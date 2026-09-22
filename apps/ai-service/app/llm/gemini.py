@@ -1,45 +1,47 @@
+"""Gemini LLM Provider — Gọi Google Gemini API thật"""
 import google.generativeai as genai
-from typing import List, Dict, Any
-from app.llm.base import BaseLLMProvider
 from app.config import settings
+from app.prompts.system_prompt import SYSTEM_PROMPT
 
-class GeminiProvider(BaseLLMProvider):
+# Khởi tạo Gemini client
+genai.configure(api_key=settings.GEMINI_API_KEY)
+
+
+class GeminiProvider:
+    """Gọi Gemini API để chat du lịch"""
+
     def __init__(self):
-        if settings.GEMINI_API_KEY:
-            genai.configure(api_key=settings.GEMINI_API_KEY)
-        self.model_name = "gemini-2.0-flash"
-        
-    async def chat(self, messages: List[Dict[str, Any]], system_prompt: str) -> str:
-        prompt = f"System: {system_prompt}\n\n"
-        for m in messages:
-            prompt += f"{m['role']}: {m['content']}\n"
-            
-        model = genai.GenerativeModel(self.model_name)
-        response = model.generate_content(prompt)
-        return response.text
+        self.model = genai.GenerativeModel(
+            model_name="gemini-3.6-flash",
+            system_instruction=SYSTEM_PROMPT,
+            generation_config=genai.GenerationConfig(
+                temperature=0.7,
+                max_output_tokens=2048,
+                top_p=0.9,
+            ),
+        )
+        # Cache chat sessions theo session_id
+        self._sessions: dict[str, any] = {}
 
-    async def chat_with_tools(self, messages: List[Dict[str, Any]], tools: List[Any], system_prompt: str) -> dict:
-        prompt = f"System: {system_prompt}\n\n"
-        for m in messages:
-            prompt += f"{m['role']}: {m['content']}\n"
-            
-        # Simplified tool representation for implementation demo
-        gemini_tools = [{"function_declarations": [{"name": t.name, "description": t.description, "parameters": t.parameters}]} for t in tools]
-        
-        model = genai.GenerativeModel(self.model_name, tools=gemini_tools if tools else None)
-        response = model.generate_content(prompt)
-        
-        # Simplified parser
-        tool_calls = []
-        if response.parts:
-            for part in response.parts:
-                if hasattr(part, "function_call") and part.function_call:
-                    tool_calls.append({
-                        "name": part.function_call.name,
-                        "args": {k: v for k, v in part.function_call.args.items()}
-                    })
-        
-        return {
-            "response": response.text,
-            "tool_calls": tool_calls
-        }
+    def get_or_create_session(self, session_id: str):
+        """Lấy hoặc tạo chat session mới"""
+        if session_id not in self._sessions:
+            self._sessions[session_id] = self.model.start_chat(history=[])
+        return self._sessions[session_id]
+
+    async def chat(self, message: str, session_id: str = "default") -> str:
+        """Gửi message đến Gemini, trả về response text"""
+        try:
+            chat_session = self.get_or_create_session(session_id)
+            response = chat_session.send_message(message)
+            return response.text
+        except Exception as e:
+            return f"Xin lỗi, mình gặp lỗi: {str(e)}. Bạn thử hỏi lại nhé! 😊"
+
+    def clear_session(self, session_id: str):
+        """Xóa chat session"""
+        self._sessions.pop(session_id, None)
+
+
+# Singleton instance
+gemini_provider = GeminiProvider()

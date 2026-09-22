@@ -5,43 +5,50 @@ import { PrismaService } from '../../prisma/prisma.service';
 export class UsersService {
   constructor(private prisma: PrismaService) {}
 
+  // Lấy thông tin user + profile + travel preferences
   async findById(id: string) {
-    try {
-      const user = await this.prisma['user'].findUnique({
-        where: { id },
-        select: { id: true, email: true, profile: true, createdAt: true },
-      });
-      if (!user) throw new NotFoundException('User not found');
-      return user;
-    } catch (e) {
-      // Mock for when schema is not ready
-      return { id, name: 'Mock User', profile: { displayName: 'Mock User' } };
-    }
+    const user = await this.prisma.user.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        email: true,
+        role: true,
+        isVerified: true,
+        createdAt: true,
+        profile: {
+          select: {
+            displayName: true,
+            avatar: true,
+            bio: true,
+            phone: true,
+          },
+        },
+        preferences: {
+          select: {
+            travelStyle: true,
+            budgetMin: true,
+            budgetMax: true,
+            interests: true,
+          },
+        },
+      },
+    });
+
+    if (!user) throw new NotFoundException('User không tồn tại');
+    return user;
   }
 
+  // Tìm user theo email (dùng cho auth)
   async findByEmail(email: string) {
-    return this.prisma['user'].findUnique({ where: { email } });
+    return this.prisma.user.findUnique({ where: { email } });
   }
 
-  async update(id: string, data: any) {
-    try {
-      return await this.prisma['user'].update({
-        where: { id },
-        data,
-      });
-    } catch (e) {
-      return { id, ...data };
-    }
-  }
-
-  async updatePreferences(id: string, preferences: any) {
-    try {
-      return await this.prisma['user'].update({
-        where: { id },
-        data: { preferences }, // Assuming json field
-      });
-    } catch (e) {
-      return { id, preferences };
-    }
+  // Cập nhật profile
+  async updateProfile(userId: string, data: { displayName?: string; bio?: string; avatar?: string }) {
+    return this.prisma.profile.upsert({
+      where: { userId },
+      update: data,
+      create: { userId, displayName: data.displayName || 'User', ...data },
+    });
   }
 }

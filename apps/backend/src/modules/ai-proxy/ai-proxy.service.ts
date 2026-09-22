@@ -1,39 +1,49 @@
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import axios from 'axios';
 
 @Injectable()
 export class AiProxyService {
-  private readonly aiServiceUrl: string;
+  private aiServiceUrl: string;
 
   constructor(private configService: ConfigService) {
-    this.aiServiceUrl = this.configService.get<string>('AI_SERVICE_URL') || 'http://localhost:8000';
+    this.aiServiceUrl = this.configService.get('AI_SERVICE_URL', 'http://localhost:8000');
   }
 
-  async chat(payload: any) {
+  // Forward chat message đến FastAPI AI service
+  async chat(message: string, sessionId?: string, userId?: string) {
     try {
-      const response = await axios.post(`${this.aiServiceUrl}/chat`, payload);
+      const response = await axios.post(`${this.aiServiceUrl}/chat`, {
+        message,
+        session_id: sessionId,
+        user_id: userId,
+      }, { timeout: 30000 });
+
       return response.data;
     } catch (error) {
-      throw new InternalServerErrorException('AI Service Error (Chat)');
+      if (axios.isAxiosError(error) && error.response) {
+        throw new HttpException(error.response.data, error.response.status);
+      }
+      throw new HttpException(
+        'AI Service không phản hồi. Vui lòng thử lại.',
+        HttpStatus.SERVICE_UNAVAILABLE,
+      );
     }
   }
 
-  async plan(payload: any) {
+  // Forward trip plan request đến FastAPI
+  async planTrip(destination: string, days: number, budget?: number, preferences?: string[]) {
     try {
-      const response = await axios.post(`${this.aiServiceUrl}/plan`, payload);
-      return response.data;
-    } catch (error) {
-      throw new InternalServerErrorException('AI Service Error (Plan)');
-    }
-  }
+      const response = await axios.post(`${this.aiServiceUrl}/planner/generate`, {
+        destination, days, budget, preferences,
+      }, { timeout: 60000 });
 
-  async reviewSummary(payload: any) {
-    try {
-      const response = await axios.post(`${this.aiServiceUrl}/review-summary`, payload);
       return response.data;
     } catch (error) {
-      throw new InternalServerErrorException('AI Service Error (Review Summary)');
+      throw new HttpException(
+        'AI Planner không phản hồi. Vui lòng thử lại.',
+        HttpStatus.SERVICE_UNAVAILABLE,
+      );
     }
   }
 }

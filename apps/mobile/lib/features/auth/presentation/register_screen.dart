@@ -11,81 +11,59 @@ class RegisterScreen extends ConsumerStatefulWidget {
 }
 
 class _RegisterScreenState extends ConsumerState<RegisterScreen> {
-  final _nameController = TextEditingController();
-  final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
-  final _confirmPasswordController = TextEditingController();
-
-  void _register() {
-    ref.read(authProvider.notifier).register(
-      _nameController.text,
-      _emailController.text,
-      _passwordController.text,
-    );
-  }
+  final _nameCtrl = TextEditingController();
+  final _emailCtrl = TextEditingController();
+  final _passCtrl = TextEditingController();
+  final _confirmCtrl = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
+    final authState = ref.watch(authProvider);
+
+    ref.listen(authProvider, (previous, next) {
+      if (next.status == AuthStateStatus.error) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(next.errorMessage ?? 'Lỗi')));
+      } else if (next.status == AuthStateStatus.unauthenticated && previous?.status == AuthStateStatus.loading) {
+        // Success
+        ref.read(authProvider.notifier).login(_emailCtrl.text, _passCtrl.text);
+      }
+    });
+
     return Scaffold(
-      appBar: AppBar(title: const Text('Register')),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              TextField(
-                controller: _nameController,
-                decoration: const InputDecoration(
-                  labelText: 'Full Name',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.person),
-                ),
+      appBar: AppBar(title: const Text('Đăng ký')),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(24.0),
+        child: Column(
+          children: [
+            TextField(controller: _nameCtrl, decoration: const InputDecoration(labelText: 'Họ tên', border: OutlineInputBorder())),
+            const SizedBox(height: 16),
+            TextField(controller: _emailCtrl, decoration: const InputDecoration(labelText: 'Email', border: OutlineInputBorder())),
+            const SizedBox(height: 16),
+            TextField(controller: _passCtrl, decoration: const InputDecoration(labelText: 'Mật khẩu', border: OutlineInputBorder()), obscureText: true),
+            const SizedBox(height: 16),
+            TextField(controller: _confirmCtrl, decoration: const InputDecoration(labelText: 'Xác nhận mật khẩu', border: OutlineInputBorder()), obscureText: true),
+            const SizedBox(height: 24),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton(
+                style: FilledButton.styleFrom(backgroundColor: Colors.teal),
+                onPressed: authState.status == AuthStateStatus.loading
+                    ? null
+                    : () {
+                        if (_passCtrl.text == _confirmCtrl.text) {
+                          ref.read(authProvider.notifier).register(_nameCtrl.text, _emailCtrl.text, _passCtrl.text);
+                        }
+                      },
+                child: authState.status == AuthStateStatus.loading 
+                    ? const CircularProgressIndicator(color: Colors.white) 
+                    : const Text('Đăng ký'),
               ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: _emailController,
-                decoration: const InputDecoration(
-                  labelText: 'Email',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.email),
-                ),
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: _passwordController,
-                obscureText: true,
-                decoration: const InputDecoration(
-                  labelText: 'Password',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.lock),
-                ),
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: _confirmPasswordController,
-                obscureText: true,
-                decoration: const InputDecoration(
-                  labelText: 'Confirm Password',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.lock),
-                ),
-              ),
-              const SizedBox(height: 24),
-              FilledButton(
-                onPressed: _register,
-                style: FilledButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                ),
-                child: const Text('Register'),
-              ),
-              const SizedBox(height: 16),
-              TextButton(
-                onPressed: () => context.pop(),
-                child: const Text('Already have an account? Login'),
-              ),
-            ],
-          ),
+            ),
+            TextButton(
+              onPressed: () => context.pop(),
+              child: const Text('Đã có tài khoản? Đăng nhập'),
+            )
+          ],
         ),
       ),
     );

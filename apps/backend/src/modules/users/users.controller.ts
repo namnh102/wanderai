@@ -12,20 +12,14 @@ export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Get('me')
-  @ApiOperation({ summary: 'Get current user profile' })
+  @ApiOperation({ summary: 'Lấy thông tin user hiện tại' })
   getProfile(@CurrentUser() user: any) {
     return this.usersService.findById(user.id);
   }
 
   @Put('me')
-  @ApiOperation({ summary: 'Update current user profile' })
-  updateProfile(@CurrentUser() user: any, @Body() data: any) {
-    return this.usersService.update(user.id, data);
-  }
-  
-  @Put('me/preferences')
-  @ApiOperation({ summary: 'Update current user preferences' })
-  updatePreferences(@CurrentUser() user: any, @Body() preferences: any) {
-    return this.usersService.updatePreferences(user.id, preferences);
+  @ApiOperation({ summary: 'Cập nhật profile' })
+  updateProfile(@CurrentUser() user: any, @Body() data: { displayName?: string; bio?: string; avatar?: string }) {
+    return this.usersService.updateProfile(user.id, data);
   }
 }

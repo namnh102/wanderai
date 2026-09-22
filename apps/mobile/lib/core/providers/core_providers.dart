@@ -7,6 +7,5 @@ final sharedPreferencesProvider = Provider<SharedPreferences>((ref) {
 });
 
 final apiClientProvider = Provider<ApiClient>((ref) {
-  final prefs = ref.watch(sharedPreferencesProvider);
-  return ApiClient(prefs);
+  return ApiClient();
 });

@@ -1,34 +1,21 @@
 import { Controller, Post, Body, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { AiProxyService } from './ai-proxy.service';
-import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 
-@ApiTags('AI Integration')
+@ApiTags('AI')
 @Controller('ai')
 export class AiProxyController {
   constructor(private readonly aiProxyService: AiProxyService) {}
 
   @Post('chat')
-  @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth()
-  @ApiOperation({ summary: 'Chat with AI assistant' })
-  // Rate limiting could be applied here with @Throttle
-  chat(@Body() payload: any) {
-    return this.aiProxyService.chat(payload);
+  @ApiOperation({ summary: 'Chat với AI Wandy' })
+  async chat(@Body() body: { message: string; session_id?: string }) {
+    return this.aiProxyService.chat(body.message, body.session_id);
   }
 
   @Post('plan')
-  @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth()
-  @ApiOperation({ summary: 'Generate a travel plan' })
-  // Rate limiting could be applied here
-  plan(@Body() payload: any) {
-    return this.aiProxyService.plan(payload);
-  }
-
-  @Post('review-summary')
-  @ApiOperation({ summary: 'Summarize reviews for a place' })
-  reviewSummary(@Body() payload: any) {
-    return this.aiProxyService.reviewSummary(payload);
+  @ApiOperation({ summary: 'AI tạo lịch trình du lịch' })
+  async plan(@Body() body: { destination: string; days: number; budget?: number }) {
+    return this.aiProxyService.planTrip(body.destination, body.days, body.budget);
   }
 }

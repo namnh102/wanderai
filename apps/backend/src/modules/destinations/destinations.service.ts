@@ -6,55 +6,83 @@ import { Prisma } from '@prisma/client';
 export class DestinationsService {
   constructor(private prisma: PrismaService) {}
 
-  async findAll(page: number = 1, limit: number = 20, search?: string) {
+  // Lấy danh sách destinations với pagination, search, filter
+  async findAll(page: number = 1, limit: number = 20, search?: string, region?: string) {
     const skip = (page - 1) * limit;
-    
-    try {
-      const where: Prisma.DestinationWhereInput = search ? { name: { contains: search, mode: 'insensitive' as Prisma.QueryMode }, deletedAt: null } : { deletedAt: null };
-      const items = await this.prisma['destination'].findMany({
-        where: { ...where, deletedAt: null },
+
+    const where: Prisma.DestinationWhereInput = {
+      deletedAt: null,
+      ...(search && {
+        OR: [
+          { name: { contains: search, mode: 'insensitive' as Prisma.QueryMode } },
+          { province: { contains: search, mode: 'insensitive' as Prisma.QueryMode } },
+          { nameEn: { contains: search, mode: 'insensitive' as Prisma.QueryMode } },
+        ],
+      }),
+      ...(region && { region }),
+    };
+
+    const [items, total] = await Promise.all([
+      this.prisma.destination.findMany({
+        where,
         skip,
         take: limit,
-      });
-      const total = await this.prisma['destination'].count({ where: { ...where, deletedAt: null } });
-      return { items, total, page, limit };
-    } catch (e) {
-      return { items: [], total: 0, page, limit };
-    }
+        orderBy: [{ isPopular: 'desc' }, { rating: 'desc' }],
+        include: {
+          _count: { select: { places: true } },
+        },
+      }),
+      this.prisma.destination.count({ where }),
+    ]);
+
+    return { items, total, page, limit, totalPages: Math.ceil(total / limit) };
   }
 
+  // Lấy chi tiết destination + places
   async findById(id: string) {
-    try {
-      const dest = await this.prisma['destination'].findUnique({ where: { id } });
-      if (!dest) throw new NotFoundException('Destination not found');
-      return dest;
-    } catch (e) {
-      return { id, name: 'Mock Destination' };
-    }
+    const dest = await this.prisma.destination.findUnique({
+      where: { id },
+      include: {
+        places: {
+          where: { deletedAt: null },
+          include: { category: true },
+          orderBy: { rating: 'desc' },
+        },
+      },
+    });
+
+    if (!dest) throw new NotFoundException('Destination không tồn tại');
+    return dest;
   }
 
-  async findNearby(lat: number, lng: number, radiusKm: number = 10) {
-    try {
-      // Raw SQL PostGIS example
-      const result = await this.prisma.$queryRaw`
-        SELECT id, name, location,
-          ST_Distance(
-            location::geography, 
-            ST_SetSRID(ST_MakePoint(${lng}, ${lat}), 4326)::geography
-          ) / 1000 AS distance_km
-        FROM "Destination"
-        WHERE ST_DWithin(
-          location::geography, 
-          ST_SetSRID(ST_MakePoint(${lng}, ${lat}), 4326)::geography, 
+  // Lấy destinations nổi bật
+  async findPopular(limit: number = 10) {
+    return this.prisma.destination.findMany({
+      where: { isPopular: true, deletedAt: null },
+      take: limit,
+      orderBy: { rating: 'desc' },
+    });
+  }
+
+  // Tìm destinations gần vị trí GPS (PostGIS)
+  async findNearby(lat: number, lng: number, radiusKm: number = 50) {
+    const result = await this.prisma.$queryRaw`
+      SELECT id, name, province, region, latitude, longitude, rating,
+        ST_Distance(
+          ST_SetSRID(ST_MakePoint(longitude, latitude), 4326)::geography,
+          ST_SetSRID(ST_MakePoint(${lng}, ${lat}), 4326)::geography
+        ) / 1000 AS distance_km
+      FROM destinations
+      WHERE deleted_at IS NULL
+        AND latitude IS NOT NULL
+        AND ST_DWithin(
+          ST_SetSRID(ST_MakePoint(longitude, latitude), 4326)::geography,
+          ST_SetSRID(ST_MakePoint(${lng}, ${lat}), 4326)::geography,
           ${radiusKm * 1000}
         )
-        AND deleted_at IS NULL
-        ORDER BY distance_km
-        LIMIT 50;
-      `;
-      return result;
-    } catch (e) {
-      return [];
-    }
+      ORDER BY distance_km
+      LIMIT 20;
+    `;
+    return result;
   }
 }

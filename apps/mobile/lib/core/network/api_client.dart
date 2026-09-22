@@ -3,19 +3,21 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../constants/app_constants.dart';
 
 class ApiClient {
-  late Dio dio;
-  final SharedPreferences sharedPreferences;
+  late final Dio dio;
 
-  ApiClient(this.sharedPreferences) {
-    dio = Dio(BaseOptions(
-      baseUrl: AppConstants.apiBaseUrl,
-      connectTimeout: const Duration(seconds: 10),
-      receiveTimeout: const Duration(seconds: 10),
-    ));
+  ApiClient() {
+    dio = Dio(
+      BaseOptions(
+        baseUrl: AppConstants.apiBaseUrl,
+        connectTimeout: const Duration(seconds: 15),
+        receiveTimeout: const Duration(seconds: 15),
+      ),
+    );
 
     dio.interceptors.add(InterceptorsWrapper(
-      onRequest: (options, handler) {
-        final token = sharedPreferences.getString('jwt_token');
+      onRequest: (options, handler) async {
+        final prefs = await SharedPreferences.getInstance();
+        final token = prefs.getString('access_token');
         if (token != null) {
           options.headers['Authorization'] = 'Bearer $token';
         }
@@ -23,10 +25,12 @@ class ApiClient {
       },
       onError: (DioException e, handler) async {
         if (e.response?.statusCode == 401) {
-          // TODO: Implement auto refresh token logic here
+          // TODO: Implement refresh token logic and logout if fail
         }
         return handler.next(e);
       },
     ));
   }
 }
+
+final apiClient = ApiClient().dio;
