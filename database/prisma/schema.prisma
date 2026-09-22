@@ -1,0 +1,618 @@
+// WanderAI Database Schema
+// 30 bảng, 8 nhóm thực thể
+// Rules: UUID v4, TIMESTAMPTZ (UTC), INT VND, soft delete
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================================
+// NHÓM 1: USER (3 bảng)
+// Quản lý tài khoản, hồ sơ, sở thích du lịch
+// ============================================================
+
+enum UserRole {
+  USER
+  ADMIN
+  MODERATOR
+}
+
+enum TravelStyle {
+  BACKPACKER    // Phượt
+  BUDGET        // Tiết kiệm
+  COMFORT       // Thoải mái
+  LUXURY        // Sang trọng
+}
+
+enum GroupSize {
+  SOLO          // Đi một mình
+  COUPLE        // Cặp đôi
+  SMALL_GROUP   // Nhóm nhỏ 3-5
+  LARGE_GROUP   // Nhóm lớn 6+
+  FAMILY        // Gia đình
+}
+
+model User {
+  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email         String    @unique
+  passwordHash  String    @map("password_hash")
+  role          UserRole  @default(USER)
+  isVerified    Boolean   @default(false) @map("is_verified")
+  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt     DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+  deletedAt     DateTime? @map("deleted_at") @db.Timestamptz
+
+  profile       Profile?
+  preferences   TravelPreference?
+  trips         Trip[]
+  tripMembers   TripMember[]
+  reviews       Review[]
+  videos        Video[]
+  comments      Comment[]
+  likes         Like[]
+  saves         Save[]
+  followers     Follow[] @relation("following")
+  following     Follow[] @relation("followers")
+  notifications Notification[]
+  sentMatches   Match[]  @relation("sender")
+  receivedMatches Match[] @relation("receiver")
+  groupMembers  GroupMember[]
+  messages      Message[]
+  safetyContacts SafetyContact[]
+  safetyCheckins SafetyCheckin[]
+  aiSessions    AiSession[]
+
+  @@map("users")
+}
+
+model Profile {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId      String   @unique @map("user_id") @db.Uuid
+  displayName String   @map("display_name")
+  avatar      String?
+  bio         String?
+  phone       String?
+  dateOfBirth DateTime? @map("date_of_birth") @db.Date
+  nationality String?
+  languages   String[] @default([])
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("profiles")
+}
+
+model TravelPreference {
+  id              String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId          String      @unique @map("user_id") @db.Uuid
+  travelStyle     TravelStyle @default(COMFORT) @map("travel_style")
+  budgetMin       Int         @default(0) @map("budget_min")        // VND integer
+  budgetMax       Int         @default(10000000) @map("budget_max")  // VND integer
+  preferredGroup  GroupSize   @default(SOLO) @map("preferred_group")
+  interests       String[]    @default([])  // ["beach","mountain","culture","food"]
+  avoidances      String[]    @default([])  // ["crowds","heights"]
+  dietaryNeeds    String[]    @default([]) @map("dietary_needs")
+  createdAt       DateTime    @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt       DateTime    @updatedAt @map("updated_at") @db.Timestamptz
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("travel_preferences")
+}
+
+// ============================================================
+// NHÓM 2: CONTENT (6 bảng)
+// Điểm đến, địa điểm, đánh giá, video
+// ============================================================
+
+model Destination {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name        String
+  nameEn      String?  @map("name_en")
+  slug        String   @unique
+  description String?
+  province    String?
+  region      String?  // "north", "central", "south"
+  latitude    Float?
+  longitude   Float?
+  coverImage  String?  @map("cover_image")
+  rating      Float    @default(0)
+  reviewCount Int      @default(0) @map("review_count")
+  isPopular   Boolean  @default(false) @map("is_popular")
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz
+  deletedAt   DateTime? @map("deleted_at") @db.Timestamptz
+
+  places      Place[]
+  trips       Trip[]
+
+  @@map("destinations")
+}
+
+model PlaceCategory {
+  id    String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name  String  @unique  // "restaurant", "hotel", "attraction", "beach"
+  icon  String?
+  color String?
+
+  places Place[]
+
+  @@map("place_categories")
+}
+
+model Place {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  destinationId String   @map("destination_id") @db.Uuid
+  categoryId    String?  @map("category_id") @db.Uuid
+  name          String
+  nameEn        String?  @map("name_en")
+  description   String?
+  address       String?
+  latitude      Float?
+  longitude     Float?
+  priceMin      Int?     @map("price_min")     // VND integer
+  priceMax      Int?     @map("price_max")     // VND integer
+  openingHours  String?  @map("opening_hours")
+  coverImage    String?  @map("cover_image")
+  images        String[] @default([])
+  rating        Float    @default(0)
+  reviewCount   Int      @default(0) @map("review_count")
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt     DateTime @updatedAt @map("updated_at") @db.Timestamptz
+  deletedAt     DateTime? @map("deleted_at") @db.Timestamptz
+
+  destination   Destination   @relation(fields: [destinationId], references: [id])
+  category      PlaceCategory? @relation(fields: [categoryId], references: [id])
+  reviews       Review[]
+  itineraryItems ItineraryItem[]
+
+  @@map("places")
+}
+
+model Review {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  placeId   String   @map("place_id") @db.Uuid
+  rating    Float    // 1.0 - 5.0
+  content   String
+  images    String[] @default([])
+  visitDate DateTime? @map("visit_date") @db.Date
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz
+  deletedAt DateTime? @map("deleted_at") @db.Timestamptz
+
+  user    User    @relation(fields: [userId], references: [id])
+  place   Place   @relation(fields: [placeId], references: [id])
+  aspects ReviewAspect[]
+
+  @@map("reviews")
+}
+
+model ReviewAspect {
+  id       String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  reviewId String @map("review_id") @db.Uuid
+  aspect   String // "food", "service", "cleanliness", "location", "value"
+  score    Float  // 1.0 - 5.0
+  comment  String?
+
+  review Review @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+
+  @@map("review_aspects")
+}
+
+model Video {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId      String   @map("user_id") @db.Uuid
+  title       String?
+  caption     String?
+  videoUrl    String   @map("video_url")
+  thumbnailUrl String? @map("thumbnail_url")
+  duration    Int?     // seconds
+  viewCount   Int      @default(0) @map("view_count")
+  likeCount   Int      @default(0) @map("like_count")
+  commentCount Int     @default(0) @map("comment_count")
+  tags        String[] @default([])
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz
+  deletedAt   DateTime? @map("deleted_at") @db.Timestamptz
+
+  user     User      @relation(fields: [userId], references: [id])
+  comments Comment[]
+  likes    Like[]
+
+  @@map("videos")
+}
+
+// ============================================================
+// NHÓM 3: SOCIAL (5 bảng)
+// Bình luận, like, save, follow, thông báo
+// ============================================================
+
+model Comment {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  videoId   String?  @map("video_id") @db.Uuid
+  content   String
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+  deletedAt DateTime? @map("deleted_at") @db.Timestamptz
+
+  user  User   @relation(fields: [userId], references: [id])
+  video Video? @relation(fields: [videoId], references: [id])
+
+  @@map("comments")
+}
+
+model Like {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  videoId   String?  @map("video_id") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  user  User   @relation(fields: [userId], references: [id])
+  video Video? @relation(fields: [videoId], references: [id])
+
+  @@unique([userId, videoId])
+  @@map("likes")
+}
+
+model Save {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId          String   @map("user_id") @db.Uuid
+  destinationId   String?  @map("destination_id") @db.Uuid
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("saves")
+}
+
+model Follow {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  followerId  String   @map("follower_id") @db.Uuid
+  followingId String   @map("following_id") @db.Uuid
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  follower  User @relation("followers", fields: [followerId], references: [id])
+  following User @relation("following", fields: [followingId], references: [id])
+
+  @@unique([followerId, followingId])
+  @@map("follows")
+}
+
+enum NotificationType {
+  MATCH_REQUEST
+  MATCH_ACCEPTED
+  TRIP_INVITE
+  SAFETY_ALERT
+  NEW_COMMENT
+  NEW_LIKE
+  SYSTEM
+}
+
+model Notification {
+  id        String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId    String           @map("user_id") @db.Uuid
+  type      NotificationType
+  title     String
+  body      String?
+  data      Json?            // metadata JSON
+  isRead    Boolean          @default(false) @map("is_read")
+  createdAt DateTime         @default(now()) @map("created_at") @db.Timestamptz
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("notifications")
+}
+
+// ============================================================
+// NHÓM 4: TRIP (4 bảng) — TRỌNG TÂM APP
+// Chuyến đi, thành viên, lịch trình, hoạt động
+// ============================================================
+
+enum TripStatus {
+  DRAFT
+  PLANNED
+  ONGOING
+  COMPLETED
+  CANCELLED
+}
+
+model Trip {
+  id              String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId          String     @map("user_id") @db.Uuid
+  destinationId   String?    @map("destination_id") @db.Uuid
+  title           String
+  description     String?
+  startDate       DateTime?  @map("start_date") @db.Date
+  endDate         DateTime?  @map("end_date") @db.Date
+  totalBudget     Int?       @map("total_budget")       // VND integer
+  status          TripStatus @default(DRAFT)
+  coverImage      String?    @map("cover_image")
+  isAiGenerated   Boolean    @default(false) @map("is_ai_generated")
+  createdAt       DateTime   @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt       DateTime   @updatedAt @map("updated_at") @db.Timestamptz
+  deletedAt       DateTime?  @map("deleted_at") @db.Timestamptz
+
+  user        User         @relation(fields: [userId], references: [id])
+  destination Destination? @relation(fields: [destinationId], references: [id])
+  members     TripMember[]
+  itineraries Itinerary[]
+
+  @@map("trips")
+}
+
+model TripMember {
+  id     String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tripId String @map("trip_id") @db.Uuid
+  userId String @map("user_id") @db.Uuid
+  role   String @default("member") // "owner", "member"
+
+  trip Trip @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id])
+
+  @@unique([tripId, userId])
+  @@map("trip_members")
+}
+
+model Itinerary {
+  id      String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tripId  String @map("trip_id") @db.Uuid
+  dayNumber Int  @map("day_number")
+  date    DateTime? @db.Date
+  title   String?
+
+  trip  Trip            @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  items ItineraryItem[]
+
+  @@unique([tripId, dayNumber])
+  @@map("itineraries")
+}
+
+model ItineraryItem {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  itineraryId  String   @map("itinerary_id") @db.Uuid
+  placeId      String?  @map("place_id") @db.Uuid
+  orderIndex   Int      @map("order_index")
+  startTime    String?  @map("start_time")   // "09:00"
+  endTime      String?  @map("end_time")     // "11:00"
+  activity     String
+  notes        String?
+  estimatedCost Int?    @map("estimated_cost") // VND integer
+  transportMode String? @map("transport_mode") // "walk","taxi","bus","motorbike"
+
+  itinerary Itinerary @relation(fields: [itineraryId], references: [id], onDelete: Cascade)
+  place     Place?    @relation(fields: [placeId], references: [id])
+
+  @@map("itinerary_items")
+}
+
+// ============================================================
+// NHÓM 5: BOOKING MOCK (4 bảng)
+// Đặt chỗ giả lập (không tích hợp thanh toán thật)
+// ============================================================
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+}
+
+model Booking {
+  id        String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId    String        @map("user_id") @db.Uuid
+  type      String        // "transport", "hotel", "tour"
+  status    BookingStatus @default(PENDING)
+  totalPrice Int          @map("total_price")  // VND integer
+  metadata  Json?
+  createdAt DateTime      @default(now()) @map("created_at") @db.Timestamptz
+
+  @@map("bookings")
+}
+
+model TransportBooking {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  provider    String   // "VietjetAir", "Vietnam Airlines", "Xe khách"
+  fromCity    String   @map("from_city")
+  toCity      String   @map("to_city")
+  departureAt DateTime @map("departure_at") @db.Timestamptz
+  arrivalAt   DateTime @map("arrival_at") @db.Timestamptz
+  price       Int      // VND integer
+  seatClass   String?  @map("seat_class")
+
+  @@map("transport_bookings")
+}
+
+model HotelBooking {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name      String
+  address   String?
+  stars     Int?
+  pricePerNight Int  @map("price_per_night")  // VND integer
+  checkIn   DateTime @map("check_in") @db.Date
+  checkOut  DateTime @map("check_out") @db.Date
+  roomType  String?  @map("room_type")
+
+  @@map("hotel_bookings")
+}
+
+model TourBooking {
+  id          String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name        String
+  description String?
+  duration    Int?   // hours
+  price       Int    // VND integer
+  meetingPoint String? @map("meeting_point")
+
+  @@map("tour_bookings")
+}
+
+// ============================================================
+// NHÓM 6: MATCHING & GROUP (4 bảng)
+// Tìm bạn đồng hành + nhóm đi chung
+// ============================================================
+
+enum MatchStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+}
+
+model Match {
+  id         String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  senderId   String      @map("sender_id") @db.Uuid
+  receiverId String      @map("receiver_id") @db.Uuid
+  status     MatchStatus @default(PENDING)
+  score      Float?      // compatibility score 0-100
+  explanation String?    // AI explanation
+  createdAt  DateTime    @default(now()) @map("created_at") @db.Timestamptz
+
+  sender   User @relation("sender", fields: [senderId], references: [id])
+  receiver User @relation("receiver", fields: [receiverId], references: [id])
+
+  @@unique([senderId, receiverId])
+  @@map("matches")
+}
+
+model Group {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name        String
+  description String?
+  tripId      String?  @map("trip_id") @db.Uuid
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  members  GroupMember[]
+  messages Message[]
+
+  @@map("groups")
+}
+
+model GroupMember {
+  id      String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  groupId String @map("group_id") @db.Uuid
+  userId  String @map("user_id") @db.Uuid
+  role    String @default("member") // "admin", "member"
+
+  group Group @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id])
+
+  @@unique([groupId, userId])
+  @@map("group_members")
+}
+
+model Message {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  groupId   String   @map("group_id") @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  content   String
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  group Group @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id])
+
+  @@map("messages")
+}
+
+// ============================================================
+// NHÓM 7: SAFETY (3 bảng)
+// SOS, check-in, liên hệ khẩn cấp
+// ============================================================
+
+model SafetyContact {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  name      String
+  phone     String
+  relation  String   // "family", "friend", "embassy"
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("safety_contacts")
+}
+
+model SafetyCheckin {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  latitude  Float
+  longitude Float
+  note      String?
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("safety_checkins")
+}
+
+enum EmergencyStatus {
+  ACTIVE
+  RESOLVED
+  FALSE_ALARM
+}
+
+model EmergencyEvent {
+  id        String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId    String          @map("user_id") @db.Uuid
+  latitude  Float
+  longitude Float
+  status    EmergencyStatus @default(ACTIVE)
+  message   String?
+  resolvedAt DateTime?      @map("resolved_at") @db.Timestamptz
+  createdAt  DateTime       @default(now()) @map("created_at") @db.Timestamptz
+
+  @@map("emergency_events")
+}
+
+// ============================================================
+// NHÓM 8: AI & RAG (3 bảng)
+// Phiên chat AI, tin nhắn, knowledge base
+// ============================================================
+
+model AiSession {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  title     String?
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  user     User         @relation(fields: [userId], references: [id])
+  messages AiMessage[]
+
+  @@map("ai_sessions")
+}
+
+enum AiMessageRole {
+  USER
+  ASSISTANT
+  TOOL
+}
+
+model AiMessage {
+  id         String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  sessionId  String        @map("session_id") @db.Uuid
+  role       AiMessageRole
+  content    String
+  toolCalls  Json?         @map("tool_calls")
+  createdAt  DateTime      @default(now()) @map("created_at") @db.Timestamptz
+
+  session AiSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@map("ai_messages")
+}
+
+model Document {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  content   String
+  source    String?
+  category  String?  // "destination_guide", "safety_tip", "travel_advice"
+  metadata  Json?
+  // embedding vector(384) -- Added via raw SQL migration (Prisma doesn't support vector type natively)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  @@map("documents")
+}

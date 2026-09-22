@@ -1,0 +1,15 @@
+{
+  "@@locale": "en",
+  "appTitle": "WanderAI",
+  "login": "Login",
+  "register": "Register",
+  "email": "Email",
+  "password": "Password",
+  "home": "Home",
+  "feed": "Feed",
+  "ai": "AI",
+  "trips": "Trips",
+  "profile": "Profile",
+  "logout": "Logout",
+  "search": "Search..."
+}
