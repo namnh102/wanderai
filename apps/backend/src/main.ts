@@ -8,8 +8,13 @@ import { TransformInterceptor } from './common/interceptors/transform.intercepto
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  // Enable CORS
-  app.enableCors();
+  // CORS — cho phép Flutter web (localhost:4200) và mobile
+  app.enableCors({
+    origin: ['http://localhost:4200', 'http://localhost:3000', 'http://127.0.0.1:4200'],
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true,
+  });
 
   // Global pipes, filters, interceptors
   app.useGlobalPipes(

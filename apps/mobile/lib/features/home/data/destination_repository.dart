@@ -1,27 +1,27 @@
-import '../../../core/network/api_client.dart';
-import '../../../core/network/api_endpoints.dart';
-import 'destination_model.dart';
+import 'package:dio/dio.dart';
 
 class DestinationRepository {
-  Future<List<Destination>> getDestinations({int page = 1, int limit = 20, String? search, String? region}) async {
-    try {
-      final query = <String, dynamic>{'page': page, 'limit': limit};
-      if (search != null) query['search'] = search;
-      if (region != null && region != 'Tất cả') query['region'] = region;
-      
-      final res = await apiClient.get(ApiEndpoints.destinations, queryParameters: query);
-      return (res.data['items'] as List).map((e) => Destination.fromJson(e)).toList();
-    } catch (e) {
-      return []; // fallback
-    }
-  }
+  final Dio apiClient;
+  
+  DestinationRepository({required this.apiClient});
 
-  Future<List<Destination>> getPopular() async {
-    try {
-      final res = await apiClient.get(ApiEndpoints.destinations, queryParameters: {'isPopular': true});
-      return (res.data['items'] as List).map((e) => Destination.fromJson(e)).toList();
-    } catch (e) {
-      return [];
+  // Láº¥y danh sÃ¡ch Ä‘á»‹a Ä‘iá»ƒm
+  Future<List<Map<String, dynamic>>> getDestinations({
+    int page = 1,
+    int limit = 50,
+    String? search,
+    String? region,
+  }) async {
+    final response = await apiClient.get('/destinations', queryParameters: {
+      'page': page,
+      'limit': limit,
+      if (search != null && search.isNotEmpty) 'search': search,
+      if (region != null) 'region': region,
+    });
+    final data = response.data;
+    if (data['data'] != null && data['data']['items'] != null) {
+      return List<Map<String, dynamic>>.from(data['data']['items']);
     }
+    return [];
   }
 }

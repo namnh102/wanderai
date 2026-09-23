@@ -1,21 +1,33 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../data/destination_repository.dart';
-import '../data/destination_model.dart';
+import '../../../core/network/api_client.dart';
 
-final destinationRepositoryProvider = Provider((ref) => DestinationRepository());
-
-final popularDestinationsProvider = FutureProvider<List<Destination>>((ref) {
-  return ref.read(destinationRepositoryProvider).getPopular();
+final destinationRepositoryProvider = Provider<DestinationRepository>((ref) {
+  return DestinationRepository(apiClient: apiClient);
 });
 
-final searchProvider = StateProvider<String>((ref) => '');
-final regionFilterProvider = StateProvider<String?>((ref) => 'Tất cả');
+final destinationsProvider = FutureProvider<List<Map<String, dynamic>>>((ref) async {
+  final repository = ref.read(destinationRepositoryProvider);
+  return repository.getDestinations();
+});
 
-final filteredDestinationsProvider = FutureProvider<List<Destination>>((ref) {
-  final search = ref.watch(searchProvider);
-  final region = ref.watch(regionFilterProvider);
-  return ref.read(destinationRepositoryProvider).getDestinations(
-    search: search.isNotEmpty ? search : null,
-    region: region,
+final searchQueryProvider = StateProvider<String>((ref) => '');
+final selectedRegionProvider = StateProvider<String?>((ref) => null);
+
+final filteredDestinationsProvider = Provider<List<Map<String, dynamic>>>((ref) {
+  final destinationsAsyncValue = ref.watch(destinationsProvider);
+  final searchQuery = ref.watch(searchQueryProvider).toLowerCase();
+  final selectedRegion = ref.watch(selectedRegionProvider);
+
+  return destinationsAsyncValue.maybeWhen(
+    data: (destinations) {
+      return destinations.where((destination) {
+        final name = (destination['name'] ?? '').toString().toLowerCase();
+        final matchesSearch = name.contains(searchQuery);
+        final matchesRegion = selectedRegion == null || destination['region'] == selectedRegion;
+        return matchesSearch && matchesRegion;
+      }).toList();
+    },
+    orElse: () => [],
   );
 });

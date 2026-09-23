@@ -8,17 +8,18 @@ class ProfileScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final authState = ref.watch(authProvider);
-    final user = authState.user ?? {};
+    final userEmail = authState.email ?? '';
+    final userName = userEmail.split('@').first;
 
     return Scaffold(
       appBar: AppBar(title: const Text('Hồ sơ')),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          CircleAvatar(radius: 40, child: Text(user['name']?.substring(0, 1) ?? 'U', style: const TextStyle(fontSize: 32))),
+          CircleAvatar(radius: 40, child: Text(userName.isNotEmpty ? userName[0].toUpperCase() : 'U', style: const TextStyle(fontSize: 32))),
           const SizedBox(height: 16),
-          Text(user['name'] ?? 'User', textAlign: TextAlign.center, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
-          Text(user['email'] ?? 'user@example.com', textAlign: TextAlign.center, style: const TextStyle(color: Colors.grey)),
+          Text(userName, textAlign: TextAlign.center, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+          Text(userEmail, textAlign: TextAlign.center, style: const TextStyle(color: Colors.grey)),
           const SizedBox(height: 32),
           ListTile(leading: const Icon(Icons.language), title: const Text('Ngôn ngữ'), onTap: () {}),
           ListTile(leading: const Icon(Icons.notifications), title: const Text('Thông báo'), onTap: () {}),
