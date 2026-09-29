@@ -1,74 +1,67 @@
-# WanderAI — Engineering Rules
+# WanderAI Engineering Rules
 
-> Tệp này là BỘ LUẬT KỸ THUẬT bắt buộc cho toàn bộ team và AI coding agents.
-> Mọi code thay đổi PHẢI tuân thủ các quy tắc dưới đây.
+## Architecture
+- Mobile: Flutter + Riverpod
+- Backend: NestJS + Prisma
+- AI: FastAPI + tool-calling
+- Database: PostgreSQL + PostGIS + pgvector
+- Cache: Redis + BullMQ
 
-## Tech Stack (KHÔNG ĐƯỢC THAY ĐỔI)
+## KHÔNG ĐƯỢC:
+- Thêm MongoDB hoặc DB khác
+- Thêm ORM khác ngoài Prisma
+- Thêm state manager khác ngoài Riverpod
+- Tạo service mới chưa được duyệt
+- Sửa DB không có migration
+- Bypass API layer (AI không truy cập DB trực tiếp)
+- Viết secrets vào source code
+- Thêm dependency không có lý do
+- Sửa file ngoài phạm vi task
+- Dùng `any` type bừa bãi (TypeScript)
+- Để AI tự thực hiện SOS, payment, delete account
+- Push trực tiếp vào main
+- Commit mà chưa chạy test
 
-- **Mobile:** Flutter 3.x + Riverpod 2.0 + GoRouter + Dio
-- **Backend:** NestJS 10+ + TypeScript + Prisma ORM
-- **AI Service:** FastAPI + Python 3.11+ + Pydantic v2
-- **Database:** PostgreSQL 16 + PostGIS + pgvector (MỘT database duy nhất)
-- **Cache/Queue:** Redis 7 + BullMQ
-- **Media:** Cloudinary
-- **Deploy:** Supabase (DB) + Railway (API services)
+## PHẢI:
+- Đọc AGENTS.md trước khi code
+- Lập kế hoạch trước khi sửa code (list files affected)
+- Viết test cho mọi service/tool
+- Dùng Conventional Commits (feat/fix/refactor/test/docs/chore)
+- Mọi API có Swagger docs
+- Mọi mutation check ownership
+- Tiền lưu integer VND
+- Ngày lưu UTC TIMESTAMPTZ
+- Mỗi feature 1 branch: feature/ten-tinh-nang
+- Format + Lint trước mỗi commit
+- Mỗi external API call có timeout + fallback
 
-## KHÔNG ĐƯỢC
+## Quy trình AI Agent:
+```
+LLM → Tool → Backend Service → Authorization → Database
+```
+AI KHÔNG được có quyền tự ý tạo SQL hoặc gọi DB trực tiếp.
+AI chỉ: đề xuất → chuẩn bị action → yêu cầu confirmation → backend validate → execute.
 
-- Thêm MongoDB, Firebase Firestore, hoặc bất kỳ database khác
-- Thêm ORM khác ngoài Prisma (không TypeORM, không Drizzle, không Sequelize)
-- Thêm state manager khác (không BLoC, không GetX, không Provider cũ)
-- Dùng GraphQL (chỉ dùng REST API)
-- Tạo microservice mới (giữ modular monolith)
-- Sửa database schema mà không tạo Prisma migration
-- Bypass NestJS API layer (Flutter KHÔNG gọi thẳng FastAPI)
-- Viết secrets, API keys, passwords vào source code
-- Commit file .env hoặc MY_KEYS.txt
-- Thêm dependency mới mà không có lý do trong PR description
-- Push trực tiếp lên main hoặc develop
-- Commit code AI generate mà chưa review và test
+## Quy trình code:
+```
+1. Read AGENTS.md
+2. Inspect current architecture
+3. Identify affected files
+4. Explain the implementation plan
+5. Do not code until the plan is approved
+6. Code within scope only
+7. Run formatter
+8. Run linter
+9. Run tests
+10. Fix all failures
+11. Show changed files
+12. Explain remaining risks
+```
 
-## PHẢI
-
-- Viết test cho mọi service method và AI tool
-- Dùng Conventional Commits: `feat:` | `fix:` | `refactor:` | `test:` | `docs:` | `chore:`
-- Mọi API endpoint phải có Swagger decorator (`@ApiTags`, `@ApiOperation`, `@ApiResponse`)
-- Mọi DTO phải dùng `class-validator` decorators
-- Mọi mutation phải kiểm tra ownership (user chỉ sửa/xóa dữ liệu của mình)
-- Mọi PR phải có: What changed / Why / Tests / Known limitations
-
-## Database Rules
-
-- **ID:** UUID v4 (`gen_random_uuid()`)
-- **Tiền tệ:** Số nguyên VND (`2000000` = 2 triệu), KHÔNG DÙNG FLOAT
-- **Thời gian:** `TIMESTAMPTZ` (UTC), frontend convert sang `Asia/Ho_Chi_Minh`
-- **Soft delete:** `deleted_at TIMESTAMPTZ` (không xóa thật)
-- **Enum:** Dùng Prisma enum
-- **Tọa độ:** `latitude Float` + `longitude Float`
-- **Vector:** `vector(384)` cho MiniLM hoặc `vector(1536)` cho OpenAI embedding
-
-## AI Rules
-
-- LLM **KHÔNG ĐƯỢC** tự bịa dữ liệu live (giá, thời tiết, booking PHẢI từ Tool)
-- Luồng bắt buộc: Agent → Tool → Service → Auth → DB
-- Mọi AI response phải qua Pydantic validation
-- Rate limit: 10 AI requests/phút/user cho chat, 5/phút cho planner
-- Prompt injection guard PHẢI bật (regex filter input)
-- System prompt phải có version number
-- AI response phải disclaimer "thông tin tham khảo, kiểm tra trước khi đặt"
-
-## Mobile Rules
-
-- i18n cho mọi user-facing text (Vietnamese + English)
-- Feature-first folder structure (`features/auth/`, `features/home/`, ...)
-- Riverpod `AsyncNotifier` cho API calls
-- GoRouter cho navigation + auth redirect
-- Dio interceptor tự động refresh JWT token
-- Không hardcode strings, dùng `AppLocalizations`
-
-## Git Flow
-
-- `main` ← production, chỉ merge từ develop
-- `develop` ← integration, merge features vào đây
-- `feature/*` ← mỗi tính năng 1 branch
-- `fix/*` ← bug fixes
+## Data Sources:
+- Destinations/Places: OpenStreetMap Overpass API (ODbL license)
+- Images: Unsplash API (Unsplash License)
+- Reviews: Mendeley CX Vietnamese Hotel Reviews (CC BY 4.0)
+- Tourism knowledge: Kaggle Vietnam Tourism v2
+- Weather: Open-Meteo API (free, no key)
+- Fake users: Faker.js with vi locale
