@@ -7,7 +7,7 @@ from app.config import settings
 from app.prompts.system_prompt import SYSTEM_PROMPT
 
 _client = genai.Client(api_key=settings.GEMINI_API_KEY)
-_MODEL = "gemini-3.6-flash"
+_MODEL = "gemini-3.5-flash"
 
 
 def _tool_to_function_declaration(tool) -> types.FunctionDeclaration:

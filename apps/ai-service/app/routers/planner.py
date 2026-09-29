@@ -11,7 +11,7 @@ from app.config import settings
 router = APIRouter(prefix="/planner", tags=["Trip Planner"])
 
 _client = genai.Client(api_key=settings.GEMINI_API_KEY)
-_MODEL = "gemini-3.6-flash"
+_MODEL = "gemini-3.5-flash"
 
 
 class PlanRequest(BaseModel):
