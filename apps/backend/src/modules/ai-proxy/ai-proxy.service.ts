@@ -34,8 +34,12 @@ export class AiProxyService {
   // Forward trip plan request đến FastAPI
   async planTrip(destination: string, days: number, budget?: number, preferences?: string[]) {
     try {
-      const response = await axios.post(`${this.aiServiceUrl}/planner/generate`, {
-        destination, days, budget, preferences,
+      const response = await axios.post(`${this.aiServiceUrl}/planner`, {
+        destination,
+        days,
+        budget: budget ?? 3000000,
+        style: 'adventure',
+        interests: preferences ?? [],
       }, { timeout: 60000 });
 
       return response.data;

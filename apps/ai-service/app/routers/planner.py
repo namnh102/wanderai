@@ -1,23 +1,17 @@
-"""AI Trip Planner — Tạo lịch trình du lịch tự động bằng Gemini"""
+"""AI Trip Planner — Tao lich trinh du lich tu dong bang Gemini"""
 import uuid
 import json
 from fastapi import APIRouter
 from pydantic import BaseModel
 from typing import Optional, List
-import google.generativeai as genai
+from google import genai
+from google.genai import types
 from app.config import settings
 
 router = APIRouter(prefix="/planner", tags=["Trip Planner"])
 
-# Khởi tạo model riêng cho planner (không dùng session)
-genai.configure(api_key=settings.GEMINI_API_KEY)
-_planner_model = genai.GenerativeModel(
-    model_name="gemini-3.6-flash",
-    generation_config=genai.GenerationConfig(
-        temperature=0.8,
-        max_output_tokens=4096,
-    ),
-)
+_client = genai.Client(api_key=settings.GEMINI_API_KEY)
+_MODEL = "gemini-3.6-flash"
 
 
 class PlanRequest(BaseModel):
@@ -140,7 +134,14 @@ async def create_plan(req: PlanRequest):
     prompt = _build_planner_prompt(req)
 
     try:
-        response = _planner_model.generate_content(prompt)
+        response = _client.models.generate_content(
+            model=_MODEL,
+            contents=prompt,
+            config=types.GenerateContentConfig(
+                temperature=0.8,
+                max_output_tokens=4096,
+            ),
+        )
         raw = response.text.strip()
 
         # Làm sạch JSON: bỏ markdown wrapper nếu có

@@ -1,5 +1,4 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dio/dio.dart';
 import '../data/auth_repository.dart';
 import '../../../core/network/api_client.dart';
@@ -10,7 +9,7 @@ class AuthState {
   final AuthStatus status;
   final bool isLoading;
   final String? error;
-  final String? email; // Email user đang đăng nhập
+  final String? email;
 
   const AuthState({
     this.status = AuthStatus.initial,
@@ -19,7 +18,12 @@ class AuthState {
     this.email,
   });
 
-  AuthState copyWith({AuthStatus? status, bool? isLoading, String? error, String? email}) {
+  AuthState copyWith({
+    AuthStatus? status,
+    bool? isLoading,
+    String? error,
+    String? email,
+  }) {
     return AuthState(
       status: status ?? this.status,
       isLoading: isLoading ?? this.isLoading,
@@ -36,71 +40,111 @@ class AuthNotifier extends StateNotifier<AuthState> {
     checkAuth();
   }
 
-  // Kiá»ƒm tra tráº¡ng thÃ¡i Ä‘Äƒng nháº­p
   Future<void> checkAuth() async {
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('access_token');
-    if (token != null) {
-      state = state.copyWith(status: AuthStatus.authenticated);
-    } else {
-      state = state.copyWith(status: AuthStatus.unauthenticated);
-    }
+    // Khi app khoi dong, kiem tra token trong SharedPreferences
+    // API client tu dong them token vao header, neu khong co se bi 401
+    try {
+      final result = await apiClient.get('/users/me');
+      if (result.statusCode == 200) {
+        final email = result.data['data']?['email'] as String? ?? '';
+        state = state.copyWith(
+          status: AuthStatus.authenticated,
+          email: email,
+        );
+        return;
+      }
+    } catch (_) {}
+    state = state.copyWith(status: AuthStatus.unauthenticated);
   }
 
-  // Xá»­ lÃ½ Ä‘Äƒng nháº­p
   Future<bool> login(String email, String password) async {
     state = state.copyWith(isLoading: true, error: null);
     try {
       final data = await _repo.login(email, password);
-      final tokens = data['data'];
-      await _repo.saveTokens(tokens['access_token'], tokens['refresh_token']);
-      state = state.copyWith(status: AuthStatus.authenticated, isLoading: false, email: email);
+      // Response: {success: true, data: {access_token, refresh_token}}
+      final tokenData = data['data'] as Map<String, dynamic>?;
+      if (tokenData == null) {
+        state = state.copyWith(
+          isLoading: false,
+          error: 'Loi dang nhap. Vui long thu lai.',
+        );
+        return false;
+      }
+      await _repo.saveTokens(
+        tokenData['access_token'] as String,
+        tokenData['refresh_token'] as String,
+      );
+      state = state.copyWith(
+        status: AuthStatus.authenticated,
+        isLoading: false,
+        email: email,
+      );
       return true;
-    } catch (e) {
+    } on DioException catch (e) {
       state = state.copyWith(
         isLoading: false,
-        error: _getFriendlyError(e),
+        error: _getError(e),
+      );
+      return false;
+    } catch (_) {
+      state = state.copyWith(
+        isLoading: false,
+        error: 'Loi ket noi. Vui long thu lai.',
       );
       return false;
     }
   }
 
-  // Xá»­ lÃ½ Ä‘Äƒng kÃ½
   Future<bool> register(String name, String email, String password) async {
     state = state.copyWith(isLoading: true, error: null);
     try {
       final data = await _repo.register(name, email, password);
-      final tokens = data['data'];
-      await _repo.saveTokens(tokens['access_token'], tokens['refresh_token']);
-      state = state.copyWith(status: AuthStatus.authenticated, isLoading: false, email: email);
+      final tokenData = data['data'] as Map<String, dynamic>?;
+      if (tokenData == null) {
+        state = state.copyWith(
+          isLoading: false,
+          error: 'Loi dang ky. Vui long thu lai.',
+        );
+        return false;
+      }
+      await _repo.saveTokens(
+        tokenData['access_token'] as String,
+        tokenData['refresh_token'] as String,
+      );
+      state = state.copyWith(
+        status: AuthStatus.authenticated,
+        isLoading: false,
+        email: email,
+      );
       return true;
-    } catch (e) {
+    } on DioException catch (e) {
       state = state.copyWith(
         isLoading: false,
-        error: _getFriendlyError(e),
+        error: _getError(e),
+      );
+      return false;
+    } catch (_) {
+      state = state.copyWith(
+        isLoading: false,
+        error: 'Loi ket noi. Vui long thu lai.',
       );
       return false;
     }
   }
 
-  // Xá»­ lÃ½ Ä‘Äƒng xuáº¥t
   Future<void> logout() async {
     await _repo.deleteTokens();
-    state = state.copyWith(status: AuthStatus.unauthenticated);
+    state = const AuthState(status: AuthStatus.unauthenticated);
   }
 
-  // Chuyá»ƒn Ä‘á»•i lá»—i thÃ nh thÃ´ng bÃ¡o dá»… hiá»ƒu
-  String _getFriendlyError(dynamic error) {
-    if (error is DioException) {
-      if (error.response?.statusCode == 401) {
-        return 'Email hoáº·c máº­t kháº©u khÃ´ng Ä‘Ãºng.';
-      }
-      if (error.response?.statusCode == 409) {
-        return 'Email Ä‘Ã£ Ä‘Æ°á»£c sá»­ dá»¥ng.';
-      }
-      return 'Lá»—i káº¿t ná»‘i. Vui lÃ²ng thá»­ láº¡i sau.';
-    }
-    return 'ÄÃ£ xáº£y ra lá»—i khÃ´ng xÃ¡c Ä‘á»‹nh.';
+  String _getError(DioException e) {
+    final status = e.response?.statusCode;
+    final msg = e.response?.data?['message'];
+    if (status == 401) return 'Email hoac mat khau khong dung.';
+    if (status == 409) return 'Email nay da duoc su dung.';
+    if (status == 400 && msg is String) return msg;
+    if (status == 400 && msg is List) return (msg as List).first.toString();
+    return 'Loi ket noi. Vui long thu lai.';
   }
 }
 
