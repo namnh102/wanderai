@@ -1,8 +1,8 @@
 # PROJECT STATUS — WANDERAI (GoMate)
 
-**Last Updated:** 2026-10-01T15:26+07:00
-**Current Phase:** AI Chat Wired (TASK 01 + TASK 02 + TASK 03 complete)
-**Current Milestone:** M1-in-progress (auth + AI chat functional end-to-end)
+**Last Updated:** 2026-10-01T15:45+07:00
+**Current Phase:** Trip Planning & CRUD (TASK 01 - TASK 04 complete)
+**Current Milestone:** M1-in-progress (auth + AI chat + Trips CRUD functional end-to-end)
 
 ---
 
@@ -32,11 +32,16 @@
 | 20 | Flutter web — runs on Chrome, no white screen | Debug service connected | 2026-10-01 |
 | 21 | Flutter thin slice — Home loads destinations from API | GET /destinations → grid | 2026-10-01 |
 | 22 | AI tests — 10 passed | `pytest tests/ -v` → 10 passed | 2026-10-01 |
-| 23 | Flutter tests — 23 passed | `flutter test` → 23 passed | 2026-10-01 |
+| 23 | Flutter tests — 34 passed | `flutter test` → 34 passed | 2026-10-01 |
 | 24 | Governance docs | project-audit.md, ADR-001, ADR-002, data-sources.md, data-dictionary.md, local-environment.md, rag-pipeline.md | 2026-10-01 |
 | 25 | NestJS /ai/chat protected with JwtAuthGuard | Returns 401 without token, 200 with JWT | 2026-10-01 |
 | 26 | Flutter AI chat models, repo, provider, UI screen | Connected to /ai route in app_router.dart | 2026-10-01 |
 | 27 | AI Chat API & Architecture documentation | `docs/api/ai-chat-api.md`, `docs/ai/ai-chat.md` | 2026-10-01 |
+| 28 | ADR-003 Trip Context Attributes Schema Extension | `docs/architecture/decisions/ADR-003-trip-context-schema.md` | 2026-10-01 |
+| 29 | Prisma migration for Trip Context | `20261001083200_add_trip_context_fields` | 2026-10-01 |
+| 30 | Trips backend authorization & validation | 11 E2E security & CRUD tests | 2026-10-01 |
+| 31 | Flutter Trips flow & TripContext abstraction | 11 Flutter unit & widget tests | 2026-10-01 |
+| 32 | Trips API & Flow documentation | `docs/api/trips-api.md`, `docs/architecture/trip-flow.md` | 2026-10-01 |
 
 ## In Progress
 
@@ -56,10 +61,10 @@
 
 | Suite | Pass | Fail | Total |
 |-------|------|------|-------|
-| Backend E2E (Jest) | 14 | 0 | 14 |
+| Backend E2E (Jest) | 25 | 0 | 25 |
 | AI (pytest) | 10 | 0 | 10 |
-| Flutter (flutter_test) | 23 | 0 | 23 |
-| **Total** | **47** | **0** | **47** |
+| Flutter (flutter_test) | 34 | 0 | 34 |
+| **Total** | **69** | **0** | **69** |
 
 ## Risks
 

@@ -6,6 +6,9 @@ import '../../features/auth/presentation/register_screen.dart';
 import '../../features/auth/providers/auth_provider.dart';
 import '../../features/home/presentation/home_screen.dart';
 import '../../features/ai_chat/presentation/ai_chat_screen.dart';
+import '../../features/trips/presentation/trip_list_screen.dart';
+import '../../features/trips/presentation/trip_form_screen.dart';
+import '../../features/trips/presentation/trip_detail_screen.dart';
 
 // Placeholder screens for tabs not yet implemented
 class _PlaceholderScreen extends StatelessWidget {
@@ -70,6 +73,16 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '/register',
         builder: (context, state) => const RegisterScreen(),
       ),
+      GoRoute(
+        path: '/trips/create',
+        builder: (context, state) => const TripFormScreen(),
+      ),
+      GoRoute(
+        path: '/trips/:id',
+        builder: (context, state) => TripDetailScreen(
+          tripId: state.pathParameters['id']!,
+        ),
+      ),
       ShellRoute(
         navigatorKey: _shellNavigatorKey,
         builder: (context, state, child) => _MainScaffold(child: child),
@@ -78,7 +91,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           GoRoute(path: '/companion', builder: (_, __) => const _PlaceholderScreen(title: 'Dong hanh', icon: Icons.diversity_1)),
           GoRoute(path: '/ai', builder: (_, __) => const AiChatScreen()),
           GoRoute(path: '/safety', builder: (_, __) => const _PlaceholderScreen(title: 'An toan', icon: Icons.shield)),
-          GoRoute(path: '/trips', builder: (_, __) => const _PlaceholderScreen(title: 'Chuyen di', icon: Icons.luggage)),
+          GoRoute(path: '/trips', builder: (_, __) => const TripListScreen()),
         ],
       ),
     ],

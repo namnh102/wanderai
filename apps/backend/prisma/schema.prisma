@@ -353,6 +353,9 @@ model Trip {
   startDate       DateTime?  @map("start_date") @db.Date
   endDate         DateTime?  @map("end_date") @db.Date
   totalBudget     Int?       @map("total_budget")       // VND integer
+  currency        String     @default("VND")
+  travelStyle     TravelStyle? @map("travel_style")
+  interests       String[]   @default([])
   status          TripStatus @default(DRAFT)
   coverImage      String?    @map("cover_image")
   isAiGenerated   Boolean    @default(false) @map("is_ai_generated")
