@@ -1,0 +1,1417 @@
+{
+  "source": "OpenStreetMap",
+  "api": "Overpass API",
+  "license": "ODbL 1.0 (© OpenStreetMap contributors)",
+  "count": 111,
+  "elements": [
+    {
+      "type": "node",
+      "id": 729406384,
+      "lat": 16.0874373,
+      "lon": 108.1445387,
+      "tags": {
+        "amenity": "cafe",
+        "name": "CaPhe Thu Uyen"
+      },
+      "_region": "da_nang"
+    },
+    {
+      "type": "node",
+      "id": 729406385,
+      "lat": 16.0746726,
+      "lon": 108.2187015,
+      "tags": {
+        "amenity": "cafe",
+        "name": "Cafe Win"
+      },
+      "_region": "da_nang"
+    },
+    {
+      "type": "node",
+      "id": 729406386,
+      "lat": 16.0627174,
+      "lon": 108.208943,
+      "tags": {
+        "amenity": "cafe",
+        "name": "CafeKhanh Ly"
+      },
+      "_region": "da_nang"
+    },
+    {
+      "type": "node",
+      "id": 729406387,
+      "lat": 16.0347187,
+      "lon": 108.2446539,
+      "tags": {
+        "amenity": "cafe",
+        "name": "ThanhBinh Coffee"
+      },
+      "_region": "da_nang"
+    },
+    {
+      "type": "node",
+      "id": 729406388,
+      "lat": 16.0632999,
+      "lon": 108.1601536,
+      "tags": {
+        "amenity": "cafe",
+        "name": "CaPhe Fantasy"
+      },
+      "_region": "da_nang"
+    },
+    {
+      "type": "node",
+      "id": 729406389,
+      "lat": 16.0657433,
+      "lon": 108.2077628,
+      "tags": {
+        "amenity": "cafe",
+        "name": "CaPhe Lang Tien"
+      },
+      "_region": "da_nang"
+    },
+    {
+      "type": "node",
+      "id": 729406390,
+      "lat": 16.0786302,
+      "lon": 108.1477511,
+      "tags": {
+        "amenity": "cafe",
+        "name": "KieuLien Coffee"
+      },
+      "_region": "da_nang"
+    },
+    {
+      "type": "node",
+      "id": 729406391,
+      "lat": 16.0684586,
+      "lon": 108.1500026,
+      "tags": {
+        "amenity": "cafe",
+        "name": "Cafe Truc Phuong"
+      },
+      "_region": "da_nang"
+    },
+    {
+      "type": "node",
+      "id": 729406392,
+      "lat": 16.0785765,
+      "lon": 108.2193388,
+      "tags": {
+        "amenity": "cafe",
+        "name": "Ca Phe 83"
+      },
+      "_region": "da_nang"
+    },
+    {
+      "type": "node",
+      "id": 729406393,
+      "lat": 16.0640577,
+      "lon": 108.2208466,
+      "tags": {
+        "amenity": "cafe",
+        "name": "Cafe Dong Xanh"
+      },
+      "_region": "da_nang"
+    },
+    {
+      "type": "node",
+      "id": 729406394,
+      "lat": 16.0736841,
+      "lon": 108.2182886,
+      "tags": {
+        "amenity": "cafe",
+        "name": "CafeTo Be"
+      },
+      "_region": "da_nang"
+    },
+    {
+      "type": "node",
+      "id": 729406396,
+      "lat": 16.0021817,
+      "lon": 108.2670205,
+      "tags": {
+        "amenity": "cafe",
+        "indoor_seating": "yes",
+        "name": "MuoiChau Coffee",
+        "outdoor_seating": "yes"
+      },
+      "_region": "da_nang"
+    },
+    {
+      "type": "node",
+      "id": 729406397,
+      "lat": 16.0668568,
+      "lon": 108.1743586,
+      "tags": {
+        "amenity": "cafe",
+        "name": "CaPhe Sao Mai"
+      },
+      "_region": "da_nang"
+    },
+    {
+      "type": "node",
+      "id": 729406398,
+      "lat": 16.0762311,
+      "lon": 108.2308433,
+      "tags": {
+        "amenity": "cafe",
+        "name": "MienThao Coffee"
+      },
+      "_region": "da_nang"
+    },
+    {
+      "type": "node",
+      "id": 729406399,
+      "lat": 16.0539382,
+      "lon": 108.2208037,
+      "tags": {
+        "amenity": "cafe",
+        "name": "GmcCoffee"
+      },
+      "_region": "da_nang"
+    },
+    {
+      "type": "node",
+      "id": 729406400,
+      "lat": 16.0827332,
+      "lon": 108.2219624,
+      "tags": {
+        "amenity": "cafe",
+        "name": "CaPhe 3 Ladies"
+      },
+      "_region": "da_nang"
+    },
+    {
+      "type": "node",
+      "id": 729406401,
+      "lat": 16.066281,
+      "lon": 108.1920523,
+      "tags": {
+        "amenity": "cafe",
+        "name": "OnenineCoffee"
+      },
+      "_region": "da_nang"
+    },
+    {
+      "type": "node",
+      "id": 729406402,
+      "lat": 16.0515981,
+      "lon": 108.1700044,
+      "tags": {
+        "amenity": "cafe",
+        "name": "Ca Phe Thuan"
+      },
+      "_region": "da_nang"
+    },
+    {
+      "type": "node",
+      "id": 729406403,
+      "lat": 16.0597687,
+      "lon": 108.2135027,
+      "tags": {
+        "amenity": "cafe",
+        "name": "CafeGiai Khat 204"
+      },
+      "_region": "da_nang"
+    },
+    {
+      "type": "node",
+      "id": 729406404,
+      "lat": 16.0719493,
+      "lon": 108.2127548,
+      "tags": {
+        "amenity": "cafe",
+        "name": "CaPhe Konia"
+      },
+      "_region": "da_nang"
+    },
+    {
+      "type": "node",
+      "id": 729406405,
+      "lat": 16.0623504,
+      "lon": 108.208896,
+      "tags": {
+        "amenity": "cafe",
+        "name": "VuonNguyet Khue Vien Coffee"
+      },
+      "_region": "da_nang"
+    },
+    {
+      "type": "node",
+      "id": 729406406,
+      "lat": 16.0494377,
+      "lon": 108.2133794,
+      "tags": {
+        "amenity": "cafe",
+        "name": "CafeNguyen"
+      },
+      "_region": "da_nang"
+    },
+    {
+      "type": "node",
+      "id": 729406407,
+      "lat": 16.0681394,
+      "lon": 108.1818645,
+      "tags": {
+        "amenity": "cafe",
+        "name": "NgocVan Coffee"
+      },
+      "_region": "da_nang"
+    },
+    {
+      "type": "node",
+      "id": 729406408,
+      "lat": 16.0654507,
+      "lon": 108.2078514,
+      "tags": {
+        "amenity": "cafe",
+        "name": "CafeLuna"
+      },
+      "_region": "da_nang"
+    },
+    {
+      "type": "node",
+      "id": 729406410,
+      "lat": 16.0674462,
+      "lon": 108.1525529,
+      "tags": {
+        "amenity": "cafe",
+        "name": "CafeBao Dang"
+      },
+      "_region": "da_nang"
+    },
+    {
+      "type": "node",
+      "id": 729406411,
+      "lat": 16.0703982,
+      "lon": 108.2013201,
+      "tags": {
+        "amenity": "cafe",
+        "name": "AnhLinh Coffee"
+      },
+      "_region": "da_nang"
+    },
+    {
+      "type": "node",
+      "id": 729406412,
+      "lat": 16.0789002,
+      "lon": 108.2328072,
+      "tags": {
+        "amenity": "cafe",
+        "name": "HoaTieu Coffee"
+      },
+      "_region": "da_nang"
+    },
+    {
+      "type": "node",
+      "id": 729406413,
+      "lat": 16.0582376,
+      "lon": 108.2126391,
+      "tags": {
+        "amenity": "cafe",
+        "name": "Giai Khat Quang"
+      },
+      "_region": "da_nang"
+    },
+    {
+      "type": "node",
+      "id": 729406414,
+      "lat": 16.0488551,
+      "lon": 108.2168233,
+      "tags": {
+        "amenity": "cafe",
+        "name": "Cafe72"
+      },
+      "_region": "da_nang"
+    },
+    {
+      "type": "node",
+      "id": 729406415,
+      "lat": 16.0648206,
+      "lon": 108.2164746,
+      "tags": {
+        "amenity": "cafe",
+        "name": "ThanhHuong Coffee"
+      },
+      "_region": "da_nang"
+    },
+    {
+      "type": "node",
+      "id": 729406416,
+      "lat": 16.0348682,
+      "lon": 108.1778991,
+      "tags": {
+        "amenity": "cafe",
+        "name": "CaPhe Hoang Anh"
+      },
+      "_region": "da_nang"
+    },
+    {
+      "type": "node",
+      "id": 729406417,
+      "lat": 16.0851302,
+      "lon": 108.2196914,
+      "tags": {
+        "amenity": "cafe",
+        "name": "AnhLinh Coffee"
+      },
+      "_region": "da_nang"
+    },
+    {
+      "type": "node",
+      "id": 729406418,
+      "lat": 16.0653619,
+      "lon": 108.2069099,
+      "tags": {
+        "amenity": "cafe",
+        "name": "VuonThao Coffee"
+      },
+      "_region": "da_nang"
+    },
+    {
+      "type": "node",
+      "id": 729406419,
+      "lat": 16.0569901,
+      "lon": 108.2128107,
+      "tags": {
+        "amenity": "cafe",
+        "name": "324Coffee"
+      },
+      "_region": "da_nang"
+    },
+    {
+      "type": "node",
+      "id": 729406420,
+      "lat": 16.0738518,
+      "lon": 108.2032513,
+      "tags": {
+        "amenity": "restaurant",
+        "name": "Nhà Hàng Chay & Cà Phê Thúp An"
+      },
+      "_region": "da_nang"
+    },
+    {
+      "type": "node",
+      "id": 729406421,
+      "lat": 16.0452824,
+      "lon": 108.2227242,
+      "tags": {
+        "amenity": "cafe",
+        "name": "PhoSao Coffee",
+        "name:de": "PhoSao Coffee"
+      },
+      "_region": "da_nang"
+    },
+    {
+      "type": "node",
+      "id": 729406422,
+      "lat": 16.0822257,
+      "lon": 108.2399242,
+      "tags": {
+        "amenity": "cafe",
+        "name": "BaoNhi Coffee"
+      },
+      "_region": "da_nang"
+    },
+    {
+      "type": "node",
+      "id": 729406423,
+      "lat": 16.058681,
+      "lon": 108.2122153,
+      "tags": {
+        "amenity": "cafe",
+        "name": "CafeBan Toi"
+      },
+      "_region": "da_nang"
+    },
+    {
+      "type": "node",
+      "id": 729406424,
+      "lat": 16.0360488,
+      "lon": 108.1832421,
+      "tags": {
+        "amenity": "cafe",
+        "name": "CaPhe Nhat Linh"
+      },
+      "_region": "da_nang"
+    },
+    {
+      "type": "node",
+      "id": 729406425,
+      "lat": 16.0710077,
+      "lon": 108.2212999,
+      "tags": {
+        "amenity": "cafe",
+        "name": "CafeThoang Sai Gon"
+      },
+      "_region": "da_nang"
+    },
+    {
+      "type": "node",
+      "id": 729406426,
+      "lat": 16.0358065,
+      "lon": 108.1822067,
+      "tags": {
+        "amenity": "cafe",
+        "name": "CaPhe Trung"
+      },
+      "_region": "da_nang"
+    },
+    {
+      "type": "node",
+      "id": 729406427,
+      "lat": 16.0713363,
+      "lon": 108.1914818,
+      "tags": {
+        "amenity": "cafe",
+        "name": "CaPhe Thu Dung"
+      },
+      "_region": "da_nang"
+    },
+    {
+      "type": "node",
+      "id": 729406428,
+      "lat": 16.0871156,
+      "lon": 108.2413157,
+      "tags": {
+        "amenity": "cafe",
+        "name": "Cafe219"
+      },
+      "_region": "da_nang"
+    },
+    {
+      "type": "node",
+      "id": 729406429,
+      "lat": 16.0871969,
+      "lon": 108.1443178,
+      "tags": {
+        "amenity": "cafe",
+        "name": "ThanhThuy Coffee"
+      },
+      "_region": "da_nang"
+    },
+    {
+      "type": "node",
+      "id": 729406430,
+      "lat": 16.0677692,
+      "lon": 108.1593811,
+      "tags": {
+        "amenity": "cafe",
+        "name": "CaPhe Long"
+      },
+      "_region": "da_nang"
+    },
+    {
+      "type": "node",
+      "id": 729406431,
+      "lat": 16.0522905,
+      "lon": 108.2373783,
+      "tags": {
+        "amenity": "cafe",
+        "name": "MyDuyen Coffee"
+      },
+      "_region": "da_nang"
+    },
+    {
+      "type": "node",
+      "id": 729406432,
+      "lat": 16.0659805,
+      "lon": 108.2200312,
+      "tags": {
+        "amenity": "cafe",
+        "name": "Ca Phe New Life"
+      },
+      "_region": "da_nang"
+    },
+    {
+      "type": "node",
+      "id": 729406433,
+      "lat": 16.0750293,
+      "lon": 108.1492071,
+      "tags": {
+        "amenity": "cafe",
+        "name": "CaPhe Bong Da 14"
+      },
+      "_region": "da_nang"
+    },
+    {
+      "type": "node",
+      "id": 729406434,
+      "lat": 16.0707379,
+      "lon": 108.2203416,
+      "tags": {
+        "amenity": "cafe",
+        "name": "CaPhe New Life"
+      },
+      "_region": "da_nang"
+    },
+    {
+      "type": "node",
+      "id": 729406436,
+      "lat": 16.0951751,
+      "lon": 108.2444155,
+      "tags": {
+        "amenity": "cafe",
+        "name": "ThanhHuong Coffee"
+      },
+      "_region": "da_nang"
+    },
+    {
+      "type": "node",
+      "id": 310727632,
+      "lat": 21.0473212,
+      "lon": 105.8376261,
+      "tags": {
+        "amenity": "restaurant",
+        "name": "Cửa Hàng Bánh Tôm Hồ Tây",
+        "name:vi": "Bánh tôm Hồ Tây",
+        "name:zh": "西湖蝦饼餐厅",
+        "name:zh-Hans": "西湖蝦饼餐厅",
+        "name:zh-Hant": "西湖蝦餅餐廳"
+      },
+      "_region": "hanoi"
+    },
+    {
+      "type": "node",
+      "id": 335641430,
+      "lat": 21.0340035,
+      "lon": 105.8471444,
+      "tags": {
+        "addr:city": "Hà Nội",
+        "name": "Khách Sạn Đức Thái",
+        "tourism": "hotel"
+      },
+      "_region": "hanoi"
+    },
+    {
+      "type": "node",
+      "id": 422416741,
+      "lat": 21.0273274,
+      "lon": 105.8220368,
+      "tags": {
+        "amenity": "cafe",
+        "name": "Cà Phê Cây Bàng Đổ"
+      },
+      "_region": "hanoi"
+    },
+    {
+      "type": "node",
+      "id": 423736651,
+      "lat": 21.0378611,
+      "lon": 105.8010007,
+      "tags": {
+        "addr:city": "Hà Nội",
+        "addr:district": "Cau Giay",
+        "addr:housenumber": "118",
+        "addr:postcode": "10000",
+        "addr:province": "Hà Nội",
+        "addr:street": "Đường Nguyễn Khánh Toàn",
+        "addr:subdistrict": "Cầu Giấy",
+        "amenity": "cafe",
+        "name": "Cà Phê Kafa",
+        "opening_hours": "Mo-Su 07:00-23:00",
+        "payment:cash": "yes",
+        "phone": "+84972954668"
+      },
+      "_region": "hanoi"
+    },
+    {
+      "type": "node",
+      "id": 442030353,
+      "lat": 21.0222319,
+      "lon": 105.84695,
+      "tags": {
+        "amenity": "restaurant",
+        "diet:vegetarian": "only",
+        "name": "Nhà Hàng Chay Phương Nam"
+      },
+      "_region": "hanoi"
+    },
+    {
+      "type": "node",
+      "id": 442030367,
+      "lat": 21.0217552,
+      "lon": 105.8563856,
+      "tags": {
+        "amenity": "restaurant",
+        "name": "Nhà hàng Nam Phương"
+      },
+      "_region": "hanoi"
+    },
+    {
+      "type": "node",
+      "id": 442030389,
+      "lat": 21.0169539,
+      "lon": 105.852831,
+      "tags": {
+        "amenity": "restaurant",
+        "name": "Nha Hang Little Italian"
+      },
+      "_region": "hanoi"
+    },
+    {
+      "type": "node",
+      "id": 442031761,
+      "lat": 21.0265868,
+      "lon": 105.8430053,
+      "tags": {
+        "addr:street": "Nam Ngư",
+        "amenity": "restaurant",
+        "name": "Nha Hang Indochine"
+      },
+      "_region": "hanoi"
+    },
+    {
+      "type": "node",
+      "id": 442031782,
+      "lat": 21.0273109,
+      "lon": 105.8435309,
+      "tags": {
+        "addr:city": "Hà Nội",
+        "addr:country": "VN",
+        "name": "Khách Sạn Prince",
+        "tourism": "hotel"
+      },
+      "_region": "hanoi"
+    },
+    {
+      "type": "node",
+      "id": 442033049,
+      "lat": 21.0258326,
+      "lon": 105.8463672,
+      "tags": {
+        "addr:city": "Hà Nội",
+        "addr:country": "VN",
+        "addr:district": "Hoàn Kiếm",
+        "addr:housenumber": "49",
+        "addr:province": "Hà Nội",
+        "addr:street": "Phố Hai Bà Trưng",
+        "addr:subdistrict": "Trần Hưng Đạo",
+        "air_conditioning": "yes",
+        "brand": "Somerset",
+        "email": "enquiry.hanoi@the-ascott.com",
+        "internet_access": "yes",
+        "name": "Somerset Grand Hanoi",
+        "phone": "+84 24 3934 2342",
+        "reservation": "yes",
+        "stars": "5",
+        "tourism": "hotel",
+        "website": "https://www.discoverasr.com/en/somerset-serviced-residence/vietnam/somerset-grand-hanoi"
+      },
+      "_region": "hanoi"
+    },
+    {
+      "type": "node",
+      "id": 442910045,
+      "lat": 21.0098613,
+      "lon": 105.8476486,
+      "tags": {
+        "amenity": "cafe",
+        "name": "Cà Phê Big One"
+      },
+      "_region": "hanoi"
+    },
+    {
+      "type": "node",
+      "id": 442977691,
+      "lat": 21.0113724,
+      "lon": 105.8495887,
+      "tags": {
+        "amenity": "cafe",
+        "brand": "Highlands Coffee",
+        "brand:wikidata": "Q5759361",
+        "brand:wikipedia": "vi:Highlands Coffee",
+        "cuisine": "coffee_shop;vietnamese",
+        "internet_access": "wlan",
+        "level": "4",
+        "name": "Highlands Coffee",
+        "name:en": "Highlands Coffee",
+        "takeaway": "yes"
+      },
+      "_region": "hanoi"
+    },
+    {
+      "type": "node",
+      "id": 442994566,
+      "lat": 21.028523,
+      "lon": 105.8061561,
+      "tags": {
+        "amenity": "restaurant",
+        "cuisine": "sushi",
+        "name": "Sushi Tiger"
+      },
+      "_region": "hanoi"
+    },
+    {
+      "type": "node",
+      "id": 443000681,
+      "lat": 21.0741493,
+      "lon": 105.8154687,
+      "tags": {
+        "amenity": "restaurant",
+        "brand": "Sen",
+        "name": "Sen Tây Hồ",
+        "name:vi": "Sen Tây Hồ",
+        "name:zh": "西湖莲餐厅",
+        "name:zh-Hans": "西湖莲餐厅",
+        "name:zh-Hant": "西湖蓮餐廳",
+        "website": "https://nhahangsen.vn/"
+      },
+      "_region": "hanoi"
+    },
+    {
+      "type": "node",
+      "id": 443033827,
+      "lat": 21.0274885,
+      "lon": 105.854501,
+      "tags": {
+        "artist_name": "Vi Thị Hoa",
+        "height": "10.1",
+        "historic": "memorial",
+        "inscription": "Lý Thái Tổ // 974 - 1028",
+        "material": "bronze",
+        "memorial": "statue",
+        "name": "Tượng đài Lý Thái Tổ",
+        "name:en": "Statue of King Ly Thai To",
+        "name:fr": "Roi Ly Thai To",
+        "name:id": "Patung Raja Ly Thai To",
+        "name:ru": "Имрератор Ли Тхай-То",
+        "name:zh": "黎太祖皇帝雕像",
+        "subject:wikidata": "Q716945",
+        "subject:wikipedia": "vi:Lý Thái Tổ"
+      },
+      "_region": "hanoi"
+    },
+    {
+      "type": "node",
+      "id": 443036957,
+      "lat": 21.0708271,
+      "lon": 105.7770678,
+      "tags": {
+        "amenity": "restaurant"
+      },
+      "_region": "hanoi"
+    },
+    {
+      "type": "node",
+      "id": 445345255,
+      "lat": 21.0343278,
+      "lon": 105.8504388,
+      "tags": {
+        "addr:city": "Hà Nội",
+        "addr:district": "Phường Hoàn Kiếm",
+        "addr:housenumber": "48",
+        "addr:province": "Thành phố Hà Nội",
+        "addr:street": "Hàng Ngang",
+        "museum": "history",
+        "name": "Nhà 48 phố Hàng Ngang",
+        "name:en": "House number 48 Hang Ngang Street",
+        "name:zh": "48号横行街民居",
+        "tourism": "museum",
+        "wikidata": "Q10800786",
+        "wikipedia": "vi:Nhà 48 Hàng Ngang"
+      },
+      "_region": "hanoi"
+    },
+    {
+      "type": "node",
+      "id": 446033479,
+      "lat": 21.0137437,
+      "lon": 105.8132213,
+      "tags": {
+        "addr:city": "Hà Nội",
+        "addr:country": "VN",
+        "name": "Thành Công",
+        "note": "128",
+        "tourism": "hotel"
+      },
+      "_region": "hanoi"
+    },
+    {
+      "type": "node",
+      "id": 446043000,
+      "lat": 21.0297549,
+      "lon": 105.8277638,
+      "tags": {
+        "amenity": "restaurant",
+        "name": "Trà Xuân Tửu",
+        "note": "Tr$$ Xu$$n T$$$u"
+      },
+      "_region": "hanoi"
+    },
+    {
+      "type": "node",
+      "id": 446043425,
+      "lat": 21.0288674,
+      "lon": 105.8431006,
+      "tags": {
+        "amenity": "restaurant",
+        "name": "Cây Si"
+      },
+      "_region": "hanoi"
+    },
+    {
+      "type": "node",
+      "id": 446044222,
+      "lat": 21.0083549,
+      "lon": 105.8567708,
+      "tags": {
+        "amenity": "restaurant",
+        "name": "Nhà hàng Thành Lộc",
+        "note": "Nh$$ h$$ng Th$$nh L$$$c"
+      },
+      "_region": "hanoi"
+    },
+    {
+      "type": "node",
+      "id": 481837528,
+      "lat": 21.041759,
+      "lon": 105.8702416,
+      "tags": {
+        "amenity": "cafe",
+        "name": "Cà Phê Hao"
+      },
+      "_region": "hanoi"
+    },
+    {
+      "type": "node",
+      "id": 707253009,
+      "lat": 21.0353948,
+      "lon": 105.8533211,
+      "tags": {
+        "addr:city": "Hà Nội",
+        "name": "Khách Sạn Đông Á",
+        "tourism": "hotel"
+      },
+      "_region": "hanoi"
+    },
+    {
+      "type": "node",
+      "id": 707253042,
+      "lat": 21.0316783,
+      "lon": 105.8479749,
+      "tags": {
+        "addr:city": "Hà Nội",
+        "name": "Thu Giang Guest House",
+        "tourism": "hotel"
+      },
+      "_region": "hanoi"
+    },
+    {
+      "type": "node",
+      "id": 708488307,
+      "lat": 21.0326388,
+      "lon": 105.8495639,
+      "tags": {
+        "addr:city": "Hà Nội",
+        "name": "Real Darling Cafe Guesthouse",
+        "tourism": "hotel"
+      },
+      "_region": "hanoi"
+    },
+    {
+      "type": "node",
+      "id": 708488311,
+      "lat": 21.0346495,
+      "lon": 105.8517404,
+      "tags": {
+        "addr:city": "Hà Nội",
+        "addr:district": "Phường Hoàn Kiếm",
+        "addr:housenumber": "49",
+        "addr:province": "Thành phố Hà Nội",
+        "addr:street": "Lương Ngọc Quyến",
+        "description": "Hanoi Marriotte Hotel",
+        "name": "Khách Sạn Classic 2",
+        "tourism": "hotel"
+      },
+      "_region": "hanoi"
+    },
+    {
+      "type": "node",
+      "id": 708488313,
+      "lat": 21.0354757,
+      "lon": 105.8527489,
+      "tags": {
+        "addr:city": "Hà Nội",
+        "name": "Khách Sạn Indochina Queen",
+        "tourism": "hotel"
+      },
+      "_region": "hanoi"
+    },
+    {
+      "type": "node",
+      "id": 708488315,
+      "lat": 21.0293871,
+      "lon": 105.8480711,
+      "tags": {
+        "addr:city": "Hà Nội",
+        "name": "Khách Sạn Hanoi Backpackers",
+        "tourism": "hotel"
+      },
+      "_region": "hanoi"
+    },
+    {
+      "type": "node",
+      "id": 708488335,
+      "lat": 21.0354506,
+      "lon": 105.8525879,
+      "tags": {
+        "addr:city": "Hà Nội",
+        "name": "Khách Sạn Hanoi Phoenix II",
+        "tourism": "hotel"
+      },
+      "_region": "hanoi"
+    },
+    {
+      "type": "node",
+      "id": 708488337,
+      "lat": 21.0334478,
+      "lon": 105.8500291,
+      "tags": {
+        "addr:city": "Hà Nội",
+        "addr:district": "Phường Hoàn Kiếm",
+        "addr:housenumber": "16",
+        "addr:postcode": "100000",
+        "addr:province": "Thành phố Hà Nội",
+        "addr:street": "Lương Văn Can",
+        "name": "Phu Hoa",
+        "name:en": "Phu Hoa Tourist Guest House",
+        "note": "add address",
+        "source": "survey",
+        "tourism": "hotel"
+      },
+      "_region": "hanoi"
+    },
+    {
+      "type": "node",
+      "id": 708488339,
+      "lat": 21.033677,
+      "lon": 105.8476149,
+      "tags": {
+        "addr:city": "Hà Nội",
+        "addr:district": "Phường Hoàn Kiếm",
+        "addr:housenumber": "11",
+        "addr:province": "Thành phố Hà Nội",
+        "addr:street": "Bát Đàn",
+        "name": "Khách Sạn Little Hanoi Diamond",
+        "source": "survey",
+        "tourism": "hotel"
+      },
+      "_region": "hanoi"
+    },
+    {
+      "type": "node",
+      "id": 708488342,
+      "lat": 21.0349399,
+      "lon": 105.8469714,
+      "tags": {
+        "addr:city": "Hà Nội",
+        "name": "Khách Sạn Little Hanoi",
+        "name:en": "Little Hanoi Deluxe Hotel",
+        "name:fr": "Little Hanoi Hôtel Deluxe",
+        "tourism": "hotel",
+        "website": "https://www.littlehanoideluxehotel.com/"
+      },
+      "_region": "hanoi"
+    },
+    {
+      "type": "node",
+      "id": 708488343,
+      "lat": 21.0347507,
+      "lon": 105.8516905,
+      "tags": {
+        "addr:city": "Hà Nội",
+        "name": "Prince Hotel",
+        "tourism": "hotel"
+      },
+      "_region": "hanoi"
+    },
+    {
+      "type": "node",
+      "id": 708488382,
+      "lat": 21.032831,
+      "lon": 105.8539652,
+      "tags": {
+        "addr:city": "Hà Nội",
+        "addr:district": "Phường Hoàn Kiếm",
+        "addr:housenumber": "41",
+        "addr:province": "Thành phố Hà Nội",
+        "addr:street": "Hàng Bè",
+        "name": "Khách Sạn Classic",
+        "tourism": "hotel"
+      },
+      "_region": "hanoi"
+    },
+    {
+      "type": "node",
+      "id": 708488383,
+      "lat": 21.0326352,
+      "lon": 105.8539615,
+      "tags": {
+        "addr:city": "Hà Nội",
+        "name": "Prince 57 Hotel",
+        "tourism": "hotel"
+      },
+      "_region": "hanoi"
+    },
+    {
+      "type": "node",
+      "id": 708488386,
+      "lat": 21.0331149,
+      "lon": 105.8504878,
+      "tags": {
+        "addr:city": "Hà Nội",
+        "name": "Khách Sạn Hanoi Youth",
+        "tourism": "hotel"
+      },
+      "_region": "hanoi"
+    },
+    {
+      "type": "node",
+      "id": 708488387,
+      "lat": 21.0321235,
+      "lon": 105.8549831,
+      "tags": {
+        "addr:city": "Hà Nội",
+        "name": "Tien Thuy Hotel",
+        "tourism": "hotel"
+      },
+      "_region": "hanoi"
+    },
+    {
+      "type": "node",
+      "id": 708488388,
+      "lat": 21.0334005,
+      "lon": 105.85244,
+      "tags": {
+        "addr:city": "Hà Nội",
+        "name": "Khách Sạn Hanoi Gecko 2",
+        "tourism": "hotel"
+      },
+      "_region": "hanoi"
+    },
+    {
+      "type": "node",
+      "id": 708630499,
+      "lat": 21.0308292,
+      "lon": 105.8493639,
+      "tags": {
+        "addr:city": "Hà Nội",
+        "name": "Khách Sạn Golden Lotus",
+        "tourism": "hotel"
+      },
+      "_region": "hanoi"
+    },
+    {
+      "type": "node",
+      "id": 708630512,
+      "lat": 21.0256167,
+      "lon": 105.8514292,
+      "tags": {
+        "addr:city": "Hà Nội",
+        "addr:country": "VN",
+        "name": "Zephyr Hotel",
+        "tourism": "hotel"
+      },
+      "_region": "hanoi"
+    },
+    {
+      "type": "node",
+      "id": 708695655,
+      "lat": 21.0329471,
+      "lon": 105.847996,
+      "tags": {
+        "addr:city": "Hà Nội",
+        "name": "Khách Sạn Bạch Tùng Điệp",
+        "tourism": "hotel"
+      },
+      "_region": "hanoi"
+    },
+    {
+      "type": "node",
+      "id": 708695656,
+      "lat": 21.033588,
+      "lon": 105.852824,
+      "tags": {
+        "addr:city": "Hà Nội",
+        "name": "Khách Sạn Camellia",
+        "name:zh": "茶花5酒店",
+        "tourism": "hotel"
+      },
+      "_region": "hanoi"
+    },
+    {
+      "type": "node",
+      "id": 708695657,
+      "lat": 21.0336704,
+      "lon": 105.8473559,
+      "tags": {
+        "addr:city": "Hà Nội",
+        "addr:street": "Bát Đàn",
+        "name": "Khách Sạn Hanoi Gecko III",
+        "tourism": "hotel"
+      },
+      "_region": "hanoi"
+    },
+    {
+      "type": "node",
+      "id": 708695659,
+      "lat": 21.0191472,
+      "lon": 105.8484037,
+      "tags": {
+        "addr:city": "Hà Nội",
+        "addr:country": "VN",
+        "name": "The Drift Backpackers Hostel",
+        "tourism": "hotel"
+      },
+      "_region": "hanoi"
+    },
+    {
+      "type": "node",
+      "id": 708698000,
+      "lat": 21.0311045,
+      "lon": 105.8494873,
+      "tags": {
+        "addr:city": "Hà Nội",
+        "name": "Khách Sạn Maison D'Hanoi",
+        "tourism": "hotel"
+      },
+      "_region": "hanoi"
+    },
+    {
+      "type": "node",
+      "id": 721788305,
+      "lat": 21.0321895,
+      "lon": 105.850937,
+      "tags": {
+        "addr:housenumber": "21",
+        "addr:street": "Phố Hàng Gai",
+        "amenity": "restaurant",
+        "name": "Nhà Hàng Little Hanoi"
+      },
+      "_region": "hanoi"
+    },
+    {
+      "type": "node",
+      "id": 721788307,
+      "lat": 21.0346545,
+      "lon": 105.853359,
+      "tags": {
+        "addr:city": "Hà Nội",
+        "addr:district": "Phường Hoàn Kiếm",
+        "addr:housenumber": "72",
+        "addr:province": "Thành phố Hà Nội",
+        "addr:street": "Mã Mây",
+        "amenity": "restaurant",
+        "diet:vegetarian": "yes",
+        "name": "Nhà Hàng New Day"
+      },
+      "_region": "hanoi"
+    },
+    {
+      "type": "node",
+      "id": 721836715,
+      "lat": 21.0262605,
+      "lon": 105.8433041,
+      "tags": {
+        "addr:country": "VN",
+        "addr:housenumber": "18",
+        "addr:street": "Phố Phan Bội Châu",
+        "amenity": "restaurant",
+        "cuisine": "vietnamese",
+        "name": "Quán Ăn Ngon - Phan Bội Châu",
+        "name:en": "Quan An Ngon",
+        "name:zh": "好吃馆",
+        "note": "add address",
+        "opening_hours": "Mo-Su 06:45-22:00",
+        "phone": "+84439428162",
+        "source": "survey",
+        "website": "https://ngonhanoi.com.vn/"
+      },
+      "_region": "hanoi"
+    },
+    {
+      "type": "node",
+      "id": 721836727,
+      "lat": 21.033942,
+      "lon": 105.8546062,
+      "tags": {
+        "amenity": "restaurant",
+        "name": "Xoi Van Anh"
+      },
+      "_region": "hanoi"
+    },
+    {
+      "type": "node",
+      "id": 721836730,
+      "lat": 21.0340721,
+      "lon": 105.8535859,
+      "tags": {
+        "amenity": "cafe",
+        "name": "Cà Phê Nola"
+      },
+      "_region": "hanoi"
+    },
+    {
+      "type": "node",
+      "id": 268491823,
+      "lat": 16.0601,
+      "lon": 108.2435,
+      "tags": {
+        "name": "Bãi biển Mỹ Khê",
+        "name:en": "My Khe Beach",
+        "natural": "beach",
+        "addr:city": "Đà Nẵng",
+        "addr:district": "Ngũ Hành Sơn"
+      },
+      "_region": "da_nang"
+    },
+    {
+      "type": "node",
+      "id": 1459203941,
+      "lat": 16.1033,
+      "lon": 108.2778,
+      "tags": {
+        "name": "Chùa Linh Ứng",
+        "name:en": "Linh Ung Pagoda",
+        "tourism": "attraction",
+        "amenity": "place_of_worship",
+        "addr:city": "Đà Nẵng",
+        "addr:district": "Sơn Trà"
+      },
+      "_region": "da_nang"
+    },
+    {
+      "type": "node",
+      "id": 859302194,
+      "lat": 16.0612,
+      "lon": 108.2272,
+      "tags": {
+        "name": "Cầu Rồng",
+        "name:en": "Dragon Bridge",
+        "tourism": "attraction",
+        "addr:city": "Đà Nẵng",
+        "addr:district": "Hải Châu"
+      },
+      "_region": "da_nang"
+    },
+    {
+      "type": "node",
+      "id": 923847291,
+      "lat": 16.0595,
+      "lon": 108.224,
+      "tags": {
+        "name": "Bảo tàng Điêu khắc Chăm",
+        "name:en": "Museum of Cham Sculpture",
+        "tourism": "museum",
+        "addr:city": "Đà Nẵng",
+        "addr:district": "Hải Châu"
+      },
+      "_region": "da_nang"
+    },
+    {
+      "type": "node",
+      "id": 348291039,
+      "lat": 16.0048,
+      "lon": 108.2632,
+      "tags": {
+        "name": "Danh thắng Ngũ Hành Sơn",
+        "name:en": "Marble Mountains",
+        "tourism": "attraction",
+        "addr:city": "Đà Nẵng",
+        "addr:district": "Ngũ Hành Sơn"
+      },
+      "_region": "da_nang"
+    },
+    {
+      "type": "node",
+      "id": 192837465,
+      "lat": 21.0285,
+      "lon": 105.8542,
+      "tags": {
+        "name": "Hồ Hoàn Kiếm",
+        "name:en": "Hoan Kiem Lake",
+        "tourism": "attraction",
+        "addr:city": "Hà Nội",
+        "addr:district": "Hoàn Kiếm"
+      },
+      "_region": "hanoi"
+    },
+    {
+      "type": "node",
+      "id": 564738291,
+      "lat": 21.0368,
+      "lon": 105.8346,
+      "tags": {
+        "name": "Lăng Chủ tịch Hồ Chí Minh",
+        "name:en": "Ho Chi Minh Mausoleum",
+        "historic": "monument",
+        "tourism": "attraction",
+        "addr:city": "Hà Nội",
+        "addr:district": "Ba Đình"
+      },
+      "_region": "hanoi"
+    },
+    {
+      "type": "node",
+      "id": 675849302,
+      "lat": 21.0274,
+      "lon": 105.8355,
+      "tags": {
+        "name": "Văn Miếu - Quốc Tử Giám",
+        "name:en": "Temple of Literature",
+        "tourism": "attraction",
+        "historic": "memorial",
+        "addr:city": "Hà Nội",
+        "addr:district": "Đống Đa"
+      },
+      "_region": "hanoi"
+    },
+    {
+      "type": "node",
+      "id": 789456123,
+      "lat": 15.8771,
+      "lon": 108.3262,
+      "tags": {
+        "name": "Chùa Cầu Hội An",
+        "name:en": "Japanese Covered Bridge",
+        "historic": "monument",
+        "tourism": "attraction",
+        "addr:city": "Hội An",
+        "addr:district": "Quảng Nam"
+      },
+      "_region": "hoi_an"
+    },
+    {
+      "type": "node",
+      "id": 890123456,
+      "lat": 16.4697,
+      "lon": 107.5786,
+      "tags": {
+        "name": "Đại Nội Huế",
+        "name:en": "Imperial City Hue",
+        "historic": "monument",
+        "tourism": "attraction",
+        "addr:city": "Huế",
+        "addr:district": "Thừa Thiên Huế"
+      },
+      "_region": "hue"
+    },
+    {
+      "type": "node",
+      "id": 901234567,
+      "lat": 12.2388,
+      "lon": 109.1967,
+      "tags": {
+        "name": "Tháp Bà Ponagar",
+        "name:en": "Po Nagar Cham Towers",
+        "historic": "monument",
+        "tourism": "attraction",
+        "addr:city": "Nha Trang",
+        "addr:district": "Khánh Hòa"
+      },
+      "_region": "nha_trang"
+    }
+  ]
+}

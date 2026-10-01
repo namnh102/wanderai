@@ -8,6 +8,7 @@ import { TripsModule } from './modules/trips/trips.module';
 import { VideosModule } from './modules/videos/videos.module';
 import { ReviewsModule } from './modules/reviews/reviews.module';
 import { AiProxyModule } from './modules/ai-proxy/ai-proxy.module';
+import { PlacesModule } from './modules/places/places.module';
 import { HealthModule } from './modules/health/health.module';
 
 @Module({
@@ -18,6 +19,7 @@ import { HealthModule } from './modules/health/health.module';
     AuthModule,
     UsersModule,
     DestinationsModule,
+    PlacesModule,
     TripsModule,
     VideosModule,
     ReviewsModule,
