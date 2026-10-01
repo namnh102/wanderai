@@ -14,12 +14,14 @@ export class PlacesController {
   @ApiQuery({ name: 'search', required: false, type: String, example: 'Cầu Rồng' })
   @ApiQuery({ name: 'category', required: false, type: String, example: 'attraction' })
   @ApiQuery({ name: 'destinationId', required: false, type: String })
+  @ApiQuery({ name: 'verifiedOnly', required: false, type: Boolean, example: true, description: 'Chỉ trả về các địa điểm đã kiểm chứng provenance (OSM canonical)' })
   async findAll(
     @Query('page') page?: string,
     @Query('limit') limit?: string,
     @Query('search') search?: string,
     @Query('category') category?: string,
     @Query('destinationId') destinationId?: string,
+    @Query('verifiedOnly') verifiedOnly?: string,
   ) {
     return this.placesService.findAll(
       page ? Number(page) : 1,
@@ -27,6 +29,7 @@ export class PlacesController {
       search,
       category,
       destinationId,
+      verifiedOnly === 'true',
     );
   }
 
@@ -36,17 +39,20 @@ export class PlacesController {
   @ApiQuery({ name: 'lng', required: true, type: Number, example: 108.2272 })
   @ApiQuery({ name: 'radius', required: false, type: Number, example: 10, description: 'Bán kính tính bằng km' })
   @ApiQuery({ name: 'limit', required: false, type: Number, example: 20 })
+  @ApiQuery({ name: 'verifiedOnly', required: false, type: Boolean, example: true, description: 'Chỉ trả về các địa điểm đã kiểm chứng provenance' })
   async findNearby(
     @Query('lat') lat: string,
     @Query('lng') lng: string,
     @Query('radius') radius?: string,
     @Query('limit') limit?: string,
+    @Query('verifiedOnly') verifiedOnly?: string,
   ) {
     return this.placesService.findNearby(
       Number(lat),
       Number(lng),
       radius ? Number(radius) : 10,
       limit ? Number(limit) : 20,
+      verifiedOnly === 'true',
     );
   }
 

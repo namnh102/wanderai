@@ -38,7 +38,7 @@ python data/pipelines/entity_resolution/resolve.py
 - **Output:** `data/curated/places_canonical.json` (108 canonical places) & `data/curated/entity_resolution_report.json`
 
 ### Step 4: Review Dataset Cleaning
-Cleans raw authentic travel reviews, clamps ratings ($1.0-5.0$), anonymizes PII.
+Normalizes review test fixtures, clamps ratings ($1.0-5.0$), and structures aspect tags. (Note: These are internal test fixtures for pipeline mechanics; authentic dataset acquisition is pending before Task 07).
 ```bash
 python data/pipelines/reviews/clean_reviews.py
 ```

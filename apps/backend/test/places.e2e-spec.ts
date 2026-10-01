@@ -92,6 +92,38 @@ describe('PlacesController (e2e)', () => {
           expect(hasMatch).toBe(true);
         });
     });
+
+    it('should filter strictly by verifiedOnly=true isolating synthetic records', () => {
+      return request(app.getHttpServer())
+        .get('/places?verifiedOnly=true&limit=200')
+        .expect(200)
+        .expect((res) => {
+          expect(res.body).toHaveProperty('success', true);
+          expect(res.body.data.total).toBe(108); // Exactly 108 verified canonical places
+          const items = res.body.data.items;
+          expect(items.length).toBe(108);
+          for (const item of items) {
+            expect(item.isVerified).toBe(true);
+            expect(item.placeSources.length).toBeGreaterThanOrEqual(1);
+          }
+        });
+    });
+
+    it('should accurately flag unverified legacy seed places as isVerified: false', () => {
+      return request(app.getHttpServer())
+        .get('/places?limit=100')
+        .expect(200)
+        .expect((res) => {
+          const items = res.body.data.items;
+          const unverifiedItems = items.filter((p: any) => p.isVerified === false);
+          if (unverifiedItems.length > 0) {
+            for (const item of unverifiedItems) {
+              expect(item.placeSources).toHaveLength(0);
+              expect(item.provenanceCount).toBe(0);
+            }
+          }
+        });
+    });
   });
 
   describe('GET /places/nearby (PostGIS Spatial)', () => {
@@ -110,6 +142,19 @@ describe('PlacesController (e2e)', () => {
           expect(nearest).toHaveProperty('distanceKm');
           expect(typeof nearest.distanceKm).toBe('number');
           expect(nearest.distanceKm).toBeLessThanOrEqual(15);
+        });
+    });
+
+    it('should filter nearby places with verifiedOnly=true', () => {
+      return request(app.getHttpServer())
+        .get('/places/nearby?lat=16.0612&lng=108.2272&radius=15&verifiedOnly=true')
+        .expect(200)
+        .expect((res) => {
+          expect(res.body).toHaveProperty('success', true);
+          expect(Array.isArray(res.body.data)).toBe(true);
+          for (const place of res.body.data) {
+            expect(place.isVerified).toBe(true);
+          }
         });
     });
   });

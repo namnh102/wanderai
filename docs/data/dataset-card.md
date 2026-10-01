@@ -14,19 +14,22 @@
 | Sub-dataset | Primary Source | License | Attribution Requirement |
 | :--- | :--- | :--- | :--- |
 | **Geographic POIs** | OpenStreetMap (OSM) via Overpass API | **ODbL 1.0** | "© OpenStreetMap contributors" |
-| **Travel Reviews** | Academic Vietnamese Sentiment Benchmark | **CC BY 4.0** | "UIT-VSFC & Mendeley Open Research Data (2023)" |
+| **Review Test Fixtures** | Internal Development Test Fixtures (Unverified) | **UNKNOWN / UNVERIFIED** | Internal use only (Not approved for Review AI) |
 | **Synthetic Baseline** | Development Mock Data | Internal Dev Only | Quarantined in `data/seed/` (`generated: true, trusted: false`) |
 
 > [!IMPORTANT]
-> **Scraping Prohibition:** GoMate strictly abides by ethical data policies. No unauthorized scraping of Google Maps, Booking.com, TripAdvisor, or TikTok is performed or allowed in the pipeline.
+> **Audit Disclosure (2026-10-01):**
+> 1. The previous claim attributing reviews to "UIT-VSFC & Mendeley Data (CC BY 4.0)" has been retracted. UIT-VSFC is the *Vietnamese Students' Feedback Corpus* (university academic feedback), not travel reviews.
+> 2. The 9 review records are unverified synthetic test fixtures created for pipeline validation.
+> 3. Review AI development (Task 07) is suspended until authentic travel review data is verified and ingested.
 
 ---
 
 ## 3. Dataset Composition & Statistics
 - **Total Canonical Places:** 108 places across Da Nang, Hanoi, Hoi An, Hue, Nha Trang
 - **External Source Provenance Records:** 110 linked OSM nodes/ways
-- **Curated Linked Reviews:** 8 authentic reviews linked to canonical places, 1 quarantined unmatched review
-- **Aspect Ratings:** 16 tagged aspect ratings (`cleanliness`, `location`, `service`, `value`, `food`)
+- **Review Test Fixtures:** 8 sample reviews linked to canonical places for pipeline testing, 1 quarantined unmatched review
+- **Aspect Ratings:** 16 sample aspect ratings attached to test fixtures
 - **Geographic Bounding Box:**
   - Latitude: $[8.18, 23.39]$
   - Longitude: $[102.14, 109.46]$

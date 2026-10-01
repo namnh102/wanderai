@@ -1,9 +1,11 @@
 {
-  "source": "Vietnamese Travel & Hotel Reviews Academic Benchmark",
-  "license": "CC BY 4.0 (Creative Commons Attribution 4.0 International)",
-  "curator": "UIT-VSFC & Mendeley Open Research Data",
-  "citation": "Vietnamese Aspect-Based Sentiment Analysis & Hotel Reviews Dataset, 2023",
-  "description": "Anonymized, authentic customer reviews for Vietnamese travel destinations and hotels.",
+  "source": "Internal Development Test Mock Fixture (Unverified)",
+  "license": "UNKNOWN / UNVERIFIED (Internal Test Fixture)",
+  "curator": "GoMate Internal Test Engineering",
+  "citation": "Unverified hand-crafted test sample for pipeline integration testing",
+  "trusted": false,
+  "verified": false,
+  "description": "Internal test fixture created for data pipeline demonstration. NOT an authentic academic travel corpus.",
   "reviews": [
     {
       "source_review_id": "rev_dn_001",

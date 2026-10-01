@@ -175,3 +175,26 @@ class TestDataQualityRules:
         assert metrics["missing_names"] == 0
         assert metrics["out_of_bounds_coordinates"] == 0
         assert metrics["source_provenance_rate"] == 1.0
+
+
+class TestReviewProvenanceAudit:
+    """Tests ensuring review provenance audit guarantees and synthetic isolation."""
+
+    def test_review_provenance_manifest_integrity(self):
+        import json
+
+        prov_path = workspace_root / "data" / "manifests" / "review-provenance.json"
+        assert prov_path.exists(), "review-provenance.json manifest must exist"
+
+        with open(prov_path, "r", encoding="utf-8") as f:
+            prov = json.load(f)
+
+        assert prov["audit_result"]["is_real_travel_review_data"] is False
+        assert prov["audit_result"]["uit_vsfc_claim_valid"] is False
+        assert prov["audit_result"]["unverified_count"] == 9
+
+        for record in prov["records"]:
+            assert record["source_status"] == "UNVERIFIED"
+            assert record["data_classification"] == "SYNTHETIC"
+            assert record["exists_in_external_corpus"] is False
+
