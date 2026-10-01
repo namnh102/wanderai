@@ -172,7 +172,28 @@ model Place {
   reviews       Review[]
   itineraryItems ItineraryItem[]
 
+  placeSources  PlaceSource[]
+
   @@map("places")
+}
+
+// Entity Resolution: track data provenance from multiple sources
+model PlaceSource {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  placeId         String   @map("place_id") @db.Uuid
+  sourceName      String   @map("source_name") @db.VarChar(50)  // 'osm', 'google_places', 'manual', 'youtube'
+  sourceId        String   @map("source_id") @db.VarChar(255)   // OSM node ID, Google Place ID, etc.
+  rawName         String   @map("raw_name") @db.VarChar(255)
+  latitude        Float?
+  longitude       Float?
+  rawData         Json?    @map("raw_data")
+  confidenceScore Float    @default(1.0) @map("confidence_score")
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  place           Place    @relation(fields: [placeId], references: [id], onDelete: Cascade)
+
+  @@unique([sourceName, sourceId])
+  @@map("place_sources")
 }
 
 model Review {

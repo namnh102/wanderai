@@ -1,0 +1,70 @@
+# Data Sources Manifest
+# All datasets used by WanderAI with provenance metadata
+
+sources:
+  - name: synthetic_destinations
+    type: synthetic
+    path: database/seed/destinations.json
+    records: 50
+    generated: true
+    trusted: false
+    source: AI-generated
+    license: N/A
+    description: >
+      50 Vietnamese destinations with approximate coordinates.
+      Names and provinces are real, but ratings and descriptions are fabricated.
+      DO NOT present as verified real-world information.
+    collection_date: "2026-09"
+
+  - name: synthetic_places
+    type: synthetic
+    path: database/seed/places.json
+    records: 56
+    generated: true
+    trusted: false
+    source: AI-generated
+    license: N/A
+    description: >
+      56 Vietnamese places across ~15 provinces.
+      Coordinates are approximate (rounded). Prices are estimated.
+      Many destinations have 0 places. Contains duplicates when seeded twice.
+      DO NOT present as verified real-world information.
+    collection_date: "2026-09"
+
+  - name: synthetic_categories
+    type: reference
+    path: database/seed/categories.json
+    records: 10
+    generated: false
+    trusted: true
+    source: Manual
+    license: N/A
+    description: Place category taxonomy (attraction, restaurant, hotel, etc.)
+
+  - name: osm_vietnam
+    type: planned
+    provider: OpenStreetMap
+    api: Overpass API
+    url: https://overpass-api.de/api/interpreter
+    license: ODbL
+    trusted: true
+    description: Real geographic data for Vietnamese tourism POIs
+    status: NOT_COLLECTED
+
+  - name: mendeley_hotel_reviews
+    type: planned
+    provider: Mendeley Data
+    url: https://data.mendeley.com
+    license: CC BY 4.0
+    trusted: true
+    description: Vietnamese hotel review dataset for Review AI training
+    status: NOT_COLLECTED
+
+  - name: open_meteo_weather
+    type: runtime_api
+    provider: Open-Meteo
+    url: https://api.open-meteo.com/v1
+    license: Free (no key)
+    trusted: true
+    description: Real-time weather forecast, queried at runtime only
+    status: AVAILABLE
