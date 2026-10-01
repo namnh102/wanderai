@@ -3,9 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../features/auth/presentation/login_screen.dart';
 import '../../features/auth/presentation/register_screen.dart';
+import '../../features/auth/providers/auth_provider.dart';
 import '../../features/home/presentation/home_screen.dart';
 
-// Placeholder screens
+// Placeholder screens for tabs not yet implemented
 class _PlaceholderScreen extends StatelessWidget {
   final String title;
   final IconData icon;
@@ -23,7 +24,7 @@ class _PlaceholderScreen extends StatelessWidget {
             const SizedBox(height: 16),
             Text(title, style: Theme.of(context).textTheme.headlineSmall),
             const SizedBox(height: 8),
-            Text('Đang phát triển...', style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+            Text('Dang phat trien...', style: Theme.of(context).textTheme.bodyMedium?.copyWith(
               color: Theme.of(context).colorScheme.onSurfaceVariant,
             )),
           ],
@@ -37,9 +38,28 @@ final _rootNavigatorKey = GlobalKey<NavigatorState>();
 final _shellNavigatorKey = GlobalKey<NavigatorState>();
 
 final appRouterProvider = Provider<GoRouter>((ref) {
+  final authState = ref.watch(authProvider);
+
   return GoRouter(
     navigatorKey: _rootNavigatorKey,
     initialLocation: '/',
+    redirect: (context, state) {
+      final isAuth = authState.status == AuthStatus.authenticated;
+      final isLoading = authState.status == AuthStatus.unknown;
+      final location = state.uri.toString();
+      final isLoginRoute = location == '/login' || location == '/register';
+
+      // While loading auth state, don't redirect
+      if (isLoading) return null;
+
+      // Not authenticated → force login (unless already there)
+      if (!isAuth && !isLoginRoute) return '/login';
+
+      // Authenticated but on login/register → go home
+      if (isAuth && isLoginRoute) return '/';
+
+      return null;
+    },
     routes: [
       GoRoute(
         path: '/login',
@@ -54,10 +74,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state, child) => _MainScaffold(child: child),
         routes: [
           GoRoute(path: '/', builder: (_, __) => const HomeScreen()),
-          GoRoute(path: '/companion', builder: (_, __) => const _PlaceholderScreen(title: 'Đồng hành', icon: Icons.diversity_1)),
+          GoRoute(path: '/companion', builder: (_, __) => const _PlaceholderScreen(title: 'Dong hanh', icon: Icons.diversity_1)),
           GoRoute(path: '/ai', builder: (_, __) => const _PlaceholderScreen(title: 'AI Agent', icon: Icons.auto_awesome)),
-          GoRoute(path: '/safety', builder: (_, __) => const _PlaceholderScreen(title: 'An toàn', icon: Icons.shield)),
-          GoRoute(path: '/trips', builder: (_, __) => const _PlaceholderScreen(title: 'Chuyến đi', icon: Icons.luggage)),
+          GoRoute(path: '/safety', builder: (_, __) => const _PlaceholderScreen(title: 'An toan', icon: Icons.shield)),
+          GoRoute(path: '/trips', builder: (_, __) => const _PlaceholderScreen(title: 'Chuyen di', icon: Icons.luggage)),
         ],
       ),
     ],
@@ -84,12 +104,12 @@ class _MainScaffold extends StatelessWidget {
           NavigationDestination(
             icon: Icon(Icons.explore_outlined),
             selectedIcon: Icon(Icons.explore),
-            label: 'Khám phá',
+            label: 'Kham pha',
           ),
           NavigationDestination(
             icon: Icon(Icons.diversity_1_outlined),
             selectedIcon: Icon(Icons.diversity_1),
-            label: 'Đồng hành',
+            label: 'Dong hanh',
           ),
           NavigationDestination(
             icon: Icon(Icons.auto_awesome_outlined),
@@ -99,12 +119,12 @@ class _MainScaffold extends StatelessWidget {
           NavigationDestination(
             icon: Icon(Icons.shield_outlined),
             selectedIcon: Icon(Icons.shield),
-            label: 'An toàn',
+            label: 'An toan',
           ),
           NavigationDestination(
             icon: Icon(Icons.luggage_outlined),
             selectedIcon: Icon(Icons.luggage),
-            label: 'Chuyến đi',
+            label: 'Chuyen di',
           ),
         ],
       ),
