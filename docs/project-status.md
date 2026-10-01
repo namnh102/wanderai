@@ -39,7 +39,6 @@
 
 | Task | Status |
 |------|--------|
-| Backend unit tests (Jest) | Needed — 0 tests exist |
 | Real data pipeline (OSM) | Foundation created, no data collected |
 | RAG document ingestion | Pipeline documented, 0 documents |
 
@@ -55,10 +54,10 @@
 
 | Suite | Pass | Fail | Total |
 |-------|------|------|-------|
+| Backend E2E (Jest) | 14 | 0 | 14 |
 | AI (pytest) | 8 | 0 | 8 |
 | Flutter (flutter_test) | 2 | 0 | 2 |
-| Backend (jest) | 0 | 0 | 0 |
-| **Total** | **10** | **0** | **10** |
+| **Total** | **24** | **0** | **24** |
 
 ## Risks
 
