@@ -9,10 +9,16 @@ import { TripStatus } from '@prisma/client';
 import { CreateTripDto } from './dto/create-trip.dto';
 import { UpdateTripDto } from './dto/update-trip.dto';
 import { AddItineraryDto } from './dto/add-itinerary.dto';
+import { BulkItineraryDto } from './dto/bulk-itinerary.dto';
+import { PlanTripDto } from './dto/plan-trip.dto';
+import { AiProxyService } from '../ai-proxy/ai-proxy.service';
 
 @Injectable()
 export class TripsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private aiProxyService: AiProxyService,
+  ) {}
 
   // POST /trips
   async create(userId: string, data: CreateTripDto) {
@@ -303,5 +309,160 @@ export class TripsService {
     } catch {
       throw new BadRequestException('User này đã là thành viên của chuyến đi');
     }
+  }
+
+  // POST /trips/:id/ai-plan — Tạo bản xem trước lịch trình AI (chưa lưu DB)
+  async planTripWithAi(tripId: string, userId: string, customOptions?: PlanTripDto) {
+    const trip = await this.findById(tripId, userId);
+
+    const destinationName = trip.destination?.name || trip.title;
+    if (!destinationName || destinationName.trim().length === 0) {
+      throw new BadRequestException('Chuyến đi cần có tên hoặc điểm đến để lập lịch trình');
+    }
+
+    let days = 3;
+    if (trip.startDate && trip.endDate) {
+      const diffTime = Math.abs(new Date(trip.endDate).getTime() - new Date(trip.startDate).getTime());
+      days = Math.max(1, Math.round(diffTime / (1000 * 60 * 60 * 24)) + 1);
+    } else if (trip.itineraries && trip.itineraries.length > 0) {
+      days = trip.itineraries.length;
+    }
+    if (days > 14) days = 14;
+
+    const context = {
+      tripId: trip.id,
+      destination: destinationName,
+      days,
+      startDate: trip.startDate ? trip.startDate.toISOString().split('T')[0] : undefined,
+      endDate: trip.endDate ? trip.endDate.toISOString().split('T')[0] : undefined,
+      budget: trip.totalBudget ?? undefined,
+      currency: trip.currency || 'VND',
+      travelStyle: trip.travelStyle ? trip.travelStyle.toLowerCase() : undefined,
+      interests: trip.interests ?? [],
+      notes: customOptions?.additionalPrompt,
+    };
+
+    const aiResult = await this.aiProxyService.planWithTripContext(context);
+
+    // Deterministic validation & arithmetic calculation
+    let calculatedCost = 0;
+    const processedDays = (aiResult.days || []).map((day: any, dayIdx: number) => {
+      let dayCost = 0;
+      const items = (day.items || []).map((item: any, itemIdx: number) => {
+        const cost = typeof item.estimated_cost === 'number' ? Math.max(0, item.estimated_cost) : 0;
+        dayCost += cost;
+        return {
+          orderIndex: item.order_index ?? (itemIdx + 1),
+          startTime: item.start_time,
+          endTime: item.end_time,
+          activity: item.activity || `Hoạt động ${itemIdx + 1}`,
+          placeName: item.place_name,
+          notes: item.notes,
+          estimatedCost: cost,
+          transportMode: item.transport_mode,
+        };
+      });
+      calculatedCost += dayCost;
+      return {
+        dayNumber: day.day_number ?? (dayIdx + 1),
+        date: day.date,
+        title: day.title || `Ngày ${dayIdx + 1}`,
+        dayCost,
+        items,
+      };
+    });
+
+    const isOverBudget = trip.totalBudget ? calculatedCost > trip.totalBudget : false;
+    const variance = trip.totalBudget ? trip.totalBudget - calculatedCost : 0;
+
+    return {
+      tripId: trip.id,
+      destination: destinationName,
+      totalDays: processedDays.length,
+      overview: aiResult.overview || `Lịch trình khám phá ${destinationName}`,
+      bestTimeToVisit: aiResult.best_time_to_visit || 'Quanh năm',
+      generalTips: aiResult.general_tips || [],
+      budgetAnalysis: {
+        totalBudget: trip.totalBudget,
+        estimatedCost: calculatedCost,
+        currency: trip.currency,
+        isOverBudget,
+        variance,
+      },
+      days: processedDays,
+    };
+  }
+
+  // POST /trips/:id/itinerary/bulk — Lưu toàn bộ lịch trình vào DB (atomic transaction)
+  async bulkSaveItinerary(tripId: string, userId: string, dto: BulkItineraryDto) {
+    const trip = await this.prisma.trip.findFirst({
+      where: { id: tripId, deletedAt: null },
+    });
+    if (!trip) {
+      throw new NotFoundException('Chuyến đi không tồn tại');
+    }
+    if (trip.userId !== userId) {
+      throw new ForbiddenException('Chỉ chủ chuyến đi mới có quyền lưu lịch trình');
+    }
+
+    if (!dto.days || !Array.isArray(dto.days) || dto.days.length === 0) {
+      throw new BadRequestException('Danh sách ngày lịch trình không được để trống');
+    }
+
+    await this.prisma.$transaction(async (tx) => {
+      if (dto.replaceExisting !== false) {
+        // Delete all existing items and itineraries for this trip
+        await tx.itineraryItem.deleteMany({
+          where: { itinerary: { tripId } },
+        });
+        await tx.itinerary.deleteMany({
+          where: { tripId },
+        });
+      }
+
+      for (const day of dto.days) {
+        const itinerary = await tx.itinerary.upsert({
+          where: { tripId_dayNumber: { tripId, dayNumber: day.dayNumber } },
+          create: {
+            tripId,
+            dayNumber: day.dayNumber,
+            title: day.title,
+            date: day.date ? new Date(day.date) : null,
+          },
+          update: {
+            title: day.title,
+            date: day.date ? new Date(day.date) : null,
+          },
+        });
+
+        if (day.items && day.items.length > 0) {
+          for (const item of day.items) {
+            await tx.itineraryItem.create({
+              data: {
+                itineraryId: itinerary.id,
+                orderIndex: item.orderIndex,
+                activity: item.activity.trim(),
+                startTime: item.startTime,
+                endTime: item.endTime,
+                placeId: item.placeId,
+                notes: item.notes?.trim(),
+                estimatedCost: item.estimatedCost,
+                transportMode: item.transportMode,
+              },
+            });
+          }
+        }
+      }
+
+      await tx.trip.update({
+        where: { id: tripId },
+        data: {
+          isAiGenerated: true,
+          status: TripStatus.PLANNED,
+        },
+      });
+    });
+
+    return this.findById(tripId, userId);
   }
 }

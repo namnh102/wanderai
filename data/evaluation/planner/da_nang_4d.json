@@ -1,0 +1,22 @@
+{
+  "scenario_id": "eval_da_nang_4d",
+  "name": "Đà Nẵng 4 Ngày 3 Đêm - Gia Đình Nghỉ Dưỡng",
+  "request": {
+    "destination": "Đà Nẵng",
+    "days": 4,
+    "start_date": "2026-06-15",
+    "end_date": "2026-06-18",
+    "budget": 8000000,
+    "currency": "VND",
+    "travel_style": "family",
+    "interests": ["beach", "food", "culture"],
+    "notes": "Có trẻ nhỏ và người cao tuổi, lịch trình thư thả không quá gấp gáp"
+  },
+  "expected_constraints": {
+    "min_days": 4,
+    "max_days": 4,
+    "max_budget": 8000000,
+    "required_keywords": ["Mỹ Khê", "Hội An", "Cầu Rồng"],
+    "min_items_per_day": 3
+  }
+}

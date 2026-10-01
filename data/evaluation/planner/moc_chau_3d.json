@@ -1,0 +1,22 @@
+{
+  "scenario_id": "eval_moc_chau_3d",
+  "name": "Mộc Châu 3 Ngày 2 Đêm - Phượt Tiết Kiệm",
+  "request": {
+    "destination": "Mộc Châu",
+    "days": 3,
+    "start_date": "2026-11-10",
+    "end_date": "2026-11-12",
+    "budget": 2500000,
+    "currency": "VND",
+    "travel_style": "budget",
+    "interests": ["nature", "food", "photography"],
+    "notes": "Muốn săn mây Tà Xùa hoặc ngắm đồi chè Trái Tim, hoa cải"
+  },
+  "expected_constraints": {
+    "min_days": 3,
+    "max_days": 3,
+    "max_budget": 2500000,
+    "required_keywords": ["Đồi chè", "Mộc Châu", "thác"],
+    "min_items_per_day": 3
+  }
+}
