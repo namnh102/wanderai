@@ -5,6 +5,7 @@ import '../../features/auth/presentation/login_screen.dart';
 import '../../features/auth/presentation/register_screen.dart';
 import '../../features/auth/providers/auth_provider.dart';
 import '../../features/home/presentation/home_screen.dart';
+import '../../features/ai_chat/presentation/ai_chat_screen.dart';
 
 // Placeholder screens for tabs not yet implemented
 class _PlaceholderScreen extends StatelessWidget {
@@ -75,7 +76,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         routes: [
           GoRoute(path: '/', builder: (_, __) => const HomeScreen()),
           GoRoute(path: '/companion', builder: (_, __) => const _PlaceholderScreen(title: 'Dong hanh', icon: Icons.diversity_1)),
-          GoRoute(path: '/ai', builder: (_, __) => const _PlaceholderScreen(title: 'AI Agent', icon: Icons.auto_awesome)),
+          GoRoute(path: '/ai', builder: (_, __) => const AiChatScreen()),
           GoRoute(path: '/safety', builder: (_, __) => const _PlaceholderScreen(title: 'An toan', icon: Icons.shield)),
           GoRoute(path: '/trips', builder: (_, __) => const _PlaceholderScreen(title: 'Chuyen di', icon: Icons.luggage)),
         ],
