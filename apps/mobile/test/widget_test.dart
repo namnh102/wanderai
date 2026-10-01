@@ -6,14 +6,16 @@ import 'package:wanderai_mobile/app/app.dart';
 void main() {
   testWidgets('App starts without crashing', (tester) async {
     await tester.pumpWidget(const ProviderScope(child: WanderApp()));
-    await tester.pumpAndSettle();
-    // App should render without exceptions
+    // Just pump a few frames, don't settle (HTTP calls will hang)
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
     expect(find.byType(MaterialApp), findsOneWidget);
   });
 
   testWidgets('Navigation bar has 5 tabs', (tester) async {
     await tester.pumpWidget(const ProviderScope(child: WanderApp()));
-    await tester.pumpAndSettle();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
     expect(find.byType(NavigationBar), findsOneWidget);
     expect(find.text('Khám phá'), findsOneWidget);
     expect(find.text('Đồng hành'), findsOneWidget);

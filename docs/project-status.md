@@ -1,74 +1,95 @@
-# PROJECT STATUS — WANDERAI
+# PROJECT STATUS — WANDERAI (GoMate)
 
-**Last Updated:** 2026-10-01T14:19+07:00
-**Current Phase:** Phase 0 — Audit & Foundation
-**Current Milestone:** Pre-M1
+**Last Updated:** 2026-10-01T14:47+07:00
+**Current Phase:** Foundation Complete
+**Current Milestone:** Pre-M1 (all infrastructure verified)
 
 ---
 
-## Completed Tasks
+## Completed
 
-| Task | Date | Evidence |
-|------|------|----------|
-| Git repository initialized | 2026-09 | 8 commits on `develop` |
-| Docker Compose configured | 2026-09 | `docker-compose.yml` |
-| Prisma schema (30 models) | 2026-09 | `database/prisma/schema.prisma` |
-| NestJS backend skeleton (34 files) | 2026-09 | `apps/backend/src/` |
-| FastAPI AI service (15 files, 6 tools) | 2026-09 | `apps/ai-service/app/` |
-| AGENTS.md created | 2026-09-29 | `AGENTS.md` |
-| CONTRIBUTING.md created | 2026-09-29 | `CONTRIBUTING.md` |
-| AI Architecture doc | 2026-09-29 | `docs/AI_ARCHITECTURE.md` |
-| Project audit | 2026-10-01 | `docs/project-audit.md` |
+| # | Task | Evidence | Date |
+|---|------|----------|------|
+| 1 | Security check — .env in .gitignore, no secrets in history | `.gitignore` line 4 | 2026-10-01 |
+| 2 | Docker Compose — PostgreSQL + Redis running | `docker ps`: healthy | 2026-10-01 |
+| 3 | PostgreSQL 16.15 verified | `SELECT version()` | 2026-10-01 |
+| 4 | PostGIS 3.4 verified | `SELECT PostGIS_Version()` | 2026-10-01 |
+| 5 | pgvector 0.8.6 verified | `SELECT extversion FROM pg_extension` | 2026-10-01 |
+| 6 | Redis verified | `redis-cli ping` → PONG | 2026-10-01 |
+| 7 | NestJS backend — build OK, 0 errors | `npx nest build` exit 0 | 2026-10-01 |
+| 8 | Backend health — GET /health | `{"status":"ok"}` | 2026-10-01 |
+| 9 | Backend auth — POST /auth/login | JWT token 224 chars | 2026-10-01 |
+| 10 | Backend destinations — GET /destinations | 20 items returned | 2026-10-01 |
+| 11 | FastAPI AI service — startup OK | port 8000 | 2026-10-01 |
+| 12 | AI health — GET /health | `{"status":"ok","llm_provider":"gemini"}` | 2026-10-01 |
+| 13 | AI chat — POST /chat | Wandy replied (865 chars) | 2026-10-01 |
+| 14 | Database — 36 tables verified | `information_schema` count | 2026-10-01 |
+| 15 | Database rows — 50 dest, 112 places, 1 user | `SELECT count(*)` | 2026-10-01 |
+| 16 | PlaceSource model + migration | `place_sources` table (10 columns) | 2026-10-01 |
+| 17 | Fake data labelled as synthetic | `data/manifests/sources.yaml` | 2026-10-01 |
+| 18 | Data pipeline directories | `data/{raw,processed,seed,evaluation,manifests}` | 2026-10-01 |
+| 19 | Flutter foundation — 7 files, 0 errors | `flutter analyze` → 1 info warning | 2026-10-01 |
+| 20 | Flutter web — runs on Chrome, no white screen | Debug service connected | 2026-10-01 |
+| 21 | Flutter thin slice — Home loads destinations from API | GET /destinations → grid | 2026-10-01 |
+| 22 | AI tests — 8 passed | `pytest tests/ -v` → 8 passed | 2026-10-01 |
+| 23 | Flutter tests — 2 passed | `flutter test` → 2 passed | 2026-10-01 |
+| 24 | Governance docs | project-audit.md, ADR-001, ADR-002, data-sources.md, data-dictionary.md, local-environment.md, rag-pipeline.md | 2026-10-01 |
 
-## Current Tasks
+## In Progress
 
-| Task | Status | Blocker |
-|------|--------|---------|
-| Start Docker Desktop | NOT STARTED | Manual action required |
-| Verify backend APIs | NOT STARTED | Needs Docker |
-| Verify AI service | NOT STARTED | Needs Docker |
-| Create real data pipeline | NOT STARTED | Needs data source research |
-| Rebuild Flutter mobile | NOT STARTED | Needs foundation first |
+| Task | Status |
+|------|--------|
+| Backend unit tests (Jest) | Needed — 0 tests exist |
+| Real data pipeline (OSM) | Foundation created, no data collected |
+| RAG document ingestion | Pipeline documented, 0 documents |
 
-## Blocked Tasks
+## Blocked
 
 | Task | Blocked By |
 |------|-----------|
-| Seed real data | Docker not running + data pipeline not built |
-| Test AI tools end-to-end | Docker not running |
-| Mobile app development | lib/ deleted, needs rebuild |
+| Real data from OSM | Script not yet written |
+| RAG retrieval | No documents embedded |
+| Flutter auth wiring | Auth provider not yet reimplemented |
+
+## Tests
+
+| Suite | Pass | Fail | Total |
+|-------|------|------|-------|
+| AI (pytest) | 8 | 0 | 8 |
+| Flutter (flutter_test) | 2 | 0 | 2 |
+| Backend (jest) | 0 | 0 | 0 |
+| **Total** | **10** | **0** | **10** |
 
 ## Risks
 
 | Risk | Severity | Mitigation |
 |------|----------|-----------|
-| Fake seed data → wrong AI recommendations | HIGH | Build real data pipeline from OSM |
-| Gemini free tier rate limits | MEDIUM | Buy paid API key or use OpenRouter |
-| No tests → regression bugs | HIGH | Write tests with every feature |
-| 12-week deadline pressure | HIGH | Focus on M1 (8 screens) first |
+| Gemini free tier rate limits | MEDIUM | Buy API key or use OpenRouter |
+| OSM data coverage gaps | LOW | Supplement with manual data |
+| 0 backend tests | HIGH | Write tests next |
+| Fake seed data still in DB | MEDIUM | Replace with real data pipeline |
 
-## Decisions Made
+## Decisions
 
-| Decision | Reason | Date |
-|----------|--------|------|
-| Delete Flutter lib/ | Code broken beyond repair (subagent conflicts, google_fonts) | 2026-10-01 |
-| Remove google_fonts | Causes white screen on Flutter web | 2026-09-29 |
-| Use gemini-3.5-flash | 3.6 and 3.7 return 503 | 2026-09-29 |
+| # | Decision | ADR |
+|---|----------|-----|
+| 1 | PostgreSQL as single DB | ADR-001 |
+| 2 | Replace fake data with real pipeline | ADR-002 |
+| 3 | Remove google_fonts | Documented in audit |
 
-## Next Tasks
+## Evidence
 
-1. Start Docker Desktop (PostgreSQL + Redis)
-2. Verify backend health
-3. Verify AI service health
-4. Research and download real data sources (OSM, Mendeley)
-5. Build data cleaning/seeding pipeline
-6. Rebuild Flutter navigation + auth
-7. Write backend unit tests
+- Git commit `8592aea`: docs
+- Git commit `b5e96db`: Flutter foundation + place_sources migration + AI tests
+- Flutter web running: `ws://127.0.0.1:65251/`
+- Backend running: `http://localhost:3000/health`
+- AI running: `http://localhost:8000/health`
 
-## Test Results
+## Next
 
-| Suite | Pass | Fail | Skip | Date |
-|-------|------|------|------|------|
-| Backend (Jest) | — | — | — | Not run |
-| AI (pytest) | — | — | — | Not run |
-| Mobile (flutter_test) | — | — | — | Not run |
+1. Write backend unit tests (health, auth, destinations)
+2. Wire Flutter auth to backend (login/register/logout)
+3. Build OSM data collection script
+4. Implement real data seeding
+5. Wire AI chat in Flutter
+6. Add Trip CRUD in Flutter
