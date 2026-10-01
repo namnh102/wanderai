@@ -648,13 +648,30 @@ model AiMessage {
 }
 
 model Document {
-  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  content   String
-  source    String?
-  category  String?  // "destination_guide", "safety_tip", "travel_advice"
-  metadata  Json?
-  // embedding vector(384) -- Added via raw SQL migration (Prisma doesn't support vector type natively)
-  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+  id             String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  documentId     String    @default("") @map("document_id") @db.VarChar(255)
+  sourceName     String    @default("wikivoyage") @map("source_name") @db.VarChar(50)
+  sourceUrl      String    @default("") @map("source_url") @db.VarChar(500)
+  license        String    @default("CC BY-SA 3.0") @db.VarChar(100)
+  attribution    String    @default("") @db.VarChar(255)
+  destinationId  String?   @map("destination_id") @db.Uuid
+  placeId        String?   @map("place_id") @db.Uuid
+  language       String    @default("en") @db.VarChar(10)
+  topic          String?   @db.VarChar(100)
+  sectionHeading String?   @map("section_heading") @db.VarChar(255)
+  title          String    @default("") @db.VarChar(255)
+  content        String
+  contentHash    String    @map("content_hash") @db.VarChar(64)
+  embeddingModel String    @default("sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2") @map("embedding_model") @db.VarChar(100)
+  category       String?   @db.VarChar(50)
+  metadata       Json?
+  retrievedAt    DateTime  @default(now()) @map("retrieved_at") @db.Timestamptz
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt      DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
 
+  // embedding vector(384) added via raw SQL for pgvector
+  @@unique([contentHash, embeddingModel])
+  @@index([sourceName])
+  @@index([destinationId])
   @@map("documents")
 }
