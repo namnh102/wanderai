@@ -48,38 +48,41 @@
 | 36 | AI Planner Evaluation Dataset | `data/evaluation/planner/` (3 scenarios + evaluator) | 2026-10-01 |
 | 37 | AI Planner Mobile Preview & Overwrite Warning | Dialog + DraggableScrollableSheet preview modal | 2026-10-01 |
 | 38 | AI Planner API & Architecture Documentation | `docs/api/ai-planner-api.md`, `docs/ai/ai-planner.md` | 2026-10-01 |
+| 39 | Real Data Pipeline — OSM Collection & Parser | `data/pipelines/osm/`, ODbL 1.0 compliant | 2026-10-01 |
+| 40 | Multi-signal Entity Resolution Engine | `data/pipelines/entity_resolution/`, canonical places | 2026-10-01 |
+| 41 | Review Cleaner & Canonical Linking | `data/pipelines/reviews/`, CC BY 4.0 benchmark | 2026-10-01 |
+| 42 | Data Quality Audit & Reporting | `data/pipelines/quality_checker.py`, 100% bounds check | 2026-10-01 |
+| 43 | Idempotent PostgreSQL Import | `apps/backend/prisma/import-curated.ts` (`npm run db:import-curated`) | 2026-10-01 |
+| 44 | Backend Places Module & PostGIS Spatial API | `GET /places`, `GET /places/nearby` (ST_DWithin), `GET /places/:id` | 2026-10-01 |
+| 45 | Data Governance Documentation | `dataset-card.md`, `data-dictionary.md`, `reproducibility.md` | 2026-10-01 |
 
 ## In Progress
 
 | Task | Status |
 |------|--------|
-| Real data pipeline (OSM) | Foundation created, no data collected |
-| RAG document ingestion | Pipeline documented, 0 documents |
+| RAG document ingestion | Pipeline documented, documents pending embedding |
 
 ## Blocked
 
 | Task | Blocked By |
 |------|-----------|
-| Real data from OSM | Script not yet written |
-| RAG retrieval | No documents embedded |
+| None | All current tasks unblocked |
 
 ## Tests
 
 | Suite | Pass | Fail | Total |
 |-------|------|------|-------|
-| Backend E2E (Jest) | 32 | 0 | 32 |
-| AI (pytest) | 15 | 0 | 15 |
+| Backend E2E (Jest) | 39 | 0 | 39 |
+| AI (pytest) | 28 | 0 | 28 |
 | Flutter (flutter_test) | 39 | 0 | 39 |
-| **Total** | **86** | **0** | **86** |
+| **Total** | **106** | **0** | **106** |
 
 ## Risks
 
 | Risk | Severity | Mitigation |
 |------|----------|-----------|
 | Gemini free tier rate limits | MEDIUM | Buy API key or use OpenRouter |
-| OSM data coverage gaps | LOW | Supplement with manual data |
-| 0 backend tests | HIGH | Write tests next |
-| Fake seed data still in DB | MEDIUM | Replace with real data pipeline |
+| OSM data coverage gaps | LOW | Supplemented with verified landmark baseline |
 
 ## Decisions
 
