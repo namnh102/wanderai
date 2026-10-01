@@ -78,23 +78,23 @@ sources:
     trusted: true
     notes: "Primary authoritative source for real Vietnamese travel POIs, accurate GPS coordinates, and street addresses."
 
-  - name: uit_vsfc_travel_reviews
-    type: sentiment_and_reviews
-    provider: UIT-VSFC & Mendeley Open Research
-    url: https://data.mendeley.com
+  - name: internal_review_mock_fixtures
+    type: unverified_test_fixtures
+    provider: Internal Development Test Fixtures (UNVERIFIED)
+    url: null
     raw_path: data/raw/vietnam_travel_reviews.json
     processed_path: data/processed/reviews_normalized.json
     curated_path: data/curated/reviews_curated.json
-    license: CC BY 4.0 (Creative Commons Attribution 4.0 International)
-    permitted_usage: "Review analysis, sentiment classification, place linking, RAG knowledge indexing"
-    storage_permission: true
-    redistribution_restriction: "Attribution to original authors required. No additional restrictions."
-    collection_method: "Curated academic benchmark dataset of Vietnamese hotel and attraction customer reviews"
+    license: UNKNOWN / UNVERIFIED (Internal Mock Data)
+    permitted_usage: "Pipeline code and ETL test validation only"
+    storage_permission: false
+    redistribution_restriction: "Do not use for Review AI training or production RAG"
+    collection_method: "Handcrafted sample test fixtures for pipeline mechanics"
     collection_date: "2026-10-01"
-    transformation: "Text cleanup -> PII anonymization -> rating normalization (1.0-5.0) -> place entity linking"
-    generated: false
-    trusted: true
-    notes: "Contains authentic Vietnamese traveler reviews for hotels and landmarks across Hanoi, Da Nang, Ho Chi Minh City, Sapa, and Hoi An."
+    transformation: "Text cleanup -> rating normalization -> place entity linking test"
+    generated: true
+    trusted: false
+    notes: "AUDIT NOTE: Previous attribution to UIT-VSFC was factually incorrect. UIT-VSFC is the Vietnamese Students' Feedback Corpus (university feedback), NOT travel/hotel reviews. The 9 review records are synthetic test fixtures. Real travel review data is pending acquisition before Task 07."
 
   - name: open_meteo_weather
     type: runtime_api

@@ -139,7 +139,7 @@ def generate_markdown_report(places_metrics: dict, reviews_metrics: dict, report
     md = f"""# Data Quality Report — Real Travel Pipeline
 
 **Generated:** {now_str}  
-**Pipeline Scope:** OpenStreetMap POIs & CC BY 4.0 Travel Reviews
+**Pipeline Scope:** OpenStreetMap POIs (ODbL 1.0) & Review Pipeline Test Fixtures (Unverified)
 
 ---
 
@@ -174,7 +174,9 @@ def generate_markdown_report(places_metrics: dict, reviews_metrics: dict, report
 
 ---
 
-## 3. Curated Reviews Quality Metrics
+## 3. Review Pipeline Test Fixture Metrics
+> [!WARNING]
+> The reviews below are internal test fixtures for verifying pipeline mechanics. Authentic travel review dataset acquisition is pending under Task 06.1.
 
 | Metric | Target | Actual | Status |
 | :--- | :--- | :--- | :--- |

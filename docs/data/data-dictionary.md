@@ -93,6 +93,9 @@ This document defines the physical and domain schemas for GoMate travel entities
 | **Constraint** | UNIQUE(`sourceName`, `sourceId`) | — | Prevents duplicate ingestion of identical external POIs |
 
 ### Review (`reviews`)
+> [!WARNING]
+> The current reviews records in the database are internal test fixtures for pipeline mechanics and are marked UNVERIFIED. Authentic travel reviews must be acquired and verified before Review AI (Task 07).
+
 | Field | Type | Nullable | Description |
 |:---|:---|:---|:---|
 | `id` | UUID | No | Primary key |

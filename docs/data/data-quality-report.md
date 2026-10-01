@@ -1,7 +1,7 @@
 # Data Quality Report — Real Travel Pipeline
 
-**Generated:** 2026-10-01 16:56:04  
-**Pipeline Scope:** OpenStreetMap POIs & CC BY 4.0 Travel Reviews
+**Generated:** 2026-10-01 17:29:12  
+**Pipeline Scope:** OpenStreetMap POIs (ODbL 1.0) & Review Pipeline Test Fixtures (Unverified)
 
 ---
 
@@ -36,7 +36,9 @@
 
 ---
 
-## 3. Curated Reviews Quality Metrics
+## 3. Review Pipeline Test Fixture Metrics
+> [!WARNING]
+> The reviews below are internal test fixtures for verifying pipeline mechanics. Authentic travel review dataset acquisition is pending under Task 06.1.
 
 | Metric | Target | Actual | Status |
 | :--- | :--- | :--- | :--- |

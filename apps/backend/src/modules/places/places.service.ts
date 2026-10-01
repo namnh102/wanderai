@@ -6,19 +6,23 @@ import { Prisma } from '@prisma/client';
 export class PlacesService {
   constructor(private prisma: PrismaService) {}
 
-  // Lấy danh sách địa điểm có pagination, search, category, destination
+  // Lấy danh sách địa điểm có pagination, search, category, destination, verifiedOnly
   async findAll(
     page: number = 1,
     limit: number = 20,
     search?: string,
     category?: string,
     destinationId?: string,
+    verifiedOnly?: boolean,
   ) {
     const skip = (page - 1) * limit;
 
     const where: Prisma.PlaceWhereInput = {
       deletedAt: null,
       ...(destinationId && { destinationId }),
+      ...(verifiedOnly && {
+        placeSources: { some: {} },
+      }),
       ...(category && {
         category: {
           name: { equals: category.toLowerCase(), mode: 'insensitive' as Prisma.QueryMode },
@@ -33,7 +37,7 @@ export class PlacesService {
       }),
     };
 
-    const [items, total] = await Promise.all([
+    const [rawItems, total] = await Promise.all([
       this.prisma.place.findMany({
         where,
         skip,
@@ -60,6 +64,12 @@ export class PlacesService {
       }),
       this.prisma.place.count({ where }),
     ]);
+
+    const items = rawItems.map((p) => ({
+      ...p,
+      isVerified: p.placeSources.length > 0,
+      provenanceCount: p.placeSources.length,
+    }));
 
     return {
       items,
@@ -110,11 +120,21 @@ export class PlacesService {
       throw new NotFoundException(`Place with ID "${id}" not found`);
     }
 
-    return place;
+    return {
+      ...place,
+      isVerified: place.placeSources.length > 0,
+      provenanceCount: place.placeSources.length,
+    };
   }
 
   // Tìm kiếm địa điểm lân cận bằng PostGIS ST_DWithin
-  async findNearby(lat: number, lng: number, radiusKm: number = 10, limit: number = 20) {
+  async findNearby(
+    lat: number,
+    lng: number,
+    radiusKm: number = 10,
+    limit: number = 20,
+    verifiedOnly: boolean = false,
+  ) {
     const places = await this.prisma.$queryRaw<any[]>`
       SELECT 
         p.id, 
@@ -127,6 +147,7 @@ export class PlacesService {
         p.review_count AS "reviewCount",
         c.name AS "categoryName",
         d.name AS "destinationName",
+        (EXISTS (SELECT 1 FROM place_sources ps WHERE ps.place_id = p.id)) AS "isVerified",
         ST_Distance(
           ST_SetSRID(ST_MakePoint(p.longitude, p.latitude), 4326)::geography,
           ST_SetSRID(ST_MakePoint(${lng}, ${lat}), 4326)::geography
@@ -136,6 +157,7 @@ export class PlacesService {
       LEFT JOIN destinations d ON p.destination_id = d.id
       WHERE p.deleted_at IS NULL
         AND p.latitude IS NOT NULL
+        ${verifiedOnly ? Prisma.sql`AND EXISTS (SELECT 1 FROM place_sources ps WHERE ps.place_id = p.id)` : Prisma.empty}
         AND ST_DWithin(
           ST_SetSRID(ST_MakePoint(p.longitude, p.latitude), 4326)::geography,
           ST_SetSRID(ST_MakePoint(${lng}, ${lat}), 4326)::geography,

@@ -55,34 +55,36 @@
 | 43 | Idempotent PostgreSQL Import | `apps/backend/prisma/import-curated.ts` (`npm run db:import-curated`) | 2026-10-01 |
 | 44 | Backend Places Module & PostGIS Spatial API | `GET /places`, `GET /places/nearby` (ST_DWithin), `GET /places/:id` | 2026-10-01 |
 | 45 | Data Governance Documentation | `dataset-card.md`, `data-dictionary.md`, `reproducibility.md` | 2026-10-01 |
+| 46 | Task 06.1 Review Provenance & Synthetic Audit | `review-provenance.json`, `database-provenance-audit.md` | 2026-10-01 |
 
 ## In Progress
 
 | Task | Status |
 |------|--------|
+| Authentic Travel Review Acquisition | Sourcing CC-BY verified hotel/landmark corpus before Task 07 |
 | RAG document ingestion | Pipeline documented, documents pending embedding |
 
 ## Blocked
 
 | Task | Blocked By |
 |------|-----------|
-| None | All current tasks unblocked |
+| Task 07 Review Intelligence | Blocked pending authentic review dataset acquisition |
 
 ## Tests
 
 | Suite | Pass | Fail | Total |
 |-------|------|------|-------|
-| Backend E2E (Jest) | 39 | 0 | 39 |
-| AI (pytest) | 28 | 0 | 28 |
+| Backend E2E (Jest) | 42 | 0 | 42 |
+| AI (pytest) | 29 | 0 | 29 |
 | Flutter (flutter_test) | 39 | 0 | 39 |
-| **Total** | **106** | **0** | **106** |
+| **Total** | **110** | **0** | **110** |
 
 ## Risks
 
 | Risk | Severity | Mitigation |
 |------|----------|-----------|
 | Gemini free tier rate limits | MEDIUM | Buy API key or use OpenRouter |
-| OSM data coverage gaps | LOW | Supplemented with verified landmark baseline |
+| Review AI dataset unverified | HIGH | Paused Task 07; quarantined test fixtures |
 
 ## Decisions
 
