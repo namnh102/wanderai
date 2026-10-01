@@ -196,6 +196,24 @@ model PlaceSource {
   @@map("place_sources")
 }
 
+// Dataset Governance: Track dataset provenance, access status, licenses and checksums
+model DatasetRegistry {
+  id             String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  datasetName    String    @unique @map("dataset_name") @db.VarChar(100)
+  datasetSource  String    @map("dataset_source") @db.VarChar(255)
+  datasetVersion String    @default("1.0.0") @map("dataset_version") @db.VarChar(50)
+  license        String    @db.VarChar(100)
+  accessStatus   String    @default("REQUEST_NOT_SENT") @map("access_status") @db.VarChar(50) // REQUEST_NOT_SENT, REQUEST_SENT, ACCESS_GRANTED, ACCESS_DENIED, PENDING
+  retrievedAt    DateTime? @map("retrieved_at") @db.Timestamptz
+  checksum       String?   @db.VarChar(128)
+  restriction    String    @db.VarChar(255)
+  recordCount    Int       @default(0) @map("record_count")
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt      DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+
+  @@map("dataset_registry")
+}
+
 model Review {
   id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   userId    String   @map("user_id") @db.Uuid
