@@ -4,7 +4,7 @@ class Settings(BaseSettings):
     LLM_PROVIDER: str = "gemini"
     GEMINI_API_KEY: str = ""
     OPENAI_API_KEY: str = ""
-    DATABASE_URL: str = ""
+    DATABASE_URL: str = "postgresql://postgres:postgres@localhost:5432/wanderai"
     REDIS_HOST: str = "localhost"
     REDIS_PORT: int = 6379
     CLOUDINARY_CLOUD_NAME: str = ""

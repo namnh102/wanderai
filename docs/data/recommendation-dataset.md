@@ -21,13 +21,19 @@ ViHoRec was constructed through a reproducible multi-platform web crawling pipel
 
 The data collection underwent cross-platform entity resolution (linking hotels across booking portals) and HMAC pseudonymization to protect reviewer privacy.
 
-### Exact Released Statistics
-* **Total User-Hotel Interactions:** 18,267 verified records
-* **Unique Users:** 6,832 anonymized individuals
-* **Unique Hotels:** 560 canonical hotels distributed across major tourist hubs in Vietnam (Hanoi, Da Nang, Ho Chi Minh City, Nha Trang, Phu Quoc, Da Lat, Sa Pa, Hoi An, Vung Tau)
-* **Metadata Enriched Hotels:** 309 hotels feature comprehensive facility, price tier, and geographic metadata
-* **Data Matrix Sparsity:** 99.5% (Extremely realistic hospitality interaction distribution)
-* **Cold-Start Characteristic:** 69.5% of users have recorded only a single interaction
+### Exact Released Statistics (Audited from Current Release on Master Branch)
+* **Total Cleaned Interactions (`interactions.csv`):** 17,911 records (pre-cleaning: 18,267 raw events)
+* **Unique Users:** 6,822 anonymized individuals
+* **Unique Hotels:** 560 canonical hotels across Vietnam
+* **Metadata Enriched Hotels (`hotels.csv`):** 560 hotels with name and location
+* **Data Matrix Sparsity:** 99.53%
+* **Cold-Start Characteristic:** 69.50% of users have recorded only a single interaction
+* **Platform Distribution:** Booking.com (7,239), Traveloka (6,273), iVIVU (4,399)
+* **Interaction Date Range:** 2011-10-15 to 2023-12-09
+* **Official Benchmark Split:**
+  - `train.csv`: 8,645 records
+  - `val.csv`: 798 records
+  - `test.csv`: 798 records (798 unique test users)
 
 ---
 

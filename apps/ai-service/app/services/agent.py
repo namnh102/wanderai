@@ -44,8 +44,9 @@ class TravelAgent:
         if cached:
             return ChatResponse(response=cached, tool_calls=[], sources=[])
             
-        # Get RAG context
-        context = await self.rag.search_similar(request.message)
+        # Get RAG context and source citations
+        context, rag_chunks = await self.rag.search_with_sources(request.message)
+        sources = [c["source_url"] for c in rag_chunks if c.get("source_url")]
         
         # Call LLM with tools
         messages = [{"role": "user", "content": request.message}]
@@ -66,7 +67,7 @@ class TravelAgent:
         return ChatResponse(
             response=response_text,
             tool_calls=llm_res.get("tool_calls", []),
-            sources=[]
+            sources=sources
         )
 
     async def handle_plan(self, request: PlanRequest) -> PlanResponse:
