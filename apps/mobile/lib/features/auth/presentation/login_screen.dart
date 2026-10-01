@@ -1,14 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../providers/auth_provider.dart';
 
-class LoginScreen extends StatefulWidget {
+class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
 
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  ConsumerState<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _emailCtrl = TextEditingController();
   final _passCtrl = TextEditingController();
   final _formKey = GlobalKey<FormState>();
@@ -25,11 +27,26 @@ class _LoginScreenState extends State<LoginScreen> {
   Future<void> _login() async {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _loading = true);
-    // TODO: Wire to auth provider in next step
-    await Future.delayed(const Duration(seconds: 1));
+
+    final ok = await ref.read(authProvider.notifier).login(
+      _emailCtrl.text.trim(),
+      _passCtrl.text,
+    );
+
     if (mounted) {
       setState(() => _loading = false);
-      context.go('/');
+      if (!ok) {
+        final errorMsg = ref.read(authProvider).errorMessage ?? 'Dang nhap that bai.';
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(errorMsg),
+            backgroundColor: Theme.of(context).colorScheme.error,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          ),
+        );
+      }
+      // On success, GoRouter redirect handles navigation automatically
     }
   }
 
@@ -52,7 +69,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     fontWeight: FontWeight.w800, color: cs.primary,
                   )),
                   const SizedBox(height: 4),
-                  Text('Khám phá Việt Nam cùng AI', style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  Text('Kham pha Viet Nam cung AI', style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     color: cs.onSurfaceVariant,
                   )),
                   const SizedBox(height: 32),
@@ -63,21 +80,21 @@ class _LoginScreenState extends State<LoginScreen> {
                       labelText: 'Email',
                       prefixIcon: Icon(Icons.email_outlined),
                     ),
-                    validator: (v) => (v == null || !v.contains('@')) ? 'Email không hợp lệ' : null,
+                    validator: (v) => (v == null || !v.contains('@')) ? 'Email khong hop le' : null,
                   ),
                   const SizedBox(height: 16),
                   TextFormField(
                     controller: _passCtrl,
                     obscureText: _obscure,
                     decoration: InputDecoration(
-                      labelText: 'Mật khẩu',
+                      labelText: 'Mat khau',
                       prefixIcon: const Icon(Icons.lock_outlined),
                       suffixIcon: IconButton(
                         icon: Icon(_obscure ? Icons.visibility_off : Icons.visibility),
                         onPressed: () => setState(() => _obscure = !_obscure),
                       ),
                     ),
-                    validator: (v) => (v == null || v.length < 6) ? 'Mật khẩu ít nhất 6 ký tự' : null,
+                    validator: (v) => (v == null || v.length < 6) ? 'Mat khau it nhat 6 ky tu' : null,
                   ),
                   const SizedBox(height: 24),
                   SizedBox(
@@ -86,13 +103,13 @@ class _LoginScreenState extends State<LoginScreen> {
                       onPressed: _loading ? null : _login,
                       child: _loading
                           ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                          : const Text('Đăng nhập'),
+                          : const Text('Dang nhap'),
                     ),
                   ),
                   const SizedBox(height: 16),
                   TextButton(
                     onPressed: () => context.go('/register'),
-                    child: const Text('Chưa có tài khoản? Đăng ký'),
+                    child: const Text('Chua co tai khoan? Dang ky'),
                   ),
                 ],
               ),

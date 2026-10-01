@@ -1,8 +1,8 @@
 # PROJECT STATUS — WANDERAI (GoMate)
 
-**Last Updated:** 2026-10-01T14:47+07:00
-**Current Phase:** Foundation Complete
-**Current Milestone:** Pre-M1 (all infrastructure verified)
+**Last Updated:** 2026-10-01T15:10+07:00
+**Current Phase:** Auth Wired (TASK 01 + TASK 02 complete)
+**Current Milestone:** M1-in-progress (auth flow working end-to-end)
 
 ---
 
@@ -56,8 +56,8 @@
 |-------|------|------|-------|
 | Backend E2E (Jest) | 14 | 0 | 14 |
 | AI (pytest) | 8 | 0 | 8 |
-| Flutter (flutter_test) | 2 | 0 | 2 |
-| **Total** | **24** | **0** | **24** |
+| Flutter (flutter_test) | 12 | 0 | 12 |
+| **Total** | **34** | **0** | **34** |
 
 ## Risks
 

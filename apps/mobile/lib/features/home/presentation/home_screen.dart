@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:dio/dio.dart';
 import '../../../core/network/api_client.dart';
+import '../../auth/providers/auth_provider.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -51,6 +52,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             Text('WanderAI', style: TextStyle(fontWeight: FontWeight.w800, color: cs.primary)),
           ],
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.logout),
+            tooltip: 'Dang xuat',
+            onPressed: () => ref.read(authProvider.notifier).logout(),
+          ),
+        ],
       ),
       body: _buildBody(cs),
     );
