@@ -92,4 +92,48 @@ class TripRepository {
   Future<void> deleteItineraryItem(String tripId, String itemId) async {
     await _dio.delete('/trips/$tripId/itinerary/$itemId');
   }
+
+  /// POST /trips/:id/ai-plan — Generate AI plan preview
+  Future<AiPlanPreviewModel> generateAiPlan(
+    String tripId, {
+    String? prompt,
+  }) async {
+    final response = await _dio.post(
+      '/trips/$tripId/ai-plan',
+      data: {
+        if (prompt != null && prompt.isNotEmpty) 'additionalPrompt': prompt,
+      },
+    );
+    final data = response.data;
+    if (data is Map<String, dynamic> && data['data'] is Map<String, dynamic>) {
+      return AiPlanPreviewModel.fromJson(
+        data['data'] as Map<String, dynamic>,
+      );
+    }
+    throw DioException(
+      requestOptions: response.requestOptions,
+      response: response,
+      error: 'Failed to parse AI plan preview',
+    );
+  }
+
+  /// POST /trips/:id/itinerary/bulk — Atomic bulk save itinerary
+  Future<TripModel> bulkSaveItinerary(
+    String tripId,
+    BulkSaveItineraryRequest request,
+  ) async {
+    final response = await _dio.post(
+      '/trips/$tripId/itinerary/bulk',
+      data: request.toJson(),
+    );
+    final data = response.data;
+    if (data is Map<String, dynamic> && data['data'] is Map<String, dynamic>) {
+      return TripModel.fromJson(data['data'] as Map<String, dynamic>);
+    }
+    throw DioException(
+      requestOptions: response.requestOptions,
+      response: response,
+      error: 'Failed to bulk save itinerary',
+    );
+  }
 }

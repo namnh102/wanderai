@@ -60,6 +60,330 @@ class _TripDetailScreenState extends ConsumerState<TripDetailScreen> {
     }
   }
 
+  Future<void> _handleGenerateAiPlan() async {
+    final noteController = TextEditingController();
+    final shouldProceed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Lap lich trinh bang AI'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Wandy se su dung thong tin chuyen di (diem den, ngay, ngan sach, so thich) de len lich trinh toi uu nhat.',
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: noteController,
+              decoration: const InputDecoration(
+                labelText: 'Yeu cau them (tuy chon)',
+                hintText: 'VD: Uu tien quan an ngon, chup anh...',
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Huy'),
+          ),
+          FilledButton.icon(
+            onPressed: () => Navigator.pop(ctx, true),
+            icon: const Icon(Icons.auto_awesome, size: 16),
+            label: const Text('Bat dau lap'),
+          ),
+        ],
+      ),
+    );
+
+    if (shouldProceed != true || !mounted) return;
+
+    final prompt = noteController.text.trim();
+    final plan = await ref
+        .read(tripDetailProvider.notifier)
+        .generateAiPlan(widget.tripId, prompt: prompt.isNotEmpty ? prompt : null);
+
+    if (!mounted) return;
+    if (plan != null) {
+      _showAiPlanPreviewModal(plan);
+    } else {
+      final err = ref.read(tripDetailProvider).planErrorMessage ??
+          'Khong the tao lich trinh tu AI';
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(err)));
+    }
+  }
+
+  void _showAiPlanPreviewModal(AiPlanPreviewModel plan) {
+    final cs = Theme.of(context).colorScheme;
+    final trip = ref.read(tripDetailProvider).trip;
+    final hasExistingItinerary = trip != null && trip.itineraries.isNotEmpty;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) => DraggableScrollableSheet(
+        initialChildSize: 0.85,
+        minChildSize: 0.5,
+        maxChildSize: 0.95,
+        expand: false,
+        builder: (ctx, scrollCtrl) => Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Column(
+            children: [
+              const SizedBox(height: 12),
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: cs.outlineVariant,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Icon(Icons.auto_awesome, color: cs.primary, size: 20),
+                            const SizedBox(width: 8),
+                            const Text(
+                              'Lich trinh tu Wandy AI',
+                              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          '${plan.destination} • ${plan.totalDays} ngay',
+                          style: TextStyle(fontSize: 13, color: cs.onSurfaceVariant),
+                        ),
+                      ],
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close),
+                    onPressed: () => Navigator.pop(ctx),
+                  ),
+                ],
+              ),
+              const Divider(),
+              Expanded(
+                child: ListView(
+                  controller: scrollCtrl,
+                  children: [
+                    if (plan.overview.isNotEmpty)
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        margin: const EdgeInsets.only(bottom: 12),
+                        decoration: BoxDecoration(
+                          color: cs.surfaceContainerLow,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          plan.overview,
+                          style: TextStyle(fontSize: 13, color: cs.onSurface),
+                        ),
+                      ),
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      margin: const EdgeInsets.only(bottom: 12),
+                      decoration: BoxDecoration(
+                        color: plan.budgetAnalysis.isOverBudget
+                            ? cs.errorContainer.withValues(alpha: 0.3)
+                            : cs.primaryContainer.withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: plan.budgetAnalysis.isOverBudget
+                              ? cs.error
+                              : cs.primary,
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Chi phi uoc tinh:',
+                                style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant),
+                              ),
+                              Text(
+                                '${plan.budgetAnalysis.estimatedCost} ${plan.budgetAnalysis.currency}',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                  color: plan.budgetAnalysis.isOverBudget ? cs.error : cs.primary,
+                                ),
+                              ),
+                            ],
+                          ),
+                          if (plan.budgetAnalysis.totalBudget != null)
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: [
+                                Text(
+                                  'Ngan sach: ${plan.budgetAnalysis.totalBudget} ${plan.budgetAnalysis.currency}',
+                                  style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant),
+                                ),
+                                Text(
+                                  plan.budgetAnalysis.isOverBudget
+                                      ? 'Vuot ${-plan.budgetAnalysis.variance} VND'
+                                      : 'Con du ${plan.budgetAnalysis.variance} VND',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                    color: plan.budgetAnalysis.isOverBudget ? cs.error : cs.primary,
+                                  ),
+                                ),
+                              ],
+                            ),
+                        ],
+                      ),
+                    ),
+                    if (hasExistingItinerary)
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        margin: const EdgeInsets.only(bottom: 16),
+                        decoration: BoxDecoration(
+                          color: Colors.amber.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Colors.amber.shade700),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(Icons.warning_amber_rounded, color: Colors.amber.shade900, size: 20),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                'Chuyen di da co ${trip.itineraries.length} ngay. Ap dung se thay the toan bo lich trinh hien tai!',
+                                style: TextStyle(fontSize: 12, color: Colors.amber.shade900),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ...plan.days.map((day) => Container(
+                          margin: const EdgeInsets.only(bottom: 12),
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: cs.surface,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.5)),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    day.title,
+                                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                                  ),
+                                  Text(
+                                    '${day.dayCost} VND',
+                                    style: TextStyle(fontSize: 12, color: cs.primary, fontWeight: FontWeight.bold),
+                                  ),
+                                ],
+                              ),
+                              const Divider(height: 16),
+                              ...day.items.map((item) => Padding(
+                                    padding: const EdgeInsets.symmetric(vertical: 4),
+                                    child: Row(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          '${item.orderIndex}. ',
+                                          style: TextStyle(fontWeight: FontWeight.bold, color: cs.primary),
+                                        ),
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                item.activity,
+                                                style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+                                              ),
+                                              if (item.startTime != null)
+                                                Text(
+                                                  '${item.startTime} - ${item.estimatedCost} VND',
+                                                  style: TextStyle(fontSize: 11, color: cs.onSurfaceVariant),
+                                                ),
+                                            ],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  )),
+                            ],
+                          ),
+                        )),
+                    const SizedBox(height: 20),
+                  ],
+                ),
+              ),
+              SafeArea(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: () => Navigator.pop(ctx),
+                          child: const Text('Huy'),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        flex: 2,
+                        child: FilledButton.icon(
+                          onPressed: () async {
+                            Navigator.pop(ctx);
+                            final success = await ref
+                                .read(tripDetailProvider.notifier)
+                                .saveAiPlan(widget.tripId, plan, replaceExisting: true);
+                            if (mounted) {
+                              if (success) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text('Da ap dung lich trinh AI thanh cong!'),
+                                  ),
+                                );
+                              } else {
+                                final err = ref.read(tripDetailProvider).errorMessage ??
+                                    'Loi khi luu lich trinh';
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text(err)),
+                                );
+                              }
+                            }
+                          },
+                          icon: const Icon(Icons.check, size: 18),
+                          label: const Text('Ap dung vao chuyen di'),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   void _showAddItineraryDialog(int defaultDay) {
     final activityController = TextEditingController();
     final timeController = TextEditingController();
@@ -318,7 +642,70 @@ class _TripDetailScreenState extends ConsumerState<TripDetailScreen> {
               ),
             ),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 16),
+
+          // AI Planning Action Card
+          Card(
+            elevation: 0,
+            color: cs.primaryContainer.withValues(alpha: 0.15),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+              side: BorderSide(color: cs.primary.withValues(alpha: 0.3)),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(Icons.auto_awesome, color: cs.primary, size: 20),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Tro ly Wandy AI',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 15,
+                          color: cs.primary,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    'Wandy se tu dong lap lich trinh chi tiet tung ngay dua tren diem den, thoi gian, ngan sach va so thich.',
+                    style: TextStyle(fontSize: 13, color: cs.onSurfaceVariant),
+                  ),
+                  const SizedBox(height: 12),
+                  if (state.isGeneratingPlan)
+                    Row(
+                      children: [
+                        const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                        const SizedBox(width: 12),
+                        Text(
+                          'Wandy dang len lich trinh toi uu...',
+                          style: TextStyle(fontSize: 13, color: cs.primary),
+                        ),
+                      ],
+                    )
+                  else
+                    SizedBox(
+                      width: double.infinity,
+                      child: FilledButton.icon(
+                        onPressed: _handleGenerateAiPlan,
+                        icon: const Icon(Icons.auto_awesome, size: 18),
+                        label: const Text('Lap lich trinh bang AI'),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
 
           // Itinerary Header
           Row(
@@ -404,7 +791,9 @@ class _TripDetailScreenState extends ConsumerState<TripDetailScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  'Ngay ${day.dayNumber}',
+                  day.title != null && day.title!.isNotEmpty
+                      ? (day.title!.startsWith('Ngay') ? day.title! : 'Ngay ${day.dayNumber}: ${day.title}')
+                      : 'Ngay ${day.dayNumber}',
                   style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
                 ),
                 TextButton(

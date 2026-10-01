@@ -17,6 +17,8 @@ import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { CreateTripDto } from './dto/create-trip.dto';
 import { UpdateTripDto } from './dto/update-trip.dto';
 import { AddItineraryDto } from './dto/add-itinerary.dto';
+import { BulkItineraryDto } from './dto/bulk-itinerary.dto';
+import { PlanTripDto } from './dto/plan-trip.dto';
 import { IsEmail, IsNotEmpty } from 'class-validator';
 
 class InviteMemberDto {
@@ -100,5 +102,27 @@ export class TripsController {
     @Body() dto: InviteMemberDto,
   ) {
     return this.tripsService.addMember(id, user.id, dto.email);
+  }
+
+  // POST /trips/:id/ai-plan — AI tạo lịch trình xem trước (không lưu DB)
+  @Post(':id/ai-plan')
+  @ApiOperation({ summary: 'AI tạo lịch trình xem trước dựa trên TripContext (không lưu DB)' })
+  planWithAi(
+    @Param('id') id: string,
+    @CurrentUser() user: any,
+    @Body() dto?: PlanTripDto,
+  ) {
+    return this.tripsService.planTripWithAi(id, user.id, dto);
+  }
+
+  // POST /trips/:id/itinerary/bulk — Lưu toàn bộ lịch trình vào DB (atomic transaction)
+  @Post(':id/itinerary/bulk')
+  @ApiOperation({ summary: 'Lưu toàn bộ lịch trình vào DB (atomic transaction)' })
+  bulkSaveItinerary(
+    @Param('id') id: string,
+    @CurrentUser() user: any,
+    @Body() dto: BulkItineraryDto,
+  ) {
+    return this.tripsService.bulkSaveItinerary(id, user.id, dto);
   }
 }

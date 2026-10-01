@@ -1,8 +1,8 @@
 # PROJECT STATUS — WANDERAI (GoMate)
 
-**Last Updated:** 2026-10-01T15:45+07:00
-**Current Phase:** Trip Planning & CRUD (TASK 01 - TASK 04 complete)
-**Current Milestone:** M1-in-progress (auth + AI chat + Trips CRUD functional end-to-end)
+**Last Updated:** 2026-10-01T16:40+07:00
+**Current Phase:** AI Trip Planner using TripContext (TASK 01 - TASK 05 complete)
+**Current Milestone:** M1-in-progress (auth + AI chat + Trips CRUD + AI Trip Planner functional end-to-end)
 
 ---
 
@@ -42,6 +42,12 @@
 | 30 | Trips backend authorization & validation | 11 E2E security & CRUD tests | 2026-10-01 |
 | 31 | Flutter Trips flow & TripContext abstraction | 11 Flutter unit & widget tests | 2026-10-01 |
 | 32 | Trips API & Flow documentation | `docs/api/trips-api.md`, `docs/architecture/trip-flow.md` | 2026-10-01 |
+| 33 | AI Trip Planner via TripContext | `POST /trips/:id/ai-plan`, prompt `TRAVEL_PLANNER_V1` | 2026-10-01 |
+| 34 | Bulk Itinerary Atomic Persistence | `POST /trips/:id/itinerary/bulk` via `prisma.$transaction` | 2026-10-01 |
+| 35 | Deterministic Validation & Budget Arithmetic | Day cost & budget comparison computed by code | 2026-10-01 |
+| 36 | AI Planner Evaluation Dataset | `data/evaluation/planner/` (3 scenarios + evaluator) | 2026-10-01 |
+| 37 | AI Planner Mobile Preview & Overwrite Warning | Dialog + DraggableScrollableSheet preview modal | 2026-10-01 |
+| 38 | AI Planner API & Architecture Documentation | `docs/api/ai-planner-api.md`, `docs/ai/ai-planner.md` | 2026-10-01 |
 
 ## In Progress
 
@@ -61,10 +67,10 @@
 
 | Suite | Pass | Fail | Total |
 |-------|------|------|-------|
-| Backend E2E (Jest) | 25 | 0 | 25 |
-| AI (pytest) | 10 | 0 | 10 |
-| Flutter (flutter_test) | 34 | 0 | 34 |
-| **Total** | **69** | **0** | **69** |
+| Backend E2E (Jest) | 32 | 0 | 32 |
+| AI (pytest) | 15 | 0 | 15 |
+| Flutter (flutter_test) | 39 | 0 | 39 |
+| **Total** | **86** | **0** | **86** |
 
 ## Risks
 

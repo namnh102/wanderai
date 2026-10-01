@@ -98,11 +98,17 @@ class TripDetailState {
   final TripModel? trip;
   final bool isLoading;
   final String? errorMessage;
+  final bool isGeneratingPlan;
+  final AiPlanPreviewModel? generatedPlan;
+  final String? planErrorMessage;
 
   const TripDetailState({
     this.trip,
     this.isLoading = false,
     this.errorMessage,
+    this.isGeneratingPlan = false,
+    this.generatedPlan,
+    this.planErrorMessage,
   });
 
   TripDetailState copyWith({
@@ -110,11 +116,21 @@ class TripDetailState {
     bool? isLoading,
     String? errorMessage,
     bool clearError = false,
+    bool? isGeneratingPlan,
+    AiPlanPreviewModel? generatedPlan,
+    bool clearPlan = false,
+    String? planErrorMessage,
+    bool clearPlanError = false,
   }) {
     return TripDetailState(
       trip: trip ?? this.trip,
       isLoading: isLoading ?? this.isLoading,
       errorMessage: clearError ? null : (errorMessage ?? this.errorMessage),
+      isGeneratingPlan: isGeneratingPlan ?? this.isGeneratingPlan,
+      generatedPlan: clearPlan ? null : (generatedPlan ?? this.generatedPlan),
+      planErrorMessage: clearPlanError
+          ? null
+          : (planErrorMessage ?? this.planErrorMessage),
     );
   }
 }
@@ -177,6 +193,73 @@ class TripDetailNotifier extends StateNotifier<TripDetailState> {
       state = state.copyWith(errorMessage: _mapError(e));
       return false;
     }
+  }
+
+  Future<AiPlanPreviewModel?> generateAiPlan(
+    String tripId, {
+    String? prompt,
+  }) async {
+    state = state.copyWith(
+      isGeneratingPlan: true,
+      clearPlanError: true,
+    );
+    try {
+      final plan = await _repo.generateAiPlan(tripId, prompt: prompt);
+      state = state.copyWith(
+        isGeneratingPlan: false,
+        generatedPlan: plan,
+        clearPlanError: true,
+      );
+      return plan;
+    } on DioException catch (e) {
+      state = state.copyWith(
+        isGeneratingPlan: false,
+        planErrorMessage: _mapError(e),
+      );
+      return null;
+    } catch (_) {
+      state = state.copyWith(
+        isGeneratingPlan: false,
+        planErrorMessage: 'Khong the tao lich trinh tu AI. Vui long thu lai.',
+      );
+      return null;
+    }
+  }
+
+  Future<bool> saveAiPlan(
+    String tripId,
+    AiPlanPreviewModel plan, {
+    bool replaceExisting = true,
+  }) async {
+    state = state.copyWith(isLoading: true, clearError: true);
+    try {
+      final updated = await _repo.bulkSaveItinerary(
+        tripId,
+        plan.toBulkSaveRequest(replaceExisting: replaceExisting),
+      );
+      state = state.copyWith(
+        trip: updated,
+        isLoading: false,
+        clearPlan: true,
+      );
+      return true;
+    } on DioException catch (e) {
+      state = state.copyWith(
+        isLoading: false,
+        errorMessage: _mapError(e),
+      );
+      return false;
+    } catch (_) {
+      state = state.copyWith(
+        isLoading: false,
+        errorMessage: 'Loi khi luu lich trinh vao chuyen di',
+      );
+      return false;
+    }
+  }
+
+  void clearGeneratedPlan() {
+    state = state.copyWith(clearPlan: true, clearPlanError: true);
   }
 
   String _mapError(DioException e) {

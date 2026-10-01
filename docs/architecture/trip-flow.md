@@ -95,6 +95,17 @@ class TripContext {
 ```
 
 This normalized object can be serialized and passed directly into:
-- The AI Agent (`POST /ai/plan` or `/ai/chat`)
+- The AI Agent (`POST /trips/:id/ai-plan` or `POST /planner`)
 - The Recommendation Engine for personalized place scoring
 - The Safety check-in daemon to monitor trip dates and locations
+
+---
+
+## AI Trip Planner & Bulk Itinerary Lifecycle (Task 05)
+
+1. **Trigger from Mobile**: Traveler opens `TripDetailScreen` and taps `Lập lịch trình bằng AI`.
+2. **Context Compilation**: NestJS retrieves the authoritative `Trip` and `Destination` from PostgreSQL, calculates duration, and constructs `TripContext`.
+3. **AI Generation**: FastAPI `/planner` invokes Gemini with `TRAVEL_PLANNER_V1` and produces an unpersisted preview JSON.
+4. **Deterministic Validation**: NestJS calculates arithmetic totals (`sum(item.estimated_cost)`), compares against `trip.totalBudget`, and flags budget variances.
+5. **Interactive Preview**: Traveler reviews activities, budget comparison, and overwrite warnings.
+6. **Atomic Persistence**: On traveler confirmation, `POST /trips/:id/itinerary/bulk` runs an atomic `prisma.$transaction` that wipes old itineraries (if requested), creates the new days and items, and updates the trip status to `PLANNED` and `isAiGenerated = true`.

@@ -315,3 +315,180 @@ class AddItineraryItemRequest {
           'transportMode': transportMode,
       };
 }
+
+class AiPlanItemModel {
+  final int orderIndex;
+  final String? startTime;
+  final String? endTime;
+  final String activity;
+  final String? placeName;
+  final String? notes;
+  final int estimatedCost;
+  final String? transportMode;
+
+  const AiPlanItemModel({
+    required this.orderIndex,
+    this.startTime,
+    this.endTime,
+    required this.activity,
+    this.placeName,
+    this.notes,
+    this.estimatedCost = 0,
+    this.transportMode,
+  });
+
+  factory AiPlanItemModel.fromJson(Map<String, dynamic> json) {
+    return AiPlanItemModel(
+      orderIndex: json['orderIndex'] as int? ?? 1,
+      startTime: json['startTime'] as String?,
+      endTime: json['endTime'] as String?,
+      activity: json['activity'] as String? ?? '',
+      placeName: json['placeName'] as String?,
+      notes: json['notes'] as String?,
+      estimatedCost: json['estimatedCost'] as int? ?? 0,
+      transportMode: json['transportMode'] as String?,
+    );
+  }
+
+  Map<String, dynamic> toBulkItemJson() {
+    final effectiveNotes = placeName != null
+        ? (notes != null ? '$notes ($placeName)' : placeName)
+        : notes;
+    return {
+      'orderIndex': orderIndex,
+      'activity': activity,
+      if (startTime != null) 'startTime': startTime,
+      if (endTime != null) 'endTime': endTime,
+      if (effectiveNotes != null) 'notes': effectiveNotes,
+      'estimatedCost': estimatedCost,
+      if (transportMode != null) 'transportMode': transportMode,
+    };
+  }
+}
+
+class AiPlanDayModel {
+  final int dayNumber;
+  final String? date;
+  final String title;
+  final int dayCost;
+  final List<AiPlanItemModel> items;
+
+  const AiPlanDayModel({
+    required this.dayNumber,
+    this.date,
+    required this.title,
+    this.dayCost = 0,
+    this.items = const [],
+  });
+
+  factory AiPlanDayModel.fromJson(Map<String, dynamic> json) {
+    final rawItems = json['items'] as List<dynamic>? ?? [];
+    return AiPlanDayModel(
+      dayNumber: json['dayNumber'] as int? ?? 1,
+      date: json['date'] as String?,
+      title: json['title'] as String? ?? 'Ngay ${json['dayNumber'] ?? 1}',
+      dayCost: json['dayCost'] as int? ?? 0,
+      items: rawItems
+          .map((i) => AiPlanItemModel.fromJson(i as Map<String, dynamic>))
+          .toList(),
+    );
+  }
+
+  Map<String, dynamic> toBulkDayJson() => {
+        'dayNumber': dayNumber,
+        if (date != null) 'date': date,
+        'title': title,
+        'items': items.map((i) => i.toBulkItemJson()).toList(),
+      };
+}
+
+class BudgetAnalysisModel {
+  final int? totalBudget;
+  final int estimatedCost;
+  final String currency;
+  final bool isOverBudget;
+  final int variance;
+
+  const BudgetAnalysisModel({
+    this.totalBudget,
+    this.estimatedCost = 0,
+    this.currency = 'VND',
+    this.isOverBudget = false,
+    this.variance = 0,
+  });
+
+  factory BudgetAnalysisModel.fromJson(Map<String, dynamic> json) {
+    return BudgetAnalysisModel(
+      totalBudget: json['totalBudget'] as int?,
+      estimatedCost: json['estimatedCost'] as int? ?? 0,
+      currency: json['currency'] as String? ?? 'VND',
+      isOverBudget: json['isOverBudget'] as bool? ?? false,
+      variance: json['variance'] as int? ?? 0,
+    );
+  }
+}
+
+class AiPlanPreviewModel {
+  final String tripId;
+  final String destination;
+  final int totalDays;
+  final String overview;
+  final String bestTimeToVisit;
+  final List<String> generalTips;
+  final BudgetAnalysisModel budgetAnalysis;
+  final List<AiPlanDayModel> days;
+
+  const AiPlanPreviewModel({
+    required this.tripId,
+    required this.destination,
+    required this.totalDays,
+    required this.overview,
+    required this.bestTimeToVisit,
+    this.generalTips = const [],
+    required this.budgetAnalysis,
+    this.days = const [],
+  });
+
+  factory AiPlanPreviewModel.fromJson(Map<String, dynamic> json) {
+    final rawTips = json['generalTips'] as List<dynamic>? ?? [];
+    final rawDays = json['days'] as List<dynamic>? ?? [];
+
+    return AiPlanPreviewModel(
+      tripId: json['tripId'] as String? ?? '',
+      destination: json['destination'] as String? ?? '',
+      totalDays: json['totalDays'] as int? ?? 1,
+      overview: json['overview'] as String? ?? '',
+      bestTimeToVisit: json['bestTimeToVisit'] as String? ?? '',
+      generalTips: rawTips.map((t) => t.toString()).toList(),
+      budgetAnalysis: json['budgetAnalysis'] != null
+          ? BudgetAnalysisModel.fromJson(
+              json['budgetAnalysis'] as Map<String, dynamic>)
+          : const BudgetAnalysisModel(),
+      days: rawDays
+          .map((d) => AiPlanDayModel.fromJson(d as Map<String, dynamic>))
+          .toList(),
+    );
+  }
+
+  BulkSaveItineraryRequest toBulkSaveRequest({bool replaceExisting = true}) {
+    return BulkSaveItineraryRequest(
+      replaceExisting: replaceExisting,
+      days: days.map((d) => d.toBulkDayJson()).toList(),
+    );
+  }
+}
+
+class BulkSaveItineraryRequest {
+  final bool replaceExisting;
+  final List<Map<String, dynamic>> days;
+
+  const BulkSaveItineraryRequest({
+    this.replaceExisting = true,
+    required this.days,
+  });
+
+  Map<String, dynamic> toJson() => {
+        'replaceExisting': replaceExisting,
+        'days': days,
+      };
+}
