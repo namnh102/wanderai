@@ -1,8 +1,8 @@
 # PROJECT STATUS — WANDERAI (GoMate)
 
-**Last Updated:** 2026-10-01T18:30+07:00  
-**Current Phase:** Foundation Tracks: RAG & Recommendation (TASK 01 - TASK 06.4 complete)  
-**Current Milestone:** RAG Ingestion + Recommendation Baselines Verified; Review Intelligence Blocked on DUA  
+**Last Updated:** 2026-10-02T14:05+07:00  
+**Current Phase:** Map Feature Complete (TASK 01 - TASK 07 complete)  
+**Current Milestone:** Flutter Map with verified OSM places from PostGIS; Review Intelligence Blocked on DUA  
 
 ---
 
@@ -60,6 +60,8 @@
 | 48 | Task 06.4 Track A: RAG Ingestion & pgvector | 10 Wikivoyage destinations + OSM places: 628 chunks in pgvector (384-dim HNSW) | 2026-10-01 |
 | 49 | Task 06.4 Track A: Frozen Retrieval Evaluation | Da Nang culinary test (`RAG-EVAL-01`) verified with 0.68 similarity | 2026-10-01 |
 | 50 | Task 06.4 Track B: ViHoRec Recommendation Pipeline | 17,911 interactions audited, MostPop baseline evaluated on 798 test users | 2026-10-01 |
+| 51 | Task 07: Map Feature — flutter_map + PostGIS | 108 verified OSM places on map, category filter, nearby search, preview | 2026-10-02 |
+| 52 | ADR-005 Map Provider (flutter_map + OSM tiles) | `docs/architecture/decisions/ADR-005-map-provider.md` | 2026-10-02 |
 
 ---
 
@@ -78,8 +80,8 @@
 |-------|------|------|-------|
 | Backend Integration (Jest / Supertest) | 42 | 0 | 42 |
 | AI Service (pytest — tools, chat, planner, pipeline, RAG, recommendation) | 37 | 0 | 37 |
-| Mobile App (Flutter Widget & Unit Tests) | 39 | 0 | 39 |
-| **Total Automated Baseline** | **118** | **0** | **118** |
+| Mobile App (Flutter Widget & Unit Tests) | 60 | 0 | 60 |
+| **Total Automated Baseline** | **139** | **0** | **139** |
 
 ---
 
@@ -91,3 +93,4 @@
 | ADR-002 | Real Travel Data Pipeline from OSM with Entity Resolution | ACCEPTED |
 | ADR-003 | Trip Context Schema Extension for Deterministic Validation | ACCEPTED |
 | ADR-004 | Domain-Segregated Dataset Matrix (ViHoRec for RecSys, VLSP for ABSA, Wikivoyage for RAG) | ACCEPTED |
+| ADR-005 | Map Provider: flutter_map + OpenStreetMap tiles (no API keys, thesis-friendly) | ACCEPTED |
