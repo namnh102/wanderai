@@ -9,6 +9,7 @@ import '../../features/ai_chat/presentation/ai_chat_screen.dart';
 import '../../features/trips/presentation/trip_list_screen.dart';
 import '../../features/trips/presentation/trip_form_screen.dart';
 import '../../features/trips/presentation/trip_detail_screen.dart';
+import '../../features/map/presentation/map_screen.dart';
 
 // Placeholder screens for tabs not yet implemented
 class _PlaceholderScreen extends StatelessWidget {
@@ -88,7 +89,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state, child) => _MainScaffold(child: child),
         routes: [
           GoRoute(path: '/', builder: (_, __) => const HomeScreen()),
-          GoRoute(path: '/companion', builder: (_, __) => const _PlaceholderScreen(title: 'Dong hanh', icon: Icons.diversity_1)),
+          GoRoute(path: '/map', builder: (_, __) => const MapScreen()),
           GoRoute(path: '/ai', builder: (_, __) => const AiChatScreen()),
           GoRoute(path: '/safety', builder: (_, __) => const _PlaceholderScreen(title: 'An toan', icon: Icons.shield)),
           GoRoute(path: '/trips', builder: (_, __) => const TripListScreen()),
@@ -102,7 +103,7 @@ class _MainScaffold extends StatelessWidget {
   final Widget child;
   const _MainScaffold({required this.child});
 
-  static const _tabs = ['/', '/companion', '/ai', '/safety', '/trips'];
+  static const _tabs = ['/', '/map', '/ai', '/safety', '/trips'];
 
   @override
   Widget build(BuildContext context) {
@@ -121,9 +122,9 @@ class _MainScaffold extends StatelessWidget {
             label: 'Kham pha',
           ),
           NavigationDestination(
-            icon: Icon(Icons.diversity_1_outlined),
-            selectedIcon: Icon(Icons.diversity_1),
-            label: 'Dong hanh',
+            icon: Icon(Icons.map_outlined),
+            selectedIcon: Icon(Icons.map),
+            label: 'Bản đồ',
           ),
           NavigationDestination(
             icon: Icon(Icons.auto_awesome_outlined),
