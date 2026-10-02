@@ -34,10 +34,8 @@ class _MapScreenState extends ConsumerState<MapScreen> {
     // Try to get user location; fall back to default (Hanoi).
     await _tryGetLocation();
 
-    final state = ref.read(mapProvider);
-    if (state.status == MapLoadingStatus.initial) {
-      ref.read(mapProvider.notifier).loadNearby();
-    }
+    // Always load nearby places, regardless of location result.
+    ref.read(mapProvider.notifier).loadNearby();
   }
 
   Future<void> _tryGetLocation() async {
