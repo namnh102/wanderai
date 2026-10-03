@@ -22,11 +22,10 @@ const mapCategories = [
   PlaceCategory('attraction', 'Tham quan', 'attractions', '#9C27B0'),
   PlaceCategory('restaurant', 'Nhà hàng', 'restaurant', '#FF5722'),
   PlaceCategory('hotel', 'Khách sạn', 'hotel', '#2196F3'),
-  PlaceCategory('temple', 'Đền/Chùa', 'temple_buddhist', '#FF9800'),
+  PlaceCategory('culture', 'Văn hóa', 'museum', '#FF9800'),
   PlaceCategory('beach', 'Biển', 'beach_access', '#00BCD4'),
-  PlaceCategory('museum', 'Bảo tàng', 'museum', '#607D8B'),
-  PlaceCategory('park', 'Công viên', 'park', '#8BC34A'),
-  PlaceCategory('market', 'Chợ', 'store', '#4CAF50'),
+  PlaceCategory('nature', 'Thiên nhiên', 'park', '#8BC34A'),
+  PlaceCategory('entertainment', 'Giải trí', 'celebration', '#E91E63'),
   PlaceCategory('cafe', 'Cà phê', 'local_cafe', '#795548'),
 ];
 

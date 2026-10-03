@@ -14,7 +14,7 @@ export class PlacesController {
   @ApiQuery({ name: 'search', required: false, type: String, example: 'Cầu Rồng' })
   @ApiQuery({ name: 'category', required: false, type: String, example: 'attraction' })
   @ApiQuery({ name: 'destinationId', required: false, type: String })
-  @ApiQuery({ name: 'verifiedOnly', required: false, type: Boolean, example: true, description: 'Chỉ trả về các địa điểm đã kiểm chứng provenance (OSM canonical)' })
+  @ApiQuery({ name: 'verifiedOnly', required: false, type: Boolean, example: true, description: 'Mặc định true: chỉ trả về địa điểm đã kiểm chứng provenance (OSM canonical). Truyền false để gồm cả bản ghi dev/test chưa có nguồn' })
   async findAll(
     @Query('page') page?: string,
     @Query('limit') limit?: string,
@@ -29,7 +29,7 @@ export class PlacesController {
       search,
       category,
       destinationId,
-      verifiedOnly === 'true',
+      verifiedOnly !== 'false', // default: verified places only; ?verifiedOnly=false includes unsourced dev/test records
     );
   }
 
@@ -39,7 +39,7 @@ export class PlacesController {
   @ApiQuery({ name: 'lng', required: true, type: Number, example: 108.2272 })
   @ApiQuery({ name: 'radius', required: false, type: Number, example: 10, description: 'Bán kính tính bằng km' })
   @ApiQuery({ name: 'limit', required: false, type: Number, example: 20 })
-  @ApiQuery({ name: 'verifiedOnly', required: false, type: Boolean, example: true, description: 'Chỉ trả về các địa điểm đã kiểm chứng provenance' })
+  @ApiQuery({ name: 'verifiedOnly', required: false, type: Boolean, example: true, description: 'Mặc định true. Truyền false để gồm cả bản ghi dev/test chưa có nguồn' })
   async findNearby(
     @Query('lat') lat: string,
     @Query('lng') lng: string,
@@ -52,7 +52,7 @@ export class PlacesController {
       Number(lng),
       radius ? Number(radius) : 10,
       limit ? Number(limit) : 20,
-      verifiedOnly === 'true',
+      verifiedOnly !== 'false', // default: verified places only; ?verifiedOnly=false includes unsourced dev/test records
     );
   }
 

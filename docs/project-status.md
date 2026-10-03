@@ -24,7 +24,7 @@
 | 12 | AI health — GET /health | `{"status":"ok","llm_provider":"gemini"}` | 2026-10-01 |
 | 13 | AI chat — POST /chat | Wandy replied (865 chars) | 2026-10-01 |
 | 14 | Database — 37 tables verified on 2026-10-01 (2026-10-03: 38 relations in `public`, incl. `_prisma_migrations` and PostGIS objects) | `information_schema` count | 2026-10-01 |
-| 15 | Database rows — 2026-10-01: 50 dest, 112 places, 1 user. **Current (2026-10-04): 50 dest, 220 places (97 verified + 123 without verified source), 97 place_sources (13 quarantined), 5 users** | `SELECT count(*)`; `docs/data/current-database-state.md` | 2026-10-03 |
+| 15 | Database rows — 2026-10-01: 50 dest, 112 places, 1 user. **Current (2026-10-04): 50 dest, 480 places (357 verified + 123 without verified source), 357 place_sources (13 quarantined), 5 users** | `SELECT count(*)`; `docs/data/current-database-state.md` | 2026-10-03 |
 | 16 | PlaceSource model + migration | `place_sources` table (10 columns) | 2026-10-01 |
 | 17 | Fake data labelled as synthetic | `data/manifests/sources.yaml` | 2026-10-01 |
 | 18 | Data pipeline directories | `data/{raw,processed,seed,evaluation,manifests,restricted}` | 2026-10-01 |

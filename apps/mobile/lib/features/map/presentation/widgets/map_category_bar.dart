@@ -69,11 +69,10 @@ class MapCategoryBar extends StatelessWidget {
       case 'attraction': return Icons.attractions;
       case 'restaurant': return Icons.restaurant;
       case 'hotel': return Icons.hotel;
-      case 'temple': return Icons.temple_buddhist;
+      case 'culture': return Icons.museum;
       case 'beach': return Icons.beach_access;
-      case 'museum': return Icons.museum;
-      case 'park': return Icons.park;
-      case 'market': return Icons.store;
+      case 'nature': return Icons.park;
+      case 'entertainment': return Icons.celebration;
       case 'cafe': return Icons.local_cafe;
       default: return Icons.place;
     }
