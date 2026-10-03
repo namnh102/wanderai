@@ -47,10 +47,13 @@ FastAPI AI Service (Port 8000)
    - If missing/invalid -> returns `401 Unauthorized`.
    - Flutter `ChatNotifier` intercepts 401 and calls `authProvider.notifier.logout()`, redirecting to `/login`.
 6. **Proxy forwarding**: NestJS forwards to `FastAPI:8000/chat`.
-7. **LLM & Tool Calling**: Gemini 3.5 Flash evaluates system prompt and calls functions if necessary (weather, places, budget, hotels).
-8. **Response Return**: FastAPI returns `{reply, session_id, tools_used, tool_calls}`.
-9. **Gateway format**: NestJS wraps in `{success: true, data: {...}, timestamp: "..."}`.
-10. **State update**: Flutter app receives response, appends assistant message, and updates `sessionId` for subsequent conversation turns.
+7. **RAG Knowledge Grounding**: FastAPI `retrieve_grounding()` queries `RAGService` to retrieve relevant verified OpenStreetMap and Wikivoyage chunks.
+   - Verified chunks are prepended as grounding context along with a strict no-hallucination instruction.
+   - Distinct source URLs (OSM way/node links, Wikivoyage page links) are extracted as `sources`.
+8. **LLM & Tool Calling**: Gemini 3.5 Flash evaluates the grounded prompt and calls functions if necessary (weather, places, budget, hotels). The Wandy system prompt mandates using only facts present in context or tool results, specifying deterministic fallback phrases if missing.
+9. **Response Return**: FastAPI returns `{reply, session_id, tools_used, tool_calls, sources}`.
+10. **Gateway format**: NestJS wraps in `{success: true, data: {...}, timestamp: "..."}`.
+11. **State update & Source UI**: Flutter app receives response, appends assistant message with `sources`. If `sources` is non-empty, `AiChatScreen` renders a compact, secondary "Nguồn tham khảo:" section with interactive source chips linking to OpenStreetMap and Wikivoyage.
 
 ## Timeout & Error Handling
 

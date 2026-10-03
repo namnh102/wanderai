@@ -57,6 +57,10 @@ All NestJS successful responses are wrapped by `TransformInterceptor`:
         "args": { "destination": "Đà Nẵng", "category": "attraction" },
         "result": { ... }
       }
+    ],
+    "sources": [
+      "https://www.openstreetmap.org/way/37933256",
+      "https://en.wikivoyage.org/wiki/Hanoi"
     ]
   },
   "timestamp": "2026-10-01T08:17:01.291Z"
@@ -70,6 +74,7 @@ All NestJS successful responses are wrapped by `TransformInterceptor`:
 | `data.session_id` | string | The active session ID (preserved or newly generated) |
 | `data.tools_used` | string[] | Array of tool names invoked during generation |
 | `data.tool_calls` | object[] | Detailed execution log of tool invocations |
+| `data.sources` | string[] | Public canonical source URLs (OpenStreetMap, Wikivoyage) that grounded the retrieved context; empty array `[]` if no documents retrieved |
 | `timestamp` | string | ISO-8601 UTC timestamp of response |
 
 #### Error Responses

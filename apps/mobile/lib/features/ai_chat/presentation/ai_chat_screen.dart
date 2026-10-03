@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../data/chat_models.dart';
 import '../providers/chat_provider.dart';
 
@@ -230,13 +231,21 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
                   bottomRight: Radius.circular(isUser ? 4 : 16),
                 ),
               ),
-              child: SelectableText(
-                message.content,
-                style: TextStyle(
-                  fontSize: 14,
-                  height: 1.4,
-                  color: isUser ? cs.onPrimary : cs.onSurface,
-                ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  SelectableText(
+                    message.content,
+                    style: TextStyle(
+                      fontSize: 14,
+                      height: 1.4,
+                      color: isUser ? cs.onPrimary : cs.onSurface,
+                    ),
+                  ),
+                  if (!isUser && message.sources.isNotEmpty)
+                    _buildSourcesSection(message.sources, cs),
+                ],
               ),
             ),
           ),
@@ -244,6 +253,134 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
         ],
       ),
     );
+  }
+
+  Widget _buildSourcesSection(List<String> sources, ColorScheme cs) {
+    if (sources.isEmpty) return const SizedBox.shrink();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        const SizedBox(height: 10),
+        Divider(
+          height: 1,
+          thickness: 0.8,
+          color: cs.outlineVariant.withValues(alpha: 0.4),
+        ),
+        const SizedBox(height: 8),
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.auto_stories_outlined,
+              size: 13,
+              color: cs.onSurfaceVariant,
+            ),
+            const SizedBox(width: 4),
+            Text(
+              'Nguon tham khao:',
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                color: cs.onSurfaceVariant,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 6),
+        Wrap(
+          spacing: 6,
+          runSpacing: 6,
+          children: sources.map((url) => _buildSourceChip(url, cs)).toList(),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSourceChip(String url, ColorScheme cs) {
+    final label = _formatSourceLabel(url);
+
+    return Tooltip(
+      message: url,
+      child: Material(
+        color: cs.surfaceContainerHighest.withValues(alpha: 0.4),
+        borderRadius: BorderRadius.circular(8),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(8),
+          onTap: () => _launchSourceUrl(url),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              border: Border.all(
+                color: cs.outlineVariant.withValues(alpha: 0.5),
+                width: 0.8,
+              ),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.open_in_new,
+                  size: 11,
+                  color: cs.primary,
+                ),
+                const SizedBox(width: 4),
+                ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 220),
+                  child: Text(
+                    label,
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w500,
+                      color: cs.primary,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  String _formatSourceLabel(String url) {
+    try {
+      final uri = Uri.parse(url);
+      if (uri.host.contains('openstreetmap.org')) {
+        final segments = uri.pathSegments;
+        if (segments.length >= 2) {
+          return 'OpenStreetMap (${segments[0]}/${segments[1]})';
+        }
+        return 'OpenStreetMap';
+      }
+      if (uri.host.contains('wikivoyage.org')) {
+        final segments = uri.pathSegments;
+        if (segments.isNotEmpty) {
+          final title = Uri.decodeComponent(segments.last).replaceAll('_', ' ');
+          return 'Wikivoyage: $title';
+        }
+        return 'Wikivoyage';
+      }
+      return uri.host.isNotEmpty ? uri.host : url;
+    } catch (_) {
+      return 'Nguon tham khao';
+    }
+  }
+
+  Future<void> _launchSourceUrl(String url) async {
+    try {
+      final uri = Uri.parse(url);
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      }
+    } catch (_) {
+      // Graceful fallback: do not crash on invalid URL or unsupported environment
+    }
   }
 
   Widget _buildLoadingBubble(ColorScheme cs) {

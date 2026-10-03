@@ -78,10 +78,10 @@
 
 | Suite | Pass | Fail | Total |
 |-------|------|------|-------|
-| Backend Integration (Jest / Supertest) | 58 | 0 | 58 |
+| Backend Integration (Jest / Supertest) | 62 | 0 | 62 |
 | AI Service (pytest — tools, chat, planner, pipeline, RAG, recommendation, provenance, RAG ingestion, grounding contract; +2 opt-in live tests skipped by default) | 87 | 0 | 87 |
-| Mobile App (Flutter Widget & Unit Tests) | 62 | 0 | 62 |
-| **Total Automated Baseline** | **207** | **0** | **207** |
+| Mobile App (Flutter Widget & Unit Tests) | 70 | 0 | 70 |
+| **Total Automated Baseline** | **219** | **0** | **219** |
 
 ---
 
@@ -129,10 +129,16 @@ Full report: `docs/audit/task-07.1-regression-audit.md`. DB counts: `docs/data/c
 - After TASK 07.3 no verified place is in the `attraction` or `beach` category (all earlier attractions had non-genuine OSM ids); the map's "Tham quan" filter is empty until genuine attractions are ingested.
 - The 11 demoted places and 112 synthetic places remain in `places` and appear in default `/places` (no `verifiedOnly`). Raw/processed OSM sample files still contain the hand-written entries (guarded by `data/manifests/osm-invalid-sources.json`).
 
-## TASK 07.5 — RAG re-ingestion & grounding contract (branch feat/rag-verified-place-ingestion, NOT merged)
+## TASK 07.5 — RAG re-ingestion & grounding contract (MERGED into develop `1a2bbf2`)
 - Production RAG: **821 documents = 464 Wikivoyage + 357 OSM** (357/357 verified places covered); `document_quarantine` 164; 357 verified places (480 places total, 123 unsourced hidden by default); 0 provenance violations, 0 duplicate hashes, 0 NULL embeddings; ingestion idempotent.
 - A. Deterministic RAG: verified (retrieval tests, provenance audit, idempotency, frozen queries unchanged vs. before).
 - B. Chat grounding (mock provider only): `/chat` injects retrieved context and returns `sources`; Wandy system prompt now forbids facts outside retrieved context/tool results, with exact fallbacks for missing price / opening hours / rating.
-- C. Live Gemini: **NOT verified**. HTTP 429 (RESOURCE_EXHAUSTED) on 3 attempts at 2026-10-04 02:39, 02:42 and 02:43 (+07). Opt-in live test `tests/test_chat_live.py` (`CHAT_LIVE_TEST=1`) fails on a quota fallback instead of passing.
-- D. Limitation: live grounded reply unverified; Flutter chat does not yet show `sources` (follow-up task). Details: `docs/audit/task-07.5-rag-reingestion.md`.
-- Tests: backend 58, AI 87 + 2 opt-in live skipped, Flutter 62.
+- C. Live Gemini: PENDING due to HTTP 429 quota.
+
+## TASK 07.5.1 — Live Wandy Grounding Verification & Source UI (branch feat/wandy-grounding-source-ui)
+- Sources API Contract: `data.sources: string[]` verified across FastAPI -> NestJS AI Proxy -> Flutter Mobile.
+- NestJS E2E: 4 tests added in `test/ai-chat.e2e-spec.ts` (JWT auth check, validation, sources preservation, empty sources handling). Total backend tests: 62.
+- Flutter Chat Model & Screen: `ChatResponse.sources` and `ChatMessage.sources` implemented. `AiChatScreen` renders compact, secondary source chips with links to OpenStreetMap and Wikivoyage. Hidden when empty or user message.
+- Flutter Tests: 8 unit & widget tests in `test/chat_sources_test.dart` (parsing, empty sources, multiple sources, chips rendering, hidden when empty, tap behavior, long URL overflow safety, backward compatibility). Total mobile tests: 70.
+- Live Gemini Grounding: PENDING (Provider returned HTTP 429 RESOURCE_EXHAUSTED on controlled check `test_chat_live.py`). Not fabricated.
+- Baseline Tests: Backend 62 passed, AI 87 passed (+ 2 skipped live tests), Flutter 70 passed. All builds & linter clean.

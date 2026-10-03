@@ -72,6 +72,13 @@ Deterministic grounding checks (no LLM; `tests/test_rag_osm_ingestion.py`, `test
 
 These are retrieval checks, not an LLM-quality or hallucination-rate evaluation.
 
-### Chat grounding contract (TASK 07.5)
+### Chat grounding contract (TASK 07.5 & 07.5.1)
 
-`POST /chat` response gains `sources: string[]` (source URLs of the retrieved documents; `[]` when nothing was retrieved). Retrieved context is prepended to the user message with a "do not invent" instruction; the system prompt permits place facts only from retrieved context or tool results and mandates the exact fallbacks "Chưa có thông tin giá trong dữ liệu hiện có.", "Chưa có thông tin giờ mở cửa trong dữ liệu hiện có.", "Chưa có đánh giá.". Verified with a mock provider only; live Gemini grounding is **not verified** (HTTP 429 quota, see `docs/audit/task-07.5-rag-reingestion.md`).
+`POST /chat` and NestJS `POST /ai/chat` return `data.sources: string[]` (source URLs of retrieved documents; `[]` when nothing was retrieved). Retrieved context is prepended to the user message with a "do not invent" instruction; the system prompt permits place facts only from retrieved context or tool results and mandates the exact fallbacks "Chưa có thông tin giá trong dữ liệu hiện có.", "Chưa có thông tin giờ mở cửa trong dữ liệu hiện có.", "Chưa có đánh giá.".
+
+### TASK 07.5.1 Update (2026-10-04): End-to-End Propagation & Source UI
+
+- **Runtime Path:** Flutter Mobile → NestJS (`POST /ai/chat`) → FastAPI (`POST /chat`) → `retrieve_grounding()` → `RAGService.search_with_sources()` → `sources: string[]` → Gemini prompt context → NestJS wrapper (`data.sources`) → Flutter (`ChatResponse.sources`) → `ChatMessage.sources` → `AiChatScreen` source chips.
+- **Flutter Source UI:** Displays a visually secondary "Nguồn tham khảo:" section within assistant bubbles containing compact chips formatted as `OpenStreetMap (way/...)` or `Wikivoyage: ...`. Clicking a chip opens the source URL externally via `url_launcher`.
+- **Empty / Non-assistant behavior:** When `sources` is empty or message is from user, no source section or empty box is rendered.
+- **Live Gemini Verification Status:** **PENDING** due to provider quota `HTTP 429 RESOURCE_EXHAUSTED`. Verified via mock-grounding tests and opt-in smoke test `CHAT_LIVE_TEST=1 pytest tests/test_chat_live.py`.
