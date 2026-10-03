@@ -1,7 +1,7 @@
 # PROJECT STATUS — WANDERAI (GoMate)
 
-**Last Updated:** 2026-10-03T16:00+07:00  
-**Current Phase:** TASK 07.1 regression audit done — 2 regressions found (AI Planner, provenance of 11 places); see "Known Regressions"  
+**Last Updated:** 2026-10-04T00:55+07:00  
+**Current Phase:** TASK 07.2 done — R1 (AI Planner) fixed on branch `fix/ai-planner-live`; R2/R3 provenance still open; see "Known Regressions"  
 **Current Milestone:** Flutter Map with verified OSM places from PostGIS; Review Intelligence Blocked on DUA  
 
 ---
@@ -42,7 +42,7 @@
 | 30 | Trips backend authorization & validation | 11 E2E security & CRUD tests | 2026-10-01 |
 | 31 | Flutter Trips flow & TripContext abstraction | 11 Flutter unit & widget tests | 2026-10-01 |
 | 32 | Trips API & Flow documentation | `docs/api/trips-api.md`, `docs/architecture/trip-flow.md` | 2026-10-01 |
-| 33 | AI Trip Planner via TripContext | `POST /trips/:id/ai-plan`, prompt `TRAVEL_PLANNER_V1` — **live call currently broken, see R1** | 2026-10-01 |
+| 33 | AI Trip Planner via TripContext | `POST /trips/:id/ai-plan`, prompt `TRAVEL_PLANNER_V1` — live call restored in TASK 07.2 (model `gemini-3.5-flash`, 16384 output tokens); see R1 | 2026-10-01 |
 | 34 | Bulk Itinerary Atomic Persistence | `POST /trips/:id/itinerary/bulk` via `prisma.$transaction` | 2026-10-01 |
 | 35 | Deterministic Validation & Budget Arithmetic | Day cost & budget comparison computed by code | 2026-10-01 |
 | 36 | AI Planner Evaluation Dataset | `data/evaluation/planner/` (3 scenarios + evaluator) | 2026-10-01 |
@@ -78,10 +78,10 @@
 
 | Suite | Pass | Fail | Total |
 |-------|------|------|-------|
-| Backend Integration (Jest / Supertest) | 42 | 0 | 42 |
-| AI Service (pytest — tools, chat, planner, pipeline, RAG, recommendation) | 37 | 0 | 37 |
+| Backend Integration (Jest / Supertest) | 43 | 0 | 43 |
+| AI Service (pytest — tools, chat, planner, pipeline, RAG, recommendation; +1 opt-in live test skipped by default) | 43 | 0 | 43 |
 | Mobile App (Flutter Widget & Unit Tests) | 60 | 0 | 60 |
-| **Total Automated Baseline** | **139** | **0** | **139** |
+| **Total Automated Baseline** | **146** | **0** | **146** |
 
 ---
 
@@ -105,7 +105,7 @@ Full report: `docs/audit/task-07.1-regression-audit.md`. DB counts: `docs/data/c
 
 | # | Subsystem | Problem | Evidence |
 |---|-----------|---------|----------|
-| R1 | AI Planner | `apps/ai-service/app/routers/planner.py` hardcodes retired model `gemini-2.0-flash` (404) and `max_output_tokens=4096` is exhausted by thinking tokens on `gemini-3.5-flash`. Live `POST /trips/:id/ai-plan` returns 500. The 37 pytest tests still pass (mock/no-key fallback = false green). | live call + direct Gemini probe |
+| R1 | AI Planner — **FIXED in TASK 07.2 (2026-10-04)**, see `docs/ai/ai-planner.md` §8. Original problem: | `apps/ai-service/app/routers/planner.py` hardcodes retired model `gemini-2.0-flash` (404) and `max_output_tokens=4096` is exhausted by thinking tokens on `gemini-3.5-flash`. Live `POST /trips/:id/ai-plan` returns 500. The 37 pytest tests still pass (mock/no-key fallback = false green). | live call + direct Gemini probe |
 | R2 | Provenance | 11 of 108 "verified" places have a `place_sources` OSM ID that is not a genuine matching OSM node (5 point to unrelated nodes, 6 do not exist on Overpass). Genuine: 97 places. The 8 reviews all sit on these 11 places. | Overpass check of 110 source IDs |
 | R3 | Data | 100 of 108 verified places have a fabricated default rating 4.5 (`resolve.py` default); the map preview shows it. | DB query |
 
@@ -122,3 +122,5 @@ Full report: `docs/audit/task-07.1-regression-audit.md`. DB counts: `docs/data/c
 - Map tiles do not load on the author's network (OSM hosts blocked/DNS-poisoned); CARTO and OpenFreeMap are reachable. Not fixed.
 - Flutter: "An toàn" tab is a placeholder; some UI strings lack diacritics.
 - Test-count history (47/69/86/106/110/118/139) = cumulative totals at successive merges; current baseline is 139.
+- Flutter web: GlobalKey duplicate-widget exception seen in the console after reload + opening a trip detail (TASK 07.2 manual E2E); not investigated.
+- Planner latency ~30 s per plan (real Gemini); Flutter i-plan request uses a 75 s timeout.

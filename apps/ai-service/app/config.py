@@ -7,6 +7,9 @@ class Settings(BaseSettings):
     DATABASE_URL: str = "postgresql://postgres:postgres@localhost:5432/wanderai"
     REDIS_HOST: str = "localhost"
     REDIS_PORT: int = 6379
+    PLANNER_MODEL: str = "gemini-3.5-flash"
+    PLANNER_MAX_OUTPUT_TOKENS: int = 16384
+    PLANNER_TIMEOUT_MS: int = 55000
     CLOUDINARY_CLOUD_NAME: str = ""
     CLOUDINARY_API_KEY: str = ""
     CLOUDINARY_API_SECRET: str = ""

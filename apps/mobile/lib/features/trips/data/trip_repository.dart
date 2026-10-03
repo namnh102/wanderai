@@ -103,6 +103,12 @@ class TripRepository {
       data: {
         if (prompt != null && prompt.isNotEmpty) 'additionalPrompt': prompt,
       },
+      // Real LLM planning takes ~30 s; global timeout is 15 s. Stay above the
+      // NestJS->FastAPI timeout (60 s) so server errors surface instead of timeouts.
+      options: Options(
+        sendTimeout: const Duration(seconds: 75),
+        receiveTimeout: const Duration(seconds: 75),
+      ),
     );
     final data = response.data;
     if (data is Map<String, dynamic> && data['data'] is Map<String, dynamic>) {
