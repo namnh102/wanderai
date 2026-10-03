@@ -1,8 +1,8 @@
 # PROJECT STATUS — WANDERAI (GoMate)
 
-**Last Updated:** 2026-10-04T03:45+07:00  
-**Current Phase:** TASK 07.6 done on branch `feature/ui-foundation-map-stability` — GoMate design tokens, responsive layout, CARTO Voyager basemap, GlobalKey resolved, honest rating display, Wandy chat polish  
-**Current Milestone:** GoMate Design System & UI Foundation Established; CARTO Voyager Basemap Stable; Review Intelligence Blocked on DUA  
+**Last Updated:** 2026-10-04T04:10+07:00  
+**Current Phase:** TASK 07.6.1 done on branch `feature/ui-foundation-map-stability` — OpenStreetMap Humanitarian (HOT) tile provider adopted, CARTO watermark eliminated, GlobalKey resolved, honest rating display, Wandy chat polish  
+**Current Milestone:** GoMate Design System & UI Foundation Established; Clean OpenStreetMap Humanitarian Basemap Stable; Review Intelligence Blocked on DUA  
 
 ---
 
@@ -154,8 +154,15 @@ Full report: `docs/audit/task-07.1-regression-audit.md`. DB counts: `docs/data/c
 - Shared Reusable Widgets: `ResponsiveWrapper`, `AppButton`, `AppCard`, `AppChip`, `AppBadge`, `RatingView`, `AppLoading`, `AppEmptyState`, `AppErrorState`.
 - Layout Stability: Responsive max-width container (640px phone/sheet, 720px tablet, 800px desktop) eliminated vast whitespace on desktop/web viewports.
 - Router & Lifecycle Stability: Persistent root and shell navigator keys via `RouterNotifier` with `refreshListenable`, permanently eliminating the "Multiple widgets used the same GlobalKey" console exception.
-- Map Provider & Grey Tiles: ADR-006 adopted CARTO Voyager raster tiles (`https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png`), verified empirical reachability (~147ms) in Vietnam network conditions, 0 API key required.
+- Map Provider & Grey Tiles: ADR-006 adopted OpenStreetMap Humanitarian (HOT) raster tiles (`https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png`) with OSM-FR fallback, resolving both blocked upstream OSM and the CARTO unauthenticated watermark banner.
 - Map Preview Sheet & Stale State: Category marker filtering now clears `selectedPlace` (`clearSelectedPlace: true`), preventing stale preview sheet state across filter changes.
 - Rating Integrity & Truth in Advertising: `RatingView` strictly displays "Chưa có đánh giá" when rating is `null` or `0.0`. Zero synthetic or fabricated ratings displayed.
 - Wandy AI Chat Polish: Styled with GoMate design tokens and responsive container while preserving 100% of grounded source chips (`OpenStreetMap`, `Wikivoyage`).
 - Automated Baseline: Backend 62 passed, AI 87 passed (+ 2 skipped live tests), Flutter 82 passed (12 new comprehensive tests). Total: **231 passed**. All builds, analyzer, and linter clean.
+
+## TASK 07.6.1 — Final Map Tile Verification & Cleanup (branch feature/ui-foundation-map-stability)
+- Watermark Resolution: Eliminated CARTO unauthenticated watermark banner ("API KEY REQUIRED carto.com/basemaps/apikey") by switching to OpenStreetMap Humanitarian (HOT) with OSM-FR fallback.
+- Tile Reachability & Speed: 100% reachable in Vietnam without VPN (HTTP 200, ~165ms latency, CORS `*`).
+- Attribution: Visible attribution updated to `OpenStreetMap contributors` and `Tiles: Humanitarian OpenStreetMap Team / OSM France`.
+- Zero Key Exposure: Zero API keys or secrets required or committed.
+- Documentation: Updated `docs/architecture/decisions/ADR-006-map-tile-provider.md` and `docs/architecture/ui-architecture.md`.

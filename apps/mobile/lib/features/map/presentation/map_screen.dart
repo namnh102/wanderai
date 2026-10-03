@@ -91,11 +91,13 @@ class _MapScreenState extends ConsumerState<MapScreen> {
               onTap: (_, __) => ref.read(mapProvider.notifier).deselectPlace(),
             ),
             children: [
-              // CARTO Voyager Basemap Tiles (Reachable in Vietnam, OSM-based)
+              // OpenStreetMap Humanitarian (HOT) Basemap Tiles (Reachable in Vietnam, OSM-based, no watermark)
               TileLayer(
                 urlTemplate:
-                    'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png',
-                subdomains: const ['a', 'b', 'c', 'd'],
+                    'https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png',
+                fallbackUrl:
+                    'https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png',
+                subdomains: const ['a', 'b', 'c'],
                 userAgentPackageName: 'com.wanderai.mobile',
                 maxZoom: 19,
               ),
@@ -138,7 +140,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                 alignment: AttributionAlignment.bottomLeft,
                 attributions: [
                   TextSourceAttribution('OpenStreetMap contributors'),
-                  TextSourceAttribution('CARTO'),
+                  TextSourceAttribution('Tiles: Humanitarian OpenStreetMap Team / OSM France'),
                 ],
               ),
             ],

@@ -149,13 +149,15 @@ To eliminate the Flutter console warning `"Multiple widgets used the same Global
 ├────────────────────────────────────────────────────────┤
 │ Custom POI Markers (PostGIS LatLng + Category Icons)   │
 ├────────────────────────────────────────────────────────┤
-│ CARTO Voyager Raster Basemap (TileLayer)               │
+│ OpenStreetMap Humanitarian (HOT) Raster Basemap        │
 └────────────────────────────────────────────────────────┘
 ```
 
 ### 5.2 Basemap Provider
-- Provider: **CARTO Voyager** (`https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png`).
-- Fully accessible from Vietnamese ISPs (Status 200, ~140ms response).
+- Primary Provider: **OpenStreetMap Humanitarian (HOT)** (`https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png`).
+- Fallback Provider: **OpenStreetMap France (OSM-FR)** (`https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png`).
+- Fully accessible from Vietnamese ISPs (Status 200, ~165ms response, CORS enabled).
+- Clean raster cartography with zero watermarks (resolving CARTO unauthenticated watermark issue).
 - High visual readability behind colorful POI markers.
 
 ### 5.3 Preview Sheet State Machine
