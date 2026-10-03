@@ -11,10 +11,11 @@ import os
 import pytest
 from fastapi.testclient import TestClient
 
+from app.config import settings
 from app.main import app
 
 pytestmark = pytest.mark.skipif(
-    os.getenv("CHAT_LIVE_TEST") != "1" or not os.getenv("GEMINI_API_KEY"),
+    os.getenv("CHAT_LIVE_TEST") != "1" or not settings.GEMINI_API_KEY,
     reason="live test: set CHAT_LIVE_TEST=1 and GEMINI_API_KEY",
 )
 

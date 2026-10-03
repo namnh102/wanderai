@@ -82,6 +82,7 @@ class ChatNotifier extends StateNotifier<ChatState> {
         role: MessageRole.assistant,
         content: response.reply,
         timestamp: DateTime.now(),
+        sources: response.sources,
       );
 
       state = state.copyWith(

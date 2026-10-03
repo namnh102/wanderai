@@ -1,7 +1,15 @@
 import 'package:flutter/material.dart';
+import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_radius.dart';
+import '../../../../core/theme/app_spacing.dart';
+import '../../../../core/theme/app_typography.dart';
+import '../../../../core/widgets/app_badge.dart';
+import '../../../../core/widgets/rating_view.dart';
+import '../../../../core/widgets/responsive_wrapper.dart';
 import '../../data/place_model.dart';
 
 /// Bottom sheet showing place preview when a marker is tapped.
+/// Follows GoMate Design Spec Section 6.8 & Rating Integrity DUX-02.
 class PlacePreviewSheet extends StatelessWidget {
   final PlaceModel place;
   final VoidCallback onClose;
@@ -14,207 +22,180 @@ class PlacePreviewSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final bottomPadding = MediaQuery.of(context).padding.bottom;
+    final catColor = AppColors.forCategory(place.categoryName);
 
-    return Container(
-      padding: EdgeInsets.only(
-        left: 16,
-        right: 16,
-        top: 12,
-        bottom: bottomPadding + 12,
-      ),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.15),
-            blurRadius: 16,
-            offset: const Offset(0, -4),
-          ),
-        ],
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Handle bar
-          Center(
-            child: Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: theme.colorScheme.outline.withValues(alpha: 0.3),
-                borderRadius: BorderRadius.circular(2),
+    return ResponsiveWrapper(
+      maxWidth: 540.0,
+      child: Container(
+        padding: EdgeInsets.only(
+          left: AppSpacing.md,
+          right: AppSpacing.md,
+          top: AppSpacing.mdSmall,
+          bottom: bottomPadding + AppSpacing.mdSmall,
+        ),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: AppRadius.sheetRadius,
+          border: Border.all(color: AppColors.border, width: 1),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.12),
+              blurRadius: 16,
+              offset: const Offset(0, -4),
+            ),
+          ],
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Handle bar
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: AppColors.border,
+                  borderRadius: BorderRadius.circular(2),
+                ),
               ),
             ),
-          ),
-          const SizedBox(height: 12),
+            const SizedBox(height: AppSpacing.mdSmall),
 
-          // Header row
-          Row(
-            children: [
-              // Category icon
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: _categoryColor(place.categoryName).withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Icon(
-                  _categoryIcon(place.categoryName),
-                  color: _categoryColor(place.categoryName),
-                  size: 24,
-                ),
-              ),
-              const SizedBox(width: 12),
-
-              // Name and category
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      place.name,
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w700,
-                      ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    if (place.categoryName != null)
-                      Text(
-                        _categoryLabel(place.categoryName!),
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: _categoryColor(place.categoryName),
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-
-              // Close button
-              IconButton(
-                onPressed: onClose,
-                icon: const Icon(Icons.close, size: 20),
-                style: IconButton.styleFrom(
-                  padding: const EdgeInsets.all(4),
-                  minimumSize: const Size(32, 32),
-                ),
-              ),
-            ],
-          ),
-
-          const SizedBox(height: 12),
-
-          // Info chips row
-          Wrap(
-            spacing: 8,
-            runSpacing: 6,
-            children: [
-              // Rating
-              if (place.rating != null)
-                _InfoChip(
-                  icon: Icons.star,
-                  label: place.rating!.toStringAsFixed(1),
-                  color: Colors.amber,
-                )
-              else
-                _InfoChip(
-                  icon: Icons.star_border,
-                  label: 'Chưa có đánh giá',
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
-
-              // Review count
-              if (place.reviewCount > 0)
-                _InfoChip(
-                  icon: Icons.rate_review_outlined,
-                  label: '${place.reviewCount} đánh giá',
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
-
-              // Distance
-              if (place.distanceKm != null)
-                _InfoChip(
-                  icon: Icons.near_me,
-                  label: place.distanceKm! < 1
-                      ? '${(place.distanceKm! * 1000).toInt()}m'
-                      : '${place.distanceKm!.toStringAsFixed(1)} km',
-                  color: theme.colorScheme.primary,
-                ),
-
-              // Verified badge
-              if (place.isVerified)
-                _InfoChip(
-                  icon: Icons.verified,
-                  label: 'Đã xác minh',
-                  color: theme.colorScheme.primary,
-                ),
-
-              // Destination
-              if (place.destinationName != null)
-                _InfoChip(
-                  icon: Icons.location_city,
-                  label: place.destinationName!,
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
-            ],
-          ),
-
-          // Address
-          if (place.address != null && place.address!.isNotEmpty) ...[
-            const SizedBox(height: 10),
+            // Header row
             Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(Icons.location_on_outlined,
-                    size: 16, color: theme.colorScheme.onSurfaceVariant),
-                const SizedBox(width: 6),
+                // Category icon
+                Container(
+                  padding: const EdgeInsets.all(AppSpacing.sm),
+                  decoration: BoxDecoration(
+                    color: catColor.withValues(alpha: 0.12),
+                    borderRadius: AppRadius.smRadius,
+                  ),
+                  child: Icon(
+                    _categoryIcon(place.categoryName),
+                    color: catColor,
+                    size: 24,
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.mdSmall),
+
+                // Name and category
                 Expanded(
-                  child: Text(
-                    place.address!,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
-                    ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        place.name,
+                        style: AppTypography.h3.copyWith(fontSize: 16),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 2),
+                      if (place.categoryName != null)
+                        Text(
+                          _categoryLabel(place.categoryName!),
+                          style: AppTypography.bodyS.copyWith(
+                            color: catColor,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+
+                // Close button
+                IconButton(
+                  onPressed: onClose,
+                  icon: const Icon(Icons.close, size: 20),
+                  color: AppColors.textSecondary,
+                  style: IconButton.styleFrom(
+                    padding: const EdgeInsets.all(4),
+                    minimumSize: const Size(32, 32),
                   ),
                 ),
               ],
             ),
-          ],
 
-          const SizedBox(height: 12),
+            const SizedBox(height: AppSpacing.mdSmall),
 
-          // Coordinates (small)
-          if (place.hasCoordinates)
-            Text(
-              '${place.latitude!.toStringAsFixed(5)}, ${place.longitude!.toStringAsFixed(5)}',
-              style: theme.textTheme.labelSmall?.copyWith(
-                color: theme.colorScheme.outline,
-                fontFamily: 'monospace',
-              ),
+            // Info chips row
+            Wrap(
+              spacing: AppSpacing.sm,
+              runSpacing: AppSpacing.xs,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              children: [
+                // Honest Rating
+                RatingView(
+                  rating: place.rating,
+                  reviewCount: place.reviewCount,
+                ),
+
+                // Distance
+                if (place.distanceKm != null)
+                  _InfoChip(
+                    icon: Icons.near_me,
+                    label: place.distanceKm! < 1
+                        ? '${(place.distanceKm! * 1000).toInt()}m'
+                        : '${place.distanceKm!.toStringAsFixed(1)} km',
+                    color: AppColors.primary,
+                  ),
+
+                // Verified badge
+                if (place.isVerified) AppBadge.verified(),
+
+                // Destination
+                if (place.destinationName != null)
+                  _InfoChip(
+                    icon: Icons.location_city,
+                    label: place.destinationName!,
+                    color: AppColors.textSecondary,
+                  ),
+              ],
             ),
-        ],
+
+            // Address
+            if (place.address != null && place.address!.isNotEmpty) ...[
+              const SizedBox(height: AppSpacing.sm),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Icon(
+                    Icons.location_on_outlined,
+                    size: 15,
+                    color: AppColors.textTertiary,
+                  ),
+                  const SizedBox(width: AppSpacing.xs),
+                  Expanded(
+                    child: Text(
+                      place.address!,
+                      style: AppTypography.bodyS,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+
+            const SizedBox(height: AppSpacing.sm),
+
+            // Coordinates
+            if (place.hasCoordinates)
+              Text(
+                '${place.latitude!.toStringAsFixed(5)}, ${place.longitude!.toStringAsFixed(5)}',
+                style: AppTypography.bodyS.copyWith(
+                  color: AppColors.textTertiary,
+                  fontSize: 11,
+                  fontFamily: 'monospace',
+                ),
+              ),
+          ],
+        ),
       ),
     );
-  }
-
-  Color _categoryColor(String? category) {
-    switch (category?.toLowerCase()) {
-      case 'attraction': return const Color(0xFF9C27B0);
-      case 'restaurant': return const Color(0xFFFF5722);
-      case 'hotel': return const Color(0xFF2196F3);
-      case 'temple': case 'pagoda': return const Color(0xFFFF9800);
-      case 'beach': return const Color(0xFF00BCD4);
-      case 'museum': case 'culture': return const Color(0xFF607D8B);
-      case 'park': case 'nature': return const Color(0xFF8BC34A);
-      case 'market': return const Color(0xFF4CAF50);
-      case 'cafe': return const Color(0xFF795548);
-      default: return const Color(0xFF00685F);
-    }
   }
 
   IconData _categoryIcon(String? category) {
@@ -265,20 +246,20 @@ class _InfoChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm, vertical: AppSpacing.xs),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: AppRadius.smRadius,
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 14, color: color),
-          const SizedBox(width: 4),
+          Icon(icon, size: 13, color: color),
+          const SizedBox(width: AppSpacing.xs),
           Text(
             label,
-            style: TextStyle(
-              fontSize: 12,
+            style: AppTypography.label.copyWith(
+              fontSize: 11,
               color: color,
               fontWeight: FontWeight.w600,
             ),

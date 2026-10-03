@@ -1,8 +1,8 @@
 # PROJECT STATUS — WANDERAI (GoMate)
 
-**Last Updated:** 2026-10-04T03:00+07:00  
-**Current Phase:** TASK 07.3 done on branch `fix/data-provenance-remediation` — R1-R5 remediated; see "Known Regressions"  
-**Current Milestone:** Flutter Map with verified OSM places from PostGIS; Review Intelligence Blocked on DUA  
+**Last Updated:** 2026-10-04T04:10+07:00  
+**Current Phase:** TASK 07.6.1 done on branch `feature/ui-foundation-map-stability` — OpenStreetMap Humanitarian (HOT) tile provider adopted, CARTO watermark eliminated, GlobalKey resolved, honest rating display, Wandy chat polish  
+**Current Milestone:** GoMate Design System & UI Foundation Established; Clean OpenStreetMap Humanitarian Basemap Stable; Review Intelligence Blocked on DUA  
 
 ---
 
@@ -62,6 +62,11 @@
 | 50 | Task 06.4 Track B: ViHoRec Recommendation Pipeline | 17,911 interactions audited, MostPop baseline evaluated on 798 test users | 2026-10-01 |
 | 51 | Task 07: Map Feature — flutter_map + PostGIS | 97 places with a genuine OSM source on the map (11 non-genuine sources quarantined in TASK 07.3; rating shown as unavailable), category filter, nearby search, preview | 2026-10-02 |
 | 52 | ADR-005 Map Provider (flutter_map + OSM tiles) | `docs/architecture/decisions/ADR-005-map-provider.md` | 2026-10-02 |
+| 53 | Task 07.4: OSM Data Enrichment & Verified Serving | 357 verified places & sources (ODbL), verifiedOnly default | 2026-10-04 |
+| 54 | Task 07.5: RAG Ingestion & Grounding Contract | 821 documents (464 Wikivoyage + 357 OSM); grounding contracts | 2026-10-04 |
+| 55 | Task 07.5.1: Live Wandy Grounding & Source UI | Source chips in Flutter UI, e2e contract tests | 2026-10-04 |
+| 56 | Task 07.6: GoMate Design System + Map UX Stability | Central tokens, shared widgets, clean OSM HOT tiles, GlobalKey fix, honest rating | 2026-10-04 |
+| 57 | ADR-006 Map Tile Provider (OpenStreetMap Humanitarian) | `docs/architecture/decisions/ADR-006-map-tile-provider.md` | 2026-10-04 |
 
 ---
 
@@ -78,10 +83,10 @@
 
 | Suite | Pass | Fail | Total |
 |-------|------|------|-------|
-| Backend Integration (Jest / Supertest) | 58 | 0 | 58 |
+| Backend Integration (Jest / Supertest) | 62 | 0 | 62 |
 | AI Service (pytest — tools, chat, planner, pipeline, RAG, recommendation, provenance, RAG ingestion, grounding contract; +2 opt-in live tests skipped by default) | 87 | 0 | 87 |
-| Mobile App (Flutter Widget & Unit Tests) | 62 | 0 | 62 |
-| **Total Automated Baseline** | **207** | **0** | **207** |
+| Mobile App (Flutter Widget & Unit Tests) | 82 | 0 | 82 |
+| **Total Automated Baseline** | **231** | **0** | **231** |
 
 ---
 
@@ -93,7 +98,8 @@
 | ADR-002 | Real Travel Data Pipeline from OSM with Entity Resolution | ACCEPTED |
 | ADR-003 | Trip Context Schema Extension for Deterministic Validation | ACCEPTED |
 | ADR-004 | Domain-Segregated Dataset Matrix (ViHoRec for RecSys, VLSP for ABSA, Wikivoyage for RAG) | ACCEPTED |
-| ADR-005 | Map Provider: flutter_map + OpenStreetMap tiles (no API keys, thesis-friendly) | ACCEPTED |
+| ADR-005 | Map Provider: flutter_map + OpenStreetMap tiles (no API keys, thesis-friendly) | SUPERSEDED by ADR-006 |
+| ADR-006 | Map Tile Provider: OpenStreetMap Humanitarian (HOT) with OSM-FR Fallback (resolves blocked upstream OSM and eliminates watermark, zero API key) | ACCEPTED |
 
 ---
 
@@ -129,10 +135,34 @@ Full report: `docs/audit/task-07.1-regression-audit.md`. DB counts: `docs/data/c
 - After TASK 07.3 no verified place is in the `attraction` or `beach` category (all earlier attractions had non-genuine OSM ids); the map's "Tham quan" filter is empty until genuine attractions are ingested.
 - The 11 demoted places and 112 synthetic places remain in `places` and appear in default `/places` (no `verifiedOnly`). Raw/processed OSM sample files still contain the hand-written entries (guarded by `data/manifests/osm-invalid-sources.json`).
 
-## TASK 07.5 — RAG re-ingestion & grounding contract (branch feat/rag-verified-place-ingestion, NOT merged)
+## TASK 07.5 — RAG re-ingestion & grounding contract (MERGED into develop `1a2bbf2`)
 - Production RAG: **821 documents = 464 Wikivoyage + 357 OSM** (357/357 verified places covered); `document_quarantine` 164; 357 verified places (480 places total, 123 unsourced hidden by default); 0 provenance violations, 0 duplicate hashes, 0 NULL embeddings; ingestion idempotent.
 - A. Deterministic RAG: verified (retrieval tests, provenance audit, idempotency, frozen queries unchanged vs. before).
 - B. Chat grounding (mock provider only): `/chat` injects retrieved context and returns `sources`; Wandy system prompt now forbids facts outside retrieved context/tool results, with exact fallbacks for missing price / opening hours / rating.
-- C. Live Gemini: **NOT verified**. HTTP 429 (RESOURCE_EXHAUSTED) on 3 attempts at 2026-10-04 02:39, 02:42 and 02:43 (+07). Opt-in live test `tests/test_chat_live.py` (`CHAT_LIVE_TEST=1`) fails on a quota fallback instead of passing.
-- D. Limitation: live grounded reply unverified; Flutter chat does not yet show `sources` (follow-up task). Details: `docs/audit/task-07.5-rag-reingestion.md`.
-- Tests: backend 58, AI 87 + 2 opt-in live skipped, Flutter 62.
+- C. Live Gemini: PENDING due to HTTP 429 quota.
+
+## TASK 07.5.1 — Live Wandy Grounding Verification & Source UI (branch feat/wandy-grounding-source-ui)
+- Sources API Contract: `data.sources: string[]` verified across FastAPI -> NestJS AI Proxy -> Flutter Mobile.
+- NestJS E2E: 4 tests added in `test/ai-chat.e2e-spec.ts` (JWT auth check, validation, sources preservation, empty sources handling). Total backend tests: 62.
+- Flutter Chat Model & Screen: `ChatResponse.sources` and `ChatMessage.sources` implemented. `AiChatScreen` renders compact, secondary source chips with links to OpenStreetMap and Wikivoyage. Hidden when empty or user message.
+- Flutter Tests: 8 unit & widget tests in `test/chat_sources_test.dart` (parsing, empty sources, multiple sources, chips rendering, hidden when empty, tap behavior, long URL overflow safety, backward compatibility). Total mobile tests: 70.
+- Live Gemini Grounding: PENDING (Provider returned HTTP 429 RESOURCE_EXHAUSTED on controlled check `test_chat_live.py`). Not fabricated.
+- Baseline Tests: Backend 62 passed, AI 87 passed (+ 2 skipped live tests), Flutter 70 passed. All builds & linter clean.
+
+## TASK 07.6 — GoMate Design System + UI Foundation + Map UX Stability (branch feature/ui-foundation-map-stability)
+- Central GoMate Design System: `apps/mobile/lib/core/theme/` (colors, spacing, radius, typography, theme) based on `docs/design/gomate-design-system-ux-spec-v1.md`.
+- Shared Reusable Widgets: `ResponsiveWrapper`, `AppButton`, `AppCard`, `AppChip`, `AppBadge`, `RatingView`, `AppLoading`, `AppEmptyState`, `AppErrorState`.
+- Layout Stability: Responsive max-width container (640px phone/sheet, 720px tablet, 800px desktop) eliminated vast whitespace on desktop/web viewports.
+- Router & Lifecycle Stability: Persistent root and shell navigator keys via `RouterNotifier` with `refreshListenable`, permanently eliminating the "Multiple widgets used the same GlobalKey" console exception.
+- Map Provider & Grey Tiles: ADR-006 adopted OpenStreetMap Humanitarian (HOT) raster tiles (`https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png`) with OSM-FR fallback, resolving both blocked upstream OSM and the CARTO unauthenticated watermark banner.
+- Map Preview Sheet & Stale State: Category marker filtering now clears `selectedPlace` (`clearSelectedPlace: true`), preventing stale preview sheet state across filter changes.
+- Rating Integrity & Truth in Advertising: `RatingView` strictly displays "Chưa có đánh giá" when rating is `null` or `0.0`. Zero synthetic or fabricated ratings displayed.
+- Wandy AI Chat Polish: Styled with GoMate design tokens and responsive container while preserving 100% of grounded source chips (`OpenStreetMap`, `Wikivoyage`).
+- Automated Baseline: Backend 62 passed, AI 87 passed (+ 2 skipped live tests), Flutter 82 passed (12 new comprehensive tests). Total: **231 passed**. All builds, analyzer, and linter clean.
+
+## TASK 07.6.1 — Final Map Tile Verification & Cleanup (branch feature/ui-foundation-map-stability)
+- Watermark Resolution: Eliminated CARTO unauthenticated watermark banner ("API KEY REQUIRED carto.com/basemaps/apikey") by switching to OpenStreetMap Humanitarian (HOT) with OSM-FR fallback.
+- Tile Reachability & Speed: 100% reachable in Vietnam without VPN (HTTP 200, ~165ms latency, CORS `*`).
+- Attribution: Visible attribution updated to `OpenStreetMap contributors` and `Tiles: Humanitarian OpenStreetMap Team / OSM France`.
+- Zero Key Exposure: Zero API keys or secrets required or committed.
+- Documentation: Updated `docs/architecture/decisions/ADR-006-map-tile-provider.md` and `docs/architecture/ui-architecture.md`.

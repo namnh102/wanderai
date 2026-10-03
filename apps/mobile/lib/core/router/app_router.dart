@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../theme/app_colors.dart';
+import '../widgets/responsive_wrapper.dart';
 import '../../features/auth/presentation/login_screen.dart';
 import '../../features/auth/presentation/register_screen.dart';
 import '../../features/auth/providers/auth_provider.dart';
@@ -25,13 +27,16 @@ class _PlaceholderScreen extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 64, color: Theme.of(context).colorScheme.primary),
+            Icon(icon, size: 64, color: AppColors.primary),
             const SizedBox(height: 16),
             Text(title, style: Theme.of(context).textTheme.headlineSmall),
             const SizedBox(height: 8),
-            Text('Dang phat trien...', style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            )),
+            Text(
+              'Tính năng đang phát triển...',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
+            ),
           ],
         ),
       ),
@@ -39,32 +44,52 @@ class _PlaceholderScreen extends StatelessWidget {
   }
 }
 
-final _rootNavigatorKey = GlobalKey<NavigatorState>();
-final _shellNavigatorKey = GlobalKey<NavigatorState>();
+/// RouterNotifier listens to AuthState changes and triggers GoRouter redirect
+/// without recreating the GoRouter or its Navigator GlobalKeys.
+/// This completely resolves the "Multiple widgets used the same GlobalKey" exception.
+class RouterNotifier extends ChangeNotifier {
+  final Ref _ref;
+
+  RouterNotifier(this._ref) {
+    _ref.listen<AuthState>(
+      authProvider,
+      (_, __) => notifyListeners(),
+    );
+  }
+
+  String? redirect(BuildContext context, GoRouterState state) {
+    final authState = _ref.read(authProvider);
+    final isAuth = authState.status == AuthStatus.authenticated;
+    final isLoading = authState.status == AuthStatus.unknown;
+    final location = state.uri.toString();
+    final isLoginRoute = location == '/login' || location == '/register';
+
+    // While loading auth state, don't redirect
+    if (isLoading) return null;
+
+    // Not authenticated → force login (unless already there)
+    if (!isAuth && !isLoginRoute) return '/login';
+
+    // Authenticated but on login/register → go home
+    if (isAuth && isLoginRoute) return '/';
+
+    return null;
+  }
+}
+
+final routerNotifierProvider = Provider<RouterNotifier>((ref) => RouterNotifier(ref));
+
+final _rootNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'rootNav');
+final _shellNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'shellNav');
 
 final appRouterProvider = Provider<GoRouter>((ref) {
-  final authState = ref.watch(authProvider);
+  final notifier = ref.watch(routerNotifierProvider);
 
   return GoRouter(
     navigatorKey: _rootNavigatorKey,
     initialLocation: '/',
-    redirect: (context, state) {
-      final isAuth = authState.status == AuthStatus.authenticated;
-      final isLoading = authState.status == AuthStatus.unknown;
-      final location = state.uri.toString();
-      final isLoginRoute = location == '/login' || location == '/register';
-
-      // While loading auth state, don't redirect
-      if (isLoading) return null;
-
-      // Not authenticated → force login (unless already there)
-      if (!isAuth && !isLoginRoute) return '/login';
-
-      // Authenticated but on login/register → go home
-      if (isAuth && isLoginRoute) return '/';
-
-      return null;
-    },
+    refreshListenable: notifier,
+    redirect: notifier.redirect,
     routes: [
       GoRoute(
         path: '/login',
@@ -91,7 +116,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           GoRoute(path: '/', builder: (_, __) => const HomeScreen()),
           GoRoute(path: '/map', builder: (_, __) => const MapScreen()),
           GoRoute(path: '/ai', builder: (_, __) => const AiChatScreen()),
-          GoRoute(path: '/safety', builder: (_, __) => const _PlaceholderScreen(title: 'An toan', icon: Icons.shield)),
+          GoRoute(path: '/safety', builder: (_, __) => const _PlaceholderScreen(title: 'An toàn', icon: Icons.shield)),
           GoRoute(path: '/trips', builder: (_, __) => const TripListScreen()),
         ],
       ),
@@ -112,37 +137,47 @@ class _MainScaffold extends StatelessWidget {
 
     return Scaffold(
       body: child,
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: currentIndex,
-        onDestinationSelected: (index) => context.go(_tabs[index]),
-        destinations: const [
-          NavigationDestination(
-            icon: Icon(Icons.explore_outlined),
-            selectedIcon: Icon(Icons.explore),
-            label: 'Kham pha',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.map_outlined),
-            selectedIcon: Icon(Icons.map),
-            label: 'Bản đồ',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.auto_awesome_outlined),
-            selectedIcon: Icon(Icons.auto_awesome),
-            label: 'AI Agent',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.shield_outlined),
-            selectedIcon: Icon(Icons.shield),
-            label: 'An toan',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.luggage_outlined),
-            selectedIcon: Icon(Icons.luggage),
-            label: 'Chuyen di',
-          ),
-        ],
+      bottomNavigationBar: Container(
+        color: Theme.of(context).colorScheme.surface,
+        child: SafeArea(
+          top: false,
+          child: ResponsiveWrapper(
+            maxWidth: 720.0,
+            fillHeight: false,
+            child: NavigationBar(
+          selectedIndex: currentIndex,
+          onDestinationSelected: (index) => context.go(_tabs[index]),
+          destinations: const [
+            NavigationDestination(
+              icon: Icon(Icons.explore_outlined),
+              selectedIcon: Icon(Icons.explore),
+              label: 'Trang chủ',
+            ),
+            NavigationDestination(
+              icon: Icon(Icons.map_outlined),
+              selectedIcon: Icon(Icons.map),
+              label: 'Bản đồ',
+            ),
+            NavigationDestination(
+              icon: Icon(Icons.auto_awesome_outlined),
+              selectedIcon: Icon(Icons.auto_awesome),
+              label: 'Wandy AI',
+            ),
+            NavigationDestination(
+              icon: Icon(Icons.shield_outlined),
+              selectedIcon: Icon(Icons.shield),
+              label: 'An toàn',
+            ),
+            NavigationDestination(
+              icon: Icon(Icons.luggage_outlined),
+              selectedIcon: Icon(Icons.luggage),
+              label: 'Chuyến đi',
+            ),
+          ],
+        ),
       ),
-    );
+    ),
+  ),
+);
   }
 }

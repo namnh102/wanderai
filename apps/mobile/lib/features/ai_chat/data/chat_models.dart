@@ -8,6 +8,7 @@ class ChatMessage {
   final String content;
   final DateTime timestamp;
   final bool isError;
+  final List<String> sources;
 
   const ChatMessage({
     required this.id,
@@ -15,6 +16,7 @@ class ChatMessage {
     required this.content,
     required this.timestamp,
     this.isError = false,
+    this.sources = const [],
   });
 
   bool get isUser => role == MessageRole.user;
@@ -26,6 +28,7 @@ class ChatMessage {
     String? content,
     DateTime? timestamp,
     bool? isError,
+    List<String>? sources,
   }) {
     return ChatMessage(
       id: id ?? this.id,
@@ -33,6 +36,7 @@ class ChatMessage {
       content: content ?? this.content,
       timestamp: timestamp ?? this.timestamp,
       isError: isError ?? this.isError,
+      sources: sources ?? this.sources,
     );
   }
 }
@@ -56,19 +60,23 @@ class ChatResponse {
   final String reply;
   final String sessionId;
   final List<String> toolsUsed;
+  final List<String> sources;
 
   const ChatResponse({
     required this.reply,
     required this.sessionId,
     this.toolsUsed = const [],
+    this.sources = const [],
   });
 
   factory ChatResponse.fromJson(Map<String, dynamic> json) {
     final toolsList = json['tools_used'] as List<dynamic>? ?? [];
+    final sourcesList = json['sources'] as List<dynamic>? ?? [];
     return ChatResponse(
       reply: json['reply'] as String? ?? '',
       sessionId: json['session_id'] as String? ?? '',
       toolsUsed: toolsList.map((e) => e.toString()).toList(),
+      sources: sourcesList.map((e) => e.toString()).toList(),
     );
   }
 }
