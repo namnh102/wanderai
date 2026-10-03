@@ -61,9 +61,15 @@ async def retrieve_grounding(message: str):
     return context, sources
 
 
+NO_CONTEXT_INSTRUCTION = (
+    "Không có dữ liệu truy xuất cho câu hỏi này. Chỉ nêu thông tin thực tế về địa điểm nếu có kết quả tool; "
+    "không bịa giờ mở cửa, giá vé hay đánh giá. Nếu thiếu, nói rõ là chưa có thông tin trong dữ liệu hiện có."
+)
+
+
 def build_grounded_message(message: str, context: str) -> str:
     if not context:
-        return message
+        return f"{NO_CONTEXT_INSTRUCTION}\n\nCâu hỏi của người dùng: {message}"
     return (
         "Dữ liệu truy xuất từ nguồn mở (OpenStreetMap, Wikivoyage). Khi nói về các địa điểm/thông tin có trong dữ liệu này, "
         "chỉ dùng đúng dữ liệu bên dưới; không bịa thêm giờ mở cửa, giá vé hay thông tin không có trong dữ liệu.\n\n"

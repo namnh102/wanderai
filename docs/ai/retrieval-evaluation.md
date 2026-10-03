@@ -49,3 +49,29 @@ To prevent hallucination and guarantee deterministic retrieval quality as Wander
    * **Passed.** 0 duplicate chunk IDs across all returned results.
 4. **Deterministic Output:**
    * **Passed.** Repeated queries against the frozen embedding vector produce identical similarity scores ($1.0000$ consistency).
+
+---
+
+## 4. TASK 07.5 update (2026-10-04): OSM verified-place documents
+
+Production corpus after TASK 07.5: **821 documents = 464 Wikivoyage + 357 OSM** (357/357 verified places covered; 164 documents in `document_quarantine`).
+
+Frozen queries RAG-EVAL-01..04 are unchanged. Results BEFORE and AFTER the re-ingestion are identical:
+
+| Query | Expected | Before | After |
+| :--- | :--- | :---: | :---: |
+| RAG-EVAL-01 | culinary / Da Nang | rank 2 (0.6654) | rank 2 (0.6654) |
+| RAG-EVAL-02 | climate / Hanoi | rank 2 (0.6542) | rank 2 (0.6542) |
+| RAG-EVAL-03 | transport / Ha Long Bay | rank 4 (0.7279) | rank 4 (0.7279) |
+| RAG-EVAL-04 | safety / Vietnam | not in top 5 | not in top 5 (pre-existing gap, not changed) |
+
+Deterministic grounding checks (no LLM; `tests/test_rag_osm_ingestion.py`, `tests/test_grounding_contract.py`):
+- "Địa điểm văn hóa ở Hà Nội": returns an OSM `culture` document; every returned document is `osm` or `wikivoyage`, has a source URL, and each OSM document maps to a real `place_sources` row (`https://www.openstreetmap.org/{source_id}`, ODbL 1.0).
+- "Giờ mở cửa Bảo tàng Hồ Chí Minh": the matching OSM documents are returned (ranks 1-3 in the 07.5 probe) and contain `Giờ mở cửa:` only when the OSM tag exists.
+- No synthetic/mock/unsourced document is returned by the production retriever.
+
+These are retrieval checks, not an LLM-quality or hallucination-rate evaluation.
+
+### Chat grounding contract (TASK 07.5)
+
+`POST /chat` response gains `sources: string[]` (source URLs of the retrieved documents; `[]` when nothing was retrieved). Retrieved context is prepended to the user message with a "do not invent" instruction; the system prompt permits place facts only from retrieved context or tool results and mandates the exact fallbacks "Chưa có thông tin giá trong dữ liệu hiện có.", "Chưa có thông tin giờ mở cửa trong dữ liệu hiện có.", "Chưa có đánh giá.". Verified with a mock provider only; live Gemini grounding is **not verified** (HTTP 429 quota, see `docs/audit/task-07.5-rag-reingestion.md`).

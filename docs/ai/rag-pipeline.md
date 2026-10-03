@@ -41,8 +41,10 @@ flowchart TD
 9. **Ninh Binh** (Trang An, Tam Coc, scenic tours) — 27 chunks
 10. **Phu Quoc** (Island beaches, night markets) — 22 chunks
 * **Total Wikivoyage Chunks:** 464 chunks
-* **OSM Canonical Place Grounding:** 164 chunks
-* **Total pgvector Chunks:** 561 chunks (628 before TASK 07.3; 67 moved to `document_quarantine`)
+* **OSM verified-place documents:** 357 (one per place with an `osm` place_source; TASK 07.5, `python -m app.rag.ingest_osm`)
+* **Total production documents:** 821 = 464 Wikivoyage + 357 OSM (561 after TASK 07.3; 97 old-format OSM documents superseded in TASK 07.5). `document_quarantine`: 164 (67 from TASK 07.3 + 97 from TASK 07.5)
+* **Production retrieval** (`RAGRetriever.search`, default `include_unverified=False`) excludes `synthetic`/`mock` documents and documents whose place has no `place_sources` row.
+* **Chat integration:** `/chat` prepends retrieved context and returns `sources` (source URLs); the Wandy system prompt only permits facts from retrieved context or tool results (`app/prompts/system_prompt.py`).
 
 ### Crawler Etiquette:
 * Endpoint: Official MediaWiki Action API (`https://en.wikivoyage.org/w/api.php?action=query&prop=extracts&explaintext=1`).

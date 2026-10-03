@@ -9,8 +9,9 @@ from app.routers.chat import build_grounded_message
 client = TestClient(app)
 
 
-def test_build_grounded_message_passthrough_without_context():
-    assert build_grounded_message("Xin chào", "") == "Xin chào"
+def test_build_grounded_message_without_context_adds_no_invention_instruction():
+    msg = build_grounded_message("Xin chào", "")
+    assert msg.endswith("Câu hỏi của người dùng: Xin chào") and "không bịa" in msg
 
 
 def test_build_grounded_message_embeds_context_and_forbids_invention():
@@ -40,4 +41,4 @@ def test_chat_degrades_to_ungrounded_when_retrieval_returns_nothing():
         llm.return_value = {"response": "ok", "tool_calls": []}
         res = client.post("/chat", json={"message": "Xin chào", "session_id": "s2"})
     assert res.status_code == 200 and res.json()["sources"] == []
-    assert llm.call_args.kwargs["message"] == "Xin chào"
+    assert llm.call_args.kwargs["message"].endswith("Câu hỏi của người dùng: Xin chào")
