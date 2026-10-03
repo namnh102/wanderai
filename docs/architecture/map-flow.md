@@ -43,12 +43,12 @@ User taps marker
 Show PlacePreviewSheet (name, category, rating, distance, verified badge)
 ```
 
-## Map Provider (ADR-005)
+## Map Provider (ADR-005, superseded by ADR-006)
 
-- **Rendering**: flutter_map v7 + OpenStreetMap tiles
+- **Rendering**: flutter_map v7 + OpenStreetMap Humanitarian (HOT) raster tiles
 - **Place data**: WanderAI PostgreSQL/PostGIS (NOT Google Places)
-- **Tile URL**: `https://tile.openstreetmap.org/{z}/{x}/{y}.png`
-- **Attribution**: `© OpenStreetMap contributors` (always visible)
+- **Tile URL**: `https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png` (fallback: `https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png`)
+- **Attribution**: `© OpenStreetMap contributors` / `Tiles: Humanitarian OpenStreetMap Team / OSM France` (always visible)
 
 ## Location Permission
 

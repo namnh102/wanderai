@@ -52,9 +52,10 @@ This audit evaluates the Flutter client (`apps/mobile`) prior to implementing TA
   - `FlutterMap` uses `urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png'`.
   - **Network Test Results (2026-10-04 from local environment):**
     - `https://tile.openstreetmap.org/0/0/0.png`: **FAILED** (`Unable to connect to the remote server` — DNS blocked in Vietnam).
-    - `https://a.basemaps.cartocdn.com/rastertiles/voyager/0/0/0.png`: **SUCCESS** (Status 200, 582ms, `image/png`).
+    - `https://a.basemaps.cartocdn.com/rastertiles/voyager/0/0/0.png`: **SUCCESS** (Status 200, 582ms, `image/png` — *Note: later found to render diagonal watermark banner in 07.6.1*).
     - `https://b.basemaps.cartocdn.com/rastertiles/voyager/0/0/0.png`: **SUCCESS** (Status 200, 147ms, `image/png`).
     - `https://a.basemaps.cartocdn.com/rastertiles/voyager/13/6505/3671.png` (Hanoi tile): **SUCCESS** (Status 200, 2049 bytes).
+    - **Final Resolution (Task 07.6.1 / ADR-006):** Adopted OpenStreetMap Humanitarian (HOT) hosted by OpenStreetMap France (`https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png`) with OSM-FR fallback — 100% reachable, zero API key, and completely watermark-free.
   - **Preview Sheet Stale State:**
     In `MapNotifier.setCategory(category)`:
     ```dart
@@ -94,7 +95,7 @@ This audit evaluates the Flutter client (`apps/mobile`) prior to implementing TA
 | Text Primary `#0F172A` | `#131B2E` | Outdated palette | Update in `AppColors` & `AppTheme` |
 | Spacing Scale (4, 8, 12, 16...) | Hardcoded literals | Inconsistent spacing | Create `AppSpacing` tokens |
 | Radius Scale (8, 12, 16, 20, 24) | Hardcoded literals | Inconsistent radius | Create `AppRadius` tokens |
-| Basemap Tiles Reachable | `tile.openstreetmap.org` (blocked) | Grey tiles | Switch to CARTO Voyager OSM raster tiles |
+| Basemap Tiles Reachable | `tile.openstreetmap.org` (blocked) | Grey tiles | Switch to OpenStreetMap Humanitarian (HOT) / OSM-FR tiles (ADR-006) |
 | Map Preview Reset on Filter | `selectedPlace` retained | Stale sheet bug | Add `clearSelectedPlace: true` on category/search change |
 | Nullable Rating Handling | Partially in preview | Potential leaks | Centralize in `RatingView` ("Chưa có đánh giá") |
 | Desktop/Web Responsive Layout | Unconstrained stretching | Mobile UI stretched | Wrap in `ResponsiveLayout` / max-width 640/900px |
@@ -125,7 +126,7 @@ This audit evaluates the Flutter client (`apps/mobile`) prior to implementing TA
 4. **Router & GlobalKey Fix:**
    - Refactor `apps/mobile/lib/core/router/app_router.dart` to prevent Navigator recreation and fix Vietnamese tab labels.
 5. **Map UX Fixes:**
-   - Update `apps/mobile/lib/features/map/presentation/map_screen.dart` with CARTO Voyager raster tiles and proper attribution.
+   - Update `apps/mobile/lib/features/map/presentation/map_screen.dart` with OpenStreetMap Humanitarian (HOT) tiles (OSM-FR fallback) and proper attribution (ADR-006).
    - Clear preview sheet in `apps/mobile/lib/features/map/providers/map_provider.dart` on category and search changes.
    - Update `apps/mobile/lib/features/map/presentation/widgets/place_preview_sheet.dart` to use shared `RatingView`, `AppBadge`, and design tokens.
 6. **Home & Wandy Polish:**

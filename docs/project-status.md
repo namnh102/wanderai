@@ -65,8 +65,8 @@
 | 53 | Task 07.4: OSM Data Enrichment & Verified Serving | 357 verified places & sources (ODbL), verifiedOnly default | 2026-10-04 |
 | 54 | Task 07.5: RAG Ingestion & Grounding Contract | 821 documents (464 Wikivoyage + 357 OSM); grounding contracts | 2026-10-04 |
 | 55 | Task 07.5.1: Live Wandy Grounding & Source UI | Source chips in Flutter UI, e2e contract tests | 2026-10-04 |
-| 56 | Task 07.6: GoMate Design System + Map UX Stability | Central tokens, shared widgets, CARTO Voyager tiles, GlobalKey fix, honest rating | 2026-10-04 |
-| 57 | ADR-006 Map Tile Provider (CARTO Voyager) | `docs/architecture/decisions/ADR-006-map-tile-provider.md` | 2026-10-04 |
+| 56 | Task 07.6: GoMate Design System + Map UX Stability | Central tokens, shared widgets, clean OSM HOT tiles, GlobalKey fix, honest rating | 2026-10-04 |
+| 57 | ADR-006 Map Tile Provider (OpenStreetMap Humanitarian) | `docs/architecture/decisions/ADR-006-map-tile-provider.md` | 2026-10-04 |
 
 ---
 
@@ -99,7 +99,7 @@
 | ADR-003 | Trip Context Schema Extension for Deterministic Validation | ACCEPTED |
 | ADR-004 | Domain-Segregated Dataset Matrix (ViHoRec for RecSys, VLSP for ABSA, Wikivoyage for RAG) | ACCEPTED |
 | ADR-005 | Map Provider: flutter_map + OpenStreetMap tiles (no API keys, thesis-friendly) | SUPERSEDED by ADR-006 |
-| ADR-006 | Map Tile Provider: CARTO Voyager Raster Tiles (resolves blocked upstream OSM tiles in Vietnam, zero API key) | ACCEPTED |
+| ADR-006 | Map Tile Provider: OpenStreetMap Humanitarian (HOT) with OSM-FR Fallback (resolves blocked upstream OSM and eliminates watermark, zero API key) | ACCEPTED |
 
 ---
 

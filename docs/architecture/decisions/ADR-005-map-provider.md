@@ -2,7 +2,7 @@
 
 ## Status
 
-ACCEPTED
+SUPERSEDED by ADR-006 (Tile provider superseded by OpenStreetMap Humanitarian / OSM-FR)
 
 ## Date
 
