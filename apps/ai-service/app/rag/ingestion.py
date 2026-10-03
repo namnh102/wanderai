@@ -11,6 +11,7 @@ import asyncpg
 from app.config import settings
 from app.rag.chunker import SectionAwareChunker, RAGChunk
 from app.rag.embedder import BaseEmbedder, get_embedder
+from app.rag.osm_documents import build_osm_place_chunk
 from app.rag.retriever import RAGRetriever
 
 logger = logging.getLogger(__name__)
@@ -128,61 +129,71 @@ class WikivoyageIngester:
             "total_chunks_saved": inserted_count,
         }
 
-    async def ingest_canonical_places(self) -> Dict[str, Any]:
-        """Synthesize and ingest knowledge chunks from verified OSM canonical places."""
+    async def fetch_verified_places(self) -> List[Dict[str, Any]]:
+        """Verified places only: not deleted AND with at least one OSM place_sources row."""
         pool = await self.retriever.get_pool()
         async with pool.acquire() as conn:
             rows = await conn.fetch("""
-                SELECT 
-                    p.id::text, p.name, p.description, p.address, p.latitude, p.longitude,
-                    p.rating, p.destination_id::text,
-                    c.name as category_name
+                SELECT p.id::text AS id, p.name, p.latitude, p.longitude, p.destination_id::text AS destination_id,
+                       d.name AS destination_name, c.name AS category,
+                       (SELECT json_agg(json_build_object(
+                                'source_name', ps.source_name, 'source_id', ps.source_id,
+                                'raw_data', ps.raw_data, 'created_at', ps.created_at))
+                          FROM place_sources ps WHERE ps.place_id = p.id AND ps.source_name = 'osm') AS sources
                 FROM places p
                 LEFT JOIN place_categories c ON p.category_id = c.id
+                LEFT JOIN destinations d ON p.destination_id = d.id
                 WHERE p.deleted_at IS NULL
                   AND EXISTS (SELECT 1 FROM place_sources ps WHERE ps.place_id = p.id AND ps.source_name = 'osm')
+                ORDER BY p.id
             """)
-
-        osm_chunks: List[RAGChunk] = []
+        places = []
         for r in rows:
-            p_id = r["id"]
-            name = r["name"]
-            cat = r["category_name"] or "Địa điểm"
-            addr = r["address"] or ""
-            desc = r["description"] or ""
+            place = dict(r)
+            place["sources"] = json.loads(place["sources"]) if isinstance(place["sources"], str) else place["sources"]
+            places.append(place)
+        return places
 
-            body = (
-                f"{name} là một {cat.lower()} tại Việt Nam.\n"
-                f"Địa chỉ: {addr}\n"
-                f"Mô tả: {desc}\n"
-                f"Tọa độ: {r['latitude']}, {r['longitude']}."
-            )
+    async def ingest_canonical_places(self) -> Dict[str, Any]:
+        """Idempotently (re)generate OSM knowledge documents for every verified place (TASK 07.5).
 
-            c_hash = SectionAwareChunker.compute_hash(body)
-            chunk = RAGChunk(
-                chunk_id=f"osm-place-{p_id}",
-                document_id=f"osm-place-{p_id}",
-                title=name,
-                section_heading=cat,
-                topic="attractions",
-                content=body,
-                content_hash=c_hash,
-                source_name="osm",
-                source_url="https://www.openstreetmap.org",
-                license="ODbL 1.0",
-                attribution="© OpenStreetMap contributors",
-                language="vi",
-                destination_id=r["destination_id"],
-                place_id=p_id,
-                category=cat,
-                metadata={"source_type": "canonical_osm_place", "rating": r["rating"]},
-            )
-            osm_chunks.append(chunk)
+        - one document per verified place, built only from existing OSM tags (see osm_documents.py)
+        - upsert on (content_hash, embedding_model): re-running never duplicates
+        - OSM documents that are no longer produced (e.g. older format, or place lost its source) are
+          copied to document_quarantine and removed, so no OSM-labelled document can outlive its provenance
+        """
+        places = await self.fetch_verified_places()
+        osm_chunks: List[RAGChunk] = []
+        for place in places:
+            chunk = build_osm_place_chunk(place)
+            if chunk is not None:
+                osm_chunks.append(chunk)
 
         saved = await self.retriever.insert_chunks(osm_chunks)
+
+        keep_ids = [c.document_id for c in osm_chunks]
+        keep_hashes = [c.content_hash for c in osm_chunks]
+        pool = await self.retriever.get_pool()
+        async with pool.acquire() as conn:
+            async with conn.transaction():
+                has_q = await conn.fetchval("SELECT to_regclass('document_quarantine') IS NOT NULL")
+                stale_where = (
+                    "source_name = 'osm' AND NOT (document_id = ANY($1::text[]) AND content_hash = ANY($2::text[]))"
+                )
+                if has_q:
+                    await conn.execute(
+                        f"""INSERT INTO document_quarantine (original_id, row_data, reason)
+                            SELECT d.id, to_jsonb(d) - 'embedding', 'osm_document_superseded_by_task_07_5_regeneration'
+                            FROM documents d WHERE {stale_where.replace('source_name', 'd.source_name').replace('document_id', 'd.document_id').replace('content_hash', 'd.content_hash')}""",
+                        keep_ids, keep_hashes,
+                    )
+                removed = await conn.execute(f"DELETE FROM documents WHERE {stale_where}", keep_ids, keep_hashes)
         return {
             "source": "OpenStreetMap",
             "license": "ODbL 1.0",
-            "places_ingested": len(rows),
-            "chunks_saved": saved,
+            "embedding_model": self.retriever.embedder.model_name,
+            "verified_places": len(places),
+            "documents_generated": len(osm_chunks),
+            "chunks_upserted": saved,
+            "stale_osm_documents_quarantined_and_removed": int(removed.split()[-1]),
         }

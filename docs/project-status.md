@@ -1,6 +1,6 @@
 # PROJECT STATUS — WANDERAI (GoMate)
 
-**Last Updated:** 2026-10-04T01:40+07:00  
+**Last Updated:** 2026-10-04T03:00+07:00  
 **Current Phase:** TASK 07.3 done on branch `fix/data-provenance-remediation` — R1-R5 remediated; see "Known Regressions"  
 **Current Milestone:** Flutter Map with verified OSM places from PostGIS; Review Intelligence Blocked on DUA  
 
@@ -57,7 +57,7 @@
 | 45 | Task 06.1 Review Provenance & Synthetic Audit | `review-provenance.json`, `database-provenance-audit.md` | 2026-10-01 |
 | 46 | Task 06.2 Review Dataset Discovery Matrix | `review-dataset-candidates.md`, `review-dataset-candidates.yaml` | 2026-10-01 |
 | 47 | Task 06.3 Dataset Acquisition Clearance | `vlsp2018-access-request.md`, `vimacsa-access.md`, `dataset-role-matrix.md` | 2026-10-01 |
-| 48 | Task 06.4 Track A: RAG Ingestion & pgvector | 10 Wikivoyage destinations + OSM places: 628 chunks in pgvector (384-dim HNSW) | 2026-10-01 |
+| 48 | Task 06.4 Track A: RAG Ingestion & pgvector | 10 Wikivoyage destinations + OSM places: 628 chunks in pgvector (384-dim HNSW); now 821 documents after TASK 07.5 | 2026-10-01 |
 | 49 | Task 06.4 Track A: Frozen Retrieval Evaluation | Da Nang culinary test (`RAG-EVAL-01`) verified with 0.68 similarity (4 frozen queries rerun in 07.1; only EVAL-01 documented) | 2026-10-01 |
 | 50 | Task 06.4 Track B: ViHoRec Recommendation Pipeline | 17,911 interactions audited, MostPop baseline evaluated on 798 test users | 2026-10-01 |
 | 51 | Task 07: Map Feature — flutter_map + PostGIS | 97 places with a genuine OSM source on the map (11 non-genuine sources quarantined in TASK 07.3; rating shown as unavailable), category filter, nearby search, preview | 2026-10-02 |
@@ -78,10 +78,10 @@
 
 | Suite | Pass | Fail | Total |
 |-------|------|------|-------|
-| Backend Integration (Jest / Supertest) | 49 | 0 | 49 |
-| AI Service (pytest — tools, chat, planner, pipeline, RAG, recommendation, provenance; +1 opt-in live test skipped by default) | 49 | 0 | 49 |
-| Mobile App (Flutter Widget & Unit Tests) | 61 | 0 | 61 |
-| **Total Automated Baseline** | **159** | **0** | **159** |
+| Backend Integration (Jest / Supertest) | 58 | 0 | 58 |
+| AI Service (pytest — tools, chat, planner, pipeline, RAG, recommendation, provenance, RAG ingestion, grounding contract; +2 opt-in live tests skipped by default) | 87 | 0 | 87 |
+| Mobile App (Flutter Widget & Unit Tests) | 62 | 0 | 62 |
+| **Total Automated Baseline** | **207** | **0** | **207** |
 
 ---
 
@@ -108,7 +108,7 @@ Full report: `docs/audit/task-07.1-regression-audit.md`. DB counts: `docs/data/c
 | R1 | AI Planner — **FIXED in TASK 07.2 (2026-10-04)**, see `docs/ai/ai-planner.md` §8. Original problem: | `apps/ai-service/app/routers/planner.py` hardcodes retired model `gemini-2.0-flash` (404) and `max_output_tokens=4096` is exhausted by thinking tokens on `gemini-3.5-flash`. Live `POST /trips/:id/ai-plan` returns 500. The 37 pytest tests still pass (mock/no-key fallback = false green). | live call + direct Gemini probe |
 | R2 | Provenance — **FIXED in TASK 07.3**: 11 non-genuine sources moved to `place_source_quarantine`; verifiedOnly = 97. Original problem: | 11 of 108 "verified" places have a `place_sources` OSM ID that is not a genuine matching OSM node (5 point to unrelated nodes, 6 do not exist on Overpass). Genuine: 97 places. The 8 reviews all sit on these 11 places. | Overpass check of 110 source IDs |
 | R3 | Data — **FIXED in TASK 07.3**: `places.rating` nullable, all ratings NULL, UI shows "Chưa có đánh giá". Original problem: | 100 of 108 verified places have a fabricated default rating 4.5 (`resolve.py` default); the map preview shows it. | DB query |
-| R4 | RAG — **FIXED in TASK 07.3** | 56 chunks on synthetic places (+11 on demoted places) labelled OSM/ODbL: 67 moved to `document_quarantine`; `documents` 628 -> 561 | `docs/audit/task-07.3-provenance-remediation.md` |
+| R4 | RAG — **FIXED in TASK 07.3** | 56 chunks on synthetic places (+11 on demoted places) labelled OSM/ODbL: 67 moved to `document_quarantine`; `documents` 628 -> 561 (later 821 after TASK 07.5 re-ingestion) | `docs/audit/task-07.3-provenance-remediation.md` |
 | R5 | Reviews — **FIXED in TASK 07.3** | 9 mock reviews now `source=synthetic`, `trusted=false`, hidden and excluded from aggregates | same |
 
 ### Known Limitations
@@ -128,3 +128,11 @@ Full report: `docs/audit/task-07.1-regression-audit.md`. DB counts: `docs/data/c
 - Planner latency ~30 s per plan (real Gemini); Flutter i-plan request uses a 75 s timeout.
 - After TASK 07.3 no verified place is in the `attraction` or `beach` category (all earlier attractions had non-genuine OSM ids); the map's "Tham quan" filter is empty until genuine attractions are ingested.
 - The 11 demoted places and 112 synthetic places remain in `places` and appear in default `/places` (no `verifiedOnly`). Raw/processed OSM sample files still contain the hand-written entries (guarded by `data/manifests/osm-invalid-sources.json`).
+
+## TASK 07.5 — RAG re-ingestion & grounding contract (branch feat/rag-verified-place-ingestion, NOT merged)
+- Production RAG: **821 documents = 464 Wikivoyage + 357 OSM** (357/357 verified places covered); `document_quarantine` 164; 357 verified places (480 places total, 123 unsourced hidden by default); 0 provenance violations, 0 duplicate hashes, 0 NULL embeddings; ingestion idempotent.
+- A. Deterministic RAG: verified (retrieval tests, provenance audit, idempotency, frozen queries unchanged vs. before).
+- B. Chat grounding (mock provider only): `/chat` injects retrieved context and returns `sources`; Wandy system prompt now forbids facts outside retrieved context/tool results, with exact fallbacks for missing price / opening hours / rating.
+- C. Live Gemini: **NOT verified**. HTTP 429 (RESOURCE_EXHAUSTED) on 3 attempts at 2026-10-04 02:39, 02:42 and 02:43 (+07). Opt-in live test `tests/test_chat_live.py` (`CHAT_LIVE_TEST=1`) fails on a quota fallback instead of passing.
+- D. Limitation: live grounded reply unverified; Flutter chat does not yet show `sources` (follow-up task). Details: `docs/audit/task-07.5-rag-reingestion.md`.
+- Tests: backend 58, AI 87 + 2 opt-in live skipped, Flutter 62.

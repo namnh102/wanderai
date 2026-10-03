@@ -37,13 +37,24 @@ class RAGRetriever:
         source_name: Optional[str] = None,
         language: Optional[str] = None,
         min_similarity: float = 0.3,
+        include_unverified: bool = False,
     ) -> List[Dict[str, Any]]:
-        """Perform semantic search using pgvector cosine similarity."""
+        """Perform semantic search using pgvector cosine similarity.
+
+        Production isolation (TASK 07.5): unless include_unverified=True (development/test only),
+        a document linked to a place is returned only when that place has a place_sources row,
+        and synthetic documents are never returned.
+        """
         query_vec = self.embedder.embed_text(query)
         vec_str = "[" + ",".join(str(x) for x in query_vec) + "]"
 
         pool = await self.get_pool()
         conditions = ["embedding IS NOT NULL"]
+        if not include_unverified:
+            conditions.append("source_name NOT IN ('synthetic', 'mock')")
+            conditions.append(
+                "(place_id IS NULL OR EXISTS (SELECT 1 FROM place_sources ps WHERE ps.place_id = documents.place_id))"
+            )
         params = [vec_str]
         param_idx = 2
 
@@ -149,7 +160,7 @@ class RAGRetriever:
                             gen_random_uuid(), $1, $2, $3, $4, $5,
                             $6::uuid, $7::uuid, $8, $9, $10,
                             $11, $12, $13, $14, $15, $16::jsonb,
-                            NOW(), NOW(), NOW(), $17::vector
+                            COALESCE($18::timestamptz, NOW()), NOW(), NOW(), $17::vector
                         )
                         ON CONFLICT (content_hash, embedding_model) DO UPDATE SET
                             title = EXCLUDED.title,
@@ -159,6 +170,11 @@ class RAGRetriever:
                             source_url = EXCLUDED.source_url,
                             attribution = EXCLUDED.attribution,
                             destination_id = EXCLUDED.destination_id,
+                            place_id = EXCLUDED.place_id,
+                            license = EXCLUDED.license,
+                            category = EXCLUDED.category,
+                            metadata = EXCLUDED.metadata,
+                            retrieved_at = CASE WHEN $18::timestamptz IS NULL THEN documents.retrieved_at ELSE $18::timestamptz END,
                             updated_at = NOW(),
                             embedding = EXCLUDED.embedding
                     """
@@ -184,6 +200,7 @@ class RAGRetriever:
                         chunk.category,
                         meta_json,
                         vec_str,
+                        getattr(chunk, "retrieved_at", None),
                     )
                     total_inserted += 1
 
