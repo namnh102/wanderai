@@ -99,9 +99,9 @@ describe('PlacesController (e2e)', () => {
         .expect(200)
         .expect((res) => {
           expect(res.body).toHaveProperty('success', true);
-          expect(res.body.data.total).toBe(108); // Exactly 108 verified canonical places
+          expect(res.body.data.total).toBe(97); // 97 places with genuine OSM provenance (11 non-genuine sources quarantined in TASK 07.3)
           const items = res.body.data.items;
-          expect(items.length).toBe(108);
+          expect(items.length).toBe(97);
           for (const item of items) {
             expect(item.isVerified).toBe(true);
             expect(item.placeSources.length).toBeGreaterThanOrEqual(1);

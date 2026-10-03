@@ -83,8 +83,19 @@ async function importCuratedData() {
   const canonicalPlaces = JSON.parse(fs.readFileSync(placesFilePath, 'utf-8'));
   console.log(`📦 Loaded ${canonicalPlaces.length} canonical places from ${placesFilePath}`);
 
+  // OSM source ids that failed upstream verification must never be imported as provenance.
+  const invalidSourcesPath = path.resolve(__dirname, '../../../data/manifests/osm-invalid-sources.json');
+  const invalidSourceKeys = new Set<string>(
+    fs.existsSync(invalidSourcesPath)
+      ? (JSON.parse(fs.readFileSync(invalidSourcesPath, 'utf-8')).invalid_sources || []).map(
+          (s: any) => `${s.source_name}:${s.source_id}`,
+        )
+      : [],
+  );
+
   let placeUpsertCount = 0;
   let sourceUpsertCount = 0;
+  let skippedInvalidSources = 0;
 
   for (const p of canonicalPlaces) {
     const cityKey = (p.city || '').toLowerCase().trim();
@@ -106,7 +117,7 @@ async function importCuratedData() {
         address: p.address || null,
         latitude: p.latitude,
         longitude: p.longitude,
-        rating: p.rating || 0.0,
+        rating: p.rating ?? null, // NULL = unavailable; never fabricate a default
         reviewCount: p.review_count || 0,
       },
       update: {
@@ -124,6 +135,10 @@ async function importCuratedData() {
 
     // Upsert PlaceSources for provenance
     for (const src of p.sources || []) {
+      if (invalidSourceKeys.has(`${src.source_name}:${src.source_id}`)) {
+        skippedInvalidSources++;
+        continue;
+      }
       await prisma.placeSource.upsert({
         where: {
           sourceName_sourceId: {
@@ -155,6 +170,7 @@ async function importCuratedData() {
   }
   console.log(`✅ Upserted ${placeUpsertCount} canonical places`);
   console.log(`✅ Upserted ${sourceUpsertCount} place source records`);
+  console.log(`Skipped ${skippedInvalidSources} source records on the invalid-source denylist`);
 
   // 5. Load and Import Curated Reviews
   const reviewsFilePath = path.resolve(__dirname, '../../../data/curated/reviews_curated.json');
@@ -186,10 +202,15 @@ async function importCuratedData() {
           placeId: rev.place_id,
           rating: rev.rating,
           content: rev.content,
+          // The curated review file is an internal mock fixture: never a real traveler review.
+          source: 'synthetic',
+          trusted: false,
         },
         update: {
           rating: rev.rating,
           content: rev.content,
+          source: 'synthetic',
+          trusted: false,
         },
       });
       reviewUpsertCount++;
@@ -213,15 +234,18 @@ async function importCuratedData() {
 
       // Update place average rating and review count
       const placeReviews = await prisma.review.findMany({
-        where: { placeId: rev.place_id },
+        where: { placeId: rev.place_id, trusted: true, deletedAt: null },
         select: { rating: true },
       });
+      // Aggregate only trusted reviews; no trusted review => rating stays NULL.
       const avgRating =
-        placeReviews.reduce((sum, r) => sum + r.rating, 0) / (placeReviews.length || 1);
+        placeReviews.length > 0
+          ? Math.round((placeReviews.reduce((sum, r) => sum + r.rating, 0) / placeReviews.length) * 10) / 10
+          : null;
       await prisma.place.update({
         where: { id: rev.place_id },
         data: {
-          rating: Math.round(avgRating * 10) / 10,
+          rating: avgRating,
           reviewCount: placeReviews.length,
         },
       });

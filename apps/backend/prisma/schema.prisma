@@ -161,7 +161,7 @@ model Place {
   openingHours  String?  @map("opening_hours")
   coverImage    String?  @map("cover_image")
   images        String[] @default([])
-  rating        Float    @default(0)
+  rating        Float?   // NULL = no rating available (never fabricate a default)
   reviewCount   Int      @default(0) @map("review_count")
   createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz
   updatedAt     DateTime @updatedAt @map("updated_at") @db.Timestamptz
@@ -196,6 +196,37 @@ model PlaceSource {
   @@map("place_sources")
 }
 
+// Audit trail: place_sources rows removed because the OSM object could not be verified upstream.
+model PlaceSourceQuarantine {
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  originalId     String   @map("original_id") @db.Uuid
+  placeId        String   @map("place_id") @db.Uuid
+  sourceName     String   @map("source_name") @db.VarChar(50)
+  sourceId       String   @map("source_id") @db.VarChar(255)
+  rawName        String   @map("raw_name") @db.VarChar(255)
+  latitude       Float?
+  longitude      Float?
+  rawData        Json?    @map("raw_data")
+  reason         String   @db.VarChar(100)
+  evidence       Json?
+  quarantinedAt  DateTime @default(now()) @map("quarantined_at") @db.Timestamptz
+
+  @@index([placeId])
+  @@map("place_source_quarantine")
+}
+
+// Audit trail: RAG chunks removed from production retrieval (synthetic / unverified provenance).
+// row_data holds the original documents row as JSON (without the embedding vector).
+model DocumentQuarantine {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  originalId    String   @map("original_id") @db.Uuid
+  rowData       Json     @map("row_data")
+  reason        String   @db.VarChar(100)
+  quarantinedAt DateTime @default(now()) @map("quarantined_at") @db.Timestamptz
+
+  @@map("document_quarantine")
+}
+
 // Dataset Governance: Track dataset provenance, access status, licenses and checksums
 model DatasetRegistry {
   id             String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
@@ -225,6 +256,9 @@ model Review {
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
   updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz
   deletedAt DateTime? @map("deleted_at") @db.Timestamptz
+  // Provenance: 'user' (real traveler) | 'synthetic' (fixture/test). trusted=false is never exposed or aggregated.
+  source    String   @default("user") @db.VarChar(20)
+  trusted   Boolean  @default(true)
 
   user    User    @relation(fields: [userId], references: [id])
   place   Place   @relation(fields: [placeId], references: [id])

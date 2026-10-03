@@ -1,0 +1,123 @@
+{
+  "verified_with": "Overpass API (https://overpass-api.de)",
+  "invalid_sources": [
+    {
+      "source_name": "osm",
+      "source_id": "node/1459203941",
+      "raw_name": "Chùa Linh Ứng",
+      "stored_latitude": 16.1033,
+      "stored_longitude": 108.2778,
+      "place_id": "a9fcefd6-4679-4c62-96ae-97bb9ded7cd1",
+      "reason": "osm_id_not_found_upstream"
+    },
+    {
+      "source_name": "osm",
+      "source_id": "node/192837465",
+      "raw_name": "Hồ Hoàn Kiếm",
+      "stored_latitude": 21.0285,
+      "stored_longitude": 105.8542,
+      "place_id": "b16800de-9e07-44ac-894b-b6daf8d66069",
+      "reason": "osm_id_points_to_unrelated_object"
+    },
+    {
+      "source_name": "osm",
+      "source_id": "node/268491823",
+      "raw_name": "Bãi biển Mỹ Khê",
+      "stored_latitude": 16.0601,
+      "stored_longitude": 108.2435,
+      "place_id": "e9af8edc-0c38-4028-b9af-da67f6de341f",
+      "reason": "osm_id_not_found_upstream"
+    },
+    {
+      "source_name": "osm",
+      "source_id": "node/348291039",
+      "raw_name": "Danh thắng Ngũ Hành Sơn",
+      "stored_latitude": 16.0048,
+      "stored_longitude": 108.2632,
+      "place_id": "21f381fc-e64b-45ce-ba79-e0b5da0022cc",
+      "reason": "osm_id_points_to_unrelated_object"
+    },
+    {
+      "source_name": "osm",
+      "source_id": "node/564738291",
+      "raw_name": "Lăng Chủ tịch Hồ Chí Minh",
+      "stored_latitude": 21.0368,
+      "stored_longitude": 105.8346,
+      "place_id": "5531ae5f-f525-4651-a984-6bff4945ea60",
+      "reason": "osm_id_points_to_unrelated_object"
+    },
+    {
+      "source_name": "osm",
+      "source_id": "node/675849302",
+      "raw_name": "Văn Miếu - Quốc Tử Giám",
+      "stored_latitude": 21.0274,
+      "stored_longitude": 105.8355,
+      "place_id": "f1fb1c77-b6f5-4e44-803a-c83911021728",
+      "reason": "osm_id_not_found_upstream"
+    },
+    {
+      "source_name": "osm",
+      "source_id": "node/789456123",
+      "raw_name": "Chùa Cầu Hội An",
+      "stored_latitude": 15.8771,
+      "stored_longitude": 108.3262,
+      "place_id": "8ef9b37a-2bfe-4050-9358-dc70ba093c43",
+      "reason": "osm_id_points_to_unrelated_object"
+    },
+    {
+      "source_name": "osm",
+      "source_id": "node/859302194",
+      "raw_name": "Cầu Rồng",
+      "stored_latitude": 16.0612,
+      "stored_longitude": 108.2272,
+      "place_id": "e30d5e7a-47c2-44ec-a52c-3a5a0411b2f9",
+      "reason": "osm_id_points_to_unrelated_object"
+    },
+    {
+      "source_name": "osm",
+      "source_id": "node/890123456",
+      "raw_name": "Đại Nội Huế",
+      "stored_latitude": 16.4697,
+      "stored_longitude": 107.5786,
+      "place_id": "26de0c50-1697-4a3a-a913-216dd744d303",
+      "reason": "osm_id_not_found_upstream"
+    },
+    {
+      "source_name": "osm",
+      "source_id": "node/901234567",
+      "raw_name": "Tháp Bà Ponagar",
+      "stored_latitude": 12.2388,
+      "stored_longitude": 109.1967,
+      "place_id": "89dd46e9-fc95-4911-a9d4-685390dc25eb",
+      "reason": "osm_id_not_found_upstream"
+    },
+    {
+      "source_name": "osm",
+      "source_id": "node/923847291",
+      "raw_name": "Bảo tàng Điêu khắc Chăm",
+      "stored_latitude": 16.0595,
+      "stored_longitude": 108.224,
+      "place_id": "6926cde2-14ce-4f11-a956-0d9b0090ed6f",
+      "reason": "osm_id_not_found_upstream"
+    },
+    {
+      "source_name": "osm",
+      "source_id": "node/708488382",
+      "raw_name": "Khách Sạn Classic",
+      "place_id": "95e4dd6b-ce28-4642-838d-bd14f786a71b",
+      "reason": "osm_node_mismatches_place",
+      "note": "found by live Overpass audit 2026-10-04: node exists but is a different object / >150 m from stored coordinates"
+    },
+    {
+      "source_name": "osm",
+      "source_id": "node/708488342",
+      "raw_name": "Khách Sạn Little Hanoi",
+      "place_id": "c693a3f8-e323-41ec-803f-04dd01b65bde",
+      "reason": "osm_node_mismatches_place",
+      "note": "found by live Overpass audit 2026-10-04: node exists but is a different object / >150 m from stored coordinates"
+    }
+  ],
+  "description": "OSM source ids that could not be verified upstream via Overpass on 2026-10-03 (TASK 07.1 audit). They must never be imported as verified provenance. Replacement ids were NOT invented.",
+  "origin": "hand-written entries in data/raw/osm_vietnam_sample.json / data/pipelines/osm/collect_osm.py fallback",
+  "verified_on": "2026-10-03"
+}

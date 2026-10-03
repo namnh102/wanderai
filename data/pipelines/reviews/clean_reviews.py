@@ -15,13 +15,14 @@ def clean_review_record(raw_rev: dict) -> dict | None:
     if len(text) < MIN_TEXT_LENGTH:
         return None
 
-    raw_rating = raw_rev.get("rating", 5.0)
+    raw_rating = raw_rev.get("rating")
     try:
         rating = float(raw_rating)
         # Clamp rating between 1.0 and 5.0
         rating = max(1.0, min(5.0, round(rating, 1)))
     except (ValueError, TypeError):
-        rating = 5.0
+        # A missing or invalid rating must not be invented: drop the review.
+        return None
 
     aspects = []
     for asp in raw_rev.get("aspects", []):
