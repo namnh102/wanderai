@@ -128,3 +128,10 @@ Full report: `docs/audit/task-07.1-regression-audit.md`. DB counts: `docs/data/c
 - Planner latency ~30 s per plan (real Gemini); Flutter i-plan request uses a 75 s timeout.
 - After TASK 07.3 no verified place is in the `attraction` or `beach` category (all earlier attractions had non-genuine OSM ids); the map's "Tham quan" filter is empty until genuine attractions are ingested.
 - The 11 demoted places and 112 synthetic places remain in `places` and appear in default `/places` (no `verifiedOnly`). Raw/processed OSM sample files still contain the hand-written entries (guarded by `data/manifests/osm-invalid-sources.json`).
+
+## TASK 07.5 — RAG re-ingestion (branch feat/rag-verified-place-ingestion, NOT merged)
+- documents 561 -> 821 (osm 357 verified places, wikivoyage 464 unchanged); document_quarantine 67 -> 164; 0 NULL embeddings; 0 duplicate hashes; 0 unsourced OSM docs.
+- Live /chat now injects retrieved context and returns `sources` (it had no RAG before).
+- Tests: backend 58, AI 75 + 1 skipped, Flutter 62; build/analyze clean; lint 0 errors.
+- Live grounded reply NOT verified (Gemini 429). Details: docs/audit/task-07.5-rag-reingestion.md
+

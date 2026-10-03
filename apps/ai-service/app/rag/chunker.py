@@ -24,6 +24,7 @@ class RAGChunk:
     place_id: Optional[str] = None
     category: Optional[str] = None
     metadata: Dict[str, Any] = field(default_factory=dict)
+    retrieved_at: Optional[Any] = None  # datetime of upstream retrieval; None -> database NOW()
 
 
 class SectionAwareChunker:

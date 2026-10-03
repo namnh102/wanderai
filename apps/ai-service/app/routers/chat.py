@@ -8,6 +8,7 @@ from app.tools.get_weather import GetWeatherTool
 from app.tools.search_places import SearchPlacesTool
 from app.tools.calculate_budget import CalculateBudgetTool
 from app.tools.search_hotels import SearchHotelsTool
+from app.services.rag import RAGService
 
 router = APIRouter(prefix="/chat", tags=["Chat"])
 
@@ -37,6 +38,37 @@ class ChatResponse(BaseModel):
     session_id: str
     tools_used: List[str] = []
     tool_calls: List[ToolCallLog] = []
+    # Source URLs of the RAG documents that grounded this reply (OpenStreetMap / Wikivoyage); empty if none.
+    sources: List[str] = []
+
+
+_rag_service: Optional[RAGService] = None
+
+
+async def retrieve_grounding(message: str):
+    """Retrieve verified knowledge (production retriever: no unsourced/synthetic documents).
+
+    Returns (context_text, source_urls). Never raises: retrieval problems degrade to an ungrounded reply.
+    """
+    global _rag_service
+    try:
+        if _rag_service is None:
+            _rag_service = RAGService()
+        context, chunks = await _rag_service.search_with_sources(message, top_k=4)
+    except Exception:  # noqa: BLE001
+        return "", []
+    sources = list(dict.fromkeys(c["source_url"] for c in chunks if c.get("source_url")))
+    return context, sources
+
+
+def build_grounded_message(message: str, context: str) -> str:
+    if not context:
+        return message
+    return (
+        "Dữ liệu truy xuất từ nguồn mở (OpenStreetMap, Wikivoyage). Khi nói về các địa điểm/thông tin có trong dữ liệu này, "
+        "chỉ dùng đúng dữ liệu bên dưới; không bịa thêm giờ mở cửa, giá vé hay thông tin không có trong dữ liệu.\n\n"
+        f"{context}\n\nCâu hỏi của người dùng: {message}"
+    )
 
 
 @router.post("", response_model=ChatResponse)
@@ -45,8 +77,10 @@ async def chat(request: ChatRequest):
 
     session_id = request.session_id or str(uuid.uuid4())
 
+    context, sources = await retrieve_grounding(request.message)
+
     result = await gemini_provider.chat_with_tools(
-        message=request.message,
+        message=build_grounded_message(request.message, context),
         tools=_TOOLS,
         session_id=session_id,
     )
@@ -69,6 +103,7 @@ async def chat(request: ChatRequest):
         session_id=session_id,
         tools_used=tools_used,
         tool_calls=tool_logs,
+        sources=sources,
     )
 
 
