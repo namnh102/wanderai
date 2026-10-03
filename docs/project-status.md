@@ -1,8 +1,8 @@
 # PROJECT STATUS — WANDERAI (GoMate)
 
-**Last Updated:** 2026-10-04T04:10+07:00  
-**Current Phase:** TASK 07.6.1 done on branch `feature/ui-foundation-map-stability` — OpenStreetMap Humanitarian (HOT) tile provider adopted, CARTO watermark eliminated, GlobalKey resolved, honest rating display, Wandy chat polish  
-**Current Milestone:** GoMate Design System & UI Foundation Established; Clean OpenStreetMap Humanitarian Basemap Stable; Review Intelligence Blocked on DUA  
+**Last Updated:** 2026-10-04T04:45+07:00  
+**Current Phase:** END-OF-DAY VERIFIED BASELINE — TASK 07.6 + 07.6.1 merged to develop (`57b3ed4`), synchronized with `origin/develop`  
+**Current Milestone:** GoMate Design System & UI Foundation Established; Clean OpenStreetMap Humanitarian Basemap Stable; Database Invariants Verified (821 prod docs, 357 verified places); Ready for TASK 08 (Place Detail Screen)  
 
 ---
 
@@ -67,6 +67,7 @@
 | 55 | Task 07.5.1: Live Wandy Grounding & Source UI | Source chips in Flutter UI, e2e contract tests | 2026-10-04 |
 | 56 | Task 07.6: GoMate Design System + Map UX Stability | Central tokens, shared widgets, clean OSM HOT tiles, GlobalKey fix, honest rating | 2026-10-04 |
 | 57 | ADR-006 Map Tile Provider (OpenStreetMap Humanitarian) | `docs/architecture/decisions/ADR-006-map-tile-provider.md` | 2026-10-04 |
+| 58 | Task 07.6.2 & End-of-Day Verified Baseline | Merged to `develop` (`57b3ed4`), pushed to `origin/develop`; 231 tests pass; 821 docs / 357 verified places verified | 2026-10-04 |
 
 ---
 
@@ -127,13 +128,12 @@ Full report: `docs/audit/task-07.1-regression-audit.md`. DB counts: `docs/data/c
 - `documents` extra columns/HNSW index exist only via raw SQL, not Prisma migrations (fresh `migrate deploy` lacks them).
 - RAG: only RAG-EVAL-01 documented (the other 3 queries were rerun; EVAL-04 has no `safety` topic chunk). No Precision@K.
 - RecSys split is per-user leave-last-one-out, not globally temporal; MostPop is the only baseline.
-- Map tiles do not load on the author's network (OSM hosts blocked/DNS-poisoned); CARTO and OpenFreeMap are reachable. Not fixed.
+- Map tiles: Resolved in ADR-006 using OpenStreetMap Humanitarian (HOT) with OSM-FR fallback; 100% reachable in Vietnam without VPN, zero watermark.
 - Flutter: "An toàn" tab is a placeholder; some UI strings lack diacritics.
-- Test-count history (47/69/86/106/110/118/139) = cumulative totals at successive merges; current baseline is 139.
-- Flutter web: GlobalKey duplicate-widget exception seen in the console after reload + opening a trip detail (TASK 07.2 manual E2E); not investigated.
-- Planner latency ~30 s per plan (real Gemini); Flutter i-plan request uses a 75 s timeout.
-- After TASK 07.3 no verified place is in the `attraction` or `beach` category (all earlier attractions had non-genuine OSM ids); the map's "Tham quan" filter is empty until genuine attractions are ingested.
-- The 11 demoted places and 112 synthetic places remain in `places` and appear in default `/places` (no `verifiedOnly`). Raw/processed OSM sample files still contain the hand-written entries (guarded by `data/manifests/osm-invalid-sources.json`).
+- Test-count baseline: 231 passed (Backend: 62, AI Service: 87 passed + 2 live skipped, Flutter: 82).
+- Flutter web: GlobalKey duplicate-widget exception resolved in TASK 07.6 via `RouterNotifier` with persistent root/shell navigator keys.
+- Planner latency ~30 s per plan (real Gemini); Flutter ai-plan request uses a 75 s timeout.
+- Categories & Places: 357 verified places across categories (`culture`, `nature`, `entertainment`, `restaurant`, `hotel`) enriched in TASK 07.4; 123 unsourced places remain in the DB and are hidden by default (`verifiedOnly=true`).
 
 ## TASK 07.5 — RAG re-ingestion & grounding contract (MERGED into develop `1a2bbf2`)
 - Production RAG: **821 documents = 464 Wikivoyage + 357 OSM** (357/357 verified places covered); `document_quarantine` 164; 357 verified places (480 places total, 123 unsourced hidden by default); 0 provenance violations, 0 duplicate hashes, 0 NULL embeddings; ingestion idempotent.
@@ -166,3 +166,34 @@ Full report: `docs/audit/task-07.1-regression-audit.md`. DB counts: `docs/data/c
 - Attribution: Visible attribution updated to `OpenStreetMap contributors` and `Tiles: Humanitarian OpenStreetMap Team / OSM France`.
 - Zero Key Exposure: Zero API keys or secrets required or committed.
 - Documentation: Updated `docs/architecture/decisions/ADR-006-map-tile-provider.md` and `docs/architecture/ui-architecture.md`.
+
+## TASK 07.6.2 & End-of-Day Final Verified Baseline (MERGED into develop `57b3ed4`)
+- **Branch & Sync:** `develop` at commit `57b3ed4`, 100% synchronized with `origin/develop`.
+- **Merge Strategy:** `feature/ui-foundation-map-stability` merged into `develop` with `--no-ff`.
+- **Database Invariants Verified (PostgreSQL):**
+  - Verified OSM places: **357** (Total places: 480; 123 unsourced legacy/synthetic places hidden by default).
+  - OSM production documents: **357** (one document per verified place; 0 provenance violations).
+  - Wikivoyage production documents: **464** (fingerprint unchanged).
+  - Production documents total: **821** (464 Wikivoyage + 357 OSM).
+  - Quarantined documents: **164** in `document_quarantine`.
+  - NULL embeddings: **0**.
+  - OSM docs without verified place_sources: **0**.
+  - Trusted synthetic reviews: **0**.
+  - Fabricated ratings on verified places: **0** (all verified places honestly display "Chưa có đánh giá").
+- **Automated Regression Suite:**
+  - Backend E2E: **62 passed** (9 suites)
+  - Backend Build: clean (`nest build` exit 0)
+  - Backend Lint: **0 errors**, 44 warnings
+  - AI Service: **87 passed**, 2 opt-in live tests skipped, 0 failed
+  - Flutter Tests: **82 passed**, 0 failed
+  - Flutter Static Analysis: **No issues found!**
+  - Total Passing Tests: **231 passed**
+- **Browser E2E Smoke Test (7/7 PASSED):**
+  - Clean HOT basemap tiles, zero "API KEY REQUIRED" watermark.
+  - Zero "Multiple widgets used the same GlobalKey" exceptions.
+  - Zero layout overflow (`RenderFlex`) errors.
+  - Honest rating ("Chưa có đánh giá") on place preview sheet.
+  - Stale preview sheet automatically dismissed on category change.
+  - Wandy AI chat renders secondary source chips (`Wikivoyage`, `OpenStreetMap`).
+  - Full round-trip navigation verified across tabs.
+- **Next Planned Milestone:** TASK 08 — Place Detail Screen & Verified Location Experience.
