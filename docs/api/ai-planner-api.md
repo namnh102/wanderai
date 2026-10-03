@@ -22,7 +22,7 @@ sequenceDiagram
     participant Nest as NestJS Backend (:3000)
     participant DB as PostgreSQL (PostGIS/pgvector)
     participant AI as FastAPI AI Service (:8000)
-    participant LLM as Google Gemini (gemini-2.0-flash / 2.5)
+    participant LLM as Google Gemini (gemini-3.5-flash)
 
     User->>Nest: POST /trips/:id/ai-plan (JWT Bearer)
     Nest->>DB: Query Trip + Destination + Itineraries
@@ -126,6 +126,7 @@ sequenceDiagram
 - `403 Forbidden`: Current user is not owner/member of the trip.
 - `404 Not Found`: Trip not found.
 - `422 Unprocessable Entity`: Trip lacks minimum required context (no destination or duration <= 0).
+- `502 Bad Gateway`: AI provider failure, malformed or truncated model output (generic message, no internals; nothing is written to the DB).
 - `503 Service Unavailable`: AI service unreachable.
 
 ---

@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { INestApplication, ValidationPipe } from '@nestjs/common';
+import { HttpException, INestApplication, ValidationPipe } from '@nestjs/common';
 import * as request from 'supertest';
 import { AppModule } from '../src/app.module';
 import { TransformInterceptor } from '../src/common/interceptors/transform.interceptor';
@@ -208,6 +208,27 @@ describe('AI Trip Planner & Bulk Itinerary (e2e)', () => {
       const count = await prisma.itinerary.count({ where: { tripId: tripAId } });
       expect(count).toBe(0);
     });
+
+    it('3b. Provider failure returns a controlled error with no DB write and no stack leak', async () => {
+      const before = await prisma.itinerary.count({ where: { tripId: tripAId } });
+      jest
+        .spyOn(aiProxyService, 'planWithTripContext')
+        .mockRejectedValueOnce(
+          new HttpException('Nhà cung cấp AI không phản hồi. Vui lòng thử lại sau.', 502),
+        );
+
+      const res = await request(app.getHttpServer())
+        .post(`/trips/${tripAId}/ai-plan`)
+        .set('Authorization', `Bearer ${userAToken}`)
+        .send({})
+        .expect(502);
+
+      expect(res.body.success).toBe(false);
+      expect(JSON.stringify(res.body)).not.toMatch(/stack|Traceback|at .*\.(ts|js|py)/i);
+      const after = await prisma.itinerary.count({ where: { tripId: tripAId } });
+      expect(after).toBe(before);
+    });
+
   });
 
   describe('POST /trips/:id/itinerary/bulk (Atomic Bulk Save)', () => {

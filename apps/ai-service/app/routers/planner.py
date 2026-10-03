@@ -1,5 +1,6 @@
 """AI Trip Planner — Generates structured itineraries using TripContext and Gemini."""
 import uuid
+import logging
 import json
 import re
 from typing import Union
@@ -21,7 +22,10 @@ from app.schemas.planner import (
 router = APIRouter(prefix="/planner", tags=["Trip Planner"])
 
 _client = genai.Client(api_key=settings.GEMINI_API_KEY) if settings.GEMINI_API_KEY else None
-_MODEL = "gemini-2.0-flash"
+logger = logging.getLogger(__name__)
+
+# Model id and output limit come from settings (PLANNER_MODEL / PLANNER_MAX_OUTPUT_TOKENS).
+# Previous hardcoded value "gemini-2.0-flash" was retired by Google (404 NOT_FOUND).
 
 
 def _clean_json_response(raw: str) -> str:
@@ -95,14 +99,27 @@ async def create_plan(req: Union[TripContextRequest, PlanRequest]):
         raw_text = ""
         if _client:
             response = _client.models.generate_content(
-                model=_MODEL,
+                model=settings.PLANNER_MODEL,
                 contents=prompt,
                 config=types.GenerateContentConfig(
                     temperature=0.7,
-                    max_output_tokens=4096,
+                    max_output_tokens=settings.PLANNER_MAX_OUTPUT_TOKENS,
+                    response_mime_type="application/json",
+                    http_options=types.HttpOptions(timeout=settings.PLANNER_TIMEOUT_MS),
                 ),
             )
             raw_text = response.text or ""
+            finish = None
+            try:
+                finish = response.candidates[0].finish_reason
+            except Exception:
+                finish = None
+            if finish is not None and "MAX_TOKENS" in str(finish):
+                logger.error("Planner output truncated (MAX_TOKENS) model=%s", settings.PLANNER_MODEL)
+                raise HTTPException(
+                    status_code=502,
+                    detail="AI tra ve ket qua khong day du. Vui long thu lai.",
+                )
         else:
             # Fallback mock for testing when no Gemini key is present
             raw_text = json.dumps({
@@ -207,14 +224,17 @@ async def create_plan(req: Union[TripContextRequest, PlanRequest]):
         )
 
     except json.JSONDecodeError as e:
+        logger.error("Planner returned invalid JSON: %s", e)
         raise HTTPException(
             status_code=502,
-            detail=f"AI trả về định dạng JSON không hợp lệ: {str(e)}",
+            detail="AI trả về định dạng không hợp lệ. Vui lòng thử lại.",
         )
     except HTTPException:
         raise
     except Exception as e:
+        # Log details server-side only; never leak provider/stack details to the client.
+        logger.exception("Planner provider/processing failure: %s", type(e).__name__)
         raise HTTPException(
-            status_code=500,
-            detail=f"Lỗi xử lý tạo lịch trình: {str(e)}",
+            status_code=502,
+            detail="Nhà cung cấp AI không phản hồi. Vui lòng thử lại sau.",
         )

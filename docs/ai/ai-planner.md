@@ -2,7 +2,7 @@
 
 ## 1. Overview
 
-The AI Trip Planner in WanderAI allows travelers to generate personalized, day-by-day itineraries using the authoritative `TripContext`. It combines Google Gemini (`gemini-2.0-flash`), domain prompt engineering (`TRAVEL_PLANNER_V1`), deterministic validation logic in backend services, and human-in-the-loop preview confirmation before writing to the primary PostgreSQL database.
+The AI Trip Planner in WanderAI allows travelers to generate personalized, day-by-day itineraries using the authoritative `TripContext`. It combines Google Gemini (`gemini-3.5-flash`, configurable via `PLANNER_MODEL`), domain prompt engineering (`TRAVEL_PLANNER_V1`), deterministic validation logic in backend services, and human-in-the-loop preview confirmation before writing to the primary PostgreSQL database.
 
 ---
 
@@ -102,3 +102,14 @@ An automated evaluation script (`data/evaluation/planner/evaluate_planner.py`) r
 | **Backend Integration** | `planner.e2e-spec.ts` | 7 passed | ✅ Green |
 | **Mobile Widget Tests** | `planner_test.dart` | 5 passed | ✅ Green |
 | **Total Regressions** | Full Monorepo | 86 passed | ✅ Green |
+
+## 8. Model, Output Limit & Live Smoke Test (TASK 07.2)
+
+- **Previous model:** `gemini-2.0-flash` (hardcoded) - retired by Google, returns 404 NOT_FOUND. Together with `max_output_tokens=4096` (exhausted by thinking tokens) this broke the live planner.
+- **Current model:** `gemini-3.5-flash`, verified available via the configured API key (`models.list` + a test call) on 2026-10-04. Settings: `PLANNER_MODEL`, `PLANNER_MAX_OUTPUT_TOKENS` (default 16384), `PLANNER_TIMEOUT_MS` (default 55000, below the 60 s NestJS timeout).
+- Output uses `response_mime_type=application/json`; `MAX_TOKENS` truncation is detected and returned as a controlled 502.
+- Provider/JSON failures return 502 with a generic message; details are logged server-side only. No DB write occurs on failure.
+- **Live smoke test:** `PLANNER_LIVE_TEST=1 pytest tests/test_planner_live.py -v -s` (real Gemini; skipped by default, no key needed for normal runs). Result 2026-10-04: passed, 31.6 s, 3 days, 19 items, estimated 3,085,000 of 5,000,000 VND.
+- **Limitations:** latency ~25-35 s per plan; with no `GEMINI_API_KEY` the router still returns a canned mock plan (testing fallback); model availability depends on Google and can change again - the live smoke test is the guard.
+- **Live evidence (2026-10-04):** real `POST /trips/:id/ai-plan` through NestJS returned 201 in 29 s (3 days, 16 items, estimated 1,960,000 of 5,000,000 VND); itinerary row counts before/after preview were identical (0/0); `POST /trips/:id/itinerary/bulk` then wrote 16 items; invalid bulk was rejected (400) and atomic. With `PLANNER_MODEL=gemini-2.0-flash` the API returned a controlled 502 (generic message, no DB write). Flutter app (Chrome): preview 3 days / 18 items, apply, reload - 3 itineraries / 18 items persisted (DB-confirmed).
+- **Flutter fix:** the global Dio receive timeout (15 s) was shorter than real planning time; `generateAiPlan` now sets a 75 s per-request timeout.
