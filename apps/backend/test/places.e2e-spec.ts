@@ -38,7 +38,7 @@ describe('PlacesController (e2e)', () => {
           expect(res.body.data).toHaveProperty('items');
           expect(res.body.data).toHaveProperty('total');
           expect(Array.isArray(res.body.data.items)).toBe(true);
-          expect(res.body.data.total).toBeGreaterThanOrEqual(100);
+          expect(res.body.data.total).toBeGreaterThanOrEqual(97); // default = verified places only
 
           if (res.body.data.items.length > 0) {
             samplePlaceId = res.body.data.items[0].id;
@@ -81,7 +81,7 @@ describe('PlacesController (e2e)', () => {
 
     it('should search places by name', () => {
       return request(app.getHttpServer())
-        .get('/places?search=Rồng')
+        .get('/places?search=Rồng&verifiedOnly=false') // legacy unsourced record: only visible when explicitly requested
         .expect(200)
         .expect((res) => {
           const items = res.body.data.items;
@@ -99,9 +99,9 @@ describe('PlacesController (e2e)', () => {
         .expect(200)
         .expect((res) => {
           expect(res.body).toHaveProperty('success', true);
-          expect(res.body.data.total).toBe(97); // 97 places with genuine OSM provenance (11 non-genuine sources quarantined in TASK 07.3)
+          expect(res.body.data.total).toBeGreaterThanOrEqual(97); // genuine OSM provenance only (TASK 07.3 quarantine + TASK 07.4 enrichment)
           const items = res.body.data.items;
-          expect(items.length).toBe(97);
+          expect(items.length).toBeGreaterThanOrEqual(97);
           for (const item of items) {
             expect(item.isVerified).toBe(true);
             expect(item.placeSources.length).toBeGreaterThanOrEqual(1);
@@ -111,7 +111,7 @@ describe('PlacesController (e2e)', () => {
 
     it('should accurately flag unverified legacy seed places as isVerified: false', () => {
       return request(app.getHttpServer())
-        .get('/places?limit=100')
+        .get('/places?limit=100&verifiedOnly=false')
         .expect(200)
         .expect((res) => {
           const items = res.body.data.items;

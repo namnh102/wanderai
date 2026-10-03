@@ -26,9 +26,10 @@ import urllib.parse
 import urllib.request
 
 TOLERANCE_M = 150.0
+# Only the authoritative host: the kumi mirror was observed serving stale snapshots (2026-06/07 data),
+# which would produce false FAIL/PASS results.
 OVERPASS_ENDPOINTS = [
     "https://overpass-api.de/api/interpreter",
-    "https://overpass.kumi.systems/api/interpreter",
 ]
 
 

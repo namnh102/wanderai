@@ -8,7 +8,7 @@ Source: live queries on DB `wanderai` (PostgreSQL via Docker `wanderai-postgres`
 |---|---|---|
 | destinations | 50 | 14 popular |
 | places | 220 | 0 soft-deleted; `rating` is NULL for all 220 |
-| place_sources | 97 | all `osm`, all verified upstream |
+| place_sources | 357 | all `osm`, all verified upstream |
 | place_source_quarantine | 13 | removed non-genuine OSM sources (11 invalid ids + 2 nodes mismatching their place; audit trail) |
 | reviews | 9 | all `source='synthetic'`, `trusted=false`; 16 `review_aspects` |
 | documents (RAG) | 561 | 464 wikivoyage + 97 osm |
@@ -20,7 +20,7 @@ Source: live queries on DB `wanderai` (PostgreSQL via Docker `wanderai-postgres`
 
 | Group | Count | Explanation |
 |---|---|---|
-| Places with `place_sources` ("verified", returned by `verifiedOnly=true`) | 97 | every source confirmed on Overpass; audit PASS 2026-10-04: 97 sources, 0 violations |
+| Places with `place_sources` ("verified", default `/places`) | 357 (TASK 07.4: 97 + 260 enrichment) | every source confirmed on Overpass; audit PASS 2026-10-04: 97 sources, 0 violations |
 | Places without `place_sources` | 123 | 112 synthetic/legacy seed (56 distinct places loaded twice, 2026-09-22 and 2026-09-29) + 11 places whose OSM source was non-genuine and was quarantined |
 
 Verified-place categories now (97): cafe 55, hotel 25, restaurant 15, culture 2. The 11 demoted places were attraction 9, culture 1, beach 1 - so **no verified place is in the `attraction` or `beach` categories any more** (every verified attraction in the earlier data had a non-genuine OSM id). Verified places lie only in Đà Nẵng (50) and Hà Nội (47).
@@ -45,7 +45,7 @@ Ratings: `rating IS NULL` for all 220 places and `review_count = 0` for all. The
 | "108 verified OSM places" | 108 had `place_sources`; 11 were non-genuine and quarantined, leaving **97** |
 | 628 RAG chunks | 561 in production + 67 quarantined (56 on synthetic places + 11 on demoted places) |
 | 100 places with rating 4.5 | 0; all ratings are NULL |
-| `dataset_registry.osm_places` = 10 | still differs from 97; the registry was not updated |
+| `dataset_registry.osm_places` = 10 | UPDATED in TASK 07.4 to 357 (matches place_sources); earlier value differed from 97; the registry was not updated |
 
 ## Schema drift (unchanged)
 

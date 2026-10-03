@@ -214,6 +214,24 @@ void main() {
       expect(find.text('4.5'), findsNothing);
     });
 
+    testWidgets('shows Vietnamese labels for TASK 07.4 categories', (tester) async {
+      const expected = {'culture': 'Văn hóa', 'nature': 'Thiên nhiên', 'entertainment': 'Giải trí'};
+      for (final e in expected.entries) {
+        final p = PlaceModel.fromJson({
+          'id': e.key,
+          'name': 'Địa điểm ${e.key}',
+          'latitude': 16.06,
+          'longitude': 108.22,
+          'category': {'name': e.key},
+        });
+        await tester.pumpWidget(MaterialApp(
+          home: Scaffold(body: PlacePreviewSheet(place: p, onClose: () {})),
+        ));
+        expect(find.text(e.value), findsWidgets, reason: e.key);
+        expect(find.text(e.key), findsNothing, reason: 'raw key leaked for ${e.key}');
+      }
+    });
+
     testWidgets('displays distance when present', (tester) async {
       await tester.pumpWidget(MaterialApp(
         home: Scaffold(
@@ -307,7 +325,7 @@ void main() {
 
     test('contains expected categories from backend taxonomy', () {
       final keys = mapCategories.map((c) => c.key).toSet();
-      expect(keys, containsAll(['attraction', 'restaurant', 'hotel', 'temple', 'beach', 'museum']));
+      expect(keys, containsAll(['attraction', 'restaurant', 'hotel', 'culture', 'beach', 'nature', 'entertainment', 'cafe']));
     });
 
     test('does not contain non-existent categories', () {

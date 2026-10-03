@@ -209,8 +209,8 @@ class PlacePreviewSheet extends StatelessWidget {
       case 'hotel': return const Color(0xFF2196F3);
       case 'temple': case 'pagoda': return const Color(0xFFFF9800);
       case 'beach': return const Color(0xFF00BCD4);
-      case 'museum': return const Color(0xFF607D8B);
-      case 'park': return const Color(0xFF8BC34A);
+      case 'museum': case 'culture': return const Color(0xFF607D8B);
+      case 'park': case 'nature': return const Color(0xFF8BC34A);
       case 'market': return const Color(0xFF4CAF50);
       case 'cafe': return const Color(0xFF795548);
       default: return const Color(0xFF00685F);
@@ -224,8 +224,8 @@ class PlacePreviewSheet extends StatelessWidget {
       case 'hotel': return Icons.hotel;
       case 'temple': case 'pagoda': return Icons.temple_buddhist;
       case 'beach': return Icons.beach_access;
-      case 'museum': return Icons.museum;
-      case 'park': return Icons.park;
+      case 'museum': case 'culture': return Icons.museum;
+      case 'park': case 'nature': return Icons.park;
       case 'market': return Icons.store;
       case 'cafe': return Icons.local_cafe;
       default: return Icons.place;
@@ -243,6 +243,9 @@ class PlacePreviewSheet extends StatelessWidget {
       case 'park': return 'Công viên';
       case 'market': return 'Chợ';
       case 'cafe': return 'Cà phê';
+      case 'entertainment': return 'Giải trí';
+      case 'culture': return 'Văn hóa';
+      case 'nature': return 'Thiên nhiên';
       default: return category;
     }
   }

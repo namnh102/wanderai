@@ -1,0 +1,7816 @@
+{
+ "source": "OpenStreetMap via Overpass API",
+ "license": "ODbL 1.0 (c) OpenStreetMap contributors",
+ "retrieved_at": "2026-10-03T18:44:46.998779+00:00",
+ "regions": {
+  "da_nang": {
+   "endpoint": "https://overpass-api.de/api/interpreter",
+   "query": "[out:json][timeout:120];(nwr[\"tourism\"~\"^(attraction|museum|viewpoint|gallery|theme_park|zoo|aquarium)$\"][\"name\"](15.9,108.05,16.2,108.35);nwr[\"natural\"=\"beach\"][\"name\"](15.9,108.05,16.2,108.35);nwr[\"historic\"~\"^(monument|castle|ruins|archaeological_site|memorial)$\"][\"name\"](15.9,108.05,16.2,108.35);nwr[\"amenity\"=\"place_of_worship\"][\"name\"][\"wikidata\"](15.9,108.05,16.2,108.35);nwr[\"leisure\"=\"park\"][\"name\"][\"wikidata\"](15.9,108.05,16.2,108.35););out center tags;",
+   "osm_base_timestamp": "2026-10-03T18:55:02Z",
+   "elements": [
+    {
+     "type": "node",
+     "id": 1036552571,
+     "lat": 16.1874495,
+     "lon": 108.1307217,
+     "tags": {
+      "ele": "496",
+      "mountain_pass": "yes",
+      "name": "Đèo Hải Vân",
+      "name:de": "Wolkenpass",
+      "name:en": "Hai Van Pass",
+      "name:fr": "Col des nuages",
+      "name:ko": "하이반 고개",
+      "tourism": "attraction",
+      "wikidata": "Q1477078",
+      "wikipedia": "vi:Đèo Hải Vân",
+      "wikipedia:en": "Hải Vân Pass"
+     }
+    },
+    {
+     "type": "node",
+     "id": 1538334281,
+     "lat": 16.1189286,
+     "lon": 108.2720036,
+     "tags": {
+      "name": "Ban Co Peak",
+      "name:vi": "Đỉnh Bàn Cờ",
+      "tourism": "viewpoint"
+     }
+    },
+    {
+     "type": "node",
+     "id": 1758586662,
+     "lat": 16.0043044,
+     "lon": 108.263527,
+     "tags": {
+      "ele": "160",
+      "name": "Thuỷ Sơn",
+      "name:en": "Mountain of Water",
+      "name:vi": "Thuỷ Sơn",
+      "natural": "peak",
+      "tourism": "attraction"
+     }
+    },
+    {
+     "type": "node",
+     "id": 4172034499,
+     "lat": 16.0205336,
+     "lon": 108.261744,
+     "tags": {
+      "name": "Non Nuoc Beach",
+      "name:en": "Non Nuoc Beach",
+      "name:pt": "Praia Non Nuoc",
+      "natural": "beach",
+      "tourism": "attraction"
+     }
+    },
+    {
+     "type": "node",
+     "id": 4222784590,
+     "lat": 16.0991336,
+     "lon": 108.3011822,
+     "tags": {
+      "addr:street": "Hoàng Sa",
+      "name": "Saturday Option",
+      "tourism": "attraction"
+     }
+    },
+    {
+     "type": "node",
+     "id": 4347089780,
+     "lat": 16.025095,
+     "lon": 108.2595335,
+     "tags": {
+      "name": "My An Beach",
+      "name:en": "My An Beach",
+      "name:pt": "Praia My An",
+      "natural": "beach"
+     }
+    },
+    {
+     "type": "node",
+     "id": 4706189591,
+     "lat": 16.023789,
+     "lon": 108.2477299,
+     "tags": {
+      "historic": "monument",
+      "name": "To Quoc Ghi Cong",
+      "name:vi": "To Quoc Ghi Cong"
+     }
+    },
+    {
+     "type": "node",
+     "id": 4807957148,
+     "lat": 16.0364559,
+     "lon": 108.2246715,
+     "tags": {
+      "addr:city": "Đà Nẵng",
+      "addr:district": "Hải Châu",
+      "addr:street": "Đường 2 Tháng 9",
+      "addr:subdistrict": "Hòa Cường Bắc",
+      "contact:phone": "+84 236 3630888",
+      "leisure": "amusement_arcade",
+      "name": "Trung tâm Giải trí Phức hợp Helio Center",
+      "tourism": "theme_park",
+      "website": "https://helio.vn/"
+     }
+    },
+    {
+     "type": "node",
+     "id": 4924323121,
+     "lat": 16.1017543,
+     "lon": 108.2589632,
+     "tags": {
+      "name": "Fishing Village and Fleet",
+      "name:en": "Fishing Village",
+      "tourism": "attraction"
+     }
+    },
+    {
+     "type": "node",
+     "id": 5273998822,
+     "lat": 16.0352694,
+     "lon": 108.2352722,
+     "tags": {
+      "name": "Cầu Tiên Sơn",
+      "name:en": "Tien Son Bridge",
+      "name:vi": "Cầu Tiên Sơn",
+      "tourism": "attraction"
+     }
+    },
+    {
+     "type": "node",
+     "id": 5273998823,
+     "lat": 16.050179,
+     "lon": 108.2293814,
+     "tags": {
+      "addr:postcode": "550000",
+      "name": "Cầu Trần Thị Lý",
+      "name:en": "Tran Thi Ly Bridge",
+      "name:vi": "Cầu Trần Thị Lý",
+      "opening_hours": "24/7",
+      "tourism": "attraction"
+     }
+    },
+    {
+     "type": "node",
+     "id": 5273999121,
+     "lat": 16.0948084,
+     "lon": 108.2200134,
+     "tags": {
+      "name": "Cầu Thuận Phước",
+      "name:en": "Thuan Phuoc Bridge",
+      "name:vi": "Cầu Thuận Phước",
+      "tourism": "attraction"
+     }
+    },
+    {
+     "type": "node",
+     "id": 5276547123,
+     "lat": 16.0510888,
+     "lon": 108.2292466,
+     "tags": {
+      "name": "Cau Nguyen Van Troi Bridge",
+      "name:en": "Old River Crossing Bridge",
+      "tourism": "attraction"
+     }
+    },
+    {
+     "type": "node",
+     "id": 5383428522,
+     "lat": 16.1559167,
+     "lon": 108.1098007,
+     "tags": {
+      "name": "Khu Du Lịch Sinh Thái Suối Lương",
+      "tourism": "attraction"
+     }
+    },
+    {
+     "type": "node",
+     "id": 5817580453,
+     "lat": 16.0953807,
+     "lon": 108.2430769,
+     "tags": {
+      "addr:street": "Trần Nhân Tông",
+      "name": "Art in Paradise Da Nang 3D Museum",
+      "name:de": "Art in Paradise Da Nang 3D Museum",
+      "tourism": "museum"
+     }
+    },
+    {
+     "type": "node",
+     "id": 6346486685,
+     "lat": 16.1226157,
+     "lon": 108.3316779,
+     "tags": {
+      "name": "Cây đa đại thụ",
+      "name:en": "The Heritage Banyan Tree",
+      "name:ru": "Баньянское дерево наследия",
+      "tourism": "attraction"
+     }
+    },
+    {
+     "type": "node",
+     "id": 6512888885,
+     "lat": 16.1223304,
+     "lon": 108.2200384,
+     "tags": {
+      "historic": "memorial",
+      "name": "Cementerio militar franco-español de Y Pha Nho",
+      "name:en": "Y Pha Nho cemetery - French-Spanish fallen soldiers",
+      "name:vi": "Y Pha Nho cemetery - French-Spanish fallen soldiers"
+     }
+    },
+    {
+     "type": "node",
+     "id": 6528451001,
+     "lat": 16.0276784,
+     "lon": 108.2218873,
+     "tags": {
+      "name": "Cây đa Đò Xu",
+      "natural": "tree",
+      "tourism": "attraction"
+     }
+    },
+    {
+     "type": "node",
+     "id": 7095169367,
+     "lat": 16.0857203,
+     "lon": 108.2194277,
+     "tags": {
+      "name": "Art Gallery",
+      "tourism": "gallery"
+     }
+    },
+    {
+     "type": "node",
+     "id": 7276380289,
+     "lat": 16.0721398,
+     "lon": 108.2268106,
+     "tags": {
+      "name": "Cầu Sông Hàn",
+      "name:en": "Han River Bridge",
+      "name:vi": "Cầu Sông Hàn",
+      "tourism": "attraction"
+     }
+    },
+    {
+     "type": "node",
+     "id": 7301996085,
+     "lat": 16.0370944,
+     "lon": 108.2248186,
+     "tags": {
+      "addr:street": "Đường 2 Tháng 9",
+      "name": "Chợ đêm Helio",
+      "name:en": "Helio Night Market",
+      "name:ko": "야시장",
+      "tourism": "attraction"
+     }
+    },
+    {
+     "type": "node",
+     "id": 8474743417,
+     "lat": 15.9994308,
+     "lon": 108.2545831,
+     "tags": {
+      "addr:postcode": "550000",
+      "addr:street": "Đường Sựvăn Hanh",
+      "name": "Bảo tàng Phật giáo",
+      "opening_hours": "Mo-Su 09:00-17:00",
+      "tourism": "museum"
+     }
+    },
+    {
+     "type": "node",
+     "id": 8883385553,
+     "lat": 15.9256934,
+     "lon": 108.2939032,
+     "tags": {
+      "addr:city": "Điện Bàn",
+      "addr:district": "Điện Dương",
+      "addr:postcode": "51000",
+      "addr:province": "Quảng Nam",
+      "addr:street": "36A",
+      "addr:subdistrict": "Tân Khai",
+      "description": "Phòng Tranh",
+      "name": "TASY STUDIO",
+      "note": "Studio",
+      "opening_hours": "24/7",
+      "operator": "Tasy",
+      "tourism": "gallery"
+     }
+    },
+    {
+     "type": "node",
+     "id": 10603622205,
+     "lat": 16.0520775,
+     "lon": 108.2156357,
+     "tags": {
+      "name": "Pont main",
+      "tourism": "attraction"
+     }
+    },
+    {
+     "type": "node",
+     "id": 10709724107,
+     "lat": 16.0009523,
+     "lon": 108.2666434,
+     "tags": {
+      "name": "Làng đá mỹ nghệ Non Nước",
+      "tourism": "attraction"
+     }
+    },
+    {
+     "type": "node",
+     "id": 10709738005,
+     "lat": 15.9867322,
+     "lon": 108.1772823,
+     "tags": {
+      "name": "Làng chiếu Cẩm Nê",
+      "tourism": "attraction"
+     }
+    },
+    {
+     "type": "node",
+     "id": 10709738105,
+     "lat": 16.1128315,
+     "lon": 108.1300902,
+     "tags": {
+      "name": "Làng nước mắm Nam Ô",
+      "tourism": "attraction"
+     }
+    },
+    {
+     "type": "node",
+     "id": 10723988763,
+     "lat": 15.9252377,
+     "lon": 108.3065476,
+     "tags": {
+      "historic": "memorial",
+      "name": "Đài tưởng niệm thảm sát Hà My",
+      "name:ko": "하미마을 위령비"
+     }
+    },
+    {
+     "type": "node",
+     "id": 11161070774,
+     "lat": 16.06108,
+     "lon": 108.2248167,
+     "tags": {
+      "name": "Dragon's Tail",
+      "tourism": "attraction"
+     }
+    },
+    {
+     "type": "node",
+     "id": 11161070775,
+     "lat": 16.0612476,
+     "lon": 108.2296554,
+     "tags": {
+      "name": "Dragon's Head",
+      "tourism": "attraction",
+      "wikipedia": "en:Dragon_Bridge_(Da_Nang)"
+     }
+    },
+    {
+     "type": "node",
+     "id": 11176025737,
+     "lat": 16.0607097,
+     "lon": 108.2200254,
+     "tags": {
+      "name": "Lang Bich hoa Da Nang",
+      "name:en": "Fresco Village Da Nang",
+      "tourism": "attraction"
+     }
+    },
+    {
+     "type": "node",
+     "id": 11359603957,
+     "lat": 15.9987986,
+     "lon": 108.2051036,
+     "tags": {
+      "amenity": "place_of_worship",
+      "name": "Chùa Nam Sơn",
+      "name:vi": "Chùa Nam Sơn",
+      "tourism": "attraction"
+     }
+    },
+    {
+     "type": "node",
+     "id": 11555496744,
+     "lat": 16.0652606,
+     "lon": 108.1833538,
+     "tags": {
+      "historic": "monument",
+      "name": "Tượng Mẹ Nhu",
+      "name:ko": "어머니 동상",
+      "name:ru": "Статуя матери Нху"
+     }
+    },
+    {
+     "type": "node",
+     "id": 11832500969,
+     "lat": 16.1167482,
+     "lon": 108.3084376,
+     "tags": {
+      "name": "Rào chắn",
+      "name:en": "Roadblock",
+      "tourism": "viewpoint"
+     }
+    },
+    {
+     "type": "node",
+     "id": 11934169470,
+     "lat": 16.0432987,
+     "lon": 108.22599,
+     "tags": {
+      "name": "Queen Cobra",
+      "opening_hours": "Mo-Su 18:00-22:00",
+      "tourism": "attraction"
+     }
+    },
+    {
+     "type": "node",
+     "id": 12404434601,
+     "lat": 16.0418575,
+     "lon": 108.1477778,
+     "tags": {
+      "addr:city": "Đà Nẵng",
+      "addr:district": "quận Liên Chiểu",
+      "addr:postcode": "55000",
+      "addr:subdistrict": "Hòa Khánh Nam",
+      "alt_name": "Chùa Không Tên;Chùa Không Tên Đà Sơn;Chùa Đà Sơn",
+      "alt_name:en": "Da Son Temple",
+      "amenity": "place_of_worship",
+      "contact:facebook": "khutamlinhdason",
+      "denomination": "mahayana",
+      "description": "Complex is a developing spiritual site in Da Nang. It features a 65m stone statue of Buddha, carved directly from the mountain rock. It is a peaceful spot for prayer, meditation, and photography.",
+      "description:ru": "Обширная культурно-духовная зона на территории бывшего карьера с гигантской статуей Будды, известная в народе как Безымянный храм",
+      "email": "phamthanhhienkhoi@gmail.com",
+      "name": "Khu Văn hóa Tâm linh Đà Sơn",
+      "name:en": "Da Son Spiritual and Cultural Complex",
+      "name:vi": "Khu Văn hóa Tâm linh Đà Sơn",
+      "operator": "Công ty TNHH Phú Mỹ Hòa",
+      "phone": "098 203 97 03",
+      "religion": "buddhist",
+      "tourism": "attraction"
+     }
+    },
+    {
+     "type": "node",
+     "id": 12622064034,
+     "lat": 16.003907,
+     "lon": 108.2660314,
+     "tags": {
+      "name": "Marble Mountains Museum",
+      "tourism": "museum"
+     }
+    },
+    {
+     "type": "node",
+     "id": 12647208262,
+     "lat": 16.099021,
+     "lon": 108.2549854,
+     "tags": {
+      "lifeguard": "yes",
+      "name": "Bãi Biển Sơn Trà",
+      "natural": "beach",
+      "supervised": "yes",
+      "surface": "sand",
+      "website": "https://sontraseahotel.com/"
+     }
+    },
+    {
+     "type": "node",
+     "id": 12701646101,
+     "lat": 16.109214,
+     "lon": 108.2517721,
+     "tags": {
+      "name": "Son Tra view",
+      "tourism": "viewpoint"
+     }
+    },
+    {
+     "type": "node",
+     "id": 12701675501,
+     "lat": 16.1145234,
+     "lon": 108.2556163,
+     "tags": {
+      "name": "Small waterfall",
+      "tourism": "viewpoint"
+     }
+    },
+    {
+     "type": "node",
+     "id": 12815941401,
+     "lat": 16.0988101,
+     "lon": 108.2244144,
+     "tags": {
+      "name": "7 wonders",
+      "tourism": "attraction"
+     }
+    },
+    {
+     "type": "node",
+     "id": 13040467529,
+     "lat": 16.0988527,
+     "lon": 108.3012745,
+     "tags": {
+      "alt_name": "Obama Rock Beach",
+      "animals": "monkeys, dogs",
+      "lifeguard": "no",
+      "name": "Bãi Đá",
+      "natural": "beach",
+      "supervised": "no",
+      "surface": "unpaved"
+     }
+    },
+    {
+     "type": "node",
+     "id": 13149084101,
+     "lat": 15.912947,
+     "lon": 108.3386895,
+     "tags": {
+      "addr:street": "Đường Nguyễn Phan Vinh",
+      "name": "Mini-Golf Hoi An",
+      "tourism": "theme_park"
+     }
+    },
+    {
+     "type": "node",
+     "id": 13525483833,
+     "lat": 16.0039418,
+     "lon": 108.2633507,
+     "tags": {
+      "name": "Hard to climb",
+      "tourism": "viewpoint"
+     }
+    },
+    {
+     "type": "node",
+     "id": 13677406601,
+     "lat": 16.121001,
+     "lon": 108.2572286,
+     "tags": {
+      "historic": "memorial",
+      "name": "Memorial to the victims of the Flight 229 plane crash on March 15, 1979."
+     }
+    },
+    {
+     "type": "node",
+     "id": 13734880501,
+     "lat": 16.0405625,
+     "lon": 108.1489375,
+     "tags": {
+      "addr:city": "Đà Nẵng",
+      "addr:district": "quận Liên Chiểu",
+      "addr:postcode": "55000",
+      "addr:subdistrict": "Hòa Khánh Nam",
+      "alt_name": "Tượng Phật Phước Lý - Khu văn hóa tâm linh Đà Sơn",
+      "alt_name:en": "Phước Lý Buddha Statue",
+      "alt_name:vi": "Tượng Phật Phước Lý - Khu văn hóa tâm linh Đà Sơn;Tượng Phật Khổng Lồ - Khu văn hóa tâm linh Đà Sơn",
+      "contact:facebook": "khutamlinhdason",
+      "description:en": "A 65-meter giant rock-cut Buddha statue located in the Da Son Spiritual Complex",
+      "description:ru": "Монументальная статуя Будды высотой 65 метров, высеченная из монолитного гранита в районе карьера Phước Lý. Является частью проекта культурно-духовной зоны Đà Sơn.",
+      "height": "65",
+      "historic": "monument",
+      "man_made": "statue",
+      "name": "Tượng Phật Phước Lý",
+      "name:en": "Giant Buddha Statue - Da Son Spiritual Complex",
+      "name:vi": "Tượng Phật Phước Lý",
+      "official_name": "Tượng Bổn sư Thích Ca Mâu Ni Phật (tại Phước Lý / Đà Sơn)",
+      "operator": "Công ty TNHH Phú Mỹ Hòa",
+      "religion": "buddhist",
+      "tourism": "attraction"
+     }
+    },
+    {
+     "type": "node",
+     "id": 14074967004,
+     "lat": 16.0605316,
+     "lon": 108.2179028,
+     "tags": {
+      "heritage": "2",
+      "historic": "memorial",
+      "name": "Bia Nghĩa trủng Phước Ninh"
+     }
+    },
+    {
+     "type": "node",
+     "id": 14130293535,
+     "lat": 15.9555651,
+     "lon": 108.2555759,
+     "tags": {
+      "historic": "monument",
+      "name": "Tượng đài Dũng sĩ Điện Ngọc"
+     }
+    },
+    {
+     "type": "way",
+     "id": 118609193,
+     "center": {
+      "lat": 16.0763542,
+      "lon": 108.2217691
+     },
+     "tags": {
+      "barrier": "wall",
+      "heritage": "2",
+      "historic": "ruins",
+      "name": "Thành Điện Hải",
+      "ruins": "fort"
+     }
+    },
+    {
+     "type": "way",
+     "id": 118691767,
+     "center": {
+      "lat": 16.0478741,
+      "lon": 108.2173603
+     },
+     "tags": {
+      "building": "yes",
+      "museum": "history",
+      "name": "Bảo tàng Quân khu 5",
+      "name:en": "Military Zone 5 Museum",
+      "tourism": "museum"
+     }
+    },
+    {
+     "type": "way",
+     "id": 204790989,
+     "center": {
+      "lat": 16.0681703,
+      "lon": 108.2145338
+     },
+     "tags": {
+      "addr:housenumber": "290",
+      "addr:street": "Đường Hùng Vương",
+      "amenity": "marketplace",
+      "name": "Chợ Cồn",
+      "name:en": "Con Market",
+      "name:ja": "コン市場",
+      "name:vi": "Chợ Cồn",
+      "operator": "Công ty Quản lý và Phát triển các chợ Đà Nẵng",
+      "tourism": "attraction"
+     }
+    },
+    {
+     "type": "way",
+     "id": 302872188,
+     "center": {
+      "lat": 16.0601964,
+      "lon": 108.223168
+     },
+     "tags": {
+      "addr:street": "Đường Bạch Đằng",
+      "check_date": "2023-01-07",
+      "fee": "yes",
+      "internet_access": "wlan",
+      "internet_access:fee": "customers",
+      "museum": "history",
+      "name": "Bảo tàng Nghệ thuật Điêu khắc Chăm Đà Nẵng",
+      "name:en": "Đà Nẵng Museum of Cham Sculpture",
+      "name:es": "Museo de la Escultura Cham",
+      "name:fr": "Musée de Sculpture Cham",
+      "name:ru": "Музей Чамской скульптуры",
+      "name:vi": "Bảo tàng Nghệ thuật Điêu khắc Chăm Đà Nẵng",
+      "name:zh": "占婆雕刻艺术博物馆",
+      "old_name": "Bảo tàng Henri Parmentier",
+      "operator:type": "government",
+      "payment:cards": "no",
+      "payment:cash": "yes",
+      "payment:credit_cards": "no",
+      "payment:debit_cards": "no",
+      "toilets": "yes",
+      "toilets:wheelchair": "yes",
+      "tourism": "museum",
+      "wheelchair": "yes",
+      "wikidata": "Q6940790",
+      "wikipedia": "vi:Bảo tàng Nghệ thuật điêu khắc Chăm Đà Nẵng",
+      "wikipedia:en": "Museum of Cham Sculpture"
+     }
+    },
+    {
+     "type": "way",
+     "id": 303341669,
+     "center": {
+      "lat": 16.0464824,
+      "lon": 108.2182471
+     },
+     "tags": {
+      "building": "yes",
+      "name": "Bảo tàng Hồ Chí Minh",
+      "name:en": "Hồ Chí Minh Museum",
+      "tourism": "museum"
+     }
+    },
+    {
+     "type": "way",
+     "id": 420947244,
+     "center": {
+      "lat": 16.0996857,
+      "lon": 108.2770161
+     },
+     "tags": {
+      "area": "yes",
+      "artwork_type": "statue",
+      "check_date": "2023-01-08",
+      "denomination": "mahayana",
+      "height": "70",
+      "historic": "monument",
+      "name": "Quan Âm",
+      "name:en": "Lady Buddha",
+      "start_date": "2010",
+      "tourism": "artwork"
+     }
+    },
+    {
+     "type": "way",
+     "id": 466418347,
+     "center": {
+      "lat": 16.1877471,
+      "lon": 108.1312899
+     },
+     "tags": {
+      "addr:street": "Đèo Hải Vân",
+      "building": "yes",
+      "check_date": "2026-08-26",
+      "name": "Hải Vân Quan",
+      "name:de": "Hai Van Pass",
+      "name:en": "Hai Van Gate",
+      "tourism": "attraction"
+     }
+    },
+    {
+     "type": "way",
+     "id": 508243736,
+     "center": {
+      "lat": 16.1505237,
+      "lon": 108.1373248
+     },
+     "tags": {
+      "name": "Bãi Hầm",
+      "natural": "beach"
+     }
+    },
+    {
+     "type": "way",
+     "id": 508244759,
+     "center": {
+      "lat": 16.1665742,
+      "lon": 108.1509793
+     },
+     "tags": {
+      "name": "Bãi Xoan",
+      "natural": "beach"
+     }
+    },
+    {
+     "type": "way",
+     "id": 554812139,
+     "center": {
+      "lat": 16.0823325,
+      "lon": 108.2231946
+     },
+     "tags": {
+      "historic": "monument",
+      "name": "Tượng Bồ Câu"
+     }
+    },
+    {
+     "type": "way",
+     "id": 630377259,
+     "center": {
+      "lat": 16.1243611,
+      "lon": 108.2202733
+     },
+     "tags": {
+      "name": "Bãi biển Tiên Sa",
+      "name:en": "Tien Sa Beach",
+      "name:vi": "Bãi biển Tiên Sa",
+      "natural": "beach"
+     }
+    },
+    {
+     "type": "way",
+     "id": 694831926,
+     "center": {
+      "lat": 16.0611683,
+      "lon": 108.2278981
+     },
+     "tags": {
+      "bridge:structure": "arch",
+      "description": "Saturday and Sunday, 9pm",
+      "layer": "1",
+      "man_made": "bridge",
+      "name": "Cầu Rồng",
+      "name:en": "Dragon Bridge",
+      "name:id": "Jembatan Naga",
+      "name:ko": "드래곤 브릿지",
+      "name:ru": "Мост Дракона",
+      "name:zh": "龙桥",
+      "name:zh-Hans": "龙桥",
+      "name:zh-Hant": "龍橋",
+      "opening_hours": "24/7",
+      "tourism": "attraction",
+      "wikidata": "Q5305270"
+     }
+    },
+    {
+     "type": "way",
+     "id": 759913076,
+     "center": {
+      "lat": 16.0713741,
+      "lon": 108.2176831
+     },
+     "tags": {
+      "addr:city": "Đà Nẵng",
+      "addr:district": "Hải Châu",
+      "addr:housenumber": "78",
+      "addr:postcode": "550000",
+      "addr:province": "Thành phố Đà Nẵng",
+      "addr:street": "Đường Lê Duẩn",
+      "building": "yes",
+      "museum": "art",
+      "name": "Bảo tàng Mỹ thuật Đà Nẵng",
+      "name:en": "Danang Fine Arts Museum",
+      "name:vi": "Bảo tàng Mỹ thuật Đà Nẵng",
+      "tourism": "museum",
+      "website": "https://dnfam.vn/"
+     }
+    },
+    {
+     "type": "way",
+     "id": 1152993502,
+     "center": {
+      "lat": 15.9251848,
+      "lon": 108.306494
+     },
+     "tags": {
+      "historic": "monument",
+      "name": "Khu tưởng niệm Hà My",
+      "name:ko": "하미 기념공원"
+     }
+    },
+    {
+     "type": "way",
+     "id": 1204900824,
+     "center": {
+      "lat": 16.0054851,
+      "lon": 108.2690189
+     },
+     "tags": {
+      "name": "Bãi tắm Non Nước",
+      "name:en": "Non Nuoc Beach",
+      "name:ko": "논느억 해변",
+      "natural": "beach",
+      "surface": "sand"
+     }
+    },
+    {
+     "type": "way",
+     "id": 1205391949,
+     "center": {
+      "lat": 15.9840305,
+      "lon": 108.2799055
+     },
+     "tags": {
+      "name": "Bãi biển Tân Trà",
+      "name:en": "Tân Trà Beach",
+      "natural": "beach",
+      "surface": "sand"
+     }
+    },
+    {
+     "type": "way",
+     "id": 1205391950,
+     "center": {
+      "lat": 15.9701121,
+      "lon": 108.2875917
+     },
+     "tags": {
+      "name": "Vanessa Beach",
+      "natural": "beach",
+      "surface": "sand"
+     }
+    },
+    {
+     "type": "way",
+     "id": 1265740821,
+     "center": {
+      "lat": 16.1426647,
+      "lon": 108.2315842
+     },
+     "tags": {
+      "area": "yes",
+      "name": "Cat Vang Beach",
+      "name:en": "Cat Vang Beach",
+      "name:vi": "Bãi Cát Vàng",
+      "natural": "beach"
+     }
+    },
+    {
+     "type": "way",
+     "id": 1330726238,
+     "center": {
+      "lat": 16.123965,
+      "lon": 108.3079479
+     },
+     "tags": {
+      "lifeguard": "yes",
+      "name": "Bãi biển Bắc",
+      "natural": "beach",
+      "supervised": "yes",
+      "surface": "sand"
+     }
+    },
+    {
+     "type": "way",
+     "id": 1331565206,
+     "center": {
+      "lat": 16.0409714,
+      "lon": 108.2243231
+     },
+     "tags": {
+      "area": "yes",
+      "historic": "monument",
+      "name": "Đài Tưởng niệm Liệt sỹ thành phố Đà Nẵng"
+     }
+    },
+    {
+     "type": "way",
+     "id": 1368599361,
+     "center": {
+      "lat": 16.0748319,
+      "lon": 108.2239805
+     },
+     "tags": {
+      "addr:housenumber": "42",
+      "addr:street": "Đường Trần Phú",
+      "check_date": "2025-11-09",
+      "landuse": "commercial",
+      "museum_type": "regional",
+      "name": "Bảo tàng Đà Nẵng",
+      "name:en": "Đà Nẵng Museum",
+      "opening_hours": "08:00-17:00",
+      "payment:cards": "no",
+      "payment:cash": "yes",
+      "payment:credit_cards": "no",
+      "payment:debit_cards": "no",
+      "phone": "+84 236 3886 236",
+      "toilets": "yes",
+      "toilets:access": "customers",
+      "tourism": "museum",
+      "wheelchair": "limited"
+     }
+    },
+    {
+     "type": "way",
+     "id": 1415072215,
+     "center": {
+      "lat": 16.1903109,
+      "lon": 108.1559182
+     },
+     "tags": {
+      "name": "Bãi Sủng Cỏ",
+      "natural": "beach"
+     }
+    },
+    {
+     "type": "way",
+     "id": 1415072216,
+     "center": {
+      "lat": 16.1939524,
+      "lon": 108.16435
+     },
+     "tags": {
+      "name": "Bãi Bà Đa",
+      "natural": "beach"
+     }
+    },
+    {
+     "type": "way",
+     "id": 1474583779,
+     "center": {
+      "lat": 16.0934685,
+      "lon": 108.2512057
+     },
+     "tags": {
+      "addr:housenumber": "284",
+      "addr:postcode": "550000",
+      "addr:street": "Đường Hoàng Sa",
+      "building": "yes",
+      "contact:facebook": "sovereigntysealofvn",
+      "name": "Nhà Trưng bày Hoàng Sa",
+      "name:en": "Hoang Sa Exhibition House (The Museum of Paracel Islands)",
+      "name:vi": "Nhà Trưng bày Hoàng Sa",
+      "operator": "Ủy ban nhân dân đặc khu Hoàng Sa",
+      "tourism": "museum",
+      "website": "https://nhatrungbayhoangsa.danang.gov.vn/"
+     }
+    },
+    {
+     "type": "way",
+     "id": 1484919510,
+     "center": {
+      "lat": 16.0201637,
+      "lon": 108.236873
+     },
+     "tags": {
+      "name": "Xanh Design DN Tiệm Cây và Nước",
+      "tourism": "zoo"
+     }
+    },
+    {
+     "type": "relation",
+     "id": 8552348,
+     "center": {
+      "lat": 16.0017096,
+      "lon": 108.2596132
+     },
+     "tags": {
+      "name": "Ngũ Hành Sơn",
+      "name:en": "Marble Mountains",
+      "name:es": "Montañas de Mármol",
+      "name:ko": "오행산(마블마운틴)",
+      "name:vi": "Ngũ Hành Sơn",
+      "natural": "wood",
+      "tourism": "attraction",
+      "type": "multipolygon",
+      "website": "https://nguhanhson.org",
+      "wikidata": "Q6755207",
+      "wikipedia": "vi:Ngũ Hành Sơn"
+     }
+    },
+    {
+     "type": "relation",
+     "id": 19000664,
+     "center": {
+      "lat": 16.0756098,
+      "lon": 108.2547352
+     },
+     "tags": {
+      "name": "Bãi biển Mỹ Khê",
+      "name:en": "My Khe Beach",
+      "name:ko": "미케 비치",
+      "name:pt": "Praia My Khe",
+      "name:vi": "Bãi biển Mỹ Khê",
+      "name:zh": "美溪沙滩",
+      "natural": "beach",
+      "surface": "sand",
+      "type": "multipolygon",
+      "wikidata": "Q10796763",
+      "wikipedia": "vi:Bãi biển Mỹ Khê"
+     }
+    }
+   ]
+  },
+  "hanoi": {
+   "query": "[out:json][timeout:120];(nwr[\"tourism\"~\"^(attraction|museum|viewpoint|gallery|theme_park|zoo|aquarium)$\"][\"name\"](20.95,105.75,21.15,105.95);nwr[\"natural\"=\"beach\"][\"name\"](20.95,105.75,21.15,105.95);nwr[\"historic\"~\"^(monument|castle|ruins|archaeological_site|memorial)$\"][\"name\"](20.95,105.75,21.15,105.95);nwr[\"amenity\"=\"place_of_worship\"][\"name\"][\"wikidata\"](20.95,105.75,21.15,105.95);nwr[\"leisure\"=\"park\"][\"name\"][\"wikidata\"](20.95,105.75,21.15,105.95););out center tags;",
+   "osm_base_timestamp": "2026-10-03T18:44:47Z",
+   "elements": [
+    {
+     "type": "node",
+     "id": 443033827,
+     "lat": 21.0274885,
+     "lon": 105.854501,
+     "tags": {
+      "artist_name": "Vi Thị Hoa",
+      "height": "10.1",
+      "historic": "memorial",
+      "inscription": "Lý Thái Tổ // 974 - 1028",
+      "material": "bronze",
+      "memorial": "statue",
+      "name": "Tượng đài Lý Thái Tổ",
+      "name:en": "Statue of King Ly Thai To",
+      "name:fr": "Roi Ly Thai To",
+      "name:id": "Patung Raja Ly Thai To",
+      "name:ru": "Имрератор Ли Тхай-То",
+      "name:zh": "黎太祖皇帝雕像",
+      "subject:wikidata": "Q716945",
+      "subject:wikipedia": "vi:Lý Thái Tổ"
+     }
+    },
+    {
+     "type": "node",
+     "id": 445345255,
+     "lat": 21.0343278,
+     "lon": 105.8504388,
+     "tags": {
+      "addr:city": "Hà Nội",
+      "addr:district": "Phường Hoàn Kiếm",
+      "addr:housenumber": "48",
+      "addr:province": "Thành phố Hà Nội",
+      "addr:street": "Hàng Ngang",
+      "museum": "history",
+      "name": "Nhà 48 phố Hàng Ngang",
+      "name:en": "House number 48 Hang Ngang Street",
+      "name:zh": "48号横行街民居",
+      "tourism": "museum",
+      "wikidata": "Q10800786",
+      "wikipedia": "vi:Nhà 48 Hàng Ngang"
+     }
+    },
+    {
+     "type": "node",
+     "id": 1000087403,
+     "lat": 21.0285199,
+     "lon": 105.8364926,
+     "tags": {
+      "addr:city": "Hà Nội",
+      "addr:country": "VN",
+      "addr:district": "Đống Đa",
+      "addr:housenumber": "32",
+      "addr:province": "Hà Nội",
+      "addr:street": "Phố Văn Miếu",
+      "addr:subdistrict": "Văn Miếu",
+      "name": "Nguyen Art Gallery",
+      "tourism": "gallery"
+     }
+    },
+    {
+     "type": "node",
+     "id": 1498111667,
+     "lat": 21.0234337,
+     "lon": 105.802772,
+     "tags": {
+      "historic": "archaeological_site",
+      "name": "Di Tích Lịch Sử Chùa Láng"
+     }
+    },
+    {
+     "type": "node",
+     "id": 1716371376,
+     "lat": 21.0395242,
+     "lon": 105.8284048,
+     "tags": {
+      "historic": "ruins",
+      "name": "Ô Thuỵ Chương"
+     }
+    },
+    {
+     "type": "node",
+     "id": 2607827391,
+     "lat": 20.952708,
+     "lon": 105.786903,
+     "tags": {
+      "name": "Cầu Mậu Lương",
+      "note": "Cau Mau Luong",
+      "tourism": "attraction"
+     }
+    },
+    {
+     "type": "node",
+     "id": 2810302635,
+     "lat": 21.0303429,
+     "lon": 105.8266305,
+     "tags": {
+      "addr:city": "Hà Nội",
+      "addr:country": "VN",
+      "addr:housenumber": "23",
+      "addr:street": "Phố Giang Văn Minh",
+      "name": "Bảo tàng Binh chủng Thông tin liên lạc",
+      "operator": "Bộ tư lệnh Binh chủng Thông tin liên lạc",
+      "tourism": "museum"
+     }
+    },
+    {
+     "type": "node",
+     "id": 3426500755,
+     "lat": 21.054713,
+     "lon": 105.7871894,
+     "tags": {
+      "historic": "memorial",
+      "memorial": "war_memorial",
+      "name": "Đài tưởng niệm Liệt sĩ Cổ Nhuế"
+     }
+    },
+    {
+     "type": "node",
+     "id": 4489385889,
+     "lat": 21.0335078,
+     "lon": 105.8509571,
+     "tags": {
+      "addr:street": "Hàng Đào",
+      "amenity": "marketplace",
+      "name": "Chợ Đêm Hàng Đào – Đồng Xuân",
+      "name:en": "Hanoi Weekend Night Market",
+      "name:fr": "Marché de nuit d'Hanoi",
+      "name:ko": "하노이 야시장",
+      "name:zh": "河内夜市",
+      "opening_hours": "Fr-Su 18:00-00:00",
+      "tourism": "attraction"
+     }
+    },
+    {
+     "type": "node",
+     "id": 4499978190,
+     "lat": 21.0235524,
+     "lon": 105.8587723,
+     "tags": {
+      "addr:city": "Hà Nội",
+      "addr:country": "VN",
+      "addr:district": "Hoàn Kiếm",
+      "addr:housenumber": "6",
+      "addr:street": "Phố Phạm Ngũ Lão",
+      "addr:subdistrict": "Phan Chu Trinh",
+      "museum": "nature",
+      "name": "Bảo tàng Địa chất Việt Nam",
+      "name:en": "Geological Museum",
+      "opening_hours": "Mo-Fr 08:00-12:00, 13:00-17:00",
+      "phone": "84439331496",
+      "tourism": "museum"
+     }
+    },
+    {
+     "type": "node",
+     "id": 4572907889,
+     "lat": 21.0332192,
+     "lon": 105.8523763,
+     "tags": {
+      "addr:city": "Hà Nội",
+      "amenity": "marketplace",
+      "name": "Chợ Đêm",
+      "name:de": "Nachtmarkt",
+      "name:en": "Night Market",
+      "name:zh": "夜市",
+      "opening_hours": "Fr-Su 19:00-22:00",
+      "tourism": "attraction"
+     }
+    },
+    {
+     "type": "node",
+     "id": 4716177261,
+     "lat": 21.0318122,
+     "lon": 105.8080483,
+     "tags": {
+      "attraction": "animal",
+      "name": "Sư tử châu Phi",
+      "name:en": "African lion",
+      "tourism": "attraction"
+     }
+    },
+    {
+     "type": "node",
+     "id": 4716178797,
+     "lat": 21.0302362,
+     "lon": 105.8070655,
+     "tags": {
+      "attraction": "animal",
+      "name": "Khỉ vàng",
+      "name:en": "Rhesus macaque",
+      "tourism": "attraction"
+     }
+    },
+    {
+     "type": "node",
+     "id": 4716178909,
+     "lat": 21.030165,
+     "lon": 105.8066066,
+     "tags": {
+      "attraction": "animal",
+      "name": "Khỉ mốc",
+      "name:en": "Assamese macaque",
+      "tourism": "attraction"
+     }
+    },
+    {
+     "type": "node",
+     "id": 4716178910,
+     "lat": 21.0302841,
+     "lon": 105.8073716,
+     "tags": {
+      "attraction": "animal",
+      "name": "Khỉ đuôi dài",
+      "name:en": "Crab-eating macaque",
+      "tourism": "attraction"
+     }
+    },
+    {
+     "type": "node",
+     "id": 4716178925,
+     "lat": 21.031493,
+     "lon": 105.808439,
+     "tags": {
+      "attraction": "animal",
+      "name": "Hổ Đông Dương",
+      "name:es": "Indochinese tiger",
+      "tourism": "attraction"
+     }
+    },
+    {
+     "type": "node",
+     "id": 4716178989,
+     "lat": 21.0303758,
+     "lon": 105.8084714,
+     "tags": {
+      "attraction": "animal",
+      "name": "Cá sấu",
+      "name:en": "Crocodile",
+      "tourism": "attraction"
+     }
+    },
+    {
+     "type": "node",
+     "id": 4742507123,
+     "lat": 21.0290553,
+     "lon": 105.8509582,
+     "tags": {
+      "historic": "monument",
+      "name": "Đài Tưởng Niệm Vua Lê Thái Tổ",
+      "name:en": "Monument of King Le Thai To",
+      "name:id": "Monumen Raja Le Thai To",
+      "name:zh": "黎太祖黄帝纪念台"
+     }
+    },
+    {
+     "type": "node",
+     "id": 4889087244,
+     "lat": 21.0189071,
+     "lon": 105.7729992,
+     "tags": {
+      "addr:city": "Hà Nội",
+      "addr:district": "Nam Từ Liêm",
+      "addr:subdistrict": "Mỹ Đình 1",
+      "name": "Bảo Tàng Hậu Cần",
+      "tourism": "museum"
+     }
+    },
+    {
+     "type": "node",
+     "id": 4927916321,
+     "lat": 21.0468303,
+     "lon": 105.8368305,
+     "tags": {
+      "historic": "memorial",
+      "image": "https://en.wikipedia.org/wiki/File:Truc_bach_lake_mccain_memorial_hanoi_2007_01.jpg",
+      "memorial": "war_memorial",
+      "name": "Tượng kỷ niệm chiến thắng B52",
+      "name:en": "John McCain capture memoral (in Vietnamese only)",
+      "tourism": "attraction"
+     }
+    },
+    {
+     "type": "node",
+     "id": 5025409279,
+     "lat": 21.0432273,
+     "lon": 105.8354367,
+     "tags": {
+      "historic": "memorial",
+      "inscription": "LÝ TỰ TRỌNG\n1914 - 1931",
+      "material": "marble",
+      "memorial": "statue",
+      "name": "Tượng đài Lý Tự Trọng"
+     }
+    },
+    {
+     "type": "node",
+     "id": 5129868129,
+     "lat": 21.070294,
+     "lon": 105.80512,
+     "tags": {
+      "historic": "monument",
+      "name": "Tượng Phật"
+     }
+    },
+    {
+     "type": "node",
+     "id": 5406262022,
+     "lat": 21.0322019,
+     "lon": 105.8123288,
+     "tags": {
+      "addr:city": "Hà Nội",
+      "addr:district": "Quận Ba Đình",
+      "addr:housenumber": "54",
+      "addr:province": "Hà Nội",
+      "addr:street": "Phố Liễu Giai",
+      "addr:subdistrict": "Ngọc Khánh",
+      "description": "253m (830ft)",
+      "fee": "yes",
+      "name": "Đài quan sát Lotte Skywalk",
+      "name:en": "Lotte Observation Deck",
+      "name:ru": "Смотровая площадка Lotte Tower",
+      "opening_hours": "Mo-Su 09:00-00:00",
+      "tourism": "attraction",
+      "website": "https://observationdeck.lottecenter.com.vn/"
+     }
+    },
+    {
+     "type": "node",
+     "id": 5485635750,
+     "lat": 21.0118709,
+     "lon": 105.8247833,
+     "tags": {
+      "historic": "monument",
+      "name": "Miếu Trung Liệt",
+      "source": "grab_hanoi_2018_t2"
+     }
+    },
+    {
+     "type": "node",
+     "id": 5630770368,
+     "lat": 21.0040006,
+     "lon": 105.9333949,
+     "tags": {
+      "historic": "monument",
+      "name": "Tượng đài Lý Tự Trọng"
+     }
+    },
+    {
+     "type": "node",
+     "id": 6046636103,
+     "lat": 21.0289049,
+     "lon": 105.8493496,
+     "tags": {
+      "historic": "memorial",
+      "inscription": "Regina Pacis",
+      "material": "steel",
+      "memorial": "statue",
+      "name": "Tượng Đức Mẹ",
+      "name:en": "Virgin Mary Queen of Peace",
+      "name:id": "Bunda Maria"
+     }
+    },
+    {
+     "type": "node",
+     "id": 6051320086,
+     "lat": 21.0323859,
+     "lon": 105.8505481,
+     "tags": {
+      "addr:city": "Hà Nội",
+      "addr:district": "Phường Hoàn Kiếm",
+      "addr:housenumber": "39",
+      "addr:province": "Thành phố Hà Nội",
+      "addr:street": "Phố Hàng Gai",
+      "name": "Phòng Trưng Bày Green Palm",
+      "name:en": "Green Palm Gallery",
+      "name:vi": "Green Palm Gallery",
+      "tourism": "gallery"
+     }
+    },
+    {
+     "type": "node",
+     "id": 6053785702,
+     "lat": 21.0240162,
+     "lon": 105.8583591,
+     "tags": {
+      "amenity": "bar",
+      "name": "Binh Minh Jazz Club",
+      "tourism": "attraction"
+     }
+    },
+    {
+     "type": "node",
+     "id": 6546220354,
+     "lat": 21.0365276,
+     "lon": 105.8404068,
+     "tags": {
+      "historic": "ruins",
+      "historic:civilization": "vietnamese",
+      "name": "Rồng đá",
+      "name:en": "Imperial dragon staircase",
+      "name:ko": "용 돌 계단",
+      "name:zh": "石龙楼梯",
+      "name:zh-Hans": "石龍楼梯",
+      "name:zh-Hant": "石龍樓梯",
+      "tourism": "attraction"
+     }
+    },
+    {
+     "type": "node",
+     "id": 6612623371,
+     "lat": 21.0380946,
+     "lon": 105.8716574,
+     "tags": {
+      "historic": "memorial",
+      "name": "Đài Liệt Sĩ Phường Bồ Đề"
+     }
+    },
+    {
+     "type": "node",
+     "id": 6612640826,
+     "lat": 21.0485554,
+     "lon": 105.8853789,
+     "tags": {
+      "historic": "memorial",
+      "name": "Đài Tưởng Niệm Liệt Sĩ"
+     }
+    },
+    {
+     "type": "node",
+     "id": 6612988434,
+     "lat": 21.0562808,
+     "lon": 105.8647701,
+     "tags": {
+      "historic": "memorial",
+      "name": "Bia Tưởng Niệm Liệt Sĩ"
+     }
+    },
+    {
+     "type": "node",
+     "id": 6801247419,
+     "lat": 21.0480728,
+     "lon": 105.8005373,
+     "tags": {
+      "description": "Vietnam National Museum of Nature",
+      "museum": "nature",
+      "name": "Bảo tàng Thiên nhiên Việt Nam",
+      "name:en": "Vietnam National Museum of Nature",
+      "operator": "Viện Hàn lâm Khoa học và Công nghệ Việt Nam",
+      "operator:type": "government",
+      "tourism": "museum"
+     }
+    },
+    {
+     "type": "node",
+     "id": 6846267429,
+     "lat": 21.0134954,
+     "lon": 105.8606269,
+     "tags": {
+      "artwork_type": "statue",
+      "historic": "monument",
+      "name": "Tượng Alexandre Yersin",
+      "name:zh": "亚历山大耶尔森雕像"
+     }
+    },
+    {
+     "type": "node",
+     "id": 6942542995,
+     "lat": 20.9534431,
+     "lon": 105.9436858,
+     "tags": {
+      "name": "Palm Artspace",
+      "tourism": "gallery"
+     }
+    },
+    {
+     "type": "node",
+     "id": 7368395546,
+     "lat": 21.0062067,
+     "lon": 105.8426706,
+     "tags": {
+      "historic": "memorial",
+      "inscription": "Từ quảng trường này, bao thế hệ cán bộ và sinh viên đã lên đường nhập ngũ vì sự nghiệp bảo vệ Tổ quốc",
+      "material": "marble",
+      "memorial": "war_memorial",
+      "name": "Tượng đài Sinh viên lên đường bảo vệ Tổ quốc",
+      "official_name": "Tượng đài Cán bộ và sinh viên xếp bút nghiên lên đường bảo vệ Tổ quốc"
+     }
+    },
+    {
+     "type": "node",
+     "id": 8090548315,
+     "lat": 21.0087758,
+     "lon": 105.8365455,
+     "tags": {
+      "historic": "monument",
+      "name": "Đài tưởng niệm liệt sĩ phường Kim Liên"
+     }
+    },
+    {
+     "type": "node",
+     "id": 8318010619,
+     "lat": 21.0743999,
+     "lon": 105.8197632,
+     "tags": {
+      "addr:city": "Hà Nội",
+      "addr:district": "Tây Hồ",
+      "addr:province": "Hà Nội",
+      "addr:street": "Phố Nhật Chiêu",
+      "addr:subdistrict": "Nhật Tân",
+      "name": "Thung lũng hoa Hồ Tây",
+      "tourism": "attraction"
+     }
+    },
+    {
+     "type": "node",
+     "id": 9287505718,
+     "lat": 21.0562674,
+     "lon": 105.8955179,
+     "tags": {
+      "name": "Thủy đình làng Trường Lâm",
+      "name:en": "Water house in Truong Lam village",
+      "tourism": "attraction"
+     }
+    },
+    {
+     "type": "node",
+     "id": 9399202172,
+     "lat": 21.0385013,
+     "lon": 105.8081236,
+     "tags": {
+      "name": "Bảo tàng Pháo binh",
+      "tourism": "museum"
+     }
+    },
+    {
+     "type": "node",
+     "id": 9846898217,
+     "lat": 20.9730809,
+     "lon": 105.916267,
+     "tags": {
+      "addr:housenumber": "28",
+      "addr:postcode": "100000",
+      "addr:street": "Đường Bát Tràng",
+      "check_date": "2026-07-22",
+      "check_date:opening_hours": "2026-07-22",
+      "fee": "yes",
+      "name": "Trung tâm Tinh hoa làng nghề Việt",
+      "name:en": "Bat Trang National ceramic museum",
+      "name:fr": "Musée national de la céramique de Bat Trang",
+      "opening_hours": "Mo-Fr 08:00-17:30; Sa,Su,PH 08:00-18:00",
+      "payment:cash": "yes",
+      "payment:credit_cards": "yes",
+      "payment:debit_cards": "yes",
+      "tourism": "museum",
+      "website": "http://tinhhoalangnghe.vn/",
+      "wheelchair": "limited"
+     }
+    },
+    {
+     "type": "node",
+     "id": 9923824085,
+     "lat": 21.0180195,
+     "lon": 105.8299531,
+     "tags": {
+      "historic": "archaeological_site",
+      "name": "Đàn Xã Tắc",
+      "start_date": "1048"
+     }
+    },
+    {
+     "type": "node",
+     "id": 9931817258,
+     "lat": 21.0168986,
+     "lon": 105.8469442,
+     "tags": {
+      "historic": "memorial",
+      "inscription": "Công an Nhân dân Vì dân phục vụ",
+      "material": "bronze",
+      "memorial": "statue",
+      "name": "Tượng đài Công an Nhân dân",
+      "start_date": "2022-07-17",
+      "statue": "human"
+     }
+    },
+    {
+     "type": "node",
+     "id": 10091771745,
+     "lat": 20.9727763,
+     "lon": 105.7815108,
+     "tags": {
+      "historic": "monument",
+      "name": "Nguyễn Trãi"
+     }
+    },
+    {
+     "type": "node",
+     "id": 11025863783,
+     "lat": 21.0419097,
+     "lon": 105.9271755,
+     "tags": {
+      "historic": "memorial",
+      "memorial": "war_memorial",
+      "name": "Đài tưởng niệm liệt sĩ phường Phúc Lợi"
+     }
+    },
+    {
+     "type": "node",
+     "id": 11043816631,
+     "lat": 21.0135953,
+     "lon": 105.86053,
+     "tags": {
+      "denotation": "urban",
+      "historic": "memorial",
+      "leaf_type": "broadleaved",
+      "name": "Cây Số 55",
+      "natural": "tree",
+      "species": "Delonix regia",
+      "species:wikidata": "Q238486",
+      "species:wikipedia": "en:Delonix regia"
+     }
+    },
+    {
+     "type": "node",
+     "id": 11085187216,
+     "lat": 21.0757951,
+     "lon": 105.8125879,
+     "tags": {
+      "level": "-1",
+      "name": "Lotte World Aquarium",
+      "tourism": "aquarium"
+     }
+    },
+    {
+     "type": "node",
+     "id": 11112006405,
+     "lat": 21.0379386,
+     "lon": 105.8270934,
+     "tags": {
+      "aircraft:type": "military",
+      "end_date": "1972-12-27",
+      "heritage": "2",
+      "historic": "aircraft",
+      "material": "metal",
+      "model:wikipedia": "en:Boeing B-52 Stratofortress",
+      "name": "Xác máy bay B52",
+      "name:en": "B52 wreckage",
+      "name:ru": "фрагмент сбитого B-52",
+      "tourism": "attraction"
+     }
+    },
+    {
+     "type": "node",
+     "id": 11387469601,
+     "lat": 21.0348324,
+     "lon": 105.9393792,
+     "tags": {
+      "historic": "memorial",
+      "inscription": "Khu di tích lịch sử văn hóa | nghệ thuật kiến trúc | Đình Chùa Vàng | đã được xếp hạng | năm 1995",
+      "memorial": "plaque",
+      "name": "Đình Chùa Vàng"
+     }
+    },
+    {
+     "type": "node",
+     "id": 11397903985,
+     "lat": 21.0312557,
+     "lon": 105.7871724,
+     "tags": {
+      "access": "yes",
+      "historic": "monument",
+      "name": "Đài tưởng niệm liệt sỹ Dịch Vọng Hậu"
+     }
+    },
+    {
+     "type": "node",
+     "id": 11449233337,
+     "lat": 21.0249365,
+     "lon": 105.8556143,
+     "tags": {
+      "addr:city": "Hà Nội",
+      "addr:district": "Hoàn Kiếm",
+      "addr:housenumber": "32",
+      "addr:province": "Hà Nội",
+      "addr:street": "Phố Tràng Tiền",
+      "addr:subdistrict": "Tràng Tiền",
+      "name": "Blue Gallery",
+      "tourism": "gallery"
+     }
+    },
+    {
+     "type": "node",
+     "id": 11534640150,
+     "lat": 21.0139917,
+     "lon": 105.8493943,
+     "tags": {
+      "historic": "monument",
+      "name": "Đài tưởng niệm liệt sĩ phường Lê Đại Hành"
+     }
+    },
+    {
+     "type": "node",
+     "id": 11634634900,
+     "lat": 21.040142,
+     "lon": 105.7989211,
+     "tags": {
+      "man_made": "watermill",
+      "name": "Cối xay nước",
+      "tourism": "attraction"
+     }
+    },
+    {
+     "type": "node",
+     "id": 11636607297,
+     "lat": 21.0404313,
+     "lon": 105.7972331,
+     "tags": {
+      "direction": "90",
+      "historic": "memorial",
+      "inscription": "CÔNG TRÌNH KỈ NIỆM\n50 Năm\nGIẢI PHÓNG THỦ ĐÔ",
+      "material": "metal",
+      "memorial": "plaque",
+      "name": "50 năm giải phóng thủ đô"
+     }
+    },
+    {
+     "type": "node",
+     "id": 11681012714,
+     "lat": 21.0398614,
+     "lon": 105.7938659,
+     "tags": {
+      "addr:city": "Hà Nội",
+      "addr:district": "Quận Cầu Giấy",
+      "addr:housenumber": "D9",
+      "addr:place": "Làng Quốc tế Thăng Long",
+      "addr:province": "Hà Nội",
+      "addr:subdistrict": "Phường Dịch Vọng",
+      "name": "Bảo tàng Tố Hữu",
+      "tourism": "museum"
+     }
+    },
+    {
+     "type": "node",
+     "id": 11691256822,
+     "lat": 21.010054,
+     "lon": 105.8513401,
+     "tags": {
+      "addr:city": "Hà Nội",
+      "addr:district": "Hai Bà Trưng",
+      "addr:housenumber": "338",
+      "addr:province": "Hà Nội",
+      "addr:street": "Phố Huế",
+      "addr:subdistrict": "Phố Huế",
+      "level": "0",
+      "name": "Vĩnh Long Gallery",
+      "tourism": "gallery"
+     }
+    },
+    {
+     "type": "node",
+     "id": 12057863165,
+     "lat": 21.0327149,
+     "lon": 105.8327812,
+     "tags": {
+      "historic": "memorial",
+      "memorial": "war_memorial",
+      "name": "Bia tưởng niệm liệt sĩ phường Điện Biên",
+      "name:en": "Dien Bien Ward's War Memorial"
+     }
+    },
+    {
+     "type": "node",
+     "id": 12090398186,
+     "lat": 21.029912,
+     "lon": 105.8387223,
+     "tags": {
+      "addr:city": "Hà Nội",
+      "addr:district": "Phường Ba Đình",
+      "addr:housenumber": "63-65",
+      "addr:province": "Thành phố Hà Nội",
+      "addr:street": "Đường Hoàng Diệu",
+      "email": "exhibition@lunetart.vn",
+      "import": "grabremote",
+      "name": "Lunet Art Galerie",
+      "opening_hours": "Mo-Su 08:00-20:00",
+      "phone": "+84 915 085 689",
+      "tourism": "gallery",
+      "website": "https://lunetart.vn/"
+     }
+    },
+    {
+     "type": "node",
+     "id": 12458510813,
+     "lat": 21.061563,
+     "lon": 105.9025195,
+     "tags": {
+      "historic": "memorial",
+      "material": "stone",
+      "memorial": "stele",
+      "name": "Công viên Long Biên"
+     }
+    },
+    {
+     "type": "node",
+     "id": 12473783268,
+     "lat": 21.059922,
+     "lon": 105.9043856,
+     "tags": {
+      "historic": "memorial",
+      "name": "Công viên Long Biên"
+     }
+    },
+    {
+     "type": "node",
+     "id": 12492157862,
+     "lat": 21.0314072,
+     "lon": 105.8060383,
+     "tags": {
+      "attraction": "animal",
+      "name": "Hươu cao cổ",
+      "name:en": "Giraffe",
+      "tourism": "attraction"
+     }
+    },
+    {
+     "type": "node",
+     "id": 12492265364,
+     "lat": 21.0305385,
+     "lon": 105.80549,
+     "tags": {
+      "attraction": "animal",
+      "name": "Khỉ vàng",
+      "name:en": "Rhesus macaque",
+      "tourism": "attraction"
+     }
+    },
+    {
+     "type": "node",
+     "id": 12492265365,
+     "lat": 21.030144,
+     "lon": 105.8061354,
+     "tags": {
+      "attraction": "animal",
+      "name": "Khỉ đuôi lợn",
+      "name:en": "Pig-tailed macaque",
+      "tourism": "attraction"
+     }
+    },
+    {
+     "type": "node",
+     "id": 12492265366,
+     "lat": 21.0303348,
+     "lon": 105.8079384,
+     "tags": {
+      "attraction": "animal",
+      "name": "Khỉ vàng",
+      "name:en": "Rhesus macaque",
+      "tourism": "attraction"
+     }
+    },
+    {
+     "type": "node",
+     "id": 12492282606,
+     "lat": 21.0309435,
+     "lon": 105.8035834,
+     "tags": {
+      "attraction": "animal",
+      "name": "Vẹt Nam Mỹ",
+      "name:en": "Macaw",
+      "tourism": "attraction"
+     }
+    },
+    {
+     "type": "node",
+     "id": 12492282607,
+     "lat": 21.0307332,
+     "lon": 105.803498,
+     "tags": {
+      "attraction": "animal",
+      "name": "Cá sấu",
+      "name:en": "Crocodile",
+      "tourism": "attraction"
+     }
+    },
+    {
+     "type": "node",
+     "id": 12492282609,
+     "lat": 21.0306777,
+     "lon": 105.8037148,
+     "tags": {
+      "attraction": "animal",
+      "name": "Quạ đen",
+      "name:en": "Crow",
+      "tourism": "attraction"
+     }
+    },
+    {
+     "type": "node",
+     "id": 12492282610,
+     "lat": 21.0307254,
+     "lon": 105.8033144,
+     "tags": {
+      "attraction": "animal",
+      "name": "Ngỗng",
+      "name:en": "Goose",
+      "tourism": "attraction"
+     }
+    },
+    {
+     "type": "node",
+     "id": 12492282611,
+     "lat": 21.030527,
+     "lon": 105.8034262,
+     "tags": {
+      "attraction": "animal",
+      "name": "Đà điểu",
+      "name:en": "Ostrich",
+      "tourism": "attraction"
+     }
+    },
+    {
+     "type": "node",
+     "id": 12492282612,
+     "lat": 21.0305695,
+     "lon": 105.8032136,
+     "tags": {
+      "attraction": "animal",
+      "name": "Sáo",
+      "name:en": "Starling",
+      "tourism": "attraction"
+     }
+    },
+    {
+     "type": "node",
+     "id": 12492282614,
+     "lat": 21.0304637,
+     "lon": 105.8032509,
+     "tags": {
+      "attraction": "animal",
+      "name": "Bồ câu",
+      "name:en": "Pigeon",
+      "tourism": "attraction"
+     }
+    },
+    {
+     "type": "node",
+     "id": 12492282615,
+     "lat": 21.0303546,
+     "lon": 105.8032667,
+     "tags": {
+      "attraction": "animal",
+      "name": "Cu li nhỏ",
+      "name:en": "Pygmy loris",
+      "tourism": "attraction"
+     }
+    },
+    {
+     "type": "node",
+     "id": 12492282616,
+     "lat": 21.0303294,
+     "lon": 105.8035096,
+     "tags": {
+      "attraction": "animal",
+      "name": "Yểng",
+      "name:en": "Myna",
+      "tourism": "attraction"
+     }
+    },
+    {
+     "type": "node",
+     "id": 12492282617,
+     "lat": 21.0300312,
+     "lon": 105.8035816,
+     "tags": {
+      "attraction": "animal",
+      "name": "Khu chim họ Trĩ",
+      "name:en": "Phasianidaes",
+      "tourism": "attraction"
+     }
+    },
+    {
+     "type": "node",
+     "id": 12492282618,
+     "lat": 21.0302979,
+     "lon": 105.8038132,
+     "tags": {
+      "attraction": "animal",
+      "name": "Công",
+      "name:en": "Green feafowl",
+      "tourism": "attraction"
+     }
+    },
+    {
+     "type": "node",
+     "id": 12492282619,
+     "lat": 21.0299494,
+     "lon": 105.8039144,
+     "tags": {
+      "attraction": "animal",
+      "name": "Công Việt Nam",
+      "name:en": "Indochinese green feafowl",
+      "tourism": "attraction"
+     }
+    },
+    {
+     "type": "node",
+     "id": 12492282620,
+     "lat": 21.0302097,
+     "lon": 105.8040314,
+     "tags": {
+      "attraction": "animal",
+      "name": "Cu ngói",
+      "name:en": "Red collared dove",
+      "tourism": "attraction"
+     }
+    },
+    {
+     "type": "node",
+     "id": 12492282621,
+     "lat": 21.0299683,
+     "lon": 105.8040921,
+     "tags": {
+      "attraction": "animal",
+      "name": "Gà rừng tai trắng",
+      "name:en": "Red junglefowl",
+      "tourism": "attraction"
+     }
+    },
+    {
+     "type": "node",
+     "id": 12492282622,
+     "lat": 21.0300984,
+     "lon": 105.8044003,
+     "tags": {
+      "attraction": "animal",
+      "name": "Gà lôi vằn",
+      "name:en": "Silver pheasant",
+      "tourism": "attraction"
+     }
+    },
+    {
+     "type": "node",
+     "id": 12492282623,
+     "lat": 21.0301929,
+     "lon": 105.8042113,
+     "tags": {
+      "attraction": "animal",
+      "name": "Gà rừng tai đỏ",
+      "name:en": "Indochinese red junglefowl",
+      "tourism": "attraction"
+     }
+    },
+    {
+     "type": "node",
+     "id": 12492312457,
+     "lat": 21.031641,
+     "lon": 105.8058252,
+     "tags": {
+      "attraction": "animal",
+      "name": "Nai",
+      "name:en": "Deer",
+      "tourism": "attraction"
+     }
+    },
+    {
+     "type": "node",
+     "id": 12492312458,
+     "lat": 21.0313563,
+     "lon": 105.8054624,
+     "tags": {
+      "attraction": "animal",
+      "name": "Vượn cáo đuôi vòng",
+      "name:en": "Ring-tailed lemur",
+      "tourism": "attraction"
+     }
+    },
+    {
+     "type": "node",
+     "id": 12492312459,
+     "lat": 21.0313139,
+     "lon": 105.8056376,
+     "tags": {
+      "attraction": "animal",
+      "name": "Nhím đuôi ngắn",
+      "name:en": "Malayan porcupine",
+      "tourism": "attraction"
+     }
+    },
+    {
+     "type": "node",
+     "id": 12492312460,
+     "lat": 21.0311004,
+     "lon": 105.8060787,
+     "tags": {
+      "attraction": "animal",
+      "name": "Khỉ mặt đỏ",
+      "name:en": "Stump-tailed macaque",
+      "tourism": "attraction"
+     }
+    },
+    {
+     "type": "node",
+     "id": 12492312461,
+     "lat": 21.0309792,
+     "lon": 105.8062869,
+     "tags": {
+      "attraction": "animal",
+      "name": "Cầy mực",
+      "name:en": "Binturong",
+      "tourism": "attraction"
+     }
+    },
+    {
+     "type": "node",
+     "id": 12492312462,
+     "lat": 21.0309253,
+     "lon": 105.8065342,
+     "tags": {
+      "attraction": "animal",
+      "name": "Báo lửa",
+      "name:en": "Temminck's golden cat",
+      "tourism": "attraction"
+     }
+    },
+    {
+     "type": "node",
+     "id": 12492312463,
+     "lat": 21.0309292,
+     "lon": 105.8067218,
+     "tags": {
+      "attraction": "animal",
+      "name": "Cầy hương",
+      "name:en": "Civet",
+      "tourism": "attraction"
+     }
+    },
+    {
+     "type": "node",
+     "id": 12492312464,
+     "lat": 21.0310946,
+     "lon": 105.8070165,
+     "tags": {
+      "attraction": "animal",
+      "name": "Vượn đen má trắng",
+      "name:en": "Northern white-cheeked gibbon",
+      "tourism": "attraction"
+     }
+    },
+    {
+     "type": "node",
+     "id": 12492312473,
+     "lat": 21.0312582,
+     "lon": 105.806646,
+     "tags": {
+      "attraction": "animal",
+      "name": "Nai",
+      "name:en": "Deer",
+      "tourism": "attraction"
+     }
+    },
+    {
+     "type": "node",
+     "id": 12492312475,
+     "lat": 21.0314074,
+     "lon": 105.806799,
+     "tags": {
+      "attraction": "animal",
+      "name": "Ngựa vằn",
+      "name:en": "Zebra",
+      "tourism": "attraction"
+     }
+    },
+    {
+     "type": "node",
+     "id": 12492312476,
+     "lat": 21.0315119,
+     "lon": 105.8068333,
+     "tags": {
+      "attraction": "animal",
+      "name": "Ngựa",
+      "name:en": "Horse",
+      "tourism": "attraction"
+     }
+    },
+    {
+     "type": "node",
+     "id": 12492312480,
+     "lat": 21.0311815,
+     "lon": 105.8074705,
+     "tags": {
+      "attraction": "animal",
+      "name": "Voi",
+      "name:en": "Elephant",
+      "tourism": "attraction"
+     }
+    },
+    {
+     "type": "node",
+     "id": 12492312481,
+     "lat": 21.0317677,
+     "lon": 105.8072969,
+     "tags": {
+      "attraction": "animal",
+      "name": "Hà mã",
+      "name:en": "Hippopotamus",
+      "tourism": "attraction"
+     }
+    },
+    {
+     "type": "node",
+     "id": 12492312482,
+     "lat": 21.0317933,
+     "lon": 105.8076418,
+     "tags": {
+      "attraction": "animal",
+      "name": "Hổ",
+      "name:en": "Tiger",
+      "tourism": "attraction"
+     }
+    },
+    {
+     "type": "node",
+     "id": 12555926214,
+     "lat": 21.0301098,
+     "lon": 105.8491126,
+     "tags": {
+      "name": "Propaganda",
+      "tourism": "gallery"
+     }
+    },
+    {
+     "type": "node",
+     "id": 12669561801,
+     "lat": 21.0793631,
+     "lon": 105.835389,
+     "tags": {
+      "name": "Steers to the Sky",
+      "tourism": "attraction"
+     }
+    },
+    {
+     "type": "node",
+     "id": 12669568802,
+     "lat": 21.0806267,
+     "lon": 105.8349415,
+     "tags": {
+      "name": "Kid's House on the tree",
+      "tourism": "attraction"
+     }
+    },
+    {
+     "type": "node",
+     "id": 12669955901,
+     "lat": 21.0840171,
+     "lon": 105.8218277,
+     "tags": {
+      "name": "Sculpture Park",
+      "tourism": "gallery"
+     }
+    },
+    {
+     "type": "node",
+     "id": 13100959743,
+     "lat": 21.0585375,
+     "lon": 105.8704392,
+     "tags": {
+      "historic": "memorial",
+      "memorial": "stele",
+      "name": "Công viên Ngọc Thụy"
+     }
+    },
+    {
+     "type": "node",
+     "id": 13358927688,
+     "lat": 21.0113408,
+     "lon": 105.9351732,
+     "tags": {
+      "historic": "memorial",
+      "memorial": "stone",
+      "name": "Học viện Nông nghiệp Việt Nam"
+     }
+    },
+    {
+     "type": "node",
+     "id": 13415760108,
+     "lat": 21.0377959,
+     "lon": 105.8232303,
+     "tags": {
+      "name": "Rose Kitchen Cooking Classes",
+      "operator": "Rose Kitchen",
+      "tourism": "attraction"
+     }
+    },
+    {
+     "type": "node",
+     "id": 13595549341,
+     "lat": 20.9904862,
+     "lon": 105.8383771,
+     "tags": {
+      "historic": "memorial",
+      "inscription": "VÌ LỢI ÍCH MƯỜI NĂM THÌ PHẢI TRỒNG CÂY\nVÌ LỢI ÍCH TRĂM NĂM THÌ PHẢI TRỒNG NGƯỜI.\n-CHỦ TỊCH HỒ CHÍ MINH",
+      "material": "reinforced_concrete",
+      "memorial": "plaque",
+      "name": "Vì lợi ích mười năm..."
+     }
+    },
+    {
+     "type": "node",
+     "id": 13684800176,
+     "lat": 21.0266691,
+     "lon": 105.8536485,
+     "tags": {
+      "distance": "0",
+      "highway": "milestone",
+      "name": "0 km",
+      "tourism": "attraction"
+     }
+    },
+    {
+     "type": "node",
+     "id": 13830351880,
+     "lat": 20.9833713,
+     "lon": 105.8260046,
+     "tags": {
+      "historic": "memorial",
+      "memorial": "war_memorial",
+      "name": "Bia chiến thắng B.52"
+     }
+    },
+    {
+     "type": "node",
+     "id": 14095752086,
+     "lat": 21.0135969,
+     "lon": 105.8605993,
+     "tags": {
+      "historic": "memorial",
+      "inscription": "Thương yêu cô gái nhỏ",
+      "memorial": "flowers",
+      "name": "Thương yêu cô gái nhỏ",
+      "name:en": "Love a little girl",
+      "note": "Đặt hoa và giấy nhớ: https://caybmw55.netlify.app/"
+     }
+    },
+    {
+     "type": "node",
+     "id": 14096883184,
+     "lat": 21.0301529,
+     "lon": 105.8440687,
+     "tags": {
+      "name": "Hanoi Train Street",
+      "tourism": "attraction",
+      "wikipedia": "https://en.wikipedia.org/wiki/Hanoi_Train_Street"
+     }
+    },
+    {
+     "type": "node",
+     "id": 14148043050,
+     "lat": 21.0793852,
+     "lon": 105.7678793,
+     "tags": {
+      "historic": "monument",
+      "name": "Trận địa tên lửa Chèm"
+     }
+    },
+    {
+     "type": "node",
+     "id": 14196143125,
+     "lat": 21.0572183,
+     "lon": 105.8985627,
+     "tags": {
+      "historic": "memorial",
+      "memorial": "war_memorial",
+      "name": "Đài tưởng niệm các anh hùng liệt sĩ Việt Hưng"
+     }
+    },
+    {
+     "type": "way",
+     "id": 9566542,
+     "center": {
+      "lat": 21.0307694,
+      "lon": 105.8527822
+     },
+     "tags": {
+      "bridge": "yes",
+      "highway": "footway",
+      "layer": "1",
+      "lit": "yes",
+      "material": "wood",
+      "name": "Cầu Thê Húc",
+      "name:de": "Rote Brücke",
+      "name:en": "The Huc Bridge",
+      "name:es": "Puente Rojo",
+      "name:fr": "Pont rouge",
+      "name:id": "Jambatan The Huc",
+      "name:ko": "테훅교",
+      "name:ru": "Мост Восходящего солнца",
+      "name:vi": "Cầu Thê Húc",
+      "name:zh": "棲旭橋",
+      "name:zh-Hans": "栖旭桥",
+      "name:zh-Hant": "棲旭橋",
+      "smoothness": "excellent",
+      "surface": "paving_stones",
+      "tourism": "attraction",
+      "wheelchair": "yes",
+      "wikidata": "Q10752403",
+      "wikipedia": "vi:Cầu Thê Húc"
+     }
+    },
+    {
+     "type": "way",
+     "id": 28912942,
+     "center": {
+      "lat": 21.0286594,
+      "lon": 105.8488512
+     },
+     "tags": {
+      "addr:city": "Hà Nội",
+      "addr:district": "Hoàn Kiếm",
+      "addr:housenumber": "40",
+      "addr:province": "Thành phố Hà Nội",
+      "addr:street": "Nhà Chung",
+      "addr:subdistrict": "Hàng Trống",
+      "amenity": "place_of_worship",
+      "building": "church",
+      "building:colour": "#BEC0C5",
+      "building:levels": "1",
+      "denomination": "catholic",
+      "height": "6.3",
+      "name": "Nhà thờ Lớn",
+      "name:de": "Saint Joseph Kathedrale",
+      "name:en": "Saint Joseph Cathedral",
+      "name:es": "Catedral de San José",
+      "name:fr": "Cathédrale Saint-Joseph",
+      "name:id": "Katedral Santo Yusuf",
+      "name:ko": "성 요셉 성당",
+      "name:vi": "Nhà thờ Lớn",
+      "name:vi-Hani": "家祠𡘯河内",
+      "name:zh": "河内大教堂",
+      "name:zh-Hant": "河內大教堂",
+      "official_name": "Nhà thờ chính tòa Thánh Giuse",
+      "official_name:vi": "Nhà thờ chính tòa Thánh Giuse",
+      "official_name:zh-Hans": "圣若瑟主教座堂",
+      "official_name:zh-Hant": "聖若瑟主教座堂",
+      "religion": "christian",
+      "roof:colour": "#B28174",
+      "wikidata": "Q1923783",
+      "wikimedia_commons": "Category:St. Joseph's Cathedral, Hanoi",
+      "wikipedia": "vi:Nhà thờ Lớn Hà Nội"
+     }
+    },
+    {
+     "type": "way",
+     "id": 28945667,
+     "center": {
+      "lat": 21.0307413,
+      "lon": 105.80664
+     },
+     "tags": {
+      "addr:city": "Hà Nội",
+      "addr:country": "VN",
+      "addr:district": "Ba Đình",
+      "addr:province": "Hà Nội",
+      "addr:street": "Đường Bưởi",
+      "addr:subdistrict": "Ngọc Khánh",
+      "charge": "50000 VND",
+      "fee": "yes",
+      "name": "Công viên Thủ Lệ",
+      "name:en": "Thu Le Park",
+      "name:ru": "Парк Тху-Ле",
+      "official_name": "Vườn thú Hà Nội",
+      "official_name:en": "Hanoi Zoo",
+      "opening_hours": "Mo-Su 06:00-18:00",
+      "operator": "Công ty TNHH MTV Vườn thú Hà Nội",
+      "operator:type": "public/government",
+      "toilets": "yes",
+      "tourism": "zoo",
+      "website": "https://hanoizoo.com/",
+      "wikidata": "Q944021",
+      "wikimedia_commons": "Category:Thủ Lệ Park",
+      "wikipedia": "vi:Công viên Thủ Lệ"
+     }
+    },
+    {
+     "type": "way",
+     "id": 37625751,
+     "center": {
+      "lat": 21.0367617,
+      "lon": 105.8346919
+     },
+     "tags": {
+      "addr:city": "Hà Nội",
+      "addr:district": "Phường Ba Đình",
+      "addr:housenumber": "1",
+      "addr:postcode": "100000",
+      "addr:province": "Thành phố Hà Nội",
+      "addr:street": "Đường Hùng Vương",
+      "alt_name": "Lăng Bác",
+      "alt_name:vi": "Lăng Bác",
+      "alt_name:zh": "胡志明墓;胡志明主席陵",
+      "building": "yes",
+      "building:colour": "#989993",
+      "height": "7.8",
+      "historic": "monument",
+      "name": "Lăng Chủ tịch Hồ Chí Minh",
+      "name:de": "Ho-Chi-Minh-Mausoleum",
+      "name:en": "Ho Chi Minh Mausoleum",
+      "name:fr": "Mausolée de Hô Chi Minh",
+      "name:id": "Mausoleum Presiden Ho Chi Minh",
+      "name:ja": "ホー・チ・ミン廟",
+      "name:ko": "호찌민 묘소",
+      "name:ru": "Мавзолей Хо Ши Мина",
+      "name:tr": "Ho Chi Minh Anıt Mezarı",
+      "name:uk": "Мавзолей Хо Ши Міна",
+      "name:vi": "Lăng Chủ tịch Hồ Chí Minh",
+      "name:vi-Hani": "陵主席胡志明",
+      "name:zh": "胡志明紀念堂",
+      "name:zh-Hans": "胡志明纪念堂",
+      "name:zh-Hant": "胡志明紀念堂",
+      "opening_hours": "Tu-Th 07:30-10:30; Sa,Su 07:30-11:00",
+      "roof:colour": "#989993",
+      "start_date": "1975-08-29",
+      "tourism": "attraction",
+      "wheelchair": "no",
+      "wikidata": "Q874234",
+      "wikimedia_commons": "Category:Ho Chi Minh Mausoleum",
+      "wikipedia": "vi:Lăng Chủ tịch Hồ Chí Minh"
+     }
+    },
+    {
+     "type": "way",
+     "id": 37629143,
+     "center": {
+      "lat": 21.0356178,
+      "lon": 105.8326247
+     },
+     "tags": {
+      "addr:city": "Hà Nội",
+      "addr:district": "Phường Ba Đình",
+      "addr:housenumber": "19",
+      "addr:province": "Thành phố Hà Nội",
+      "addr:street": "Phố Ngọc Hà",
+      "air_conditioning": "yes",
+      "alt_name:ja": "ドラゴンハウス",
+      "building": "museum",
+      "building:levels": "3",
+      "charge": "40000 VND",
+      "contact:email": "truyenthong.bthcm@gmail.com",
+      "contact:facebook": "https://www.facebook.com/HoChiMinhMuseum/",
+      "contact:fax": "+84 24 3843 9837",
+      "contact:phone": "+84 24 3845 5435",
+      "contact:website": "https://baotanghochiminh.vn/",
+      "fee": "yes",
+      "height": "20",
+      "museum": "history",
+      "name": "Bảo tàng Hồ Chí Minh",
+      "name:cy": "Amgueddfa Ho Chi Minh",
+      "name:de": "Ho Chi Minh Museum",
+      "name:en": "Ho Chi Minh Museum",
+      "name:es": "Museo Ho Chi Minh",
+      "name:fr": "Musée Ho Chi Minh",
+      "name:id": "Muzium Ho Chi Minh",
+      "name:ja": "ホー・チ・ミン博物館",
+      "name:ko": "호찌민 박물관",
+      "name:ms": "Muzium Ho Chi Minh",
+      "name:nl": "Ho Chi Minh-museum",
+      "name:ru": "Музей Хо Ши Мина",
+      "name:tr": "Ho Chi Minh Müzesi",
+      "name:vi": "Bảo tàng Hồ Chí Minh",
+      "name:vi-Hani": "寶藏胡志明",
+      "name:zh": "胡志明博物館",
+      "name:zh-Hans": "胡志明博物馆",
+      "name:zh-Hant": "胡志明博物館",
+      "opening_hours": "Tu-Th 08:00-11:30; Sa-Su 14:00-16:30",
+      "operator": "Bộ Văn hóa, Thể thao và Du lịch",
+      "operator:type": "government",
+      "start_date": "1990-05-19",
+      "subject:wikidata": "Q36014",
+      "toilets": "yes",
+      "tourism": "museum",
+      "wheelchair": "yes",
+      "wikidata": "Q1055897",
+      "wikimedia_commons": "Category:Ho Chi Minh Museum",
+      "wikipedia": "vi:Bảo tàng Hồ Chí Minh"
+     }
+    },
+    {
+     "type": "way",
+     "id": 37629570,
+     "center": {
+      "lat": 21.0393019,
+      "lon": 105.8344412
+     },
+     "tags": {
+      "alt_name:zh": "河内主席府",
+      "alt_name:zh-Hans": "河内主席府",
+      "alt_name:zh-Hant": "河內主席府",
+      "building": "yes",
+      "building:colour": "#E5B24F",
+      "building:levels": "4",
+      "castle_type": "stately",
+      "government": "presidency",
+      "historic": "castle",
+      "name": "Phủ Chủ Tịch",
+      "name:de": "Präsidentenpalast",
+      "name:en": "Presidential Palace",
+      "name:es": "Palacio Presidencial",
+      "name:fr": "Palais Présidentiel",
+      "name:id": "Istana kepresidenan",
+      "name:ja": "国家主席官邸",
+      "name:ko": "주석궁",
+      "name:ru": "Президентский дворец",
+      "name:vi": "Phủ Chủ Tịch",
+      "name:vi-Hani": "府主席",
+      "name:zh": "主席府",
+      "old_name:fr": "Palais du Gouverneur-Générale de l'Indochine française",
+      "old_name:vi": "Dinh Toàn quyền",
+      "roof:colour": "#BF6236",
+      "roof:shape": "gabled",
+      "tourism": "attraction",
+      "wikidata": "Q864758",
+      "wikipedia": "vi:Phủ Chủ tịch"
+     }
+    },
+    {
+     "type": "way",
+     "id": 37933050,
+     "center": {
+      "lat": 21.0241925,
+      "lon": 105.8578253
+     },
+     "tags": {
+      "addr:housenumber": "1A",
+      "addr:street": "Phố Tràng Tiền",
+      "amenity": "theatre",
+      "building": "yes",
+      "building:colour": "#FAEBBC",
+      "building:levels": "4",
+      "heritage": "2",
+      "name": "Nhà hát Lớn",
+      "name:de": "Oper",
+      "name:en": "Opera House",
+      "name:es": "Opera de Hanoi",
+      "name:fr": "Opéra de Hanoi",
+      "name:id": "Rumah Opera Hanoi",
+      "name:ko": "하노이 오페라 하우스",
+      "name:ru": "Ханойский оперный театр",
+      "name:vi": "Nhà hát Lớn",
+      "name:zh": "河內大劇院",
+      "official_name": "Nhà hát Lớn Hà Nội",
+      "official_name:en": "Hanoi Opera House",
+      "official_name:vi": "Nhà hát Lớn Hà Nội",
+      "roof:colour": "#A47355",
+      "tourism": "attraction",
+      "wikidata": "Q1186043",
+      "wikimedia_commons": "Category:Hanoi Opera House",
+      "wikipedia": "vi:Nhà hát Lớn Hà Nội"
+     }
+    },
+    {
+     "type": "way",
+     "id": 37933256,
+     "center": {
+      "lat": 21.0242432,
+      "lon": 105.8597158
+     },
+     "tags": {
+      "addr:city": "Hà Nội",
+      "addr:country": "VN",
+      "addr:district": "Hoàn Kiếm",
+      "addr:housenumber": "1",
+      "addr:province": "Hà Nội",
+      "addr:street": "Phố Tràng Tiền",
+      "addr:subdistrict": "Phan Chu Trinh",
+      "check_date": "2025-10-31",
+      "landuse": "commercial",
+      "museum": "history",
+      "name": "Bảo tàng Lịch sử Quốc gia Việt Nam",
+      "name:en": "National Museum of Vietnamese History",
+      "name:fr": "Musée national d'histoire vietnamienne",
+      "name:id": "Muzium Sejarah Vietnam",
+      "name:ja": "ベトナム歴史博物館",
+      "name:vi": "Viện Bảo tàng Lịch sử Việt Nam",
+      "name:vi-Hani": "院寶藏歷史越南",
+      "name:zh": "越南历史博物馆",
+      "name:zh-Hans": "越南历史博物馆",
+      "name:zh-Hant": "越南歷史博物館",
+      "opening_hours": "Mo off; Tu-Su 08:00-12:00,13:30-17:00",
+      "operator:type": "government",
+      "tourism": "museum",
+      "wikidata": "Q5370414",
+      "wikimedia_commons": "Category:National Museum of Vietnamese History",
+      "wikipedia": "vi:Bảo tàng Lịch sử Việt Nam"
+     }
+    },
+    {
+     "type": "way",
+     "id": 37933258,
+     "center": {
+      "lat": 21.0253311,
+      "lon": 105.8586174
+     },
+     "tags": {
+      "addr:city": "Hà Nội",
+      "addr:country": "VN",
+      "addr:district": "Hoàn Kiếm",
+      "addr:housenumber": "216",
+      "addr:province": "Hà Nội",
+      "addr:street": "Đường Trần Quang Khải",
+      "addr:subdistrict": "Phan Chu Trinh",
+      "fee": "yes",
+      "landuse": "commercial",
+      "name": "Bảo tàng Lịch sử Quốc gia Việt Nam",
+      "name:en": "Vietnam Museum of Revolution",
+      "name:vi": "Viện Bảo tàng Cách mạng Việt Nam",
+      "name:vi-Hani": "院寶藏革命越南",
+      "name:zh": "越南革命博物馆",
+      "name:zh-Hant": "越南革命博物館",
+      "tourism": "museum",
+      "wikidata": "Q5370340",
+      "wikimedia_commons": "Category:Vietnam Museum of Revolution",
+      "wikipedia": "vi:Bảo tàng Cách mạng Việt Nam"
+     }
+    },
+    {
+     "type": "way",
+     "id": 37933849,
+     "center": {
+      "lat": 21.0125082,
+      "lon": 105.8445252
+     },
+     "tags": {
+      "addr:city": "Hà Nội",
+      "addr:district": "Hai Bà Trưng",
+      "addr:province": "Hà Nội",
+      "addr:subdistrict": "Lê Đại Hành",
+      "leisure": "park",
+      "name": "Công viên Thống Nhất",
+      "name:de": "Thong-Nhat-Park",
+      "name:en": "Thong Nhat Park",
+      "name:fr": "Parc Thống Nhất",
+      "name:ja": "統一公園",
+      "name:ko": "통녓 공원",
+      "name:ru": "Парк Thong Nhat",
+      "name:th": "สวนท้งเญิ้ต",
+      "name:zh": "统一公园",
+      "name:zh-Hant": "統一公園",
+      "opening_hours": "Mo-Su 06:00-22:00",
+      "wikidata": "Q10752058",
+      "wikimedia_commons": "Category:Thong Nhat Park",
+      "wikipedia": "vi:Công viên Thống Nhất"
+     }
+    },
+    {
+     "type": "way",
+     "id": 38137267,
+     "center": {
+      "lat": 21.0188015,
+      "lon": 105.8140975
+     },
+     "tags": {
+      "alt_name": "Công viên hồ Thành Công",
+      "leisure": "park",
+      "name": "Công viên Indira Gandhi",
+      "name:en": "Indira Gandhi Park",
+      "name:etymology:wikidata": "Q1149",
+      "name:id": "Taman Indirah Gandhi",
+      "name:zh": "英迪拉·甘地公园",
+      "wikidata": "Q10752050",
+      "wikipedia": "vi:Công viên Indira Gandhi"
+     }
+    },
+    {
+     "type": "way",
+     "id": 136247704,
+     "center": {
+      "lat": 21.0488302,
+      "lon": 105.7847783
+     },
+     "tags": {
+      "access": "private",
+      "building": "yes",
+      "building:levels": "3",
+      "museum": "history",
+      "name": "H6 - Nhà truyền thống",
+      "operator": "Học viện Kĩ thuật Quân sự",
+      "operator:type": "military",
+      "tourism": "museum"
+     }
+    },
+    {
+     "type": "way",
+     "id": 178995262,
+     "center": {
+      "lat": 21.0307296,
+      "lon": 105.8523763
+     },
+     "tags": {
+      "addr:city": "Hà Nội",
+      "addr:country": "VN",
+      "amenity": "place_of_worship",
+      "building": "temple",
+      "height": "12",
+      "name": "Đền Ngọc Sơn",
+      "name:de": "Jadeberg-Tempel",
+      "name:en": "Ngoc Son Temple",
+      "name:es": "Templo Ngoc Son",
+      "name:fr": "Temple Ngoc Son",
+      "name:id": "Kuil Ngoc Son",
+      "name:ja": "玉山祠",
+      "name:ko": "응옥선 사당",
+      "name:ru": "Храм Нефритовой горы",
+      "name:vi": "Đền Ngọc Sơn",
+      "name:zh": "玉山祠",
+      "opening_hours": "Mo-Fr 07:00-18:00",
+      "religion": "vietnamese_folk",
+      "roof:colour": "red",
+      "roof:shape": "pyramidal",
+      "wheelchair": "no",
+      "wikidata": "Q3517494",
+      "wikimedia_commons": "Category:Temple of the Jade Mountain",
+      "wikipedia": "vi:Đền Ngọc Sơn"
+     }
+    },
+    {
+     "type": "way",
+     "id": 178995269,
+     "center": {
+      "lat": 21.027873,
+      "lon": 105.8522929
+     },
+     "tags": {
+      "access": "private",
+      "addr:city": "Hà Nội",
+      "addr:country": "VN",
+      "alt_name": "Quy Sơn Tháp",
+      "alt_name:zh": "龜山塔",
+      "building": "monument",
+      "historic": "monument",
+      "name": "Tháp Rùa",
+      "name:cs": "Želví věž",
+      "name:de": "Schildkrötenturm",
+      "name:en": "Turtle Tower",
+      "name:es": "Torre de la Tortuga",
+      "name:fr": "Tour de la Tortue",
+      "name:id": "Menara Penyu",
+      "name:ja": "亀の塔",
+      "name:ko": "터틀 타워",
+      "name:ru": "Башня Черепахи",
+      "name:vi": "Tháp Rùa",
+      "name:vi-Hani": "塔𪛇",
+      "name:zh": "龜塔",
+      "name:zh-Hans": "龟塔",
+      "name:zh-Hant": "龜塔",
+      "wikidata": "Q1134533",
+      "wikimedia_commons": "Category:Turtle Tower",
+      "wikipedia": "vi:Tháp Rùa"
+     }
+    },
+    {
+     "type": "way",
+     "id": 185535416,
+     "center": {
+      "lat": 21.0373231,
+      "lon": 105.8404825
+     },
+     "tags": {
+      "building": "yes",
+      "building:colour": "#6dada3",
+      "building:levels": "1",
+      "historic": "yes",
+      "name": "Nhà D67",
+      "name:en": "Building D67",
+      "name:zh": "D67楼",
+      "roof:colour": "#635652",
+      "roof:shape": "gabled",
+      "tourism": "attraction"
+     }
+    },
+    {
+     "type": "way",
+     "id": 185536369,
+     "center": {
+      "lat": 21.036378,
+      "lon": 105.8401087
+     },
+     "tags": {
+      "building": "yes",
+      "building:colour": "#9a8548",
+      "building:levels": "1",
+      "name": "Triển lãm Tranh dân gian Việt Nam",
+      "name:en": "Vietnamese folk art exhibition",
+      "roof:colour": "#ad4a3c",
+      "roof:shape": "hipped",
+      "tourism": "gallery"
+     }
+    },
+    {
+     "type": "way",
+     "id": 185540946,
+     "center": {
+      "lat": 21.0317824,
+      "lon": 105.8395837
+     },
+     "tags": {
+      "leisure": "park",
+      "name": "Công viên Lê-nin",
+      "name:cy": "Parc Lenin",
+      "name:de": "Lenin Park",
+      "name:en": "Lenin Park",
+      "name:fr": "Parc Lénine",
+      "name:id": "Taman Lenin",
+      "name:ko": "레닌 공원",
+      "name:ru": "Парк имени Ленина",
+      "name:vi": "Công viên Lê-nin",
+      "name:zh": "列宁公园",
+      "name:zh-Hant": "列寧公園",
+      "old_name": "Vườn hoa Chi Lăng",
+      "old_name:vi": "Vườn hoa Chi Lăng",
+      "wikidata": "Q10752053",
+      "wikipedia": "vi:Công viên Lê Nin"
+     }
+    },
+    {
+     "type": "way",
+     "id": 207178320,
+     "center": {
+      "lat": 21.0430301,
+      "lon": 105.836588
+     },
+     "tags": {
+      "addr:city": "Hà Nội",
+      "addr:district": "Phường Ba Đình",
+      "addr:housenumber": "194",
+      "addr:province": "Thành phố Hà Nội",
+      "addr:street": "Phố Quán Thánh",
+      "alt_name:zh": "舘聖殿",
+      "amenity": "place_of_worship",
+      "building": "religious",
+      "heritage": "2",
+      "name": "Đền Quán Thánh",
+      "name:en": "Quan Thanh Temple",
+      "name:ru": "Храм Quan Thanh",
+      "name:vi": "Đền Quán Thánh",
+      "name:vi-Hani": "殿舘聖",
+      "name:zh": "真武觀",
+      "name:zh-Hans": "真武观",
+      "old_name": "Trấn Vũ Quán",
+      "old_name:vi": "Trấn Vũ Quán",
+      "religion": "taoist",
+      "wikidata": "Q5370148",
+      "wikimedia_commons": "Category:Quán Thánh Temple",
+      "wikipedia": "vi:Đền Quán Thánh"
+     }
+    },
+    {
+     "type": "way",
+     "id": 207178342,
+     "center": {
+      "lat": 21.0381713,
+      "lon": 105.833152
+     },
+     "tags": {
+      "addr:city": "Hà Nội",
+      "addr:district": "Phường Ba Đình",
+      "addr:province": "Thành phố Hà Nội",
+      "building": "house",
+      "fee": "25000",
+      "historic": "house",
+      "name": "Nhà sàn Bác Hồ",
+      "name:de": "Ho-Chi-Minh-Haus",
+      "name:en": "Ho Chi Minh’s Stilt House",
+      "name:id": "Rumah panggung Ho Chi Minh",
+      "name:ko": "호치민 생가 입장료 25000동",
+      "name:vi": "Nhà sàn Bác Hồ",
+      "name:zh": "胡志明故居",
+      "tourism": "attraction"
+     }
+    },
+    {
+     "type": "way",
+     "id": 208188482,
+     "center": {
+      "lat": 21.0654087,
+      "lon": 105.7872988
+     },
+     "tags": {
+      "leisure": "park",
+      "name": "Công viên Hòa Bình",
+      "name:en": "Peace Park",
+      "name:id": "Taman Perdamaian",
+      "name:ja": "平和公園",
+      "name:km": "ឧទ្យានសន្តិភាព",
+      "name:ko": "평화 공원",
+      "name:ru": "парк мира",
+      "name:th": "สวนสันติภาพ",
+      "name:zh": "和平公园",
+      "wikidata": "Q10752048",
+      "wikipedia": "vi:Công viên Hòa Bình"
+     }
+    },
+    {
+     "type": "way",
+     "id": 208255133,
+     "center": {
+      "lat": 21.010013,
+      "lon": 105.786309
+     },
+     "tags": {
+      "addr:city": "Hà Nội",
+      "addr:district": "Nam Từ Liêm",
+      "addr:province": "Hà Nội",
+      "addr:street": "Đường Phạm Hùng",
+      "addr:subdistrict": "Mễ Trì",
+      "building": "yes",
+      "contact:facebook": "https://www.facebook.com/baotanghanoi.hanoimuseum",
+      "name": "Bảo tàng Hà Nội",
+      "name:en": "Hanoi Museum",
+      "name:es": "Museo de Hanói",
+      "name:fr": "Musée de Hanoï",
+      "name:ko": "하노이 박물관",
+      "name:vi": "Bảo tàng Hà Nội",
+      "name:zh": "河內博物館",
+      "opening_hours": "Tu-Su 08:00-11:30,13:30-17:00",
+      "phone": "+84 978 509 935",
+      "tourism": "museum",
+      "website": "https://baotanghanoi.com.vn/",
+      "wikidata": "Q1835176",
+      "wikimedia_commons": "Category:Hanoi Museum",
+      "wikipedia": "vi:Bảo tàng Hà Nội"
+     }
+    },
+    {
+     "type": "way",
+     "id": 220302249,
+     "center": {
+      "lat": 21.0478999,
+      "lon": 105.8367599
+     },
+     "tags": {
+      "amenity": "place_of_worship",
+      "fee": "no",
+      "landuse": "religious",
+      "name": "Chùa Trấn Quốc",
+      "name:de": "Tran-Quoc-Pagode",
+      "name:en": "Tran Quoc Pagoda",
+      "name:es": "Pagoda Tran Quoc Pen",
+      "name:ja": "ティンクオック寺",
+      "name:ko": "쩐꾸옥 사원",
+      "name:ru": "Пагода Чанкуок",
+      "name:vi": "Chùa Trấn Quốc",
+      "name:vi-Hani": "㕑鎮國",
+      "name:zh": "鎮國寺",
+      "name:zh-Hans": "镇国寺",
+      "name:zh-Hant": "鎮國寺",
+      "religion": "buddhist",
+      "wikidata": "Q864770",
+      "wikimedia_commons": "Category:Trấn Quốc Pagoda",
+      "wikipedia": "vi:Chùa Trấn Quốc"
+     }
+    },
+    {
+     "type": "way",
+     "id": 228075195,
+     "center": {
+      "lat": 21.0222159,
+      "lon": 105.8442347
+     },
+     "tags": {
+      "addr:city": "Hà Nội",
+      "addr:country": "VN",
+      "addr:district": "Hoàn Kiếm",
+      "addr:housenumber": "91",
+      "addr:province": "Hà Nội",
+      "addr:street": "Phố Trần Hưng Đạo",
+      "addr:subdistrict": "Trần Hưng Đạo",
+      "alt_name": "Cung Văn Hóa Hữu Nghị Việt Xô",
+      "amenity": "community_centre",
+      "landuse": "commercial",
+      "layer": "1",
+      "name": "Cung Văn hóa Lao động Hữu nghị Việt Xô",
+      "name:en": "Vietnam-Soviet Friendship Cultural Center",
+      "name:id": "Istana Budaya dan Pertemanan Vietnam-Soviet",
+      "name:ru": "Дворец культуры и труда вьетнамско-советской дружбы",
+      "tourism": "attraction",
+      "website": "https://cungvanhoalaodonghuunghivietxo.vn/",
+      "wikidata": "Q10751146",
+      "wikimedia_commons": "Category:Vietnam-Soviet Friendship Labor Cultural Palace",
+      "wikipedia": "vi:Cung Văn hóa Lao động Hữu nghị Việt Xô"
+     }
+    },
+    {
+     "type": "way",
+     "id": 242518340,
+     "center": {
+      "lat": 21.0401148,
+      "lon": 105.847428
+     },
+     "tags": {
+      "amenity": "events_venue",
+      "building": "yes",
+      "height": "21",
+      "heritage": "4",
+      "name": "Tháp nước Hàng Đậu",
+      "name:en": "Hang Dau Water Tank",
+      "name:fr": "Chateau D'Eau Hang Dau",
+      "roof:shape": "pyramidal",
+      "start_date": "1894",
+      "tourism": "attraction"
+     }
+    },
+    {
+     "type": "way",
+     "id": 291706038,
+     "center": {
+      "lat": 21.0467053,
+      "lon": 105.7943379
+     },
+     "tags": {
+      "addr:city": "Hà Nội",
+      "addr:country": "VN",
+      "addr:housenumber": "108",
+      "addr:postcode": "10000",
+      "addr:street": "Đường Hoàng Quốc Việt",
+      "building": "yes",
+      "name": "Bảo tàng lực lượng Tăng Thiết Giáp",
+      "opening_hours": "\"by appointment\"",
+      "tourism": "museum"
+     }
+    },
+    {
+     "type": "way",
+     "id": 292907018,
+     "center": {
+      "lat": 21.0387814,
+      "lon": 105.8471531
+     },
+     "tags": {
+      "bridge": "yes",
+      "electrified": "no",
+      "gauge": "1000",
+      "layer": "1",
+      "maxspeed": "40",
+      "name": "Đường sắt Hà Nội - Đồng Đăng",
+      "name:en": "Hanoi–Dong Dang Railway",
+      "name:vi": "Đường sắt Hà Nội - Đồng Đăng",
+      "name:vi-Hani": "塘𨫊河內-同登",
+      "name:zh": "河同铁路",
+      "name:zh-Hans": "河同铁路",
+      "name:zh-Hant": "河同鐵路",
+      "operator": "Tổng công ty Đường sắt Việt Nam",
+      "passenger_lines": "1",
+      "railway": "rail",
+      "railway:etcs": "2",
+      "source": "Bing",
+      "tourism": "attraction",
+      "usage": "main",
+      "wikidata": "Q10841016",
+      "wikipedia": "vi:Đường sắt Hà Nội – Đồng Đăng"
+     }
+    },
+    {
+     "type": "way",
+     "id": 339936730,
+     "center": {
+      "lat": 21.0403941,
+      "lon": 105.7988369
+     },
+     "tags": {
+      "addr:city": "Hà Nội",
+      "addr:country": "VN",
+      "addr:district": "Cầu Giấy",
+      "addr:province": "Hà Nội",
+      "addr:street": "Đường Nguyễn Văn Huyên",
+      "addr:subdistrict": "Quan Hoa",
+      "charge": "40000 VND",
+      "contact:facebook": "https://www.facebook.com/btdth",
+      "email": "information@vme.org.vn",
+      "fax": "+842438360351",
+      "fee": "yes",
+      "name": "Bảo tàng Dân tộc học Việt Nam",
+      "name:de": "Ethnologisches Museum von Vietnam",
+      "name:en": "Vietnam Museum of Ethnology",
+      "name:fr": "Musée d'Ethnologie du Vietnam",
+      "name:ja": "ハノイ民族学博物館",
+      "name:ko": "베트남 민족학 박물관",
+      "name:vi": "Bảo tàng Dân tộc học Việt Nam",
+      "name:vi-Hani": "寶藏民族學越南",
+      "name:zh": "越南民族博物館",
+      "name:zh-Hans": "越南民族博物馆",
+      "name:zh-Hant": "越南民族博物館",
+      "opening_hours": "Tu-Su 08:30-17:30",
+      "operator": "Viện Hàn lâm Khoa học xã hội Việt Nam",
+      "operator:type": "public/government",
+      "phone": "+842437562193",
+      "start_date": "1997",
+      "tourism": "museum",
+      "website": "https://www.vme.org.vn/",
+      "wikidata": "Q1048345",
+      "wikimedia_commons": "Category:Vietnam Museum of Ethnology",
+      "wikipedia": "vi:Bảo tàng Dân tộc học Việt Nam"
+     }
+    },
+    {
+     "type": "way",
+     "id": 340128580,
+     "center": {
+      "lat": 21.0253763,
+      "lon": 105.8464274
+     },
+     "tags": {
+      "addr:city": "Hà Nội",
+      "addr:country": "VN",
+      "addr:housenumber": "1",
+      "addr:street": "Phố Hỏa Lò",
+      "alt_name": "Nhà tù Hoả Lò",
+      "alt_name:vi": "Nhà tù Hoả Lò",
+      "building": "yes",
+      "building:levels": "2",
+      "heritage": "2",
+      "name": "Nhà tù Hỏa Lò",
+      "name:de": "Hoa Lo Gefängnis",
+      "name:en": "Hoa Lo Prison",
+      "name:es": "Museo de la Prisión de Hoa Lo",
+      "name:fr": "Prison Hoa Lo (Maison centrale)",
+      "name:it": "Museo della Prigione di Hoa Lo",
+      "name:ko": "하노이 힐턴",
+      "name:ru": "Тюрьма Hoa Lo",
+      "name:vi": "Nhà tù Hoả Lò",
+      "name:zh-Hans": "火炉监狱",
+      "name:zh-Hant": "火爐監獄",
+      "old_name": "Maison Centrale",
+      "opening_hours": "Mo-Su 08:00-17:00",
+      "phone": "+84 439342253",
+      "tourism": "museum",
+      "wikidata": "Q1359941",
+      "wikimedia_commons": "Category:Hanoi Hilton",
+      "wikipedia": "en:Hỏa Lò Prison"
+     }
+    },
+    {
+     "type": "way",
+     "id": 351035449,
+     "center": {
+      "lat": 21.0544494,
+      "lon": 105.7632282
+     },
+     "tags": {
+      "historic": "memorial",
+      "inscription": "Names of sacrified soldiers and national mothers.",
+      "memorial": "war_memorial",
+      "name": "Đài tưởng niệm liệt sĩ Phú Diễn",
+      "religion": "buddhist"
+     }
+    },
+    {
+     "type": "way",
+     "id": 409390951,
+     "center": {
+      "lat": 21.0261665,
+      "lon": 105.7852576
+     },
+     "tags": {
+      "addr:city": "Hà Nội",
+      "addr:country": "VN",
+      "addr:district": "Cầu Giấy",
+      "addr:province": "Hà Nội",
+      "addr:street": "Ngõ 3 Tôn Thất Thuyết",
+      "addr:subdistrict": "Dịch Vọng Hậu",
+      "building": "commercial",
+      "building:levels": "9",
+      "name": "Trung tâm Lưu trữ và Triển lãm Ảnh Nghệ thuật Việt Nam",
+      "smoking": "outside",
+      "tourism": "museum",
+      "website": "https://www.facebook.com/TrungTamLuuTruvaTrienLamAnhNgheThuatVietNam/"
+     }
+    },
+    {
+     "type": "way",
+     "id": 480826771,
+     "center": {
+      "lat": 21.0706177,
+      "lon": 105.8245013
+     },
+     "tags": {
+      "addr:city": "Hà Nội",
+      "addr:district": "Tây Hồ",
+      "addr:street": "Ngõ 275 Âu Cơ",
+      "addr:subdistrict": "Quảng An",
+      "building": "yes",
+      "name": "Bảo tàng Văn học Việt Nam",
+      "name:en": "Vietnam Literature Museum",
+      "tourism": "museum",
+      "website": "https://baotangvanhoc.vn/"
+     }
+    },
+    {
+     "type": "way",
+     "id": 483273181,
+     "center": {
+      "lat": 21.0597741,
+      "lon": 105.7567979
+     },
+     "tags": {
+      "name": "Vườn Thực vật Hà Nội",
+      "natural": "wood",
+      "tourism": "attraction"
+     }
+    },
+    {
+     "type": "way",
+     "id": 548070677,
+     "center": {
+      "lat": 21.0248126,
+      "lon": 105.8171839
+     },
+     "tags": {
+      "historic": "memorial",
+      "memorial": "war_memorial",
+      "name": "Đài Tưởng Niệm Liệt Sĩ Giảng Võ",
+      "name:en": "Giang Vo War Soldier Memorial"
+     }
+    },
+    {
+     "type": "way",
+     "id": 582077342,
+     "center": {
+      "lat": 21.051055,
+      "lon": 105.8867543
+     },
+     "tags": {
+      "historic": "monument",
+      "name": "Đài tưởng niệm các nạn nhân bị bom mìn sát hại làng Gia Thụy"
+     }
+    },
+    {
+     "type": "way",
+     "id": 649534759,
+     "center": {
+      "lat": 21.08795,
+      "lon": 105.9433532
+     },
+     "tags": {
+      "addr:city": "Bắc Ninh",
+      "addr:district": "Thành phố Từ Sơn",
+      "addr:province": "Bac Ninh",
+      "addr:street": "Đường Lý Anh Tông",
+      "addr:subdistrict": "Phường Đình Bảng",
+      "amenity": "place_of_worship",
+      "historic": "tomb",
+      "name": "Lăng Phát Tích",
+      "note": "Lăng bà Phạm Thị Ngà, mẹ của vua Lý Thái Tổ",
+      "tomb": "mausoleum",
+      "tourism": "attraction"
+     }
+    },
+    {
+     "type": "way",
+     "id": 661138411,
+     "center": {
+      "lat": 21.0978845,
+      "lon": 105.9163832
+     },
+     "tags": {
+      "building": "yes",
+      "historic": "memorial",
+      "name": "Đài liệt sĩ xã Yên Thường"
+     }
+    },
+    {
+     "type": "way",
+     "id": 661161561,
+     "center": {
+      "lat": 21.1485131,
+      "lon": 105.9314653
+     },
+     "tags": {
+      "addr:city": "Bắc Ninh",
+      "addr:district": "Thành phố Từ Sơn",
+      "addr:province": "Bac Ninh",
+      "addr:street": "Phố Nguyễn Quỳnh Cư",
+      "addr:subdistrict": "Phường Phù Khê",
+      "landuse": "commercial",
+      "name": "Khu tưởng niệm Cố Tổng Bí thư Nguyễn Văn Cừ",
+      "tourism": "museum"
+     }
+    },
+    {
+     "type": "way",
+     "id": 696389268,
+     "center": {
+      "lat": 21.0352574,
+      "lon": 105.8402519
+     },
+     "tags": {
+      "building": "yes",
+      "historic": "city_gate",
+      "name": "Đoan Môn",
+      "name:en": "Doan Mon Gate",
+      "name:id": "Gerbang Kejujutan",
+      "name:ko": "단문",
+      "name:vi": "Đoan Môn",
+      "name:vi-Hani": "端門",
+      "name:zh": "端門",
+      "name:zh-Hans": "端门",
+      "name:zh-Latn-pinyin": "duānmén",
+      "tourism": "attraction",
+      "wikidata": "Q20025612",
+      "wikimedia_commons": "Category:Đoan Môn Gate",
+      "wikipedia": "vi:Đoan Môn"
+     }
+    },
+    {
+     "type": "way",
+     "id": 696389287,
+     "center": {
+      "lat": 21.0365891,
+      "lon": 105.8381198
+     },
+     "tags": {
+      "archaeological_site": "shelter",
+      "historic": "archaeological_site",
+      "historic:civilization": "vietnamese",
+      "name": "Di tích nhà bát giác",
+      "ruins": "yes"
+     }
+    },
+    {
+     "type": "way",
+     "id": 696668911,
+     "center": {
+      "lat": 21.0353827,
+      "lon": 105.840275
+     },
+     "tags": {
+      "historic": "archaeological_site",
+      "historic:civilization": "vietnamese",
+      "name": "Dấu vết ngự đạo",
+      "name:en": "Relics of the kings’ footpath"
+     }
+    },
+    {
+     "type": "way",
+     "id": 697161740,
+     "center": {
+      "lat": 21.0404628,
+      "lon": 105.8342162
+     },
+     "tags": {
+      "building": "yes",
+      "castle_type": "palace",
+      "government": "yes",
+      "historic": "castle",
+      "name": "Phủ Thủ tướng",
+      "name:en": "Prime Minister Office",
+      "name:id": "Istana Menteri Besar",
+      "name:zh": "总理府",
+      "roof:colour": "#943D2B"
+     }
+    },
+    {
+     "type": "way",
+     "id": 697326496,
+     "center": {
+      "lat": 21.0358556,
+      "lon": 105.8336144
+     },
+     "tags": {
+      "addr:city": "Hà Nội",
+      "addr:district": "Phường Ba Đình",
+      "addr:postcode": "100000",
+      "addr:province": "Thành phố Hà Nội",
+      "addr:street": "Phố Ông Ích Khiêm",
+      "alt_name": "Chùa Mật;Diên Hựu tự;Liên Hoa Đài;Chùa Diên Hựu",
+      "alt_name:vi": "Chùa Mật;Diên Hựu tự;Liên Hoa Đài;Chùa Diên Hựu",
+      "alt_name:zh-Hans": "一柱塔;延祐寺;莲花台",
+      "alt_name:zh-Hant": "一柱塔;延祐寺;蓮花臺",
+      "amenity": "place_of_worship",
+      "building": "temple",
+      "building:colour": "#85552e",
+      "heritage": "2",
+      "layer": "1",
+      "name": "Chùa Một Cột",
+      "name:de": "Einsäulenpagode",
+      "name:en": "One Pillar Pagoda",
+      "name:es": "Pagoda del pilar único",
+      "name:fr": "Pagode Môt Côt",
+      "name:id": "Vihara Dien Huu",
+      "name:ja": "一柱寺",
+      "name:ko": "못꼿사원",
+      "name:ms": "Pagoda Satu Tiang",
+      "name:pi": "Vihara Mangala Sadaiva",
+      "name:vi-Hani": "㕑𠬠榾",
+      "name:zh": "延祐寺",
+      "religion": "buddhist",
+      "start_date": "1049",
+      "tourism": "attraction",
+      "wheelchair": "no",
+      "wikidata": "Q1186292",
+      "wikimedia_commons": "Category:One Pillar Pagoda",
+      "wikipedia": "vi:Chùa Một Cột"
+     }
+    },
+    {
+     "type": "way",
+     "id": 698018249,
+     "center": {
+      "lat": 21.0414535,
+      "lon": 105.8405062
+     },
+     "tags": {
+      "amenity": "place_of_worship",
+      "building": "church",
+      "denomination": "roman_catholic",
+      "heritage": "4",
+      "name": "Nhà thờ Cửa Bắc",
+      "name:en": "Cua Bac Church",
+      "name:id": "Gereja Katolik Cua Bac",
+      "name:zh": "北门天主教堂",
+      "name:zh-Hant": "北門天主教堂",
+      "religion": "christian",
+      "tourism": "attraction",
+      "wikidata": "Q1088224",
+      "wikimedia_commons": "Category:Cửa Bắc Church",
+      "wikipedia": "en:Cửa Bắc Church"
+     }
+    },
+    {
+     "type": "way",
+     "id": 700620997,
+     "center": {
+      "lat": 21.0379481,
+      "lon": 105.8475552
+     },
+     "tags": {
+      "addr:city": "Hà Nội",
+      "addr:district": "Phường Hoàn Kiếm",
+      "addr:housenumber": "12",
+      "addr:province": "Thành phố Hà Nội",
+      "addr:street": "Phố Hàng Lược",
+      "amenity": "place_of_worship",
+      "building": "mosque",
+      "denomination": "sunni",
+      "name": "Thánh đường Hồi giáo Al-Noor",
+      "name:en": "Al-Noor Mosque",
+      "name:zh": "努尔清真寺",
+      "religion": "muslim",
+      "wikidata": "Q124982776"
+     }
+    },
+    {
+     "type": "way",
+     "id": 700840702,
+     "center": {
+      "lat": 21.0355189,
+      "lon": 105.8527855
+     },
+     "tags": {
+      "building": "yes",
+      "name": "Trung tâm Giao lưu văn hóa phố cổ Hà Nội",
+      "name:en": "Hanoi Old Quarter Cultural Exchange Centre",
+      "tourism": "museum"
+     }
+    },
+    {
+     "type": "way",
+     "id": 700840711,
+     "center": {
+      "lat": 21.0359129,
+      "lon": 105.850991
+     },
+     "tags": {
+      "addr:city": "Hà Nội",
+      "addr:district": "Phường Hoàn Kiếm",
+      "addr:housenumber": "76",
+      "addr:province": "Thành phố Hà Nội",
+      "addr:street": "Hàng Buồm",
+      "amenity": "place_of_worship",
+      "building": "yes",
+      "heritage": "2",
+      "name": "Đền Bạch Mã",
+      "name:en": "Bach Ma Temple",
+      "name:id": "Kuil Bach Ma (Kuda Putih)",
+      "name:zh": "白馬殿",
+      "name:zh-Hans": "白马殿",
+      "name:zh-Hant": "白馬殿",
+      "opening_hours": "Tu-Su 08:00-11:00, 14:00-17:00",
+      "religion": "vietnamese_folk",
+      "wikidata": "Q10841667",
+      "wikipedia": "vi:Đền Bạch Mã"
+     }
+    },
+    {
+     "type": "way",
+     "id": 700853410,
+     "center": {
+      "lat": 21.0310639,
+      "lon": 105.8537472
+     },
+     "tags": {
+      "addr:city": "Hà Nội",
+      "addr:country": "VN",
+      "building": "yes",
+      "historic": "memorial",
+      "inscription": "Quyết tử / để Tổ quốc / quyết sinh",
+      "memorial": "war_memorial",
+      "name": "Cảm Tử Quân",
+      "name:en": "Suicide Troops",
+      "name:zh": "决死军纪念台"
+     }
+    },
+    {
+     "type": "way",
+     "id": 702185155,
+     "center": {
+      "lat": 21.0285826,
+      "lon": 105.8358894
+     },
+     "tags": {
+      "building": "yes",
+      "name": "Khuê Văn Các",
+      "name:en": "Khue Van pavilion",
+      "name:id": "Pavilyun Keindahan Bintang Kaki",
+      "name:ko": "규문각",
+      "name:vi": "Khuê Văn Các",
+      "name:zh": "奎文閣",
+      "name:zh-Hans": "奎文阁",
+      "name:zh-Hant": "奎文閣",
+      "tourism": "attraction"
+     }
+    },
+    {
+     "type": "way",
+     "id": 704134587,
+     "center": {
+      "lat": 21.0242928,
+      "lon": 105.8458574
+     },
+     "tags": {
+      "addr:housenumber": "67",
+      "addr:street": "Phố Lý Thường Kiệt",
+      "building": "yes",
+      "heritage": "4",
+      "name": "Bảo tàng Công an Hà Nội",
+      "tourism": "museum"
+     }
+    },
+    {
+     "type": "way",
+     "id": 704134588,
+     "center": {
+      "lat": 21.024453,
+      "lon": 105.8454153
+     },
+     "tags": {
+      "addr:housenumber": "79",
+      "addr:street": "Phố Quán Sứ",
+      "amenity": "place_of_worship",
+      "name": "Chùa Quán Sứ",
+      "name:de": "Quan Su Pagode",
+      "name:en": "Quan Su Pagoda",
+      "name:fr": "pagode des ambassadeurs",
+      "name:zh": "使节塔",
+      "religion": "buddhist",
+      "wikidata": "Q7273080",
+      "wikimedia_commons": "Category:Quán Sứ Temple",
+      "wikipedia": "en:Quán Sứ Pagoda"
+     }
+    },
+    {
+     "type": "way",
+     "id": 704147278,
+     "center": {
+      "lat": 21.0234022,
+      "lon": 105.8516031
+     },
+     "tags": {
+      "addr:housenumber": "36",
+      "addr:street": "Phố Lý Thường Kiệt",
+      "email": "info@baotangphunu.org.vn",
+      "fee": "yes",
+      "landuse": "commercial",
+      "name": "Bảo tàng Phụ nữ Việt Nam",
+      "name:de": "Vietnamesische Frauenmuseum",
+      "name:en": "Vietnamese Women's Museum",
+      "name:es": "Museo de mujeres del Vietnam",
+      "name:fr": "Musée des femmes du Vietnam",
+      "name:zh": "越南女士宝物院",
+      "opening_hours": "Mo-Su 08:00-17:00",
+      "source": "grab_hanoi_2018_t1",
+      "tourism": "museum",
+      "website": "https://www.baotangphunu.org.vn/",
+      "wikidata": "Q10743287",
+      "wikimedia_commons": "Category:Vietnamese Women's Museum",
+      "wikipedia": "en:Vietnamese Women's Museum"
+     }
+    },
+    {
+     "type": "way",
+     "id": 704147333,
+     "center": {
+      "lat": 21.0225802,
+      "lon": 105.8455674
+     },
+     "tags": {
+      "building": "yes",
+      "name": "Bảo tàng Công an nhân dân",
+      "name:en": "National Security Museum",
+      "name:fr": "Musée de la sécurité nationale",
+      "tourism": "museum"
+     }
+    },
+    {
+     "type": "way",
+     "id": 704153616,
+     "center": {
+      "lat": 21.0266205,
+      "lon": 105.8552836
+     },
+     "tags": {
+      "addr:housenumber": "12",
+      "addr:street": "Phố Ngô Quyền",
+      "building": "yes",
+      "building:colour": "#DFC86D",
+      "building:levels": "2",
+      "heritage": "4",
+      "name": "Bắc Bộ Phủ",
+      "name:en": "Tonkin Palace",
+      "roof:colour": "#8C6D63",
+      "tourism": "attraction",
+      "wikidata": "Q10743330",
+      "wikimedia_commons": "Category:State Guest House (Vietnam)",
+      "wikipedia": "vi:Nhà khách Chính phủ"
+     }
+    },
+    {
+     "type": "way",
+     "id": 704153620,
+     "center": {
+      "lat": 21.0265056,
+      "lon": 105.8537259
+     },
+     "tags": {
+      "addr:city": "Hà Nội",
+      "addr:district": "Hoàn Kiếm",
+      "addr:housenumber": "75",
+      "addr:province": "Hà Nội",
+      "addr:street": "Phố Đinh Tiên Hoàng",
+      "addr:subdistrict": "Tràng Tiền",
+      "building": "yes",
+      "name": "Tòa nhà trung tâm Bưu điện Hà Nội",
+      "name:en": "Hanoi Post Office",
+      "tourism": "attraction",
+      "wikidata": "Q113457479",
+      "wikimedia_commons": "Category:Hanoi Post Office",
+      "wikipedia": "vi:Bưu điện Hà Nội"
+     }
+    },
+    {
+     "type": "way",
+     "id": 765597030,
+     "center": {
+      "lat": 21.0353013,
+      "lon": 105.8519782
+     },
+     "tags": {
+      "description": "Beer Street",
+      "description:ko": "맥주거리",
+      "highway": "residential",
+      "lit": "yes",
+      "maxspeed": "50",
+      "motorcar": "no",
+      "name": "Phố Tạ Hiện",
+      "name:en": "Ta Hien Street",
+      "name:etymology:wikidata": "Q10831485",
+      "name:zh": "谢现街",
+      "surface": "asphalt",
+      "tourism": "attraction"
+     }
+    },
+    {
+     "type": "way",
+     "id": 776437155,
+     "center": {
+      "lat": 21.1139482,
+      "lon": 105.8735347
+     },
+     "tags": {
+      "historic": "castle",
+      "name": "Co Loa Citadel",
+      "tourism": "attraction"
+     }
+    },
+    {
+     "type": "way",
+     "id": 776438252,
+     "center": {
+      "lat": 21.1125414,
+      "lon": 105.8715414
+     },
+     "tags": {
+      "amenity": "place_of_worship",
+      "heritage": "2",
+      "name": "Đền thờ An Dương Vương",
+      "name:en": "An Duong Vuong Temple",
+      "religion": "vietnamese_folk",
+      "tourism": "attraction"
+     }
+    },
+    {
+     "type": "way",
+     "id": 867981976,
+     "center": {
+      "lat": 21.0081408,
+      "lon": 105.8357463
+     },
+     "tags": {
+      "building": "yes",
+      "heritage": "4",
+      "historic": "monument",
+      "name": "Nhà lưu niệm Chủ tịch Hồ Chí Minh"
+     }
+    },
+    {
+     "type": "way",
+     "id": 879841441,
+     "center": {
+      "lat": 21.0264805,
+      "lon": 105.8560132
+     },
+     "tags": {
+      "access": "yes",
+      "alt_name": "Vườn hoa Con Cóc",
+      "alt_name:ko": "꼰꼭 공원",
+      "leisure": "park",
+      "name": "Vườn hoa Diên Hồng",
+      "name:en": "Dien Hong Park",
+      "name:etymology:wikidata": "Q10772300",
+      "old_name": "Vườn hoa Chavassieux",
+      "opening_hours": "24/7",
+      "start_date": "1901",
+      "wikidata": "Q10834022",
+      "wikimedia_commons": "Category:Dien Hong Park",
+      "wikipedia": "vi:Vườn hoa Diên Hồng"
+     }
+    },
+    {
+     "type": "way",
+     "id": 892577251,
+     "center": {
+      "lat": 21.003424,
+      "lon": 105.8149068
+     },
+     "tags": {
+      "buildingpart": "room",
+      "indoor": "yes",
+      "level": "-1",
+      "name": "Trung tâm nghệ thuật VCCA",
+      "tourism": "gallery"
+     }
+    },
+    {
+     "type": "way",
+     "id": 925432867,
+     "center": {
+      "lat": 21.0534209,
+      "lon": 105.8121622
+     },
+     "tags": {
+      "historic": "memorial",
+      "material": "concrete",
+      "memorial": "memorial",
+      "name": "Đài tưởng niệm liệt sỹ"
+     }
+    },
+    {
+     "type": "way",
+     "id": 941901613,
+     "center": {
+      "lat": 21.0555556,
+      "lon": 105.8197192
+     },
+     "tags": {
+      "addr:housenumber": "52",
+      "amenity": "place_of_worship",
+      "name": "Phủ Tây Hồ",
+      "religion": "vietnamese_folk",
+      "wikidata": "Q10807217",
+      "wikipedia": "vi:Phủ Tây Hồ"
+     }
+    },
+    {
+     "type": "way",
+     "id": 947089943,
+     "center": {
+      "lat": 21.0106784,
+      "lon": 105.8381736
+     },
+     "tags": {
+      "amenity": "place_of_worship",
+      "heritage": "2",
+      "landuse": "religious",
+      "name": "Đền Kim Liên",
+      "name:en": "Kim Lien Temple",
+      "name:ru": "Храм Kim Lien",
+      "wikidata": "Q10840590",
+      "wikimedia_commons": "Category:Kim Lien shrine",
+      "wikipedia": "vi:Đền Kim Liên"
+     }
+    },
+    {
+     "type": "way",
+     "id": 964908494,
+     "center": {
+      "lat": 21.0874871,
+      "lon": 105.808633
+     },
+     "tags": {
+      "historic": "monument",
+      "name": "Nhà tưởng niệm Liệt sĩ phường Phú Thượng"
+     }
+    },
+    {
+     "type": "way",
+     "id": 1019050228,
+     "center": {
+      "lat": 21.0561942,
+      "lon": 105.8092578
+     },
+     "tags": {
+      "building": "yes",
+      "name": "Bảo tàng Công binh",
+      "tourism": "museum"
+     }
+    },
+    {
+     "type": "way",
+     "id": 1019050229,
+     "center": {
+      "lat": 21.0391757,
+      "lon": 105.7864458
+     },
+     "tags": {
+      "addr:city": "Hà Nội",
+      "addr:district": "Cầu Giấy",
+      "addr:street": "Phỗ Phan Văn Trường",
+      "addr:subdistrict": "Dịch Vọng Hậu",
+      "building": "yes",
+      "fee": "no",
+      "museum": "military",
+      "name": "Bảo tàng Binh chủng Hóa học",
+      "opening_hours": "Mo-Su 08:00-11:00,13:30-16:30",
+      "operator": "Binh chủng Hóa học",
+      "operator:type": "military",
+      "tourism": "museum"
+     }
+    },
+    {
+     "type": "way",
+     "id": 1019050231,
+     "center": {
+      "lat": 21.0355531,
+      "lon": 105.8260825
+     },
+     "tags": {
+      "building": "yes",
+      "fee": "no",
+      "name": "Bảo tàng Chiến thắng B52",
+      "name:en": "B52 Victory Museum",
+      "tourism": "museum",
+      "wikidata": "Q10743280"
+     }
+    },
+    {
+     "type": "way",
+     "id": 1040742615,
+     "center": {
+      "lat": 21.0208459,
+      "lon": 105.8519134
+     },
+     "tags": {
+      "access": "yes",
+      "addr:housenumber": "49",
+      "addr:street": "Phố Trần Hưng Đạo",
+      "building": "yes",
+      "check_date": "2024-01-26",
+      "historic": "manor",
+      "import": "grabremote",
+      "name": "Biệt thự 49 Trần Hưng Đạo",
+      "tourism": "attraction",
+      "wikimedia_commons": "File:Biệt thự 49 Trần Hưng Đạo, Hà Nội.jpg"
+     }
+    },
+    {
+     "type": "way",
+     "id": 1067639931,
+     "center": {
+      "lat": 21.0290142,
+      "lon": 105.9440467
+     },
+     "tags": {
+      "historic": "memorial",
+      "memorial": "war_memorial",
+      "name": "Đài tưởng niệm trận càn làng Cam 1947"
+     }
+    },
+    {
+     "type": "way",
+     "id": 1080023296,
+     "center": {
+      "lat": 21.0206826,
+      "lon": 105.8064118
+     },
+     "tags": {
+      "heritage": "2",
+      "historic": "memorial",
+      "memorial": "war_memorial",
+      "name": "Di tích Pháo đài Láng"
+     }
+    },
+    {
+     "type": "way",
+     "id": 1103182086,
+     "center": {
+      "lat": 21.0055401,
+      "lon": 105.8570519
+     },
+     "tags": {
+      "addr:city": "Hà Nội",
+      "addr:district": "Hai Bà Trưng",
+      "addr:housenumber": "1",
+      "addr:province": "Hà Nội",
+      "addr:street": "Phố Võ Thị Sáu",
+      "addr:subdistrict": "Thanh Nhàn",
+      "leisure": "park",
+      "name": "Công viên Võ Thị Sáu",
+      "old_name": "Công viên Tuổi trẻ Thủ đô",
+      "old_name:en": "Hanoi Youth Park",
+      "opening_hours": "24/7",
+      "wikidata": "Q10752060",
+      "wikipedia": "vi:Công viên Tuổi Trẻ"
+     }
+    },
+    {
+     "type": "way",
+     "id": 1118494921,
+     "center": {
+      "lat": 21.0371267,
+      "lon": 105.7951905
+     },
+     "tags": {
+      "addr:city": "Hà Nội",
+      "addr:district": "Cầu Giấy",
+      "addr:housenumber": "86",
+      "addr:street": "Phố Chùa Hà",
+      "addr:subdistrict": "Dịch Vọng",
+      "amenity": "place_of_worship",
+      "landuse": "religious",
+      "name": "Chùa Hà",
+      "religion": "buddhist",
+      "wikidata": "Q10748428",
+      "wikipedia": "vi:Chùa Hà"
+     }
+    },
+    {
+     "type": "way",
+     "id": 1123050055,
+     "center": {
+      "lat": 21.0428789,
+      "lon": 105.7933834
+     },
+     "tags": {
+      "historic": "monument",
+      "name": "Đài tưởng niệm liệt sĩ Nghĩa Tân"
+     }
+    },
+    {
+     "type": "way",
+     "id": 1124817467,
+     "center": {
+      "lat": 21.0065177,
+      "lon": 105.9392143
+     },
+     "tags": {
+      "building": "yes",
+      "historic": "memorial",
+      "inscription": "Tổ quốc ghi công",
+      "memorial": "war_memorial",
+      "name": "Đài tưởng niệm các anh hùng liệt sĩ Trâu Quỳ"
+     }
+    },
+    {
+     "type": "way",
+     "id": 1137325940,
+     "center": {
+      "lat": 21.0318025,
+      "lon": 105.9111744
+     },
+     "tags": {
+      "historic": "memorial",
+      "memorial": "war_memorial",
+      "name": "Đài tưởng niệm các anh hùng liệt sĩ Sài Đồng"
+     }
+    },
+    {
+     "type": "way",
+     "id": 1140667038,
+     "center": {
+      "lat": 21.004447,
+      "lon": 105.8211559
+     },
+     "tags": {
+      "alt_name": "Chùa Sở",
+      "amenity": "place_of_worship",
+      "heritage": "2",
+      "name": "Chùa Phúc Khánh",
+      "religion": "buddhist",
+      "wikidata": "Q10748505",
+      "wikipedia": "vi:Chùa Phúc Khánh"
+     }
+    },
+    {
+     "type": "way",
+     "id": 1141562511,
+     "center": {
+      "lat": 21.0345459,
+      "lon": 105.9144675
+     },
+     "tags": {
+      "historic": "memorial",
+      "memorial": "war_memorial",
+      "name": "Liệt sĩ bất diệt"
+     }
+    },
+    {
+     "type": "way",
+     "id": 1148571536,
+     "center": {
+      "lat": 21.0115766,
+      "lon": 105.754666
+     },
+     "tags": {
+      "addr:city": "Hà Nội",
+      "addr:district": "Nam Từ Liêm",
+      "addr:housenumber": "Km 6+500",
+      "addr:province": "Hà Nội",
+      "addr:street": "Đại lộ Thăng Long",
+      "addr:subdistrict": "Tây Mỗ",
+      "landuse": "military",
+      "museum": "history",
+      "name": "Bảo tàng Lịch sử Quân sự Việt Nam",
+      "name:en": "Vietnam Military History Museum",
+      "name:es": "Museo de Historia Militar de Vietnam",
+      "name:ja": "ベトナム軍事歴史博物館",
+      "name:ka": "ვიეტნამის სამხედრო ისტორიის მუზეუმი",
+      "name:ko": "베트남 군사역사박물관",
+      "name:ru": "Вьетнамский музей военной истории",
+      "name:vi": "Bảo tàng Lịch sử Quân sự Việt Nam",
+      "name:zh": "越南军事历史博物馆",
+      "opening_hours": "Tu-Th,Sa-Su,PH 08:00-11:30,13:00-16:30",
+      "operator": "Tổng cục Chính trị",
+      "operator:type": "military",
+      "start_date": "2024-11-01",
+      "tourism": "museum",
+      "website": "https://btlsqsvn.mod.gov.vn/",
+      "wikidata": "Q1048785",
+      "wikipedia": "vi:Bảo tàng Lịch sử Quân sự Việt Nam"
+     }
+    },
+    {
+     "type": "way",
+     "id": 1201121655,
+     "center": {
+      "lat": 21.0117706,
+      "lon": 105.9044868
+     },
+     "tags": {
+      "building": "yes",
+      "historic": "memorial",
+      "memorial": "war_memorial",
+      "name": "Đài tưởng niệm liệt sĩ Cự Khối"
+     }
+    },
+    {
+     "type": "way",
+     "id": 1207063057,
+     "center": {
+      "lat": 21.0127908,
+      "lon": 105.8856213
+     },
+     "tags": {
+      "area": "yes",
+      "description": "Abandoned Van",
+      "name": "Abandoned Van",
+      "tourism": "attraction"
+     }
+    },
+    {
+     "type": "way",
+     "id": 1216770910,
+     "center": {
+      "lat": 21.0284762,
+      "lon": 105.8297933
+     },
+     "tags": {
+      "building": "yes",
+      "historic": "memorial",
+      "name": "Nhà bia Tưởng niệm Liệt sỹ phường Cát Linh"
+     }
+    },
+    {
+     "type": "way",
+     "id": 1216978705,
+     "center": {
+      "lat": 21.011893,
+      "lon": 105.8768299
+     },
+     "tags": {
+      "lifeguard": "no",
+      "name": "Red River Beach",
+      "name:en": "Red River Beach",
+      "name:vi": "Bãi biển sông Hồng",
+      "natural": "beach",
+      "supervised": "no",
+      "surface": "sand"
+     }
+    },
+    {
+     "type": "way",
+     "id": 1219524639,
+     "center": {
+      "lat": 20.999274,
+      "lon": 105.8292331
+     },
+     "tags": {
+      "addr:city": "Hà Nội",
+      "addr:country": "VN",
+      "addr:district": "Thanh Xuân",
+      "addr:housenumber": "173C",
+      "addr:province": "Hà Nội",
+      "addr:street": "Đường Trường Chinh",
+      "addr:subdistrict": "Khương Mai",
+      "fee": "yes",
+      "landuse": "military",
+      "museum": "military",
+      "name": "Bảo tàng Phòng không - Không quân",
+      "opening_hours": "Mo-Su 08:00-11:00,13:00-16:00; Fr off",
+      "operator": "Quân chủng Phòng không - Không quân Việt Nam",
+      "operator:type": "military",
+      "tourism": "museum",
+      "wikidata": "Q7928536",
+      "wikimedia_commons": "Category:Vietnamese Air Force Museum in Hanoi",
+      "wikipedia": "vi:Bảo tàng Phòng không - Không quân (Việt Nam)"
+     }
+    },
+    {
+     "type": "way",
+     "id": 1219991538,
+     "center": {
+      "lat": 21.0263362,
+      "lon": 105.853313
+     },
+     "tags": {
+      "building": "tower",
+      "building:levels": "3",
+      "man_made": "tower",
+      "name": "Tháp Hòa Phong",
+      "name:en": "Hoa Phong Tower",
+      "name:zh": "和風塔",
+      "tourism": "attraction",
+      "tower:construction": "brick",
+      "tower:type": "monument",
+      "wikidata": "Q10825843",
+      "wikimedia_commons": "Category:Hoa Phong Tower",
+      "wikipedia": "vi:Tháp Hòa Phong"
+     }
+    },
+    {
+     "type": "way",
+     "id": 1229451553,
+     "center": {
+      "lat": 21.0381302,
+      "lon": 105.7981514
+     },
+     "tags": {
+      "building": "yes",
+      "historic": "memorial",
+      "memorial": "war_memorial",
+      "name": "Đài tưởng niệm liệt sĩ phường Quan Hoa"
+     }
+    },
+    {
+     "type": "way",
+     "id": 1234036432,
+     "center": {
+      "lat": 21.0252147,
+      "lon": 105.8573158
+     },
+     "tags": {
+      "addr:city": "Hà Nội",
+      "addr:district": "Hoàn Kiếm",
+      "addr:housenumber": "3",
+      "addr:province": "Hà Nội",
+      "addr:street": "Phố Lý Đạo Thành",
+      "addr:subdistrict": "Tràng Tiền",
+      "building": "yes",
+      "building:levels": "6",
+      "contact:facebook": "https://www.facebook.com/dongphongartgallery",
+      "email": "contact@dongphongartgallery.com",
+      "name": "Đông Phong Art Gallery",
+      "opening_hours": "Mo-Su 09:30-18:30",
+      "phone": "+84 24 393 64 393",
+      "tourism": "gallery",
+      "website": "https://dongphongartgallery.com/"
+     }
+    },
+    {
+     "type": "way",
+     "id": 1239425732,
+     "center": {
+      "lat": 21.0141222,
+      "lon": 105.8495463
+     },
+     "tags": {
+      "addr:city": "Hà Nội",
+      "addr:district": "Hai Bà Trưng",
+      "addr:housenumber": "151",
+      "addr:province": "Hà Nội",
+      "addr:street": "Phố Bà Triệu",
+      "addr:subdistrict": "Lê Đại Hành",
+      "alt_name": "Phúc Lâm tự",
+      "amenity": "place_of_worship",
+      "name": "Chùa Chân Tiên",
+      "religion": "buddhist",
+      "wikidata": "Q10748395",
+      "wikipedia": "vi:Chùa Chân Tiên (Hà Nội)"
+     }
+    },
+    {
+     "type": "way",
+     "id": 1247135450,
+     "center": {
+      "lat": 21.0299738,
+      "lon": 105.8431281
+     },
+     "tags": {
+      "access": "private",
+      "landuse": "railway",
+      "name": "Phố đường tàu Hà Nội",
+      "name:en": "Hanoi Train Street",
+      "note": "To understand why this neighborhood came to be, watch this excellent video about the train street: The People Who Hate Us - Rare Earth, and read this news article: Cuộc sống hơn 60 năm ở xóm đường tàu – VnExpress",
+      "operator": "Tổng Công ty Đường sắt Việt Nam",
+      "tourism": "attraction",
+      "wikidata": "Q85788921",
+      "wikipedia": "en:Hanoi Train Street"
+     }
+    },
+    {
+     "type": "way",
+     "id": 1249796827,
+     "center": {
+      "lat": 21.0615141,
+      "lon": 105.7767688
+     },
+     "tags": {
+      "historic": "memorial",
+      "material": "concrete",
+      "name": "Nhà lưu niệm Đại tướng Văn Tiến Dũng"
+     }
+    },
+    {
+     "type": "way",
+     "id": 1251537883,
+     "center": {
+      "lat": 21.0628861,
+      "lon": 105.9190152
+     },
+     "tags": {
+      "historic": "memorial",
+      "memorial": "war_memorial",
+      "name": "Đài tưởng niệm liệt sĩ Giang Biên"
+     }
+    },
+    {
+     "type": "way",
+     "id": 1251617787,
+     "center": {
+      "lat": 21.0398777,
+      "lon": 105.7989919
+     },
+     "tags": {
+      "area": "yes",
+      "name": "Nhà Chăm",
+      "name:en": "Cham's house",
+      "name:fr": "Maison des Cham",
+      "operator": "Bảo tàng Dân tộc học Việt Nam",
+      "tourism": "attraction"
+     }
+    },
+    {
+     "type": "way",
+     "id": 1251617788,
+     "center": {
+      "lat": 21.0397455,
+      "lon": 105.7994191
+     },
+     "tags": {
+      "area": "yes",
+      "name": "Nhà Việt",
+      "name:en": "Viet's house",
+      "name:fr": "Maison des Viet",
+      "operator": "Bảo tàng Dân tộc học Việt Nam",
+      "tourism": "attraction"
+     }
+    },
+    {
+     "type": "way",
+     "id": 1251617810,
+     "center": {
+      "lat": 21.0413109,
+      "lon": 105.7991726
+     },
+     "tags": {
+      "area": "yes",
+      "name": "Nhà Hà Nhì",
+      "name:en": "Hani's house",
+      "name:fr": "Maison des Hani",
+      "operator": "Bảo tàng Dân tộc học Việt Nam",
+      "tourism": "attraction"
+     }
+    },
+    {
+     "type": "way",
+     "id": 1253201592,
+     "center": {
+      "lat": 20.998195,
+      "lon": 105.8732856
+     },
+     "tags": {
+      "barrier": "wall",
+      "historic": "memorial",
+      "inscription": "ĐỜI ĐỜI NHỚ ƠN CÁC ANH HÙNG LIỆT SỸ\nTỔ QUỐC GHI CÔNG",
+      "memorial": "war_memorial",
+      "name": "Đài tưởng niệm các anh hùng liệt sỹ phường Vĩnh Tuy"
+     }
+    },
+    {
+     "type": "way",
+     "id": 1255802866,
+     "center": {
+      "lat": 21.0310246,
+      "lon": 105.8460228
+     },
+     "tags": {
+      "addr:city": "Hà Nội",
+      "addr:district": "Phường Hoàn Kiếm",
+      "addr:housenumber": "2",
+      "addr:province": "Thành phố Hà Nội",
+      "addr:street": "Ngõ Trạm",
+      "amenity": "place_of_worship",
+      "building": "church",
+      "denomination": "evangelical",
+      "image": "https://www.mapillary.com/app/?lat=21.031068858065012&lng=105.84623355806002&z=17&focus=photo&pKey=642559157710033",
+      "name": "Hội thánh Tin lành Hà Nội",
+      "name:en": "Hanoi Evangelical Church",
+      "name:id": "Gereja Kristen Hanoi",
+      "name:zh": "黑内基督教会",
+      "religion": "christian",
+      "wikidata": "Q10772316"
+     }
+    },
+    {
+     "type": "way",
+     "id": 1296795442,
+     "center": {
+      "lat": 20.9858706,
+      "lon": 105.9474388
+     },
+     "tags": {
+      "fee": "yes",
+      "name": "Vietgangz Farm",
+      "opening_hours": "Mo-Su 09:00-12:00,15:00-22:30",
+      "operator": "Vietgangz",
+      "phone": "+84862419444",
+      "tourism": "zoo",
+      "website": "https://www.facebook.com/vietgangzfarm",
+      "zoo": "petting_zoo"
+     }
+    },
+    {
+     "type": "way",
+     "id": 1316353973,
+     "center": {
+      "lat": 21.0675686,
+      "lon": 105.8813225
+     },
+     "tags": {
+      "building": "yes",
+      "fee": "no",
+      "name": "Bảo tàng Vũ Khí",
+      "opening_hours": "Tu-Fri 07:30-10:30,13:30-16:30",
+      "tourism": "museum"
+     }
+    },
+    {
+     "type": "way",
+     "id": 1316901417,
+     "center": {
+      "lat": 21.0572653,
+      "lon": 105.8951902
+     },
+     "tags": {
+      "building": "yes",
+      "historic": "monument",
+      "name": "Nhà lưu niệm Bác Hồ"
+     }
+    },
+    {
+     "type": "way",
+     "id": 1323789771,
+     "center": {
+      "lat": 20.9908482,
+      "lon": 105.8519972
+     },
+     "tags": {
+      "amenity": "place_of_worship",
+      "name": "Chùa Nga My",
+      "religion": "buddhist",
+      "wikidata": "Q10748486",
+      "wikipedia": "vi:Chùa Nga My"
+     }
+    },
+    {
+     "type": "way",
+     "id": 1323789772,
+     "center": {
+      "lat": 20.990485,
+      "lon": 105.8525888
+     },
+     "tags": {
+      "amenity": "place_of_worship",
+      "name": "Đình Hoàng Mai",
+      "wikidata": "Q10840586",
+      "wikipedia": "vi:Đình Hoàng Mai"
+     }
+    },
+    {
+     "type": "way",
+     "id": 1329826250,
+     "center": {
+      "lat": 21.0122248,
+      "lon": 105.7546032
+     },
+     "tags": {
+      "building": "yes",
+      "historic": "monument",
+      "name": "Đền tưởng niệm các Anh Hùng - Liệt Sĩ"
+     }
+    },
+    {
+     "type": "way",
+     "id": 1331638484,
+     "center": {
+      "lat": 20.9964112,
+      "lon": 105.8679407
+     },
+     "tags": {
+      "indoor": "room",
+      "level": "-1",
+      "name": "Vinpearl Aquarium Times City",
+      "tourism": "aquarium"
+     }
+    },
+    {
+     "type": "way",
+     "id": 1350620262,
+     "center": {
+      "lat": 21.0305055,
+      "lon": 105.8056791
+     },
+     "tags": {
+      "attraction": "roller_coaster",
+      "name": "Tàu lượn siêu tốc",
+      "tourism": "attraction"
+     }
+    },
+    {
+     "type": "way",
+     "id": 1368360528,
+     "center": {
+      "lat": 21.0765097,
+      "lon": 105.8367646
+     },
+     "tags": {
+      "name": "Shaun the Sheep",
+      "tourism": "zoo",
+      "zoo": "petting_zoo"
+     }
+    },
+    {
+     "type": "way",
+     "id": 1418338747,
+     "center": {
+      "lat": 21.0230053,
+      "lon": 105.9060126
+     },
+     "tags": {
+      "building": "yes",
+      "historic": "memorial",
+      "name": "Đài tưởng niệm các anh hùng liệt sĩ Thạch Bàn"
+     }
+    },
+    {
+     "type": "way",
+     "id": 1446303895,
+     "center": {
+      "lat": 20.9831007,
+      "lon": 105.8463474
+     },
+     "tags": {
+      "amenity": "place_of_worship",
+      "name": "Chùa Sét",
+      "religion": "buddhist",
+      "wikidata": "Q10748531",
+      "wikipedia": "vi:Chùa Sét"
+     }
+    },
+    {
+     "type": "way",
+     "id": 1452566130,
+     "center": {
+      "lat": 20.9877224,
+      "lon": 105.843058
+     },
+     "tags": {
+      "addr:housenumber": "111",
+      "addr:street": "Đường Giáp Bát",
+      "amenity": "place_of_worship",
+      "barrier": "wall",
+      "denomination": "roman_catholic",
+      "name": "Nhà thờ Giáo xứ Kẻ Sét",
+      "name:en": "Ke Set Parish Church",
+      "religion": "christian",
+      "wikidata": "Q61130926",
+      "wikipedia": "vi:Nhà thờ Kẻ Sét"
+     }
+    },
+    {
+     "type": "way",
+     "id": 1460746033,
+     "center": {
+      "lat": 20.9935257,
+      "lon": 105.8419385
+     },
+     "tags": {
+      "building": "yes",
+      "historic": "monument",
+      "memorial": "war_memorial",
+      "name": "Nhà bia tưởng niệm liệt sỹ"
+     }
+    },
+    {
+     "type": "way",
+     "id": 1474970180,
+     "center": {
+      "lat": 21.0564668,
+      "lon": 105.9037611
+     },
+     "tags": {
+      "name": "Lệ Mật Snake Kingdom",
+      "tourism": "zoo",
+      "website": "https://lematsnakekingdom.com/"
+     }
+    },
+    {
+     "type": "way",
+     "id": 1475290263,
+     "center": {
+      "lat": 20.9815515,
+      "lon": 105.8300657
+     },
+     "tags": {
+      "historic": "memorial",
+      "landuse": "commercial",
+      "name": "Đài tưởng niệm Hồ Chí Minh (Định Công Hạ)"
+     }
+    },
+    {
+     "type": "way",
+     "id": 1476571872,
+     "center": {
+      "lat": 20.9822943,
+      "lon": 105.8278
+     },
+     "tags": {
+      "historic": "memorial",
+      "landuse": "commercial",
+      "name": "Nghĩa trang Liệt sỹ Phường Định Công"
+     }
+    },
+    {
+     "type": "way",
+     "id": 1481550721,
+     "center": {
+      "lat": 21.0300784,
+      "lon": 105.8050665
+     },
+     "tags": {
+      "addr:city": "Hà Nội",
+      "addr:housenumber": "362",
+      "addr:province": "Hà Nội",
+      "addr:street": "Phố Kim Mã",
+      "addr:subdistrict": "Ngọc Khánh",
+      "amenity": "place_of_worship",
+      "heritage": "2",
+      "name": "Đền Voi Phục",
+      "name:en": "Voi Phuc Temple",
+      "opening_hours": "Mo-Su 08:00-20:00",
+      "religion": "vietnamese_folk",
+      "wikidata": "Q10841709",
+      "wikimedia_commons": "Category:Voi Phục Temple",
+      "wikipedia": "vi:Đền Voi Phục"
+     }
+    },
+    {
+     "type": "way",
+     "id": 1481550728,
+     "center": {
+      "lat": 21.030986,
+      "lon": 105.8043725
+     },
+     "tags": {
+      "building": "yes",
+      "historic": "memorial",
+      "memorial": "war_memorial",
+      "name": "Đài tưởng niệm liệt sĩ"
+     }
+    },
+    {
+     "type": "way",
+     "id": 1482440126,
+     "center": {
+      "lat": 20.9703676,
+      "lon": 105.8309508
+     },
+     "tags": {
+      "historic": "memorial",
+      "landuse": "commercial",
+      "memorial": "statue",
+      "name": "Đài tưởng niệm Chủ tịch Hồ Chí Minh (Đại Từ)",
+      "source": "grab_hanoi_2018_t5"
+     }
+    },
+    {
+     "type": "way",
+     "id": 1482908197,
+     "center": {
+      "lat": 20.978034,
+      "lon": 105.822778
+     },
+     "tags": {
+      "historic": "memorial",
+      "landuse": "commercial",
+      "name": "Nhà bia tưởng niệm liệt sỹ Đại Kim"
+     }
+    },
+    {
+     "type": "way",
+     "id": 1497569902,
+     "center": {
+      "lat": 21.0401583,
+      "lon": 105.8460554
+     },
+     "tags": {
+      "building": "yes",
+      "historic": "memorial",
+      "memorial": "war_memorial",
+      "name": "Tượng đài “Quyết tử để Tổ quốc quyết sinh”",
+      "name:en": "Hanoi 1946 War Statue"
+     }
+    },
+    {
+     "type": "way",
+     "id": 1497572243,
+     "center": {
+      "lat": 21.0367709,
+      "lon": 105.8404263
+     },
+     "tags": {
+      "historic": "ruins",
+      "historic:civilization": "vietnamese",
+      "landuse": "construction",
+      "name": "Điện Kính Thiên",
+      "name:en": "Site of Kinh Thien Hall",
+      "name:zh": "敬天殿"
+     }
+    },
+    {
+     "type": "way",
+     "id": 1519545462,
+     "center": {
+      "lat": 21.0184139,
+      "lon": 105.8545214
+     },
+     "tags": {
+      "addr:housenumber": "5",
+      "addr:street": "Phố Hàm Long",
+      "heritage": "2",
+      "name": "Di tích ngôi nhà số 5D phố Hàm Long",
+      "tourism": "museum"
+     }
+    },
+    {
+     "type": "way",
+     "id": 1519545465,
+     "center": {
+      "lat": 20.9774714,
+      "lon": 105.7767401
+     },
+     "tags": {
+      "addr:street": "Ngõ 36 Phố Cầu Am",
+      "heritage": "2",
+      "name": "Nhà lưu niệm Chủ tịch Hồ Chí Minh",
+      "operator": "Ban Quản lý di tích danh thắng Hà Nội",
+      "tourism": "museum"
+     }
+    },
+    {
+     "type": "way",
+     "id": 1527119269,
+     "center": {
+      "lat": 20.9886439,
+      "lon": 105.8779737
+     },
+     "tags": {
+      "barrier": "wall",
+      "historic": "memorial",
+      "memorial": "war_memorial",
+      "name": "Đài tưởng niệm liệt sĩ Vĩnh Hưng"
+     }
+    },
+    {
+     "type": "relation",
+     "id": 7112202,
+     "center": {
+      "lat": 21.0345923,
+      "lon": 105.8503955
+     },
+     "tags": {
+      "amenity": "marketplace",
+      "description": "For more information see http://www.hanoiweather.info/2015/09/hanoi-night-market.html",
+      "name": "Chợ đêm",
+      "name:de": "Nachtmarkt",
+      "name:en": "Night Market",
+      "name:zh": "夜市",
+      "opening_hours": "Fr-Su 18:00-23:00",
+      "tourism": "attraction",
+      "type": "site"
+     }
+    },
+    {
+     "type": "relation",
+     "id": 16640104,
+     "center": {
+      "lat": 21.0311074,
+      "lon": 105.8534574
+     },
+     "tags": {
+      "addr:street": "Phố Đinh Tiên Hoàng",
+      "alt_name": "Thiên Tiên điện",
+      "alt_name:zh": "婆较殿",
+      "amenity": "place_of_worship",
+      "building": "temple",
+      "denomination": "dao_mau",
+      "name": "Đền Bà Kiệu",
+      "name:en": "Ba Kieu Temple",
+      "name:id": "Kuil Ba Kieu",
+      "name:zh": "天仙殿",
+      "religion": "vietnamese_folk",
+      "type": "multipolygon",
+      "wikidata": "Q16481078",
+      "wikipedia": "vi:Đền Bà Kiệu"
+     }
+    },
+    {
+     "type": "relation",
+     "id": 17877970,
+     "center": {
+      "lat": 21.0360358,
+      "lon": 105.8386914
+     },
+     "tags": {
+      "alt_name": "Đài tưởng niệm Bắc Sơn",
+      "alt_name:en": "Bac Son Monument",
+      "alt_name:id": "Monumen Bac Son",
+      "building": "yes",
+      "height": "12.6",
+      "historic": "monument",
+      "name": "Đài tưởng niệm các Anh hùng liệt sĩ",
+      "name:ar": "نصب الأبطال والشهداء",
+      "name:en": "Monument to Heroes and Martyrs",
+      "name:fr": "Monument aux Héros",
+      "name:id": "Monumen Pahlawan dan Martir",
+      "name:km": "វិមាននៃវីរបុរសនិងពួកបរិសុទ្ធ",
+      "name:ko": "영웅렬사기념탑",
+      "name:ru": "Памятник героям и мученикам",
+      "name:th": "อนุสาวรีย์วีรบุรุษและผู้พลีชีพ",
+      "name:zh": "英雄烈士想念台",
+      "start_date": "1994-05-07",
+      "type": "multipolygon",
+      "wikidata": "Q7928570",
+      "wikimedia_commons": "Category:Vietnam War Memorial, Hanoi",
+      "wikipedia": "en:Memorial to the Revolutionary Martyrs"
+     }
+    },
+    {
+     "type": "relation",
+     "id": 19179452,
+     "center": {
+      "lat": 21.0121877,
+      "lon": 105.8550904
+     },
+     "tags": {
+      "amenity": "place_of_worship",
+      "building": "yes",
+      "name": "Đền Hai Bà Trưng",
+      "name:de": "Hai Ba Trung Temple",
+      "name:en": "Hai Bà Trưng Temple",
+      "name:vi": "Đền Hai Bà Trưng",
+      "religion": "vietnamese_folk",
+      "type": "multipolygon",
+      "wikidata": "Q2817231",
+      "wikimedia_commons": "Category:Hai Bà Trưng Temple"
+     }
+    },
+    {
+     "type": "relation",
+     "id": 21390097,
+     "center": {
+      "lat": 21.0251253,
+      "lon": 105.8550051
+     },
+     "tags": {
+      "addr:city": "Hà Nội",
+      "addr:district": "Hoàn Kiếm",
+      "addr:housenumber": "16",
+      "addr:province": "Hà Nội",
+      "addr:street": "Phố Ngô Quyền",
+      "addr:subdistrict": "Tràng Tiền",
+      "building": "yes",
+      "building:levels": "4",
+      "name": "Nhà triển lãm Mỹ thuật",
+      "name:en": "Painting Exhibition",
+      "operator": "Hội Mỹ thuật Việt Nam",
+      "tourism": "gallery",
+      "type": "multipolygon"
+     }
+    },
+    {
+     "type": "relation",
+     "id": 21390321,
+     "center": {
+      "lat": 21.0274515,
+      "lon": 105.854748
+     },
+     "tags": {
+      "alt_name": "Vườn hoa Chí Linh",
+      "alt_name:en": "Chi Linh Park",
+      "alt_name:zh": "志玲花园",
+      "leisure": "park",
+      "name": "Vườn hoa Lý Thái Tổ",
+      "name:en": "Ly Thai To Park",
+      "name:etymology:wikidata": "Q716945",
+      "name:id": "Taman Ly Thai To",
+      "name:vi": "Vườn hoa Lý Thái Tổ",
+      "name:zh": "李太祖花园",
+      "name:zh-Hant": "李太祖公園",
+      "type": "multipolygon",
+      "wikidata": "Q25418011",
+      "wikipedia": "vi:Vườn hoa Chí Linh"
+     }
+    },
+    {
+     "type": "relation",
+     "id": 21401560,
+     "center": {
+      "lat": 21.036972,
+      "lon": 105.8358025
+     },
+     "tags": {
+      "area:highway": "pedestrian",
+      "lit": "yes",
+      "name": "Quảng trường Ba Đình",
+      "name:cy": "Sgwâr Ba Dinh",
+      "name:de": "Ba Dinh-Platz",
+      "name:en": "Ba Dinh Square",
+      "name:es": "Plaza Ba Dinh",
+      "name:fr": "Place Ba Dinh",
+      "name:id": "Alun-alun Ba Dinh",
+      "name:ja": "バーディン広場",
+      "name:ko": "바딘 광장",
+      "name:ms": "Dataran Ba Dinh",
+      "name:ru": "Площадь Бадинь",
+      "name:tr": "Ba Dinh Meydanı",
+      "name:vi": "Quảng trường Ba Đình",
+      "name:vi-Hani": "廣場𠀧亭",
+      "name:zh": "巴亭广场",
+      "name:zh-Hans": "巴亭广场",
+      "name:zh-Hant": "巴亭廣場",
+      "old_name": "Rond point Puginier",
+      "old_name:-1945": "Rond point Puginier",
+      "place": "square",
+      "tourism": "attraction",
+      "type": "multipolygon",
+      "wikidata": "Q2234574",
+      "wikimedia_commons": "Category:Ba Đình Square",
+      "wikipedia": "vi:Quảng trường Ba Đình"
+     }
+    },
+    {
+     "type": "relation",
+     "id": 21404732,
+     "center": {
+      "lat": 21.0388614,
+      "lon": 105.8342318
+     },
+     "tags": {
+      "access": "permit",
+      "addr:city": "Hà Nội",
+      "addr:district": "Phường Ba Đình",
+      "addr:province": "Thành phố Hà Nội",
+      "dog": "no",
+      "heritage": "2",
+      "heritage:operator": "VN_heritage",
+      "leisure": "park",
+      "name": "Khu Di tích Phủ Chủ tịch",
+      "name:en": "Presidential Palace Historical Site",
+      "note": "Nguồn: Khu Di tích Phủ Chủ tịch nằm trên địa phận phường Ngọc Hà, quận Ba Đình, thành phố Hà Nội. Phía Bắc Khu Di tích giáp Hồ Tây, phía Nam giáp chùa Một Cột, Bảo tàng Hồ Chí Minh; phía Tây liền kề với Bách Thảo, phía Đông nhìn thẳng ra đường Hùng Vương.",
+      "operator": "Bộ Thông tin và Truyền thông",
+      "operator:type": "government",
+      "ref:VN_heritage": "Di tích quốc gia đặc biệt",
+      "source": "https://bqllang.gov.vn/tin-tuc/tin-tong-hop/1036-khu-di-tich-ph-ch-t-ch.html",
+      "start_date": "1975-05-15",
+      "type": "multipolygon",
+      "wikidata": "Q5370392",
+      "wikipedia": "vi:Khu di tích Phủ Chủ tịch"
+     }
+    },
+    {
+     "type": "relation",
+     "id": 21425134,
+     "center": {
+      "lat": 21.0306532,
+      "lon": 105.8370317
+     },
+     "tags": {
+      "addr:city": "Hà Nội",
+      "addr:district": "Phường Ba Đình",
+      "addr:housenumber": "66",
+      "addr:province": "Thành phố Hà Nội",
+      "addr:street": "Phố Nguyễn Thái Học",
+      "charge": "40000 VND",
+      "email": "btmtvn@vnfam.vn",
+      "fee": "yes",
+      "museum": "art",
+      "name": "Bảo tàng Mỹ thuật Việt Nam",
+      "name:de": "Kunstmuseum",
+      "name:en": "Vietnam Fine Arts Museum",
+      "name:fr": "Musée des beaux-arts du Viêt Nam",
+      "name:vi": "Bảo tàng Mỹ thuật Việt Nam",
+      "name:vi-Hani": "寶藏美術越南",
+      "name:zh": "越南美术馆",
+      "name:zh-Hant": "越南美術館",
+      "opening_hours": "Mo-Su 08:30-17:00",
+      "operator": "Bộ Văn hóa, Thể thao và Du lịch",
+      "operator:type": "public/government",
+      "phone": "+84 24 3823 3084;+84 32 666 5664",
+      "tourism": "museum",
+      "type": "multipolygon",
+      "website": "http://vnfam.vn/",
+      "wikidata": "Q3654706",
+      "wikimedia_commons": "Category:Vietnam National Museum of Fine Arts",
+      "wikipedia": "vi:Bảo tàng Mỹ thuật Việt Nam"
+     }
+    },
+    {
+     "type": "relation",
+     "id": 21425205,
+     "center": {
+      "lat": 21.0362895,
+      "lon": 105.8404418
+     },
+     "tags": {
+      "addr:city": "Hà Nội",
+      "addr:district": "Phường Ba Đình",
+      "addr:province": "Thành phố Hà Nội",
+      "alt_name": "Tử cấm thành Thăng Long",
+      "alt_name:en": "Imperial Citadel of Thăng Long",
+      "alt_name:vi": "Tử cấm thành Thăng Long",
+      "building": "yes",
+      "castle_type": "fortress",
+      "heritage:operator": "whc",
+      "heritage:website": "https://whc.unesco.org/en/list/1328/",
+      "historic": "castle",
+      "leisure": "park",
+      "name": "Hoàng thành Thăng Long",
+      "name:de": "Zitadelle Thăng Long",
+      "name:en": "Imperial Citadel of Thang Long",
+      "name:es": "Ciudad imperiale de Thang Long",
+      "name:fr": "Cité impériale de Thang Long",
+      "name:id": "Kota Kerajaan Thang Long",
+      "name:ja": "タンロン皇城",
+      "name:ko": "탕롱 황성",
+      "name:ko-Hani": "升龍皇城",
+      "name:ms": "Kubu kota empayar Thang Long",
+      "name:ru": "Ханойская цитадель",
+      "name:vi": "Hoàng thành Thăng Long",
+      "name:vi-Hani": "皇城升龍",
+      "name:zh": "升龙皇城",
+      "name:zh-Hans": "升龙皇城",
+      "name:zh-Hant": "升龍皇城",
+      "opening_hours": "Tu-Su 08:00-17:00",
+      "ref:whc": "1328",
+      "type": "multipolygon",
+      "whc:criteria": "(ii)(iii)(vi)",
+      "whc:inscription_date": "2010",
+      "wikidata": "Q206219",
+      "wikipedia": "vi:Hoàng thành Thăng Long"
+     }
+    },
+    {
+     "type": "relation",
+     "id": 21439106,
+     "center": {
+      "lat": 21.0361495,
+      "lon": 105.7793509
+     },
+     "tags": {
+      "historic": "monument",
+      "leisure": "park",
+      "name": "Đài tưởng niệm Liệt sĩ Phường Mai Dịch",
+      "type": "multipolygon"
+     }
+    }
+   ]
+  },
+  "hoi_an": {
+   "query": "[out:json][timeout:120];(nwr[\"tourism\"~\"^(attraction|museum|viewpoint|gallery|theme_park|zoo|aquarium)$\"][\"name\"](15.85,108.3,15.92,108.4);nwr[\"natural\"=\"beach\"][\"name\"](15.85,108.3,15.92,108.4);nwr[\"historic\"~\"^(monument|castle|ruins|archaeological_site|memorial)$\"][\"name\"](15.85,108.3,15.92,108.4);nwr[\"amenity\"=\"place_of_worship\"][\"name\"][\"wikidata\"](15.85,108.3,15.92,108.4);nwr[\"leisure\"=\"park\"][\"name\"][\"wikidata\"](15.85,108.3,15.92,108.4););out center tags;",
+   "osm_base_timestamp": "2026-10-03T18:45:46Z",
+   "elements": [
+    {
+     "type": "node",
+     "id": 2076855866,
+     "lat": 15.8770533,
+     "lon": 108.3273582,
+     "tags": {
+      "addr:city": "Hội An",
+      "addr:country": "VN",
+      "addr:housenumber": "129",
+      "addr:street": "Trần Phú",
+      "building": "yes",
+      "check_date": "2023-01-01",
+      "fee": "yes",
+      "name": "Nhà cổ Đức An",
+      "name:en": "Duc An Ancient House",
+      "tourism": "museum"
+     }
+    },
+    {
+     "type": "node",
+     "id": 2076855954,
+     "lat": 15.8770968,
+     "lon": 108.3292876,
+     "tags": {
+      "addr:city": "Hội An",
+      "addr:country": "VN",
+      "addr:housenumber": "77",
+      "addr:street": "Trần Phú",
+      "check_date": "2023-01-01",
+      "fee": "yes",
+      "name": "Nhà cổ Quân Thắng",
+      "name:de": "Quang Thang Haus",
+      "name:en": "Quan Thang House",
+      "name:es": "Casa Quan Thang",
+      "name:ru": "Старинный дом Куан Тханга",
+      "tourism": "museum"
+     }
+    },
+    {
+     "type": "node",
+     "id": 2076856032,
+     "lat": 15.8772671,
+     "lon": 108.329548,
+     "tags": {
+      "addr:housenumber": "80",
+      "addr:street": "Trần Phú",
+      "fee": "yes",
+      "name": "Boa tang gom su mau dich",
+      "name:en": "Ceramic Tiles Museum",
+      "tourism": "museum"
+     }
+    },
+    {
+     "type": "node",
+     "id": 2092582385,
+     "lat": 15.8778696,
+     "lon": 108.3319964,
+     "tags": {
+      "addr:city": "Hội An",
+      "addr:country": "VN",
+      "addr:housenumber": "10",
+      "addr:street": "Trần Phú",
+      "amenity": "community_centre",
+      "community_centre": "community_hall",
+      "name": "Hội quán Hải Nam",
+      "name:en": "Assembly Hall of the Hainan Chinese Congregation",
+      "name:es": "Asamblea Hai Nam",
+      "name:vi-Hani": "會館海南",
+      "name:zh-Hant": "海南會館",
+      "tourism": "attraction"
+     }
+    },
+    {
+     "type": "node",
+     "id": 2617007574,
+     "lat": 15.8772786,
+     "lon": 108.3277903,
+     "tags": {
+      "alt_name:pl": "Pomnik Kazimierza Kwiatkowskiego",
+      "historic": "monument",
+      "name": "Kazimierz Kwiatkowski",
+      "name:ko": "카지미에시 크비아트코브스키 기념물",
+      "website": "https://vi.m.wikipedia.org/wiki/Kazimierz_Kwiatkowski",
+      "wikidata": "Q11738068",
+      "wikipedia": "en:Kazimierz Kwiatkowski (architect)"
+     }
+    },
+    {
+     "type": "node",
+     "id": 3189923484,
+     "lat": 15.8770347,
+     "lon": 108.3264247,
+     "tags": {
+      "check_date": "2025-02-19",
+      "fee": "yes",
+      "name": "Sa Huynh",
+      "name:ru": "Музей культуры Шахуин",
+      "tourism": "museum",
+      "wheelchair": "limited"
+     }
+    },
+    {
+     "type": "node",
+     "id": 4171925609,
+     "lat": 15.8644172,
+     "lon": 108.3643815,
+     "tags": {
+      "name": "Thuan Tinh Island",
+      "tourism": "attraction"
+     }
+    },
+    {
+     "type": "node",
+     "id": 4171964292,
+     "lat": 15.8980583,
+     "lon": 108.3662256,
+     "tags": {
+      "name": "Cua Dai",
+      "name:en": "Cua Dai Beach",
+      "name:pt": "Praia Cua Dai",
+      "natural": "beach",
+      "tourism": "attraction"
+     }
+    },
+    {
+     "type": "node",
+     "id": 4171971289,
+     "lat": 15.865593,
+     "lon": 108.3256188,
+     "tags": {
+      "name": "Kim Bong Carpentry Village",
+      "tourism": "attraction"
+     }
+    },
+    {
+     "type": "node",
+     "id": 4171971589,
+     "lat": 15.8832622,
+     "lon": 108.3314662,
+     "tags": {
+      "addr:street": "Thanh Ha Pottery Village, Hoi An, Phạm Phán, Thanh Hà, Tp. Hội An, Quảng Nam",
+      "name": "Thanh Ha Pottery Village",
+      "name:vi": "כפר הקדרים טאן הא",
+      "tourism": "attraction"
+     }
+    },
+    {
+     "type": "node",
+     "id": 4279640089,
+     "lat": 15.8772193,
+     "lon": 108.3257902,
+     "tags": {
+      "addr:city": "Hội An",
+      "addr:country": "VN",
+      "addr:housenumber": "4",
+      "addr:street": "Nguyễn Thị Minh Khai",
+      "fee": "yes",
+      "name": "Nhà cổ Phùng Hưng",
+      "name:de": "Ehemaliges Haus von Phung Hung",
+      "name:en": "Phung Hung Old House",
+      "name:ko": "풍훙 고가",
+      "name:ru": "Дом Фунг Хунга",
+      "tourism": "museum"
+     }
+    },
+    {
+     "type": "node",
+     "id": 4517387589,
+     "lat": 15.8721333,
+     "lon": 108.3055893,
+     "tags": {
+      "name": "Triem Tay Village",
+      "name:en": "Triem Tay Village",
+      "name:vi": "Triem Tay Village",
+      "tourism": "attraction"
+     }
+    },
+    {
+     "type": "node",
+     "id": 4955662821,
+     "lat": 15.8791656,
+     "lon": 108.323789,
+     "tags": {
+      "historic": "memorial",
+      "name": "Đài Kỷ Niệm Danh Nhân Chí Sĩ Quảng Nam",
+      "name:de": "Kriegsdenkmal",
+      "name:en": "Quang Nam Heroes Memorial"
+     }
+    },
+    {
+     "type": "node",
+     "id": 5153761923,
+     "lat": 15.8770404,
+     "lon": 108.3263229,
+     "tags": {
+      "name": "Phùng Hung",
+      "name:en": "Phung Hung Anciente House",
+      "name:es": "Casa Antigua Phung Hung",
+      "name:vi": "Phùng Hung",
+      "tourism": "attraction"
+     }
+    },
+    {
+     "type": "node",
+     "id": 5276546923,
+     "lat": 15.885147,
+     "lon": 108.3256249,
+     "tags": {
+      "historic": "monument",
+      "name": "Nguyen Duy Hieu"
+     }
+    },
+    {
+     "type": "node",
+     "id": 5403993021,
+     "lat": 15.9031848,
+     "lon": 108.3572298,
+     "tags": {
+      "name": "Cua Dai Beach",
+      "name:en": "Cua Dai Beach",
+      "tourism": "attraction"
+     }
+    },
+    {
+     "type": "node",
+     "id": 5444978923,
+     "lat": 15.8898126,
+     "lon": 108.3179345,
+     "tags": {
+      "historic": "monument",
+      "name": "Nghĩa trang Liệt Sĩ"
+     }
+    },
+    {
+     "type": "node",
+     "id": 5513474821,
+     "lat": 15.8778967,
+     "lon": 108.3001365,
+     "tags": {
+      "charge": "30000 VND",
+      "fee": "yes",
+      "name": "Terracotta Park",
+      "opening_hours": "Mo-Su 08:30-17:30",
+      "tourism": "museum"
+     }
+    },
+    {
+     "type": "node",
+     "id": 5674096859,
+     "lat": 15.8766285,
+     "lon": 108.3285601,
+     "tags": {
+      "addr:city": "Hội An",
+      "addr:country": "VN",
+      "addr:housenumber": "58",
+      "addr:street": "Nguyễn Thái Học",
+      "name": "Diep Dong Nguyen",
+      "name:de": "Diep Dong Nguyen House",
+      "name:en": "Diep Dong Nguyen House",
+      "tourism": "museum"
+     }
+    },
+    {
+     "type": "node",
+     "id": 6091196615,
+     "lat": 15.8774754,
+     "lon": 108.3285499,
+     "tags": {
+      "addr:housenumber": "37",
+      "addr:street": "Lê Lợi",
+      "name": "Phan Kim Chi Art Gallery",
+      "tourism": "gallery"
+     }
+    },
+    {
+     "type": "node",
+     "id": 6099308589,
+     "lat": 15.8757772,
+     "lon": 108.3259285,
+     "tags": {
+      "addr:city": "Hội An",
+      "addr:street": "Nguyễn Hoàng",
+      "addr:subdistrict": "minh an",
+      "amenity": "marketplace",
+      "name": "Chợ Đêm",
+      "name:en": "Night Market",
+      "name:es": "Mercado Nocturno",
+      "name:fr": "Marché de nuit",
+      "name:ko": "호이안 등불축제(야시장)",
+      "opening_hours": "Mo-Su 18:00-22:00",
+      "tourism": "attraction"
+     }
+    },
+    {
+     "type": "node",
+     "id": 6627739386,
+     "lat": 15.8764811,
+     "lon": 108.3270804,
+     "tags": {
+      "addr:housenumber": "101",
+      "addr:street": "Nguyễn Thái Học",
+      "name": "Casa Tan my",
+      "name:es": "Casa Tan Ky",
+      "tourism": "attraction"
+     }
+    },
+    {
+     "type": "node",
+     "id": 6873083990,
+     "lat": 15.8761042,
+     "lon": 108.3284,
+     "tags": {
+      "description": "Street along the river, lot of people at night, full of lanterns",
+      "description:fr": "Rue en bord de rivière très animée le soir, pleine de lanternes",
+      "name": "Lantern street",
+      "tourism": "attraction"
+     }
+    },
+    {
+     "type": "node",
+     "id": 7127442985,
+     "lat": 15.8760742,
+     "lon": 108.3296451,
+     "tags": {
+      "amenity": "theatre",
+      "name": "Hoi An Traditional Art Performance House",
+      "tourism": "attraction"
+     }
+    },
+    {
+     "type": "node",
+     "id": 7127464285,
+     "lat": 15.8766492,
+     "lon": 108.3298384,
+     "tags": {
+      "check_date": "2025-11-10",
+      "museum": "local",
+      "name": "Hoi An Museum of Traditional Medicine",
+      "opening_hours": "Mo-Su 07:00-11:00",
+      "tourism": "museum"
+     }
+    },
+    {
+     "type": "node",
+     "id": 7259793385,
+     "lat": 15.8651646,
+     "lon": 108.3889609,
+     "tags": {
+      "name": "Sauce Nuoc Mam",
+      "tourism": "museum"
+     }
+    },
+    {
+     "type": "node",
+     "id": 7689987500,
+     "lat": 15.8637945,
+     "lon": 108.3247834,
+     "tags": {
+      "name": "Cẩm Kim",
+      "name:zh": "锦金社",
+      "name:zh-Hant": "錦金社",
+      "place": "village",
+      "tourism": "attraction"
+     }
+    },
+    {
+     "type": "node",
+     "id": 10709738006,
+     "lat": 15.8645169,
+     "lon": 108.3253021,
+     "tags": {
+      "name": "Làng mộc Kim Bồng",
+      "tourism": "attraction"
+     }
+    },
+    {
+     "type": "node",
+     "id": 10709738405,
+     "lat": 15.877712,
+     "lon": 108.3009146,
+     "tags": {
+      "name": "Làng mộc Thanh Hà",
+      "tourism": "attraction"
+     }
+    },
+    {
+     "type": "node",
+     "id": 11259291337,
+     "lat": 15.877412,
+     "lon": 108.3306003,
+     "tags": {
+      "addr:street": "Trần Phú",
+      "name": "Hội Quán Phước Kiến",
+      "name:en": "Entry to Assembly Hall of the Fujian Chinese Congregation",
+      "name:vi-Hani": "會館福建",
+      "name:zh-Hant": "福建會館",
+      "tourism": "attraction",
+      "wheelchair": "yes"
+     }
+    },
+    {
+     "type": "node",
+     "id": 11374783349,
+     "lat": 15.8576323,
+     "lon": 108.3511567,
+     "tags": {
+      "amenity": "ferry_terminal",
+      "name": "Basket Boat Station",
+      "tourism": "attraction"
+     }
+    },
+    {
+     "type": "node",
+     "id": 11374805869,
+     "lat": 15.8581281,
+     "lon": 108.3508811,
+     "tags": {
+      "name": "Broken Bamboo Bridge and Palmoil Forest",
+      "tourism": "attraction"
+     }
+    },
+    {
+     "type": "node",
+     "id": 11425562478,
+     "lat": 15.8764862,
+     "lon": 108.3268477,
+     "tags": {
+      "description": "Get a cheap 0.9L beer from \"Moon Milk\" and enjoy the crowd view in the evening.",
+      "name": "Crowd watching",
+      "opening_hours": "Mo-Su 19:00-22:00",
+      "tourism": "viewpoint"
+     }
+    },
+    {
+     "type": "node",
+     "id": 11581700332,
+     "lat": 15.8794937,
+     "lon": 108.3335921,
+     "tags": {
+      "historic": "ruins",
+      "name": "Military blockhouse ruins"
+     }
+    },
+    {
+     "type": "node",
+     "id": 11586091345,
+     "lat": 15.8857313,
+     "lon": 108.3360989,
+     "tags": {
+      "historic": "memorial",
+      "name": "DI TÍCH LỊCH SỬ CÁCH MẠNG"
+     }
+    },
+    {
+     "type": "node",
+     "id": 11618566160,
+     "lat": 15.8794095,
+     "lon": 108.3342216,
+     "tags": {
+      "historic": "ruins",
+      "name": "Military blockhouse ruins"
+     }
+    },
+    {
+     "type": "node",
+     "id": 11896339273,
+     "lat": 15.8855958,
+     "lon": 108.3505685,
+     "tags": {
+      "addr:housenumber": "229",
+      "addr:street": "Cua Dai",
+      "name": "CSO Gallery",
+      "opening_hours": "Tu-Su 08:00-17:00",
+      "phone": "0562226688",
+      "tourism": "gallery",
+      "website": "ticket.csogallery@gmail.com"
+     }
+    },
+    {
+     "type": "node",
+     "id": 12344125229,
+     "lat": 15.8771754,
+     "lon": 108.3342411,
+     "tags": {
+      "addr:city": "Hội An",
+      "addr:housenumber": "26",
+      "addr:street": "Phan Bội Châu",
+      "email": "rehahn.hoian@gmail.com",
+      "fee": "no",
+      "internet_access": "wlan",
+      "museum": "ethnography",
+      "name": "Precious Heritage Art Gallery Museum",
+      "name:en": "Precious Heritage Art Gallery Museum",
+      "name:vi": "Di San Vô Giá",
+      "opening_hours": "Mo-Su 08:00-20:00",
+      "operator": "Réhahn",
+      "operator:type": "private",
+      "phone": "05106558382",
+      "tourism": "museum",
+      "website": "https://www.rehahnphotographer.com",
+      "wikidata": "Q30744118",
+      "wikipedia": "en:Precious Heritage Art Gallery Museum"
+     }
+    },
+    {
+     "type": "node",
+     "id": 13149084101,
+     "lat": 15.912947,
+     "lon": 108.3386895,
+     "tags": {
+      "addr:street": "Đường Nguyễn Phan Vinh",
+      "name": "Mini-Golf Hoi An",
+      "tourism": "theme_park"
+     }
+    },
+    {
+     "type": "node",
+     "id": 13293830517,
+     "lat": 15.8771924,
+     "lon": 108.3297946,
+     "tags": {
+      "check_date": "2025-11-10",
+      "museum": "local",
+      "name": "Bảo Tàng Thó Sản",
+      "name:en": "Museum of Local Products",
+      "tourism": "museum"
+     }
+    },
+    {
+     "type": "node",
+     "id": 13797708575,
+     "lat": 15.8764766,
+     "lon": 108.3736311,
+     "tags": {
+      "name": "Hoi An Basket Boat",
+      "phone": "+84 986 605 612",
+      "tourism": "attraction",
+      "website": "https://hoianbasketboats.com"
+     }
+    },
+    {
+     "type": "node",
+     "id": 14078442086,
+     "lat": 15.8696196,
+     "lon": 108.3670063,
+     "tags": {
+      "description": "Family-run organizer of fishing and river tours",
+      "name": "Hoi An Hideout Fishing Barbecue Tour",
+      "phone": "+84 77 952 9832",
+      "tourism": "attraction",
+      "website": "https://www.hoianhideoutfishing.com/"
+     }
+    },
+    {
+     "type": "way",
+     "id": 14131302,
+     "center": {
+      "lat": 15.8750613,
+      "lon": 108.3398171
+     },
+     "tags": {
+      "check_date": "2026-05-11",
+      "name": "Hoi An Memories Land",
+      "place": "islet",
+      "source": "Bing",
+      "tourism": "theme_park"
+     }
+    },
+    {
+     "type": "way",
+     "id": 35952574,
+     "center": {
+      "lat": 15.8764915,
+      "lon": 108.3264631
+     },
+     "tags": {
+      "bridge": "yes",
+      "highway": "service",
+      "layer": "1",
+      "maxweight:signed": "no",
+      "name": "Cầu An Hội",
+      "name:en": "An Hoi Bridge",
+      "name:vi": "Cầu An Hội",
+      "surface": "paving_stones",
+      "tourism": "attraction",
+      "wheelchair": "yes"
+     }
+    },
+    {
+     "type": "way",
+     "id": 35952591,
+     "center": {
+      "lat": 15.8770764,
+      "lon": 108.3325201
+     },
+     "tags": {
+      "amenity": "marketplace",
+      "name": "Chợ vải Hội An",
+      "name:en": "Hoi An Textile Market",
+      "name:ko": "호이안 직물 시장",
+      "opening_hours": "Mo-Su 06:00-19:00",
+      "tourism": "attraction"
+     }
+    },
+    {
+     "type": "way",
+     "id": 39268284,
+     "center": {
+      "lat": 15.8771173,
+      "lon": 108.326023
+     },
+     "tags": {
+      "alt_name": "Lai Viễn Kiều",
+      "alt_name:zh": "日本廊桥",
+      "bridge": "yes",
+      "covered": "yes",
+      "highway": "footway",
+      "layer": "1",
+      "maxheight:signed": "no",
+      "name": "Chùa Cầu",
+      "name:en": "Japanese Bridge",
+      "name:es": "Puente Japonés",
+      "name:fr": "Pont Japonais",
+      "name:ja": "来遠橋",
+      "name:pl": "Most Japoński",
+      "name:th": "สะพานญี่ปุ่น",
+      "name:vi": "Chùa Cầu",
+      "name:zh": "來遠橋",
+      "name:zh-Hans": "来远桥",
+      "name:zh-Hant": "來遠橋",
+      "surface": "wood",
+      "tourism": "attraction",
+      "vehicle": "no",
+      "wikidata": "Q1091054",
+      "wikipedia": "vi:Chùa Cầu"
+     }
+    },
+    {
+     "type": "way",
+     "id": 448044645,
+     "center": {
+      "lat": 15.8779064,
+      "lon": 108.3330332
+     },
+     "tags": {
+      "addr:city": "Hội An",
+      "addr:country": "VN",
+      "addr:housenumber": "157",
+      "addr:street": "Nguyễn Duy Hiệu",
+      "building": "yes",
+      "name": "Hội quán Triều Châu",
+      "name:en": "Trieu Chau (Chaozhou) Assembly Hall",
+      "name:vi-Hani": "會館潮州",
+      "name:zh-Hant": "潮州會館",
+      "tourism": "attraction",
+      "wheelchair": "limited",
+      "wikipedia": "vi:Hội quán Triều Châu (Hội An)"
+     }
+    },
+    {
+     "type": "way",
+     "id": 565300448,
+     "center": {
+      "lat": 15.8773646,
+      "lon": 108.3265656
+     },
+     "tags": {
+      "addr:city": "Hội An",
+      "addr:housenumber": "176",
+      "addr:street": "Trần Phú",
+      "building": "temple",
+      "building:levels": "1",
+      "name": "Hội Quán Quảng Triệu",
+      "name:de": "Versammlungshalle der Chinesen aus Kanton",
+      "name:en": "Quang Trieu (Cantonese) Assembly Hall",
+      "name:ko": "광동회관 / 절",
+      "name:vi-Hani": "會館廣肇",
+      "name:zh": "廣肇會館",
+      "roof:shape": "gabled",
+      "tourism": "attraction",
+      "wheelchair": "limited"
+     }
+    },
+    {
+     "type": "way",
+     "id": 565592419,
+     "center": {
+      "lat": 15.8803099,
+      "lon": 108.3294674
+     },
+     "tags": {
+      "access": "permit",
+      "addr:housenumber": "10B",
+      "addr:street": "Trần Hưng Đạo",
+      "air_conditioning": "no",
+      "building": "yes",
+      "building:levels": "3",
+      "check_date": "2025-11-10",
+      "museum": "history",
+      "name": "Bảo tàng Hội An",
+      "name:en": "Hoi An Museum",
+      "opening_hours": "Mo-Su 07:30-11:30,13:30-17:30",
+      "tourism": "museum",
+      "wheelchair": "no",
+      "wikidata": "Q114397271"
+     }
+    },
+    {
+     "type": "way",
+     "id": 595299310,
+     "center": {
+      "lat": 15.8764553,
+      "lon": 108.3278311
+     },
+     "tags": {
+      "building": "yes",
+      "fee": "yes",
+      "name": "Tan Ky",
+      "name:en": "National Heritage House of Tan Ky",
+      "name:ru": "Старинный дом Тан Ки",
+      "name:zh": "黎氏宗祠",
+      "tourism": "museum"
+     }
+    },
+    {
+     "type": "way",
+     "id": 626704914,
+     "center": {
+      "lat": 15.8774451,
+      "lon": 108.3303659
+     },
+     "tags": {
+      "building": "yes",
+      "fee": "no",
+      "name": "Hùng Đông về và bạn tránh",
+      "tourism": "gallery",
+      "wheelchair": "no"
+     }
+    },
+    {
+     "type": "way",
+     "id": 631064893,
+     "center": {
+      "lat": 15.8775404,
+      "lon": 108.3313895
+     },
+     "tags": {
+      "addr:city": "Hội An",
+      "addr:country": "VN",
+      "addr:housenumber": "24",
+      "addr:street": "Trần Phú",
+      "alt_name": "Chùa Ông",
+      "alt_name:vi": "Chùa Ông",
+      "amenity": "place_of_worship",
+      "building": "yes",
+      "name": "Quan Công Miếu",
+      "name:en": "Quan Cong Temple",
+      "name:es": "Templo Quan Cong",
+      "name:ko": "꽌꽁 사원",
+      "name:ru": "Храм Куан Конг",
+      "name:vi-Hani": "關公廟",
+      "name:zh-Hant": "關公廟",
+      "religion": "buddhist",
+      "tourism": "attraction",
+      "wikimedia_commons": "Category:Quan Cong Temple, Hoi An"
+     }
+    },
+    {
+     "type": "way",
+     "id": 636068988,
+     "center": {
+      "lat": 15.878735,
+      "lon": 108.3304634
+     },
+     "tags": {
+      "addr:housenumber": "20",
+      "addr:street": "Phan Châu Trinh",
+      "amenity": "place_of_worship",
+      "building": "yes",
+      "layer": "1",
+      "name": "Văn chỉ Minh Hương",
+      "name:en": "Minh Hương Temple of Literature",
+      "name:vi": "Văn chỉ Minh Hương",
+      "name:zh-Hant": "文聖廟",
+      "religion": "confucian",
+      "wikidata": "Q132483343"
+     }
+    },
+    {
+     "type": "way",
+     "id": 1077108382,
+     "center": {
+      "lat": 15.8802557,
+      "lon": 108.3340518
+     },
+     "tags": {
+      "leisure": "park",
+      "name": "Công viên Hội An",
+      "name:en": "Hoi An Park",
+      "name:vi-Hani": "公園會安",
+      "name:zh-Hant": "會安公園",
+      "wikidata": "Q113003348",
+      "wikipedia": "vi:Công viên Hội An"
+     }
+    },
+    {
+     "type": "way",
+     "id": 1246229021,
+     "center": {
+      "lat": 15.8846724,
+      "lon": 108.3407098
+     },
+     "tags": {
+      "historic": "memorial",
+      "landuse": "cemetery",
+      "name": "nghĩa trang liệt sĩ tổ quốc ghi công",
+      "name:de": "Friedhof der Märtyrer für die Eroberung des Landes",
+      "name:en": "National martyr cemetery",
+      "name:ru": "Национальное Мученическое кладбище"
+     }
+    },
+    {
+     "type": "way",
+     "id": 1281365649,
+     "center": {
+      "lat": 15.8763674,
+      "lon": 108.3264461
+     },
+     "tags": {
+      "bridge": "yes",
+      "highway": "service",
+      "layer": "1",
+      "maxweight:signed": "no",
+      "name": "Cầu An Hội",
+      "name:en": "An Hoi Bridge",
+      "name:vi": "Cầu An Hội",
+      "surface": "wood",
+      "tourism": "attraction",
+      "wheelchair": "yes"
+     }
+    },
+    {
+     "type": "way",
+     "id": 1281365650,
+     "center": {
+      "lat": 15.8762329,
+      "lon": 108.3264276
+     },
+     "tags": {
+      "bridge": "yes",
+      "highway": "service",
+      "layer": "1",
+      "maxweight:signed": "no",
+      "name": "Cầu An Hội",
+      "name:en": "An Hoi Bridge",
+      "name:vi": "Cầu An Hội",
+      "surface": "paving_stones",
+      "tourism": "attraction",
+      "wheelchair": "yes"
+     }
+    }
+   ]
+  },
+  "nha_trang": {
+   "endpoint": "https://overpass-api.de/api/interpreter",
+   "query": "[out:json][timeout:120];(nwr[\"tourism\"~\"^(attraction|museum|viewpoint|gallery|theme_park|zoo|aquarium)$\"][\"name\"](12.18,109.15,12.32,109.25);nwr[\"natural\"=\"beach\"][\"name\"](12.18,109.15,12.32,109.25);nwr[\"historic\"~\"^(monument|castle|ruins|archaeological_site|memorial)$\"][\"name\"](12.18,109.15,12.32,109.25);nwr[\"amenity\"=\"place_of_worship\"][\"name\"][\"wikidata\"](12.18,109.15,12.32,109.25);nwr[\"leisure\"=\"park\"][\"name\"][\"wikidata\"](12.18,109.15,12.32,109.25););out center tags;",
+   "osm_base_timestamp": "2026-10-03T18:55:02Z",
+   "elements": [
+    {
+     "type": "node",
+     "id": 849300563,
+     "lat": 12.2103078,
+     "lon": 109.2153658,
+     "tags": {
+      "description:ru": "Дворец Бао Дай в Нячанге, также известный как Вилла Кау Да, был построен в 1923 году и расположен на выступающей к морю части горы Кань Лонг.",
+      "description:vi": "Dinh Bảo Đại ở Nha Trang hay còn được biết đến với tên gọi là biệt thự Cầu Đá, được xây dựng từ năm 1923, nằm trên một phần núi Cảnh Long nhô ra phía biển.",
+      "name": "Lầu Bảo Đại",
+      "tourism": "attraction"
+     }
+    },
+    {
+     "type": "node",
+     "id": 1400908663,
+     "lat": 12.2891903,
+     "lon": 109.1847686,
+     "tags": {
+      "historic": "memorial",
+      "name": "Nghĩa trang liệt sĩ Hòn Dung"
+     }
+    },
+    {
+     "type": "node",
+     "id": 3889096567,
+     "lat": 12.2589531,
+     "lon": 109.198761,
+     "tags": {
+      "historic": "monument",
+      "name": "Monument Alexander Yersin"
+     }
+    },
+    {
+     "type": "node",
+     "id": 4172003998,
+     "lat": 12.1873048,
+     "lon": 109.1610564,
+     "tags": {
+      "name": "100 Eggs Mud Bath",
+      "name:ru": "100 яиц грязелечебница",
+      "tourism": "theme_park"
+     }
+    },
+    {
+     "type": "node",
+     "id": 4884705621,
+     "lat": 12.2719555,
+     "lon": 109.2059818,
+     "tags": {
+      "charge": "30 VND",
+      "check_date": "2025-10-05",
+      "fee": "yes",
+      "name": "Hòn Chồng",
+      "name:ru": "Хон Чонг",
+      "name:vi": "Hòn Chồng",
+      "opening_hours": "Mo-Su 09:00-18:00",
+      "tourism": "museum",
+      "wheelchair": "yes"
+     }
+    },
+    {
+     "type": "node",
+     "id": 5189505622,
+     "lat": 12.2506272,
+     "lon": 109.1872613,
+     "tags": {
+      "addr:housenumber": "126",
+      "addr:street": "Hoàng Văn Thụ",
+      "name": "Long Thanh Art Gallery",
+      "name:ru": "Long Thanh Art Gallery",
+      "tourism": "gallery"
+     }
+    },
+    {
+     "type": "node",
+     "id": 6861462485,
+     "lat": 12.2707818,
+     "lon": 109.205638,
+     "tags": {
+      "name": "Park of Marital Stones",
+      "name:en": "Park of Marital Stones",
+      "name:ru": "Парк Супружеских Камней",
+      "tourism": "attraction"
+     }
+    },
+    {
+     "type": "node",
+     "id": 7040433200,
+     "lat": 12.2189846,
+     "lon": 109.2394781,
+     "tags": {
+      "attraction": "animal",
+      "name": "Dolphin show",
+      "species": "dolphin",
+      "tourism": "attraction"
+     }
+    },
+    {
+     "type": "node",
+     "id": 7087673293,
+     "lat": 12.2344148,
+     "lon": 109.1946157,
+     "tags": {
+      "name": "Mai Loc Photo Gallery",
+      "tourism": "gallery"
+     }
+    },
+    {
+     "type": "node",
+     "id": 7192331886,
+     "lat": 12.2037204,
+     "lon": 109.1613319,
+     "tags": {
+      "description:en": "Snake show",
+      "description:ru": "Змеино-крокодиловая ферма",
+      "name": "Snake and crocodile farm",
+      "tourism": "attraction"
+     }
+    },
+    {
+     "type": "node",
+     "id": 7248365886,
+     "lat": 12.2139925,
+     "lon": 109.2000807,
+     "tags": {
+      "addr:housenumber": "08",
+      "addr:street": "Trường Sơn",
+      "name": "Lang nghe truong son",
+      "name:ru": "Ремесленная деревня Труонг Сон",
+      "tourism": "attraction"
+     }
+    },
+    {
+     "type": "node",
+     "id": 11527158960,
+     "lat": 12.3045687,
+     "lon": 109.2179009,
+     "tags": {
+      "historic": "monument",
+      "name": "NAM MÔ ĐA BẢO PHẬT"
+     }
+    },
+    {
+     "type": "node",
+     "id": 11527179496,
+     "lat": 12.3045071,
+     "lon": 109.2178806,
+     "tags": {
+      "historic": "monument",
+      "name": "NAM MÔ ĐA BẢO PHẬT"
+     }
+    },
+    {
+     "type": "node",
+     "id": 11929829169,
+     "lat": 12.2135708,
+     "lon": 109.2005336,
+     "tags": {
+      "name": "Làng nghề Trường Sơn",
+      "name:en": "Truong Son craft village",
+      "opening_hours": "Mo-Su 07:30-17:00",
+      "tourism": "attraction"
+     }
+    },
+    {
+     "type": "node",
+     "id": 12813515691,
+     "lat": 12.2657362,
+     "lon": 109.1890368,
+     "tags": {
+      "name": "Some Motobikes",
+      "tourism": "museum"
+     }
+    },
+    {
+     "type": "node",
+     "id": 13503067816,
+     "lat": 12.2498944,
+     "lon": 109.1845155,
+     "tags": {
+      "historic": "memorial",
+      "name": "23-10-1945"
+     }
+    },
+    {
+     "type": "node",
+     "id": 13505854889,
+     "lat": 12.2548714,
+     "lon": 109.1960478,
+     "tags": {
+      "historic": "memorial",
+      "name": "1968"
+     }
+    },
+    {
+     "type": "node",
+     "id": 13508160140,
+     "lat": 12.2349204,
+     "lon": 109.192116,
+     "tags": {
+      "aircraft:type": "jet",
+      "historic": "memorial",
+      "memorial": "aircraft",
+      "name": "L-39"
+     }
+    },
+    {
+     "type": "node",
+     "id": 13800462101,
+     "lat": 12.2247916,
+     "lon": 109.2443027,
+     "tags": {
+      "historic": "monument",
+      "name": "Buddha"
+     }
+    },
+    {
+     "type": "way",
+     "id": 146780347,
+     "center": {
+      "lat": 12.2652869,
+      "lon": 109.1951363
+     },
+     "tags": {
+      "archaeological_site": "city",
+      "barrier": "fence",
+      "era": "Cham",
+      "historic": "archaeological_site",
+      "historic:civilization": "cham",
+      "name": "Tháp Po Nagar",
+      "name:en": "Po Nagar Cham Towers",
+      "name:id": "Menara Po Nagar Cham",
+      "name:ko": "포나가르 탑",
+      "name:ru": "Чамские Башни Понагар",
+      "name:zh": "波那加塔",
+      "religion": "hindu",
+      "wikidata": "Q600269",
+      "wikimedia_commons": "File:Ganesh Tempel Po Nagar Nha Trang.jpg",
+      "wikipedia": "vi:Tháp Po Nagar"
+     }
+    },
+    {
+     "type": "way",
+     "id": 162818208,
+     "center": {
+      "lat": 12.2467884,
+      "lon": 109.1881276
+     },
+     "tags": {
+      "addr:city": "Nha Trang",
+      "addr:housenumber": "31a",
+      "addr:street": "Thái Nguyên",
+      "alt_name": "Nhà thờ Núi",
+      "amenity": "place_of_worship",
+      "building": "yes",
+      "denomination": "catholic",
+      "name": "Nhà thờ Chính tòa Nha Trang",
+      "name:en": "Christ the King Cathedral, Nha Trang",
+      "name:ko": "냐짱(나트랑) 대성당",
+      "name:ru": "Собор Христа Царя, Нячанг",
+      "name:zh": "芽莊基督君王主教座堂",
+      "opening_hours": "08:00-11:00,14:00-16:00",
+      "religion": "christian",
+      "wikidata": "Q2942901",
+      "wikipedia": "en:Christ the King Cathedral, Nha Trang"
+     }
+    },
+    {
+     "type": "way",
+     "id": 196896058,
+     "center": {
+      "lat": 12.2653731,
+      "lon": 109.1950113
+     },
+     "tags": {
+      "building": "yes",
+      "museum": "history",
+      "name": "Showroom",
+      "tourism": "museum"
+     }
+    },
+    {
+     "type": "way",
+     "id": 207742943,
+     "center": {
+      "lat": 12.2357927,
+      "lon": 109.2034698
+     },
+     "tags": {
+      "access": "yes",
+      "addr:city": "Nha Trang",
+      "addr:province": "Khánh Hòa",
+      "addr:street": "Trần Phú",
+      "fee": "no",
+      "leisure": "beach_resort",
+      "name": "Nha Trang",
+      "name:de": "Nha Trang Beach",
+      "name:ko": "냐짱(나트랑) 해변",
+      "name:ru": "Нячанг",
+      "name:zh": "芽庄海滩",
+      "natural": "beach",
+      "surface": "sand"
+     }
+    },
+    {
+     "type": "way",
+     "id": 272274254,
+     "center": {
+      "lat": 12.1957856,
+      "lon": 109.2122169
+     },
+     "tags": {
+      "name": "An Viên Beach",
+      "natural": "beach",
+      "surface": "dirt/sand"
+     }
+    },
+    {
+     "type": "way",
+     "id": 385512390,
+     "center": {
+      "lat": 12.2193551,
+      "lon": 109.2408639
+     },
+     "tags": {
+      "building": "yes",
+      "name": "Underwater world",
+      "tourism": "aquarium"
+     }
+    },
+    {
+     "type": "way",
+     "id": 406136497,
+     "center": {
+      "lat": 12.2289754,
+      "lon": 109.1996096
+     },
+     "tags": {
+      "alt_name:ru": "Парк Горького",
+      "leisure": "park",
+      "name": "Central Park",
+      "name:en": "Central Park",
+      "name:ru": "Центральный парк",
+      "tourism": "attraction"
+     }
+    },
+    {
+     "type": "way",
+     "id": 471186074,
+     "center": {
+      "lat": 12.1951053,
+      "lon": 109.2258099
+     },
+     "tags": {
+      "name": "Ho Ca Tri Nguyen",
+      "name:en": "Tri Nguyen Aquarium",
+      "tourism": "aquarium"
+     }
+    },
+    {
+     "type": "way",
+     "id": 759974064,
+     "center": {
+      "lat": 12.2193015,
+      "lon": 109.243809
+     },
+     "tags": {
+      "name": "King's Garden",
+      "tourism": "zoo"
+     }
+    },
+    {
+     "type": "way",
+     "id": 1193057654,
+     "center": {
+      "lat": 12.2509375,
+      "lon": 109.1961332
+     },
+     "tags": {
+      "building": "yes",
+      "name": "Bào Tàng Alexandre Yersin",
+      "name:en": "Museum of Yersin",
+      "name:fr": "Musée Yersin",
+      "name:ja": "イェルサン博物館",
+      "opening_hours": "Mo-Fr 07:30-11:30,14:00-17:00; Sa 07:30-11:30",
+      "tourism": "museum",
+      "wikipedia": "vi:Yersin Museum"
+     }
+    },
+    {
+     "type": "way",
+     "id": 1239290934,
+     "center": {
+      "lat": 12.2748211,
+      "lon": 109.2033024
+     },
+     "tags": {
+      "name": "Bãi Tắm Hòn Chồng",
+      "name:en": "Hon Chong beach",
+      "natural": "beach",
+      "surface": "sand"
+     }
+    },
+    {
+     "type": "way",
+     "id": 1353575545,
+     "center": {
+      "lat": 12.2174853,
+      "lon": 109.2411374
+     },
+     "tags": {
+      "internet_access": "wlan",
+      "name": "VinWonders",
+      "name:ko": "빈펄 테마파크",
+      "name:ru": "ВинВондерс",
+      "opening_hours": "8:00-22:00",
+      "tourism": "theme_park"
+     }
+    },
+    {
+     "type": "way",
+     "id": 1545622602,
+     "center": {
+      "lat": 12.2675928,
+      "lon": 109.2027451
+     },
+     "tags": {
+      "historic": "monument",
+      "name": "Tháp Bút"
+     }
+    },
+    {
+     "type": "relation",
+     "id": 15662995,
+     "center": {
+      "lat": 12.2082555,
+      "lon": 109.2147071
+     },
+     "tags": {
+      "building": "yes",
+      "museum": "marine",
+      "name": "Bảo tàng Hải dương học Nha Trang",
+      "opening_hours": "Mo-Su 06:00-18:00",
+      "operator": "Viện Hải dương học",
+      "operator:type": "public",
+      "tourism": "museum",
+      "type": "multipolygon"
+     }
+    }
+   ]
+  },
+  "hue": {
+   "query": "[out:json][timeout:120];(nwr[\"tourism\"~\"^(attraction|museum|viewpoint|gallery|theme_park|zoo|aquarium)$\"][\"name\"](16.42,107.54,16.5,107.65);nwr[\"natural\"=\"beach\"][\"name\"](16.42,107.54,16.5,107.65);nwr[\"historic\"~\"^(monument|castle|ruins|archaeological_site|memorial)$\"][\"name\"](16.42,107.54,16.5,107.65);nwr[\"amenity\"=\"place_of_worship\"][\"name\"][\"wikidata\"](16.42,107.54,16.5,107.65);nwr[\"leisure\"=\"park\"][\"name\"][\"wikidata\"](16.42,107.54,16.5,107.65););out center tags;",
+   "osm_base_timestamp": "2026-10-03T18:47:34Z",
+   "elements": [
+    {
+     "type": "node",
+     "id": 669249193,
+     "lat": 16.4331813,
+     "lon": 107.5645857,
+     "tags": {
+      "historic": "ruins",
+      "name": "Lăng Tự Đức"
+     }
+    },
+    {
+     "type": "node",
+     "id": 2899189013,
+     "lat": 16.4694914,
+     "lon": 107.577755,
+     "tags": {
+      "historic": "castle",
+      "name": "Tử Cấm Thành",
+      "name:de": "Verbotene Purpurstadt",
+      "name:en": "Purple Forbidden City",
+      "name:id": "Kota Terlarang",
+      "name:ru": "Запретный пурпурный город",
+      "name:vi": "Tử Cấm Thành",
+      "name:zh": "紫禁城",
+      "tourism": "attraction"
+     }
+    },
+    {
+     "type": "node",
+     "id": 4555464591,
+     "lat": 16.4578346,
+     "lon": 107.5842155,
+     "tags": {
+      "name": "Điềm Phùng Thį",
+      "name:en": "Diem Phung Thi Art Exhibition House",
+      "name:vi": "Điêm Phùng Thį",
+      "tourism": "museum"
+     }
+    },
+    {
+     "type": "node",
+     "id": 4555491489,
+     "lat": 16.46715,
+     "lon": 107.5898061,
+     "tags": {
+      "historic": "monument",
+      "name": "Tượng đài Phan Bội Châu",
+      "name:en": "Phan Boi Chau Street Monument"
+     }
+    },
+    {
+     "type": "node",
+     "id": 4729199352,
+     "lat": 16.4678206,
+     "lon": 107.5912729,
+     "tags": {
+      "historic": "memorial",
+      "name": "Anh Nguyen Tat Thanh",
+      "name:en": "Anh Nguyen Tat Thanh Artwork",
+      "tourism": "artwork"
+     }
+    },
+    {
+     "type": "node",
+     "id": 5182931945,
+     "lat": 16.4689726,
+     "lon": 107.5781266,
+     "tags": {
+      "addr:city": "Huế",
+      "addr:country": "VN",
+      "addr:province": "Thừa Thiên - Huế",
+      "addr:street": "23 Tháng 8",
+      "alt_name": "Đại Nội",
+      "alt_name:en": "Hue Citadel",
+      "alt_name:vi": "Đại Nội",
+      "alt_name:zh": "顺化皇城",
+      "heritage:operator": "whc",
+      "historic": "castle",
+      "is_in:city": "Huế",
+      "is_in:country": "Việt Nam",
+      "is_in:iso_3166_2": "VN-26",
+      "name": "Hoàng Thành Huế",
+      "name:de": "Kaiserstadt",
+      "name:en": "Imperial Citadel",
+      "name:fr": "Cité Impériale d’Hue",
+      "name:id": "Kota Kerajaan Hue",
+      "name:ja": "フエ王宮",
+      "name:ko": "후에 황성",
+      "name:ru": "Императорская цитадель",
+      "name:vi": "Hoàng Thành",
+      "name:zh": "順化皇城",
+      "name:zh-Hant": "順化皇城",
+      "opening_hours": "Mo-Sa 07:30-17:30; Su 06:30-17:30",
+      "ref:whc": "678-001",
+      "tourism": "museum",
+      "whc:criteria": "(iv)",
+      "whc:inscription_date": "1993",
+      "wikidata": "Q10769129",
+      "wikipedia": "vi:Hoàng thành Huế"
+     }
+    },
+    {
+     "type": "node",
+     "id": 5291054227,
+     "lat": 16.4719956,
+     "lon": 107.5758125,
+     "tags": {
+      "name": "Bac Khuyet Dai",
+      "name:en": "North Bastion",
+      "name:fr": "Bastion nord",
+      "name:zh": "北關台",
+      "tourism": "attraction"
+     }
+    },
+    {
+     "type": "node",
+     "id": 5295611830,
+     "lat": 16.4342482,
+     "lon": 107.5666428,
+     "tags": {
+      "name": "Boi Lang",
+      "name:en": "Boi Tomb",
+      "tourism": "attraction"
+     }
+    },
+    {
+     "type": "node",
+     "id": 5299153429,
+     "lat": 16.4609446,
+     "lon": 107.5825343,
+     "tags": {
+      "historic": "memorial",
+      "name": "Quoc Hoc",
+      "name:en": "Quoc Hoc Memorial",
+      "tourism": "attraction"
+     }
+    },
+    {
+     "type": "node",
+     "id": 5323683221,
+     "lat": 16.4714657,
+     "lon": 107.5997497,
+     "tags": {
+      "name": "Cầu Vĩ Dạ",
+      "name:en": "Vi Da Bridge",
+      "tourism": "attraction"
+     }
+    },
+    {
+     "type": "node",
+     "id": 5326790724,
+     "lat": 16.4725391,
+     "lon": 107.6419051,
+     "tags": {
+      "name": "To Quoc Ghi Cong",
+      "name:en": "Shrine and Graveyard",
+      "tourism": "attraction"
+     }
+    },
+    {
+     "type": "node",
+     "id": 5326790725,
+     "lat": 16.4824922,
+     "lon": 107.6040878,
+     "tags": {
+      "name": "Cau Thuy Van",
+      "name:en": "Thuy Van Bridge",
+      "tourism": "attraction"
+     }
+    },
+    {
+     "type": "node",
+     "id": 5326790726,
+     "lat": 16.4741464,
+     "lon": 107.6078971,
+     "tags": {
+      "name": "Cau Van Duong",
+      "name:en": "Van Duong Bridge",
+      "tourism": "attraction"
+     }
+    },
+    {
+     "type": "node",
+     "id": 5841077608,
+     "lat": 16.4691166,
+     "lon": 107.5780681,
+     "tags": {
+      "barrier": "gate",
+      "historic": "ruins",
+      "name": "Đại Cung Môn",
+      "name:en": "Great Gateway of the Palace",
+      "name:ja": "大宮門",
+      "name:zh": "大宮門",
+      "name:zh-Hans": "大宫门"
+     }
+    },
+    {
+     "type": "node",
+     "id": 6099306388,
+     "lat": 16.4420037,
+     "lon": 107.5914458,
+     "tags": {
+      "historic": "monument",
+      "name": "Tượng đài vua Quang Trung",
+      "name:en": "Statue of Emperor Quang Trung"
+     }
+    },
+    {
+     "type": "node",
+     "id": 6533792207,
+     "lat": 16.4650415,
+     "lon": 107.5712089,
+     "tags": {
+      "historic": "ruins",
+      "name": "Đàn Xã Tắc"
+     }
+    },
+    {
+     "type": "node",
+     "id": 6535217831,
+     "lat": 16.471778,
+     "lon": 107.5782705,
+     "tags": {
+      "abandoned:memorial": "stele",
+      "historic": "memorial",
+      "name": "Bia Tiên động phương tung"
+     }
+    },
+    {
+     "type": "node",
+     "id": 9960090217,
+     "lat": 16.4532498,
+     "lon": 107.5632941,
+     "tags": {
+      "name": "Đúc đồng Dương Xuân",
+      "tourism": "attraction"
+     }
+    },
+    {
+     "type": "node",
+     "id": 11171564836,
+     "lat": 16.4532504,
+     "lon": 107.544583,
+     "tags": {
+      "historic": "memorial",
+      "name": "Thích Quảng Đức xe",
+      "name:en": "Thich Quang Duc's car",
+      "name:fr": "Voiture historique de Thich Quang Duc",
+      "tourism": "attraction"
+     }
+    },
+    {
+     "type": "node",
+     "id": 11212153237,
+     "lat": 16.4621728,
+     "lon": 107.5707363,
+     "tags": {
+      "name": "Quan Tượng Đài",
+      "name:en": "Meteorological Tower",
+      "name:zh": "觀象台",
+      "tourism": "attraction"
+     }
+    },
+    {
+     "type": "node",
+     "id": 12318159702,
+     "lat": 16.4331868,
+     "lon": 107.5653998,
+     "tags": {
+      "name": "Stele Pavilion",
+      "tourism": "attraction"
+     }
+    },
+    {
+     "type": "node",
+     "id": 12458493963,
+     "lat": 16.4809553,
+     "lon": 107.5766048,
+     "tags": {
+      "name": "Tang  tho lao",
+      "tourism": "museum"
+     }
+    },
+    {
+     "type": "node",
+     "id": 12622178803,
+     "lat": 16.4565984,
+     "lon": 107.5981417,
+     "tags": {
+      "name": "illegal entrance to palace, climb over",
+      "tourism": "attraction"
+     }
+    },
+    {
+     "type": "node",
+     "id": 13408004501,
+     "lat": 16.4653726,
+     "lon": 107.5879553,
+     "tags": {
+      "name": "Le Ba Dang Art Foundation",
+      "tourism": "gallery"
+     }
+    },
+    {
+     "type": "node",
+     "id": 13503143701,
+     "lat": 16.4667729,
+     "lon": 107.6427024,
+     "tags": {
+      "name": "Thanh Toan Bridge",
+      "tourism": "attraction"
+     }
+    },
+    {
+     "type": "node",
+     "id": 13644094722,
+     "lat": 16.470602,
+     "lon": 107.57292,
+     "tags": {
+      "name": "Gểnal Nguyen Chi Thahn Múeum",
+      "opening_hours": "Tu-Su 09:00-11:30,14:00-16:00",
+      "tourism": "museum"
+     }
+    },
+    {
+     "type": "node",
+     "id": 14058844271,
+     "lat": 16.4251144,
+     "lon": 107.5794286,
+     "tags": {
+      "name": "Ngoc An Art Gallery",
+      "tourism": "gallery"
+     }
+    },
+    {
+     "type": "way",
+     "id": 39411515,
+     "center": {
+      "lat": 16.4566552,
+      "lon": 107.5809463
+     },
+     "tags": {
+      "bridge": "yes",
+      "bridge:name": "Cầu Nam Giao",
+      "bridge:name:en": "Nam Giao Bridge",
+      "highway": "secondary",
+      "layer": "1",
+      "name": "Điện Biên Phủ",
+      "surface": "asphalt",
+      "tourism": "attraction"
+     }
+    },
+    {
+     "type": "way",
+     "id": 39414469,
+     "center": {
+      "lat": 16.4572126,
+      "lon": 107.5788716
+     },
+     "tags": {
+      "bridge": "yes",
+      "highway": "secondary",
+      "layer": "1",
+      "maxweightrating:hgv": "15",
+      "name": "Cầu Ga",
+      "name:en": "Ga Bridge",
+      "surface": "asphalt",
+      "tourism": "attraction"
+     }
+    },
+    {
+     "type": "way",
+     "id": 118540998,
+     "center": {
+      "lat": 16.4669715,
+      "lon": 107.5895601
+     },
+     "tags": {
+      "addr:city": "Thành phố Huế",
+      "addr:housenumber": "17",
+      "addr:province": "Tỉnh Thừa Thiên Huế",
+      "addr:street": "Lê Lợi",
+      "addr:subdistrict": "Phường Phú Hội",
+      "building": "yes",
+      "building:architecture": "french_colonial",
+      "museum": "art",
+      "name": "Trung tâm Nghệ thuật Điềm Phùng Thị",
+      "name:en": "Diem Phung Thi art foundation",
+      "opening_hours": "Tu-Su 07:30-11:30; 13:30-17:00",
+      "phone": "+84 0234 383 7411",
+      "tourism": "museum",
+      "website": "https://diemphungthiartfoundation.com/vi/"
+     }
+    },
+    {
+     "type": "way",
+     "id": 118541971,
+     "center": {
+      "lat": 16.4592467,
+      "lon": 107.5822457
+     },
+     "tags": {
+      "addr:city": "Huế",
+      "addr:housenumber": "8",
+      "addr:postcode": "530000",
+      "addr:province": "Thừa Thiên - Huế",
+      "addr:street": "Lê Lợi",
+      "addr:subdistrict": "Vĩnh Ninh",
+      "building": "yes",
+      "name": "Trung tâm Thanh thiếu nhi Huế",
+      "name:en": "National Museum",
+      "tourism": "museum"
+     }
+    },
+    {
+     "type": "way",
+     "id": 161714451,
+     "center": {
+      "lat": 16.4725333,
+      "lon": 107.5886564
+     },
+     "tags": {
+      "amenity": "marketplace",
+      "landuse": "retail",
+      "name": "Chợ Đông Ba",
+      "name:en": "Dong Ba Market",
+      "name:id": "Pasar Dong Ba",
+      "name:vi": "Chợ Đông Ba",
+      "name:zh": "东巴市场",
+      "name:zh-Hant": "洞巴市場",
+      "source": "survey",
+      "tourism": "attraction"
+     }
+    },
+    {
+     "type": "way",
+     "id": 172657562,
+     "center": {
+      "lat": 16.4676824,
+      "lon": 107.5791834
+     },
+     "tags": {
+      "building": "yes",
+      "building:levels": "3",
+      "historic": "city_gate",
+      "name": "Ngọ Môn",
+      "name:en": "Meridian Gate",
+      "name:fr": "Entrée de la Cité Impériale de Hue - Ngo Mon",
+      "name:id": "Gerbang Selatan",
+      "name:ja": "午門",
+      "name:ko": "오문",
+      "name:vi": "Ngọ Môn",
+      "name:zh": "午門",
+      "name:zh-Hans": "午门",
+      "opening_hours": "Mo-Su 07:00-17:00",
+      "tourism": "attraction"
+     }
+    },
+    {
+     "type": "way",
+     "id": 172657563,
+     "center": {
+      "lat": 16.4703036,
+      "lon": 107.5784839
+     },
+     "tags": {
+      "amenity": "theatre",
+      "building": "yes",
+      "description:fr": "Spectacle payant, tous les jours, 10:00-10:35, 15:00-15:35",
+      "name": "Duyệt Thị Đường",
+      "name:de": "Kaiserliches Theater",
+      "name:en": "Duyệt Thị Royal Theatre",
+      "name:fr": "Théâtre Royal Duyệt Thị",
+      "name:id": "Teater Kerajaan Duyet Thi Duong",
+      "name:vi": "Duyệt Thị Đường",
+      "name:zh": "閱是堂",
+      "tourism": "attraction"
+     }
+    },
+    {
+     "type": "way",
+     "id": 172657565,
+     "center": {
+      "lat": 16.4675459,
+      "lon": 107.5764287
+     },
+     "tags": {
+      "alt_name": "Hưng Miếu",
+      "amenity": "place_of_worship",
+      "building": "temple",
+      "name": "Hưng Tổ Miếu",
+      "name:de": "Hưng Tổ Miếu",
+      "name:zh": "興祖廟",
+      "religion": "vietnamese_folk",
+      "tourism": "attraction"
+     }
+    },
+    {
+     "type": "way",
+     "id": 172657566,
+     "center": {
+      "lat": 16.4699025,
+      "lon": 107.5803251
+     },
+     "tags": {
+      "amenity": "place_of_worship",
+      "building": "temple",
+      "historic": "building",
+      "name": "Thái Miếu",
+      "name:en": "Thai Mieu Temple",
+      "name:fr": "Temple Thai Mieu",
+      "name:ja": "太祖廟",
+      "name:ko": "태조묘",
+      "name:vi": "Thái Miếu",
+      "name:zh": "太祖廟",
+      "religion": "vietnamese_folk",
+      "tourism": "attraction"
+     }
+    },
+    {
+     "type": "way",
+     "id": 172657570,
+     "center": {
+      "lat": 16.4701991,
+      "lon": 107.5800933
+     },
+     "tags": {
+      "amenity": "place_of_worship",
+      "building": "temple",
+      "name": "Triệu Miếu",
+      "name:en": "Trieu Mieu Temple",
+      "name:fr": "Temple Trieu Mieu",
+      "name:vi": "Triệu Miếu",
+      "name:zh": "肇組廟",
+      "tourism": "attraction"
+     }
+    },
+    {
+     "type": "way",
+     "id": 172763419,
+     "center": {
+      "lat": 16.4706162,
+      "lon": 107.5797647
+     },
+     "tags": {
+      "building": "yes",
+      "building:architecture": "french_colonial",
+      "name": "Phủ Nội Vụ",
+      "name:en": "Royal Treasury",
+      "name:vi": "Phủ Nội Vụ",
+      "name:zh": "內務府",
+      "tourism": "attraction"
+     }
+    },
+    {
+     "type": "way",
+     "id": 172763420,
+     "center": {
+      "lat": 16.4688916,
+      "lon": 107.5754008
+     },
+     "tags": {
+      "building": "yes",
+      "name": "Cung Diên Thọ",
+      "name:de": "Diên Thọ Residenz",
+      "name:en": "Dien Tho Residence",
+      "name:fr": "Le palais Dien Tho",
+      "name:vi": "Cung Diên Thọ",
+      "name:zh": "延壽宮",
+      "tourism": "attraction"
+     }
+    },
+    {
+     "type": "way",
+     "id": 172763427,
+     "center": {
+      "lat": 16.4697182,
+      "lon": 107.5746783
+     },
+     "tags": {
+      "building": "yes",
+      "name": "Cung Trường Sanh",
+      "name:en": "Truong Sanh Residences - Palace of Longevity",
+      "name:zh": "長生宮",
+      "tourism": "attraction"
+     }
+    },
+    {
+     "type": "way",
+     "id": 205794912,
+     "center": {
+      "lat": 16.4536003,
+      "lon": 107.5446622
+     },
+     "tags": {
+      "addr:city": "Huế",
+      "addr:postcode": "530000",
+      "addr:province": "Huế",
+      "addr:subdistrict": "Hương Long",
+      "amenity": "place_of_worship",
+      "name": "Chùa Thiên Mụ",
+      "name:ko": "티엔무 사원",
+      "name:vi": "Chùa Thiên Mụ",
+      "name:vi-Hani": "𫴶天姥",
+      "name:zh": "天姥寺",
+      "opening_hours": "Mo-Su 08:00-18:00",
+      "religion": "buddhist",
+      "source": "Bing/GPS",
+      "wikidata": "Q975568",
+      "wikipedia": "en:Thiên Mụ Temple"
+     }
+    },
+    {
+     "type": "way",
+     "id": 240266284,
+     "center": {
+      "lat": 16.4596249,
+      "lon": 107.5811082
+     },
+     "tags": {
+      "addr:city": "Huế",
+      "addr:housenumber": "7",
+      "addr:province": "Huế",
+      "addr:street": "Lê Lợi",
+      "addr:subdistrict": "Vĩnh Ninh",
+      "building": "yes",
+      "building:levels": "2",
+      "check_date": "2025-11-11",
+      "name": "Bảo tàng Hồ Chí Minh",
+      "name:en": "Ho Chi Minh Museum",
+      "name:zh": "胡志明博物館",
+      "opening_hours": "Mo-Su 08:00-11:00, 14:00-16:45",
+      "phone": "054822152",
+      "tourism": "museum"
+     }
+    },
+    {
+     "type": "way",
+     "id": 285990343,
+     "center": {
+      "lat": 16.4694768,
+      "lon": 107.5777963
+     },
+     "tags": {
+      "historic": "ruins",
+      "name": "Điện Cần Chánh",
+      "name:en": "Hall of Diligent Governance",
+      "name:ja": "勤政殿",
+      "name:vi": "Điện Cần Chánh",
+      "name:zh": "勤政殿",
+      "ruins": "yes"
+     }
+    },
+    {
+     "type": "way",
+     "id": 285990344,
+     "center": {
+      "lat": 16.4700295,
+      "lon": 107.5773597
+     },
+     "tags": {
+      "historic": "ruins",
+      "historic:civilization": "vietnamese",
+      "name": "Điện Càn Thành",
+      "name:vi": "Điện Càn Thành",
+      "name:zh": "乾成殿",
+      "ruins": "yes"
+     }
+    },
+    {
+     "type": "way",
+     "id": 285990345,
+     "center": {
+      "lat": 16.4700459,
+      "lon": 107.5768062
+     },
+     "tags": {
+      "historic": "ruins",
+      "name": "Viện Thuận Huy",
+      "name:zh": "順輝殿"
+     }
+    },
+    {
+     "type": "way",
+     "id": 285990346,
+     "center": {
+      "lat": 16.4705416,
+      "lon": 107.5774746
+     },
+     "tags": {
+      "historic": "ruins",
+      "name": "Điện Dưỡng Tâm",
+      "name:zh": "養心殿"
+     }
+    },
+    {
+     "type": "way",
+     "id": 285990348,
+     "center": {
+      "lat": 16.4710952,
+      "lon": 107.5765216
+     },
+     "tags": {
+      "building": "yes",
+      "building:architecture": "french_colonial",
+      "castle_type": "palace",
+      "historic": "castle",
+      "name": "Điện Kiến Trung",
+      "name:en": "Kiến Trung Palace",
+      "name:fr": "Le palais Kien Trung",
+      "name:zh": "建忠殿"
+     }
+    },
+    {
+     "type": "way",
+     "id": 285990349,
+     "center": {
+      "lat": 16.4681271,
+      "lon": 107.5759753
+     },
+     "tags": {
+      "castle_type": "palace",
+      "historic": "ruins",
+      "name": "Điện Phụng Tiên",
+      "name:fr": "Temple Phung Tien",
+      "name:vi": "Điện Phụng Tiên",
+      "name:zh": "奉先殿",
+      "ruins": "yes"
+     }
+    },
+    {
+     "type": "way",
+     "id": 369017963,
+     "center": {
+      "lat": 16.4667817,
+      "lon": 107.6421227
+     },
+     "tags": {
+      "building": "yes",
+      "name": "Nha Trung Bay Nong Cu",
+      "name:en": "Thanh Toan Museum",
+      "opening_hours": "Mo-Su 07:00-18:00",
+      "source": "Bing",
+      "tourism": "museum"
+     }
+    },
+    {
+     "type": "way",
+     "id": 519775822,
+     "center": {
+      "lat": 16.4389102,
+      "lon": 107.5719893
+     },
+     "tags": {
+      "amenity": "place_of_worship",
+      "building": "yes",
+      "name": "Chùa Từ Hiếu",
+      "name:en": "Từ Hiếu Pagoda",
+      "religion": "buddhist",
+      "wikidata": "Q10748576",
+      "wikipedia": "vi:Chùa Từ Hiếu"
+     }
+    },
+    {
+     "type": "way",
+     "id": 531031513,
+     "center": {
+      "lat": 16.471596,
+      "lon": 107.5800406
+     },
+     "tags": {
+      "building": "yes",
+      "name": "Đông Khuyết Đài",
+      "name:en": "East Bastion",
+      "name:zh": "東闕台",
+      "tourism": "attraction"
+     }
+    },
+    {
+     "type": "way",
+     "id": 531031518,
+     "center": {
+      "lat": 16.4705977,
+      "lon": 107.5824866
+     },
+     "tags": {
+      "leisure": "park",
+      "name": "Quốc Tử Giám",
+      "name:en": "Imperial Academy",
+      "name:vi": "Quốc Tử Giám",
+      "name:zh": "國子監",
+      "tourism": "attraction"
+     }
+    },
+    {
+     "type": "way",
+     "id": 531031548,
+     "center": {
+      "lat": 16.4697923,
+      "lon": 107.5781777
+     },
+     "tags": {
+      "historic": "ruins",
+      "name": "Điện Văn Minh",
+      "name:zh": "文明殿"
+     }
+    },
+    {
+     "type": "way",
+     "id": 531031566,
+     "center": {
+      "lat": 16.4687434,
+      "lon": 107.5783867
+     },
+     "tags": {
+      "alt_name:en": "Hall of Supreme Harmony",
+      "building": "yes",
+      "building:levels": "2",
+      "historic:civilization": "vietnamese",
+      "name": "Điện Thái Hòa",
+      "name:en": "Thai Hoa Hall",
+      "name:id": "Istana Keharmonisan",
+      "name:ja": "太和殿",
+      "name:ko": "태화전",
+      "name:vi": "Điện Thái Hòa",
+      "name:zh": "太和殿",
+      "tourism": "attraction",
+      "wikidata": "Q6826745"
+     }
+    },
+    {
+     "type": "way",
+     "id": 617437880,
+     "center": {
+      "lat": 16.468038,
+      "lon": 107.5750678
+     },
+     "tags": {
+      "building": "yes",
+      "layer": "1",
+      "name": "Tây Khuyết Đài",
+      "name:en": "West Bastion",
+      "name:fr": "Bastion ouest",
+      "name:zh": "西闕台",
+      "tourism": "attraction"
+     }
+    },
+    {
+     "type": "way",
+     "id": 617944737,
+     "center": {
+      "lat": 16.4700196,
+      "lon": 107.5779562
+     },
+     "tags": {
+      "historic": "ruins",
+      "historic:civilization": "vietnamese",
+      "name": "Điện Quang Minh",
+      "name:zh": "光明殿"
+     }
+    },
+    {
+     "type": "way",
+     "id": 617944748,
+     "center": {
+      "lat": 16.4679182,
+      "lon": 107.5812384
+     },
+     "tags": {
+      "building": "roof",
+      "name": "Holy Cannons of the Citadel of Hue",
+      "name:en": "Holy Cannons of the Citadel of Hue",
+      "name:es": "Cañones Sagrados de la Ciudadela de Hue",
+      "name:fr": "Canons sacrés de la citadelle de Hué",
+      "name:vi": "Cửu vị Thần công",
+      "tourism": "attraction"
+     }
+    },
+    {
+     "type": "way",
+     "id": 617991266,
+     "center": {
+      "lat": 16.4692315,
+      "lon": 107.5774452
+     },
+     "tags": {
+      "historic": "ruins",
+      "name": "Điện Võ Hiển",
+      "name:en": "Vo Hien Hall",
+      "name:zh": "武顯殿"
+     }
+    },
+    {
+     "type": "way",
+     "id": 618267901,
+     "center": {
+      "lat": 16.470085,
+      "lon": 107.5752197
+     },
+     "tags": {
+      "building": "yes",
+      "name": "Trường An Môn",
+      "name:en": "Ornate Entrance Gate",
+      "name:zh": "長安門",
+      "tourism": "attraction"
+     }
+    },
+    {
+     "type": "way",
+     "id": 631871434,
+     "center": {
+      "lat": 16.4429374,
+      "lon": 107.5877254
+     },
+     "tags": {
+      "amenity": "place_of_worship",
+      "name": "Chùa Quốc Ân",
+      "name:en": "Quoc An Pagoda",
+      "name:id": "Vihara Quoc An",
+      "name:zh": "国恩寺",
+      "religion": "buddhist",
+      "wikidata": "Q7272817"
+     }
+    },
+    {
+     "type": "way",
+     "id": 683524977,
+     "center": {
+      "lat": 16.4667921,
+      "lon": 107.6426953
+     },
+     "tags": {
+      "bridge": "yes",
+      "covered": "yes",
+      "highway": "footway",
+      "layer": "1",
+      "material": "wood",
+      "name": "Cầu ngói Thanh Toàn",
+      "name:en": "Thanh Toan Bridge",
+      "name:fr": "Pont couvert de Thanh Toan",
+      "name:ru": "Японский крытый мост",
+      "tourism": "attraction"
+     }
+    },
+    {
+     "type": "way",
+     "id": 690841004,
+     "center": {
+      "lat": 16.4674224,
+      "lon": 107.5771366
+     },
+     "tags": {
+      "historic": "ruins",
+      "name": "Canh Y Điện",
+      "name:zh": "更衣殿"
+     }
+    },
+    {
+     "type": "way",
+     "id": 695775607,
+     "center": {
+      "lat": 16.4592349,
+      "lon": 107.5823079
+     },
+     "tags": {
+      "area": "yes",
+      "name": "Trung tâm Thanh thiếu nhi Huế",
+      "tourism": "museum"
+     }
+    },
+    {
+     "type": "way",
+     "id": 695810695,
+     "center": {
+      "lat": 16.4756171,
+      "lon": 107.5806219
+     },
+     "tags": {
+      "building": "yes",
+      "name": "Di tích Nhà Lưu niệm Chủ tịch Hồ Chí Minh",
+      "tourism": "museum"
+     }
+    },
+    {
+     "type": "way",
+     "id": 695810698,
+     "center": {
+      "lat": 16.4719593,
+      "lon": 107.583647
+     },
+     "tags": {
+      "leisure": "park",
+      "name": "Viện Cơ Mật - Tam Toà",
+      "name:zh": "機密院",
+      "tourism": "museum"
+     }
+    },
+    {
+     "type": "way",
+     "id": 695810710,
+     "center": {
+      "lat": 16.4713073,
+      "lon": 107.5819424
+     },
+     "tags": {
+      "building": "yes",
+      "name": "Bảo tàng Cổ vật Cung đình Huế",
+      "name:de": "Hue Royal Antiquities Museum",
+      "name:en": "Hue Royal Antiquities Museum",
+      "name:ru": "Музей вьетнамский войны в Хюэ",
+      "opening_hours": "Mo-Su 08:30-11:00, 13:30-17:00",
+      "tourism": "museum"
+     }
+    },
+    {
+     "type": "way",
+     "id": 695810733,
+     "center": {
+      "lat": 16.4729593,
+      "lon": 107.5807931
+     },
+     "tags": {
+      "name": "Không gian Văn hóa Lục Bộ",
+      "tourism": "attraction"
+     }
+    },
+    {
+     "type": "way",
+     "id": 695810763,
+     "center": {
+      "lat": 16.4705913,
+      "lon": 107.5787475
+     },
+     "tags": {
+      "historic": "ruins",
+      "name": "Sở Thượng Thiện",
+      "name:zh": "上膳"
+     }
+    },
+    {
+     "type": "way",
+     "id": 695949048,
+     "center": {
+      "lat": 16.4706059,
+      "lon": 107.576903
+     },
+     "tags": {
+      "historic": "ruins",
+      "name": "Điện Khôn Thái",
+      "name:vi": "Điện Khôn Thái",
+      "name:zh": "坤泰殿",
+      "ruins": "yes"
+     }
+    },
+    {
+     "type": "way",
+     "id": 695949060,
+     "center": {
+      "lat": 16.4704727,
+      "lon": 107.5788398
+     },
+     "tags": {
+      "historic": "ruins",
+      "name": "Ngự Y",
+      "name:zh": "御醫"
+     }
+    },
+    {
+     "type": "way",
+     "id": 771244228,
+     "center": {
+      "lat": 16.4778556,
+      "lon": 107.5874206
+     },
+     "tags": {
+      "addr:housenumber": "102",
+      "addr:street": "Bạch Đằng",
+      "amenity": "place_of_worship",
+      "building": "yes",
+      "name": "Quoc Tu Dieu De",
+      "name:de": "Quoc Tu Dieu De",
+      "name:en": "Dieu De National Pagoda",
+      "name:fr": "Pagode national de Diệu Đế",
+      "name:pt": "Pagode Nacional de Dieu De",
+      "religion": "buddhist",
+      "tourism": "attraction"
+     }
+    },
+    {
+     "type": "way",
+     "id": 771244236,
+     "center": {
+      "lat": 16.4659179,
+      "lon": 107.5783783
+     },
+     "tags": {
+      "building": "yes",
+      "name": "Holy Cannons of the Citadel of Hue",
+      "name:en": "Five Cannons - Metal, Wood, Water, Fire and Earth",
+      "name:es": "Cañones Sagrados de la Ciudadela de Hue",
+      "name:ja": "5つの大砲",
+      "tourism": "attraction"
+     }
+    },
+    {
+     "type": "way",
+     "id": 1167513732,
+     "center": {
+      "lat": 16.4640341,
+      "lon": 107.5857605
+     },
+     "tags": {
+      "bridge": "yes",
+      "highway": "footway",
+      "layer": "1",
+      "name": "Ironwood Foot Bridge",
+      "tourism": "attraction"
+     }
+    },
+    {
+     "type": "way",
+     "id": 1167513742,
+     "center": {
+      "lat": 16.4636435,
+      "lon": 107.5855555
+     },
+     "tags": {
+      "highway": "footway",
+      "name": "Ironwood Foot Bridge",
+      "tourism": "attraction"
+     }
+    },
+    {
+     "type": "way",
+     "id": 1170979640,
+     "center": {
+      "lat": 16.4542377,
+      "lon": 107.5796821
+     },
+     "tags": {
+      "addr:city": "Huế",
+      "addr:housenumber": "17",
+      "addr:province": "Huế",
+      "addr:street": "Bảo Quốc",
+      "addr:subdistrict": "Phường Đúc",
+      "amenity": "monastery",
+      "name": "Chùa Báo Quốc",
+      "name:en": "Báo Quốc Temple",
+      "name:ru": "Бао Куок",
+      "religion": "buddhist",
+      "tourism": "attraction",
+      "wikidata": "Q4857424",
+      "wikipedia": "en:Báo Quốc Temple"
+     }
+    },
+    {
+     "type": "way",
+     "id": 1172894102,
+     "center": {
+      "lat": 16.4579663,
+      "lon": 107.5953601
+     },
+     "tags": {
+      "addr:city": "Huế",
+      "addr:housenumber": "142",
+      "addr:province": "Huế",
+      "addr:street": "Nguyễn Khuyến",
+      "addr:subdistrict": "Phú Nhuận",
+      "amenity": "place_of_worship",
+      "building": "yes",
+      "denomination": "roman_catholic",
+      "name": "Nhà Thờ Dòng Chúa Cứu Thế Huế",
+      "name:en": "Redemptorist Church of Hue",
+      "religion": "christian",
+      "wikidata": "Q10800885",
+      "wikipedia": "vi:Nhà thờ Dòng Chúa Cứu Thế, Huế"
+     }
+    },
+    {
+     "type": "way",
+     "id": 1172897446,
+     "center": {
+      "lat": 16.4566343,
+      "lon": 107.5983094
+     },
+     "tags": {
+      "access": "private",
+      "addr:city": "Huế",
+      "addr:housenumber": "179",
+      "addr:province": "Huế",
+      "addr:street": "Phan Đình Phùng",
+      "addr:subdistrict": "Phú Nhuận",
+      "building": "yes",
+      "building:architecture": "french_colonial",
+      "castle_type": "palace",
+      "historic": "castle",
+      "name": "Cung An Định",
+      "name:en": "An Dinh Palace",
+      "wikidata": "Q10751137",
+      "wikipedia": "vi:Cung An Định"
+     }
+    },
+    {
+     "type": "way",
+     "id": 1473275556,
+     "center": {
+      "lat": 16.4339995,
+      "lon": 107.5626893
+     },
+     "tags": {
+      "description": "Incense & Conical Hat Making Tourist Stalls",
+      "highway": "tertiary",
+      "name": "Làng hương Thủy Xuân",
+      "name:vi": "Huyền Trân Công Chúa",
+      "tourism": "attraction"
+     }
+    },
+    {
+     "type": "way",
+     "id": 1509320731,
+     "center": {
+      "lat": 16.4767654,
+      "lon": 107.5726546
+     },
+     "tags": {
+      "access": "yes",
+      "castle_type": "palace",
+      "historic": "castle",
+      "landuse": "residential",
+      "name": "Kinh thành Huế",
+      "name:en": "Hue Citadel",
+      "wikidata": "Q877185",
+      "wikipedia": "vi:Kinh thành Huế"
+     }
+    },
+    {
+     "type": "relation",
+     "id": 8537575,
+     "center": {
+      "lat": 16.4715813,
+      "lon": 107.5763379
+     },
+     "tags": {
+      "alt_name": "Hậu Hồ",
+      "name": "Hồ Nội Kim Thủy",
+      "name:en": "The Back Lake",
+      "name:zh": "內金水湖",
+      "natural": "water",
+      "tourism": "attraction",
+      "type": "multipolygon",
+      "water": "lake"
+     }
+    },
+    {
+     "type": "relation",
+     "id": 19381147,
+     "center": {
+      "lat": 16.4485461,
+      "lon": 107.5545593
+     },
+     "tags": {
+      "access": "yes",
+      "building": "historic",
+      "historic": "archaeological_site",
+      "name": "Hổ Quyền",
+      "name:en": "Tiger Arena",
+      "type": "multipolygon"
+     }
+    }
+   ]
+  }
+ }
+}

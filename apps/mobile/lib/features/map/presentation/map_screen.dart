@@ -395,9 +395,9 @@ class _MapScreenState extends ConsumerState<MapScreen> {
         return const Color(0xFFFF9800);
       case 'beach':
         return const Color(0xFF00BCD4);
-      case 'museum':
+      case 'museum': case 'culture':
         return const Color(0xFF607D8B);
-      case 'park':
+      case 'park': case 'nature':
         return const Color(0xFF8BC34A);
       case 'market':
         return const Color(0xFF4CAF50);
@@ -421,9 +421,9 @@ class _MapScreenState extends ConsumerState<MapScreen> {
         return Icons.temple_buddhist;
       case 'beach':
         return Icons.beach_access;
-      case 'museum':
+      case 'museum': case 'culture':
         return Icons.museum;
-      case 'park':
+      case 'park': case 'nature':
         return Icons.park;
       case 'market':
         return Icons.store;
