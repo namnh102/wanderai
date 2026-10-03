@@ -115,11 +115,17 @@ class PlacePreviewSheet extends StatelessWidget {
             runSpacing: 6,
             children: [
               // Rating
-              if (place.rating > 0)
+              if (place.rating != null)
                 _InfoChip(
                   icon: Icons.star,
-                  label: place.rating.toStringAsFixed(1),
+                  label: place.rating!.toStringAsFixed(1),
                   color: Colors.amber,
+                )
+              else
+                _InfoChip(
+                  icon: Icons.star_border,
+                  label: 'Chưa có đánh giá',
+                  color: theme.colorScheme.onSurfaceVariant,
                 ),
 
               // Review count

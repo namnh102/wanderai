@@ -42,7 +42,7 @@ export class PlacesService {
         where,
         skip,
         take: limit,
-        orderBy: [{ rating: 'desc' }, { reviewCount: 'desc' }],
+        orderBy: [{ rating: { sort: 'desc', nulls: 'last' } }, { reviewCount: 'desc' }],
         include: {
           destination: {
             select: { id: true, name: true, slug: true, province: true },
@@ -58,7 +58,8 @@ export class PlacesService {
             },
           },
           _count: {
-            select: { reviews: true },
+            // Only trusted, non-deleted reviews are counted.
+            select: { reviews: { where: { trusted: true, deletedAt: null } } },
           },
         },
       }),
@@ -98,7 +99,8 @@ export class PlacesService {
           },
         },
         reviews: {
-          where: { deletedAt: null },
+          // Synthetic/untrusted reviews are never exposed as traveler reviews.
+          where: { deletedAt: null, trusted: true },
           orderBy: { createdAt: 'desc' },
           include: {
             aspects: true,

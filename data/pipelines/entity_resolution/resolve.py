@@ -96,7 +96,7 @@ def _create_canonical_record(source_record: dict, canonical_id: str, confidence_
         "latitude": source_record.get("latitude"),
         "longitude": source_record.get("longitude"),
         "description": source_record.get("description"),
-        "rating": source_record.get("rating", 4.5),
+        "rating": source_record.get("rating"),  # None = unavailable; never fabricate a default
         "review_count": source_record.get("review_count", 0),
         "review_flag": review_flag,
         "sources": [

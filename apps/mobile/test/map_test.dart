@@ -82,13 +82,13 @@ void main() {
       expect(place.longitude, isNull);
     });
 
-    test('defaults rating and reviewCount to 0', () {
+    test('missing rating stays null (unavailable) and reviewCount defaults to 0', () {
       final place = PlaceModel.fromJson({
         'id': 'defaults',
         'name': 'Default Place',
       });
 
-      expect(place.rating, 0);
+      expect(place.rating, isNull);
       expect(place.reviewCount, 0);
       expect(place.isVerified, false);
     });
@@ -194,6 +194,24 @@ void main() {
       ));
 
       expect(find.text('4.5'), findsOneWidget);
+    });
+
+    testWidgets('shows honest unavailable-rating label when rating is null', (tester) async {
+      final unrated = PlaceModel.fromJson({
+        'id': 'unrated',
+        'name': 'Quán chưa có đánh giá',
+        'latitude': 16.06,
+        'longitude': 108.22,
+      });
+      await tester.pumpWidget(MaterialApp(
+        home: Scaffold(
+          body: PlacePreviewSheet(place: unrated, onClose: () {}),
+        ),
+      ));
+
+      expect(find.text('Chưa có đánh giá'), findsOneWidget);
+      expect(find.text('0.0'), findsNothing);
+      expect(find.text('4.5'), findsNothing);
     });
 
     testWidgets('displays distance when present', (tester) async {

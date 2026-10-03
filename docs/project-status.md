@@ -1,7 +1,7 @@
 # PROJECT STATUS — WANDERAI (GoMate)
 
-**Last Updated:** 2026-10-04T00:55+07:00  
-**Current Phase:** TASK 07.2 done — R1 (AI Planner) fixed on branch `fix/ai-planner-live`; R2/R3 provenance still open; see "Known Regressions"  
+**Last Updated:** 2026-10-04T01:40+07:00  
+**Current Phase:** TASK 07.3 done on branch `fix/data-provenance-remediation` — R1-R5 remediated; see "Known Regressions"  
 **Current Milestone:** Flutter Map with verified OSM places from PostGIS; Review Intelligence Blocked on DUA  
 
 ---
@@ -24,7 +24,7 @@
 | 12 | AI health — GET /health | `{"status":"ok","llm_provider":"gemini"}` | 2026-10-01 |
 | 13 | AI chat — POST /chat | Wandy replied (865 chars) | 2026-10-01 |
 | 14 | Database — 37 tables verified on 2026-10-01 (2026-10-03: 38 relations in `public`, incl. `_prisma_migrations` and PostGIS objects) | `information_schema` count | 2026-10-01 |
-| 15 | Database rows — 2026-10-01: 50 dest, 112 places, 1 user. **Current (2026-10-03): 50 dest, 220 places (108 sourced + 112 synthetic), 5 users** | `SELECT count(*)`; `docs/data/current-database-state.md` | 2026-10-03 |
+| 15 | Database rows — 2026-10-01: 50 dest, 112 places, 1 user. **Current (2026-10-04): 50 dest, 220 places (97 verified + 123 without verified source), 97 place_sources (13 quarantined), 5 users** | `SELECT count(*)`; `docs/data/current-database-state.md` | 2026-10-03 |
 | 16 | PlaceSource model + migration | `place_sources` table (10 columns) | 2026-10-01 |
 | 17 | Fake data labelled as synthetic | `data/manifests/sources.yaml` | 2026-10-01 |
 | 18 | Data pipeline directories | `data/{raw,processed,seed,evaluation,manifests,restricted}` | 2026-10-01 |
@@ -60,7 +60,7 @@
 | 48 | Task 06.4 Track A: RAG Ingestion & pgvector | 10 Wikivoyage destinations + OSM places: 628 chunks in pgvector (384-dim HNSW) | 2026-10-01 |
 | 49 | Task 06.4 Track A: Frozen Retrieval Evaluation | Da Nang culinary test (`RAG-EVAL-01`) verified with 0.68 similarity (4 frozen queries rerun in 07.1; only EVAL-01 documented) | 2026-10-01 |
 | 50 | Task 06.4 Track B: ViHoRec Recommendation Pipeline | 17,911 interactions audited, MostPop baseline evaluated on 798 test users | 2026-10-01 |
-| 51 | Task 07: Map Feature — flutter_map + PostGIS | 108 places with place_sources on map (97 with a genuine OSM source, 11 unverifiable — see TASK 07.1 R2), category filter, nearby search, preview | 2026-10-02 |
+| 51 | Task 07: Map Feature — flutter_map + PostGIS | 97 places with a genuine OSM source on the map (11 non-genuine sources quarantined in TASK 07.3; rating shown as unavailable), category filter, nearby search, preview | 2026-10-02 |
 | 52 | ADR-005 Map Provider (flutter_map + OSM tiles) | `docs/architecture/decisions/ADR-005-map-provider.md` | 2026-10-02 |
 
 ---
@@ -78,10 +78,10 @@
 
 | Suite | Pass | Fail | Total |
 |-------|------|------|-------|
-| Backend Integration (Jest / Supertest) | 43 | 0 | 43 |
-| AI Service (pytest — tools, chat, planner, pipeline, RAG, recommendation; +1 opt-in live test skipped by default) | 43 | 0 | 43 |
-| Mobile App (Flutter Widget & Unit Tests) | 60 | 0 | 60 |
-| **Total Automated Baseline** | **146** | **0** | **146** |
+| Backend Integration (Jest / Supertest) | 49 | 0 | 49 |
+| AI Service (pytest — tools, chat, planner, pipeline, RAG, recommendation, provenance; +1 opt-in live test skipped by default) | 49 | 0 | 49 |
+| Mobile App (Flutter Widget & Unit Tests) | 61 | 0 | 61 |
+| **Total Automated Baseline** | **159** | **0** | **159** |
 
 ---
 
@@ -106,8 +106,10 @@ Full report: `docs/audit/task-07.1-regression-audit.md`. DB counts: `docs/data/c
 | # | Subsystem | Problem | Evidence |
 |---|-----------|---------|----------|
 | R1 | AI Planner — **FIXED in TASK 07.2 (2026-10-04)**, see `docs/ai/ai-planner.md` §8. Original problem: | `apps/ai-service/app/routers/planner.py` hardcodes retired model `gemini-2.0-flash` (404) and `max_output_tokens=4096` is exhausted by thinking tokens on `gemini-3.5-flash`. Live `POST /trips/:id/ai-plan` returns 500. The 37 pytest tests still pass (mock/no-key fallback = false green). | live call + direct Gemini probe |
-| R2 | Provenance | 11 of 108 "verified" places have a `place_sources` OSM ID that is not a genuine matching OSM node (5 point to unrelated nodes, 6 do not exist on Overpass). Genuine: 97 places. The 8 reviews all sit on these 11 places. | Overpass check of 110 source IDs |
-| R3 | Data | 100 of 108 verified places have a fabricated default rating 4.5 (`resolve.py` default); the map preview shows it. | DB query |
+| R2 | Provenance — **FIXED in TASK 07.3**: 11 non-genuine sources moved to `place_source_quarantine`; verifiedOnly = 97. Original problem: | 11 of 108 "verified" places have a `place_sources` OSM ID that is not a genuine matching OSM node (5 point to unrelated nodes, 6 do not exist on Overpass). Genuine: 97 places. The 8 reviews all sit on these 11 places. | Overpass check of 110 source IDs |
+| R3 | Data — **FIXED in TASK 07.3**: `places.rating` nullable, all ratings NULL, UI shows "Chưa có đánh giá". Original problem: | 100 of 108 verified places have a fabricated default rating 4.5 (`resolve.py` default); the map preview shows it. | DB query |
+| R4 | RAG — **FIXED in TASK 07.3** | 56 chunks on synthetic places (+11 on demoted places) labelled OSM/ODbL: 67 moved to `document_quarantine`; `documents` 628 -> 561 | `docs/audit/task-07.3-provenance-remediation.md` |
+| R5 | Reviews — **FIXED in TASK 07.3** | 9 mock reviews now `source=synthetic`, `trusted=false`, hidden and excluded from aggregates | same |
 
 ### Known Limitations
 
@@ -116,7 +118,7 @@ Full report: `docs/audit/task-07.1-regression-audit.md`. DB counts: `docs/data/c
 - AI chat memory is in FastAPI process memory (`ai_sessions`/`ai_messages` have 0 rows); `search_places` tool reads `destinations`.
 - `GET /places/not-a-uuid` returns 500; `/places/nearby` with invalid lat/lng returns 200.
 - 112 unsourced synthetic/legacy places are the seed loaded twice (2 x 56); default `/places` (no `verifiedOnly`) returns them.
-- 56 RAG chunks labelled OSM/ODbL are attached to unsourced synthetic places; `documents` extra columns/HNSW index exist only via raw SQL, not Prisma migrations (fresh `migrate deploy` lacks them).
+- `documents` extra columns/HNSW index exist only via raw SQL, not Prisma migrations (fresh `migrate deploy` lacks them).
 - RAG: only RAG-EVAL-01 documented (the other 3 queries were rerun; EVAL-04 has no `safety` topic chunk). No Precision@K.
 - RecSys split is per-user leave-last-one-out, not globally temporal; MostPop is the only baseline.
 - Map tiles do not load on the author's network (OSM hosts blocked/DNS-poisoned); CARTO and OpenFreeMap are reachable. Not fixed.
@@ -124,3 +126,5 @@ Full report: `docs/audit/task-07.1-regression-audit.md`. DB counts: `docs/data/c
 - Test-count history (47/69/86/106/110/118/139) = cumulative totals at successive merges; current baseline is 139.
 - Flutter web: GlobalKey duplicate-widget exception seen in the console after reload + opening a trip detail (TASK 07.2 manual E2E); not investigated.
 - Planner latency ~30 s per plan (real Gemini); Flutter i-plan request uses a 75 s timeout.
+- After TASK 07.3 no verified place is in the `attraction` or `beach` category (all earlier attractions had non-genuine OSM ids); the map's "Tham quan" filter is empty until genuine attractions are ingested.
+- The 11 demoted places and 112 synthetic places remain in `places` and appear in default `/places` (no `verifiedOnly`). Raw/processed OSM sample files still contain the hand-written entries (guarded by `data/manifests/osm-invalid-sources.json`).

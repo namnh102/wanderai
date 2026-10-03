@@ -140,6 +140,7 @@ class WikivoyageIngester:
                 FROM places p
                 LEFT JOIN place_categories c ON p.category_id = c.id
                 WHERE p.deleted_at IS NULL
+                  AND EXISTS (SELECT 1 FROM place_sources ps WHERE ps.place_id = p.id AND ps.source_name = 'osm')
             """)
 
         osm_chunks: List[RAGChunk] = []

@@ -72,8 +72,8 @@ def validate_places(places: list[dict]) -> dict:
         if cat not in VALID_CATEGORIES:
             invalid_categories += 1
 
-        rating = p.get("rating", 0.0)
-        if not (0.0 <= rating <= 5.0):
+        rating = p.get("rating")  # None = unavailable (valid)
+        if rating is not None and not (0.0 <= rating <= 5.0):
             invalid_ratings += 1
 
     return {

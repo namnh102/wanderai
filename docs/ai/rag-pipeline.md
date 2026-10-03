@@ -1,4 +1,4 @@
-# WanderAI RAG Pipeline Specification
+﻿# WanderAI RAG Pipeline Specification
 
 **Document Version:** 1.0.0  
 **Audit Date:** 2026-10-01  
@@ -42,7 +42,7 @@ flowchart TD
 10. **Phu Quoc** (Island beaches, night markets) — 22 chunks
 * **Total Wikivoyage Chunks:** 464 chunks
 * **OSM Canonical Place Grounding:** 164 chunks
-* **Total pgvector Chunks:** 628 chunks
+* **Total pgvector Chunks:** 561 chunks (628 before TASK 07.3; 67 moved to `document_quarantine`)
 
 ### Crawler Etiquette:
 * Endpoint: Official MediaWiki Action API (`https://en.wikivoyage.org/w/api.php?action=query&prop=extracts&explaintext=1`).
