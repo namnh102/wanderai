@@ -123,7 +123,7 @@ void main() {
       expect(find.text('Bảo tàng Hồ Chí Minh mở cửa từ thứ Ba đến Chủ Nhật.'), findsOneWidget);
 
       // Verify the sources section header
-      expect(find.text('Nguon tham khao:'), findsOneWidget);
+      expect(find.text('Nguồn tham khảo:'), findsOneWidget);
 
       // Verify source chips labels formatted safely
       expect(find.textContaining('OpenStreetMap'), findsOneWidget);
@@ -159,12 +159,12 @@ void main() {
       expect(find.text('Xin chào, mình có thể giúp gì cho bạn?'), findsOneWidget);
 
       // Source section MUST NOT be rendered
-      expect(find.text('Nguon tham khao:'), findsNothing);
+      expect(find.text('Nguồn tham khảo:'), findsNothing);
       expect(find.textContaining('OpenStreetMap'), findsNothing);
     });
 
     testWidgets('7. Handles very long URL without overflow', (tester) async {
-      final veryLongUrl = 'https://www.openstreetmap.org/node/9999999999999999999999999999999999999999999999999999999999999999999999999999999999';
+      const veryLongUrl = 'https://www.openstreetmap.org/node/9999999999999999999999999999999999999999999999999999999999999999999999999999999999';
       final fakeRepo = FakeChatRepositoryWithSources()
         ..nextReply = 'Thông tin có URL rất dài.'
         ..nextSources = [veryLongUrl];
@@ -187,7 +187,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(tester.takeException(), isNull);
-      expect(find.text('Nguon tham khao:'), findsOneWidget);
+      expect(find.text('Nguồn tham khảo:'), findsOneWidget);
     });
 
     testWidgets('8. Source chip is tappable without crash', (tester) async {

@@ -244,7 +244,7 @@ void main() {
       await tester.pump();
 
       expect(find.text('Wandy'), findsOneWidget);
-      expect(find.text('Xin chao, minh la Wandy!'), findsOneWidget);
+      expect(find.text('Xin chào, mình là Wandy!'), findsOneWidget);
       expect(find.byType(TextField), findsOneWidget);
       expect(find.byType(ActionChip), findsWidgets);
     });
@@ -299,7 +299,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // Error banner and retry button should be visible
-      expect(find.text('Thu lai'), findsOneWidget);
+      expect(find.text('Thử lại'), findsOneWidget);
     });
   });
 }

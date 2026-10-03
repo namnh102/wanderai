@@ -105,6 +105,7 @@ class MapNotifier extends StateNotifier<MapState> {
       center: c,
       radiusKm: r,
       clearError: true,
+      clearSelectedPlace: true,
     );
 
     try {
@@ -133,7 +134,7 @@ class MapNotifier extends StateNotifier<MapState> {
   /// Search places by text.
   Future<void> searchPlaces(String query) async {
     if (query.trim().isEmpty) {
-      state = state.copyWith(clearSearch: true);
+      state = state.copyWith(clearSearch: true, clearSelectedPlace: true);
       return loadNearby();
     }
 
@@ -141,6 +142,7 @@ class MapNotifier extends StateNotifier<MapState> {
       status: MapLoadingStatus.loading,
       searchQuery: query,
       clearError: true,
+      clearSelectedPlace: true,
     );
 
     try {
@@ -171,6 +173,7 @@ class MapNotifier extends StateNotifier<MapState> {
     state = state.copyWith(
       selectedCategory: category,
       clearCategory: category == null,
+      clearSelectedPlace: true,
     );
 
     // Re-apply filter or reload

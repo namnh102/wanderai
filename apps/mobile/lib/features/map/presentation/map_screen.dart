@@ -3,6 +3,11 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
+import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_radius.dart';
+import '../../../core/theme/app_spacing.dart';
+import '../../../core/theme/app_typography.dart';
+import '../../../core/widgets/responsive_wrapper.dart';
 import '../data/place_model.dart';
 import '../providers/map_provider.dart';
 import 'widgets/place_preview_sheet.dart';
@@ -24,17 +29,13 @@ class _MapScreenState extends ConsumerState<MapScreen> {
   @override
   void initState() {
     super.initState();
-    // Load initial data after first frame.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _initMap();
     });
   }
 
   Future<void> _initMap() async {
-    // Try to get user location; fall back to default (Hanoi).
     await _tryGetLocation();
-
-    // Always load nearby places, regardless of location result.
     ref.read(mapProvider.notifier).loadNearby();
   }
 
@@ -48,7 +49,6 @@ class _MapScreenState extends ConsumerState<MapScreen> {
         final requested = await Geolocator.requestPermission();
         if (requested == LocationPermission.denied ||
             requested == LocationPermission.deniedForever) {
-          // Use default location — no error shown.
           return;
         }
       }
@@ -87,15 +87,17 @@ class _MapScreenState extends ConsumerState<MapScreen> {
               initialCenter: state.center,
               initialZoom: 13.0,
               minZoom: 5.0,
-              maxZoom: 18.0,
+              maxZoom: 19.0,
               onTap: (_, __) => ref.read(mapProvider.notifier).deselectPlace(),
             ),
             children: [
-              // OSM Tile Layer
+              // CARTO Voyager Basemap Tiles (Reachable in Vietnam, OSM-based)
               TileLayer(
-                urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                urlTemplate:
+                    'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png',
+                subdomains: const ['a', 'b', 'c', 'd'],
                 userAgentPackageName: 'com.wanderai.mobile',
-                maxZoom: 18,
+                maxZoom: 19,
               ),
 
               // Place Markers
@@ -116,12 +118,12 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                       height: 24,
                       child: Container(
                         decoration: BoxDecoration(
-                          color: theme.colorScheme.primary,
+                          color: AppColors.primary,
                           shape: BoxShape.circle,
                           border: Border.all(color: Colors.white, width: 3),
                           boxShadow: [
                             BoxShadow(
-                              color: theme.colorScheme.primary.withValues(alpha: 0.4),
+                              color: AppColors.primary.withValues(alpha: 0.4),
                               blurRadius: 8,
                             ),
                           ],
@@ -136,6 +138,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                 alignment: AttributionAlignment.bottomLeft,
                 attributions: [
                   TextSourceAttribution('OpenStreetMap contributors'),
+                  TextSourceAttribution('CARTO'),
                 ],
               ),
             ],
@@ -144,15 +147,19 @@ class _MapScreenState extends ConsumerState<MapScreen> {
           // ─── Search Bar (top) ───
           Positioned(
             top: MediaQuery.of(context).padding.top + 8,
-            left: 12,
-            right: 12,
-            child: MapSearchBar(
-              onSearch: (query) {
-                ref.read(mapProvider.notifier).searchPlaces(query);
-              },
-              onClear: () {
-                ref.read(mapProvider.notifier).searchPlaces('');
-              },
+            left: 0,
+            right: 0,
+            child: ResponsiveWrapper(
+              maxWidth: 600.0,
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              child: MapSearchBar(
+                onSearch: (query) {
+                  ref.read(mapProvider.notifier).searchPlaces(query);
+                },
+                onClear: () {
+                  ref.read(mapProvider.notifier).searchPlaces('');
+                },
+              ),
             ),
           ),
 
@@ -161,11 +168,14 @@ class _MapScreenState extends ConsumerState<MapScreen> {
             top: MediaQuery.of(context).padding.top + 68,
             left: 0,
             right: 0,
-            child: MapCategoryBar(
-              selectedCategory: state.selectedCategory,
-              onCategorySelected: (cat) {
-                ref.read(mapProvider.notifier).setCategory(cat);
-              },
+            child: ResponsiveWrapper(
+              maxWidth: 640.0,
+              child: MapCategoryBar(
+                selectedCategory: state.selectedCategory,
+                onCategorySelected: (cat) {
+                  ref.read(mapProvider.notifier).setCategory(cat);
+                },
+              ),
             ),
           ),
 
@@ -177,7 +187,6 @@ class _MapScreenState extends ConsumerState<MapScreen> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // My location button
                 _FloatingButton(
                   icon: Icons.my_location,
                   onTap: () => _tryGetLocation(),
@@ -204,16 +213,17 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   decoration: BoxDecoration(
-                    color: theme.colorScheme.surface,
-                    borderRadius: BorderRadius.circular(20),
+                    color: AppColors.surface,
+                    borderRadius: AppRadius.pillRadius,
+                    border: Border.all(color: AppColors.border),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.1),
+                        color: Colors.black.withValues(alpha: 0.08),
                         blurRadius: 8,
                       ),
                     ],
                   ),
-                  child: Row(
+                  child: const Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       SizedBox(
@@ -221,11 +231,11 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                         height: 16,
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
-                          color: theme.colorScheme.primary,
+                          valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
                         ),
                       ),
-                      const SizedBox(width: 8),
-                      Text('Đang tải...', style: theme.textTheme.bodySmall),
+                      SizedBox(width: 8),
+                      Text('Đang tải địa điểm...', style: AppTypography.bodyS),
                     ],
                   ),
                 ),
@@ -238,37 +248,40 @@ class _MapScreenState extends ConsumerState<MapScreen> {
               top: MediaQuery.of(context).padding.top + 120,
               left: 40,
               right: 40,
-              child: Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.surface,
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.1),
-                      blurRadius: 8,
-                    ),
-                  ],
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(Icons.location_off, size: 32, color: Colors.grey),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Không tìm thấy địa điểm',
-                      style: theme.textTheme.bodyMedium,
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'Thử mở rộng bán kính hoặc thay đổi bộ lọc',
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
+              child: Center(
+                child: Container(
+                  constraints: const BoxConstraints(maxWidth: 400),
+                  padding: const EdgeInsets.all(AppSpacing.md),
+                  decoration: BoxDecoration(
+                    color: AppColors.surface,
+                    borderRadius: AppRadius.cardRadius,
+                    border: Border.all(color: AppColors.border),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.1),
+                        blurRadius: 8,
                       ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ],
+                    ],
+                  ),
+                  child: const Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.location_off_outlined,
+                          size: 32, color: AppColors.textTertiary),
+                      SizedBox(height: AppSpacing.sm),
+                      Text(
+                        'Không tìm thấy địa điểm',
+                        style: AppTypography.h3,
+                        textAlign: TextAlign.center,
+                      ),
+                      SizedBox(height: 4),
+                      Text(
+                        'Thử mở rộng bán kính hoặc chọn danh mục khác',
+                        style: AppTypography.bodyS,
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -279,28 +292,33 @@ class _MapScreenState extends ConsumerState<MapScreen> {
               top: MediaQuery.of(context).padding.top + 120,
               left: 40,
               right: 40,
-              child: Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.errorContainer,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.error_outline, color: theme.colorScheme.error),
-                    const SizedBox(height: 8),
-                    Text(
-                      state.errorMessage ?? 'Đã xảy ra lỗi',
-                      style: theme.textTheme.bodySmall,
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 8),
-                    TextButton(
-                      onPressed: () => ref.read(mapProvider.notifier).loadNearby(),
-                      child: const Text('Thử lại'),
-                    ),
-                  ],
+              child: Center(
+                child: Container(
+                  constraints: const BoxConstraints(maxWidth: 400),
+                  padding: const EdgeInsets.all(AppSpacing.md),
+                  decoration: BoxDecoration(
+                    color: AppColors.errorContainer,
+                    borderRadius: AppRadius.cardRadius,
+                    border: Border.all(color: AppColors.error.withValues(alpha: 0.3)),
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.error_outline, color: AppColors.error),
+                      const SizedBox(height: AppSpacing.sm),
+                      Text(
+                        state.errorMessage ?? 'Đã xảy ra lỗi',
+                        style: AppTypography.bodyS.copyWith(color: AppColors.error),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: AppSpacing.sm),
+                      TextButton(
+                        onPressed: () =>
+                            ref.read(mapProvider.notifier).loadNearby(),
+                        child: const Text('Thử lại'),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -314,15 +332,29 @@ class _MapScreenState extends ConsumerState<MapScreen> {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
-                  color: theme.colorScheme.primary,
-                  borderRadius: BorderRadius.circular(16),
+                  color: AppColors.primaryContainer,
+                  borderRadius: AppRadius.pillRadius,
+                  border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.08),
+                      blurRadius: 4,
+                    ),
+                  ],
                 ),
-                child: Text(
-                  '${state.places.length} địa điểm',
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onPrimary,
-                    fontWeight: FontWeight.w600,
-                  ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.place, size: 14, color: AppColors.onPrimaryContainer),
+                    const SizedBox(width: 4),
+                    Text(
+                      '${state.places.length} địa điểm',
+                      style: AppTypography.label.copyWith(
+                        color: AppColors.onPrimaryContainer,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -345,7 +377,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
 
   Marker _buildMarker(PlaceModel place, MapState state, ThemeData theme) {
     final isSelected = state.selectedPlace?.id == place.id;
-    final color = _categoryColor(place.categoryName);
+    final color = AppColors.forCategory(place.categoryName);
 
     return Marker(
       point: LatLng(place.latitude!, place.longitude!),
@@ -370,7 +402,12 @@ class _MapScreenState extends ConsumerState<MapScreen> {
             ),
             boxShadow: isSelected
                 ? [BoxShadow(color: color.withValues(alpha: 0.5), blurRadius: 8)]
-                : [BoxShadow(color: Colors.black.withValues(alpha: 0.2), blurRadius: 4)],
+                : [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.2),
+                      blurRadius: 4,
+                    )
+                  ],
           ),
           child: Icon(
             _categoryIcon(place.categoryName),
@@ -380,32 +417,6 @@ class _MapScreenState extends ConsumerState<MapScreen> {
         ),
       ),
     );
-  }
-
-  Color _categoryColor(String? category) {
-    switch (category?.toLowerCase()) {
-      case 'attraction':
-        return const Color(0xFF9C27B0);
-      case 'restaurant':
-        return const Color(0xFFFF5722);
-      case 'hotel':
-        return const Color(0xFF2196F3);
-      case 'temple':
-      case 'pagoda':
-        return const Color(0xFFFF9800);
-      case 'beach':
-        return const Color(0xFF00BCD4);
-      case 'museum': case 'culture':
-        return const Color(0xFF607D8B);
-      case 'park': case 'nature':
-        return const Color(0xFF8BC34A);
-      case 'market':
-        return const Color(0xFF4CAF50);
-      case 'cafe':
-        return const Color(0xFF795548);
-      default:
-        return const Color(0xFF00685F);
-    }
   }
 
   IconData _categoryIcon(String? category) {
@@ -421,9 +432,11 @@ class _MapScreenState extends ConsumerState<MapScreen> {
         return Icons.temple_buddhist;
       case 'beach':
         return Icons.beach_access;
-      case 'museum': case 'culture':
+      case 'museum':
+      case 'culture':
         return Icons.museum;
-      case 'park': case 'nature':
+      case 'park':
+      case 'nature':
         return Icons.park;
       case 'market':
         return Icons.store;
@@ -448,11 +461,10 @@ class _FloatingButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     return Material(
-      elevation: 4,
+      elevation: 3,
       shape: const CircleBorder(),
-      color: theme.colorScheme.surface,
+      color: AppColors.surface,
       child: InkWell(
         onTap: onTap,
         customBorder: const CircleBorder(),
@@ -460,7 +472,7 @@ class _FloatingButton extends StatelessWidget {
           message: tooltip,
           child: Padding(
             padding: const EdgeInsets.all(10),
-            child: Icon(icon, size: 22, color: theme.colorScheme.primary),
+            child: Icon(icon, size: 22, color: AppColors.primary),
           ),
         ),
       ),

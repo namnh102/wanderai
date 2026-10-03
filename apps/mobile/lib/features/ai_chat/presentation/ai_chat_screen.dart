@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_radius.dart';
+import '../../../core/theme/app_spacing.dart';
+import '../../../core/theme/app_typography.dart';
+import '../../../core/widgets/responsive_wrapper.dart';
 import '../data/chat_models.dart';
 import '../providers/chat_provider.dart';
 
@@ -64,13 +69,13 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
           children: [
             Container(
               padding: const EdgeInsets.all(6),
-              decoration: BoxDecoration(
-                color: cs.primary.withValues(alpha: 0.1),
+              decoration: const BoxDecoration(
+                color: AppColors.primaryContainer,
                 shape: BoxShape.circle,
               ),
-              child: Icon(Icons.auto_awesome, color: cs.primary, size: 20),
+              child: const Icon(Icons.auto_awesome, color: AppColors.primary, size: 20),
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: AppSpacing.sm),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -80,10 +85,9 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
                 ),
                 Text(
                   'AI Travel Copilot',
-                  style: TextStyle(
+                  style: AppTypography.bodyS.copyWith(
                     fontSize: 11,
-                    color: cs.onSurfaceVariant,
-                    fontWeight: FontWeight.normal,
+                    color: AppColors.textSecondary,
                   ),
                 ),
               ],
@@ -94,7 +98,8 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
           if (chatState.messages.isNotEmpty)
             IconButton(
               icon: const Icon(Icons.delete_outline),
-              tooltip: 'Xoa cuoc tro chuyen',
+              tooltip: 'Xóa cuộc trò chuyện',
+              color: AppColors.textSecondary,
               onPressed: () {
                 ref.read(chatProvider.notifier).clearConversation();
               },
@@ -102,69 +107,75 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
         ],
       ),
       body: SafeArea(
-        child: Column(
-          children: [
-            // Message List or Empty State
-            Expanded(
-              child: chatState.messages.isEmpty
-                  ? _buildEmptyState(cs)
-                  : _buildMessageList(chatState, cs),
-            ),
+        child: ResponsiveWrapper(
+          maxWidth: 720.0,
+          child: Column(
+            children: [
+              // Message List or Empty State
+              Expanded(
+                child: chatState.messages.isEmpty
+                    ? _buildEmptyState()
+                    : _buildMessageList(chatState, cs),
+              ),
 
-            // Error & Retry Banner
-            if (chatState.hasError && chatState.errorMessage != null)
-              _buildErrorBanner(chatState, cs),
+              // Error & Retry Banner
+              if (chatState.hasError && chatState.errorMessage != null)
+                _buildErrorBanner(chatState, cs),
 
-            // Input Bar
-            _buildInputBar(chatState, cs),
-          ],
+              // Input Bar
+              _buildInputBar(chatState, cs),
+            ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildEmptyState(ColorScheme cs) {
+  Widget _buildEmptyState() {
     return Center(
       child: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.lg,
+          vertical: AppSpacing.md,
+        ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              width: 72,
-              height: 72,
-              decoration: BoxDecoration(
-                color: cs.primary.withValues(alpha: 0.12),
+              width: 68,
+              height: 68,
+              decoration: const BoxDecoration(
+                color: AppColors.primaryContainer,
                 shape: BoxShape.circle,
               ),
-              child: Icon(Icons.auto_awesome, size: 36, color: cs.primary),
+              child: const Icon(Icons.auto_awesome, size: 34, color: AppColors.primary),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppSpacing.md),
             const Text(
-              'Xin chao, minh la Wandy!',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
+              'Xin chào, mình là Wandy!',
+              style: AppTypography.h2,
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppSpacing.sm),
             Text(
-              'Tro ly AI chuyen ve du lich Viet Nam. Minh co the giup ban tim diem den, du doan thoi tiet, va tinh toan chi phi chuyen di.',
-              style: TextStyle(fontSize: 14, color: cs.onSurfaceVariant, height: 1.4),
+              'Trợ lý AI chuyên về du lịch Việt Nam. Mình có thể gợi ý điểm đến, lập lịch trình, và giải đáp thông tin được xác thực.',
+              style: AppTypography.bodyM.copyWith(height: 1.45),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: AppSpacing.lg),
             const Text(
-              'Goi y cau hoi:',
-              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+              'Gợi ý câu hỏi:',
+              style: AppTypography.label,
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: AppSpacing.sm),
             Wrap(
-              spacing: 8,
-              runSpacing: 8,
+              spacing: AppSpacing.sm,
+              runSpacing: AppSpacing.sm,
               alignment: WrapAlignment.center,
               children: [
-                _buildSuggestionChip('Goi y 3 diem du lich Da Nang'),
-                _buildSuggestionChip('Thoi tiet Ha Giang hom nay the nao?'),
-                _buildSuggestionChip('Ngan sach du lich Phu Quoc 3 ngay'),
+                _buildSuggestionChip('Gợi ý 3 điểm du lịch Đà Nẵng'),
+                _buildSuggestionChip('Thời tiết Hà Giang hôm nay thế nào?'),
+                _buildSuggestionChip('Ngân sách du lịch Phú Quốc 3 ngày'),
               ],
             ),
           ],
@@ -175,7 +186,10 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
 
   Widget _buildSuggestionChip(String text) {
     return ActionChip(
-      label: Text(text, style: const TextStyle(fontSize: 12)),
+      label: Text(text, style: AppTypography.bodyS.copyWith(color: AppColors.primary)),
+      backgroundColor: AppColors.primaryContainer.withValues(alpha: 0.5),
+      side: BorderSide(color: AppColors.primary.withValues(alpha: 0.3)),
+      shape: const RoundedRectangleBorder(borderRadius: AppRadius.pillRadius),
       onPressed: () {
         _textController.text = text;
         _handleSend();
@@ -188,7 +202,10 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
 
     return ListView.builder(
       controller: _scrollController,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.md,
+        vertical: AppSpacing.mdSmall,
+      ),
       itemCount: itemCount,
       itemBuilder: (context, index) {
         if (index == chatState.messages.length && chatState.isLoading) {
@@ -212,24 +229,37 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (!isUser) ...[
-            CircleAvatar(
+            const CircleAvatar(
               radius: 16,
-              backgroundColor: cs.primary.withValues(alpha: 0.15),
-              child: Icon(Icons.auto_awesome, size: 16, color: cs.primary),
+              backgroundColor: AppColors.primaryContainer,
+              child: Icon(Icons.auto_awesome, size: 16, color: AppColors.primary),
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: AppSpacing.sm),
           ],
           Flexible(
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.md,
+                vertical: AppSpacing.mdSmall,
+              ),
               decoration: BoxDecoration(
-                color: isUser ? cs.primary : cs.surfaceContainerLow,
+                color: isUser ? AppColors.primary : AppColors.surface,
                 borderRadius: BorderRadius.only(
-                  topLeft: const Radius.circular(16),
-                  topRight: const Radius.circular(16),
-                  bottomLeft: Radius.circular(isUser ? 16 : 4),
-                  bottomRight: Radius.circular(isUser ? 4 : 16),
+                  topLeft: const Radius.circular(AppRadius.card),
+                  topRight: const Radius.circular(AppRadius.card),
+                  bottomLeft: Radius.circular(isUser ? AppRadius.card : 4),
+                  bottomRight: Radius.circular(isUser ? 4 : AppRadius.card),
                 ),
+                border: isUser
+                    ? null
+                    : Border.all(color: AppColors.border, width: 1),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.04),
+                    blurRadius: 4,
+                    offset: const Offset(0, 1),
+                  ),
+                ],
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -239,8 +269,8 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
                     message.content,
                     style: TextStyle(
                       fontSize: 14,
-                      height: 1.4,
-                      color: isUser ? cs.onPrimary : cs.onSurface,
+                      height: 1.45,
+                      color: isUser ? AppColors.onPrimary : AppColors.textPrimary,
                     ),
                   ),
                   if (!isUser && message.sources.isNotEmpty)
@@ -249,7 +279,7 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
               ),
             ),
           ),
-          if (isUser) const SizedBox(width: 8),
+          if (isUser) const SizedBox(width: AppSpacing.sm),
         ],
       ),
     );
@@ -262,28 +292,27 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        const SizedBox(height: 10),
-        Divider(
+        const SizedBox(height: AppSpacing.sm),
+        const Divider(
           height: 1,
           thickness: 0.8,
-          color: cs.outlineVariant.withValues(alpha: 0.4),
+          color: AppColors.border,
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: AppSpacing.sm),
         Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
+            const Icon(
               Icons.auto_stories_outlined,
               size: 13,
-              color: cs.onSurfaceVariant,
+              color: AppColors.textSecondary,
             ),
             const SizedBox(width: 4),
             Text(
-              'Nguon tham khao:',
-              style: TextStyle(
+              'Nguồn tham khảo:',
+              style: AppTypography.label.copyWith(
                 fontSize: 11,
-                fontWeight: FontWeight.w600,
-                color: cs.onSurfaceVariant,
+                color: AppColors.textSecondary,
               ),
             ),
           ],
@@ -304,37 +333,37 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
     return Tooltip(
       message: url,
       child: Material(
-        color: cs.surfaceContainerHighest.withValues(alpha: 0.4),
-        borderRadius: BorderRadius.circular(8),
+        color: AppColors.primaryContainer.withValues(alpha: 0.4),
+        borderRadius: AppRadius.smRadius,
         child: InkWell(
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: AppRadius.smRadius,
           onTap: () => _launchSourceUrl(url),
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
               border: Border.all(
-                color: cs.outlineVariant.withValues(alpha: 0.5),
+                color: AppColors.primary.withValues(alpha: 0.3),
                 width: 0.8,
               ),
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: AppRadius.smRadius,
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(
+                const Icon(
                   Icons.open_in_new,
                   size: 11,
-                  color: cs.primary,
+                  color: AppColors.primary,
                 ),
                 const SizedBox(width: 4),
                 ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 220),
                   child: Text(
                     label,
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 11,
-                      fontWeight: FontWeight.w500,
-                      color: cs.primary,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.primary,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -368,7 +397,7 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
       }
       return uri.host.isNotEmpty ? uri.host : url;
     } catch (_) {
-      return 'Nguon tham khao';
+      return 'Nguồn tham khảo';
     }
   }
 
@@ -379,7 +408,7 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
         await launchUrl(uri, mode: LaunchMode.externalApplication);
       }
     } catch (_) {
-      // Graceful fallback: do not crash on invalid URL or unsupported environment
+      // Graceful fallback
     }
   }
 
@@ -389,41 +418,44 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          CircleAvatar(
+          const CircleAvatar(
             radius: 16,
-            backgroundColor: cs.primary.withValues(alpha: 0.15),
-            child: Icon(Icons.auto_awesome, size: 16, color: cs.primary),
+            backgroundColor: AppColors.primaryContainer,
+            child: Icon(Icons.auto_awesome, size: 16, color: AppColors.primary),
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: AppSpacing.sm),
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.md,
+              vertical: AppSpacing.mdSmall,
+            ),
             decoration: BoxDecoration(
-              color: cs.surfaceContainerLow,
+              color: AppColors.surface,
               borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(16),
-                topRight: Radius.circular(16),
+                topLeft: Radius.circular(AppRadius.card),
+                topRight: Radius.circular(AppRadius.card),
                 bottomLeft: Radius.circular(4),
-                bottomRight: Radius.circular(16),
+                bottomRight: Radius.circular(AppRadius.card),
               ),
+              border: Border.all(color: AppColors.border),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                SizedBox(
+                const SizedBox(
                   width: 14,
                   height: 14,
                   child: CircularProgressIndicator(
                     strokeWidth: 2,
-                    color: cs.primary,
+                    valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
                   ),
                 ),
                 const SizedBox(width: 10),
                 Text(
-                  'Wandy dang suy nghi...',
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: cs.onSurfaceVariant,
+                  'Wandy đang suy nghĩ...',
+                  style: AppTypography.bodyS.copyWith(
                     fontStyle: FontStyle.italic,
+                    color: AppColors.textSecondary,
                   ),
                 ),
               ],
@@ -436,20 +468,26 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
 
   Widget _buildErrorBanner(ChatState chatState, ColorScheme cs) {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: cs.errorContainer,
-        borderRadius: BorderRadius.circular(8),
+      margin: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.md,
+        vertical: 4,
+      ),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.mdSmall,
+        vertical: AppSpacing.sm,
+      ),
+      decoration: const BoxDecoration(
+        color: AppColors.errorContainer,
+        borderRadius: AppRadius.smRadius,
       ),
       child: Row(
         children: [
-          Icon(Icons.error_outline, size: 18, color: cs.onErrorContainer),
-          const SizedBox(width: 8),
+          const Icon(Icons.error_outline, size: 18, color: AppColors.error),
+          const SizedBox(width: AppSpacing.sm),
           Expanded(
             child: Text(
-              chatState.errorMessage ?? 'Loi khong xac dinh',
-              style: TextStyle(fontSize: 12, color: cs.onErrorContainer),
+              chatState.errorMessage ?? 'Lỗi không xác định',
+              style: AppTypography.bodyS.copyWith(color: AppColors.error),
             ),
           ),
           TextButton(
@@ -459,12 +497,12 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
               minimumSize: Size.zero,
               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
             ),
-            child: Text(
-              'Thu lai',
+            child: const Text(
+              'Thử lại',
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.bold,
-                color: cs.onErrorContainer,
+                color: AppColors.error,
               ),
             ),
           ),
@@ -475,11 +513,14 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
 
   Widget _buildInputBar(ChatState chatState, ColorScheme cs) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: Theme.of(context).scaffoldBackgroundColor,
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.mdSmall,
+        vertical: AppSpacing.sm,
+      ),
+      decoration: const BoxDecoration(
+        color: AppColors.surface,
         border: Border(
-          top: BorderSide(color: cs.outlineVariant.withValues(alpha: 0.5)),
+          top: BorderSide(color: AppColors.border),
         ),
       ),
       child: Row(
@@ -491,31 +532,32 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
               textInputAction: TextInputAction.send,
               onSubmitted: (_) => _handleSend(),
               decoration: InputDecoration(
-                hintText: 'Hoi Wandy ve du lich Viet Nam...',
-                hintStyle: TextStyle(fontSize: 14, color: cs.outline),
+                hintText: 'Hỏi Wandy về du lịch Việt Nam...',
+                hintStyle: AppTypography.bodyM.copyWith(color: AppColors.textTertiary),
                 contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 16,
+                  horizontal: AppSpacing.md,
                   vertical: 10,
                 ),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(24),
-                  borderSide: BorderSide(color: cs.outlineVariant),
+                border: const OutlineInputBorder(
+                  borderRadius: AppRadius.pillRadius,
+                  borderSide: BorderSide(color: AppColors.border),
                 ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(24),
-                  borderSide: BorderSide(color: cs.outlineVariant),
+                enabledBorder: const OutlineInputBorder(
+                  borderRadius: AppRadius.pillRadius,
+                  borderSide: BorderSide(color: AppColors.border),
                 ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(24),
-                  borderSide: BorderSide(color: cs.primary, width: 1.5),
+                focusedBorder: const OutlineInputBorder(
+                  borderRadius: AppRadius.pillRadius,
+                  borderSide: BorderSide(color: AppColors.primary, width: 1.5),
                 ),
                 filled: true,
-                fillColor: cs.surfaceContainerLow,
+                fillColor: AppColors.background,
               ),
             ),
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: AppSpacing.sm),
           IconButton.filled(
+            style: IconButton.styleFrom(backgroundColor: AppColors.primary),
             onPressed: chatState.isLoading ? null : _handleSend,
             icon: chatState.isLoading
                 ? const SizedBox(
@@ -523,10 +565,10 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
                     height: 18,
                     child: CircularProgressIndicator(
                       strokeWidth: 2,
-                      color: Colors.white,
+                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                     ),
                   )
-                : const Icon(Icons.send_rounded, size: 20),
+                : const Icon(Icons.send_rounded, size: 20, color: Colors.white),
           ),
         ],
       ),
