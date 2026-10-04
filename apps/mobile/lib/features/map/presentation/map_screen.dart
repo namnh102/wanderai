@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:go_router/go_router.dart';
 import 'package:latlong2/latlong.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_radius.dart';
@@ -184,7 +185,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
           // ─── Radius selector (right side) ───
           Positioned(
             right: 12,
-            bottom: (state.selectedPlace != null ? 280 : 24) +
+            bottom: (state.selectedPlace != null ? 340 : 24) +
                 MediaQuery.of(context).padding.bottom,
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -329,7 +330,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
           if (state.status == MapLoadingStatus.loaded)
             Positioned(
               left: 12,
-              bottom: (state.selectedPlace != null ? 280 : 24) +
+              bottom: (state.selectedPlace != null ? 340 : 24) +
                   MediaQuery.of(context).padding.bottom,
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -370,6 +371,9 @@ class _MapScreenState extends ConsumerState<MapScreen> {
               child: PlacePreviewSheet(
                 place: state.selectedPlace!,
                 onClose: () => ref.read(mapProvider.notifier).deselectPlace(),
+                // push (not go): MapScreen and its state stay alive beneath the detail.
+                onViewDetail: () =>
+                    context.push('/places/${state.selectedPlace!.id}'),
               ),
             ),
         ],

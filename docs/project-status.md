@@ -68,6 +68,7 @@
 | 56 | Task 07.6: GoMate Design System + Map UX Stability | Central tokens, shared widgets, clean OSM HOT tiles, GlobalKey fix, honest rating | 2026-10-04 |
 | 57 | ADR-006 Map Tile Provider (OpenStreetMap Humanitarian) | `docs/architecture/decisions/ADR-006-map-tile-provider.md` | 2026-10-04 |
 | 58 | Task 07.6.2 & End-of-Day Verified Baseline | Merged to `develop` (`57b3ed4`), pushed to `origin/develop`; 231 tests pass; 821 docs / 357 verified places verified | 2026-10-04 |
+| 59 | Task 08: Place Detail & Verified Location Experience | `GET /places/:id` factual contract, `/places/:id` Flutter screen, preview "Xem chi tiết" (branch `feature/place-detail`, not merged) | 2026-10-04 |
 
 ---
 
@@ -197,3 +198,11 @@ Full report: `docs/audit/task-07.1-regression-audit.md`. DB counts: `docs/data/c
   - Wandy AI chat renders secondary source chips (`Wikivoyage`, `OpenStreetMap`).
   - Full round-trip navigation verified across tabs.
 - **Next Planned Milestone:** TASK 08 — Place Detail Screen & Verified Location Experience.
+
+## TASK 08 — Place Detail & Verified Location Experience (branch `feature/place-detail`, NOT merged / NOT pushed)
+- Backend: `GET /places/:id` now returns only factual fields — OSM-tag-derived `address`, `openingHours`, `website`, `phone`, plus `source` (`OpenStreetMap`, canonical URL, ODbL); `null` when unavailable; unverified places expose no descriptive facts; invalid UUID → 400 (was 500); raw OSM tag blob not exposed; `verifiedOnly` list semantics unchanged. Docs: `docs/api/places-api.md`.
+- Flutter: route `/places/:id` (top-level, pushed over the map; no new GoRouter/keys), `PlaceDetailScreen` (hero, honest rating, address, hours, contact only when present, coordinates + mini map, OSM provenance link, "Chỉ đường" via `geo:` URI with OSM coordinate fallback, loading/error/empty states), preview sheet "Xem chi tiết". Docs: `docs/architecture/place-detail-flow.md`.
+- Tests: Backend 71 passed (+9 in `place-detail.e2e-spec.ts`); AI unchanged; Flutter 97 passed (+15 in `place_detail_test.dart`); `nest build` clean; lint 0 errors / 48 warnings; `flutter analyze` clean.
+- Browser E2E (Map → marker → preview → Xem chi tiết → detail → back): PASS; map state/category/preview preserved on back; 0 GlobalKey, 0 RenderFlex errors (checked at end of session). Evidence: `docs/audit/evidence/task-08/`.
+- Bug caught by tests: `SimpleAttributionWidget` in the mini map overflowed horizontally → replaced by `RichAttributionWidget`.
+- Known limitations: in the sampled data most verified places have no `addr:*`, hours or contact tags, so the detail shows honest "Chưa có thông tin…" states (real hours/website/phone rendering verified by backend e2e + Flutter widget tests, not visually in browser). The preview sheet still shows the importer-built address (e.g. "Chùa Trấn Quốc, hanoi") while the detail correctly reports no address — inconsistency to fix in a follow-up. The Flutter canvas could not be scrolled by the browser tester (lower sections verified via accessibility tree).

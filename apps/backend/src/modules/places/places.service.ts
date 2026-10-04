@@ -81,7 +81,8 @@ export class PlacesService {
     };
   }
 
-  // Lấy chi tiết địa điểm bao gồm nguồn gốc (provenance) và đánh giá (reviews + aspects)
+  // Lấy chi tiết địa điểm: chỉ dữ kiện có thật trong DB / OSM tags, provenance, và đánh giá tin cậy.
+  // Mọi trường không có dữ liệu trả về null (không bịa).
   async findById(id: string) {
     const place = await this.prisma.place.findUnique({
       where: { id },
@@ -96,6 +97,7 @@ export class PlacesService {
             rawName: true,
             confidenceScore: true,
             createdAt: true,
+            rawData: true,
           },
         },
         reviews: {
@@ -122,10 +124,53 @@ export class PlacesService {
       throw new NotFoundException(`Place with ID "${id}" not found`);
     }
 
+    const osm = place.placeSources.find((s) => s.sourceName === 'osm');
+    const tags = (osm?.rawData ?? {}) as Record<string, unknown>;
+    const tag = (...keys: string[]): string | null => {
+      for (const k of keys) {
+        const v = tags[k];
+        if (typeof v === 'string' && v.trim() !== '') return v.trim();
+      }
+      return null;
+    };
+    const isVerified = place.placeSources.length > 0;
+
+    const street = tag('addr:street');
+    const houseNumber = tag('addr:housenumber');
+    const addrParts = [
+      [houseNumber, street].filter(Boolean).join(' ') || null,
+      tag('addr:suburb', 'addr:district'),
+      tag('addr:city'),
+    ].filter((x): x is string => !!x);
+
+    // Chỉ tin cậy dữ kiện của bản ghi có provenance; bản ghi dev/test không có nguồn thì không công bố mô tả/giờ mở cửa.
+    const sources = place.placeSources.map(({ rawData: _raw, ...s }) => ({
+      ...s,
+      canonicalUrl: s.sourceName === 'osm' ? `https://www.openstreetmap.org/${s.sourceId}` : null,
+      license: s.sourceName === 'osm' ? 'ODbL 1.0' : null,
+      attribution: s.sourceName === 'osm' ? '© OpenStreetMap contributors' : null,
+    }));
+
     return {
       ...place,
-      isVerified: place.placeSources.length > 0,
+      placeSources: sources,
+      isVerified,
       provenanceCount: place.placeSources.length,
+      // Dữ kiện dẫn xuất (null = không có dữ liệu)
+      address: isVerified && addrParts.length > 0 ? addrParts.join(', ') : null,
+      description: isVerified ? place.description : null,
+      openingHours: isVerified ? (tag('opening_hours') ?? place.openingHours) : null,
+      website: isVerified ? tag('website', 'contact:website') : null,
+      phone: isVerified ? tag('phone', 'contact:phone') : null,
+      source: osm
+        ? {
+            name: 'OpenStreetMap',
+            sourceId: osm.sourceId,
+            canonicalUrl: `https://www.openstreetmap.org/${osm.sourceId}`,
+            license: 'ODbL 1.0',
+            attribution: '© OpenStreetMap contributors',
+          }
+        : null,
     };
   }
 

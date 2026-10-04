@@ -4,6 +4,7 @@ import '../../../../core/theme/app_radius.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/app_badge.dart';
+import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/rating_view.dart';
 import '../../../../core/widgets/responsive_wrapper.dart';
 import '../../data/place_model.dart';
@@ -13,11 +14,14 @@ import '../../data/place_model.dart';
 class PlacePreviewSheet extends StatelessWidget {
   final PlaceModel place;
   final VoidCallback onClose;
+  /// When provided, a "Xem chi tiết" action navigates to the Place Detail screen.
+  final VoidCallback? onViewDetail;
 
   const PlacePreviewSheet({
     super.key,
     required this.place,
     required this.onClose,
+    this.onViewDetail,
   });
 
   @override
@@ -192,6 +196,17 @@ class PlacePreviewSheet extends StatelessWidget {
                   fontFamily: 'monospace',
                 ),
               ),
+
+            if (onViewDetail != null) ...[
+              const SizedBox(height: AppSpacing.mdSmall),
+              AppButton(
+                key: const Key('place_preview_view_detail'),
+                text: 'Xem chi tiết',
+                icon: Icons.arrow_forward,
+                variant: AppButtonVariant.tonal,
+                onPressed: onViewDetail,
+              ),
+            ],
           ],
         ),
       ),

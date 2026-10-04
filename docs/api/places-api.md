@@ -166,3 +166,44 @@ Synthetic/legacy seed places have **no** `place_sources` records and are exclude
 | market | Chợ | store | #4CAF50 |
 | cafe | Cà phê | local_cafe | #795548 |
 | nightlife | Cuộc sống đêm | nightlife | #E91E63 |
+
+---
+
+## GET /places/:id — Place Detail contract (TASK 08)
+
+Factual, provenance-backed detail used by the Flutter Place Detail screen. **Nothing is invented**: every optional field is `null` when the database / OSM tags have no data.
+
+**Validation:** `:id` must be a UUID → otherwise `400`. Unknown / soft-deleted → `404`.
+
+**Added / derived fields**
+
+| Field | Source | `null` when |
+|-------|--------|-------------|
+| `isVerified` | ≥ 1 row in `place_sources` (unchanged semantics) | — (boolean) |
+| `address` | OSM `addr:housenumber`, `addr:street`, `addr:suburb`/`addr:district`, `addr:city` joined with `, ` | no `addr:*` tags, or place unverified |
+| `openingHours` | OSM `opening_hours` tag (verbatim), else `places.opening_hours` | not tagged, or place unverified |
+| `website` | OSM `website` / `contact:website` | not tagged, or place unverified |
+| `phone` | OSM `phone` / `contact:phone` | not tagged, or place unverified |
+| `description` | `places.description` | empty, or place unverified |
+| `rating`, `reviewCount` | stored values / trusted reviews only | `rating` is `null` when unavailable — never defaulted |
+| `source` | the OSM `place_sources` row | place has no OSM source |
+
+`source`:
+
+```json
+{
+  "name": "OpenStreetMap",
+  "sourceId": "way/37933256",
+  "canonicalUrl": "https://www.openstreetmap.org/way/37933256",
+  "license": "ODbL 1.0",
+  "attribution": "© OpenStreetMap contributors"
+}
+```
+
+`placeSources[]` entries additionally carry `canonicalUrl`, `license`, `attribution`; the raw OSM tag blob (`rawData`) is **not** exposed.
+
+Unverified (unsourced dev/test) places are still resolvable by id but expose no descriptive facts: `isVerified=false`, `source=null`, `placeSources=[]`, and `address/description/openingHours/website/phone = null`. `reviews` only ever contains `trusted=true` rows — synthetic/mock reviews never appear.
+
+List semantics are unchanged: `GET /places` and `/places/nearby` still default to `verifiedOnly=true`.
+
+**Tests:** `apps/backend/test/place-detail.e2e-spec.ts`.

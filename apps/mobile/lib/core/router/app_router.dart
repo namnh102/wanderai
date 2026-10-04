@@ -12,6 +12,7 @@ import '../../features/trips/presentation/trip_list_screen.dart';
 import '../../features/trips/presentation/trip_form_screen.dart';
 import '../../features/trips/presentation/trip_detail_screen.dart';
 import '../../features/map/presentation/map_screen.dart';
+import '../../features/places/presentation/place_detail_screen.dart';
 
 // Placeholder screens for tabs not yet implemented
 class _PlaceholderScreen extends StatelessWidget {
@@ -107,6 +108,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '/trips/:id',
         builder: (context, state) => TripDetailScreen(
           tripId: state.pathParameters['id']!,
+        ),
+      ),
+      GoRoute(
+        path: '/places/:id',
+        builder: (context, state) => PlaceDetailScreen(
+          placeId: state.pathParameters['id']!,
         ),
       ),
       ShellRoute(
