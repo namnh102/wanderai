@@ -212,3 +212,10 @@ Full report: `docs/audit/task-07.1-regression-audit.md`. DB counts: `docs/data/c
 - Real user position (permission states, blue marker, `Vị trí của tôi` recenter), client-side Haversine distance on preview and detail, honest `Khoảng cách chưa xác định`, unified Google Maps Directions handler (no API key, no OSM website). See `docs/architecture/place-detail-flow.md`.
 - Tests: Backend 76, AI 87 + 2 skipped, Flutter 127, analyze clean, nest build clean, lint 0 errors / 52 warnings.
 - Browser: denied path and with-fix path verified; the fix was **emulated** via DevTools geolocation (21.03, 105.85), not real GPS. With the fix: Chùa Trấn Quốc 2.4 km (independent haversine 2.418 km), Nhà thờ Lớn 191 m, nav URL contained `origin=21.030000,105.850000` and the selected place as destination. Without a fix: `Khoảng cách chưa xác định`, URL without origin. Not verified in the browser: blue dot after returning from detail (hidden behind the preview), detail distance line (not scrolled). Not testable here: Android/iOS native handlers and real GPS.
+
+#### TASK 08.1 closure audit (2026-10-04)
+
+- Full Flutter suite: 143 passed (plain run, and shuffled seed 3252860629), `flutter analyze` clean. The earlier exit-code-1 report could not be reproduced (4 clean runs); see `docs/audit/task-08.1-closure-audit.md`.
+- New automated coverage: camera (no recenter on open / on return from detail; recenter only on "Vị trí của tôi"), exact location state transitions, stale-coordinate clearing, lat/lng order, known-pair haversine.
+- Browser (emulated DevTools geolocation, labelled as such): denied path, recenter-on-tap, 2.4 km / 3.8 km matching haversine, nav URL with destination + origin, back-from-detail keeps view. Console clean.
+- Platforms: Web verified; Android not executed; iOS not executed.

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:wanderai_mobile/core/theme/app_theme.dart';
 import 'package:wanderai_mobile/features/location/domain/geo_distance.dart';
@@ -67,6 +69,9 @@ class _MapRepo implements PlaceRepository {
     String? category,
   }) async =>
       places;
+
+  @override
+  Future<PlaceModel> getPlaceById(String id) async => places.first;
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
@@ -438,6 +443,256 @@ void main() {
       await tester.pump(const Duration(milliseconds: 200));
       expect(find.byKey(const Key('user_location_marker')), findsNothing);
       expect(find.text('Không xác định được vị trí'), findsWidgets);
+    });
+  });
+
+  group('MapScreen camera behaviour', () {
+    const defaultCenter = LatLng(21.0285, 105.8542);
+    const fixA = LatLng(10.7769, 106.7009); // far from the default centre
+    const fixB = LatLng(16.0544, 108.2022);
+
+    Future<MapController> pumpMapWithController(
+      WidgetTester tester,
+      FakeLocationService svc,
+    ) async {
+      tester.view.physicalSize = const Size(1200, 1800);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+      final controller = MapController();
+      await tester.pumpWidget(_wrap(
+        MapScreen(mapController: controller),
+        overrides: [
+          locationServiceProvider.overrideWithValue(svc),
+          placeRepositoryProvider.overrideWithValue(_MapRepo([_place()])),
+        ],
+      ));
+      await tester.pump(const Duration(milliseconds: 300));
+      return controller;
+    }
+
+    List<Marker> userMarkers(WidgetTester tester) => tester
+        .widgetList<MarkerLayer>(find.byType(MarkerLayer))
+        .expand((l) => l.markers)
+        .where((m) => m.key == const Key('user_location_marker'))
+        .toList();
+
+    testWidgets('opening the map does NOT recenter, even if a fix is already available', (tester) async {
+      final svc = FakeLocationService(
+          permission: LocationPermissionState.granted, position: fixA);
+      final controller = await pumpMapWithController(tester, svc);
+      // The silent refresh found a fix and drew the marker ...
+      expect(userMarkers(tester), hasLength(1));
+      expect(userMarkers(tester).single.point, fixA);
+      // ... but the camera stayed where it was.
+      expect(controller.camera.center.latitude, closeTo(defaultCenter.latitude, 1e-6));
+      expect(controller.camera.center.longitude, closeTo(defaultCenter.longitude, 1e-6));
+      expect(svc.requestCalls, 0); // and no permission prompt
+    });
+
+    testWidgets('tapping "Vị trí của tôi" DOES recenter on the fix', (tester) async {
+      final svc = FakeLocationService(position: fixA);
+      final controller = await pumpMapWithController(tester, svc);
+      expect(controller.camera.center.latitude, closeTo(defaultCenter.latitude, 1e-6));
+
+      await tester.tap(find.byKey(const Key('my_location_button')));
+      await tester.pump(const Duration(milliseconds: 300));
+
+      expect(controller.camera.center.latitude, closeTo(fixA.latitude, 1e-6));
+      expect(controller.camera.center.longitude, closeTo(fixA.longitude, 1e-6));
+      expect(controller.camera.zoom, 15.0);
+    });
+
+    testWidgets('denied tap does not move the camera', (tester) async {
+      final svc = FakeLocationService(afterRequest: LocationPermissionState.denied);
+      final controller = await pumpMapWithController(tester, svc);
+      await tester.tap(find.byKey(const Key('my_location_button')));
+      await tester.pump(const Duration(milliseconds: 300));
+      expect(controller.camera.center.latitude, closeTo(defaultCenter.latitude, 1e-6));
+      expect(controller.camera.center.longitude, closeTo(defaultCenter.longitude, 1e-6));
+    });
+
+    testWidgets('a changed fix updates the marker; the camera moves only on tap', (tester) async {
+      final svc = FakeLocationService(position: fixA);
+      final c = await pumpMapWithController(tester, svc);
+      await tester.tap(find.byKey(const Key('my_location_button')));
+      await tester.pump(const Duration(milliseconds: 300));
+      expect(userMarkers(tester).single.point, fixA);
+
+      // The device moves; nothing happens until the user asks again.
+      svc.position = fixB;
+      await tester.pump(const Duration(seconds: 2));
+      expect(userMarkers(tester).single.point, fixA);
+      expect(c.camera.center.latitude, closeTo(fixA.latitude, 1e-6));
+
+      await tester.tap(find.byKey(const Key('my_location_button')));
+      await tester.pump(const Duration(milliseconds: 300));
+      expect(userMarkers(tester), hasLength(1));
+      expect(userMarkers(tester).single.point, fixB);
+      expect(c.camera.center.latitude, closeTo(fixB.latitude, 1e-6));
+      expect(c.camera.center.longitude, closeTo(fixB.longitude, 1e-6));
+    });
+
+    testWidgets('returning from Place Detail does NOT recenter the camera', (tester) async {
+      final svc = FakeLocationService(
+          permission: LocationPermissionState.granted, position: fixA);
+      final controller = MapController();
+      final router = GoRouter(
+        initialLocation: '/map',
+        routes: [
+          GoRoute(path: '/map', builder: (c, _) => MapScreen(mapController: controller)),
+          GoRoute(
+            path: '/places/:id',
+            builder: (c, s) => PlaceDetailScreen(placeId: s.pathParameters['id']!),
+          ),
+        ],
+      );
+      tester.view.physicalSize = const Size(1200, 1800);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(ProviderScope(
+        overrides: [
+          locationServiceProvider.overrideWithValue(svc),
+          placeRepositoryProvider.overrideWithValue(_MapRepo([_place()])),
+        ],
+        child: MaterialApp.router(theme: AppTheme.lightTheme, routerConfig: router),
+      ));
+      await tester.pump(const Duration(milliseconds: 300));
+
+      // The user pans the map somewhere specific and selects a place.
+      const panned = LatLng(16.0, 108.0);
+      controller.move(panned, 12.0);
+      await tester.pump();
+      ProviderScope.containerOf(tester.element(find.byType(MapScreen)))
+          .read(mapProvider.notifier)
+          .selectPlace(_place());
+      await tester.pump();
+
+      router.push('/places/p1');
+      await tester.pumpAndSettle();
+      expect(find.byType(PlaceDetailScreen), findsOneWidget);
+
+      router.pop();
+      await tester.pumpAndSettle();
+      expect(find.byType(MapScreen), findsOneWidget);
+      expect(controller.camera.center.latitude, closeTo(panned.latitude, 1e-6));
+      expect(controller.camera.center.longitude, closeTo(panned.longitude, 1e-6));
+      expect(controller.camera.zoom, 12.0);
+      expect(userMarkers(tester), hasLength(1)); // marker still drawn
+    });
+  });
+
+  group('Location state machine (exact transitions)', () {
+    List<UserLocationStatus> record(UserLocationNotifier n) {
+      final seen = <UserLocationStatus>[n.state.status];
+      n.addListener((s) => seen.add(s.status), fireImmediately: false);
+      return seen;
+    }
+
+    test('unknown -> requesting -> granted', () async {
+      final n = UserLocationNotifier(FakeLocationService());
+      final seen = record(n);
+      await n.request();
+      expect(seen, [
+        UserLocationStatus.unknown,
+        UserLocationStatus.requesting,
+        UserLocationStatus.granted,
+      ]);
+      expect(n.state.position, isNotNull);
+    });
+
+    test('unknown -> requesting -> denied (position stays null)', () async {
+      final n = UserLocationNotifier(
+          FakeLocationService(afterRequest: LocationPermissionState.denied));
+      final seen = record(n);
+      await n.request();
+      expect(seen, [
+        UserLocationStatus.unknown,
+        UserLocationStatus.requesting,
+        UserLocationStatus.denied,
+      ]);
+      expect(n.state.position, isNull);
+    });
+
+    test('unknown -> requesting -> unavailable (position stays null)', () async {
+      final n = UserLocationNotifier(FakeLocationService(
+          permission: LocationPermissionState.granted, serviceEnabled: false));
+      final seen = record(n);
+      await n.request();
+      expect(seen, [
+        UserLocationStatus.unknown,
+        UserLocationStatus.requesting,
+        UserLocationStatus.unavailable,
+      ]);
+      expect(n.state.position, isNull);
+    });
+
+    test('position is null until a real fix exists, including while requesting', () async {
+      final n = UserLocationNotifier(FakeLocationService());
+      expect(n.state.position, isNull);
+      final positions = <LatLng?>[];
+      n.addListener((s) => positions.add(s.position), fireImmediately: false);
+      await n.request();
+      expect(positions.first, isNull); // requesting
+      expect(positions.last, isNotNull); // granted
+    });
+
+    test('a later denial/failure drops stale coordinates (never shown as realtime)', () async {
+      final svc = FakeLocationService(position: const LatLng(10.0, 106.0));
+      final n = UserLocationNotifier(svc);
+      await n.request();
+      expect(n.state.position, const LatLng(10.0, 106.0));
+
+      svc.error = Exception('gps lost');
+      await n.request();
+      expect(n.state.status, UserLocationStatus.unavailable);
+      expect(n.state.position, isNull);
+
+      svc.error = null;
+      svc.permission = LocationPermissionState.deniedForever;
+      await n.request();
+      expect(n.state.status, UserLocationStatus.denied);
+      expect(n.state.position, isNull);
+    });
+
+    test('permission and position are separate: granted permission without a fix has no position', () async {
+      final svc = FakeLocationService(permission: LocationPermissionState.granted)
+        ..error = Exception('timeout');
+      final n = UserLocationNotifier(svc);
+      await n.request();
+      expect(await svc.checkPermission(), LocationPermissionState.granted);
+      expect(n.state.status, UserLocationStatus.unavailable);
+      expect(n.state.position, isNull);
+    });
+  });
+
+  group('Distance source and coordinate order', () {
+    test('known pair: (21.03,105.85) -> Chùa Trấn Quốc (21.0479,105.83676) is about 2.42 km', () {
+      final km = haversineKm(const LatLng(21.03, 105.85), const LatLng(21.0479, 105.83676));
+      expect(km, closeTo(2.418, 0.02));
+    });
+
+    test('longitude is not treated as latitude: swapped pair gives a different result', () {
+      final ok = haversineKm(const LatLng(21.03, 105.85), const LatLng(21.0479, 105.83676));
+      final swapped = haversineKm(const LatLng(105.85, 21.03), const LatLng(105.83676, 21.0479));
+      expect((ok - swapped).abs(), greaterThan(0.5));
+    });
+
+    test('distanceFromUserKm(user, placeLat, placeLng) uses (lat, lng) order', () {
+      final km = distanceFromUserKm(const LatLng(21.03, 105.85), 21.0479, 105.83676)!;
+      expect(km, closeTo(2.418, 0.02));
+    });
+
+    test('Google destination/origin are "lat,lng"', () {
+      final u = googleDirectionsUri(
+          destLat: 21.0479, destLng: 105.83676, origin: const LatLng(21.03, 105.85));
+      expect(u.queryParameters['destination'], '21.047900,105.836760');
+      expect(u.queryParameters['origin'], '21.030000,105.850000');
+    });
+
+    test('server distanceKm is parsed but never used for display', () {
+      final p = _place(serverDistance: 99.0);
+      expect(p.distanceKm, 99.0); // field kept for API compatibility
+      expect(distanceFromUserKm(null, p.latitude, p.longitude), isNull);
     });
   });
 }

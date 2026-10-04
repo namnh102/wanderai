@@ -18,14 +18,19 @@ import 'widgets/map_search_bar.dart';
 import 'widgets/map_radius_selector.dart';
 
 class MapScreen extends ConsumerStatefulWidget {
-  const MapScreen({super.key});
+  /// Optional controller, injected only by tests to observe the camera.
+  /// In the app it is null and the screen owns its own controller.
+  final MapController? mapController;
+
+  const MapScreen({super.key, this.mapController});
 
   @override
   ConsumerState<MapScreen> createState() => _MapScreenState();
 }
 
 class _MapScreenState extends ConsumerState<MapScreen> {
-  final MapController _mapController = MapController();
+  late final MapController _mapController =
+      widget.mapController ?? MapController();
 
   @override
   void initState() {
