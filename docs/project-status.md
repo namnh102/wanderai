@@ -220,8 +220,9 @@ Full report: `docs/audit/task-07.1-regression-audit.md`. DB counts: `docs/data/c
 - Browser (emulated DevTools geolocation, labelled as such): denied path, recenter-on-tap, 2.4 km / 3.8 km matching haversine, nav URL with destination + origin, back-from-detail keeps view. Console clean.
 - Platforms: Web verified; Android not executed; iOS not executed.
 
-### TASK 08.1.1 — Location Reliability & UX Hardening (branch `feature/location-reliability-hardening`)
+### TASK 08.1.1 — Location Reliability & UX Hardening (MERGED into develop)
 
+- Merged into `develop` with `--no-ff`.
 - Addressed user feedback ("sao vị trí sai hiện tại của tôi sai lung tung vậy") where inaccurate browser/IP-based geolocation fixes previously rendered without accuracy disclosure.
 - **Accuracy Quality Gate:**
   - Strict classification: `<= 50m` (good), `50–200m` (approximate), `> 200m` (poor).
