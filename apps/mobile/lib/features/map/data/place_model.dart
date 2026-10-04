@@ -19,6 +19,12 @@ class PlaceModel {
   final int provenanceCount;
   final double? distanceKm;
 
+  // Place Detail (TASK 08) — all null when the backend has no factual data.
+  final String? openingHours;
+  final String? website;
+  final String? phone;
+  final PlaceSourceInfo? source;
+
   const PlaceModel({
     required this.id,
     required this.name,
@@ -37,6 +43,10 @@ class PlaceModel {
     this.isVerified = false,
     this.provenanceCount = 0,
     this.distanceKm,
+    this.openingHours,
+    this.website,
+    this.phone,
+    this.source,
   });
 
   /// Parse from GET /places response item (Prisma-formatted with relations).
@@ -67,8 +77,57 @@ class PlaceModel {
       isVerified: json['isVerified'] as bool? ?? false,
       provenanceCount: (json['provenanceCount'] as num?)?.toInt() ?? 0,
       distanceKm: (json['distanceKm'] as num?)?.toDouble(),
+      openingHours: _nonBlank(json['openingHours']),
+      website: _nonBlank(json['website']),
+      phone: _nonBlank(json['phone']),
+      source: json['source'] is Map<String, dynamic>
+          ? PlaceSourceInfo.fromJson(json['source'] as Map<String, dynamic>)
+          : null,
     );
   }
 
+  static String? _nonBlank(dynamic v) {
+    if (v is! String) return null;
+    final t = v.trim();
+    return t.isEmpty ? null : t;
+  }
+
   bool get hasCoordinates => latitude != null && longitude != null;
+
+  /// Exact text shown when the API has no factual (OSM-backed) address.
+  static const addressUnavailableText = 'Chưa có thông tin địa chỉ.';
+
+  /// True only when the API returned a real, non-blank address.
+  bool get hasAddress => address != null && address!.trim().isNotEmpty;
+
+  /// Address exactly as served by the API, or the honest unavailable text.
+  /// Never composed from name/destination — shared by preview sheet and detail screen.
+  String get addressDisplay => hasAddress ? address!.trim() : addressUnavailableText;
+}
+
+/// Provenance of a place (OpenStreetMap). Only present for verified places.
+class PlaceSourceInfo {
+  final String name;
+  final String sourceId;
+  final String canonicalUrl;
+  final String? license;
+  final String? attribution;
+
+  const PlaceSourceInfo({
+    required this.name,
+    required this.sourceId,
+    required this.canonicalUrl,
+    this.license,
+    this.attribution,
+  });
+
+  factory PlaceSourceInfo.fromJson(Map<String, dynamic> json) {
+    return PlaceSourceInfo(
+      name: json['name'] as String? ?? 'OpenStreetMap',
+      sourceId: json['sourceId'] as String? ?? '',
+      canonicalUrl: json['canonicalUrl'] as String? ?? '',
+      license: json['license'] as String?,
+      attribution: json['attribution'] as String?,
+    );
+  }
 }

@@ -68,6 +68,7 @@
 | 56 | Task 07.6: GoMate Design System + Map UX Stability | Central tokens, shared widgets, clean OSM HOT tiles, GlobalKey fix, honest rating | 2026-10-04 |
 | 57 | ADR-006 Map Tile Provider (OpenStreetMap Humanitarian) | `docs/architecture/decisions/ADR-006-map-tile-provider.md` | 2026-10-04 |
 | 58 | Task 07.6.2 & End-of-Day Verified Baseline | Merged to `develop` (`57b3ed4`), pushed to `origin/develop`; 231 tests pass; 821 docs / 357 verified places verified | 2026-10-04 |
+| 59 | Task 08: Place Detail & Verified Location Experience | `GET /places/:id` factual contract, `/places/:id` Flutter screen, preview "Xem chi tiết" (branch `feature/place-detail`, not merged) | 2026-10-04 |
 
 ---
 
@@ -124,7 +125,7 @@ Full report: `docs/audit/task-07.1-regression-audit.md`. DB counts: `docs/data/c
 - JWT is not forwarded to FastAPI (NestJS validates, sends `user_id`); FastAPI has CORS `*` and no auth.
 - AI chat memory is in FastAPI process memory (`ai_sessions`/`ai_messages` have 0 rows); `search_places` tool reads `destinations`.
 - `GET /places/not-a-uuid` returns 500; `/places/nearby` with invalid lat/lng returns 200.
-- 112 unsourced synthetic/legacy places are the seed loaded twice (2 x 56); default `/places` (no `verifiedOnly`) returns them.
+- 123 unsourced legacy/synthetic places (112 seed loaded twice + 11 demoted in TASK 07.3) remain in the DB (480 total); `GET /places` and `/nearby` hide them by default (`verifiedOnly=true`, 357 verified); `verifiedOnly=false` returns them.
 - `documents` extra columns/HNSW index exist only via raw SQL, not Prisma migrations (fresh `migrate deploy` lacks them).
 - RAG: only RAG-EVAL-01 documented (the other 3 queries were rerun; EVAL-04 has no `safety` topic chunk). No Precision@K.
 - RecSys split is per-user leave-last-one-out, not globally temporal; MostPop is the only baseline.
@@ -197,3 +198,11 @@ Full report: `docs/audit/task-07.1-regression-audit.md`. DB counts: `docs/data/c
   - Wandy AI chat renders secondary source chips (`Wikivoyage`, `OpenStreetMap`).
   - Full round-trip navigation verified across tabs.
 - **Next Planned Milestone:** TASK 08 — Place Detail Screen & Verified Location Experience.
+
+## TASK 08 — Place Detail & Verified Location Experience (branch `feature/place-detail`, NOT merged / NOT pushed)
+- Backend: `GET /places/:id` now returns only factual fields — OSM-tag-derived `address`, `openingHours`, `website`, `phone`, plus `source` (`OpenStreetMap`, canonical URL, ODbL); `null` when unavailable; unverified places expose no descriptive facts; invalid UUID → 400 (was 500); raw OSM tag blob not exposed; `verifiedOnly` list semantics unchanged. Docs: `docs/api/places-api.md`.
+- Flutter: route `/places/:id` (top-level, pushed over the map; no new GoRouter/keys), `PlaceDetailScreen` (hero, honest rating, address, hours, contact only when present, coordinates + mini map, OSM provenance link, "Chỉ đường" via `geo:` URI with OSM coordinate fallback, loading/error/empty states), preview sheet "Xem chi tiết". Docs: `docs/architecture/place-detail-flow.md`.
+- Tests: Backend 71 passed (+9 in `place-detail.e2e-spec.ts`); AI unchanged; Flutter 97 passed (+15 in `place_detail_test.dart`); `nest build` clean; lint 0 errors / 48 warnings; `flutter analyze` clean.
+- Browser E2E (Map → marker → preview → Xem chi tiết → detail → back): PASS; map state/category/preview preserved on back; 0 GlobalKey, 0 RenderFlex errors (checked at end of session). Evidence: `docs/audit/evidence/task-08/`.
+- Bug caught by tests: `SimpleAttributionWidget` in the mini map overflowed horizontally → replaced by `RichAttributionWidget`.
+- Polish (resolved): preview sheet, list, nearby and detail now share one factual address (OSM `addr:*` only; else `Chưa có thông tin địa chỉ.`); the importer-built `places.address` is no longer served. Backend 76 passed, Flutter 100 passed. Known limitations: in the sampled data most verified places have no `addr:*`, hours or contact tags, so detail shows honest unavailable states (real hours/website/phone verified by backend e2e + Flutter widget tests, not visually in browser). The Flutter canvas could not be scrolled by the browser tester (lower sections verified via accessibility tree).

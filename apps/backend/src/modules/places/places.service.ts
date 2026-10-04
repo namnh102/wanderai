@@ -2,6 +2,30 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { Prisma } from '@prisma/client';
 
+/**
+ * Factual address from OSM `addr:*` tags only (null when OSM has none).
+ * Never built from place name / destination. The stored `places.address` column is importer-generated
+ * ("<name>, <city>") and is therefore NOT a factual address and is never served.
+ * Must stay equivalent to the SQL expression in `findNearby`.
+ */
+export function osmAddress(tags: Record<string, unknown> | null | undefined): string | null {
+  const t = tags ?? {};
+  const get = (...keys: string[]): string | null => {
+    for (const k of keys) {
+      const v = t[k];
+      if (typeof v === 'string' && v.trim() !== '') return v.trim();
+    }
+    return null;
+  };
+  const parts = [
+    [get('addr:housenumber'), get('addr:street')].filter(Boolean).join(' ') || null,
+    get('addr:suburb', 'addr:district'),
+    get('addr:city'),
+  ].filter((x): x is string => !!x);
+  return parts.length > 0 ? parts.join(', ') : null;
+}
+
+
 @Injectable()
 export class PlacesService {
   constructor(private prisma: PrismaService) {}
@@ -55,6 +79,7 @@ export class PlacesService {
               sourceName: true,
               sourceId: true,
               confidenceScore: true,
+              rawData: true, // only used to derive the factual address; stripped below
             },
           },
           _count: {
@@ -66,11 +91,17 @@ export class PlacesService {
       this.prisma.place.count({ where }),
     ]);
 
-    const items = rawItems.map((p) => ({
-      ...p,
-      isVerified: p.placeSources.length > 0,
-      provenanceCount: p.placeSources.length,
-    }));
+    const items = rawItems.map((p) => {
+      const osm = p.placeSources.find((s) => s.sourceName === 'osm');
+      return {
+        ...p,
+        placeSources: p.placeSources.map(({ rawData: _raw, ...s }) => s),
+        // Factual OSM address only; never the importer-generated places.address.
+        address: osmAddress((osm?.rawData ?? null) as Record<string, unknown> | null),
+        isVerified: p.placeSources.length > 0,
+        provenanceCount: p.placeSources.length,
+      };
+    });
 
     return {
       items,
@@ -81,7 +112,8 @@ export class PlacesService {
     };
   }
 
-  // Lấy chi tiết địa điểm bao gồm nguồn gốc (provenance) và đánh giá (reviews + aspects)
+  // Lấy chi tiết địa điểm: chỉ dữ kiện có thật trong DB / OSM tags, provenance, và đánh giá tin cậy.
+  // Mọi trường không có dữ liệu trả về null (không bịa).
   async findById(id: string) {
     const place = await this.prisma.place.findUnique({
       where: { id },
@@ -96,6 +128,7 @@ export class PlacesService {
             rawName: true,
             confidenceScore: true,
             createdAt: true,
+            rawData: true,
           },
         },
         reviews: {
@@ -122,10 +155,45 @@ export class PlacesService {
       throw new NotFoundException(`Place with ID "${id}" not found`);
     }
 
+    const osm = place.placeSources.find((s) => s.sourceName === 'osm');
+    const tags = (osm?.rawData ?? {}) as Record<string, unknown>;
+    const tag = (...keys: string[]): string | null => {
+      for (const k of keys) {
+        const v = tags[k];
+        if (typeof v === 'string' && v.trim() !== '') return v.trim();
+      }
+      return null;
+    };
+    const isVerified = place.placeSources.length > 0;
+
+    // Chỉ tin cậy dữ kiện của bản ghi có provenance; bản ghi dev/test không có nguồn thì không công bố mô tả/giờ mở cửa.
+    const sources = place.placeSources.map(({ rawData: _raw, ...s }) => ({
+      ...s,
+      canonicalUrl: s.sourceName === 'osm' ? `https://www.openstreetmap.org/${s.sourceId}` : null,
+      license: s.sourceName === 'osm' ? 'ODbL 1.0' : null,
+      attribution: s.sourceName === 'osm' ? '© OpenStreetMap contributors' : null,
+    }));
+
     return {
       ...place,
-      isVerified: place.placeSources.length > 0,
+      placeSources: sources,
+      isVerified,
       provenanceCount: place.placeSources.length,
+      // Dữ kiện dẫn xuất (null = không có dữ liệu)
+      address: isVerified ? osmAddress(tags) : null,
+      description: isVerified ? place.description : null,
+      openingHours: isVerified ? (tag('opening_hours') ?? place.openingHours) : null,
+      website: isVerified ? tag('website', 'contact:website') : null,
+      phone: isVerified ? tag('phone', 'contact:phone') : null,
+      source: osm
+        ? {
+            name: 'OpenStreetMap',
+            sourceId: osm.sourceId,
+            canonicalUrl: `https://www.openstreetmap.org/${osm.sourceId}`,
+            license: 'ODbL 1.0',
+            attribution: '© OpenStreetMap contributors',
+          }
+        : null,
     };
   }
 
@@ -142,7 +210,17 @@ export class PlacesService {
         p.id, 
         p.name, 
         p.name_en AS "nameEn", 
-        p.address, 
+        (
+          SELECT NULLIF(concat_ws(', ',
+            NULLIF(concat_ws(' ', NULLIF(btrim(ps.raw_data->>'addr:housenumber'), ''), NULLIF(btrim(ps.raw_data->>'addr:street'), '')), ''),
+            COALESCE(NULLIF(btrim(ps.raw_data->>'addr:suburb'), ''), NULLIF(btrim(ps.raw_data->>'addr:district'), '')),
+            NULLIF(btrim(ps.raw_data->>'addr:city'), '')
+          ), '')
+          FROM place_sources ps
+          WHERE ps.place_id = p.id AND ps.source_name = 'osm'
+          ORDER BY ps.created_at ASC
+          LIMIT 1
+        ) AS address,
         p.latitude, 
         p.longitude, 
         p.rating, 

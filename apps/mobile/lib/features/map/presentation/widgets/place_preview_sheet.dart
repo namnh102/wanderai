@@ -4,6 +4,7 @@ import '../../../../core/theme/app_radius.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/app_badge.dart';
+import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/rating_view.dart';
 import '../../../../core/widgets/responsive_wrapper.dart';
 import '../../data/place_model.dart';
@@ -13,11 +14,14 @@ import '../../data/place_model.dart';
 class PlacePreviewSheet extends StatelessWidget {
   final PlaceModel place;
   final VoidCallback onClose;
+  /// When provided, a "Xem chi tiết" action navigates to the Place Detail screen.
+  final VoidCallback? onViewDetail;
 
   const PlacePreviewSheet({
     super.key,
     required this.place,
     required this.onClose,
+    this.onViewDetail,
   });
 
   @override
@@ -156,29 +160,31 @@ class PlacePreviewSheet extends StatelessWidget {
               ],
             ),
 
-            // Address
-            if (place.address != null && place.address!.isNotEmpty) ...[
-              const SizedBox(height: AppSpacing.sm),
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Icon(
-                    Icons.location_on_outlined,
-                    size: 15,
-                    color: AppColors.textTertiary,
+            // Address — same factual semantics as Place Detail (never composed from name/city)
+            const SizedBox(height: AppSpacing.sm),
+            Row(
+              key: const Key('place_preview_address'),
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Icon(
+                  Icons.location_on_outlined,
+                  size: 15,
+                  color: AppColors.textTertiary,
+                ),
+                const SizedBox(width: AppSpacing.xs),
+                Expanded(
+                  child: Text(
+                    place.addressDisplay,
+                    style: place.hasAddress
+                        ? AppTypography.bodyS
+                        : AppTypography.bodyS
+                            .copyWith(color: AppColors.textTertiary),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                   ),
-                  const SizedBox(width: AppSpacing.xs),
-                  Expanded(
-                    child: Text(
-                      place.address!,
-                      style: AppTypography.bodyS,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                ],
-              ),
-            ],
+                ),
+              ],
+            ),
 
             const SizedBox(height: AppSpacing.sm),
 
@@ -192,6 +198,17 @@ class PlacePreviewSheet extends StatelessWidget {
                   fontFamily: 'monospace',
                 ),
               ),
+
+            if (onViewDetail != null) ...[
+              const SizedBox(height: AppSpacing.mdSmall),
+              AppButton(
+                key: const Key('place_preview_view_detail'),
+                text: 'Xem chi tiết',
+                icon: Icons.arrow_forward,
+                variant: AppButtonVariant.tonal,
+                onPressed: onViewDetail,
+              ),
+            ],
           ],
         ),
       ),

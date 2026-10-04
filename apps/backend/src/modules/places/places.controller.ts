@@ -1,4 +1,4 @@
-import { Controller, Get, Param, Query } from '@nestjs/common';
+import { Controller, Get, Param, ParseUUIDPipe, Query } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiQuery } from '@nestjs/swagger';
 import { PlacesService } from './places.service';
 
@@ -58,7 +58,7 @@ export class PlacesController {
 
   @Get(':id')
   @ApiOperation({ summary: 'Xem chi tiết địa điểm, nguồn dữ liệu xác minh (provenance) và đánh giá' })
-  async findById(@Param('id') id: string) {
+  async findById(@Param('id', new ParseUUIDPipe()) id: string) {
     return this.placesService.findById(id);
   }
 }
