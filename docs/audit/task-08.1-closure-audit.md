@@ -55,13 +55,11 @@ All coordinates below are **emulated browser geolocation (DevTools)**, not real 
 |---|---|
 | A. Permission blocked: tap "Vị trí của tôi" -> "Quyền vị trí bị từ chối" | PASS |
 | A. Marker distance chip reads "Khoảng cách chưa xác định", no km | PASS |
-| A. No blue dot / no camera move | A1-A3 screenshots from the earlier pass; not re-read in text this pass; also covered by widget tests |
-| B. Emulated 21.03,105.85: on open the camera stays on the default view (silent read draws the pill) | PASS |
+| A. Blocked: no blue dot and no pill before tapping (D1b); after tapping only the denied pill, still no dot, map pixel-identical (D2) | PASS |`n| B. Emulated 21.03,105.85: on open the camera stays on the default view (silent read draws the pill) | PASS |
 | B. After panning away, "Vị trí của tôi" centres the map on the blue dot (B1) | PASS |
 | B. Chùa Trấn Quốc 2.4 km vs haversine 2.418 | PASS |
 | B. Emulation changed to 21.05,105.80, then tap again: marker moves, 3.8 km vs haversine 3.822 | PASS |
-| B. "Distance does not change by itself after emulation changes" | INCONCLUSIVE in the browser (preview had closed); covered by widget test `a changed fix updates the marker; the camera moves only on tap` |
-| C. Detail distance 3.8 km equals preview; OSM source shown; hint "Điều hướng sẽ mở ứng dụng bản đồ" | PASS |
+| B. Emulation changed to 21.05,105.80 with no interaction for 11 s: dot and map identical (D3 vs D4); one tap on "Vị trí của tôi" then moves both (D5_after_retap) | PASS |`n| C. Detail distance 3.8 km equals preview; OSM source shown; hint "Điều hướng sẽ mở ứng dụng bản đồ" | PASS |
 | C. `Chỉ đường` URL (window.open log): `https://www.google.com/maps/dir/?api=1&destination=21.047900%2C105.836760&origin=21.050000%2C105.800000&travelmode=driving` | PASS (destination = place, origin = emulated fix; host not openstreetmap.org) |
 | C. Back to map: view kept, sheet kept, blue dot still visible (C1) | PASS |
 | D. Console | no messages; GlobalKey 0, RenderFlex 0, other app errors 0 (page reloaded twice, so only post-reload messages were visible) |
