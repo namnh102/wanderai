@@ -60,26 +60,29 @@ To maintain continuity with the user-approved Master Visual Board (`media_179113
 
 ---
 
-## 4. Current Capability (Production Reality)
+## 4. Current & Partial Capabilities (Audited Production Reality)
 
 The current GoMate codebase (`develop` branch) implements:
-1. **Conversational RAG Chat:** Live FastAPI `/chat` endpoint connecting to Gemini 1.5 Flash.
-2. **Spatial Semantic Search:** pgvector embeddings matching queries against genuine Hanoi locations.
-3. **Source Citation Grounding:** OpenStreetMap and Wikivoyage citation chips rendered under assistant messages.
-4. **Place Entity Bridge:** Ability to link chat recommendations to canonical Place IDs.
-5. **Manual Add to Trip:** User-driven bottom sheet to save places into user trips.
+1. **Conversational RAG Chat (`CURRENT`):** Live FastAPI `/chat` endpoint connecting to Gemini 1.5 Flash via NestJS `/ai/chat` proxy with multi-turn session memory.
+2. **Spatial Semantic Retrieval (`CURRENT`):** pgvector embeddings matching queries against genuine OpenStreetMap and Wikivoyage locations in `rag_documents`.
+3. **Source Citation Grounding (`CURRENT`):** OpenStreetMap and Wikivoyage citation chips rendered under assistant messages with external browser launch via `url_launcher`.
+4. **Place Recommendations (`PARTIAL`):** Natural language recommendations embedded in markdown text; **no** structured place objects, place IDs, verified badges, coordinates, or ratings in API response or Flutter UI.
+5. **AI Planner Engine (`PARTIAL`):** Automated trip planning exists in `trips` (`POST /trips/:id/ai-plan`), but is accessed from `trip_detail_screen.dart`, with **no** entry bridge from Wandy chat.
 
 ---
 
-## 5. Future Capability (Sprint 02+ Agent Roadmap)
+## 5. Future Capabilities (Roadmap & Designed UX)
 
-The following capabilities are classified strictly as **FUTURE AGENT UX**:
-1. **Autonomous Itinerary Mutation:** AI agent directly inserting, rearranging, or deleting slots in an active multi-day itinerary.
-2. **Autonomous External Actions:** Booking confirmation, restaurant table holds, calendar syncing.
-3. **Proactive Trip Conflict Resolution:** Detecting schedule overruns and suggesting real-time itinerary modifications.
-4. **Group Collaboration Agent:** Multi-user shared trip coordination.
+The following capabilities are strictly classified as **FUTURE** (concept / roadmap / design spec only):
+1. **Trip Context in Chat:** Passing active trip dates/destinations into the chat API (currently only supported by the planner endpoint).
+2. **Manual Add-to-Trip from Wandy:** Bottom sheet or CTA saving a recommended place from chat into a trip.
+3. **Deep Linking to Map / Place Detail:** Navigating directly from chat cards to `/places/:id` or `/map`.
+4. **Autonomous Itinerary Mutation:** AI agent directly inserting, rearranging, or deleting slots in an active multi-day itinerary.
+5. **Autonomous External Actions:** Booking confirmation, restaurant table holds, calendar syncing.
+6. **Proactive Trip Conflict Resolution:** Detecting schedule overruns and suggesting real-time itinerary modifications.
+7. **Group Collaboration Agent:** Multi-user shared trip coordination.
 
-*Every future capability that mutates user state requires explicit Human-in-the-Loop confirmation before execution.*
+*Every future capability that mutates user state requires explicit Human-in-the-Loop confirmation before execution (Design Invariant).*
 
 ---
 

@@ -235,19 +235,23 @@ When implementing UI in Flutter, the following honest fallback rules are mandato
    - `• Cân đối thời gian & ngân sách...`
    - `• Hoàn thiện lịch trình`
 
-### 7.4. Capability Separation Matrix: Current vs Future Agent
+### 7.4. Capability Separation Matrix: Current vs Partial vs Future (Reconciled in R2)
 
-| Feature / Action | Scope | Technical Basis | UI Representation |
+| Feature / Action | Scope | Code Evidence & Technical Reality | UI Representation |
 | :--- | :---: | :--- | :--- |
-| **Conversational Chat** | CURRENT | Gemini 1.5 Flash via FastAPI `/chat` | Standard message bubbles |
-| **Spatial RAG Retrieval** | CURRENT | pgvector embeddings + PostgreSQL | Grounded entity answers |
-| **Source Citations** | CURRENT | OpenStreetMap / Wikivoyage provenance | Tappable source chips |
-| **Place Recommendations** | CURRENT | Canonical Place catalog | Rich cards / Carousels |
-| **Trip Context Injection** | CURRENT | Active Trip model | Trip context header banner |
-| **Manual Add-to-Trip** | CURRENT | REST API `/trips/:id/items` | Trip picker bottom sheet |
-| **Autonomous Itinerary Mutation** | FUTURE | Multi-agent autonomous planner (Sprint 02+) | `FUTURE AGENT UX` Confirmation Modal |
-| **Autonomous Booking / Reminders** | FUTURE | Tool-use agent integrations | `FUTURE AGENT UX` Confirmation Modal |
-| **Proactive Group Collaboration** | FUTURE | Realtime websocket agents | `FUTURE AGENT UX` Banner |
+| **Conversational Chat** | **CURRENT** | Gemini 1.5 Flash via FastAPI `/chat` + NestJS `/ai/chat` proxy. Multi-turn session memory in `ChatNotifier`. | Standard message bubbles |
+| **Spatial RAG Retrieval** | **CURRENT** | pgvector cosine distance search against 384-dim embeddings in `rag_documents`. | Verified knowledge grounding |
+| **Source Citations** | **CURRENT** | Public URLs extracted from retrieved chunks; rendered as interactive chips launching external browser via `url_launcher`. | Tappable source chips (`OpenStreetMap`, `Wikivoyage`) |
+| **Place Recommendations** | **PARTIAL** | Natural language text mentions in chat; **NO** structured Place models, place IDs, verified badges, coordinates, or ratings in API response. | Designed as Rich Cards / Carousels (Visual mockup only) |
+| **AI Planner Engine** | **PARTIAL** | AI itinerary generation (`POST /trips/:id/ai-plan`) and bulk save (`POST /trips/:id/itinerary/bulk`) exist in `trips` feature; **NO** entry bridge from Wandy chat. | Implemented in `trip_detail_screen.dart`; Wandy entry bridge is Future |
+| **Trip Context in Chat** | **FUTURE** | `ChatRequest` accepts only `message` and `sessionId`. No `tripId` or `TripContext` accepted by Chat API or stored in chat state. | Visual design concept (`wandy-mobile-context-trip.png`) |
+| **Manual Add-to-Trip (from Wandy)** | **FUTURE** | Generic `POST /trips/:id/itinerary` exists in backend; **ZERO** bridge or `SelectTrip` sheet in `ai_chat`. | Visual design concept (`wandy-mobile-add-to-trip-action.png`) |
+| **Open Place Detail from Wandy** | **FUTURE** | `/places/:id` route exists, but Wandy returns no place IDs and renders no navigation buttons. | Visual design concept (`wandy-mobile-place-recommendation.png`) |
+| **Open Map from Wandy** | **FUTURE** | `/map` route exists, but no deep-linking mechanism from chat exists. | Visual design concept (`wandy-mobile-multi-place-results.png`) |
+| **Autonomous Itinerary Mutation** | **FUTURE** | Roadmap concept for Sprint 02+ multi-agent planner. Zero autonomous worker code in backend. | `FUTURE AGENT UX` Confirmation Modal |
+| **Autonomous Booking / Reminders** | **FUTURE** | Roadmap concept. Zero tool integration code in backend. | `FUTURE AGENT UX` Confirmation Modal |
+| **Proactive Group Collaboration** | **FUTURE** | Roadmap concept. Basic member invitation exists in Trips, but zero proactive agent sync. | `FUTURE AGENT UX` Context Banner |
+| **Agent Confirmation / Safeguard** | **DESIGN INVARIANT** | UX safeguard rule: `ACTION MUTATION REQUIRES EXPLICIT USER CONFIRMATION`. Designed in UI; no runtime agent exists yet to enforce it. | Visual design rule on confirmation dialogs |
 
 ### 7.5. Empty State Hierarchy
 To eliminate confusion between empty screens, two distinct states are formally established:
