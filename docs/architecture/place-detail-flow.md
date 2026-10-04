@@ -55,11 +55,32 @@ Preview sheet, list, nearby and detail all use the same factual semantics:
 - Flutter: `PlaceModel.hasAddress` / `addressDisplay` / `addressUnavailableText` (`Chưa có thông tin địa chỉ.`). `PlacePreviewSheet` (key `place_preview_address`) and `PlaceDetailScreen` both render `addressDisplay`; no address is ever composed from name + city.
 - Tests: `place-detail.e2e-spec.ts` (list = nearby = detail, unverified null) and `place_detail_test.dart` (real address, null address, no fabricated text).
 
-## Realtime location & navigation (TASK 08.1)
+## Realtime location & navigation (TASK 08.1 & TASK 08.1.1)
 
-- **Location** (`features/location/providers/user_location_provider.dart`): states `unknown`, `requesting`, `granted`, `denied`, `unavailable`. Position is `null` unless a real fix was obtained; nothing is ever defaulted. On open the map only silently reads a fix if permission was already granted (never prompts, never moves the camera). The `Vị trí của tôi` button (`my_location_button`) requests permission/fix and recenters; later taps refresh and recenter. Passive updates never move the camera.
-- **Platforms:** web = browser geolocation (Geolocator web plugin); Android/iOS = OS location services; desktop = platform location where available, else `unavailable`.
-- **Marker:** blue dot with halo (`user_location_marker`), drawn below POI markers and wrapped in `IgnorePointer`; POI category markers are coloured circles with icons.
-- **Distance:** `haversineKm` from the user's real fix to the place (`features/location/domain/geo_distance.dart`) on both the preview sheet and Place Detail. The server `distanceKm` (computed from the map centre) is no longer displayed. Unknown location => `Khoảng cách chưa xác định`.
-- **Navigation** (`features/places/data/navigation_service.dart`): `Chỉ đường` opens an external service; GoMate never routes. Web/desktop: `https://www.google.com/maps/dir/?api=1&destination=<lat>,<lng>[&origin=<lat>,<lng>]&travelmode=driving` (origin only with a real fix; no API key). Android: `geo:` intent, falling back to the Google URL. iOS: Apple Maps `daddr`/`saddr`, falling back to the Google URL. The openstreetmap.org website is no longer used for directions (source/attribution links to OSM remain). Detail shows `Điều hướng sẽ mở ứng dụng bản đồ` above the button.
-- **Tests:** `test/location_navigation_test.dart` (27), plus updated `map_test.dart` and `place_detail_test.dart`.
+- **Location Data Model & Quality Gate** (`features/location/providers/user_location_provider.dart`):
+  - State machine: `unknown`, `requesting`, `granted`, `denied`, `unavailable`.
+  - Fix representation: `LocationFix` with `position` (`LatLng`), `accuracyMeters` (`double`), `timestamp` (`DateTime`), and `quality` (`LocationAccuracyQuality`).
+  - Quality classification: `good` ($\le 50\text{m}$), `approximate` ($50–200\text{m}$), `poor` ($> 200\text{m}$).
+  - Quality Gate: Automatically retries up to 3 times on poor accuracy fixes (capped to 1 attempt on `kIsWeb` to prevent browser timeouts), selecting the best available fix. Good fixes complete immediately.
+  - Position remains strictly `null` unless a real fix exists; approximate fixes are never presented as exact.
+- **Platforms:** Web = browser geolocation (Geolocator web plugin, medium accuracy, 5s timeout); Android/iOS = OS location services; Desktop = platform location where available, else `unavailable`.
+- **Map Visuals & Accuracy Circle:**
+  - Blue user dot with halo (`user_location_marker`), wrapped in `IgnorePointer` to prevent intercepting POI taps.
+  - Translucent accuracy disk (`CircleLayer`) rendered below POIs with radius equal to `accuracyMeters` in meters.
+  - Multi-state location button (`idle`, `requesting`, `success`, `approximate`, `denied`, `unavailable`) using GoMate design tokens.
+  - Compact status pill with honest feedback (`Đã xác định vị trí · ±X m`, `Vị trí ước lượng · ±X m`, `Vị trí chưa chính xác`, `Quyền vị trí bị từ chối`) with 5-second auto-dismiss and tap-to-dismiss.
+- **Camera Policy:**
+  - On map open: Camera remains fixed at default center; does NOT automatically recenter.
+  - On POI tap: Does NOT move camera; opens preview sheet smoothly.
+  - On returning from Place Detail: Camera position and zoom are preserved.
+  - On explicit "Vị trí của tôi" tap: Smoothly animates camera to user location fix using 250ms cubic easing (`Curves.easeInOutCubic`). Preserves zoom level if $\ge 14.0$, or zooms to $15.0$ if zoomed out.
+- **Distance:** Device-side `haversineKm` in `features/location/domain/geo_distance.dart`. Shared formatter:
+  - $< 1\text{ km}$ ($< 1000\text{m}$): integer meters (e.g. `191m`, `850m`).
+  - $\ge 1\text{ km}$: one decimal kilometer (e.g. `1.0 km`, `2.4 km`).
+  - Unknown location => `Khoảng cách chưa xác định`. Backend map-center distance is completely ignored.
+- **Navigation** (`features/places/data/navigation_service.dart`):
+  - `Chỉ đường` opens external service without internal routing.
+  - Web/Desktop: `https://www.google.com/maps/dir/?api=1&destination=<lat>,<lng>[&origin=<lat>,<lng>]&travelmode=driving`.
+  - Origin is included only when a valid fix exists. Lat/Lng ordering is strictly `lat,lng`.
+- **Tests:** `test/location_navigation_test.dart` (52 tests covering accuracy thresholds, quality gate retry, camera behavior, distance formatting, and edge cases).
+
