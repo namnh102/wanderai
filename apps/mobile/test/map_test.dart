@@ -232,11 +232,12 @@ void main() {
       }
     });
 
-    testWidgets('displays distance when present', (tester) async {
+    testWidgets('displays distance from the real user position (not server distanceKm)', (tester) async {
       await tester.pumpWidget(MaterialApp(
         home: Scaffold(
           body: PlacePreviewSheet(
             place: _samplePlace,
+            distanceKm: 0.5,
             onClose: () {},
           ),
         ),

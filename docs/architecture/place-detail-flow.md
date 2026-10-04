@@ -55,3 +55,11 @@ Preview sheet, list, nearby and detail all use the same factual semantics:
 - Flutter: `PlaceModel.hasAddress` / `addressDisplay` / `addressUnavailableText` (`Chưa có thông tin địa chỉ.`). `PlacePreviewSheet` (key `place_preview_address`) and `PlaceDetailScreen` both render `addressDisplay`; no address is ever composed from name + city.
 - Tests: `place-detail.e2e-spec.ts` (list = nearby = detail, unverified null) and `place_detail_test.dart` (real address, null address, no fabricated text).
 
+## Realtime location & navigation (TASK 08.1)
+
+- **Location** (`features/location/providers/user_location_provider.dart`): states `unknown`, `requesting`, `granted`, `denied`, `unavailable`. Position is `null` unless a real fix was obtained; nothing is ever defaulted. On open the map only silently reads a fix if permission was already granted (never prompts, never moves the camera). The `Vị trí của tôi` button (`my_location_button`) requests permission/fix and recenters; later taps refresh and recenter. Passive updates never move the camera.
+- **Platforms:** web = browser geolocation (Geolocator web plugin); Android/iOS = OS location services; desktop = platform location where available, else `unavailable`.
+- **Marker:** blue dot with halo (`user_location_marker`), drawn below POI markers and wrapped in `IgnorePointer`; POI category markers are coloured circles with icons.
+- **Distance:** `haversineKm` from the user's real fix to the place (`features/location/domain/geo_distance.dart`) on both the preview sheet and Place Detail. The server `distanceKm` (computed from the map centre) is no longer displayed. Unknown location => `Khoảng cách chưa xác định`.
+- **Navigation** (`features/places/data/navigation_service.dart`): `Chỉ đường` opens an external service; GoMate never routes. Web/desktop: `https://www.google.com/maps/dir/?api=1&destination=<lat>,<lng>[&origin=<lat>,<lng>]&travelmode=driving` (origin only with a real fix; no API key). Android: `geo:` intent, falling back to the Google URL. iOS: Apple Maps `daddr`/`saddr`, falling back to the Google URL. The openstreetmap.org website is no longer used for directions (source/attribution links to OSM remain). Detail shows `Điều hướng sẽ mở ứng dụng bản đồ` above the button.
+- **Tests:** `test/location_navigation_test.dart` (27), plus updated `map_test.dart` and `place_detail_test.dart`.

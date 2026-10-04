@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:geolocator/geolocator.dart';
 import 'package:go_router/go_router.dart';
 import 'package:latlong2/latlong.dart';
 import '../../../core/theme/app_colors.dart';
@@ -9,6 +8,8 @@ import '../../../core/theme/app_radius.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/widgets/responsive_wrapper.dart';
+import '../../location/domain/geo_distance.dart';
+import '../../location/providers/user_location_provider.dart';
 import '../data/place_model.dart';
 import '../providers/map_provider.dart';
 import 'widgets/place_preview_sheet.dart';
@@ -25,7 +26,6 @@ class MapScreen extends ConsumerStatefulWidget {
 
 class _MapScreenState extends ConsumerState<MapScreen> {
   final MapController _mapController = MapController();
-  bool _locationRequested = false;
 
   @override
   void initState() {
@@ -36,46 +36,37 @@ class _MapScreenState extends ConsumerState<MapScreen> {
   }
 
   Future<void> _initMap() async {
-    await _tryGetLocation();
+    // Load POIs first (around the default map centre); never blocks on GPS.
     ref.read(mapProvider.notifier).loadNearby();
+    // Silent: only picks up a fix if permission was already granted. It never
+    // prompts and never moves the camera.
+    await ref.read(userLocationProvider.notifier).refreshIfPermitted();
   }
 
-  Future<void> _tryGetLocation() async {
-    if (_locationRequested) return;
-    _locationRequested = true;
-
-    try {
-      final permission = await Geolocator.checkPermission();
-      if (permission == LocationPermission.denied) {
-        final requested = await Geolocator.requestPermission();
-        if (requested == LocationPermission.denied ||
-            requested == LocationPermission.deniedForever) {
-          return;
-        }
+  /// "Vị trí của tôi": explicit request. First tap asks for permission and a
+  /// fix; later taps refresh the fix and recenter. The camera is only moved
+  /// here, never on passive location updates.
+  Future<void> _onMyLocationTap() async {
+    final pos = await ref.read(userLocationProvider.notifier).request();
+    if (!mounted) return;
+    if (pos == null) {
+      final label = ref.read(userLocationProvider).label;
+      if (label != null) {
+        ScaffoldMessenger.of(context)
+          ..hideCurrentSnackBar()
+          ..showSnackBar(SnackBar(content: Text(label)));
       }
-      if (permission == LocationPermission.deniedForever) return;
-
-      final serviceEnabled = await Geolocator.isLocationServiceEnabled();
-      if (!serviceEnabled) return;
-
-      final position = await Geolocator.getCurrentPosition(
-        locationSettings: const LocationSettings(
-          accuracy: LocationAccuracy.medium,
-          timeLimit: Duration(seconds: 5),
-        ),
-      );
-
-      final userLoc = LatLng(position.latitude, position.longitude);
-      ref.read(mapProvider.notifier).setUserLocation(userLoc);
-      _mapController.move(userLoc, 14.0);
-    } catch (_) {
-      // Location unavailable — silently use default.
+      return;
     }
+    _mapController.move(pos, 15.0);
+    ref.read(mapProvider.notifier).moveCenter(pos);
   }
 
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(mapProvider);
+    final userLoc = ref.watch(userLocationProvider);
+    final userPos = userLoc.position;
     final theme = Theme.of(context);
 
     return Scaffold(
@@ -103,6 +94,44 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                 maxZoom: 19,
               ),
 
+              // Current-position marker: real GPS fix only, drawn BEFORE the POI
+              // layer so it never covers or intercepts POI taps.
+              if (userPos != null)
+                MarkerLayer(
+                  markers: [
+                    Marker(
+                      key: const Key('user_location_marker'),
+                      point: userPos,
+                      width: 44,
+                      height: 44,
+                      child: IgnorePointer(
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: AppColors.info.withValues(alpha: 0.18),
+                            shape: BoxShape.circle,
+                          ),
+                          alignment: Alignment.center,
+                          child: Container(
+                            width: 18,
+                            height: 18,
+                            decoration: BoxDecoration(
+                              color: AppColors.info,
+                              shape: BoxShape.circle,
+                              border: Border.all(color: Colors.white, width: 3),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.25),
+                                  blurRadius: 4,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+
               // Place Markers
               MarkerLayer(
                 markers: state.places
@@ -110,31 +139,6 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                     .map((place) => _buildMarker(place, state, theme))
                     .toList(),
               ),
-
-              // User location marker
-              if (state.useLocation)
-                MarkerLayer(
-                  markers: [
-                    Marker(
-                      point: state.center,
-                      width: 24,
-                      height: 24,
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: AppColors.primary,
-                          shape: BoxShape.circle,
-                          border: Border.all(color: Colors.white, width: 3),
-                          boxShadow: [
-                            BoxShadow(
-                              color: AppColors.primary.withValues(alpha: 0.4),
-                              blurRadius: 8,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
 
               // Attribution
               const RichAttributionWidget(
@@ -191,9 +195,11 @@ class _MapScreenState extends ConsumerState<MapScreen> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 _FloatingButton(
+                  key: const Key('my_location_button'),
                   icon: Icons.my_location,
-                  onTap: () => _tryGetLocation(),
+                  onTap: _onMyLocationTap,
                   tooltip: 'Vị trí của tôi',
+                  active: userPos != null,
                 ),
                 const SizedBox(height: 8),
                 MapRadiusSelector(
@@ -362,6 +368,34 @@ class _MapScreenState extends ConsumerState<MapScreen> {
               ),
             ),
 
+          // ─── Location status pill (honest state) ───
+          if (userLoc.label != null)
+            Positioned(
+              right: 60,
+              bottom: (state.selectedPlace != null ? 340 : 24) +
+                  MediaQuery.of(context).padding.bottom +
+                  8,
+              child: Container(
+                key: const Key('location_status_pill'),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: AppColors.surface,
+                  borderRadius: AppRadius.pillRadius,
+                  border: Border.all(color: AppColors.border),
+                ),
+                child: Text(
+                  userLoc.label!,
+                  style: AppTypography.label.copyWith(
+                    color: userLoc.status == UserLocationStatus.granted
+                        ? AppColors.info
+                        : AppColors.textSecondary,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ),
+
           // ─── Place preview sheet (bottom) ───
           if (state.selectedPlace != null)
             Positioned(
@@ -370,6 +404,11 @@ class _MapScreenState extends ConsumerState<MapScreen> {
               bottom: 0,
               child: PlacePreviewSheet(
                 place: state.selectedPlace!,
+                distanceKm: distanceFromUserKm(
+                  userPos,
+                  state.selectedPlace!.latitude,
+                  state.selectedPlace!.longitude,
+                ),
                 onClose: () => ref.read(mapProvider.notifier).deselectPlace(),
                 // push (not go): MapScreen and its state stay alive beneath the detail.
                 onViewDetail: () =>
@@ -458,11 +497,14 @@ class _FloatingButton extends StatelessWidget {
   final IconData icon;
   final VoidCallback onTap;
   final String tooltip;
+  final bool active;
 
   const _FloatingButton({
+    super.key,
     required this.icon,
     required this.onTap,
     required this.tooltip,
+    this.active = false,
   });
 
   @override
@@ -478,7 +520,8 @@ class _FloatingButton extends StatelessWidget {
           message: tooltip,
           child: Padding(
             padding: const EdgeInsets.all(10),
-            child: Icon(icon, size: 22, color: AppColors.primary),
+            child: Icon(icon,
+                size: 22, color: active ? AppColors.info : AppColors.primary),
           ),
         ),
       ),

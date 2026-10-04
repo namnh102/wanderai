@@ -11,6 +11,7 @@ import 'package:wanderai_mobile/features/map/data/place_model.dart';
 import 'package:wanderai_mobile/features/map/data/place_repository.dart';
 import 'package:wanderai_mobile/features/map/presentation/widgets/place_preview_sheet.dart';
 import 'package:wanderai_mobile/features/map/providers/map_provider.dart';
+import 'package:wanderai_mobile/features/places/data/navigation_service.dart';
 import 'package:wanderai_mobile/features/places/presentation/place_detail_screen.dart';
 
 class _FakeRepo implements PlaceRepository {
@@ -249,11 +250,15 @@ void main() {
       expect(directions, 1);
     });
 
-    test('directions use coordinates only (geo URI + OSM coordinate fallback)', () {
-      final p = PlaceModel.fromJson(Map<String, dynamic>.from(_verifiedJson));
-      expect(directionsGeoUri(p).toString(), 'geo:21.0485,105.8363?q=21.0485,105.8363');
-      expect(directionsFallbackUri(p).toString(),
-          'https://www.openstreetmap.org/?mlat=21.0485&mlon=105.8363#map=17/21.0485/105.8363');
+    test('directions never fall back to the openstreetmap.org website', () {
+      for (final platform in NavPlatform.values) {
+        final uris = directionsCandidates(
+            destLat: 21.0485, destLng: 105.8363, platform: platform);
+        expect(uris, isNotEmpty);
+        for (final u in uris) {
+          expect(u.host, isNot(contains('openstreetmap')));
+        }
+      }
     });
   });
 
