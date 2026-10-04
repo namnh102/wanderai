@@ -46,3 +46,12 @@ No routing provider is invented. The CTA hands the OS a neutral `geo:<lat>,<lng>
 
 - Backend: `places.service.ts` (`findById`), `places.controller.ts` (`ParseUUIDPipe`), `test/place-detail.e2e-spec.ts`
 - Flutter: `features/places/presentation/place_detail_screen.dart`, `widgets/place_mini_map.dart`, `features/places/providers/place_detail_provider.dart`, `place_model.dart` (+`PlaceSourceInfo`), `place_preview_sheet.dart` (`onViewDetail`), `app_router.dart`, `test/place_detail_test.dart`
+
+## Shared address contract (TASK 08 polish)
+
+Preview sheet, list, nearby and detail all use the same factual semantics:
+
+- Backend: `osmAddress(tags)` in `places.service.ts` builds the address from OSM `addr:*` tags in `place_sources.raw_data`; `findAll`, `findNearby` (SQL subquery) and `findById` return it, or `null`. The importer-built `places.address` ("<name>, <city>") is never served.
+- Flutter: `PlaceModel.hasAddress` / `addressDisplay` / `addressUnavailableText` (`Chưa có thông tin địa chỉ.`). `PlacePreviewSheet` (key `place_preview_address`) and `PlaceDetailScreen` both render `addressDisplay`; no address is ever composed from name + city.
+- Tests: `place-detail.e2e-spec.ts` (list = nearby = detail, unverified null) and `place_detail_test.dart` (real address, null address, no fabricated text).
+

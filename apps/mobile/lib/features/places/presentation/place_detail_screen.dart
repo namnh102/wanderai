@@ -160,7 +160,6 @@ class PlaceDetailView extends StatelessWidget {
   Widget build(BuildContext context) {
     final catColor = AppColors.forCategory(place.categoryName);
     final hasHours = place.openingHours != null;
-    final hasAddress = place.address != null && place.address!.trim().isNotEmpty;
     final hasContact = place.website != null || place.phone != null;
 
     return ResponsiveWrapper(
@@ -254,9 +253,9 @@ class PlaceDetailView extends StatelessWidget {
                   _Section(
                     icon: Icons.location_on_outlined,
                     title: 'Địa chỉ',
-                    child: hasAddress
-                        ? Text(place.address!, style: AppTypography.bodyM)
-                        : const _Unavailable('Chưa có thông tin địa chỉ.'),
+                    child: place.hasAddress
+                        ? Text(place.addressDisplay, style: AppTypography.bodyM)
+                        : const _Unavailable(PlaceModel.addressUnavailableText),
                   ),
 
                   // ── Opening hours ──

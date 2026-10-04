@@ -3,6 +3,7 @@ import { INestApplication, ValidationPipe } from '@nestjs/common';
 import * as request from 'supertest';
 import { AppModule } from '../src/app.module';
 import { PrismaService } from '../src/prisma/prisma.service';
+import { osmAddress } from '../src/modules/places/places.service';
 import { TransformInterceptor } from '../src/common/interceptors/transform.interceptor';
 import { HttpExceptionFilter } from '../src/common/filters/http-exception.filter';
 
@@ -130,5 +131,64 @@ describe('Place Detail (e2e)', () => {
   it('verifiedOnly list semantics unchanged: default list excludes unsourced places', async () => {
     const res = await request(app.getHttpServer()).get('/places?limit=50').expect(200);
     for (const item of res.body.data.items) expect(item.isVerified).toBe(true);
+  });
+
+  describe('factual address semantics (list = nearby = detail)', () => {
+    it('osmAddress joins only real addr:* tags and never invents', () => {
+      expect(osmAddress({})).toBeNull();
+      expect(osmAddress(null)).toBeNull();
+      expect(osmAddress({ name: 'Chùa X', amenity: 'x' })).toBeNull();
+      expect(osmAddress({ 'addr:city': '  ' })).toBeNull();
+      expect(
+        osmAddress({
+          'addr:housenumber': '46',
+          'addr:street': 'Thanh Niên',
+          'addr:suburb': 'Tây Hồ',
+          'addr:city': 'Hà Nội',
+        }),
+      ).toBe('46 Thanh Niên, Tây Hồ, Hà Nội');
+      expect(osmAddress({ 'addr:street': 'Thanh Niên' })).toBe('Thanh Niên');
+    });
+
+    it('detail never serves the importer-generated "<name>, <city>" address', async () => {
+      const place = await prisma.place.findFirst({
+        where: { deletedAt: null, address: { not: null }, placeSources: { some: {} } },
+      });
+      expect(place).toBeTruthy();
+      expect(place!.address).toContain(','); // stored column is importer text
+      const p = await getDetail(place!.id);
+      const src = await prisma.placeSource.findFirst({ where: { placeId: place!.id, sourceName: 'osm' } });
+      expect(p.address).toBe(osmAddress((src?.rawData ?? null) as any));
+      if (p.address) expect(p.address).not.toBe(place!.address);
+    });
+
+    it('nearby (SQL) address equals the shared osmAddress for every verified place in range', async () => {
+      const res = await request(app.getHttpServer())
+        .get('/places/nearby?lat=21.0285&lng=105.8542&radius=100&limit=1000')
+        .expect(200);
+      const items: any[] = res.body.data;
+      expect(items.length).toBeGreaterThan(0);
+      for (const it of items) {
+        const src = await prisma.placeSource.findFirst({ where: { placeId: it.id, sourceName: 'osm' } });
+        expect(it.address).toBe(osmAddress((src?.rawData ?? null) as any));
+        if (it.address) expect(it.address).not.toBe(`${it.name}, ${it.destinationName}`);
+      }
+    });
+
+    it('list address equals detail address and never exposes rawData', async () => {
+      const res = await request(app.getHttpServer()).get('/places?limit=30').expect(200);
+      for (const it of res.body.data.items) {
+        for (const s of it.placeSources) expect(s).not.toHaveProperty('rawData');
+        const d = await getDetail(it.id);
+        expect(it.address).toBe(d.address);
+      }
+    });
+
+    it('unverified place has null address in list (verifiedOnly=false) and detail', async () => {
+      const res = await request(app.getHttpServer()).get('/places?verifiedOnly=false&limit=500').expect(200);
+      const unverified = res.body.data.items.filter((i: any) => !i.isVerified);
+      expect(unverified.length).toBeGreaterThan(0);
+      for (const it of unverified) expect(it.address).toBeNull();
+    });
   });
 });

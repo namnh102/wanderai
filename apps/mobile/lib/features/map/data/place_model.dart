@@ -93,6 +93,16 @@ class PlaceModel {
   }
 
   bool get hasCoordinates => latitude != null && longitude != null;
+
+  /// Exact text shown when the API has no factual (OSM-backed) address.
+  static const addressUnavailableText = 'Chưa có thông tin địa chỉ.';
+
+  /// True only when the API returned a real, non-blank address.
+  bool get hasAddress => address != null && address!.trim().isNotEmpty;
+
+  /// Address exactly as served by the API, or the honest unavailable text.
+  /// Never composed from name/destination — shared by preview sheet and detail screen.
+  String get addressDisplay => hasAddress ? address!.trim() : addressUnavailableText;
 }
 
 /// Provenance of a place (OpenStreetMap). Only present for verified places.

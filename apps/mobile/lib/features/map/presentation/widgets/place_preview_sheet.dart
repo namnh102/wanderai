@@ -160,29 +160,31 @@ class PlacePreviewSheet extends StatelessWidget {
               ],
             ),
 
-            // Address
-            if (place.address != null && place.address!.isNotEmpty) ...[
-              const SizedBox(height: AppSpacing.sm),
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Icon(
-                    Icons.location_on_outlined,
-                    size: 15,
-                    color: AppColors.textTertiary,
+            // Address — same factual semantics as Place Detail (never composed from name/city)
+            const SizedBox(height: AppSpacing.sm),
+            Row(
+              key: const Key('place_preview_address'),
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Icon(
+                  Icons.location_on_outlined,
+                  size: 15,
+                  color: AppColors.textTertiary,
+                ),
+                const SizedBox(width: AppSpacing.xs),
+                Expanded(
+                  child: Text(
+                    place.addressDisplay,
+                    style: place.hasAddress
+                        ? AppTypography.bodyS
+                        : AppTypography.bodyS
+                            .copyWith(color: AppColors.textTertiary),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                   ),
-                  const SizedBox(width: AppSpacing.xs),
-                  Expanded(
-                    child: Text(
-                      place.address!,
-                      style: AppTypography.bodyS,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                ],
-              ),
-            ],
+                ),
+              ],
+            ),
 
             const SizedBox(height: AppSpacing.sm),
 

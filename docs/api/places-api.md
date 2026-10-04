@@ -22,10 +22,10 @@ List places with pagination, search, category, and verified filtering.
 |-----------|------|---------|-------------|
 | `page` | number | 1 | Page number |
 | `limit` | number | 20 | Items per page |
-| `search` | string | — | Case-insensitive search (name, nameEn, address) |
+| `search` | string | — | Case-insensitive search (name, nameEn, stored address column) |
 | `category` | string | — | Filter by category name (e.g., `attraction`, `restaurant`) |
 | `destinationId` | UUID | — | Filter by destination |
-| `verifiedOnly` | boolean | false | Only return places with provenance records |
+| `verifiedOnly` | boolean | **true** | Only places with genuine `place_sources` provenance. `false` also returns unsourced legacy/dev records. Current DB: 357 verified of 480 total; 123 unsourced hidden by default |
 
 **Response:**
 ```json
@@ -35,13 +35,13 @@ List places with pagination, search, category, and verified filtering.
     "items": [
       {
         "id": "uuid",
-        "name": "Cầu Rồng",
-        "nameEn": "Dragon Bridge",
-        "address": "...",
-        "latitude": 16.0612,
-        "longitude": 108.2272,
-        "rating": 4.5,
-        "reviewCount": 120,
+        "name": "Chùa Trấn Quốc",
+        "nameEn": null,
+        "address": null,
+        "latitude": 21.0485,
+        "longitude": 105.8366,
+        "rating": null,
+        "reviewCount": 0,
         "destination": { "id": "...", "name": "Đà Nẵng", "slug": "da-nang", "province": "Đà Nẵng" },
         "category": { "id": "...", "name": "attraction", "icon": "attractions", "color": "#9C27B0" },
         "placeSources": [{ "sourceName": "osm", "sourceId": "node/123", "confidenceScore": 1.0 }],
@@ -49,13 +49,17 @@ List places with pagination, search, category, and verified filtering.
         "provenanceCount": 1
       }
     ],
-    "total": 108,
+    "total": 357,
     "page": 1,
     "limit": 20,
-    "totalPages": 6
+    "totalPages": 18
   }
 }
 ```
+
+**Address semantics (list = nearby = detail):** `address` is the *factual* OSM-derived address (`addr:housenumber` + `addr:street`, then `addr:suburb`/`addr:district`, then `addr:city`, joined with `, `), or `null` when OSM has no `addr:*` tags or the place is unverified. The importer-generated `places.address` column (e.g. `"Chùa Trấn Quốc, hanoi"`) is never served. `placeSources[].rawData` is never exposed. Flutter shows `null` as `Chưa có thông tin địa chỉ.`.
+
+> Historical: older task docs quote `total=108` / `97`; those pre-TASK 07.4 baselines are superseded by 357 (examples above are the current default, `verifiedOnly=true`).
 
 ---
 
@@ -71,7 +75,7 @@ Find places near a GPS coordinate using PostGIS `ST_DWithin`.
 | `lng` | number | required | Center longitude |
 | `radius` | number | 10 | Radius in kilometers |
 | `limit` | number | 20 | Max results |
-| `verifiedOnly` | boolean | false | Only verified places |
+| `verifiedOnly` | boolean | **true** | Only verified places (`false` adds the 123 unsourced legacy records) |
 
 **Response:**
 ```json
@@ -80,15 +84,15 @@ Find places near a GPS coordinate using PostGIS `ST_DWithin`.
   "data": [
     {
       "id": "uuid",
-      "name": "Cầu Rồng",
-      "nameEn": "Dragon Bridge",
-      "address": "...",
-      "latitude": 16.0612,
-      "longitude": 108.2272,
-      "rating": 4.5,
-      "reviewCount": 120,
-      "categoryName": "attraction",
-      "destinationName": "Đà Nẵng",
+      "name": "Chùa Trấn Quốc",
+      "nameEn": null,
+      "address": null,
+      "latitude": 21.0485,
+      "longitude": 105.8366,
+      "rating": null,
+      "reviewCount": 0,
+      "categoryName": "culture",
+      "destinationName": "Hà Nội",
       "isVerified": true,
       "distanceKm": 0.45
     }

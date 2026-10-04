@@ -312,4 +312,58 @@ void main() {
       expect(find.text('Chùa Trấn Quốc'), findsNothing);
     });
   });
+
+  group('Factual address consistency (preview = detail)', () {
+    const fabricated = 'Chùa Trấn Quốc, hanoi';
+
+    Future<void> pumpPreview(WidgetTester tester, PlaceModel p) async {
+      await tester.pumpWidget(const SizedBox());
+      await tester.pumpWidget(_app(Scaffold(body: PlacePreviewSheet(place: p, onClose: () {}))));
+    }
+
+    Future<void> pumpDetail(WidgetTester tester, PlaceModel p) async {
+      await tester.pumpWidget(const SizedBox());
+      await tester.pumpWidget(_screenApp((_) async => p, 'p1'));
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('verified place with real address shows it in preview and detail', (tester) async {
+      final json = Map<String, dynamic>.from(_verifiedJson)..['address'] = '46 Thanh Niên, Tây Hồ, Hà Nội';
+      final place = PlaceModel.fromJson(json);
+      expect(place.hasAddress, isTrue);
+      await pumpPreview(tester, place);
+      expect(find.byKey(const Key('place_preview_address')), findsOneWidget);
+      expect(find.text('46 Thanh Niên, Tây Hồ, Hà Nội'), findsOneWidget);
+      expect(find.text(PlaceModel.addressUnavailableText), findsNothing);
+
+      await pumpDetail(tester, place);
+      expect(find.text('46 Thanh Niên, Tây Hồ, Hà Nội'), findsOneWidget);
+    });
+
+    testWidgets('verified place with null address shows exact unavailable text', (tester) async {
+      final json = Map<String, dynamic>.from(_verifiedJson)..['address'] = null;
+      final place = PlaceModel.fromJson(json);
+      expect(place.hasAddress, isFalse);
+      expect(PlaceModel.addressUnavailableText, 'Chưa có thông tin địa chỉ.');
+      await pumpPreview(tester, place);
+      expect(find.text('Chưa có thông tin địa chỉ.'), findsOneWidget);
+
+      await pumpDetail(tester, place);
+      expect(find.text('Chưa có thông tin địa chỉ.'), findsOneWidget);
+    });
+
+    testWidgets('never fabricates "<name>, <city>" when address is null or blank', (tester) async {
+      for (final addr in <String?>[null, '', '   ']) {
+        final json = Map<String, dynamic>.from(_verifiedJson)
+          ..['address'] = addr
+          ..['destinationName'] = 'hanoi';
+        final place = PlaceModel.fromJson(json);
+        expect(place.addressDisplay, PlaceModel.addressUnavailableText);
+        await pumpPreview(tester, place);
+        expect(find.text(fabricated), findsNothing);
+        await pumpDetail(tester, place);
+        expect(find.text(fabricated), findsNothing);
+      }
+    });
+  });
 }
