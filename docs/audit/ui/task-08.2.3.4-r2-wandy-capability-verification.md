@@ -173,7 +173,10 @@ The following reconciliations were made to ensure that documentation matches cod
   - `flutter analyze`: `No issues found! (ran in 4.4s)`.
   - `flutter test`: `+152: All tests passed!` (152/152 passed).
 - **AI Service:**
-  - `python -m pytest tests/ -q`: 74 passed, 13 skipped (opt-in/live), 2 failed due to offline local PostgreSQL (`ConnectionRefusedError: [WinError 1225]`). All mocked chat and tool tests (`test_chat.py`, `test_chat_rag.py`, `test_health.py`, `test_tools.py`, `test_planner.py`) PASSED.
+  - Database test dependency: `wanderai-postgres` (PostgreSQL 16 + pgvector) and `wanderai-redis` running and healthy in WSL2 Docker container, listening on `localhost:5432` / `localhost:6379`.
+  - `python -m pytest tests/ -q`: **87 passed, 2 skipped, 0 failed** in 47.82s (EXIT_CODE = 0).
+  - Targeted Chat / RAG / Grounding / Planner / Tools test suite (`tests/test_chat.py`, `tests/test_chat_rag.py`, `tests/test_rag.py`, `tests/test_grounding_contract.py`, `tests/test_planner.py`, `tests/test_tools.py`): **34 passed, 0 failed** in 22.32s (EXIT_CODE = 0).
+  - Skipped tests (2): `tests/test_live_e2e.py` and `tests/test_rag_benchmark.py` (explicit opt-in / benchmark tests requiring live Gemini API keys).
 - **Source Code Integrity:**
   - `git diff apps/`: **100% CLEAN** (Zero lines of application code modified).
 
