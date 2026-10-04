@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -28,9 +29,13 @@ class MapScreen extends ConsumerStatefulWidget {
   ConsumerState<MapScreen> createState() => _MapScreenState();
 }
 
-class _MapScreenState extends ConsumerState<MapScreen> {
+class _MapScreenState extends ConsumerState<MapScreen>
+    with TickerProviderStateMixin {
   late final MapController _mapController =
       widget.mapController ?? MapController();
+  AnimationController? _cameraAnimationController;
+  Timer? _pillDismissTimer;
+  bool _showLocationPill = true;
 
   @override
   void initState() {
@@ -38,6 +43,13 @@ class _MapScreenState extends ConsumerState<MapScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _initMap();
     });
+  }
+
+  @override
+  void dispose() {
+    _pillDismissTimer?.cancel();
+    _cameraAnimationController?.dispose();
+    super.dispose();
   }
 
   Future<void> _initMap() async {
@@ -48,23 +60,113 @@ class _MapScreenState extends ConsumerState<MapScreen> {
     await ref.read(userLocationProvider.notifier).refreshIfPermitted();
   }
 
+  /// Smoothly animates the map camera from current center to [destLocation].
+  void _animatedMapMove(LatLng destLocation, double destZoom) {
+    _cameraAnimationController?.dispose();
+
+    final latTween = Tween<double>(
+      begin: _mapController.camera.center.latitude,
+      end: destLocation.latitude,
+    );
+    final lngTween = Tween<double>(
+      begin: _mapController.camera.center.longitude,
+      end: destLocation.longitude,
+    );
+    final zoomTween = Tween<double>(
+      begin: _mapController.camera.zoom,
+      end: destZoom,
+    );
+
+    final controller = AnimationController(
+      duration: const Duration(milliseconds: 250),
+      vsync: this,
+    );
+    _cameraAnimationController = controller;
+
+    final animation = CurvedAnimation(
+      parent: controller,
+      curve: Curves.easeInOutCubic,
+    );
+
+    controller.addListener(() {
+      _mapController.move(
+        LatLng(latTween.evaluate(animation), lngTween.evaluate(animation)),
+        zoomTween.evaluate(animation),
+      );
+    });
+
+    animation.addStatusListener((status) {
+      if (status == AnimationStatus.completed ||
+          status == AnimationStatus.dismissed) {
+        controller.dispose();
+        if (_cameraAnimationController == controller) {
+          _cameraAnimationController = null;
+        }
+      }
+    });
+
+    controller.forward();
+  }
+
   /// "Vị trí của tôi": explicit request. First tap asks for permission and a
   /// fix; later taps refresh the fix and recenter. The camera is only moved
   /// here, never on passive location updates.
   Future<void> _onMyLocationTap() async {
+    setState(() => _showLocationPill = true);
     final pos = await ref.read(userLocationProvider.notifier).request();
     if (!mounted) return;
     if (pos == null) {
-      final label = ref.read(userLocationProvider).label;
-      if (label != null) {
+      final userLoc = ref.read(userLocationProvider);
+      final label = userLoc.label ?? 'Không xác định được vị trí';
+      if (userLoc.status == UserLocationStatus.denied) {
         ScaffoldMessenger.of(context)
           ..hideCurrentSnackBar()
-          ..showSnackBar(SnackBar(content: Text(label)));
+          ..showSnackBar(
+            SnackBar(
+              content: Text(label),
+              action: SnackBarAction(
+                label: 'Mở cài đặt',
+                onPressed: () {
+                  ref.read(userLocationProvider.notifier).openAppSettings();
+                },
+              ),
+              duration: const Duration(seconds: 6),
+            ),
+          );
+      } else if (userLoc.status == UserLocationStatus.unavailable) {
+        ScaffoldMessenger.of(context)
+          ..hideCurrentSnackBar()
+          ..showSnackBar(
+            SnackBar(
+              content: Text(label),
+              action: SnackBarAction(
+                label: 'Mở cài đặt',
+                onPressed: () {
+                  ref.read(userLocationProvider.notifier).openLocationSettings();
+                },
+              ),
+              duration: const Duration(seconds: 6),
+            ),
+          );
       }
       return;
     }
-    _mapController.move(pos, 15.0);
-    ref.read(mapProvider.notifier).moveCenter(pos);
+
+    // Zoom policy: if zoomed out (< 14.0), zoom in to 15.0; if already >= 14.0, keep current zoom
+    final currentZoom = _mapController.camera.zoom;
+    final targetZoom = currentZoom < 14.0 ? 15.0 : currentZoom;
+
+    if (widget.mapController != null) {
+      _mapController.move(pos, targetZoom);
+    } else {
+      _animatedMapMove(pos, targetZoom);
+    }
+
+    // Auto-dismiss pill after 5s on successful fix
+    _pillDismissTimer?.cancel();
+    _pillDismissTimer = Timer(const Duration(seconds: 5), () {
+      if (mounted) setState(() => _showLocationPill = false);
+    });
   }
 
   @override
@@ -98,6 +200,24 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                 userAgentPackageName: 'com.wanderai.mobile',
                 maxZoom: 19,
               ),
+
+              // Accuracy circle: translucent disk with radius = accuracyMeters
+              if (userPos != null &&
+                  userLoc.accuracyMeters != null &&
+                  userLoc.accuracyMeters! > 0)
+                CircleLayer(
+                  key: const Key('user_location_accuracy_circle'),
+                  circles: [
+                    CircleMarker(
+                      point: userPos,
+                      radius: userLoc.accuracyMeters!,
+                      useRadiusInMeter: true,
+                      color: AppColors.info.withValues(alpha: 0.12),
+                      borderColor: AppColors.info.withValues(alpha: 0.35),
+                      borderStrokeWidth: 1.5,
+                    ),
+                  ],
+                ),
 
               // Current-position marker: real GPS fix only, drawn BEFORE the POI
               // layer so it never covers or intercepts POI taps.
@@ -191,7 +311,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
             ),
           ),
 
-          // ─── Radius selector (right side) ───
+          // ─── Radius selector & Location action (right side) ───
           Positioned(
             right: 12,
             bottom: (state.selectedPlace != null ? 340 : 24) +
@@ -199,12 +319,10 @@ class _MapScreenState extends ConsumerState<MapScreen> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                _FloatingButton(
+                _LocationButton(
                   key: const Key('my_location_button'),
-                  icon: Icons.my_location,
+                  state: userLoc,
                   onTap: _onMyLocationTap,
-                  tooltip: 'Vị trí của tôi',
-                  active: userPos != null,
                 ),
                 const SizedBox(height: 8),
                 MapRadiusSelector(
@@ -374,28 +492,75 @@ class _MapScreenState extends ConsumerState<MapScreen> {
             ),
 
           // ─── Location status pill (honest state) ───
-          if (userLoc.label != null)
+          if (userLoc.label != null && _showLocationPill)
             Positioned(
               right: 60,
               bottom: (state.selectedPlace != null ? 340 : 24) +
                   MediaQuery.of(context).padding.bottom +
                   8,
-              child: Container(
-                key: const Key('location_status_pill'),
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(
-                  color: AppColors.surface,
-                  borderRadius: AppRadius.pillRadius,
-                  border: Border.all(color: AppColors.border),
-                ),
-                child: Text(
-                  userLoc.label!,
-                  style: AppTypography.label.copyWith(
-                    color: userLoc.status == UserLocationStatus.granted
-                        ? AppColors.info
-                        : AppColors.textSecondary,
-                    fontWeight: FontWeight.w600,
+              child: GestureDetector(
+                onTap: () {
+                  _pillDismissTimer?.cancel();
+                  setState(() => _showLocationPill = false);
+                },
+                child: Container(
+                  key: const Key('location_status_pill'),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: AppColors.surface,
+                    borderRadius: AppRadius.pillRadius,
+                    border: Border.all(
+                      color: userLoc.status == UserLocationStatus.denied ||
+                              userLoc.status == UserLocationStatus.unavailable
+                          ? AppColors.error.withValues(alpha: 0.3)
+                          : (userLoc.quality == LocationAccuracyQuality.approximate ||
+                                  userLoc.quality == LocationAccuracyQuality.poor)
+                              ? AppColors.warning.withValues(alpha: 0.5)
+                              : AppColors.border,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.08),
+                        blurRadius: 4,
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        userLoc.status == UserLocationStatus.denied
+                            ? Icons.location_disabled
+                            : userLoc.status == UserLocationStatus.unavailable
+                                ? Icons.location_off
+                                : userLoc.quality == LocationAccuracyQuality.good
+                                    ? Icons.check_circle_outline
+                                    : userLoc.quality == LocationAccuracyQuality.approximate
+                                        ? Icons.info_outline
+                                        : Icons.warning_amber_rounded,
+                        size: 14,
+                        color: userLoc.status == UserLocationStatus.denied ||
+                                userLoc.status == UserLocationStatus.unavailable
+                            ? AppColors.error
+                            : userLoc.quality == LocationAccuracyQuality.good
+                                ? AppColors.info
+                                : AppColors.warning,
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        userLoc.label!,
+                        style: AppTypography.label.copyWith(
+                          color: userLoc.status == UserLocationStatus.denied ||
+                                  userLoc.status == UserLocationStatus.unavailable
+                              ? AppColors.error
+                              : userLoc.quality == LocationAccuracyQuality.good
+                                  ? AppColors.info
+                                  : AppColors.textPrimary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
@@ -436,10 +601,6 @@ class _MapScreenState extends ConsumerState<MapScreen> {
       child: GestureDetector(
         onTap: () {
           ref.read(mapProvider.notifier).selectPlace(place);
-          _mapController.move(
-            LatLng(place.latitude!, place.longitude!),
-            _mapController.camera.zoom,
-          );
         },
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
@@ -498,22 +659,72 @@ class _MapScreenState extends ConsumerState<MapScreen> {
   }
 }
 
-class _FloatingButton extends StatelessWidget {
-  final IconData icon;
+/// Visual states for the "Vị trí của tôi" floating action:
+/// - idle: default state before fix
+/// - requesting: loading spinner
+/// - success: accurate fix (<= 50m)
+/// - approximate: approximate/poor fix (> 50m)
+/// - denied: permission denied
+/// - unavailable: location service disabled or error
+class _LocationButton extends StatelessWidget {
+  final UserLocationState state;
   final VoidCallback onTap;
-  final String tooltip;
-  final bool active;
 
-  const _FloatingButton({
+  const _LocationButton({
     super.key,
-    required this.icon,
+    required this.state,
     required this.onTap,
-    required this.tooltip,
-    this.active = false,
   });
 
   @override
   Widget build(BuildContext context) {
+    IconData icon;
+    Color iconColor;
+    String tooltip;
+    Widget? customChild;
+
+    switch (state.status) {
+      case UserLocationStatus.unknown:
+        icon = Icons.my_location;
+        iconColor = AppColors.textSecondary;
+        tooltip = 'Vị trí của tôi';
+        break;
+      case UserLocationStatus.requesting:
+        icon = Icons.my_location;
+        iconColor = AppColors.primary;
+        tooltip = 'Đang xác định vị trí...';
+        customChild = const SizedBox(
+          width: 20,
+          height: 20,
+          child: CircularProgressIndicator(
+            strokeWidth: 2,
+            valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+          ),
+        );
+        break;
+      case UserLocationStatus.denied:
+        icon = Icons.location_disabled;
+        iconColor = AppColors.error;
+        tooltip = 'Quyền vị trí bị từ chối';
+        break;
+      case UserLocationStatus.unavailable:
+        icon = Icons.location_off;
+        iconColor = AppColors.textTertiary;
+        tooltip = 'Không xác định được vị trí';
+        break;
+      case UserLocationStatus.granted:
+        if (state.quality == LocationAccuracyQuality.good) {
+          icon = Icons.my_location;
+          iconColor = AppColors.info;
+          tooltip = 'Vị trí chính xác (±${state.accuracyMeters?.round()}m)';
+        } else {
+          icon = Icons.location_searching;
+          iconColor = AppColors.warning;
+          tooltip = 'Vị trí ước lượng (±${state.accuracyMeters?.round()}m)';
+        }
+        break;
+    }
+
     return Material(
       elevation: 3,
       shape: const CircleBorder(),
@@ -525,8 +736,7 @@ class _FloatingButton extends StatelessWidget {
           message: tooltip,
           child: Padding(
             padding: const EdgeInsets.all(10),
-            child: Icon(icon,
-                size: 22, color: active ? AppColors.info : AppColors.primary),
+            child: customChild ?? Icon(icon, size: 22, color: iconColor),
           ),
         ),
       ),

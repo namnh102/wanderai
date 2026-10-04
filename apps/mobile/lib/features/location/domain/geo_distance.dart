@@ -25,9 +25,15 @@ double? distanceFromUserKm(LatLng? user, double? placeLat, double? placeLng) {
   return haversineKm(user, LatLng(placeLat, placeLng));
 }
 
-/// "850m" below one kilometre, otherwise "2.8 km".
-String formatDistanceKm(double km) =>
-    km < 1 ? '${(km * 1000).round()}m' : '${km.toStringAsFixed(1)} km';
+/// "< 1 km => integer meters", ">= 1 km => one decimal km".
+String formatDistanceKm(double km) {
+  if (km <= 0) return '0m';
+  final meters = (km * 1000).round();
+  if (meters < 1000) {
+    return '${meters}m';
+  }
+  return '${km.toStringAsFixed(1)} km';
+}
 
 /// Label for a possibly-unknown distance.
 String distanceLabel(double? km) =>

@@ -23,8 +23,14 @@ class FakeLocationService implements LocationService {
   bool serviceEnabled;
   Object? error;
   LatLng position;
+  double accuracyMeters;
+  DateTime? timestamp;
   int requestCalls = 0;
   int positionCalls = 0;
+  int openAppSettingsCalls = 0;
+  int openLocationSettingsCalls = 0;
+  List<LocationFix> sequenceFixes = [];
+  int sequenceIndex = 0;
 
   FakeLocationService({
     this.permission = LocationPermissionState.denied,
@@ -32,7 +38,10 @@ class FakeLocationService implements LocationService {
     this.serviceEnabled = true,
     this.error,
     this.position = const LatLng(10.0, 106.0),
-  });
+    this.accuracyMeters = 15.0,
+    this.timestamp,
+    List<LocationFix>? sequenceFixes,
+  }) : sequenceFixes = sequenceFixes ?? [];
 
   @override
   Future<LocationPermissionState> checkPermission() async => permission;
@@ -48,10 +57,35 @@ class FakeLocationService implements LocationService {
   Future<bool> isServiceEnabled() async => serviceEnabled;
 
   @override
-  Future<LatLng> currentPosition() async {
+  Future<LocationFix> currentFix() async {
     positionCalls++;
     if (error != null) throw error!;
-    return position;
+    if (sequenceFixes.isNotEmpty && sequenceIndex < sequenceFixes.length) {
+      final fix = sequenceFixes[sequenceIndex++];
+      position = fix.position;
+      accuracyMeters = fix.accuracyMeters;
+      return fix;
+    }
+    return LocationFix(
+      position: position,
+      accuracyMeters: accuracyMeters,
+      timestamp: timestamp ?? DateTime(2026, 10, 4, 12, 0, 0),
+    );
+  }
+
+  @override
+  Future<LatLng> currentPosition() async => (await currentFix()).position;
+
+  @override
+  Future<bool> openAppSettings() async {
+    openAppSettingsCalls++;
+    return true;
+  }
+
+  @override
+  Future<bool> openLocationSettings() async {
+    openLocationSettingsCalls++;
+    return true;
   }
 }
 
@@ -95,6 +129,21 @@ Widget _wrap(Widget child, {List<Override> overrides = const []}) => ProviderSco
       overrides: overrides,
       child: MaterialApp(theme: AppTheme.lightTheme, home: child),
     );
+
+Future<ProviderContainer> pumpMap(
+  WidgetTester tester,
+  FakeLocationService svc,
+) async {
+  tester.view.physicalSize = const Size(1200, 1800);
+  tester.view.devicePixelRatio = 1.0;
+  addTearDown(tester.view.reset);
+  await tester.pumpWidget(_wrap(const MapScreen(), overrides: [
+    locationServiceProvider.overrideWithValue(svc),
+    placeRepositoryProvider.overrideWithValue(_MapRepo([_place()])),
+  ]));
+  await tester.pump(const Duration(milliseconds: 200));
+  return ProviderScope.containerOf(tester.element(find.byType(MapScreen)));
+}
 
 void main() {
   group('Haversine distance', () {
@@ -351,21 +400,6 @@ void main() {
   });
 
   group('MapScreen realtime location', () {
-    Future<ProviderContainer> pumpMap(
-      WidgetTester tester,
-      FakeLocationService svc,
-    ) async {
-      tester.view.physicalSize = const Size(1200, 1800);
-      tester.view.devicePixelRatio = 1.0;
-      addTearDown(tester.view.reset);
-      await tester.pumpWidget(_wrap(const MapScreen(), overrides: [
-        locationServiceProvider.overrideWithValue(svc),
-        placeRepositoryProvider.overrideWithValue(_MapRepo([_place()])),
-      ]));
-      await tester.pump(const Duration(milliseconds: 200));
-      return ProviderScope.containerOf(tester.element(find.byType(MapScreen)));
-    }
-
     testWidgets('initially no user marker and no fake distance; no prompt on open', (tester) async {
       final svc = FakeLocationService(permission: LocationPermissionState.denied);
       final c = await pumpMap(tester, svc);
@@ -389,7 +423,8 @@ void main() {
 
       expect(svc.requestCalls, 1);
       expect(find.byKey(const Key('user_location_marker')), findsOneWidget);
-      expect(find.text('Đã xác định vị trí của bạn'), findsOneWidget);
+      expect(find.byKey(const Key('user_location_accuracy_circle')), findsOneWidget);
+      expect(find.text('Đã xác định vị trí · ±15 m'), findsOneWidget);
 
       c.read(mapProvider.notifier).selectPlace(_place());
       await tester.pump();
@@ -693,6 +728,196 @@ void main() {
       final p = _place(serverDistance: 99.0);
       expect(p.distanceKm, 99.0); // field kept for API compatibility
       expect(distanceFromUserKm(null, p.latitude, p.longitude), isNull);
+    });
+  });
+
+  group('Accuracy Quality Gate & Retry (TASK 08.1.1)', () {
+    test('thresholds: good (<= 50m), approximate (50-200m), poor (> 200m)', () {
+      const p = LatLng(21.0, 105.0);
+      final t = DateTime.now();
+
+      final fixGood = LocationFix(position: p, accuracyMeters: 25.0, timestamp: t);
+      expect(fixGood.quality, LocationAccuracyQuality.good);
+      final stateGood = UserLocationState(
+        status: UserLocationStatus.granted,
+        fix: fixGood,
+      );
+      expect(stateGood.label, 'Đã xác định vị trí · ±25 m');
+
+      final fixApprox = LocationFix(position: p, accuracyMeters: 120.0, timestamp: t);
+      expect(fixApprox.quality, LocationAccuracyQuality.approximate);
+      final stateApprox = UserLocationState(
+        status: UserLocationStatus.granted,
+        fix: fixApprox,
+      );
+      expect(stateApprox.label, 'Vị trí ước lượng · ±120 m');
+
+      final fixPoor = LocationFix(position: p, accuracyMeters: 2500.0, timestamp: t);
+      expect(fixPoor.quality, LocationAccuracyQuality.poor);
+      final statePoor = UserLocationState(
+        status: UserLocationStatus.granted,
+        fix: fixPoor,
+      );
+      expect(statePoor.label, 'Vị trí chưa chính xác');
+    });
+
+    test('retry logic: retries up to 3 times on poor accuracy and selects best fix', () async {
+      final t = DateTime.now();
+      const p1 = LatLng(21.0, 105.0);
+      const p2 = LatLng(21.01, 105.01);
+      const p3 = LatLng(21.02, 105.02);
+
+      // sequence: 1st poor (3000m), 2nd better (150m, approximate), stopped
+      final svc = FakeLocationService(
+        permission: LocationPermissionState.granted,
+        sequenceFixes: [
+          LocationFix(position: p1, accuracyMeters: 3000.0, timestamp: t),
+          LocationFix(position: p2, accuracyMeters: 150.0, timestamp: t),
+          LocationFix(position: p3, accuracyMeters: 10.0, timestamp: t),
+        ],
+      );
+
+      final n = UserLocationNotifier(svc, retryDelay: Duration.zero);
+      final pos = await n.request();
+
+      expect(svc.positionCalls, 2); // stopped because 150m is approximate (< 200m)
+      expect(pos, p2);
+      expect(n.state.accuracyMeters, 150.0);
+      expect(n.state.quality, LocationAccuracyQuality.approximate);
+      expect(n.state.label, 'Vị trí ước lượng · ±150 m');
+    });
+
+    test('retry logic: picks the lowest accuracyMeters even if all attempts are poor', () async {
+      final t = DateTime.now();
+      const p1 = LatLng(21.0, 105.0);
+      const p2 = LatLng(21.01, 105.01);
+      const p3 = LatLng(21.02, 105.02);
+
+      final svc = FakeLocationService(
+        permission: LocationPermissionState.granted,
+        sequenceFixes: [
+          LocationFix(position: p1, accuracyMeters: 5000.0, timestamp: t),
+          LocationFix(position: p2, accuracyMeters: 1200.0, timestamp: t),
+          LocationFix(position: p3, accuracyMeters: 2500.0, timestamp: t),
+        ],
+      );
+
+      final n = UserLocationNotifier(svc, retryDelay: Duration.zero);
+      final pos = await n.request();
+
+      expect(svc.positionCalls, 3); // 3 attempts made
+      expect(pos, p2); // best among poor fixes is 1200m
+      expect(n.state.accuracyMeters, 1200.0);
+      expect(n.state.quality, LocationAccuracyQuality.poor);
+      expect(n.state.label, 'Vị trí chưa chính xác');
+    });
+
+    test('immediate return: good fix on first attempt does not retry', () async {
+      final t = DateTime.now();
+      const p1 = LatLng(21.03, 105.85);
+
+      final svc = FakeLocationService(
+        permission: LocationPermissionState.granted,
+        sequenceFixes: [
+          LocationFix(position: p1, accuracyMeters: 20.0, timestamp: t),
+          LocationFix(position: const LatLng(21.0, 105.0), accuracyMeters: 5.0, timestamp: t),
+        ],
+      );
+
+      final n = UserLocationNotifier(svc, retryDelay: Duration.zero);
+      final pos = await n.request();
+
+      expect(svc.positionCalls, 1); // 1st was good (<= 50m) => no retry
+      expect(pos, p1);
+      expect(n.state.quality, LocationAccuracyQuality.good);
+    });
+  });
+
+  group('Map Screen Location Hardening & UX (TASK 08.1.1)', () {
+    testWidgets('renders accuracy circle with useRadiusInMeter below POI markers', (tester) async {
+      final svc = FakeLocationService(
+        position: const LatLng(21.03, 105.85),
+        accuracyMeters: 150.0,
+      );
+      final c = await pumpMap(tester, svc);
+
+      await tester.tap(find.byKey(const Key('my_location_button')));
+      await tester.pump(const Duration(milliseconds: 200));
+
+      final circleFinder = find.byKey(const Key('user_location_accuracy_circle'));
+      expect(circleFinder, findsOneWidget);
+
+      final circleWidget = tester.widget<CircleLayer>(circleFinder);
+      expect(circleWidget.circles.first.useRadiusInMeter, isTrue);
+      expect(circleWidget.circles.first.radius, 150.0);
+
+      // POI marker on top can still be tapped
+      c.read(mapProvider.notifier).selectPlace(_place());
+      await tester.pump();
+      expect(find.byType(PlacePreviewSheet), findsOneWidget);
+    });
+
+    testWidgets('denied tap shows SnackBar with "Mở cài đặt" action calling openAppSettings', (tester) async {
+      final svc = FakeLocationService(afterRequest: LocationPermissionState.denied);
+      await pumpMap(tester, svc);
+
+      await tester.tap(find.byKey(const Key('my_location_button')));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Quyền vị trí bị từ chối'), findsWidgets);
+      expect(find.text('Mở cài đặt'), findsOneWidget);
+
+      await tester.tap(find.text('Mở cài đặt'));
+      await tester.pump();
+      expect(svc.openAppSettingsCalls, 1);
+    });
+
+    testWidgets('unavailable service shows SnackBar with "Mở cài đặt" action calling openLocationSettings', (tester) async {
+      final svc = FakeLocationService(
+        permission: LocationPermissionState.granted,
+        serviceEnabled: false,
+      );
+      await pumpMap(tester, svc);
+
+      await tester.tap(find.byKey(const Key('my_location_button')));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Không xác định được vị trí'), findsWidgets);
+      expect(find.text('Mở cài đặt'), findsOneWidget);
+
+      await tester.tap(find.text('Mở cài đặt'));
+      await tester.pump();
+      expect(svc.openLocationSettingsCalls, 1);
+    });
+
+    testWidgets('status pill can be dismissed by tap', (tester) async {
+      final svc = FakeLocationService(position: const LatLng(21.03, 105.85));
+      await pumpMap(tester, svc);
+
+      await tester.tap(find.byKey(const Key('my_location_button')));
+      await tester.pump(const Duration(milliseconds: 200));
+
+      expect(find.byKey(const Key('location_status_pill')), findsOneWidget);
+
+      await tester.tap(find.byKey(const Key('location_status_pill')));
+      await tester.pump();
+
+      expect(find.byKey(const Key('location_status_pill')), findsNothing);
+    });
+  });
+
+  group('Shared Distance Formatter Edge Cases (TASK 08.1.1)', () {
+    test('integer meters below 1000m and one decimal km at >= 1000m', () {
+      expect(formatDistanceKm(0.0), '0m');
+      expect(formatDistanceKm(-0.5), '0m');
+      expect(formatDistanceKm(0.025), '25m');
+      expect(formatDistanceKm(0.85), '850m');
+      expect(formatDistanceKm(0.999), '999m');
+      expect(formatDistanceKm(0.9996), '1.0 km');
+      expect(formatDistanceKm(1.0), '1.0 km');
+      expect(formatDistanceKm(1.04), '1.0 km');
+      expect(formatDistanceKm(2.84), '2.8 km');
+      expect(formatDistanceKm(15.67), '15.7 km');
     });
   });
 }
