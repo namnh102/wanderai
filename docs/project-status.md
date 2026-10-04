@@ -219,3 +219,20 @@ Full report: `docs/audit/task-07.1-regression-audit.md`. DB counts: `docs/data/c
 - New automated coverage: camera (no recenter on open / on return from detail; recenter only on "Vị trí của tôi"), exact location state transitions, stale-coordinate clearing, lat/lng order, known-pair haversine.
 - Browser (emulated DevTools geolocation, labelled as such): denied path, recenter-on-tap, 2.4 km / 3.8 km matching haversine, nav URL with destination + origin, back-from-detail keeps view. Console clean.
 - Platforms: Web verified; Android not executed; iOS not executed.
+
+### TASK 08.1.1 — Location Reliability & UX Hardening (branch `feature/location-reliability-hardening`)
+
+- Addressed user feedback ("sao vị trí sai hiện tại của tôi sai lung tung vậy") where inaccurate browser/IP-based geolocation fixes previously rendered without accuracy disclosure.
+- **Accuracy Quality Gate:**
+  - Strict classification: `<= 50m` (good), `50–200m` (approximate), `> 200m` (poor).
+  - Retry mechanism: on poor accuracy fix, automatically retries up to 3 attempts and selects the fix with minimum `accuracyMeters`.
+  - Honest disclosure: never silently presents poor accuracy as exact location.
+- **Map & UX Polish:**
+  - Translucent accuracy disk (`CircleLayer`) rendered beneath POIs matching `accuracyMeters`.
+  - Dedicated multi-state location button (`idle`, `requesting`, `success`, `approximate`, `denied`, `unavailable`) using GoMate design system tokens.
+  - Interactive status pill with honest accuracy (`Đã xác định vị trí · ±X m` / `Vị trí ước lượng · ±X m` / `Vị trí chưa chính xác` / `Quyền vị trí bị từ chối`) with auto-dismiss after 5s and tap-to-dismiss.
+  - Actionable permission recovery: direct "Mở cài đặt" actions in SnackBars invoking `openAppSettings()` / `openLocationSettings()`.
+  - Smooth camera animation: 250ms cubic easing with zoom policy preservation (zooms to 15.0 if overview, preserves zoom if already zoomed in).
+  - Unified distance formatting: boundary-safe integer meters below 1 km (`< 1 km` => `Xm`) and one-decimal km (`>= 1 km` => `X.X km`), eliminating rounding artifacts near 1000m.
+- **Test Baseline:** Full regression clean: Flutter tests: **152 passed** (+9 in `location_navigation_test.dart`), `flutter analyze` **0 issues**, Backend Jest E2E: **76 passed (10 suites)**, Nest build: **exit 0**, Backend lint: **0 errors** / 52 warnings, AI pytest: **87 passed, 2 skipped**.
+
