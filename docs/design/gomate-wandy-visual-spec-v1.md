@@ -118,8 +118,9 @@ Wandy is the central AI Travel Copilot (`Trợ lý Du lịch Đồng hành`) for
   - Action footer: Two outline buttons `[Xem trên bản đồ]` and `[Xem thêm địa điểm]`.
 - **Rich Card Variant (`wandy-mobile-chat-sources.png` & `wandy-mobile-place-recommendation.png`):**
   - Full width card, border radius 16px–20px, border `1.5px solid #E2E8F0`.
-  - Photo hero with `✓ Đã xác minh thực địa` floating badge.
-  - Address and operating hours rows with teal vector icons.
+  - Photo hero with `✓ Đã xác minh nguồn dữ liệu` floating badge (indicating validated source provenance, NOT field physical audit).
+  - Explicit caption: `* Visual Demo State — Not Production Data` to clearly distinguish illustrative mockups from production database realities.
+  - Address and operating hours rows with teal vector icons (with explicit fallback to "Chưa có thông tin..." if absent).
   - Action button row:
     - Primary CTA: `[Xem địa điểm]` or `[Thêm vào chuyến đi]` (solid teal `#0F766E`, white text).
     - Secondary CTA: `[Chỉ đường]` (container mint `#CCFBF1`, teal text `#0F766E`).
@@ -137,8 +138,13 @@ Wandy is the central AI Travel Copilot (`Trợ lý Du lịch Đồng hành`) for
     - `• Tối ưu lịch trình theo ngân sách...` (teal active indicator)
     - Three-dot pulsating loader animation.
 - **Generating State (`wandy-mobile-generating.png`):**
-  - Header: `[🔄] Đang tạo lịch trình...`
-  - Checklist + Progress bar showing 70% fill in teal `#0F766E`.
+  - Header: `[🔄] Wandy đang lập lịch trình...`
+  - Dynamic step checklist reflecting actual pipeline stages without misleading numeric percentages:
+    - `✓ Tìm địa điểm phù hợp`
+    - `✓ Sắp xếp theo tuyến đường`
+    - `• Cân đối thời gian & ngân sách...`
+    - `• Hoàn thiện lịch trình`
+  - Smooth indeterminate pulse bar (`#14B8A6` to `#0F766E`) and status text: `Đang tính toán tuyến đường tối ưu...` (Eliminates artificial 70% progress illusion).
   - Mascot illustration of Wandy sitting with travel map and backpack.
 
 ### 4.7. Error & Fallback States
@@ -161,10 +167,13 @@ Wandy is the central AI Travel Copilot (`Trợ lý Du lịch Đồng hành`) for
   - Secondary button: `[+ Tạo chuyến đi mới]`.
   - Primary button: `[Tiếp tục (Chọn ngày) →]`.
 - **Agent Confirmation Dialog (`wandy-mobile-agent-confirmation.png`, `wandy-desktop-agent-confirmation.png`):**
+  - Classified explicitly as **FUTURE AGENT UX** (Sprint 02+).
+  - Prominent badge at top: `FUTURE AGENT UX • HUMAN-IN-THE-LOOP` in amber/ochre container (`#FEF3C7`).
   - Center modal with Wandy avatar header.
   - Title: `Xác nhận hành động`.
   - Message: `Bạn có muốn thêm Chùa Trấn Quốc vào Hà Nội 3N2Đ Mùa Thu Ngày 2 (16/10/2026)?`
-  - Buttons: `[Xác nhận]` (solid teal) and `[Hủy]` (neutral).
+  - Safeguard banner: `🛡️ Tác vụ sửa đổi lịch trình luôn yêu cầu người dùng xác nhận trực tiếp trước khi ghi dữ liệu.`
+  - Buttons: `[Xác nhận thêm vào chuyến đi]` (solid teal) and `[Hủy bỏ]` (neutral).
 
 ---
 
@@ -189,5 +198,85 @@ On desktop screens ($1440 \times 900$), Wandy expands into a 3-column workstatio
 - **Reduced Motion Support:** Respects `prefers-reduced-motion`. Replaces pulsating thinking dots with static indicators; disables slide-up sheet animations in favor of immediate opacity fade ($150\text{ms}$).
 - **Screen Reader Semantics:**
   - Wandy avatar labeled as `Ảnh đại diện Trợ lý Wandy`.
-  - Source chips announced as `Nguồn dữ liệu thực địa OpenStreetMap, nhấn để xem chi tiết chứng thực`.
-  - Star ratings announced as `4.6 trên 5 sao từ 128 lượt đánh giá thực tế`.
+  - Source chips announced as `Nguồn dữ liệu OpenStreetMap đã được đối chiếu, nhấn để xem chi tiết chứng thực`.
+  - Star ratings announced as `4.6 trên 5 sao từ 128 lượt đánh giá (dữ liệu minh họa giao diện)`.
+
+---
+
+## 7. R1 Corrections & Design Lock (TASK 08.2.3.4-R1)
+
+### 7.1. Provenance Terminology Rule
+The following absolute rule is enforced across all UI screens, documentation, and audits:
+$$\text{SOURCE VERIFIED} \neq \text{FIELD VERIFIED} \neq \text{HIGH RATING}$$
+
+1. **Forbidden Language:** Phrasing such as *"Đã xác minh thực địa"* or *"Đã xác thực thực địa qua GoMate Data Pipeline"* is strictly prohibited because the data pipeline ingests and reconciles geospatial sources (OpenStreetMap, Wikivoyage) rather than dispatching staff on physical on-site inspections.
+2. **Approved Language:**
+   - `"Đã xác minh nguồn dữ liệu"`
+   - `"Nguồn dữ liệu đã được đối chiếu"`
+   - `"Đối chiếu nguồn: OpenStreetMap & Wikivoyage"`
+
+### 7.2. Visual Demo State vs Production Data
+All high-fidelity mockups depicting rich sample data (e.g. `★ 4.6 (128)`, operating hours `07:30 – 17:30`, specific phone numbers) are designated as **VISUAL DEMO STATE — NOT PRODUCTION DATA**.
+
+When implementing UI in Flutter, the following honest fallback rules are mandatory:
+| Field | When Data Exists | When Data Is Absent (Honest Fallback) |
+| :--- | :--- | :--- |
+| **Rating** | `★ 4.6 (128)` | `Chưa có đánh giá` (No stars, neutral badge) |
+| **Address** | Actual formatted address | `Chưa có thông tin địa chỉ` |
+| **Opening Hours** | Actual schedule | `Chưa có thông tin giờ mở cửa` |
+| **Contact / Phone** | Formatted phone number | Entire contact section is cleanly hidden |
+| **Provenance** | Verified source badge | Unverified / synthetic data flag |
+
+### 7.3. Non-Deterministic Progress Behavior
+1. **Elimination of Fake Percentages:** LLM and RAG generation cannot predict exact percentage completion. Mockup `wandy-mobile-generating.png` has been revised to remove the synthetic `70%` progress bar.
+2. **Approved Loading Pattern:** Indeterminate pulse bar with realistic pipeline phase checklist:
+   - `✓ Tìm địa điểm phù hợp`
+   - `✓ Sắp xếp theo tuyến đường`
+   - `• Cân đối thời gian & ngân sách...`
+   - `• Hoàn thiện lịch trình`
+
+### 7.4. Capability Separation Matrix: Current vs Future Agent
+
+| Feature / Action | Scope | Technical Basis | UI Representation |
+| :--- | :---: | :--- | :--- |
+| **Conversational Chat** | CURRENT | Gemini 1.5 Flash via FastAPI `/chat` | Standard message bubbles |
+| **Spatial RAG Retrieval** | CURRENT | pgvector embeddings + PostgreSQL | Grounded entity answers |
+| **Source Citations** | CURRENT | OpenStreetMap / Wikivoyage provenance | Tappable source chips |
+| **Place Recommendations** | CURRENT | Canonical Place catalog | Rich cards / Carousels |
+| **Trip Context Injection** | CURRENT | Active Trip model | Trip context header banner |
+| **Manual Add-to-Trip** | CURRENT | REST API `/trips/:id/items` | Trip picker bottom sheet |
+| **Autonomous Itinerary Mutation** | FUTURE | Multi-agent autonomous planner (Sprint 02+) | `FUTURE AGENT UX` Confirmation Modal |
+| **Autonomous Booking / Reminders** | FUTURE | Tool-use agent integrations | `FUTURE AGENT UX` Confirmation Modal |
+| **Proactive Group Collaboration** | FUTURE | Realtime websocket agents | `FUTURE AGENT UX` Banner |
+
+### 7.5. Empty State Hierarchy
+To eliminate confusion between empty screens, two distinct states are formally established:
+1. **Default Empty State (`wandy-mobile-empty.png`):**
+   - The primary landing state upon opening the Wandy AI tab (Tab 3) without existing chat history.
+   - Layout: Centered explorer mascot, friendly greeting, brief capability summary, and 4 primary starter prompt cards (`Lập lịch trình`, `Tìm địa điểm`, `Gợi ý món ngon`, `Khám phá gần bạn`).
+2. **Expanded Discovery State (`wandy-mobile-empty-prompts.png`):**
+   - An expanded suggestion view accessed when tapping the "Khám phá Việt Nam cùng Wandy" discovery banner or exploring category ideas.
+   - Layout: Landscape banner header + 6 thematic prompt rows for users seeking inspiration.
+
+### 7.6. Source Detail Safety & Metadata Boundaries
+In `wandy-mobile-source-detail.png`:
+- OpenStreetMap Node IDs (e.g. `Node #268491024`) and micro-coordinates are **Demonstration Metadata**.
+- In production, these fields are only displayed when the upstream data source explicitly provides them. If unavailable, the source sheet displays the entity name and source license without fabricating node numbers.
+
+### 7.7. Human-in-the-Loop Safeguard Contract
+**Invariant:** *No AI action may mutate, delete, or overwrite user trip itineraries without explicit, conscious user confirmation.*
+- Vague conversational cues (e.g. *"Ok thêm đi"*) must trigger the `FUTURE AGENT UX` confirmation modal (`wandy-mobile-agent-confirmation.png` / `wandy-desktop-agent-confirmation.png`).
+- The modal displays:
+  - Exact target trip name and target day.
+  - Entity to be added or modified.
+  - Distinct `[Xác nhận thêm]` (Teal) and `[Hủy bỏ]` (Neutral) buttons.
+  - Safeguard disclosure: `🛡️ Tác vụ sửa đổi lịch trình luôn yêu cầu người dùng xác nhận trực tiếp trước khi ghi dữ liệu.`
+
+### 7.8. Neutral Copilot Language (No AI Over-claiming)
+Wandy communicates as an assistant, not an omniscient entity:
+- Prefer: *"Wandy có thể gợi ý...", "Wandy tìm thấy...", "Dựa trên nguồn OpenStreetMap..."*
+- Avoid: *"Wandy hiểu mọi điều về bạn...", "Wandy đã kiểm tra thực địa...", "Wandy đảm bảo 100%..."*
+
+### 7.9. Visual Design Lock Confirmation
+The visual design of Wandy AI Copilot across 22 mockups, color tokens, typography scales, responsive layouts, and safety patterns is formally **LOCKED** for subsequent Flutter implementation. Zero further design iterations are permitted without explicit product architecture approval.
+

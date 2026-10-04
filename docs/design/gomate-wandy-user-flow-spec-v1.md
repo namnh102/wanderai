@@ -68,9 +68,10 @@
 - **Entry:** AI service completes RAG retrieval and synthesis.
 - **User Intent:** Receive accurate, verified travel facts backed by authentic data sources.
 - **Action:** Wandy renders response bubble with structured Markdown, accompanied by `Nguồn tham khảo` label and source chips (`[◎ OpenStreetMap]`, `[📖 Wikivoyage: Hanoi]`).
-- **Loading:** Step-by-step thinking checklist (`Phân tích nhu cầu...`, `Tìm kiếm địa điểm...`, `Kiểm tra nguồn...`) transitions into the generated bubble.
-- **Success:** Rich place cards with real photos, honest ratings (`★ 4.6 (128)`), and distances (`2.4 km từ bạn`).
-- **Data Honesty Invariant:** No synthetic ratings. If a place has no ratings in DB, it strictly renders `Chưa có đánh giá`.
+- **Loading:** Non-deterministic step-by-step thinking checklist (`Phân tích nhu cầu...`, `Tìm kiếm địa điểm...`, `Kiểm tra nguồn...`) with indeterminate progress bar (no fake percentage).
+- **Success:** Rich place cards with real photos, visual layout sample (`★ 4.6 (128)`), and distances (`2.4 km từ bạn`).
+- **Data Honesty Invariant:** No synthetic ratings. If a place has no ratings in DB, it strictly renders `Chưa có đánh giá`. Address/hours fall back to `Chưa có thông tin...` if absent in source data.
+- **Demo State Notice:** Sample metadata in mockups is explicitly designated as `VISUAL DEMO STATE — NOT PRODUCTION DATA`.
 
 ---
 
@@ -80,9 +81,10 @@
 - **Action:** Bottom sheet modal slides up (`wandy-mobile-source-detail.png`).
 - **Content:**
   - Entity: `Chùa Trấn Quốc (Node #268491024)`
-  - Exact coordinates: `21.0479° N, 105.8368° E`
+  - Coordinates: `21.0479° N, 105.8368° E` *(Demonstration metadata; in production, only rendered if provided by upstream source)*
   - License: `ODbL (Open Database License)`
-  - Pipeline verification stamp: `Đã xác thực thực địa qua GoMate Data Pipeline`.
+  - Pipeline verification stamp: `Đã xác minh nguồn dữ liệu qua GoMate Data Pipeline` (Source Provenance Validation, NOT physical field inspection).
+  - Data Honesty Alert: Clear statement that GoMate validates sources without claiming physical on-site audits or fabricating ratings.
 - **Cancel / Back:** Tapping `[Đóng]` or tapping backdrop returns smoothly to chat without reloading.
 
 ---
@@ -151,13 +153,18 @@
 
 ---
 
-### FLOW W12: Future Agent Confirmation Flow (Human-in-the-Loop)
-- **Entry:** Advanced autonomous AI agent proposes modifying user's saved trip (adding/swapping items, deleting slots, adjusting budget).
+### FLOW W12: Future Agent Confirmation Flow (Human-in-the-Loop Safeguard)
+- **Scope & Status:** Strictly classified as **FUTURE AGENT UX** (Sprint 02+). Not part of current baseline RAG chat capability.
+- **Entry:** Future autonomous AI agent proposes modifying user's saved trip (adding/swapping items, deleting slots, adjusting budget).
 - **User Intent:** Safeguard itinerary integrity against unconfirmed AI hallucination or unwanted overwrites.
-- **UI Element:** Modal dialog appears (`wandy-mobile-agent-confirmation.png`).
+- **UI Element:** Modal dialog appears (`wandy-mobile-agent-confirmation.png` on mobile, `wandy-desktop-agent-confirmation.png` on desktop).
+  - Scope Badge: `FUTURE AGENT UX • HUMAN-IN-THE-LOOP` (amber capsule).
+  - Header: Wandy avatar icon with subtle halo.
   - Title: `Xác nhận hành động`.
   - Message: `Bạn có muốn thêm Chùa Trấn Quốc vào Hà Nội 3N2Đ Mùa Thu Ngày 2 (16/10/2026)?`
+  - Safeguard Banner: `🛡️ Tác vụ sửa đổi lịch trình luôn yêu cầu người dùng xác nhận trực tiếp trước khi ghi dữ liệu.`
 - **Actions:**
-  - `[Xác nhận]` (Solid Teal): Executes trip update via API.
-  - `[Hủy]` (Neutral): Aborts action and keeps itinerary untouched.
-- **Policy:** Autonomous actions NEVER modify user database state without explicit confirmation.
+  - `[Xác nhận thêm vào chuyến đi]` (Solid Teal): User explicitly approves; executes trip update via API.
+  - `[Hủy bỏ]` (Neutral): Aborts action and keeps itinerary untouched.
+- **Golden Policy:** **ACTION MUTATION REQUIRES EXPLICIT USER CONFIRMATION.** Autonomous agents are NEVER permitted to delete trips, overwrite days, or add places solely from ambiguous chat prompts.
+

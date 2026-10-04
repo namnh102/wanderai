@@ -1,7 +1,8 @@
 # GoMate Wandy AI Copilot — Visual & UX Audit (TASK 08.2.3.4)
 
-**Status:** COMPLETE & VERIFIED  
+**Status:** SUPERSEDED & REVISED BY TASK 08.2.3.4-R1 (See `task-08.2.3.4-r1-wandy-visual-audit.md`)  
 **Task:** TASK 08.2.3.4 — GOMATE WANDY AI COPILOT VISUAL MOCKUP V1  
+**Revision:** Locked in TASK 08.2.3.4-R1  
 **Target Viewports:** Mobile ($390 \times 844$), Desktop ($1440 \times 900$)  
 **Branch:** `feature/gomate-visual-mockups`  
 **Reference Design Board:** `media_1791138265499.jpg` (User-uploaded master board)  
