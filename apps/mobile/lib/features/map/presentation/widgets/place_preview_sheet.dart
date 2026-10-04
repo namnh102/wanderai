@@ -8,6 +8,7 @@ import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/rating_view.dart';
 import '../../../../core/widgets/responsive_wrapper.dart';
 import '../../data/place_model.dart';
+import '../../../location/domain/geo_distance.dart';
 
 /// Bottom sheet showing place preview when a marker is tapped.
 /// Follows GoMate Design Spec Section 6.8 & Rating Integrity DUX-02.
@@ -17,11 +18,16 @@ class PlacePreviewSheet extends StatelessWidget {
   /// When provided, a "Xem chi tiết" action navigates to the Place Detail screen.
   final VoidCallback? onViewDetail;
 
+  /// Distance from the user's real current position. `null` means unknown and
+  /// renders "Khoảng cách chưa xác định" (never a server/default-centre value).
+  final double? distanceKm;
+
   const PlacePreviewSheet({
     super.key,
     required this.place,
     required this.onClose,
     this.onViewDetail,
+    this.distanceKm,
   });
 
   @override
@@ -137,15 +143,15 @@ class PlacePreviewSheet extends StatelessWidget {
                   reviewCount: place.reviewCount,
                 ),
 
-                // Distance
-                if (place.distanceKm != null)
-                  _InfoChip(
-                    icon: Icons.near_me,
-                    label: place.distanceKm! < 1
-                        ? '${(place.distanceKm! * 1000).toInt()}m'
-                        : '${place.distanceKm!.toStringAsFixed(1)} km',
-                    color: AppColors.primary,
-                  ),
+                // Distance — only from the user's real position, else honest unavailable
+                _InfoChip(
+                  key: const Key('place_preview_distance'),
+                  icon: Icons.near_me,
+                  label: distanceLabel(distanceKm),
+                  color: distanceKm == null
+                      ? AppColors.textTertiary
+                      : AppColors.primary,
+                ),
 
                 // Verified badge
                 if (place.isVerified) AppBadge.verified(),
@@ -255,6 +261,7 @@ class _InfoChip extends StatelessWidget {
   final Color color;
 
   const _InfoChip({
+    super.key,
     required this.icon,
     required this.label,
     required this.color,

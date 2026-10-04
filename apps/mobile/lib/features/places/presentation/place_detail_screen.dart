@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:latlong2/latlong.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_radius.dart';
@@ -14,7 +15,10 @@ import '../../../core/widgets/app_error_state.dart';
 import '../../../core/widgets/app_loading.dart';
 import '../../../core/widgets/rating_view.dart';
 import '../../../core/widgets/responsive_wrapper.dart';
+import '../../location/domain/geo_distance.dart';
+import '../../location/providers/user_location_provider.dart';
 import '../../map/data/place_model.dart';
+import '../data/navigation_service.dart';
 import '../providers/place_detail_provider.dart';
 import 'widgets/place_mini_map.dart';
 
@@ -52,16 +56,6 @@ IconData placeCategoryIcon(String? category) {
   }
 }
 
-/// Coordinates-only "Chỉ đường" target. No routing provider is invented:
-/// a neutral `geo:` URI is handed to the OS; where unsupported (e.g. web),
-/// the OSM location of the same coordinates is opened.
-Uri directionsGeoUri(PlaceModel p) => Uri.parse(
-    'geo:${p.latitude},${p.longitude}?q=${p.latitude},${p.longitude}');
-
-Uri directionsFallbackUri(PlaceModel p) => Uri.parse(
-    'https://www.openstreetmap.org/?mlat=${p.latitude}&mlon=${p.longitude}'
-    '#map=17/${p.latitude}/${p.longitude}');
-
 Future<void> _openExternal(Uri uri) async {
   try {
     if (await canLaunchUrl(uri)) {
@@ -72,15 +66,15 @@ Future<void> _openExternal(Uri uri) async {
   }
 }
 
-Future<void> _openDirections(PlaceModel p) async {
-  final geo = directionsGeoUri(p);
-  try {
-    if (await canLaunchUrl(geo)) {
-      await launchUrl(geo);
-      return;
-    }
-  } catch (_) {}
-  await _openExternal(directionsFallbackUri(p));
+/// Unified "Chỉ đường": external map/navigation app with the place's
+/// coordinates; the user's real position is the origin only when known.
+Future<void> _openDirections(PlaceModel p, LatLng? origin) async {
+  if (!p.hasCoordinates) return;
+  await openDirections(
+    destLat: p.latitude!,
+    destLng: p.longitude!,
+    origin: origin,
+  );
 }
 
 /// Place Detail screen — route `/places/:id`.
@@ -132,11 +126,16 @@ class PlaceDetailScreen extends ConsumerWidget {
             onRetry: () => ref.invalidate(placeDetailProvider(placeId)),
           );
         },
-        data: (place) => PlaceDetailView(
-          place: place,
-          onOpenUrl: (url) => _openExternal(Uri.parse(url)),
-          onDirections: () => _openDirections(place),
-        ),
+        data: (place) {
+          final user = ref.watch(userLocationProvider).position;
+          return PlaceDetailView(
+            place: place,
+            distanceKm:
+                distanceFromUserKm(user, place.latitude, place.longitude),
+            onOpenUrl: (url) => _openExternal(Uri.parse(url)),
+            onDirections: () => _openDirections(place, user),
+          );
+        },
       ),
     );
   }
@@ -146,12 +145,16 @@ class PlaceDetailScreen extends ConsumerWidget {
 /// honest "not available" state or are omitted — never invented.
 class PlaceDetailView extends StatelessWidget {
   final PlaceModel place;
+
+  /// Real distance from the user's current position; `null` = unknown.
+  final double? distanceKm;
   final void Function(String url) onOpenUrl;
   final VoidCallback onDirections;
 
   const PlaceDetailView({
     super.key,
     required this.place,
+    this.distanceKm,
     required this.onOpenUrl,
     required this.onDirections,
   });
@@ -320,6 +323,27 @@ class PlaceDetailView extends StatelessWidget {
                                 color: AppColors.textSecondary,
                                 fontFamily: 'monospace'),
                           ),
+                          const SizedBox(height: AppSpacing.xs),
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.near_me,
+                                  size: 14,
+                                  color: distanceKm == null
+                                      ? AppColors.textTertiary
+                                      : AppColors.primary),
+                              const SizedBox(width: AppSpacing.xs),
+                              Text(
+                                distanceLabel(distanceKm),
+                                key: const Key('place_detail_distance'),
+                                style: AppTypography.bodyS.copyWith(
+                                    color: distanceKm == null
+                                        ? AppColors.textTertiary
+                                        : AppColors.primary,
+                                    fontWeight: FontWeight.w600),
+                              ),
+                            ],
+                          ),
                           const SizedBox(height: AppSpacing.sm),
                           PlaceMiniMap(place: place),
                         ],
@@ -381,11 +405,23 @@ class PlaceDetailView extends StatelessWidget {
                 color: AppColors.surface,
                 border: Border(top: BorderSide(color: AppColors.border)),
               ),
-              child: AppButton(
-                key: const Key('place_detail_directions'),
-                text: 'Chỉ đường',
-                icon: Icons.directions,
-                onPressed: onDirections,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    navigationHintText,
+                    key: const Key('place_detail_nav_hint'),
+                    style: AppTypography.bodyS
+                        .copyWith(color: AppColors.textTertiary),
+                  ),
+                  const SizedBox(height: AppSpacing.xs),
+                  AppButton(
+                    key: const Key('place_detail_directions'),
+                    text: 'Chỉ đường',
+                    icon: Icons.directions,
+                    onPressed: onDirections,
+                  ),
+                ],
               ),
             ),
         ],
