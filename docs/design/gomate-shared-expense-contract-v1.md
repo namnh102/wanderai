@@ -18,8 +18,8 @@
 - Master Visual Evidence Artifacts:
   - Mobile Overview V1: [`shared-expense-mobile-overview-v1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.13/shared-expense-mobile-overview-v1.png) ($390 \times 844$)
   - Mobile Add Expense V1: [`shared-expense-mobile-add-v1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.13/shared-expense-mobile-add-v1.png) ($390 \times 844$)
-  - Mobile Expense Detail V1: [`shared-expense-mobile-detail-v1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.13/shared-expense-mobile-detail-v1.png) ($390 \times 844$)
-  - Mobile Balances & Settlements V1: [`shared-expense-mobile-balances-v1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.13/shared-expense-mobile-balances-v1.png) ($390 \times 844$)
+  - Mobile Expense Detail R1: [`shared-expense-mobile-detail-r1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.13/shared-expense-mobile-detail-r1.png) ($390 \times 844$) *(Replaces V1: neutral split shares, removes fake OCR ad)*
+  - Mobile Balances & Settlements R1: [`shared-expense-mobile-balances-r1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.13/shared-expense-mobile-balances-r1.png) ($390 \times 844$) *(Replaces V1: honest 1.2M spent vs 500k debt copy, zero-sum conservation)*
   - Mobile Empty State V1: [`shared-expense-mobile-empty-v1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.13/shared-expense-mobile-empty-v1.png) ($390 \times 844$)
   - Desktop Master Workstation V1: [`shared-expense-desktop-v1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.13/shared-expense-desktop-v1.png) ($1440 \times 900$)
 
@@ -110,10 +110,9 @@ enum SplitType {
   CUSTOM         // Tùy chỉnh số tiền
 }
 
-enum SettlementStatus {
-  UNSETTLED      // Chưa thanh toán
-  SETTLED        // Đã hoàn tiền / quyết toán
-}
+// NOTE: SettlementStatus enum is REMOVED in R1.
+// ExpenseSplit does NOT track individual settlement status.
+// model Settlement is the SOLE canonical source of truth for debt reconciliation.
 
 model Expense {
   id              String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
@@ -144,9 +143,7 @@ model ExpenseSplit {
   id              String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   expenseId       String           @map("expense_id") @db.Uuid
   userId          String           @map("user_id") @db.Uuid
-  shareAmount     Int              @map("share_amount") // Integer VND (> 0)
-  status          SettlementStatus @default(UNSETTLED)
-  settledAt       DateTime?        @map("settled_at") @db.Timestamptz
+  shareAmount     Int              @map("share_amount") // Integer VND (> 0) - Immutable allocation obligation
   createdAt       DateTime         @default(now()) @map("created_at") @db.Timestamptz
 
   expense         Expense          @relation(fields: [expenseId], references: [id], onDelete: Cascade)
@@ -162,7 +159,7 @@ model Settlement {
   tripId          String          @map("trip_id") @db.Uuid
   debtorId        String          @map("debtor_id") @db.Uuid   // Người hoàn tiền
   creditorId      String          @map("creditor_id") @db.Uuid // Người nhận tiền
-  amount          Int             // Integer VND (> 0)
+  amount          Int             // Integer VND (> 0) - Offline reimbursement amount
   currency        String          @default("VND") @db.VarChar(10)
   notes           String?         @db.Text
   settledAt       DateTime        @default(now()) @map("settled_at") @db.Timestamptz
@@ -186,13 +183,20 @@ Access to the shared expense ledger requires strict server-side validation again
 
 | User Persona | View Ledger | Add Expense | Edit/Delete Expense | Record Settlement | Rationale & Security Boundary |
 | :--- | :---: | :---: | :---: | :---: | :--- |
-| **Trip Owner** (`trip.userId === req.user.id`) | **YES** | **YES** | **YES** (All) | **YES** | Trip administrator and primary financial trustee. |
+| **Trip Owner** (`trip.userId === req.user.id`) | **YES** | **YES** | **YES** (All) | **YES** (All)* | Trip administrator and primary financial trustee. |
 | **Trip Member** (`TripMember.tripId === trip.id`) | **YES** | **YES** | **YES** (Own only)* | **YES** (Involved)* | Active member participating in trip expenses. |
 | **GroupMember only** (No `TripMember` record) | **NO (403)**| **NO (403)**| **NO (403)** | **NO (403)** | Group chat membership does NOT grant financial access. |
 | **Matched Buddy** (No trip invitation) | **NO (403)**| **NO (403)**| **NO (403)** | **NO (403)** | Consent match does NOT grant access to private trips. |
 | **Unrelated Stranger** | **NO (403)**| **NO (403)**| **NO (403)** | **NO (403)** | Blocked by `findById` trip authorization guard. |
 
-*\*Note on Member Edit/Delete:* In V1 design target, a TripMember can edit or delete an expense only if `expense.createdByUserId === req.user.id`. The Trip Owner can edit/delete any expense to resolve bookkeeping errors.
+### Settlement Authorization Rules & Server Invariants:
+1. **Trip Owner Authority:** The Trip Owner may record any valid settlement within the trip to resolve bookkeeping errors or assist members.
+2. **Member Invariant (Involved Parties Only):** A regular TripMember may record a settlement **only if** they are a direct participant:
+   $$\text{req.user.id} == \text{debtorId} \quad \lor \quad \text{req.user.id} == \text{creditorId}$$
+   An unrelated TripMember cannot record a settlement between two other members (`403 Forbidden`).
+3. **Identity Invariant:** `createdByUserId` is strictly server-injected from the authenticated JWT session (`req.user.id`). Client-supplied creator IDs are ignored.
+4. **Amount Invariant:** `settlement.amount > 0` and must not exceed the current outstanding net debt between `debtorId` and `creditorId`.
+5. **Expense Edit/Delete Authority:** A TripMember may edit or delete an expense only if `expense.createdByUserId === req.user.id`. The Trip Owner can edit/delete any expense to maintain ledger health.
 
 ---
 
@@ -269,19 +273,42 @@ Server-side validation rejects any non-matching payload with `400 Bad Request`.
 
 ## 13. Balance Algorithm (Công Thức Tính Toán Công Nợ)
 
-For each participant $u$ in the trip:
+For each participant $u$ in the trip, the ledger calculates their net financial position deterministically from raw immutable records:
 
-1. **Total Paid:**
-   $$\text{paidAmount}(u) = \sum \{ \text{expense.amount} \mid \text{expense.paidByUserId} = u \}$$
-2. **Total Owed (Share of expenses):**
-   $$\text{owedAmount}(u) = \sum \{ \text{split.shareAmount} \mid \text{split.userId} = u \}$$
-3. **Net Balance:**
-   $$\text{netBalance}(u) = \text{paidAmount}(u) - \text{owedAmount}(u) + \text{netSettlements}(u)$$
+### 1. Base Expense Positions:
+- **Total Paid by User:**
+  $$\text{paidAmount}(u) = \sum \{ \text{expense.amount} \mid \text{expense.paidByUserId} = u \}$$
+- **Total Owed by User (Sum of Expense Obligations):**
+  $$\text{owedAmount}(u) = \sum \{ \text{split.shareAmount} \mid \text{split.userId} = u \}$$
+- **Base Net Position (Trước quyết toán):**
+  $$\text{baseNet}(u) = \text{paidAmount}(u) - \text{owedAmount}(u)$$
 
-### Semantic Interpretation:
-- $\text{netBalance}(u) > 0$: **Được nhận lại** (Creditor — other members owe money to this user).
-- $\text{netBalance}(u) < 0$: **Cần trả** (Debtor — this user owes money to the group).
-- $\text{netBalance}(u) = 0$: **Cân đối** (Balanced — all shares settled).
+### 2. Settlement Adjustments:
+Reimbursements occur via `Settlement` records (where debtor $D$ pays creditor $C$):
+- **Outgoing Settlements (Tiền đã hoàn trả cho chủ nợ):**
+  $$\text{outgoingSettlement}(u) = \sum \{ s.\text{amount} \mid s.\text{debtorId} = u \}$$
+- **Incoming Settlements (Tiền đã nhận lại từ người nợ):**
+  $$\text{incomingSettlement}(u) = \sum \{ s.\text{amount} \mid s.\text{creditorId} = u \}$$
+
+### 3. Net Outstanding Balance (Vị thế công nợ còn lại):
+$$\text{netOutstanding}(u) = \text{paidAmount}(u) - \text{owedAmount}(u) + \text{outgoingSettlement}(u) - \text{incomingSettlement}(u)$$
+$$\text{netOutstanding}(u) = \text{baseNet}(u) + \text{outgoingSettlement}(u) - \text{incomingSettlement}(u)$$
+
+### 4. Semantic Interpretation:
+- $\text{netOutstanding}(u) > 0$: **Được nhận lại** (Creditor — other members still owe this user money).
+- $\text{netOutstanding}(u) < 0$: **Cần trả** (Debtor — this user still owes money to the group).
+- $\text{netOutstanding}(u) = 0$: **Cân đối** (Fully balanced — all obligations cleared).
+
+### 5. Mathematical Zero-Sum Conservation Invariant:
+At all times (before, during, and after any number of partial or full settlements):
+$$\sum_{u \in \text{TripParticipants}} \text{netOutstanding}(u) = 0\text{ VND}$$
+
+### 6. Outstanding Debt Aggregate vs. Total Actual Spending:
+- **Total Actual Spending (Tổng chi tiêu đã ghi nhận):**
+  $$\text{totalSpent} = \sum \text{expense.amount} = 1.200.000\text{ đ}$$
+- **Total Outstanding Debt (Công nợ còn cần quyết toán):**
+  $$\text{totalOutstandingDebt} = \sum_{u, \text{netOutstanding}(u) < 0} |\text{netOutstanding}(u)| = |-100.000| + |-400.000| = 500.000\text{ đ}$$
+These two metrics represent distinct financial dimensions and MUST NEVER be conflated in UI copy.
 
 ---
 
@@ -307,10 +334,17 @@ This guarantees at most $N - 1$ settlement transactions for $N$ members.
 ### CRITICAL DISTINCTION:
 $$\textbf{"Ghi nhận đã hoàn tiền" } \ne \textbf{ Thanh toán tiền điện tử}$$
 
-1. **Manual Record Only:** GoMate is an **expense tracking ledger**, NOT an e-wallet, payment gateway, or banking app.
-2. **Zero Financial Transfer:** Clicking *"Ghi nhận đã hoàn tiền"* records a ledger settlement event indicating that money changed hands offline (via cash, external bank transfer, or mutual agreement).
-3. **No Third-Party Claims:** The UI strictly omits any fake branding for MoMo, ZaloPay, VNPay, PayPal, or card charging.
-4. **Settlement Confirmation Modal:**
+1. **Sole Source of Truth for Debt Clearance:** `model Settlement` is the **only** canonical entity that records debt reimbursement in GoMate. `ExpenseSplit` records are immutable allocation shares and never hold settlement statuses or timestamps.
+2. **Ledger Impact:** Recording a settlement directly updates `outgoingSettlement(debtor)` and `incomingSettlement(creditor)`. It decreases the debtor's debt and the creditor's receivable without modifying historical expense records.
+3. **Manual Record Only:** GoMate is an **expense tracking ledger**, NOT an e-wallet, payment gateway, or banking app.
+4. **Zero Financial Transfer:** Clicking *"Ghi nhận đã hoàn tiền"* records a ledger settlement event indicating that money changed hands offline (via cash, external bank transfer, or mutual agreement).
+5. **No Third-Party Claims:** The UI strictly omits any fake branding for MoMo, ZaloPay, VNPay, PayPal, or card charging.
+6. **Server-Side Validation Rules:**
+   - `amount > 0` (Integer VND).
+   - `debtorId !== creditorId`.
+   - `amount <= currentNetDebt(debtor, creditor)`: The system rejects over-settlement.
+   - `createdByUserId` must be Trip Owner, the debtor, or the creditor.
+7. **Settlement Confirmation Modal:**
    - Dialog Title: *"Xác nhận ghi nhận đã hoàn tiền?"*
    - Details: `Người hoàn tiền: [Tên]` $\rightarrow$ `Người nhận: [Tên]` · `Số tiền: [X đ]`.
    - Actions: `[Xác nhận]` | `[Hủy]`.
@@ -345,14 +379,23 @@ All master mockups across mobile and desktop are strictly synchronized to the fo
    - Participants: Nam ($100\text{k}$), Khánh ($100\text{k}$), Mai ($100\text{k}$) — Equal Split
 
 ### Mathematical Reconciliation:
-- **Total Actual Spent:** $900.000 + 300.000 = \mathbf{1.200.000\text{ VND}}$ ($24\%$ of $5\text{M}$ budget).
+- **Total Actual Spent (Tổng chi tiêu đã ghi nhận):** $900.000 + 300.000 = \mathbf{1.200.000\text{ VND}}$ ($24\%$ of $5\text{M}$ budget).
+- **Total Outstanding Debt (Công nợ còn cần quyết toán):** $|-100.000| + |-400.000| = \mathbf{500.000\text{ VND}}$.
 - **Remaining Actual Budget:** $5.000.000 - 1.200.000 = \mathbf{+3.800.000\text{ VND}}$.
 - **Member Balances:**
   - **Nam:** Paid $900\text{k}$ · Shares: $300\text{k} + 100\text{k} = 400\text{k} \implies \mathbf{+500.000\text{ đ}}$ (Được nhận lại)
   - **Khánh:** Paid $300\text{k}$ · Shares: $300\text{k} + 100\text{k} = 400\text{k} \implies \mathbf{-100.000\text{ đ}}$ (Cần trả)
   - **Mai:** Paid $0\text{ đ}$ · Shares: $300\text{k} + 100\text{k} = 400\text{k} \implies \mathbf{-400.000\text{ đ}}$ (Cần trả)
 - **Conservation Check:**
-  $$\sum \text{netBalance} = +500.000 + (-100.000) + (-400.000) = \mathbf{0\text{ VND}}$$
+  $$\sum \text{netOutstanding} = +500.000 + (-100.000) + (-400.000) = \mathbf{0\text{ VND}}$$
+- **Canonical UI Copy Alignment (Balances Screen R1):**
+  - Metric 1: *"Tổng chi tiêu đã ghi nhận: 1.200.000 đ"*
+  - Metric 2: *"Công nợ còn cần quyết toán: 500.000 đ"*
+  - Accounting invariant note: *"Bảo toàn giá trị: Tổng vị thế ròng = 0 đ"*
+  - Debt counter: *"2 khoản nợ chưa quyết toán"*
+- **Canonical UI Copy Alignment (Expense Detail Screen R1):**
+  - Payer card: *"Lê Hoàng Nam (Bạn) / Đã thanh toán: 900.000 đ · Ứng trước ròng: 600.000 đ"*
+  - Split rows: Neutral allocation obligations (Nam: $300\text{k}$, Khánh: $300\text{k}$, Mai: $300\text{k}$), without confusing per-split "Chưa hoàn tiền" labels.
 - **Minimal Settlements:**
   1. Trần Khánh $\longrightarrow$ Lê Hoàng Nam : **$100.000\text{ đ}$**
   2. Nguyễn Thị Mai $\longrightarrow$ Lê Hoàng Nam : **$400.000\text{ đ}$**
@@ -381,16 +424,19 @@ All master mockups across mobile and desktop are strictly synchronized to the fo
 1. **Member Leaves Trip:**
    - If a member leaves or is removed from a trip, their historical `ExpenseSplit` and payment records **MUST NOT be deleted**.
    - Leaving the trip does **NOT** forgive outstanding debt.
-   - The member's name remains visible on historical ledger cards with an inactive status tag (e.g. `(Đã rời chuyến đi)`).
-2. **User Account Deletion:**
-   - Anonymized historical preservation: In the event of a hard User account deletion, database foreign keys must use `SET NULL` on display fields or retain an immutable snapshot name to prevent ledger corruption.
+   - The member's name remains visible on historical ledger cards with an inactive status tag: `(Đã rời chuyến đi)`.
+2. **User Account Deletion (Architecture & Policy Reality):**
+   - **Schema Reality:** Target schema uses `onDelete: Restrict` for all user foreign keys (`paidByUserId`, `userId`, `debtorId`, `creditorId`).
+   - Consequently, a User account with recorded financial transactions **CANNOT be hard-deleted** from PostgreSQL without violating relational integrity.
+   - **Policy Classification:** Hard user deletion, snapshot name decoupling, and GDPR "right to be forgotten" in financial ledgers are classified as **`FUTURE ARCHITECTURE / POLICY GAP`**.
+   - The system does **NOT** claim immutable snapshot support or automatic nullification exists in V1.
 
 ---
 
 ## 19. Privacy & Safety Boundary
 
 1. **Exposed Ledger Data:**
-   - Display name, profile avatar, expense title, amount, category, date, personal share, and settlement status.
+   - Display name, profile avatar, expense title, amount, category, date, personal share, and trip-level settlement records.
 2. **Strictly Concealed Private Data:**
    - **NEVER EXPOSED:** Email address, phone number, bank account details, credit card numbers, password/JWT tokens, live GPS coordinates, or emergency contacts.
 
@@ -402,7 +448,7 @@ All master mockups across mobile and desktop are strictly synchronized to the fo
 2. **Boundary Rules:**
    - Photo attachment / receipt upload is classified as **FUTURE CAPABILITY**.
    - OCR automatic bill scanning is classified as **FUTURE AI SERVICE**.
-   - Production mockups show clean manual expense entry without simulated camera/scanner widgets.
+   - **Honest Production UI:** Production screens show clean manual expense entry and clean notes without promotional paragraphs for unimplemented OCR or camera scanning.
 
 ---
 
@@ -468,16 +514,18 @@ Raw database errors (Prisma, SQL, 500) are never exposed to users.
 
 ## 27. Current vs. Future Capability Matrix
 
-| Dimension | Current Runtime Status | Architectural Contract V1 | Future Target |
+| Dimension | Current Runtime Status | Architectural Contract V1 / R1 | Future Target |
 | :--- | :---: | :---: | :--- |
 | **Expense Data Model** | **MISSING** | **SCHEMA SPECIFICATION** | PostgreSQL `model Expense` migration |
-| **Expense Split Model** | **MISSING** | **SCHEMA SPECIFICATION** | PostgreSQL `model ExpenseSplit` migration |
-| **Settlement Model** | **MISSING** | **SCHEMA SPECIFICATION** | PostgreSQL `model Settlement` migration |
+| **Expense Split Model** | **MISSING** | **SCHEMA SPECIFICATION** | PostgreSQL `model ExpenseSplit` (immutable share obligations) |
+| **Per-Split Settlement Status** | **EXCLUDED** | **REMOVED FROM V1** | Anti-pattern eliminated; zero status columns in `ExpenseSplit` |
+| **Settlement Model** | **MISSING** | **SCHEMA SPECIFICATION** | PostgreSQL `model Settlement` (sole canonical truth) |
+| **Trip-Level Settlement Record**| **MISSING** | **DESIGN LOCKED** | Offline reconciliation marking between debtor and creditor |
 | **Equal Split (Chia đều)**| **MISSING** | **DESIGN LOCKED** | Backend deterministic remainder split |
 | **Custom Split (Tùy chỉnh)**| **MISSING**| **DESIGN LOCKED** | Client/server zero-sum validation |
-| **Balance Calculation** | **MISSING** | **DESIGN LOCKED** | Realtime ledger balance derivation |
+| **Balance Calculation** | **MISSING** | **DESIGN LOCKED** | Explicit sign formula: $\text{baseNet} + \text{outgoing} - \text{incoming}$ |
 | **Settlement Suggestions** | **MISSING**| **DESIGN LOCKED** | Greedy $N-1$ transaction minimizer |
-| **Manual Settlement Record**| **MISSING**| **DESIGN LOCKED** | Offline reconciliation marking |
+| **User Deletion / History** | **RESTRICTED**| **FUTURE ARCHITECTURE / POLICY GAP** | Snapshot decoupling / anonymization policy |
 | **E-Wallet / Card Payment**| **EXCLUDED**| **OUT OF SCOPE** | Payment gateway integration |
 | **Receipt Photo Upload** | **MISSING** | **FUTURE SPECIFICATION** | S3 / MinIO object storage |
 | **Receipt OCR Scanner** | **MISSING** | **FUTURE SPECIFICATION** | Multimodal Gemini receipt parser |
