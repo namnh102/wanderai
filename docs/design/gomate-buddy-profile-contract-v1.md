@@ -1,7 +1,7 @@
-# GoMate Buddy Profile — UX, Privacy & Connection Entry Contract V1
+# GoMate Buddy Profile — UX, Privacy & Connection Entry Contract V1 (R1 Locked)
 
-**Status:** APPROVED DESIGN & CONTRACT SPECIFICATION  
-**Task:** TASK 08.2.3.8 — GOMATE BUDDY PROFILE UX, PRIVACY & CONNECTION ENTRY CONTRACT V1  
+**Status:** APPROVED DESIGN & CONTRACT SPECIFICATION (R1 SAFETY LOCKED)  
+**Task:** TASK 08.2.3.8 / TASK 08.2.3.8-R1 — GOMATE BUDDY PROFILE SAFETY HONESTY MICRO-FIX  
 **Module:** Travel Buddy Public Profile & Connection Entry (`/buddy/profile/:userId`)  
 **Target Viewports:** Mobile ($390 \times 844$), Tablet ($768 \times 1024$), Desktop ($1440 \times 900$)  
 **Source of Truth:** 
@@ -9,8 +9,8 @@
 - Discovery Contract: `docs/design/gomate-buddy-discovery-contract-v1.md`
 - Discovery Audits: `docs/audit/ui/task-08.2.3.7-buddy-discovery-audit.md`, `docs/audit/ui/task-08.2.3.7-r1-buddy-discovery-correction.md`
 - Master Visual Artifacts:
-  - Mobile Profile V1: `docs/audit/evidence/ui-08.2.3.8/buddy-mobile-profile-v1.png` ($390 \times 844$)
-  - Desktop Profile V1: `docs/audit/evidence/ui-08.2.3.8/buddy-desktop-profile-v1.png` ($1440 \times 900$)
+  - Mobile Profile R1: `docs/audit/evidence/ui-08.2.3.8/buddy-mobile-profile-r1.png` ($390 \times 844$)
+  - Desktop Profile R1: `docs/audit/evidence/ui-08.2.3.8/buddy-desktop-profile-r1.png` ($1440 \times 900$)
 
 ---
 
@@ -33,8 +33,14 @@ The **Buddy Profile** screen (`Hồ sơ bạn đồng hành`) represents the **P
    Exact `dateOfBirth` is sensitive personal data. Discovery and pre-match profiles strictly expose standardized 5-year **Age Bands** (`20–24 tuổi`, `25–29 tuổi`, `30–34 tuổi`, `35–39 tuổi`).
 5. **Location & Itinerary Privacy:**
    - **Never expose exact real-time GPS coordinates** or live hotel addresses. Only broad destination overlaps (e.g., `"Đà Nẵng"`) are public.
+   - **Privacy Reassurance Copy:** In privacy notices, real-time location is affirmed as:
+     $$\textbf{"Vị trí thời gian thực: GoMate không hiển thị vị trí này trong hồ sơ bạn đồng hành."}$$
    - **Never expose detailed minute-by-minute timelines** (e.g. "08:00 ăn sáng, 10:00 tắm biển"). Broad trip dates (e.g. `"15/10 – 18/10/2026"`) are the sole temporal overlap exposed.
-6. **Information Architecture Parity (Canonical 5-Tab Root):**
+6. **Safety Honesty Invariant (No False Production Support):**
+   - Bảng `UserBlock` và `UserReport` hiện chưa có trong cơ sở dữ liệu (`UNSAFE / BLOCKED DEPENDENCY`).
+   - Thẻ và hành động báo cáo trực tiếp bị loại bỏ khỏi thanh tiêu đề mobile để không tạo ảo tưởng về tính năng đang hoạt động.
+   - Trên desktop, các thành phần an toàn được dán nhãn rõ ràng: `DESIGN TARGET — BLOCKED`.
+7. **Information Architecture Parity (Canonical 5-Tab Root):**
    Buddy Profile is a contextual submodule accessed from travel context (`Trip Detail > Buddy Discovery > Buddy Profile`). Desktop top navigation preserves the canonical 5 root tabs (`Khám phá`, `Bản đồ`, `Wandy AI`, `Chuyến đi` [active], `An toàn`) and uses breadcrumb navigation.
 
 ---
@@ -43,7 +49,7 @@ The **Buddy Profile** screen (`Hồ sơ bạn đồng hành`) represents the **P
 
 | Capability Area | Backend NestJS | Flutter Client | Database (`schema.prisma`) | Design Specification | Capability Status | Implementation Reality |
 | :--- | :---: | :---: | :---: | :---: | :---: | :--- |
-| **Public Buddy Profile** | Missing | Missing | `Profile` & `TravelPreference` | `buddy-mobile-profile-v1.png` | **DESIGN TARGET** | DB models exist; public read API and UI missing. |
+| **Public Buddy Profile** | Missing | Missing | `Profile` & `TravelPreference` | `buddy-mobile-profile-r1.png` | **DESIGN TARGET** | DB models exist; public read API and UI missing. |
 | **Profile Bio** | `GET/PUT /users/me` | Basic profile | `Profile.bio` (String?) | Bio snippet or fallback | **CURRENT (DB) / PARTIAL (API)**| Persisted in DB; public endpoint missing. |
 | **Age Band Privacy** | Missing | Missing | `Profile.dateOfBirth` | 5-year age bands | **DESIGN TARGET** | Computed server-side; exact DOB masked. |
 | **Travel Preferences**| Missing | Missing | `TravelPreference` | Style, group, budget tier | **PARTIAL (DB Only)** | Enums in DB; public read API missing. |
@@ -119,7 +125,7 @@ Before a mutual match connection is established, the candidate profile renders s
 
 ```
 ============================================================
-GOMATE PRIVACY TIERS FOR BUDDY PROFILE
+GOMATE PRIVACY TIERS FOR BUDDY PROFILE (R1 LOCKED)
 ============================================================
 
 TIER 1: PUBLIC PRE-MATCH (Unconditionally visible on Profile)
@@ -145,7 +151,7 @@ TIER 3: LOCKED PRE-MATCH (Revealed only after mutual connection acceptance)
 TIER 4: SENSITIVE / NEVER EXPOSED (Never rendered in UI)
 - Account Email Address (`User.email`) & Password Hash
 - Exact Date of Birth (`Profile.dateOfBirth`)
-- Real-Time Live GPS Coordinates
+- Real-Time Live GPS Coordinates: "GoMate không hiển thị vị trí này trong hồ sơ bạn đồng hành."
 - Emergency Contacts (`SafetyContact`) & SOS Alert Logs
 - Internal Database UUIDs
 ============================================================
@@ -183,7 +189,7 @@ To set transparent expectations and build user trust, the profile renders an exp
 - Rows:
   - Row 1: `Số điện thoại cá nhân` $\longrightarrow$ `Chỉ hiển thị sau khi kết nối`
   - Row 2: `Lịch trình chi tiết theo giờ` $\longrightarrow$ `Chỉ chia sẻ khi là bạn đồng hành`
-  - Desktop Row 3: `Vị trí thời gian thực (GPS)` $\longrightarrow$ `Tuyệt đối không chia sẻ`
+  - Desktop Row 3: `Vị trí thời gian thực` $\longrightarrow$ `GoMate không hiển thị vị trí này trong hồ sơ bạn đồng hành.`
 
 ### 7.2. Anti-Masking Invariant
 - **Rule:** Never render fake masked phone numbers (e.g. `09xx xxx xxx` or `0912***789`). The UI displays an honest placeholder state explaining the unlock condition.
@@ -227,23 +233,23 @@ $$\text{Gửi lời mời} \neq \text{Kết nối ngay lập tức}$$
 
 ## 10. Multi-Platform & Responsive Rules
 
-### 10.1. Mobile ($390 \times 844$) — `buddy-mobile-profile-v1.png`
+### 10.1. Mobile ($390 \times 844$) — `buddy-mobile-profile-r1.png`
 - Single-column vertical scroll flow.
-- Top App Bar with back navigation arrow, title `"Hồ sơ bạn đồng hành"`, and right action `"Báo cáo"` (flag icon).
+- Top App Bar with back navigation arrow and title `"Hồ sơ bạn đồng hành"`. (Direct `"Báo cáo"` action removed in R1 to prevent overclaiming runtime safety support).
 - Fixed bottom action bar anchoring `"Gửi lời mời kết nối"` with safety helper text.
 - Clean layout without browser scrollbars.
 
 ### 10.2. Tablet ($768 \times 1024$)
 - Centered 2-column layout: Left column ($320\text{px}$) sticky identity and locked data; Right column ($400\text{px}$) compatibility, about, preferences, and action button.
 
-### 10.3. Desktop ($1440 \times 900$) — `buddy-desktop-profile-v1.png`
+### 10.3. Desktop ($1440 \times 900$) — `buddy-desktop-profile-r1.png`
 - Full-width top header ($64\text{px}$) preserving canonical 5-tab root navigation: `Khám phá`, `Bản đồ`, `Wandy AI`, `Chuyến đi` (active teal underline), `An toàn`.
 - Contextual breadcrumb trail: `Chuyến đi > Khám phá Đà Nẵng 4N3Đ > Bạn đồng hành > Hồ sơ Lê Hoàng Nam`.
 - 2-Column Workstation Layout:
   - **Left Column ($440\text{px}$):**
     - Identity Card (80dp avatar, name, verified badge, age band, nationality, languages, full bio box).
-    - Locked Privacy Card with status indicators for phone, itinerary, and live GPS.
-    - Safety Notice Box: `"Báo cáo vi phạm hoặc chặn người dùng (Mục tiêu thiết kế)"`.
+    - Locked Privacy Card with status indicators for phone, itinerary, and live GPS (`GoMate không hiển thị vị trí này trong hồ sơ bạn đồng hành.`).
+    - Safety Notice Box: `"Báo cáo vi phạm hoặc chặn người dùng"`, clearly badged: `DESIGN TARGET — BLOCKED`.
   - **Right Column ($900\text{px}$):**
     - Compatibility Hero Card with 3 checked factual criteria.
     - Preferences & Interests Card (3-column grid for style, group, budget; tag cloud for experiences).
@@ -253,7 +259,7 @@ $$\text{Gửi lời mời} \neq \text{Kết nối ngay lập tức}$$
 
 ## 11. Accessibility Contract
 
-- **Touch Target Minimum:** All interactive controls (back arrow, report button, connection CTA, back button) satisfy $\ge 44 \times 44\text{ dp}$.
+- **Touch Target Minimum:** All interactive controls (back arrow, connection CTA, back button) satisfy $\ge 44 \times 44\text{ dp}$.
 - **Screen Reader Announcements:** Profile components are wrapped in semantic labels:
   *"Hồ sơ bạn đồng hành của Lê Hoàng Nam, tài khoản đã xác minh, độ tuổi 25 đến 29, quốc tịch Việt Nam. Phù hợp với chuyến đi Đà Nẵng vì trùng toàn bộ 4 ngày từ 15 đến 18 tháng 10 và phong cách du lịch Thoải mái. Thông tin riêng tư như số điện thoại và lịch trình chi tiết đang được khóa. Nút bấm: Gửi lời mời kết nối."*
 - **Color Independence:** Compatibility indicators use explicit text and checkmark icons (`✓`), never color-only cues.

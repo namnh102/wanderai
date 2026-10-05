@@ -1,7 +1,7 @@
-# GoMate Buddy Profile — Capability Audit & Architecture Report (TASK 08.2.3.8)
+# GoMate Buddy Profile — Capability Audit & Architecture Report (TASK 08.2.3.8 / R1)
 
-**Status:** APPROVED ARCHITECTURAL AUDIT & UX SPECIFICATION  
-**Task:** TASK 08.2.3.8 — GOMATE BUDDY PROFILE UX, PRIVACY & CONNECTION ENTRY CONTRACT V1  
+**Status:** APPROVED ARCHITECTURAL AUDIT & UX SPECIFICATION (R1 SAFETY REFINED)  
+**Task:** TASK 08.2.3.8 / TASK 08.2.3.8-R1 — GOMATE BUDDY PROFILE SAFETY HONESTY MICRO-FIX  
 **Date:** October 5, 2026  
 **Branch:** `feature/gomate-visual-mockups`  
 **Target Viewports:** Mobile ($390 \times 844$), Desktop ($1440 \times 900$)  
@@ -11,11 +11,11 @@
 
 ## 1. Executive Summary & Audit Overview
 
-TASK 08.2.3.8 audits and specifies the UX contract, privacy boundaries, and connection entry point for the **Buddy Profile** (`Hồ sơ bạn đồng hành`) in GoMate.
+TASK 08.2.3.8 and refinement R1 audit and specify the UX contract, privacy boundaries, and connection entry point for the **Buddy Profile** (`Hồ sơ bạn đồng hành`) in GoMate.
 
 The Buddy Profile is a **Public Pre-Match Profile** reached from Buddy Discovery when a traveler evaluates a potential companion. The screen must maintain strict data honesty, preserve privacy tiers, prevent algorithmic fabrication, and establish clear boundaries between public evaluation and private post-connection access.
 
-### Key Audit Findings:
+### Key Audit Findings & R1 Safety Refinements:
 1. **Schema Reality (`schema.prisma`):**
    - Model `Profile` contains: `userId`, `displayName`, `avatar`, `bio`, `phone`, `dateOfBirth`, `nationality`, `languages`.
    - Model `TravelPreference` contains: `userId`, `travelStyle`, `budgetMin`, `budgetMax`, `preferredGroup`, `interests`, `avoidances`, `dietaryNeeds`.
@@ -25,11 +25,13 @@ The Buddy Profile is a **Public Pre-Match Profile** reached from Buddy Discovery
    - Backend `users.controller.ts` exposes only `GET /users/me` and `PUT /users/me`.
    - **Zero public profile endpoints exist** (e.g. `GET /users/:id/public-profile` is missing).
    - **Zero match request endpoints exist** (e.g. `POST /buddy/matches` is missing).
-3. **Safety & Privacy Reality:**
+3. **Safety & Privacy Reality (R1 Audit):**
    - `User.isVerified` means **email/account verification only**. It does not represent KYC, CCCD, or legal identity verification.
    - `Profile` has **no city, province, hometown, or residence field**.
-   - `UserBlock` and `UserReport` models are **missing from schema**.
-   - `isDiscoverable` flag is **missing from schema**.
+   - `UserBlock` and `UserReport` models are **missing from schema** (`UNSAFE / BLOCKED DEPENDENCY`).
+   - In R1, the direct "Báo cáo" action was **removed from mobile top App Bar** to avoid misleading users into thinking reporting is active in production.
+   - In desktop, the safety notice is explicitly badged: `DESIGN TARGET — BLOCKED`.
+   - In desktop privacy rows, real-time GPS is clarified as privacy reassurance: *"GoMate không hiển thị vị trí này trong hồ sơ bạn đồng hành."*
 
 ---
 
@@ -110,7 +112,7 @@ The Buddy Profile is a **Public Pre-Match Profile** reached from Buddy Discovery
 
 ```
 ============================================================
-FIELD PRIVACY CLASSIFICATION AUDIT
+FIELD PRIVACY CLASSIFICATION AUDIT (R1 REFINED)
 ============================================================
 
 1. PUBLIC PRE-MATCH (Safe for unauthenticated discovery & profile viewing):
@@ -134,7 +136,7 @@ FIELD PRIVACY CLASSIFICATION AUDIT
    - User.email: Account authentication credential
    - User.passwordHash: Security credential
    - Profile.dateOfBirth: Exact date of birth (must be masked to Age Band)
-   - Real-time GPS: Live user coordinates
+   - Real-time GPS: Reassured copy "GoMate không hiển thị vị trí này trong hồ sơ bạn đồng hành."
    - SafetyContact: Emergency SOS contacts
    - Internal UUIDs: id, userId, senderId, receiverId
 
@@ -151,11 +153,11 @@ FIELD PRIVACY CLASSIFICATION AUDIT
 
 | Capability | Backend NestJS | Flutter Client | Database (`schema.prisma`) | Design Specification | Status | Evidence |
 | :--- | :---: | :---: | :---: | :---: | :---: | :--- |
-| **Public Buddy Profile** | Missing | Missing | `Profile` & `TravelPreference` | `buddy-mobile-profile-v1.png` | **DESIGN TARGET** | Audited schema; public read API missing. |
+| **Public Buddy Profile** | Missing | Missing | `Profile` & `TravelPreference` | `buddy-mobile-profile-r1.png` | **DESIGN TARGET** | Audited schema; public read API missing. |
 | **Profile Bio** | `GET/PUT /users/me` | Basic profile | `Profile.bio` (String?) | Bio snippet or fallback | **CURRENT (DB) / PARTIAL (API)**| Bio persisted in DB; public endpoint missing. |
 | **Age Band Privacy** | Missing | Missing | `Profile.dateOfBirth` | 5-year age bands | **DESIGN TARGET** | Computed server-side; exact DOB masked. |
 | **Travel Preferences**| Missing | Missing | `TravelPreference` | Style, group, budget tier | **PARTIAL (DB Only)** | Enums in DB; public read API missing. |
-| **Compatibility Reasons**| Missing | Missing | `Match.explanation` | Checkmarked factual list | **DESIGN TARGET** | Visualized in `buddy-mobile-profile-v1.png`. |
+| **Compatibility Reasons**| Missing | Missing | `Match.explanation` | Checkmarked factual list | **DESIGN TARGET** | Visualized in `buddy-mobile-profile-r1.png`. |
 | **Private Contact Unlock**| Missing | Missing | `Profile.phone` | Locked section pre-match | **PARTIAL (DB Only)** | Model has phone; unlock logic requires match state. |
 | **Trip Detail Sharing**| `POST :id/members`| Missing | `TripMember` | Post-match sharing | **CURRENT (API) / PARTIAL (UI)**| API exists for invite by email; UI pending. |
 | **Connection Request** | Missing | Missing | `Match` (status `PENDING`) | Primary CTA button | **PARTIAL (DB Only)** | DB model exists; request API controller missing. |
@@ -164,14 +166,14 @@ FIELD PRIVACY CLASSIFICATION AUDIT
 
 ---
 
-## 5. Visual Artifacts Verification (2 Master Mockups)
+## 5. Visual Artifacts Verification (R1 Master Mockups)
 
-Per task instructions, exactly **two** master mockups were produced and verified at `docs/audit/evidence/ui-08.2.3.8/`:
+Exactly **two** master mockups were produced and verified at `docs/audit/evidence/ui-08.2.3.8/`:
 
 | Mockup File | Viewport | Target Resolution | Architectural & Visual Compliance Audit | Status |
 | :--- | :---: | :---: | :--- | :---: |
-| [`buddy-mobile-profile-v1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.8/buddy-mobile-profile-v1.png) | Mobile | $390 \times 844$ | 1. Status bar & App Bar with back navigation + "Báo cáo" action.<br>2. Identity card: avatar (HN), "Lê Hoàng Nam", "Tài khoản đã xác minh" badge, "25–29 tuổi · Việt Nam", languages.<br>3. Compatibility card: "Phù hợp với chuyến đi Đà Nẵng (15–18/10)" with 3 factual checkmarked reasons.<br>4. About section: raw bio text without fabrication.<br>5. Travel preferences: "Thoải mái (Comfort)", "Nhóm nhỏ (2–4 người)", "~2.0M / ngày", 4 interest chips.<br>6. Locked privacy card: phone and hourly itinerary clearly locked.<br>7. Fixed bottom action bar: "Gửi lời mời kết nối" CTA + safety helper text: "Người này chỉ được kết nối với bạn sau khi họ chấp nhận lời mời."<br>8. Zero browser scrollbars, clean pixel rendering. | **PASS** |
-| [`buddy-desktop-profile-v1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.8/buddy-desktop-profile-v1.png) | Desktop | $1440 \times 900$ | 1. Canonical 5-tab root navigation (Khám phá, Bản đồ, Wandy AI, Chuyến đi [active], An toàn).<br>2. Breadcrumb: Chuyến đi > Khám phá Đà Nẵng 4N3Đ > Bạn đồng hành > Hồ sơ Lê Hoàng Nam.<br>3. 2-Column workstation layout:<br>   - Left ($440\text{px}$): Identity (80dp avatar, verified badge, age band, nationality, bio box), Locked privacy card (phone, itinerary, GPS), Safety action box.<br>   - Right ($900\text{px}$): Compatibility hero card, Preferences & experience tags, Action footer with "Quay lại danh sách" and "Gửi lời mời kết nối".<br>4. Zero browser scrollbars, pixel-perfect workstation view. | **PASS** |
+| [`buddy-mobile-profile-r1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.8/buddy-mobile-profile-r1.png) | Mobile | $390 \times 844$ | 1. Status bar & Top App Bar with back navigation (direct "Báo cáo" button removed to avoid overstating runtime safety support).<br>2. Identity card: avatar (HN), "Lê Hoàng Nam", "Tài khoản đã xác minh" badge, "25–29 tuổi · Việt Nam", languages.<br>3. Compatibility card: "Phù hợp với chuyến đi Đà Nẵng (15–18/10)" with 3 factual checkmarked reasons.<br>4. About section: raw bio text without fabrication.<br>5. Travel preferences: "Thoải mái (Comfort)", "Nhóm nhỏ (2–4 người)", "~2.0M / ngày", 4 interest chips.<br>6. Locked privacy card: phone and hourly itinerary clearly locked.<br>7. Fixed bottom action bar: "Gửi lời mời kết nối" CTA + safety helper text: "Người này chỉ được kết nối với bạn sau khi họ chấp nhận lời mời."<br>8. Zero browser scrollbars, clean pixel rendering. | **PASS** |
+| [`buddy-desktop-profile-r1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.8/buddy-desktop-profile-r1.png) | Desktop | $1440 \times 900$ | 1. Canonical 5-tab root navigation (Khám phá, Bản đồ, Wandy AI, Chuyến đi [active], An toàn).<br>2. Breadcrumb: Chuyến đi > Khám phá Đà Nẵng 4N3Đ > Bạn đồng hành > Hồ sơ Lê Hoàng Nam.<br>3. 2-Column workstation layout:<br>   - Left ($440\text{px}$): Identity (80dp avatar, verified badge, age band, nationality, bio box), Locked privacy card (phone, itinerary, GPS reassured copy: "GoMate không hiển thị vị trí này trong hồ sơ bạn đồng hành."), Safety action box badged `DESIGN TARGET — BLOCKED`.<br>   - Right ($900\text{px}$): Compatibility hero card, Preferences & experience tags, Action footer with "Quay lại danh sách" and "Gửi lời mời kết nối".<br>4. Zero browser scrollbars, pixel-perfect workstation view. | **PASS** |
 
 ---
 
@@ -190,26 +192,18 @@ Per task instructions, exactly **two** master mockups were produced and verified
 
 ---
 
-## 7. Design Acceptance Gate (TASK 08.2.3.8)
+## 7. Design Acceptance Gate (TASK 08.2.3.8-R1)
 
-- [x] **Profile schema audited:** Complete field-by-field matrix documented.
-- [x] **Public fields traceable:** All displayed fields map to real schema properties.
-- [x] **Unsupported hometown absent:** No fabricated cities; backed by `Profile.nationality`.
-- [x] **Account verification semantics correct:** Strictly labeled `"Tài khoản đã xác minh"`, never `"Đã xác minh danh tính"`.
-- [x] **Age band preserved:** Exact DOB hidden; `25–29 tuổi` displayed.
-- [x] **GPS hidden:** Real-time coordinates completely absent.
-- [x] **Detailed itinerary hidden:** Minute-by-minute timeline locked.
-- [x] **Private contact locked:** Phone number displayed in locked section with unlock condition.
-- [x] **Never-expose fields documented:** Email, passwordHash, GPS, EmergencyEvent, internal UUIDs prohibited.
-- [x] **No fake match percentage:** Banned percentage scores; explainable reasons with checkmarks locked.
-- [x] **Compatibility reasons explainable:** Factual, human-readable criteria specified.
-- [x] **Connection CTA marked DESIGN TARGET:** DB model exists, API route pending.
-- [x] **Match lifecycle deferred to 08.2.3.9:** Pending/Accept/Reject lifecycle cleanly separated.
-- [x] **Mobile master created:** `buddy-mobile-profile-v1.png` rendered and verified ($390 \times 844$).
-- [x] **Desktop master created:** `buddy-desktop-profile-v1.png` rendered and verified ($1440 \times 900$).
+- [x] **Mobile no longer presents Report as CURRENT:** Removed "Báo cáo" action from mobile top App Bar.
+- [x] **Desktop safety target clearly marked DESIGN TARGET:** Badged `DESIGN TARGET — BLOCKED`.
+- [x] **GPS privacy wording does not expose data:** Rephrased to `"GoMate không hiển thị vị trí này trong hồ sơ bạn đồng hành."`.
+- [x] **Block remains UNSAFE / BLOCKED:** Maintained in matrix and documentation.
+- [x] **Report remains UNSAFE / BLOCKED:** Maintained in matrix and documentation.
+- [x] **Public/private contracts unchanged:** Age band, verified semantics, locked phone/itinerary preserved.
+- [x] **Connection CTA remains DESIGN TARGET:** Reaffirmed as design target awaiting API controller.
+- [x] **Mobile master created:** `buddy-mobile-profile-r1.png` rendered and verified ($390 \times 844$).
+- [x] **Desktop master created:** `buddy-desktop-profile-r1.png` rendered and verified ($1440 \times 900$).
 - [x] **Canonical 5-root IA preserved:** Desktop top nav matches authoritative 5 root tabs.
-- [x] **Vietnamese-first:** Canonical Vietnamese copy across all components.
-- [x] **Accessibility defined:** Touch targets $\ge 44\text{dp}$, semantic labels, WCAG AA contrast.
 - [x] **No source changes:** 0 lines modified in `apps/`.
 - [x] **No DB changes:** `schema.prisma` unmodified.
 - [x] **No API changes:** Contracts intact.
