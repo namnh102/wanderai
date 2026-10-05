@@ -117,13 +117,18 @@ Pursuant to Circular No. 22/2014/TT-BTTTT of the Ministry of Information and Com
 ## 5. Destination Tourist Support Hotlines (Category C: Đường Dây Nóng Du Khách Địa Phương)
 
 ### 5.1. TP. Đà Nẵng (Đà Nẵng Visitor Support Center)
-- **Hotline Number:** `(+84) 236 3550 111` (Nội địa: `0236 3550 111`)
-- **Official Entity:** Trung tâm Hỗ trợ Du khách Đà Nẵng (Sở Du lịch TP. Đà Nẵng)
-- **Physical Address:** **18 Hùng Vương, Phường Hải Châu 1, Quận Hải Châu, TP. Đà Nẵng** *(Văn phòng đã chuyển từ 108 Bạch Đằng sang 18 Hùng Vương từ năm 2023)*
-- **Operating Hours:** `UNKNOWN` *(Không tự tiện gán "Theo ca trực" khi chưa có thông cáo chính thức; giao diện hiển thị nhãn trung lập "Thông tin hỗ trợ du khách")*
-- **Telecom Charge:** `UNKNOWN` *(Không tự tiện gán "Cước cố định" hay "Không miễn phí"; UNKNOWN != FALSE)*
+- **Current Primary Hotline:** `*8899` *(Số định tuyến ngắn tiếp nhận hỗ trợ du khách được công bố trong ấn phẩm và truyền thông chính thức của Du lịch Đà Nẵng ngày 26/09/2026)*
+- **Official Entity:** Trung tâm Hỗ trợ Du khách Đà Nẵng (Trung tâm Xúc tiến Du lịch Đà Nẵng — Sở Du lịch TP. Đà Nẵng)
+- **Primary Physical Office:** **18 Hùng Vương, Phường Hải Châu 1, Quận Hải Châu, TP. Đà Nẵng** *(Văn phòng chính đã di dời từ 108 Bạch Đằng sang 18 Hùng Vương từ năm 2023)*
+- **Secondary / Supporting Office Note:** **49 Phan Châu Trinh, Phường Minh An, TP. Hội An** *(Điểm liên kết hỗ trợ du khách khu vực kết nối Đà Nẵng - Hội An theo tư liệu xúc tiến 2026; không đưa vào giao diện chính để tránh quá tải thông tin)*
+- **Operating Hours:** `UNKNOWN` *(Chưa công bố khung giờ trực tổng đài cụ thể trong ấn phẩm 2026; giao diện hiển thị nhãn trung lập "Thông tin hỗ trợ du khách")*
+- **Telecom Charge:** `UNKNOWN` *(Đầu số ngắn *8899 chưa công bố chi tiết biểu cước viễn thông đối với người gọi; UNKNOWN != FALSE; TUYỆT ĐỐI KHÔNG tự tiện gán nhãn "Miễn phí" hoặc "Có phí")*
 - **Official Portal:** [https://danangfantasticity.com](https://danangfantasticity.com)
-- **Snapshot Date:** 2026-10-05
+- **Current Evidence Snapshot Date:** 2026-09-26 (Ấn phẩm Trung tâm Xúc tiến Du lịch Đà Nẵng) / 2026-10-05 (GoMate Review)
+- **Legacy / Historical Hotline Record:**
+  - **Number:** `(+84) 236 3550 111` (Nội địa: `0236 3550 111`)
+  - **Evidence Period:** Xuất bản và lưu hành trong các tài liệu, ấn phẩm lịch sử của Trung tâm Hỗ trợ Du khách Đà Nẵng trước đây.
+  - **Current Operational Status:** `UNKNOWN` *(Không tự tiện tuyên bố đã cắt số hoặc mất hiệu lực khi chưa có văn bản công bố hủy số; KHÔNG hiển thị làm hotline chính trên giao diện sản xuất GoMate V1)*.
 
 ### 5.2. Thủ Đô Hà Nội (Hanoi Tourist Information & Support)
 - **Hotline Numbers:** `1800 556 896` (`VERIFIED_FREE`) / `024 3926 1515` (`UNKNOWN`)
@@ -143,7 +148,8 @@ Pursuant to Circular No. 22/2014/TT-BTTTT of the Ministry of Information and Com
 | **114** | Cứu hộ, Cứu nạn & PCCC | Khẩn cấp quốc gia (A) | **Cục CS PCCC & CNCH (Bộ CA)** | `VERIFIED_24_7` | `VERIFIED_FREE` | Luật PCCC, canhsatpccc.gov.vn |
 | **115** | Cấp cứu y tế & Cứu thương | Khẩn cấp quốc gia (A) | **Bộ Y tế** | `VERIFIED_24_7` | `VERIFIED_FREE` | QĐ 01/2008/QĐ-BYT, moh.gov.vn |
 | **111** | Tổng đài Bảo vệ Trẻ em | Bảo vệ / An sinh (B) | **Cục Bà mẹ và Trẻ em — Bộ Y tế** | `VERIFIED_24_7` | `VERIFIED_FREE` | Luật Trẻ em 2016, tongdai111.vn |
-| **0236 3550 111** | Hỗ trợ Du khách Đà Nẵng | Du lịch địa phương (C) | **Sở Du lịch TP. Đà Nẵng** | `UNKNOWN` | `UNKNOWN` | 18 Hùng Vương, Đà Nẵng; danangfantasticity.com |
+| ***8899** | Hỗ trợ Du khách Đà Nẵng (Chính) | Du lịch địa phương (C) | **Sở Du lịch TP. Đà Nẵng** | `UNKNOWN` | `UNKNOWN` | Hotline chính thức (26/09/2026), 18 Hùng Vương, Đà Nẵng; danangfantasticity.com |
+| *0236 3550 111* | *Hỗ trợ Du khách Đà Nẵng (Lịch sử)* | *Lịch sử / Đối chiếu (C)* | **Sở Du lịch TP. Đà Nẵng** | `UNKNOWN` | `UNKNOWN` | Số cố định lịch sử; trạng thái hiện tại UNKNOWN; không dùng làm hotline chính V1 |
 | **1800 556 896** | Hỗ trợ Du khách Hà Nội | Du lịch địa phương (C) | **Sở Du lịch Hà Nội** | `UNKNOWN` | `VERIFIED_FREE` | sodulich.hanoi.gov.vn (Đầu số 1800) |
 
 ---
@@ -172,8 +178,11 @@ model EmergencyDirectoryEntry {
   regionCode         String?               @map("region_code") @db.VarChar(10) // "DAD", "HAN", null (national)
   category           String                @db.VarChar(50) // "emergency_national", "protection_social", "tourist_support"
   displayName        String                @map("display_name") @db.VarChar(150)
-  phoneNumber        String                @map("phone_number") @db.VarChar(30)
-  physicalAddress    String?               @map("physical_address") @db.VarChar(255)
+  phoneNumber        String                @map("phone_number") @db.VarChar(30) // Primary current hotline: "*8899"
+  legacyHotline      String?               @map("legacy_hotline") @db.VarChar(30) // "0236 3550 111" (historical)
+  legacyStatus       MetadataEvidenceState @default(UNKNOWN) @map("legacy_status")
+  physicalAddress    String?               @map("physical_address") @db.VarChar(255) // "18 Hùng Vương, Đà Nẵng"
+  secondaryAddress   String?               @map("secondary_address") @db.VarChar(255) // "49 Phan Châu Trinh, Hội An"
   governingAuthority String                @map("governing_authority") @db.VarChar(150)
   coordinationNote   String?               @map("coordination_note") @db.Text
   sourceUrl          String                @map("source_url") @db.Text

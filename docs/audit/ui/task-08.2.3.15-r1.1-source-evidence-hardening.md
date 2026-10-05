@@ -135,3 +135,13 @@ TASK 08.2.3.15-R1.1 executes a micro-correction and evidence-hardening pass on G
 - [x] **weekly-report-W01.docx untouched / unstaged:** Preserved unstaged.
 - [x] **no merge:** Maintained on `feature/gomate-visual-mockups`.
 - [x] **no push:** Local commits only.
+
+---
+
+## 5. Subsequent Revision Addendum (TASK 08.2.3.15-R1.2)
+
+For complete tracking of the Da Nang visitor support hotline update:
+- In TASK 08.2.3.15-R1.2, official September 26, 2026 Da Nang tourism evidence established **`*8899`** as the current primary visitor support hotline.
+- The historical fixed-line number `0236 3550 111` was reclassified as **Legacy / Historical Evidence (Current Operational Status = UNKNOWN)**.
+- See full addendum in [`docs/audit/ui/task-08.2.3.15-r1.2-current-hotline-freshness-fix.md`](file:///d:/Do_an/wanderai/docs/audit/ui/task-08.2.3.15-r1.2-current-hotline-freshness-fix.md).
+
