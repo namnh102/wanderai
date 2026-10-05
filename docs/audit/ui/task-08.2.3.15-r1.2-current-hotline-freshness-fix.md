@@ -37,8 +37,8 @@ TASK 08.2.3.15-R1.2 executes a final data freshness, evidence classification, an
 - **Problem:** R1.1 displayed `0236 3550 111` as the primary contact number. While historically accurate, official September 26, 2026 publications from the Da Nang Department of Tourism / Da Nang Tourism Promotion Center (Danang FantastiCity) established **`*8899`** as the official visitor support hotline.
 - **Current Canonical Production Hotline:** **`*8899`**
 - **Physical Office Locations:**
-  - **Primary Headquarters:** `18 Hùng Vương, Phường Hải Châu 1, Quận Hải Châu, TP. Đà Nẵng` (relocated from 108 Bạch Đằng in 2023).
-  - **Regional Supporting Office (Documentation Note):** `49 Phan Châu Trinh, Phường Minh An, TP. Hội An` (collaboration office for the Da Nang - Hoi An corridor; omitted from primary UI to prevent cognitive clutter).
+  - **Primary Headquarters:** `18 Hùng Vương, phường Hải Châu, Đà Nẵng` (relocated from 108 Bạch Đằng in 2023).
+  - **Regional Supporting Office (Documentation Note):** `49 Phan Châu Trinh, phường Hội An, Đà Nẵng` (collaboration office for the Da Nang - Hoi An corridor; omitted from primary UI to prevent cognitive clutter).
 
 ### 2.2. Honest Reclassification of Legacy Number (0236 3550 111)
 - **Principle:** GoMate adheres strictly to the **Zero Fabrication Policy**. The product must **never** claim an official number is "disconnected", "canceled", or "invalid" unless an authoritative government announcement confirms termination.

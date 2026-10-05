@@ -1,8 +1,8 @@
-# GoMate Safety & Emergency — Capability & Architectural Audit (TASK 08.2.3.15 / R1.1 Revision)
+# GoMate Safety & Emergency — Capability & Architectural Audit (TASK 08.2.3.15 / R1.3 Revision)
 
-**Status:** APPROVED ARCHITECTURAL AUDIT & CONTRACT LOCK (R1.1 REVISION)  
-**Task:** TASK 08.2.3.15-R1.1 — GOMATE SAFETY & EMERGENCY: CURRENT LEGAL BASIS, SOURCE EVIDENCE & UNKNOWN-METADATA HARDENING  
-**Date:** October 5, 2026  
+**Status:** APPROVED ARCHITECTURAL AUDIT & CONTRACT LOCK (R1.3 REVISION)  
+**Task:** TASK 08.2.3.15-R1.3 — GOMATE SAFETY & EMERGENCY: FINAL MASTER CONSISTENCY CLEANUP  
+**Date:** October 6, 2026  
 **Branch:** `feature/gomate-visual-mockups`  
 **Target Viewports:** Mobile ($390 \times 844$), Desktop ($1440 \times 900$)  
 **Source of Truth:**
@@ -13,16 +13,17 @@
 - Mobile Client Dependencies: [`apps/mobile/pubspec.yaml`](file:///d:/Do_an/wanderai/apps/mobile/pubspec.yaml)
 - Primary Design Contract: [`docs/design/gomate-safety-emergency-contract-v1.md`](file:///d:/Do_an/wanderai/docs/design/gomate-safety-emergency-contract-v1.md)
 - Authoritative Source Card: [`docs/design/data/gomate-emergency-contact-source-card-v1.md`](file:///d:/Do_an/wanderai/docs/design/data/gomate-emergency-contact-source-card-v1.md)
-- Master Visual Evidence Artifacts:
-  - Mobile Safety Home V1 (R1): [`safety-mobile-home-v1-r1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.15/safety-mobile-home-v1-r1.png) ($390 \times 844$)
-  - Mobile Emergency Directory V1 (R1.1 Final): [`safety-mobile-emergency-v1-r1-final.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.15/safety-mobile-emergency-v1-r1-final.png) / [`safety-mobile-emergency-v1-r1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.15/safety-mobile-emergency-v1-r1.png) ($390 \times 844$)
+- Master Visual Evidence Artifacts (10 Master Artifacts — R1.3 Revision):
+  - Mobile Safety Home V1 (R1.3 Final): [`safety-mobile-home-v1-r1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.15/safety-mobile-home-v1-r1.png) ($390 \times 844$)
+  - Mobile Emergency Directory V1 (R1.3 Final): [`safety-mobile-emergency-v1-r1-final.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.15/safety-mobile-emergency-v1-r1-final.png) ($390 \times 844$)
   - Mobile Emergency Confirmation V1: [`safety-mobile-emergency-confirm-v1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.15/safety-mobile-emergency-confirm-v1.png) ($390 \times 844$)
   - Mobile Trusted Contacts V1: [`safety-mobile-trusted-contacts-v1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.15/safety-mobile-trusted-contacts-v1.png) ($390 \times 844$)
   - Mobile Add Trusted Contact V1: [`safety-mobile-trusted-contact-add-v1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.15/safety-mobile-trusted-contact-add-v1.png) ($390 \times 844$)
   - Mobile Location Safety V1: [`safety-mobile-location-v1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.15/safety-mobile-location-v1.png) ($390 \times 844$)
-  - Mobile Location Permission Denied V1 (R1): [`safety-mobile-location-permission-denied-v1-r1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.15/safety-mobile-location-permission-denied-v1-r1.png) ($390 \times 844$)
-  - Mobile Offline Safety V1 (R1): [`safety-mobile-offline-v1-r1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.15/safety-mobile-offline-v1-r1.png) ($390 \times 844$)
-  - Desktop Safety Master V1 (R1.1 Final): [`safety-desktop-v1-r1-final.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.15/safety-desktop-v1-r1-final.png) / [`safety-desktop-v1-r1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.15/safety-desktop-v1-r1.png) ($1440 \times 900$)
+  - Mobile Location Permission Denied Temporary V1 (R1.2 Final): [`safety-mobile-location-permission-denied-temporary-v1-final.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.15/safety-mobile-location-permission-denied-temporary-v1-final.png) ($390 \times 844$)
+  - Mobile Location Permission Denied Permanent V1 (R1 Locked): [`safety-mobile-location-permission-denied-v1-r1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.15/safety-mobile-location-permission-denied-v1-r1.png) ($390 \times 844$)
+  - Mobile Offline Safety V1 (R1 Locked): [`safety-mobile-offline-v1-r1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.15/safety-mobile-offline-v1-r1.png) ($390 \times 844$)
+  - Desktop Safety Master V1 (R1.3 Final): [`safety-desktop-v1-r1-final.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.15/safety-desktop-v1-r1-final.png) ($1440 \times 900$)
 
 ---
 
@@ -117,7 +118,7 @@ AI must never delay, filter, or reason over life-threatening emergency situation
 - Emergency numbers must be backed by official statutory sources.
 - Vietnam Statutory National Emergency Services (Category A): `112` (Cứu nạn & tình huống nguy cấp), `113` (Police / Cảnh sát), `114` (Fire & Rescue / Cứu nạn & PCCC), `115` (Medical Ambulance / Cấp cứu Y tế).
 - National Public Safety / Protection Hotlines (Category B): `111` (Child Protection / Bảo vệ Trẻ em — Cục Bà mẹ và Trẻ em, Bộ Y tế).
-- Local Tourism Hotline (Category C): Primary current hotline `*8899` (Đà Nẵng Visitor Support Center, 18 Hùng Vương; published Sept 26, 2026; operational attributes `UNKNOWN`). Legacy hotline `0236 3550 111` retained as historical evidence (status `UNKNOWN`).
+- Local Tourism Hotline (Category C): Primary current hotline `*8899` (Đà Nẵng Visitor Support Center, 18 Hùng Vương, phường Hải Châu, Đà Nẵng; published Sept 26, 2026; operational attributes `UNKNOWN`). Legacy hotline `0236 3550 111` retained as historical evidence (status `UNKNOWN`).
 - All numbers documented in [`gomate-emergency-contact-source-card-v1.md`](file:///d:/Do_an/wanderai/docs/design/data/gomate-emergency-contact-source-card-v1.md).
 
 ### 3.4. Emergency Action Semantics (Explicit OS Dialer Handoff)
@@ -173,14 +174,14 @@ AI must never delay, filter, or reason over life-threatening emergency situation
 
 ---
 
-## 5. Master Mockup Verification (10 Master Artifacts — R1.2 Revision)
+## 5. Master Mockup Verification (10 Master Artifacts — R1.3 Revision)
 
 All 10 master mockups were rendered via headless Microsoft Edge browser at native resolutions and verified in `docs/audit/evidence/ui-08.2.3.15/`:
 
 | Mockup File | Viewport | Target Resolution | Architectural & Visual Compliance Audit | Status |
 | :--- | :---: | :---: | :--- | :---: |
-| [`safety-mobile-home-v1-r1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.15/safety-mobile-home-v1-r1.png) | Mobile | $390 \times 844$ | 1. Status bar `9:41 5G 100%` + App bar `An toàn & Cứu trợ`.<br>2. Emergency SOS card displaying national services (112, 113, 114, 115) with `[ Mở danh bạ cứu trợ khẩn cấp › ]`.<br>3. Location safety card: Coordinates, locality, accuracy `±15 m (Tốt)`.<br>4. Trusted contacts summary (2/3 contacts) with private lock tag.<br>5. Travel safety handbook card.<br>6. Product disclaimer footnote.<br>7. Canonical 5-tab root navigation with `An toàn` active. | **PASS (LOCKED R1)** |
-| [`safety-mobile-emergency-v1-r1-final.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.15/safety-mobile-emergency-v1-r1-final.png) | Mobile | $390 \times 844$ | 1. App bar `< Danh bạ cứu trợ & bảo vệ` + Subtitle.<br>2. Sourced free-call notice for 112, 113, 114, 115, 111.<br>3. National emergency services section: 112 (Cứu nạn & tình huống nguy cấp · Bộ Quốc phòng chủ trì), 113 (Công an), 114 (Cứu nạn & PCCC), 115 (Cấp cứu) with individual 24/7 & free badges.<br>4. Separated National Child Protection Hotline section: 111 (Cục Bà mẹ và Trẻ em — Bộ Y tế).<br>5. Local tourist support: Current primary hotline *8899 (Đà Nẵng Visitor Center) at 18 Hùng Vương with neutral metadata `Thông tin hỗ trợ du khách`. CTA `[Gọi hỗ trợ]`.<br>6. Staged transition roadmap footnote: Stage 1 until 2027, subsequent stage 2027–2028.<br>7. Canonical 5-tab bottom navigation. | **PASS (LOCKED R1.2)** |
+| [`safety-mobile-home-v1-r1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.15/safety-mobile-home-v1-r1.png) | Mobile | $390 \times 844$ | 1. Status bar `9:41 5G 100%` + App bar `An toàn & Cứu trợ`.<br>2. Emergency SOS card displaying national services (112, 113, 114, 115) strictly scoped to 24/7/free badges (no blanket claim over tourism hotline) with `[ Mở danh bạ cứu trợ khẩn cấp › ]`.<br>3. Location safety card: Coordinates, locality (`Phường Hải Châu, TP. Đà Nẵng`), accuracy `±15 m (Tốt)`.<br>4. Trusted contacts summary (2/3 contacts) with private lock tag.<br>5. Travel safety handbook card.<br>6. Product disclaimer footnote.<br>7. Canonical 5-tab root navigation with `An toàn` active. | **PASS (LOCKED R1.3)** |
+| [`safety-mobile-emergency-v1-r1-final.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.15/safety-mobile-emergency-v1-r1-final.png) | Mobile | $390 \times 844$ | 1. App bar `< Danh bạ cứu trợ & bảo vệ` + Subtitle.<br>2. Sourced free-call notice for 112, 113, 114, 115, 111.<br>3. National emergency services section: 112 (Cứu nạn & tình huống nguy cấp · Bộ Quốc phòng chủ trì), 113 (Công an), 114 (Cứu nạn & PCCC), 115 (Cấp cứu) with individual 24/7 & free badges.<br>4. Separated National Child Protection Hotline section: 111 (Cục Bà mẹ và Trẻ em — Bộ Y tế).<br>5. Local tourist support: Current primary hotline *8899 (Đà Nẵng Visitor Center) at 18 Hùng Vương, phường Hải Châu, Đà Nẵng with neutral metadata `Thông tin hỗ trợ du khách`. CTA `[Gọi hỗ trợ]`.<br>6. Staged transition roadmap footnote: Stage 1 until 2027, subsequent stage 2027–2028.<br>7. Canonical 5-tab bottom navigation. | **PASS (LOCKED R1.3)** |
 | [`safety-mobile-emergency-confirm-v1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.15/safety-mobile-emergency-confirm-v1.png) | Mobile | $390 \times 844$ | 1. Dark semi-transparent modal overlay.<br>2. Confirmation sheet: `Gọi Cấp cứu Y tế 115?`.<br>3. Exact GPS coordinates and locality display for dispatcher communication.<br>4. Primary CTA: `[ Mở trình quay số 115 ]` (Red).<br>5. Secondary: `[ Hủy bỏ ]`. Zero silent calling. | **PASS (LOCKED)** |
 | [`safety-mobile-trusted-contacts-v1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.15/safety-mobile-trusted-contacts-v1.png) | Mobile | $390 \times 844$ | 1. App bar `< Người liên hệ tin cậy` with `+ Thêm`.<br>2. Sensitive privacy guarantee banner (creator-only, hidden from group/profile).<br>3. 2 contact cards with `[ Mở cuộc gọi ]`, `[ Sửa ]`, `[ Xóa ]`.<br>4. Clarification note: Calls open OS dialer; deleting trips preserves contacts.<br>5. Canonical 5-tab bottom navigation. | **PASS (LOCKED)** |
 | [`safety-mobile-trusted-contact-add-v1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.15/safety-mobile-trusted-contact-add-v1.png) | Mobile | $390 \times 844$ | 1. App bar `Hủy`, `Thêm người liên hệ`, `Lưu`.<br>2. Form inputs: Full Name \*, Phone Number \*, Relationship chips.<br>3. Privacy commitment card explaining data protection.<br>4. Primary CTA: `[ Lưu người liên hệ tin cậy ]`. Clean layout contained in $844\text{px}$. | **PASS (LOCKED)** |
@@ -188,7 +189,7 @@ All 10 master mockups were rendered via headless Microsoft Edge browser at nativ
 | [`safety-mobile-location-permission-denied-temporary-v1-final.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.15/safety-mobile-location-permission-denied-temporary-v1-final.png) | Mobile | $390 \times 844$ | 1. Informational badge `Chưa cấp quyền` + Title `Quyền truy cập vị trí chưa được cấp`.<br>2. State description: `LocationPermission.denied` (in-app prompt can be triggered directly).<br>3. Primary CTA: `[ Cấp quyền vị trí cho ứng dụng ]` (Teal).<br>4. Secondary action: `[ Mở Cài đặt nếu cần thiết ]` (Neutral outline).<br>5. Fallback emergency access: Full 112, 113, 114, 115 hotline chips preserved.<br>6. Canonical 5-tab bottom navigation. | **PASS (LOCKED R1.2)** |
 | [`safety-mobile-location-permission-denied-v1-r1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.15/safety-mobile-location-permission-denied-v1-r1.png) | Mobile | $390 \times 844$ | 1. Orange shield icon + `Quyền truy cập vị trí đang bị tắt vĩnh viễn`.<br>2. Clear status: `deniedForever` explaining why system dialog cannot re-prompt.<br>3. Action button: `[ Mở Cài đặt hệ thống thiết bị ]` (strictly differentiated from temporary denial).<br>4. Safe Fallback section: Direct access to 112, 113, 114, 115 hotlines maintained (never traps user).<br>5. Canonical 5-tab bottom navigation. | **PASS (LOCKED R1)** |
 | [`safety-mobile-offline-v1-r1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.15/safety-mobile-offline-v1-r1.png) | Mobile | $390 \times 844$ | 1. Offline status badge and banner.<br>2. Neutral telecom capability notice (phone call requires carrier network coverage, independent of Internet; omitted speculative 2G/3G/4G text).<br>3. Static cached emergency hotlines: 112, 113, 114, 115.<br>4. Cached last-known GPS fix.<br>5. Canonical 5-tab bottom navigation. | **PASS (LOCKED R1)** |
-| [`safety-desktop-v1-r1-final.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.15/safety-desktop-v1-r1-final.png) | Desktop | $1440 \times 900$ | 1. Top nav: Logo `GoMate` + badge `Safety Hub` + Canonical 5 tabs (`Khám phá`, `Bản đồ`, `Wandy AI`, `Chuyến đi`, `An toàn` [Active]) + User pill.<br>2. Col 1 ($280\text{px}$): Safety menu & quick hotline box (112, 113, 114, 115, 111).<br>3. Col 2 ($780\text{px}$): National Emergency Grid (112, 113, 114, 115 · Bộ Quốc phòng chủ trì) + Separate row for 111 & Đà Nẵng primary hotline *8899 (18 Hùng Vương, neutral metadata label `Thông tin hỗ trợ du khách`) + Foreground Location Safety card.<br>4. Col 3 ($340\text{px}$): Trusted contacts widget + Wandy Safety Copilot card (advisory only) + Sourced transition roadmap note (Giai đoạn 1 đến 2027, giai đoạn tiếp theo 2027–2028).<br>5. Zero debug labels; perfectly contained in $900\text{px}$. | **PASS (LOCKED R1.2)** |
+| [`safety-desktop-v1-r1-final.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.15/safety-desktop-v1-r1-final.png) | Desktop | $1440 \times 900$ | 1. Top nav: Logo `GoMate` + badge `Safety Hub` + Canonical 5 tabs (`Khám phá`, `Bản đồ`, `Wandy AI`, `Chuyến đi`, `An toàn` [Active]) + User pill.<br>2. Col 1 ($280\text{px}$): Safety menu & quick hotline box (112, 113, 114, 115, 111).<br>3. Col 2 ($780\text{px}$): National Emergency Grid (112, 113, 114, 115 · Bộ Quốc phòng chủ trì) + Separate row for 111 & Đà Nẵng primary hotline *8899 (18 Hùng Vương, phường Hải Châu, Đà Nẵng; neutral metadata label `Thông tin hỗ trợ du khách`) + Foreground Location Safety card.<br>4. Col 3 ($340\text{px}$): Trusted contacts widget + Wandy Safety Copilot card (advisory only) + Sourced transition roadmap note (Giai đoạn 1 đến 2027, giai đoạn tiếp theo 2027–2028).<br>5. Zero debug labels; perfectly contained in $900\text{px}$. | **PASS (LOCKED R1.3)** |
 
 ### 5.1. Superseded Artifact Registry (Historical Audit Only — DO NOT USE AS MASTER)
 
@@ -205,26 +206,27 @@ All 10 master mockups were rendered via headless Microsoft Edge browser at nativ
 
 ---
 
-## 6. Design Acceptance Gate (TASK 08.2.3.15-R1.2 Revision)
+## 6. Design Acceptance Gate (TASK 08.2.3.15-R1.3 Revision)
 
-- [x] **Current Da Nang hotline = *8899:** Verified from official September 26, 2026 Da Nang tourism publication.
-- [x] **0236 3550 111 retained only as legacy/unknown-current-status:** Reclassified honestly without unsupported disconnection claims.
-- [x] **No unsupported statement that old number is disconnected:** Status documented as `UNKNOWN` (UNKNOWN != FALSE).
-- [x] **Da Nang address = 18 Hùng Vương:** Retained as primary physical office.
-- [x] **Operating hours remain UNKNOWN:** Preserved unless authoritative publication specifies exact hours.
-- [x] **Telecom charge remains UNKNOWN:** Preserved unless authoritative tariff documentation exists.
-- [x] **Mobile emergency current visual updated:** Regenerated showing `*8899` as primary hotline.
-- [x] **Desktop Safety current visual updated:** Regenerated showing `*8899` as primary hotline.
-- [x] **Temporary denied visual exists:** `safety-mobile-location-permission-denied-temporary-v1-final.png` created and verified.
-- [x] **Temporary denied fallback includes 112/113/114/115:** All 4 statutory services available without GPS fix.
-- [x] **deniedForever remains unchanged:** Locked in R1 as permanent settings-only CTA.
-- [x] **Offline R1 remains neutral telecom copy:** Free of speculative network generation claims.
-- [x] **112 legal basis R1.1 remains unchanged:** Grounded in NĐ 200/2025/NĐ-CP, QĐ 2023/QĐ-TTg, QĐ 2024/QĐ-TTg.
-- [x] **111 taxonomy remains unchanged:** Separated as Category B (Cục Bà mẹ và Trẻ em — Bộ Y tế).
-- [x] **Wandy boundary unchanged:** Advisory only; zero autonomous dialer or emergency dispatch action.
-- [x] **No autonomous emergency actions:** OS dialer handoff strictly enforced.
-- [x] **git diff apps/ EMPTY:** Codebase strictly untouched.
-- [x] **schema.prisma untouched:** Production PostgreSQL schema unmodified.
+- [x] **Safety Home no longer implies tourist hotline is 24/7/free:** Scoped strictly to national numbers.
+- [x] **24/7/free claims visually scoped to verified national numbers:** 112, 113, 114, 115 only.
+- [x] **Current Da Nang primary hotline remains *8899:** Verified from official September 26, 2026 publication.
+- [x] **Current primary address uses "18 Hùng Vương, phường Hải Châu, Đà Nẵng":** Standardized across all documents and mockups.
+- [x] **Secondary office current wording uses "49 Phan Châu Trinh, phường Hội An, Đà Nẵng":** Standardized in reference source card.
+- [x] **Operating hours of *8899 remain UNKNOWN:** Neutral metadata label `Thông tin hỗ trợ du khách`.
+- [x] **Telecom charge of *8899 remains UNKNOWN:** No speculative free/paid badges.
+- [x] **0236 3550 111 remains legacy / current status UNKNOWN:** Retained in audit source card; not rendered on primary UI.
+- [x] **Exactly one current Mobile Emergency master row:** `safety-mobile-emergency-v1-r1-final.png` (*8899, 18 Hùng Vương, phường Hải Châu, Đà Nẵng, PASS / LOCKED R1.3).
+- [x] **Exactly one current Desktop Safety master row:** `safety-desktop-v1-r1-final.png` (*8899, 18 Hùng Vương, phường Hải Châu, Đà Nẵng, PASS / LOCKED R1.3).
+- [x] **Old artifact rows are explicitly historical/superseded:** Documented in Superseded Artifact Registry.
+- [x] **Temporary denied state remains locked:** `safety-mobile-location-permission-denied-temporary-v1-final.png` preserved.
+- [x] **deniedForever remains locked:** `safety-mobile-location-permission-denied-v1-r1.png` preserved.
+- [x] **Offline R1 remains locked:** `safety-mobile-offline-v1-r1.png` with neutral carrier copy preserved.
+- [x] **112/113/114/115 architecture unchanged:** Grounded in statutory legal basis; 112 under Bộ Quốc phòng.
+- [x] **111 taxonomy unchanged:** Category B (Cục Bà mẹ và Trẻ em — Bộ Y tế).
+- [x] **Wandy emergency boundary unchanged:** Advisory only; zero autonomous dispatch.
+- [x] **No production code changes:** Zero modifications to `apps/`.
+- [x] **schema.prisma untouched:** Production schema pristine.
 - [x] **weekly-report-W01.docx untouched / unstaged:** Preserved unstaged.
 - [x] **no merge:** Maintained on `feature/gomate-visual-mockups`.
 - [x] **no push:** Local commits only.
