@@ -108,7 +108,7 @@ model Message {
 
 ```
 ========================================================================
-RELATIONSHIP COMPARISON MATRIX
+RELATIONSHIP COMPARISON & ONBOARDING MATRIX
 ========================================================================
 
 DIMENSION           MATCH                    TRIP MEMBER              GROUP MEMBER
@@ -118,8 +118,12 @@ Prisma Model        model Match              model TripMember         model Grou
 Permissions         View phone               Edit itinerary / budget  Send messages
 Data Unlocked       Phone number             Hourly schedule          Chat thread
 Email Visible?      NEVER (Tier 4)           NEVER to UI              NEVER (Tier 4)
-GPS Visible?        NEVER in Buddy           NEVER                    NEVER
+GPS Visible?        NEVER in Buddy           NEVER                    NEVER (Not auto-shared)
 Automatic Entry?    No (Mutual Consent)      No (Explicit Add)        No (Explicit Invite)
+------------------------------------------------------------------------
+CANONICAL ONBOARDING PREREQUISITE FLOW:
+    [MATCHED] ──> [Explicit Trip Invite] ──> [TRIP MEMBER] ──> [Group Invite] ──> [GROUP MEMBER]
+* Accepted Match alone is NOT YET ELIGIBLE to join a trip-bound Companion Group.
 ========================================================================
 ```
 
@@ -131,60 +135,55 @@ Automatic Entry?    No (Mutual Consent)      No (Explicit Add)        No (Explic
 | :--- | :---: | :---: | :---: | :---: | :---: | :--- |
 | **Group Model** | Missing | Missing | `model Group` | Contract Section 3 | **PARTIAL (DB Only)** | Model exists in schema; no backend controller. |
 | **GroupMember Model** | Missing | Missing | `model GroupMember` | Contract Section 4 | **PARTIAL (DB Only)** | Model exists; plain string role `"admin" / "member"`. |
-| **Group ↔ Trip Link** | Missing | Missing | `Group.tripId` (unlinked) | Contract Section 5 | **PARTIAL (DB Only) / GAP** | Loose UUID column; no formal `@relation` to `Trip`. |
+| **Group ↔ Trip Link** | Missing | Missing | `Group.tripId` (unlinked) | Contract Section 5 | **PARTIAL (DB Only) / GAP** | Loose UUID column; no formal `@relation` to `Trip`. Trip 1 ↔ 0..1 Group is a **LOCKED V1 PRODUCT RULE** (not DB-enforced). |
+| **Member Capacity** | Missing | Missing | **MISSING FROM DB** | Contract Section 3, 21 | **SCHEMA GAP / UNCONSTRAINED** | Schema lacks `maxMembers`. UI renders plain member count `(3)`, no `/5` denominator. |
 | **Create Group** | Missing | Missing | `model Group` | Contract Section 7 | **DESIGN TARGET** | 0 endpoints in NestJS; Trip Owner eligibility rule locked. |
 | **Join / Accept Group** | Missing | Missing | `GroupMember` | Contract Section 8 | **DESIGN TARGET** | Requires explicit consent; auto-enrollment forbidden. |
-| **Invite Member** | Missing | Missing | Missing Endpoint | Contract Section 11 | **DESIGN TARGET** | Cannot reuse email API; safe internal `userId` required. |
-| **Leave Group** | Missing | Missing | Missing Endpoint | Contract Section 12 | **DESIGN TARGET** | Member leaves freely; Owner transfer rule locked. |
+| **Invite Member** | Missing | Missing | Missing Endpoint | Contract Section 11 | **DESIGN TARGET** | Cannot reuse email API; requires `TripMember` prerequisite. |
+| **Leave Group** | Missing | Missing | Missing Endpoint | Contract Section 12 | **DESIGN TARGET** | Member leaves freely; Owner transfer rule locked. Message retention is DB-supported; anonymous display is DESIGN TARGET. |
 | **Remove Member** | Missing | Missing | Missing Endpoint | Contract Section 13 | **DESIGN TARGET** | Admin/Owner privilege; does NOT unmatch or strip Trip. |
-| **Owner Role** | Missing | Missing | **SCHEMA GAP** | Contract Section 9 | **DESIGN TARGET (Logic)** | Schema lacks `creatorId` / `owner` enum; mapped by logic. |
-| **Admin Role** | Missing | Missing | `role = "admin"` | Contract Section 9 | **PARTIAL (DB String) / TARGET**| Comment has `"admin"`; enforcement logic missing. |
+| **Owner Role** | Missing | Missing | **SCHEMA GAP** | Contract Section 9 | **SCHEMA GAP / DERIVED TARGET**| Schema lacks `creatorId` / `owner` enum; derived from linked `Trip.userId` by logic. |
+| **Admin Role** | Missing | Missing | `role = "admin"` | Contract Section 9 | **PARTIAL (DB String) / TARGET**| Comment has `"admin"`; enforcement logic missing. No Postgres enum exists. |
 | **Delete Group** | Missing | Missing | `Cascade` on GroupMember| Contract Section 14 | **DESIGN TARGET** | Schema cascades members & messages; Owner-only action. |
-| **Group Chat** | Missing | Missing | `model Message` | TASK 08.2.3.11 | **PARTIAL (DB Only) / FUTURE** | DB tables exist; runtime WebSocket missing. |
-| **Shared Itinerary** | Missing | Missing | `model Itinerary` (Trip) | TASK 08.2.3.12 | **DESIGN TARGET / FUTURE** | Scoped to `TripMember` role, not raw GroupMember. |
-| **Shared Expense** | Missing | Missing | **MISSING FROM DB** | TASK 08.2.3.13 | **FUTURE / SCHEMA GAP** | Zero expense models currently in `schema.prisma`. |
+| **Group Chat** | Missing | Missing | `model Message` | TASK 08.2.3.11 | **PARTIAL (DB Only) / FUTURE** | DB tables exist; runtime WebSocket missing. UI displays clean "Sắp có". |
+| **Shared Itinerary** | Missing | Missing | `model Itinerary` (Trip) | TASK 08.2.3.12 | **FUTURE** | Scoped to `TripMember` role, not raw GroupMember. UI displays clean "Sắp có". |
+| **Shared Expense** | Missing | Missing | **MISSING FROM DB** | TASK 08.2.3.13 | **SCHEMA GAP / FUTURE** | Zero expense models currently in `schema.prisma`. UI displays clean "Sắp có". |
 | **Notifications** | Missing | Missing | Missing Service | Contract Section 19 | **DESIGN TARGET** | Zero FCM/APNs in repo; no notification overclaims. |
 | **User Block / Report**| Missing | Missing | **MISSING FROM DB** | Contract Section 20 | **UNSAFE / BLOCKED** | Requires new Prisma migration for `UserBlock`/`UserReport`. |
 
 ---
 
-## 6. Master Mockup Verification (2 Master Artifacts)
+## 6. Master Mockup Verification (R1 Refined Artifacts)
 
-Both master mockups were generated and verified at `docs/audit/evidence/ui-08.2.3.10/`:
+Both master mockups were updated and verified at `docs/audit/evidence/ui-08.2.3.10/`:
 
 | Mockup File | Viewport | Target Resolution | Architectural & Visual Compliance Audit | Status |
 | :--- | :---: | :---: | :--- | :---: |
-| [`group-mobile-detail-v1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.10/group-mobile-detail-v1.png) | Mobile | $390 \times 844$ | 1. Status bar `9:41 5G 100%` + App bar `"Nhóm đồng hành"`.<br>2. Group Hero card with avatar `ĐN`, title, description, and trip context pill (`Khám phá Đà Nẵng 4N3Đ`).<br>3. Member section with `[+ Mời thành viên (Mục tiêu)]` and 3 members with canonical `"Tài khoản đã xác minh"` badges.<br>4. Role badges: `"Trưởng nhóm"` for Owner, `"Thành viên"` for others.<br>5. Downstream module entries clearly annotated: Chat (`SẮP RA MẮT`), Shared Itinerary (`MỤC TIÊU THIẾT KẾ`), Shared Expense (`CHƯA CÓ DB`).<br>6. Destructive link `"Rời khỏi nhóm đồng hành"`.<br>7. Canonical 5 bottom tabs with `"Chuyến đi"` active. Zero scrollbars. | **PASS** |
-| [`group-desktop-detail-v1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.10/group-desktop-detail-v1.png) | Desktop | $1440 \times 900$ | 1. Top navigation with 5 canonical tabs (Chuyến đi active).<br>2. Breadcrumb: `Chuyến đi › Khám phá Đà Nẵng 4N3Đ › Nhóm đồng hành chuyến đi`.<br>3. Col 1 ($360\text{px}$): Group info, linked trip metadata, and privacy rules box.<br>4. Col 2 ($640\text{px}$): Member management list (3/5), verified badges, invite button, role permissions summary.<br>5. Col 3 ($380\text{px}$): Future modules (Chat TASK 08.2.3.11, Itinerary TASK 08.2.3.12, Expense TASK 08.2.3.13) and Disband group danger zone. Zero scrollbars. | **PASS** |
+| [`group-mobile-detail-r1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.10/group-mobile-detail-r1.png) | Mobile | $390 \times 844$ | 1. Status bar `9:41 5G 100%` + App bar `"Nhóm đồng hành"`.<br>2. Group Hero card with avatar `ĐN`, title, description, and trip context pill (`Khám phá Đà Nẵng 4N3Đ`).<br>3. Member section labeled honestly as `Thành viên nhóm (3)` (fake `/5` removed).<br>4. Owner rendered as `"Bạn"`, `"Chủ chuyến đi"`, badge `"Trưởng nhóm"` (avoiding false DB enum claims).<br>5. Member 2 (Lê Hoàng Nam) verified as `"Bạn đồng hành · Thành viên chuyến đi"`.<br>6. Downstream modules cleanly displayed with neutral `"Sắp có"` badges (no developer task IDs or `"CHƯA CÓ DB"` leaked to UI).<br>7. Canonical 5 bottom tabs with `"Chuyến đi"` active. Zero scrollbars. | **PASS** |
+| [`group-desktop-detail-r1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.10/group-desktop-detail-r1.png) | Desktop | $1440 \times 900$ | 1. Top navigation with 5 canonical tabs (Chuyến đi active).<br>2. Breadcrumb: `Chuyến đi › Khám phá Đà Nẵng 4N3Đ › Nhóm đồng hành chuyến đi`.<br>3. Col 1 ($360\text{px}$): Group info, linked trip metadata, and safely scoped privacy notice: *"Việc tham gia nhóm không tự động chia sẻ vị trí thời gian thực."*<br>4. Col 2 ($640\text{px}$): Member management list `Danh sách thành viên (3)` without fake `/5`, verified badges, invite button, role permissions summary.<br>5. Col 3 ($380\text{px}$): Downstream modules (`"Sắp có"`) and Disband group danger zone. Zero scrollbars. | **PASS** |
+
+*(Pre-correction V1 artifacts preserved for historical comparison: [`group-mobile-detail-v1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.10/group-mobile-detail-v1.png), [`group-desktop-detail-v1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.10/group-desktop-detail-v1.png).)*
 
 *(Note on `group-mobile-create-v1.png`: In accordance with the prompt condition, group creation form mockup was omitted because `creatorId` and `Trip` relation schema gaps require database resolution before locking form mutations).*
 
 ---
 
-## 7. Design Acceptance Gate (TASK 08.2.3.10)
+## 7. Design Acceptance Gate (TASK 08.2.3.10-R1)
 
-- [x] **Group schema audited:** Fields `id`, `name`, `description`, `tripId`, `createdAt` verified.
-- [x] **GroupMember audited:** Fields `id`, `groupId`, `userId`, `role` verified.
-- [x] **Role enum audited:** Plain String verified; lack of enum and lack of `"owner"` documented.
-- [x] **Group ↔ Trip relation verified:** Unlinked `tripId` UUID column documented; 1:1 primary group rule locked.
-- [x] **Match != TripMember != GroupMember locked:** 3-tier boundary matrix established.
-- [x] **Creation eligibility documented:** Trip Owner authority locked.
-- [x] **Membership entry documented:** Explicit consent required; no auto-enrollment.
-- [x] **Invite eligibility documented:** Candidate eligibility table constructed; email forbidden.
-- [x] **Ownership documented:** Mapped to Trip Owner; orphan group forbidden.
-- [x] **Role permissions documented:** Complete matrix across Owner, Admin, Member.
-- [x] **Leave behavior documented:** Regular leave vs Owner transfer/disband requirement.
-- [x] **Owner-leave edge case documented:** Orphan group prevention locked.
-- [x] **Remove-member behavior documented:** Separation from TripMember/Match locked.
-- [x] **Delete/cascade behavior audited:** Cascades to GroupMember and Message; Trip unaffected.
-- [x] **Trip access remains separate:** GroupMember does not grant itinerary edit permissions.
-- [x] **Chat deferred honestly:** Tagged as `SẮP RA MẮT / TASK 08.2.3.11`.
-- [x] **Shared itinerary deferred honestly:** Tagged as `MỤC TIÊU THIẾT KẾ / TASK 08.2.3.12`.
-- [x] **Expense deferred honestly:** Tagged as `CHƯA CÓ DB / TASK 08.2.3.13`.
-- [x] **Notification reality honest:** No false push notification claims.
-- [x] **Safety dependencies honest:** Block/Report classified as `UNSAFE / BLOCKED`.
-- [x] **Mobile master created:** [`group-mobile-detail-v1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.10/group-mobile-detail-v1.png) verified.
-- [x] **Desktop master created:** [`group-desktop-detail-v1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.10/group-desktop-detail-v1.png) verified.
+- [x] **Accepted Match alone cannot directly join Group:** Prerequisite locked (`Match -> TripMember -> GroupMember`).
+- [x] **TripMember prerequisite locked:** Only TripMembers are eligible for Group invitation.
+- [x] **GroupMember still requires explicit consent:** No automatic enrollment upon becoming TripMember.
+- [x] **No fake 3/5 member capacity:** Header shows `Thành viên nhóm (3)` without `/5`.
+- [x] **Owner semantics are derived-target only:** Derived from `Trip.userId`; no DB enum claimed.
+- [x] **Owner not confused with Admin:** Labeled as `"Bạn"`, `"Chủ chuyến đi"`, badge `"Trưởng nhóm"`.
+- [x] **Message anonymization not claimed as DB behavior:** Retention is DB-supported; anonymous display is client rendering rule.
+- [x] **No TASK IDs shown as production copy:** Technical labels removed from mockup UI frames.
+- [x] **No "CHƯA CÓ DB" shown to end users:** Clean neutral `"Sắp có"` badges used in UI.
+- [x] **GPS wording scoped safely:** *"Việc tham gia nhóm không tự động chia sẻ vị trí thời gian thực. Mọi tính năng chia sẻ vị trí trong tương lai phải yêu cầu hành động và sự đồng ý rõ ràng của người dùng."*
+- [x] **One-group-per-trip classified as V1 product rule:** Explicitly documented as locked product rule, not current DB constraint.
+- [x] **Group mutation actions remain DESIGN TARGET:** Documented with zero API overclaims.
+- [x] **Mobile R1 created:** [`group-mobile-detail-r1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.10/group-mobile-detail-r1.png) verified ($390 \times 844$).
+- [x] **Desktop R1 created:** [`group-desktop-detail-r1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.10/group-desktop-detail-r1.png) verified ($1440 \times 900$).
 - [x] **No source changes:** `git diff apps/` is empty.
 - [x] **No DB changes:** `schema.prisma` unmodified.
 - [x] **No API changes:** API contracts intact.
