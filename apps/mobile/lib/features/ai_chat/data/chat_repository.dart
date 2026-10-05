@@ -1,31 +1,34 @@
 import 'package:dio/dio.dart';
-import '../../../core/constants/app_constants.dart';
+import 'chat_models.dart';
 
+/// Repository for AI Chat communicating through NestJS AI Proxy.
 class ChatRepository {
-  // Gọi FastAPI AI service trực tiếp (tránh CORS qua NestJS proxy)
-  Future<Map<String, dynamic>> sendMessage(String message, String? sessionId) async {
-    try {
-      final dio = Dio();
-      dio.options.connectTimeout = const Duration(seconds: 30);
-      dio.options.receiveTimeout = const Duration(seconds: 30);
+  final Dio _dio;
 
-      final response = await dio.post(
-        '${AppConstants.aiBaseUrl}/chat',
-        data: {
-          'message': message,
-          if (sessionId != null) 'session_id': sessionId,
-        },
-      );
+  ChatRepository(this._dio);
 
-      return {
-        'reply': response.data['reply'] ?? 'Không có phản hồi',
-        'session_id': response.data['session_id'],
-      };
-    } catch (e) {
-      return {
-        'reply': 'Xin lỗi, Wandy đang gặp sự cố kết nối. Vui lòng thử lại sau! 😊',
-        'session_id': sessionId,
-      };
+  /// Send message to Wandy via NestJS `/ai/chat` proxy.
+  /// Uses a dedicated 35s timeout for AI model inference.
+  Future<ChatResponse> sendMessage(ChatRequest request) async {
+    final response = await _dio.post(
+      '/ai/chat',
+      data: request.toJson(),
+      options: Options(
+        sendTimeout: const Duration(seconds: 35),
+        receiveTimeout: const Duration(seconds: 35),
+      ),
+    );
+
+    final data = response.data;
+    if (data is Map<String, dynamic> && data['data'] != null) {
+      return ChatResponse.fromJson(data['data'] as Map<String, dynamic>);
     }
+
+    throw DioException(
+      requestOptions: response.requestOptions,
+      response: response,
+      type: DioExceptionType.badResponse,
+      error: 'Invalid response format from AI service',
+    );
   }
 }

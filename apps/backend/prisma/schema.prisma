@@ -161,7 +161,7 @@ model Place {
   openingHours  String?  @map("opening_hours")
   coverImage    String?  @map("cover_image")
   images        String[] @default([])
-  rating        Float    @default(0)
+  rating        Float?   // NULL = no rating available (never fabricate a default)
   reviewCount   Int      @default(0) @map("review_count")
   createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz
   updatedAt     DateTime @updatedAt @map("updated_at") @db.Timestamptz
@@ -172,7 +172,77 @@ model Place {
   reviews       Review[]
   itineraryItems ItineraryItem[]
 
+  placeSources  PlaceSource[]
+
   @@map("places")
+}
+
+// Entity Resolution: track data provenance from multiple sources
+model PlaceSource {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  placeId         String   @map("place_id") @db.Uuid
+  sourceName      String   @map("source_name") @db.VarChar(50)  // 'osm', 'google_places', 'manual', 'youtube'
+  sourceId        String   @map("source_id") @db.VarChar(255)   // OSM node ID, Google Place ID, etc.
+  rawName         String   @map("raw_name") @db.VarChar(255)
+  latitude        Float?
+  longitude       Float?
+  rawData         Json?    @map("raw_data")
+  confidenceScore Float    @default(1.0) @map("confidence_score")
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  place           Place    @relation(fields: [placeId], references: [id], onDelete: Cascade)
+
+  @@unique([sourceName, sourceId])
+  @@map("place_sources")
+}
+
+// Audit trail: place_sources rows removed because the OSM object could not be verified upstream.
+model PlaceSourceQuarantine {
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  originalId     String   @map("original_id") @db.Uuid
+  placeId        String   @map("place_id") @db.Uuid
+  sourceName     String   @map("source_name") @db.VarChar(50)
+  sourceId       String   @map("source_id") @db.VarChar(255)
+  rawName        String   @map("raw_name") @db.VarChar(255)
+  latitude       Float?
+  longitude      Float?
+  rawData        Json?    @map("raw_data")
+  reason         String   @db.VarChar(100)
+  evidence       Json?
+  quarantinedAt  DateTime @default(now()) @map("quarantined_at") @db.Timestamptz
+
+  @@index([placeId])
+  @@map("place_source_quarantine")
+}
+
+// Audit trail: RAG chunks removed from production retrieval (synthetic / unverified provenance).
+// row_data holds the original documents row as JSON (without the embedding vector).
+model DocumentQuarantine {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  originalId    String   @map("original_id") @db.Uuid
+  rowData       Json     @map("row_data")
+  reason        String   @db.VarChar(100)
+  quarantinedAt DateTime @default(now()) @map("quarantined_at") @db.Timestamptz
+
+  @@map("document_quarantine")
+}
+
+// Dataset Governance: Track dataset provenance, access status, licenses and checksums
+model DatasetRegistry {
+  id             String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  datasetName    String    @unique @map("dataset_name") @db.VarChar(100)
+  datasetSource  String    @map("dataset_source") @db.VarChar(255)
+  datasetVersion String    @default("1.0.0") @map("dataset_version") @db.VarChar(50)
+  license        String    @db.VarChar(100)
+  accessStatus   String    @default("REQUEST_NOT_SENT") @map("access_status") @db.VarChar(50) // REQUEST_NOT_SENT, REQUEST_SENT, ACCESS_GRANTED, ACCESS_DENIED, PENDING
+  retrievedAt    DateTime? @map("retrieved_at") @db.Timestamptz
+  checksum       String?   @db.VarChar(128)
+  restriction    String    @db.VarChar(255)
+  recordCount    Int       @default(0) @map("record_count")
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt      DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+
+  @@map("dataset_registry")
 }
 
 model Review {
@@ -186,6 +256,9 @@ model Review {
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
   updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz
   deletedAt DateTime? @map("deleted_at") @db.Timestamptz
+  // Provenance: 'user' (real traveler) | 'synthetic' (fixture/test). trusted=false is never exposed or aggregated.
+  source    String   @default("user") @db.VarChar(20)
+  trusted   Boolean  @default(true)
 
   user    User    @relation(fields: [userId], references: [id])
   place   Place   @relation(fields: [placeId], references: [id])
@@ -332,6 +405,9 @@ model Trip {
   startDate       DateTime?  @map("start_date") @db.Date
   endDate         DateTime?  @map("end_date") @db.Date
   totalBudget     Int?       @map("total_budget")       // VND integer
+  currency        String     @default("VND")
+  travelStyle     TravelStyle? @map("travel_style")
+  interests       String[]   @default([])
   status          TripStatus @default(DRAFT)
   coverImage      String?    @map("cover_image")
   isAiGenerated   Boolean    @default(false) @map("is_ai_generated")
@@ -606,13 +682,30 @@ model AiMessage {
 }
 
 model Document {
-  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  content   String
-  source    String?
-  category  String?  // "destination_guide", "safety_tip", "travel_advice"
-  metadata  Json?
-  // embedding vector(384) -- Added via raw SQL migration (Prisma doesn't support vector type natively)
-  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+  id             String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  documentId     String    @default("") @map("document_id") @db.VarChar(255)
+  sourceName     String    @default("wikivoyage") @map("source_name") @db.VarChar(50)
+  sourceUrl      String    @default("") @map("source_url") @db.VarChar(500)
+  license        String    @default("CC BY-SA 3.0") @db.VarChar(100)
+  attribution    String    @default("") @db.VarChar(255)
+  destinationId  String?   @map("destination_id") @db.Uuid
+  placeId        String?   @map("place_id") @db.Uuid
+  language       String    @default("en") @db.VarChar(10)
+  topic          String?   @db.VarChar(100)
+  sectionHeading String?   @map("section_heading") @db.VarChar(255)
+  title          String    @default("") @db.VarChar(255)
+  content        String
+  contentHash    String    @map("content_hash") @db.VarChar(64)
+  embeddingModel String    @default("sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2") @map("embedding_model") @db.VarChar(100)
+  category       String?   @db.VarChar(50)
+  metadata       Json?
+  retrievedAt    DateTime  @default(now()) @map("retrieved_at") @db.Timestamptz
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt      DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
 
+  // embedding vector(384) added via raw SQL for pgvector
+  @@unique([contentHash, embeddingModel])
+  @@index([sourceName])
+  @@index([destinationId])
   @@map("documents")
 }

@@ -1,0 +1,3024 @@
+[
+  {
+    "id": "d3de2c7d-2fa6-4bb1-9f0a-c106741322c0",
+    "name": "CaPhe Thu Uyen",
+    "name_en": null,
+    "category": "cafe",
+    "address": "CaPhe Thu Uyen, da_nang",
+    "city": "da_nang",
+    "latitude": 16.087437,
+    "longitude": 108.144539,
+    "description": null,
+    "rating": null,
+    "review_count": 0,
+    "review_flag": false,
+    "sources": [
+      {
+        "source_name": "osm",
+        "source_id": "node/729406384",
+        "raw_name": "CaPhe Thu Uyen",
+        "latitude": 16.087437,
+        "longitude": 108.144539,
+        "raw_data": {
+          "amenity": "cafe",
+          "name": "CaPhe Thu Uyen"
+        },
+        "confidence_score": 1.0
+      }
+    ]
+  },
+  {
+    "id": "b8736146-31e2-4040-a944-b3caa52b0d22",
+    "name": "Cafe Win",
+    "name_en": null,
+    "category": "cafe",
+    "address": "Cafe Win, da_nang",
+    "city": "da_nang",
+    "latitude": 16.074673,
+    "longitude": 108.218701,
+    "description": null,
+    "rating": null,
+    "review_count": 0,
+    "review_flag": false,
+    "sources": [
+      {
+        "source_name": "osm",
+        "source_id": "node/729406385",
+        "raw_name": "Cafe Win",
+        "latitude": 16.074673,
+        "longitude": 108.218701,
+        "raw_data": {
+          "amenity": "cafe",
+          "name": "Cafe Win"
+        },
+        "confidence_score": 1.0
+      }
+    ]
+  },
+  {
+    "id": "e2ca3e09-5e27-49be-8cb8-2b4de0aad198",
+    "name": "CafeKhanh Ly",
+    "name_en": null,
+    "category": "cafe",
+    "address": "CafeKhanh Ly, da_nang",
+    "city": "da_nang",
+    "latitude": 16.062717,
+    "longitude": 108.208943,
+    "description": null,
+    "rating": null,
+    "review_count": 0,
+    "review_flag": false,
+    "sources": [
+      {
+        "source_name": "osm",
+        "source_id": "node/729406386",
+        "raw_name": "CafeKhanh Ly",
+        "latitude": 16.062717,
+        "longitude": 108.208943,
+        "raw_data": {
+          "amenity": "cafe",
+          "name": "CafeKhanh Ly"
+        },
+        "confidence_score": 1.0
+      }
+    ]
+  },
+  {
+    "id": "bb1f7c06-a890-4e93-9adb-8f4feb337b13",
+    "name": "ThanhBinh Coffee",
+    "name_en": null,
+    "category": "cafe",
+    "address": "ThanhBinh Coffee, da_nang",
+    "city": "da_nang",
+    "latitude": 16.034719,
+    "longitude": 108.244654,
+    "description": null,
+    "rating": null,
+    "review_count": 0,
+    "review_flag": false,
+    "sources": [
+      {
+        "source_name": "osm",
+        "source_id": "node/729406387",
+        "raw_name": "ThanhBinh Coffee",
+        "latitude": 16.034719,
+        "longitude": 108.244654,
+        "raw_data": {
+          "amenity": "cafe",
+          "name": "ThanhBinh Coffee"
+        },
+        "confidence_score": 1.0
+      }
+    ]
+  },
+  {
+    "id": "6e362397-926d-4d3d-8c17-6efb33c70deb",
+    "name": "CaPhe Fantasy",
+    "name_en": null,
+    "category": "cafe",
+    "address": "CaPhe Fantasy, da_nang",
+    "city": "da_nang",
+    "latitude": 16.0633,
+    "longitude": 108.160154,
+    "description": null,
+    "rating": null,
+    "review_count": 0,
+    "review_flag": false,
+    "sources": [
+      {
+        "source_name": "osm",
+        "source_id": "node/729406388",
+        "raw_name": "CaPhe Fantasy",
+        "latitude": 16.0633,
+        "longitude": 108.160154,
+        "raw_data": {
+          "amenity": "cafe",
+          "name": "CaPhe Fantasy"
+        },
+        "confidence_score": 1.0
+      }
+    ]
+  },
+  {
+    "id": "90ac9b6b-f6f8-4108-b08f-0d34fc120d12",
+    "name": "CaPhe Lang Tien",
+    "name_en": null,
+    "category": "cafe",
+    "address": "CaPhe Lang Tien, da_nang",
+    "city": "da_nang",
+    "latitude": 16.065743,
+    "longitude": 108.207763,
+    "description": null,
+    "rating": null,
+    "review_count": 0,
+    "review_flag": false,
+    "sources": [
+      {
+        "source_name": "osm",
+        "source_id": "node/729406389",
+        "raw_name": "CaPhe Lang Tien",
+        "latitude": 16.065743,
+        "longitude": 108.207763,
+        "raw_data": {
+          "amenity": "cafe",
+          "name": "CaPhe Lang Tien"
+        },
+        "confidence_score": 1.0
+      }
+    ]
+  },
+  {
+    "id": "106e4cce-a105-4960-91f3-c7404f2cc0b7",
+    "name": "KieuLien Coffee",
+    "name_en": null,
+    "category": "cafe",
+    "address": "KieuLien Coffee, da_nang",
+    "city": "da_nang",
+    "latitude": 16.07863,
+    "longitude": 108.147751,
+    "description": null,
+    "rating": null,
+    "review_count": 0,
+    "review_flag": false,
+    "sources": [
+      {
+        "source_name": "osm",
+        "source_id": "node/729406390",
+        "raw_name": "KieuLien Coffee",
+        "latitude": 16.07863,
+        "longitude": 108.147751,
+        "raw_data": {
+          "amenity": "cafe",
+          "name": "KieuLien Coffee"
+        },
+        "confidence_score": 1.0
+      }
+    ]
+  },
+  {
+    "id": "0e23f5f0-be20-429a-93ee-6fc36bfa56d4",
+    "name": "Cafe Truc Phuong",
+    "name_en": null,
+    "category": "cafe",
+    "address": "Cafe Truc Phuong, da_nang",
+    "city": "da_nang",
+    "latitude": 16.068459,
+    "longitude": 108.150003,
+    "description": null,
+    "rating": null,
+    "review_count": 0,
+    "review_flag": false,
+    "sources": [
+      {
+        "source_name": "osm",
+        "source_id": "node/729406391",
+        "raw_name": "Cafe Truc Phuong",
+        "latitude": 16.068459,
+        "longitude": 108.150003,
+        "raw_data": {
+          "amenity": "cafe",
+          "name": "Cafe Truc Phuong"
+        },
+        "confidence_score": 1.0
+      }
+    ]
+  },
+  {
+    "id": "8ebf0429-fabb-4701-bbc1-cb2fea86d587",
+    "name": "Ca Phe 83",
+    "name_en": null,
+    "category": "cafe",
+    "address": "Ca Phe 83, da_nang",
+    "city": "da_nang",
+    "latitude": 16.078577,
+    "longitude": 108.219339,
+    "description": null,
+    "rating": null,
+    "review_count": 0,
+    "review_flag": false,
+    "sources": [
+      {
+        "source_name": "osm",
+        "source_id": "node/729406392",
+        "raw_name": "Ca Phe 83",
+        "latitude": 16.078577,
+        "longitude": 108.219339,
+        "raw_data": {
+          "amenity": "cafe",
+          "name": "Ca Phe 83"
+        },
+        "confidence_score": 1.0
+      }
+    ]
+  },
+  {
+    "id": "e05198ce-ad69-42ff-a6e2-7127b4d57020",
+    "name": "Cafe Dong Xanh",
+    "name_en": null,
+    "category": "cafe",
+    "address": "Cafe Dong Xanh, da_nang",
+    "city": "da_nang",
+    "latitude": 16.064058,
+    "longitude": 108.220847,
+    "description": null,
+    "rating": null,
+    "review_count": 0,
+    "review_flag": false,
+    "sources": [
+      {
+        "source_name": "osm",
+        "source_id": "node/729406393",
+        "raw_name": "Cafe Dong Xanh",
+        "latitude": 16.064058,
+        "longitude": 108.220847,
+        "raw_data": {
+          "amenity": "cafe",
+          "name": "Cafe Dong Xanh"
+        },
+        "confidence_score": 1.0
+      }
+    ]
+  },
+  {
+    "id": "5069b8a3-89c1-4388-8d90-2849a7161bbc",
+    "name": "CafeTo Be",
+    "name_en": null,
+    "category": "cafe",
+    "address": "CafeTo Be, da_nang",
+    "city": "da_nang",
+    "latitude": 16.073684,
+    "longitude": 108.218289,
+    "description": null,
+    "rating": null,
+    "review_count": 0,
+    "review_flag": false,
+    "sources": [
+      {
+        "source_name": "osm",
+        "source_id": "node/729406394",
+        "raw_name": "CafeTo Be",
+        "latitude": 16.073684,
+        "longitude": 108.218289,
+        "raw_data": {
+          "amenity": "cafe",
+          "name": "CafeTo Be"
+        },
+        "confidence_score": 1.0
+      }
+    ]
+  },
+  {
+    "id": "e7ae2f9e-f63b-415b-bdb7-96d276e8fa12",
+    "name": "MuoiChau Coffee",
+    "name_en": null,
+    "category": "cafe",
+    "address": "MuoiChau Coffee, da_nang",
+    "city": "da_nang",
+    "latitude": 16.002182,
+    "longitude": 108.267021,
+    "description": null,
+    "rating": null,
+    "review_count": 0,
+    "review_flag": false,
+    "sources": [
+      {
+        "source_name": "osm",
+        "source_id": "node/729406396",
+        "raw_name": "MuoiChau Coffee",
+        "latitude": 16.002182,
+        "longitude": 108.267021,
+        "raw_data": {
+          "amenity": "cafe",
+          "indoor_seating": "yes",
+          "name": "MuoiChau Coffee",
+          "outdoor_seating": "yes"
+        },
+        "confidence_score": 1.0
+      }
+    ]
+  },
+  {
+    "id": "37dafa44-02aa-4249-91be-32a45771d515",
+    "name": "CaPhe Sao Mai",
+    "name_en": null,
+    "category": "cafe",
+    "address": "CaPhe Sao Mai, da_nang",
+    "city": "da_nang",
+    "latitude": 16.066857,
+    "longitude": 108.174359,
+    "description": null,
+    "rating": null,
+    "review_count": 0,
+    "review_flag": false,
+    "sources": [
+      {
+        "source_name": "osm",
+        "source_id": "node/729406397",
+        "raw_name": "CaPhe Sao Mai",
+        "latitude": 16.066857,
+        "longitude": 108.174359,
+        "raw_data": {
+          "amenity": "cafe",
+          "name": "CaPhe Sao Mai"
+        },
+        "confidence_score": 1.0
+      }
+    ]
+  },
+  {
+    "id": "0e700a5f-4c74-43af-b6b8-b8ee9050d811",
+    "name": "MienThao Coffee",
+    "name_en": null,
+    "category": "cafe",
+    "address": "MienThao Coffee, da_nang",
+    "city": "da_nang",
+    "latitude": 16.076231,
+    "longitude": 108.230843,
+    "description": null,
+    "rating": null,
+    "review_count": 0,
+    "review_flag": false,
+    "sources": [
+      {
+        "source_name": "osm",
+        "source_id": "node/729406398",
+        "raw_name": "MienThao Coffee",
+        "latitude": 16.076231,
+        "longitude": 108.230843,
+        "raw_data": {
+          "amenity": "cafe",
+          "name": "MienThao Coffee"
+        },
+        "confidence_score": 1.0
+      }
+    ]
+  },
+  {
+    "id": "db313e4a-f824-4d0c-a0b4-50ffa0e54c92",
+    "name": "GmcCoffee",
+    "name_en": null,
+    "category": "cafe",
+    "address": "GmcCoffee, da_nang",
+    "city": "da_nang",
+    "latitude": 16.053938,
+    "longitude": 108.220804,
+    "description": null,
+    "rating": null,
+    "review_count": 0,
+    "review_flag": false,
+    "sources": [
+      {
+        "source_name": "osm",
+        "source_id": "node/729406399",
+        "raw_name": "GmcCoffee",
+        "latitude": 16.053938,
+        "longitude": 108.220804,
+        "raw_data": {
+          "amenity": "cafe",
+          "name": "GmcCoffee"
+        },
+        "confidence_score": 1.0
+      }
+    ]
+  },
+  {
+    "id": "cb696281-f372-41cc-b1d8-96c557359629",
+    "name": "CaPhe 3 Ladies",
+    "name_en": null,
+    "category": "cafe",
+    "address": "CaPhe 3 Ladies, da_nang",
+    "city": "da_nang",
+    "latitude": 16.082733,
+    "longitude": 108.221962,
+    "description": null,
+    "rating": null,
+    "review_count": 0,
+    "review_flag": false,
+    "sources": [
+      {
+        "source_name": "osm",
+        "source_id": "node/729406400",
+        "raw_name": "CaPhe 3 Ladies",
+        "latitude": 16.082733,
+        "longitude": 108.221962,
+        "raw_data": {
+          "amenity": "cafe",
+          "name": "CaPhe 3 Ladies"
+        },
+        "confidence_score": 1.0
+      }
+    ]
+  },
+  {
+    "id": "cf254f06-4d4c-4c19-b1ea-d06679a5f429",
+    "name": "OnenineCoffee",
+    "name_en": null,
+    "category": "cafe",
+    "address": "OnenineCoffee, da_nang",
+    "city": "da_nang",
+    "latitude": 16.066281,
+    "longitude": 108.192052,
+    "description": null,
+    "rating": null,
+    "review_count": 0,
+    "review_flag": false,
+    "sources": [
+      {
+        "source_name": "osm",
+        "source_id": "node/729406401",
+        "raw_name": "OnenineCoffee",
+        "latitude": 16.066281,
+        "longitude": 108.192052,
+        "raw_data": {
+          "amenity": "cafe",
+          "name": "OnenineCoffee"
+        },
+        "confidence_score": 1.0
+      }
+    ]
+  },
+  {
+    "id": "2dff8b62-2005-48d2-a216-3f0c78bf930d",
+    "name": "Ca Phe Thuan",
+    "name_en": null,
+    "category": "cafe",
+    "address": "Ca Phe Thuan, da_nang",
+    "city": "da_nang",
+    "latitude": 16.051598,
+    "longitude": 108.170004,
+    "description": null,
+    "rating": null,
+    "review_count": 0,
+    "review_flag": false,
+    "sources": [
+      {
+        "source_name": "osm",
+        "source_id": "node/729406402",
+        "raw_name": "Ca Phe Thuan",
+        "latitude": 16.051598,
+        "longitude": 108.170004,
+        "raw_data": {
+          "amenity": "cafe",
+          "name": "Ca Phe Thuan"
+        },
+        "confidence_score": 1.0
+      }
+    ]
+  },
+  {
+    "id": "70618fb3-8373-45d3-95e9-f00de8a77401",
+    "name": "CafeGiai Khat 204",
+    "name_en": null,
+    "category": "cafe",
+    "address": "CafeGiai Khat 204, da_nang",
+    "city": "da_nang",
+    "latitude": 16.059769,
+    "longitude": 108.213503,
+    "description": null,
+    "rating": null,
+    "review_count": 0,
+    "review_flag": false,
+    "sources": [
+      {
+        "source_name": "osm",
+        "source_id": "node/729406403",
+        "raw_name": "CafeGiai Khat 204",
+        "latitude": 16.059769,
+        "longitude": 108.213503,
+        "raw_data": {
+          "amenity": "cafe",
+          "name": "CafeGiai Khat 204"
+        },
+        "confidence_score": 1.0
+      }
+    ]
+  },
+  {
+    "id": "2df6ec00-eada-4cdc-8307-435080bf4d34",
+    "name": "CaPhe Konia",
+    "name_en": null,
+    "category": "cafe",
+    "address": "CaPhe Konia, da_nang",
+    "city": "da_nang",
+    "latitude": 16.071949,
+    "longitude": 108.212755,
+    "description": null,
+    "rating": null,
+    "review_count": 0,
+    "review_flag": false,
+    "sources": [
+      {
+        "source_name": "osm",
+        "source_id": "node/729406404",
+        "raw_name": "CaPhe Konia",
+        "latitude": 16.071949,
+        "longitude": 108.212755,
+        "raw_data": {
+          "amenity": "cafe",
+          "name": "CaPhe Konia"
+        },
+        "confidence_score": 1.0
+      }
+    ]
+  },
+  {
+    "id": "fd87da97-b3a1-42f8-b195-c7da9b492929",
+    "name": "VuonNguyet Khue Vien Coffee",
+    "name_en": null,
+    "category": "cafe",
+    "address": "VuonNguyet Khue Vien Coffee, da_nang",
+    "city": "da_nang",
+    "latitude": 16.06235,
+    "longitude": 108.208896,
+    "description": null,
+    "rating": null,
+    "review_count": 0,
+    "review_flag": false,
+    "sources": [
+      {
+        "source_name": "osm",
+        "source_id": "node/729406405",
+        "raw_name": "VuonNguyet Khue Vien Coffee",
+        "latitude": 16.06235,
+        "longitude": 108.208896,
+        "raw_data": {
+          "amenity": "cafe",
+          "name": "VuonNguyet Khue Vien Coffee"
+        },
+        "confidence_score": 1.0
+      }
+    ]
+  },
+  {
+    "id": "bd651d9d-d4da-437c-95ea-d323b70da8ff",
+    "name": "CafeNguyen",
+    "name_en": null,
+    "category": "cafe",
+    "address": "CafeNguyen, da_nang",
+    "city": "da_nang",
+    "latitude": 16.049438,
+    "longitude": 108.213379,
+    "description": null,
+    "rating": null,
+    "review_count": 0,
+    "review_flag": false,
+    "sources": [
+      {
+        "source_name": "osm",
+        "source_id": "node/729406406",
+        "raw_name": "CafeNguyen",
+        "latitude": 16.049438,
+        "longitude": 108.213379,
+        "raw_data": {
+          "amenity": "cafe",
+          "name": "CafeNguyen"
+        },
+        "confidence_score": 1.0
+      }
+    ]
+  },
+  {
+    "id": "aa7e39ef-0355-4d7d-801b-b6b62e615bf0",
+    "name": "NgocVan Coffee",
+    "name_en": null,
+    "category": "cafe",
+    "address": "NgocVan Coffee, da_nang",
+    "city": "da_nang",
+    "latitude": 16.068139,
+    "longitude": 108.181865,
+    "description": null,
+    "rating": null,
+    "review_count": 0,
+    "review_flag": false,
+    "sources": [
+      {
+        "source_name": "osm",
+        "source_id": "node/729406407",
+        "raw_name": "NgocVan Coffee",
+        "latitude": 16.068139,
+        "longitude": 108.181865,
+        "raw_data": {
+          "amenity": "cafe",
+          "name": "NgocVan Coffee"
+        },
+        "confidence_score": 1.0
+      }
+    ]
+  },
+  {
+    "id": "6cf7ba51-b528-4a36-a018-de7a6d883d17",
+    "name": "CafeLuna",
+    "name_en": null,
+    "category": "cafe",
+    "address": "CafeLuna, da_nang",
+    "city": "da_nang",
+    "latitude": 16.065451,
+    "longitude": 108.207851,
+    "description": null,
+    "rating": null,
+    "review_count": 0,
+    "review_flag": false,
+    "sources": [
+      {
+        "source_name": "osm",
+        "source_id": "node/729406408",
+        "raw_name": "CafeLuna",
+        "latitude": 16.065451,
+        "longitude": 108.207851,
+        "raw_data": {
+          "amenity": "cafe",
+          "name": "CafeLuna"
+        },
+        "confidence_score": 1.0
+      }
+    ]
+  },
+  {
+    "id": "b571207d-ce89-47e9-83be-ff590ce5a603",
+    "name": "CafeBao Dang",
+    "name_en": null,
+    "category": "cafe",
+    "address": "CafeBao Dang, da_nang",
+    "city": "da_nang",
+    "latitude": 16.067446,
+    "longitude": 108.152553,
+    "description": null,
+    "rating": null,
+    "review_count": 0,
+    "review_flag": false,
+    "sources": [
+      {
+        "source_name": "osm",
+        "source_id": "node/729406410",
+        "raw_name": "CafeBao Dang",
+        "latitude": 16.067446,
+        "longitude": 108.152553,
+        "raw_data": {
+          "amenity": "cafe",
+          "name": "CafeBao Dang"
+        },
+        "confidence_score": 1.0
+      }
+    ]
+  },
+  {
+    "id": "e785000a-dd1f-4156-954d-5ad52c13c0b7",
+    "name": "AnhLinh Coffee",
+    "name_en": null,
+    "category": "cafe",
+    "address": "AnhLinh Coffee, da_nang",
+    "city": "da_nang",
+    "latitude": 16.070398,
+    "longitude": 108.20132,
+    "description": null,
+    "rating": null,
+    "review_count": 0,
+    "review_flag": false,
+    "sources": [
+      {
+        "source_name": "osm",
+        "source_id": "node/729406411",
+        "raw_name": "AnhLinh Coffee",
+        "latitude": 16.070398,
+        "longitude": 108.20132,
+        "raw_data": {
+          "amenity": "cafe",
+          "name": "AnhLinh Coffee"
+        },
+        "confidence_score": 1.0
+      }
+    ]
+  },
+  {
+    "id": "91277439-d542-47f2-9825-e13814d483af",
+    "name": "HoaTieu Coffee",
+    "name_en": null,
+    "category": "cafe",
+    "address": "HoaTieu Coffee, da_nang",
+    "city": "da_nang",
+    "latitude": 16.0789,
+    "longitude": 108.232807,
+    "description": null,
+    "rating": null,
+    "review_count": 0,
+    "review_flag": false,
+    "sources": [
+      {
+        "source_name": "osm",
+        "source_id": "node/729406412",
+        "raw_name": "HoaTieu Coffee",
+        "latitude": 16.0789,
+        "longitude": 108.232807,
+        "raw_data": {
+          "amenity": "cafe",
+          "name": "HoaTieu Coffee"
+        },
+        "confidence_score": 1.0
+      }
+    ]
+  },
+  {
+    "id": "65cd2e60-e033-4b64-bf0b-a76f80281e31",
+    "name": "Giai Khat Quang",
+    "name_en": null,
+    "category": "cafe",
+    "address": "Giai Khat Quang, da_nang",
+    "city": "da_nang",
+    "latitude": 16.058238,
+    "longitude": 108.212639,
+    "description": null,
+    "rating": null,
+    "review_count": 0,
+    "review_flag": false,
+    "sources": [
+      {
+        "source_name": "osm",
+        "source_id": "node/729406413",
+        "raw_name": "Giai Khat Quang",
+        "latitude": 16.058238,
+        "longitude": 108.212639,
+        "raw_data": {
+          "amenity": "cafe",
+          "name": "Giai Khat Quang"
+        },
+        "confidence_score": 1.0
+      }
+    ]
+  },
+  {
+    "id": "ee500089-d251-441d-8e22-cf2ab022eb9b",
+    "name": "Cafe72",
+    "name_en": null,
+    "category": "cafe",
+    "address": "Cafe72, da_nang",
+    "city": "da_nang",
+    "latitude": 16.048855,
+    "longitude": 108.216823,
+    "description": null,
+    "rating": null,
+    "review_count": 0,
+    "review_flag": false,
+    "sources": [
+      {
+        "source_name": "osm",
+        "source_id": "node/729406414",
+        "raw_name": "Cafe72",
+        "latitude": 16.048855,
+        "longitude": 108.216823,
+        "raw_data": {
+          "amenity": "cafe",
+          "name": "Cafe72"
+        },
+        "confidence_score": 1.0
+      }
+    ]
+  },
+  {
+    "id": "10f54122-dbbc-4f01-b09a-4505bc86df27",
+    "name": "ThanhHuong Coffee",
+    "name_en": null,
+    "category": "cafe",
+    "address": "ThanhHuong Coffee, da_nang",
+    "city": "da_nang",
+    "latitude": 16.064821,
+    "longitude": 108.216475,
+    "description": null,
+    "rating": null,
+    "review_count": 0,
+    "review_flag": false,
+    "sources": [
+      {
+        "source_name": "osm",
+        "source_id": "node/729406415",
+        "raw_name": "ThanhHuong Coffee",
+        "latitude": 16.064821,
+        "longitude": 108.216475,
+        "raw_data": {
+          "amenity": "cafe",
+          "name": "ThanhHuong Coffee"
+        },
+        "confidence_score": 1.0
+      }
+    ]
+  },
+  {
+    "id": "0fad00f2-c21a-458d-b5af-9a7a31192061",
+    "name": "CaPhe Hoang Anh",
+    "name_en": null,
+    "category": "cafe",
+    "address": "CaPhe Hoang Anh, da_nang",
+    "city": "da_nang",
+    "latitude": 16.034868,
+    "longitude": 108.177899,
+    "description": null,
+    "rating": null,
+    "review_count": 0,
+    "review_flag": false,
+    "sources": [
+      {
+        "source_name": "osm",
+        "source_id": "node/729406416",
+        "raw_name": "CaPhe Hoang Anh",
+        "latitude": 16.034868,
+        "longitude": 108.177899,
+        "raw_data": {
+          "amenity": "cafe",
+          "name": "CaPhe Hoang Anh"
+        },
+        "confidence_score": 1.0
+      }
+    ]
+  },
+  {
+    "id": "630f4de9-0d28-4eeb-ae4c-d5fc7eb36024",
+    "name": "AnhLinh Coffee",
+    "name_en": null,
+    "category": "cafe",
+    "address": "AnhLinh Coffee, da_nang",
+    "city": "da_nang",
+    "latitude": 16.08513,
+    "longitude": 108.219691,
+    "description": null,
+    "rating": null,
+    "review_count": 0,
+    "review_flag": true,
+    "sources": [
+      {
+        "source_name": "osm",
+        "source_id": "node/729406417",
+        "raw_name": "AnhLinh Coffee",
+        "latitude": 16.08513,
+        "longitude": 108.219691,
+        "raw_data": {
+          "amenity": "cafe",
+          "name": "AnhLinh Coffee"
+        },
+        "confidence_score": 0.65
+      }
+    ]
+  },
+  {
+    "id": "450844a1-1aaa-47de-8776-12183a70b17f",
+    "name": "VuonThao Coffee",
+    "name_en": null,
+    "category": "cafe",
+    "address": "VuonThao Coffee, da_nang",
+    "city": "da_nang",
+    "latitude": 16.065362,
+    "longitude": 108.20691,
+    "description": null,
+    "rating": null,
+    "review_count": 0,
+    "review_flag": false,
+    "sources": [
+      {
+        "source_name": "osm",
+        "source_id": "node/729406418",
+        "raw_name": "VuonThao Coffee",
+        "latitude": 16.065362,
+        "longitude": 108.20691,
+        "raw_data": {
+          "amenity": "cafe",
+          "name": "VuonThao Coffee"
+        },
+        "confidence_score": 1.0
+      }
+    ]
+  },
+  {
+    "id": "7d7e049e-d3f9-436a-aa1a-bf49ca0d1206",
+    "name": "324Coffee",
+    "name_en": null,
+    "category": "cafe",
+    "address": "324Coffee, da_nang",
+    "city": "da_nang",
+    "latitude": 16.05699,
+    "longitude": 108.212811,
+    "description": null,
+    "rating": null,
+    "review_count": 0,
+    "review_flag": false,
+    "sources": [
+      {
+        "source_name": "osm",
+        "source_id": "node/729406419",
+        "raw_name": "324Coffee",
+        "latitude": 16.05699,
+        "longitude": 108.212811,
+        "raw_data": {
+          "amenity": "cafe",
+          "name": "324Coffee"
+        },
+        "confidence_score": 1.0
+      }
+    ]
+  },
+  {
+    "id": "61b29632-3b0a-4d72-b4fc-4f1c1873b12b",
+    "name": "Nhà Hàng Chay & Cà Phê Thúp An",
+    "name_en": null,
+    "category": "restaurant",
+    "address": "Nhà Hàng Chay & Cà Phê Thúp An, da_nang",
+    "city": "da_nang",
+    "latitude": 16.073852,
+    "longitude": 108.203251,
+    "description": null,
+    "rating": null,
+    "review_count": 0,
+    "review_flag": false,
+    "sources": [
+      {
+        "source_name": "osm",
+        "source_id": "node/729406420",
+        "raw_name": "Nhà Hàng Chay & Cà Phê Thúp An",
+        "latitude": 16.073852,
+        "longitude": 108.203251,
+        "raw_data": {
+          "amenity": "restaurant",
+          "name": "Nhà Hàng Chay & Cà Phê Thúp An"
+        },
+        "confidence_score": 1.0
+      }
+    ]
+  },
+  {
+    "id": "13241745-f946-400d-9246-b7247a2255ea",
+    "name": "PhoSao Coffee",
+    "name_en": null,
+    "category": "cafe",
+    "address": "PhoSao Coffee, da_nang",
+    "city": "da_nang",
+    "latitude": 16.045282,
+    "longitude": 108.222724,
+    "description": null,
+    "rating": null,
+    "review_count": 0,
+    "review_flag": false,
+    "sources": [
+      {
+        "source_name": "osm",
+        "source_id": "node/729406421",
+        "raw_name": "PhoSao Coffee",
+        "latitude": 16.045282,
+        "longitude": 108.222724,
+        "raw_data": {
+          "amenity": "cafe",
+          "name": "PhoSao Coffee",
+          "name:de": "PhoSao Coffee"
+        },
+        "confidence_score": 1.0
+      }
+    ]
+  },
+  {
+    "id": "462eecc9-4cf2-4b10-9248-7bb7dce7326d",
+    "name": "BaoNhi Coffee",
+    "name_en": null,
+    "category": "cafe",
+    "address": "BaoNhi Coffee, da_nang",
+    "city": "da_nang",
+    "latitude": 16.082226,
+    "longitude": 108.239924,
+    "description": null,
+    "rating": null,
+    "review_count": 0,
+    "review_flag": false,
+    "sources": [
+      {
+        "source_name": "osm",
+        "source_id": "node/729406422",
+        "raw_name": "BaoNhi Coffee",
+        "latitude": 16.082226,
+        "longitude": 108.239924,
+        "raw_data": {
+          "amenity": "cafe",
+          "name": "BaoNhi Coffee"
+        },
+        "confidence_score": 1.0
+      }
+    ]
+  },
+  {
+    "id": "c68c362a-aa05-42c1-aa5b-6934519da8ed",
+    "name": "CafeBan Toi",
+    "name_en": null,
+    "category": "cafe",
+    "address": "CafeBan Toi, da_nang",
+    "city": "da_nang",
+    "latitude": 16.058681,
+    "longitude": 108.212215,
+    "description": null,
+    "rating": null,
+    "review_count": 0,
+    "review_flag": false,
+    "sources": [
+      {
+        "source_name": "osm",
+        "source_id": "node/729406423",
+        "raw_name": "CafeBan Toi",
+        "latitude": 16.058681,
+        "longitude": 108.212215,
+        "raw_data": {
+          "amenity": "cafe",
+          "name": "CafeBan Toi"
+        },
+        "confidence_score": 1.0
+      }
+    ]
+  },
+  {
+    "id": "0d80df76-7568-45cb-a732-423175b64542",
+    "name": "CaPhe Nhat Linh",
+    "name_en": null,
+    "category": "cafe",
+    "address": "CaPhe Nhat Linh, da_nang",
+    "city": "da_nang",
+    "latitude": 16.036049,
+    "longitude": 108.183242,
+    "description": null,
+    "rating": null,
+    "review_count": 0,
+    "review_flag": false,
+    "sources": [
+      {
+        "source_name": "osm",
+        "source_id": "node/729406424",
+        "raw_name": "CaPhe Nhat Linh",
+        "latitude": 16.036049,
+        "longitude": 108.183242,
+        "raw_data": {
+          "amenity": "cafe",
+          "name": "CaPhe Nhat Linh"
+        },
+        "confidence_score": 1.0
+      }
+    ]
+  },
+  {
+    "id": "2a4b6214-f12f-42ae-b29f-bb2fccea4332",
+    "name": "CafeThoang Sai Gon",
+    "name_en": null,
+    "category": "cafe",
+    "address": "CafeThoang Sai Gon, da_nang",
+    "city": "da_nang",
+    "latitude": 16.071008,
+    "longitude": 108.2213,
+    "description": null,
+    "rating": null,
+    "review_count": 0,
+    "review_flag": false,
+    "sources": [
+      {
+        "source_name": "osm",
+        "source_id": "node/729406425",
+        "raw_name": "CafeThoang Sai Gon",
+        "latitude": 16.071008,
+        "longitude": 108.2213,
+        "raw_data": {
+          "amenity": "cafe",
+          "name": "CafeThoang Sai Gon"
+        },
+        "confidence_score": 1.0
+      }
+    ]
+  },
+  {
+    "id": "901c8604-f171-4ae7-819f-7ab8141e6c8b",
+    "name": "CaPhe Trung",
+    "name_en": null,
+    "category": "cafe",
+    "address": "CaPhe Trung, da_nang",
+    "city": "da_nang",
+    "latitude": 16.035806,
+    "longitude": 108.182207,
+    "description": null,
+    "rating": null,
+    "review_count": 0,
+    "review_flag": false,
+    "sources": [
+      {
+        "source_name": "osm",
+        "source_id": "node/729406426",
+        "raw_name": "CaPhe Trung",
+        "latitude": 16.035806,
+        "longitude": 108.182207,
+        "raw_data": {
+          "amenity": "cafe",
+          "name": "CaPhe Trung"
+        },
+        "confidence_score": 1.0
+      }
+    ]
+  },
+  {
+    "id": "838778f3-cab3-41ce-9c77-0a05cacbc914",
+    "name": "CaPhe Thu Dung",
+    "name_en": null,
+    "category": "cafe",
+    "address": "CaPhe Thu Dung, da_nang",
+    "city": "da_nang",
+    "latitude": 16.071336,
+    "longitude": 108.191482,
+    "description": null,
+    "rating": null,
+    "review_count": 0,
+    "review_flag": false,
+    "sources": [
+      {
+        "source_name": "osm",
+        "source_id": "node/729406427",
+        "raw_name": "CaPhe Thu Dung",
+        "latitude": 16.071336,
+        "longitude": 108.191482,
+        "raw_data": {
+          "amenity": "cafe",
+          "name": "CaPhe Thu Dung"
+        },
+        "confidence_score": 1.0
+      }
+    ]
+  },
+  {
+    "id": "35f2457e-8cd4-440a-b3a6-fb3dac62868f",
+    "name": "Cafe219",
+    "name_en": null,
+    "category": "cafe",
+    "address": "Cafe219, da_nang",
+    "city": "da_nang",
+    "latitude": 16.087116,
+    "longitude": 108.241316,
+    "description": null,
+    "rating": null,
+    "review_count": 0,
+    "review_flag": false,
+    "sources": [
+      {
+        "source_name": "osm",
+        "source_id": "node/729406428",
+        "raw_name": "Cafe219",
+        "latitude": 16.087116,
+        "longitude": 108.241316,
+        "raw_data": {
+          "amenity": "cafe",
+          "name": "Cafe219"
+        },
+        "confidence_score": 1.0
+      }
+    ]
+  },
+  {
+    "id": "5f06d67b-ec9c-491e-b676-983c5f0a7b2d",
+    "name": "ThanhThuy Coffee",
+    "name_en": null,
+    "category": "cafe",
+    "address": "ThanhThuy Coffee, da_nang",
+    "city": "da_nang",
+    "latitude": 16.087197,
+    "longitude": 108.144318,
+    "description": null,
+    "rating": null,
+    "review_count": 0,
+    "review_flag": false,
+    "sources": [
+      {
+        "source_name": "osm",
+        "source_id": "node/729406429",
+        "raw_name": "ThanhThuy Coffee",
+        "latitude": 16.087197,
+        "longitude": 108.144318,
+        "raw_data": {
+          "amenity": "cafe",
+          "name": "ThanhThuy Coffee"
+        },
+        "confidence_score": 1.0
+      }
+    ]
+  },
+  {
+    "id": "aef9a458-dbbc-4a6a-b4ff-32f261292805",
+    "name": "CaPhe Long",
+    "name_en": null,
+    "category": "cafe",
+    "address": "CaPhe Long, da_nang",
+    "city": "da_nang",
+    "latitude": 16.067769,
+    "longitude": 108.159381,
+    "description": null,
+    "rating": null,
+    "review_count": 0,
+    "review_flag": false,
+    "sources": [
+      {
+        "source_name": "osm",
+        "source_id": "node/729406430",
+        "raw_name": "CaPhe Long",
+        "latitude": 16.067769,
+        "longitude": 108.159381,
+        "raw_data": {
+          "amenity": "cafe",
+          "name": "CaPhe Long"
+        },
+        "confidence_score": 1.0
+      }
+    ]
+  },
+  {
+    "id": "e7551f04-dbba-4077-83b1-d0689396f681",
+    "name": "MyDuyen Coffee",
+    "name_en": null,
+    "category": "cafe",
+    "address": "MyDuyen Coffee, da_nang",
+    "city": "da_nang",
+    "latitude": 16.052291,
+    "longitude": 108.237378,
+    "description": null,
+    "rating": null,
+    "review_count": 0,
+    "review_flag": false,
+    "sources": [
+      {
+        "source_name": "osm",
+        "source_id": "node/729406431",
+        "raw_name": "MyDuyen Coffee",
+        "latitude": 16.052291,
+        "longitude": 108.237378,
+        "raw_data": {
+          "amenity": "cafe",
+          "name": "MyDuyen Coffee"
+        },
+        "confidence_score": 1.0
+      }
+    ]
+  },
+  {
+    "id": "da7f0562-2bee-4244-86c8-26a21474f8e0",
+    "name": "Ca Phe New Life",
+    "name_en": null,
+    "category": "cafe",
+    "address": "Ca Phe New Life, da_nang",
+    "city": "da_nang",
+    "latitude": 16.06598,
+    "longitude": 108.220031,
+    "description": null,
+    "rating": null,
+    "review_count": 0,
+    "review_flag": false,
+    "sources": [
+      {
+        "source_name": "osm",
+        "source_id": "node/729406432",
+        "raw_name": "Ca Phe New Life",
+        "latitude": 16.06598,
+        "longitude": 108.220031,
+        "raw_data": {
+          "amenity": "cafe",
+          "name": "Ca Phe New Life"
+        },
+        "confidence_score": 1.0
+      }
+    ]
+  },
+  {
+    "id": "282fc847-15d7-49d4-84ac-a69363d256e8",
+    "name": "CaPhe Bong Da 14",
+    "name_en": null,
+    "category": "cafe",
+    "address": "CaPhe Bong Da 14, da_nang",
+    "city": "da_nang",
+    "latitude": 16.075029,
+    "longitude": 108.149207,
+    "description": null,
+    "rating": null,
+    "review_count": 0,
+    "review_flag": false,
+    "sources": [
+      {
+        "source_name": "osm",
+        "source_id": "node/729406433",
+        "raw_name": "CaPhe Bong Da 14",
+        "latitude": 16.075029,
+        "longitude": 108.149207,
+        "raw_data": {
+          "amenity": "cafe",
+          "name": "CaPhe Bong Da 14"
+        },
+        "confidence_score": 1.0
+      }
+    ]
+  },
+  {
+    "id": "94fa3f20-ad89-4c85-9b18-28afcbee4e03",
+    "name": "CaPhe New Life",
+    "name_en": null,
+    "category": "cafe",
+    "address": "CaPhe New Life, da_nang",
+    "city": "da_nang",
+    "latitude": 16.070738,
+    "longitude": 108.220342,
+    "description": null,
+    "rating": null,
+    "review_count": 0,
+    "review_flag": false,
+    "sources": [
+      {
+        "source_name": "osm",
+        "source_id": "node/729406434",
+        "raw_name": "CaPhe New Life",
+        "latitude": 16.070738,
+        "longitude": 108.220342,
+        "raw_data": {
+          "amenity": "cafe",
+          "name": "CaPhe New Life"
+        },
+        "confidence_score": 1.0
+      }
+    ]
+  },
+  {
+    "id": "0ab131df-43f2-48b1-a9d1-bbc2f38970c9",
+    "name": "ThanhHuong Coffee",
+    "name_en": null,
+    "category": "cafe",
+    "address": "ThanhHuong Coffee, da_nang",
+    "city": "da_nang",
+    "latitude": 16.095175,
+    "longitude": 108.244416,
+    "description": null,
+    "rating": null,
+    "review_count": 0,
+    "review_flag": true,
+    "sources": [
+      {
+        "source_name": "osm",
+        "source_id": "node/729406436",
+        "raw_name": "ThanhHuong Coffee",
+        "latitude": 16.095175,
+        "longitude": 108.244416,
+        "raw_data": {
+          "amenity": "cafe",
+          "name": "ThanhHuong Coffee"
+        },
+        "confidence_score": 0.65
+      }
+    ]
+  },
+  {
+    "id": "b0641225-0f38-4bcc-9f4c-34f65fa50d45",
+    "name": "Cửa Hàng Bánh Tôm Hồ Tây",
+    "name_en": null,
+    "category": "restaurant",
+    "address": "Cửa Hàng Bánh Tôm Hồ Tây, hanoi",
+    "city": "hanoi",
+    "latitude": 21.047321,
+    "longitude": 105.837626,
+    "description": null,
+    "rating": null,
+    "review_count": 0,
+    "review_flag": false,
+    "sources": [
+      {
+        "source_name": "osm",
+        "source_id": "node/310727632",
+        "raw_name": "Cửa Hàng Bánh Tôm Hồ Tây",
+        "latitude": 21.047321,
+        "longitude": 105.837626,
+        "raw_data": {
+          "amenity": "restaurant",
+          "name": "Cửa Hàng Bánh Tôm Hồ Tây",
+          "name:vi": "Bánh tôm Hồ Tây",
+          "name:zh": "西湖蝦饼餐厅",
+          "name:zh-Hans": "西湖蝦饼餐厅",
+          "name:zh-Hant": "西湖蝦餅餐廳"
+        },
+        "confidence_score": 1.0
+      }
+    ]
+  },
+  {
+    "id": "da64cc83-b270-4cb3-ab90-0abc172cf763",
+    "name": "Khách Sạn Đức Thái",
+    "name_en": null,
+    "category": "hotel",
+    "address": "Hà Nội",
+    "city": "Hà Nội",
+    "latitude": 21.034004,
+    "longitude": 105.847144,
+    "description": null,
+    "rating": null,
+    "review_count": 0,
+    "review_flag": false,
+    "sources": [
+      {
+        "source_name": "osm",
+        "source_id": "node/335641430",
+        "raw_name": "Khách Sạn Đức Thái",
+        "latitude": 21.034004,
+        "longitude": 105.847144,
+        "raw_data": {
+          "addr:city": "Hà Nội",
+          "name": "Khách Sạn Đức Thái",
+          "tourism": "hotel"
+        },
+        "confidence_score": 1.0
+      }
+    ]
+  },
+  {
+    "id": "ef76a682-35ef-4088-94ef-fe05fadf6a1d",
+    "name": "Cà Phê Cây Bàng Đổ",
+    "name_en": null,
+    "category": "cafe",
+    "address": "Cà Phê Cây Bàng Đổ, hanoi",
+    "city": "hanoi",
+    "latitude": 21.027327,
+    "longitude": 105.822037,
+    "description": null,
+    "rating": null,
+    "review_count": 0,
+    "review_flag": false,
+    "sources": [
+      {
+        "source_name": "osm",
+        "source_id": "node/422416741",
+        "raw_name": "Cà Phê Cây Bàng Đổ",
+        "latitude": 21.027327,
+        "longitude": 105.822037,
+        "raw_data": {
+          "amenity": "cafe",
+          "name": "Cà Phê Cây Bàng Đổ"
+        },
+        "confidence_score": 1.0
+      }
+    ]
+  },
+  {
+    "id": "a2fc15de-d609-4d4f-abf1-9779d57901a6",
+    "name": "Cà Phê Kafa",
+    "name_en": null,
+    "category": "cafe",
+    "address": "118 Đường Nguyễn Khánh Toàn, Cau Giay, Hà Nội",
+    "city": "Hà Nội",
+    "latitude": 21.037861,
+    "longitude": 105.801001,
+    "description": null,
+    "rating": null,
+    "review_count": 0,
+    "review_flag": false,
+    "sources": [
+      {
+        "source_name": "osm",
+        "source_id": "node/423736651",
+        "raw_name": "Cà Phê Kafa",
+        "latitude": 21.037861,
+        "longitude": 105.801001,
+        "raw_data": {
+          "addr:city": "Hà Nội",
+          "addr:district": "Cau Giay",
+          "addr:housenumber": "118",
+          "addr:postcode": "10000",
+          "addr:province": "Hà Nội",
+          "addr:street": "Đường Nguyễn Khánh Toàn",
+          "addr:subdistrict": "Cầu Giấy",
+          "amenity": "cafe",
+          "name": "Cà Phê Kafa",
+          "opening_hours": "Mo-Su 07:00-23:00",
+          "payment:cash": "yes",
+          "phone": "+84972954668"
+        },
+        "confidence_score": 1.0
+      }
+    ]
+  },
+  {
+    "id": "bac279ff-37a6-4f87-8b4a-e05fe1ecb174",
+    "name": "Nhà Hàng Chay Phương Nam",
+    "name_en": null,
+    "category": "restaurant",
+    "address": "Nhà Hàng Chay Phương Nam, hanoi",
+    "city": "hanoi",
+    "latitude": 21.022232,
+    "longitude": 105.84695,
+    "description": null,
+    "rating": null,
+    "review_count": 0,
+    "review_flag": false,
+    "sources": [
+      {
+        "source_name": "osm",
+        "source_id": "node/442030353",
+        "raw_name": "Nhà Hàng Chay Phương Nam",
+        "latitude": 21.022232,
+        "longitude": 105.84695,
+        "raw_data": {
+          "amenity": "restaurant",
+          "diet:vegetarian": "only",
+          "name": "Nhà Hàng Chay Phương Nam"
+        },
+        "confidence_score": 1.0
+      }
+    ]
+  },
+  {
+    "id": "8708d047-6900-4dbc-80e9-381a269ba488",
+    "name": "Nhà hàng Nam Phương",
+    "name_en": null,
+    "category": "restaurant",
+    "address": "Nhà hàng Nam Phương, hanoi",
+    "city": "hanoi",
+    "latitude": 21.021755,
+    "longitude": 105.856386,
+    "description": null,
+    "rating": null,
+    "review_count": 0,
+    "review_flag": true,
+    "sources": [
+      {
+        "source_name": "osm",
+        "source_id": "node/442030367",
+        "raw_name": "Nhà hàng Nam Phương",
+        "latitude": 21.021755,
+        "longitude": 105.856386,
+        "raw_data": {
+          "amenity": "restaurant",
+          "name": "Nhà hàng Nam Phương"
+        },
+        "confidence_score": 0.6725
+      }
+    ]
+  },
+  {
+    "id": "29a380ee-5690-453f-9e5b-13b64f2cd997",
+    "name": "Nha Hang Little Italian",
+    "name_en": null,
+    "category": "restaurant",
+    "address": "Nha Hang Little Italian, hanoi",
+    "city": "hanoi",
+    "latitude": 21.016954,
+    "longitude": 105.852831,
+    "description": null,
+    "rating": null,
+    "review_count": 0,
+    "review_flag": false,
+    "sources": [
+      {
+        "source_name": "osm",
+        "source_id": "node/442030389",
+        "raw_name": "Nha Hang Little Italian",
+        "latitude": 21.016954,
+        "longitude": 105.852831,
+        "raw_data": {
+          "amenity": "restaurant",
+          "name": "Nha Hang Little Italian"
+        },
+        "confidence_score": 1.0
+      }
+    ]
+  },
+  {
+    "id": "ac39bb02-5154-445b-af31-7d832351b379",
+    "name": "Nha Hang Indochine",
+    "name_en": null,
+    "category": "restaurant",
+    "address": "Nam Ngư",
+    "city": "hanoi",
+    "latitude": 21.026587,
+    "longitude": 105.843005,
+    "description": null,
+    "rating": null,
+    "review_count": 0,
+    "review_flag": false,
+    "sources": [
+      {
+        "source_name": "osm",
+        "source_id": "node/442031761",
+        "raw_name": "Nha Hang Indochine",
+        "latitude": 21.026587,
+        "longitude": 105.843005,
+        "raw_data": {
+          "addr:street": "Nam Ngư",
+          "amenity": "restaurant",
+          "name": "Nha Hang Indochine"
+        },
+        "confidence_score": 1.0
+      }
+    ]
+  },
+  {
+    "id": "0ef5ad18-1c3a-49a6-8243-7d8d70e91e3c",
+    "name": "Khách Sạn Prince",
+    "name_en": null,
+    "category": "hotel",
+    "address": "Hà Nội",
+    "city": "Hà Nội",
+    "latitude": 21.027311,
+    "longitude": 105.843531,
+    "description": null,
+    "rating": null,
+    "review_count": 0,
+    "review_flag": false,
+    "sources": [
+      {
+        "source_name": "osm",
+        "source_id": "node/442031782",
+        "raw_name": "Khách Sạn Prince",
+        "latitude": 21.027311,
+        "longitude": 105.843531,
+        "raw_data": {
+          "addr:city": "Hà Nội",
+          "addr:country": "VN",
+          "name": "Khách Sạn Prince",
+          "tourism": "hotel"
+        },
+        "confidence_score": 1.0
+      }
+    ]
+  },
+  {
+    "id": "9a96e0a0-e040-4e16-a3f2-682ca373dd8e",
+    "name": "Somerset Grand Hanoi",
+    "name_en": null,
+    "category": "hotel",
+    "address": "49 Phố Hai Bà Trưng, Hoàn Kiếm, Hà Nội",
+    "city": "Hà Nội",
+    "latitude": 21.025833,
+    "longitude": 105.846367,
+    "description": null,
+    "rating": null,
+    "review_count": 0,
+    "review_flag": false,
+    "sources": [
+      {
+        "source_name": "osm",
+        "source_id": "node/442033049",
+        "raw_name": "Somerset Grand Hanoi",
+        "latitude": 21.025833,
+        "longitude": 105.846367,
+        "raw_data": {
+          "addr:city": "Hà Nội",
+          "addr:country": "VN",
+          "addr:district": "Hoàn Kiếm",
+          "addr:housenumber": "49",
+          "addr:province": "Hà Nội",
+          "addr:street": "Phố Hai Bà Trưng",
+          "addr:subdistrict": "Trần Hưng Đạo",
+          "air_conditioning": "yes",
+          "brand": "Somerset",
+          "email": "enquiry.hanoi@the-ascott.com",
+          "internet_access": "yes",
+          "name": "Somerset Grand Hanoi",
+          "phone": "+84 24 3934 2342",
+          "reservation": "yes",
+          "stars": "5",
+          "tourism": "hotel",
+          "website": "https://www.discoverasr.com/en/somerset-serviced-residence/vietnam/somerset-grand-hanoi"
+        },
+        "confidence_score": 1.0
+      }
+    ]
+  },
+  {
+    "id": "82150ecb-f97e-4f82-bbcc-b183d12bb503",
+    "name": "Cà Phê Big One",
+    "name_en": null,
+    "category": "cafe",
+    "address": "Cà Phê Big One, hanoi",
+    "city": "hanoi",
+    "latitude": 21.009861,
+    "longitude": 105.847649,
+    "description": null,
+    "rating": null,
+    "review_count": 0,
+    "review_flag": false,
+    "sources": [
+      {
+        "source_name": "osm",
+        "source_id": "node/442910045",
+        "raw_name": "Cà Phê Big One",
+        "latitude": 21.009861,
+        "longitude": 105.847649,
+        "raw_data": {
+          "amenity": "cafe",
+          "name": "Cà Phê Big One"
+        },
+        "confidence_score": 1.0
+      }
+    ]
+  },
+  {
+    "id": "5bd45eb7-a691-4426-9691-a5a00f38d1ad",
+    "name": "Highlands Coffee",
+    "name_en": "Highlands Coffee",
+    "category": "cafe",
+    "address": "Highlands Coffee, hanoi",
+    "city": "hanoi",
+    "latitude": 21.011372,
+    "longitude": 105.849589,
+    "description": null,
+    "rating": null,
+    "review_count": 0,
+    "review_flag": false,
+    "sources": [
+      {
+        "source_name": "osm",
+        "source_id": "node/442977691",
+        "raw_name": "Highlands Coffee",
+        "latitude": 21.011372,
+        "longitude": 105.849589,
+        "raw_data": {
+          "amenity": "cafe",
+          "brand": "Highlands Coffee",
+          "brand:wikidata": "Q5759361",
+          "brand:wikipedia": "vi:Highlands Coffee",
+          "cuisine": "coffee_shop;vietnamese",
+          "internet_access": "wlan",
+          "level": "4",
+          "name": "Highlands Coffee",
+          "name:en": "Highlands Coffee",
+          "takeaway": "yes"
+        },
+        "confidence_score": 1.0
+      }
+    ]
+  },
+  {
+    "id": "54cb11e4-f1b9-48ed-aeed-6383a6e42f03",
+    "name": "Sushi Tiger",
+    "name_en": null,
+    "category": "restaurant",
+    "address": "Sushi Tiger, hanoi",
+    "city": "hanoi",
+    "latitude": 21.028523,
+    "longitude": 105.806156,
+    "description": null,
+    "rating": null,
+    "review_count": 0,
+    "review_flag": false,
+    "sources": [
+      {
+        "source_name": "osm",
+        "source_id": "node/442994566",
+        "raw_name": "Sushi Tiger",
+        "latitude": 21.028523,
+        "longitude": 105.806156,
+        "raw_data": {
+          "amenity": "restaurant",
+          "cuisine": "sushi",
+          "name": "Sushi Tiger"
+        },
+        "confidence_score": 1.0
+      }
+    ]
+  },
+  {
+    "id": "afb3793b-7227-4645-a68a-3647c7468638",
+    "name": "Sen Tây Hồ",
+    "name_en": null,
+    "category": "restaurant",
+    "address": "Sen Tây Hồ, hanoi",
+    "city": "hanoi",
+    "latitude": 21.074149,
+    "longitude": 105.815469,
+    "description": null,
+    "rating": null,
+    "review_count": 0,
+    "review_flag": false,
+    "sources": [
+      {
+        "source_name": "osm",
+        "source_id": "node/443000681",
+        "raw_name": "Sen Tây Hồ",
+        "latitude": 21.074149,
+        "longitude": 105.815469,
+        "raw_data": {
+          "amenity": "restaurant",
+          "brand": "Sen",
+          "name": "Sen Tây Hồ",
+          "name:vi": "Sen Tây Hồ",
+          "name:zh": "西湖莲餐厅",
+          "name:zh-Hans": "西湖莲餐厅",
+          "name:zh-Hant": "西湖蓮餐廳",
+          "website": "https://nhahangsen.vn/"
+        },
+        "confidence_score": 1.0
+      }
+    ]
+  },
+  {
+    "id": "fba71fa1-0b3f-406d-9192-6ab9c8057f6a",
+    "name": "Tượng đài Lý Thái Tổ",
+    "name_en": "Statue of King Ly Thai To",
+    "category": "culture",
+    "address": "Tượng đài Lý Thái Tổ, hanoi",
+    "city": "hanoi",
+    "latitude": 21.027489,
+    "longitude": 105.854501,
+    "description": null,
+    "rating": null,
+    "review_count": 0,
+    "review_flag": false,
+    "sources": [
+      {
+        "source_name": "osm",
+        "source_id": "node/443033827",
+        "raw_name": "Tượng đài Lý Thái Tổ",
+        "latitude": 21.027489,
+        "longitude": 105.854501,
+        "raw_data": {
+          "artist_name": "Vi Thị Hoa",
+          "height": "10.1",
+          "historic": "memorial",
+          "inscription": "Lý Thái Tổ // 974 - 1028",
+          "material": "bronze",
+          "memorial": "statue",
+          "name": "Tượng đài Lý Thái Tổ",
+          "name:en": "Statue of King Ly Thai To",
+          "name:fr": "Roi Ly Thai To",
+          "name:id": "Patung Raja Ly Thai To",
+          "name:ru": "Имрератор Ли Тхай-То",
+          "name:zh": "黎太祖皇帝雕像",
+          "subject:wikidata": "Q716945",
+          "subject:wikipedia": "vi:Lý Thái Tổ"
+        },
+        "confidence_score": 1.0
+      }
+    ]
+  },
+  {
+    "id": "3b3ca713-1a38-491f-9106-fe8d061275a7",
+    "name": "Nhà 48 phố Hàng Ngang",
+    "name_en": "House number 48 Hang Ngang Street",
+    "category": "culture",
+    "address": "48 Hàng Ngang, Phường Hoàn Kiếm, Hà Nội",
+    "city": "Hà Nội",
+    "latitude": 21.034328,
+    "longitude": 105.850439,
+    "description": null,
+    "rating": null,
+    "review_count": 0,
+    "review_flag": false,
+    "sources": [
+      {
+        "source_name": "osm",
+        "source_id": "node/445345255",
+        "raw_name": "Nhà 48 phố Hàng Ngang",
+        "latitude": 21.034328,
+        "longitude": 105.850439,
+        "raw_data": {
+          "addr:city": "Hà Nội",
+          "addr:district": "Phường Hoàn Kiếm",
+          "addr:housenumber": "48",
+          "addr:province": "Thành phố Hà Nội",
+          "addr:street": "Hàng Ngang",
+          "museum": "history",
+          "name": "Nhà 48 phố Hàng Ngang",
+          "name:en": "House number 48 Hang Ngang Street",
+          "name:zh": "48号横行街民居",
+          "tourism": "museum",
+          "wikidata": "Q10800786",
+          "wikipedia": "vi:Nhà 48 Hàng Ngang"
+        },
+        "confidence_score": 1.0
+      }
+    ]
+  },
+  {
+    "id": "0d2e75ea-0868-4759-a4c1-e8d08373846e",
+    "name": "Thành Công",
+    "name_en": null,
+    "category": "hotel",
+    "address": "Hà Nội",
+    "city": "Hà Nội",
+    "latitude": 21.013744,
+    "longitude": 105.813221,
+    "description": null,
+    "rating": null,
+    "review_count": 0,
+    "review_flag": false,
+    "sources": [
+      {
+        "source_name": "osm",
+        "source_id": "node/446033479",
+        "raw_name": "Thành Công",
+        "latitude": 21.013744,
+        "longitude": 105.813221,
+        "raw_data": {
+          "addr:city": "Hà Nội",
+          "addr:country": "VN",
+          "name": "Thành Công",
+          "note": "128",
+          "tourism": "hotel"
+        },
+        "confidence_score": 1.0
+      }
+    ]
+  },
+  {
+    "id": "a3ff8bb3-cf45-490f-9d6c-3a6ffdd7ab19",
+    "name": "Trà Xuân Tửu",
+    "name_en": null,
+    "category": "restaurant",
+    "address": "Trà Xuân Tửu, hanoi",
+    "city": "hanoi",
+    "latitude": 21.029755,
+    "longitude": 105.827764,
+    "description": null,
+    "rating": null,
+    "review_count": 0,
+    "review_flag": false,
+    "sources": [
+      {
+        "source_name": "osm",
+        "source_id": "node/446043000",
+        "raw_name": "Trà Xuân Tửu",
+        "latitude": 21.029755,
+        "longitude": 105.827764,
+        "raw_data": {
+          "amenity": "restaurant",
+          "name": "Trà Xuân Tửu",
+          "note": "Tr$$ Xu$$n T$$$u"
+        },
+        "confidence_score": 1.0
+      }
+    ]
+  },
+  {
+    "id": "f6f82c88-2577-4b65-a225-ee98afb345a9",
+    "name": "Cây Si",
+    "name_en": null,
+    "category": "restaurant",
+    "address": "Cây Si, hanoi",
+    "city": "hanoi",
+    "latitude": 21.028867,
+    "longitude": 105.843101,
+    "description": null,
+    "rating": null,
+    "review_count": 0,
+    "review_flag": false,
+    "sources": [
+      {
+        "source_name": "osm",
+        "source_id": "node/446043425",
+        "raw_name": "Cây Si",
+        "latitude": 21.028867,
+        "longitude": 105.843101,
+        "raw_data": {
+          "amenity": "restaurant",
+          "name": "Cây Si"
+        },
+        "confidence_score": 1.0
+      }
+    ]
+  },
+  {
+    "id": "17f25462-dbb9-457d-a946-e4d0cf1a688e",
+    "name": "Nhà hàng Thành Lộc",
+    "name_en": null,
+    "category": "restaurant",
+    "address": "Nhà hàng Thành Lộc, hanoi",
+    "city": "hanoi",
+    "latitude": 21.008355,
+    "longitude": 105.856771,
+    "description": null,
+    "rating": null,
+    "review_count": 0,
+    "review_flag": false,
+    "sources": [
+      {
+        "source_name": "osm",
+        "source_id": "node/446044222",
+        "raw_name": "Nhà hàng Thành Lộc",
+        "latitude": 21.008355,
+        "longitude": 105.856771,
+        "raw_data": {
+          "amenity": "restaurant",
+          "name": "Nhà hàng Thành Lộc",
+          "note": "Nh$$ h$$ng Th$$nh L$$$c"
+        },
+        "confidence_score": 1.0
+      }
+    ]
+  },
+  {
+    "id": "a7bfcb70-18f2-42f7-9901-b6772874ca28",
+    "name": "Cà Phê Hao",
+    "name_en": null,
+    "category": "cafe",
+    "address": "Cà Phê Hao, hanoi",
+    "city": "hanoi",
+    "latitude": 21.041759,
+    "longitude": 105.870242,
+    "description": null,
+    "rating": null,
+    "review_count": 0,
+    "review_flag": false,
+    "sources": [
+      {
+        "source_name": "osm",
+        "source_id": "node/481837528",
+        "raw_name": "Cà Phê Hao",
+        "latitude": 21.041759,
+        "longitude": 105.870242,
+        "raw_data": {
+          "amenity": "cafe",
+          "name": "Cà Phê Hao"
+        },
+        "confidence_score": 1.0
+      }
+    ]
+  },
+  {
+    "id": "a4a59fc4-08f7-4f8c-a4f2-643a857026da",
+    "name": "Khách Sạn Đông Á",
+    "name_en": null,
+    "category": "hotel",
+    "address": "Hà Nội",
+    "city": "Hà Nội",
+    "latitude": 21.035395,
+    "longitude": 105.853321,
+    "description": null,
+    "rating": null,
+    "review_count": 0,
+    "review_flag": false,
+    "sources": [
+      {
+        "source_name": "osm",
+        "source_id": "node/707253009",
+        "raw_name": "Khách Sạn Đông Á",
+        "latitude": 21.035395,
+        "longitude": 105.853321,
+        "raw_data": {
+          "addr:city": "Hà Nội",
+          "name": "Khách Sạn Đông Á",
+          "tourism": "hotel"
+        },
+        "confidence_score": 1.0
+      }
+    ]
+  },
+  {
+    "id": "b82492e3-ca7a-4a0d-a709-9e2529351d4a",
+    "name": "Thu Giang Guest House",
+    "name_en": null,
+    "category": "hotel",
+    "address": "Hà Nội",
+    "city": "Hà Nội",
+    "latitude": 21.031678,
+    "longitude": 105.847975,
+    "description": null,
+    "rating": null,
+    "review_count": 0,
+    "review_flag": false,
+    "sources": [
+      {
+        "source_name": "osm",
+        "source_id": "node/707253042",
+        "raw_name": "Thu Giang Guest House",
+        "latitude": 21.031678,
+        "longitude": 105.847975,
+        "raw_data": {
+          "addr:city": "Hà Nội",
+          "name": "Thu Giang Guest House",
+          "tourism": "hotel"
+        },
+        "confidence_score": 1.0
+      }
+    ]
+  },
+  {
+    "id": "6ad4a9fb-f6d0-4268-b50a-d485d4fcff4b",
+    "name": "Real Darling Cafe Guesthouse",
+    "name_en": null,
+    "category": "hotel",
+    "address": "Hà Nội",
+    "city": "Hà Nội",
+    "latitude": 21.032639,
+    "longitude": 105.849564,
+    "description": null,
+    "rating": null,
+    "review_count": 0,
+    "review_flag": false,
+    "sources": [
+      {
+        "source_name": "osm",
+        "source_id": "node/708488307",
+        "raw_name": "Real Darling Cafe Guesthouse",
+        "latitude": 21.032639,
+        "longitude": 105.849564,
+        "raw_data": {
+          "addr:city": "Hà Nội",
+          "name": "Real Darling Cafe Guesthouse",
+          "tourism": "hotel"
+        },
+        "confidence_score": 1.0
+      }
+    ]
+  },
+  {
+    "id": "95e4dd6b-ce28-4642-838d-bd14f786a71b",
+    "name": "Khách Sạn Classic 2",
+    "name_en": null,
+    "category": "hotel",
+    "address": "49 Lương Ngọc Quyến, Phường Hoàn Kiếm, Hà Nội",
+    "city": "Hà Nội",
+    "latitude": 21.03465,
+    "longitude": 105.85174,
+    "description": null,
+    "rating": null,
+    "review_count": 0,
+    "review_flag": true,
+    "sources": [
+      {
+        "source_name": "osm",
+        "source_id": "node/708488311",
+        "raw_name": "Khách Sạn Classic 2",
+        "latitude": 21.03465,
+        "longitude": 105.85174,
+        "raw_data": {
+          "addr:city": "Hà Nội",
+          "addr:district": "Phường Hoàn Kiếm",
+          "addr:housenumber": "49",
+          "addr:province": "Thành phố Hà Nội",
+          "addr:street": "Lương Ngọc Quyến",
+          "description": "Hanoi Marriotte Hotel",
+          "name": "Khách Sạn Classic 2",
+          "tourism": "hotel"
+        },
+        "confidence_score": 0.6142
+      }
+    ]
+  },
+  {
+    "id": "54965bd3-db07-495f-b636-460a84310d2c",
+    "name": "Khách Sạn Indochina Queen",
+    "name_en": null,
+    "category": "hotel",
+    "address": "Hà Nội",
+    "city": "Hà Nội",
+    "latitude": 21.035476,
+    "longitude": 105.852749,
+    "description": null,
+    "rating": null,
+    "review_count": 0,
+    "review_flag": true,
+    "sources": [
+      {
+        "source_name": "osm",
+        "source_id": "node/708488313",
+        "raw_name": "Khách Sạn Indochina Queen",
+        "latitude": 21.035476,
+        "longitude": 105.852749,
+        "raw_data": {
+          "addr:city": "Hà Nội",
+          "name": "Khách Sạn Indochina Queen",
+          "tourism": "hotel"
+        },
+        "confidence_score": 0.6142
+      }
+    ]
+  },
+  {
+    "id": "904c9200-2262-4df1-888b-ce8d7884e714",
+    "name": "Khách Sạn Hanoi Backpackers",
+    "name_en": null,
+    "category": "hotel",
+    "address": "Hà Nội",
+    "city": "Hà Nội",
+    "latitude": 21.029387,
+    "longitude": 105.848071,
+    "description": null,
+    "rating": null,
+    "review_count": 0,
+    "review_flag": false,
+    "sources": [
+      {
+        "source_name": "osm",
+        "source_id": "node/708488315",
+        "raw_name": "Khách Sạn Hanoi Backpackers",
+        "latitude": 21.029387,
+        "longitude": 105.848071,
+        "raw_data": {
+          "addr:city": "Hà Nội",
+          "name": "Khách Sạn Hanoi Backpackers",
+          "tourism": "hotel"
+        },
+        "confidence_score": 1.0
+      }
+    ]
+  },
+  {
+    "id": "557f3c33-eaa8-418c-adab-8106ce640903",
+    "name": "Khách Sạn Hanoi Phoenix II",
+    "name_en": null,
+    "category": "hotel",
+    "address": "Hà Nội",
+    "city": "Hà Nội",
+    "latitude": 21.035451,
+    "longitude": 105.852588,
+    "description": null,
+    "rating": null,
+    "review_count": 0,
+    "review_flag": true,
+    "sources": [
+      {
+        "source_name": "osm",
+        "source_id": "node/708488335",
+        "raw_name": "Khách Sạn Hanoi Phoenix II",
+        "latitude": 21.035451,
+        "longitude": 105.852588,
+        "raw_data": {
+          "addr:city": "Hà Nội",
+          "name": "Khách Sạn Hanoi Phoenix II",
+          "tourism": "hotel"
+        },
+        "confidence_score": 0.6429
+      }
+    ]
+  },
+  {
+    "id": "40f78727-b11e-49d2-8127-fa9619a0df77",
+    "name": "Phu Hoa",
+    "name_en": "Phu Hoa Tourist Guest House",
+    "category": "hotel",
+    "address": "16 Lương Văn Can, Phường Hoàn Kiếm, Hà Nội",
+    "city": "Hà Nội",
+    "latitude": 21.033448,
+    "longitude": 105.850029,
+    "description": null,
+    "rating": null,
+    "review_count": 0,
+    "review_flag": false,
+    "sources": [
+      {
+        "source_name": "osm",
+        "source_id": "node/708488337",
+        "raw_name": "Phu Hoa",
+        "latitude": 21.033448,
+        "longitude": 105.850029,
+        "raw_data": {
+          "addr:city": "Hà Nội",
+          "addr:district": "Phường Hoàn Kiếm",
+          "addr:housenumber": "16",
+          "addr:postcode": "100000",
+          "addr:province": "Thành phố Hà Nội",
+          "addr:street": "Lương Văn Can",
+          "name": "Phu Hoa",
+          "name:en": "Phu Hoa Tourist Guest House",
+          "note": "add address",
+          "source": "survey",
+          "tourism": "hotel"
+        },
+        "confidence_score": 1.0
+      }
+    ]
+  },
+  {
+    "id": "c693a3f8-e323-41ec-803f-04dd01b65bde",
+    "name": "Khách Sạn Little Hanoi Diamond",
+    "name_en": "Little Hanoi Deluxe Hotel",
+    "category": "hotel",
+    "address": "11 Bát Đàn, Phường Hoàn Kiếm, Hà Nội",
+    "city": "Hà Nội",
+    "latitude": 21.033677,
+    "longitude": 105.847615,
+    "description": null,
+    "rating": null,
+    "review_count": 0,
+    "review_flag": true,
+    "sources": [
+      {
+        "source_name": "osm",
+        "source_id": "node/708488339",
+        "raw_name": "Khách Sạn Little Hanoi Diamond",
+        "latitude": 21.033677,
+        "longitude": 105.847615,
+        "raw_data": {
+          "addr:city": "Hà Nội",
+          "addr:district": "Phường Hoàn Kiếm",
+          "addr:housenumber": "11",
+          "addr:province": "Thành phố Hà Nội",
+          "addr:street": "Bát Đàn",
+          "name": "Khách Sạn Little Hanoi Diamond",
+          "source": "survey",
+          "tourism": "hotel"
+        },
+        "confidence_score": 0.6275
+      }
+    ]
+  },
+  {
+    "id": "c04b7f76-28b3-4548-8aa3-84a608d1f077",
+    "name": "Prince Hotel",
+    "name_en": null,
+    "category": "hotel",
+    "address": "Hà Nội",
+    "city": "Hà Nội",
+    "latitude": 21.034751,
+    "longitude": 105.851691,
+    "description": null,
+    "rating": null,
+    "review_count": 0,
+    "review_flag": false,
+    "sources": [
+      {
+        "source_name": "osm",
+        "source_id": "node/708488343",
+        "raw_name": "Prince Hotel",
+        "latitude": 21.034751,
+        "longitude": 105.851691,
+        "raw_data": {
+          "addr:city": "Hà Nội",
+          "name": "Prince Hotel",
+          "tourism": "hotel"
+        },
+        "confidence_score": 1.0
+      }
+    ]
+  },
+  {
+    "id": "65b612a7-79d4-4dbb-9f13-656b9540e553",
+    "name": "Prince 57 Hotel",
+    "name_en": null,
+    "category": "hotel",
+    "address": "Hà Nội",
+    "city": "Hà Nội",
+    "latitude": 21.032635,
+    "longitude": 105.853961,
+    "description": null,
+    "rating": null,
+    "review_count": 0,
+    "review_flag": true,
+    "sources": [
+      {
+        "source_name": "osm",
+        "source_id": "node/708488383",
+        "raw_name": "Prince 57 Hotel",
+        "latitude": 21.032635,
+        "longitude": 105.853961,
+        "raw_data": {
+          "addr:city": "Hà Nội",
+          "name": "Prince 57 Hotel",
+          "tourism": "hotel"
+        },
+        "confidence_score": 0.7108
+      }
+    ]
+  },
+  {
+    "id": "34e677eb-5a2f-42f2-a2ba-373b6af40cef",
+    "name": "Khách Sạn Hanoi Youth",
+    "name_en": null,
+    "category": "hotel",
+    "address": "Hà Nội",
+    "city": "Hà Nội",
+    "latitude": 21.033115,
+    "longitude": 105.850488,
+    "description": null,
+    "rating": null,
+    "review_count": 0,
+    "review_flag": true,
+    "sources": [
+      {
+        "source_name": "osm",
+        "source_id": "node/708488386",
+        "raw_name": "Khách Sạn Hanoi Youth",
+        "latitude": 21.033115,
+        "longitude": 105.850488,
+        "raw_data": {
+          "addr:city": "Hà Nội",
+          "name": "Khách Sạn Hanoi Youth",
+          "tourism": "hotel"
+        },
+        "confidence_score": 0.6775
+      }
+    ]
+  },
+  {
+    "id": "939a2b1e-5557-46a8-918f-5841ec320b33",
+    "name": "Tien Thuy Hotel",
+    "name_en": null,
+    "category": "hotel",
+    "address": "Hà Nội",
+    "city": "Hà Nội",
+    "latitude": 21.032124,
+    "longitude": 105.854983,
+    "description": null,
+    "rating": null,
+    "review_count": 0,
+    "review_flag": false,
+    "sources": [
+      {
+        "source_name": "osm",
+        "source_id": "node/708488387",
+        "raw_name": "Tien Thuy Hotel",
+        "latitude": 21.032124,
+        "longitude": 105.854983,
+        "raw_data": {
+          "addr:city": "Hà Nội",
+          "name": "Tien Thuy Hotel",
+          "tourism": "hotel"
+        },
+        "confidence_score": 1.0
+      }
+    ]
+  },
+  {
+    "id": "b33b6d8e-4dc2-4281-b88f-138bc4edbae3",
+    "name": "Khách Sạn Hanoi Gecko 2",
+    "name_en": null,
+    "category": "hotel",
+    "address": "Hà Nội",
+    "city": "Hà Nội",
+    "latitude": 21.0334,
+    "longitude": 105.85244,
+    "description": null,
+    "rating": null,
+    "review_count": 0,
+    "review_flag": true,
+    "sources": [
+      {
+        "source_name": "osm",
+        "source_id": "node/708488388",
+        "raw_name": "Khách Sạn Hanoi Gecko 2",
+        "latitude": 21.0334,
+        "longitude": 105.85244,
+        "raw_data": {
+          "addr:city": "Hà Nội",
+          "name": "Khách Sạn Hanoi Gecko 2",
+          "tourism": "hotel"
+        },
+        "confidence_score": 0.6975
+      }
+    ]
+  },
+  {
+    "id": "6ccaef28-4739-48f8-bd75-be205773666e",
+    "name": "Khách Sạn Golden Lotus",
+    "name_en": null,
+    "category": "hotel",
+    "address": "Hà Nội",
+    "city": "Hà Nội",
+    "latitude": 21.030829,
+    "longitude": 105.849364,
+    "description": null,
+    "rating": null,
+    "review_count": 0,
+    "review_flag": false,
+    "sources": [
+      {
+        "source_name": "osm",
+        "source_id": "node/708630499",
+        "raw_name": "Khách Sạn Golden Lotus",
+        "latitude": 21.030829,
+        "longitude": 105.849364,
+        "raw_data": {
+          "addr:city": "Hà Nội",
+          "name": "Khách Sạn Golden Lotus",
+          "tourism": "hotel"
+        },
+        "confidence_score": 1.0
+      }
+    ]
+  },
+  {
+    "id": "6490cf19-2a35-4128-8b2c-ad795f1f2a07",
+    "name": "Zephyr Hotel",
+    "name_en": null,
+    "category": "hotel",
+    "address": "Hà Nội",
+    "city": "Hà Nội",
+    "latitude": 21.025617,
+    "longitude": 105.851429,
+    "description": null,
+    "rating": null,
+    "review_count": 0,
+    "review_flag": false,
+    "sources": [
+      {
+        "source_name": "osm",
+        "source_id": "node/708630512",
+        "raw_name": "Zephyr Hotel",
+        "latitude": 21.025617,
+        "longitude": 105.851429,
+        "raw_data": {
+          "addr:city": "Hà Nội",
+          "addr:country": "VN",
+          "name": "Zephyr Hotel",
+          "tourism": "hotel"
+        },
+        "confidence_score": 1.0
+      }
+    ]
+  },
+  {
+    "id": "39e061bd-478a-488a-a803-6c9342400b6b",
+    "name": "Khách Sạn Bạch Tùng Điệp",
+    "name_en": null,
+    "category": "hotel",
+    "address": "Hà Nội",
+    "city": "Hà Nội",
+    "latitude": 21.032947,
+    "longitude": 105.847996,
+    "description": null,
+    "rating": null,
+    "review_count": 0,
+    "review_flag": false,
+    "sources": [
+      {
+        "source_name": "osm",
+        "source_id": "node/708695655",
+        "raw_name": "Khách Sạn Bạch Tùng Điệp",
+        "latitude": 21.032947,
+        "longitude": 105.847996,
+        "raw_data": {
+          "addr:city": "Hà Nội",
+          "name": "Khách Sạn Bạch Tùng Điệp",
+          "tourism": "hotel"
+        },
+        "confidence_score": 1.0
+      }
+    ]
+  },
+  {
+    "id": "9244a3af-2a8e-42da-8a04-092627863b74",
+    "name": "Khách Sạn Camellia",
+    "name_en": null,
+    "category": "hotel",
+    "address": "Hà Nội",
+    "city": "Hà Nội",
+    "latitude": 21.033588,
+    "longitude": 105.852824,
+    "description": null,
+    "rating": null,
+    "review_count": 0,
+    "review_flag": true,
+    "sources": [
+      {
+        "source_name": "osm",
+        "source_id": "node/708695656",
+        "raw_name": "Khách Sạn Camellia",
+        "latitude": 21.033588,
+        "longitude": 105.852824,
+        "raw_data": {
+          "addr:city": "Hà Nội",
+          "name": "Khách Sạn Camellia",
+          "name:zh": "茶花5酒店",
+          "tourism": "hotel"
+        },
+        "confidence_score": 0.6667
+      }
+    ]
+  },
+  {
+    "id": "7035a23e-b828-4ad3-a937-d4e69f296711",
+    "name": "Khách Sạn Hanoi Gecko III",
+    "name_en": null,
+    "category": "hotel",
+    "address": "Bát Đàn, Hà Nội",
+    "city": "Hà Nội",
+    "latitude": 21.03367,
+    "longitude": 105.847356,
+    "description": null,
+    "rating": null,
+    "review_count": 0,
+    "review_flag": true,
+    "sources": [
+      {
+        "source_name": "osm",
+        "source_id": "node/708695657",
+        "raw_name": "Khách Sạn Hanoi Gecko III",
+        "latitude": 21.03367,
+        "longitude": 105.847356,
+        "raw_data": {
+          "addr:city": "Hà Nội",
+          "addr:street": "Bát Đàn",
+          "name": "Khách Sạn Hanoi Gecko III",
+          "tourism": "hotel"
+        },
+        "confidence_score": 0.7143
+      }
+    ]
+  },
+  {
+    "id": "2c99e80d-25a7-4b7c-9dbc-6138c8e5d5be",
+    "name": "The Drift Backpackers Hostel",
+    "name_en": null,
+    "category": "hotel",
+    "address": "Hà Nội",
+    "city": "Hà Nội",
+    "latitude": 21.019147,
+    "longitude": 105.848404,
+    "description": null,
+    "rating": null,
+    "review_count": 0,
+    "review_flag": false,
+    "sources": [
+      {
+        "source_name": "osm",
+        "source_id": "node/708695659",
+        "raw_name": "The Drift Backpackers Hostel",
+        "latitude": 21.019147,
+        "longitude": 105.848404,
+        "raw_data": {
+          "addr:city": "Hà Nội",
+          "addr:country": "VN",
+          "name": "The Drift Backpackers Hostel",
+          "tourism": "hotel"
+        },
+        "confidence_score": 1.0
+      }
+    ]
+  },
+  {
+    "id": "03e7eb46-afc0-4b25-91b0-dae3befb68da",
+    "name": "Khách Sạn Maison D'Hanoi",
+    "name_en": null,
+    "category": "hotel",
+    "address": "Hà Nội",
+    "city": "Hà Nội",
+    "latitude": 21.031105,
+    "longitude": 105.849487,
+    "description": null,
+    "rating": null,
+    "review_count": 0,
+    "review_flag": true,
+    "sources": [
+      {
+        "source_name": "osm",
+        "source_id": "node/708698000",
+        "raw_name": "Khách Sạn Maison D'Hanoi",
+        "latitude": 21.031105,
+        "longitude": 105.849487,
+        "raw_data": {
+          "addr:city": "Hà Nội",
+          "name": "Khách Sạn Maison D'Hanoi",
+          "tourism": "hotel"
+        },
+        "confidence_score": 0.6429
+      }
+    ]
+  },
+  {
+    "id": "2ae50f31-e1dd-4be4-bffc-680318074f7f",
+    "name": "Nhà Hàng Little Hanoi",
+    "name_en": null,
+    "category": "restaurant",
+    "address": "21 Phố Hàng Gai",
+    "city": "hanoi",
+    "latitude": 21.03219,
+    "longitude": 105.850937,
+    "description": null,
+    "rating": null,
+    "review_count": 0,
+    "review_flag": false,
+    "sources": [
+      {
+        "source_name": "osm",
+        "source_id": "node/721788305",
+        "raw_name": "Nhà Hàng Little Hanoi",
+        "latitude": 21.03219,
+        "longitude": 105.850937,
+        "raw_data": {
+          "addr:housenumber": "21",
+          "addr:street": "Phố Hàng Gai",
+          "amenity": "restaurant",
+          "name": "Nhà Hàng Little Hanoi"
+        },
+        "confidence_score": 1.0
+      }
+    ]
+  },
+  {
+    "id": "0180e390-f144-4efc-849e-00eeb6cb3992",
+    "name": "Nhà Hàng New Day",
+    "name_en": null,
+    "category": "restaurant",
+    "address": "72 Mã Mây, Phường Hoàn Kiếm, Hà Nội",
+    "city": "Hà Nội",
+    "latitude": 21.034654,
+    "longitude": 105.853359,
+    "description": null,
+    "rating": null,
+    "review_count": 0,
+    "review_flag": false,
+    "sources": [
+      {
+        "source_name": "osm",
+        "source_id": "node/721788307",
+        "raw_name": "Nhà Hàng New Day",
+        "latitude": 21.034654,
+        "longitude": 105.853359,
+        "raw_data": {
+          "addr:city": "Hà Nội",
+          "addr:district": "Phường Hoàn Kiếm",
+          "addr:housenumber": "72",
+          "addr:province": "Thành phố Hà Nội",
+          "addr:street": "Mã Mây",
+          "amenity": "restaurant",
+          "diet:vegetarian": "yes",
+          "name": "Nhà Hàng New Day"
+        },
+        "confidence_score": 1.0
+      }
+    ]
+  },
+  {
+    "id": "acb22336-1124-49d5-a279-6357c2b2b445",
+    "name": "Quán Ăn Ngon - Phan Bội Châu",
+    "name_en": "Quan An Ngon",
+    "category": "restaurant",
+    "address": "18 Phố Phan Bội Châu",
+    "city": "hanoi",
+    "latitude": 21.02626,
+    "longitude": 105.843304,
+    "description": null,
+    "rating": null,
+    "review_count": 0,
+    "review_flag": false,
+    "sources": [
+      {
+        "source_name": "osm",
+        "source_id": "node/721836715",
+        "raw_name": "Quán Ăn Ngon - Phan Bội Châu",
+        "latitude": 21.02626,
+        "longitude": 105.843304,
+        "raw_data": {
+          "addr:country": "VN",
+          "addr:housenumber": "18",
+          "addr:street": "Phố Phan Bội Châu",
+          "amenity": "restaurant",
+          "cuisine": "vietnamese",
+          "name": "Quán Ăn Ngon - Phan Bội Châu",
+          "name:en": "Quan An Ngon",
+          "name:zh": "好吃馆",
+          "note": "add address",
+          "opening_hours": "Mo-Su 06:45-22:00",
+          "phone": "+84439428162",
+          "source": "survey",
+          "website": "https://ngonhanoi.com.vn/"
+        },
+        "confidence_score": 1.0
+      }
+    ]
+  },
+  {
+    "id": "5abba2de-af4b-4c0d-a3b7-7347cd0b266a",
+    "name": "Xoi Van Anh",
+    "name_en": null,
+    "category": "restaurant",
+    "address": "Xoi Van Anh, hanoi",
+    "city": "hanoi",
+    "latitude": 21.033942,
+    "longitude": 105.854606,
+    "description": null,
+    "rating": null,
+    "review_count": 0,
+    "review_flag": false,
+    "sources": [
+      {
+        "source_name": "osm",
+        "source_id": "node/721836727",
+        "raw_name": "Xoi Van Anh",
+        "latitude": 21.033942,
+        "longitude": 105.854606,
+        "raw_data": {
+          "amenity": "restaurant",
+          "name": "Xoi Van Anh"
+        },
+        "confidence_score": 1.0
+      }
+    ]
+  },
+  {
+    "id": "4146f2b7-8289-4309-b7e6-60ba7de3470e",
+    "name": "Cà Phê Nola",
+    "name_en": null,
+    "category": "cafe",
+    "address": "Cà Phê Nola, hanoi",
+    "city": "hanoi",
+    "latitude": 21.034072,
+    "longitude": 105.853586,
+    "description": null,
+    "rating": null,
+    "review_count": 0,
+    "review_flag": false,
+    "sources": [
+      {
+        "source_name": "osm",
+        "source_id": "node/721836730",
+        "raw_name": "Cà Phê Nola",
+        "latitude": 21.034072,
+        "longitude": 105.853586,
+        "raw_data": {
+          "amenity": "cafe",
+          "name": "Cà Phê Nola"
+        },
+        "confidence_score": 1.0
+      }
+    ]
+  },
+  {
+    "id": "e9af8edc-0c38-4028-b9af-da67f6de341f",
+    "name": "Bãi biển Mỹ Khê",
+    "name_en": "My Khe Beach",
+    "category": "beach",
+    "address": "Ngũ Hành Sơn, Đà Nẵng",
+    "city": "Đà Nẵng",
+    "latitude": 16.0601,
+    "longitude": 108.2435,
+    "description": null,
+    "rating": null,
+    "review_count": 0,
+    "review_flag": false,
+    "sources": []
+  },
+  {
+    "id": "a9fcefd6-4679-4c62-96ae-97bb9ded7cd1",
+    "name": "Chùa Linh Ứng",
+    "name_en": "Linh Ung Pagoda",
+    "category": "attraction",
+    "address": "Sơn Trà, Đà Nẵng",
+    "city": "Đà Nẵng",
+    "latitude": 16.1033,
+    "longitude": 108.2778,
+    "description": null,
+    "rating": null,
+    "review_count": 0,
+    "review_flag": false,
+    "sources": []
+  },
+  {
+    "id": "e30d5e7a-47c2-44ec-a52c-3a5a0411b2f9",
+    "name": "Cầu Rồng",
+    "name_en": "Dragon Bridge",
+    "category": "attraction",
+    "address": "Hải Châu, Đà Nẵng",
+    "city": "Đà Nẵng",
+    "latitude": 16.0612,
+    "longitude": 108.2272,
+    "description": null,
+    "rating": null,
+    "review_count": 0,
+    "review_flag": false,
+    "sources": []
+  },
+  {
+    "id": "6926cde2-14ce-4f11-a956-0d9b0090ed6f",
+    "name": "Bảo tàng Điêu khắc Chăm",
+    "name_en": "Museum of Cham Sculpture",
+    "category": "culture",
+    "address": "Hải Châu, Đà Nẵng",
+    "city": "Đà Nẵng",
+    "latitude": 16.0595,
+    "longitude": 108.224,
+    "description": null,
+    "rating": null,
+    "review_count": 0,
+    "review_flag": false,
+    "sources": []
+  },
+  {
+    "id": "21f381fc-e64b-45ce-ba79-e0b5da0022cc",
+    "name": "Danh thắng Ngũ Hành Sơn",
+    "name_en": "Marble Mountains",
+    "category": "attraction",
+    "address": "Ngũ Hành Sơn, Đà Nẵng",
+    "city": "Đà Nẵng",
+    "latitude": 16.0048,
+    "longitude": 108.2632,
+    "description": null,
+    "rating": null,
+    "review_count": 0,
+    "review_flag": false,
+    "sources": []
+  },
+  {
+    "id": "b16800de-9e07-44ac-894b-b6daf8d66069",
+    "name": "Hồ Hoàn Kiếm",
+    "name_en": "Hoan Kiem Lake",
+    "category": "attraction",
+    "address": "Hoàn Kiếm, Hà Nội",
+    "city": "Hà Nội",
+    "latitude": 21.0285,
+    "longitude": 105.8542,
+    "description": null,
+    "rating": null,
+    "review_count": 0,
+    "review_flag": false,
+    "sources": []
+  },
+  {
+    "id": "5531ae5f-f525-4651-a984-6bff4945ea60",
+    "name": "Lăng Chủ tịch Hồ Chí Minh",
+    "name_en": "Ho Chi Minh Mausoleum",
+    "category": "attraction",
+    "address": "Ba Đình, Hà Nội",
+    "city": "Hà Nội",
+    "latitude": 21.0368,
+    "longitude": 105.8346,
+    "description": null,
+    "rating": null,
+    "review_count": 0,
+    "review_flag": false,
+    "sources": []
+  },
+  {
+    "id": "f1fb1c77-b6f5-4e44-803a-c83911021728",
+    "name": "Văn Miếu - Quốc Tử Giám",
+    "name_en": "Temple of Literature",
+    "category": "attraction",
+    "address": "Đống Đa, Hà Nội",
+    "city": "Hà Nội",
+    "latitude": 21.0274,
+    "longitude": 105.8355,
+    "description": null,
+    "rating": null,
+    "review_count": 0,
+    "review_flag": false,
+    "sources": []
+  },
+  {
+    "id": "8ef9b37a-2bfe-4050-9358-dc70ba093c43",
+    "name": "Chùa Cầu Hội An",
+    "name_en": "Japanese Covered Bridge",
+    "category": "attraction",
+    "address": "Quảng Nam, Hội An",
+    "city": "Hội An",
+    "latitude": 15.8771,
+    "longitude": 108.3262,
+    "description": null,
+    "rating": null,
+    "review_count": 0,
+    "review_flag": false,
+    "sources": []
+  },
+  {
+    "id": "26de0c50-1697-4a3a-a913-216dd744d303",
+    "name": "Đại Nội Huế",
+    "name_en": "Imperial City Hue",
+    "category": "attraction",
+    "address": "Thừa Thiên Huế, Huế",
+    "city": "Huế",
+    "latitude": 16.4697,
+    "longitude": 107.5786,
+    "description": null,
+    "rating": null,
+    "review_count": 0,
+    "review_flag": false,
+    "sources": []
+  },
+  {
+    "id": "89dd46e9-fc95-4911-a9d4-685390dc25eb",
+    "name": "Tháp Bà Ponagar",
+    "name_en": "Po Nagar Cham Towers",
+    "category": "attraction",
+    "address": "Khánh Hòa, Nha Trang",
+    "city": "Nha Trang",
+    "latitude": 12.2388,
+    "longitude": 109.1967,
+    "description": null,
+    "rating": null,
+    "review_count": 0,
+    "review_flag": false,
+    "sources": []
+  }
+]

@@ -1,41 +1,66 @@
 import 'package:dio/dio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'auth_models.dart';
 
+/// Authentication repository — single abstraction for all auth operations.
+///
+/// Screens/providers call this, NOT Dio directly.
+/// Handles token persistence via SharedPreferences.
+///
+/// LIMITATION: SharedPreferences stores tokens in plaintext on device.
+/// Acceptable for thesis MVP. For production, use flutter_secure_storage.
 class AuthRepository {
-  final Dio apiClient;
-  
-  AuthRepository({required this.apiClient});
+  final Dio _dio;
 
-  // Gá»i API Ä‘Äƒng nháº­p
-  Future<Map<String, dynamic>> login(String email, String password) async {
-    final response = await apiClient.post('/auth/login', data: {
-      'email': email,
-      'password': password,
-    });
-    return response.data;
+  static const _accessTokenKey = 'access_token';
+  static const _refreshTokenKey = 'refresh_token';
+
+  AuthRepository(this._dio);
+
+  /// POST /auth/login
+  Future<AuthTokens> login(LoginRequest request) async {
+    final response = await _dio.post('/auth/login', data: request.toJson());
+    final tokens = AuthTokens.fromJson(response.data['data']);
+    await _saveTokens(tokens);
+    return tokens;
   }
 
-  // Gá»i API Ä‘Äƒng kÃ½
-  Future<Map<String, dynamic>> register(String name, String email, String password) async {
-    final response = await apiClient.post('/auth/register', data: {
-      'name': name,
-      'email': email,
-      'password': password,
-    });
-    return response.data;
+  /// POST /auth/register
+  Future<AuthTokens> register(RegisterRequest request) async {
+    final response = await _dio.post('/auth/register', data: request.toJson());
+    final tokens = AuthTokens.fromJson(response.data['data']);
+    await _saveTokens(tokens);
+    return tokens;
   }
 
-  // LÆ°u token
-  Future<void> saveTokens(String accessToken, String refreshToken) async {
+  /// Remove stored tokens.
+  Future<void> logout() async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('access_token', accessToken);
-    await prefs.setString('refresh_token', refreshToken);
+    await prefs.remove(_accessTokenKey);
+    await prefs.remove(_refreshTokenKey);
   }
 
-  // XÃ³a token khi Ä‘Äƒng xuáº¥t
-  Future<void> deleteTokens() async {
+  /// Check if a stored access token exists.
+  Future<bool> isAuthenticated() async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.remove('access_token');
-    await prefs.remove('refresh_token');
+    final token = prefs.getString(_accessTokenKey);
+    return token != null && token.isNotEmpty;
+  }
+
+  /// Restore session — returns true if a stored token exists.
+  Future<bool> restoreSession() async {
+    return isAuthenticated();
+  }
+
+  /// Read the stored access token (for API client interceptor).
+  Future<String?> getAccessToken() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_accessTokenKey);
+  }
+
+  Future<void> _saveTokens(AuthTokens tokens) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_accessTokenKey, tokens.accessToken);
+    await prefs.setString(_refreshTokenKey, tokens.refreshToken);
   }
 }

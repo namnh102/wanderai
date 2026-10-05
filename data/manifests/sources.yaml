@@ -1,0 +1,112 @@
+# Data Sources Manifest — WanderAI (GoMate)
+# Full data provenance, licensing, and compliance registry
+
+version: "1.0"
+last_updated: "2026-10-01"
+
+sources:
+  - name: synthetic_destinations
+    type: synthetic
+    path: data/seed/synthetic_destinations.json
+    records: 50
+    generated: true
+    trusted: false
+    source: AI-generated
+    license: N/A
+    permitted_usage: "Internal UI layout testing and schema prototyping only"
+    storage_permission: true
+    redistribution_restriction: "Do not distribute as real-world data"
+    collection_method: "Pre-generated LLM sample"
+    collection_date: "2026-09-01"
+    transformation: "JSON normalization to Prisma Destination model"
+    notes: >
+      50 Vietnamese destinations with approximate coordinates.
+      Names and provinces are real, but ratings and descriptions are fabricated.
+      DO NOT present as verified real-world information.
+
+  - name: synthetic_places
+    type: synthetic
+    path: data/seed/synthetic_places.json
+    records: 56
+    generated: true
+    trusted: false
+    source: AI-generated
+    license: N/A
+    permitted_usage: "Internal UI layout testing only"
+    storage_permission: true
+    redistribution_restriction: "Do not distribute as real-world data"
+    collection_method: "Pre-generated LLM sample"
+    collection_date: "2026-09-01"
+    transformation: "JSON normalization to Prisma Place model"
+    notes: >
+      56 Vietnamese places across ~15 provinces.
+      Coordinates are approximate (rounded). Prices are estimated.
+      DO NOT present as verified real-world information.
+
+  - name: reference_categories
+    type: reference
+    path: database/seed/categories.json
+    records: 10
+    generated: false
+    trusted: true
+    source: Manual Taxonomy
+    license: Open
+    permitted_usage: "Taxonomy categorization across all application layers"
+    storage_permission: true
+    redistribution_restriction: "None"
+    collection_method: "Curated application taxonomy"
+    collection_date: "2026-09-01"
+    transformation: "Direct seed into place_categories table"
+    notes: "Base category taxonomy (attraction, restaurant, hotel, beach, mountain, culture, etc.)"
+
+  - name: osm_vietnam_tourism
+    type: geographic
+    provider: OpenStreetMap Contributors
+    api: Overpass API
+    url: https://overpass-api.de/api/interpreter
+    raw_path: data/raw/osm_vietnam_sample.json
+    processed_path: data/processed/osm_places.json
+    curated_path: data/curated/places_canonical.json
+    license: ODbL (Open Database License 1.0)
+    permitted_usage: "Search, Map, Route planning, Recommendations, Geocoding"
+    storage_permission: true
+    redistribution_restriction: "Attribution required (© OpenStreetMap contributors). Share-Alike on derivative databases."
+    collection_method: "Overpass API spatial query filtering Vietnam bounding box with tourism, amenity, historic tags"
+    collection_date: "2026-10-01"
+    transformation: "Raw node/way JSON -> tag extraction -> category mapping -> coordinate validation -> entity resolution"
+    generated: false
+    trusted: true
+    notes: "Primary authoritative source for real Vietnamese travel POIs, accurate GPS coordinates, and street addresses."
+
+  - name: internal_review_mock_fixtures
+    type: unverified_test_fixtures
+    provider: Internal Development Test Fixtures (UNVERIFIED)
+    url: null
+    raw_path: data/raw/vietnam_travel_reviews.json
+    processed_path: data/processed/reviews_normalized.json
+    curated_path: data/curated/reviews_curated.json
+    license: UNKNOWN / UNVERIFIED (Internal Mock Data)
+    permitted_usage: "Pipeline code and ETL test validation only"
+    storage_permission: false
+    redistribution_restriction: "Do not use for Review AI training or production RAG"
+    collection_method: "Handcrafted sample test fixtures for pipeline mechanics"
+    collection_date: "2026-10-01"
+    transformation: "Text cleanup -> rating normalization -> place entity linking test"
+    generated: true
+    trusted: false
+    notes: "AUDIT NOTE: Previous attribution to UIT-VSFC was factually incorrect. UIT-VSFC is the Vietnamese Students' Feedback Corpus (university feedback), NOT travel/hotel reviews. The 9 review records are synthetic test fixtures. Real travel review data is pending acquisition before Task 07."
+
+  - name: open_meteo_weather
+    type: runtime_api
+    provider: Open-Meteo
+    url: https://api.open-meteo.com/v1
+    license: Free for non-commercial and commercial with attribution (CC BY 4.0)
+    permitted_usage: "Real-time weather query in AI Agent tools"
+    storage_permission: false
+    redistribution_restriction: "Do not cache persistently; query at runtime"
+    collection_method: "On-demand REST API query by GPS coordinates"
+    collection_date: "Runtime dynamic"
+    transformation: "JSON forecast to text summary for LLM context"
+    generated: false
+    trusted: true
+    notes: "Queried on demand by GetWeatherTool for 7-day weather forecasts across Vietnam."

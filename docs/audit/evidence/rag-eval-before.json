@@ -1,0 +1,204 @@
+{
+  "retrieved_at": "2026-10-03T19:28:01.414057+00:00",
+  "model": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
+  "frozen": [
+    {
+      "id": "RAG-EVAL-01",
+      "query": "Đà Nẵng có món ăn đặc trưng nào?",
+      "expected_topic": "culinary",
+      "expected_title": "Da Nang",
+      "expected_topic_and_title_rank": 2,
+      "results": [
+        {
+          "rank": 1,
+          "similarity": 0.6857,
+          "title": "Vietnam",
+          "topic": "culinary",
+          "source": "wikivoyage",
+          "section": "Eat"
+        },
+        {
+          "rank": 2,
+          "similarity": 0.6654,
+          "title": "Da Nang",
+          "topic": "culinary",
+          "source": "wikivoyage",
+          "section": "Eat"
+        },
+        {
+          "rank": 3,
+          "similarity": 0.6133,
+          "title": "Nha Trang",
+          "topic": "culinary",
+          "source": "wikivoyage",
+          "section": "Eat"
+        },
+        {
+          "rank": 4,
+          "similarity": 0.5853,
+          "title": "Vietnam",
+          "topic": "culinary",
+          "source": "wikivoyage",
+          "section": "Eat"
+        },
+        {
+          "rank": 5,
+          "similarity": 0.5765,
+          "title": "Vietnam",
+          "topic": "general",
+          "source": "wikivoyage",
+          "section": "Dietary restrictions"
+        }
+      ]
+    },
+    {
+      "id": "RAG-EVAL-02",
+      "query": "Thời tiết Hà Nội vào mùa thu như thế nào?",
+      "expected_topic": "climate",
+      "expected_title": "Hanoi",
+      "expected_topic_and_title_rank": 2,
+      "results": [
+        {
+          "rank": 1,
+          "similarity": 0.7369,
+          "title": "Vietnam",
+          "topic": "climate",
+          "source": "wikivoyage",
+          "section": "Climate"
+        },
+        {
+          "rank": 2,
+          "similarity": 0.6542,
+          "title": "Hanoi",
+          "topic": "climate",
+          "source": "wikivoyage",
+          "section": "Climate"
+        },
+        {
+          "rank": 3,
+          "similarity": 0.5856,
+          "title": "Hanoi",
+          "topic": "activities",
+          "source": "wikivoyage",
+          "section": "Do"
+        },
+        {
+          "rank": 4,
+          "similarity": 0.5784,
+          "title": "Da Nang",
+          "topic": "climate",
+          "source": "wikivoyage",
+          "section": "Climate"
+        },
+        {
+          "rank": 5,
+          "similarity": 0.5721,
+          "title": "Hanoi",
+          "topic": "general",
+          "source": "wikivoyage",
+          "section": "Go next"
+        }
+      ]
+    },
+    {
+      "id": "RAG-EVAL-03",
+      "query": "How to get to Ha Long Bay from Hanoi?",
+      "expected_topic": "transport",
+      "expected_title": "Ha Long Bay",
+      "expected_topic_and_title_rank": 4,
+      "results": [
+        {
+          "rank": 1,
+          "similarity": 0.7974,
+          "title": "Ha Long Bay",
+          "topic": "general",
+          "source": "wikivoyage",
+          "section": "Introduction"
+        },
+        {
+          "rank": 2,
+          "similarity": 0.7963,
+          "title": "Ha Long Bay",
+          "topic": "general",
+          "source": "wikivoyage",
+          "section": "Go next"
+        },
+        {
+          "rank": 3,
+          "similarity": 0.7797,
+          "title": "Ha Long Bay",
+          "topic": "general",
+          "source": "wikivoyage",
+          "section": "Independently"
+        },
+        {
+          "rank": 4,
+          "similarity": 0.7279,
+          "title": "Ha Long Bay",
+          "topic": "transport",
+          "source": "wikivoyage",
+          "section": "By plane"
+        },
+        {
+          "rank": 5,
+          "similarity": 0.705,
+          "title": "Hanoi",
+          "topic": "general",
+          "source": "wikivoyage",
+          "section": "By foot"
+        }
+      ]
+    },
+    {
+      "id": "RAG-EVAL-04",
+      "query": "Lưu ý an toàn khi đi taxi ở Việt Nam",
+      "expected_topic": "safety",
+      "expected_title": "Vietnam",
+      "expected_topic_and_title_rank": null,
+      "results": [
+        {
+          "rank": 1,
+          "similarity": 0.776,
+          "title": "Hanoi",
+          "topic": "general",
+          "source": "wikivoyage",
+          "section": "Hustles and scams"
+        },
+        {
+          "rank": 2,
+          "similarity": 0.7758,
+          "title": "Hanoi",
+          "topic": "general",
+          "source": "wikivoyage",
+          "section": "By metered taxi"
+        },
+        {
+          "rank": 3,
+          "similarity": 0.7053,
+          "title": "Da Nang",
+          "topic": "general",
+          "source": "wikivoyage",
+          "section": "By taxi"
+        },
+        {
+          "rank": 4,
+          "similarity": 0.6898,
+          "title": "Hanoi",
+          "topic": "general",
+          "source": "wikivoyage",
+          "section": "By motorbike taxi"
+        },
+        {
+          "rank": 5,
+          "similarity": 0.6832,
+          "title": "Vietnam",
+          "topic": "general",
+          "source": "wikivoyage",
+          "section": "Taxis"
+        }
+      ]
+    }
+  ],
+  "grounding": [],
+  "label": "before"
+}

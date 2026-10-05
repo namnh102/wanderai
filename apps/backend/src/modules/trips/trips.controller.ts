@@ -11,42 +11,20 @@ import {
   HttpStatus,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
-import { IsString, IsOptional, IsNumber, IsDateString, IsEnum } from 'class-validator';
 import { TripsService } from './trips.service';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
-
-class CreateTripDto {
-  @IsString() title: string;
-  @IsOptional() @IsString() destinationId?: string;
-  @IsOptional() @IsDateString() startDate?: string;
-  @IsOptional() @IsDateString() endDate?: string;
-  @IsOptional() @IsNumber() totalBudget?: number;
-  @IsOptional() @IsString() description?: string;
-}
-
-class UpdateTripDto {
-  @IsOptional() @IsString() title?: string;
-  @IsOptional() @IsDateString() startDate?: string;
-  @IsOptional() @IsDateString() endDate?: string;
-  @IsOptional() @IsNumber() totalBudget?: number;
-  @IsOptional() @IsString() description?: string;
-  @IsOptional() @IsEnum(['DRAFT', 'PLANNED', 'ONGOING', 'COMPLETED', 'CANCELLED']) status?: string;
-}
-
-class AddItineraryDto {
-  @IsNumber() dayNumber: number;
-  @IsString() activity: string;         // Tên hoạt động (bắt buộc)
-  @IsOptional() @IsString() startTime?: string;
-  @IsOptional() @IsString() endTime?: string;
-  @IsOptional() @IsString() placeId?: string;
-  @IsOptional() @IsString() notes?: string;
-  @IsOptional() @IsNumber() estimatedCost?: number;
-  @IsOptional() @IsString() transportMode?: string;
-}
+import { CreateTripDto } from './dto/create-trip.dto';
+import { UpdateTripDto } from './dto/update-trip.dto';
+import { AddItineraryDto } from './dto/add-itinerary.dto';
+import { BulkItineraryDto } from './dto/bulk-itinerary.dto';
+import { PlanTripDto } from './dto/plan-trip.dto';
+import { IsEmail, IsNotEmpty } from 'class-validator';
 
 class InviteMemberDto {
-  @IsString() email: string;
+  @IsEmail({}, { message: 'Email không hợp lệ' })
+  @IsNotEmpty()
+  email: string;
 }
 
 @ApiTags('Trips')
@@ -124,5 +102,27 @@ export class TripsController {
     @Body() dto: InviteMemberDto,
   ) {
     return this.tripsService.addMember(id, user.id, dto.email);
+  }
+
+  // POST /trips/:id/ai-plan — AI tạo lịch trình xem trước (không lưu DB)
+  @Post(':id/ai-plan')
+  @ApiOperation({ summary: 'AI tạo lịch trình xem trước dựa trên TripContext (không lưu DB)' })
+  planWithAi(
+    @Param('id') id: string,
+    @CurrentUser() user: any,
+    @Body() dto?: PlanTripDto,
+  ) {
+    return this.tripsService.planTripWithAi(id, user.id, dto);
+  }
+
+  // POST /trips/:id/itinerary/bulk — Lưu toàn bộ lịch trình vào DB (atomic transaction)
+  @Post(':id/itinerary/bulk')
+  @ApiOperation({ summary: 'Lưu toàn bộ lịch trình vào DB (atomic transaction)' })
+  bulkSaveItinerary(
+    @Param('id') id: string,
+    @CurrentUser() user: any,
+    @Body() dto: BulkItineraryDto,
+  ) {
+    return this.tripsService.bulkSaveItinerary(id, user.id, dto);
   }
 }

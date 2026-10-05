@@ -1,113 +1,102 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dio/dio.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../data/auth_repository.dart';
+import '../data/auth_models.dart';
 import '../../../core/network/api_client.dart';
 
-enum AuthStatus { initial, authenticated, unauthenticated }
+/// Authentication states.
+enum AuthStatus { unknown, authenticated, unauthenticated }
 
 class AuthState {
   final AuthStatus status;
-  final bool isLoading;
-  final String? error;
-  final String? email; // Email user đang đăng nhập
+  final String? errorMessage;
 
-  const AuthState({
-    this.status = AuthStatus.initial,
-    this.isLoading = false,
-    this.error,
-    this.email,
-  });
+  const AuthState({required this.status, this.errorMessage});
 
-  AuthState copyWith({AuthStatus? status, bool? isLoading, String? error, String? email}) {
-    return AuthState(
-      status: status ?? this.status,
-      isLoading: isLoading ?? this.isLoading,
-      error: error,
-      email: email ?? this.email,
-    );
-  }
+  const AuthState.unknown() : status = AuthStatus.unknown, errorMessage = null;
+  const AuthState.authenticated() : status = AuthStatus.authenticated, errorMessage = null;
+  const AuthState.unauthenticated({this.errorMessage}) : status = AuthStatus.unauthenticated;
 }
 
+/// Single source of truth for authentication.
 class AuthNotifier extends StateNotifier<AuthState> {
   final AuthRepository _repo;
 
-  AuthNotifier(this._repo) : super(const AuthState()) {
-    checkAuth();
+  AuthNotifier(this._repo) : super(const AuthState.unknown()) {
+    _init();
   }
 
-  // Kiá»ƒm tra tráº¡ng thÃ¡i Ä‘Äƒng nháº­p
-  Future<void> checkAuth() async {
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('access_token');
-    if (token != null) {
-      state = state.copyWith(status: AuthStatus.authenticated);
+  Future<void> _init() async {
+    final hasToken = await _repo.restoreSession();
+    if (hasToken) {
+      state = const AuthState.authenticated();
     } else {
-      state = state.copyWith(status: AuthStatus.unauthenticated);
+      state = const AuthState.unauthenticated();
     }
   }
 
-  // Xá»­ lÃ½ Ä‘Äƒng nháº­p
   Future<bool> login(String email, String password) async {
-    state = state.copyWith(isLoading: true, error: null);
     try {
-      final data = await _repo.login(email, password);
-      final tokens = data['data'];
-      await _repo.saveTokens(tokens['access_token'], tokens['refresh_token']);
-      state = state.copyWith(status: AuthStatus.authenticated, isLoading: false, email: email);
+      await _repo.login(LoginRequest(email: email, password: password));
+      state = const AuthState.authenticated();
       return true;
-    } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        error: _getFriendlyError(e),
-      );
+    } on DioException catch (e) {
+      state = AuthState.unauthenticated(errorMessage: _mapError(e));
       return false;
     }
   }
 
-  // Xá»­ lÃ½ Ä‘Äƒng kÃ½
   Future<bool> register(String name, String email, String password) async {
-    state = state.copyWith(isLoading: true, error: null);
     try {
-      final data = await _repo.register(name, email, password);
-      final tokens = data['data'];
-      await _repo.saveTokens(tokens['access_token'], tokens['refresh_token']);
-      state = state.copyWith(status: AuthStatus.authenticated, isLoading: false, email: email);
+      await _repo.register(RegisterRequest(name: name, email: email, password: password));
+      state = const AuthState.authenticated();
       return true;
-    } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        error: _getFriendlyError(e),
-      );
+    } on DioException catch (e) {
+      state = AuthState.unauthenticated(errorMessage: _mapError(e));
       return false;
     }
   }
 
-  // Xá»­ lÃ½ Ä‘Äƒng xuáº¥t
   Future<void> logout() async {
-    await _repo.deleteTokens();
-    state = state.copyWith(status: AuthStatus.unauthenticated);
+    await _repo.logout();
+    state = const AuthState.unauthenticated();
   }
 
-  // Chuyá»ƒn Ä‘á»•i lá»—i thÃ nh thÃ´ng bÃ¡o dá»… hiá»ƒu
-  String _getFriendlyError(dynamic error) {
-    if (error is DioException) {
-      if (error.response?.statusCode == 401) {
-        return 'Email hoáº·c máº­t kháº©u khÃ´ng Ä‘Ãºng.';
-      }
-      if (error.response?.statusCode == 409) {
-        return 'Email Ä‘Ã£ Ä‘Æ°á»£c sá»­ dá»¥ng.';
-      }
-      return 'Lá»—i káº¿t ná»‘i. Vui lÃ²ng thá»­ láº¡i sau.';
+  /// Map API/network errors to user-friendly Vietnamese messages.
+  String _mapError(DioException e) {
+    if (e.type == DioExceptionType.connectionTimeout ||
+        e.type == DioExceptionType.receiveTimeout) {
+      return 'Không thể kết nối máy chủ. Vui lòng thử lại.';
     }
-    return 'ÄÃ£ xáº£y ra lá»—i khÃ´ng xÃ¡c Ä‘á»‹nh.';
+    if (e.type == DioExceptionType.connectionError) {
+      return 'Không có kết nối mạng.';
+    }
+    final statusCode = e.response?.statusCode;
+    final data = e.response?.data;
+    if (statusCode == 401) {
+      return 'Email hoặc mật khẩu không đúng.';
+    }
+    if (statusCode == 400 && data is Map) {
+      final msg = data['message'];
+      if (msg is String) {
+        if (msg.contains('đã được sử dụng') || msg.contains('already')) {
+          return 'Email đã được sử dụng.';
+        }
+        return msg;
+      }
+    }
+    return 'Có lỗi xảy ra. Vui lòng thử lại.';
   }
 }
 
+/// Riverpod provider for AuthRepository.
 final authRepositoryProvider = Provider<AuthRepository>((ref) {
-  return AuthRepository(apiClient: apiClient);
+  final dio = ref.read(apiClientProvider);
+  return AuthRepository(dio);
 });
 
+/// Riverpod provider for auth state — single source of truth.
 final authProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) {
-  return AuthNotifier(ref.read(authRepositoryProvider));
+  final repo = ref.read(authRepositoryProvider);
+  return AuthNotifier(repo);
 });

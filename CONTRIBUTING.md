@@ -1,52 +1,116 @@
 # Contributing to WanderAI
 
-## Git Flow
+## 10 Quy tắc vàng
 
-- `main` ← production, chỉ merge từ develop
-- `develop` ← integration branch
-- `feature/*` ← mỗi tính năng 1 branch
-- `fix/*` ← bug fixes
+1. No direct push to main.
+2. Every feature starts with a GitHub Issue.
+3. Every feature uses a dedicated branch.
+4. Read AGENTS.md before coding.
+5. AI-generated code must be reviewed.
+6. Every business logic change needs tests.
+7. Database changes require migrations.
+8. No secrets in Git.
+9. No direct database access from AI agents.
+10. Code is DONE only when CI passes.
 
-## Branch Naming
+## Git Workflow
 
 ```
+main        ← production-ready, chỉ merge từ develop
+develop     ← integration branch
+feature/*   ← mỗi tính năng 1 branch
+```
+
+### Branch naming
+```
+feature/ai-trip-planner
 feature/auth-login
-feature/ai-chat-v1
-feature/home-screen
-fix/jwt-refresh-bug
+feature/safety-sos
+fix/gemini-function-calling
 ```
 
-## Commit Convention (Conventional Commits)
+### Commit convention
+```
+feat:      tính năng mới
+fix:       sửa lỗi
+refactor:  refactor code
+test:      thêm/sửa test
+docs:      tài liệu
+chore:     config, dependencies
+```
+
+### Commit size
+Nhỏ. Một commit = một việc cụ thể.
+```
+# Đúng
+feat: add trip schema
+feat: add trip creation API
+test: add trip service tests
+
+# Sai
+feat: complete entire backend
+```
+
+## Trước khi commit
+
+```bash
+# Flutter
+dart format .
+flutter analyze
+
+# NestJS
+npm run format
+npm run lint
+npm run build
+
+# Python
+ruff format .
+ruff check .
+```
+
+Không merge nếu còn lint error.
+
+## Pull Request Checklist
 
 ```
-feat: add login screen
-fix: resolve JWT token refresh issue
-refactor: extract auth service
-test: add unit tests for trip service
-docs: update API documentation
-chore: upgrade dependencies
+- [ ] Requirement implemented
+- [ ] Formatter passed
+- [ ] Linter passed
+- [ ] Unit tests passed
+- [ ] Integration tests passed (if applicable)
+- [ ] Swagger updated (if API changed)
+- [ ] Migration added (if DB changed)
+- [ ] No secrets in code
+- [ ] No unrelated file changes
+- [ ] Reviewed by teammate
 ```
 
-## Pull Request
+## Definition of Done
 
-Mỗi PR cần có:
-1. **What** — Thay đổi gì
-2. **Why** — Tại sao thay đổi
-3. **Tests** — Đã test gì
-4. **Screenshots** — Nếu có UI changes
+Mỗi task chỉ được đánh DONE khi:
+- ✅ Requirement đúng
+- ✅ Code đúng architecture (đọc AGENTS.md)
+- ✅ Type-safe (không dùng `any` bừa)
+- ✅ Formatted + Lint passed
+- ✅ Unit test written + passed
+- ✅ API docs updated (Swagger)
+- ✅ No secret in code
+- ✅ No unrelated changes
+- ✅ PR reviewed
+- ✅ CI passed
 
-## Code Style
+## Quy trình cho mỗi feature
 
-- TypeScript: ESLint + Prettier
-- Python: Black + isort
-- Dart: flutter analyze
-- Tất cả format trước khi commit
+```
+GitHub Issue → Specification → API contract → Branch →
+AI đọc project → AI lập plan → Approve plan →
+AI code → Format → Lint → Unit test → Integration test →
+PR → Human review → CI → Merge develop
+```
 
-## Review Checklist
+## Environment
 
-- [ ] Code đã format (prettier/black/dart format)
-- [ ] Không có console.log/print debug
-- [ ] Có test cho logic mới
-- [ ] Swagger decorators cho API endpoints mới
-- [ ] class-validator cho DTOs mới
-- [ ] Không hardcode secrets
+```
+.env          ← KHÔNG commit (trong .gitignore)
+.env.example  ← Commit (template không có giá trị thật)
+```

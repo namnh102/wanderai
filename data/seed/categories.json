@@ -1,0 +1,12 @@
+[
+  {"name": "restaurant", "icon": "restaurant", "color": "#FF5722"},
+  {"name": "hotel", "icon": "hotel", "color": "#2196F3"},
+  {"name": "attraction", "icon": "attractions", "color": "#9C27B0"},
+  {"name": "beach", "icon": "beach_access", "color": "#00BCD4"},
+  {"name": "temple", "icon": "temple_buddhist", "color": "#FF9800"},
+  {"name": "market", "icon": "store", "color": "#4CAF50"},
+  {"name": "cafe", "icon": "local_cafe", "color": "#795548"},
+  {"name": "museum", "icon": "museum", "color": "#607D8B"},
+  {"name": "park", "icon": "park", "color": "#8BC34A"},
+  {"name": "nightlife", "icon": "nightlife", "color": "#E91E63"}
+]

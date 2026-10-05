@@ -1,0 +1,6 @@
+# Ignore all restricted data files and subdirectories
+*
+
+# Allow tracking of this .gitignore and the README documentation
+!.gitignore
+!README.md
