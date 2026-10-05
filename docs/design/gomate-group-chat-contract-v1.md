@@ -9,10 +9,11 @@
 - Foundation Contract: `docs/design/gomate-group-foundation-contract-v1.md`
 - Foundation Audits: `docs/audit/ui/task-08.2.3.10-group-foundation-audit.md`, `docs/audit/ui/task-08.2.3.10-r1-group-foundation-correction.md`
 - Master Visual Artifacts:
-  - Mobile Master (Chat Ready): [`group-chat-mobile-v1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.11/group-chat-mobile-v1.png) ($390 \times 844$)
-  - Mobile Send Failure State: [`group-chat-mobile-send-failed-v1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.11/group-chat-mobile-send-failed-v1.png) ($390 \times 844$)
-  - Mobile Reconnecting State: [`group-chat-mobile-reconnecting-v1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.11/group-chat-mobile-reconnecting-v1.png) ($390 \times 844$)
-  - Desktop Master Workstation: [`group-chat-desktop-v1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.11/group-chat-desktop-v1.png) ($1440 \times 900$)
+  - Mobile Master R1 (Chat Ready): [`group-chat-mobile-r1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.11/group-chat-mobile-r1.png) ($390 \times 844$)
+  - Mobile Send Failure State R1: [`group-chat-mobile-send-failed-r1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.11/group-chat-mobile-send-failed-r1.png) ($390 \times 844$)
+  - Mobile Reconnecting State R1: [`group-chat-mobile-reconnecting-r1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.11/group-chat-mobile-reconnecting-r1.png) ($390 \times 844$)
+  - Desktop Master Workstation R1: [`group-chat-desktop-r1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.11/group-chat-desktop-r1.png) ($1440 \times 900$)
+  - Baseline V1 Visuals (Pre-Correction): [`group-chat-mobile-v1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.11/group-chat-mobile-v1.png), [`group-chat-mobile-send-failed-v1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.11/group-chat-mobile-send-failed-v1.png), [`group-chat-mobile-reconnecting-v1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.11/group-chat-mobile-reconnecting-v1.png), [`group-chat-desktop-v1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.11/group-chat-desktop-v1.png)
 
 ---
 
@@ -115,12 +116,17 @@ GROUP CHAT AUTHORIZATION INVARIANT
 
 ---
 
-## 5. Text-Only V1 Contract
+## 5. Text-Only V1 Contract & Security Rendering
 
 Because `model Message` only persists `content String`:
 1. **Supported Message Payload:** Plain UTF-8 text only.
 2. **Unsupported Media:** Images, video, audio clips, voice notes, stickers, file attachments, and GPS coordinate pins are **strictly unsupported in V1**.
 3. **UI Standard:** The message composer contains a text input field and a Send button. **Zero attachment buttons (paperclips, cameras, microphones)** are rendered as active or current features.
+4. **Security & Plain-Text Rendering Rules:**
+   - `Message.content` must be treated as **untrusted user text**.
+   - The Flutter client must render content strictly as plain text (or safe styled text); **it must NOT interpret raw HTML, scripts, or executable markup** (XSS / injection protection).
+   - Full Unicode and Vietnamese character diacritics must be preserved.
+   - The application layer must enforce non-empty content validation (trimming whitespace; rejecting empty or whitespace-only messages).
 
 ---
 
@@ -138,18 +144,21 @@ Because `model Message` only persists `content String`:
 
 ---
 
-## 7. Pagination Contract (Recommended Target)
+## 7. Pagination Contract (Standardized Opaque Cursor)
 
-Since no backend chat controller exists, the target API contract specifies **cursor-based pagination** for stable infinite scrolling:
+Since no backend chat controller exists, the target API contract specifies **cursor-based pagination** using a standardized opaque cursor:
 
 ```http
-GET /groups/:groupId/messages?cursor=<cursorId>&limit=30
+GET /groups/:groupId/messages?before=<opaqueCursor>&limit=30
 Authorization: Bearer <token>
 ```
 
 - **Query Parameters:**
-  - `cursor`: The `id` of the oldest currently loaded message (fetching older messages before this point).
+  - `before`: An **opaque cursor string** encoding the `(createdAt, id)` composite checkpoint of the oldest currently loaded message.
   - `limit`: Default `30`, Maximum `50`.
+- **Opaque Cursor Invariant:**
+  - The client **MUST treat the cursor as an opaque string**.
+  - The client must never attempt to parse, decompose, or fabricate cursor internals.
 - **Response Structure (Target):**
   ```json
   {
@@ -167,7 +176,7 @@ Authorization: Bearer <token>
         }
       }
     ],
-    "nextCursor": "18f2d59e-e67c-47ea-a841-38148b308da2",
+    "nextCursor": "ZXlKa1lYUmxJam9pTWpBeU5pMHhNQzB3TlRBNU1URTFNQzR3TURBZ1pHVjJJam9pTVRoZk1tUTFPV1V0WlRZM1l5MDBOMlZoTFdFNE5ERXRNelV4TkRoaU16QTRaR0V5SW4wPQ==",
     "hasMore": true
   }
   ```
@@ -187,34 +196,43 @@ CLIENT-VISIBLE MESSAGE DELIVERY LIFECYCLE
     [SENDING] (Local optimistic bubble, light sending status)
         │
         ├───> [SENT] (Server ACK: confirmed Message.id & createdAt)
+        │            (Displays: "09:25 · Đã gửi")
         │
         └───> [FAILED] (Network disconnect, timeout, or 5xx error)
                  │
                  ▼
-              [RETRY] (User taps "Thử lại", re-attempts dispatch)
+              [RETRY] (User taps "Thử lại", re-attempts manual dispatch)
 
-* Note: READ / SEEN states do NOT exist in V1 (No read receipt models).
+* Note: READ / SEEN / DELIVERED states do NOT exist in V1 (No read receipt models).
 ========================================================================
 ```
 
 ---
 
-## 9. Optimistic Send Contract
+## 9. Optimistic Send Contract & "Đã gửi" Semantics
 
-To ensure responsiveness:
-1. When the user taps Send, the client immediately creates a temporary local bubble with state `SENDING`.
-2. The input field in the composer is cleared.
-3. Upon receiving the server response, the temporary bubble is updated with the persistent `id` and `createdAt` returned by Postgres, and transitions to `SENT`.
-4. If the server returns an error or times out, the bubble transitions to `FAILED`.
+1. **Optimistic Lifecycle:**
+   - When the user taps Send, the client immediately creates a temporary local bubble with state `SENDING`.
+   - The input field in the composer is cleared.
+   - Upon receiving the server response, the temporary bubble is updated with the persistent `id` and `createdAt` returned by Postgres, and transitions to `SENT`.
+   - If the server returns an error or times out, the bubble transitions to `FAILED`.
+2. **Exact Meaning of "Đã gửi" (Locked R1 Semantics):**
+   $$\textbf{"Đã gửi"} \iff \textbf{Server ACK received} \ \wedge \ \textbf{Message persisted in DB}$$
+   - `"Đã gửi"` indicates strictly that the backend accepted and committed the row to Postgres.
+   - It **DOES NOT mean DELIVERED** to other peers' devices.
+   - It **DOES NOT mean READ or SEEN** by any recipient.
+   - Master mockups and production UI must never attach double ticks or "Seen" labels to this status.
 
 ---
 
 ## 10. Retry & Idempotency Gap
 
-1. **Failure Display:**
+1. **Send Failure Remains Separate:**
+   - Failures occurring during an attempted network dispatch transition `SENDING -> FAILED`.
    - Outgoing bubble displays warning indicator and text:
      $$\textbf{"Không gửi được · Thử lại"}$$
    - The failed message content is never discarded or wiped automatically.
+   - The user must **manually tap "Thử lại"** to retry. The system never performs silent automatic background retries.
 2. **Idempotency Architectural Gap:**
    - `model Message` currently lacks a `clientMessageId` or `idempotencyKey` column.
    - **Risk:** A network drop occurring *after* the server writes to DB but *before* the client receives the ACK could cause duplicate messages if the user taps "Thử lại".
@@ -232,16 +250,25 @@ To ensure responsiveness:
 
 ---
 
-## 12. Reconnect & Offline UX
+## 12. Reconnect & Offline UX (Honest R1 Contract)
 
-1. **Connection State Indicators:**
-   - `CONNECTED`: Normal real-time streaming; no intrusive status banner.
-   - `RECONNECTING`: Subtle amber banner below app bar:
-     $$\textbf{"⟳ Đang kết nối lại... Tin nhắn sẽ được gửi khi có mạng"}$$
-   - `OFFLINE`: Amber banner: `"Không có kết nối mạng"`.
-2. **Offline Data Integrity:**
-   - Existing loaded messages remain fully readable while offline.
-   - No fake "offline background synchronization" is promised. Outgoing attempts offline immediately transition to `FAILED` with retry action.
+1. **Correction of Offline Queue Misconception:**
+   - The application currently has **NO background offline queue**.
+   - Claiming *"Tin nhắn sẽ được gửi khi có mạng"* is an architectural overclaim and is **strictly prohibited**.
+2. **Locked R1 Connection States & Behavior:**
+   - **`CONNECTED`:** Normal real-time streaming; composer enabled; Send button active.
+   - **`RECONNECTING`:**
+     - Already-loaded message history remains visible and readable.
+     - Any unsent draft text typed in the input field remains preserved.
+     - **Send button is DISABLED** (`btn-send-disabled`).
+     - **NO automatic background queue.**
+     - Banner Copy (Locked):
+       $$\textbf{"Đang kết nối lại... Bạn vẫn có thể xem các tin nhắn đã tải."}$$
+   - **`OFFLINE`:**
+     - Loaded history remains visible.
+     - Draft preserved.
+     - Send button disabled.
+     - Banner Copy: *"Không có kết nối mạng. Hãy thử gửi lại khi kết nối được khôi phục."*
 
 ---
 
@@ -306,11 +333,17 @@ Group Chat is a multi-user space; data protection is enforced as follows:
 - **Mobile Viewport ($390 \times 844$):**
   - Full-height flexbox column: Status bar ($44\text{px}$), App bar ($56\text{px}$), Scrollable chat stream, Text composer ($64\text{px}$), Home indicator ($20\text{px}$).
   - Own bubbles aligned right (`#0F766E`, white text); other member bubbles aligned left (`#FFFFFF`, border `#E2E8F0`).
+  - Master Artifacts:
+    - Chat Ready: [`group-chat-mobile-r1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.11/group-chat-mobile-r1.png)
+    - Send Failed: [`group-chat-mobile-send-failed-r1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.11/group-chat-mobile-send-failed-r1.png)
+    - Reconnecting: [`group-chat-mobile-reconnecting-r1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.11/group-chat-mobile-reconnecting-r1.png)
 - **Desktop Viewport ($1440 \times 900$):**
   - 3-column workstation layout:
-    - Left ($340\text{px}$): Group info, linked trip metadata, privacy notice.
-    - Center ($740\text{px}$): Stream header (`Văn bản thuần`), chronological message feed, full-width text composer.
+    - Left ($340\text{px}$): Group info (clean, `"Chính thức"` removed), linked trip metadata, verified member list, privacy notice.
+    - Center ($740\text{px}$): Stream header (`"Trò chuyện nhóm"` without developer badges or JWT annotations), chronological message feed, full-width text composer with Send button.
     - Right ($340\text{px}$): Downstream modules (`Lịch trình chung · Sắp có`, `Chi tiêu chuyến đi · Sắp có`), Leave group action.
+  - Zero internal task or architecture tags inside the application frame.
+  - Master Artifact: [`group-chat-desktop-r1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.11/group-chat-desktop-r1.png)
 - **Tablet Viewport ($768 \times 1024$):** 2-column layout (Left: Member summary, Right: Chat stream and composer).
 
 ---

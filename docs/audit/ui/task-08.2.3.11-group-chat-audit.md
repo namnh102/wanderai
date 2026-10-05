@@ -132,47 +132,41 @@ model Message {
 
 ## 6. Master Mockup Verification (4 Master Artifacts)
 
-All 4 master mockups were generated and verified at `docs/audit/evidence/ui-08.2.3.11/`:
+## 6. Master Mockup Verification (R1 Refined Artifacts)
+
+All 4 master mockups were updated and verified at `docs/audit/evidence/ui-08.2.3.11/`:
 
 | Mockup File | Viewport | Target Resolution | Architectural & Visual Compliance Audit | Status |
 | :--- | :---: | :---: | :--- | :---: |
-| [`group-chat-mobile-v1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.11/group-chat-mobile-v1.png) | Mobile | $390 \times 844$ | 1. Status bar `9:41 5G 100%` + App bar `"Nhóm Đà Nẵng 4N3Đ"` with avatar `ĐN` and info icon.<br>2. Date separator `"Hôm nay, 5 tháng 10"`.<br>3. Text-only message stream: Other member bubbles (Nam, Mai) with display names and roles; Own bubble right-aligned (`#0F766E`).<br>4. Text composer with placeholder `"Nhập tin nhắn..."` and Send button.<br>5. **CRITICAL CHECKS:** Zero attachment buttons, zero read receipts (no ticks/seen), zero online presence, zero typing indicators. | **PASS** |
-| [`group-chat-mobile-send-failed-v1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.11/group-chat-mobile-send-failed-v1.png) | Mobile | $390 \times 844$ | 1. Previous messages completely preserved.<br>2. Latest outgoing bubble has warning state: `⚠️ Không gửi được · Thử lại`.<br>3. Input field remains functional; typed content is not deleted.<br>4. No raw network/socket error codes exposed to user. | **PASS** |
-| [`group-chat-mobile-reconnecting-v1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.11/group-chat-mobile-reconnecting-v1.png) | Mobile | $390 \times 844$ | 1. Amber reconnecting banner below app bar: `⟳ Đang kết nối lại... Tin nhắn sẽ được gửi khi có mạng`.<br>2. Existing cached message history remains fully readable.<br>3. Composer indicates pending state while offline, demonstrating realtime transport boundary. | **PASS** |
-| [`group-chat-desktop-v1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.11/group-chat-desktop-v1.png) | Desktop | $1440 \times 900$ | 1. Top navigation: GoMate navbar with 5 canonical tabs (Chuyến đi active).<br>2. Breadcrumb: `Chuyến đi › Khám phá Đà Nẵng 4N3Đ › Nhóm đồng hành › Trò chuyện nhóm`.<br>3. Col 1 ($340\text{px}$): Group info, linked trip metadata, 3 members with verified badges, privacy notice.<br>4. Col 2 ($740\text{px}$): Stream header (`Văn bản thuần`), chronological text message feed, full-width text composer with Send button. Zero attachments, zero read receipts.<br>5. Col 3 ($340\text{px}$): Downstream modules (`Lịch trình chung · Sắp có`, `Chi tiêu chuyến đi · Sắp có`), Leave group danger zone. Zero scrollbars. | **PASS** |
+| [`group-chat-mobile-r1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.11/group-chat-mobile-r1.png) | Mobile | $390 \times 844$ | 1. Status bar `9:41 5G 100%` + App bar `"Nhóm Đà Nẵng 4N3Đ"` with avatar `ĐN` and info icon.<br>2. Date separator `"Hôm nay, 5 tháng 10"`.<br>3. Clean production UI: Internal tags (`DEMO EVIDENCE`) completely removed from application frame.<br>4. Text-only message stream: Other member bubbles (Nam, Mai) with display names and roles; Own bubble right-aligned (`#0F766E`) with `"09:25 · Đã gửi"`.<br>5. Text composer with placeholder `"Nhập tin nhắn..."` and active Send button.<br>6. **CRITICAL CHECKS:** Zero attachment buttons, zero read receipts (no ticks/seen), zero online presence, zero typing indicators. | **PASS** |
+| [`group-chat-mobile-send-failed-r1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.11/group-chat-mobile-send-failed-r1.png) | Mobile | $390 \times 844$ | 1. Previous messages completely preserved.<br>2. Latest outgoing bubble has explicit warning state: `⚠️ Không gửi được · Thử lại`.<br>3. Input field remains functional; typed content is not deleted.<br>4. Clean production UI: Zero developer evidence tags inside frame. | **PASS** |
+| [`group-chat-mobile-reconnecting-r1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.11/group-chat-mobile-reconnecting-r1.png) | Mobile | $390 \times 844$ | 1. Honest reconnecting banner below app bar: `⟳ Đang kết nối lại... Bạn vẫn có thể xem các tin nhắn đã tải.` (NO false auto-send promises).<br>2. Existing cached message history remains fully readable.<br>3. Draft text is preserved in composer.<br>4. **Send button is DISABLED** (`btn-send-disabled`), accurately conveying lack of offline queue. | **PASS** |
+| [`group-chat-desktop-r1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.11/group-chat-desktop-r1.png) | Desktop | $1440 \times 900$ | 1. Top navigation: GoMate navbar with 5 canonical tabs (Chuyến đi active).<br>2. Breadcrumb: `Chuyến đi › Khám phá Đà Nẵng 4N3Đ › Nhóm đồng hành › Trò chuyện nhóm`.<br>3. Col 1 ($340\text{px}$): Group info (clean, `"Chính thức"` removed), linked trip metadata, 3 members with verified badges, privacy notice.<br>4. Col 2 ($740\text{px}$): Clean stream header (`"Trò chuyện nhóm"`, no `"Văn bản thuần"` badge, no JWT wording), chronological text message feed (others left, own right), full-width text composer with Send button. Zero attachments, zero read receipts.<br>5. Col 3 ($340\text{px}$): Downstream modules (`Lịch trình chung · Sắp có`, `Chi tiêu chuyến đi · Sắp có`), Leave group danger zone.<br>6. Zero internal task or architecture tags. Zero scrollbars. | **PASS** |
+
+*(Pre-correction V1 artifacts preserved for historical comparison: [`group-chat-mobile-v1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.11/group-chat-mobile-v1.png), [`group-chat-mobile-send-failed-v1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.11/group-chat-mobile-send-failed-v1.png), [`group-chat-mobile-reconnecting-v1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.11/group-chat-mobile-reconnecting-v1.png), [`group-chat-desktop-v1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.11/group-chat-desktop-v1.png).)*
 
 ---
 
-## 7. Design Acceptance Gate (TASK 08.2.3.11)
+## 7. Design Acceptance Gate (TASK 08.2.3.11-R1)
 
-- [x] **Exact Message schema verified:** Fields `id`, `groupId`, `userId`, `content`, `createdAt` verified.
-- [x] **GroupMember-only authorization locked:** Active `GroupMember` row required for read/write.
-- [x] **Match alone cannot access chat:** Mutual Match does not grant chat authorization.
-- [x] **TripMember alone cannot access chat:** TripMember does not grant chat authorization without Group membership.
-- [x] **Text-only V1 locked:** Only plain UTF-8 text supported.
-- [x] **No fake attachments:** Zero attachment buttons rendered in UI.
-- [x] **Ordering documented:** `createdAt ASC` with tie-breaker `id`.
-- [x] **Pagination target documented:** Cursor-based (`createdAt + id`) pagination specified.
-- [x] **Sending state defined:** Optimistic local bubble with `SENDING` state.
-- [x] **Failure/retry defined:** Status `FAILED` with `"Không gửi được · Thử lại"`.
-- [x] **Idempotency gap documented:** Lack of `clientMessageId` documented as implementation gap.
-- [x] **WebSocket reality honest:** Classified as `MISSING / FUTURE`; zero packages in repo.
-- [x] **Reconnect behavior defined:** Subtle banner `"Đang kết nối lại..."` with preserved history.
-- [x] **Offline behavior honest:** Existing messages readable; no fake background sync promised.
-- [x] **No read receipts:** Zero "Seen", "Đã xem", or double checkmarks rendered.
-- [x] **No typing indicator:** Zero "Nam đang nhập..." rendered.
-- [x] **No online presence:** Zero green dots or "Online" badges rendered.
-- [x] **Edit/delete gaps classified:** `editedAt` and `deletedAt` documented as `FUTURE`.
-- [x] **Member-leave behavior honest:** DB retention supported; anonymous display is client rendering rule.
-- [x] **Remove/revoke behavior defined:** UI shows *"Bạn không còn là thành viên của nhóm này"*.
-- [x] **Group-disband behavior defined:** UI shows *"Nhóm đồng hành này đã được giải tán"*.
-- [x] **Privacy fields protected:** Email, phone, live GPS, and emergency contacts never exposed.
-- [x] **Notifications not overclaimed:** Push notifications classified as `DESIGN TARGET`.
-- [x] **Safety dependencies documented:** Block/Report classified as `UNSAFE / BLOCKED DEPENDENCY`.
-- [x] **Mobile master created:** [`group-chat-mobile-v1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.11/group-chat-mobile-v1.png) verified ($390 \times 844$).
-- [x] **Mobile failure state created:** [`group-chat-mobile-send-failed-v1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.11/group-chat-mobile-send-failed-v1.png) verified ($390 \times 844$).
-- [x] **Third mobile state created:** [`group-chat-mobile-reconnecting-v1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.11/group-chat-mobile-reconnecting-v1.png) verified ($390 \times 844$).
-- [x] **Desktop master created:** [`group-chat-desktop-v1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.11/group-chat-desktop-v1.png) verified ($1440 \times 900$).
+- [x] **No auto-send promise while reconnecting:** Copy locked to *"Đang kết nối lại... Bạn vẫn có thể xem các tin nhắn đã tải."*
+- [x] **Reconnecting Send is disabled:** Send button rendered disabled in reconnecting state.
+- [x] **Draft remains preserved:** Text typed into input remains intact during reconnection.
+- [x] **Existing history remains readable:** Cached messages visible and legible.
+- [x] **Send failure remains explicit retry:** Outgoing failure shows `"Không gửi được · Thử lại"`; no silent auto-retry.
+- [x] **No technical labels inside product frame:** `DEMO EVIDENCE`, `STATE: CHAT_READY`, etc., removed.
+- [x] **No JWT wording shown to end user:** Removed `"Xác thực thành viên JWT"` from desktop header.
+- [x] **No TASK/STATE labels shown to end user:** Developer annotations purged from user-facing cards.
+- [x] **"Chính thức" badge removed:** Omitted from Desktop Group info card.
+- [x] **Text-only developer badge removed:** Omitted from Desktop primary stream header.
+- [x] **Cursor uses opaque (createdAt, id) contract:** Standardized on `GET /groups/:groupId/messages?before=<opaqueCursor>&limit=30`.
+- [x] **"Đã gửi" means server ACK only:** Persisted to Postgres; does not imply delivered/read/seen.
+- [x] **No Delivered/Read/Seen implication:** No double checkmarks or read ticks.
+- [x] **Plain text treated as untrusted text:** Safe rendering; no execution of raw HTML/scripts.
+- [x] **Mobile ready R1 generated:** [`group-chat-mobile-r1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.11/group-chat-mobile-r1.png) verified ($390 \times 844$).
+- [x] **Mobile failed R1 generated:** [`group-chat-mobile-send-failed-r1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.11/group-chat-mobile-send-failed-r1.png) verified ($390 \times 844$).
+- [x] **Mobile reconnect R1 generated:** [`group-chat-mobile-reconnecting-r1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.11/group-chat-mobile-reconnecting-r1.png) verified ($390 \times 844$).
+- [x] **Desktop R1 generated:** [`group-chat-desktop-r1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.11/group-chat-desktop-r1.png) verified ($1440 \times 900$).
 - [x] **No source changes:** `git diff apps/` is empty.
 - [x] **No DB changes:** `schema.prisma` unmodified.
 - [x] **No API changes:** API contracts intact.
