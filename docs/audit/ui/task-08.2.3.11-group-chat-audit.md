@@ -10,10 +10,11 @@
 - Foundation Contract: `docs/design/gomate-group-foundation-contract-v1.md`
 - Core Contract: `docs/design/gomate-group-chat-contract-v1.md`
 - Master Visual Artifacts:
-  - Mobile Master (Chat Ready): [`group-chat-mobile-v1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.11/group-chat-mobile-v1.png) ($390 \times 844$)
-  - Mobile Send Failure State: [`group-chat-mobile-send-failed-v1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.11/group-chat-mobile-send-failed-v1.png) ($390 \times 844$)
-  - Mobile Reconnecting State: [`group-chat-mobile-reconnecting-v1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.11/group-chat-mobile-reconnecting-v1.png) ($390 \times 844$)
-  - Desktop Master Workstation: [`group-chat-desktop-v1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.11/group-chat-desktop-v1.png) ($1440 \times 900$)
+  - Mobile Master R1 (Chat Ready): [`group-chat-mobile-r1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.11/group-chat-mobile-r1.png) ($390 \times 844$)
+  - Mobile Send Failure State R1: [`group-chat-mobile-send-failed-r1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.11/group-chat-mobile-send-failed-r1.png) ($390 \times 844$)
+  - Mobile Reconnecting State R1: [`group-chat-mobile-reconnecting-r1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.11/group-chat-mobile-reconnecting-r1.png) ($390 \times 844$)
+  - Desktop Master Workstation R1 (Final IA Aligned): [`group-chat-desktop-r1-final.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.11/group-chat-desktop-r1-final.png) ($1440 \times 900$)
+  - Baseline V1 Visuals (Pre-Correction): [`group-chat-mobile-v1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.11/group-chat-mobile-v1.png), [`group-chat-mobile-send-failed-v1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.11/group-chat-mobile-send-failed-v1.png), [`group-chat-mobile-reconnecting-v1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.11/group-chat-mobile-reconnecting-v1.png), [`group-chat-desktop-v1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.11/group-chat-desktop-v1.png)
 
 ---
 
@@ -130,24 +131,23 @@ model Message {
 
 ---
 
-## 6. Master Mockup Verification (4 Master Artifacts)
+## 6. Master Mockup Verification (R1 & R1.1 Final Artifacts)
 
-## 6. Master Mockup Verification (R1 Refined Artifacts)
-
-All 4 master mockups were updated and verified at `docs/audit/evidence/ui-08.2.3.11/`:
+All master mockups are verified at `docs/audit/evidence/ui-08.2.3.11/`:
 
 | Mockup File | Viewport | Target Resolution | Architectural & Visual Compliance Audit | Status |
 | :--- | :---: | :---: | :--- | :---: |
 | [`group-chat-mobile-r1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.11/group-chat-mobile-r1.png) | Mobile | $390 \times 844$ | 1. Status bar `9:41 5G 100%` + App bar `"Nhóm Đà Nẵng 4N3Đ"` with avatar `ĐN` and info icon.<br>2. Date separator `"Hôm nay, 5 tháng 10"`.<br>3. Clean production UI: Internal tags (`DEMO EVIDENCE`) completely removed from application frame.<br>4. Text-only message stream: Other member bubbles (Nam, Mai) with display names and roles; Own bubble right-aligned (`#0F766E`) with `"09:25 · Đã gửi"`.<br>5. Text composer with placeholder `"Nhập tin nhắn..."` and active Send button.<br>6. **CRITICAL CHECKS:** Zero attachment buttons, zero read receipts (no ticks/seen), zero online presence, zero typing indicators. | **PASS** |
 | [`group-chat-mobile-send-failed-r1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.11/group-chat-mobile-send-failed-r1.png) | Mobile | $390 \times 844$ | 1. Previous messages completely preserved.<br>2. Latest outgoing bubble has explicit warning state: `⚠️ Không gửi được · Thử lại`.<br>3. Input field remains functional; typed content is not deleted.<br>4. Clean production UI: Zero developer evidence tags inside frame. | **PASS** |
 | [`group-chat-mobile-reconnecting-r1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.11/group-chat-mobile-reconnecting-r1.png) | Mobile | $390 \times 844$ | 1. Honest reconnecting banner below app bar: `⟳ Đang kết nối lại... Bạn vẫn có thể xem các tin nhắn đã tải.` (NO false auto-send promises).<br>2. Existing cached message history remains fully readable.<br>3. Draft text is preserved in composer.<br>4. **Send button is DISABLED** (`btn-send-disabled`), accurately conveying lack of offline queue. | **PASS** |
-| [`group-chat-desktop-r1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.11/group-chat-desktop-r1.png) | Desktop | $1440 \times 900$ | 1. Top navigation: GoMate navbar with 5 canonical tabs (Chuyến đi active).<br>2. Breadcrumb: `Chuyến đi › Khám phá Đà Nẵng 4N3Đ › Nhóm đồng hành › Trò chuyện nhóm`.<br>3. Col 1 ($340\text{px}$): Group info (clean, `"Chính thức"` removed), linked trip metadata, 3 members with verified badges, privacy notice.<br>4. Col 2 ($740\text{px}$): Clean stream header (`"Trò chuyện nhóm"`, no `"Văn bản thuần"` badge, no JWT wording), chronological text message feed (others left, own right), full-width text composer with Send button. Zero attachments, zero read receipts.<br>5. Col 3 ($340\text{px}$): Downstream modules (`Lịch trình chung · Sắp có`, `Chi tiêu chuyến đi · Sắp có`), Leave group danger zone.<br>6. Zero internal task or architecture tags. Zero scrollbars. | **PASS** |
+| [`group-chat-desktop-r1-final.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.11/group-chat-desktop-r1-final.png) | Desktop | $1440 \times 900$ | 1. **Canonical GoMate Root Navigation:** Exactly 5 tabs (`Khám phá`, `Bản đồ`, `Wandy AI`, `Chuyến đi` [Active], `An toàn`). Regression fixed: `"Bạn đồng hành"` removed from root tabs; `"An toàn"` restored.<br>2. **Contextual Breadcrumb Hierarchy:** `Chuyến đi › Khám phá Đà Nẵng 4N3Đ › Nhóm đồng hành › Trò chuyện nhóm`. Accurately anchors Companion Group within Trip scope.<br>3. Col 1 ($340\text{px}$): Clean group info, linked trip metadata, 3 members with verified badges, privacy notice.<br>4. Col 2 ($740\text{px}$): Clean stream header (`"Trò chuyện nhóm"` without developer badges or JWT annotations), chronological text message feed, full-width text composer with Send button.<br>5. Col 3 ($340\text{px}$): Downstream modules (`Lịch trình chung · Sắp có`, `Chi tiêu chuyến đi · Sắp có`), Leave group danger zone.<br>6. Zero internal task or architecture tags inside frame. | **PASS** |
+| [`group-chat-desktop-r1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.11/group-chat-desktop-r1.png) | Desktop | $1440 \times 900$ | *Pre-IA correction artifact (5th tab was incorrectly labeled "Bạn đồng hành" instead of "An toàn"). Preserved for audit trail.* | **SUPERSEDED** |
 
 *(Pre-correction V1 artifacts preserved for historical comparison: [`group-chat-mobile-v1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.11/group-chat-mobile-v1.png), [`group-chat-mobile-send-failed-v1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.11/group-chat-mobile-send-failed-v1.png), [`group-chat-mobile-reconnecting-v1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.11/group-chat-mobile-reconnecting-v1.png), [`group-chat-desktop-v1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.11/group-chat-desktop-v1.png).)*
 
 ---
 
-## 7. Design Acceptance Gate (TASK 08.2.3.11-R1)
+## 7. Design Acceptance Gate (TASK 08.2.3.11-R1 & R1.1)
 
 - [x] **No auto-send promise while reconnecting:** Copy locked to *"Đang kết nối lại... Bạn vẫn có thể xem các tin nhắn đã tải."*
 - [x] **Reconnecting Send is disabled:** Send button rendered disabled in reconnecting state.
@@ -163,10 +163,13 @@ All 4 master mockups were updated and verified at `docs/audit/evidence/ui-08.2.3
 - [x] **"Đã gửi" means server ACK only:** Persisted to Postgres; does not imply delivered/read/seen.
 - [x] **No Delivered/Read/Seen implication:** No double checkmarks or read ticks.
 - [x] **Plain text treated as untrusted text:** Safe rendering; no execution of raw HTML/scripts.
-- [x] **Mobile ready R1 generated:** [`group-chat-mobile-r1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.11/group-chat-mobile-r1.png) verified ($390 \times 844$).
-- [x] **Mobile failed R1 generated:** [`group-chat-mobile-send-failed-r1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.11/group-chat-mobile-send-failed-r1.png) verified ($390 \times 844$).
-- [x] **Mobile reconnect R1 generated:** [`group-chat-mobile-reconnecting-r1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.11/group-chat-mobile-reconnecting-r1.png) verified ($390 \times 844$).
-- [x] **Desktop R1 generated:** [`group-chat-desktop-r1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.11/group-chat-desktop-r1.png) verified ($1440 \times 900$).
+- [x] **Desktop root navigation = canonical GoMate IA:** Restored `An toàn` as 5th tab; removed `Bạn đồng hành` from root tabs.
+- [x] **Active root destination:** `Chuyến đi` remains active tab in navbar.
+- [x] **Contextual hierarchy preserved:** Breadcrumb `Chuyến đi › Khám phá Đà Nẵng 4N3Đ › Nhóm đồng hành › Trò chuyện nhóm`.
+- [x] **Final Desktop Mockup generated:** [`group-chat-desktop-r1-final.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.11/group-chat-desktop-r1-final.png) verified ($1440 \times 900$).
+- [x] **Mobile ready R1 verified:** [`group-chat-mobile-r1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.11/group-chat-mobile-r1.png) ($390 \times 844$).
+- [x] **Mobile failed R1 verified:** [`group-chat-mobile-send-failed-r1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.11/group-chat-mobile-send-failed-r1.png) ($390 \times 844$).
+- [x] **Mobile reconnect R1 verified:** [`group-chat-mobile-reconnecting-r1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.11/group-chat-mobile-reconnecting-r1.png) ($390 \times 844$).
 - [x] **No source changes:** `git diff apps/` is empty.
 - [x] **No DB changes:** `schema.prisma` unmodified.
 - [x] **No API changes:** API contracts intact.

@@ -12,7 +12,8 @@
   - Mobile Master R1 (Chat Ready): [`group-chat-mobile-r1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.11/group-chat-mobile-r1.png) ($390 \times 844$)
   - Mobile Send Failure State R1: [`group-chat-mobile-send-failed-r1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.11/group-chat-mobile-send-failed-r1.png) ($390 \times 844$)
   - Mobile Reconnecting State R1: [`group-chat-mobile-reconnecting-r1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.11/group-chat-mobile-reconnecting-r1.png) ($390 \times 844$)
-  - Desktop Master Workstation R1: [`group-chat-desktop-r1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.11/group-chat-desktop-r1.png) ($1440 \times 900$)
+  - Desktop Master Workstation R1 (Final IA Aligned): [`group-chat-desktop-r1-final.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.11/group-chat-desktop-r1-final.png) ($1440 \times 900$)
+  - Desktop Master Workstation R1 (Pre-IA Alignment): [`group-chat-desktop-r1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.11/group-chat-desktop-r1.png) ($1440 \times 900$)
   - Baseline V1 Visuals (Pre-Correction): [`group-chat-mobile-v1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.11/group-chat-mobile-v1.png), [`group-chat-mobile-send-failed-v1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.11/group-chat-mobile-send-failed-v1.png), [`group-chat-mobile-reconnecting-v1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.11/group-chat-mobile-reconnecting-v1.png), [`group-chat-desktop-v1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.11/group-chat-desktop-v1.png)
 
 ---
@@ -338,12 +339,16 @@ Group Chat is a multi-user space; data protection is enforced as follows:
     - Send Failed: [`group-chat-mobile-send-failed-r1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.11/group-chat-mobile-send-failed-r1.png)
     - Reconnecting: [`group-chat-mobile-reconnecting-r1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.11/group-chat-mobile-reconnecting-r1.png)
 - **Desktop Viewport ($1440 \times 900$):**
+  - **Global Root Navigation (GoMate Canonical IA):**
+    - 5 root destinations: `Khám phá` | `Bản đồ` | `Wandy AI` | `Chuyến đi` [Active] | `An toàn`.
+    - **Root IA Invariant:** `"Bạn đồng hành"` / `"Nhóm đồng hành"` is strictly a **contextual Trip capability**, never an independent root navigation tab.
+    - Breadcrumb navigation: `Chuyến đi › Khám phá Đà Nẵng 4N3Đ › Nhóm đồng hành › Trò chuyện nhóm`.
   - 3-column workstation layout:
     - Left ($340\text{px}$): Group info (clean, `"Chính thức"` removed), linked trip metadata, verified member list, privacy notice.
     - Center ($740\text{px}$): Stream header (`"Trò chuyện nhóm"` without developer badges or JWT annotations), chronological message feed, full-width text composer with Send button.
     - Right ($340\text{px}$): Downstream modules (`Lịch trình chung · Sắp có`, `Chi tiêu chuyến đi · Sắp có`), Leave group action.
   - Zero internal task or architecture tags inside the application frame.
-  - Master Artifact: [`group-chat-desktop-r1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.11/group-chat-desktop-r1.png)
+  - Master Artifact: [`group-chat-desktop-r1-final.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.11/group-chat-desktop-r1-final.png) ($1440 \times 900$)
 - **Tablet Viewport ($768 \times 1024$):** 2-column layout (Left: Member summary, Right: Chat stream and composer).
 
 ---
