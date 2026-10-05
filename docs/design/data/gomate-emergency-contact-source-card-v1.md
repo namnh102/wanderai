@@ -1,7 +1,7 @@
-# GoMate Emergency Contact Directory — Authoritative Source Card V1
+# GoMate Emergency Contact Directory — Authoritative Source Card V1 (R1 Revision)
 
-**Status:** APPROVED REFERENCE DATA SPECIFICATION  
-**Module:** Safety & Emergency (TASK 08.2.3.15)  
+**Status:** APPROVED REFERENCE DATA SPECIFICATION & DIRECTORY CORRECTION  
+**Task:** TASK 08.2.3.15-R1 — GOMATE SAFETY & EMERGENCY: AUTHORITATIVE DIRECTORY & CURRENT-GOVERNANCE CORRECTION  
 **Date:** October 5, 2026  
 **Jurisdiction / Primary Scope:** Vietnam (Toàn quốc & Điểm đến du lịch trọng điểm)  
 **Applicability:** GoMate V1 Client Emergency Hub & Directory  
@@ -11,138 +11,133 @@
 ## 1. Governance & Data Honesty Principle
 
 > [!IMPORTANT]
-> **Zero Fabrication Policy:**
-> Emergency contact numbers connect travelers to life-saving and civil defense services. Fabricating, guessing, or using mock phone numbers for visual realism is **STRICTLY PROHIBITED**. Every emergency entry displayed in GoMate must be backed by an authoritative government or official tourism department source, with a recorded snapshot date, URL, and geographic scope.
+> **Zero Fabrication Policy & Taxonomy Integrity:**
+> 1. Emergency contact numbers connect travelers to life-saving and civil defense services. Fabricating, guessing, or using mock phone numbers for visual realism is **STRICTLY PROHIBITED**.
+> 2. **Strict Taxonomy Separation:** Statutory emergency services (112, 113, 114, 115) must be cleanly distinguished from social protection/welfare hotlines (111) and local tourism support hotlines.
+> 3. **No Blanket Claims:** Do NOT apply global "24/7" or "Miễn phí" badges across heterogeneous contact categories. Every entry carries its own verified operational metadata.
 
 ---
 
-## 2. National Emergency Service Directory (Toàn Quốc)
+## 2. Statutory National Emergency Services (Dịch Vụ Khẩn Cấp Quốc Gia)
 
-These four emergency telephone numbers are standardized nationally across the Socialist Republic of Vietnam pursuant to statutory telecommunications regulations.
+Pursuant to Circular No. 22/2014/TT-BTTTT of the Ministry of Information and Communications (Article 9 on Emergency Telecommunications Numbers), four numbers constitute Vietnam's national emergency services:
 
-### 2.1. Cảnh Sát / Công An (Police & Public Security)
+### 2.1. Tìm Kiếm & Cứu Nạn Quốc Gia (Search, Rescue & Civil Defence) — 112
+- **Short Dial Number:** `112`
+- **Official Title:** Tổng đài tiếp nhận yêu cầu trợ giúp, tìm kiếm cứu nạn trên phạm vi toàn quốc
+- **Governing Authority:** Ủy ban Quốc gia Ứng phó sự cố, thiên tai và Tìm kiếm Cứu nạn (VINASARCOM) / Cục Cứu hộ - Cứu nạn (Bộ Quốc phòng) phối hợp cùng các nhà mạng viễn thông.
+- **Geographic Scope:** Toàn quốc (National) — bao gồm đất liền, sông suối, vùng núi hiểm trở và vùng biển Việt Nam.
+- **Availability:** 24/7
+- **Telecom Charge:** **Miễn phí cước gọi (Free call)**
+- **Interconnection & Coordination:** 
+  - Phối hợp và chia sẻ thông tin cứu nạn với các lực lượng Cảnh sát (113), Cảnh sát PCCC & CNCH (114), và Y tế (115).
+  - Tiếp nhận các tình huống thiên tai, bão lũ, sạt lở đất, tàu thuyền gặp nạn trên biển, người mất tích khi leo núi hoặc thám hiểm dã ngoại.
+- **Primary Source / Legal Basis:**
+  - Quyết định số 226/QĐ-TTg của Thủ tướng Chính phủ phê duyệt Quy hoạch phát triển hệ thống thông tin cứu nạn khẩn cấp.
+  - Thông tư số 22/2014/TT-BTTTT của Bộ Thông tin và Truyền thông ban hành Quy hoạch kho số viễn thông (Điều 9, Khoản 1).
+  - Cổng thông tin Cục Cứu hộ - Cứu nạn: [http://vinasarcom.gov.vn](http://vinasarcom.gov.vn)
+- **Snapshot Date:** 2026-10-05
+- **Operational Scope in GoMate:** Sử dụng cho các trường hợp du khách đi trekking, lạc trong rừng/núi, gặp sự cố trên biển hoặc thiên tai lũ quét.
+
+### 2.2. Cảnh Sát / Công An (Police & Public Security) — 113
 - **Short Dial Number:** `113`
 - **Official Title:** Tổng đài Cảnh sát phản ứng nhanh 113
 - **Governing Authority:** Bộ Công an Việt Nam (Ministry of Public Security)
 - **Geographic Scope:** Toàn quốc (National)
-- **Availability:** 24/7, Miễn phí cước gọi viễn thông (Free call)
+- **Availability:** 24/7
+- **Telecom Charge:** **Miễn phí cước gọi (Free call)**
 - **Primary Source / Legal Basis:**
-  - Thông tư số 22/2014/TT-BTTTT của Bộ Thông tin và Truyền thông ban hành Quy hoạch kho số viễn thông (Điều 9 quy định số dịch vụ khẩn cấp 113, 114, 115).
+  - Thông tư số 22/2014/TT-BTTTT (Bộ TTTT).
   - Cổng thông tin điện tử Bộ Công an: [https://bocongan.gov.vn](https://bocongan.gov.vn)
 - **Snapshot Date:** 2026-10-05
-- **Operational Scope in GoMate:** Sử dụng cho các trường hợp đe dọa an ninh trật tự, cướp giật, tội phạm, tai nạn giao thông nghiêm trọng.
+- **Operational Scope in GoMate:** Can thiệp an ninh trật tự, trộm cắp, cướp giật, hành hung, tai nạn giao thông nghiêm trọng.
 
-### 2.2. Cứu Hỏa & Cứu Nạn Cứu Hộ (Fire & Disaster Rescue)
+### 2.3. Cứu Hỏa & Cứu Nạn Cứu Hộ (Fire & Rescue) — 114
 - **Short Dial Number:** `114`
 - **Official Title:** Tổng đài Cứu nạn, Cứu hộ và Phòng cháy chữa cháy 114
-- **Governing Authority:** Cục Cảnh sát PCCC và CNCH — Bộ Công an (Fire and Rescue Police Department)
+- **Governing Authority:** Cục Cảnh sát PCCC và CNCH — Bộ Công an
 - **Geographic Scope:** Toàn quốc (National)
-- **Availability:** 24/7, Miễn phí cước gọi viễn thông
+- **Availability:** 24/7
+- **Telecom Charge:** **Miễn phí cước gọi (Free call)**
 - **Primary Source / Legal Basis:**
   - Luật Phòng cháy và chữa cháy; Nghị định số 136/2020/NĐ-CP; Thông tư số 22/2014/TT-BTTTT.
   - Trang thông tin điện tử Cục Cảnh sát PCCC và CNCH: [http://canhsatpccc.gov.vn](http://canhsatpccc.gov.vn)
 - **Snapshot Date:** 2026-10-05
-- **Operational Scope in GoMate:** Sử dụng cho hỏa hoạn, tai nạn sập đổ, cứu hộ sông suối, mắc kẹt trong rừng/núi khi du lịch.
+- **Operational Scope in GoMate:** Hỏa hoạn tại khách sạn/homestay, tai nạn mắc kẹt thang máy/xe khách, đuối nước tại bãi biển/hồ bơi.
 
-### 2.3. Cấp Cứu Y Tế (Medical Emergency & Ambulance)
+### 2.4. Cấp Cứu Y Tế (Medical Emergency & Ambulance) — 115
 - **Short Dial Number:** `115`
 - **Official Title:** Tổng đài Cấp cứu Y tế 115
 - **Governing Authority:** Bộ Y tế Việt Nam (Ministry of Health) / Trung tâm Cấp cứu 115 các tỉnh, thành phố
 - **Geographic Scope:** Toàn quốc (National)
-- **Availability:** 24/7, Miễn phí cước gọi viễn thông
+- **Availability:** 24/7
+- **Telecom Charge:** **Miễn phí cước gọi (Free call)**
 - **Primary Source / Legal Basis:**
   - Quyết định số 01/2008/QĐ-BYT về Quy chế Cấp cứu, Hồi sức tích cực và Chống độc.
   - Cổng thông tin điện tử Bộ Y tế: [https://moh.gov.vn](https://moh.gov.vn)
 - **Snapshot Date:** 2026-10-05
-- **Operational Scope in GoMate:** Sử dụng cho tai nạn chấn thương, đột quỵ, ngộ độc thực phẩm nặng, ngạt nước hoặc các tình huống đe dọa tính mạng.
+- **Operational Scope in GoMate:** Chấn thương nặng, ngộ độc thực phẩm cấp, đột quỵ, sốc nhiệt, tai nạn đe dọa tính mạng.
 
-### 2.4. Bảo Vệ Trẻ Em (National Child Protection)
+---
+
+## 3. Emergency Number Transition Governance (2026–2027 Coexistence Period)
+
+> [!NOTE]
+> **National 113 Integration Transition Status:**
+> - Vietnam is currently implementing the roadmap to modernize command information centers and integrate emergency reception (113, 114, 115) toward a unified emergency response infrastructure centered on 113.
+> - **Transition Classification:** `transitionStatus: "2026–2027 integration / coexistence period"`.
+> - **Operational Reality:** During this transition window, **114 and 115 continue to operate actively** across all provinces and cities. They have NOT ceased operation. GoMate V1 continues presenting 112, 113, 114, and 115 explicitly so travelers have immediate direct access to specialized dispatch units while documenting the national integration direction.
+
+---
+
+## 4. National Public Safety / Protection Hotlines (Đường Dây Nóng An Sinh / Bảo Vệ Xã Hội)
+
+This category represents statutory public welfare hotlines, distinct from emergency telecom dispatch services:
+
+### 4.1. Tổng Đài Quốc Gia Bảo Vệ Trẻ Em — 111
 - **Short Dial Number:** `111`
 - **Official Title:** Tổng đài Quốc gia Bảo vệ Trẻ em 111
-- **Governing Authority:** Cục Trẻ em — Bộ Lao động - Thương binh và Xã hội
+- **Governing Authority:** **Cục Bà mẹ và Trẻ em — Bộ Y tế** (Cập nhật phân công quản lý nhà nước hiện hành)
 - **Geographic Scope:** Toàn quốc (National)
-- **Availability:** 24/7, Miễn phí cước gọi viễn thông
+- **Availability:** 24/7
+- **Telecom Charge:** **Miễn phí cước gọi (Free call)**
 - **Primary Source / Legal Basis:**
-  - Luật Trẻ em 2016; Nghị định 56/2017/NĐ-CP.
+  - Luật Trẻ em 2016; Nghị định 56/2017/NĐ-CP quy định chi tiết một số điều của Luật Trẻ em.
   - Cổng thông tin Tổng đài 111: [https://tongdai111.vn](https://tongdai111.vn)
 - **Snapshot Date:** 2026-10-05
-- **Operational Scope in GoMate:** Hỗ trợ khẩn cấp bảo vệ trẻ em đi cùng gia đình/nhóm trong trường hợp lạc trẻ, xâm hại, bạo lực hoặc nguy cơ khẩn cấp.
+- **Operational Scope in GoMate:** Hỗ trợ khẩn cấp bảo vệ trẻ em trong chuyến đi gia đình: trẻ em bị thất lạc, tai nạn thương tích trẻ em, bạo lực, xâm hại hoặc nguy cơ tổn hại sức khỏe tâm lý/thể chất.
 
 ---
 
-## 3. Official Destination Tourist Support Hotlines (Đường Dây Nóng Du Lịch Địa Phương)
+## 5. Destination Tourist Support Hotlines (Đường Dây Nóng Du Khách Địa Phương)
 
-Dành cho hỗ trợ du khách khi gặp vấn đề về chặt chém giá cả, tranh chấp dịch vụ, thất lạc đồ đạc, hoặc cần chỉ dẫn hỗ trợ tại địa bàn du lịch:
+Dành cho phản ánh giá cả dịch vụ, hỗ trợ thông tin địa bàn, xử lý thất lạc hành lý và tranh chấp du lịch.
 
-### 3.1. TP. Đà Nẵng (Đà Nẵng Visitor Support Center)
+### 5.1. TP. Đà Nẵng (Đà Nẵng Visitor Support Center)
 - **Hotline Number:** `(+84) 236 3550 111` (Nội địa: `0236 3550 111`)
-- **Official Entity:** Trung tâm Hỗ trợ Du khách Đà Nẵng (thuộc Trung tâm Xúc tiến Du lịch — Sở Du lịch TP. Đà Nẵng)
-- **Physical Address:** 108 Bạch Đằng, Phường Hải Châu 1, Quận Hải Châu, TP. Đà Nẵng
+- **Official Entity:** Trung tâm Hỗ trợ Du khách Đà Nẵng (Sở Du lịch TP. Đà Nẵng)
+- **Physical Address:** 108 Bạch Đằng, Quận Hải Châu, TP. Đà Nẵng
+- **Availability:** Giờ hành chính & theo ca trực hỗ trợ mùa du lịch cao điểm (KHÔNG xác nhận trực 24/7 toàn năm).
+- **Telecom Charge:** **Cước viễn thông cố định tiêu chuẩn (Standard local call rate)** (KHÔNG phải miễn phí cước).
 - **Official Portal:** [https://danangfantasticity.com](https://danangfantasticity.com)
 - **Snapshot Date:** 2026-10-05
-- **Scope in GoMate:** Liên kết trực tiếp trong các chuyến đi có điểm đến Đà Nẵng (ví dụ chuyến đi mẫu *"Khám phá Đà Nẵng 4N3Đ"*).
 
-### 3.2. Thủ Đô Hà Nội (Hanoi Tourist Information & Support)
-- **Hotline Numbers:** `1800 556 896` (Tổng đài miễn phí) / `024 3926 1515`
-- **Official Entity:** Trung tâm Thông tin và Hỗ trợ Khách Du lịch Hà Nội (Sở Du lịch TP. Hà Nội)
-- **Physical Address:** 28 Hàng Dầu, Quận Hoàn Kiếm, Hà Nội
+### 5.2. Thủ Đô Hà Nội (Hanoi Tourist Information & Support)
+- **Hotline Numbers:** `1800 556 896` (Miễn phí cước) / `024 3926 1515` (Cước cố định)
+- **Official Entity:** Trung tâm Thông tin và Hỗ trợ Khách Du lịch Hà Nội (Sở Du lịch Hà Nội)
 - **Official Portal:** [http://sodulich.hanoi.gov.vn](http://sodulich.hanoi.gov.vn)
 - **Snapshot Date:** 2026-10-05
-- **Scope in GoMate:** Chuyến đi tại Hà Nội và khu vực phụ cận.
-
-### 3.3. TP. Hồ Chí Minh (HCMC Tourist Information & Support)
-- **Hotline Numbers:** `1022` (Nhánh 8) / `(+84) 28 3825 8558`
-- **Official Entity:** Trung tâm Hỗ trợ Du khách TP. Hồ Chí Minh (Sở Du lịch TP.HCM)
-- **Official Portal:** [https://visithcmc.vn](https://visithcmc.vn)
-- **Snapshot Date:** 2026-10-05
-- **Scope in GoMate:** Chuyến đi tại TP. Hồ Chí Minh.
 
 ---
 
-## 4. Consular & Diplomatic Assistance Guidelines (Đại sứ quán & Lãnh sự)
+## 6. Authoritative Metadata Evidence Matrix
 
-- **National Citizen Protection Hotline (Cục Lãnh sự - Bộ Ngoại giao Việt Nam):**
-  - Số điện thoại bảo hộ công dân: `(+84) 981 84 84 84`
-  - Nguồn: Cổng Thông tin điện tử về Công tác Lãnh sự: [https://lanhsuvietnam.gov.vn](https://lanhsuvietnam.gov.vn)
-  - Snapshot Date: 2026-10-05
-- **Foreign Travelers in Vietnam:**
-  - GoMate V1 không nhúng danh bạ tĩnh hàng trăm đại sứ quán nước ngoài mà phân loại là **DESIGN TARGET / EMBASSY DIRECTORY DEPENDENCY**. Khi triển khai, dữ liệu phải được đồng bộ chính thức từ cơ sở dữ liệu Bộ Ngoại giao.
-
----
-
-## 5. Conceptual Reference Data Schema (Read-Only)
-
-```prisma
-// Conceptual Reference Data Schema (TASK 08.2.3.15)
-// Reference data only - NOT owned by User - Production schema.prisma unmodified
-model EmergencyDirectoryEntry {
-  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  countryCode     String    @map("country_code") @db.VarChar(2) // "VN"
-  regionCode      String?   @map("region_code") @db.VarChar(10) // "DAD", "HAN", "SGN", or null (national)
-  category        String    @db.VarChar(50) // "police", "fire", "medical", "child", "tourist", "consular"
-  displayName     String    @map("display_name") @db.VarChar(150)
-  phoneNumber     String    @map("phone_number") @db.VarChar(30)
-  sourceUrl       String    @map("source_url") @db.Text
-  sourceName      String    @map("source_name") @db.VarChar(150)
-  verifiedAt      DateTime  @map("verified_at") @db.Date
-  notes           String?   @db.Text
-  isFreeCall      Boolean   @default(false) @map("is_free_call")
-
-  @@index([countryCode, regionCode])
-  @@map("emergency_directory_entries")
-}
-```
-
----
-
-## 6. Verification Summary
-
-| Entry | Dial Code | Authority | Source Status |
-| :--- | :---: | :--- | :---: |
-| **Công an / Cảnh sát** | `113` | Bộ Công an Việt Nam | **VERIFIED OFFICIAL** |
-| **Cứu hỏa / Cứu nạn** | `114` | Cục Cảnh sát PCCC & CNCH | **VERIFIED OFFICIAL** |
-| **Cấp cứu Y tế** | `115` | Bộ Y tế Việt Nam | **VERIFIED OFFICIAL** |
-| **Bảo vệ Trẻ em** | `111` | Cục Trẻ em — Bộ LĐTBXH | **VERIFIED OFFICIAL** |
-| **Hỗ trợ Du khách Đà Nẵng** | `0236 3550 111` | Trung tâm Hỗ trợ Du khách — Sở Du lịch ĐN | **VERIFIED OFFICIAL** |
-| **Hỗ trợ Du khách Hà Nội** | `1800 556 896` | Sở Du lịch Hà Nội | **VERIFIED OFFICIAL** |
-| **Bảo hộ Công dân Việt Nam** | `+84 981 84 84 84` | Cục Lãnh sự — Bộ Ngoại giao | **VERIFIED OFFICIAL** |
+| Number | Display Name | Category | Governing Authority | 24/7 | Free Call | Telecom Type |
+| :---: | :--- | :--- | :--- | :---: | :---: | :--- |
+| **112** | Tìm kiếm & Cứu nạn | Khẩn cấp quốc gia | VINASARCOM / Bộ Quốc phòng | **Yes** | **Yes** | Statutory Emergency |
+| **113** | Cảnh sát phản ứng nhanh | Khẩn cấp quốc gia | Bộ Công an | **Yes** | **Yes** | Statutory Emergency |
+| **114** | Cứu nạn, Cứu hộ & PCCC | Khẩn cấp quốc gia | Cục CS PCCC & CNCH | **Yes** | **Yes** | Statutory Emergency |
+| **115** | Cấp cứu y tế | Khẩn cấp quốc gia | Bộ Y tế | **Yes** | **Yes** | Statutory Emergency |
+| **111** | Tổng đài Bảo vệ Trẻ em | Bảo vệ / An sinh | Cục Bà mẹ và Trẻ em — Bộ Y tế | **Yes** | **Yes** | Public Safety Hotline |
+| **0236 3550 111** | Hỗ trợ Du khách Đà Nẵng | Du lịch địa phương | Sở Du lịch Đà Nẵng | **No (Ca trực)** | **No (Cước cố định)** | PSTN Landline |
+| **1800 556 896** | Hỗ trợ Du khách Hà Nội | Du lịch địa phương | Sở Du lịch Hà Nội | **No (Giờ HC)** | **Yes (1800)** | Toll-free Hotline |
