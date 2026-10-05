@@ -8,10 +8,11 @@
 - Database Schema: `apps/backend/prisma/schema.prisma` (`model Trip`, `model TripMember`, `model Itinerary`, `model ItineraryItem`, `model Place`, `model Group`, `model GroupMember`, `model User`)
 - Foundation Contracts: `docs/design/gomate-group-foundation-contract-v1.md`, `docs/design/gomate-group-chat-contract-v1.md`
 - Master Visual Artifacts:
-  - Mobile Master View V1: [`shared-itinerary-mobile-view-v1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.12/shared-itinerary-mobile-view-v1.png) ($390 \times 844$)
+  - Mobile Master View R1 (Budget Aligned): [`shared-itinerary-mobile-view-r1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.12/shared-itinerary-mobile-view-r1.png) ($390 \times 844$)
   - Mobile Master Edit V1: [`shared-itinerary-mobile-edit-v1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.12/shared-itinerary-mobile-edit-v1.png) ($390 \times 844$)
-  - Mobile Conflict / Save Error V1: [`shared-itinerary-mobile-conflict-v1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.12/shared-itinerary-mobile-conflict-v1.png) ($390 \times 844$)
-  - Desktop Master Workstation V1: [`shared-itinerary-desktop-v1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.12/shared-itinerary-desktop-v1.png) ($1440 \times 900$)
+  - Mobile Conflict R1 (Generic Warning): [`shared-itinerary-mobile-conflict-r1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.12/shared-itinerary-mobile-conflict-r1.png) ($390 \times 844$)
+  - Desktop Master Workstation R1 (Clean Badge): [`shared-itinerary-desktop-r1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.12/shared-itinerary-desktop-r1.png) ($1440 \times 900$)
+  - Baseline V1 Pre-Correction Visuals: [`shared-itinerary-mobile-view-v1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.12/shared-itinerary-mobile-view-v1.png), [`shared-itinerary-mobile-conflict-v1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.12/shared-itinerary-mobile-conflict-v1.png), [`shared-itinerary-desktop-v1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.12/shared-itinerary-desktop-v1.png)
 
 ---
 
@@ -36,8 +37,8 @@ Unlike generic shared note-taking tools or isolated messaging apps where travel 
 | **Group Access Bridge**| Missing | Missing | Loose `Group.tripId` | N/A | Section 5 | **DESIGN TARGET** | Navigates from Group to linked Trip context. |
 | **Create Activity** | Current | Current | `model ItineraryItem` | N/A | Section 9 | **CURRENT** | `POST /trips/:id/itinerary` appends item. |
 | **Edit Activity** | Missing | Missing | `model ItineraryItem` | N/A | Section 10 | **GAP / TARGET** | No `PUT /trips/:id/itinerary/:itemId` endpoint. |
-| **Delete Activity** | Current | Current | `model ItineraryItem` | N/A | Section 11 | **CURRENT** | `DELETE /trips/:id/itinerary/:itemId` hard delete. |
-| **Reorder Activity** | Missing | Missing | `ItineraryItem.orderIndex` | N/A | Section 12 | **GAP / TARGET** | `orderIndex` exists, but dedicated reorder endpoint is missing. |
+| **Delete Activity** | Current | Current | `model ItineraryItem` | N/A | Section 11 | **CURRENT (Policy Risk)**| `DELETE /trips/:id/itinerary/:itemId` hard delete. TripMember can delete ANY item (Product/Permission Risk). |
+| **Reorder Activity** | Missing | Missing | `ItineraryItem.orderIndex` | N/A | Section 12 | **GAP / TARGET** | `orderIndex` exists, but dedicated batch reorder endpoint is missing. |
 | **Move Across Day** | Missing | Missing | `ItineraryItem.itineraryId` | N/A | Section 12 | **GAP / TARGET** | Requires changing `itineraryId` foreign key. |
 | **Budget Derivation** | Current | Current | `ItineraryItem.estimatedCost` | Current | Section 13 | **CURRENT** | Integer VND derived daily/total. Separate from Expense. |
 | **AI Generate Plan** | Current | Current | `AiSession` | Current | Section 14 | **CURRENT** | `POST /trips/:id/ai-plan` via Gemini LLM. |
@@ -45,8 +46,8 @@ Unlike generic shared note-taking tools or isolated messaging apps where travel 
 | **AI Apply Plan** | Current | Current | `prisma.$transaction` | N/A | Section 16 | **CURRENT (Owner)**| `POST /trips/:id/itinerary/bulk` replaces items. |
 | **Atomic Apply** | Current | Current | Prisma Transaction | N/A | Section 16 | **CURRENT** | All-or-nothing database transaction. |
 | **Concurrent Edit Protection** | Missing | Missing | Missing `version` / `ETag` | N/A | Section 17 | **GAP** | Neither `Itinerary` nor `ItineraryItem` has versioning. |
-| **Conflict Detection**| Missing | Missing | Missing `updatedAt` on Items | N/A | Section 18 | **DESIGN TARGET** | Target UX prompts user to reload latest version. |
-| **Change History** | Missing | Missing | Missing `createdBy` / log | N/A | Section 20 | **FUTURE** | No audit trail table in database. |
+| **Conflict Detection**| Missing | Missing | Missing `version` / `ETag` | N/A | Section 18 | **GAP / TARGET** | Runtime detection is missing; Conflict UX is design target. |
+| **Change History** | Missing | Missing | Missing `createdBy` / log | N/A | Section 20 | **FUTURE / SCHEMA GAP** | No audit trail table in database. |
 | **Realtime Sync** | Missing | Missing | Missing WebSocket | N/A | Section 17 | **FUTURE** | No realtime collaborative cursors or presence. |
 | **Map Integration** | Current | Current | `Place` PostGIS coordinates | N/A | Section 21 | **CURRENT** | Opens existing verified places on map view. |
 | **Push Notifications**| Missing | Missing | Missing Service | N/A | Section 22 | **FUTURE** | No FCM/APNs in repo; no instant delivery promises. |
@@ -219,9 +220,9 @@ model GroupMember {
 | User Relationship | View Itinerary | Add Activity | Delete Activity | Bulk Save / Apply | Run AI Preview | Runtime Authorization Guard |
 | :--- | :---: | :---: | :---: | :---: | :---: | :--- |
 | **Trip Owner** (`trip.userId == user.id`) | **YES** | **YES** | **YES** | **YES** | **YES** | Full admin rights (`TripsService`). |
-| **Trip Member** (`trip.members.some`) | **YES** | **YES** (Current) | **YES** (Current) | **NO** (403 Forbidden)| **YES** (Preview only)| Passed `findById`; blocked on `bulkSaveItinerary`. |
+| **Trip Member** (`trip.members.some`) | **YES** | **YES** (Current) | **YES** (Policy Risk)| **NO** (403 Forbidden)| **YES** (Preview only)| Passed `findById`; can delete ANY item (Policy Risk); blocked on bulk save. |
 | **GroupMember only** (Not in TripMember)| **NO** (Blocked)| **NO** (Blocked)| **NO** (Blocked)| **NO** (Blocked) | **NO** (Blocked)| `findById` throws 403 `'Bạn không có quyền xem chuyến đi này'`. |
-| **TripMember + GroupMember** | **YES** | **YES** | **YES** | **NO** (Owner only)| **YES** | Evaluated strictly via `TripMember` contract. |
+| **TripMember + GroupMember** | **YES** | **YES** | **YES** (Policy Risk)| **NO** (Owner only)| **YES** | Evaluated strictly via `TripMember` contract. |
 | **Matched Buddy only** (No Trip invite)| **NO** | **NO** | **NO** | **NO** | **NO** | 403 Forbidden. No data leakage. |
 | **Unrelated User (Stranger)** | **NO** | **NO** | **NO** | **NO** | **NO** | 403 Forbidden. |
 
@@ -251,15 +252,25 @@ model GroupMember {
 
 ---
 
-## 8. Edit Permission Specification
+## 8. Edit Permission Specification & Policy Evolution
 
-- **Current Backend Reality:**
-  - `POST /trips/:id/itinerary` (add item) and `DELETE /trips/:id/itinerary/:itemId` (delete item) verify `findById(tripId, userId)`. Both Trip Owner and Trip Members can currently add or delete individual items.
-  - `POST /trips/:id/itinerary/bulk` (bulk save / AI apply) strictly enforces `trip.userId === userId`. Only the Trip Owner can apply a full replan or bulk save.
-- **Design Target Policy:**
-  - **Trip Owner:** Full editorial authority (Create, Edit, Delete, Reorder, AI Apply, Metadata update).
-  - **Trip Member:** Contributor authority (Add activity proposals, remove their own added proposals). Cannot execute destructive bulk overwrites.
-  - **Read-Only Trip Member:** Clean viewing experience; edit controls are not rendered.
+### 8.1. Current Backend Reality & Permission Risk Classification
+- **Verified Code Behavior:**
+  - `POST /trips/:id/itinerary` (add item) and `DELETE /trips/:id/itinerary/:itemId` (delete item) verify `findById(tripId, userId)`.
+  - Therefore, both **Trip Owner** and **TripMember** can currently add items AND delete ANY item in the itinerary.
+  - **Explicit Risk Classification:**
+    $$\textbf{TripMember DELETE ANY ITEM} = \textbf{CURRENT BACKEND BEHAVIOR} + \textbf{PERMISSION / POLICY RISK}$$
+    Because `findById` grants mutation access without validating creator identity, any TripMember can currently delete items created by the owner or other members. This is an acknowledged backend policy risk that must not be hidden.
+
+### 8.2. Removal of Unsupported "Own Proposal" Semantics
+- **Database Reality:** `model ItineraryItem` contains NO `createdBy`, `createdByUserId`, `ownerId`, `proposalBy`, or `proposalStatus` columns.
+- **Contract Correction:** The contract strictly **removes** any claim that the backend can identify "activity created by this member" or "their own proposal". Current schema cannot prove item ownership.
+- **Future Contribution Model:** Supporting *"TripMember may edit/delete only their own contributions"* requires a future database migration (e.g. `createdByUserId` or an `ItineraryProposal` model) and is classified strictly as **FUTURE SCHEMA / AUTHORIZATION WORK**.
+
+### 8.3. Recommended Target Contributor Policy (Design Target V1)
+- **Trip Owner:** Full editorial authority (Create, Edit, Delete, Reorder, AI Apply, Trip metadata update).
+- **Trip Member:** Contributor authority (View itinerary, Add activities, Run AI preview). Delete, reorder, and bulk apply are restricted to Trip Owner until a granular contribution ownership model exists.
+- **Read-Only Member Semantics:** `TripMember.role` currently only stores `"owner"` or `"member"`. There is no proven `"viewer"` or `"readonly"` role in current code. "Read-Only Trip Member" is classified strictly as a **FUTURE / POLICY TARGET**.
 
 ---
 
@@ -324,19 +335,29 @@ model GroupMember {
 
 ---
 
-## 13. Budget Derivation Contract
+## 13. Budget Derivation & Consistency Contract
 
 > [!NOTE]
 > **Budget Isolation Invariant:**
 > $$\textbf{Activity Estimated Cost} \centernot\equiv \textbf{Shared Expense Ledger}$$
 
 1. **Data Source:** Activity cost is derived strictly from stored `ItineraryItem.estimatedCost` (integer VND).
-2. **Derived Computations:**
-   - **Daily Estimated Cost:** $\sum_{\text{items in day}} \text{estimatedCost}$
-   - **Trip Estimated Total:** $\sum_{\text{all days}} \text{estimatedCost}$
-   - **Budget Variance:** $\text{Trip.totalBudget} - \text{Trip Estimated Total}$
-   - **Over-Budget Flag:** $\text{Trip Estimated Total} > \text{Trip.totalBudget}$
-3. **Expense Boundary:** This metric is purely a **planning estimate**. It does NOT track actual transaction receipts, payment splits, or who owes whom. Shared expenses are isolated in **TASK 08.2.3.13**.
+2. **Canonical Mathematical Formulations:**
+   $$\text{dailyEstimatedCost} = \sum_{i \in \text{items of day}} \text{ItineraryItem.estimatedCost}_i$$
+   $$\text{tripEstimatedCost} = \sum_{\text{all days}} \text{dailyEstimatedCost}$$
+   $$\text{remainingBudget} = \text{Trip.totalBudget} - \text{tripEstimatedCost}$$
+   $$\text{budgetUsagePercentage} = \text{round}\left(\frac{\text{tripEstimatedCost}}{\text{Trip.totalBudget}} \times 100\%\right)$$
+3. **Cross-Platform Demo Consistency Locked:**
+   - Same Trip + same itinerary MUST produce identical totals on Mobile and Desktop:
+     - **Day 1:** $300.000\text{ VND}$
+     - **Day 2:** $850.000\text{ VND}$
+     - **Day 3:** $1.200.000\text{ VND}$
+     - **Day 4:** $450.000\text{ VND}$
+     - **Trip Estimated Total:** $2.800.000\text{ VND}$
+     - **Trip Total Budget:** $5.000.000\text{ VND}$
+     - **Remaining Buffer:** $+2.200.000\text{ VND}$
+     - **Budget Usage:** $56\%$ (Progress bar fill rendered at exactly $56\%$).
+4. **Expense Boundary:** This metric is purely a **planning estimate**. It does NOT track actual transaction receipts, payment splits, or who owes whom. Shared expenses are isolated in **TASK 08.2.3.13**.
 
 ---
 
@@ -392,26 +413,29 @@ model GroupMember {
    - `model Itinerary` and `model ItineraryItem` possess **zero versioning columns** (`version`, `revision`, `updatedAt`, `ETag`).
    - Only `model Trip` contains `@updatedAt`.
    - Therefore, concurrent editing protection is an **IMPLEMENTATION GAP**.
-2. **Concurrency Risk Scenario:**
-   - User A (Owner) and User B (Member) open the itinerary simultaneously.
-   - User B adds an item to Day 1.
-   - User A performs an edit on Day 1 using stale cached state.
-   - Without versioning, last-write-wins occurs, leading to potential item overwrites.
+2. **Capability Classification:**
+   - **Conflict Detection:** `DESIGN TARGET / IMPLEMENTATION GAP`.
+   - **Conflict UX:** `DESIGN SPECIFICATION`.
+   - **Runtime Conflict Detection:** `NOT CURRENT`. (The current runtime has no version checking or `If-Match` mechanism; it does NOT automatically refuse stale writes yet).
+3. **Future Concurrency Architecture Requirement:**
+   - Add `version Int @default(1)` on the itinerary aggregate or an optimistic concurrency token.
+   - Future mutation requests send `expectedVersion`.
+   - Backend evaluates: if `currentVersion !== expectedVersion` $\rightarrow$ throw `409 Conflict`.
+   - Audit trail attribution (who changed what, timestamp, exact diff) requires future `createdBy` / `updatedBy` columns and an `itinerary_change_logs` table.
 
 ---
 
-## 18. Conflict Handling & Resolution Strategy
+## 18. Conflict Handling & Resolution Specification (Design Target)
 
-When concurrent modification is detected (via target timestamp or version mismatch):
-1. **Target Conflict Modal:**
-   - Renders `shared-itinerary-mobile-conflict-v1.png`.
+When concurrent modification is detected by future version-checking infrastructure:
+1. **Generic Conflict UI Standard (Zero Fabricated Diff):**
+   - Master Artifact: [`shared-itinerary-mobile-conflict-r1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.12/shared-itinerary-mobile-conflict-r1.png) ($390 \times 844$).
    - Title: *“Xung đột chỉnh sửa lịch trình”*
-   - Explanatory copy: *“Lịch trình vừa được cập nhật bởi một thành viên khác trong nhóm. Phiên bản bạn đang chỉnh sửa không còn là dữ liệu mới nhất.”*
-   - Contextual Details: Displays the modifying user's name and timestamp (e.g. *“Lê Hoàng Nam lúc 09:32”*).
-2. **Action CTAs:**
-   - Primary: `[Tải lại lịch trình mới nhất]` (Re-fetches fresh data from `GET /trips/:id`).
+   - Message: *“Lịch trình trên máy chủ đã thay đổi trong khi bạn đang chỉnh sửa. Phiên bản hiện tại của bạn không còn là dữ liệu mới nhất.”*
+   - Honest Boundary: The UI strictly omits actor names, timestamps, and diff details because no change logs or creator IDs exist in current database schema.
+2. **Resolution Actions:**
+   - Primary: `[Tải lại lịch trình mới nhất]` (Re-fetches canonical state from `GET /trips/:id`).
    - Secondary: `[Hủy bỏ thay đổi của bạn]`.
-   - **Zero silent overwrites:** The system refuses to submit stale mutations.
 
 ---
 
@@ -478,17 +502,17 @@ When concurrent modification is detected (via target timestamp or version mismat
 - **Mobile Viewport ($390 \times 844$):**
   - Single-column timeline with sticky status bar, trip hero with budget progress, horizontal day pills, chronological activity cards, bottom actions (`Wandy AI`, `Chỉnh sửa lịch trình`), and canonical 5-tab root navigation.
   - Master Artifacts:
-    - View: [`shared-itinerary-mobile-view-v1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.12/shared-itinerary-mobile-view-v1.png)
-    - Edit: [`shared-itinerary-mobile-edit-v1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.12/shared-itinerary-mobile-edit-v1.png)
-    - Conflict: [`shared-itinerary-mobile-conflict-v1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.12/shared-itinerary-mobile-conflict-v1.png)
+    - View R1 (Budget Aligned): [`shared-itinerary-mobile-view-r1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.12/shared-itinerary-mobile-view-r1.png)
+    - Edit V1: [`shared-itinerary-mobile-edit-v1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.12/shared-itinerary-mobile-edit-v1.png)
+    - Conflict R1 (Generic Warning): [`shared-itinerary-mobile-conflict-r1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.12/shared-itinerary-mobile-conflict-r1.png)
 - **Desktop Viewport ($1440 \times 900$):**
   - Canonical 5-tab root navigation (`Khám phá` | `Bản đồ` | `Wandy AI` | `Chuyến đi` [Active] | `An toàn`).
   - Contextual breadcrumb: `Chuyến đi › Khám phá Đà Nẵng 4N3Đ › Nhóm đồng hành › Lịch trình chung`.
   - 3-column workstation:
     - Left ($340\text{px}$): Day navigation list with item counts and costs, member permissions summary, chat link.
     - Center ($740\text{px}$): Day header with actions (`Bản đồ`, `Thêm hoạt động`, `Chỉnh sửa`), detailed timeline items with addresses, costs, notes, transport modes.
-    - Right ($340\text{px}$): Budget analysis card with progress bar, Wandy AI assistant card with disclaimer, downstream expense card (`Sắp có · TASK 08.2.3.13`).
-  - Master Artifact: [`shared-itinerary-desktop-v1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.12/shared-itinerary-desktop-v1.png)
+    - Right ($340\text{px}$): Budget analysis card with progress bar, Wandy AI assistant card with disclaimer, downstream expense card (`Chi tiêu chuyến đi` · `Sắp có`, clean badge without technical task ID).
+  - Master Artifact: [`shared-itinerary-desktop-r1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.12/shared-itinerary-desktop-r1.png)
 - **Tablet Viewport ($768 \times 1024$):** 2-column layout (Left: Day & member summary, Right: Itinerary timeline and budget).
 
 ---
