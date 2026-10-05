@@ -12,9 +12,9 @@
 
 | Flow ID | Flow Name | Primary Screen Mockup | Core Interaction | Capability Status |
 | :--- | :--- | :--- | :--- | :--- |
-| **T01** | Trip Discovery & List Navigation | `trip-mobile-list-upcoming-r1.png`, `trip-mobile-list-past-r1.png`, `trip-mobile-list-empty-r2.png`, `trip-mobile-list-loading-r2.png`, `trip-mobile-list-error-r2.png`, `trip-desktop-list.png` | Bottom Tab 5 tap, semantic tabs (Hiện tại & sắp tới / Đã kết thúc / Bản nháp), persistent search | **CURRENT** |
+| **T01** | Trip Discovery & List Navigation | `trip-mobile-list-upcoming-r1.png`, `trip-mobile-list-past-r1.png`, `trip-mobile-list-empty-r2.png`, `trip-mobile-list-loading-r2.png`, `trip-mobile-list-error-r2.png` (`trip-mobile-list-error-r2-final.png`), `trip-desktop-list.png` | Bottom Tab 5 tap, semantic tabs (Hiện tại & sắp tới / Đã kết thúc / Bản nháp), persistent search | **CURRENT** |
 | **T02** | Trip Creation Flow | `trip-mobile-create-r1.png`, `trip-mobile-create-validation.png`, `trip-desktop-create.png` | Tap "+", fill Title, Destination, Dates, Budget, Style; CTA: "Tạo chuyến đi" | **CURRENT** |
-| **T03** | Trip Edit Flow | `trip-mobile-edit-r2.png` | More Menu → Chỉnh sửa thông tin; edit Title, Dates, Budget, Style, Notes (NO status dropdown) | **CURRENT** |
+| **T03** | Trip Edit Flow | `trip-mobile-edit-r2-final.png` (`trip-mobile-edit-r2.png`) | More Menu → Chỉnh sửa thông tin; edit Title, Dates, Budget + Currency (VND/USD), Style, Notes (NO status dropdown) | **CURRENT** |
 | **T04** | Trip Deletion Flow | `trip-mobile-delete-confirmation.png` | More Menu → Xóa chuyến đi, destructive modal confirmation | **CURRENT** |
 | **T05** | Trip Detail & Navigation | `trip-mobile-detail.png`, `trip-mobile-detail-empty-r1.png`, `trip-desktop-detail.png` | Tap trip card, browse hero metadata, identical title, day selector tabs | **CURRENT** |
 | **T06** | Manual Activity Creation | `trip-mobile-add-activity-r1.png` | Tap "+ Thêm hoạt động", bottom sheet mapping 1:1 to API (activity, placeId?, time, cost, transportMode, notes) | **CURRENT** |
@@ -44,7 +44,7 @@
   - `trip-mobile-list-past-r1.png`: Displays completed trips.
   - `trip-mobile-list-empty-r2.png`: Empty state with friendly luggage illustration, "+ Tạo chuyến đi ngay" CTA, and 5-tab navigation.
   - `trip-mobile-list-loading-r2.png`: Shimmer skeleton loading cards with 5-tab navigation.
-  - `trip-mobile-list-error-r2.png`: Network failure screen with retry button and 5-tab navigation.
+  - `trip-mobile-list-error-r2.png` (`trip-mobile-list-error-r2-final.png`): Human-friendly network failure screen with clean message, retry button, and 5-tab navigation (raw 503 error codes suppressed from primary UI).
   - `trip-desktop-list.png`: 3-column responsive card grid on desktop (1440px).
 - **Search Control Contract (Locked Decision):**
   - **Rule (Option A): Persistent Search Across Populated Tabs.**
@@ -88,14 +88,15 @@
 ### FLOW T03: Trip Edit Flow
 - **Entry Points:**
   - Trip Detail screen → Top App Bar More menu (`⋮`) → "Chỉnh sửa thông tin chuyến đi".
-- **User Intent:** Update title, dates, budget, travel style, or notes of an existing trip.
+- **User Intent:** Update title, dates, budget, currency, travel style, or notes of an existing trip.
 - **Screen Mockups:**
-  - `trip-mobile-edit-r2.png`: Edit form pre-populated with verified editable fields.
+  - `trip-mobile-edit-r2-final.png` (`trip-mobile-edit-r2.png`): Edit form pre-populated with verified editable fields.
 - **Field Contract & Status Rule (Locked):**
-  - **Editable Fields:**
+  - **Editable Fields (1:1 with `trip_form_screen.dart`):**
     - `title`: Tên chuyến đi (TextFormField)
     - `startDate` & `endDate`: Ngày bắt đầu / kết thúc (Date pickers)
     - `totalBudget`: Tổng ngân sách dự toán (Numeric input)
+    - `currency`: Đơn vị tiền tệ (Dropdown: `VND` / `USD` in a 2-column row alongside budget, flex 3 : flex 2)
     - `travelStyle`: Phong cách du lịch (Choice chips: Phượt / Tiết kiệm / Thoải mái / Sang trọng)
     - `description`: Mô tả / Ghi chú (Textarea)
     - `destination`: Displayed as read-only destination reference (Destination change is PARTIAL in backend only).

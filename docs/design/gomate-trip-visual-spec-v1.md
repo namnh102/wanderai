@@ -88,7 +88,7 @@ Key design principles:
   - `trip-mobile-list-past-r1.png`
   - `trip-mobile-list-empty-r2.png`
   - `trip-mobile-list-loading-r2.png`
-  - `trip-mobile-list-error-r2.png`
+  - `trip-mobile-list-error-r2.png` (`trip-mobile-list-error-r2-final.png`)
   - `trip-desktop-list.png`
 - **Search Control Contract (Option A - Persistent):**
   - Persistent search box placed directly beneath filter tabs across all populated lists.
@@ -99,6 +99,9 @@ Key design principles:
   - `Hiện tại & sắp tới (N)`: Active ongoing trips (`ONGOING`) and scheduled trips (`PLANNED`).
   - `Đã kết thúc (N)`: Historical trips (`COMPLETED`) and cancelled trips (`CANCELLED`).
   - `Bản nháp (N)`: Unfinalized itineraries (`DRAFT`).
+- **Error State Humanization (R2.1):**
+  - Raw technical codes (such as `ERR_NETWORK_DISCONNECTED (503)`) are omitted from primary user-facing UI and preserved strictly in diagnostic/evidence logs.
+  - Primary UI presents a warm, clear message: *"Không thể tải danh sách chuyến đi. Vui lòng kiểm tra kết nối mạng và thử lại."* paired with an actionable "Thử lại" retry button.
 - **5-Tab Root Navigation:** Docked at bottom with `Chuyến đi` (Tab 5) active.
 
 ### 4.2. Trip Creation Screen
@@ -114,12 +117,12 @@ Key design principles:
   - Strictly **"Tạo chuyến đi"** (NOT "Tạo chuyến đi & Lên lịch").
 
 ### 4.3. Trip Edit Screen (Current Contract)
-- **Mockup Reference:** `trip-mobile-edit-r2.png`
-- **Verified Editable Fields:**
+- **Mockup Reference:** `trip-mobile-edit-r2-final.png` (`trip-mobile-edit-r2.png`)
+- **Verified Editable Fields (1:1 with `trip_form_screen.dart`):**
   1. `title`: Tên chuyến đi (TextFormField)
   2. `destination`: Điểm đến (Read-only destination reference)
   3. `startDate` & `endDate`: Thời gian chuyến đi (Date pickers)
-  4. `totalBudget`: Tổng ngân sách dự toán (Numeric input)
+  4. `totalBudget` & `currency`: Tổng ngân sách & Đơn vị tiền tệ. 2-column input row (flex 3: numeric budget field, flex 2: dropdown selector supporting `VND` and `USD`).
   5. `travelStyle`: Phong cách du lịch (Choice chips: Phượt, Tiết kiệm, Thoải mái [Selected], Sang trọng)
   6. `description`: Mô tả / Ghi chú (Textarea)
 - **STRICT EXCLUSION — NO STATUS DROPDOWN:**

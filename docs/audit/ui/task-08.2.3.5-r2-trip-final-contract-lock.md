@@ -31,7 +31,7 @@ In V1, three root list states displayed outdated 4-tab navigation and old termin
 | :---: | :--- | :---: | :---: | :---: | :--- |
 | **01** | [`trip-mobile-list-empty-r2.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.5/trip-mobile-list-empty-r2.png) | Mobile | 34,990 B | $390 \times 844$ | 1. 5-tab root navigation (Tab 5 `Chuyến đi` active).<br>2. Filter tabs: "Hiện tại & sắp tới (0)", "Đã kết thúc (0)", "Bản nháp (0)".<br>3. Header single `+` button; NO duplicate FAB.<br>4. Luggage illustration + "+ Tạo chuyến đi ngay" CTA. |
 | **02** | [`trip-mobile-list-loading-r2.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.5/trip-mobile-list-loading-r2.png) | Mobile | 26,862 B | $390 \times 844$ | 1. 5-tab root navigation.<br>2. Semantic filter tabs: "Hiện tại & sắp tới" active.<br>3. Shimmer skeleton cards.<br>4. NO FAB. |
-| **03** | [`trip-mobile-list-error-r2.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.5/trip-mobile-list-error-r2.png) | Mobile | 29,216 B | $390 \times 844$ | 1. 5-tab root navigation.<br>2. Semantic filter tabs.<br>3. Offline alert icon + error code `ERR_NETWORK_DISCONNECTED (503)`.<br>4. "Thử lại" retry action. |
+| **03** | [`trip-mobile-list-error-r2.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.5/trip-mobile-list-error-r2.png) ([`trip-mobile-list-error-r2-final.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.5/trip-mobile-list-error-r2-final.png)) | Mobile | 28,149 B | $390 \times 844$ | 1. 5-tab root navigation.<br>2. Semantic filter tabs.<br>3. Offline alert icon + human-friendly error message *"Không thể tải danh sách chuyến đi. Vui lòng kiểm tra kết nối mạng và thử lại."*<br>4. **R2.1 Clean Error UI:** Raw technical error code `ERR_NETWORK_DISCONNECTED (503)` suppressed from primary UI and preserved strictly in diagnostic/evidence logs.<br>5. "Thử lại" retry action. |
 
 ---
 
@@ -88,8 +88,8 @@ An exhaustive audit of `UpdateTripDto`, `TripsService.update`, and Flutter `trip
 | `destinationId` / `destination` | `UUID / String` | YES (`destinationId`) | NO (not in edit form) | **PARTIAL** | **Show as read-only reference** (Destination change is Phase 2) |
 | `startDate` | `DateString` | YES | YES (`showDatePicker`) | **CURRENT** | **Show as editable date picker** |
 | `endDate` | `DateString` | YES | YES (`showDatePicker`) | **CURRENT** | **Show as editable date picker** |
-| `totalBudget` | `Int` | YES | YES (`_budgetController`) | **CURRENT** | **Show as editable numeric input** |
-| `currency` | `String` | YES (`VND`, `USD`) | YES (Dropdown) | **CURRENT** | **Show as VND default / selector** |
+| `totalBudget` | `Int` | YES | YES (`_budgetController`) | **CURRENT** | **Show as editable numeric input** (paired with currency) |
+| `currency` | `String` | YES (`VND`, `USD`) | YES (`DropdownButtonFormField<String> _currency`) | **CURRENT** | **Show as currency selector (`VND` / `USD`)** alongside budget |
 | `travelStyle` | `TravelStyle` | YES (Enum) | YES (`ChoiceChip` list) | **CURRENT** | **Show as 4 locked chips** (Phượt, Tiết kiệm, Thoải mái, Sang trọng) |
 | `description` | `String` | YES | YES (`TextFormField`) | **CURRENT** | **Show as editable textarea** |
 | `status` | `TripStatus` | YES (in DTO) | **NO (not in UI form)** | **CURRENT (System Lifecycle)** | **STRICTLY EXCLUDED FROM FORM** (Status is not a user dropdown) |
@@ -104,11 +104,16 @@ In V1, `trip-mobile-edit.png` incorrectly presented a "Trạng thái chuyến đ
 - Trip status is managed by lifecycle invariants (`DRAFT` $\rightarrow$ `PLANNED` on bulk save, `ONGOING` on active date, `COMPLETED` on post-end-date).
 - Showing an arbitrary status dropdown violates the architecture.
 
-**Resolution:** Generated [`trip-mobile-edit-r2.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.5/trip-mobile-edit-r2.png):
+In R2.1, the currency handling was specifically audited:
+- In `trip_form_screen.dart`, currency is rendered inside a `Row` alongside budget: `Expanded(flex: 3, child: _buildTextField(... 'Ngân sách'))` and `Expanded(flex: 2, child: DropdownButtonFormField<String>(value: _currency, items: ['VND', 'USD']))`.
+- Both `budget` and `currency` are passed to `UpdateTripRequest` upon saving changes.
+- Therefore, `currency` is verified as **`CURRENT`** capability.
+
+**Resolution:** Generated [`trip-mobile-edit-r2-final.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.5/trip-mobile-edit-r2-final.png) (and updated [`trip-mobile-edit-r2.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.5/trip-mobile-edit-r2.png)):
 - **Tên chuyến đi:** Editable text field.
 - **Điểm đến:** Read-only reference with location pin icon.
 - **Thời gian:** Start/End date pickers.
-- **Ngân sách ước tính:** Numeric VND field.
+- **Ngân sách dự kiến & Tiền tệ (R2.1):** 2-column input row containing numeric budget input (`15.000.000`) and currency dropdown selector (`VND` / `USD`).
 - **Phong cách du lịch:** 4 locked chips with `Thoải mái` selected.
 - **Mô tả / Ghi chú:** Textarea.
 - **Status Dropdown:** **REMOVED**. Replaced by informational notice on system lifecycle management.
@@ -165,6 +170,8 @@ To prevent false assumptions during code reviews and audits, the following desig
 - [x] **CANCELLED Status Reconciled:** Explicitly categorized as `UX DECISION REQUIRED / FUTURE CONTRACT` with locked design target rules.
 - [x] **UpdateTripDto Audited:** Exact 10-field matrix documented.
 - [x] **Edit Trip Mockup Matches Contract:** `trip-mobile-edit-r2.png` created with exact editable fields and NO status dropdown.
+- [x] **R2.1 Currency Audit:** Verified editable dropdown (`VND` / `USD`) in `trip_form_screen.dart`, reflected in `trip-mobile-edit-r2-final.png` (`trip-mobile-edit-r2.png`).
+- [x] **R2.1 Human-Friendly Error State:** Raw technical error code `ERR_NETWORK_DISCONNECTED (503)` removed from primary UI in `trip-mobile-list-error-r2-final.png` (`trip-mobile-list-error-r2.png`).
 - [x] **Unsupported Status Edit Not Presented as Current:** Fully removed from edit UI.
 - [x] **Edit Activity Marked Design Target:** Documented as `DESIGN TARGET — NOT CURRENT IMPLEMENTATION`.
 - [x] **Reorder Marked Design Target:** Documented as `DESIGN TARGET — NOT CURRENT IMPLEMENTATION`.
