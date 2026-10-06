@@ -27,44 +27,53 @@ This report delivers the comprehensive **Product Target (Tier 2)** for GoMate Au
 
 | # | Capability Dimension | Tier 1 (Current Runtime V1) | Tier 2 (Product Target V2) | Technical Dependency & Implementation Plan |
 | :-: | :--- | :---: | :---: | :--- |
-| **1** | **Email Login** | **CURRENT** | **KEEP** | Standard email validation and case-insensitive normalization. |
-| **2** | **Password Login** | **CURRENT** | **KEEP** | bcrypt comparison against hashed credentials. |
-| **3** | **Register Account** | **CURRENT** | **ENHANCED** | Adds background trigger for email verification post-registration. |
-| **4** | **Input Validation** | **CURRENT** | **KEEP** | Client-side reactive validation + NestJS `ValidationPipe`. |
-| **5** | **Duplicate Email Behavior** | **CURRENT** | **KEEP** | 400 Bad Request mapped to natural Vietnamese error copy. |
-| **6** | **Wrong-Password Behavior** | **CURRENT** | **KEEP** | Generic 401 Unauthorized prevents username enumeration. |
-| **7** | **Loading State** | **CURRENT** | **KEEP** | Inline CTA spinner and disabled inputs during requests. |
-| **8** | **Network Error Handling** | **CURRENT** | **KEEP** | Vietnamese messages for timeout and offline conditions. |
-| **9** | **Global 401 Interceptor** | **PARTIAL** | **PRODUCT TARGET** | Dio error interceptor with queued retries on token refresh. |
-| **10**| **Access Token Storage** | **CURRENT** (Plaintext) | **PRODUCT TARGET** | Migrates to `flutter_secure_storage` (Keystore/Keychain). |
-| **11**| **Refresh Token Storage** | **CURRENT** (Plaintext) | **PRODUCT TARGET** | Hardware-backed encrypted storage for 7-day token. |
-| **12**| **Silent Token Refresh** | **PARTIAL** (Backend only)| **PRODUCT TARGET** | Background refresh upon 401 without disrupting user flow. |
-| **13**| **Startup Session Restore** | **CURRENT** | **ENHANCED** | Validates JWT expiry locally before attempting restore. |
-| **14**| **Expired-Session Handling** | **PARTIAL** | **PRODUCT TARGET** | Re-login prompt modal redirecting to `/login`. |
-| **15**| **Client Logout** | **CURRENT** | **KEEP** | Purges tokens from local storage; resets Riverpod state. |
-| **16**| **Server Token Blacklist** | **EXCLUDED** | **FUTURE** | Preserves stateless JWT; Redis blacklist deferred. |
-| **17**| **Forgot Password** | **MISSING** | **PRODUCT TARGET** | Email dispatcher + time-limited cryptographic reset token. |
-| **18**| **Reset Password** | **MISSING** | **PRODUCT TARGET** | Deep link validation + password update endpoint. |
-| **19**| **Change Password** | **MISSING** | **PRODUCT TARGET** | Authenticated settings screen requiring current password. |
-| **20**| **Email Verification** | **FUTURE** | **PRODUCT TARGET** | Transactional email provider + verification token. |
-| **21**| **Google Social Login** | **MISSING** | **PRODUCT TARGET** | Google Sign-In SDK + backend IDToken verification. |
-| **22**| **Apple Social Login** | **MISSING** | **PRODUCT TARGET** | Sign in with Apple SDK (mandatory on iOS) + backend verification. |
-| **23**| **Facebook Social Login** | **MISSING** | **OPTIONAL / FUTURE** | Deprioritized in favor of Google & Apple for travel MVP. |
-| **24**| **Account Linking** | **MISSING** | **PRODUCT TARGET** | Seamlessly connects OAuth identity to existing email user. |
-| **25**| **Rate Limiting (Brute-force)**| **MISSING** | **PRODUCT TARGET** | NestJS Throttler on `/auth/login` and `/auth/forgot-password`. |
+| **1** | **Email / Password Login** | **CURRENT** | **CURRENT** | Verified runtime baseline; standard email normalization & bcrypt verify. |
+| **2** | **Account Registration** | **CURRENT** | **CURRENT** | Verified runtime baseline; create `User` in PostgreSQL. |
+| **3** | **Input Validation** | **CURRENT** | **CURRENT** | Client-side reactive validation + NestJS `ValidationPipe`. |
+| **4** | **Duplicate Email Handling** | **CURRENT** | **CURRENT** | 400 Bad Request mapped to natural Vietnamese error copy. |
+| **5** | **Wrong-Password Handling** | **CURRENT** | **CURRENT** | Generic 401 Unauthorized prevents username enumeration. |
+| **6** | **Loading & Button Disabled State**| **CURRENT** | **CURRENT** | Inline CTA spinner and disabled inputs during requests. |
+| **7** | **Network Error Handling** | **CURRENT** | **CURRENT** | Vietnamese messages for timeout and offline conditions. |
+| **8** | **Client Logout** | **CURRENT** | **CURRENT** | Purges tokens from local storage; resets Riverpod state. |
+| **9** | **Startup Session Restore** | **CURRENT** | **CURRENT** | Decodes token locally before attempting session restore. |
+| **10**| **Secure Token Storage (Mobile)** | **PARTIAL** (Plain) | **PRODUCT TARGET** | Migrate from `SharedPreferences` to `flutter_secure_storage` (KeyStore/Keychain). |
+| **11**| **Global 401 Interceptor** | **PARTIAL** | **PRODUCT TARGET** | Dio error interceptor with queued retries on token refresh. |
+| **12**| **Silent Token Refresh (Mobile)** | **PARTIAL** (Backend only)| **PRODUCT TARGET** | Client queue locking to avoid refresh loops & race conditions. |
+| **13**| **Expired-Session Handling** | **PARTIAL** | **PRODUCT TARGET** | Clean in-app modal prompt redirecting to `/login` when refresh fails. |
+| **14**| **Forgot Password Request** | **MISSING** | **PRODUCT TARGET** | Anti-enumeration response + background email dispatch. |
+| **15**| **Reset Password Pipeline** | **MISSING** | **PRODUCT TARGET** | $15\text{m}$ one-time cryptographic token + password update via deep link. |
+| **16**| **Authenticated Change Password** | **MISSING** | **PRODUCT TARGET** | Settings endpoint requiring current password + new password validation. |
+| **17**| **Email Verification Pipeline** | **MISSING** | **PRODUCT TARGET** | Mail provider integration + verification token + unverified banner. |
+| **18**| **Google Social OAuth** | **MISSING** | **PRODUCT TARGET** | Google Sign-In SDK + `POST /auth/oauth/google` IDToken validation. |
+| **19**| **Apple Social OAuth** | **MISSING** | **PRODUCT TARGET** | Sign in with Apple SDK + `POST /auth/oauth/apple` credential validation. |
+| **20**| **Account Linking Collision** | **MISSING** | **PRODUCT TARGET** | Prevents duplicate user; prompts password via `POST /auth/link-account`. |
+| **21**| **Rate Limiting & Abuse Protection**| **MISSING** | **PRODUCT TARGET** | NestJS Throttler on `/auth/login`, `/auth/forgot-password`, `/auth/register`. |
+| **22**| **Facebook Social Login** | **MISSING** | **EXCLUDED** | Deprioritized in favor of Google & Apple for travel MVP. |
+| **23**| **Guest / Anonymous Browse** | **MISSING** | **EXCLUDED** | GoMate requires authenticated profile for itineraries, safety & sync. |
+| **24**| **Remember Me Checkbox** | **MISSING** | **EXCLUDED** | Continuous session via hardware secure storage; no UI checkbox. |
+| **25**| **Server Token Blacklist** | **EXCLUDED** | **FUTURE** | Preserves stateless JWT; Redis blacklist deferred post-launch. |
+| **26**| **Biometric Login (`local_auth`)** | **MISSING** | **FUTURE** | Hardware biometric unlock on top of secure storage deferred post-MVP. |
+| **27**| **Active Sessions Management** | **MISSING** | **FUTURE** | Multi-device remote session revocation table deferred post-launch. |
+| **28**| **Multi-Factor Auth (MFA / TOTP)**| **MISSING** | **FUTURE** | Authenticator app TOTP deferred post-MVP (guide/admin tier). |
+| **29**| **Passwordless / Magic Link** | **MISSING** | **FUTURE** | Deferred post-launch; email/password and social OAuth prioritize MVP. |
 
 ---
 
 ## 3. Subsystem Architecture Specifications
 
 ### 3.1. Password Recovery (Anti-Enumeration & Token Lifecycle)
-- **Generic Response:** Regardless of email presence, `/auth/forgot-password` returns `200 OK` with:
+- **Generic Response & Anti-Enumeration Invariant:** Regardless of email presence, `/auth/forgot-password` returns `200 OK` with:
   `"Nếu email tồn tại trong hệ thống, chúng tôi đã gửi hướng dẫn đặt lại mật khẩu."`
+  *Canonical Invariant:* Response behavior MUST NOT intentionally reveal whether an email exists. Status code and response body are identical; implementation should minimize observable timing differences.
 - **Token Security:** 32-byte cryptographically secure random token, stored as SHA-256 hash in database, valid for strictly 15 minutes, invalidated immediately after use.
-- **Complexity:** Requires minimum 8 characters, mixed case, and numbers.
+- **Canonical Password Complexity:** Mật khẩu tối thiểu 8 ký tự, có ít nhất 1 chữ hoa, 1 chữ thường, và ít nhất 1 chữ số hoặc ký tự đặc biệt.
 
 ### 3.2. Social Login & Account Linking
-- **Provider Targets:** Google and Apple.
+- **Provider Targets & Canonical Endpoints:**
+  - Google OAuth: `POST /auth/oauth/google`
+  - Apple OAuth: `POST /auth/oauth/apple`
+  - Account Linking: `POST /auth/link-account`
+  *(Mọi tài liệu tham khảo lịch sử sử dụng `/auth/google` hoặc `/auth/apple` đều được đánh dấu chính thức là **SUPERSEDED**).*
 - **Collision Invariant:** When an incoming OAuth identity matches an existing email registered via password, the system prevents duplicate account creation. It prompts the user for their password once to link the provider ID to the canonical `User` record.
 
 ### 3.3. Session Hardening & Refresh Lock
