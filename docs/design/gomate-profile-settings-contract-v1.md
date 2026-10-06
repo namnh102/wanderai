@@ -109,19 +109,30 @@ The **GoMate Profile & Settings** module governs the traveler's digital identity
 | **`Home City`** | Absent | Absent | Absent | **MISSING** | Schema only has `nationality`. |
 | **`TravelPreference`** | 1:1 relation | Read-Only | No | **PARTIAL** | Selected in `findById`; zero update endpoint. |
 
-### 3.2. Form Validation & Write-Boundary Specification (Edit Profile V1-R1 Option A Master)
+### 3.2. Form Validation & Write-Boundary Specification (Edit Profile V1-R1.2 Option A Master)
 
-Under **Option A Master Baseline**, the Edit Profile UI strictly separates writable fields from read-only account metadata. The Save button persists **only** the writable fields supported by `PUT /users/me`:
+Under **Option A Master Baseline**, the Edit Profile UI strictly separates writable fields from read-only account metadata and standardizes on a **single canonical primary Save CTA**:
 
 1. **Writable Fields (Persisted via `PUT /users/me`):**
    - **Tên hiển thị (`displayName`)**: String, **Bắt buộc**, 2–50 ký tự (`value.trim().length >= 2 && value.trim().length <= 50`).
    - **Giới thiệu ngắn (`bio`)**: String, Tùy chọn, tối đa 200 ký tự với bộ đếm ký tự trực tiếp (`N / 200`).
-   - **Ảnh đại diện (`avatar`)**: URL ảnh hoặc tải lên; hiển thị khung tròn có icon chỉnh sửa.
+   - **Ảnh đại diện (`avatar`) — Phân loại năng lực 6 chiều (Avatar End-to-End Audit):**
+     1. *Field Persistence*: **CURRENT** — `avatar String?` trong `model Profile` (PostgreSQL).
+     2. *URL Update*: **CURRENT** — `PUT /users/me` nhận `{ avatar?: string }` và `UsersService.updateProfile` thực hiện upsert.
+     3. *Device Image Selection*: **MISSING** — Không có `image_picker` hay `file_picker` trong `pubspec.yaml`.
+     4. *Binary Image Upload*: **MISSING** — Không có endpoint nhận `multipart/form-data` hoặc Multer interceptor trong NestJS.
+     5. *Persistent Media Storage*: **MISSING** — Không có AWS S3, Cloudinary hay Firebase Storage SDK trong backend.
+     6. *Image Retrieval / Display*: **PARTIAL** — Mobile sử dụng `cached_network_image` hiển thị URL nếu có, fallback về hình tròn ký tự đầu (Initial Circle `N`).
+     - **UI Invariant:** Nhằm tránh tạo affordance giả về tính năng chọn ảnh từ máy/camera chưa tồn tại, icon camera đè lên avatar và nút bấm `[Thay đổi ảnh đại diện]` được **loại bỏ** khỏi mockup hiện hành (`profile-mobile-edit-v1-r1.png`). Khả năng chụp/chọn ảnh từ thiết bị được phân loại là **DESIGN TARGET** cho các phiên bản tiếp theo.
 
-2. **Readable & Non-Readable Account Metadata (R1.1 Truth):**
+2. **Readable & Non-Readable Account Metadata (R1.1 / R1.2 Truth):**
    - **Số điện thoại (`phone`)**: Đọc được từ `GET /users/me`; hiển thị dưới dạng thẻ chỉ đọc (Read-Only) kèm huy hiệu `Riêng tư`.
    - **Ngày sinh, Quốc tịch, Ngôn ngữ**: Không được đọc qua `GET /users/me` hiện tại. Không hiển thị các giá trị demo này như dữ liệu tài khoản runtime.
    - **Ghi chú minh bạch**: *"Một số thông tin tài khoản bổ sung chưa khả dụng trong phiên bản hiện tại."*
+
+3. **Single Canonical Primary Save Action:**
+   - **AppBar:** Chỉ hiển thị icon quay lại `<` cùng tiêu đề `"Chỉnh sửa hồ sơ"`. Nút `[Lưu]` trên AppBar bị **loại bỏ hoàn toàn** để tránh trùng lặp hành động.
+   - **Bottom CTA:** Duy nhất nút chính `[Lưu thay đổi hồ sơ]` ở chân màn hình, có chiều rộng full-width ($100\%$).
 
 ---
 
@@ -299,8 +310,8 @@ All 12 current master mockups were rendered via headless Microsoft Edge browser 
 | Mockup File | Viewport | Target Resolution | Architectural & Visual Compliance Audit (R1 Truth) | Status |
 | :--- | :---: | :---: | :--- | :---: |
 | [`profile-mobile-overview-v1-r1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.16/profile-mobile-overview-v1-r1.png) | Mobile | $390 \times 844$ | 1. App bar `Hồ sơ cá nhân` + gear icon.<br>2. User avatar (N), display name "Lê Hoàng Nam", static role "Thành viên" (mapped from USER). Inferred personality badge removed.<br>3. Bio text.<br>4. Neutral informational card "Cập nhật thông tin và sở thích du lịch để cá nhân hóa trải nghiệm GoMate." (fake 65% and Wandy/Buddy matching claims removed).<br>5. Personal info & travel style (Comfort) + interest chips.<br>6. Actions: `[Chỉnh sửa hồ sơ]` + `[Quyền riêng tư]`.<br>7. Canonical 5-tab bottom navigation. | **CURRENT MASTER** |
-| [`profile-desktop-overview-v1-r1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.16/profile-desktop-overview-v1-r1.png) | Desktop | $1440 \times 900$ | 1. Top nav: GoMate logo + badge `Hồ sơ du khách` + 5 canonical tabs + User pill.<br>2. 3-column workspace ($320\text{px} + 680\text{px} + 340\text{px}$).<br>3. Col 1: Profile summary, avatar, static role "Thành viên", fake "Đã xác thực" removed, completion card with neutral copy "Cập nhật thông tin và sở thích du lịch để cá nhân hóa trải nghiệm GoMate.", quick menu.<br>4. Col 2: Bio, basic info, TravelPreference details (Comfort, 1M-10M VND, 3-5 group, interest chips).<br>5. Col 3: Buddy Matching card ("Đang hoàn thiện"), Privacy Shield guarantee ("Mặc định ẩn"), Security shortcuts. | **CURRENT MASTER** |
-| [`profile-mobile-edit-v1-r1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.16/profile-mobile-edit-v1-r1.png) | Mobile | $390 \times 844$ | **Option A Master Baseline:**<br>1. App bar `< Hủy`, `Chỉnh sửa hồ sơ`, `[Lưu]`.<br>2. Avatar edit overlay.<br>3. Writable Section (PUT /users/me): Tên hiển thị (2-50 chars) + Giới thiệu (78/200 chars).<br>4. Read-Only Section: Số điện thoại (Riêng tư); non-readable fields (DOB, nationality, languages) omitted with honest note: "Một số thông tin tài khoản bổ sung chưa khả dụng trong phiên bản hiện tại.".<br>5. Clear note: Additional info managed at account level.<br>6. Primary CTA: `[Lưu thay đổi hồ sơ]`. | **CURRENT MASTER** |
+| [`profile-desktop-overview-v1-r1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.16/profile-desktop-overview-v1-r1.png) | Desktop | $1440 \times 900$ | 1. Top nav: GoMate logo + badge `Hồ sơ du khách` + 5 canonical tabs + User pill.<br>2. 3-column workspace ($320\text{px} + 680\text{px} + 340\text{px}$).<br>3. Col 1: Profile summary, avatar, static role "Thành viên", fake "Đã xác thực" removed, completion card with neutral copy "Cập nhật thông tin và sở thích du lịch để cá nhân hóa trải nghiệm GoMate.", quick menu.<br>4. Col 2: Bio, basic info (Họ tên, SĐT [Riêng tư], Vai trò; unsupported "Đang hoạt động" presence claim completely removed), TravelPreference details (Comfort, 1M-10M VND, 3-5 group, interest chips).<br>5. Col 3: Buddy Matching card ("Đang hoàn thiện"), Privacy Shield guarantee ("Mặc định ẩn"), Security shortcuts. | **CURRENT MASTER** |
+| [`profile-mobile-edit-v1-r1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.16/profile-mobile-edit-v1-r1.png) | Mobile | $390 \times 844$ | **Option A Master Baseline (R1.2 Calibrated):**<br>1. App bar: `< Chỉnh sửa hồ sơ` (duplicate AppBar [Lưu] button removed).<br>2. Avatar presentation without false camera upload affordance (native picker / multipart upload is DESIGN TARGET).<br>3. Writable Section (PUT /users/me): Tên hiển thị (2-50 chars) + Giới thiệu (78/200 chars).<br>4. Read-Only Section: Số điện thoại (Riêng tư); non-readable fields (DOB, nationality, languages) omitted with honest note: "Một số thông tin tài khoản bổ sung chưa khả dụng trong phiên bản hiện tại.".<br>5. Clear note: Additional info managed at account level.<br>6. Single Primary CTA: `[Lưu thay đổi hồ sơ]`. | **CURRENT MASTER** |
 | [`profile-mobile-travel-preferences-v1-r1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.16/profile-mobile-travel-preferences-v1-r1.png) | Mobile | $390 \times 844$ | **Option A Read-Only Master Baseline:**<br>1. App bar `< Hồ sơ`, `Sở thích du lịch` (no Save button).<br>2. Informational note: "Sở thích du lịch: Chức năng chỉnh sửa sở thích đang được hoàn thiện."<br>3. TravelStyle cards (Thoải mái displayed read-only).<br>4. GroupSize chips (Nhóm nhỏ 3-5 displayed read-only).<br>5. Budget range: 1.000.000 đ – 10.000.000 đ.<br>6. Interest chips: Biển, Văn hóa, Ẩm thực, Chụp ảnh (no toggle affordances).<br>7. Read-only presentation; no Save CTA. | **CURRENT MASTER** |
 | [`settings-mobile-home-v1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.16/settings-mobile-home-v1.png) | Mobile | $390 \times 844$ | 1. App bar `< Cài đặt`.<br>2. User header card with avatar & `Hồ sơ ›` link.<br>3. Grouped sections: Tài khoản & Bảo mật, Trải nghiệm du lịch, Quyền riêng tư & An toàn, Ứng dụng.<br>4. Red logout action: `[Đăng xuất tài khoản]`.<br>5. Canonical 5-tab bottom navigation. | **CURRENT MASTER** |
 | [`settings-desktop-home-v1-r1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.16/settings-desktop-home-v1-r1.png) | Desktop | $1440 \times 900$ | 1. Top nav: GoMate logo + badge `Hồ sơ du khách` + 5 canonical tabs + User pill.<br>2. 2-column workspace ($320\text{px} + 1020\text{px}$).<br>3. Left menu: Settings categories.<br>4. Right panel: Account info card (fake "Đã xác thực" removed), Password card ("Đã thiết lập", change password unavailable), Privacy (Buddy matching "Đang hoàn thiện", Phone "Mặc định ẩn") & Location summary, Danger zone (Account management pure informational guidance, no fake CTA/button). | **CURRENT MASTER** |
@@ -323,34 +334,35 @@ All 12 current master mockups were rendered via headless Microsoft Edge browser 
 
 ---
 
-## 13. Current vs. Future Capability Matrix (24 Dimensions)
+## 13. Current vs. Future Capability Matrix (25 Dimensions · R1.2 Calibrated)
 
-| Dimension | Current Codebase Status | Architectural Contract V1-R1 | Future Target |
+| Dimension | Current Codebase Status | Architectural Contract V1-R1.2 | Future Target |
 | :--- | :---: | :---: | :--- |
 | **1. User Entity & Auth Identity** | **CURRENT** | **LOCKED** | Standard JWT authentication via NestJS |
-| **2. Display Name & Avatar** | **CURRENT** | **LOCKED** | Full CRUD via `users.service.ts` |
-| **3. Traveler Bio** | **CURRENT** | **LOCKED** | Updatable via `PUT /users/me` |
-| **4. Phone Number Storage** | **PARTIAL** | **LOCKED** | Stored in `Profile`, needs update API endpoint |
-| **5. Phone Number Privacy** | **DESIGN LOCKED** | **TIER 1 (PRIVATE)** | Never public; explicit post-match consent |
-| **6. Nationality & Languages** | **SCHEMA GAP** | **DESIGN TARGET** | Add to `UsersService.updateProfile` |
-| **7. Date of Birth / Age** | **SCHEMA GAP** | **DESIGN TARGET** | Age verification $\ge 16$ years old |
-| **8. Travel Preferences (Style/Interests)**| **PARTIAL** | **LOCKED** | `model TravelPreference` single source of truth |
-| **9. Budget Range** | **PARTIAL** | **LOCKED** | `budgetMin` / `budgetMax` in integer VND |
-| **10. Preferred Group Size** | **SCHEMA ONLY** | **DESIGN TARGET** | Connect `preferredGroup` enum to UI |
-| **11. Safety Contacts Isolation** | **LOCKED** | **STRICT INVARIANT** | Never shown on profile or Buddy matching |
-| **12. Buddy Discovery Preference** | **MISSING** | **DESIGN TARGET** | Opt-in/opt-out flag for recommendation pool |
-| **13. Post-Match Privacy Scope** | **DESIGN LOCKED** | **TIER 2 BOUNDARY** | Matched users get chat channel, NOT raw phone |
-| **14. Location Foreground Fix** | **CURRENT** | **LOCKED** | `geolocator` fix with accuracy radius |
-| **15. Background Location Tracking** | **EXCLUDED** | **STRICTLY PROHIBITED**| No continuous tracking without user presence |
-| **16. Live Location Streaming** | **MISSING** | **EXCLUDED FROM V1** | Future ephemeral opt-in live sharing |
-| **17. Notification Schema Store** | **PARTIAL** | **LOCKED** | `model Notification` in PostgreSQL |
-| **18. Notification Inbox Runtime** | **MISSING** | **DESIGN TARGET** | Needs NestJS controller & mobile inbox UI |
-| **19. OS Push Notifications (FCM/APNs)**| **MISSING** | **FUTURE SPECIFICATION**| Requires Firebase integration in V2 |
-| **20. Password Change Feature** | **MISSING** | **DESIGN TARGET** | Add `PUT /auth/change-password` |
-| **21. Client Logout Flow** | **CURRENT** | **LOCKED** | Remove tokens from `SharedPreferences` |
-| **22. Server Token Revocation** | **MISSING** | **FUTURE SPECIFICATION**| Stateless JWT; token blacklist in Redis for V2 |
-| **23. Account Hard Deletion** | **BLOCKED** | **POLICY / ARCH GAP** | FK restrict on 15+ models prevents hard delete |
-| **24. Soft-Delete & Anonymization** | **DESIGN LOCKED** | **DESIGN TARGET** | Set `deletedAt`, sanitize PII, preserve ledgers |
+| **2. Display Name** | **CURRENT** | **LOCKED** | Full CRUD via `users.service.ts` |
+| **3. Avatar Persistence & URL Update** | **PARTIAL** | **LOCKED** | Field in DB + URL update via `PUT /users/me`; binary device picker/upload is DESIGN TARGET |
+| **4. Traveler Bio** | **CURRENT** | **LOCKED** | Updatable via `PUT /users/me` |
+| **5. Phone Number Storage** | **PARTIAL** | **LOCKED** | Stored in `Profile`, needs update API endpoint |
+| **6. Phone Number Privacy** | **DESIGN LOCKED** | **TIER 1 (PRIVATE)** | Never public; explicit post-match consent |
+| **7. Nationality & Languages** | **SCHEMA GAP** | **DESIGN TARGET** | Add to `UsersService.updateProfile` |
+| **8. Date of Birth / Age** | **SCHEMA GAP** | **DESIGN TARGET** | Age verification $\ge 16$ years old |
+| **9. Travel Preferences (Style/Interests)**| **PARTIAL** | **LOCKED** | `model TravelPreference` single source of truth |
+| **10. Budget Range** | **PARTIAL** | **LOCKED** | `budgetMin` / `budgetMax` in integer VND |
+| **11. Preferred Group Size** | **SCHEMA ONLY** | **DESIGN TARGET** | Connect `preferredGroup` enum to UI |
+| **12. Safety Contacts Isolation** | **LOCKED** | **STRICT INVARIANT** | Never shown on profile or Buddy matching |
+| **13. Buddy Discovery Preference** | **MISSING** | **DESIGN TARGET** | Opt-in/opt-out flag for recommendation pool |
+| **14. Post-Match Privacy Scope** | **DESIGN LOCKED** | **TIER 2 BOUNDARY** | Matched users get chat channel, NOT raw phone |
+| **15. User Online Presence / Status** | **MISSING** | **EXCLUDED** | No presence gateway or heartbeat; zero presence claims |
+| **16. Location Foreground Fix** | **CURRENT** | **LOCKED** | `geolocator` fix with accuracy radius |
+| **17. Background Location Tracking** | **EXCLUDED** | **STRICTLY PROHIBITED**| No continuous tracking without user presence |
+| **18. Live Location Streaming** | **MISSING** | **EXCLUDED FROM V1** | Future ephemeral opt-in live sharing |
+| **19. Notification Schema Store** | **PARTIAL** | **LOCKED** | `model Notification` in PostgreSQL |
+| **20. Notification Inbox Runtime** | **MISSING** | **DESIGN TARGET** | Needs NestJS controller & mobile inbox UI |
+| **21. OS Push Notifications (FCM/APNs)**| **MISSING** | **FUTURE SPECIFICATION**| Requires Firebase integration in V2 |
+| **22. Password Change Feature** | **MISSING** | **DESIGN TARGET** | Add `PUT /auth/change-password` |
+| **23. Client Logout Flow** | **CURRENT** | **LOCKED** | Remove tokens from `SharedPreferences` |
+| **24. Server Token Revocation** | **MISSING** | **FUTURE SPECIFICATION**| Stateless JWT; token blacklist in Redis for V2 |
+| **25. Account Hard Deletion & Soft-Delete**| **POLICY GAP** | **DESIGN TARGET** | FK restrictions prevent hard delete; soft-delete in docs |
 
 ---
 

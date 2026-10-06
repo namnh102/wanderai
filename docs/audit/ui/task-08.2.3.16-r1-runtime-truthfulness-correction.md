@@ -127,6 +127,37 @@ The core architecture defined in V1 (Three-Tier Privacy Model, Canonical TravelP
   - Honest disclosure that delivery infrastructure is in development.
 - **Affected Artifact Corrected:** `settings-mobile-notifications-v1-r1.png`
 
+### 2.11. Removal of Unsupported Online/Presence Claim (R1.2)
+- **Contradiction Found:** `profile-desktop-overview-v1-r1.png` Col 2 rendered `"Trạng thái: Đang hoạt động"`.
+- **Repository Audit Truth:** Grep across `apps/` for `onlineStatus`, `presence`, `lastSeen`, `lastActive`, `heartbeat` confirmed **0 matches**. PostgreSQL `model User` has no presence column, and backend provides zero presence WebSocket gateway.
+- **R1.2 Corrections:**
+  - Completely removed `"Trạng thái: Đang hoạt động"` from `profile-desktop-overview-v1-r1.png`.
+  - In accordance with audit rules, did NOT substitute with "Ngoại tuyến" or "Vừa truy cập" (which also lack runtime evidence).
+  - Basic personal info grid displays: Họ và tên, Số điện thoại [Riêng tư], Vai trò. Zero presence claims remain.
+- **Affected Artifact Corrected:** `profile-desktop-overview-v1-r1.png` [Regenerated]
+
+### 2.12. Verification of Avatar Change End-to-End Capability (R1.2)
+- **Contradiction Found:** `profile-mobile-edit-v1-r1.png` rendered a camera icon overlay badge on the avatar and clickable text `"Thay đổi ảnh đại diện"`.
+- **Repository Audit Truth (6 Dimensions):**
+  1. *Field Persistence*: `CURRENT` (`model Profile.avatar String?` in PostgreSQL).
+  2. *URL Update*: `CURRENT` (`PUT /users/me` accepts `{ avatar?: string }` JSON string).
+  3. *Device Image Selection*: `MISSING` (zero `image_picker` or `file_picker` in `apps/mobile/pubspec.yaml`).
+  4. *Binary Image Upload*: `MISSING` (zero `multipart/form-data` route or Multer interceptor in backend).
+  5. *Persistent Media Storage*: `MISSING` (zero S3, Cloudinary, or Firebase Storage SDK in backend).
+  6. *Image Retrieval / Display*: `PARTIAL` (`cached_network_image` renders remote URLs, falls back to initial letter).
+- **R1.2 Corrections:**
+  - Removed camera icon badge overlay and clickable `"Thay đổi ảnh đại diện"` text from CURRENT V1 mockup to eliminate false affordances.
+  - Native photo picker / upload pipeline explicitly classified as **DESIGN TARGET** in contract.
+- **Affected Artifact Corrected:** `profile-mobile-edit-v1-r1.png` [Regenerated]
+
+### 2.13. Single Primary Save Action Standardization (R1.2)
+- **Contradiction Found:** `profile-mobile-edit-v1-r1.png` contained duplicate save triggers: `[Lưu]` on the AppBar and `[Lưu thay đổi hồ sơ]` at the bottom.
+- **R1.2 Corrections:**
+  - Standardized on a single primary action: AppBar displays back arrow `<` with title `"Chỉnh sửa hồ sơ"`.
+  - Duplicate AppBar `[Lưu]` action removed.
+  - Full-width bottom CTA `[Lưu thay đổi hồ sơ]` retained as the canonical submission trigger.
+- **Affected Artifact Corrected:** `profile-mobile-edit-v1-r1.png` [Regenerated]
+
 ---
 
 ## 3. Demo Data Governance Policy
@@ -140,13 +171,13 @@ All mockup values (e.g., *Lê Hoàng Nam*, *nam.le@example.com*, *0912 345 678*,
 
 ## 4. Master Visual Artifact Registry
 
-Following R1 and R1.1 regeneration, all 12 visual screens have exactly one CURRENT master artifact. All 8 superseded V1 artifacts are preserved on disk for audit history:
+Following R1, R1.1, and R1.2 calibrations, all 12 visual screens have exactly one CURRENT master artifact. All 8 superseded V1 artifacts are preserved on disk for audit history:
 
 | Screen / State | Viewport | Current Master Artifact (R1 / V1) | Superseded V1 Artifact | Current Status |
 | :--- | :---: | :--- | :--- | :---: |
 | **1. Profile Overview (Mobile)** | Mobile ($390 \times 844$) | [`profile-mobile-overview-v1-r1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.16/profile-mobile-overview-v1-r1.png) | `profile-mobile-overview-v1.png` | **CURRENT MASTER** |
-| **2. Profile Overview (Desktop)**| Desktop ($1440 \times 900$) | [`profile-desktop-overview-v1-r1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.16/profile-desktop-overview-v1-r1.png) | `profile-desktop-overview-v1.png` | **CURRENT MASTER** |
-| **3. Edit Profile (Mobile)** | Mobile ($390 \times 844$) | [`profile-mobile-edit-v1-r1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.16/profile-mobile-edit-v1-r1.png) | `profile-mobile-edit-v1.png` | **CURRENT MASTER** |
+| **2. Profile Overview (Desktop)**| Desktop ($1440 \times 900$) | [`profile-desktop-overview-v1-r1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.16/profile-desktop-overview-v1-r1.png) | `profile-desktop-overview-v1.png` | **CURRENT MASTER (R1.2 Calibrated)** |
+| **3. Edit Profile (Mobile)** | Mobile ($390 \times 844$) | [`profile-mobile-edit-v1-r1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.16/profile-mobile-edit-v1-r1.png) | `profile-mobile-edit-v1.png` | **CURRENT MASTER (R1.2 Calibrated)** |
 | **4. Travel Preferences (Mobile)**| Mobile ($390 \times 844$) | [`profile-mobile-travel-preferences-v1-r1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.16/profile-mobile-travel-preferences-v1-r1.png) | `profile-mobile-travel-preferences-v1.png` | **CURRENT MASTER** |
 | **5. Settings Home (Mobile)** | Mobile ($390 \times 844$) | [`settings-mobile-home-v1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.16/settings-mobile-home-v1.png) | *None (Unaffected)* | **CURRENT MASTER** |
 | **6. Settings Home (Desktop)** | Desktop ($1440 \times 900$) | [`settings-desktop-home-v1-r1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.16/settings-desktop-home-v1-r1.png) | `settings-desktop-home-v1.png` | **CURRENT MASTER** |
@@ -161,7 +192,7 @@ Following R1 and R1.1 regeneration, all 12 visual screens have exactly one CURRE
 
 ## 5. Acceptance Gate Checklist
 
-| Verification Item | R1 / R1.1 Standard | Verification Evidence | Status |
+| Verification Item | R1 / R1.1 / R1.2 Standard | Verification Evidence | Status |
 | :--- | :--- | :--- | :---: |
 | **1. No Fake "Đã xác thực" Badge** | Omit badge where no pipeline exists | Removed from desktop & mobile account views | **PASS** |
 | **2. Notification Inbox Honest State** | Not claimed ACTIVE without runtime | Reclassified as `PARTIAL / SCHEMA PRESENT` | **PASS** |
@@ -177,19 +208,23 @@ Following R1 and R1.1 regeneration, all 12 visual screens have exactly one CURRE
 | **12. Account Management Notice** | Pure informational text | No fake support button/badge (0 support in repo) | **PASS** |
 | **13. Edit Profile Write Boundary** | Separate writable from read-only fields | Non-readable demo metadata omitted with notice | **PASS** |
 | **14. TravelPreference Read-Only** | No unbacked write CTA | `profile-mobile-travel-preferences-v1-r1.png` is read-only | **PASS** |
-| **15. Profile Completeness Metric** | No fabricated 65% calculation | Removed 65%; neutral completion copy used | **PASS** |
-| **16. Persona Badge Removed** | No unbacked personality labels | Inferred badge removed; static role `"Thành viên"` | **PASS** |
-| **17. SafetyContact Isolation** | Tier 1 strict boundary | Zero exposure to profile or group views | **PASS** |
-| **18. TravelPreference SSOT** | Unified preference engine | Preserved as single source of truth | **PASS** |
-| **19. Location Boundary Preserved** | Foreground only | Background & continuous tracking excluded | **PASS** |
-| **20. Canonical 5-Tab Navigation** | No 6th bottom nav tab added | Standard 5 tabs intact on all views | **PASS** |
-| **21. Zero Production Code Changes** | `apps/` untouched | Verified via `git diff apps/` (0 lines) | **PASS** |
-| **22. Schema Untouched** | `schema.prisma` untouched | Verified via `git diff` (0 lines) | **PASS** |
-| **23. Unstaged Document Invariant** | `weekly-report-W01.docx` untouched | Must remain strictly unstaged and uncommitted | **PASS** |
+| **15. Presence Claims Purged** | Zero online presence indicators | Removed `"Trạng thái: Đang hoạt động"` from desktop | **PASS** |
+| **16. Avatar Capability Delineated** | Delineate 6 dimensions | Camera badge overlay purged; upload is DESIGN TARGET | **PASS** |
+| **17. Single Primary Save CTA** | Exactly 1 Save button on edit screen | AppBar [Lưu] purged; bottom CTA retained | **PASS** |
+| **18. Profile Completeness Metric** | No fabricated 65% calculation | Removed 65%; neutral completion copy used | **PASS** |
+| **19. Persona Badge Removed** | No unbacked personality labels | Inferred badge removed; static role `"Thành viên"` | **PASS** |
+| **20. SafetyContact Isolation** | Tier 1 strict boundary | Zero exposure to profile or group views | **PASS** |
+| **21. TravelPreference SSOT** | Unified preference engine | Preserved as single source of truth | **PASS** |
+| **22. Location Boundary Preserved** | Foreground only | Background & continuous tracking excluded | **PASS** |
+| **23. Canonical 5-Tab Navigation** | No 6th bottom nav tab added | Standard 5 tabs intact on all views | **PASS** |
+| **24. Zero Production Code Changes** | `apps/` untouched | Verified via `git diff apps/` (0 lines) | **PASS** |
+| **25. Schema Untouched** | `schema.prisma` untouched | Verified via `git diff` (0 lines) | **PASS** |
+| **26. Unstaged Document Invariant** | `weekly-report-W01.docx` untouched | Must remain strictly unstaged and uncommitted | **PASS** |
 
 ---
 
 ## 6. Conclusion
 
-TASK 08.2.3.16-R1 and R1.1 completely align the visual representation and architectural documentation of GoMate Profile & Settings with repository truth. All contradictions regarding travel preference writes, non-readable fields, emergency notification claims, buddy matching defaults, and support buttons are definitively closed. The module is fully locked and ready for downstream implementation when scheduled.
+TASK 08.2.3.16-R1, R1.1, and R1.2 completely align the visual representation and architectural documentation of GoMate Profile & Settings with repository truth. All contradictions regarding travel preference writes, non-readable fields, emergency notification claims, buddy matching defaults, support buttons, presence indicators, avatar uploads, and duplicate save actions are definitively closed. The module is fully locked and ready for downstream implementation when scheduled.
+
 
