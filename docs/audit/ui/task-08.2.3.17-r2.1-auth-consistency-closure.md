@@ -113,7 +113,7 @@ Vocabulary: `CURRENT` | `PARTIAL` | `PRODUCT TARGET` | `FUTURE` | `EXCLUDED`
 | **22**| **Facebook Social Login** | **MISSING** | **EXCLUDED** | Deprioritized in favor of Google & Apple for travel MVP. |
 | **23**| **Guest / Anonymous Browse** | **MISSING** | **EXCLUDED** | GoMate requires authenticated profile for itineraries, safety & sync. |
 | **24**| **Remember Me Checkbox** | **MISSING** | **EXCLUDED** | Continuous session via hardware secure storage; no UI checkbox. |
-| **25**| **Server Token Blacklist** | **EXCLUDED** | **FUTURE** | Preserves stateless JWT; Redis blacklist deferred post-launch. |
+| **25**| **Server Token Blacklist** | **MISSING** | **FUTURE** | Preserves stateless JWT; Redis blacklist deferred post-launch. |
 | **26**| **Biometric Login (`local_auth`)** | **MISSING** | **FUTURE** | Hardware biometric unlock on top of secure storage deferred post-MVP. |
 | **27**| **Active Sessions Management** | **MISSING** | **FUTURE** | Multi-device remote session revocation table deferred post-launch. |
 | **28**| **Multi-Factor Auth (MFA / TOTP)**| **MISSING** | **FUTURE** | Authenticator app TOTP deferred post-MVP (guide/admin tier). |

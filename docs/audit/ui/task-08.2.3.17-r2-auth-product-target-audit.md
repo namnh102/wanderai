@@ -13,6 +13,24 @@
 
 This report delivers the comprehensive **Product Target (Tier 2)** for GoMate Authentication while maintaining total fidelity to the **Current Runtime Baseline (Tier 1)** locked in `TASK 08.2.3.17 V1`.
 
+### Six-State Classification Vocabulary
+
+To maintain strict truthfulness across current repository capabilities and target architecture, all capabilities are evaluated against a six-state vocabulary:
+
+- **`CURRENT`:** Đã được xác minh có runtime code hoạt động trong repository.
+- **`PARTIAL`:** Đã tồn tại một phần nhưng chưa hoàn chỉnh end-to-end.
+- **`MISSING`:** Chưa có implementation trong current runtime.
+- **`PRODUCT TARGET`:** Bắt buộc phải triển khai trước production-ready release.
+- **`FUTURE`:** Để sau MVP / post-launch.
+- **`EXCLUDED`:** Cố ý không nằm trong phạm vi sản phẩm hiện tại.
+
+> [!NOTE]
+> **Two-Tier Capability Independence:** Một capability hoàn toàn có thể có:
+> - **Current Runtime:** `MISSING` (hoặc `PARTIAL`)
+> - **Product Target:** `PRODUCT TARGET` (hoặc `FUTURE`, `EXCLUDED`)
+>
+> Đây KHÔNG phải là mâu thuẫn (contradiction) mà là bản chất của mô hình quản trị hai tầng: phản ánh trung thực hiện trạng code mà không ngăn cản việc thiết lập đích đến kiến trúc hoàn chỉnh.
+
 ### Core Achievements
 1. **Two-Tier Capability Governance:** Clearly segregates verified runtime features (`CURRENT`) from production requirements (`PRODUCT TARGET`). No un-implemented features (such as social login or password recovery) are misrepresented as operational.
 2. **Anti-Enumeration Password Recovery:** Designed an end-to-end recovery pipeline returning identical generic responses regardless of user existence, backed by time-limited ($15\text{m}$) one-time cryptographic tokens.
@@ -51,7 +69,7 @@ This report delivers the comprehensive **Product Target (Tier 2)** for GoMate Au
 | **22**| **Facebook Social Login** | **MISSING** | **EXCLUDED** | Deprioritized in favor of Google & Apple for travel MVP. |
 | **23**| **Guest / Anonymous Browse** | **MISSING** | **EXCLUDED** | GoMate requires authenticated profile for itineraries, safety & sync. |
 | **24**| **Remember Me Checkbox** | **MISSING** | **EXCLUDED** | Continuous session via hardware secure storage; no UI checkbox. |
-| **25**| **Server Token Blacklist** | **EXCLUDED** | **FUTURE** | Preserves stateless JWT; Redis blacklist deferred post-launch. |
+| **25**| **Server Token Blacklist** | **MISSING** | **FUTURE** | Preserves stateless JWT; Redis blacklist deferred post-launch. |
 | **26**| **Biometric Login (`local_auth`)** | **MISSING** | **FUTURE** | Hardware biometric unlock on top of secure storage deferred post-MVP. |
 | **27**| **Active Sessions Management** | **MISSING** | **FUTURE** | Multi-device remote session revocation table deferred post-launch. |
 | **28**| **Multi-Factor Auth (MFA / TOTP)**| **MISSING** | **FUTURE** | Authenticator app TOTP deferred post-MVP (guide/admin tier). |
@@ -67,6 +85,19 @@ This report delivers the comprehensive **Product Target (Tier 2)** for GoMate Au
   *Canonical Invariant:* Response behavior MUST NOT intentionally reveal whether an email exists. Status code and response body are identical; implementation should minimize observable timing differences.
 - **Token Security:** 32-byte cryptographically secure random token, stored as SHA-256 hash in database, valid for strictly 15 minutes, invalidated immediately after use.
 - **Canonical Password Complexity:** Mật khẩu tối thiểu 8 ký tự, có ít nhất 1 chữ hoa, 1 chữ thường, và ít nhất 1 chữ số hoặc ký tự đặc biệt.
+- **Conceptual DTO Validator Contract (ResetPasswordDto & ChangePasswordDto):**
+  ```typescript
+  @IsString()
+  @MinLength(8)
+  @Matches(
+    /((?=.*\d)|(?=.*\W+))(?![.\n])(?=.*[A-Z])(?=.*[a-z]).*$/,
+    {
+      message:
+        'Mật khẩu tối thiểu 8 ký tự, có ít nhất 1 chữ hoa, 1 chữ thường, và ít nhất 1 chữ số hoặc ký tự đặc biệt.',
+    },
+  )
+  newPassword: string;
+  ```
 
 ### 3.2. Social Login & Account Linking
 - **Provider Targets & Canonical Endpoints:**

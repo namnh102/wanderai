@@ -32,13 +32,23 @@ This document establishes the **Complete Product Target (V2)** for the GoMate Au
 └───────────────────────────────────┴────────────────────────────────────┘
 ```
 
-### Classification Vocabulary
-- **`CURRENT`:** Code is verified in repository runtime (NestJS backend and Flutter client).
-- **`PARTIAL`:** Implemented partially (e.g. backend exists but mobile integration is missing).
-- **`PRODUCT TARGET`:** Mandatory for GoMate production readiness before launch; architecture and UX designed, but zero code implemented in this phase.
-- **`FUTURE`:** Deferred post-MVP release (e.g. WebAuthn, biometric sync, Facebook login).
-- **`EXCLUDED`:** Intentionally omitted (e.g. guest mode, server session state table).
+### Six-State Classification Vocabulary
 
+To maintain strict truthfulness across current repository capabilities and target architecture, all capabilities are evaluated against a six-state vocabulary:
+
+- **`CURRENT`:** Đã được xác minh có runtime code hoạt động trong repository.
+- **`PARTIAL`:** Đã tồn tại một phần nhưng chưa hoàn chỉnh end-to-end.
+- **`MISSING`:** Chưa có implementation trong current runtime.
+- **`PRODUCT TARGET`:** Bắt buộc phải triển khai trước production-ready release.
+- **`FUTURE`:** Để sau MVP / post-launch.
+- **`EXCLUDED`:** Cố ý không nằm trong phạm vi sản phẩm hiện tại.
+
+> [!NOTE]
+> **Two-Tier Capability Independence:** Một capability hoàn toàn có thể có:
+> - **Current Runtime:** `MISSING` (hoặc `PARTIAL`)
+> - **Product Target:** `PRODUCT TARGET` (hoặc `FUTURE`, `EXCLUDED`)
+>
+> Đây KHÔNG phải là mâu thuẫn (contradiction) mà là bản chất của mô hình quản trị hai tầng: phản ánh trung thực hiện trạng code mà không ngăn cản việc thiết lập đích đến kiến trúc hoàn chỉnh.
 ---
 
 ## 2. Current vs. Product Target Capability Matrix
@@ -69,7 +79,7 @@ This document establishes the **Complete Product Target (V2)** for the GoMate Au
 | **22**| **Facebook Social Login** | **MISSING** | **EXCLUDED** | Deprioritized in favor of Google & Apple for travel MVP. |
 | **23**| **Guest / Anonymous Browse** | **MISSING** | **EXCLUDED** | GoMate requires authenticated profile for itineraries, safety & sync. |
 | **24**| **Remember Me Checkbox** | **MISSING** | **EXCLUDED** | Continuous session via hardware secure storage; no UI checkbox. |
-| **25**| **Server Token Blacklist** | **EXCLUDED** | **FUTURE** | Preserves stateless JWT; Redis blacklist deferred post-launch. |
+| **25**| **Server Token Blacklist** | **MISSING** | **FUTURE** | Preserves stateless JWT; Redis blacklist deferred post-launch. |
 | **26**| **Biometric Login (`local_auth`)** | **MISSING** | **FUTURE** | Hardware biometric unlock on top of secure storage deferred post-MVP. |
 | **27**| **Active Sessions Management** | **MISSING** | **FUTURE** | Multi-device remote session revocation table deferred post-launch. |
 | **28**| **Multi-Factor Auth (MFA / TOTP)**| **MISSING** | **FUTURE** | Authenticator app TOTP deferred post-MVP (guide/admin tier). |
@@ -329,9 +339,13 @@ export class ResetPasswordDto {
 
   @IsString()
   @MinLength(8)
-  @Matches(/((?=.*\d)|(?=.*\W+))(?![.\n])(?=.*[A-Z])(?=.*[a-z]).*$/, {
-    message: 'Mật khẩu phải chứa ít nhất 1 chữ hoa, 1 chữ thường và 1 chữ số',
-  })
+  @Matches(
+    /((?=.*\d)|(?=.*\W+))(?![.\n])(?=.*[A-Z])(?=.*[a-z]).*$/,
+    {
+      message:
+        'Mật khẩu tối thiểu 8 ký tự, có ít nhất 1 chữ hoa, 1 chữ thường, và ít nhất 1 chữ số hoặc ký tự đặc biệt.',
+    },
+  )
   newPassword: string;
 }
 
@@ -343,9 +357,15 @@ export class ChangePasswordDto {
 
   @IsString()
   @MinLength(8)
+  @Matches(
+    /((?=.*\d)|(?=.*\W+))(?![.\n])(?=.*[A-Z])(?=.*[a-z]).*$/,
+    {
+      message:
+        'Mật khẩu tối thiểu 8 ký tự, có ít nhất 1 chữ hoa, 1 chữ thường, và ít nhất 1 chữ số hoặc ký tự đặc biệt.',
+    },
+  )
   newPassword: string;
 }
-
 // POST /auth/oauth/google
 export class GoogleAuthDto {
   @IsString()
