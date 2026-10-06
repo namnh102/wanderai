@@ -11,15 +11,27 @@
 
 ## 1. Executive Summary & Purpose
 
-This register catalogues all technical dependencies, schema alterations, external integrations, and architectural preconditions required before future engineering implementation (`TASK 08.3`) can begin. It guarantees that no module will be scheduled for coding until its underlying database models, network contracts, security safeguards, and third-party prerequisites are explicitly accounted for.
+This register catalogues all technical dependencies, schema alterations, external integrations, and architectural preconditions across **14 canonical subsystems** required before future engineering implementation (`TASK 08.3`) can begin. It guarantees that no module will be scheduled for coding until its underlying database models, network contracts, security safeguards, and third-party prerequisites are explicitly accounted for.
+
+### Master Roadmap Source-of-Truth Hierarchy (Invariant for TASK 08.3)
+When planning and implementing tasks in `TASK 08.3`, all work items must strictly follow this authority priority:
+$$\text{Repository Evidence} > \text{Capability Matrix (Capability Level)} > \text{Dependency Register (14 Subsystems)} > \text{Module Summary Prose}$$
+
+1. **Repository Evidence (Supreme Truth):** Code running in `apps/backend/` and `apps/mobile/` takes precedence over any documentation claim.
+2. **Capability-Level Matrix:** Authoritative registry of functional and architectural scope per capability ID.
+3. **Dependency Register (14 Subsystems):** Authoritative registry of system preconditions, schema models, and service interfaces across all 14 dependency areas.
+4. **Module Summary Prose:** Informational overview only; carries zero implementation authority.
 
 ---
 
-## 2. Master Subsystem Dependency Register
+## 2. Master Subsystem Dependency Register (14 Canonical Subsystems)
 
 ### 1. Place Media Pipeline & Image Provenance
 - **Current Runtime Status:** `PARTIAL` (Static URLs in seed; missing dynamic media ingestion).
 - **Architectural Target:** `PRODUCT TARGET`
+- **Presentation vs. Pipeline Separation:**
+  - *Place Detail Header & Layout Presentation:* `CURRENT` in repository runtime with fallback placeholder hero.
+  - *Production Place Media Pipeline:* `PARTIAL` $\rightarrow$ `PRODUCT TARGET` (dynamic ingestion, CC license provenance, thumbnail generation, CDN/R2 storage).
 - **Prisma Schema Dependencies:**
   - `PlaceMedia` model: `id UUID`, `place_id UUID`, `url TEXT`, `thumbnail_url TEXT`, `license_type VARCHAR`, `author TEXT`, `source_url TEXT`, `created_at TIMESTAMPTZ`.
 - **Backend NestJS Dependencies:**

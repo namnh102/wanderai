@@ -13,22 +13,39 @@
 
 This audit constitutes the comprehensive global design review for the GoMate travel copilot. It synthesizes all preceding module audits (`TASK 08.2.3.1` through `TASK 08.2.3.17-R2.2`), verifying end-to-end navigational integrity, design system compliance, data truthfulness, privacy protections, AI operational boundaries, and responsive viewport behavior.
 
-### 1.1. Audited Modules Overview
-All 14 modules have been audited individually and cross-functionally:
-1. **Home / Discover:** Verified runtime discovery shell with real destination cards.
-2. **Map & Nearby Places:** Verified CARTO/HOT OSM basemap, POI markers, haversine distance, and GPS pill.
-3. **Place Detail:** Verified honest fallback metadata, mini-map, OSM source citation, and navigation intent.
-4. **Wandy AI Copilot:** Verified streaming advisory chat with pgvector grounding and source chips.
-5. **Trip Management:** Verified multi-day itinerary CRUD and budget calculation in PostgreSQL.
-6. **AI Itinerary Planner:** Verified Gemini multi-day itinerary generation with preview and overwrite guards.
-7. **Buddy Matching:** Complete visual & consent contract locked; masked public identity.
-8. **Group & Group Chat:** Complete group space & WebSocket timeline contract locked; immutable messages.
-9. **Shared Itinerary:** Complete collaborative board contract locked with voting and conflict resolution.
-10. **Shared Expense:** Complete peer ledger contract locked; non-financial record-keeping.
-11. **Scheduling & Reminders:** Complete local notification contract locked with lead-time offsets.
-12. **Safety & Emergency:** Complete hotline directory locked; NĐ 200/2025/NĐ-CP legal basis; Da Nang *8899; dialer confirmation.
-13. **Profile & Settings:** Responsive edit profile locked (390px zero overflow); preferences read-only boundary enforced.
-14. **Authentication & Session:** Current email/pass baseline + Target V2 recovery, social OAuth, silent refresh queue locked.
+### 1.1. Audited Modules Overview & Runtime Truthfulness
+All 14 modules have been audited individually and cross-functionally. To avoid ambiguity between a module that has an existing code baseline and a feature-complete module, each area is classified by its runtime reality:
+
+| Module ID & Name | Runtime Baseline Status | Architectural State | Authoritative Reference |
+| :--- | :---: | :---: | :--- |
+| **Module 1: Home / Discover** | `RUNTIME BASELINE EXISTS` | MIXED CAPABILITIES (`CURRENT` / `PARTIAL` / `FUTURE`) | 5 capabilities in Matrix (1.1–1.5) |
+| **Module 2: Map & Nearby Places** | `RUNTIME BASELINE EXISTS` | MIXED CAPABILITIES (`CURRENT` / `PRODUCT TARGET` / `EXCLUDED`) | 8 capabilities in Matrix (2.1–2.8) |
+| **Module 3: Place Detail** | `RUNTIME BASELINE EXISTS` | MIXED CAPABILITIES (`CURRENT` / `PARTIAL` / `PRODUCT TARGET` / `FUTURE`) | 10 capabilities in Matrix (3.1–3.10) |
+| **Module 4: Wandy AI Copilot** | `RUNTIME BASELINE EXISTS` | MIXED CAPABILITIES (`CURRENT` / `PRODUCT TARGET` / `FUTURE` / `EXCLUDED`) | 6 capabilities in Matrix (4.1–4.6) |
+| **Module 5: Trip Management** | `RUNTIME BASELINE EXISTS` | MIXED CAPABILITIES (`CURRENT` / `PRODUCT TARGET` / `FUTURE`) | 5 capabilities in Matrix (5.1–5.5) |
+| **Module 6: AI Itinerary Planner** | `RUNTIME BASELINE EXISTS` | MIXED CAPABILITIES (`CURRENT` / `FUTURE`) | 5 capabilities in Matrix (6.1–6.5) |
+| **Module 7: Buddy Matching** | `NO RUNTIME` | DESIGN CONTRACT ONLY (`PRODUCT TARGET` / `EXCLUDED`) | 5 capabilities in Matrix (7.1–7.5) |
+| **Module 8: Group & Group Chat** | `NO RUNTIME` | DESIGN CONTRACT ONLY (`PRODUCT TARGET` / `FUTURE` / `EXCLUDED`) | 5 capabilities in Matrix (8.1–8.5) |
+| **Module 9: Shared Itinerary** | `NO RUNTIME` | DESIGN CONTRACT ONLY (`PRODUCT TARGET`) | 3 capabilities in Matrix (9.1–9.3) |
+| **Module 10: Shared Expense** | `NO RUNTIME` | DESIGN CONTRACT ONLY (`PRODUCT TARGET` / `EXCLUDED`) | 5 capabilities in Matrix (10.1–10.5) |
+| **Module 11: Scheduling & Reminders** | `NO RUNTIME` | DESIGN CONTRACT ONLY (`PRODUCT TARGET` / `FUTURE`) | 4 capabilities in Matrix (11.1–11.4) |
+| **Module 12: Safety & Emergency** | `RUNTIME BASELINE EXISTS` | MIXED CAPABILITIES (`CURRENT` / `PARTIAL` / `PRODUCT TARGET` / `EXCLUDED`) | 7 capabilities in Matrix (12.1–12.7) |
+| **Module 13: Profile & Settings** | `RUNTIME BASELINE EXISTS` | MIXED CAPABILITIES (`CURRENT` / `PRODUCT TARGET` / `EXCLUDED`) | 6 capabilities in Matrix (13.1–13.6) |
+| **Module 14: Authentication & Session**| `RUNTIME BASELINE EXISTS` | MIXED CAPABILITIES (`CURRENT` / `PARTIAL` / `PRODUCT TARGET` / `FUTURE` / `EXCLUDED`) | 16 capabilities in Matrix (14.1–14.16) |
+
+> [!IMPORTANT]
+> **Module-Level Status Disclaimer & Authority Hierarchy:**
+> Module-level status only indicates whether a usable runtime baseline exists in the repository for that domain. It does NOT imply that all capabilities within that module are feature-complete.
+> The **[Global Capability Matrix](file:///d:/Do_an/wanderai/docs/audit/ui/task-08.2.4-global-capability-matrix.md)** is the **sole authoritative implementation source of truth**. Every feature work package in TASK 08.3 must be derived from capability-level rows, not module summary labels.
+
+### 1.2. Master Roadmap Source-of-Truth Hierarchy (Invariant for TASK 08.3)
+When planning and implementing tasks in `TASK 08.3`, all work items must strictly follow this authority priority:
+$$\text{Repository Evidence} > \text{Capability Matrix (Capability Level)} > \text{Dependency Register} > \text{Module Summary Prose}$$
+
+1. **Repository Evidence (Supreme Truth):** Code running in `apps/backend/` and `apps/mobile/` takes precedence over any documentation claim.
+2. **Capability-Level Matrix:** Authoritative registry of functional and architectural scope per capability ID.
+3. **Dependency Register (14 Subsystems):** Authoritative registry of system preconditions, schema models, and service interfaces.
+4. **Module Summary Prose:** Informational overview only; carries zero implementation authority.
 
 ---
 
@@ -50,6 +67,10 @@ Desktop (1440px): Sidebar with identical 5 destinations + Bottom Settings/Profil
 ---
 
 ## 3. Cross-Module User Flow Verification (Flows A through L)
+
+> [!WARNING]
+> **Cross-Module Flow Runtime Honesty Notice:**
+> The flow descriptions specify target user journeys and UX contracts. They do NOT imply that full end-to-end integration is operational today. Specifically, Flows E, F, G, K, and L have **ZERO runtime implementation** in the repository and are strictly `PRODUCT TARGET` requirements for TASK 08.3. Flows A, C, H, I, and J are `PARTIAL`, with existing baseline components but missing target integration links. Only Flows B and D have full operational runtime parity today.
 
 Every cross-module flow has been evaluated against current runtime code versus architectural target requirements:
 
@@ -99,27 +120,33 @@ The entire design corpus was audited to eliminate fake data, false capability cl
 
 ## 6. State Coverage Audit (14 Modules)
 
+> [!NOTE]
+> **State Coverage Distinction:**
+> - **Visual / Design State Coverage:** Measures whether all required visual states (Loading, Empty, Error, Offline, Content) have locked mockups and design contracts.
+> - **Runtime Implementation Coverage:** Reflects actual operational software deployed in the repository. Modules with `ZERO RUNTIME` are design specifications only; their 100% design coverage does NOT imply existing software implementation.
+
 ```
-┌────────────────────────────────────────────────────────────────────────┐
-│                        GLOBAL STATE COVERAGE MATRIX                    │
-├─────────────────────┬─────────┬─────────┬─────────┬──────────┬─────────┤
-│ Module              │ Loading │ Empty   │ Error   │ Offline  │ Visual  │
-├─────────────────────┼─────────┼─────────┼─────────┼──────────┼─────────┤
-│ 1. Home / Discover  │ Skeleton│ Covered │ Covered │ Covered  │ 100%    │
-│ 2. Map / Places     │ Spinner │ Covered │ Covered │ Fallback │ 100%    │
-│ 3. Place Detail     │ Skeleton│ Covered │ Covered │ Cached   │ 100%    │
-│ 4. Wandy AI Copilot │ Typing  │ Covered │ Covered │ Notice   │ 100%    │
-│ 5. Trip Management  │ Skeleton│ Covered │ Covered │ Cached   │ 100%    │
-│ 6. AI Planner       │ Progress│ N/A     │ Covered │ Notice   │ 100%    │
-│ 7. Buddy Matching   │ Skeleton│ Covered │ Covered │ Notice   │ Target  │
-│ 8. Group & Chat     │ Spinner │ Covered │ Covered │ Offline Q│ Target  │
-│ 9. Shared Itinerary │ Skeleton│ Covered │ Covered │ Read-only│ Target  │
-│ 10. Shared Expense  │ Skeleton│ Covered │ Covered │ Offline L│ Target  │
-│ 11. Scheduling      │ Inline  │ Covered │ Covered │ Local OS │ Target  │
-│ 12. Safety Directory│ Inline  │ N/A     │ Fallback│ Bundled  │ 100%    │
-│ 13. Profile/Settings│ Skeleton│ Covered │ Covered │ Cached   │ 100%    │
-│ 14. Authentication  │ Spinner │ N/A     │ Covered │ Offline M│ 100%    │
-└─────────────────────┴─────────┴─────────┴─────────┴──────────┴─────────┘
+┌────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│                                   GLOBAL STATE COVERAGE MATRIX                                         │
+├─────────────────────┬─────────┬─────────┬─────────┬──────────┬─────────────────┬───────────────────────┤
+│ Module              │ Loading │ Empty   │ Error   │ Offline  │ Visual / Design │ Runtime Implementation│
+│                     │ State   │ State   │ State   │ State    │ State Coverage  │ Coverage              │
+├─────────────────────┼─────────┼─────────┼─────────┼──────────┼─────────────────┼───────────────────────┤
+│ 1. Home / Discover  │ Skeleton│ Covered │ Covered │ Covered  │ COMPLETE (100%) │ RUNTIME BASELINE (Mix)│
+│ 2. Map / Places     │ Spinner │ Covered │ Covered │ Fallback │ COMPLETE (100%) │ RUNTIME BASELINE (Mix)│
+│ 3. Place Detail     │ Skeleton│ Covered │ Covered │ Cached   │ COMPLETE (100%) │ RUNTIME BASELINE (Mix)│
+│ 4. Wandy AI Copilot │ Typing  │ Covered │ Covered │ Notice   │ COMPLETE (100%) │ RUNTIME BASELINE (Mix)│
+│ 5. Trip Management  │ Skeleton│ Covered │ Covered │ Cached   │ COMPLETE (100%) │ RUNTIME BASELINE (Mix)│
+│ 6. AI Planner       │ Progress│ N/A     │ Covered │ Notice   │ COMPLETE (100%) │ RUNTIME BASELINE (Mix)│
+│ 7. Buddy Matching   │ Skeleton│ Covered │ Covered │ Notice   │ COMPLETE (100%) │ ZERO RUNTIME (Design) │
+│ 8. Group & Chat     │ Spinner │ Covered │ Covered │ Offline Q│ COMPLETE (100%) │ ZERO RUNTIME (Design) │
+│ 9. Shared Itinerary │ Skeleton│ Covered │ Covered │ Read-only│ COMPLETE (100%) │ ZERO RUNTIME (Design) │
+│ 10. Shared Expense  │ Skeleton│ Covered │ Covered │ Offline L│ COMPLETE (100%) │ ZERO RUNTIME (Design) │
+│ 11. Scheduling      │ Inline  │ Covered │ Covered │ Local OS │ COMPLETE (100%) │ ZERO RUNTIME (Design) │
+│ 12. Safety Directory│ Inline  │ N/A     │ Fallback│ Bundled  │ COMPLETE (100%) │ RUNTIME BASELINE (Mix)│
+│ 13. Profile/Settings│ Skeleton│ Covered │ Covered │ Cached   │ COMPLETE (100%) │ RUNTIME BASELINE (Mix)│
+│ 14. Authentication  │ Spinner │ N/A     │ Covered │ Offline M│ COMPLETE (100%) │ RUNTIME BASELINE (Mix)│
+└─────────────────────┴─────────┴─────────┴─────────┴──────────┴─────────────────┴───────────────────────┘
 ```
 
 ---
@@ -158,7 +185,7 @@ The entire design corpus was audited to eliminate fake data, false capability cl
 - [x] **Auth Target Invariants:** Canonical password policy, endpoints, and anti-enumeration unified.
 - [x] **Cross-Module Flows:** Flows A through L specified with strict runtime vs target boundaries.
 - [x] **Six-State Vocabulary:** `CURRENT`, `PARTIAL`, `MISSING`, `PRODUCT TARGET`, `FUTURE`, `EXCLUDED` applied.
-- [x] **Dependency Register:** All 12 subsystem preconditions cataloged and phased.
+- [x] **Dependency Register:** All 14 subsystem preconditions cataloged and phased.
 - [x] **Issue Clearance:** 0 P0 blockers remaining; all P1 issues resolved in documentation and mockups.
 - [x] **`apps/` Clean:** Zero lines modified in production code.
 - [x] **`schema.prisma` Clean:** Zero lines modified in database schema.

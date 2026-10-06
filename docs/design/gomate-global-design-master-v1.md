@@ -228,15 +228,26 @@ flowchart LR
 
 ## 7. Global Cross-Module User Flows (Flows A through L)
 
+> [!WARNING]
+> **Cross-Module Flow Runtime Truthfulness Notice:**
+> The flow descriptions below specify **end-state target UX contracts**. Readers and implementers must NOT interpret flow steps as operational code unless the flow is explicitly labeled `CURRENT RUNTIME: CURRENT`.
+> - **Flows E, F, G, K, and L** have **ZERO runtime implementation** in the repository today; they represent target specifications (`PRODUCT TARGET`) for TASK 08.3.
+> - **Flows A, C, H, I, and J** are `PARTIAL`, with existing baseline components in code but missing target integration links.
+> - **Flows B and D** are `CURRENT`, with operational code verified in the repository.
+
 ### FLOW A: Discover $\rightarrow$ Place Detail $\rightarrow$ Add to Trip $\rightarrow$ Trip Detail
+- **Current Runtime Status:** `PARTIAL`
+- **Target Specification:** `PRODUCT TARGET`
 1. User browses destination cards on Home (`/home`).
 2. Taps a featured POI card $\rightarrow$ Navigation pushes `/places/:id`.
-3. User reviews honest place details (ratings, hours, OSM source).
+3. User reviews honest place details (ratings, hours, OSM source) with placeholder/fallback hero image (dynamic media ingestion pipeline is `PARTIAL` $\rightarrow$ `PRODUCT TARGET`).
 4. Taps primary CTA `[Thêm vào chuyến đi]`.
 5. Modal sheet lists active user trips; user selects target trip and day.
 6. Backend records item; UI provides snackbar with `[Xem chuyến đi]` CTA navigating to `/trips/:id`.
 
 ### FLOW B: Map $\rightarrow$ Marker $\rightarrow$ Place Preview $\rightarrow$ Place Detail $\rightarrow$ Preserved Map
+- **Current Runtime Status:** `CURRENT`
+- **Target Specification:** `CURRENT`
 1. User opens Bản đồ tab (`/map`); filters by category chip (e.g. `Văn hóa`).
 2. Taps marker on map $\rightarrow$ Bottom preview sheet slides up with honest rating and distance.
 3. User taps `[Xem chi tiết]` on preview sheet $\rightarrow$ Pushes `/places/:id`.
@@ -244,6 +255,8 @@ flowchart LR
 5. **Invariant:** Selected chip (`Văn hóa`), place count badge, map camera position, and active preview sheet are completely preserved.
 
 ### FLOW C: Wandy $\rightarrow$ Recommend Place $\rightarrow$ Place Detail $\rightarrow$ Add to Trip
+- **Current Runtime Status:** `PARTIAL`
+- **Target Specification:** `PRODUCT TARGET`
 1. User asks Wandy (`/wandy`): *"Gợi ý quán cà phê đẹp ở Hà Nội"*.
 2. Wandy streams response with grounded POI card and source chips.
 3. User taps POI recommendation card $\rightarrow$ Pushes `/places/:id`.
@@ -251,6 +264,8 @@ flowchart LR
 5. Back navigation seamlessly returns user to their Wandy conversation history.
 
 ### FLOW D: Trip $\rightarrow$ AI Planner $\rightarrow$ Preview Sheet $\rightarrow$ User Confirmation $\rightarrow$ Saved Plan
+- **Current Runtime Status:** `CURRENT`
+- **Target Specification:** `CURRENT`
 1. User opens an existing trip in `/trips/:id`.
 2. Taps primary action `[Lập lịch trình bằng AI]`.
 3. Client displays non-blocking generation modal with progress indicators.
@@ -260,6 +275,8 @@ flowchart LR
 7. User confirms $\rightarrow$ Itinerary is persisted to PostgreSQL; Trip Detail updates immediately.
 
 ### FLOW E: Buddy Discovery $\rightarrow$ Profile $\rightarrow$ Match Request $\rightarrow$ Consent Handshake
+- **Current Runtime Status:** `MISSING (ZERO CODE IN REPOSITORY)`
+- **Target Specification:** `PRODUCT TARGET`
 1. User navigates to Buddy tab; filters by destination (`Đà Nẵng`) and travel style (`Ẩm thực & Văn hóa`).
 2. Grid displays anonymous traveler cards with compatibility scores (e.g. `92% Tương thích`).
 3. User taps card $\rightarrow$ Pushes `/buddies/:id`.
@@ -268,6 +285,8 @@ flowchart LR
 6. Target user receives notification; upon mutual consent, match status transitions to `MATCHED`.
 
 ### FLOW F: Buddy Match $\rightarrow$ Group Creation $\rightarrow$ Shared Itinerary $\rightarrow$ Group Chat $\rightarrow$ Shared Expense
+- **Current Runtime Status:** `MISSING (ZERO CODE IN REPOSITORY)`
+- **Target Specification:** `PRODUCT TARGET`
 1. From confirmed Buddy Match, user taps `[Tạo nhóm chuyến đi]`.
 2. System initializes Group record with Leader and Member roles.
 3. Group Space provides 3 unified sub-tabs:
@@ -276,6 +295,8 @@ flowchart LR
    - **Chi phí chung:** Expense ledger tracking shared bills and settlement balances.
 
 ### FLOW G: Trip Itinerary $\rightarrow$ Schedule Reminder $\rightarrow$ Local Notification
+- **Current Runtime Status:** `MISSING (ZERO CODE IN REPOSITORY)`
+- **Target Specification:** `PRODUCT TARGET`
 1. User views an itinerary item (e.g., flight departure or tour booking) in `/trips/:id`.
 2. Taps `[Đặt nhắc nhở]` icon.
 3. Modal picker allows selecting reminder lead time (15 mins, 1 hour, 1 day before).
@@ -283,6 +304,8 @@ flowchart LR
 5. Scheduled reminder is editable or removable from the item detail card.
 
 ### FLOW H: Safety $\rightarrow$ Emergency Directory $\rightarrow$ Confirmation Modal $\rightarrow$ Native Dialer
+- **Current Runtime Status:** `PARTIAL (Hotline directory & native dialer exist; confirmation modal is target requirement)`
+- **Target Specification:** `PRODUCT TARGET`
 1. User taps An toàn tab (`/safety`).
 2. Quick SOS card provides national hotlines (112, 113, 114, 115) and local visitor support (*8899 for Da Nang).
 3. User taps emergency row (e.g. `Cứu nạn sự cố 112`).
@@ -291,6 +314,8 @@ flowchart LR
 5. User taps `[Xác nhận gọi]` $\rightarrow$ App dispatches `tel:112` to native device dialer.
 
 ### FLOW I: Profile $\rightarrow$ Settings $\rightarrow$ Privacy $\rightarrow$ Location $\rightarrow$ Security
+- **Current Runtime Status:** `PARTIAL (Identity viewing & responsive edit profile exist; travel preference write & privacy controls are target)`
+- **Target Specification:** `PRODUCT TARGET`
 1. User accesses Profile from top-right avatar on Home.
 2. Settings screen displays structured groups:
    - **Tài khoản:** Public profile, email, verification status.
@@ -300,6 +325,8 @@ flowchart LR
 3. Tapping `[Đổi mật khẩu]` navigates to authenticated change password form.
 
 ### FLOW J: Session Lifecycle $\rightarrow$ 401 Interception $\rightarrow$ Silent Refresh $\rightarrow$ Re-Login
+- **Current Runtime Status:** `PARTIAL (Backend refresh endpoint exists; mobile Dio queue lock interceptor is target)`
+- **Target Specification:** `PRODUCT TARGET`
 1. User performs authenticated action in app shell.
 2. Access token (15m expiry) expires; server returns `401 Unauthorized`.
 3. Client Dio Interceptor locks the request queue and triggers `POST /auth/refresh`.
@@ -307,6 +334,8 @@ flowchart LR
 5. If refresh fails: Queue aborted, tokens cleared, user presented with session-expired modal to re-login.
 
 ### FLOW K: Password Recovery $\rightarrow$ Anti-Enumeration $\rightarrow$ Deep Link $\rightarrow$ Reset
+- **Current Runtime Status:** `MISSING (ZERO CODE IN REPOSITORY)`
+- **Target Specification:** `PRODUCT TARGET`
 1. User taps `Quên mật khẩu?` on login screen (`/login`).
 2. Enters email on recovery screen; submits `[Gửi hướng dẫn đặt lại mật khẩu]`.
 3. System returns generic confirmation copy regardless of email existence.
@@ -315,6 +344,8 @@ flowchart LR
 6. Upon submission, token is consumed (`used_at = now()`), and user is redirected to login.
 
 ### FLOW L: Social OAuth $\rightarrow$ Email Collision $\rightarrow$ Account Linking
+- **Current Runtime Status:** `MISSING (ZERO CODE IN REPOSITORY)`
+- **Target Specification:** `PRODUCT TARGET`
 1. User taps `Tiếp tục với Google` on login screen.
 2. Native SDK retrieves Google IDToken; client submits to `POST /auth/oauth/google`.
 3. Backend detects email collision with an existing password account.
@@ -374,6 +405,17 @@ To ensure professional quality and build user trust, GoMate mandates consistent 
 By authority of this Global Design Review specification:
 1. All 14 GoMate modules are **DESIGN LOCKED**.
 2. No further UI redesigns, scope expansions, or visual regenerations are permitted.
-3. All future engineering implementation (`TASK 08.3`) must strictly comply with the contracts, invariants, and dependency registers documented herein.
+3. All future engineering implementation (`TASK 08.3`) must strictly comply with the contracts, invariants, and 14 subsystem dependency registers documented herein.
+
+### 10.1. Master Roadmap Source-of-Truth Hierarchy (Invariant for TASK 08.3)
+When decomposing work packages for the Master Implementation Roadmap (`TASK 08.3`), engineering scope must strictly adhere to the following hierarchy of authority:
+
+$$\text{Repository Evidence} > \text{Capability Matrix (Capability Level)} > \text{Dependency Register (14 Subsystems)} > \text{Module Summary Prose}$$
+
+1. **Repository Evidence (Supreme Truth):** Code running in `apps/backend/` and `apps/mobile/` takes precedence over any documentation claim.
+2. **Capability-Level Matrix:** Authoritative registry of functional and architectural scope per capability ID. A module summary stating "RUNTIME BASELINE EXISTS" must NEVER be used to claim that individual incomplete capabilities are done.
+3. **Dependency Register (14 Subsystems):** Authoritative registry of system preconditions, schema models, and service interfaces across all 14 dependency areas.
+4. **Module Summary Prose:** Informational overview only; carries zero implementation authority.
 
 $$\mathbf{GOMATE\ GLOBAL\ DESIGN\ =\ MASTER\ LOCKED}$$
+$$\mathbf{ROADMAP\ GOVERNANCE\ =\ FULLY\ ALIGNED}$$
