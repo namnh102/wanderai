@@ -16,17 +16,17 @@
   - [`docs/design/gomate-group-foundation-contract-v1.md`](file:///d:/Do_an/wanderai/docs/design/gomate-group-foundation-contract-v1.md)
   - [`docs/design/gomate-shared-expense-contract-v1.md`](file:///d:/Do_an/wanderai/docs/design/gomate-shared-expense-contract-v1.md)
   - [`docs/design/gomate-safety-emergency-contract-v1.md`](file:///d:/Do_an/wanderai/docs/design/gomate-safety-emergency-contract-v1.md)
-- Master Visual Evidence Artifacts (12 Master Artifacts · R1 Calibrated):
+- Master Visual Evidence Artifacts (12 Master Artifacts · R1.1 Calibrated):
   - Mobile Profile Overview R1: [`profile-mobile-overview-v1-r1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.16/profile-mobile-overview-v1-r1.png) ($390 \times 844$) [Supersedes V1]
   - Desktop Profile Overview R1: [`profile-desktop-overview-v1-r1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.16/profile-desktop-overview-v1-r1.png) ($1440 \times 900$) [Supersedes V1]
   - Mobile Edit Profile R1: [`profile-mobile-edit-v1-r1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.16/profile-mobile-edit-v1-r1.png) ($390 \times 844$) [Supersedes V1]
-  - Mobile Travel Preferences: [`profile-mobile-travel-preferences-v1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.16/profile-mobile-travel-preferences-v1.png) ($390 \times 844$) [Current Master]
+  - Mobile Travel Preferences R1: [`profile-mobile-travel-preferences-v1-r1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.16/profile-mobile-travel-preferences-v1-r1.png) ($390 \times 844$) [Supersedes V1]
   - Mobile Settings Home: [`settings-mobile-home-v1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.16/settings-mobile-home-v1.png) ($390 \times 844$) [Current Master]
   - Desktop Settings Home R1: [`settings-desktop-home-v1-r1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.16/settings-desktop-home-v1-r1.png) ($1440 \times 900$) [Supersedes V1]
   - Mobile Privacy Settings R1: [`settings-mobile-privacy-v1-r1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.16/settings-mobile-privacy-v1-r1.png) ($390 \times 844$) [Supersedes V1]
   - Mobile Notification Settings R1: [`settings-mobile-notifications-v1-r1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.16/settings-mobile-notifications-v1-r1.png) ($390 \times 844$) [Supersedes V1]
   - Mobile Location Settings: [`settings-mobile-location-v1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.16/settings-mobile-location-v1.png) ($390 \times 844$) [Current Master]
-  - Mobile Account & Security R1: [`settings-mobile-account-security-v1-r1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.16/settings-mobile-account-security-v1.png) ($390 \times 844$) [Supersedes V1]
+  - Mobile Account & Security R1: [`settings-mobile-account-security-v1-r1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.16/settings-mobile-account-security-v1-r1.png) ($390 \times 844$) [Supersedes V1]
   - Mobile Logout Confirmation: [`settings-mobile-logout-confirm-v1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.16/settings-mobile-logout-confirm-v1.png) ($390 \times 844$) [Current Master]
   - Mobile Loading & Error States: [`profile-mobile-loading-error-v1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.16/profile-mobile-loading-error-v1.png) ($390 \times 844$) [Current Master]
 
@@ -118,16 +118,14 @@ Under **Option A Master Baseline**, the Edit Profile UI strictly separates writa
    - **Giới thiệu ngắn (`bio`)**: String, Tùy chọn, tối đa 200 ký tự với bộ đếm ký tự trực tiếp (`N / 200`).
    - **Ảnh đại diện (`avatar`)**: URL ảnh hoặc tải lên; hiển thị khung tròn có icon chỉnh sửa.
 
-2. **Read-Only Account Metadata (Non-Writable via `PUT /users/me`):**
-   - **Số điện thoại (`phone`)**: Hiển thị dưới dạng thẻ thông tin chỉ đọc (Read-Only) kèm huy hiệu `Riêng tư`.
-   - **Ngày sinh (`dateOfBirth`)**: Hiển thị chỉ đọc (`15/08/1998`).
-   - **Quốc tịch (`nationality`)**: Hiển thị chỉ đọc (`Việt Nam`).
-   - **Ngôn ngữ giao tiếp (`languages`)**: Hiển thị chip chỉ đọc (`Tiếng Việt`, `English`), không có nút xóa `✕` hoặc nút `+ Thêm`.
-   - **Ghi chú minh bạch**: *"Các trường thông tin bổ sung hiện được lưu ở mức tài khoản và không thay đổi qua form này."*
+2. **Readable & Non-Readable Account Metadata (R1.1 Truth):**
+   - **Số điện thoại (`phone`)**: Đọc được từ `GET /users/me`; hiển thị dưới dạng thẻ chỉ đọc (Read-Only) kèm huy hiệu `Riêng tư`.
+   - **Ngày sinh, Quốc tịch, Ngôn ngữ**: Không được đọc qua `GET /users/me` hiện tại. Không hiển thị các giá trị demo này như dữ liệu tài khoản runtime.
+   - **Ghi chú minh bạch**: *"Một số thông tin tài khoản bổ sung chưa khả dụng trong phiên bản hiện tại."*
 
 ---
 
-## 4. Canonical Preference Ownership Model
+## 4. Canonical Preference Ownership & Write-Boundary Model
 
 The GoMate architecture establishes [`model TravelPreference`](file:///d:/Do_an/wanderai/apps/backend/prisma/schema.prisma#L91) as the **single source of truth** for all traveler preferences, shared across AI Itinerary Planning (Task 07.2) and Buddy Matching (future).
 
@@ -150,7 +148,13 @@ model TravelPreference {
 }
 ```
 
-### Enums Locked:
+### 4.1. Write-Boundary Status & UI Contract:
+- **Runtime Classification:** **PARTIAL / READ CURRENT**, **WRITE = DESIGN TARGET**.
+- `TravelPreference` được đọc thành công qua `GET /users/me` (`include: { travelPreferences: true }`), nhưng hiện tại **KHÔNG CÓ** endpoint `PUT /users/me/preferences`.
+- Giao diện `profile-mobile-travel-preferences-v1-r1.png` hiển thị các sở thích dưới dạng **thông tin chỉ đọc (Read-Only)**, loại bỏ toàn bộ tương tác chọn lựa có thể gây hiểu nhầm, và loại bỏ nút `[Lưu]`.
+- Thông báo trung thực: *"Sở thích du lịch: Chức năng chỉnh sửa sở thích đang được hoàn thiện."* (Tuyệt đối không dùng thuật ngữ kỹ sư như API, backend, V2).
+
+### 4.2. Enums Locked:
 - **`TravelStyle`:** `BACKPACKER` (Phượt), `BUDGET` (Tiết kiệm), `COMFORT` (Thoải mái), `LUXURY` (Sang trọng).
 - **`GroupSize`:** `SOLO` (Một mình), `COUPLE` (Cặp đôi), `SMALL_GROUP` (Nhóm nhỏ 3-5), `LARGE_GROUP` (Nhóm lớn 6+), `FAMILY` (Gia đình).
 
@@ -173,8 +177,10 @@ model TravelPreference {
 ```
 
 ### 5.1. Discovery Rules & Honest Controls:
-1. **Phone Number Masking:** Phone number is **NEVER** public. Post-match phone sharing is an informational preference target; default state is **LUÔN BẢO MẬT (HIDDEN)**.
-2. **Buddy Discovery Toggle:** In the absence of a preference persistence API, Buddy Discovery is presented as an informational preference target (`Mặc định mở`).
+1. **Phone Number Masking:** Phone number is **NEVER** public. Post-match phone sharing is an informational preference target; default state is **MẶC ĐỊNH ẨN (HIDDEN)** (not "Luôn bảo mật" as future post-match consent may allow sharing).
+2. **Buddy Discovery Toggle:** In the absence of a preference persistence API, Buddy Discovery is presented as an informational preference target with status:
+   `Tìm bạn đồng hành: Chức năng khám phá bạn đồng hành đang được hoàn thiện`
+   (The claim "Mặc định mở" is removed as no persistence or matching runtime exists).
 3. **Social Safety / Block List:** In the absence of a `UserBlock` table in PostgreSQL (audited as a SCHEMA GAP in Task 08.2.3.15), the UI displays:
    `Chặn & báo cáo: Chức năng quản lý danh sách chặn đang được hoàn thiện`
    (Fabrication of an empty-state count like "0 người" is strictly rejected).
@@ -188,8 +194,8 @@ Settings Home is organized into clear operational sections:
 ```
 [ CÀI ĐẶT GOMATE ]
   ├── 1. Tài khoản & Bảo mật (Email, Mật khẩu tài khoản [Đã thiết lập], Phiên thiết bị)
-  ├── 2. Hồ sơ & Sở thích du lịch (Xem hồ sơ, Chỉnh sửa sở thích TravelPreference)
-  ├── 3. Quyền riêng tư & An toàn (Buddy Discovery, Ẩn số điện thoại, Lối tắt SOS)
+  ├── 2. Hồ sơ & Sở thích du lịch (Xem hồ sơ, Thông tin sở thích TravelPreference)
+  ├── 3. Quyền riêng tư & An toàn (Buddy Discovery [Đang hoàn thiện], Ẩn số điện thoại, Lối tắt SOS)
   ├── 4. Vị trí & Dữ liệu (Quyền GPS tiền cảnh, Minh bạch chia sẻ vị trí)
   ├── 5. Cài đặt thông báo (Thông báo trong ứng dụng, Lời nhắc)
   ├── 6. Giao diện & Ứng dụng (Tiếng Việt · Giao diện sáng · GoMate v1.0.0)
@@ -212,7 +218,7 @@ The notification settings screen strictly avoids developer jargon (`Dự kiến 
 > **Thông báo trong ứng dụng: Đang được hoàn thiện** · **Thông báo đẩy trên thiết bị: Chưa hỗ trợ**  
 > *"Hệ thống đang hoàn thiện hòm thư lưu trữ thông báo lịch trình và cảnh báo an toàn. Thiết bị hiện chưa hỗ trợ nhận thông báo đẩy khi đóng ứng dụng."*
 
-Controls are presented as informational rows (`Đang hoàn thiện`) rather than unbacked operational switches.
+Controls are presented as informational rows (`Đang hoàn thiện`) rather than unbacked operational switches. Crucially, **all rows** (including Emergency Safety Alerts) are uniformly marked `Đang hoàn thiện` (the claim "Luôn bật" is removed since zero delivery runtime exists in the repository).
 
 ---
 
@@ -257,8 +263,8 @@ Hard deleting a user (`DELETE FROM users WHERE id = ...`) will immediately throw
 - **Status:** **POLICY / ARCHITECTURE GAP**.
 - **Production UI Copy:**
   - Section title: `"Quản lý tài khoản"`.
-  - Copy: *"Quy trình xóa tài khoản chưa được hỗ trợ trực tiếp trong ứng dụng. Để yêu cầu xử lý hoặc khóa tài khoản, vui lòng liên hệ bộ phận hỗ trợ khách hàng GoMate."*
-  - The enabled CTA `[Yêu cầu xóa tài khoản]` and unapproved 30-day anonymization claims are **PURGED** from user-facing UI.
+  - Copy: *"Quy trình quản lý tài khoản chưa được hỗ trợ trực tiếp trong ứng dụng."*
+  - The enabled CTA `[Yêu cầu xóa tài khoản]`, unbacked `[Liên hệ hỗ trợ]` button/badge, and unapproved 30-day anonymization claims are **PURGED** from user-facing UI.
 - **Contract Specification (Architecture Target in Documentation Only):**
   1. Set `User.deletedAt = now()`.
   2. Redact personal attributes: `Profile.displayName = "Người dùng GoMate"`, `Profile.avatar = null`, `Profile.bio = null`, `Profile.phone = null`.
@@ -292,16 +298,16 @@ All 12 current master mockups were rendered via headless Microsoft Edge browser 
 
 | Mockup File | Viewport | Target Resolution | Architectural & Visual Compliance Audit (R1 Truth) | Status |
 | :--- | :---: | :---: | :--- | :---: |
-| [`profile-mobile-overview-v1-r1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.16/profile-mobile-overview-v1-r1.png) | Mobile | $390 \times 844$ | 1. App bar `Hồ sơ cá nhân` + gear icon.<br>2. User avatar (N), display name "Lê Hoàng Nam", static role "Thành viên" (mapped from USER). Inferred personality badge removed.<br>3. Bio text.<br>4. Generic informational card "Hoàn thiện hồ sơ du lịch" (65% fake metric removed).<br>5. Personal info & travel style (Comfort) + interest chips.<br>6. Actions: `[Chỉnh sửa hồ sơ]` + `[Quyền riêng tư]`.<br>7. Canonical 5-tab bottom navigation. | **CURRENT MASTER** |
-| [`profile-desktop-overview-v1-r1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.16/profile-desktop-overview-v1-r1.png) | Desktop | $1440 \times 900$ | 1. Top nav: GoMate logo + badge `Hồ sơ du khách` + 5 canonical tabs + User pill.<br>2. 3-column workspace ($320\text{px} + 680\text{px} + 340\text{px}$).<br>3. Col 1: Profile summary, avatar, static role "Thành viên", fake "Đã xác thực" removed, generic completion card (no 65%), quick menu.<br>4. Col 2: Bio, basic info, TravelPreference details (Comfort, 1M-10M VND, 3-5 group, interest chips).<br>5. Col 3: Buddy Matching card, Privacy Shield guarantee, Security shortcuts. | **CURRENT MASTER** |
-| [`profile-mobile-edit-v1-r1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.16/profile-mobile-edit-v1-r1.png) | Mobile | $390 \times 844$ | **Option A Master Baseline:**<br>1. App bar `< Hủy`, `Chỉnh sửa hồ sơ`, `[Lưu]`.<br>2. Avatar edit overlay.<br>3. Writable Section (PUT /users/me): Tên hiển thị (2-50 chars) + Giới thiệu (78/200 chars).<br>4. Read-Only Section: Số điện thoại (Riêng tư), Ngày sinh, Quốc tịch, Ngôn ngữ giao tiếp (chips without ✕).<br>5. Clear note: Additional info managed at account level.<br>6. Primary CTA: `[Lưu thay đổi hồ sơ]`. | **CURRENT MASTER** |
-| [`profile-mobile-travel-preferences-v1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.16/profile-mobile-travel-preferences-v1.png) | Mobile | $390 \times 844$ | 1. App bar `< Hồ sơ`, `Sở thích du lịch`, `[Lưu]`.<br>2. Wandy AI value proposition banner.<br>3. 4 TravelStyle cards (Thoải mái active).<br>4. GroupSize chips (Nhóm nhỏ 3-5 active).<br>5. Budget range: 1.000.000 đ – 10.000.000 đ.<br>6. Interest chips: Biển, Văn hóa, Ẩm thực, Chụp ảnh.<br>7. CTA: `[Lưu sở thích du lịch]`. | **CURRENT MASTER** |
+| [`profile-mobile-overview-v1-r1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.16/profile-mobile-overview-v1-r1.png) | Mobile | $390 \times 844$ | 1. App bar `Hồ sơ cá nhân` + gear icon.<br>2. User avatar (N), display name "Lê Hoàng Nam", static role "Thành viên" (mapped from USER). Inferred personality badge removed.<br>3. Bio text.<br>4. Neutral informational card "Cập nhật thông tin và sở thích du lịch để cá nhân hóa trải nghiệm GoMate." (fake 65% and Wandy/Buddy matching claims removed).<br>5. Personal info & travel style (Comfort) + interest chips.<br>6. Actions: `[Chỉnh sửa hồ sơ]` + `[Quyền riêng tư]`.<br>7. Canonical 5-tab bottom navigation. | **CURRENT MASTER** |
+| [`profile-desktop-overview-v1-r1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.16/profile-desktop-overview-v1-r1.png) | Desktop | $1440 \times 900$ | 1. Top nav: GoMate logo + badge `Hồ sơ du khách` + 5 canonical tabs + User pill.<br>2. 3-column workspace ($320\text{px} + 680\text{px} + 340\text{px}$).<br>3. Col 1: Profile summary, avatar, static role "Thành viên", fake "Đã xác thực" removed, completion card with neutral copy "Cập nhật thông tin và sở thích du lịch để cá nhân hóa trải nghiệm GoMate.", quick menu.<br>4. Col 2: Bio, basic info, TravelPreference details (Comfort, 1M-10M VND, 3-5 group, interest chips).<br>5. Col 3: Buddy Matching card ("Đang hoàn thiện"), Privacy Shield guarantee ("Mặc định ẩn"), Security shortcuts. | **CURRENT MASTER** |
+| [`profile-mobile-edit-v1-r1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.16/profile-mobile-edit-v1-r1.png) | Mobile | $390 \times 844$ | **Option A Master Baseline:**<br>1. App bar `< Hủy`, `Chỉnh sửa hồ sơ`, `[Lưu]`.<br>2. Avatar edit overlay.<br>3. Writable Section (PUT /users/me): Tên hiển thị (2-50 chars) + Giới thiệu (78/200 chars).<br>4. Read-Only Section: Số điện thoại (Riêng tư); non-readable fields (DOB, nationality, languages) omitted with honest note: "Một số thông tin tài khoản bổ sung chưa khả dụng trong phiên bản hiện tại.".<br>5. Clear note: Additional info managed at account level.<br>6. Primary CTA: `[Lưu thay đổi hồ sơ]`. | **CURRENT MASTER** |
+| [`profile-mobile-travel-preferences-v1-r1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.16/profile-mobile-travel-preferences-v1-r1.png) | Mobile | $390 \times 844$ | **Option A Read-Only Master Baseline:**<br>1. App bar `< Hồ sơ`, `Sở thích du lịch` (no Save button).<br>2. Informational note: "Sở thích du lịch: Chức năng chỉnh sửa sở thích đang được hoàn thiện."<br>3. TravelStyle cards (Thoải mái displayed read-only).<br>4. GroupSize chips (Nhóm nhỏ 3-5 displayed read-only).<br>5. Budget range: 1.000.000 đ – 10.000.000 đ.<br>6. Interest chips: Biển, Văn hóa, Ẩm thực, Chụp ảnh (no toggle affordances).<br>7. Read-only presentation; no Save CTA. | **CURRENT MASTER** |
 | [`settings-mobile-home-v1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.16/settings-mobile-home-v1.png) | Mobile | $390 \times 844$ | 1. App bar `< Cài đặt`.<br>2. User header card with avatar & `Hồ sơ ›` link.<br>3. Grouped sections: Tài khoản & Bảo mật, Trải nghiệm du lịch, Quyền riêng tư & An toàn, Ứng dụng.<br>4. Red logout action: `[Đăng xuất tài khoản]`.<br>5. Canonical 5-tab bottom navigation. | **CURRENT MASTER** |
-| [`settings-desktop-home-v1-r1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.16/settings-desktop-home-v1-r1.png) | Desktop | $1440 \times 900$ | 1. Top nav: GoMate logo + badge `Hồ sơ du khách` + 5 canonical tabs + User pill.<br>2. 2-column workspace ($320\text{px} + 1020\text{px}$).<br>3. Left menu: Settings categories.<br>4. Right panel: Account info card (fake "Đã xác thực" removed), Password card ("Đã thiết lập", change password unavailable), Privacy & Location summary, Danger zone (Account Deletion guidance, no fake CTA). | **CURRENT MASTER** |
-| [`settings-mobile-privacy-v1-r1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.16/settings-mobile-privacy-v1-r1.png) | Mobile | $390 \times 844$ | 1. App bar `< Quyền riêng tư`.<br>2. Buddy discovery (Mặc định mở) & Phone visibility (Luôn bảo mật) presented as preference targets.<br>3. Location boundary disclosure card (no auto sharing).<br>4. Social safety: Chặn & báo cáo (Đang hoàn thiện, no fake "0 người"), Báo cáo vi phạm.<br>5. SOS security commitment banner (trusted contacts isolated). | **CURRENT MASTER** |
-| [`settings-mobile-notifications-v1-r1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.16/settings-mobile-notifications-v1-r1.png) | Mobile | $390 \times 844$ | 1. App bar `< Cài đặt thông báo`.<br>2. Honest runtime status: `Thông báo trong ứng dụng: Đang được hoàn thiện` vs `Thông báo đẩy trên thiết bị: Chưa hỗ trợ` (dev terms FCM/APNs, V2 purged).<br>3. Informational status rows (Trips, Buddy, Group, Safety alert mandatory).<br>4. Reminders section (Schedule reminders). | **CURRENT MASTER** |
-| [`settings-mobile-location-v1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.16/settings-mobile-location-v1.png) | Mobile | $390 \times 844$ | 1. App bar `< Vị trí & Dữ liệu`.<br>2. Foreground permission status (±15 m · Tốt) + `[Mở Cài đặt hệ thống]` button.<br>3. Location transparency principles: Foreground only, no background tracking, no continuous live broadcast.<br>4. Location cache clear action. | **CURRENT MASTER** |
-| [`settings-mobile-account-security-v1-r1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.16/settings-mobile-account-security-v1-r1.png) | Mobile | $390 \times 844$ | 1. App bar `< Tài khoản & Bảo mật`.<br>2. Account info: Email (fake "Đã xác thực" removed), Joined date, Role (Thành viên USER).<br>3. Password: "Đã thiết lập" (bcrypt detail purged); Change password: "Chưa hỗ trợ trong phiên bản hiện tại" (enabled button & API target purged).<br>4. Danger Zone card: Neutral customer support guidance (fake runtime CTA & 30-day claim purged). | **CURRENT MASTER** |
+| [`settings-desktop-home-v1-r1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.16/settings-desktop-home-v1-r1.png) | Desktop | $1440 \times 900$ | 1. Top nav: GoMate logo + badge `Hồ sơ du khách` + 5 canonical tabs + User pill.<br>2. 2-column workspace ($320\text{px} + 1020\text{px}$).<br>3. Left menu: Settings categories.<br>4. Right panel: Account info card (fake "Đã xác thực" removed), Password card ("Đã thiết lập", change password unavailable), Privacy (Buddy matching "Đang hoàn thiện", Phone "Mặc định ẩn") & Location summary, Danger zone (Account management pure informational guidance, no fake CTA/button). | **CURRENT MASTER** |
+| [`settings-mobile-privacy-v1-r1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.16/settings-mobile-privacy-v1-r1.png) | Mobile | $390 \times 844$ | 1. App bar `< Quyền riêng tư`.<br>2. Buddy discovery: "Chức năng khám phá bạn đồng hành đang được hoàn thiện" (no fake "Mặc định mở") & Phone visibility: "Mặc định ẩn" (no "Luôn bảo mật").<br>3. Location boundary disclosure card (no auto sharing).<br>4. Social safety: Chặn & báo cáo (Đang hoàn thiện, no fake "0 người"), Báo cáo vi phạm.<br>5. SOS security commitment banner (trusted contacts isolated). | **CURRENT MASTER** |
+| [`settings-mobile-notifications-v1-r1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.16/settings-mobile-notifications-v1-r1.png) | Mobile | $390 \times 844$ | 1. App bar `< Cài đặt thông báo`.<br>2. Honest runtime status: `Thông báo trong ứng dụng: Đang được hoàn thiện` vs `Thông báo đẩy trên thiết bị: Chưa hỗ trợ` (dev terms FCM/APNs, V2 purged).<br>3. Informational status rows: ALL rows marked "Đang hoàn thiện" including safety alerts (no "Luôn bật" runtime claim).<br>4. Reminders section (Schedule reminders marked "Đang hoàn thiện"). | **CURRENT MASTER** |
+| [`settings-mobile-location-v1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.16/settings-mobile-location-v1.png) | Mobile | $390 \times 844$ | 1. App bar `< Vị trí & Dữ liệu`.<br>2. Foreground permission status (±15 m · Tốt) + `[Mở Cài đặt hệ thống]` button.<br>3. Location validity principles: Foreground only, no background tracking, no continuous live broadcast.<br>4. Location cache clear action. | **CURRENT MASTER** |
+| [`settings-mobile-account-security-v1-r1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.16/settings-mobile-account-security-v1-r1.png) | Mobile | $390 \times 844$ | 1. App bar `< Tài khoản & Bảo mật`.<br>2. Account info: Email (fake "Đã xác thực" removed), Joined date, Role (Thành viên USER).<br>3. Password: "Đã thiết lập" (bcrypt detail purged); Change password: "Chưa hỗ trợ trong phiên bản hiện tại" (enabled button & API target purged).<br>4. Danger Zone card: Pure informational notice "Quy trình quản lý tài khoản chưa được hỗ trợ trực tiếp trong ứng dụng" (fake action button & contact link purged). | **CURRENT MASTER** |
 | [`settings-mobile-logout-confirm-v1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.16/settings-mobile-logout-confirm-v1.png) | Mobile | $390 \times 844$ | 1. Dark semi-transparent modal overlay ($65\%$ opacity).<br>2. Centered confirmation dialog with logout icon.<br>3. Title `Đăng xuất khỏi GoMate?`.<br>4. Clear session expiration warning.<br>5. Primary CTA `[Đăng xuất]` (Red) + Secondary CTA `[Hủy bỏ]`. | **CURRENT MASTER** |
 | [`profile-mobile-loading-error-v1.png`](file:///d:/Do_an/wanderai/docs/audit/evidence/ui-08.2.3.16/profile-mobile-loading-error-v1.png) | Mobile | $390 \times 844$ | 1. Dual demonstration layout.<br>2. Top card: Loading skeleton with animated placeholders.<br>3. Bottom card: Network error state with warning icon, error explanation, and `[Thử lại]` action button.<br>4. Canonical 5-tab bottom navigation. | **CURRENT MASTER** |
 
@@ -309,6 +315,7 @@ All 12 current master mockups were rendered via headless Microsoft Edge browser 
 - `profile-mobile-overview-v1.png` → Superseded by `profile-mobile-overview-v1-r1.png`
 - `profile-desktop-overview-v1.png` → Superseded by `profile-desktop-overview-v1-r1.png`
 - `profile-mobile-edit-v1.png` → Superseded by `profile-mobile-edit-v1-r1.png`
+- `profile-mobile-travel-preferences-v1.png` → Superseded by `profile-mobile-travel-preferences-v1-r1.png`
 - `settings-desktop-home-v1.png` → Superseded by `settings-desktop-home-v1-r1.png`
 - `settings-mobile-privacy-v1.png` → Superseded by `settings-mobile-privacy-v1-r1.png`
 - `settings-mobile-notifications-v1.png` → Superseded by `settings-mobile-notifications-v1-r1.png`
