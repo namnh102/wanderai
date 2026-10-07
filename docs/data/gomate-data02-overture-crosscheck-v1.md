@@ -63,7 +63,7 @@ In accordance with the DATA-02 data contract:
 
 ## 4. Multi-License Provenance Resolution
 
-Overture Places does not apply a single uniform license across all records. Each auxiliary source link derives its license from the underlying source record providers:
+Overture Places does not apply a single uniform license across all records. Each auxiliary source link derives its license strictly from the underlying source record providers:
 
 ```json
 {
@@ -81,8 +81,18 @@ Overture Places does not apply a single uniform license across all records. Each
 }
 ```
 
-- **Resolved License Families:** CDLA Permissive 2.0 (Meta, Microsoft), Apache 2.0, CC0 1.0.
-- **Unresolved Licenses:** 0 (100% of auto-linked records had verified permissive licensing).
+### 4.1 Strict Resolution Policy (DATA-02-R1)
+- **Approved Explicit License Families:** `CDLA Permissive 2.0`, `Apache 2.0`, `CC0 1.0`.
+- **Zero Fallback Invariant:** The default fallback (`if not resolved_licenses: return "CDLA Permissive 2.0"`) was eliminated. Unresolved, missing, or unapproved upstream licenses strictly evaluate to `None` / `LICENSE_UNRESOLVED`.
+- **Auto-Link Gate:** Records with unresolved licenses are blocked from database auto-linking and routed to manual review.
+
+### 4.2 Database Auxiliary Records License Audit
+All 89 Overture auxiliary records currently in PostgreSQL were subjected to an exhaustive provenance audit:
+- Total auxiliary records audited: **89** (51 in Hạ Long, 38 in Hà Nội).
+- Records with explicit, verified approved licenses: **89 (100.0%)**.
+- Records with null, empty, or unapproved licenses: **0 (0.0%)**.
+- Records linked via fallback: **0 (0.0%)**.
+- Quarantine or deletion actions required: **0**.
 
 ---
 
@@ -90,4 +100,6 @@ Overture Places does not apply a single uniform license across all records. Each
 
 1. **Zero Replacement of OSM IDs:** No Overture ID was used as a canonical `places.id`.
 2. **Zero Factual Overwrite:** OSM coordinates, names, and tags were NOT overwritten by Overture data.
-3. **Database Footprint:** Exactly 89 high-confidence Overture auxiliary provenance records were linked to DB places (51 in Ha Long, 38 in Hanoi).
+3. **Database Footprint:** Exactly 89 high-confidence Overture auxiliary provenance records were linked to DB places (51 in Ha Long, 38 in Hanoi), all with validated `CDLA Permissive 2.0` upstream provenance.
+4. **Reproducibility:** Cross-check outputs and summaries are cryptographically sealed in [`data/manifests/dataset-freeze-v1.yaml`](file:///d:/Do_an/wanderai/data/manifests/dataset-freeze-v1.yaml).
+

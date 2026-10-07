@@ -63186,6 +63186,25 @@
     "overture_match": null
   },
   {
+    "source_id": "relation/11623141",
+    "osm_name": "Chợ Hôm",
+    "osm_tier1": "SHOPPING_COMMERCE",
+    "status": "AUTO_LINK",
+    "overture_match": {
+      "overture_id": "cb2f9544-5f76-4397-b45c-1f586bce666f",
+      "overture_name": "Chợ Hôm",
+      "distance_m": 27.4,
+      "similarity_score": 1.0,
+      "category_compatible": true,
+      "operating_status": null,
+      "license": "CDLA Permissive 2.0",
+      "providers": [
+        "meta",
+        "Overture"
+      ]
+    }
+  },
+  {
     "source_id": "relation/11771976",
     "osm_name": "Khách sạn Thắng Lợi",
     "osm_tier1": "HOSPITALITY",
@@ -63212,9 +63231,101 @@
     }
   },
   {
+    "source_id": "relation/14048545",
+    "osm_name": "Chùa Bồ Đề",
+    "osm_tier1": "CULTURE_HERITAGE",
+    "status": "UNMATCHED",
+    "overture_match": null
+  },
+  {
+    "source_id": "relation/14048548",
+    "osm_name": "Đền Chầu Bà",
+    "osm_tier1": "CULTURE_HERITAGE",
+    "status": "UNMATCHED",
+    "overture_match": null
+  },
+  {
+    "source_id": "relation/14048551",
+    "osm_name": "Đền Ghềnh",
+    "osm_tier1": "CULTURE_HERITAGE",
+    "status": "MANUAL_REVIEW_CANDIDATE",
+    "overture_match": {
+      "overture_id": "8616c824-b677-40fc-b9b5-73c6c5b55085",
+      "overture_name": "Đền Ghềnh",
+      "distance_m": 24.1,
+      "similarity_score": 1.0,
+      "category_compatible": false,
+      "operating_status": null,
+      "license": "CDLA Permissive 2.0",
+      "providers": [
+        "meta",
+        "Overture"
+      ]
+    }
+  },
+  {
+    "source_id": "relation/14428278",
+    "osm_name": "Đình Phúc Xá",
+    "osm_tier1": "CULTURE_HERITAGE",
+    "status": "UNMATCHED",
+    "overture_match": null
+  },
+  {
+    "source_id": "relation/14428279",
+    "osm_name": "Chùa Bắc Biên",
+    "osm_tier1": "CULTURE_HERITAGE",
+    "status": "AUTO_LINK",
+    "overture_match": {
+      "overture_id": "7600ed6e-ed4a-4f61-bf1b-9c7d3dba28f0",
+      "overture_name": "Chùa Bắc Biên",
+      "distance_m": 15.4,
+      "similarity_score": 1.0,
+      "category_compatible": true,
+      "operating_status": null,
+      "license": "CDLA Permissive 2.0",
+      "providers": [
+        "meta",
+        "Overture"
+      ]
+    }
+  },
+  {
     "source_id": "relation/15974755",
     "osm_name": "Nhà khách Học viện Thanh thiếu niên Việt Nam",
     "osm_tier1": "HOSPITALITY",
+    "status": "UNMATCHED",
+    "overture_match": null
+  },
+  {
+    "source_id": "relation/16437918",
+    "osm_name": "Trung tâm thương mại dịch vụ Nghĩa Đô",
+    "osm_tier1": "SHOPPING_COMMERCE",
+    "status": "UNMATCHED",
+    "overture_match": null
+  },
+  {
+    "source_id": "relation/16640104",
+    "osm_name": "Đền Bà Kiệu",
+    "osm_tier1": "CULTURE_HERITAGE",
+    "status": "AUTO_LINK",
+    "overture_match": {
+      "overture_id": "13614930-937b-4fbf-8a0b-9048f4e9b3c1",
+      "overture_name": "Đền Bà Kiệu",
+      "distance_m": 4.2,
+      "similarity_score": 1.0,
+      "category_compatible": true,
+      "operating_status": null,
+      "license": "CDLA Permissive 2.0",
+      "providers": [
+        "meta",
+        "Overture"
+      ]
+    }
+  },
+  {
+    "source_id": "relation/16798725",
+    "osm_name": "Công viên Mỗ Lao",
+    "osm_tier1": "NATURE_SCENERY",
     "status": "UNMATCHED",
     "overture_match": null
   },
@@ -63257,6 +63368,51 @@
     }
   },
   {
+    "source_id": "relation/19179452",
+    "osm_name": "Đền Hai Bà Trưng",
+    "osm_tier1": "CULTURE_HERITAGE",
+    "status": "MANUAL_REVIEW_CANDIDATE",
+    "overture_match": {
+      "overture_id": "849c07de-6616-45ab-a2e4-7538d236daaf",
+      "overture_name": "Đền Hai Bà Trưng",
+      "distance_m": 34.2,
+      "similarity_score": 1.0,
+      "category_compatible": false,
+      "operating_status": null,
+      "license": "CDLA Permissive 2.0",
+      "providers": [
+        "meta",
+        "Overture"
+      ]
+    }
+  },
+  {
+    "source_id": "relation/20662634",
+    "osm_name": "Hội Quán Phúc Kiến",
+    "osm_tier1": "CULTURE_HERITAGE",
+    "status": "UNMATCHED",
+    "overture_match": null
+  },
+  {
+    "source_id": "relation/20965271",
+    "osm_name": "Đình đền Đông Thiên Vĩnh Hưng",
+    "osm_tier1": "CULTURE_HERITAGE",
+    "status": "AUTO_LINK",
+    "overture_match": {
+      "overture_id": "87f34ab9-5544-4b11-a334-5626b812b04e",
+      "overture_name": "Đình đền Đông Thiên",
+      "distance_m": 44.2,
+      "similarity_score": 0.931,
+      "category_compatible": true,
+      "operating_status": null,
+      "license": "CDLA Permissive 2.0",
+      "providers": [
+        "meta",
+        "Overture"
+      ]
+    }
+  },
+  {
     "source_id": "relation/21390097",
     "osm_name": "Nhà triển lãm Mỹ thuật",
     "osm_tier1": "CULTURE_HERITAGE",
@@ -63266,6 +63422,25 @@
       "overture_name": "Nhà triển lãm 45 Tràng Tiền",
       "distance_m": 94.6,
       "similarity_score": 0.897,
+      "category_compatible": true,
+      "operating_status": null,
+      "license": "CDLA Permissive 2.0",
+      "providers": [
+        "meta",
+        "Overture"
+      ]
+    }
+  },
+  {
+    "source_id": "relation/21390321",
+    "osm_name": "Vườn hoa Lý Thái Tổ",
+    "osm_tier1": "NATURE_SCENERY",
+    "status": "AUTO_LINK",
+    "overture_match": {
+      "overture_id": "28798dcb-16a7-4f57-8027-0a026262c6fd",
+      "overture_name": "Vườn hoa Lý Thái Tổ",
+      "distance_m": 20.0,
+      "similarity_score": 1.0,
       "category_compatible": true,
       "operating_status": null,
       "license": "CDLA Permissive 2.0",
@@ -63295,9 +63470,37 @@
     }
   },
   {
+    "source_id": "relation/21395416",
+    "osm_name": "Tu viện Dòng mến Thánh Giá",
+    "osm_tier1": "CULTURE_HERITAGE",
+    "status": "UNMATCHED",
+    "overture_match": null
+  },
+  {
     "source_id": "relation/21401560",
     "osm_name": "Quảng trường Ba Đình",
     "osm_tier1": "ATTRACTIONS_LEISURE",
+    "status": "UNMATCHED",
+    "overture_match": null
+  },
+  {
+    "source_id": "relation/21404421",
+    "osm_name": "Khu khảo cổ học 18 Hoàng Diệu",
+    "osm_tier1": "NATURE_SCENERY",
+    "status": "UNMATCHED",
+    "overture_match": null
+  },
+  {
+    "source_id": "relation/21404732",
+    "osm_name": "Khu Di tích Phủ Chủ tịch",
+    "osm_tier1": "NATURE_SCENERY",
+    "status": "UNMATCHED",
+    "overture_match": null
+  },
+  {
+    "source_id": "relation/21408979",
+    "osm_name": "Vườn hoa Kính Thiên",
+    "osm_tier1": "NATURE_SCENERY",
     "status": "UNMATCHED",
     "overture_match": null
   },
@@ -63307,6 +63510,25 @@
     "osm_tier1": "HOSPITALITY",
     "status": "UNMATCHED",
     "overture_match": null
+  },
+  {
+    "source_id": "relation/21422526",
+    "osm_name": "Vườn Giám",
+    "osm_tier1": "NATURE_SCENERY",
+    "status": "MANUAL_REVIEW_CANDIDATE",
+    "overture_match": {
+      "overture_id": "7aeb4dbb-678f-472f-83c0-4ac7d7c1e8ae",
+      "overture_name": "Vườn Cây Ú",
+      "distance_m": 112.6,
+      "similarity_score": 0.853,
+      "category_compatible": true,
+      "operating_status": null,
+      "license": "CDLA Permissive 2.0",
+      "providers": [
+        "meta",
+        "Overture"
+      ]
+    }
   },
   {
     "source_id": "relation/21425134",
@@ -63335,9 +63557,68 @@
     "overture_match": null
   },
   {
+    "source_id": "relation/21429693",
+    "osm_name": "Công viên An Hoà",
+    "osm_tier1": "NATURE_SCENERY",
+    "status": "UNMATCHED",
+    "overture_match": null
+  },
+  {
     "source_id": "relation/21439106",
     "osm_name": "Đài tưởng niệm Liệt sĩ Phường Mai Dịch",
     "osm_tier1": "CULTURE_HERITAGE",
+    "status": "UNMATCHED",
+    "overture_match": null
+  },
+  {
+    "source_id": "relation/21452132",
+    "osm_name": "Công viên Mai Dịch",
+    "osm_tier1": "NATURE_SCENERY",
+    "status": "MANUAL_REVIEW_CANDIDATE",
+    "overture_match": {
+      "overture_id": "7a24bf0d-143e-4c3a-ad8d-80247488c869",
+      "overture_name": "Công viên hồ điều hòa Mai Dịch",
+      "distance_m": 46.3,
+      "similarity_score": 0.887,
+      "category_compatible": true,
+      "operating_status": null,
+      "license": "CDLA Permissive 2.0",
+      "providers": [
+        "meta",
+        "Overture"
+      ]
+    }
+  },
+  {
+    "source_id": "relation/21456196",
+    "osm_name": "Công viên Nghĩa trang Mai Dịch",
+    "osm_tier1": "NATURE_SCENERY",
+    "status": "UNMATCHED",
+    "overture_match": null
+  },
+  {
+    "source_id": "relation/21474423",
+    "osm_name": "Chùa Cả",
+    "osm_tier1": "CULTURE_HERITAGE",
+    "status": "AUTO_LINK",
+    "overture_match": {
+      "overture_id": "14c6a7dd-4e00-432f-ba47-170d2c395890",
+      "overture_name": "Chùa Cả",
+      "distance_m": 7.3,
+      "similarity_score": 1.0,
+      "category_compatible": true,
+      "operating_status": null,
+      "license": "CDLA Permissive 2.0",
+      "providers": [
+        "meta",
+        "Overture"
+      ]
+    }
+  },
+  {
+    "source_id": "relation/21513852",
+    "osm_name": "Vườn hoa Sài Đồng",
+    "osm_tier1": "NATURE_SCENERY",
     "status": "UNMATCHED",
     "overture_match": null
   }

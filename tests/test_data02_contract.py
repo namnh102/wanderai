@@ -193,3 +193,78 @@ def test_freeze_manifest_sha256_integrity():
                 h.update(chunk)
         actual_sha = h.hexdigest()
         assert actual_sha == expected_sha, f"SHA-256 mismatch for {rel_path}: expected {expected_sha}, got {actual_sha}"
+
+# 8. DATA-02-R1 Governance Closure Tests
+import subprocess
+import yaml
+
+def test_overture_license_resolution_strict_no_fallback():
+    """Verify that unknown/missing licenses resolve to None without falling back to CDLA."""
+    # Unknown license
+    lic, prov = resolve_overture_license([{"license": "Proprietary", "dataset": "unknown_corp"}])
+    assert lic is None
+    assert "unknown_corp" in prov
+
+    # Missing license
+    lic_empty, prov_empty = resolve_overture_license([{"dataset": "partner_x"}])
+    assert lic_empty is None
+    assert "partner_x" in prov_empty
+
+    # Empty list
+    lic_none, prov_none = resolve_overture_license([])
+    assert lic_none is None
+    assert prov_none == []
+
+    # Valid approved licenses
+    for app_lic, exp in [
+        ("CDLA-Permissive-2.0", "CDLA Permissive 2.0"),
+        ("Apache-2.0", "Apache 2.0"),
+        ("CC0-1.0", "CC0 1.0"),
+    ]:
+        l, _ = resolve_overture_license([{"license": app_lic, "dataset": "meta"}])
+        assert l == exp
+
+def test_manifest_dynamic_db_assertions():
+    """Verify manifest YAML schema and live DB consistency invariants."""
+    yaml_file = REPO_ROOT / "data" / "manifests" / "dataset-freeze-v1.yaml"
+    assert yaml_file.exists()
+
+    with open(yaml_file, "r", encoding="utf-8") as f:
+        manifest = yaml.safe_load(f)
+
+    db_state = manifest["database_state"]
+    assert db_state["osm_documents"] == db_state["total_verified_osm_sources"] == 580
+    assert db_state["wikivoyage_documents"] == 464
+    assert db_state["total_documents"] == db_state["osm_documents"] + db_state["wikivoyage_documents"] == 1044
+    assert db_state["places_with_non_null_rating"] == 0
+
+    assert len(manifest["committed_immutable_artifacts"]) == 17
+    assert len(manifest["local_restricted_dependencies"]) == 6
+
+def test_reca_item_universe_lock():
+    """Verify REC-A item universe is strictly locked to the 580 canonical verified places."""
+    curated_file = REPO_ROOT / "data" / "curated" / "gomate_places_freeze_v1.json"
+    with open(curated_file, "r", encoding="utf-8") as f:
+        places = json.load(f)
+
+    assert len(places) == 580
+    place_ids = set()
+    for p in places:
+        assert p["place_id"] not in place_ids, f"Duplicate place_id {p['place_id']}"
+        place_ids.add(p["place_id"])
+        assert p["latitude"] is not None and p["longitude"] is not None
+        assert p["category"] is not None
+        assert p["destination"] is not None
+
+def test_vihorec_not_tracked_in_git():
+    """Verify that no ViHoRec CSV files are tracked in the Git index."""
+    result = subprocess.run(
+        ["git", "ls-files", "data/restricted/vihorec"],
+        cwd=str(REPO_ROOT),
+        capture_output=True,
+        text=True
+    )
+    assert result.returncode == 0
+    tracked_files = [line.strip() for line in result.stdout.strip().splitlines() if line.strip()]
+    assert len(tracked_files) == 0, f"Restricted ViHoRec files tracked in git: {tracked_files}"
+

@@ -12,11 +12,11 @@
   },
   "hanoi": {
     "region": "hanoi",
-    "total_osm_pois": 4866,
+    "total_osm_pois": 4889,
     "total_overture_places": 257036,
-    "auto_linked": 1112,
-    "manual_review_candidates": 1328,
-    "unmatched": 2426,
+    "auto_linked": 1118,
+    "manual_review_candidates": 1332,
+    "unmatched": 2439,
     "license_unresolved": 0,
     "source_conflicts": 0,
     "linked_places": []

@@ -31,11 +31,30 @@ All queries utilized reproducible Overpass QL files committed to version control
 | **Normalized Candidate POIs** | **4,889** | **188** | **5,077** |
 | **Filtered / Rejected Elements** | 9 | 3 | 12 |
 | **Target Coverage Goal** | ~120 POIs | ~60 POIs | ~180 POIs |
-| **Target Satisfaction** | **4,074% of Target** (4,889 vs ~120) | **313% of Target** (188 vs ~60) | **PASS** |
+| **Verified POIs Frozen in DB** | **145 POIs** (110 baseline + 35 new) | **188 POIs** (newly established) | **333 Corridor POIs** |
+| **Corridor Target Satisfaction** | **121% of Target** (145 vs ~120) | **313% of Target** (188 vs ~60) | **PASS** |
 
 ---
 
-## 3. Freshness & Provenance Metadata Envelope
+## 3. Candidate Extraction Pool vs. Canonical Verified POI Universe
+
+A critical methodological distinction is established between the upstream extraction pool and the canonical research universe:
+
+1. **Normalized Candidate Extraction Pool ($N = 5,077$):**
+   - Stored in [`data/processed/osm/hanoi_normalized_v1.json`](file:///d:/Do_an/wanderai/data/processed/osm/hanoi_normalized_v1.json) (4,889 POIs) and [`data/processed/osm/halong_normalized_v1.json`](file:///d:/Do_an/wanderai/data/processed/osm/halong_normalized_v1.json) (188 POIs).
+   - Represents the complete spatial extraction of normalized OSM amenities within the bounding boxes conforming to Taxonomy V1.1.
+   - Serves as an immutable reference corpus for future research expansions and density studies.
+
+2. **Canonical Verified POI Universe ($N = 580$):**
+   - Stored in [`data/curated/gomate_places_freeze_v1.json`](file:///d:/Do_an/wanderai/data/curated/gomate_places_freeze_v1.json) and mirrored in the active PostgreSQL `places` table.
+   - Comprises the 580 verified tourism POIs with active OSM provenance records across all 6 research destinations (188 Ha Long, 145 Hanoi, 89 Da Nang, 80 Hoi An, 41 Nha Trang, 37 Hue).
+   - In Hanoi, 35 high-confidence tourism candidates (prioritizing culture, heritage, attractions, nature, and Overture AUTO-LINK confirmed places) were added to the existing 110 verified baseline places, reaching 145 POIs (satisfying the ~120 target).
+   - In Ha Long, all 188 normalized candidates were verified and imported to overcome the zero-POI baseline.
+   - **Strict Governance Rule:** Recommender evaluation track REC-A operates strictly on the 580 canonical verified POIs, not the 5,077 raw extraction pool.
+
+---
+
+## 4. Freshness & Provenance Metadata Envelope
 
 Every collected raw response and parsed record preserves the full upstream provenance envelope:
 
@@ -67,7 +86,7 @@ Every collected raw response and parsed record preserves the full upstream prove
 
 ---
 
-## 4. Ha Long Verified POI Corpus Establishment
+## 5. Ha Long Verified POI Corpus Establishment
 
 Prior to DATA-02, the Ha Long destination in GoMate contained zero verified OSM POIs. DATA-02 successfully resolves this deficit:
 
@@ -82,7 +101,7 @@ Prior to DATA-02, the Ha Long destination in GoMate contained zero verified OSM 
 
 ---
 
-## 5. Architectural & Reproducibility Guarantees
+## 6. Architectural & Reproducibility Guarantees
 
 1. **Deterministic Queries:** Both `.overpassql` query scripts are version-controlled in [`data/queries/osm/`](file:///d:/Do_an/wanderai/data/queries/osm/).
 2. **Immutable Raw Snapshots:** Raw response bytes are committed to [`data/raw/osm/`](file:///d:/Do_an/wanderai/data/raw/osm/) and verified against cryptographic SHA-256 hashes.

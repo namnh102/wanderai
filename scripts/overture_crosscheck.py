@@ -114,9 +114,9 @@ KNOWN_LICENSES = {
     "cc0": "CC0 1.0",
     "cc0-1.0": "CC0 1.0",
     "cc0 1.0": "CC0 1.0",
-    "mit": "MIT",
-    "odbl": "ODbL 1.0"
 }
+
+APPROVED_AUTO_LINK_LICENSES = {"CDLA Permissive 2.0", "Apache 2.0", "CC0 1.0"}
 
 def resolve_overture_license(sources: list[dict]) -> tuple[str | None, list[str]]:
     resolved_licenses = set()
@@ -130,10 +130,9 @@ def resolve_overture_license(sources: list[dict]) -> tuple[str | None, list[str]
                 resolved_licenses.add(v)
 
     if not resolved_licenses:
-        # Default Overture baseline is CDLA Permissive 2.0 if derived from Meta/Microsoft open places
-        return "CDLA Permissive 2.0", providers
+        return None, providers
 
-    # If multiple licenses, return comma-separated or primary
+    # If multiple licenses, return comma-separated
     return "; ".join(sorted(resolved_licenses)), providers
 
 def is_category_compatible(osm_tier1: str, ov_basic_cat: str, ov_taxonomy: dict) -> bool:

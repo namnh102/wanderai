@@ -1,7 +1,7 @@
 dataset_freeze_version: v1.0.0
-created_at_utc: '2026-10-07T09:57:43.329144+00:00'
+created_at_utc: '2026-10-07T10:44:00.976621+00:00'
 branch: feature/data-foundation-w2
-git_commit: 871d890722c51a632b0a98cb32a1f1e83a767f11
+git_commit: 82619409d3040e3ccd7aa5755e349510ca002e91
 canonical_geography:
   hanoi:
     bbox:
@@ -26,8 +26,8 @@ database_state:
   total_places: 703
   total_verified_osm_sources: 580
   total_auxiliary_overture_sources: 89
-  total_documents: 1009
-  osm_documents: 545
+  total_documents: 1044
+  osm_documents: 580
   wikivoyage_documents: 464
   places_with_non_null_rating: 0
 overture_secondary_crosscheck:
@@ -35,7 +35,8 @@ overture_secondary_crosscheck:
   schema_version: v2.0.0
   licensing: Multi-License (CDLA Permissive 2.0 / Apache 2.0 / CC0 1.0)
   halong_matched_auto: 51
-  hanoi_matched_auto: 1112
+  hanoi_matched_auto: 1118
+  db_auxiliary_linked_sources: 89
 synthetic_preferences:
   population_size: 300
   seed: 42
@@ -48,7 +49,8 @@ vihorec_benchmark:
   interactions: 17911
   users: 6822
   hotels: 560
-immutable_artifacts:
+  governance: LOCAL_RESTRICTED_RESEARCH_DEPENDENCY (Git-Ignored, Verified by SHA256)
+committed_immutable_artifacts:
 - path: data/queries/osm/hanoi_v1.overpassql
   bytes: 1984
   sha256: 677ac053d278d6e1bb7720098777e95bdaaf49f8604b34c1f41627a37ed4bb00
@@ -64,12 +66,6 @@ immutable_artifacts:
 - path: data/raw/osm/collection_metadata_2026-10-07.json
   bytes: 823
   sha256: 7ee17315987643457128ec79cc9f1eb72a98bc29c5f1d860cb7fd0e872531b66
-- path: data/raw/overture/overture_halong_2026-09-23.1.parquet
-  bytes: 1762323
-  sha256: b8946680034deb7bcfd77eeb9412ea88249cddf44c30680d12f246b01e59e811
-- path: data/raw/overture/overture_hanoi_2026-09-23.1.parquet
-  bytes: 32312042
-  sha256: 9ee7d9eadfa4ac29e6494e13df02e802da8f2c041de408085a79a2d5da8eddc7
 - path: data/processed/osm/hanoi_normalized_v1.json
   bytes: 4613231
   sha256: a71fd59b8f0f741359dffb49fcda50fcc8fc9618a19b7e718ad903ca39c88bf3
@@ -83,11 +79,11 @@ immutable_artifacts:
   bytes: 63014
   sha256: 3267b1ee1bf38f76023057c395a0cb9171f7b3c5b3326a6cb6b8f232c8ae88e2
 - path: data/curated/overture/hanoi_overture_crosscheck_v1.json
-  bytes: 1748684
-  sha256: 454e8cc378c7f16e79d9aca280c7d294f16554c835434e06d65936e11cb50c6b
+  bytes: 1756566
+  sha256: 2f3477e774373ec8beb7cb24f778447ced323db57c40251ae2e3a528256161f5
 - path: data/curated/overture/overture_crosscheck_summary_2026-10-07.json
   bytes: 564
-  sha256: 68401a1945a594355fe892dcdd88f19b4a205aeb3f19fa80900e512a75ce7545
+  sha256: 1c245d97b8e04fe9590466f5201f8c03e726e3ffc23131377a849c75a456f50c
 - path: data/curated/gomate_places_freeze_v1.json
   bytes: 661993
   sha256: d687b08cd6f3ef2f1ea0bdeb41d5b2647f848add70ddfed5144d55fcb0b23d4b
@@ -100,21 +96,34 @@ immutable_artifacts:
 - path: data/research/preferences/synthetic_preferences_distribution_v1.json
   bytes: 3271
   sha256: 4175db65e33e14b6c540bf57bc899e35a0d3c83f243abd4b32faef4c00ca01dd
+- path: data/manifests/db_import_plan_v1.json
+  bytes: 381290
+  sha256: 18400ad20a221f4bed76c47845dec868137d4587b5c1d993af9c16f0ed8efb5e
+- path: data/manifests/pre_data02_rollback_state.json
+  bytes: 337909
+  sha256: c1f0f517899ffab5a231797eb148d1c16810deb0596659ac9d655d3bf277b20e
+local_restricted_dependencies:
 - path: data/restricted/vihorec/hotels.csv
   bytes: 27214
   sha256: 64d4108855d1eec303253bcfae71596a8abc26733b7fade0dd33b9425b976b16
+  governance: LOCAL_RESTRICTED_DEPENDENCY (Git-Ignored, Verified by SHA256)
 - path: data/restricted/vihorec/interactions.csv
   bytes: 776686
   sha256: 6461d3f3abc15a79615cd09c46950dee4750575b951c4471a98b5c11fe40feeb
+  governance: LOCAL_RESTRICTED_DEPENDENCY (Git-Ignored, Verified by SHA256)
 - path: data/restricted/vihorec/users.csv
   bytes: 109476
   sha256: 02926a6e666c7fcc23ae40733bbd1fe0b4565a25001ed3d85c9f14308ad6fbb3
+  governance: LOCAL_RESTRICTED_DEPENDENCY (Git-Ignored, Verified by SHA256)
 - path: data/restricted/vihorec/train.csv
   bytes: 196724
   sha256: 781a3b99e5a020179e8f1c427c2acf858d1035385040114f88e76ab1320c915e
+  governance: LOCAL_RESTRICTED_DEPENDENCY (Git-Ignored, Verified by SHA256)
 - path: data/restricted/vihorec/val.csv
   bytes: 18229
   sha256: dcaeba814337360e1c483be1e3d61201ecbfb587555938114ae907bf8a15b948
+  governance: LOCAL_RESTRICTED_DEPENDENCY (Git-Ignored, Verified by SHA256)
 - path: data/restricted/vihorec/test.csv
   bytes: 18217
   sha256: eb2d913269c597d986e242b65c53f7067f765c68915005054fae99426e97afbc
+  governance: LOCAL_RESTRICTED_DEPENDENCY (Git-Ignored, Verified by SHA256)
