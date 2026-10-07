@@ -45,3 +45,5 @@ data/raw/*
 !data/raw/.gitkeep
 !data/raw/README.md
 !data/raw/osm_enrichment.json
+!data/raw/osm/
+!data/raw/osm/**
