@@ -1,0 +1,51 @@
+{
+  "region": "danang",
+  "bbox": {
+    "min_lat": 15.95,
+    "max_lat": 16.2,
+    "min_lon": 107.95,
+    "max_lon": 108.35
+  },
+  "raw_elements": 2497,
+  "accepted_count": 2497,
+  "rejected_total": 0,
+  "rejected_reasons": {},
+  "tier1_distribution": {
+    "FOOD_BEVERAGE": 1619,
+    "ATTRACTIONS_LEISURE": 133,
+    "NATURE_SCENERY": 53,
+    "TRANSPORT_HUBS": 1,
+    "HOSPITALITY": 534,
+    "CULTURE_HERITAGE": 102,
+    "SHOPPING_COMMERCE": 55
+  },
+  "tier2_distribution": {
+    "cafe_tea": 957,
+    "restaurant_dining": 545,
+    "nightlife_entertainment": 94,
+    "landmark_iconic": 36,
+    "viewpoint_scenic": 6,
+    "boat_terminal": 1,
+    "hotel_resort": 449,
+    "cave_grotto": 5,
+    "religious_temple": 80,
+    "homestay_hostel": 85,
+    "street_food_market": 72,
+    "beach_coastal": 13,
+    "traditional_market": 46,
+    "historic_monument": 12,
+    "theme_park_leisure": 3,
+    "seafood_dining": 45,
+    "museum_gallery": 10,
+    "shopping_mall": 9,
+    "park_garden": 28,
+    "zoo_wildlife": 1
+  },
+  "missing_fields": {
+    "missing_address": 1708,
+    "missing_opening_hours": 2182,
+    "missing_phone": 2214,
+    "missing_website": 2303,
+    "missing_name_en": 2260
+  }
+}
