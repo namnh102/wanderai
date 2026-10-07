@@ -123,11 +123,16 @@ Any PR that causes a regression in any of the following **11 Invariants** will b
 │ 7  │ AI Planner Safeguard    │ Itinerary generation renders preview    │
 │    │                         │ sheet; requires explicit overwrite OK.  │
 ├────┼─────────────────────────┼─────────────────────────────────────────┤
-│ 8  │ Emergency Non-Autonomy  │ Tapping hotlines requires confirmation  │
-│    │                         │ modal; dispatches native device dialer. │
+│ 8  │ Emergency Non-Autonomy  │ Emergency calls must NEVER become       │
+│    │                         │ autonomous. Baseline provides native    │
+│    │                         │ dialer (`tel:`); once confirmation modal│
+│    │                         │ is implemented (WP-SAFE-01), it becomes │
+│    │                         │ mandatory before dialer dispatch.       │
 ├────┼─────────────────────────┼─────────────────────────────────────────┤
-│ 9  │ Profile & Privacy       │ Unverified presence labels completely   │
-│    │                         │ purged; travel prefs read-only intact.  │
+│ 9  │ Profile & Privacy       │ Zero fake presence indicators; private  │
+│    │ Boundary                │ fields masked. Before WP-PROF-01: prefs │
+│    │                         │ remain read-only. After WP-PROF-01: edit│
+│    │                         │ allowed ONLY via validated auth API.    │
 ├────┼─────────────────────────┼─────────────────────────────────────────┤
 │ 10 │ 5-Tab Navigation Parity │ Mobile bottom bar and Desktop sidebar   │
 │    │                         │ share 100% identical 5-tab taxonomy.    │

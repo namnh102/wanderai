@@ -261,15 +261,16 @@ $$\text{Prisma Schema} \longrightarrow \text{NestJS API} \longrightarrow \text{F
 #### WP-PROF-02: Privacy & Visibility Controls
 - **Capability IDs:** `13.5` (Privacy & Visibility Controls)
 - **Current Runtime:** `MISSING` (Profile discovery opt-out toggles are visual-only).
-- **Target State:** Persist `isDiscoverable` and `showActivityStatus` on User model; buddy matching excludes non-discoverable travelers.
+- **Target State:** Persist `isDiscoverable` and buddy/profile visibility controls on User model; buddy discovery excludes non-discoverable travelers. Strictly zero fake or unsupported online activity presence (Capability 13.6 is `EXCLUDED`).
 - **Prisma Schema Changes:**
-  - Add fields to `User`: `isDiscoverable Boolean @default(true) @map("is_discoverable")`.
+  - Add field to `User`: `isDiscoverable Boolean @default(true) @map("is_discoverable")`.
 - **Backend NestJS Changes:**
-  - Update `PUT /users/me` to accept `isDiscoverable`.
+  - Update `PUT /users/me` and user service to accept `isDiscoverable`.
 - **Flutter Changes:**
-  - Wire toggle switches in `settings-mobile-privacy-v1-r1.png`.
+  - Wire discovery privacy toggle switches in `settings-mobile-privacy-v1-r1.png`.
 - **Testing Requirements:**
-  - Integration: Setting `isDiscoverable = false` hides user from buddy discovery search.
+  - Integration: Setting `isDiscoverable = false` hides user from buddy discovery search results.
+  - Privacy: Assert zero presence or "last active" fields are persisted or leaked.
 - **Estimated Effort:** 0.5 Day (Backend: 0.2d, Flutter: 0.2d, Testing: 0.1d).
 - **Parallel Class:** `PARALLEL SAFE`.
 
@@ -843,11 +844,32 @@ MILESTONE 4: COLLABORATIVE GROUP EXPERIENCE (End of Week 13)
 
 ---
 
-## 8. Summary & Transition to DAG
+## 8. Thesis Priority Override & First Implementation Decision
+
+### 8.1. Academic Calendar Scheduling Invariant
+When academic calendar deadlines conflict with product polish, the **Thesis Critical Path** takes absolute priority:
+
+$$\text{DATA} \longrightarrow \text{Preference Representation} \longrightarrow \text{Recommender} \longrightarrow \text{Recommender Evaluation} \longrightarrow \text{Agent Evaluation} \longrightarrow \text{RAG Evaluation} \longrightarrow \text{Buddy Matching} \longrightarrow \text{Matching Evaluation} \longrightarrow \text{E2E Integration}$$
+
+- **Auth Hardening:** May execute concurrently in a parallel track, but must **never delay or block** Week 4 / Week 5 recommender baseline and evaluation milestones.
+- **Product vs. Research Scope Boundary:** Capability `1.5 Personalized Recommendations` strictly remains `FUTURE` in the product capability matrix. Offline recommender experiments (`REC-01`, `REC-EVAL-01`) operate under the independent **Thesis Research Track** and do NOT silently promote product scope.
+
+### 8.2. First Implementation Package Decision
+- **Single Development Stream:** **`WP-PROF-01` (Travel Preference Persistence & Validation API)** must be executed **FIRST**.
+  - *Rationale:* `WP-PROF-01` is a core Thesis P1 deliverable, establishes user preference representations for recommender baselines, and is the absolute root of the primary social/collaborative critical path.
+- **Concurrent Multi-Agent Stream:**
+  - **Track A (Thesis Core):** `WP-PROF-01` (Travel Preferences API & Mobile Form).
+  - **Track B (Platform Security):** `WP-AUTH-01` (Secure Storage & Dio Silent Refresh Queue Lock).
+
+---
+
+## 9. Summary & Transition to Companion Documents
 
 The implementation plan defined in this document is completely capability-driven, mathematically reconciled with the 90-dimension capability matrix, and enforces the source-of-truth hierarchy.
 
 Next immediate companion documents:
-1. `docs/roadmap/gomate-implementation-dependency-dag-v1.md` (Concrete Directed Acyclic Graph)
-2. `docs/roadmap/gomate-parallel-development-matrix-v1.md` (Multi-Agent Concurrency Strategy)
-3. `docs/roadmap/gomate-test-release-gates-v1.md` (Quality Assurance & Non-Regression Gates)
+1. `docs/roadmap/gomate-thesis-research-roadmap-v1.md` (14-Week Academic Research Track)
+2. `docs/roadmap/gomate-product-research-alignment-matrix-v1.md` (Product vs. Research Alignment)
+3. `docs/roadmap/gomate-implementation-dependency-dag-v1.md` (Concrete Directed Acyclic Graph)
+4. `docs/roadmap/gomate-parallel-development-matrix-v1.md` (Multi-Agent Concurrency Strategy)
+5. `docs/roadmap/gomate-test-release-gates-v1.md` (Quality Assurance & Non-Regression Gates)
