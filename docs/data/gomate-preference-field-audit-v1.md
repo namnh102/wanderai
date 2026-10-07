@@ -90,103 +90,112 @@ To prevent free-text divergence, user interests will map onto the **Tier-1 / Tie
 
 ---
 
-## 4. Draft Metric Contract
+---
 
-This contract defines the official evaluation metrics, mathematical formulations, and acceptance thresholds for graduation thesis experiments.
+## 4. Recommender Experiment Boundary & Ratified Metric Contract
+
+### 4.1. Dual Recommender Experiment Isolation Principle
+To maintain scientific validity and prevent methodological confusion, the recommendation evaluation framework is strictly partitioned into two independent research tracks:
+- **`REC-A` (GoMate POI Content-Based / Persona Recommendation):** Evaluated over verified OpenStreetMap POIs (Hanoi, Ha Long, and baseline regions) mapped against structured user personas and itinerary context.
+- **`REC-B` (ViHoRec Collaborative Filtering Benchmark):** Evaluated over the official temporal train/val/test splits of ViHoRec (560 hotels, 6,822 users) for standard CF algorithms (MostPop, BPR-MF, LightGCN).
+- **Core Invariant:** `REC-A` POI UUIDs and `REC-B` ViHoRec hotel IDs (`H0000`–`H0559`) **must NEVER be merged, mapped, or concatenated into a single hybrid training matrix**. They address distinct experimental questions and have separate ground truths.
 
 ```mermaid
 flowchart TD
-    subgraph Recommender_Contract ["Recommender Metric Contract (Top-10)"]
-        R1["NDCG@10 >= 0.12"]
-        R2["Recall@10 >= 0.20"]
-        R3["Precision@10 >= 0.05"]
-        R4["HitRate@10 >= 0.25"]
-        R5["Coverage@10 >= 0.15"]
-        R6["Diversity@10 >= 0.40"]
+    subgraph Recommender_Contract ["Recommender Metric Contract (Top-10 Protocol)"]
+        direction TB
+        R_NOTE["Mandatory Metric Computation\n(Numerical accuracy thresholds decoupled until baseline training)"]
+        R1["NDCG@10"]
+        R2["Recall@10"]
+        R3["Precision@10"]
+        R4["HitRate@10"]
+        R5["Coverage@10 (Catalog Coverage)"]
+        R6["Diversity@10 (Intra-List Diversity)"]
     end
-    subgraph Matching_Contract ["Buddy Matching Metric Contract (Top-5)"]
-        M1["NDCG@5 >= 0.65"]
-        M2["Precision@5 >= 0.60"]
-        M3["HitRate@5 >= 0.80"]
+    subgraph Matching_Contract ["Buddy Matching Metric Contract (Top-5 Protocol)"]
+        direction TB
+        M1["NDCG@5"]
+        M2["Precision@5"]
+        M3["HitRate@5"]
         M4["Constraint Satisfaction Rate == 100%"]
-        M5["Privacy Violations == 0 (Strict)"]
-        M6["Consent Violations == 0 (Strict)"]
+        M5["Privacy Violations == 0 (Strict Hard Gate)"]
+        M6["Consent Violations == 0 (Strict Hard Gate)"]
     end
 ```
 
 ---
 
-### 4.1. Recommender Metric Contract (Top-10 Protocol)
+### 4.2. Recommender Metric Contract (Top-10 Protocol)
 
-Evaluated on the official ViHoRec temporal test split and verified POI recommendation candidate set.
+Evaluated on the official ViHoRec temporal test split (REC-B) and verified POI recommendation candidate set (REC-A). All 6 metrics are **mandatory to report**. Numerical accuracy thresholds are decoupled from blocking CI/CD pass/fail gates until empirical baseline results are trained and published.
 
 #### 1. NDCG@10 (Normalized Discounted Cumulative Gain at Rank 10)
 - **Definition:** Measures ranking quality, penalizing relevant items placed lower in the top 10.
 - **Formula:**
   $$\text{DCG@10} = \sum_{i=1}^{10} \frac{2^{r_i} - 1}{\log_2(i + 1)}, \quad \text{NDCG@10} = \frac{\text{DCG@10}}{\text{IDCG@10}}$$
   where $r_i \in \{0, 1\}$ indicates binary relevance.
-- **Target Threshold:** $\text{NDCG@10} \ge 0.12$ (Baseline MostPop: $\sim 0.089$).
+- **Reporting Protocol:** Mandatory report across all models. (Reference MostPop baseline: $\sim 0.089$).
 
 #### 2. Recall@10
 - **Definition:** Fraction of ground-truth relevant items successfully retrieved in the top 10.
 - **Formula:**
   $$\text{Recall@10} = \frac{|\text{Predicted}_{10} \cap \text{Actual}|}{|\text{Actual}|}$$
-- **Target Threshold:** $\text{Recall@10} \ge 0.20$.
+- **Reporting Protocol:** Mandatory report across all models.
 
 #### 3. Precision@10
 - **Definition:** Fraction of recommended items in top 10 that are relevant.
 - **Formula:**
   $$\text{Precision@10} = \frac{|\text{Predicted}_{10} \cap \text{Actual}|}{10}$$
-- **Target Threshold:** $\text{Precision@10} \ge 0.05$.
+- **Reporting Protocol:** Mandatory report across all models.
 
 #### 4. HitRate@10 (HR@10)
 - **Definition:** Indicator of whether at least one relevant item appears in the top 10 recommendation list.
 - **Formula:**
   $$\text{HR@10} = \begin{cases} 1 & \text{if } |\text{Predicted}_{10} \cap \text{Actual}| > 0 \\ 0 & \text{otherwise} \end{cases}$$
-- **Target Threshold:** $\text{HR@10} \ge 0.25$.
+- **Reporting Protocol:** Mandatory report across all models.
 
 #### 5. Coverage@10 (Catalog Coverage)
 - **Definition:** Percentage of distinct items from the total catalog $\mathcal{I}$ recommended to at least one user across the test population $\mathcal{U}$.
 - **Formula:**
   $$\text{Coverage@10} = \frac{\left| \bigcup_{u \in \mathcal{U}} \text{Predicted}_{10}(u) \right|}{|\mathcal{I}|}$$
-- **Target Threshold:** $\text{Coverage@10} \ge 0.15$ (prevents severe popularity bias collapse).
+- **Reporting Protocol:** Mandatory report to monitor and prevent popularity bias collapse.
 
 #### 6. Diversity@10 (Intra-List Diversity)
 - **Definition:** Average pairwise cosine or Jaccard distance between category/feature representations of recommended items.
 - **Formula:**
   $$\text{Diversity@10}(u) = \frac{1}{\binom{10}{2}} \sum_{i < j} \left(1 - \text{sim}(\mathbf{v}_i, \mathbf{v}_j)\right)$$
-- **Target Threshold:** $\text{Diversity@10} \ge 0.40$.
+- **Reporting Protocol:** Mandatory report to measure catalog variety.
 
 ---
 
-### 4.2. Traveler Buddy Matching Metric Contract (Top-5 Protocol)
+### 4.3. Traveler Buddy Matching Metric Contract (Top-5 Protocol)
 
 Evaluated on candidate traveler compatibility pairs under strict privacy constraints.
 
 #### 1. NDCG@5
 - **Definition:** Ranking quality of the top 5 compatible traveler profiles.
-- **Target Threshold:** $\text{NDCG@5} \ge 0.65$.
+- **Reporting Protocol:** Mandatory report.
 
 #### 2. Precision@5
 - **Definition:** Percentage of top 5 recommended buddies who meet mutual destination, budget, and travel style compatibility.
-- **Target Threshold:** $\text{Precision@5} \ge 0.60$.
+- **Reporting Protocol:** Mandatory report.
 
 #### 3. HitRate@5
 - **Definition:** Probability that top 5 recommendations contain at least one mutually compatible companion.
-- **Target Threshold:** $\text{HitRate@5} \ge 0.80$.
+- **Reporting Protocol:** Mandatory report.
 
 #### 4. Constraint Satisfaction Rate (CSR)
 - **Definition:** Percentage of hard negative constraints (e.g., gender safety preferences, smoking/alcohol avoidances, overlapping travel dates) that are strictly honored.
 - **Formula:**
   $$\text{CSR} = \frac{\text{Total Hard Constraints Satisfied}}{\text{Total Hard Constraints Evaluated}} \times 100\%$$
-- **Target Threshold:** $\mathbf{100.0\%}$ (Zero tolerance for hard constraint violations).
+- **Target Invariant:** $\mathbf{100.0\%}$ (Zero tolerance for hard constraint violations).
 
-#### 5. Privacy Violations Counter
-- **Definition:** Total count of instances where private or identifiable user data (real name, phone, email, unmasked avatar, exact live GPS coordinates) is exposed to an unconsented user.
+#### 5. Privacy Violations Counter (STRICT HARD GATE)
+- **Definition:** Total count of instances where private or identifiable user data (real surname, phone, email, unmasked avatar, exact live GPS coordinates) is exposed to an unconsented user.
 - **Formula:**
   $$\text{Privacy Violations} = \sum \text{Leaks}$$
-- **Target Invariant:** $\mathbf{0}$ (Strict Zero Violation Gate).
+- **Hard Gate Invariant:** $\mathbf{0}$ (Strict Zero Violation Gate — any violation causes build failure).
 
-#### 6. Consent Violations Counter
+#### 6. Consent Violations Counter (STRICT HARD GATE)
 - **Definition:** Total count of match connections, direct chat sessions, or contact reveals established without double opt-in mutual consent (`MATCH_ACCEPTED` status).
-- **Target Invariant:** $\mathbf{0}$ (Strict Zero Violation Gate).
+- **Hard Gate Invariant:** $\mathbf{0}$ (Strict Zero Violation Gate — any violation causes build failure).
