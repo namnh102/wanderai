@@ -6029,7 +6029,7 @@
     "category": "culture",
     "destination": "Đà Nẵng",
     "destination_slug": "da-nang",
-    "is_rec_a_core_v2": true,
+    "is_rec_a_core_v2": false,
     "sources": [
       {
         "source_name": "osm",
@@ -8077,7 +8077,7 @@
     "category": "culture",
     "destination": "Đà Nẵng",
     "destination_slug": "da-nang",
-    "is_rec_a_core_v2": true,
+    "is_rec_a_core_v2": false,
     "sources": [
       {
         "source_name": "osm",
@@ -8992,7 +8992,7 @@
     "category": "entertainment",
     "destination": "Đà Nẵng",
     "destination_slug": "da-nang",
-    "is_rec_a_core_v2": true,
+    "is_rec_a_core_v2": false,
     "sources": [
       {
         "source_name": "osm",
@@ -13321,7 +13321,7 @@
     "category": "attraction",
     "destination": "Đà Nẵng",
     "destination_slug": "da-nang",
-    "is_rec_a_core_v2": true,
+    "is_rec_a_core_v2": false,
     "sources": [
       {
         "source_name": "osm",

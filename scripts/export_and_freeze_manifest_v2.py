@@ -84,17 +84,26 @@ async def main():
             WHERE ps.source_name = 'osm' AND p.destination_id = $1 AND p.deleted_at IS NULL
         """, danang_id)
 
-        rec_a_core_v2_total = hanoi_osm + halong_osm + danang_osm
+        danang_core_osm = await conn.fetchval("""
+            SELECT count(*) FROM places p
+            JOIN place_sources ps ON p.id = ps.place_id
+            WHERE ps.source_name = 'osm' AND p.destination_id = $1 AND p.deleted_at IS NULL
+              AND p.latitude >= 15.95 AND p.latitude <= 16.20 AND p.longitude >= 107.95 AND p.longitude <= 108.35
+        """, danang_id)
+        danang_outside_osm = danang_osm - danang_core_osm
+
+        rec_a_core_v2_total = hanoi_osm + halong_osm + danang_core_osm
         secondary_osm = live_osm_sources - rec_a_core_v2_total
 
         print("LIVE DATABASE COUNTS:")
         print(f"- Total Active Places:            {live_places}")
         print(f"- Verified OSM Sources:          {live_osm_sources}")
         print(f"  - Hanoi:                       {hanoi_osm} (Locked Canonical)")
-        print(f"  - Da Nang:                     {danang_osm} (Locked Canonical V2)")
+        print(f"  - Da Nang (Total):             {danang_osm} (289 Core + 4 Outside Core)")
+        print(f"  - Da Nang (Primary Core):      {danang_core_osm} (Inside locked bbox)")
         print(f"  - Ha Long:                     {halong_osm} (Locked Canonical)")
         print(f"  - REC-A-CORE-V2 Total:         {rec_a_core_v2_total}")
-        print(f"  - Secondary Research POIs:     {secondary_osm} (Hoi An, Hue, Nha Trang)")
+        print(f"  - Secondary Research POIs:     {secondary_osm} (50 Hoi An, 50 Hue, 33 Nha Trang, 4 Outside Core)")
         print(f"- Auxiliary Overture Sources:    {live_ov_sources}")
         print(f"- Total Documents:               {live_total_docs}")
         print(f"  - OSM Documents:               {live_osm_docs}")
@@ -113,7 +122,10 @@ async def main():
         assert hanoi_osm == 145, f"Expected 145 Hanoi OSM, got {hanoi_osm}"
         assert halong_osm == 188, f"Expected 188 Ha Long OSM, got {halong_osm}"
         assert danang_osm == 293, f"Expected 293 Da Nang OSM, got {danang_osm}"
-        assert rec_a_core_v2_total == 626, f"Expected 626 REC-A-CORE-V2 total, got {rec_a_core_v2_total}"
+        assert danang_core_osm == 289, f"Expected 289 Da Nang Core OSM, got {danang_core_osm}"
+        assert danang_outside_osm == 4, f"Expected 4 Da Nang Outside OSM, got {danang_outside_osm}"
+        assert rec_a_core_v2_total == 622, f"Expected 622 REC-A-CORE-V2 total, got {rec_a_core_v2_total}"
+        assert secondary_osm == 137, f"Expected 137 secondary OSM, got {secondary_osm}"
 
         print("\n[ALL LIVE DB INTEGRITY ASSERTIONS PASS]")
 
@@ -123,7 +135,11 @@ async def main():
             SELECT p.id::text as place_id, p.name, p.address, p.latitude, p.longitude,
                    p.opening_hours, p.rating, p.review_count,
                    c.name as category, d.name as destination, d.slug as destination_slug,
-                   (d.slug IN ('ha-noi', 'da-nang', 'ha-long')) as is_rec_a_core_v2,
+                   (CASE
+                       WHEN d.slug IN ('ha-noi', 'ha-long') THEN true
+                       WHEN d.slug = 'da-nang' AND p.latitude >= 15.95 AND p.latitude <= 16.20 AND p.longitude >= 107.95 AND p.longitude <= 108.35 THEN true
+                       ELSE false
+                   END) as is_rec_a_core_v2,
                    json_agg(json_build_object(
                        'source_name', ps.source_name,
                        'source_id', ps.source_id,
@@ -191,6 +207,7 @@ async def main():
         "data/manifests/danang_coordinate_drift_stats_v2.json",
         "data/manifests/db_import_plan_danang_v2.json",
         "data/curated/gomate_places_freeze_v2.json",
+        "data/manifests/freeze-v1-to-v2-place-lineage.json",
 
         # ViHoRec benchmark files
         "data/restricted/vihorec/hotels.csv",
@@ -268,13 +285,17 @@ async def main():
             "rec_a_core_v2": {
                 "destinations": ["hanoi", "danang", "halong"],
                 "hanoi_count": hanoi_osm,
-                "danang_count": danang_osm,
+                "danang_core_count": danang_core_osm,
                 "halong_count": halong_osm,
                 "total_items": rec_a_core_v2_total,
                 "role": "Primary Thesis / Product MVP evaluation universe (W4/W5)"
             },
             "secondary_research_corpus": {
-                "destinations": ["hoi-an", "hue", "nha-trang"],
+                "destinations": ["hoi-an", "hue", "nha-trang", "quang-nam-outside-core"],
+                "hoi_an_count": 50,
+                "hue_count": 50,
+                "nha_trang_count": 33,
+                "danang_outside_core_count": danang_outside_osm,
                 "total_items": secondary_osm,
                 "role": "Exploratory generalization research (excluded from primary 3-city metrics)"
             },

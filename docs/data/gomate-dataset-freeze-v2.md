@@ -14,10 +14,10 @@
 Dataset Freeze V2 expands the official GoMate Research and Product MVP scope from two destinations (Hanoi + Ha Long) to three destinations: **Hanoi + Da Nang + Ha Long**. 
 
 Freeze V2 locks:
-1. All canonical verified POIs for the three MVP destinations (`REC-A-CORE-V2`, N = 626).
-2. The secondary exploratory research corpus (Hoi An, Hue, Nha Trang, N = 133).
+1. All canonical verified POIs for the three MVP destinations (`REC-A-CORE-V2`, N = 622).
+2. The secondary exploratory research corpus (Hoi An, Hue, Nha Trang, and 4 Da Nang POIs outside MVP core, N = 137).
 3. The factual RAG knowledge corpus (N = 1,223 documents: 759 OSM place documents + 464 pinned Wikivoyage chunks).
-4. All associated raw, processed, and curated query, geometry, and cross-check artifacts under cryptographic SHA-256 manifests.
+4. All associated raw, processed, and curated query, geometry, cross-check, and lineage reconciliation manifests under cryptographic SHA-256 manifests.
 
 ---
 
@@ -29,9 +29,9 @@ Freeze V2 locks:
 | **Total Verified OSM Sources** | 580 | **759** | +179 verified OSM sources. |
 | **Hà Nội Verified POIs** | 145 | **145** | 100% frozen and preserved from V1. |
 | **Hạ Long Verified POIs** | 188 | **188** | 100% frozen and preserved from V1. |
-| **Đà Nẵng Verified POIs** | 114 | **293** | +179 curated new POIs, 109 updated, 5 unchanged. |
-| **`REC-A-CORE-V2` Total** | 333 (2 cities) | **626 (3 cities)** | Primary offline recommender evaluation universe. |
-| **Secondary Research POIs** | 247 | **133** | Hoi An (50), Hue (50), Nha Trang (33). Excluded from 3-city metrics. |
+| **Đà Nẵng Verified POIs** | 114 | **293** | 289 Primary Core + 4 Outside MVP Core. |
+| **`REC-A-CORE-V2` Total** | 333 (2 cities) | **622 (3 cities)** | Primary offline recommender evaluation universe (145 HN + 188 HL + 289 DN). |
+| **Secondary Research POIs** | 247 | **137** | Hoi An (50), Hue (50), Nha Trang (33), Quang Nam outside core (4). |
 | **Auxiliary Overture Sources** | 89 | **247** | Dual-source verified auxiliary records. |
 | **Total RAG Documents** | 1,044 | **1,223** | +179 new Da Nang OSM knowledge chunks. |
 | **Wikivoyage Chunks** | 464 | **464** | Pinned and 100% byte-for-byte identical. |
@@ -56,7 +56,8 @@ The authoritative checksum manifest is stored at [`data/manifests/dataset-freeze
 | `data/curated/overture/danang_overture_crosscheck_summary_v2.json` | 396 | `439c6a587508859de674a2752b57fa2b694b29bb86f9ca54db4d3f3f278ebdd9` |
 | `data/manifests/danang_coordinate_drift_stats_v2.json` | 158 | `8cefe81512e4aa06114a8dbcc94bfbe03f71c4c15330ce4f62bf9fba4d3cbca0` |
 | `data/manifests/db_import_plan_danang_v2.json` | 403,075 | `2e52d58e3480c97e1481b7e0bb0f8ec8a0cbe43b46955a8286a524a875a6be46` |
-| `data/curated/gomate_places_freeze_v2.json` | 1,058,734 | `2e4f95e7ec576d15b02ec3b749d2906eb4cc96cba8c227f2f11eb1cfc12f205c` |
+| `data/curated/gomate_places_freeze_v2.json` | 1,058,738 | `93681135d94b379f28802aa75204a0a4c7bec4039f85d28e76ae6737e792e245` |
+| `data/manifests/freeze-v1-to-v2-place-lineage.json` | 360,444 | `076aeb3804320ba7f0b2f8da846aae3e18d083cf74c10e8c336e448a33464561` |
 
 ### 3.2. Freeze V1 Immutability Audit
 All 23 original Freeze V1 artifacts recorded in `data/manifests/dataset-freeze-v1.sha256` were audited via SHA-256 verification and confirmed 100% byte-for-byte identical.

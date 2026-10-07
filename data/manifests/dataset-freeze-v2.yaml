@@ -1,6 +1,6 @@
 dataset_freeze_version: v2.0.0
 parent_source_dataset: v1.0.0 (dataset-freeze-v1.yaml)
-created_at_utc: '2026-10-07T15:39:06.128415+00:00'
+created_at_utc: '2026-10-07T16:15:41.458179+00:00'
 branch: feature/mvp-three-city-freeze-v2
 base_commit: b661c6b
 canonical_geography:
@@ -50,16 +50,21 @@ item_universe:
     - danang
     - halong
     hanoi_count: 145
-    danang_count: 293
+    danang_core_count: 289
     halong_count: 188
-    total_items: 626
+    total_items: 622
     role: Primary Thesis / Product MVP evaluation universe (W4/W5)
   secondary_research_corpus:
     destinations:
     - hoi-an
     - hue
     - nha-trang
-    total_items: 133
+    - quang-nam-outside-core
+    hoi_an_count: 50
+    hue_count: 50
+    nha_trang_count: 33
+    danang_outside_core_count: 4
+    total_items: 137
     role: Exploratory generalization research (excluded from primary 3-city metrics)
   total_canonical_places: 882
   total_verified_osm_places: 759
@@ -201,8 +206,11 @@ committed_immutable_artifacts:
   bytes: 403075
   sha256: 2e52d58e3480c97eb31e538642c8fd3d5a54ff47a053630e6629b2790b77c04a
 - path: data/curated/gomate_places_freeze_v2.json
-  bytes: 1058734
-  sha256: 2e4f95e7ec576d15bd0876c06e06beda7485498f90f77602389709ca1a04615b
+  bytes: 1058738
+  sha256: 93681135d94b379f28802aa75204a0a4c7bec4039f85d28e76ae6737e792e245
+- path: data/manifests/freeze-v1-to-v2-place-lineage.json
+  bytes: 360444
+  sha256: 076aeb3804320ba7f0b2f8da846aae3e18d083cf74c10e8c336e448a33464561
 - path: data/restricted/vihorec/hotels.csv
   bytes: 27214
   sha256: 64d4108855d1eec303253bcfae71596a8abc26733b7fade0dd33b9425b976b16

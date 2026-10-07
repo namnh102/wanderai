@@ -142,8 +142,8 @@ def test_reca_core_v2_item_universe():
     rec_a_core = [p for p in places if p.get("is_rec_a_core_v2") is True]
     secondary = [p for p in places if p.get("is_rec_a_core_v2") is False]
 
-    assert len(rec_a_core) == 626, f"Expected 626 REC-A-CORE-V2 places, got {len(rec_a_core)}"
-    assert len(secondary) == 133, f"Expected 133 secondary places, got {len(secondary)}"
+    assert len(rec_a_core) == 622, f"Expected 622 REC-A-CORE-V2 places, got {len(rec_a_core)}"
+    assert len(secondary) == 137, f"Expected 137 secondary places, got {len(secondary)}"
 
     # City breakdown in REC-A-CORE-V2
     city_counts = {}
@@ -153,7 +153,7 @@ def test_reca_core_v2_item_universe():
 
     assert city_counts.get("ha-noi") == 145, f"Expected 145 Hanoi, got {city_counts.get('ha-noi')}"
     assert city_counts.get("ha-long") == 188, f"Expected 188 Ha Long, got {city_counts.get('ha-long')}"
-    assert city_counts.get("da-nang") == 293, f"Expected 293 Da Nang, got {city_counts.get('da-nang')}"
+    assert city_counts.get("da-nang") == 289, f"Expected 289 Da Nang, got {city_counts.get('da-nang')}"
     assert set(city_counts.keys()) == {"ha-noi", "ha-long", "da-nang"}
 
     # Unique place IDs

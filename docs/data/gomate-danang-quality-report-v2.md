@@ -61,16 +61,31 @@ Before applying mutations, the 114 existing Da Nang OSM POIs in PostgreSQL were 
 
 ---
 
-## 4. Deterministic Curation Rule for NEW POIs (N = 179)
+## 4. Deterministic Curation Contract for NEW POIs (N = 179)
 
-To ensure the Da Nang tourism corpus is balanced across travel dimensions (avoiding pure F&B skew while addressing the baseline zero-hotel and zero-market deficit), a deterministic curation contract was applied to select 179 NEW POIs:
-1. **Transport Hubs:** All validated ferry/boat terminals (1 POI).
-2. **Core Tourism Categories:** All candidates in `CULTURE_HERITAGE` (33), `SHOPPING_COMMERCE` (21), `ATTRACTIONS_LEISURE` (14), `NATURE_SCENERY` (2) possessing dual-source Overture `AUTO_LINK` verification OR verified contact metadata (`phone` or `website`).
-3. **Hospitality:** Candidates in `HOSPITALITY` possessing dual-source Overture `AUTO_LINK` verification AND verified contact metadata (57 top hotels/resorts).
-4. **Culinary Dining:** Non-cafe dining candidates in `FOOD_BEVERAGE` (restaurants, seafood dining) possessing dual-source Overture `AUTO_LINK` verification AND verified contact metadata (51 POIs).
+To ensure the Da Nang tourism corpus is balanced across travel dimensions (avoiding pure F&B skew while addressing the baseline zero-hotel and zero-market deficit), a strict, reproducible deterministic curation contract was executed across all 2,388 un-matched candidates:
+
+| Tier-1 Category | Unmatched Pool | Selection Rule & Gates | Qualifying | Selected | Status / Tie-Break |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **TRANSPORT_HUBS** | 1 | All validated ferry/boat terminals | 1 | **1** | `ALL_QUALIFYING_SELECTED` (No truncation) |
+| **CULTURE_HERITAGE** | 82 | Dual Overture `AUTO_LINK` OR verified contact (`phone`/`web`) | 33 | **33** | `ALL_QUALIFYING_SELECTED` (No truncation) |
+| **SHOPPING_COMMERCE** | 55 | Dual Overture `AUTO_LINK` OR verified contact (`phone`/`web`) | 21 | **21** | `ALL_QUALIFYING_SELECTED` (No truncation) |
+| **ATTRACTIONS_LEISURE** | 109 | Dual Overture `AUTO_LINK` OR verified contact (`phone`/`web`) | 14 | **14** | `ALL_QUALIFYING_SELECTED` (No truncation) |
+| **NATURE_SCENERY** | 38 | Dual Overture `AUTO_LINK` OR verified contact (`phone`/`web`) | 2 | **2** | `ALL_QUALIFYING_SELECTED` (No truncation) |
+| **HOSPITALITY** | 534 | Dual Overture `AUTO_LINK` AND verified contact (`phone`/`web`) | 57 | **57** | `ALL_QUALIFYING_SELECTED` (No truncation) |
+| **FOOD_BEVERAGE** | 1,569 | Non-cafe dining (`t2 != cafe_tea`) AND Dual `AUTO_LINK` AND contact | 51 | **51** | `ALL_QUALIFYING_SELECTED` (No truncation) |
+| **TOTAL** | **2,388** | Fully deterministic multi-tier gates | **179** | **179** | **100% Deterministic (Zero arbitrary selection)** |
+
+### Curation Determinism Guarantees:
+1. **Zero Undefined "Top" Truncation:** Exactly 57 candidates in `HOSPITALITY` and 51 dining candidates in `FOOD_BEVERAGE` satisfied the rigorous dual-source and contact verification gates; 100% of qualifying candidates were accepted (`ALL_QUALIFYING_SELECTED`).
+2. **Order Invariance:** Selection is mathematically independent of stream order, database physical row storage, or incidental Overpass query ordering.
+3. **No Fabricated Data:** Rating remains `NULL` and `review_count = 0` for all 179 curated places.
 
 ### Resulting Da Nang Canonical Verified Corpus:
 $$\text{Baseline Preserved (114)} + \text{Curated NEW (179)} = \mathbf{293} \text{ Canonical POIs}$$
+- **Da Nang Primary Core (in REC-A-CORE-V2):** $293 - 4 = \mathbf{289}$ POIs (inside locked bbox $[15.95, 107.95, 16.20, 108.35]$).
+- **Da Nang Outside MVP Core:** $4$ POIs south of $15.95^\circ\text{N}$ in Điện Bàn / Quảng Nam (`TASY STUDIO`, `Khu tưởng niệm Hà My`, `Đài tưởng niệm thảm sát Hà My`, `Mini-Golf Hoi An`), preserved in DB and history but excluded from `REC-A-CORE-V2`.
+- **Mỹ Khê Beach Relation:** relation/19000664 (Lat 16.07561, Lon 108.254735) is inside bbox and verified as a core Da Nang POI.
 
 ---
 
