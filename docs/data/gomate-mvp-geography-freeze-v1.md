@@ -39,7 +39,8 @@ An audit of the current repository reveals a severe geographical imbalance:
 ### The Ha Long Deficit
 - **RAG Knowledge:** Official Wikivoyage article for *"Ha Long Bay"* is already ingested into pgvector (Page ID `13946`, Revision ID `5294720`, 48 chunks under CC BY-SA 3.0).
 - **Verified POI Catalog:** Contains **exactly 0 verified OpenStreetMap places** for Ha Long. In `data/seed/synthetic_places.json`, Ha Long is represented only by 3 fabricated records (Vịnh Hạ Long, Đảo Tuần Châu, Bảo tàng Quảng Ninh) with rounded dummy coordinates.
-- **Mandate for DATA-02:** DATA-02 **MUST execute an authoritative Overpass API collection** for the Ha Long tourism zone to establish $\ge 60$ verified POIs.
+- **Mandate for DATA-02:** DATA-02 **MUST execute an Overpass API collection via the selected canonical Overpass query endpoint** for the Ha Long tourism zone targeting $\approx 60$ verified POIs.
+- **Coverage Rule:** **QUALITY + VERIFIED PROVENANCE OVERRIDES RAW COUNT.** Coverage targets are goals, not hard gates. Verification standards will not be weakened to hit numerical quotas.
 
 ---
 
@@ -68,7 +69,7 @@ flowchart LR
 - **Bounding Box:**
   $$\text{Latitude: } [20.85, 21.05] \text{ N}, \quad \text{Longitude: } [106.95, 107.25] \text{ E}$$
 - **Key Tourism Hubs:** Bãi Cháy tourist center, Tuần Châu international passenger terminal, Hòn Gai cultural quarter, Ha Long Bay marine landmarks.
-- **Target Ingestion Quota in DATA-02:** $\ge 60$ verified POIs across:
+- **Target Ingestion Coverage in DATA-02:** $\approx 60$ verified POIs across:
   - Coastal and island attractions (caves, beaches, viewpoints).
   - Passenger ports and ferry terminals (Tuần Châu, Hạ Long International Port).
   - Seafood restaurants, local markets (Chợ Hạ Long 1), and bayside cafes.

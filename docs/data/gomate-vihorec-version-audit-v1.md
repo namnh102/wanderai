@@ -12,7 +12,7 @@
 
 This audit performs an empirical reconciliation between the local ViHoRec snapshot stored in `data/restricted/vihorec/` and the official upstream publication repository ([`MinhNguyenDS/ViHoRec`](https://github.com/MinhNguyenDS/ViHoRec), arXiv:2607.12946). 
 
-The audit resolves the apparent discrepancy between the paper's cited figure of **18,267 interactions** and the local file count of **17,911 interactions**, verifies all six local CSV artifacts, calculates cryptographic SHA-256 checksums, and establishes the dataset versioning baseline for the thesis research track.
+The audit notes that the publication-level count differs from the cleaned benchmark release; local files bit-match the audited upstream release. It verifies all six local CSV artifacts, calculates cryptographic SHA-256 checksums, and establishes the dataset versioning baseline for the thesis research track.
 
 ---
 
@@ -20,8 +20,8 @@ The audit resolves the apparent discrepancy between the paper's cited figure of 
 
 | Dimension | Paper Abstract Claim (arXiv:2607.12946) | Official Upstream GitHub Release (`master`) | Local Repository Snapshot (`data/restricted/vihorec/`) | Reconciliation Analysis |
 | :--- | :---: | :---: | :---: | :--- |
-| **Total Interactions** | 18,267 | 17,911 | **17,911** | **EXACT MATCH.** 18,267 represents raw scraped events prior to data cleaning. 17,911 is the official cleaned release after removing duplicate reviews and invalid timestamps. |
-| **Unique Users** | 6,832 | 6,822 | **6,822** | **EXACT MATCH.** 10 users with corrupted/null session tokens were excluded during official pipeline deduplication. |
+| **Total Interactions** | 18,267 | 17,911 | **17,911** | Publication-level count differs from cleaned benchmark release; local files bit-match the audited upstream release. |
+| **Unique Users** | 6,832 | 6,822 | **6,822** | Publication-level count differs from cleaned benchmark release; local files bit-match the audited upstream release. |
 | **Unique Hotels** | 560 | 560 | **560** | **EXACT MATCH.** 560 unique canonical hotels across 9 Vietnamese tourism cities. |
 | **Train Split Records** | Not stated in abstract | 8,645 | **8,645** | **EXACT MATCH.** Temporal train split. |
 | **Validation Split** | Not stated in abstract | 798 | **798** | **EXACT MATCH.** Temporal leave-last-one-out validation set. |

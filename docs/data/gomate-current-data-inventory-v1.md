@@ -29,7 +29,7 @@ The following table itemizes every data file, fixture, seed, and database table 
 | :--- | :---: | :--- | :--- | :---: | :--- | :--- | :---: |
 | `database.places` (PostgreSQL) | 480 | OSM Overpass API (357) + Legacy Seed (123) | ODbL 1.0 (verified) / None (synthetic) | 2026-10-04 | 5 Pilot Regions (Đà Nẵng, Hà Nội, Hội An, Huế, Nha Trang) + Synthetic National | 123 records lack verified provenance; all ratings are `NULL`; `price_min`/`max` missing on OSM places. | **YES** (Verified subset of 357 only) |
 | `database.destinations` (PostgreSQL) | 50 | Synthetic Seed (`destinations.json`) | Project Internal / None | 2026-09-22 | National Vietnam (50 destinations across 30+ provinces) | AI-generated descriptions and arbitrary default ratings; coordinates are approximate. | **YES** (Prototyping & spatial bounding) |
-| `database.place_sources` (PostgreSQL) | 357 | OpenStreetMap Overpass API | ODbL 1.0 | 2026-10-04 | Đà Nẵng (114), Hà Nội (110), Hội An (50), Huế (50), Nha Trang (33) | 100% verified upstream; zero violations against Overpass authoritative endpoints. | **YES** (Authoritative POI baseline) |
+| `database.place_sources` (PostgreSQL) | 357 | OpenStreetMap Overpass API | ODbL 1.0 | 2026-10-04 | Đà Nẵng (114), Hà Nội (110), Hội An (50), Huế (50), Nha Trang (33) | 100% verified upstream; zero violations against selected Overpass query endpoints. | **YES** (Authoritative POI baseline) |
 | `database.place_source_quarantine` | 13 | Quarantined OSM IDs | N/A (Audit Trail) | 2026-10-04 | Various | 11 non-existent upstream OSM IDs + 2 coordinate/place mismatch nodes isolated from production. | **NO** (Audit log only) |
 | `database.reviews` (PostgreSQL) | 9 | Mock Fixture (`vietnam_travel_reviews.json`) | UNKNOWN / Mock | 2026-10-01 | Synthetic Đà Nẵng (4), Hà Nội (2), Hội An (1), Huế (1), Vùng sâu (1) | Fabricated mock reviews; `trusted=false`; unusable for sentiment analysis or NLP training. | **NO** (ETL pipeline smoke tests only) |
 | `database.documents` (pgvector RAG) | 821 | Wikivoyage API (464) + OSM Places (357) | CC BY-SA 3.0 (Wikivoyage) / ODbL 1.0 (OSM) | 2026-10-04 | 10 Pilot Destinations (Wikivoyage) + 5 Pilot Regions (OSM) | Raw vector table drifted from Prisma schema (managed via SQL); HNSW index operational. | **YES** (Grounding & RAG retrieval) |
@@ -91,7 +91,7 @@ The repository contains a robust, reproducible ETL pipeline architecture:
 - `data/pipelines/osm/parse_osm.py`: Extracts names, normalized categories, formatted addresses, and coordinate validation.
 - `data/pipelines/osm/enrich_osm.py`: Curates high-value tourism POIs with per-region quality capping and deterministic UUID generation.
 - `data/pipelines/entity_resolution/resolve.py` & `matcher.py`: Levenshtein distance and geospatial radius matching to prevent cross-source duplicates.
-- `data/pipelines/provenance_audit.py`: Automated test runner checking every stored place against authoritative live Overpass endpoints with a 150m tolerance window.
+- `data/pipelines/provenance_audit.py`: Automated test runner checking every stored place against live Overpass query endpoints with a 150m tolerance window.
 - `data/pipelines/quality_checker.py`: Schema validation, bounding box containment, duplicate coordinate detection, and missing field auditing.
 - `apps/ai-service/app/rag/ingestion.py`: Section-aware chunking and embedding pipeline for Wikivoyage API articles and OSM canonical places.
 
@@ -114,7 +114,7 @@ The repository contains a robust, reproducible ETL pipeline architecture:
 
 ### 3.6. Review Data Reality
 - **Production Database Reviews:** 9 rows. All 9 are synthetic test fixtures with `trusted=false`. Zero genuine customer reviews exist in the database.
-- **ViHoRec:** Contains 17,911 interactions and 560 hotels, but **zero review text** (only user ID, hotel ID, rating float 1.0–10.0, date, and source platform).
+- **ViHoRec:** Contains 17,911 interactions and 560 hotels, but **zero review text** (only user ID, hotel ID, rating float 1.0–10.0, date, and source platform). Publication-level count differs from cleaned benchmark release; local files bit-match the audited upstream release.
 - **Conclusion:** The project currently possesses **zero real Vietnamese textual review data** for Aspect-Based Sentiment Analysis (ABSA), NLP summarization, or review-based retrieval.
 
 ---
@@ -123,7 +123,7 @@ The repository contains a robust, reproducible ETL pipeline architecture:
 
 | Asset Cluster | Academic Thesis Usability | Justification & Constraints |
 | :--- | :---: | :--- |
-| **Verified OSM Places (357)** | **YES** | Legally compliant (ODbL 1.0), reproducible, verified against live Overpass endpoints. Provides solid ground truth for POI search, map visualization, and spatial clustering. |
+| **Verified OSM Places (357)** | **YES** | Legally compliant (ODbL 1.0), reproducible, verified against OpenStreetMap via Overpass query endpoints. Provides solid ground truth for POI search, map visualization, and spatial clustering. |
 | **ViHoRec Benchmark (data/restricted/vihorec/)** | **YES** | Legally compliant for non-commercial academic research (CC BY-NC 4.0). Enables rigorous offline recommender benchmarks (MostPopular, NCF, LightGCN) with standard metrics (NDCG@10, Recall@10). |
 | **Wikivoyage RAG Corpus (464 chunks)** | **YES** | Permitted under CC BY-SA 3.0 with attribution. Provides factual context for AI agent grounding and destination guides. |
 | **Synthetic Seed Places (56) & Reviews (9)** | **NO** | Must remain quarantined / hidden from thesis evaluations, baseline reports, and production API serving. |

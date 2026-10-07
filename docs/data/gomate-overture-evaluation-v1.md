@@ -1,16 +1,16 @@
 # Overture Maps Places Audit & Cross-Check Evaluation (V1)
 
-**Document Version:** 1.0.0  
+**Document Version:** 1.1.0  
 **Snapshot Date:** 2026-10-07  
 **Branch / Worktree:** `feature/data-foundation-w2`  
-**Task Reference:** TASK DATA-01B (Overture Maps Evaluation & Entity Resolution Plan)  
+**Task Reference:** TASK DATA-01B-R1 (Overture Maps Evaluation & Entity Resolution Plan)  
 **Role in Architecture:** SECONDARY QUALITY & FRESHNESS CROSS-CHECK ONLY (Never Replaces OSM IDs)
 
 ---
 
 ## 1. Executive Summary
 
-This document evaluates the official Overture Maps Foundation dataset as a secondary factual cross-check for the GoMate POI catalog. Based on the official **Release `2026-09-23.1` (Schema v2.0.0)**, we document schema specifications, licensing models, field taxonomies, and formulate the exact entity resolution protocol (`OSM ↔ Overture`) for DATA-02.
+This document evaluates the official Overture Maps Foundation dataset as a secondary factual cross-check for the GoMate POI catalog. Based on the official **Release `2026-09-23.1` (Schema v2.0.0)**, we document schema specifications, multi-licensing models, field taxonomies, and formulate the exact entity resolution protocol (`OSM ↔ Overture`) for DATA-02.
 
 ---
 
@@ -23,14 +23,25 @@ This document evaluates the official Overture Maps Foundation dataset as a secon
 │ Release Identifier    │ 2026-09-23.1                                         │
 │ Schema Version        │ v2.0.0 (Pydantic-governed structured specification)  │
 │ Theme / Feature Type  │ places / place                                       │
-│ Primary License       │ CDLA Permissive 2.0 (Community Data License)         │
-│ Underlying Upstream   │ Meta, Microsoft, TomTom, OpenStreetMap contributors  │
-│ Global Coverage       │ > 60 Million global POIs                             │
+│ Total Places Count    │ 81,455,425 global places                             │
+│ Licensing Model       │ MULTI-LICENSE (Derived per source record:            │
+│                       │ CDLA Permissive 2.0, Apache 2.0, CC0 1.0)            │
+│ Canonical Sources     │ Meta, Microsoft, Foursquare, BrightQuery,            │
+│                       │ AllThePlaces, PinMeTo, DAC, Krick, RenderSEO         │
+│ OpenStreetMap Note    │ Places theme DOES NOT contain OpenStreetMap data     │
 │ Access Distribution   │ Cloud-native GeoParquet (AWS S3 & Azure Blob)        │
 └───────────────────────┴──────────────────────────────────────────────────────┘
 ```
 
-### 2.1. Critical Schema Migration (September 2026 Release)
+### 2.1. Critical Source & Multi-Licensing Governance
+1. **Source Model:** Overture Maps Places does **NOT** contain OpenStreetMap data. While other Overture themes (such as `transportation` and `buildings`) ingest OSM data under ODbL 1.0, the `places` theme is compiled independently from proprietary and open business datasets donated by corporate and commercial members:
+   - **Canonical Places Source Families:** Meta, Microsoft, Foursquare, BrightQuery, AllThePlaces, PinMeTo, DAC, Krick, RenderSEO, and other documented Overture sources.
+2. **Multi-License Structure:** Overture Places is **not** governed by a single monolithic license. It is a **multi-license dataset**:
+   - Primary data distribution framework: **CDLA Permissive 2.0** (Community Data License Agreement – Permissive – Version 2.0).
+   - Component source records may be subject to **Apache 2.0**, **CC0 1.0**, or contributor-specific permissive terms as recorded in the `sources` property.
+   - **Provenance Rule:** Any auxiliary record ingested into GoMate's `database.place_sources` must extract and record the specific license string from the matched Overture record's provenance metadata, rather than blindly hardcoding CDLA Permissive 2.0.
+
+### 2.2. Critical Schema Migration (September 2026 Release)
 As of Release `2026-09-23.1`, Overture Maps has **officially removed the legacy `categories` property** (`categories.primary` and `categories.alternate`). The GoMate data pipeline strictly conforms to the new v2.0.0 taxonomy specification:
 
 1. **`basic_category` (String):**  
@@ -49,7 +60,7 @@ As of Release `2026-09-23.1`, Overture Maps has **officially removed the legacy 
 6. **`confidence` (Float):**  
    Model-derived confidence score in $[0.0, 1.0]$.
 7. **`sources` (List of Objects):**  
-   Provenance array documenting upstream contributors (`dataset`, `record_id`, `confidence`).
+   Provenance array documenting upstream contributors (`dataset`, `record_id`, `license`, `confidence`).
 
 ---
 
@@ -57,13 +68,13 @@ As of Release `2026-09-23.1`, Overture Maps has **officially removed the legacy 
 
 ```mermaid
 flowchart TD
-    OSM["OpenStreetMap Overpass API\n(ODbL 1.0)"] -->|"Primary Ingestion"| CANON["GoMate Canonical Places\n(Primary ID: osm_id)"]
-    OVERTURE["Overture Maps Release 2026-09-23.1\n(CDLA Permissive 2.0)"] -->|"GeoParquet Bounding Query"| O_CAND["Overture Vietnam POIs"]
+    OSM["OpenStreetMap Overpass Query\n(ODbL 1.0 - Primary POI Baseline)"] -->|"Primary Ingestion"| CANON["GoMate Canonical Places\n(Primary ID: osm_id)"]
+    OVERTURE["Overture Maps Release 2026-09-23.1\n(81,455,425 Places - Multi-License)"] -->|"GeoParquet Bounding Query"| O_CAND["Overture Vietnam POIs"]
     
     CANON --> RESOLVE{"Entity Resolution Engine\n(Name, Distance <= 150m, Category)"}
     O_CAND --> RESOLVE
     
-    RESOLVE -->|"Match Confirmed"| AUX["Store Overture GERS ID in place_sources\n(Auxiliary Provenance Record)"]
+    RESOLVE -->|"Match Confirmed"| AUX["Store Overture GERS ID in place_sources\n(Auxiliary Record with Provenance License)"]
     RESOLVE -->|"Discrepancy (e.g. permanently_closed)"| FLAG["Flag for Human Verification"]
 ```
 
@@ -71,7 +82,7 @@ flowchart TD
 1. **Never Replace OSM Canonical Keys:** GoMate places derive their primary foreign key lineage from OpenStreetMap. An Overture GERS ID will never supersede an OSM node/way ID.
 2. **Independent License Accounting:** 
    - OpenStreetMap attributes are governed by **ODbL 1.0** (requiring Share-Alike on derivative databases and OpenStreetMap attribution).
-   - Overture Places attributes are governed by **CDLA Permissive 2.0**.
+   - Overture Places attributes are governed by their respective **source-derived licenses** (CDLA Permissive 2.0, Apache 2.0, CC0 1.0).
    - These licenses must never be conflated. Auxiliary records in `database.place_sources` maintain distinct `license` strings.
 
 ---
@@ -106,9 +117,9 @@ The Overture `basic_category` and `taxonomy.hierarchy[0]` must be compatible wit
 
 ### 4.4. Step 4: Storage & Flagging Action
 - **High-Confidence Match ($\text{Distance} \le 50\text{m}, \text{Score} \ge 0.90$):**  
-  Insert auxiliary row into `place_sources`:
+  Insert auxiliary row into `place_sources` recording the derived license:
   ```sql
-  INSERT INTO place_sources (place_id, source_name, source_id, raw_data, created_at)
-  VALUES ($place_id, 'overture', $overture_id, $raw_json, now());
+  INSERT INTO place_sources (place_id, source_name, source_id, license, raw_data, created_at)
+  VALUES ($place_id, 'overture', $overture_id, $record_license, $raw_json, now());
   ```
 - **Closure Flag:** If Overture marks `operating_status = "permanently_closed"` for a matched place, flag place with `quarantine_review_needed = true` for human verification.

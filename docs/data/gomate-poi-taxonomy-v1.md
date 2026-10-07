@@ -1,27 +1,20 @@
 # GoMate POI Taxonomy Specification (V1)
 
-**Document Version:** 1.0.0  
+**Document Version:** 1.1.0  
 **Snapshot Date:** 2026-10-07  
 **Branch / Worktree:** `feature/data-foundation-w2`  
-**Task Reference:** TASK DATA-01B (POI Taxonomy Harmonization & Overture Mapping)  
-**Governance Invariant:** Based strictly on REAL EXISTING DATA. Zero production code changes; zero `schema.prisma` edits.
+**Task Reference:** TASK DATA-01B-R1 (POI Taxonomy Ambiguity Fixes & Semantic Alignment)  
+**Governance Invariant:** Based strictly on REAL EXISTING DATA. Zero production code changes; zero `schema.prisma` edits. Preserve raw OSM tags in all cases.
 
 ---
 
-## 1. Executive Summary & Problem Statement
+## 1. Executive Summary & Semantic Clarifications
 
-An empirical audit of the GoMate repository reveals a structural divergence between three competing taxonomy representations currently coexisting in the codebase:
-
-1. **Production Seed Taxonomy (`database/seed/categories.json`):**  
-   Defines 10 flat categories: `restaurant`, `hotel`, `attraction`, `beach`, `temple`, `market`, `cafe`, `museum`, `park`, `nightlife`.
-2. **OpenStreetMap Pipeline Ingestion Taxonomy (`data/pipelines/osm/config.py`):**  
-   Collapses rich OSM tags into 8 broad categories: `attraction`, `culture`, `nature`, `entertainment`, `beach`, `cafe`, `restaurant`, `hotel`.
-3. **Verified Database Reality (357 Verified Places):**  
-   The active PostgreSQL database contains verified places with categories: `culture` (111), `attraction` (111), `cafe` (55), `hotel` (25), `nature` (21), `restaurant` (15), `beach` (14), `entertainment` (5).
-4. **Overture Maps v2.0.0 Schema:**  
-   Replaced legacy categories with `basic_category` and hierarchical `taxonomy.hierarchy`.
-5. **MVP Geography Specificity (Ha Long Bay):**  
-   Coastal and marine tourism requires explicit support for caves/grottos, passenger ferry terminals, islands, and seafood dining.
+This document refines the GoMate POI Taxonomy to eliminate ambiguous category collapses identified during the DATA-01B review:
+1. **Separation of Zoos and Parks:** `tourism=zoo` is explicitly mapped to `zoo_wildlife`, not collapsed into `park_garden`.
+2. **Separation of Aquariums and Theme Parks:** `tourism=aquarium` is mapped to `aquarium`, not collapsed into `theme_park_leisure`.
+3. **Separation of Modern Malls and Traditional Markets:** `shop=mall` is mapped to `shopping_mall`, strictly isolated from `amenity=marketplace` (`traditional_market`).
+4. **Transport Hubs Governance:** `boat_terminal` (`amenity=ferry_terminal`) is classified under `TRANSPORT_HUBS` for research and routing models, while mapping to legacy `attraction` ONLY as a backward-compatible UI fallback.
 
 ---
 
@@ -51,21 +44,24 @@ The table below unifies OpenStreetMap tags, Overture Maps v2.0.0 fields, and the
 | | `museum_gallery` | `tourism=museum`, `tourism=gallery` | `museum` | `arts_and_entertainment` | `museum` |
 | | `historic_monument` | `historic=monument`, `historic=memorial`, `historic=castle` | `historic_site` | `arts_and_entertainment` | `attraction` (or `culture`) |
 | **2. NATURE & SCENERY** | `beach_coastal` | `natural=beach`, `leisure=beach_resort` | `beach` | `outdoors_and_recreation` | `beach` |
-| | `park_garden` | `leisure=park`, `tourism=zoo` | `park` | `outdoors_and_recreation` | `park` |
+| | `park_garden` | `leisure=park` | `park` | `outdoors_and_recreation` | `park` |
+| | `zoo_wildlife` | `tourism=zoo` | `zoo` | `outdoors_and_recreation` | `park` (or `attraction`) |
 | | `viewpoint_scenic` | `tourism=viewpoint` | `scenic_viewpoint` | `outdoors_and_recreation` | `attraction` (or `nature`) |
 | | `cave_grotto` *(Ha Long)*| `natural=cave_entrance` | `natural_feature` | `outdoors_and_recreation` | `attraction` |
 | | `island_landmark` *(Ha Long)*| `place=island`, `tourism=attraction` | `island` | `outdoors_and_recreation` | `attraction` |
 | **3. ATTRACTIONS & LEISURE** | `landmark_iconic` | `tourism=attraction` (bridges, towers, squares) | `tourist_attraction` | `arts_and_entertainment` | `attraction` |
-| | `theme_park_leisure` | `tourism=theme_park`, `tourism=aquarium` | `theme_park` | `arts_and_entertainment` | `entertainment` (or `attraction`) |
+| | `aquarium` | `tourism=aquarium` | `aquarium` | `arts_and_entertainment` | `attraction` |
+| | `theme_park_leisure` | `tourism=theme_park` | `theme_park` | `arts_and_entertainment` | `entertainment` (or `attraction`) |
 | | `nightlife_entertainment`| `amenity=nightclub`, `amenity=pub`, `amenity=bar` | `bar` | `food_and_drink` | `nightlife` |
 | **4. FOOD & BEVERAGE** | `cafe_tea` | `amenity=cafe` | `cafe` | `food_and_drink` | `cafe` |
 | | `restaurant_dining` | `amenity=restaurant`, `amenity=food_court` | `restaurant` | `food_and_drink` | `restaurant` |
 | | `seafood_dining` *(Ha Long)*| `amenity=restaurant` & `cuisine=seafood` | `seafood_restaurant`| `food_and_drink` | `restaurant` |
-| | `street_food_market` | `amenity=fast_food`, `amenity=marketplace` (food) | `fast_food_restaurant`| `food_and_drink` | `market` (or `restaurant`) |
+| | `street_food_market` | `amenity=fast_food` | `fast_food_restaurant`| `food_and_drink` | `market` (or `restaurant`) |
 | **5. HOSPITALITY** | `hotel_resort` | `tourism=hotel`, `tourism=resort`, ViHoRec | `hotel` | `accommodation` | `hotel` |
 | | `homestay_hostel` | `tourism=guest_house`, `tourism=hostel` | `guest_house` | `accommodation` | `hotel` |
-| **6. TRANSPORT & HUBS** | `boat_terminal` *(Ha Long)* | `amenity=ferry_terminal` | `ferry_terminal` | `transportation` | `attraction` |
-| **7. SHOPPING & COMMERCE** | `traditional_market` | `amenity=marketplace`, `shop=mall` | `market` | `retail` | `market` |
+| **6. TRANSPORT & HUBS** | `boat_terminal` *(Ha Long)* | `amenity=ferry_terminal` | `ferry_terminal` | `transportation` | `attraction` *(UI fallback only)* |
+| **7. SHOPPING & COMMERCE** | `traditional_market` | `amenity=marketplace` | `market` | `retail` | `market` |
+| | `shopping_mall` | `shop=mall` | `shopping_mall` | `retail` | `market` |
 
 ---
 
@@ -114,6 +110,26 @@ The table below unifies OpenStreetMap tags, Overture Maps v2.0.0 fields, and the
     "display_en": "Beach"
   },
   {
+    "osm_key": "leisure",
+    "osm_value": "park",
+    "tier_1": "NATURE_SCENERY",
+    "tier_2": "park_garden",
+    "overture_basic_category": "park",
+    "legacy_production_id": "park",
+    "display_vi": "Công viên & Cảnh quan xanh",
+    "display_en": "Park & Garden"
+  },
+  {
+    "osm_key": "tourism",
+    "osm_value": "zoo",
+    "tier_1": "NATURE_SCENERY",
+    "tier_2": "zoo_wildlife",
+    "overture_basic_category": "zoo",
+    "legacy_production_id": "park",
+    "display_vi": "Vườn thú & Khu bảo tồn động vật",
+    "display_en": "Zoo & Wildlife Park"
+  },
+  {
     "osm_key": "natural",
     "osm_value": "cave_entrance",
     "tier_1": "NATURE_SCENERY",
@@ -122,6 +138,26 @@ The table below unifies OpenStreetMap tags, Overture Maps v2.0.0 fields, and the
     "legacy_production_id": "attraction",
     "display_vi": "Hang động & Thạch nhũ",
     "display_en": "Cave & Grotto"
+  },
+  {
+    "osm_key": "tourism",
+    "osm_value": "aquarium",
+    "tier_1": "ATTRACTIONS_LEISURE",
+    "tier_2": "aquarium",
+    "overture_basic_category": "aquarium",
+    "legacy_production_id": "attraction",
+    "display_vi": "Thủy cung sinh vật biển",
+    "display_en": "Aquarium"
+  },
+  {
+    "osm_key": "tourism",
+    "osm_value": "theme_park",
+    "tier_1": "ATTRACTIONS_LEISURE",
+    "tier_2": "theme_park_leisure",
+    "overture_basic_category": "theme_park",
+    "legacy_production_id": "entertainment",
+    "display_vi": "Công viên giải trí chủ đề",
+    "display_en": "Theme Park"
   },
   {
     "osm_key": "amenity",
@@ -194,6 +230,16 @@ The table below unifies OpenStreetMap tags, Overture Maps v2.0.0 fields, and the
     "display_en": "Traditional Market"
   },
   {
+    "osm_key": "shop",
+    "osm_value": "mall",
+    "tier_1": "SHOPPING_COMMERCE",
+    "tier_2": "shopping_mall",
+    "overture_basic_category": "shopping_mall",
+    "legacy_production_id": "market",
+    "display_vi": "Trung tâm thương mại",
+    "display_en": "Shopping Mall"
+  },
+  {
     "osm_key": "amenity",
     "osm_value": "nightclub",
     "tier_1": "ATTRACTIONS_LEISURE",
@@ -211,5 +257,5 @@ The table below unifies OpenStreetMap tags, Overture Maps v2.0.0 fields, and the
 ## 5. Backward Compatibility & Migration Strategy
 
 1. **Production Table (`place_categories`):** Continues to host the 10 production seed categories with fixed primary keys.
-2. **Metadata Extension via JSON:** In DATA-02, Tier-1 and Tier-2 taxonomy tags and Overture `basic_category` mappings will be persisted inside `place_sources.raw_data` and RAG document `metadata`.
-3. **Zero Schema Modification:** Neither `schema.prisma` nor production apps are altered.
+2. **Boat Terminal Handling:** For UI presentation, `boat_terminal` maps to `attraction` so existing Flutter/Web screens render it without missing icon errors. For research, graph routing, and trip planning, it is processed under `TRANSPORT_HUBS / boat_terminal`.
+3. **Preservation of Raw Tags:** Ingestion pipelines always persist the complete raw OSM `tags` object in `place_sources.raw_data` to ensure zero information loss.
