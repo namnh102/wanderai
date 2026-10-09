@@ -1,0 +1,81 @@
+{
+  "hanoi": {
+    "region": "hanoi",
+    "raw_elements": 4898,
+    "accepted_count": 4889,
+    "rejected_total": 9,
+    "rejected_reasons": {
+      "GENERIC_PLACEHOLDER_NAME": 2,
+      "MISSING_OR_SHORT_NAME": 3,
+      "OUT_OF_BBOX": 4
+    },
+    "category_distribution": {
+      "restaurant_dining": 1441,
+      "hotel_resort": 531,
+      "cafe_tea": 1155,
+      "street_food_market": 275,
+      "historic_monument": 74,
+      "museum_gallery": 44,
+      "religious_temple": 566,
+      "nightlife_entertainment": 171,
+      "homestay_hostel": 169,
+      "traditional_market": 120,
+      "landmark_iconic": 86,
+      "shopping_mall": 38,
+      "seafood_dining": 17,
+      "boat_terminal": 4,
+      "park_garden": 191,
+      "aquarium": 2,
+      "zoo_wildlife": 4,
+      "beach_coastal": 1
+    },
+    "tier1_distribution": {
+      "FOOD_BEVERAGE": 2888,
+      "HOSPITALITY": 700,
+      "CULTURE_HERITAGE": 684,
+      "ATTRACTIONS_LEISURE": 259,
+      "SHOPPING_COMMERCE": 158,
+      "TRANSPORT_HUBS": 4,
+      "NATURE_SCENERY": 196
+    }
+  },
+  "halong": {
+    "region": "halong",
+    "raw_elements": 191,
+    "accepted_count": 188,
+    "rejected_total": 3,
+    "rejected_reasons": {
+      "OUT_OF_BBOX": 3
+    },
+    "category_distribution": {
+      "boat_terminal": 10,
+      "hotel_resort": 54,
+      "restaurant_dining": 33,
+      "landmark_iconic": 11,
+      "cave_grotto": 5,
+      "homestay_hostel": 4,
+      "nightlife_entertainment": 5,
+      "museum_gallery": 2,
+      "cafe_tea": 21,
+      "island_landmark": 3,
+      "viewpoint_scenic": 2,
+      "historic_monument": 3,
+      "religious_temple": 11,
+      "street_food_market": 1,
+      "seafood_dining": 3,
+      "shopping_mall": 3,
+      "park_garden": 3,
+      "traditional_market": 12,
+      "theme_park_leisure": 2
+    },
+    "tier1_distribution": {
+      "TRANSPORT_HUBS": 10,
+      "HOSPITALITY": 58,
+      "FOOD_BEVERAGE": 58,
+      "ATTRACTIONS_LEISURE": 18,
+      "NATURE_SCENERY": 13,
+      "CULTURE_HERITAGE": 16,
+      "SHOPPING_COMMERCE": 15
+    }
+  }
+}

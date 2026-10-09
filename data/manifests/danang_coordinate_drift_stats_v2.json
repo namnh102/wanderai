@@ -1,0 +1,9 @@
+{
+  "count": 293,
+  "median_drift_m": 0.0,
+  "p95_drift_m": 0.0,
+  "max_drift_m": 0.0,
+  "drift_gt_5m": 0,
+  "drift_gt_20m": 0,
+  "drift_gt_100m": 0
+}
