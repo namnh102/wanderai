@@ -1,0 +1,2302 @@
+[
+  {
+    "source_id": "node/622797283",
+    "osm_name": "Bến phà Gia Luận",
+    "osm_tier1": "TRANSPORT_HUBS",
+    "status": "UNMATCHED",
+    "overture_match": null
+  },
+  {
+    "source_id": "node/839480851",
+    "osm_name": "Old Hon Gai Ferry Terminal",
+    "osm_tier1": "TRANSPORT_HUBS",
+    "status": "UNMATCHED",
+    "overture_match": null
+  },
+  {
+    "source_id": "node/995291906",
+    "osm_name": "Ha Long Pearl",
+    "osm_tier1": "HOSPITALITY",
+    "status": "AUTO_LINK",
+    "overture_match": {
+      "overture_id": "de928d62-6e06-49b7-b0d1-4e98a84fa95f",
+      "overture_name": "Ha Long Pearl Hotel",
+      "distance_m": 14.9,
+      "similarity_score": 0.937,
+      "category_compatible": true,
+      "operating_status": null,
+      "license": "CDLA Permissive 2.0",
+      "providers": [
+        "meta",
+        "Overture"
+      ]
+    }
+  },
+  {
+    "source_id": "node/995292144",
+    "osm_name": "BMC Thăng Long Hotel",
+    "osm_tier1": "HOSPITALITY",
+    "status": "AUTO_LINK",
+    "overture_match": {
+      "overture_id": "4952130a-972f-41d6-8c80-9b3ee92a08d5",
+      "overture_name": "BMC Thang Long Ha Long",
+      "distance_m": 4.2,
+      "similarity_score": 0.933,
+      "category_compatible": true,
+      "operating_status": null,
+      "license": "CDLA Permissive 2.0",
+      "providers": [
+        "meta",
+        "Overture"
+      ]
+    }
+  },
+  {
+    "source_id": "node/995293185",
+    "osm_name": "Cua Vàng",
+    "osm_tier1": "FOOD_BEVERAGE",
+    "status": "UNMATCHED",
+    "overture_match": null
+  },
+  {
+    "source_id": "node/2707025319",
+    "osm_name": "Vịnh Hạ Long",
+    "osm_tier1": "ATTRACTIONS_LEISURE",
+    "status": "UNMATCHED",
+    "overture_match": null
+  },
+  {
+    "source_id": "node/3410529615",
+    "osm_name": "Halong Plaza Hotel",
+    "osm_tier1": "HOSPITALITY",
+    "status": "AUTO_LINK",
+    "overture_match": {
+      "overture_id": "4288385a-a620-4628-9f3c-acba6f68fa15",
+      "overture_name": "Halong Plaza Hotel",
+      "distance_m": 3.5,
+      "similarity_score": 1.0,
+      "category_compatible": true,
+      "operating_status": null,
+      "license": "CDLA Permissive 2.0",
+      "providers": [
+        "meta",
+        "Overture"
+      ]
+    }
+  },
+  {
+    "source_id": "node/3494811567",
+    "osm_name": "Hang Bồ Nâu",
+    "osm_tier1": "NATURE_SCENERY",
+    "status": "UNMATCHED",
+    "overture_match": null
+  },
+  {
+    "source_id": "node/3559335899",
+    "osm_name": "Bến phà Tuần Châu",
+    "osm_tier1": "TRANSPORT_HUBS",
+    "status": "MANUAL_REVIEW_CANDIDATE",
+    "overture_match": {
+      "overture_id": "07efc4df-0c19-4979-8975-f131bc6c5314",
+      "overture_name": "Bến phà Tuần Châu",
+      "distance_m": 36.6,
+      "similarity_score": 1.0,
+      "category_compatible": false,
+      "operating_status": null,
+      "license": "CDLA Permissive 2.0",
+      "providers": [
+        "meta",
+        "Overture"
+      ]
+    }
+  },
+  {
+    "source_id": "node/3560283504",
+    "osm_name": "Hang Luồn Cave Entrance",
+    "osm_tier1": "ATTRACTIONS_LEISURE",
+    "status": "UNMATCHED",
+    "overture_match": null
+  },
+  {
+    "source_id": "node/3770228391",
+    "osm_name": "Long Ha Nha Nghi",
+    "osm_tier1": "HOSPITALITY",
+    "status": "UNMATCHED",
+    "overture_match": null
+  },
+  {
+    "source_id": "node/3773061053",
+    "osm_name": "Van Nam",
+    "osm_tier1": "HOSPITALITY",
+    "status": "UNMATCHED",
+    "overture_match": null
+  },
+  {
+    "source_id": "node/4092014049",
+    "osm_name": "Pizza Hut",
+    "osm_tier1": "FOOD_BEVERAGE",
+    "status": "AUTO_LINK",
+    "overture_match": {
+      "overture_id": "93180b8a-c1dc-42a3-9900-0182986febe3",
+      "overture_name": "Pizza Hut",
+      "distance_m": 8.8,
+      "similarity_score": 1.0,
+      "category_compatible": true,
+      "operating_status": null,
+      "license": "CDLA Permissive 2.0",
+      "providers": [
+        "meta",
+        "Overture"
+      ]
+    }
+  },
+  {
+    "source_id": "node/4092067022",
+    "osm_name": "Nhà Hàng Ẩm Thực Đông Nam",
+    "osm_tier1": "FOOD_BEVERAGE",
+    "status": "MANUAL_REVIEW_CANDIDATE",
+    "overture_match": {
+      "overture_id": "3a80f4aa-4469-42de-a29a-5d8f2c66e328",
+      "overture_name": "Nhà Hàng TMV",
+      "distance_m": 37.1,
+      "similarity_score": 0.853,
+      "category_compatible": true,
+      "operating_status": null,
+      "license": "CDLA Permissive 2.0",
+      "providers": [
+        "meta",
+        "Overture"
+      ]
+    }
+  },
+  {
+    "source_id": "node/4155558391",
+    "osm_name": "Tuan Chau",
+    "osm_tier1": "FOOD_BEVERAGE",
+    "status": "UNMATCHED",
+    "overture_match": null
+  },
+  {
+    "source_id": "node/4330722989",
+    "osm_name": "Vinpearl Ha Long resort",
+    "osm_tier1": "HOSPITALITY",
+    "status": "AUTO_LINK",
+    "overture_match": {
+      "overture_id": "9ed3a2e3-60a3-4df0-acd8-83185f57a281",
+      "overture_name": "Vinpearl Hạ Long",
+      "distance_m": 11.7,
+      "similarity_score": 0.939,
+      "category_compatible": true,
+      "operating_status": null,
+      "license": "CDLA Permissive 2.0",
+      "providers": [
+        "meta",
+        "Overture"
+      ]
+    }
+  },
+  {
+    "source_id": "node/4642815456",
+    "osm_name": "Ba Hang Bar",
+    "osm_tier1": "ATTRACTIONS_LEISURE",
+    "status": "UNMATCHED",
+    "overture_match": null
+  },
+  {
+    "source_id": "node/4730928605",
+    "osm_name": "Động Thiên Cung",
+    "osm_tier1": "NATURE_SCENERY",
+    "status": "UNMATCHED",
+    "overture_match": null
+  },
+  {
+    "source_id": "node/4730928606",
+    "osm_name": "Hang Đầu Gỗ",
+    "osm_tier1": "NATURE_SCENERY",
+    "status": "UNMATCHED",
+    "overture_match": null
+  },
+  {
+    "source_id": "node/4753109965",
+    "osm_name": "Hang Thiên Cảnh Sơn",
+    "osm_tier1": "NATURE_SCENERY",
+    "status": "UNMATCHED",
+    "overture_match": null
+  },
+  {
+    "source_id": "node/4755942999",
+    "osm_name": "Thay Cave",
+    "osm_tier1": "NATURE_SCENERY",
+    "status": "UNMATCHED",
+    "overture_match": null
+  },
+  {
+    "source_id": "node/4863125821",
+    "osm_name": "Hạ long Khách sạn Vẻ đẹp tiềm ẩn",
+    "osm_tier1": "HOSPITALITY",
+    "status": "UNMATCHED",
+    "overture_match": null
+  },
+  {
+    "source_id": "node/4890935584",
+    "osm_name": "Quán ăn vặt Ba Sói",
+    "osm_tier1": "FOOD_BEVERAGE",
+    "status": "UNMATCHED",
+    "overture_match": null
+  },
+  {
+    "source_id": "node/4925494521",
+    "osm_name": "Koc moc",
+    "osm_tier1": "HOSPITALITY",
+    "status": "UNMATCHED",
+    "overture_match": null
+  },
+  {
+    "source_id": "node/5224259422",
+    "osm_name": "Gray Line Cruise",
+    "osm_tier1": "HOSPITALITY",
+    "status": "UNMATCHED",
+    "overture_match": null
+  },
+  {
+    "source_id": "node/5229974522",
+    "osm_name": "Rock House Pizza",
+    "osm_tier1": "FOOD_BEVERAGE",
+    "status": "AUTO_LINK",
+    "overture_match": {
+      "overture_id": "510215b6-e8af-45aa-96a3-e2d4b2a88dd8",
+      "overture_name": "Rock House Pizza",
+      "distance_m": 22.3,
+      "similarity_score": 1.0,
+      "category_compatible": true,
+      "operating_status": null,
+      "license": "CDLA Permissive 2.0",
+      "providers": [
+        "meta",
+        "Overture"
+      ]
+    }
+  },
+  {
+    "source_id": "node/5229975822",
+    "osm_name": "14 Pizza Halong",
+    "osm_tier1": "FOOD_BEVERAGE",
+    "status": "UNMATCHED",
+    "overture_match": null
+  },
+  {
+    "source_id": "node/5316382623",
+    "osm_name": "hòn gà chọi",
+    "osm_tier1": "CULTURE_HERITAGE",
+    "status": "UNMATCHED",
+    "overture_match": null
+  },
+  {
+    "source_id": "node/5323088622",
+    "osm_name": "Khách sạn Hà Gia",
+    "osm_tier1": "HOSPITALITY",
+    "status": "UNMATCHED",
+    "overture_match": null
+  },
+  {
+    "source_id": "node/5374431321",
+    "osm_name": "Banana and Rose Homestay",
+    "osm_tier1": "HOSPITALITY",
+    "status": "AUTO_LINK",
+    "overture_match": {
+      "overture_id": "6d7da82c-0085-4ef0-b6bb-7e9bbec8b700",
+      "overture_name": "Banana and Rose",
+      "distance_m": 31.7,
+      "similarity_score": 0.925,
+      "category_compatible": true,
+      "operating_status": null,
+      "license": "CDLA Permissive 2.0",
+      "providers": [
+        "meta",
+        "Overture"
+      ]
+    }
+  },
+  {
+    "source_id": "node/5395107122",
+    "osm_name": "Bảo tàng Quảng Ninh",
+    "osm_tier1": "CULTURE_HERITAGE",
+    "status": "AUTO_LINK",
+    "overture_match": {
+      "overture_id": "bd078edf-ad58-4f6c-9016-adf65c90e5eb",
+      "overture_name": "Bảo Tàng Quảng Ninh",
+      "distance_m": 38.4,
+      "similarity_score": 1.0,
+      "category_compatible": true,
+      "operating_status": null,
+      "license": "CDLA Permissive 2.0",
+      "providers": [
+        "meta",
+        "Overture"
+      ]
+    }
+  },
+  {
+    "source_id": "node/5452491521",
+    "osm_name": "Mai Ly",
+    "osm_tier1": "FOOD_BEVERAGE",
+    "status": "UNMATCHED",
+    "overture_match": null
+  },
+  {
+    "source_id": "node/5490093131",
+    "osm_name": "Ếch ộp quán",
+    "osm_tier1": "FOOD_BEVERAGE",
+    "status": "UNMATCHED",
+    "overture_match": null
+  },
+  {
+    "source_id": "node/5616118021",
+    "osm_name": "Thien Tan Hotel",
+    "osm_tier1": "HOSPITALITY",
+    "status": "UNMATCHED",
+    "overture_match": null
+  },
+  {
+    "source_id": "node/5761407821",
+    "osm_name": "Quán Cà Phê Eleven Coffee",
+    "osm_tier1": "FOOD_BEVERAGE",
+    "status": "UNMATCHED",
+    "overture_match": null
+  },
+  {
+    "source_id": "node/5841391786",
+    "osm_name": "Paris",
+    "osm_tier1": "HOSPITALITY",
+    "status": "MANUAL_REVIEW_CANDIDATE",
+    "overture_match": {
+      "overture_id": "da0343cf-11ca-4ad9-95dd-abf5f20940f1",
+      "overture_name": "Paris Hotel",
+      "distance_m": 49.7,
+      "similarity_score": 0.891,
+      "category_compatible": true,
+      "operating_status": null,
+      "license": "CDLA Permissive 2.0",
+      "providers": [
+        "meta",
+        "Overture"
+      ]
+    }
+  },
+  {
+    "source_id": "node/6304871405",
+    "osm_name": "Hòn Bằng",
+    "osm_tier1": "NATURE_SCENERY",
+    "status": "UNMATCHED",
+    "overture_match": null
+  },
+  {
+    "source_id": "node/6313597177",
+    "osm_name": "My Way",
+    "osm_tier1": "FOOD_BEVERAGE",
+    "status": "UNMATCHED",
+    "overture_match": null
+  },
+  {
+    "source_id": "node/6313597560",
+    "osm_name": "Sơn Đoòng",
+    "osm_tier1": "FOOD_BEVERAGE",
+    "status": "UNMATCHED",
+    "overture_match": null
+  },
+  {
+    "source_id": "node/6313597581",
+    "osm_name": "Bella Hotel",
+    "osm_tier1": "HOSPITALITY",
+    "status": "UNMATCHED",
+    "overture_match": null
+  },
+  {
+    "source_id": "node/6313934207",
+    "osm_name": "Cầu Koi",
+    "osm_tier1": "NATURE_SCENERY",
+    "status": "MANUAL_REVIEW_CANDIDATE",
+    "overture_match": {
+      "overture_id": "d2a1d903-c13f-430a-afb4-b5867e915a8f",
+      "overture_name": "Cầu Koi",
+      "distance_m": 40.8,
+      "similarity_score": 1.0,
+      "category_compatible": false,
+      "operating_status": null,
+      "license": "CDLA Permissive 2.0",
+      "providers": [
+        "meta",
+        "Overture"
+      ]
+    }
+  },
+  {
+    "source_id": "node/6314162950",
+    "osm_name": "Đài tưởng niệm Liệt sĩ Hạ Long",
+    "osm_tier1": "CULTURE_HERITAGE",
+    "status": "UNMATCHED",
+    "overture_match": null
+  },
+  {
+    "source_id": "node/6314163138",
+    "osm_name": "Tượng đài đồng chí Vũ Văn Hiếu",
+    "osm_tier1": "CULTURE_HERITAGE",
+    "status": "MANUAL_REVIEW_CANDIDATE",
+    "overture_match": {
+      "overture_id": "21159c10-d62d-4a56-bda1-cc52654edd77",
+      "overture_name": "Tượng đài VŨ VĂN HIẾU",
+      "distance_m": 38.5,
+      "similarity_score": 0.902,
+      "category_compatible": false,
+      "operating_status": null,
+      "license": "CDLA Permissive 2.0",
+      "providers": [
+        "meta",
+        "Overture"
+      ]
+    }
+  },
+  {
+    "source_id": "node/6314164410",
+    "osm_name": "Sunland Coffee",
+    "osm_tier1": "FOOD_BEVERAGE",
+    "status": "UNMATCHED",
+    "overture_match": null
+  },
+  {
+    "source_id": "node/6332183385",
+    "osm_name": "Đền Trấn Ải Linh Từ",
+    "osm_tier1": "CULTURE_HERITAGE",
+    "status": "UNMATCHED",
+    "overture_match": null
+  },
+  {
+    "source_id": "node/6337578913",
+    "osm_name": "The Bay",
+    "osm_tier1": "FOOD_BEVERAGE",
+    "status": "UNMATCHED",
+    "overture_match": null
+  },
+  {
+    "source_id": "node/6340826290",
+    "osm_name": "Royal Ha Long",
+    "osm_tier1": "HOSPITALITY",
+    "status": "MANUAL_REVIEW_CANDIDATE",
+    "overture_match": {
+      "overture_id": "ec409907-6af3-4757-8edf-e957a581dc65",
+      "overture_name": "Royal Ha Long Hotel & Villas",
+      "distance_m": 70.8,
+      "similarity_score": 0.9,
+      "category_compatible": true,
+      "operating_status": null,
+      "license": "CDLA Permissive 2.0",
+      "providers": [
+        "meta",
+        "Overture"
+      ]
+    }
+  },
+  {
+    "source_id": "node/6361848885",
+    "osm_name": "Nhà hàng Thủy Chung",
+    "osm_tier1": "FOOD_BEVERAGE",
+    "status": "AUTO_LINK",
+    "overture_match": {
+      "overture_id": "d70b5e0a-ae8d-4a73-8fa9-a1514c2fbd42",
+      "overture_name": "Nhà Hàng Thuỷ Chung",
+      "distance_m": 12.2,
+      "similarity_score": 1.0,
+      "category_compatible": true,
+      "operating_status": null,
+      "license": "CDLA Permissive 2.0",
+      "providers": [
+        "meta",
+        "Overture"
+      ]
+    }
+  },
+  {
+    "source_id": "node/6814131343",
+    "osm_name": "Karaoke Q7",
+    "osm_tier1": "ATTRACTIONS_LEISURE",
+    "status": "UNMATCHED",
+    "overture_match": null
+  },
+  {
+    "source_id": "node/6814191259",
+    "osm_name": "Zone 9 Karaoke",
+    "osm_tier1": "ATTRACTIONS_LEISURE",
+    "status": "UNMATCHED",
+    "overture_match": null
+  },
+  {
+    "source_id": "node/6814192321",
+    "osm_name": "Paradise Trend Hotel",
+    "osm_tier1": "HOSPITALITY",
+    "status": "MANUAL_REVIEW_CANDIDATE",
+    "overture_match": {
+      "overture_id": "88a0145c-aa3e-4b54-b3ba-f2b750c58a3a",
+      "overture_name": "Paradise Suites Hotel",
+      "distance_m": 93.7,
+      "similarity_score": 0.932,
+      "category_compatible": true,
+      "operating_status": null,
+      "license": "CDLA Permissive 2.0",
+      "providers": [
+        "meta",
+        "Overture"
+      ]
+    }
+  },
+  {
+    "source_id": "node/6814212745",
+    "osm_name": "Paradise Comfort Hotel",
+    "osm_tier1": "HOSPITALITY",
+    "status": "UNMATCHED",
+    "overture_match": null
+  },
+  {
+    "source_id": "node/6853102485",
+    "osm_name": "Lotus Tea & Coffee",
+    "osm_tier1": "FOOD_BEVERAGE",
+    "status": "UNMATCHED",
+    "overture_match": null
+  },
+  {
+    "source_id": "node/6854638085",
+    "osm_name": "deja vu house",
+    "osm_tier1": "HOSPITALITY",
+    "status": "AUTO_LINK",
+    "overture_match": {
+      "overture_id": "0e3c6abe-9d47-44b0-bf0d-52f025e70291",
+      "overture_name": "Deja Vu House Ha Long",
+      "distance_m": 17.7,
+      "similarity_score": 0.924,
+      "category_compatible": true,
+      "operating_status": null,
+      "license": "CDLA Permissive 2.0",
+      "providers": [
+        "meta",
+        "Overture"
+      ]
+    }
+  },
+  {
+    "source_id": "node/6956608362",
+    "osm_name": "Paradise Suites",
+    "osm_tier1": "HOSPITALITY",
+    "status": "AUTO_LINK",
+    "overture_match": {
+      "overture_id": "88a0145c-aa3e-4b54-b3ba-f2b750c58a3a",
+      "overture_name": "Paradise Suites Hotel",
+      "distance_m": 39.9,
+      "similarity_score": 0.943,
+      "category_compatible": true,
+      "operating_status": null,
+      "license": "CDLA Permissive 2.0",
+      "providers": [
+        "meta",
+        "Overture"
+      ]
+    }
+  },
+  {
+    "source_id": "node/6987509893",
+    "osm_name": "Lea House",
+    "osm_tier1": "HOSPITALITY",
+    "status": "MANUAL_REVIEW_CANDIDATE",
+    "overture_match": {
+      "overture_id": "e3f8070a-069a-4f2f-8e0f-7408ea2f526b",
+      "overture_name": "Lea House Ha Long",
+      "distance_m": 12.4,
+      "similarity_score": 0.906,
+      "category_compatible": false,
+      "operating_status": null,
+      "license": "CDLA Permissive 2.0",
+      "providers": [
+        "meta",
+        "Overture"
+      ]
+    }
+  },
+  {
+    "source_id": "node/7044140886",
+    "osm_name": "Ha Long International Cruise Port",
+    "osm_tier1": "TRANSPORT_HUBS",
+    "status": "AUTO_LINK",
+    "overture_match": {
+      "overture_id": "527ebd9f-445a-4059-a815-0d988c0925a2",
+      "overture_name": "Ha Long International Cruise Port",
+      "distance_m": 44.4,
+      "similarity_score": 1.0,
+      "category_compatible": true,
+      "operating_status": null,
+      "license": "CDLA Permissive 2.0",
+      "providers": [
+        "meta",
+        "Overture"
+      ]
+    }
+  },
+  {
+    "source_id": "node/7129916146",
+    "osm_name": "Gold Mark",
+    "osm_tier1": "HOSPITALITY",
+    "status": "AUTO_LINK",
+    "overture_match": {
+      "overture_id": "2fc1a60a-b439-44c6-a629-f982f5b7d859",
+      "overture_name": "Gold Mark Halong",
+      "distance_m": 10.2,
+      "similarity_score": 0.912,
+      "category_compatible": true,
+      "operating_status": null,
+      "license": "CDLA Permissive 2.0",
+      "providers": [
+        "meta",
+        "Overture"
+      ]
+    }
+  },
+  {
+    "source_id": "node/7168778356",
+    "osm_name": "Senna Cruise",
+    "osm_tier1": "TRANSPORT_HUBS",
+    "status": "UNMATCHED",
+    "overture_match": null
+  },
+  {
+    "source_id": "node/7168783694",
+    "osm_name": "Morning Star Hotel",
+    "osm_tier1": "HOSPITALITY",
+    "status": "UNMATCHED",
+    "overture_match": null
+  },
+  {
+    "source_id": "node/7168795429",
+    "osm_name": "Pearl Coffee",
+    "osm_tier1": "FOOD_BEVERAGE",
+    "status": "UNMATCHED",
+    "overture_match": null
+  },
+  {
+    "source_id": "node/7252844287",
+    "osm_name": "Hùng vùòng",
+    "osm_tier1": "HOSPITALITY",
+    "status": "MANUAL_REVIEW_CANDIDATE",
+    "overture_match": {
+      "overture_id": "6c12d266-7e62-4a59-b0ad-602a7380d135",
+      "overture_name": "Hùng Vương Hotel Hạ Long",
+      "distance_m": 19.4,
+      "similarity_score": 0.883,
+      "category_compatible": true,
+      "operating_status": null,
+      "license": "CDLA Permissive 2.0",
+      "providers": [
+        "meta",
+        "Overture"
+      ]
+    }
+  },
+  {
+    "source_id": "node/8661572074",
+    "osm_name": "Bài thơ Hotel",
+    "osm_tier1": "HOSPITALITY",
+    "status": "UNMATCHED",
+    "overture_match": null
+  },
+  {
+    "source_id": "node/9931528179",
+    "osm_name": "Legend Pearl Café",
+    "osm_tier1": "FOOD_BEVERAGE",
+    "status": "MANUAL_REVIEW_CANDIDATE",
+    "overture_match": {
+      "overture_id": "205b266d-9d1f-4a4b-90f4-58d5bac7dcba",
+      "overture_name": "Legend Pearl",
+      "distance_m": 18.7,
+      "similarity_score": 0.941,
+      "category_compatible": false,
+      "operating_status": null,
+      "license": "CDLA Permissive 2.0",
+      "providers": [
+        "meta",
+        "Overture"
+      ]
+    }
+  },
+  {
+    "source_id": "node/10576900641",
+    "osm_name": "Central Luxury Hotel",
+    "osm_tier1": "HOSPITALITY",
+    "status": "AUTO_LINK",
+    "overture_match": {
+      "overture_id": "62ddf259-f2f1-4cce-b467-2c7afa4a32b9",
+      "overture_name": "Central Luxury Hạ Long Hotel",
+      "distance_m": 35.8,
+      "similarity_score": 0.923,
+      "category_compatible": true,
+      "operating_status": null,
+      "license": "CDLA Permissive 2.0",
+      "providers": [
+        "meta",
+        "Overture"
+      ]
+    }
+  },
+  {
+    "source_id": "node/10635540903",
+    "osm_name": "G. X. Ti Tốp",
+    "osm_tier1": "CULTURE_HERITAGE",
+    "status": "UNMATCHED",
+    "overture_match": null
+  },
+  {
+    "source_id": "node/10821152105",
+    "osm_name": "Hòn Đỉnh Hương",
+    "osm_tier1": "ATTRACTIONS_LEISURE",
+    "status": "UNMATCHED",
+    "overture_match": null
+  },
+  {
+    "source_id": "node/10859902760",
+    "osm_name": "MINALO Hotel",
+    "osm_tier1": "HOSPITALITY",
+    "status": "UNMATCHED",
+    "overture_match": null
+  },
+  {
+    "source_id": "node/10923381498",
+    "osm_name": "Nhà Hàng Phương Nam 2",
+    "osm_tier1": "FOOD_BEVERAGE",
+    "status": "AUTO_LINK",
+    "overture_match": {
+      "overture_id": "eca3823b-6ebe-4e4b-87f6-fa4393ec4123",
+      "overture_name": "Nha Hang Phuong Nam 2",
+      "distance_m": 10.0,
+      "similarity_score": 1.0,
+      "category_compatible": true,
+      "operating_status": null,
+      "license": "CDLA Permissive 2.0",
+      "providers": [
+        "meta",
+        "Overture"
+      ]
+    }
+  },
+  {
+    "source_id": "node/12001024423",
+    "osm_name": "Laguna Coffee",
+    "osm_tier1": "FOOD_BEVERAGE",
+    "status": "UNMATCHED",
+    "overture_match": null
+  },
+  {
+    "source_id": "node/12001024424",
+    "osm_name": "Pearl Hotel",
+    "osm_tier1": "HOSPITALITY",
+    "status": "AUTO_LINK",
+    "overture_match": {
+      "overture_id": "e7770eea-7b04-4da4-8b47-757f6bd2254d",
+      "overture_name": "Pearl Hotel Tuan Chau",
+      "distance_m": 17.9,
+      "similarity_score": 0.905,
+      "category_compatible": true,
+      "operating_status": null,
+      "license": "CDLA Permissive 2.0",
+      "providers": [
+        "meta",
+        "Overture"
+      ]
+    }
+  },
+  {
+    "source_id": "node/12001024430",
+    "osm_name": "Charmhill Hotel",
+    "osm_tier1": "HOSPITALITY",
+    "status": "UNMATCHED",
+    "overture_match": null
+  },
+  {
+    "source_id": "node/12019817981",
+    "osm_name": "An Villa",
+    "osm_tier1": "HOSPITALITY",
+    "status": "UNMATCHED",
+    "overture_match": null
+  },
+  {
+    "source_id": "node/12189361140",
+    "osm_name": "Highlands Coffee",
+    "osm_tier1": "FOOD_BEVERAGE",
+    "status": "AUTO_LINK",
+    "overture_match": {
+      "overture_id": "50a50e37-4817-4f56-8185-6c96eb7a36a9",
+      "overture_name": "Highlands Coffee",
+      "distance_m": 15.7,
+      "similarity_score": 1.0,
+      "category_compatible": true,
+      "operating_status": null,
+      "license": "CDLA Permissive 2.0",
+      "providers": [
+        "meta",
+        "Overture"
+      ]
+    }
+  },
+  {
+    "source_id": "node/12189361142",
+    "osm_name": "Prosperity",
+    "osm_tier1": "HOSPITALITY",
+    "status": "AUTO_LINK",
+    "overture_match": {
+      "overture_id": "217f7b75-5bcc-479d-8d59-a4d082fd4ba5",
+      "overture_name": "Prosperity Hotel",
+      "distance_m": 6.9,
+      "similarity_score": 0.925,
+      "category_compatible": true,
+      "operating_status": null,
+      "license": "CDLA Permissive 2.0",
+      "providers": [
+        "meta",
+        "Overture"
+      ]
+    }
+  },
+  {
+    "source_id": "node/12189361143",
+    "osm_name": "Pamela",
+    "osm_tier1": "FOOD_BEVERAGE",
+    "status": "MANUAL_REVIEW_CANDIDATE",
+    "overture_match": {
+      "overture_id": "11a708bb-c8c4-4d39-a12e-29993720b474",
+      "overture_name": "Pamela Coffee",
+      "distance_m": 1.4,
+      "similarity_score": 0.892,
+      "category_compatible": true,
+      "operating_status": null,
+      "license": "CDLA Permissive 2.0",
+      "providers": [
+        "meta",
+        "Overture"
+      ]
+    }
+  },
+  {
+    "source_id": "node/12189361145",
+    "osm_name": "Jayden",
+    "osm_tier1": "HOSPITALITY",
+    "status": "MANUAL_REVIEW_CANDIDATE",
+    "overture_match": {
+      "overture_id": "fdee0406-75fc-4dfb-b78d-112ba379fbb3",
+      "overture_name": "Jayden Hotel Halong",
+      "distance_m": 8.6,
+      "similarity_score": 0.863,
+      "category_compatible": true,
+      "operating_status": null,
+      "license": "CDLA Permissive 2.0",
+      "providers": [
+        "meta",
+        "Overture"
+      ]
+    }
+  },
+  {
+    "source_id": "node/12189361146",
+    "osm_name": "Dau Co Viet",
+    "osm_tier1": "FOOD_BEVERAGE",
+    "status": "UNMATCHED",
+    "overture_match": null
+  },
+  {
+    "source_id": "node/12189361147",
+    "osm_name": "Trung Nguyên Coffee",
+    "osm_tier1": "FOOD_BEVERAGE",
+    "status": "MANUAL_REVIEW_CANDIDATE",
+    "overture_match": {
+      "overture_id": "2af4659c-ec31-4911-9775-26d8cb9b73c8",
+      "overture_name": "Trung Nguyên Legend Café",
+      "distance_m": 18.8,
+      "similarity_score": 0.897,
+      "category_compatible": true,
+      "operating_status": null,
+      "license": "CDLA Permissive 2.0",
+      "providers": [
+        "meta",
+        "Overture"
+      ]
+    }
+  },
+  {
+    "source_id": "node/12189361148",
+    "osm_name": "Pasan",
+    "osm_tier1": "HOSPITALITY",
+    "status": "UNMATCHED",
+    "overture_match": null
+  },
+  {
+    "source_id": "node/12189361149",
+    "osm_name": "Wyndham Garden",
+    "osm_tier1": "HOSPITALITY",
+    "status": "UNMATCHED",
+    "overture_match": null
+  },
+  {
+    "source_id": "node/12189361150",
+    "osm_name": "Vincent",
+    "osm_tier1": "HOSPITALITY",
+    "status": "UNMATCHED",
+    "overture_match": null
+  },
+  {
+    "source_id": "node/12189361151",
+    "osm_name": "Soleil Wyndham",
+    "osm_tier1": "HOSPITALITY",
+    "status": "UNMATCHED",
+    "overture_match": null
+  },
+  {
+    "source_id": "node/12346832201",
+    "osm_name": "Chala De Villa",
+    "osm_tier1": "HOSPITALITY",
+    "status": "UNMATCHED",
+    "overture_match": null
+  },
+  {
+    "source_id": "node/12740647490",
+    "osm_name": "Grand Pioneer",
+    "osm_tier1": "TRANSPORT_HUBS",
+    "status": "MANUAL_REVIEW_CANDIDATE",
+    "overture_match": {
+      "overture_id": "74af559d-aa22-4b9b-a1a4-1cca370923d5",
+      "overture_name": "Grand Pioneers HaLong Bay Cruise",
+      "distance_m": 34.6,
+      "similarity_score": 0.881,
+      "category_compatible": true,
+      "operating_status": null,
+      "license": "CDLA Permissive 2.0",
+      "providers": [
+        "meta",
+        "Overture"
+      ]
+    }
+  },
+  {
+    "source_id": "node/12759133301",
+    "osm_name": "Cảng tàu khách quốc tế Hạ Long",
+    "osm_tier1": "TRANSPORT_HUBS",
+    "status": "MANUAL_REVIEW_CANDIDATE",
+    "overture_match": {
+      "overture_id": "9930fecc-559b-4e3d-8034-7cc04c8a362e",
+      "overture_name": "Cảng Tàu Du Lịch Quốc Tế Hạ Long",
+      "distance_m": 8.7,
+      "similarity_score": 0.919,
+      "category_compatible": false,
+      "operating_status": null,
+      "license": "CDLA Permissive 2.0",
+      "providers": [
+        "meta",
+        "Overture"
+      ]
+    }
+  },
+  {
+    "source_id": "node/12998514201",
+    "osm_name": "Nhà hàng Hồng Hạnh 3",
+    "osm_tier1": "FOOD_BEVERAGE",
+    "status": "AUTO_LINK",
+    "overture_match": {
+      "overture_id": "92ed9717-ce41-4e8f-ab25-52e369cd88be",
+      "overture_name": "Nha Hang Hong Hanh 3",
+      "distance_m": 14.6,
+      "similarity_score": 1.0,
+      "category_compatible": true,
+      "operating_status": null,
+      "license": "CDLA Permissive 2.0",
+      "providers": [
+        "meta",
+        "Overture"
+      ]
+    }
+  },
+  {
+    "source_id": "node/12998531301",
+    "osm_name": "Nhà hàng Ngọc Phương Nam 1",
+    "osm_tier1": "FOOD_BEVERAGE",
+    "status": "AUTO_LINK",
+    "overture_match": {
+      "overture_id": "04dda4d2-9d22-4516-a651-73c774b61663",
+      "overture_name": "Nhà Hàng Ngọc Phương Nam",
+      "distance_m": 9.6,
+      "similarity_score": 0.985,
+      "category_compatible": true,
+      "operating_status": null,
+      "license": "CDLA Permissive 2.0",
+      "providers": [
+        "meta",
+        "Overture"
+      ]
+    }
+  },
+  {
+    "source_id": "node/12998531401",
+    "osm_name": "Vựa Hải Sản Bãi Cháy",
+    "osm_tier1": "FOOD_BEVERAGE",
+    "status": "UNMATCHED",
+    "overture_match": null
+  },
+  {
+    "source_id": "node/12998779901",
+    "osm_name": "Nhà hàng Buffet Sen Á Đông",
+    "osm_tier1": "FOOD_BEVERAGE",
+    "status": "AUTO_LINK",
+    "overture_match": {
+      "overture_id": "0772c46b-7aa9-40a0-b403-78dec2591927",
+      "overture_name": "Nhà hàng Buffet Sen Á Đông Hạ Long",
+      "distance_m": 18.5,
+      "similarity_score": 0.953,
+      "category_compatible": true,
+      "operating_status": null,
+      "license": "CDLA Permissive 2.0",
+      "providers": [
+        "meta",
+        "Overture"
+      ]
+    }
+  },
+  {
+    "source_id": "node/12998811501",
+    "osm_name": "Nhà hàng Biển 14",
+    "osm_tier1": "FOOD_BEVERAGE",
+    "status": "AUTO_LINK",
+    "overture_match": {
+      "overture_id": "ddc52079-b5af-4a4c-a5dc-0f7a4328171a",
+      "overture_name": "Nhà hàng Biển 14 Buffet Hải Sản",
+      "distance_m": 3.2,
+      "similarity_score": 0.903,
+      "category_compatible": true,
+      "operating_status": null,
+      "license": "CDLA Permissive 2.0",
+      "providers": [
+        "meta",
+        "Overture"
+      ]
+    }
+  },
+  {
+    "source_id": "node/12998811601",
+    "osm_name": "Nhà hàng Đảo Dừa",
+    "osm_tier1": "FOOD_BEVERAGE",
+    "status": "AUTO_LINK",
+    "overture_match": {
+      "overture_id": "001e776d-31ff-48bc-a8b8-cf68b78987cf",
+      "overture_name": "Nhà hàng Đảo Dừa",
+      "distance_m": 1.4,
+      "similarity_score": 1.0,
+      "category_compatible": true,
+      "operating_status": null,
+      "license": "CDLA Permissive 2.0",
+      "providers": [
+        "meta",
+        "Overture"
+      ]
+    }
+  },
+  {
+    "source_id": "node/12998811701",
+    "osm_name": "Ga Hải Sản",
+    "osm_tier1": "FOOD_BEVERAGE",
+    "status": "MANUAL_REVIEW_CANDIDATE",
+    "overture_match": {
+      "overture_id": "2ed982ff-d1fa-4521-bdfd-35c17e4cd03c",
+      "overture_name": "Ga Hải Sản - Seafood Station",
+      "distance_m": 42.4,
+      "similarity_score": 0.877,
+      "category_compatible": true,
+      "operating_status": null,
+      "license": "CDLA Permissive 2.0",
+      "providers": [
+        "meta",
+        "Overture"
+      ]
+    }
+  },
+  {
+    "source_id": "node/13003599202",
+    "osm_name": "Bia Tâm Hưng 2",
+    "osm_tier1": "FOOD_BEVERAGE",
+    "status": "AUTO_LINK",
+    "overture_match": {
+      "overture_id": "015c6ed2-443f-4fae-936a-73c0365ff2aa",
+      "overture_name": "Bia Tâm Hưng 2",
+      "distance_m": 39.9,
+      "similarity_score": 1.0,
+      "category_compatible": true,
+      "operating_status": null,
+      "license": "CDLA Permissive 2.0",
+      "providers": [
+        "meta",
+        "Overture"
+      ]
+    }
+  },
+  {
+    "source_id": "node/13009079401",
+    "osm_name": "Nhà hàng Hoài Thu",
+    "osm_tier1": "FOOD_BEVERAGE",
+    "status": "AUTO_LINK",
+    "overture_match": {
+      "overture_id": "f0eccb01-907c-4212-a40b-2438e8ab9147",
+      "overture_name": "Nhà hàng Hoài Thu",
+      "distance_m": 14.4,
+      "similarity_score": 1.0,
+      "category_compatible": true,
+      "operating_status": null,
+      "license": "CDLA Permissive 2.0",
+      "providers": [
+        "meta",
+        "Overture"
+      ]
+    }
+  },
+  {
+    "source_id": "node/13009250202",
+    "osm_name": "Sữa chua trân châu Hạ Long cơ sở 00",
+    "osm_tier1": "FOOD_BEVERAGE",
+    "status": "UNMATCHED",
+    "overture_match": null
+  },
+  {
+    "source_id": "node/13017062701",
+    "osm_name": "An Phát",
+    "osm_tier1": "FOOD_BEVERAGE",
+    "status": "UNMATCHED",
+    "overture_match": null
+  },
+  {
+    "source_id": "node/13124410039",
+    "osm_name": "Café 16A",
+    "osm_tier1": "FOOD_BEVERAGE",
+    "status": "MANUAL_REVIEW_CANDIDATE",
+    "overture_match": {
+      "overture_id": "50b84f83-2df3-4f20-b27a-b6f0d9d62e11",
+      "overture_name": "Cafe Cỏ 16A Anh Đào",
+      "distance_m": 11.1,
+      "similarity_score": 0.884,
+      "category_compatible": true,
+      "operating_status": null,
+      "license": "CDLA Permissive 2.0",
+      "providers": [
+        "meta",
+        "Overture"
+      ]
+    }
+  },
+  {
+    "source_id": "node/13183486704",
+    "osm_name": "Highlands Coffee",
+    "osm_tier1": "FOOD_BEVERAGE",
+    "status": "AUTO_LINK",
+    "overture_match": {
+      "overture_id": "6039522b-f82a-4a1d-88f3-09beca7172ab",
+      "overture_name": "Highlands Coffee",
+      "distance_m": 6.3,
+      "similarity_score": 1.0,
+      "category_compatible": true,
+      "operating_status": null,
+      "license": "CDLA Permissive 2.0",
+      "providers": [
+        "meta",
+        "Overture"
+      ]
+    }
+  },
+  {
+    "source_id": "node/13264947301",
+    "osm_name": "High long mountain",
+    "osm_tier1": "ATTRACTIONS_LEISURE",
+    "status": "UNMATCHED",
+    "overture_match": null
+  },
+  {
+    "source_id": "node/13264947401",
+    "osm_name": "High long mountain",
+    "osm_tier1": "ATTRACTIONS_LEISURE",
+    "status": "UNMATCHED",
+    "overture_match": null
+  },
+  {
+    "source_id": "node/13511189920",
+    "osm_name": "Dược Điến Chay Quán",
+    "osm_tier1": "FOOD_BEVERAGE",
+    "status": "UNMATCHED",
+    "overture_match": null
+  },
+  {
+    "source_id": "node/13515995778",
+    "osm_name": "An Nhiên",
+    "osm_tier1": "FOOD_BEVERAGE",
+    "status": "UNMATCHED",
+    "overture_match": null
+  },
+  {
+    "source_id": "node/13515995779",
+    "osm_name": "Hối",
+    "osm_tier1": "FOOD_BEVERAGE",
+    "status": "UNMATCHED",
+    "overture_match": null
+  },
+  {
+    "source_id": "node/13516003522",
+    "osm_name": "Nắng Coffee",
+    "osm_tier1": "FOOD_BEVERAGE",
+    "status": "UNMATCHED",
+    "overture_match": null
+  },
+  {
+    "source_id": "node/13516003832",
+    "osm_name": "Nhà Hàng Ngọc Trường",
+    "osm_tier1": "FOOD_BEVERAGE",
+    "status": "UNMATCHED",
+    "overture_match": null
+  },
+  {
+    "source_id": "node/13516003889",
+    "osm_name": "Coffee Sun",
+    "osm_tier1": "FOOD_BEVERAGE",
+    "status": "UNMATCHED",
+    "overture_match": null
+  },
+  {
+    "source_id": "node/13516003942",
+    "osm_name": "Núi Sư Tử",
+    "osm_tier1": "NATURE_SCENERY",
+    "status": "UNMATCHED",
+    "overture_match": null
+  },
+  {
+    "source_id": "node/13611298801",
+    "osm_name": "Cafe ban mê",
+    "osm_tier1": "FOOD_BEVERAGE",
+    "status": "AUTO_LINK",
+    "overture_match": {
+      "overture_id": "d8a424b1-9afe-40ad-82e3-0c32eb88b5f7",
+      "overture_name": "Café ban mê_8A Anh Đào",
+      "distance_m": 39.6,
+      "similarity_score": 0.9,
+      "category_compatible": true,
+      "operating_status": null,
+      "license": "CDLA Permissive 2.0",
+      "providers": [
+        "meta",
+        "Overture"
+      ]
+    }
+  },
+  {
+    "source_id": "node/13611818401",
+    "osm_name": "Orchid Coffee",
+    "osm_tier1": "FOOD_BEVERAGE",
+    "status": "AUTO_LINK",
+    "overture_match": {
+      "overture_id": "8cea6ed9-1a07-458c-8a7f-7ba3fbb2e6b0",
+      "overture_name": "Orchid Coffee",
+      "distance_m": 9.5,
+      "similarity_score": 1.0,
+      "category_compatible": true,
+      "operating_status": null,
+      "license": "CDLA Permissive 2.0",
+      "providers": [
+        "meta",
+        "Overture"
+      ]
+    }
+  },
+  {
+    "source_id": "node/13619338993",
+    "osm_name": "Buffet Viên Chiên 49K",
+    "osm_tier1": "FOOD_BEVERAGE",
+    "status": "UNMATCHED",
+    "overture_match": null
+  },
+  {
+    "source_id": "node/13619338994",
+    "osm_name": "Thiên Đường Tô Tượng Hạ Long",
+    "osm_tier1": "FOOD_BEVERAGE",
+    "status": "UNMATCHED",
+    "overture_match": null
+  },
+  {
+    "source_id": "node/13619338995",
+    "osm_name": "Paper Flowers Villa Ha Long - Rổ Hoa Giấy 🌸🌊 (Airbnb)",
+    "osm_tier1": "HOSPITALITY",
+    "status": "UNMATCHED",
+    "overture_match": null
+  },
+  {
+    "source_id": "node/13633171601",
+    "osm_name": "Tulip Cruises",
+    "osm_tier1": "TRANSPORT_HUBS",
+    "status": "UNMATCHED",
+    "overture_match": null
+  },
+  {
+    "source_id": "node/13666885876",
+    "osm_name": "Phong Sushi",
+    "osm_tier1": "FOOD_BEVERAGE",
+    "status": "AUTO_LINK",
+    "overture_match": {
+      "overture_id": "f033ff37-0071-4626-8a5f-68a0acaa7d79",
+      "overture_name": "Phong Sushi",
+      "distance_m": 7.7,
+      "similarity_score": 1.0,
+      "category_compatible": true,
+      "operating_status": null,
+      "license": "CDLA Permissive 2.0",
+      "providers": [
+        "meta",
+        "Overture"
+      ]
+    }
+  },
+  {
+    "source_id": "node/13720358301",
+    "osm_name": "Hùa Long Tiên",
+    "osm_tier1": "CULTURE_HERITAGE",
+    "status": "UNMATCHED",
+    "overture_match": null
+  },
+  {
+    "source_id": "node/13721064101",
+    "osm_name": "Tiki Lounge and stay - Rooftop",
+    "osm_tier1": "ATTRACTIONS_LEISURE",
+    "status": "MANUAL_REVIEW_CANDIDATE",
+    "overture_match": {
+      "overture_id": "55a42f6a-dc41-4f87-9d41-e5e18ba648c4",
+      "overture_name": "TIKI Lounge & Stay",
+      "distance_m": 9.0,
+      "similarity_score": 0.902,
+      "category_compatible": false,
+      "operating_status": null,
+      "license": "CDLA Permissive 2.0",
+      "providers": [
+        "meta",
+        "Overture"
+      ]
+    }
+  },
+  {
+    "source_id": "node/14020865915",
+    "osm_name": "WOW BEACH BAR",
+    "osm_tier1": "ATTRACTIONS_LEISURE",
+    "status": "UNMATCHED",
+    "overture_match": null
+  },
+  {
+    "source_id": "node/14053384506",
+    "osm_name": "Cảng tàu khách quốc tế Hạ Long",
+    "osm_tier1": "TRANSPORT_HUBS",
+    "status": "MANUAL_REVIEW_CANDIDATE",
+    "overture_match": {
+      "overture_id": "9930fecc-559b-4e3d-8034-7cc04c8a362e",
+      "overture_name": "Cảng Tàu Du Lịch Quốc Tế Hạ Long",
+      "distance_m": 40.1,
+      "similarity_score": 0.919,
+      "category_compatible": false,
+      "operating_status": null,
+      "license": "CDLA Permissive 2.0",
+      "providers": [
+        "meta",
+        "Overture"
+      ]
+    }
+  },
+  {
+    "source_id": "way/45481464",
+    "osm_name": "Hòn Đầu Gỗ",
+    "osm_tier1": "NATURE_SCENERY",
+    "status": "UNMATCHED",
+    "overture_match": null
+  },
+  {
+    "source_id": "way/141720478",
+    "osm_name": "Đảo Cống đỏ",
+    "osm_tier1": "NATURE_SCENERY",
+    "status": "UNMATCHED",
+    "overture_match": null
+  },
+  {
+    "source_id": "way/480056722",
+    "osm_name": "Hòn Gà chọi",
+    "osm_tier1": "ATTRACTIONS_LEISURE",
+    "status": "UNMATCHED",
+    "overture_match": null
+  },
+  {
+    "source_id": "way/534551455",
+    "osm_name": "Commercial_VincomPlazaHaLong Stories 4",
+    "osm_tier1": "SHOPPING_COMMERCE",
+    "status": "UNMATCHED",
+    "overture_match": null
+  },
+  {
+    "source_id": "way/673096964",
+    "osm_name": "Chợ Hà Lầm",
+    "osm_tier1": "SHOPPING_COMMERCE",
+    "status": "AUTO_LINK",
+    "overture_match": {
+      "overture_id": "5f4a8ec8-7dcb-4169-813c-1141c87c0939",
+      "overture_name": "Chợ Hà Lầm",
+      "distance_m": 13.5,
+      "similarity_score": 1.0,
+      "category_compatible": true,
+      "operating_status": null,
+      "license": "CDLA Permissive 2.0",
+      "providers": [
+        "meta",
+        "Overture"
+      ]
+    }
+  },
+  {
+    "source_id": "way/673096986",
+    "osm_name": "Công viên Lán Bè",
+    "osm_tier1": "NATURE_SCENERY",
+    "status": "UNMATCHED",
+    "overture_match": null
+  },
+  {
+    "source_id": "way/673096992",
+    "osm_name": "Vườn hoa",
+    "osm_tier1": "NATURE_SCENERY",
+    "status": "UNMATCHED",
+    "overture_match": null
+  },
+  {
+    "source_id": "way/673097001",
+    "osm_name": "Đền thờ vua Lê Thánh Tông",
+    "osm_tier1": "CULTURE_HERITAGE",
+    "status": "MANUAL_REVIEW_CANDIDATE",
+    "overture_match": {
+      "overture_id": "367b7fa7-41e2-4cd9-a2b4-070408ca91f8",
+      "overture_name": "Đền Thờ Vua Lê Thánh Tông",
+      "distance_m": 40.5,
+      "similarity_score": 1.0,
+      "category_compatible": false,
+      "operating_status": null,
+      "license": "CDLA Permissive 2.0",
+      "providers": [
+        "meta",
+        "Overture"
+      ]
+    }
+  },
+  {
+    "source_id": "way/673097126",
+    "osm_name": "Khách sạn Bưu điện Hạ Long",
+    "osm_tier1": "HOSPITALITY",
+    "status": "AUTO_LINK",
+    "overture_match": {
+      "overture_id": "b0c1e444-50f6-495e-a2f4-0f8225d2af74",
+      "overture_name": "Khách Sạn Bưu Điện Hạ Long",
+      "distance_m": 6.4,
+      "similarity_score": 1.0,
+      "category_compatible": true,
+      "operating_status": null,
+      "license": "CDLA Permissive 2.0",
+      "providers": [
+        "meta",
+        "Overture"
+      ]
+    }
+  },
+  {
+    "source_id": "way/673558390",
+    "osm_name": "Chợ Hạ Long II",
+    "osm_tier1": "SHOPPING_COMMERCE",
+    "status": "UNMATCHED",
+    "overture_match": null
+  },
+  {
+    "source_id": "way/673593445",
+    "osm_name": "Chợ Cao Thắng",
+    "osm_tier1": "SHOPPING_COMMERCE",
+    "status": "UNMATCHED",
+    "overture_match": null
+  },
+  {
+    "source_id": "way/673890818",
+    "osm_name": "Chợ Sa Tô",
+    "osm_tier1": "SHOPPING_COMMERCE",
+    "status": "MANUAL_REVIEW_CANDIDATE",
+    "overture_match": {
+      "overture_id": "661a916b-e70c-4cfd-98eb-eb60c224a9e8",
+      "overture_name": "Chợ Sa Tô",
+      "distance_m": 37.2,
+      "similarity_score": 1.0,
+      "category_compatible": false,
+      "operating_status": null,
+      "license": "CDLA Permissive 2.0",
+      "providers": [
+        "meta",
+        "Overture"
+      ]
+    }
+  },
+  {
+    "source_id": "way/674061983",
+    "osm_name": "Chợ Hồng Hà",
+    "osm_tier1": "SHOPPING_COMMERCE",
+    "status": "MANUAL_REVIEW_CANDIDATE",
+    "overture_match": {
+      "overture_id": "c6c54cb5-120a-466a-a281-afd0af54fabb",
+      "overture_name": "Chợ Hồng Hà",
+      "distance_m": 61.9,
+      "similarity_score": 1.0,
+      "category_compatible": true,
+      "operating_status": null,
+      "license": "CDLA Permissive 2.0",
+      "providers": [
+        "meta",
+        "Overture"
+      ]
+    }
+  },
+  {
+    "source_id": "way/674168538",
+    "osm_name": "Hồ Cô Tiên Palace",
+    "osm_tier1": "FOOD_BEVERAGE",
+    "status": "AUTO_LINK",
+    "overture_match": {
+      "overture_id": "8e60da39-ef6e-4189-a339-79634de1aa4a",
+      "overture_name": "Hồ Cô Tiên Palace",
+      "distance_m": 4.6,
+      "similarity_score": 1.0,
+      "category_compatible": true,
+      "operating_status": null,
+      "license": "CDLA Permissive 2.0",
+      "providers": [
+        "meta",
+        "Overture"
+      ]
+    }
+  },
+  {
+    "source_id": "way/674228542",
+    "osm_name": "Tháp Đồng Hồ",
+    "osm_tier1": "ATTRACTIONS_LEISURE",
+    "status": "UNMATCHED",
+    "overture_match": null
+  },
+  {
+    "source_id": "way/674228548",
+    "osm_name": "Đền Quan Sơn",
+    "osm_tier1": "CULTURE_HERITAGE",
+    "status": "AUTO_LINK",
+    "overture_match": {
+      "overture_id": "599a8447-f262-4b12-a7a3-49755c2b3c69",
+      "overture_name": "đền quan sơn",
+      "distance_m": 3.1,
+      "similarity_score": 1.0,
+      "category_compatible": true,
+      "operating_status": null,
+      "license": "CDLA Permissive 2.0",
+      "providers": [
+        "meta",
+        "Overture"
+      ]
+    }
+  },
+  {
+    "source_id": "way/674228574",
+    "osm_name": "Nhà thờ Hòn Gai",
+    "osm_tier1": "CULTURE_HERITAGE",
+    "status": "UNMATCHED",
+    "overture_match": null
+  },
+  {
+    "source_id": "way/674228647",
+    "osm_name": "Sakura Coffee",
+    "osm_tier1": "FOOD_BEVERAGE",
+    "status": "UNMATCHED",
+    "overture_match": null
+  },
+  {
+    "source_id": "way/674228652",
+    "osm_name": "Mộc Trà Quán",
+    "osm_tier1": "FOOD_BEVERAGE",
+    "status": "UNMATCHED",
+    "overture_match": null
+  },
+  {
+    "source_id": "way/674419334",
+    "osm_name": "Đền Cái Lân cũ",
+    "osm_tier1": "CULTURE_HERITAGE",
+    "status": "MANUAL_REVIEW_CANDIDATE",
+    "overture_match": {
+      "overture_id": "95d9d116-977b-43a4-84f5-901d272b1438",
+      "overture_name": "Đền Cái Lân",
+      "distance_m": 15.7,
+      "similarity_score": 0.957,
+      "category_compatible": false,
+      "operating_status": null,
+      "license": "CDLA Permissive 2.0",
+      "providers": [
+        "meta",
+        "Overture"
+      ]
+    }
+  },
+  {
+    "source_id": "way/674641659",
+    "osm_name": "Chợ Cái Dăm",
+    "osm_tier1": "SHOPPING_COMMERCE",
+    "status": "AUTO_LINK",
+    "overture_match": {
+      "overture_id": "9b6e3c9a-d263-4e5d-8ff7-7d7bddc1ffef",
+      "overture_name": "Chợ Cái Dăm",
+      "distance_m": 0.7,
+      "similarity_score": 1.0,
+      "category_compatible": true,
+      "operating_status": null,
+      "license": "CDLA Permissive 2.0",
+      "providers": [
+        "meta",
+        "Overture"
+      ]
+    }
+  },
+  {
+    "source_id": "way/674647531",
+    "osm_name": "Vinpearl Ferry Terminal",
+    "osm_tier1": "TRANSPORT_HUBS",
+    "status": "UNMATCHED",
+    "overture_match": null
+  },
+  {
+    "source_id": "way/674647540",
+    "osm_name": "Ha Long Palace",
+    "osm_tier1": "HOSPITALITY",
+    "status": "UNMATCHED",
+    "overture_match": null
+  },
+  {
+    "source_id": "way/674647543",
+    "osm_name": "Marina",
+    "osm_tier1": "HOSPITALITY",
+    "status": "AUTO_LINK",
+    "overture_match": {
+      "overture_id": "4e45f719-397f-4201-970d-0de3223646cc",
+      "overture_name": "Marina hotel",
+      "distance_m": 7.2,
+      "similarity_score": 0.9,
+      "category_compatible": true,
+      "operating_status": null,
+      "license": "CDLA Permissive 2.0",
+      "providers": [
+        "meta",
+        "Overture"
+      ]
+    }
+  },
+  {
+    "source_id": "way/674647544",
+    "osm_name": "Crown Hotel",
+    "osm_tier1": "HOSPITALITY",
+    "status": "UNMATCHED",
+    "overture_match": null
+  },
+  {
+    "source_id": "way/674647546",
+    "osm_name": "Mường Thanh Grand Hạ Long",
+    "osm_tier1": "HOSPITALITY",
+    "status": "AUTO_LINK",
+    "overture_match": {
+      "overture_id": "d7c070db-24c0-4129-8033-313e97cea965",
+      "overture_name": "Muong Thanh Grand Ha Long",
+      "distance_m": 19.8,
+      "similarity_score": 1.0,
+      "category_compatible": true,
+      "operating_status": null,
+      "license": "CDLA Permissive 2.0",
+      "providers": [
+        "meta",
+        "Overture"
+      ]
+    }
+  },
+  {
+    "source_id": "way/674647548",
+    "osm_name": "Moon Hotel",
+    "osm_tier1": "HOSPITALITY",
+    "status": "AUTO_LINK",
+    "overture_match": {
+      "overture_id": "e4c7c8ce-42e8-433d-bbe4-4e2c84d10319",
+      "overture_name": "Moon Hotel",
+      "distance_m": 0.7,
+      "similarity_score": 1.0,
+      "category_compatible": true,
+      "operating_status": null,
+      "license": "CDLA Permissive 2.0",
+      "providers": [
+        "meta",
+        "Overture"
+      ]
+    }
+  },
+  {
+    "source_id": "way/674647549",
+    "osm_name": "Galaxy Ha Long Hotel",
+    "osm_tier1": "HOSPITALITY",
+    "status": "AUTO_LINK",
+    "overture_match": {
+      "overture_id": "0756ff04-1f86-45eb-b333-bbe7c2e9c275",
+      "overture_name": "Galaxy Halong Hotel",
+      "distance_m": 0.5,
+      "similarity_score": 0.969,
+      "category_compatible": true,
+      "operating_status": null,
+      "license": "CDLA Permissive 2.0",
+      "providers": [
+        "meta",
+        "Overture"
+      ]
+    }
+  },
+  {
+    "source_id": "way/674647550",
+    "osm_name": "Au Lac Hotel",
+    "osm_tier1": "HOSPITALITY",
+    "status": "AUTO_LINK",
+    "overture_match": {
+      "overture_id": "d7c2a067-2dc7-4e2c-95cc-25c30c70dfa6",
+      "overture_name": "Âu Lạc Hotel",
+      "distance_m": 20.3,
+      "similarity_score": 1.0,
+      "category_compatible": true,
+      "operating_status": null,
+      "license": "CDLA Permissive 2.0",
+      "providers": [
+        "meta",
+        "Overture"
+      ]
+    }
+  },
+  {
+    "source_id": "way/675567588",
+    "osm_name": "Chùa Quang Nghiêm",
+    "osm_tier1": "CULTURE_HERITAGE",
+    "status": "AUTO_LINK",
+    "overture_match": {
+      "overture_id": "960db4ce-3acc-4b2d-aeeb-d8d9bdfe56e8",
+      "overture_name": "Chùa Quang Nghiêm",
+      "distance_m": 4.8,
+      "similarity_score": 1.0,
+      "category_compatible": true,
+      "operating_status": null,
+      "license": "CDLA Permissive 2.0",
+      "providers": [
+        "meta",
+        "Overture"
+      ]
+    }
+  },
+  {
+    "source_id": "way/675568320",
+    "osm_name": "Chợ Hà Tu",
+    "osm_tier1": "SHOPPING_COMMERCE",
+    "status": "AUTO_LINK",
+    "overture_match": {
+      "overture_id": "2b79632c-427b-4269-b03b-1c4b6b6e71a2",
+      "overture_name": "Chợ Hà Tu",
+      "distance_m": 8.5,
+      "similarity_score": 1.0,
+      "category_compatible": true,
+      "operating_status": null,
+      "license": "CDLA Permissive 2.0",
+      "providers": [
+        "meta",
+        "Overture"
+      ]
+    }
+  },
+  {
+    "source_id": "way/675996045",
+    "osm_name": "Đình làng Hà Phong",
+    "osm_tier1": "CULTURE_HERITAGE",
+    "status": "AUTO_LINK",
+    "overture_match": {
+      "overture_id": "f4aeac53-4084-4190-ad79-444537a07b16",
+      "overture_name": "Đinh Làng Lộ Phong",
+      "distance_m": 14.6,
+      "similarity_score": 0.943,
+      "category_compatible": true,
+      "operating_status": null,
+      "license": "CDLA Permissive 2.0",
+      "providers": [
+        "meta",
+        "Overture"
+      ]
+    }
+  },
+  {
+    "source_id": "way/675996054",
+    "osm_name": "Chợ Hà Phong",
+    "osm_tier1": "SHOPPING_COMMERCE",
+    "status": "AUTO_LINK",
+    "overture_match": {
+      "overture_id": "1117f804-10ff-4138-ba13-ecd4c3488cd5",
+      "overture_name": "Chợ Hà Phong",
+      "distance_m": 20.5,
+      "similarity_score": 1.0,
+      "category_compatible": true,
+      "operating_status": null,
+      "license": "CDLA Permissive 2.0",
+      "providers": [
+        "meta",
+        "Overture"
+      ]
+    }
+  },
+  {
+    "source_id": "way/675996151",
+    "osm_name": "Trường Tiểu học Minh Hà",
+    "osm_tier1": "FOOD_BEVERAGE",
+    "status": "MANUAL_REVIEW_CANDIDATE",
+    "overture_match": {
+      "overture_id": "5163c6f1-4fd4-4671-b890-4e72883adf2f",
+      "overture_name": "Truong Tieu Hoc Hoc Minh Ha",
+      "distance_m": 45.2,
+      "similarity_score": 0.953,
+      "category_compatible": false,
+      "operating_status": null,
+      "license": "CDLA Permissive 2.0",
+      "providers": [
+        "meta",
+        "Overture"
+      ]
+    }
+  },
+  {
+    "source_id": "way/676252284",
+    "osm_name": "Chợ Hà Trung",
+    "osm_tier1": "SHOPPING_COMMERCE",
+    "status": "UNMATCHED",
+    "overture_match": null
+  },
+  {
+    "source_id": "way/676535795",
+    "osm_name": "Khách sạn Hương Biển",
+    "osm_tier1": "HOSPITALITY",
+    "status": "UNMATCHED",
+    "overture_match": null
+  },
+  {
+    "source_id": "way/676720191",
+    "osm_name": "Novotel Ha Long",
+    "osm_tier1": "HOSPITALITY",
+    "status": "AUTO_LINK",
+    "overture_match": {
+      "overture_id": "893209f5-1d13-479f-b7d7-6630b1f3fe57",
+      "overture_name": "Novotel Ha Long Bay",
+      "distance_m": 6.9,
+      "similarity_score": 0.958,
+      "category_compatible": true,
+      "operating_status": null,
+      "license": "CDLA Permissive 2.0",
+      "providers": [
+        "meta",
+        "Overture"
+      ]
+    }
+  },
+  {
+    "source_id": "way/676720195",
+    "osm_name": "Khách sạn Sài Gòn Hạ Long",
+    "osm_tier1": "HOSPITALITY",
+    "status": "MANUAL_REVIEW_CANDIDATE",
+    "overture_match": {
+      "overture_id": "a9c467ed-c998-4c93-b46b-cfbd7661eb76",
+      "overture_name": "Khách sạn Duy Anh Hạ Long",
+      "distance_m": 96.3,
+      "similarity_score": 0.888,
+      "category_compatible": true,
+      "operating_status": null,
+      "license": "CDLA Permissive 2.0",
+      "providers": [
+        "meta",
+        "Overture"
+      ]
+    }
+  },
+  {
+    "source_id": "way/676780271",
+    "osm_name": "Chợ Hạ Long 3",
+    "osm_tier1": "SHOPPING_COMMERCE",
+    "status": "UNMATCHED",
+    "overture_match": null
+  },
+  {
+    "source_id": "way/676780280",
+    "osm_name": "Nhà thờ Giáo họ Hồng Hải",
+    "osm_tier1": "CULTURE_HERITAGE",
+    "status": "UNMATCHED",
+    "overture_match": null
+  },
+  {
+    "source_id": "way/676796073",
+    "osm_name": "Chùa Minh Tâm",
+    "osm_tier1": "CULTURE_HERITAGE",
+    "status": "AUTO_LINK",
+    "overture_match": {
+      "overture_id": "8445afd5-c5c9-4f67-875f-701f08426dd5",
+      "overture_name": "Chùa Minh Tâm",
+      "distance_m": 13.7,
+      "similarity_score": 1.0,
+      "category_compatible": true,
+      "operating_status": null,
+      "license": "CDLA Permissive 2.0",
+      "providers": [
+        "meta",
+        "Overture"
+      ]
+    }
+  },
+  {
+    "source_id": "way/676796113",
+    "osm_name": "Đình Chùa Tiêu Dao",
+    "osm_tier1": "CULTURE_HERITAGE",
+    "status": "UNMATCHED",
+    "overture_match": null
+  },
+  {
+    "source_id": "way/676796150",
+    "osm_name": "Chợ Hà Khẩu",
+    "osm_tier1": "SHOPPING_COMMERCE",
+    "status": "AUTO_LINK",
+    "overture_match": {
+      "overture_id": "db1cbe5b-1500-4b3d-b216-e1d62bc10a25",
+      "overture_name": "chợ Hà Khẩu",
+      "distance_m": 43.5,
+      "similarity_score": 1.0,
+      "category_compatible": true,
+      "operating_status": null,
+      "license": "CDLA Permissive 2.0",
+      "providers": [
+        "meta",
+        "Overture"
+      ]
+    }
+  },
+  {
+    "source_id": "way/677038212",
+    "osm_name": "Nhạc nước",
+    "osm_tier1": "ATTRACTIONS_LEISURE",
+    "status": "UNMATCHED",
+    "overture_match": null
+  },
+  {
+    "source_id": "way/677184635",
+    "osm_name": "Ánh Dương",
+    "osm_tier1": "FOOD_BEVERAGE",
+    "status": "UNMATCHED",
+    "overture_match": null
+  },
+  {
+    "source_id": "way/677184638",
+    "osm_name": "Hạ Long 1",
+    "osm_tier1": "FOOD_BEVERAGE",
+    "status": "UNMATCHED",
+    "overture_match": null
+  },
+  {
+    "source_id": "way/677184641",
+    "osm_name": "Thuận Lợi 2",
+    "osm_tier1": "FOOD_BEVERAGE",
+    "status": "UNMATCHED",
+    "overture_match": null
+  },
+  {
+    "source_id": "way/677419395",
+    "osm_name": "Chợ Trới",
+    "osm_tier1": "SHOPPING_COMMERCE",
+    "status": "MANUAL_REVIEW_CANDIDATE",
+    "overture_match": {
+      "overture_id": "2fa0dc23-752b-4d2a-bc0e-151fafcddd4d",
+      "overture_name": "Chợ Trới Cho Troi",
+      "distance_m": 89.8,
+      "similarity_score": 0.894,
+      "category_compatible": true,
+      "operating_status": null,
+      "license": "CDLA Permissive 2.0",
+      "providers": [
+        "meta",
+        "Overture"
+      ]
+    }
+  },
+  {
+    "source_id": "way/677419454",
+    "osm_name": "Vườn hoa Thị trấn Trới",
+    "osm_tier1": "NATURE_SCENERY",
+    "status": "UNMATCHED",
+    "overture_match": null
+  },
+  {
+    "source_id": "way/678387920",
+    "osm_name": "Chợ Km10 Quang Hanh",
+    "osm_tier1": "SHOPPING_COMMERCE",
+    "status": "UNMATCHED",
+    "overture_match": null
+  },
+  {
+    "source_id": "way/678388004",
+    "osm_name": "Chợ Suối Khoáng",
+    "osm_tier1": "SHOPPING_COMMERCE",
+    "status": "AUTO_LINK",
+    "overture_match": {
+      "overture_id": "41c792b2-bd23-49de-a97c-e9c59979700d",
+      "overture_name": "Chợ Suối Khoáng",
+      "distance_m": 37.8,
+      "similarity_score": 1.0,
+      "category_compatible": true,
+      "operating_status": null,
+      "license": "CDLA Permissive 2.0",
+      "providers": [
+        "meta",
+        "Overture"
+      ]
+    }
+  },
+  {
+    "source_id": "way/683639731",
+    "osm_name": "Legend Pearl",
+    "osm_tier1": "ATTRACTIONS_LEISURE",
+    "status": "MANUAL_REVIEW_CANDIDATE",
+    "overture_match": {
+      "overture_id": "205b266d-9d1f-4a4b-90f4-58d5bac7dcba",
+      "overture_name": "Legend Pearl",
+      "distance_m": 13.2,
+      "similarity_score": 1.0,
+      "category_compatible": false,
+      "operating_status": null,
+      "license": "CDLA Permissive 2.0",
+      "providers": [
+        "meta",
+        "Overture"
+      ]
+    }
+  },
+  {
+    "source_id": "way/743192131",
+    "osm_name": "Dolphinarium (closed?)",
+    "osm_tier1": "ATTRACTIONS_LEISURE",
+    "status": "UNMATCHED",
+    "overture_match": null
+  },
+  {
+    "source_id": "way/743192138",
+    "osm_name": "Tuan Chau Park",
+    "osm_tier1": "ATTRACTIONS_LEISURE",
+    "status": "UNMATCHED",
+    "overture_match": null
+  },
+  {
+    "source_id": "way/1117849457",
+    "osm_name": "Restaurant_NhaHangMAGNOLIA Stories 1",
+    "osm_tier1": "FOOD_BEVERAGE",
+    "status": "UNMATCHED",
+    "overture_match": null
+  },
+  {
+    "source_id": "way/1252774078",
+    "osm_name": "Phi Long Thần Tốc",
+    "osm_tier1": "ATTRACTIONS_LEISURE",
+    "status": "UNMATCHED",
+    "overture_match": null
+  },
+  {
+    "source_id": "way/1278946629",
+    "osm_name": "Wyndham Hotel",
+    "osm_tier1": "HOSPITALITY",
+    "status": "UNMATCHED",
+    "overture_match": null
+  },
+  {
+    "source_id": "way/1526043729",
+    "osm_name": "Nhật Minh Hotel",
+    "osm_tier1": "HOSPITALITY",
+    "status": "UNMATCHED",
+    "overture_match": null
+  },
+  {
+    "source_id": "way/1526044893",
+    "osm_name": "The Almin Hotel",
+    "osm_tier1": "HOSPITALITY",
+    "status": "AUTO_LINK",
+    "overture_match": {
+      "overture_id": "58ad11a6-5f9a-4d9b-9f75-ab412c143721",
+      "overture_name": "The Almin Hotel",
+      "distance_m": 14.6,
+      "similarity_score": 1.0,
+      "category_compatible": true,
+      "operating_status": null,
+      "license": "CDLA Permissive 2.0",
+      "providers": [
+        "meta",
+        "Overture"
+      ]
+    }
+  },
+  {
+    "source_id": "way/1526046781",
+    "osm_name": "Halong Boutique Hotel",
+    "osm_tier1": "HOSPITALITY",
+    "status": "AUTO_LINK",
+    "overture_match": {
+      "overture_id": "02d40213-76e5-40a0-943d-9f7998779ead",
+      "overture_name": "Halong Boutique Hotel",
+      "distance_m": 24.4,
+      "similarity_score": 1.0,
+      "category_compatible": true,
+      "operating_status": null,
+      "license": "CDLA Permissive 2.0",
+      "providers": [
+        "meta",
+        "Overture"
+      ]
+    }
+  },
+  {
+    "source_id": "way/1526053605",
+    "osm_name": "Alee Halong Hotel",
+    "osm_tier1": "HOSPITALITY",
+    "status": "AUTO_LINK",
+    "overture_match": {
+      "overture_id": "e45b39e7-3d35-4f10-9ccf-587dc2075278",
+      "overture_name": "Alee Hạ Long HOTEL",
+      "distance_m": 17.5,
+      "similarity_score": 0.965,
+      "category_compatible": true,
+      "operating_status": null,
+      "license": "CDLA Permissive 2.0",
+      "providers": [
+        "meta",
+        "Overture"
+      ]
+    }
+  },
+  {
+    "source_id": "way/1526053606",
+    "osm_name": "MINH PHÁT HOTEL",
+    "osm_tier1": "HOSPITALITY",
+    "status": "AUTO_LINK",
+    "overture_match": {
+      "overture_id": "70a8b972-9033-48d4-9243-2f65459c1b16",
+      "overture_name": "Minh Phát Hotel",
+      "distance_m": 11.2,
+      "similarity_score": 1.0,
+      "category_compatible": true,
+      "operating_status": null,
+      "license": "CDLA Permissive 2.0",
+      "providers": [
+        "meta",
+        "Overture"
+      ]
+    }
+  },
+  {
+    "source_id": "way/1526053607",
+    "osm_name": "SUNRISE Hạ Long Hotel",
+    "osm_tier1": "HOSPITALITY",
+    "status": "UNMATCHED",
+    "overture_match": null
+  },
+  {
+    "source_id": "way/1527568153",
+    "osm_name": "Nhà Hàng Tiệc Cưới Nhật Hà",
+    "osm_tier1": "FOOD_BEVERAGE",
+    "status": "UNMATCHED",
+    "overture_match": null
+  },
+  {
+    "source_id": "way/1527569413",
+    "osm_name": "DIAMOND PALACE HẠ LONG",
+    "osm_tier1": "FOOD_BEVERAGE",
+    "status": "MANUAL_REVIEW_CANDIDATE",
+    "overture_match": {
+      "overture_id": "32b94181-16be-467f-b5db-738713770b31",
+      "overture_name": "Diamond Palace Hạ Long",
+      "distance_m": 27.5,
+      "similarity_score": 1.0,
+      "category_compatible": false,
+      "operating_status": null,
+      "license": "CDLA Permissive 2.0",
+      "providers": [
+        "meta",
+        "Overture"
+      ]
+    }
+  },
+  {
+    "source_id": "relation/18623673",
+    "osm_name": "Sunworld",
+    "osm_tier1": "ATTRACTIONS_LEISURE",
+    "status": "UNMATCHED",
+    "overture_match": null
+  },
+  {
+    "source_id": "relation/19032744",
+    "osm_name": "The Yacht",
+    "osm_tier1": "HOSPITALITY",
+    "status": "MANUAL_REVIEW_CANDIDATE",
+    "overture_match": {
+      "overture_id": "4ddb4f13-17bd-4ab6-b9b2-1cb4ad08b16a",
+      "overture_name": "The Yacht Hotel by DC",
+      "distance_m": 13.7,
+      "similarity_score": 0.886,
+      "category_compatible": true,
+      "operating_status": null,
+      "license": "CDLA Permissive 2.0",
+      "providers": [
+        "meta",
+        "Overture"
+      ]
+    }
+  },
+  {
+    "source_id": "relation/19032748",
+    "osm_name": "Khách sạn Mường Thanh Luxury Quảng Ninh",
+    "osm_tier1": "HOSPITALITY",
+    "status": "MANUAL_REVIEW_CANDIDATE",
+    "overture_match": {
+      "overture_id": "40eb42ac-13a7-4f5b-8099-1696644b59b5",
+      "overture_name": "Khách sạn Hạ Long Xanh Bãi Cháy",
+      "distance_m": 40.5,
+      "similarity_score": 0.861,
+      "category_compatible": false,
+      "operating_status": null,
+      "license": "CDLA Permissive 2.0",
+      "providers": [
+        "meta",
+        "Overture"
+      ]
+    }
+  },
+  {
+    "source_id": "relation/19730970",
+    "osm_name": "Khách sạn Mường Thanh Luxury Hạ Long Centre",
+    "osm_tier1": "HOSPITALITY",
+    "status": "MANUAL_REVIEW_CANDIDATE",
+    "overture_match": {
+      "overture_id": "fa94c178-899f-4763-aa05-c19f215aa30e",
+      "overture_name": "Khách Sạn Mường Thanh Hạ Long Centre",
+      "distance_m": 120.0,
+      "similarity_score": 0.934,
+      "category_compatible": true,
+      "operating_status": null,
+      "license": "CDLA Permissive 2.0",
+      "providers": [
+        "meta",
+        "Overture"
+      ]
+    }
+  }
+]
