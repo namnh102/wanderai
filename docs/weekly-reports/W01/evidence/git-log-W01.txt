@@ -1,0 +1,81 @@
+GIT LOG AUDIT - W1 (27/09/2026 - 03/10/2026, boundaries interpreted as 2026-09-27 00:00 +0700 .. 2026-10-04 00:00 +0700)
+Generated: 2026-10-05 from local repository d:\Do_an\wanderai (read-only commands). Command:
+  git log --all --since="2026-09-27 00:00 +0700" --until="2026-10-04 00:00 +0700" --reverse
+Caveat: commit dates are author/committer timestamps stored in Git; they can be altered by rebase/amend and are not independent proof of the day work was done.
+
+hash | date | author | message | relevance to W1 (proposal W1: city scope, POI sources/licenses, MVP; evidence: data/source card, repo, POI pilot dataset)
+----------------------------------------------------------------------------------------------------
+ff8314b | 2026-09-29 15:13:04 +0700 | namnh102 | feat: AI function calling + Flutter UI screens (backup before refactor)
+    -> OUT-OF-PLAN (app code backup: AI function calling + Flutter screens). Repository activity only.
+9b36f9d | 2026-09-29 15:28:17 +0700 | namnh102 | docs: add AGENTS.md and CONTRIBUTING.md project rules
+    -> W1-REPO: AGENTS.md + CONTRIBUTING.md (engineering/branching rules).
+959fcf1 | 2026-09-29 15:34:16 +0700 | namnh102 | docs: add AI architecture guide + fix: switch to gemini-3.5-flash (3.6 503)
+    -> OUT-OF-PLAN (AI architecture guide, Gemini model switch).
+8592aea | 2026-10-01 14:23:31 +0700 | namnh102 | docs: add project audit, status, ADRs, data sources, data dictionary
+    -> W1-DATA/LICENSE: project audit, ADR-001, ADR-002 (real-data decision), data-sources.md, data-dictionary.md.
+b5e96db | 2026-10-01 14:46:48 +0700 | namnh102 | feat: rebuild Flutter foundation, add place_sources migration, AI tool tests
+    -> W1-DATA/LICENSE: data/manifests/sources.yaml (source manifest); place_sources migration; Flutter rebuild (out-of-plan).
+2c6549d | 2026-10-01 14:48:24 +0700 | namnh102 | test: fix Flutter tests (2 passed), add RAG docs, update project status
+    -> OUT-OF-PLAN (Flutter tests, RAG docs).
+aaef53e | 2026-10-01 14:58:25 +0700 | namnh102 | test(backend): add API integration test baseline
+    -> OUT-OF-PLAN (backend test baseline).
+d02cee7 | 2026-10-01 15:10:58 +0700 | namnh102 | feat(mobile): wire flutter authentication to NestJS backend
+    -> OUT-OF-PLAN (Flutter auth) - early start of later weeks.
+8164a99 | 2026-10-01 15:12:54 +0700 | namnh102 | Merge feature/flutter-auth: wire Flutter authentication
+    -> OUT-OF-PLAN (merge of flutter-auth).
+3e86a05 | 2026-10-01 15:27:18 +0700 | namnh102 | feat(mobile): wire ai chat to backend
+    -> OUT-OF-PLAN (Flutter AI chat).
+95353b3 | 2026-10-01 15:27:29 +0700 | namnh102 | Merge feature/flutter-ai-chat: wire Flutter AI Chat to backend
+    -> OUT-OF-PLAN (merge of flutter-ai-chat).
+e6f6373 | 2026-10-01 15:45:44 +0700 | namnh102 | feat(trip): implement trip planning and crud flow
+    -> OUT-OF-PLAN (trip CRUD; ADR-003).
+2ac16b4 | 2026-10-01 15:46:00 +0700 | namnh102 | Merge feature/trip-crud: implement trip planning and crud flow
+    -> OUT-OF-PLAN (merge of trip-crud).
+9a0d2f0 | 2026-10-01 16:41:32 +0700 | namnh102 | feat(ai): generate trip itinerary from trip context
+    -> OUT-OF-PLAN (AI trip planner; proposal W6) - early start.
+77089ae | 2026-10-01 16:42:14 +0700 | namnh102 | Merge branch 'feature/ai-trip-planner' into develop
+    -> OUT-OF-PLAN (merge of ai-trip-planner).
+ffe7b97 | 2026-10-01 17:13:38 +0700 | namnh102 | feat(data): add real travel data ingestion pipeline
+    -> W1-DATA (core): OSM/Overpass ingestion pipeline, entity resolution, places_canonical.json (108), sources.yaml update, dataset-card, data-quality-report, reproducibility.
+e518b98 | 2026-10-01 17:13:54 +0700 | namnh102 | Merge branch 'feature/real-data-pipeline' into develop
+    -> W1-DATA: merge of real-data-pipeline.
+4944fae | 2026-10-01 17:33:20 +0700 | namnh102 | fix(data): verify review dataset provenance and licensing
+    -> W1-LICENSE (partial): review-dataset provenance/licensing correction (UIT-VSFC claim retracted).
+8e346e9 | 2026-10-01 17:33:44 +0700 | namnh102 | Merge branch 'fix/review-data-provenance' into develop
+    -> W1-LICENSE: merge of review-data-provenance fix.
+bec83d0 | 2026-10-01 17:48:45 +0700 | namnh102 | feat(data): review dataset discovery and independent verification matrix
+    -> W1-LICENSE (partial): review-dataset candidate discovery (not POI).
+37b077e | 2026-10-01 17:48:52 +0700 | namnh102 | Merge branch 'feature/review-dataset-discovery' into develop
+    -> W1-LICENSE: merge of review-dataset-discovery.
+173a573 | 2026-10-01 18:02:11 +0700 | namnh102 | docs(data): document dataset access and research roles
+    -> W1-LICENSE (partial): dataset access/DUA docs, dataset-role-matrix.
+c5e363a | 2026-10-01 18:09:30 +0700 | namnh102 | Merge branch 'chore/dataset-access-clearance' into develop
+    -> W1-LICENSE: merge of dataset-access-clearance.
+960f90e | 2026-10-01 18:32:12 +0700 | namnh102 | feat(ai): establish rag and recommendation foundations
+    -> OUT-OF-PLAN (RAG + recommendation foundation; proposal W3/W4).
+bc2a487 | 2026-10-01 18:33:29 +0700 | namnh102 | Merge branch 'feature/rag-recommendation-foundation' into develop
+    -> OUT-OF-PLAN (merge of rag-recommendation-foundation).
+8abee0b | 2026-10-02 14:04:25 +0700 | namnh102 | feat(mobile): integrate real place map with flutter_map and PostGIS
+    -> OUT-OF-PLAN for W1 (map screen + PostGIS places API; proposal W2) - occurred inside W1 calendar window, early start of W2.
+b17b150 | 2026-10-02 14:04:34 +0700 | namnh102 | Merge branch 'feature/map' into develop
+    -> OUT-OF-PLAN for W1 (merge of feature/map).
+5f3aa3a | 2026-10-02 14:05:20 +0700 | namnh102 | docs: update project-status with Task 07 Map Feature completion
+    -> docs status update for map (W2 early start).
+0997efa | 2026-10-02 14:26:30 +0700 | namnh102 | fix(map): always load nearby places on init regardless of location result
+    -> OUT-OF-PLAN for W1 (map init fix).
+27d2b86 | 2026-10-03 15:28:43 +0700 | namnh102 | Merge TASK 07.1 regression audit (docs only)
+    -> W1-DATA evidence: merge of TASK 07.1 regression audit (docs only).
+2d15a64 | 2026-10-03 15:28:43 +0700 | namnh102 | docs: TASK 07.1 regression audit, DB state snapshot, status corrections, daily reports
+    -> W1-DATA evidence: DB state snapshot (current-database-state.md), regression audit, daily reports; discovered 11 non-genuine OSM IDs.
+
+TOTAL commits in window (all branches, merges included): 31
+TOTAL non-merge commits in window: 20
+Commits per day: 2026-09-29: 3, 2026-10-01: 22, 2026-10-02: 4, 2026-10-03: 2
+Authors (git author name): namnh102: 31
+git log --all --author="Nam" -> 0 commits (whole history)
+git log --all --author="Khanh" -> 0 commits (whole history)
+git log --all --author="Khánh" -> 0 commits (whole history)
+
+EXCLUDED (before window): commits dated 2026-09-22 .. 2026-09-23 (initial setup, week2 auth/AI chat, week3 planner/reviews).
+EXCLUDED (after window): every commit dated 2026-10-04 or later (starting with d515bc2 "fix(ai): restore live trip planner compatibility", 2026-10-04 00:50 +0700).
+Unclassified commits in window: none

@@ -1,0 +1,83 @@
+{
+  "benchmark_id": "REC-A-BENCHMARK-V1",
+  "dataset_freeze": "v2",
+  "catalog_universe": "REC-A-CORE-V2",
+  "catalog_size": 622,
+  "profiles_evaluated": 300,
+  "top_k": 10,
+  "determinism_verification": {
+    "rec_a0_bit_identical": true,
+    "rec_a1_bit_identical": true
+  },
+  "rec_a0": {
+    "model": "rec-a0",
+    "total_profiles": 300,
+    "total_recommendations_made": 3000,
+    "zero_result_profiles": 0,
+    "cold_start_profiles": 0,
+    "unique_places_recommended": 52,
+    "catalog_coverage_pct": 8.36,
+    "score_distribution": {
+      "min": 1.0,
+      "max": 1.0,
+      "mean": 1.0,
+      "median": 1.0,
+      "stdev": 0.0
+    },
+    "destination_distribution": {
+      "ha-long": 773,
+      "da-nang": 1944,
+      "ha-noi": 283
+    },
+    "top_categories_recommended": {
+      "restaurant": 1078,
+      "cafe": 494,
+      "beach": 478,
+      "culture": 419,
+      "attraction": 178,
+      "nightlife": 152,
+      "nature": 101,
+      "market": 94,
+      "park": 6
+    }
+  },
+  "rec_a1": {
+    "model": "rec-a1",
+    "total_profiles": 300,
+    "total_recommendations_made": 3000,
+    "zero_result_profiles": 0,
+    "cold_start_profiles": 0,
+    "unique_places_recommended": 52,
+    "catalog_coverage_pct": 8.36,
+    "score_distribution": {
+      "min": 0.5,
+      "max": 0.7071,
+      "mean": 0.5924,
+      "median": 0.5774,
+      "stdev": 0.0844
+    },
+    "destination_distribution": {
+      "ha-long": 773,
+      "da-nang": 1944,
+      "ha-noi": 283
+    },
+    "top_categories_recommended": {
+      "restaurant": 1078,
+      "cafe": 494,
+      "beach": 478,
+      "culture": 419,
+      "attraction": 178,
+      "nightlife": 152,
+      "nature": 101,
+      "market": 94,
+      "park": 6
+    }
+  },
+  "comparison_notes": [
+    "REC-A0 produces integer overlap scores in range [1, 4] representing count of matching canonical interests.",
+    "REC-A1 produces normalized cosine scores in range [0, 1] representing cosine similarity between 7D user and item vectors.",
+    "Both models strictly evaluate over the 622 REC-A-CORE-V2 POI catalog (Hanoi: 145, Ha Long: 188, Da Nang: 289) and exclude all 137 secondary places.",
+    "Zero empty/zero-result profiles occurred across all 300 synthetic evaluations.",
+    "Independent sequential runs confirmed 100% bit-identical ranking reproducibility."
+  ]
+}

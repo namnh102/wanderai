@@ -1,0 +1,5912 @@
+[
+  {
+    "synthetic_user_id": "syn_usr_0001",
+    "travelStyle": "COMFORT",
+    "budgetMin": 1350000,
+    "budgetMax": 2900000,
+    "preferredGroup": "COUPLE",
+    "interests": [
+      "food_cuisine",
+      "beach_island",
+      "nature_outdoor",
+      "coffee_culture"
+    ],
+    "pace": "MODERATE",
+    "avoidances": [],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0002",
+    "travelStyle": "BUDGET",
+    "budgetMin": 700000,
+    "budgetMax": 1450000,
+    "preferredGroup": "SMALL_GROUP",
+    "interests": [
+      "nature_outdoor",
+      "culture_history"
+    ],
+    "pace": "RELAXED",
+    "avoidances": [
+      "long_walks"
+    ],
+    "dietaryNeeds": [
+      "vegetarian"
+    ],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0003",
+    "travelStyle": "BUDGET",
+    "budgetMin": 450000,
+    "budgetMax": 2000000,
+    "preferredGroup": "SOLO",
+    "interests": [
+      "food_cuisine",
+      "nature_outdoor",
+      "coffee_culture"
+    ],
+    "pace": "MODERATE",
+    "avoidances": [],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0004",
+    "travelStyle": "BUDGET",
+    "budgetMin": 600000,
+    "budgetMax": 900000,
+    "preferredGroup": "SOLO",
+    "interests": [
+      "culture_history",
+      "coffee_culture",
+      "shopping_local",
+      "food_cuisine"
+    ],
+    "pace": "MODERATE",
+    "avoidances": [],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0005",
+    "travelStyle": "COMFORT",
+    "budgetMin": 1350000,
+    "budgetMax": 5250000,
+    "preferredGroup": "SMALL_GROUP",
+    "interests": [
+      "culture_history",
+      "nature_outdoor"
+    ],
+    "pace": "PACKED",
+    "avoidances": [],
+    "dietaryNeeds": [
+      "vegetarian"
+    ],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0006",
+    "travelStyle": "BUDGET",
+    "budgetMin": 350000,
+    "budgetMax": 1750000,
+    "preferredGroup": "SMALL_GROUP",
+    "interests": [
+      "food_cuisine",
+      "beach_island",
+      "culture_history",
+      "nature_outdoor"
+    ],
+    "pace": "RELAXED",
+    "avoidances": [
+      "crowds"
+    ],
+    "dietaryNeeds": [
+      "halal"
+    ],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0007",
+    "travelStyle": "COMFORT",
+    "budgetMin": 1050000,
+    "budgetMax": 3200000,
+    "preferredGroup": "SMALL_GROUP",
+    "interests": [
+      "beach_island",
+      "culture_history"
+    ],
+    "pace": "PACKED",
+    "avoidances": [
+      "spicy_food"
+    ],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0008",
+    "travelStyle": "COMFORT",
+    "budgetMin": 1750000,
+    "budgetMax": 3750000,
+    "preferredGroup": "SMALL_GROUP",
+    "interests": [
+      "nature_outdoor",
+      "food_cuisine",
+      "culture_history",
+      "beach_island"
+    ],
+    "pace": "MODERATE",
+    "avoidances": [
+      "crowds"
+    ],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0009",
+    "travelStyle": "BACKPACKER",
+    "budgetMin": 250000,
+    "budgetMax": 900000,
+    "preferredGroup": "SOLO",
+    "interests": [
+      "food_cuisine",
+      "culture_history",
+      "nature_outdoor"
+    ],
+    "pace": "MODERATE",
+    "avoidances": [
+      "long_walks"
+    ],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0010",
+    "travelStyle": "COMFORT",
+    "budgetMin": 1700000,
+    "budgetMax": 4150000,
+    "preferredGroup": "COUPLE",
+    "interests": [
+      "nightlife_entertainment",
+      "beach_island",
+      "food_cuisine"
+    ],
+    "pace": "MODERATE",
+    "avoidances": [
+      "long_walks"
+    ],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0011",
+    "travelStyle": "COMFORT",
+    "budgetMin": 1150000,
+    "budgetMax": 3400000,
+    "preferredGroup": "COUPLE",
+    "interests": [
+      "food_cuisine",
+      "culture_history",
+      "beach_island"
+    ],
+    "pace": "RELAXED",
+    "avoidances": [
+      "spicy_food"
+    ],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0012",
+    "travelStyle": "BACKPACKER",
+    "budgetMin": 450000,
+    "budgetMax": 700000,
+    "preferredGroup": "SOLO",
+    "interests": [
+      "nature_outdoor",
+      "food_cuisine",
+      "coffee_culture",
+      "culture_history"
+    ],
+    "pace": "MODERATE",
+    "avoidances": [
+      "spicy_food"
+    ],
+    "dietaryNeeds": [
+      "seafood_allergy"
+    ],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0013",
+    "travelStyle": "LUXURY",
+    "budgetMin": 3350000,
+    "budgetMax": 16250000,
+    "preferredGroup": "SMALL_GROUP",
+    "interests": [
+      "culture_history",
+      "food_cuisine",
+      "coffee_culture"
+    ],
+    "pace": "MODERATE",
+    "avoidances": [
+      "long_walks"
+    ],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0014",
+    "travelStyle": "BACKPACKER",
+    "budgetMin": 250000,
+    "budgetMax": 600000,
+    "preferredGroup": "LARGE_GROUP",
+    "interests": [
+      "nature_outdoor",
+      "coffee_culture",
+      "food_cuisine",
+      "nightlife_entertainment"
+    ],
+    "pace": "RELAXED",
+    "avoidances": [],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0015",
+    "travelStyle": "COMFORT",
+    "budgetMin": 1450000,
+    "budgetMax": 3750000,
+    "preferredGroup": "SMALL_GROUP",
+    "interests": [
+      "coffee_culture",
+      "culture_history",
+      "nature_outdoor",
+      "food_cuisine"
+    ],
+    "pace": "MODERATE",
+    "avoidances": [],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0016",
+    "travelStyle": "COMFORT",
+    "budgetMin": 1100000,
+    "budgetMax": 4750000,
+    "preferredGroup": "COUPLE",
+    "interests": [
+      "food_cuisine",
+      "culture_history",
+      "nature_outdoor",
+      "coffee_culture"
+    ],
+    "pace": "MODERATE",
+    "avoidances": [],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0017",
+    "travelStyle": "COMFORT",
+    "budgetMin": 1900000,
+    "budgetMax": 4300000,
+    "preferredGroup": "SOLO",
+    "interests": [
+      "culture_history",
+      "nature_outdoor",
+      "coffee_culture"
+    ],
+    "pace": "RELAXED",
+    "avoidances": [
+      "long_walks"
+    ],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0018",
+    "travelStyle": "BUDGET",
+    "budgetMin": 300000,
+    "budgetMax": 1850000,
+    "preferredGroup": "SOLO",
+    "interests": [
+      "nightlife_entertainment",
+      "food_cuisine",
+      "nature_outdoor",
+      "culture_history"
+    ],
+    "pace": "PACKED",
+    "avoidances": [],
+    "dietaryNeeds": [
+      "vegetarian"
+    ],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0019",
+    "travelStyle": "BUDGET",
+    "budgetMin": 500000,
+    "budgetMax": 1500000,
+    "preferredGroup": "SOLO",
+    "interests": [
+      "shopping_local",
+      "food_cuisine"
+    ],
+    "pace": "MODERATE",
+    "avoidances": [
+      "heights"
+    ],
+    "dietaryNeeds": [
+      "vegetarian"
+    ],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0020",
+    "travelStyle": "BUDGET",
+    "budgetMin": 300000,
+    "budgetMax": 900000,
+    "preferredGroup": "SMALL_GROUP",
+    "interests": [
+      "food_cuisine",
+      "nature_outdoor"
+    ],
+    "pace": "RELAXED",
+    "avoidances": [
+      "crowds"
+    ],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0021",
+    "travelStyle": "BUDGET",
+    "budgetMin": 500000,
+    "budgetMax": 1500000,
+    "preferredGroup": "SOLO",
+    "interests": [
+      "nature_outdoor",
+      "nightlife_entertainment",
+      "shopping_local"
+    ],
+    "pace": "PACKED",
+    "avoidances": [
+      "long_walks"
+    ],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0022",
+    "travelStyle": "BUDGET",
+    "budgetMin": 700000,
+    "budgetMax": 850000,
+    "preferredGroup": "COUPLE",
+    "interests": [
+      "culture_history",
+      "food_cuisine",
+      "coffee_culture",
+      "nightlife_entertainment"
+    ],
+    "pace": "PACKED",
+    "avoidances": [],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0023",
+    "travelStyle": "COMFORT",
+    "budgetMin": 1100000,
+    "budgetMax": 4650000,
+    "preferredGroup": "FAMILY",
+    "interests": [
+      "culture_history",
+      "nightlife_entertainment"
+    ],
+    "pace": "MODERATE",
+    "avoidances": [
+      "crowds"
+    ],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0024",
+    "travelStyle": "BUDGET",
+    "budgetMin": 700000,
+    "budgetMax": 1300000,
+    "preferredGroup": "COUPLE",
+    "interests": [
+      "food_cuisine",
+      "beach_island",
+      "culture_history"
+    ],
+    "pace": "RELAXED",
+    "avoidances": [
+      "long_walks"
+    ],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0025",
+    "travelStyle": "BUDGET",
+    "budgetMin": 350000,
+    "budgetMax": 800000,
+    "preferredGroup": "SOLO",
+    "interests": [
+      "coffee_culture",
+      "nature_outdoor",
+      "food_cuisine"
+    ],
+    "pace": "RELAXED",
+    "avoidances": [
+      "crowds"
+    ],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0026",
+    "travelStyle": "BUDGET",
+    "budgetMin": 450000,
+    "budgetMax": 1350000,
+    "preferredGroup": "SOLO",
+    "interests": [
+      "food_cuisine",
+      "shopping_local",
+      "coffee_culture"
+    ],
+    "pace": "MODERATE",
+    "avoidances": [
+      "spicy_food"
+    ],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0027",
+    "travelStyle": "COMFORT",
+    "budgetMin": 1450000,
+    "budgetMax": 5450000,
+    "preferredGroup": "COUPLE",
+    "interests": [
+      "food_cuisine",
+      "shopping_local",
+      "culture_history",
+      "nightlife_entertainment"
+    ],
+    "pace": "PACKED",
+    "avoidances": [],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0028",
+    "travelStyle": "BUDGET",
+    "budgetMin": 500000,
+    "budgetMax": 1600000,
+    "preferredGroup": "COUPLE",
+    "interests": [
+      "culture_history",
+      "shopping_local",
+      "food_cuisine"
+    ],
+    "pace": "MODERATE",
+    "avoidances": [
+      "heights"
+    ],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0029",
+    "travelStyle": "BUDGET",
+    "budgetMin": 500000,
+    "budgetMax": 1050000,
+    "preferredGroup": "SOLO",
+    "interests": [
+      "nature_outdoor",
+      "beach_island",
+      "culture_history",
+      "food_cuisine"
+    ],
+    "pace": "MODERATE",
+    "avoidances": [
+      "long_walks"
+    ],
+    "dietaryNeeds": [
+      "seafood_allergy"
+    ],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0030",
+    "travelStyle": "BUDGET",
+    "budgetMin": 700000,
+    "budgetMax": 1000000,
+    "preferredGroup": "COUPLE",
+    "interests": [
+      "food_cuisine",
+      "nature_outdoor",
+      "shopping_local"
+    ],
+    "pace": "MODERATE",
+    "avoidances": [
+      "heights"
+    ],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0031",
+    "travelStyle": "BACKPACKER",
+    "budgetMin": 200000,
+    "budgetMax": 750000,
+    "preferredGroup": "COUPLE",
+    "interests": [
+      "shopping_local",
+      "culture_history",
+      "coffee_culture",
+      "food_cuisine"
+    ],
+    "pace": "MODERATE",
+    "avoidances": [
+      "heights"
+    ],
+    "dietaryNeeds": [
+      "vegan"
+    ],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0032",
+    "travelStyle": "LUXURY",
+    "budgetMin": 3050000,
+    "budgetMax": 11550000,
+    "preferredGroup": "FAMILY",
+    "interests": [
+      "shopping_local",
+      "coffee_culture",
+      "culture_history",
+      "nature_outdoor"
+    ],
+    "pace": "PACKED",
+    "avoidances": [],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0033",
+    "travelStyle": "BUDGET",
+    "budgetMin": 300000,
+    "budgetMax": 1550000,
+    "preferredGroup": "SMALL_GROUP",
+    "interests": [
+      "food_cuisine",
+      "shopping_local"
+    ],
+    "pace": "MODERATE",
+    "avoidances": [
+      "heights"
+    ],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0034",
+    "travelStyle": "BACKPACKER",
+    "budgetMin": 350000,
+    "budgetMax": 750000,
+    "preferredGroup": "COUPLE",
+    "interests": [
+      "beach_island",
+      "nightlife_entertainment",
+      "culture_history"
+    ],
+    "pace": "RELAXED",
+    "avoidances": [],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0035",
+    "travelStyle": "LUXURY",
+    "budgetMin": 3350000,
+    "budgetMax": 13650000,
+    "preferredGroup": "SOLO",
+    "interests": [
+      "nature_outdoor",
+      "nightlife_entertainment"
+    ],
+    "pace": "PACKED",
+    "avoidances": [
+      "crowds"
+    ],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0036",
+    "travelStyle": "BUDGET",
+    "budgetMin": 700000,
+    "budgetMax": 950000,
+    "preferredGroup": "SMALL_GROUP",
+    "interests": [
+      "shopping_local",
+      "food_cuisine",
+      "culture_history"
+    ],
+    "pace": "MODERATE",
+    "avoidances": [
+      "crowds"
+    ],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0037",
+    "travelStyle": "BACKPACKER",
+    "budgetMin": 450000,
+    "budgetMax": 1000000,
+    "preferredGroup": "SMALL_GROUP",
+    "interests": [
+      "culture_history",
+      "food_cuisine"
+    ],
+    "pace": "PACKED",
+    "avoidances": [],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0038",
+    "travelStyle": "BUDGET",
+    "budgetMin": 500000,
+    "budgetMax": 1600000,
+    "preferredGroup": "FAMILY",
+    "interests": [
+      "coffee_culture",
+      "culture_history",
+      "beach_island"
+    ],
+    "pace": "RELAXED",
+    "avoidances": [],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0039",
+    "travelStyle": "COMFORT",
+    "budgetMin": 1250000,
+    "budgetMax": 4450000,
+    "preferredGroup": "SOLO",
+    "interests": [
+      "culture_history",
+      "coffee_culture",
+      "food_cuisine",
+      "nature_outdoor"
+    ],
+    "pace": "RELAXED",
+    "avoidances": [
+      "crowds"
+    ],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0040",
+    "travelStyle": "COMFORT",
+    "budgetMin": 1300000,
+    "budgetMax": 4100000,
+    "preferredGroup": "SOLO",
+    "interests": [
+      "beach_island",
+      "nightlife_entertainment",
+      "coffee_culture"
+    ],
+    "pace": "MODERATE",
+    "avoidances": [],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0041",
+    "travelStyle": "COMFORT",
+    "budgetMin": 1350000,
+    "budgetMax": 4650000,
+    "preferredGroup": "SMALL_GROUP",
+    "interests": [
+      "culture_history",
+      "food_cuisine",
+      "nature_outdoor"
+    ],
+    "pace": "MODERATE",
+    "avoidances": [
+      "crowds"
+    ],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0042",
+    "travelStyle": "BACKPACKER",
+    "budgetMin": 450000,
+    "budgetMax": 950000,
+    "preferredGroup": "COUPLE",
+    "interests": [
+      "coffee_culture",
+      "culture_history"
+    ],
+    "pace": "MODERATE",
+    "avoidances": [],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0043",
+    "travelStyle": "COMFORT",
+    "budgetMin": 1150000,
+    "budgetMax": 4950000,
+    "preferredGroup": "FAMILY",
+    "interests": [
+      "food_cuisine",
+      "beach_island",
+      "coffee_culture"
+    ],
+    "pace": "PACKED",
+    "avoidances": [
+      "crowds"
+    ],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0044",
+    "travelStyle": "LUXURY",
+    "budgetMin": 4450000,
+    "budgetMax": 24050000,
+    "preferredGroup": "COUPLE",
+    "interests": [
+      "nightlife_entertainment",
+      "nature_outdoor",
+      "shopping_local",
+      "beach_island"
+    ],
+    "pace": "MODERATE",
+    "avoidances": [
+      "long_walks"
+    ],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0045",
+    "travelStyle": "COMFORT",
+    "budgetMin": 1250000,
+    "budgetMax": 4850000,
+    "preferredGroup": "FAMILY",
+    "interests": [
+      "nature_outdoor",
+      "beach_island",
+      "shopping_local"
+    ],
+    "pace": "RELAXED",
+    "avoidances": [
+      "long_walks"
+    ],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0046",
+    "travelStyle": "COMFORT",
+    "budgetMin": 1450000,
+    "budgetMax": 3250000,
+    "preferredGroup": "COUPLE",
+    "interests": [
+      "culture_history",
+      "shopping_local",
+      "food_cuisine"
+    ],
+    "pace": "MODERATE",
+    "avoidances": [],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0047",
+    "travelStyle": "BUDGET",
+    "budgetMin": 550000,
+    "budgetMax": 1650000,
+    "preferredGroup": "COUPLE",
+    "interests": [
+      "culture_history",
+      "food_cuisine",
+      "coffee_culture"
+    ],
+    "pace": "MODERATE",
+    "avoidances": [
+      "crowds"
+    ],
+    "dietaryNeeds": [
+      "vegan"
+    ],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0048",
+    "travelStyle": "COMFORT",
+    "budgetMin": 1600000,
+    "budgetMax": 4000000,
+    "preferredGroup": "FAMILY",
+    "interests": [
+      "nightlife_entertainment",
+      "culture_history"
+    ],
+    "pace": "RELAXED",
+    "avoidances": [
+      "heights"
+    ],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0049",
+    "travelStyle": "BACKPACKER",
+    "budgetMin": 400000,
+    "budgetMax": 1200000,
+    "preferredGroup": "SOLO",
+    "interests": [
+      "nature_outdoor",
+      "culture_history"
+    ],
+    "pace": "RELAXED",
+    "avoidances": [],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0050",
+    "travelStyle": "COMFORT",
+    "budgetMin": 1700000,
+    "budgetMax": 5400000,
+    "preferredGroup": "SMALL_GROUP",
+    "interests": [
+      "nightlife_entertainment",
+      "nature_outdoor"
+    ],
+    "pace": "RELAXED",
+    "avoidances": [
+      "crowds"
+    ],
+    "dietaryNeeds": [
+      "vegan"
+    ],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0051",
+    "travelStyle": "COMFORT",
+    "budgetMin": 1700000,
+    "budgetMax": 3050000,
+    "preferredGroup": "COUPLE",
+    "interests": [
+      "culture_history",
+      "nature_outdoor"
+    ],
+    "pace": "MODERATE",
+    "avoidances": [],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0052",
+    "travelStyle": "BACKPACKER",
+    "budgetMin": 350000,
+    "budgetMax": 700000,
+    "preferredGroup": "COUPLE",
+    "interests": [
+      "nature_outdoor",
+      "beach_island"
+    ],
+    "pace": "PACKED",
+    "avoidances": [
+      "spicy_food"
+    ],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0053",
+    "travelStyle": "BUDGET",
+    "budgetMin": 300000,
+    "budgetMax": 2000000,
+    "preferredGroup": "COUPLE",
+    "interests": [
+      "nightlife_entertainment",
+      "food_cuisine"
+    ],
+    "pace": "PACKED",
+    "avoidances": [],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0054",
+    "travelStyle": "BUDGET",
+    "budgetMin": 450000,
+    "budgetMax": 1500000,
+    "preferredGroup": "SMALL_GROUP",
+    "interests": [
+      "culture_history",
+      "nature_outdoor",
+      "beach_island",
+      "nightlife_entertainment"
+    ],
+    "pace": "RELAXED",
+    "avoidances": [
+      "long_walks"
+    ],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0055",
+    "travelStyle": "BUDGET",
+    "budgetMin": 500000,
+    "budgetMax": 1700000,
+    "preferredGroup": "SOLO",
+    "interests": [
+      "shopping_local",
+      "culture_history",
+      "nightlife_entertainment",
+      "food_cuisine"
+    ],
+    "pace": "RELAXED",
+    "avoidances": [
+      "heights"
+    ],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0056",
+    "travelStyle": "BUDGET",
+    "budgetMin": 350000,
+    "budgetMax": 1700000,
+    "preferredGroup": "SMALL_GROUP",
+    "interests": [
+      "culture_history",
+      "nature_outdoor"
+    ],
+    "pace": "MODERATE",
+    "avoidances": [
+      "crowds"
+    ],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0057",
+    "travelStyle": "BUDGET",
+    "budgetMin": 350000,
+    "budgetMax": 1450000,
+    "preferredGroup": "FAMILY",
+    "interests": [
+      "coffee_culture",
+      "beach_island",
+      "nature_outdoor"
+    ],
+    "pace": "PACKED",
+    "avoidances": [
+      "long_walks"
+    ],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0058",
+    "travelStyle": "LUXURY",
+    "budgetMin": 4700000,
+    "budgetMax": 19350000,
+    "preferredGroup": "COUPLE",
+    "interests": [
+      "nature_outdoor",
+      "beach_island",
+      "food_cuisine"
+    ],
+    "pace": "PACKED",
+    "avoidances": [
+      "heights"
+    ],
+    "dietaryNeeds": [
+      "vegetarian"
+    ],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0059",
+    "travelStyle": "BUDGET",
+    "budgetMin": 650000,
+    "budgetMax": 1700000,
+    "preferredGroup": "FAMILY",
+    "interests": [
+      "coffee_culture",
+      "culture_history",
+      "nature_outdoor",
+      "food_cuisine"
+    ],
+    "pace": "MODERATE",
+    "avoidances": [],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0060",
+    "travelStyle": "BUDGET",
+    "budgetMin": 500000,
+    "budgetMax": 1650000,
+    "preferredGroup": "COUPLE",
+    "interests": [
+      "nature_outdoor",
+      "food_cuisine"
+    ],
+    "pace": "RELAXED",
+    "avoidances": [
+      "crowds"
+    ],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0061",
+    "travelStyle": "COMFORT",
+    "budgetMin": 1750000,
+    "budgetMax": 3900000,
+    "preferredGroup": "COUPLE",
+    "interests": [
+      "food_cuisine",
+      "culture_history"
+    ],
+    "pace": "MODERATE",
+    "avoidances": [],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0062",
+    "travelStyle": "COMFORT",
+    "budgetMin": 1650000,
+    "budgetMax": 4850000,
+    "preferredGroup": "SOLO",
+    "interests": [
+      "culture_history",
+      "beach_island",
+      "food_cuisine",
+      "nature_outdoor"
+    ],
+    "pace": "RELAXED",
+    "avoidances": [],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0063",
+    "travelStyle": "BUDGET",
+    "budgetMin": 400000,
+    "budgetMax": 1100000,
+    "preferredGroup": "SOLO",
+    "interests": [
+      "coffee_culture",
+      "culture_history"
+    ],
+    "pace": "RELAXED",
+    "avoidances": [
+      "long_walks"
+    ],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0064",
+    "travelStyle": "COMFORT",
+    "budgetMin": 1450000,
+    "budgetMax": 3200000,
+    "preferredGroup": "LARGE_GROUP",
+    "interests": [
+      "food_cuisine",
+      "culture_history",
+      "coffee_culture"
+    ],
+    "pace": "PACKED",
+    "avoidances": [
+      "spicy_food"
+    ],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0065",
+    "travelStyle": "COMFORT",
+    "budgetMin": 1750000,
+    "budgetMax": 2800000,
+    "preferredGroup": "SMALL_GROUP",
+    "interests": [
+      "nature_outdoor",
+      "culture_history"
+    ],
+    "pace": "MODERATE",
+    "avoidances": [],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0066",
+    "travelStyle": "BUDGET",
+    "budgetMin": 350000,
+    "budgetMax": 1400000,
+    "preferredGroup": "FAMILY",
+    "interests": [
+      "food_cuisine",
+      "coffee_culture",
+      "culture_history"
+    ],
+    "pace": "MODERATE",
+    "avoidances": [
+      "crowds"
+    ],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0067",
+    "travelStyle": "BUDGET",
+    "budgetMin": 600000,
+    "budgetMax": 1750000,
+    "preferredGroup": "LARGE_GROUP",
+    "interests": [
+      "beach_island",
+      "food_cuisine",
+      "nature_outdoor",
+      "coffee_culture"
+    ],
+    "pace": "MODERATE",
+    "avoidances": [
+      "heights"
+    ],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0068",
+    "travelStyle": "LUXURY",
+    "budgetMin": 4950000,
+    "budgetMax": 9500000,
+    "preferredGroup": "SOLO",
+    "interests": [
+      "coffee_culture",
+      "culture_history"
+    ],
+    "pace": "RELAXED",
+    "avoidances": [],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0069",
+    "travelStyle": "COMFORT",
+    "budgetMin": 1950000,
+    "budgetMax": 4000000,
+    "preferredGroup": "COUPLE",
+    "interests": [
+      "food_cuisine",
+      "nature_outdoor",
+      "culture_history"
+    ],
+    "pace": "MODERATE",
+    "avoidances": [],
+    "dietaryNeeds": [
+      "vegetarian"
+    ],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0070",
+    "travelStyle": "BUDGET",
+    "budgetMin": 450000,
+    "budgetMax": 1450000,
+    "preferredGroup": "COUPLE",
+    "interests": [
+      "nature_outdoor",
+      "coffee_culture"
+    ],
+    "pace": "RELAXED",
+    "avoidances": [
+      "heights"
+    ],
+    "dietaryNeeds": [
+      "vegan"
+    ],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0071",
+    "travelStyle": "BUDGET",
+    "budgetMin": 500000,
+    "budgetMax": 1500000,
+    "preferredGroup": "COUPLE",
+    "interests": [
+      "nature_outdoor",
+      "culture_history"
+    ],
+    "pace": "MODERATE",
+    "avoidances": [],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0072",
+    "travelStyle": "COMFORT",
+    "budgetMin": 1650000,
+    "budgetMax": 4850000,
+    "preferredGroup": "SOLO",
+    "interests": [
+      "coffee_culture",
+      "food_cuisine",
+      "culture_history"
+    ],
+    "pace": "RELAXED",
+    "avoidances": [
+      "heights"
+    ],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0073",
+    "travelStyle": "COMFORT",
+    "budgetMin": 1400000,
+    "budgetMax": 4300000,
+    "preferredGroup": "COUPLE",
+    "interests": [
+      "beach_island",
+      "food_cuisine"
+    ],
+    "pace": "RELAXED",
+    "avoidances": [
+      "crowds"
+    ],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0074",
+    "travelStyle": "BUDGET",
+    "budgetMin": 650000,
+    "budgetMax": 900000,
+    "preferredGroup": "LARGE_GROUP",
+    "interests": [
+      "culture_history",
+      "nature_outdoor",
+      "beach_island"
+    ],
+    "pace": "MODERATE",
+    "avoidances": [],
+    "dietaryNeeds": [
+      "vegetarian"
+    ],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0075",
+    "travelStyle": "COMFORT",
+    "budgetMin": 1850000,
+    "budgetMax": 2600000,
+    "preferredGroup": "COUPLE",
+    "interests": [
+      "food_cuisine",
+      "culture_history",
+      "nature_outdoor"
+    ],
+    "pace": "PACKED",
+    "avoidances": [
+      "heights"
+    ],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0076",
+    "travelStyle": "BACKPACKER",
+    "budgetMin": 350000,
+    "budgetMax": 800000,
+    "preferredGroup": "COUPLE",
+    "interests": [
+      "food_cuisine",
+      "nature_outdoor"
+    ],
+    "pace": "PACKED",
+    "avoidances": [
+      "crowds"
+    ],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0077",
+    "travelStyle": "BACKPACKER",
+    "budgetMin": 300000,
+    "budgetMax": 850000,
+    "preferredGroup": "COUPLE",
+    "interests": [
+      "nature_outdoor",
+      "food_cuisine",
+      "beach_island",
+      "shopping_local"
+    ],
+    "pace": "RELAXED",
+    "avoidances": [],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0078",
+    "travelStyle": "BUDGET",
+    "budgetMin": 350000,
+    "budgetMax": 1500000,
+    "preferredGroup": "SOLO",
+    "interests": [
+      "coffee_culture",
+      "food_cuisine"
+    ],
+    "pace": "MODERATE",
+    "avoidances": [],
+    "dietaryNeeds": [
+      "vegan"
+    ],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0079",
+    "travelStyle": "COMFORT",
+    "budgetMin": 1750000,
+    "budgetMax": 3250000,
+    "preferredGroup": "SOLO",
+    "interests": [
+      "nature_outdoor",
+      "culture_history",
+      "nightlife_entertainment"
+    ],
+    "pace": "MODERATE",
+    "avoidances": [
+      "heights"
+    ],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0080",
+    "travelStyle": "BACKPACKER",
+    "budgetMin": 350000,
+    "budgetMax": 750000,
+    "preferredGroup": "COUPLE",
+    "interests": [
+      "culture_history",
+      "food_cuisine",
+      "beach_island",
+      "shopping_local"
+    ],
+    "pace": "RELAXED",
+    "avoidances": [
+      "long_walks"
+    ],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0081",
+    "travelStyle": "BACKPACKER",
+    "budgetMin": 300000,
+    "budgetMax": 900000,
+    "preferredGroup": "SOLO",
+    "interests": [
+      "culture_history",
+      "nightlife_entertainment",
+      "beach_island",
+      "shopping_local"
+    ],
+    "pace": "MODERATE",
+    "avoidances": [],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0082",
+    "travelStyle": "BACKPACKER",
+    "budgetMin": 350000,
+    "budgetMax": 1050000,
+    "preferredGroup": "SOLO",
+    "interests": [
+      "culture_history",
+      "coffee_culture",
+      "shopping_local"
+    ],
+    "pace": "MODERATE",
+    "avoidances": [
+      "crowds"
+    ],
+    "dietaryNeeds": [
+      "halal"
+    ],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0083",
+    "travelStyle": "BUDGET",
+    "budgetMin": 350000,
+    "budgetMax": 1500000,
+    "preferredGroup": "SOLO",
+    "interests": [
+      "nature_outdoor",
+      "culture_history"
+    ],
+    "pace": "RELAXED",
+    "avoidances": [
+      "crowds"
+    ],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0084",
+    "travelStyle": "COMFORT",
+    "budgetMin": 1400000,
+    "budgetMax": 3550000,
+    "preferredGroup": "COUPLE",
+    "interests": [
+      "coffee_culture",
+      "nature_outdoor",
+      "shopping_local",
+      "beach_island"
+    ],
+    "pace": "MODERATE",
+    "avoidances": [],
+    "dietaryNeeds": [
+      "vegetarian"
+    ],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0085",
+    "travelStyle": "BUDGET",
+    "budgetMin": 700000,
+    "budgetMax": 850000,
+    "preferredGroup": "SMALL_GROUP",
+    "interests": [
+      "food_cuisine",
+      "coffee_culture",
+      "nightlife_entertainment",
+      "shopping_local"
+    ],
+    "pace": "RELAXED",
+    "avoidances": [
+      "crowds"
+    ],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0086",
+    "travelStyle": "BUDGET",
+    "budgetMin": 650000,
+    "budgetMax": 1050000,
+    "preferredGroup": "SMALL_GROUP",
+    "interests": [
+      "culture_history",
+      "food_cuisine",
+      "coffee_culture",
+      "nature_outdoor"
+    ],
+    "pace": "PACKED",
+    "avoidances": [
+      "crowds"
+    ],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0087",
+    "travelStyle": "BUDGET",
+    "budgetMin": 400000,
+    "budgetMax": 1050000,
+    "preferredGroup": "SOLO",
+    "interests": [
+      "food_cuisine",
+      "shopping_local"
+    ],
+    "pace": "RELAXED",
+    "avoidances": [],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0088",
+    "travelStyle": "LUXURY",
+    "budgetMin": 3800000,
+    "budgetMax": 18750000,
+    "preferredGroup": "COUPLE",
+    "interests": [
+      "coffee_culture",
+      "shopping_local",
+      "culture_history"
+    ],
+    "pace": "MODERATE",
+    "avoidances": [
+      "crowds"
+    ],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0089",
+    "travelStyle": "BUDGET",
+    "budgetMin": 500000,
+    "budgetMax": 1800000,
+    "preferredGroup": "FAMILY",
+    "interests": [
+      "coffee_culture",
+      "culture_history",
+      "food_cuisine"
+    ],
+    "pace": "PACKED",
+    "avoidances": [
+      "heights"
+    ],
+    "dietaryNeeds": [
+      "halal"
+    ],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0090",
+    "travelStyle": "BUDGET",
+    "budgetMin": 500000,
+    "budgetMax": 1900000,
+    "preferredGroup": "SOLO",
+    "interests": [
+      "food_cuisine",
+      "beach_island",
+      "nature_outdoor"
+    ],
+    "pace": "MODERATE",
+    "avoidances": [
+      "heights"
+    ],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0091",
+    "travelStyle": "BACKPACKER",
+    "budgetMin": 450000,
+    "budgetMax": 850000,
+    "preferredGroup": "LARGE_GROUP",
+    "interests": [
+      "beach_island",
+      "food_cuisine",
+      "coffee_culture"
+    ],
+    "pace": "PACKED",
+    "avoidances": [],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0092",
+    "travelStyle": "BUDGET",
+    "budgetMin": 400000,
+    "budgetMax": 1800000,
+    "preferredGroup": "SMALL_GROUP",
+    "interests": [
+      "shopping_local",
+      "coffee_culture"
+    ],
+    "pace": "RELAXED",
+    "avoidances": [
+      "crowds"
+    ],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0093",
+    "travelStyle": "COMFORT",
+    "budgetMin": 1450000,
+    "budgetMax": 3500000,
+    "preferredGroup": "SMALL_GROUP",
+    "interests": [
+      "culture_history",
+      "food_cuisine",
+      "shopping_local",
+      "beach_island"
+    ],
+    "pace": "MODERATE",
+    "avoidances": [
+      "crowds"
+    ],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0094",
+    "travelStyle": "BUDGET",
+    "budgetMin": 650000,
+    "budgetMax": 1250000,
+    "preferredGroup": "COUPLE",
+    "interests": [
+      "shopping_local",
+      "coffee_culture",
+      "culture_history",
+      "food_cuisine"
+    ],
+    "pace": "PACKED",
+    "avoidances": [],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0095",
+    "travelStyle": "COMFORT",
+    "budgetMin": 1850000,
+    "budgetMax": 3650000,
+    "preferredGroup": "SMALL_GROUP",
+    "interests": [
+      "beach_island",
+      "food_cuisine"
+    ],
+    "pace": "MODERATE",
+    "avoidances": [
+      "crowds"
+    ],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0096",
+    "travelStyle": "COMFORT",
+    "budgetMin": 2000000,
+    "budgetMax": 5500000,
+    "preferredGroup": "SMALL_GROUP",
+    "interests": [
+      "food_cuisine",
+      "culture_history",
+      "nature_outdoor"
+    ],
+    "pace": "RELAXED",
+    "avoidances": [
+      "crowds"
+    ],
+    "dietaryNeeds": [
+      "vegetarian"
+    ],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0097",
+    "travelStyle": "LUXURY",
+    "budgetMin": 5600000,
+    "budgetMax": 18850000,
+    "preferredGroup": "COUPLE",
+    "interests": [
+      "culture_history",
+      "nature_outdoor",
+      "food_cuisine",
+      "nightlife_entertainment"
+    ],
+    "pace": "MODERATE",
+    "avoidances": [
+      "crowds"
+    ],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0098",
+    "travelStyle": "BUDGET",
+    "budgetMin": 650000,
+    "budgetMax": 1350000,
+    "preferredGroup": "FAMILY",
+    "interests": [
+      "nightlife_entertainment",
+      "coffee_culture",
+      "nature_outdoor",
+      "culture_history"
+    ],
+    "pace": "MODERATE",
+    "avoidances": [
+      "heights"
+    ],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0099",
+    "travelStyle": "COMFORT",
+    "budgetMin": 1400000,
+    "budgetMax": 2600000,
+    "preferredGroup": "FAMILY",
+    "interests": [
+      "culture_history",
+      "nature_outdoor",
+      "nightlife_entertainment",
+      "beach_island"
+    ],
+    "pace": "RELAXED",
+    "avoidances": [
+      "long_walks"
+    ],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0100",
+    "travelStyle": "COMFORT",
+    "budgetMin": 1600000,
+    "budgetMax": 3350000,
+    "preferredGroup": "LARGE_GROUP",
+    "interests": [
+      "nightlife_entertainment",
+      "shopping_local"
+    ],
+    "pace": "MODERATE",
+    "avoidances": [],
+    "dietaryNeeds": [
+      "vegetarian"
+    ],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0101",
+    "travelStyle": "BUDGET",
+    "budgetMin": 300000,
+    "budgetMax": 1300000,
+    "preferredGroup": "SMALL_GROUP",
+    "interests": [
+      "nightlife_entertainment",
+      "coffee_culture"
+    ],
+    "pace": "PACKED",
+    "avoidances": [
+      "heights"
+    ],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0102",
+    "travelStyle": "COMFORT",
+    "budgetMin": 1350000,
+    "budgetMax": 3550000,
+    "preferredGroup": "SMALL_GROUP",
+    "interests": [
+      "beach_island",
+      "nature_outdoor"
+    ],
+    "pace": "PACKED",
+    "avoidances": [
+      "spicy_food"
+    ],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0103",
+    "travelStyle": "LUXURY",
+    "budgetMin": 3350000,
+    "budgetMax": 23900000,
+    "preferredGroup": "SOLO",
+    "interests": [
+      "food_cuisine",
+      "nature_outdoor"
+    ],
+    "pace": "RELAXED",
+    "avoidances": [
+      "crowds"
+    ],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0104",
+    "travelStyle": "BUDGET",
+    "budgetMin": 600000,
+    "budgetMax": 1600000,
+    "preferredGroup": "COUPLE",
+    "interests": [
+      "coffee_culture",
+      "culture_history"
+    ],
+    "pace": "MODERATE",
+    "avoidances": [
+      "crowds"
+    ],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0105",
+    "travelStyle": "BUDGET",
+    "budgetMin": 300000,
+    "budgetMax": 1950000,
+    "preferredGroup": "SOLO",
+    "interests": [
+      "nature_outdoor",
+      "culture_history",
+      "nightlife_entertainment",
+      "food_cuisine"
+    ],
+    "pace": "PACKED",
+    "avoidances": [
+      "crowds"
+    ],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0106",
+    "travelStyle": "COMFORT",
+    "budgetMin": 1100000,
+    "budgetMax": 5350000,
+    "preferredGroup": "SOLO",
+    "interests": [
+      "culture_history",
+      "food_cuisine"
+    ],
+    "pace": "PACKED",
+    "avoidances": [
+      "crowds"
+    ],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0107",
+    "travelStyle": "COMFORT",
+    "budgetMin": 1950000,
+    "budgetMax": 4150000,
+    "preferredGroup": "SMALL_GROUP",
+    "interests": [
+      "nature_outdoor",
+      "coffee_culture",
+      "food_cuisine"
+    ],
+    "pace": "MODERATE",
+    "avoidances": [
+      "heights"
+    ],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0108",
+    "travelStyle": "COMFORT",
+    "budgetMin": 1300000,
+    "budgetMax": 3850000,
+    "preferredGroup": "SMALL_GROUP",
+    "interests": [
+      "shopping_local",
+      "culture_history",
+      "beach_island"
+    ],
+    "pace": "RELAXED",
+    "avoidances": [
+      "long_walks"
+    ],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0109",
+    "travelStyle": "BUDGET",
+    "budgetMin": 400000,
+    "budgetMax": 1850000,
+    "preferredGroup": "SOLO",
+    "interests": [
+      "food_cuisine",
+      "beach_island",
+      "culture_history"
+    ],
+    "pace": "MODERATE",
+    "avoidances": [
+      "long_walks"
+    ],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0110",
+    "travelStyle": "BACKPACKER",
+    "budgetMin": 400000,
+    "budgetMax": 900000,
+    "preferredGroup": "SMALL_GROUP",
+    "interests": [
+      "coffee_culture",
+      "culture_history",
+      "shopping_local"
+    ],
+    "pace": "RELAXED",
+    "avoidances": [
+      "crowds"
+    ],
+    "dietaryNeeds": [
+      "seafood_allergy"
+    ],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0111",
+    "travelStyle": "LUXURY",
+    "budgetMin": 3950000,
+    "budgetMax": 16000000,
+    "preferredGroup": "COUPLE",
+    "interests": [
+      "nature_outdoor",
+      "food_cuisine"
+    ],
+    "pace": "MODERATE",
+    "avoidances": [],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0112",
+    "travelStyle": "BUDGET",
+    "budgetMin": 500000,
+    "budgetMax": 1700000,
+    "preferredGroup": "FAMILY",
+    "interests": [
+      "beach_island",
+      "coffee_culture"
+    ],
+    "pace": "MODERATE",
+    "avoidances": [
+      "heights"
+    ],
+    "dietaryNeeds": [
+      "seafood_allergy"
+    ],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0113",
+    "travelStyle": "COMFORT",
+    "budgetMin": 1400000,
+    "budgetMax": 2550000,
+    "preferredGroup": "SMALL_GROUP",
+    "interests": [
+      "culture_history",
+      "beach_island"
+    ],
+    "pace": "MODERATE",
+    "avoidances": [],
+    "dietaryNeeds": [
+      "vegan"
+    ],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0114",
+    "travelStyle": "BUDGET",
+    "budgetMin": 350000,
+    "budgetMax": 1000000,
+    "preferredGroup": "COUPLE",
+    "interests": [
+      "coffee_culture",
+      "food_cuisine",
+      "beach_island",
+      "culture_history"
+    ],
+    "pace": "RELAXED",
+    "avoidances": [],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0115",
+    "travelStyle": "BUDGET",
+    "budgetMin": 350000,
+    "budgetMax": 850000,
+    "preferredGroup": "SMALL_GROUP",
+    "interests": [
+      "food_cuisine",
+      "coffee_culture"
+    ],
+    "pace": "RELAXED",
+    "avoidances": [],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0116",
+    "travelStyle": "COMFORT",
+    "budgetMin": 1400000,
+    "budgetMax": 3150000,
+    "preferredGroup": "SOLO",
+    "interests": [
+      "food_cuisine",
+      "nature_outdoor",
+      "culture_history",
+      "shopping_local"
+    ],
+    "pace": "MODERATE",
+    "avoidances": [
+      "long_walks"
+    ],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0117",
+    "travelStyle": "BUDGET",
+    "budgetMin": 300000,
+    "budgetMax": 1100000,
+    "preferredGroup": "SOLO",
+    "interests": [
+      "nightlife_entertainment",
+      "coffee_culture",
+      "beach_island"
+    ],
+    "pace": "RELAXED",
+    "avoidances": [],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0118",
+    "travelStyle": "COMFORT",
+    "budgetMin": 1850000,
+    "budgetMax": 4750000,
+    "preferredGroup": "SOLO",
+    "interests": [
+      "nature_outdoor",
+      "beach_island"
+    ],
+    "pace": "MODERATE",
+    "avoidances": [],
+    "dietaryNeeds": [
+      "vegetarian"
+    ],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0119",
+    "travelStyle": "BACKPACKER",
+    "budgetMin": 200000,
+    "budgetMax": 1150000,
+    "preferredGroup": "COUPLE",
+    "interests": [
+      "nature_outdoor",
+      "coffee_culture",
+      "beach_island"
+    ],
+    "pace": "MODERATE",
+    "avoidances": [],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0120",
+    "travelStyle": "BUDGET",
+    "budgetMin": 650000,
+    "budgetMax": 1900000,
+    "preferredGroup": "SOLO",
+    "interests": [
+      "food_cuisine",
+      "shopping_local",
+      "culture_history"
+    ],
+    "pace": "PACKED",
+    "avoidances": [
+      "crowds"
+    ],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0121",
+    "travelStyle": "BUDGET",
+    "budgetMin": 550000,
+    "budgetMax": 2000000,
+    "preferredGroup": "SOLO",
+    "interests": [
+      "food_cuisine",
+      "coffee_culture"
+    ],
+    "pace": "MODERATE",
+    "avoidances": [],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0122",
+    "travelStyle": "BACKPACKER",
+    "budgetMin": 450000,
+    "budgetMax": 1150000,
+    "preferredGroup": "SOLO",
+    "interests": [
+      "culture_history",
+      "food_cuisine"
+    ],
+    "pace": "PACKED",
+    "avoidances": [
+      "crowds"
+    ],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0123",
+    "travelStyle": "BACKPACKER",
+    "budgetMin": 450000,
+    "budgetMax": 850000,
+    "preferredGroup": "SMALL_GROUP",
+    "interests": [
+      "beach_island",
+      "coffee_culture",
+      "culture_history"
+    ],
+    "pace": "MODERATE",
+    "avoidances": [
+      "crowds"
+    ],
+    "dietaryNeeds": [
+      "vegan"
+    ],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0124",
+    "travelStyle": "COMFORT",
+    "budgetMin": 2000000,
+    "budgetMax": 3500000,
+    "preferredGroup": "SMALL_GROUP",
+    "interests": [
+      "nature_outdoor",
+      "culture_history"
+    ],
+    "pace": "PACKED",
+    "avoidances": [
+      "long_walks"
+    ],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0125",
+    "travelStyle": "COMFORT",
+    "budgetMin": 1700000,
+    "budgetMax": 3900000,
+    "preferredGroup": "SOLO",
+    "interests": [
+      "food_cuisine",
+      "beach_island"
+    ],
+    "pace": "MODERATE",
+    "avoidances": [
+      "heights"
+    ],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0126",
+    "travelStyle": "BACKPACKER",
+    "budgetMin": 350000,
+    "budgetMax": 950000,
+    "preferredGroup": "SMALL_GROUP",
+    "interests": [
+      "nightlife_entertainment",
+      "coffee_culture",
+      "food_cuisine",
+      "shopping_local"
+    ],
+    "pace": "RELAXED",
+    "avoidances": [],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0127",
+    "travelStyle": "COMFORT",
+    "budgetMin": 1700000,
+    "budgetMax": 2800000,
+    "preferredGroup": "SOLO",
+    "interests": [
+      "nightlife_entertainment",
+      "food_cuisine",
+      "coffee_culture"
+    ],
+    "pace": "PACKED",
+    "avoidances": [
+      "long_walks"
+    ],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0128",
+    "travelStyle": "LUXURY",
+    "budgetMin": 4150000,
+    "budgetMax": 16500000,
+    "preferredGroup": "SOLO",
+    "interests": [
+      "culture_history",
+      "beach_island",
+      "coffee_culture"
+    ],
+    "pace": "RELAXED",
+    "avoidances": [
+      "crowds"
+    ],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0129",
+    "travelStyle": "BUDGET",
+    "budgetMin": 600000,
+    "budgetMax": 1250000,
+    "preferredGroup": "SOLO",
+    "interests": [
+      "coffee_culture",
+      "nature_outdoor",
+      "shopping_local"
+    ],
+    "pace": "RELAXED",
+    "avoidances": [],
+    "dietaryNeeds": [
+      "vegetarian"
+    ],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0130",
+    "travelStyle": "COMFORT",
+    "budgetMin": 2000000,
+    "budgetMax": 4700000,
+    "preferredGroup": "COUPLE",
+    "interests": [
+      "culture_history",
+      "coffee_culture",
+      "nightlife_entertainment",
+      "food_cuisine"
+    ],
+    "pace": "MODERATE",
+    "avoidances": [
+      "long_walks"
+    ],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0131",
+    "travelStyle": "BACKPACKER",
+    "budgetMin": 450000,
+    "budgetMax": 1000000,
+    "preferredGroup": "SMALL_GROUP",
+    "interests": [
+      "food_cuisine",
+      "coffee_culture",
+      "nature_outdoor",
+      "culture_history"
+    ],
+    "pace": "PACKED",
+    "avoidances": [
+      "spicy_food"
+    ],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0132",
+    "travelStyle": "BUDGET",
+    "budgetMin": 400000,
+    "budgetMax": 1000000,
+    "preferredGroup": "SMALL_GROUP",
+    "interests": [
+      "culture_history",
+      "beach_island"
+    ],
+    "pace": "MODERATE",
+    "avoidances": [
+      "crowds"
+    ],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0133",
+    "travelStyle": "COMFORT",
+    "budgetMin": 1950000,
+    "budgetMax": 2900000,
+    "preferredGroup": "SOLO",
+    "interests": [
+      "culture_history",
+      "food_cuisine",
+      "shopping_local",
+      "beach_island"
+    ],
+    "pace": "RELAXED",
+    "avoidances": [],
+    "dietaryNeeds": [
+      "vegetarian"
+    ],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0134",
+    "travelStyle": "COMFORT",
+    "budgetMin": 1350000,
+    "budgetMax": 3900000,
+    "preferredGroup": "SOLO",
+    "interests": [
+      "culture_history",
+      "beach_island",
+      "nature_outdoor",
+      "coffee_culture"
+    ],
+    "pace": "RELAXED",
+    "avoidances": [
+      "heights"
+    ],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0135",
+    "travelStyle": "COMFORT",
+    "budgetMin": 1900000,
+    "budgetMax": 3900000,
+    "preferredGroup": "FAMILY",
+    "interests": [
+      "beach_island",
+      "coffee_culture",
+      "culture_history"
+    ],
+    "pace": "MODERATE",
+    "avoidances": [],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0136",
+    "travelStyle": "BUDGET",
+    "budgetMin": 300000,
+    "budgetMax": 1800000,
+    "preferredGroup": "SMALL_GROUP",
+    "interests": [
+      "shopping_local",
+      "nature_outdoor",
+      "food_cuisine"
+    ],
+    "pace": "PACKED",
+    "avoidances": [
+      "heights"
+    ],
+    "dietaryNeeds": [
+      "vegetarian"
+    ],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0137",
+    "travelStyle": "BUDGET",
+    "budgetMin": 700000,
+    "budgetMax": 1000000,
+    "preferredGroup": "SMALL_GROUP",
+    "interests": [
+      "food_cuisine",
+      "shopping_local",
+      "beach_island"
+    ],
+    "pace": "MODERATE",
+    "avoidances": [
+      "spicy_food"
+    ],
+    "dietaryNeeds": [
+      "vegetarian"
+    ],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0138",
+    "travelStyle": "COMFORT",
+    "budgetMin": 1600000,
+    "budgetMax": 2750000,
+    "preferredGroup": "SOLO",
+    "interests": [
+      "culture_history",
+      "nature_outdoor",
+      "food_cuisine"
+    ],
+    "pace": "MODERATE",
+    "avoidances": [],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0139",
+    "travelStyle": "BUDGET",
+    "budgetMin": 650000,
+    "budgetMax": 1900000,
+    "preferredGroup": "COUPLE",
+    "interests": [
+      "beach_island",
+      "culture_history"
+    ],
+    "pace": "PACKED",
+    "avoidances": [
+      "spicy_food"
+    ],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0140",
+    "travelStyle": "BUDGET",
+    "budgetMin": 700000,
+    "budgetMax": 1450000,
+    "preferredGroup": "COUPLE",
+    "interests": [
+      "beach_island",
+      "food_cuisine"
+    ],
+    "pace": "MODERATE",
+    "avoidances": [],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0141",
+    "travelStyle": "COMFORT",
+    "budgetMin": 1750000,
+    "budgetMax": 4400000,
+    "preferredGroup": "SMALL_GROUP",
+    "interests": [
+      "food_cuisine",
+      "coffee_culture",
+      "culture_history",
+      "nature_outdoor"
+    ],
+    "pace": "MODERATE",
+    "avoidances": [
+      "crowds"
+    ],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0142",
+    "travelStyle": "BUDGET",
+    "budgetMin": 350000,
+    "budgetMax": 1600000,
+    "preferredGroup": "SOLO",
+    "interests": [
+      "food_cuisine",
+      "coffee_culture",
+      "nature_outdoor"
+    ],
+    "pace": "RELAXED",
+    "avoidances": [
+      "crowds"
+    ],
+    "dietaryNeeds": [
+      "halal"
+    ],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0143",
+    "travelStyle": "BUDGET",
+    "budgetMin": 550000,
+    "budgetMax": 1200000,
+    "preferredGroup": "SOLO",
+    "interests": [
+      "food_cuisine",
+      "beach_island",
+      "nature_outdoor",
+      "shopping_local"
+    ],
+    "pace": "RELAXED",
+    "avoidances": [
+      "long_walks"
+    ],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0144",
+    "travelStyle": "COMFORT",
+    "budgetMin": 1850000,
+    "budgetMax": 3550000,
+    "preferredGroup": "SOLO",
+    "interests": [
+      "food_cuisine",
+      "beach_island",
+      "nature_outdoor",
+      "coffee_culture"
+    ],
+    "pace": "MODERATE",
+    "avoidances": [
+      "heights"
+    ],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0145",
+    "travelStyle": "BUDGET",
+    "budgetMin": 500000,
+    "budgetMax": 1100000,
+    "preferredGroup": "SMALL_GROUP",
+    "interests": [
+      "beach_island",
+      "shopping_local"
+    ],
+    "pace": "MODERATE",
+    "avoidances": [],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0146",
+    "travelStyle": "BUDGET",
+    "budgetMin": 300000,
+    "budgetMax": 2000000,
+    "preferredGroup": "FAMILY",
+    "interests": [
+      "food_cuisine",
+      "nature_outdoor",
+      "beach_island",
+      "shopping_local"
+    ],
+    "pace": "MODERATE",
+    "avoidances": [],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0147",
+    "travelStyle": "BUDGET",
+    "budgetMin": 600000,
+    "budgetMax": 1300000,
+    "preferredGroup": "FAMILY",
+    "interests": [
+      "nature_outdoor",
+      "culture_history"
+    ],
+    "pace": "RELAXED",
+    "avoidances": [
+      "crowds"
+    ],
+    "dietaryNeeds": [
+      "vegan"
+    ],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0148",
+    "travelStyle": "BACKPACKER",
+    "budgetMin": 400000,
+    "budgetMax": 1150000,
+    "preferredGroup": "SMALL_GROUP",
+    "interests": [
+      "nature_outdoor",
+      "culture_history"
+    ],
+    "pace": "MODERATE",
+    "avoidances": [
+      "long_walks"
+    ],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0149",
+    "travelStyle": "BUDGET",
+    "budgetMin": 650000,
+    "budgetMax": 1350000,
+    "preferredGroup": "SMALL_GROUP",
+    "interests": [
+      "food_cuisine",
+      "shopping_local",
+      "nature_outdoor"
+    ],
+    "pace": "MODERATE",
+    "avoidances": [],
+    "dietaryNeeds": [
+      "halal"
+    ],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0150",
+    "travelStyle": "LUXURY",
+    "budgetMin": 5000000,
+    "budgetMax": 17350000,
+    "preferredGroup": "FAMILY",
+    "interests": [
+      "nature_outdoor",
+      "beach_island",
+      "food_cuisine"
+    ],
+    "pace": "MODERATE",
+    "avoidances": [
+      "heights"
+    ],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0151",
+    "travelStyle": "COMFORT",
+    "budgetMin": 1350000,
+    "budgetMax": 4950000,
+    "preferredGroup": "SOLO",
+    "interests": [
+      "culture_history",
+      "nature_outdoor",
+      "coffee_culture",
+      "beach_island"
+    ],
+    "pace": "MODERATE",
+    "avoidances": [
+      "spicy_food"
+    ],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0152",
+    "travelStyle": "BUDGET",
+    "budgetMin": 700000,
+    "budgetMax": 1350000,
+    "preferredGroup": "SMALL_GROUP",
+    "interests": [
+      "culture_history",
+      "nature_outdoor",
+      "nightlife_entertainment"
+    ],
+    "pace": "RELAXED",
+    "avoidances": [],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0153",
+    "travelStyle": "COMFORT",
+    "budgetMin": 1400000,
+    "budgetMax": 4750000,
+    "preferredGroup": "FAMILY",
+    "interests": [
+      "food_cuisine",
+      "coffee_culture",
+      "beach_island"
+    ],
+    "pace": "MODERATE",
+    "avoidances": [],
+    "dietaryNeeds": [
+      "halal"
+    ],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0154",
+    "travelStyle": "BUDGET",
+    "budgetMin": 650000,
+    "budgetMax": 900000,
+    "preferredGroup": "COUPLE",
+    "interests": [
+      "nightlife_entertainment",
+      "shopping_local",
+      "nature_outdoor",
+      "coffee_culture"
+    ],
+    "pace": "MODERATE",
+    "avoidances": [],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0155",
+    "travelStyle": "BUDGET",
+    "budgetMin": 400000,
+    "budgetMax": 1350000,
+    "preferredGroup": "COUPLE",
+    "interests": [
+      "culture_history",
+      "nightlife_entertainment",
+      "beach_island",
+      "food_cuisine"
+    ],
+    "pace": "RELAXED",
+    "avoidances": [],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0156",
+    "travelStyle": "COMFORT",
+    "budgetMin": 1200000,
+    "budgetMax": 4450000,
+    "preferredGroup": "SOLO",
+    "interests": [
+      "food_cuisine",
+      "nature_outdoor"
+    ],
+    "pace": "PACKED",
+    "avoidances": [
+      "crowds"
+    ],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0157",
+    "travelStyle": "COMFORT",
+    "budgetMin": 1200000,
+    "budgetMax": 3500000,
+    "preferredGroup": "SOLO",
+    "interests": [
+      "food_cuisine",
+      "nature_outdoor",
+      "coffee_culture",
+      "culture_history"
+    ],
+    "pace": "RELAXED",
+    "avoidances": [
+      "crowds"
+    ],
+    "dietaryNeeds": [
+      "vegetarian"
+    ],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0158",
+    "travelStyle": "COMFORT",
+    "budgetMin": 1800000,
+    "budgetMax": 5400000,
+    "preferredGroup": "SMALL_GROUP",
+    "interests": [
+      "beach_island",
+      "nature_outdoor"
+    ],
+    "pace": "MODERATE",
+    "avoidances": [],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0159",
+    "travelStyle": "LUXURY",
+    "budgetMin": 4650000,
+    "budgetMax": 14250000,
+    "preferredGroup": "COUPLE",
+    "interests": [
+      "culture_history",
+      "coffee_culture"
+    ],
+    "pace": "PACKED",
+    "avoidances": [],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0160",
+    "travelStyle": "BUDGET",
+    "budgetMin": 400000,
+    "budgetMax": 1700000,
+    "preferredGroup": "SOLO",
+    "interests": [
+      "food_cuisine",
+      "coffee_culture",
+      "beach_island",
+      "nature_outdoor"
+    ],
+    "pace": "RELAXED",
+    "avoidances": [
+      "crowds"
+    ],
+    "dietaryNeeds": [
+      "vegetarian"
+    ],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0161",
+    "travelStyle": "BACKPACKER",
+    "budgetMin": 450000,
+    "budgetMax": 1100000,
+    "preferredGroup": "COUPLE",
+    "interests": [
+      "culture_history",
+      "food_cuisine",
+      "beach_island",
+      "coffee_culture"
+    ],
+    "pace": "MODERATE",
+    "avoidances": [
+      "heights"
+    ],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0162",
+    "travelStyle": "COMFORT",
+    "budgetMin": 1350000,
+    "budgetMax": 5050000,
+    "preferredGroup": "SMALL_GROUP",
+    "interests": [
+      "culture_history",
+      "nature_outdoor",
+      "beach_island",
+      "food_cuisine"
+    ],
+    "pace": "MODERATE",
+    "avoidances": [
+      "crowds"
+    ],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0163",
+    "travelStyle": "BUDGET",
+    "budgetMin": 550000,
+    "budgetMax": 1950000,
+    "preferredGroup": "COUPLE",
+    "interests": [
+      "nightlife_entertainment",
+      "food_cuisine",
+      "nature_outdoor"
+    ],
+    "pace": "PACKED",
+    "avoidances": [],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0164",
+    "travelStyle": "COMFORT",
+    "budgetMin": 1150000,
+    "budgetMax": 2650000,
+    "preferredGroup": "COUPLE",
+    "interests": [
+      "nightlife_entertainment",
+      "beach_island",
+      "culture_history"
+    ],
+    "pace": "MODERATE",
+    "avoidances": [
+      "spicy_food"
+    ],
+    "dietaryNeeds": [
+      "seafood_allergy"
+    ],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0165",
+    "travelStyle": "BACKPACKER",
+    "budgetMin": 250000,
+    "budgetMax": 1100000,
+    "preferredGroup": "FAMILY",
+    "interests": [
+      "nature_outdoor",
+      "coffee_culture"
+    ],
+    "pace": "RELAXED",
+    "avoidances": [],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0166",
+    "travelStyle": "BUDGET",
+    "budgetMin": 450000,
+    "budgetMax": 1100000,
+    "preferredGroup": "FAMILY",
+    "interests": [
+      "culture_history",
+      "food_cuisine",
+      "coffee_culture",
+      "nightlife_entertainment"
+    ],
+    "pace": "RELAXED",
+    "avoidances": [
+      "crowds"
+    ],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0167",
+    "travelStyle": "COMFORT",
+    "budgetMin": 1400000,
+    "budgetMax": 4800000,
+    "preferredGroup": "FAMILY",
+    "interests": [
+      "beach_island",
+      "culture_history",
+      "nature_outdoor"
+    ],
+    "pace": "MODERATE",
+    "avoidances": [],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0168",
+    "travelStyle": "COMFORT",
+    "budgetMin": 1850000,
+    "budgetMax": 3350000,
+    "preferredGroup": "COUPLE",
+    "interests": [
+      "coffee_culture",
+      "food_cuisine",
+      "nightlife_entertainment",
+      "nature_outdoor"
+    ],
+    "pace": "RELAXED",
+    "avoidances": [],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0169",
+    "travelStyle": "LUXURY",
+    "budgetMin": 4600000,
+    "budgetMax": 17250000,
+    "preferredGroup": "SMALL_GROUP",
+    "interests": [
+      "food_cuisine",
+      "culture_history",
+      "beach_island",
+      "shopping_local"
+    ],
+    "pace": "MODERATE",
+    "avoidances": [],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0170",
+    "travelStyle": "BACKPACKER",
+    "budgetMin": 300000,
+    "budgetMax": 600000,
+    "preferredGroup": "COUPLE",
+    "interests": [
+      "nightlife_entertainment",
+      "coffee_culture",
+      "culture_history"
+    ],
+    "pace": "PACKED",
+    "avoidances": [
+      "heights"
+    ],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0171",
+    "travelStyle": "COMFORT",
+    "budgetMin": 1000000,
+    "budgetMax": 3650000,
+    "preferredGroup": "SMALL_GROUP",
+    "interests": [
+      "coffee_culture",
+      "nightlife_entertainment",
+      "nature_outdoor"
+    ],
+    "pace": "MODERATE",
+    "avoidances": [
+      "long_walks"
+    ],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0172",
+    "travelStyle": "COMFORT",
+    "budgetMin": 2000000,
+    "budgetMax": 5000000,
+    "preferredGroup": "COUPLE",
+    "interests": [
+      "nature_outdoor",
+      "beach_island",
+      "culture_history",
+      "food_cuisine"
+    ],
+    "pace": "MODERATE",
+    "avoidances": [
+      "crowds"
+    ],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0173",
+    "travelStyle": "BACKPACKER",
+    "budgetMin": 200000,
+    "budgetMax": 950000,
+    "preferredGroup": "COUPLE",
+    "interests": [
+      "food_cuisine",
+      "culture_history",
+      "coffee_culture",
+      "nature_outdoor"
+    ],
+    "pace": "RELAXED",
+    "avoidances": [
+      "crowds"
+    ],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0174",
+    "travelStyle": "BACKPACKER",
+    "budgetMin": 450000,
+    "budgetMax": 1050000,
+    "preferredGroup": "FAMILY",
+    "interests": [
+      "coffee_culture",
+      "nature_outdoor"
+    ],
+    "pace": "PACKED",
+    "avoidances": [
+      "spicy_food"
+    ],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0175",
+    "travelStyle": "COMFORT",
+    "budgetMin": 1700000,
+    "budgetMax": 5400000,
+    "preferredGroup": "SOLO",
+    "interests": [
+      "culture_history",
+      "nature_outdoor",
+      "beach_island",
+      "coffee_culture"
+    ],
+    "pace": "PACKED",
+    "avoidances": [
+      "long_walks"
+    ],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0176",
+    "travelStyle": "COMFORT",
+    "budgetMin": 1850000,
+    "budgetMax": 3450000,
+    "preferredGroup": "COUPLE",
+    "interests": [
+      "nightlife_entertainment",
+      "shopping_local"
+    ],
+    "pace": "MODERATE",
+    "avoidances": [
+      "long_walks"
+    ],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0177",
+    "travelStyle": "COMFORT",
+    "budgetMin": 1850000,
+    "budgetMax": 5450000,
+    "preferredGroup": "SOLO",
+    "interests": [
+      "culture_history",
+      "food_cuisine",
+      "beach_island",
+      "nature_outdoor"
+    ],
+    "pace": "MODERATE",
+    "avoidances": [
+      "heights"
+    ],
+    "dietaryNeeds": [
+      "halal"
+    ],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0178",
+    "travelStyle": "LUXURY",
+    "budgetMin": 3900000,
+    "budgetMax": 9000000,
+    "preferredGroup": "FAMILY",
+    "interests": [
+      "shopping_local",
+      "coffee_culture",
+      "nature_outdoor"
+    ],
+    "pace": "MODERATE",
+    "avoidances": [
+      "heights"
+    ],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0179",
+    "travelStyle": "BUDGET",
+    "budgetMin": 350000,
+    "budgetMax": 1750000,
+    "preferredGroup": "SMALL_GROUP",
+    "interests": [
+      "nature_outdoor",
+      "food_cuisine",
+      "beach_island",
+      "coffee_culture"
+    ],
+    "pace": "MODERATE",
+    "avoidances": [],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0180",
+    "travelStyle": "COMFORT",
+    "budgetMin": 1200000,
+    "budgetMax": 2500000,
+    "preferredGroup": "SMALL_GROUP",
+    "interests": [
+      "nightlife_entertainment",
+      "food_cuisine",
+      "coffee_culture",
+      "shopping_local"
+    ],
+    "pace": "MODERATE",
+    "avoidances": [
+      "long_walks"
+    ],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0181",
+    "travelStyle": "BACKPACKER",
+    "budgetMin": 200000,
+    "budgetMax": 1200000,
+    "preferredGroup": "COUPLE",
+    "interests": [
+      "coffee_culture",
+      "food_cuisine"
+    ],
+    "pace": "MODERATE",
+    "avoidances": [
+      "heights"
+    ],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0182",
+    "travelStyle": "BUDGET",
+    "budgetMin": 400000,
+    "budgetMax": 850000,
+    "preferredGroup": "FAMILY",
+    "interests": [
+      "beach_island",
+      "food_cuisine",
+      "coffee_culture"
+    ],
+    "pace": "MODERATE",
+    "avoidances": [],
+    "dietaryNeeds": [
+      "vegetarian"
+    ],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0183",
+    "travelStyle": "BUDGET",
+    "budgetMin": 550000,
+    "budgetMax": 1250000,
+    "preferredGroup": "COUPLE",
+    "interests": [
+      "nightlife_entertainment",
+      "nature_outdoor",
+      "culture_history"
+    ],
+    "pace": "RELAXED",
+    "avoidances": [
+      "heights"
+    ],
+    "dietaryNeeds": [
+      "vegan"
+    ],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0184",
+    "travelStyle": "COMFORT",
+    "budgetMin": 1250000,
+    "budgetMax": 4800000,
+    "preferredGroup": "COUPLE",
+    "interests": [
+      "coffee_culture",
+      "beach_island",
+      "food_cuisine"
+    ],
+    "pace": "MODERATE",
+    "avoidances": [],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0185",
+    "travelStyle": "COMFORT",
+    "budgetMin": 2000000,
+    "budgetMax": 5350000,
+    "preferredGroup": "COUPLE",
+    "interests": [
+      "beach_island",
+      "nature_outdoor",
+      "food_cuisine"
+    ],
+    "pace": "RELAXED",
+    "avoidances": [],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0186",
+    "travelStyle": "BUDGET",
+    "budgetMin": 500000,
+    "budgetMax": 1400000,
+    "preferredGroup": "SOLO",
+    "interests": [
+      "nature_outdoor",
+      "food_cuisine"
+    ],
+    "pace": "MODERATE",
+    "avoidances": [
+      "crowds"
+    ],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0187",
+    "travelStyle": "COMFORT",
+    "budgetMin": 1350000,
+    "budgetMax": 2650000,
+    "preferredGroup": "COUPLE",
+    "interests": [
+      "food_cuisine",
+      "nature_outdoor",
+      "coffee_culture",
+      "beach_island"
+    ],
+    "pace": "MODERATE",
+    "avoidances": [
+      "long_walks"
+    ],
+    "dietaryNeeds": [
+      "vegetarian"
+    ],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0188",
+    "travelStyle": "BUDGET",
+    "budgetMin": 500000,
+    "budgetMax": 1350000,
+    "preferredGroup": "COUPLE",
+    "interests": [
+      "culture_history",
+      "nightlife_entertainment",
+      "nature_outdoor",
+      "coffee_culture"
+    ],
+    "pace": "PACKED",
+    "avoidances": [],
+    "dietaryNeeds": [
+      "halal"
+    ],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0189",
+    "travelStyle": "COMFORT",
+    "budgetMin": 1300000,
+    "budgetMax": 4900000,
+    "preferredGroup": "FAMILY",
+    "interests": [
+      "coffee_culture",
+      "nature_outdoor"
+    ],
+    "pace": "RELAXED",
+    "avoidances": [
+      "crowds"
+    ],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0190",
+    "travelStyle": "COMFORT",
+    "budgetMin": 1150000,
+    "budgetMax": 2650000,
+    "preferredGroup": "SOLO",
+    "interests": [
+      "shopping_local",
+      "food_cuisine",
+      "coffee_culture",
+      "culture_history"
+    ],
+    "pace": "PACKED",
+    "avoidances": [
+      "crowds"
+    ],
+    "dietaryNeeds": [
+      "vegetarian"
+    ],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0191",
+    "travelStyle": "COMFORT",
+    "budgetMin": 1800000,
+    "budgetMax": 3900000,
+    "preferredGroup": "SMALL_GROUP",
+    "interests": [
+      "nature_outdoor",
+      "coffee_culture"
+    ],
+    "pace": "MODERATE",
+    "avoidances": [],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0192",
+    "travelStyle": "COMFORT",
+    "budgetMin": 1600000,
+    "budgetMax": 3300000,
+    "preferredGroup": "FAMILY",
+    "interests": [
+      "coffee_culture",
+      "nature_outdoor"
+    ],
+    "pace": "RELAXED",
+    "avoidances": [],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0193",
+    "travelStyle": "BUDGET",
+    "budgetMin": 350000,
+    "budgetMax": 1550000,
+    "preferredGroup": "LARGE_GROUP",
+    "interests": [
+      "culture_history",
+      "food_cuisine"
+    ],
+    "pace": "PACKED",
+    "avoidances": [
+      "crowds"
+    ],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0194",
+    "travelStyle": "COMFORT",
+    "budgetMin": 1600000,
+    "budgetMax": 3900000,
+    "preferredGroup": "LARGE_GROUP",
+    "interests": [
+      "culture_history",
+      "coffee_culture",
+      "beach_island"
+    ],
+    "pace": "MODERATE",
+    "avoidances": [
+      "long_walks"
+    ],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0195",
+    "travelStyle": "BUDGET",
+    "budgetMin": 700000,
+    "budgetMax": 1000000,
+    "preferredGroup": "COUPLE",
+    "interests": [
+      "nightlife_entertainment",
+      "beach_island",
+      "coffee_culture",
+      "shopping_local"
+    ],
+    "pace": "RELAXED",
+    "avoidances": [
+      "long_walks"
+    ],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0196",
+    "travelStyle": "COMFORT",
+    "budgetMin": 1700000,
+    "budgetMax": 3600000,
+    "preferredGroup": "SOLO",
+    "interests": [
+      "culture_history",
+      "nightlife_entertainment"
+    ],
+    "pace": "MODERATE",
+    "avoidances": [],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0197",
+    "travelStyle": "BACKPACKER",
+    "budgetMin": 200000,
+    "budgetMax": 650000,
+    "preferredGroup": "SOLO",
+    "interests": [
+      "food_cuisine",
+      "coffee_culture"
+    ],
+    "pace": "RELAXED",
+    "avoidances": [
+      "long_walks"
+    ],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0198",
+    "travelStyle": "BACKPACKER",
+    "budgetMin": 350000,
+    "budgetMax": 650000,
+    "preferredGroup": "COUPLE",
+    "interests": [
+      "food_cuisine",
+      "shopping_local",
+      "culture_history",
+      "coffee_culture"
+    ],
+    "pace": "MODERATE",
+    "avoidances": [
+      "heights"
+    ],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0199",
+    "travelStyle": "COMFORT",
+    "budgetMin": 1500000,
+    "budgetMax": 3250000,
+    "preferredGroup": "SOLO",
+    "interests": [
+      "shopping_local",
+      "nightlife_entertainment",
+      "nature_outdoor"
+    ],
+    "pace": "RELAXED",
+    "avoidances": [],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0200",
+    "travelStyle": "COMFORT",
+    "budgetMin": 1250000,
+    "budgetMax": 4500000,
+    "preferredGroup": "SMALL_GROUP",
+    "interests": [
+      "nature_outdoor",
+      "culture_history",
+      "nightlife_entertainment",
+      "shopping_local"
+    ],
+    "pace": "RELAXED",
+    "avoidances": [
+      "long_walks"
+    ],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0201",
+    "travelStyle": "BUDGET",
+    "budgetMin": 600000,
+    "budgetMax": 1050000,
+    "preferredGroup": "SOLO",
+    "interests": [
+      "nature_outdoor",
+      "shopping_local",
+      "culture_history",
+      "beach_island"
+    ],
+    "pace": "MODERATE",
+    "avoidances": [
+      "spicy_food"
+    ],
+    "dietaryNeeds": [
+      "vegetarian"
+    ],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0202",
+    "travelStyle": "COMFORT",
+    "budgetMin": 1200000,
+    "budgetMax": 3700000,
+    "preferredGroup": "LARGE_GROUP",
+    "interests": [
+      "culture_history",
+      "nature_outdoor"
+    ],
+    "pace": "RELAXED",
+    "avoidances": [
+      "crowds"
+    ],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0203",
+    "travelStyle": "BUDGET",
+    "budgetMin": 300000,
+    "budgetMax": 1200000,
+    "preferredGroup": "SOLO",
+    "interests": [
+      "coffee_culture",
+      "nature_outdoor",
+      "shopping_local"
+    ],
+    "pace": "PACKED",
+    "avoidances": [
+      "long_walks"
+    ],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0204",
+    "travelStyle": "COMFORT",
+    "budgetMin": 1500000,
+    "budgetMax": 3450000,
+    "preferredGroup": "SMALL_GROUP",
+    "interests": [
+      "food_cuisine",
+      "culture_history"
+    ],
+    "pace": "MODERATE",
+    "avoidances": [
+      "long_walks"
+    ],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0205",
+    "travelStyle": "BACKPACKER",
+    "budgetMin": 450000,
+    "budgetMax": 650000,
+    "preferredGroup": "FAMILY",
+    "interests": [
+      "shopping_local",
+      "nature_outdoor",
+      "beach_island"
+    ],
+    "pace": "RELAXED",
+    "avoidances": [
+      "crowds"
+    ],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0206",
+    "travelStyle": "BUDGET",
+    "budgetMin": 650000,
+    "budgetMax": 1500000,
+    "preferredGroup": "COUPLE",
+    "interests": [
+      "beach_island",
+      "coffee_culture"
+    ],
+    "pace": "RELAXED",
+    "avoidances": [],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0207",
+    "travelStyle": "BUDGET",
+    "budgetMin": 450000,
+    "budgetMax": 1950000,
+    "preferredGroup": "SOLO",
+    "interests": [
+      "food_cuisine",
+      "coffee_culture"
+    ],
+    "pace": "MODERATE",
+    "avoidances": [
+      "long_walks"
+    ],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0208",
+    "travelStyle": "BUDGET",
+    "budgetMin": 450000,
+    "budgetMax": 1550000,
+    "preferredGroup": "COUPLE",
+    "interests": [
+      "coffee_culture",
+      "nature_outdoor",
+      "food_cuisine",
+      "shopping_local"
+    ],
+    "pace": "MODERATE",
+    "avoidances": [
+      "crowds"
+    ],
+    "dietaryNeeds": [
+      "seafood_allergy"
+    ],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0209",
+    "travelStyle": "COMFORT",
+    "budgetMin": 1250000,
+    "budgetMax": 2900000,
+    "preferredGroup": "COUPLE",
+    "interests": [
+      "nature_outdoor",
+      "food_cuisine",
+      "shopping_local",
+      "nightlife_entertainment"
+    ],
+    "pace": "RELAXED",
+    "avoidances": [
+      "crowds"
+    ],
+    "dietaryNeeds": [
+      "seafood_allergy"
+    ],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0210",
+    "travelStyle": "BACKPACKER",
+    "budgetMin": 200000,
+    "budgetMax": 1100000,
+    "preferredGroup": "COUPLE",
+    "interests": [
+      "culture_history",
+      "shopping_local"
+    ],
+    "pace": "PACKED",
+    "avoidances": [
+      "long_walks"
+    ],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0211",
+    "travelStyle": "BUDGET",
+    "budgetMin": 650000,
+    "budgetMax": 1850000,
+    "preferredGroup": "SOLO",
+    "interests": [
+      "food_cuisine",
+      "coffee_culture",
+      "nature_outdoor"
+    ],
+    "pace": "MODERATE",
+    "avoidances": [
+      "long_walks"
+    ],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0212",
+    "travelStyle": "COMFORT",
+    "budgetMin": 1650000,
+    "budgetMax": 5050000,
+    "preferredGroup": "COUPLE",
+    "interests": [
+      "food_cuisine",
+      "culture_history"
+    ],
+    "pace": "RELAXED",
+    "avoidances": [],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0213",
+    "travelStyle": "COMFORT",
+    "budgetMin": 1600000,
+    "budgetMax": 2750000,
+    "preferredGroup": "FAMILY",
+    "interests": [
+      "nightlife_entertainment",
+      "nature_outdoor",
+      "food_cuisine"
+    ],
+    "pace": "MODERATE",
+    "avoidances": [],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0214",
+    "travelStyle": "BACKPACKER",
+    "budgetMin": 450000,
+    "budgetMax": 1100000,
+    "preferredGroup": "COUPLE",
+    "interests": [
+      "food_cuisine",
+      "nature_outdoor"
+    ],
+    "pace": "PACKED",
+    "avoidances": [],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0215",
+    "travelStyle": "BUDGET",
+    "budgetMin": 600000,
+    "budgetMax": 1800000,
+    "preferredGroup": "COUPLE",
+    "interests": [
+      "nature_outdoor",
+      "shopping_local",
+      "food_cuisine"
+    ],
+    "pace": "MODERATE",
+    "avoidances": [],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0216",
+    "travelStyle": "BUDGET",
+    "budgetMin": 650000,
+    "budgetMax": 1200000,
+    "preferredGroup": "FAMILY",
+    "interests": [
+      "shopping_local",
+      "coffee_culture"
+    ],
+    "pace": "PACKED",
+    "avoidances": [
+      "crowds"
+    ],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0217",
+    "travelStyle": "COMFORT",
+    "budgetMin": 1000000,
+    "budgetMax": 3150000,
+    "preferredGroup": "COUPLE",
+    "interests": [
+      "food_cuisine",
+      "beach_island",
+      "shopping_local",
+      "nightlife_entertainment"
+    ],
+    "pace": "PACKED",
+    "avoidances": [
+      "crowds"
+    ],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0218",
+    "travelStyle": "COMFORT",
+    "budgetMin": 1850000,
+    "budgetMax": 3550000,
+    "preferredGroup": "FAMILY",
+    "interests": [
+      "beach_island",
+      "food_cuisine",
+      "nightlife_entertainment"
+    ],
+    "pace": "RELAXED",
+    "avoidances": [
+      "crowds"
+    ],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0219",
+    "travelStyle": "LUXURY",
+    "budgetMin": 5650000,
+    "budgetMax": 8900000,
+    "preferredGroup": "COUPLE",
+    "interests": [
+      "coffee_culture",
+      "nature_outdoor",
+      "culture_history"
+    ],
+    "pace": "MODERATE",
+    "avoidances": [],
+    "dietaryNeeds": [
+      "seafood_allergy"
+    ],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0220",
+    "travelStyle": "COMFORT",
+    "budgetMin": 1350000,
+    "budgetMax": 3600000,
+    "preferredGroup": "SMALL_GROUP",
+    "interests": [
+      "nightlife_entertainment",
+      "culture_history",
+      "coffee_culture",
+      "nature_outdoor"
+    ],
+    "pace": "MODERATE",
+    "avoidances": [
+      "crowds"
+    ],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0221",
+    "travelStyle": "BACKPACKER",
+    "budgetMin": 250000,
+    "budgetMax": 800000,
+    "preferredGroup": "SMALL_GROUP",
+    "interests": [
+      "beach_island",
+      "food_cuisine",
+      "nature_outdoor",
+      "culture_history"
+    ],
+    "pace": "MODERATE",
+    "avoidances": [
+      "spicy_food"
+    ],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0222",
+    "travelStyle": "COMFORT",
+    "budgetMin": 1100000,
+    "budgetMax": 3050000,
+    "preferredGroup": "SMALL_GROUP",
+    "interests": [
+      "nature_outdoor",
+      "coffee_culture",
+      "culture_history"
+    ],
+    "pace": "MODERATE",
+    "avoidances": [],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0223",
+    "travelStyle": "BUDGET",
+    "budgetMin": 600000,
+    "budgetMax": 800000,
+    "preferredGroup": "SMALL_GROUP",
+    "interests": [
+      "culture_history",
+      "beach_island",
+      "coffee_culture"
+    ],
+    "pace": "MODERATE",
+    "avoidances": [
+      "spicy_food"
+    ],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0224",
+    "travelStyle": "BUDGET",
+    "budgetMin": 400000,
+    "budgetMax": 1000000,
+    "preferredGroup": "SOLO",
+    "interests": [
+      "culture_history",
+      "nature_outdoor",
+      "food_cuisine"
+    ],
+    "pace": "RELAXED",
+    "avoidances": [
+      "crowds"
+    ],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0225",
+    "travelStyle": "COMFORT",
+    "budgetMin": 1350000,
+    "budgetMax": 4800000,
+    "preferredGroup": "COUPLE",
+    "interests": [
+      "nature_outdoor",
+      "coffee_culture",
+      "culture_history",
+      "food_cuisine"
+    ],
+    "pace": "MODERATE",
+    "avoidances": [],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0226",
+    "travelStyle": "BACKPACKER",
+    "budgetMin": 350000,
+    "budgetMax": 750000,
+    "preferredGroup": "SOLO",
+    "interests": [
+      "beach_island",
+      "shopping_local",
+      "nightlife_entertainment"
+    ],
+    "pace": "PACKED",
+    "avoidances": [],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0227",
+    "travelStyle": "LUXURY",
+    "budgetMin": 4250000,
+    "budgetMax": 15150000,
+    "preferredGroup": "COUPLE",
+    "interests": [
+      "coffee_culture",
+      "nature_outdoor",
+      "nightlife_entertainment"
+    ],
+    "pace": "MODERATE",
+    "avoidances": [],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0228",
+    "travelStyle": "BUDGET",
+    "budgetMin": 450000,
+    "budgetMax": 1700000,
+    "preferredGroup": "SMALL_GROUP",
+    "interests": [
+      "food_cuisine",
+      "beach_island",
+      "culture_history",
+      "shopping_local"
+    ],
+    "pace": "MODERATE",
+    "avoidances": [],
+    "dietaryNeeds": [
+      "seafood_allergy"
+    ],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0229",
+    "travelStyle": "BACKPACKER",
+    "budgetMin": 350000,
+    "budgetMax": 1000000,
+    "preferredGroup": "FAMILY",
+    "interests": [
+      "food_cuisine",
+      "nature_outdoor",
+      "culture_history"
+    ],
+    "pace": "MODERATE",
+    "avoidances": [
+      "crowds"
+    ],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0230",
+    "travelStyle": "BUDGET",
+    "budgetMin": 600000,
+    "budgetMax": 1650000,
+    "preferredGroup": "SOLO",
+    "interests": [
+      "shopping_local",
+      "beach_island",
+      "culture_history",
+      "food_cuisine"
+    ],
+    "pace": "RELAXED",
+    "avoidances": [
+      "long_walks"
+    ],
+    "dietaryNeeds": [
+      "seafood_allergy"
+    ],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0231",
+    "travelStyle": "BACKPACKER",
+    "budgetMin": 200000,
+    "budgetMax": 1100000,
+    "preferredGroup": "SMALL_GROUP",
+    "interests": [
+      "coffee_culture",
+      "culture_history"
+    ],
+    "pace": "PACKED",
+    "avoidances": [],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0232",
+    "travelStyle": "LUXURY",
+    "budgetMin": 5400000,
+    "budgetMax": 15450000,
+    "preferredGroup": "SMALL_GROUP",
+    "interests": [
+      "food_cuisine",
+      "culture_history",
+      "nature_outdoor"
+    ],
+    "pace": "MODERATE",
+    "avoidances": [
+      "crowds"
+    ],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0233",
+    "travelStyle": "COMFORT",
+    "budgetMin": 1700000,
+    "budgetMax": 4950000,
+    "preferredGroup": "COUPLE",
+    "interests": [
+      "nature_outdoor",
+      "culture_history",
+      "food_cuisine",
+      "coffee_culture"
+    ],
+    "pace": "MODERATE",
+    "avoidances": [
+      "crowds"
+    ],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0234",
+    "travelStyle": "LUXURY",
+    "budgetMin": 3450000,
+    "budgetMax": 15900000,
+    "preferredGroup": "COUPLE",
+    "interests": [
+      "culture_history",
+      "beach_island",
+      "nature_outdoor"
+    ],
+    "pace": "PACKED",
+    "avoidances": [],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0235",
+    "travelStyle": "COMFORT",
+    "budgetMin": 1050000,
+    "budgetMax": 5050000,
+    "preferredGroup": "SOLO",
+    "interests": [
+      "food_cuisine",
+      "shopping_local",
+      "coffee_culture",
+      "nature_outdoor"
+    ],
+    "pace": "MODERATE",
+    "avoidances": [
+      "spicy_food"
+    ],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0236",
+    "travelStyle": "BUDGET",
+    "budgetMin": 700000,
+    "budgetMax": 1450000,
+    "preferredGroup": "COUPLE",
+    "interests": [
+      "culture_history",
+      "nature_outdoor",
+      "food_cuisine"
+    ],
+    "pace": "MODERATE",
+    "avoidances": [
+      "crowds"
+    ],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0237",
+    "travelStyle": "BUDGET",
+    "budgetMin": 600000,
+    "budgetMax": 1400000,
+    "preferredGroup": "SMALL_GROUP",
+    "interests": [
+      "coffee_culture",
+      "food_cuisine"
+    ],
+    "pace": "MODERATE",
+    "avoidances": [
+      "heights"
+    ],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0238",
+    "travelStyle": "BUDGET",
+    "budgetMin": 400000,
+    "budgetMax": 1350000,
+    "preferredGroup": "COUPLE",
+    "interests": [
+      "food_cuisine",
+      "culture_history",
+      "beach_island"
+    ],
+    "pace": "PACKED",
+    "avoidances": [
+      "spicy_food"
+    ],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0239",
+    "travelStyle": "BUDGET",
+    "budgetMin": 350000,
+    "budgetMax": 1350000,
+    "preferredGroup": "SOLO",
+    "interests": [
+      "beach_island",
+      "nature_outdoor",
+      "coffee_culture"
+    ],
+    "pace": "MODERATE",
+    "avoidances": [],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0240",
+    "travelStyle": "COMFORT",
+    "budgetMin": 1150000,
+    "budgetMax": 3250000,
+    "preferredGroup": "COUPLE",
+    "interests": [
+      "food_cuisine",
+      "nature_outdoor",
+      "culture_history"
+    ],
+    "pace": "MODERATE",
+    "avoidances": [
+      "crowds"
+    ],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0241",
+    "travelStyle": "COMFORT",
+    "budgetMin": 1850000,
+    "budgetMax": 4700000,
+    "preferredGroup": "SOLO",
+    "interests": [
+      "shopping_local",
+      "food_cuisine",
+      "culture_history",
+      "nature_outdoor"
+    ],
+    "pace": "MODERATE",
+    "avoidances": [
+      "heights"
+    ],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0242",
+    "travelStyle": "COMFORT",
+    "budgetMin": 1750000,
+    "budgetMax": 2900000,
+    "preferredGroup": "FAMILY",
+    "interests": [
+      "beach_island",
+      "nightlife_entertainment"
+    ],
+    "pace": "PACKED",
+    "avoidances": [
+      "crowds"
+    ],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0243",
+    "travelStyle": "COMFORT",
+    "budgetMin": 1750000,
+    "budgetMax": 3000000,
+    "preferredGroup": "SOLO",
+    "interests": [
+      "nature_outdoor",
+      "beach_island"
+    ],
+    "pace": "PACKED",
+    "avoidances": [],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0244",
+    "travelStyle": "BUDGET",
+    "budgetMin": 650000,
+    "budgetMax": 1650000,
+    "preferredGroup": "COUPLE",
+    "interests": [
+      "food_cuisine",
+      "culture_history",
+      "beach_island",
+      "shopping_local"
+    ],
+    "pace": "RELAXED",
+    "avoidances": [
+      "heights"
+    ],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0245",
+    "travelStyle": "BUDGET",
+    "budgetMin": 600000,
+    "budgetMax": 950000,
+    "preferredGroup": "SMALL_GROUP",
+    "interests": [
+      "beach_island",
+      "coffee_culture",
+      "food_cuisine",
+      "nightlife_entertainment"
+    ],
+    "pace": "RELAXED",
+    "avoidances": [],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0246",
+    "travelStyle": "BACKPACKER",
+    "budgetMin": 250000,
+    "budgetMax": 650000,
+    "preferredGroup": "SOLO",
+    "interests": [
+      "nature_outdoor",
+      "culture_history",
+      "beach_island",
+      "coffee_culture"
+    ],
+    "pace": "PACKED",
+    "avoidances": [],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0247",
+    "travelStyle": "BUDGET",
+    "budgetMin": 550000,
+    "budgetMax": 1650000,
+    "preferredGroup": "COUPLE",
+    "interests": [
+      "nature_outdoor",
+      "food_cuisine",
+      "nightlife_entertainment"
+    ],
+    "pace": "MODERATE",
+    "avoidances": [
+      "crowds"
+    ],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0248",
+    "travelStyle": "LUXURY",
+    "budgetMin": 5600000,
+    "budgetMax": 9400000,
+    "preferredGroup": "SOLO",
+    "interests": [
+      "nightlife_entertainment",
+      "coffee_culture"
+    ],
+    "pace": "PACKED",
+    "avoidances": [
+      "spicy_food"
+    ],
+    "dietaryNeeds": [
+      "vegan"
+    ],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0249",
+    "travelStyle": "BACKPACKER",
+    "budgetMin": 250000,
+    "budgetMax": 600000,
+    "preferredGroup": "COUPLE",
+    "interests": [
+      "culture_history",
+      "food_cuisine",
+      "shopping_local",
+      "coffee_culture"
+    ],
+    "pace": "PACKED",
+    "avoidances": [
+      "crowds"
+    ],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0250",
+    "travelStyle": "COMFORT",
+    "budgetMin": 1100000,
+    "budgetMax": 3750000,
+    "preferredGroup": "SOLO",
+    "interests": [
+      "coffee_culture",
+      "nature_outdoor",
+      "shopping_local",
+      "culture_history"
+    ],
+    "pace": "MODERATE",
+    "avoidances": [
+      "crowds"
+    ],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0251",
+    "travelStyle": "BACKPACKER",
+    "budgetMin": 350000,
+    "budgetMax": 1000000,
+    "preferredGroup": "FAMILY",
+    "interests": [
+      "coffee_culture",
+      "shopping_local",
+      "beach_island",
+      "culture_history"
+    ],
+    "pace": "MODERATE",
+    "avoidances": [
+      "heights"
+    ],
+    "dietaryNeeds": [
+      "seafood_allergy"
+    ],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0252",
+    "travelStyle": "COMFORT",
+    "budgetMin": 1850000,
+    "budgetMax": 4300000,
+    "preferredGroup": "SOLO",
+    "interests": [
+      "nature_outdoor",
+      "culture_history"
+    ],
+    "pace": "MODERATE",
+    "avoidances": [
+      "long_walks"
+    ],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0253",
+    "travelStyle": "BUDGET",
+    "budgetMin": 650000,
+    "budgetMax": 800000,
+    "preferredGroup": "COUPLE",
+    "interests": [
+      "shopping_local",
+      "food_cuisine"
+    ],
+    "pace": "RELAXED",
+    "avoidances": [
+      "spicy_food"
+    ],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0254",
+    "travelStyle": "COMFORT",
+    "budgetMin": 2000000,
+    "budgetMax": 3450000,
+    "preferredGroup": "LARGE_GROUP",
+    "interests": [
+      "shopping_local",
+      "beach_island"
+    ],
+    "pace": "PACKED",
+    "avoidances": [],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0255",
+    "travelStyle": "BUDGET",
+    "budgetMin": 300000,
+    "budgetMax": 1400000,
+    "preferredGroup": "SMALL_GROUP",
+    "interests": [
+      "culture_history",
+      "beach_island",
+      "food_cuisine",
+      "coffee_culture"
+    ],
+    "pace": "RELAXED",
+    "avoidances": [],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0256",
+    "travelStyle": "COMFORT",
+    "budgetMin": 1700000,
+    "budgetMax": 2500000,
+    "preferredGroup": "COUPLE",
+    "interests": [
+      "coffee_culture",
+      "beach_island"
+    ],
+    "pace": "MODERATE",
+    "avoidances": [
+      "crowds"
+    ],
+    "dietaryNeeds": [
+      "halal"
+    ],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0257",
+    "travelStyle": "BUDGET",
+    "budgetMin": 350000,
+    "budgetMax": 950000,
+    "preferredGroup": "COUPLE",
+    "interests": [
+      "culture_history",
+      "nature_outdoor",
+      "coffee_culture"
+    ],
+    "pace": "MODERATE",
+    "avoidances": [
+      "heights"
+    ],
+    "dietaryNeeds": [
+      "vegetarian"
+    ],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0258",
+    "travelStyle": "COMFORT",
+    "budgetMin": 1900000,
+    "budgetMax": 2500000,
+    "preferredGroup": "SMALL_GROUP",
+    "interests": [
+      "coffee_culture",
+      "culture_history",
+      "beach_island",
+      "nature_outdoor"
+    ],
+    "pace": "MODERATE",
+    "avoidances": [
+      "crowds"
+    ],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0259",
+    "travelStyle": "COMFORT",
+    "budgetMin": 1150000,
+    "budgetMax": 2900000,
+    "preferredGroup": "FAMILY",
+    "interests": [
+      "nature_outdoor",
+      "culture_history"
+    ],
+    "pace": "MODERATE",
+    "avoidances": [],
+    "dietaryNeeds": [
+      "seafood_allergy"
+    ],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0260",
+    "travelStyle": "BUDGET",
+    "budgetMin": 700000,
+    "budgetMax": 1750000,
+    "preferredGroup": "COUPLE",
+    "interests": [
+      "coffee_culture",
+      "culture_history",
+      "nightlife_entertainment",
+      "food_cuisine"
+    ],
+    "pace": "MODERATE",
+    "avoidances": [
+      "heights"
+    ],
+    "dietaryNeeds": [
+      "vegetarian"
+    ],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0261",
+    "travelStyle": "BUDGET",
+    "budgetMin": 600000,
+    "budgetMax": 1250000,
+    "preferredGroup": "SMALL_GROUP",
+    "interests": [
+      "food_cuisine",
+      "shopping_local",
+      "nightlife_entertainment",
+      "nature_outdoor"
+    ],
+    "pace": "MODERATE",
+    "avoidances": [
+      "crowds"
+    ],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0262",
+    "travelStyle": "COMFORT",
+    "budgetMin": 1550000,
+    "budgetMax": 5450000,
+    "preferredGroup": "SOLO",
+    "interests": [
+      "food_cuisine",
+      "shopping_local",
+      "coffee_culture"
+    ],
+    "pace": "PACKED",
+    "avoidances": [
+      "long_walks"
+    ],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0263",
+    "travelStyle": "BACKPACKER",
+    "budgetMin": 200000,
+    "budgetMax": 950000,
+    "preferredGroup": "LARGE_GROUP",
+    "interests": [
+      "food_cuisine",
+      "culture_history"
+    ],
+    "pace": "RELAXED",
+    "avoidances": [
+      "spicy_food"
+    ],
+    "dietaryNeeds": [
+      "vegan"
+    ],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0264",
+    "travelStyle": "BUDGET",
+    "budgetMin": 600000,
+    "budgetMax": 1450000,
+    "preferredGroup": "COUPLE",
+    "interests": [
+      "culture_history",
+      "coffee_culture",
+      "nature_outdoor",
+      "food_cuisine"
+    ],
+    "pace": "RELAXED",
+    "avoidances": [],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0265",
+    "travelStyle": "LUXURY",
+    "budgetMin": 4000000,
+    "budgetMax": 17000000,
+    "preferredGroup": "LARGE_GROUP",
+    "interests": [
+      "coffee_culture",
+      "beach_island",
+      "nature_outdoor",
+      "food_cuisine"
+    ],
+    "pace": "MODERATE",
+    "avoidances": [
+      "long_walks"
+    ],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0266",
+    "travelStyle": "BACKPACKER",
+    "budgetMin": 350000,
+    "budgetMax": 550000,
+    "preferredGroup": "COUPLE",
+    "interests": [
+      "coffee_culture",
+      "food_cuisine",
+      "beach_island"
+    ],
+    "pace": "MODERATE",
+    "avoidances": [],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0267",
+    "travelStyle": "BUDGET",
+    "budgetMin": 650000,
+    "budgetMax": 1350000,
+    "preferredGroup": "COUPLE",
+    "interests": [
+      "nature_outdoor",
+      "beach_island",
+      "food_cuisine",
+      "culture_history"
+    ],
+    "pace": "MODERATE",
+    "avoidances": [
+      "heights"
+    ],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0268",
+    "travelStyle": "COMFORT",
+    "budgetMin": 1500000,
+    "budgetMax": 5050000,
+    "preferredGroup": "COUPLE",
+    "interests": [
+      "culture_history",
+      "food_cuisine",
+      "beach_island"
+    ],
+    "pace": "PACKED",
+    "avoidances": [],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0269",
+    "travelStyle": "COMFORT",
+    "budgetMin": 1900000,
+    "budgetMax": 3000000,
+    "preferredGroup": "SOLO",
+    "interests": [
+      "food_cuisine",
+      "beach_island",
+      "shopping_local"
+    ],
+    "pace": "MODERATE",
+    "avoidances": [],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0270",
+    "travelStyle": "COMFORT",
+    "budgetMin": 1000000,
+    "budgetMax": 3250000,
+    "preferredGroup": "COUPLE",
+    "interests": [
+      "nature_outdoor",
+      "culture_history"
+    ],
+    "pace": "PACKED",
+    "avoidances": [
+      "spicy_food"
+    ],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0271",
+    "travelStyle": "BACKPACKER",
+    "budgetMin": 450000,
+    "budgetMax": 1000000,
+    "preferredGroup": "SMALL_GROUP",
+    "interests": [
+      "culture_history",
+      "food_cuisine",
+      "nightlife_entertainment"
+    ],
+    "pace": "PACKED",
+    "avoidances": [
+      "heights"
+    ],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0272",
+    "travelStyle": "COMFORT",
+    "budgetMin": 1050000,
+    "budgetMax": 3050000,
+    "preferredGroup": "COUPLE",
+    "interests": [
+      "beach_island",
+      "nightlife_entertainment"
+    ],
+    "pace": "RELAXED",
+    "avoidances": [],
+    "dietaryNeeds": [
+      "seafood_allergy"
+    ],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0273",
+    "travelStyle": "COMFORT",
+    "budgetMin": 1500000,
+    "budgetMax": 2750000,
+    "preferredGroup": "COUPLE",
+    "interests": [
+      "nature_outdoor",
+      "culture_history",
+      "food_cuisine",
+      "shopping_local"
+    ],
+    "pace": "PACKED",
+    "avoidances": [],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0274",
+    "travelStyle": "BUDGET",
+    "budgetMin": 450000,
+    "budgetMax": 1950000,
+    "preferredGroup": "LARGE_GROUP",
+    "interests": [
+      "beach_island",
+      "food_cuisine",
+      "culture_history",
+      "coffee_culture"
+    ],
+    "pace": "PACKED",
+    "avoidances": [],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0275",
+    "travelStyle": "BACKPACKER",
+    "budgetMin": 200000,
+    "budgetMax": 1100000,
+    "preferredGroup": "FAMILY",
+    "interests": [
+      "culture_history",
+      "beach_island",
+      "food_cuisine",
+      "nature_outdoor"
+    ],
+    "pace": "PACKED",
+    "avoidances": [
+      "crowds"
+    ],
+    "dietaryNeeds": [
+      "halal"
+    ],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0276",
+    "travelStyle": "LUXURY",
+    "budgetMin": 3850000,
+    "budgetMax": 9350000,
+    "preferredGroup": "LARGE_GROUP",
+    "interests": [
+      "shopping_local",
+      "beach_island"
+    ],
+    "pace": "MODERATE",
+    "avoidances": [
+      "long_walks"
+    ],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0277",
+    "travelStyle": "BUDGET",
+    "budgetMin": 350000,
+    "budgetMax": 1600000,
+    "preferredGroup": "LARGE_GROUP",
+    "interests": [
+      "coffee_culture",
+      "culture_history"
+    ],
+    "pace": "MODERATE",
+    "avoidances": [],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0278",
+    "travelStyle": "COMFORT",
+    "budgetMin": 1500000,
+    "budgetMax": 5450000,
+    "preferredGroup": "COUPLE",
+    "interests": [
+      "coffee_culture",
+      "beach_island",
+      "culture_history"
+    ],
+    "pace": "MODERATE",
+    "avoidances": [],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0279",
+    "travelStyle": "BUDGET",
+    "budgetMin": 400000,
+    "budgetMax": 950000,
+    "preferredGroup": "SMALL_GROUP",
+    "interests": [
+      "nature_outdoor",
+      "culture_history"
+    ],
+    "pace": "RELAXED",
+    "avoidances": [],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0280",
+    "travelStyle": "BACKPACKER",
+    "budgetMin": 200000,
+    "budgetMax": 550000,
+    "preferredGroup": "SOLO",
+    "interests": [
+      "beach_island",
+      "culture_history"
+    ],
+    "pace": "MODERATE",
+    "avoidances": [
+      "crowds"
+    ],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0281",
+    "travelStyle": "BUDGET",
+    "budgetMin": 450000,
+    "budgetMax": 1350000,
+    "preferredGroup": "FAMILY",
+    "interests": [
+      "nature_outdoor",
+      "coffee_culture",
+      "food_cuisine"
+    ],
+    "pace": "MODERATE",
+    "avoidances": [],
+    "dietaryNeeds": [
+      "halal"
+    ],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0282",
+    "travelStyle": "COMFORT",
+    "budgetMin": 1350000,
+    "budgetMax": 2800000,
+    "preferredGroup": "SOLO",
+    "interests": [
+      "food_cuisine",
+      "beach_island",
+      "culture_history"
+    ],
+    "pace": "RELAXED",
+    "avoidances": [
+      "long_walks"
+    ],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0283",
+    "travelStyle": "BUDGET",
+    "budgetMin": 350000,
+    "budgetMax": 1700000,
+    "preferredGroup": "COUPLE",
+    "interests": [
+      "culture_history",
+      "beach_island",
+      "food_cuisine",
+      "nature_outdoor"
+    ],
+    "pace": "MODERATE",
+    "avoidances": [
+      "crowds"
+    ],
+    "dietaryNeeds": [
+      "vegan"
+    ],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0284",
+    "travelStyle": "BUDGET",
+    "budgetMin": 550000,
+    "budgetMax": 950000,
+    "preferredGroup": "FAMILY",
+    "interests": [
+      "nightlife_entertainment",
+      "food_cuisine"
+    ],
+    "pace": "PACKED",
+    "avoidances": [
+      "crowds"
+    ],
+    "dietaryNeeds": [
+      "vegan"
+    ],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0285",
+    "travelStyle": "COMFORT",
+    "budgetMin": 1650000,
+    "budgetMax": 3050000,
+    "preferredGroup": "SOLO",
+    "interests": [
+      "food_cuisine",
+      "culture_history",
+      "nature_outdoor"
+    ],
+    "pace": "MODERATE",
+    "avoidances": [],
+    "dietaryNeeds": [
+      "vegetarian"
+    ],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0286",
+    "travelStyle": "COMFORT",
+    "budgetMin": 1650000,
+    "budgetMax": 5300000,
+    "preferredGroup": "COUPLE",
+    "interests": [
+      "nature_outdoor",
+      "food_cuisine",
+      "coffee_culture",
+      "culture_history"
+    ],
+    "pace": "MODERATE",
+    "avoidances": [
+      "long_walks"
+    ],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0287",
+    "travelStyle": "BUDGET",
+    "budgetMin": 300000,
+    "budgetMax": 1400000,
+    "preferredGroup": "LARGE_GROUP",
+    "interests": [
+      "culture_history",
+      "coffee_culture",
+      "nature_outdoor",
+      "nightlife_entertainment"
+    ],
+    "pace": "RELAXED",
+    "avoidances": [],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0288",
+    "travelStyle": "BUDGET",
+    "budgetMin": 500000,
+    "budgetMax": 850000,
+    "preferredGroup": "SOLO",
+    "interests": [
+      "nature_outdoor",
+      "beach_island",
+      "nightlife_entertainment"
+    ],
+    "pace": "MODERATE",
+    "avoidances": [],
+    "dietaryNeeds": [
+      "seafood_allergy"
+    ],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0289",
+    "travelStyle": "COMFORT",
+    "budgetMin": 1050000,
+    "budgetMax": 4900000,
+    "preferredGroup": "COUPLE",
+    "interests": [
+      "nature_outdoor",
+      "nightlife_entertainment"
+    ],
+    "pace": "PACKED",
+    "avoidances": [
+      "spicy_food"
+    ],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0290",
+    "travelStyle": "LUXURY",
+    "budgetMin": 4000000,
+    "budgetMax": 24850000,
+    "preferredGroup": "COUPLE",
+    "interests": [
+      "shopping_local",
+      "food_cuisine",
+      "coffee_culture"
+    ],
+    "pace": "MODERATE",
+    "avoidances": [
+      "crowds"
+    ],
+    "dietaryNeeds": [
+      "seafood_allergy"
+    ],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0291",
+    "travelStyle": "COMFORT",
+    "budgetMin": 1750000,
+    "budgetMax": 4200000,
+    "preferredGroup": "COUPLE",
+    "interests": [
+      "food_cuisine",
+      "culture_history",
+      "nature_outdoor"
+    ],
+    "pace": "PACKED",
+    "avoidances": [],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0292",
+    "travelStyle": "COMFORT",
+    "budgetMin": 1200000,
+    "budgetMax": 3550000,
+    "preferredGroup": "SOLO",
+    "interests": [
+      "food_cuisine",
+      "beach_island",
+      "shopping_local",
+      "culture_history"
+    ],
+    "pace": "RELAXED",
+    "avoidances": [
+      "long_walks"
+    ],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0293",
+    "travelStyle": "BUDGET",
+    "budgetMin": 550000,
+    "budgetMax": 900000,
+    "preferredGroup": "COUPLE",
+    "interests": [
+      "coffee_culture",
+      "nature_outdoor",
+      "culture_history"
+    ],
+    "pace": "RELAXED",
+    "avoidances": [],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0294",
+    "travelStyle": "LUXURY",
+    "budgetMin": 5000000,
+    "budgetMax": 19450000,
+    "preferredGroup": "SMALL_GROUP",
+    "interests": [
+      "culture_history",
+      "beach_island",
+      "nature_outdoor",
+      "nightlife_entertainment"
+    ],
+    "pace": "MODERATE",
+    "avoidances": [],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0295",
+    "travelStyle": "COMFORT",
+    "budgetMin": 1450000,
+    "budgetMax": 2900000,
+    "preferredGroup": "FAMILY",
+    "interests": [
+      "coffee_culture",
+      "nightlife_entertainment"
+    ],
+    "pace": "MODERATE",
+    "avoidances": [],
+    "dietaryNeeds": [
+      "seafood_allergy"
+    ],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0296",
+    "travelStyle": "LUXURY",
+    "budgetMin": 4900000,
+    "budgetMax": 15100000,
+    "preferredGroup": "LARGE_GROUP",
+    "interests": [
+      "culture_history",
+      "coffee_culture",
+      "nightlife_entertainment",
+      "food_cuisine"
+    ],
+    "pace": "MODERATE",
+    "avoidances": [],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0297",
+    "travelStyle": "LUXURY",
+    "budgetMin": 3250000,
+    "budgetMax": 24150000,
+    "preferredGroup": "COUPLE",
+    "interests": [
+      "coffee_culture",
+      "culture_history",
+      "food_cuisine",
+      "nature_outdoor"
+    ],
+    "pace": "PACKED",
+    "avoidances": [],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0298",
+    "travelStyle": "BACKPACKER",
+    "budgetMin": 350000,
+    "budgetMax": 1050000,
+    "preferredGroup": "SMALL_GROUP",
+    "interests": [
+      "nightlife_entertainment",
+      "beach_island",
+      "culture_history"
+    ],
+    "pace": "MODERATE",
+    "avoidances": [
+      "crowds"
+    ],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0299",
+    "travelStyle": "BUDGET",
+    "budgetMin": 450000,
+    "budgetMax": 1050000,
+    "preferredGroup": "SOLO",
+    "interests": [
+      "food_cuisine",
+      "shopping_local",
+      "nature_outdoor"
+    ],
+    "pace": "PACKED",
+    "avoidances": [
+      "spicy_food"
+    ],
+    "dietaryNeeds": [],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  },
+  {
+    "synthetic_user_id": "syn_usr_0300",
+    "travelStyle": "BUDGET",
+    "budgetMin": 350000,
+    "budgetMax": 1650000,
+    "preferredGroup": "COUPLE",
+    "interests": [
+      "culture_history",
+      "nightlife_entertainment"
+    ],
+    "pace": "MODERATE",
+    "avoidances": [
+      "long_walks"
+    ],
+    "dietaryNeeds": [
+      "vegetarian"
+    ],
+    "isSynthetic": true,
+    "seed": 42,
+    "generatorVersion": "preference-v1"
+  }
+]
