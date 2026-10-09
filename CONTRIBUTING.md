@@ -1,4 +1,4 @@
-# Contributing to WanderAI
+# Contributing to Gomate
 
 ## Git Flow
 
