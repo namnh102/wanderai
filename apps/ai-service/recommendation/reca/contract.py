@@ -34,6 +34,11 @@ INTEREST_LABELS_VI = {
 
 UNSUPPORTED_USER_FEATURES = [
     {
+        "feature": "travelStyle",
+        "status": "AVAILABLE_USER_FEATURE_NOT_USED_IN_V1",
+        "reason": "No validated POI-side travel-style compatibility signal exists in Dataset Freeze V2.",
+    },
+    {
         "feature": "budgetMin",
         "status": "AVAILABLE_USER_FEATURE_NOT_USED_IN_V1",
         "reason": "POI price data is not reliably standardized in OSM/Overture factual dataset.",
@@ -46,17 +51,17 @@ UNSUPPORTED_USER_FEATURES = [
     {
         "feature": "preferredGroup",
         "status": "AVAILABLE_USER_FEATURE_NOT_USED_IN_V1",
-        "reason": "Group suitability is not explicitly tagged on OSM POIs without speculation.",
+        "reason": "Group dynamics and party size constraints are not modeled in REC-A baseline.",
     },
     {
         "feature": "avoidances",
         "status": "AVAILABLE_USER_FEATURE_NOT_USED_IN_V1",
-        "reason": "Negative amenity signals are not comprehensively tagged on upstream OSM POIs.",
+        "reason": "Negative preference filtering is deferred to post-filtering in later milestones.",
     },
     {
         "feature": "dietaryNeeds",
         "status": "AVAILABLE_USER_FEATURE_NOT_USED_IN_V1",
-        "reason": "Dietary certifications (halal, vegan, allergen-free) are not verified on upstream OSM dining places in Freeze V2.",
+        "reason": "Detailed dietary certification is not universally populated in OSM nodes.",
     },
 ]
 
@@ -147,6 +152,10 @@ def extract_poi_taxonomy(poi: Dict[str, Any]) -> Tuple[str, str, Dict[str, Any]]
 def poi_to_canonical_vector(poi: Dict[str, Any]) -> Tuple[List[float], List[str]]:
     """Convert a canonical POI into a 7-dimensional interest feature vector.
 
+    Strictly reconciled with gomate-reca-feature-contract-v1.md.
+    No heuristic feature invention.
+    Hospitality has no activity feature mapping in REC-A V1.
+
     Returns:
         (vector, matched_taxonomy_domains)
     """
@@ -154,46 +163,51 @@ def poi_to_canonical_vector(poi: Dict[str, Any]) -> Tuple[List[float], List[str]
     vec = [0.0] * len(CANONICAL_INTERESTS)
     matched_tax = []
 
-    if t1 == "FOOD_BEVERAGE":
-        matched_tax.append(t1)
-        if t2 == "cafe_tea":
-            vec[INTEREST_INDEX["coffee_culture"]] = 1.0
-        else:
-            vec[INTEREST_INDEX["food_cuisine"]] = 1.0
-    elif t1 == "CULTURE_HERITAGE":
-        matched_tax.append(t1)
-        vec[INTEREST_INDEX["culture_history"]] = 1.0
-    elif t1 == "NATURE_SCENERY":
-        matched_tax.append(t1)
-        if t2 in ("beach_coastal", "island_landmark"):
-            vec[INTEREST_INDEX["beach_island"]] = 1.0
-            vec[INTEREST_INDEX["nature_outdoor"]] = 0.5
-        elif t2 == "cave_grotto":
-            vec[INTEREST_INDEX["nature_outdoor"]] = 1.0
-            vec[INTEREST_INDEX["beach_island"]] = 0.5
-        else:
-            vec[INTEREST_INDEX["nature_outdoor"]] = 1.0
-    elif t1 == "SHOPPING_COMMERCE":
-        matched_tax.append(t1)
-        vec[INTEREST_INDEX["shopping_local"]] = 1.0
-    elif t1 == "ATTRACTIONS_LEISURE":
-        matched_tax.append(t1)
-        if t2 == "nightlife_entertainment":
-            vec[INTEREST_INDEX["nightlife_entertainment"]] = 1.0
-        elif t2 in ("theme_park_leisure", "water_park"):
-            vec[INTEREST_INDEX["nightlife_entertainment"]] = 0.8
-            vec[INTEREST_INDEX["nature_outdoor"]] = 0.4
-        else:
-            # General attraction / leisure
-            vec[INTEREST_INDEX["nightlife_entertainment"]] = 0.5
-            vec[INTEREST_INDEX["culture_history"]] = 0.5
-    elif t1 == "HOSPITALITY":
-        # Specific beach resort hotel can activate beach_island
-        name_lower = (poi.get("name") or "").lower()
-        if "resort" in name_lower or "beach" in name_lower or tags.get("tourism") == "resort":
-            matched_tax.append(t1)
-            vec[INTEREST_INDEX["beach_island"]] = 0.8
+    # 1. food_cuisine: restaurant_dining, street_food, street_food_market, seafood_dining
+    if t2 in ("restaurant_dining", "street_food", "street_food_market", "seafood_dining"):
+        vec[INTEREST_INDEX["food_cuisine"]] = 1.0
+        matched_tax.append("FOOD_BEVERAGE")
 
+    # 2. coffee_culture: cafe_tea
+    # Do NOT automatically classify cafe_tea as food_cuisine unless trusted taxonomy explicitly represents a dining subtype.
+    if t2 == "cafe_tea":
+        vec[INTEREST_INDEX["coffee_culture"]] = 1.0
+        matched_tax.append("FOOD_BEVERAGE")
+        cuisine_tag = str(tags.get("cuisine", "")).lower()
+        amenity_tag = str(tags.get("amenity", "")).lower()
+        if amenity_tag == "restaurant" or "restaurant" in cuisine_tag or "dining" in cuisine_tag:
+            vec[INTEREST_INDEX["food_cuisine"]] = 1.0
+
+    # 3. culture_history: valid CULTURE_HERITAGE mappings from contract
+    if t1 == "CULTURE_HERITAGE" or t2 in ("temple_pagoda", "religious_temple", "museum_gallery", "historic_monument", "heritage_craft"):
+        vec[INTEREST_INDEX["culture_history"]] = 1.0
+        matched_tax.append("CULTURE_HERITAGE")
+
+    # 4. nature_outdoor: park_garden, cave_grotto, lake_river, zoo_wildlife, scenic_viewpoint, viewpoint_scenic
+    if t2 in ("park_garden", "cave_grotto", "lake_river", "zoo_wildlife", "scenic_viewpoint", "viewpoint_scenic"):
+        vec[INTEREST_INDEX["nature_outdoor"]] = 1.0
+        matched_tax.append("NATURE_SCENERY")
+
+    # 5. beach_island: beach_coastal, island_landmark
+    if t2 in ("beach_coastal", "island_landmark"):
+        vec[INTEREST_INDEX["beach_island"]] = 1.0
+        matched_tax.append("NATURE_SCENERY")
+
+    # 6. shopping_local: traditional_market, shopping_mall, souvenir_craft
+    if t2 in ("traditional_market", "shopping_mall", "souvenir_craft"):
+        vec[INTEREST_INDEX["shopping_local"]] = 1.0
+        matched_tax.append("SHOPPING_COMMERCE")
+
+    # 7. nightlife_entertainment: nightlife_entertainment
+    # Do NOT automatically classify every ATTRACTIONS_LEISURE POI (e.g. landmark_iconic, theme_park_leisure, attraction) as nightlife.
+    if t2 == "nightlife_entertainment":
+        vec[INTEREST_INDEX["nightlife_entertainment"]] = 1.0
+        matched_tax.append("ATTRACTIONS_LEISURE")
+
+    # HOSPITALITY: audited and removed - no contract-backed activity feature in REC-A V1.
+    # Result for pure hotels is [0.0]*7.
+
+    matched_tax = list(dict.fromkeys(matched_tax))
     return vec, matched_tax
 
 

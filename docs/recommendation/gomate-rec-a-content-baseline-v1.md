@@ -117,17 +117,15 @@ $$u_i = \begin{cases} 1.0 & \text{if } d_i \in I \\ 0.0 & \text{otherwise} \end{
 The user vector $u \in \{0, 1\}^7$ has Euclidean norm $\|u\|_2 = \sqrt{\sum_{i=1}^7 u_i^2} = \sqrt{|I|}$.
 
 ### 3.3 Item Vector Construction (`poi_to_canonical_vector`)
-Items are mapped into $p \in [0, 1]^7$ through deterministic projection from their verified taxonomy and tags:
-- **Primary Domain Mapping:**
-  - `FOOD_BEVERAGE` $\rightarrow$ `food_cuisine` ($1.0$). If `tier_2 == cafe_tea` or cafe tags exist $\rightarrow$ also `coffee_culture` ($1.0$).
-  - `CULTURE_HERITAGE` $\rightarrow$ `culture_history` ($1.0$).
-  - `NATURE_SCENERY` $\rightarrow$ `nature_outdoor` ($1.0$). If coastal/beach tags exist $\rightarrow$ also `beach_island` ($1.0$).
-  - `SHOPPING_COMMERCE` $\rightarrow$ `shopping_local` ($1.0$).
-  - `ATTRACTIONS_LEISURE` $\rightarrow$ `nightlife_entertainment` ($1.0$). If nature/parks $\rightarrow$ also `nature_outdoor` ($1.0$).
-- **Hospitality & Secondary Tags:**
-  - Resort/Beach hotels $\rightarrow$ `beach_island` ($0.5$).
-  - General city hotels $\rightarrow$ no activity bias ($[0]^7$).
-  - Nightlife venues $\rightarrow$ `nightlife_entertainment` ($1.0$).
+Items are mapped into $p \in [0, 1]^7$ through deterministic projection from their verified taxonomy and tags, strictly reconciled with [`gomate-reca-feature-contract-v1.md`](file:///d:/Do_an/wanderai/docs/recommendation/gomate-reca-feature-contract-v1.md) without heuristic feature invention:
+- **`food_cuisine` ($1.0$):** `restaurant_dining`, `street_food`, `street_food_market`, `seafood_dining`.
+- **`coffee_culture` ($1.0$):** `cafe_tea`. Does NOT automatically imply `food_cuisine` unless trusted taxonomy explicitly represents a dining subtype (e.g. `amenity=restaurant`).
+- **`culture_history` ($1.0$):** Valid `CULTURE_HERITAGE` mappings (`temple_pagoda`, `religious_temple`, `museum_gallery`, `historic_monument`, `heritage_craft`).
+- **`nature_outdoor` ($1.0$):** `park_garden`, `cave_grotto`, `lake_river`, `zoo_wildlife`, `scenic_viewpoint`, `viewpoint_scenic`.
+- **`beach_island` ($1.0$):** `beach_coastal`, `island_landmark`.
+- **`shopping_local` ($1.0$):** `traditional_market`, `shopping_mall`, `souvenir_craft`.
+- **`nightlife_entertainment` ($1.0$):** `nightlife_entertainment` only. Generic attractions, iconic landmarks, theme parks, and water parks do NOT automatically map to nightlife.
+- **`HOSPITALITY` ($[0.0]^7$):** Audited and removed from activity feature mapping. No unsupported heuristic Hospitality weighting exists in REC-A V1. Pure accommodation places have a zero activity feature vector.
 
 ---
 
@@ -151,11 +149,11 @@ If $\|u\|_2 = 0$ or $\|p\|_2 = 0$, $\text{score}_{\text{A1}}(u, p) = 0.0$.
 - **Properties:** Angle-based similarity penalizing items with bloated or irrelevant tags, rewarding high-purity thematic alignment.
 
 ### 4.3 Deterministic Tie-Breaking
-When candidates achieve identical scores, GoMate applies a strict, platform-independent 3-tuple sort key:
+When candidates achieve identical scores, GoMate applies a strict 3-tuple sort key:
 
 $$\text{SortKey}(item) = (-\text{score}, \text{NormalizeString}(name), \text{place\_id})$$
 
-Where `NormalizeString` removes diacritics, strips punctuation, and lowercases text. This guarantees 100% bit-identical ordering across operating systems, Python versions, and runtime invocations.
+Where `NormalizeString` removes diacritics, strips punctuation, and lowercases text. Ranking is deterministic under the defined algorithm and verified execution environment; repeated benchmark runs produced identical rankings.
 
 ---
 
@@ -175,6 +173,11 @@ The `TravelPreference` database model includes dimensions currently unsupported 
 
 ```json
 "unsupported_user_features": [
+  {
+    "feature": "travelStyle",
+    "status": "AVAILABLE_USER_FEATURE_NOT_USED_IN_V1",
+    "reason": "No validated POI-side travel-style compatibility signal exists in Dataset Freeze V2."
+  },
   {
     "feature": "budgetMin",
     "status": "AVAILABLE_USER_FEATURE_NOT_USED_IN_V1",
@@ -303,22 +306,22 @@ The benchmark suite ([`scripts/run_reca_benchmarks.py`](file:///d:/Do_an/wandera
 | **Total Recommendations ($N \times K$)** | 3,000 | 3,000 | $K = 10$ |
 | **Zero-Result Profiles** | **0** | **0** | **0% failure rate** |
 | **Cold-Start Fallback Invocations** | 0 | 0 | All 300 profiles have valid interests |
-| **Unique POIs Recommended** | 56 | 76 | Cosine provides higher catalog exploration (+35.7%) |
-| **Catalog Coverage (%)** | 9.00% | 12.22% | In pure Top-10 unconstrained ranking |
-| **Score Minimum** | 1.0000 | 0.5000 | At least 1 matching dimension |
-| **Score Maximum** | 1.5000 | 1.0000 | Perfect vector direction alignment |
-| **Score Mean** | 1.0903 | 0.6495 | Balanced distribution |
-| **Score Median** | 1.0000 | 0.6708 | Consistent central tendency |
-| **Score Std Dev** | 0.1869 | 0.1067 | Stable variance |
-| **Run 1 == Run 2 (Determinism)** | **True** | **True** | **100% Bit-Identical Reproducibility** |
+| **Unique POIs Recommended** | 52 | 52 | Pure activity taxonomy matching |
+| **Catalog Coverage (%)** | 8.36% | 8.36% | In pure Top-10 unconstrained ranking (52 / 622) |
+| **Score Minimum** | 1.0000 | 0.5000 | At least 1 matching canonical dimension |
+| **Score Maximum** | 1.0000 | 0.7071 | Exact cosine angle projection |
+| **Score Mean** | 1.0000 | 0.5924 | Balanced distribution |
+| **Score Median** | 1.0000 | 0.5774 | Consistent central tendency |
+| **Score Std Dev** | 0.0000 | 0.0844 | Stable variance |
+| **Run 1 == Run 2 (Determinism)** | **True** | **True** | Verified identical rankings under execution environment |
 
 ### 9.2 Destination Distribution of Top-10 Recommendations
 
 | Destination | REC-A0 Count | REC-A0 % | REC-A1 Count | REC-A1 % |
 | :--- | :--- | :--- | :--- | :--- |
-| **Đà Nẵng** | 1,992 | 66.4% | 1,801 | 60.0% |
-| **Hạ Long** | 754 | 25.1% | 684 | 22.8% |
-| **Hà Nội** | 254 | 8.5% | 515 | 17.2% |
+| **Đà Nẵng** | 1,944 | 64.8% | 1,944 | 64.8% |
+| **Hạ Long** | 773 | 25.8% | 773 | 25.8% |
+| **Hà Nội** | 283 | 9.4% | 283 | 9.4% |
 | **Total** | 3,000 | 100.0% | 3,000 | 100.0% |
 
 ### 9.3 Generated Evaluation Artifacts
@@ -330,6 +333,15 @@ The benchmark suite ([`scripts/run_reca_benchmarks.py`](file:///d:/Do_an/wandera
 
 ## 10. Research Threats to Validity & Limitations
 
-1. **Top-K Catalog Concentration:** In unconstrained global ranking ($K=10$), the top items are concentrated among POIs with high thematic coverage in popular categories (e.g. coastal beaches and top food venues), yielding 12.22% catalog coverage across 300 users. Destination-constrained queries distribute coverage evenly across cities.
+1. **Top-K Catalog Concentration:** In unconstrained global ranking ($K=10$), the top items are concentrated among POIs with high thematic coverage in primary activity categories, yielding 8.36% catalog coverage across 300 users in pure global ranking. Destination-constrained queries distribute coverage evenly across cities.
 2. **Absence of Interaction History:** Pure content-based baselines do not model collaborative filtering patterns. This limitation will be addressed in REC-B (collaborative hotel recommendations via ViHoRec benchmark).
-3. **Scientific Claims Boundary:** This milestone establishes the reproducible algorithmic baseline and runtime vertical slice. Final scientific benchmarking with NDCG, MAP, and cross-model ranking tests is deferred to `REC-EVAL-01` (Week 5).
+3. **Scientific Claims Boundary & Metric Contract:** This milestone establishes the reproducible algorithmic baseline and runtime vertical slice. Final scientific benchmarking is deferred to `REC-EVAL-01` (Week 5).
+   Per the ratified evaluation contract, the primary evaluation metrics are:
+   - `NDCG@10`
+   - `Recall@10`
+   - `Precision@10`
+   - `HitRate@10`
+   - `Coverage@10`
+   - `Diversity@10`
+
+   `MAP` (Mean Average Precision) is classified as **OPTIONAL / EXPLORATORY** only and is not a mandatory primary metric.

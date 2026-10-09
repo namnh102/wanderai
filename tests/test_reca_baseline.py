@@ -268,6 +268,7 @@ def test_assertion_8_cold_start_fallback(recommender):
 # 9. Unsupported User Features Manifest
 def test_assertion_9_unsupported_features_manifest(recommender):
     expected_unsupported = [
+        "travelStyle",
         "budgetMin",
         "budgetMax",
         "preferredGroup",
@@ -361,3 +362,165 @@ def test_assertion_12_freeze_v1_and_v2_sha_integrity():
                 assert target_file.exists(), f"Target file missing: {rel_path}"
                 actual_sha = compute_sha256(target_file)
                 assert actual_sha == expected_sha, f"SHA mismatch on {rel_path}! Expected {expected_sha}, got {actual_sha}"
+
+
+# ==============================================================================
+# R1 SPECIFIC ASSERTIONS (TASK REC-01A-R1)
+# ==============================================================================
+
+# R1-1: cafe_tea does NOT automatically imply food_cuisine unless trusted dining subtype is present
+def test_r1_cafe_tea_does_not_automatically_imply_food_cuisine():
+    pure_cafe = {
+        "place_id": "test-cafe-pure",
+        "name": "Cà Phê Phố Cổ",
+        "category": "cafe",
+        "sources": [{
+            "source_name": "osm",
+            "raw_data": {
+                "tier_1": "FOOD_BEVERAGE",
+                "tier_2": "cafe_tea",
+                "tags": {"amenity": "cafe"},
+            },
+        }],
+    }
+    vec, matched = poi_to_canonical_vector(pure_cafe)
+    assert vec[CANONICAL_INTERESTS.index("coffee_culture")] == 1.0
+    assert vec[CANONICAL_INTERESTS.index("food_cuisine")] == 0.0
+
+    # Cafe with explicit dining amenity tag
+    dining_cafe = {
+        "place_id": "test-cafe-dining",
+        "name": "Bistro & Cafe",
+        "category": "cafe",
+        "sources": [{
+            "source_name": "osm",
+            "raw_data": {
+                "tier_1": "FOOD_BEVERAGE",
+                "tier_2": "cafe_tea",
+                "tags": {"amenity": "restaurant", "cuisine": "vietnamese;coffee"},
+            },
+        }],
+    }
+    d_vec, _ = poi_to_canonical_vector(dining_cafe)
+    assert d_vec[CANONICAL_INTERESTS.index("coffee_culture")] == 1.0
+    assert d_vec[CANONICAL_INTERESTS.index("food_cuisine")] == 1.0
+
+
+# R1-2: restaurant_dining, street_food, seafood_dining map to food_cuisine
+def test_r1_restaurant_dining_maps_to_food_cuisine():
+    dining_types = ["restaurant_dining", "street_food", "street_food_market", "seafood_dining"]
+    for dtype in dining_types:
+        poi = {
+            "place_id": f"test-{dtype}",
+            "name": f"Test {dtype}",
+            "category": "restaurant",
+            "sources": [{
+                "source_name": "osm",
+                "raw_data": {
+                    "tier_1": "FOOD_BEVERAGE",
+                    "tier_2": dtype,
+                    "tags": {"amenity": "restaurant"},
+                },
+            }],
+        }
+        vec, matched = poi_to_canonical_vector(poi)
+        assert vec[CANONICAL_INTERESTS.index("food_cuisine")] == 1.0
+        assert "FOOD_BEVERAGE" in matched
+
+
+# R1-3: nightlife_entertainment maps to nightlife
+def test_r1_nightlife_entertainment_maps_to_nightlife():
+    nightlife_poi = {
+        "place_id": "test-bar",
+        "name": "Sky Bar & Lounge",
+        "category": "nightlife",
+        "sources": [{
+            "source_name": "osm",
+            "raw_data": {
+                "tier_1": "ATTRACTIONS_LEISURE",
+                "tier_2": "nightlife_entertainment",
+                "tags": {"amenity": "bar"},
+            },
+        }],
+    }
+    vec, matched = poi_to_canonical_vector(nightlife_poi)
+    assert vec[CANONICAL_INTERESTS.index("nightlife_entertainment")] == 1.0
+    assert "ATTRACTIONS_LEISURE" in matched
+
+
+# R1-4: generic attraction and theme park do NOT automatically map to nightlife
+def test_r1_generic_attractions_and_theme_parks_do_not_map_to_nightlife():
+    non_nightlife_attractions = [
+        ("theme_park_leisure", "Công viên giải trí Sun World"),
+        ("water_park", "Công viên nước Mikazuki"),
+        ("landmark_iconic", "Cầu Rồng"),
+        ("attraction", "Điểm tham quan chung"),
+    ]
+    for tier2, name in non_nightlife_attractions:
+        poi = {
+            "place_id": f"test-{tier2}",
+            "name": name,
+            "category": "attraction",
+            "sources": [{
+                "source_name": "osm",
+                "raw_data": {
+                    "tier_1": "ATTRACTIONS_LEISURE",
+                    "tier_2": tier2,
+                    "tags": {"tourism": "attraction"},
+                },
+            }],
+        }
+        vec, _ = poi_to_canonical_vector(poi)
+        assert vec[CANONICAL_INTERESTS.index("nightlife_entertainment")] == 0.0, (
+            f"POI {name} ({tier2}) improperly mapped to nightlife_entertainment!"
+        )
+
+
+# R1-5: No unsupported heuristic Hospitality weighting exists unless contract-backed
+def test_r1_no_unsupported_hospitality_heuristic_weighting():
+    hotels = [
+        ("Furama Resort Danang Beach", {"tourism": "resort"}),
+        ("Diamond Sea Hotel", {"tourism": "hotel"}),
+        ("Ha Long Bay Luxury Hotel", {"tourism": "hotel"}),
+    ]
+    for name, tags in hotels:
+        poi = {
+            "place_id": f"test-hotel-{name[:5]}",
+            "name": name,
+            "category": "hotel",
+            "sources": [{
+                "source_name": "osm",
+                "raw_data": {
+                    "tier_1": "HOSPITALITY",
+                    "tier_2": "hotel_resort",
+                    "tags": tags,
+                },
+            }],
+        }
+        vec, _ = poi_to_canonical_vector(poi)
+        assert vec == [0.0] * 7, f"Hotel {name} received non-zero activity feature vector: {vec}"
+
+
+# R1-6: travelStyle is explicitly marked unsupported with validated reason
+def test_r1_travel_style_explicitly_marked_unsupported():
+    travel_style_feature = next((f for f in UNSUPPORTED_USER_FEATURES if f["feature"] == "travelStyle"), None)
+    assert travel_style_feature is not None
+    assert travel_style_feature["status"] == "AVAILABLE_USER_FEATURE_NOT_USED_IN_V1"
+    assert "Dataset Freeze V2" in travel_style_feature["reason"]
+
+
+# R1-7: explanation matched_interests exactly reflect score features
+def test_r1_explanation_matched_interests_exactly_reflect_score_features(recommender):
+    user_prefs = {"interests": ["food_cuisine", "coffee_culture"]}
+    res = recommender.recommend(preferences=user_prefs, destination="da-nang", top_k=10, model="rec-a1")
+    for r in res["recommendations"]:
+        expl = r["explanation"]
+        matched = expl["matched_interests"]
+        assert set(matched).issubset({"food_cuisine", "coffee_culture"})
+        # Every matched interest must be in the POI's canonical vector
+        pid = r["place_id"]
+        poi_vec = recommender.poi_vectors[pid]
+        for m in matched:
+            idx = CANONICAL_INTERESTS.index(m)
+            assert poi_vec[idx] > 0.0
+

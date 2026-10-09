@@ -15,30 +15,30 @@
     "total_recommendations_made": 3000,
     "zero_result_profiles": 0,
     "cold_start_profiles": 0,
-    "unique_places_recommended": 56,
-    "catalog_coverage_pct": 9.0,
+    "unique_places_recommended": 52,
+    "catalog_coverage_pct": 8.36,
     "score_distribution": {
       "min": 1.0,
-      "max": 1.5,
-      "mean": 1.0903,
+      "max": 1.0,
+      "mean": 1.0,
       "median": 1.0,
-      "stdev": 0.1869
+      "stdev": 0.0
     },
     "destination_distribution": {
-      "da-nang": 1992,
-      "ha-long": 754,
-      "ha-noi": 254
+      "ha-long": 773,
+      "da-nang": 1944,
+      "ha-noi": 283
     },
     "top_categories_recommended": {
-      "restaurant": 903,
-      "beach": 689,
-      "cafe": 431,
-      "culture": 342,
-      "attraction": 246,
-      "nightlife": 131,
-      "entertainment": 104,
-      "market": 80,
-      "nature": 74
+      "restaurant": 1078,
+      "cafe": 494,
+      "beach": 478,
+      "culture": 419,
+      "attraction": 178,
+      "nightlife": 152,
+      "nature": 101,
+      "market": 94,
+      "park": 6
     }
   },
   "rec_a1": {
@@ -47,31 +47,30 @@
     "total_recommendations_made": 3000,
     "zero_result_profiles": 0,
     "cold_start_profiles": 0,
-    "unique_places_recommended": 76,
-    "catalog_coverage_pct": 12.22,
+    "unique_places_recommended": 52,
+    "catalog_coverage_pct": 8.36,
     "score_distribution": {
       "min": 0.5,
-      "max": 1.0,
-      "mean": 0.6495,
-      "median": 0.6708,
-      "stdev": 0.1067
+      "max": 0.7071,
+      "mean": 0.5924,
+      "median": 0.5774,
+      "stdev": 0.0844
     },
     "destination_distribution": {
-      "da-nang": 1801,
-      "ha-long": 684,
-      "ha-noi": 515
+      "ha-long": 773,
+      "da-nang": 1944,
+      "ha-noi": 283
     },
     "top_categories_recommended": {
-      "restaurant": 906,
-      "attraction": 491,
-      "cafe": 434,
-      "beach": 423,
-      "culture": 399,
-      "market": 108,
-      "nightlife": 97,
-      "nature": 74,
-      "entertainment": 60,
-      "hotel": 8
+      "restaurant": 1078,
+      "cafe": 494,
+      "beach": 478,
+      "culture": 419,
+      "attraction": 178,
+      "nightlife": 152,
+      "nature": 101,
+      "market": 94,
+      "park": 6
     }
   },
   "comparison_notes": [
