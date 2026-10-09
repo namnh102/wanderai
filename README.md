@@ -1,4 +1,4 @@
-# WanderAI — AI Travel & Social Companion
+# Gomate — AI Travel & Social Companion
 
 > Ứng dụng du lịch thông minh kết hợp AI chatbot, lập kế hoạch tự động, video feed cộng đồng và tìm bạn đồng hành.
 
