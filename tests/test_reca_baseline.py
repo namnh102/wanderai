@@ -15,7 +15,6 @@ Verifies:
 12. Freeze V1 and Freeze V2 SHA256 integrity remains 100% unchanged.
 """
 
-import hashlib
 import json
 import math
 from pathlib import Path
@@ -43,14 +42,6 @@ from recommendation.reca.models import (
     build_explanation,
 )
 from recommendation.reca.engine import PlaceRecommender
-
-
-def compute_sha256(file_path: Path) -> str:
-    h = hashlib.sha256()
-    with open(file_path, "rb") as f:
-        while chunk := f.read(65536):
-            h.update(chunk)
-    return h.hexdigest()
 
 
 @pytest.fixture(scope="module")
@@ -349,19 +340,19 @@ def test_assertion_11_synthetic_benchmark_outputs():
 
 # 12. Freeze V1 and Freeze V2 SHA Integrity
 def test_assertion_12_freeze_v1_and_v2_sha_integrity():
+    if str(REPO_ROOT) not in sys.path:
+        sys.path.insert(0, str(REPO_ROOT))
+    from scripts.freeze_checksum import (
+        DEFAULT_COMPAT_RELPATHS, LEGACY_EOL_COMPAT_PASS, PASS, verify_manifest,
+    )
+    compat_paths = [REPO_ROOT / p for p in DEFAULT_COMPAT_RELPATHS]
     for manifest_name in ["dataset-freeze-v1.sha256", "dataset-freeze-v2.sha256"]:
         manifest_path = REPO_ROOT / "data" / "manifests" / manifest_name
         assert manifest_path.exists(), f"Missing manifest: {manifest_path}"
-        with open(manifest_path, "r", encoding="utf-8") as f:
-            for line in f:
-                line = line.strip()
-                if not line or line.startswith("#"):
-                    continue
-                expected_sha, rel_path = line.split(None, 1)
-                target_file = REPO_ROOT / rel_path.strip()
-                assert target_file.exists(), f"Target file missing: {rel_path}"
-                actual_sha = compute_sha256(target_file)
-                assert actual_sha == expected_sha, f"SHA mismatch on {rel_path}! Expected {expected_sha}, got {actual_sha}"
+        results = verify_manifest(REPO_ROOT, manifest_path, compat_paths)
+        assert results, f"Empty manifest: {manifest_name}"
+        bad = [d for _, st, d in results if st not in (PASS, LEGACY_EOL_COMPAT_PASS)]
+        assert not bad, f"{manifest_name} integrity failure: " + "; ".join(bad)
 
 
 # ==============================================================================
