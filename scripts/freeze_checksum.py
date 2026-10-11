@@ -128,12 +128,23 @@ def verify_manifest(
 
 
 if __name__ == "__main__":  # pragma: no cover
+    import sys
+
+    # Optional CLI-only flag for CI clones: restricted/licensed data is git-ignored and
+    # therefore legitimately absent. Missing files under the given prefix are reported as
+    # SKIPPED_RESTRICTED (never silently PASS); every other mismatch still fails.
+    skip_prefixes = [a.split("=", 1)[1] for a in sys.argv[1:] if a.startswith("--skip-missing-prefix=")]
     root = Path(__file__).resolve().parent.parent
-    res = verify_manifest(
-        root,
-        root / "data/manifests/dataset-freeze-v1.sha256",
-        [root / p for p in DEFAULT_COMPAT_RELPATHS],
-    )
-    for rel, status, detail in res:
-        print(f"{status:24s} {rel}")
-    raise SystemExit(0 if all(s in (PASS, LEGACY_EOL_COMPAT_PASS) for _, s, _ in res) else 1)
+    ok = True
+    for manifest in ("dataset-freeze-v1.sha256", "dataset-freeze-v2.sha256"):
+        res = verify_manifest(
+            root, root / "data/manifests" / manifest, [root / p for p in DEFAULT_COMPAT_RELPATHS]
+        )
+        print(f"== {manifest}")
+        for rel, status, detail in res:
+            if status == MISSING and any(rel.startswith(pf) for pf in skip_prefixes):
+                status = "SKIPPED_RESTRICTED"
+            elif status not in (PASS, LEGACY_EOL_COMPAT_PASS):
+                ok = False
+            print(f"{status:24s} {rel}")
+    raise SystemExit(0 if ok else 1)

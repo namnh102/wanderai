@@ -1,0 +1,9 @@
+# Minimal Python lint baseline (W3-00). Intentionally conservative: catches
+# syntax errors, undefined names and unused imports/variables only. No formatter
+# is enforced and no mass auto-fix is applied to legacy code.
+line-length = 120
+target-version = "py311"
+extend-exclude = ["apps/mobile", "apps/backend", "data", "node_modules", ".venv"]
+
+[lint]
+select = ["E9", "F63", "F7", "F82"]
