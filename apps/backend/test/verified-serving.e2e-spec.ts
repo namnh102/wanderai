@@ -9,6 +9,27 @@ import { HttpExceptionFilter } from '../src/common/filters/http-exception.filter
 import { PrismaService } from '../src/prisma/prisma.service';
 
 /**
+ * Source contract after DATA-02 (see docs/data governance):
+ *  - OSM is the canonical factual source and is REQUIRED for every verified place.
+ *  - Overture is an auxiliary cross-check source: allowed IN ADDITION to OSM,
+ *    never sufficient on its own to make a place verified.
+ *  - Any other source (e.g. Google, Tripadvisor) is forbidden in the research verified path
+ *    unless governance explicitly approves it by adding it to APPROVED_SOURCE_NAMES.
+ */
+const APPROVED_SOURCE_NAMES = ['osm', 'overture'];
+
+function assertVerifiedSourceContract(sources: Array<{ sourceName: string }>) {
+  const names = sources.map((s) => s.sourceName.toLowerCase());
+  expect(names.length).toBeGreaterThanOrEqual(1);
+  expect(names).toContain('osm'); // Overture-only verified places are forbidden
+  expect(names).not.toContain('google');
+  expect(names).not.toContain('tripadvisor');
+  for (const n of names) {
+    expect(APPROVED_SOURCE_NAMES).toContain(n);
+  }
+}
+
+/**
  * TASK 07.4 regression tests: verified-only default serving + real OSM enrichment.
  */
 describe('Verified place serving & OSM enrichment (e2e)', () => {
@@ -62,17 +83,28 @@ describe('Verified place serving & OSM enrichment (e2e)', () => {
   });
 
   it.each(['attraction', 'beach', 'culture', 'nature'])(
-    '4. category "%s" is populated and every item is verified OSM',
+    '4. category "%s" is populated and every item is verified with OSM provenance',
     async (cat) => {
       const res = await request(app.getHttpServer()).get(`/places?category=${cat}&limit=100`).expect(200);
       expect(res.body.data.total).toBeGreaterThan(0);
       for (const p of res.body.data.items) {
         expect(p.category.name).toBe(cat);
         expect(p.isVerified).toBe(true);
-        expect(p.placeSources.every((s: any) => s.sourceName === 'osm')).toBe(true);
+        assertVerifiedSourceContract(p.placeSources);
       }
     },
   );
+
+  it('4b. no verified place in the database is Overture-only or carries a non-governed source', async () => {
+    const places = await prisma.place.findMany({
+      where: { deletedAt: null, placeSources: { some: {} } },
+      select: { id: true, name: true, placeSources: { select: { sourceName: true } } },
+    });
+    expect(places.length).toBeGreaterThan(0);
+    for (const p of places) {
+      assertVerifiedSourceContract(p.placeSources);
+    }
+  });
 
   it('5. every enrichment record is stored with a well-formed real OSM source id and provenance', async () => {
     expect(enrichment.length).toBeGreaterThan(0);

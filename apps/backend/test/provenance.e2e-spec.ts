@@ -16,10 +16,22 @@ describe('Provenance & data integrity (e2e)', () => {
   let app: INestApplication;
   let prisma: PrismaService;
 
+  const dataDir = path.resolve(__dirname, '../../../data');
   const manifest = JSON.parse(
-    fs.readFileSync(path.resolve(__dirname, '../../../data/manifests/osm-invalid-sources.json'), 'utf-8'),
+    fs.readFileSync(path.join(dataDir, 'manifests/osm-invalid-sources.json'), 'utf-8'),
   );
-  const invalidIds: string[] = manifest.invalid_sources.map((s: any) => s.source_id);
+  const legacyInvalidIds: string[] = manifest.invalid_sources.map((s: any) => s.source_id);
+
+  // Explicit revalidations: only entries with status REVALIDATED_CURRENT_OSM_MATCH are exempted.
+  // UNRESOLVED / STILL_INVALID_OR_MISMATCH / any other status stay denied.
+  const revalidation = JSON.parse(
+    fs.readFileSync(path.join(dataDir, 'manifests/osm-source-revalidation-v2.json'), 'utf-8'),
+  );
+  const revalidated: any[] = revalidation.revalidations.filter(
+    (r: any) => r.status === 'REVALIDATED_CURRENT_OSM_MATCH',
+  );
+  const revalidatedIds: string[] = revalidated.map((r: any) => r.source_id);
+  const invalidIds: string[] = legacyInvalidIds.filter((id) => !revalidatedIds.includes(id));
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -51,8 +63,33 @@ describe('Provenance & data integrity (e2e)', () => {
     return items;
   }
 
+  it('0. every revalidation exemption is explicit, legacy-invalid, and exists in Freeze V2 with the documented place/source', () => {
+    const freezeV2: any[] = JSON.parse(
+      fs.readFileSync(path.join(dataDir, 'curated/gomate_places_freeze_v2.json'), 'utf-8'),
+    );
+    expect(revalidation.legacy_invalid_intersect_freeze_v2.sort()).toEqual([...revalidatedIds].sort());
+    for (const r of revalidated) {
+      expect(legacyInvalidIds).toContain(r.source_id);
+      const place = freezeV2.find((p) => p.place_id === r.freeze_v2_place_id);
+      expect(place).toBeDefined();
+      expect(place.name).toBe(r.freeze_v2_name);
+      expect(place.latitude).toBe(r.freeze_v2_latitude);
+      expect(place.longitude).toBe(r.freeze_v2_longitude);
+      expect(
+        place.sources.some((s: any) => s.source_name === 'osm' && s.source_id === r.source_id),
+      ).toBe(true);
+      expect(r.distance_m).toBeLessThanOrEqual(5);
+    }
+    // No other Freeze V2 OSM source may collide with the legacy denylist.
+    const v2OsmIds = new Set<string>(
+      freezeV2.flatMap((p) => p.sources.filter((s: any) => s.source_name === 'osm').map((s: any) => s.source_id)),
+    );
+    expect(legacyInvalidIds.filter((id) => v2OsmIds.has(id)).sort()).toEqual([...revalidatedIds].sort());
+  });
+
   it('1. denylisted (non-genuine) OSM source ids are absent from place_sources', async () => {
-    expect(invalidIds).toHaveLength(13);
+    expect(legacyInvalidIds).toHaveLength(13);
+    expect(invalidIds.length).toBe(legacyInvalidIds.length - revalidatedIds.length);
     const n = await prisma.placeSource.count({
       where: { sourceName: 'osm', sourceId: { in: invalidIds } },
     });

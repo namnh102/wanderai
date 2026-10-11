@@ -1,0 +1,979 @@
+{
+  "components": {
+    "schemas": {
+      "BudgetAnalysis": {
+        "properties": {
+          "currency": {
+            "default": "VND",
+            "title": "Currency",
+            "type": "string"
+          },
+          "estimated_cost": {
+            "default": 0,
+            "title": "Estimated Cost",
+            "type": "integer"
+          },
+          "is_over_budget": {
+            "default": false,
+            "title": "Is Over Budget",
+            "type": "boolean"
+          },
+          "total_budget": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total Budget"
+          },
+          "variance": {
+            "default": 0,
+            "title": "Variance",
+            "type": "integer"
+          }
+        },
+        "title": "BudgetAnalysis",
+        "type": "object"
+      },
+      "ChatRequest": {
+        "properties": {
+          "message": {
+            "title": "Message",
+            "type": "string"
+          },
+          "session_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Session Id"
+          },
+          "user_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "User Id"
+          }
+        },
+        "required": [
+          "message"
+        ],
+        "title": "ChatRequest",
+        "type": "object"
+      },
+      "ChatResponse": {
+        "properties": {
+          "reply": {
+            "title": "Reply",
+            "type": "string"
+          },
+          "session_id": {
+            "title": "Session Id",
+            "type": "string"
+          },
+          "sources": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Sources",
+            "type": "array"
+          },
+          "tool_calls": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/ToolCallLog"
+            },
+            "title": "Tool Calls",
+            "type": "array"
+          },
+          "tools_used": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Tools Used",
+            "type": "array"
+          }
+        },
+        "required": [
+          "reply",
+          "session_id"
+        ],
+        "title": "ChatResponse",
+        "type": "object"
+      },
+      "ExplanationDto": {
+        "properties": {
+          "matched_interests": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Matched Interests",
+            "type": "array"
+          },
+          "matched_taxonomy": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Matched Taxonomy",
+            "type": "array"
+          },
+          "reason_code": {
+            "title": "Reason Code",
+            "type": "string"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "reason_code",
+          "matched_interests",
+          "matched_taxonomy",
+          "text"
+        ],
+        "title": "ExplanationDto",
+        "type": "object"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "title": "Detail",
+            "type": "array"
+          }
+        },
+        "title": "HTTPValidationError",
+        "type": "object"
+      },
+      "ItineraryDay": {
+        "properties": {
+          "date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Date"
+          },
+          "day_cost": {
+            "default": 0,
+            "title": "Day Cost",
+            "type": "integer"
+          },
+          "day_number": {
+            "title": "Day Number",
+            "type": "integer"
+          },
+          "items": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/ItineraryItem"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "day_number",
+          "title"
+        ],
+        "title": "ItineraryDay",
+        "type": "object"
+      },
+      "ItineraryItem": {
+        "properties": {
+          "activity": {
+            "title": "Activity",
+            "type": "string"
+          },
+          "end_time": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "End Time"
+          },
+          "estimated_cost": {
+            "default": 0,
+            "title": "Estimated Cost",
+            "type": "integer"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          },
+          "order_index": {
+            "default": 1,
+            "title": "Order Index",
+            "type": "integer"
+          },
+          "place_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Place Name"
+          },
+          "start_time": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Start Time"
+          },
+          "transport_mode": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Transport Mode"
+          }
+        },
+        "required": [
+          "activity"
+        ],
+        "title": "ItineraryItem",
+        "type": "object"
+      },
+      "MetadataDto": {
+        "properties": {
+          "algorithm": {
+            "title": "Algorithm",
+            "type": "string"
+          },
+          "cold_start": {
+            "title": "Cold Start",
+            "type": "boolean"
+          },
+          "destination_filter": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Destination Filter"
+          },
+          "model": {
+            "title": "Model",
+            "type": "string"
+          },
+          "returned_count": {
+            "title": "Returned Count",
+            "type": "integer"
+          },
+          "total_candidates": {
+            "title": "Total Candidates",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "algorithm",
+          "model",
+          "destination_filter",
+          "total_candidates",
+          "returned_count",
+          "cold_start"
+        ],
+        "title": "MetadataDto",
+        "type": "object"
+      },
+      "PlaceRecommendationRequest": {
+        "properties": {
+          "destination": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Optional destination filter (e.g. 'ha-noi', 'da-nang', 'ha-long')",
+            "example": "da-nang",
+            "title": "Destination"
+          },
+          "model": {
+            "default": "rec-a1",
+            "description": "Algorithm baseline to use ('rec-a1' for cosine, 'rec-a0' for taxonomy overlap)",
+            "example": "rec-a1",
+            "title": "Model",
+            "type": "string"
+          },
+          "preferences": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "User travel preference object containing 'interests', 'travelStyle', etc.",
+            "example": {
+              "interests": [
+                "food_cuisine",
+                "culture_history"
+              ]
+            },
+            "title": "Preferences"
+          },
+          "top_k": {
+            "default": 10,
+            "description": "Number of recommendations to return",
+            "maximum": 50.0,
+            "minimum": 1.0,
+            "title": "Top K",
+            "type": "integer"
+          }
+        },
+        "title": "PlaceRecommendationRequest",
+        "type": "object"
+      },
+      "PlaceRecommendationResponse": {
+        "properties": {
+          "metadata": {
+            "$ref": "#/components/schemas/MetadataDto"
+          },
+          "recommendations": {
+            "items": {
+              "$ref": "#/components/schemas/RecommendedPlaceDto"
+            },
+            "title": "Recommendations",
+            "type": "array"
+          },
+          "unsupported_user_features": {
+            "items": {
+              "$ref": "#/components/schemas/UnsupportedFeatureDto"
+            },
+            "title": "Unsupported User Features",
+            "type": "array"
+          }
+        },
+        "required": [
+          "recommendations",
+          "metadata",
+          "unsupported_user_features"
+        ],
+        "title": "PlaceRecommendationResponse",
+        "type": "object"
+      },
+      "PlanRequest": {
+        "properties": {
+          "budget": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Budget"
+          },
+          "days": {
+            "default": 3,
+            "title": "Days",
+            "type": "integer"
+          },
+          "destination": {
+            "title": "Destination",
+            "type": "string"
+          },
+          "interests": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Interests",
+            "type": "array"
+          },
+          "start_date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Start Date"
+          },
+          "style": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": "mixed",
+            "title": "Style"
+          }
+        },
+        "required": [
+          "destination"
+        ],
+        "title": "PlanRequest",
+        "type": "object"
+      },
+      "PlanResponse": {
+        "properties": {
+          "best_time_to_visit": {
+            "title": "Best Time To Visit",
+            "type": "string"
+          },
+          "budget_analysis": {
+            "$ref": "#/components/schemas/BudgetAnalysis"
+          },
+          "days": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/ItineraryDay"
+            },
+            "title": "Days",
+            "type": "array"
+          },
+          "destination": {
+            "title": "Destination",
+            "type": "string"
+          },
+          "general_tips": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "General Tips",
+            "type": "array"
+          },
+          "overview": {
+            "title": "Overview",
+            "type": "string"
+          },
+          "plan_id": {
+            "title": "Plan Id",
+            "type": "string"
+          },
+          "total_days": {
+            "title": "Total Days",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "plan_id",
+          "destination",
+          "total_days",
+          "overview",
+          "best_time_to_visit",
+          "budget_analysis"
+        ],
+        "title": "PlanResponse",
+        "type": "object"
+      },
+      "RecommendedPlaceDto": {
+        "properties": {
+          "category": {
+            "title": "Category",
+            "type": "string"
+          },
+          "destination": {
+            "title": "Destination",
+            "type": "string"
+          },
+          "destination_slug": {
+            "title": "Destination Slug",
+            "type": "string"
+          },
+          "explanation": {
+            "$ref": "#/components/schemas/ExplanationDto"
+          },
+          "matched_interests": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Matched Interests",
+            "type": "array"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "place_id": {
+            "title": "Place Id",
+            "type": "string"
+          },
+          "rank": {
+            "title": "Rank",
+            "type": "integer"
+          },
+          "score": {
+            "title": "Score",
+            "type": "number"
+          },
+          "strategy": {
+            "title": "Strategy",
+            "type": "string"
+          }
+        },
+        "required": [
+          "place_id",
+          "name",
+          "destination",
+          "destination_slug",
+          "category",
+          "score",
+          "rank",
+          "matched_interests",
+          "explanation",
+          "strategy"
+        ],
+        "title": "RecommendedPlaceDto",
+        "type": "object"
+      },
+      "ToolCallLog": {
+        "properties": {
+          "args": {
+            "additionalProperties": true,
+            "title": "Args",
+            "type": "object"
+          },
+          "result": {
+            "title": "Result"
+          },
+          "tool": {
+            "title": "Tool",
+            "type": "string"
+          }
+        },
+        "required": [
+          "tool",
+          "args",
+          "result"
+        ],
+        "title": "ToolCallLog",
+        "type": "object"
+      },
+      "TripContextRequest": {
+        "properties": {
+          "budget": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Budget"
+          },
+          "currency": {
+            "default": "VND",
+            "title": "Currency",
+            "type": "string"
+          },
+          "days": {
+            "description": "Duration in days, between 1 and 14",
+            "maximum": 14.0,
+            "minimum": 1.0,
+            "title": "Days",
+            "type": "integer"
+          },
+          "destination": {
+            "title": "Destination",
+            "type": "string"
+          },
+          "end_date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "End Date"
+          },
+          "existing_itinerary_count": {
+            "default": 0,
+            "title": "Existing Itinerary Count",
+            "type": "integer"
+          },
+          "interests": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Interests",
+            "type": "array"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          },
+          "start_date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Start Date"
+          },
+          "travel_style": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Travel Style"
+          },
+          "trip_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Trip Id"
+          }
+        },
+        "required": [
+          "destination",
+          "days"
+        ],
+        "title": "TripContextRequest",
+        "type": "object"
+      },
+      "UnsupportedFeatureDto": {
+        "properties": {
+          "feature": {
+            "title": "Feature",
+            "type": "string"
+          },
+          "reason": {
+            "title": "Reason",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "feature",
+          "status",
+          "reason"
+        ],
+        "title": "UnsupportedFeatureDto",
+        "type": "object"
+      },
+      "ValidationError": {
+        "properties": {
+          "ctx": {
+            "title": "Context",
+            "type": "object"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "title": "Location",
+            "type": "array"
+          },
+          "msg": {
+            "title": "Message",
+            "type": "string"
+          },
+          "type": {
+            "title": "Error Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError",
+        "type": "object"
+      }
+    }
+  },
+  "info": {
+    "title": "WanderAI AI Service",
+    "version": "0.1.0"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/chat": {
+      "post": {
+        "description": "Chat voi AI Wandy — co kha nang goi tools that su",
+        "operationId": "chat_chat_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChatRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChatResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Chat",
+        "tags": [
+          "Chat"
+        ]
+      }
+    },
+    "/chat/{session_id}": {
+      "delete": {
+        "description": "Xoa lich su chat",
+        "operationId": "clear_chat_chat__session_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "session_id",
+            "required": true,
+            "schema": {
+              "title": "Session Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Clear Chat",
+        "tags": [
+          "Chat"
+        ]
+      }
+    },
+    "/health": {
+      "get": {
+        "operationId": "health_check_health_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Health Check",
+        "tags": [
+          "health"
+        ]
+      }
+    },
+    "/planner": {
+      "post": {
+        "description": "Tạo lịch trình du lịch AI chi tiết theo từng ngày từ TripContext.",
+        "operationId": "create_plan_planner_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/TripContextRequest"
+                  },
+                  {
+                    "$ref": "#/components/schemas/PlanRequest"
+                  }
+                ],
+                "title": "Req"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlanResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Plan",
+        "tags": [
+          "Trip Planner"
+        ]
+      }
+    },
+    "/recommendations/places": {
+      "post": {
+        "description": "Generate personalized or cold-start place recommendations from REC-A-CORE-V2.",
+        "operationId": "recommend_places_recommendations_places_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PlaceRecommendationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlaceRecommendationResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Recommend Places",
+        "tags": [
+          "Recommendations"
+        ]
+      }
+    }
+  }
+}
