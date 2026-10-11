@@ -1,0 +1,22 @@
+{
+  "hanoi": {
+    "overpass_endpoint": "https://overpass-api.de/api/interpreter",
+    "query_timestamp_utc": "2026-10-07T09:53:36.923704+00:00",
+    "osm_base": "2026-10-07T09:52:02Z",
+    "element_count": 4898,
+    "status_code": 200,
+    "sha256": "469417955e76d9f4eab8eab11401f13405e2d38a7d46027101013db4b0e0e9ea",
+    "bytes": 2504861,
+    "output_file": "data/raw/osm/hanoi_2026-10-07.json"
+  },
+  "halong": {
+    "overpass_endpoint": "https://overpass-api.de/api/interpreter",
+    "query_timestamp_utc": "2026-10-07T09:53:49.827201+00:00",
+    "osm_base": "2026-10-07T09:52:02Z",
+    "element_count": 191,
+    "status_code": 200,
+    "sha256": "de27ec3d3db00974c44725d01578c955d790a90bdc7da356d9098401fdb654f6",
+    "bytes": 120946,
+    "output_file": "data/raw/osm/halong_2026-10-07.json"
+  }
+}

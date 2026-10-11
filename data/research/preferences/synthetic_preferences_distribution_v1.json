@@ -1,0 +1,175 @@
+{
+  "population_size": 300,
+  "seed": 42,
+  "generator_version": "preference-v1",
+  "travelStyle_distribution": {
+    "BACKPACKER": {
+      "count": 46,
+      "pct": 15.3
+    },
+    "BUDGET": {
+      "count": 114,
+      "pct": 38.0
+    },
+    "COMFORT": {
+      "count": 114,
+      "pct": 38.0
+    },
+    "LUXURY": {
+      "count": 26,
+      "pct": 8.7
+    }
+  },
+  "preferredGroup_distribution": {
+    "COUPLE": {
+      "count": 98,
+      "pct": 32.7
+    },
+    "FAMILY": {
+      "count": 38,
+      "pct": 12.7
+    },
+    "LARGE_GROUP": {
+      "count": 17,
+      "pct": 5.7
+    },
+    "SMALL_GROUP": {
+      "count": 66,
+      "pct": 22.0
+    },
+    "SOLO": {
+      "count": 81,
+      "pct": 27.0
+    }
+  },
+  "pace_distribution": {
+    "MODERATE": {
+      "count": 150,
+      "pct": 50.0
+    },
+    "PACKED": {
+      "count": 68,
+      "pct": 22.7
+    },
+    "RELAXED": {
+      "count": 82,
+      "pct": 27.3
+    }
+  },
+  "interests_frequency": {
+    "food_cuisine": {
+      "count": 174,
+      "pct": 58.0
+    },
+    "culture_history": {
+      "count": 173,
+      "pct": 57.7
+    },
+    "nature_outdoor": {
+      "count": 160,
+      "pct": 53.3
+    },
+    "coffee_culture": {
+      "count": 136,
+      "pct": 45.3
+    },
+    "beach_island": {
+      "count": 115,
+      "pct": 38.3
+    },
+    "shopping_local": {
+      "count": 78,
+      "pct": 26.0
+    },
+    "nightlife_entertainment": {
+      "count": 70,
+      "pct": 23.3
+    }
+  },
+  "dietary_needs_distribution": {
+    "NONE": {
+      "count": 235,
+      "pct": 78.3
+    },
+    "halal": {
+      "count": 11,
+      "pct": 3.7
+    },
+    "seafood_allergy": {
+      "count": 16,
+      "pct": 5.3
+    },
+    "vegan": {
+      "count": 13,
+      "pct": 4.3
+    },
+    "vegetarian": {
+      "count": 25,
+      "pct": 8.3
+    }
+  },
+  "avoidances_distribution": {
+    "NONE": {
+      "count": 113,
+      "pct": 37.7
+    },
+    "crowds": {
+      "count": 78,
+      "pct": 26.0
+    },
+    "heights": {
+      "count": 39,
+      "pct": 13.0
+    },
+    "long_walks": {
+      "count": 46,
+      "pct": 15.3
+    },
+    "spicy_food": {
+      "count": 24,
+      "pct": 8.0
+    }
+  },
+  "budget_statistics": {
+    "min_overall": 200000,
+    "max_overall": 24850000,
+    "by_style": {
+      "COMFORT": {
+        "min_b": 1000000,
+        "max_b": 5500000,
+        "sum_min": 172850000,
+        "sum_max": 444900000,
+        "count": 114,
+        "avg_min": 1516228,
+        "avg_max": 3902632
+      },
+      "BUDGET": {
+        "min_b": 300000,
+        "max_b": 2000000,
+        "sum_min": 56750000,
+        "sum_max": 159450000,
+        "count": 114,
+        "avg_min": 497807,
+        "avg_max": 1398684
+      },
+      "BACKPACKER": {
+        "min_b": 200000,
+        "max_b": 1200000,
+        "sum_min": 15200000,
+        "sum_max": 41150000,
+        "count": 46,
+        "avg_min": 330435,
+        "avg_max": 894565
+      },
+      "LUXURY": {
+        "min_b": 3050000,
+        "max_b": 24850000,
+        "sum_min": 112200000,
+        "sum_max": 420900000,
+        "count": 26,
+        "avg_min": 4315385,
+        "avg_max": 16188462
+      }
+    }
+  }
+}

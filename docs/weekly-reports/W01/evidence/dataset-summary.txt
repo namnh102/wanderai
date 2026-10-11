@@ -1,0 +1,45 @@
+﻿POI PILOT DATASET SUMMARY - W1
+Artifact : data/curated/places_canonical.json (blob 9e8a7c16fb9564a6f8d1f1e5ee57d648f0ee75aa, identical at commits ffe7b97 [2026-10-01], 4944fae, 2d15a64 [2026-10-03])
+Raw input: data/raw/osm_vietnam_sample.json (blob 869de264147265e4e279d2c7016fd5b46176462b, identical at ffe7b97 and 2d15a64)
+Status   : RECONSTRUCTED-BY-MEASUREMENT. Statistics below were computed on 2026-10-05 by running scratch/stats.py against the files as stored at commit 2d15a64 (end of W1). They were NOT produced during W1. Not the current database or current dataset (the current files were modified by post-W1 commits 7ad9c45 and fee3f02 on 2026-10-04).
+Extraction: git show 2d15a64:<path>
+Script   : scratch/stats.py (read-only; local analysis, not committed)
+
+---- OUTPUT ----
+RAW declared count 111 actual 111
+RAW region Counter({'da_nang': 55, 'hanoi': 53, 'hoi_an': 1, 'hue': 1, 'nha_trang': 1})
+RAW types Counter({'node': 111})
+RAW keys ['_region', 'id', 'lat', 'lon', 'tags', 'type']
+RAW dup ids 0
+RAW missing name 1
+RAW meta keys ['source', 'api', 'license', 'count']
+CANON total 108
+CANON fields ['address', 'category', 'city', 'description', 'id', 'latitude', 'longitude', 'name', 'name_en', 'rating', 'review_count', 'review_flag', 'sources'] 13
+CANON city Counter({'da_nang': 50, 'H├á Nß╗Öi': 31, 'hanoi': 19, '─É├á Nß║╡ng': 5, 'Hß╗Öi An': 1, 'Huß║┐': 1, 'Nha Trang': 1})
+CANON cat Counter({'cafe': 55, 'hotel': 25, 'restaurant': 15, 'attraction': 9, 'culture': 3, 'beach': 1})
+CANON n categories 6
+CANON rating [(4.5, 108)]
+CANON missing coords 0
+CANON bad coords 0
+CANON address placeholder 66
+CANON missing description 108
+CANON missing name_en 91
+CANON no sources 0
+CANON source rows 110
+CANON source names Counter({'osm': 110})
+CANON dup name+coord 0
+CANON opening hours field present False
+CANON raw tag keys [('name', 110), ('amenity', 71), ('addr:city', 41), ('tourism', 38), ('addr:district', 19), ('name:en', 17), ('addr:street', 12), ('addr:housenumber', 10), ('addr:province', 8), ('name:zh', 6), ('addr:country', 6), ('historic', 6)]
+CANON lat range 12.2388 21.074149
+
+---- OBSERVATIONS (derived from the numbers above and from docs/data/current-database-state.md @ 2d15a64) ----
+1. Records: raw 111 OSM nodes (1 without name) -> processed 110 -> canonical 108 (entity_resolution_report.json: total_incoming 110, matched_existing 2, new_canonical_created 108, review_needed_count 13).
+2. Fields: 13 top-level fields per canonical record; no opening_hours, phone, website field exists in the schema at W1.
+3. Categories: 6 (cafe 55, hotel 25, restaurant 15, attraction 9, culture 3, beach 1).
+4. City distribution (raw label values are inconsistent): da_nang 50 + Da Nang(vi) 5 = 55; hanoi 19 + Ha Noi(vi) 31 = 50; Hoi An 1; Hue 1; Nha Trang 1. 'city' uses two label formats (slug vs Vietnamese name) -> normalization problem. Ha Long: 0 records.
+5. Rating: all 108 records have rating = 4.5 and review_count = 0 (default value in resolve.py, not collected data; stated in current-database-state.md).
+6. Address: 66 of 108 addresses are placeholders of the form '<name>, <city slug>' rather than real OSM addresses. 0 records have description; 91 of 108 have no name_en.
+7. Coordinates: 0 missing, 0 outside the Vietnam bounding box. Duplicate name+coordinate pairs: 0.
+8. Provenance: 110 source rows (all source_name = osm) for 108 places. Per TASK 07.1 audit (commit 2d15a64, 2026-10-03): 97 places have >= 1 source confirmed on live Overpass; 11 places have non-genuine OSM IDs (5 point to unrelated nodes 9,800-20,400 km away, 6 do not exist), all from hand-written entries in data/raw/osm_vietnam_sample.json. The 2026-10-01 data-quality-report.md claim of 100% provenance is therefore only PARTIALLY correct.
+9. Snapshot date: sources.yaml declares collection_date 2026-10-01; the raw file has only metadata keys source/api/license/count (no timestamp).
+10. Scale vs proposal W2 target ('1k+ POIs if available'): 108 << 1000 (pilot only).

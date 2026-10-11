@@ -1,0 +1,24 @@
+{
+  "halong": {
+    "region": "halong",
+    "total_osm_pois": 188,
+    "total_overture_places": 12848,
+    "auto_linked": 51,
+    "manual_review_candidates": 31,
+    "unmatched": 106,
+    "license_unresolved": 0,
+    "source_conflicts": 0,
+    "linked_places": []
+  },
+  "hanoi": {
+    "region": "hanoi",
+    "total_osm_pois": 4889,
+    "total_overture_places": 257036,
+    "auto_linked": 1118,
+    "manual_review_candidates": 1332,
+    "unmatched": 2439,
+    "license_unresolved": 0,
+    "source_conflicts": 0,
+    "linked_places": []
+  }
+}
