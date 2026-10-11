@@ -95,6 +95,23 @@ const List<CanonicalInterestItem> kCanonicalInterests = [
   ),
 ];
 
+/// Canonical interest keys (exactly the 7 REC-A / backend keys).
+final Set<String> kCanonicalInterestKeys = {
+  for (final i in kCanonicalInterests) i.key,
+};
+
+/// Keep only canonical interest keys, de-duplicated, preserving order.
+/// Legacy/free-form stored values are dropped; the canonical set is not extended.
+List<String> filterCanonicalInterests(Iterable<String> values) {
+  final seen = <String>{};
+  final out = <String>[];
+  for (final raw in values) {
+    final v = raw.trim();
+    if (kCanonicalInterestKeys.contains(v) && seen.add(v)) out.add(v);
+  }
+  return out;
+}
+
 const List<String> kCommonAvoidances = [
   'Đông đúc',
   'Độ cao',
@@ -142,10 +159,10 @@ class TravelPreferences {
       budgetMin: (json['budgetMin'] as num?)?.toInt() ?? 0,
       budgetMax: (json['budgetMax'] as num?)?.toInt() ?? 10000000,
       preferredGroup: GroupSize.fromApi(json['preferredGroup'] as String?),
-      interests: (json['interests'] as List<dynamic>?)
-              ?.map((e) => e.toString())
-              .toList() ??
-          const [],
+      // Legacy non-canonical stored values are dropped deterministically.
+      interests: filterCanonicalInterests(
+        (json['interests'] as List<dynamic>?)?.map((e) => e.toString()) ?? const [],
+      ),
       avoidances: (json['avoidances'] as List<dynamic>?)
               ?.map((e) => e.toString())
               .toList() ??
@@ -162,7 +179,7 @@ class TravelPreferences {
         'budgetMin': budgetMin,
         'budgetMax': budgetMax,
         'preferredGroup': preferredGroup.apiValue,
-        'interests': interests,
+        'interests': filterCanonicalInterests(interests),
         'avoidances': avoidances,
         'dietaryNeeds': dietaryNeeds,
       };

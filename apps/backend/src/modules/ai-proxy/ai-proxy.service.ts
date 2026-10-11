@@ -2,6 +2,26 @@ import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import axios from 'axios';
 
+/**
+ * Flatten a FastAPI `detail` (string | Pydantic error list | object) into a single
+ * human-readable string so clients never receive raw objects or internals.
+ */
+export function formatUpstreamDetail(detail: unknown, fallback: string): string {
+  if (typeof detail === 'string' && detail.trim()) return detail;
+  if (Array.isArray(detail)) {
+    const parts = detail
+      .map((d: any) => {
+        if (typeof d === 'string') return d;
+        const field = Array.isArray(d?.loc) ? d.loc.filter((p: any) => p !== 'body').join('.') : '';
+        const msg = typeof d?.msg === 'string' ? d.msg.replace(/^Value error, /, '') : '';
+        return msg ? (field ? `${field}: ${msg}` : msg) : '';
+      })
+      .filter(Boolean);
+    if (parts.length) return parts.join('; ');
+  }
+  return fallback;
+}
+
 @Injectable()
 export class AiProxyService {
   private aiServiceUrl: string;
@@ -119,7 +139,7 @@ export class AiProxyService {
     } catch (error) {
       if (axios.isAxiosError(error) && error.response) {
         throw new HttpException(
-          error.response.data?.detail || 'Lỗi từ AI Recommendation Service',
+          formatUpstreamDetail(error.response.data?.detail, 'Lỗi từ AI Recommendation Service'),
           error.response.status,
         );
       }

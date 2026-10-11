@@ -2,11 +2,15 @@
 
 from typing import List, Dict, Any, Optional
 from fastapi import APIRouter, HTTPException, Query
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
+from recommendation.reca.contract import normalize_destination
 from recommendation.reca.engine import get_place_recommender
 
 router = APIRouter(prefix="/recommendations", tags=["Recommendations"])
+
+SUPPORTED_DESTINATIONS = ("ha-noi", "da-nang", "ha-long")
+SUPPORTED_MODELS = ("rec-a0", "rec-a1")
 
 
 class PlaceRecommendationRequest(BaseModel):
@@ -26,6 +30,28 @@ class PlaceRecommendationRequest(BaseModel):
         description="Algorithm baseline to use ('rec-a1' for cosine, 'rec-a0' for taxonomy overlap)",
         json_schema_extra={"example": "rec-a1"},
     )
+
+    @field_validator("destination")
+    @classmethod
+    def _validate_destination(cls, value: Optional[str]) -> Optional[str]:
+        """Unknown destinations must never silently widen to all REC-A-CORE-V2 candidates."""
+        if value is None or not value.strip():
+            return None
+        slug = normalize_destination(value)
+        if slug is None:
+            raise ValueError(
+                f"Unsupported destination '{value}'. Supported: {', '.join(SUPPORTED_DESTINATIONS)}"
+            )
+        return slug
+
+    @field_validator("model")
+    @classmethod
+    def _validate_model(cls, value: str) -> str:
+        """Unknown models must never silently fall back to rec-a1."""
+        normalized = value.strip().lower()
+        if normalized not in SUPPORTED_MODELS:
+            raise ValueError(f"Unsupported model '{value}'. Supported: {', '.join(SUPPORTED_MODELS)}")
+        return normalized
 
 
 class ExplanationDto(BaseModel):
