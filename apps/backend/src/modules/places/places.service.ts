@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { Prisma } from '@prisma/client';
+import { AiProxyService } from '../ai-proxy/ai-proxy.service';
 
 /**
  * Factual address from OSM `addr:*` tags only (null when OSM has none).
@@ -28,7 +29,10 @@ export function osmAddress(tags: Record<string, unknown> | null | undefined): st
 
 @Injectable()
 export class PlacesService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private aiProxyService: AiProxyService,
+  ) {}
 
   // Lấy danh sách địa điểm có pagination, search, category, destination, verifiedOnly
   async findAll(
@@ -248,5 +252,31 @@ export class PlacesService {
     `;
 
     return places;
+  }
+
+  // Gợi ý địa điểm cá nhân hóa dựa trên TravelPreference (REC-A)
+  async getRecommendations(
+    userId: string,
+    destination?: string,
+    topK: number = 10,
+    model: string = 'rec-a1',
+  ) {
+    const pref = await this.prisma.travelPreference.findUnique({
+      where: { userId },
+    });
+
+    const userPrefs = pref
+      ? {
+          interests: pref.interests,
+          travelStyle: pref.travelStyle,
+          budgetMin: pref.budgetMin,
+          budgetMax: pref.budgetMax,
+          preferredGroup: pref.preferredGroup,
+          avoidances: pref.avoidances,
+          dietaryNeeds: pref.dietaryNeeds,
+        }
+      : { interests: [] };
+
+    return this.aiProxyService.getPlaceRecommendations(userPrefs, destination, topK, model);
   }
 }

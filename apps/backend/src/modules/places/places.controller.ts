@@ -1,6 +1,8 @@
-import { Controller, Get, Param, ParseUUIDPipe, Query } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiQuery } from '@nestjs/swagger';
+import { Controller, Get, Param, ParseUUIDPipe, Query, UseGuards } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiQuery, ApiBearerAuth } from '@nestjs/swagger';
 import { PlacesService } from './places.service';
+import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
+import { CurrentUser } from '../../common/decorators/current-user.decorator';
 
 @ApiTags('Places')
 @Controller('places')
@@ -53,6 +55,27 @@ export class PlacesController {
       radius ? Number(radius) : 10,
       limit ? Number(limit) : 20,
       verifiedOnly !== 'false', // default: verified places only; ?verifiedOnly=false includes unsourced dev/test records
+    );
+  }
+
+  @Get('recommendations')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Lấy danh sách địa điểm gợi ý cá nhân hóa dựa trên sở thích du lịch (REC-A)' })
+  @ApiQuery({ name: 'destination', required: false, type: String, example: 'da-nang' })
+  @ApiQuery({ name: 'topK', required: false, type: Number, example: 10 })
+  @ApiQuery({ name: 'model', required: false, type: String, example: 'rec-a1' })
+  async getRecommendations(
+    @CurrentUser() user: any,
+    @Query('destination') destination?: string,
+    @Query('topK') topK?: string,
+    @Query('model') model?: string,
+  ) {
+    return this.placesService.getRecommendations(
+      user.id,
+      destination,
+      topK ? Number(topK) : 10,
+      model || 'rec-a1',
     );
   }
 

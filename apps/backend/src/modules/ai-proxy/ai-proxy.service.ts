@@ -96,4 +96,37 @@ export class AiProxyService {
       );
     }
   }
+
+  // Forward place recommendation request đến FastAPI AI service (REC-A)
+  async getPlaceRecommendations(
+    preferences?: any,
+    destination?: string,
+    topK: number = 10,
+    model: string = 'rec-a1',
+  ) {
+    try {
+      const response = await axios.post(
+        `${this.aiServiceUrl}/recommendations/places`,
+        {
+          preferences: preferences || null,
+          destination: destination || null,
+          top_k: topK,
+          model: model || 'rec-a1',
+        },
+        { timeout: 15000 },
+      );
+      return response.data;
+    } catch (error) {
+      if (axios.isAxiosError(error) && error.response) {
+        throw new HttpException(
+          error.response.data?.detail || 'Lỗi từ AI Recommendation Service',
+          error.response.status,
+        );
+      }
+      throw new HttpException(
+        'AI Recommendation Service không phản hồi. Vui lòng thử lại sau.',
+        HttpStatus.SERVICE_UNAVAILABLE,
+      );
+    }
+  }
 }
