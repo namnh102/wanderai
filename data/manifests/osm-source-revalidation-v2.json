@@ -1,0 +1,48 @@
+{
+  "description": "Explicit revalidation of legacy-invalid OSM source ids that legitimately appear in Dataset Freeze V2. Historical osm-invalid-sources.json is NOT modified. Only entries with status REVALIDATED_CURRENT_OSM_MATCH are exempted from the provenance denylist.",
+  "legacy_invalid_intersect_freeze_v2": [
+    "node/708488342"
+  ],
+  "revalidations": [
+    {
+      "source_id": "node/708488342",
+      "legacy_status": "invalid",
+      "legacy_reason": "osm_node_mismatches_place",
+      "legacy_place_id": "c693a3f8-e323-41ec-803f-04dd01b65bde",
+      "legacy_place_name": "Khách Sạn Little Hanoi",
+      "legacy_verified_on": "2026-10-04",
+      "freeze_v2_place_id": "ab78f751-d68d-4436-b42a-93587aa5a22a",
+      "freeze_v2_name": "Khách Sạn Little Hanoi",
+      "freeze_v2_latitude": 21.0349399,
+      "freeze_v2_longitude": 105.8469714,
+      "live_osm_name": "Khách Sạn Little Hanoi",
+      "live_osm_latitude": 21.0349399,
+      "live_osm_longitude": 105.8469714,
+      "live_osm_version": 8,
+      "live_osm_changeset": 182697269,
+      "live_osm_timestamp": "2026-05-15T12:48:30Z",
+      "live_osm_tags": {
+        "addr:city": "Hà Nội",
+        "name": "Khách Sạn Little Hanoi",
+        "name:en": "Little Hanoi Deluxe Hotel",
+        "name:fr": "Little Hanoi Hôtel Deluxe",
+        "tourism": "hotel",
+        "website": "https://www.littlehanoideluxehotel.com/"
+      },
+      "distance_m": 0.0,
+      "status": "REVALIDATED_CURRENT_OSM_MATCH",
+      "revalidated_on": "2026-10-12",
+      "rationale": "Node exists; coordinates, name and tourism=hotel match the Freeze V2 place; version and changeset equal frozen raw_data; object state predates the 2026-10-04 legacy audit. The historical mismatch was against the old handwritten legacy place association, not the current Freeze V2 place generated from this node.",
+      "evidence_source": {
+        "endpoint": "https://overpass-api.de/api/interpreter",
+        "query": "[out:json];node(708488342);out meta;",
+        "osm_base_timestamp": "2026-10-11T18:05:36Z"
+      },
+      "evidence_limitations": [
+        "api.openstreetmap.org unreachable from current network (DNS)",
+        "secondary Overpass mirrors timed out / returned 5xx",
+        "no claim of independent second live endpoint verification"
+      ]
+    }
+  ]
+}
