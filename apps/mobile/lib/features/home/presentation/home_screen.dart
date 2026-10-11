@@ -83,6 +83,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         ),
         actions: [
           IconButton(
+            icon: const Icon(Icons.tune_outlined),
+            tooltip: 'Sở thích du lịch',
+            color: AppColors.primary,
+            onPressed: () => context.push('/profile/preferences'),
+          ),
+          IconButton(
             icon: const Icon(Icons.logout),
             tooltip: 'Đăng xuất',
             color: AppColors.textSecondary,

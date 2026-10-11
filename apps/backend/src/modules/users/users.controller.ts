@@ -3,6 +3,7 @@ import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { UsersService } from './users.service';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
+import { UpdatePreferencesDto } from './dto/update-preferences.dto';
 
 @ApiTags('Users')
 @ApiBearerAuth()
@@ -15,6 +16,12 @@ export class UsersController {
   @ApiOperation({ summary: 'Lấy thông tin user hiện tại' })
   getProfile(@CurrentUser() user: any) {
     return this.usersService.findById(user.id);
+  }
+
+  @Put('me/preferences')
+  @ApiOperation({ summary: 'Cập nhật sở thích du lịch (TravelPreference)' })
+  updatePreferences(@CurrentUser() user: any, @Body() dto: UpdatePreferencesDto) {
+    return this.usersService.updatePreferences(user.id, dto);
   }
 
   @Put('me')
