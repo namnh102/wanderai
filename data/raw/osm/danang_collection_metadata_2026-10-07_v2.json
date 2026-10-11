@@ -1,0 +1,18 @@
+{
+  "overpass_endpoint": "https://overpass-api.de/api/interpreter",
+  "query_timestamp_utc": "2026-10-07T15:20:56.380227+00:00",
+  "osm_base": "2026-10-07T15:18:56Z",
+  "element_count": 2497,
+  "status_code": 200,
+  "sha256": "f73b49124e5a09a834d5381febf3f5c5bcc5f5d6e343ef85d0650e3996cbcb47",
+  "bytes": 1016599,
+  "output_file": "data/raw/osm/danang_2026-10-07_v2.json",
+  "query_file": "data/queries/osm/danang_v2.overpassql",
+  "region": "danang",
+  "bbox": {
+    "south": 15.95,
+    "west": 107.95,
+    "north": 16.2,
+    "east": 108.35
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "region": "danang",
+  "total_osm_pois": 2497,
+  "total_overture_places": 65688,
+  "auto_linked": 549,
+  "manual_review_candidates": 504,
+  "unmatched": 1444,
+  "license_unresolved": 0,
+  "source_conflicts": 0,
+  "license_breakdown": {
+    "CDLA Permissive 2.0": 1025,
+    "Apache 2.0; CDLA Permissive 2.0": 24,
+    "CC0 1.0; CDLA Permissive 2.0": 4
+  },
+  "linked_places": []
+}
