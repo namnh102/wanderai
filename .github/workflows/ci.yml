@@ -3,7 +3,7 @@ name: ci
 on:
   pull_request:
   push:
-    branches: [develop, main, "chore/**", "feature/**"]
+    branches: [develop, main]
 
 concurrency:
   group: ci-${{ github.ref }}
@@ -81,7 +81,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      - run: pip install pytest pyyaml asyncpg
+      - run: pip install -r requirements-data-contract.txt
       - name: Freeze V1/V2 checksum verification (restricted ViHoRec data is git-ignored)
         run: python -m scripts.freeze_checksum --skip-missing-prefix=data/restricted/
       - name: Data / REC-A contract tests

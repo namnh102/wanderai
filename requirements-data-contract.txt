@@ -1,0 +1,6 @@
+pytest
+pyyaml
+asyncpg
+pandas
+pyarrow
+pydantic-settings
