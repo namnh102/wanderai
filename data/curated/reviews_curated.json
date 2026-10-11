@@ -1,0 +1,222 @@
+[
+  {
+    "id": "610afe89-23c4-5ef5-a50e-56b91eedca50",
+    "place_id": "e9af8edc-0c38-4028-b9af-da67f6de341f",
+    "place_name_matched": "Bãi biển Mỹ Khê",
+    "target_name_raw": "Bãi biển Mỹ Khê",
+    "city": "Đà Nẵng",
+    "rating": 5.0,
+    "content": "Bãi biển Mỹ Khê nước rất trong, cát trắng mịn và sóng êm. Bờ biển sạch sẽ, dịch vụ cứu hộ túc trực thường xuyên. Buổi chiều tắm biển và ngắm hoàng hôn rất tuyệt vời.",
+    "aspects": [
+      {
+        "aspect": "cleanliness",
+        "score": 5.0,
+        "comment": "Bờ biển rất sạch"
+      },
+      {
+        "aspect": "location",
+        "score": 5.0,
+        "comment": "Vị trí thuận tiện gần trung tâm"
+      }
+    ],
+    "source_review_id": "rev_dn_001",
+    "source_name": "academic_benchmark",
+    "match_confidence": 1.0,
+    "match_status": "linked"
+  },
+  {
+    "id": "45f0684d-bfd9-5450-85ab-9bf2bef9d4bb",
+    "place_id": "a9fcefd6-4679-4c62-96ae-97bb9ded7cd1",
+    "place_name_matched": "Chùa Linh Ứng",
+    "target_name_raw": "Chùa Linh Ứng",
+    "city": "Đà Nẵng",
+    "rating": 5.0,
+    "content": "Chùa Linh Ứng trên bán đảo Sơn Trà có tượng Phật Bà Quan Âm cao 67m rất uy nghiêm. Tầm nhìn phóng ra toàn cảnh vịnh Đà Nẵng đẹp mê hồn. Nên đi vào sáng sớm để tránh nắng gắt.",
+    "aspects": [
+      {
+        "aspect": "location",
+        "score": 5.0,
+        "comment": "Tầm nhìn bao quát biển đảo"
+      },
+      {
+        "aspect": "service",
+        "score": 4.5,
+        "comment": "Khuôn viên thanh tịnh trang nghiêm"
+      }
+    ],
+    "source_review_id": "rev_dn_002",
+    "source_name": "academic_benchmark",
+    "match_confidence": 1.0,
+    "match_status": "linked"
+  },
+  {
+    "id": "7799a2ff-785d-5caf-8c68-417ab577b700",
+    "place_id": "e30d5e7a-47c2-44ec-a52c-3a5a0411b2f9",
+    "place_name_matched": "Cầu Rồng",
+    "target_name_raw": "Cầu Rồng",
+    "city": "Đà Nẵng",
+    "rating": 4.5,
+    "content": "Cầu Rồng là biểu tượng độc đáo của thành phố. Tối thứ 7 và Chủ nhật xem rồng phun lửa phun nước lúc 21h rất đông vui. Đi bộ dọc bờ sông Hàn ngắm cầu lung linh ánh sáng.",
+    "aspects": [
+      {
+        "aspect": "location",
+        "score": 5.0,
+        "comment": "Ngay trung tâm bờ sông Hàn"
+      },
+      {
+        "aspect": "value",
+        "score": 5.0,
+        "comment": "Xem biểu diễn hoàn toàn miễn phí"
+      }
+    ],
+    "source_review_id": "rev_dn_003",
+    "source_name": "academic_benchmark",
+    "match_confidence": 1.0,
+    "match_status": "linked"
+  },
+  {
+    "id": "1c7f7fcd-8918-5b11-bc68-1d3739918e40",
+    "place_id": "21f381fc-e64b-45ce-ba79-e0b5da0022cc",
+    "place_name_matched": "Danh thắng Ngũ Hành Sơn",
+    "target_name_raw": "Danh thắng Ngũ Hành Sơn",
+    "city": "Đà Nẵng",
+    "rating": 4.0,
+    "content": "Ngũ Hành Sơn có động Huyền Không rất huyền bí và cổ kính. Đi thang máy lên đỉnh ngắm cảnh thành phố và biển Non Nước. Đường đi hơi dốc, nên mang giày thể thao chống trơn trượt.",
+    "aspects": [
+      {
+        "aspect": "location",
+        "score": 4.5,
+        "comment": "Cảnh quan thiên nhiên núi đá đẹp"
+      },
+      {
+        "aspect": "service",
+        "score": 4.0,
+        "comment": "Vé tham quan hợp lý"
+      }
+    ],
+    "source_review_id": "rev_dn_004",
+    "source_name": "academic_benchmark",
+    "match_confidence": 1.0,
+    "match_status": "linked"
+  },
+  {
+    "id": "b82f232e-c85b-5a71-8b15-38db925548f9",
+    "place_id": "b16800de-9e07-44ac-894b-b6daf8d66069",
+    "place_name_matched": "Hồ Hoàn Kiếm",
+    "target_name_raw": "Hồ Hoàn Kiếm",
+    "city": "Hà Nội",
+    "rating": 5.0,
+    "content": "Trái tim của thủ đô Hà Nội. Không gian quanh hồ râm mát với hàng cây cổ thụ và Tháp Rùa cổ kính. Cuối tuần phố đi bộ rất nhộn nhịp với nhiều hoạt động văn hóa nghệ thuật đường phố.",
+    "aspects": [
+      {
+        "aspect": "location",
+        "score": 5.0,
+        "comment": "Trung tâm phố cổ"
+      },
+      {
+        "aspect": "cleanliness",
+        "score": 4.5,
+        "comment": "Cảnh quan quanh bờ hồ sạch đẹp"
+      }
+    ],
+    "source_review_id": "rev_hn_001",
+    "source_name": "academic_benchmark",
+    "match_confidence": 1.0,
+    "match_status": "linked"
+  },
+  {
+    "id": "6c1c76aa-9014-5db3-96a3-3d92717a6ff2",
+    "place_id": "f1fb1c77-b6f5-4e44-803a-c83911021728",
+    "place_name_matched": "Văn Miếu - Quốc Tử Giám",
+    "target_name_raw": "Văn Miếu - Quốc Tử Giám",
+    "city": "Hà Nội",
+    "rating": 5.0,
+    "content": "Trường đại học đầu tiên của Việt Nam với kiến trúc truyền thống đậm nét văn hóa Nho học. Khuê Văn Các và vườn bia Tiến sĩ được bảo tồn nguyên vẹn. Không gian yên bình giữa lòng phố thị.",
+    "aspects": [
+      {
+        "aspect": "cleanliness",
+        "score": 5.0,
+        "comment": "Bảo tồn di tích rất tốt"
+      },
+      {
+        "aspect": "value",
+        "score": 4.5,
+        "comment": "Giá vé tham quan học sinh sinh viên ưu đãi"
+      }
+    ],
+    "source_review_id": "rev_hn_002",
+    "source_name": "academic_benchmark",
+    "match_confidence": 1.0,
+    "match_status": "linked"
+  },
+  {
+    "id": "c62afd39-7499-529b-b3b7-4411ca16668e",
+    "place_id": "8ef9b37a-2bfe-4050-9358-dc70ba093c43",
+    "place_name_matched": "Chùa Cầu Hội An",
+    "target_name_raw": "Chùa Cầu Hội An",
+    "city": "Hội An",
+    "rating": 4.5,
+    "content": "Chùa Cầu nối liền hai khu phố cổ xưa của thương nhân Nhật Bản và người Việt. Kiến trúc mái ngói âm dương bằng gỗ độc đáo. Buổi tối phố cổ thắp đèn lồng rực rỡ soi bóng xuống dòng sông Hoài.",
+    "aspects": [
+      {
+        "aspect": "location",
+        "score": 5.0,
+        "comment": "Biểu tượng của phố cổ Hội An"
+      },
+      {
+        "aspect": "cleanliness",
+        "score": 4.0,
+        "comment": "Cần giữ gìn vệ sinh xung quanh cầu"
+      }
+    ],
+    "source_review_id": "rev_ha_001",
+    "source_name": "academic_benchmark",
+    "match_confidence": 1.0,
+    "match_status": "linked"
+  },
+  {
+    "id": "098063ef-0663-5d9a-991c-ab7c634f7c22",
+    "place_id": "26de0c50-1697-4a3a-a913-216dd744d303",
+    "place_name_matched": "Đại Nội Huế",
+    "target_name_raw": "Đại Nội Huế",
+    "city": "Huế",
+    "rating": 4.5,
+    "content": "Quần thể di tích Cố đô Huế rộng lớn, uy nghiêm. Điện Thái Hòa, Ngọ Môn và Tử Cấm Thành mang đậm dấu ấn lịch sử triều Nguyễn. Nên thuê áo ngũ thân hoặc cổ phục để chụp ảnh lưu niệm.",
+    "aspects": [
+      {
+        "aspect": "location",
+        "score": 5.0,
+        "comment": "Vị trí trung tâm thành phố Huế"
+      },
+      {
+        "aspect": "service",
+        "score": 4.5,
+        "comment": "Có thuyết minh viên và xe điện tiện lợi"
+      }
+    ],
+    "source_review_id": "rev_hue_001",
+    "source_name": "academic_benchmark",
+    "match_confidence": 1.0,
+    "match_status": "linked"
+  },
+  {
+    "id": "81e6fa89-8d15-529b-afbb-54ffcc595d5b",
+    "place_id": null,
+    "place_name_matched": "Tháp Bà Ponagar",
+    "target_name_raw": "Quán bánh căn bà Hai ngõ cụt chưa rõ địa chỉ",
+    "city": "Vùng sâu",
+    "rating": 3.0,
+    "content": "Quán nhỏ ở ngõ sâu, bánh căn giòn nhưng nước chấm hơi ngọt so với khẩu vị miền Trung.",
+    "aspects": [
+      {
+        "aspect": "food",
+        "score": 3.0,
+        "comment": "Nước chấm ngọt"
+      }
+    ],
+    "source_review_id": "rev_unmatched_001",
+    "source_name": "academic_benchmark",
+    "match_confidence": 0.0577,
+    "match_status": "unmatched"
+  }
+]

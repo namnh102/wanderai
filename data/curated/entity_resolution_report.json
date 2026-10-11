@@ -1,0 +1,73 @@
+{
+  "total_incoming": 110,
+  "matched_existing": 2,
+  "new_canonical_created": 108,
+  "review_needed_count": 13,
+  "review_needed_cases": [
+    {
+      "incoming_name": "AnhLinh Coffee",
+      "candidate_name": "AnhLinh Coffee",
+      "score": 0.65
+    },
+    {
+      "incoming_name": "ThanhHuong Coffee",
+      "candidate_name": "ThanhHuong Coffee",
+      "score": 0.65
+    },
+    {
+      "incoming_name": "Nhà hàng Nam Phương",
+      "candidate_name": "Nhà Hàng Chay Phương Nam",
+      "score": 0.6725
+    },
+    {
+      "incoming_name": "Khách Sạn Classic 2",
+      "candidate_name": "Khách Sạn Đông Á",
+      "score": 0.6142
+    },
+    {
+      "incoming_name": "Khách Sạn Indochina Queen",
+      "candidate_name": "Khách Sạn Đông Á",
+      "score": 0.6142
+    },
+    {
+      "incoming_name": "Khách Sạn Hanoi Phoenix II",
+      "candidate_name": "Khách Sạn Indochina Queen",
+      "score": 0.6429
+    },
+    {
+      "incoming_name": "Khách Sạn Little Hanoi Diamond",
+      "candidate_name": "Khách Sạn Hanoi Backpackers",
+      "score": 0.6275
+    },
+    {
+      "incoming_name": "Prince 57 Hotel",
+      "candidate_name": "Prince Hotel",
+      "score": 0.7108
+    },
+    {
+      "incoming_name": "Khách Sạn Hanoi Youth",
+      "candidate_name": "Khách Sạn Hanoi Backpackers",
+      "score": 0.6775
+    },
+    {
+      "incoming_name": "Khách Sạn Hanoi Gecko 2",
+      "candidate_name": "Khách Sạn Classic 2",
+      "score": 0.6975
+    },
+    {
+      "incoming_name": "Khách Sạn Camellia",
+      "candidate_name": "Khách Sạn Hanoi Gecko 2",
+      "score": 0.6667
+    },
+    {
+      "incoming_name": "Khách Sạn Hanoi Gecko III",
+      "candidate_name": "Khách Sạn Little Hanoi Diamond",
+      "score": 0.7143
+    },
+    {
+      "incoming_name": "Khách Sạn Maison D'Hanoi",
+      "candidate_name": "Khách Sạn Golden Lotus",
+      "score": 0.6429
+    }
+  ]
+}

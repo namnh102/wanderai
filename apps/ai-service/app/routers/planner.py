@@ -1,210 +1,240 @@
-"""AI Trip Planner — Tạo lịch trình du lịch tự động bằng Gemini"""
+"""AI Trip Planner — Generates structured itineraries using TripContext and Gemini."""
 import uuid
+import logging
 import json
-from fastapi import APIRouter
-from pydantic import BaseModel
-from typing import Optional, List
-import google.generativeai as genai
+import re
+from typing import Union
+from fastapi import APIRouter, HTTPException
+from google import genai
+from google.genai import types
+
 from app.config import settings
+from app.prompts.planner_prompt import build_planner_prompt
+from app.schemas.planner import (
+    TripContextRequest,
+    PlanRequest,
+    PlanResponse,
+    ItineraryDay,
+    ItineraryItem,
+    BudgetAnalysis,
+)
 
 router = APIRouter(prefix="/planner", tags=["Trip Planner"])
 
-# Khởi tạo model riêng cho planner (không dùng session)
-genai.configure(api_key=settings.GEMINI_API_KEY)
-_planner_model = genai.GenerativeModel(
-    model_name="gemini-3.6-flash",
-    generation_config=genai.GenerationConfig(
-        temperature=0.8,
-        max_output_tokens=4096,
-    ),
-)
+_client = genai.Client(api_key=settings.GEMINI_API_KEY) if settings.GEMINI_API_KEY else None
+logger = logging.getLogger(__name__)
+
+# Model id and output limit come from settings (PLANNER_MODEL / PLANNER_MAX_OUTPUT_TOKENS).
+# Previous hardcoded value "gemini-2.0-flash" was retired by Google (404 NOT_FOUND).
 
 
-class PlanRequest(BaseModel):
-    destination: str                  # "Đà Nẵng"
-    days: int                         # 3
-    budget: Optional[int] = None      # 3000000 (VND)
-    style: Optional[str] = "mixed"   # "adventure" | "relaxed" | "family" | "couple" | "mixed"
-    interests: Optional[List[str]] = []  # ["beach", "food", "culture", "mountain", "shopping"]
-    start_date: Optional[str] = None  # "2024-04-01"
+def _clean_json_response(raw: str) -> str:
+    """Extract clean JSON string from raw LLM output."""
+    raw = raw.strip()
+    if "```" in raw:
+        parts = raw.split("```")
+        for part in parts:
+            part = part.strip()
+            if part.startswith("json"):
+                part = part[4:].strip()
+            if part.startswith("{"):
+                raw = part
+                break
+    raw = raw.strip()
 
+    start = raw.find("{")
+    end = raw.rfind("}") + 1
+    if start >= 0 and end > start:
+        raw = raw[start:end]
 
-class Activity(BaseModel):
-    time: str         # "07:00"
-    name: str         # "Chùa Linh Ứng"
-    type: str         # "attraction" | "food" | "transport" | "accommodation" | "shopping"
-    address: str      # "Bán đảo Sơn Trà, Đà Nẵng"
-    duration: str     # "2 tiếng"
-    cost: int         # 0 (VND)
-    tip: str          # "Nên đến sớm trước 8h để tránh đông"
-
-
-class DayPlan(BaseModel):
-    day: int
-    title: str
-    activities: List[Activity]
-    day_total_cost: int
-
-
-class PlanResponse(BaseModel):
-    plan_id: str
-    destination: str
-    days: int
-    total_cost_min: int
-    total_cost_max: int
-    overview: str
-    itinerary: List[DayPlan]
-    general_tips: List[str]
-    best_time_to_visit: str
-
-
-def _build_planner_prompt(req: PlanRequest) -> str:
-    style_map = {
-        "adventure": "phượt/khám phá/mạo hiểm",
-        "relaxed": "nghỉ dưỡng/thư giãn",
-        "family": "gia đình có trẻ em",
-        "couple": "cặp đôi/lãng mạn",
-        "mixed": "kết hợp đa dạng"
-    }
-    interest_map = {
-        "beach": "biển và bãi tắm",
-        "food": "ẩm thực địa phương",
-        "culture": "văn hóa và lịch sử",
-        "mountain": "núi và thiên nhiên",
-        "shopping": "mua sắm và chợ"
-    }
-
-    style_str = style_map.get(req.style, "kết hợp đa dạng")
-    interest_str = ", ".join([interest_map.get(i, i) for i in req.interests]) if req.interests else "đa dạng"
-    budget_str = f"{req.budget:,} VND" if req.budget else "không giới hạn"
-
-    return f"""Bạn là chuyên gia du lịch Việt Nam. Hãy tạo lịch trình chi tiết cho chuyến đi sau:
-
-THÔNG TIN CHUYẾN ĐI:
-- Điểm đến: {req.destination}
-- Số ngày: {req.days} ngày
-- Ngân sách: {budget_str}
-- Phong cách: {style_str}
-- Sở thích: {interest_str}
-
-YÊU CẦU OUTPUT: Trả về JSON hợp lệ với cấu trúc sau (KHÔNG có markdown, KHÔNG có ```json):
-{{
-  "overview": "Mô tả tổng quan chuyến đi 2-3 câu",
-  "total_cost_min": 2000000,
-  "total_cost_max": 4000000,
-  "best_time_to_visit": "Tháng 3-8 là tốt nhất",
-  "general_tips": [
-    "Tip thực tế 1",
-    "Tip thực tế 2",
-    "Tip thực tế 3"
-  ],
-  "itinerary": [
-    {{
-      "day": 1,
-      "title": "Ngày 1: Tên chủ đề ngày",
-      "day_total_cost": 500000,
-      "activities": [
-        {{
-          "time": "07:00",
-          "name": "Tên địa điểm/hoạt động",
-          "type": "attraction",
-          "address": "Địa chỉ cụ thể",
-          "duration": "2 tiếng",
-          "cost": 0,
-          "tip": "Mẹo thực tế cho hoạt động này"
-        }}
-      ]
-    }}
-  ]
-}}
-
-QUY TẮC:
-- Mỗi ngày có 5-7 hoạt động (sáng/trưa/chiều/tối)
-- Chi phí (cost) phải là số nguyên VND thực tế
-- type phải là một trong: attraction, food, transport, accommodation, shopping
-- address phải là địa chỉ thực tế ở Việt Nam
-- tip phải hữu ích và cụ thể
-- Tổng chi phí phải phù hợp với ngân sách {budget_str}
-- PHẢI tạo đủ {req.days} ngày
-- Chỉ trả về JSON, không có text khác"""
+    # Remove invalid trailing commas before closing braces/brackets
+    raw = re.sub(r',\s*}', '}', raw)
+    raw = re.sub(r',\s*]', ']', raw)
+    return raw
 
 
 @router.post("", response_model=PlanResponse)
-async def create_plan(req: PlanRequest):
-    """Tạo lịch trình du lịch AI chi tiết theo từng ngày"""
+async def create_plan(req: Union[TripContextRequest, PlanRequest]):
+    """Tạo lịch trình du lịch AI chi tiết theo từng ngày từ TripContext."""
+    # Normalize inputs whether caller passes TripContextRequest or PlanRequest
+    if isinstance(req, TripContextRequest):
+        destination = req.destination
+        days = req.days
+        start_date = req.start_date
+        end_date = req.end_date
+        budget = req.budget
+        currency = req.currency or "VND"
+        travel_style = req.travel_style
+        interests = req.interests
+        notes = req.notes
+        trip_id = req.trip_id
+    else:
+        destination = req.destination
+        days = req.days
+        start_date = req.start_date
+        end_date = None
+        budget = int(req.budget) if req.budget is not None else None
+        currency = "VND"
+        travel_style = req.style
+        interests = req.interests
+        notes = None
+        trip_id = None
 
-    if req.days < 1 or req.days > 14:
-        from fastapi import HTTPException
-        raise HTTPException(status_code=400, detail="Số ngày phải từ 1 đến 14")
+    if days < 1 or days > 14:
+        raise HTTPException(status_code=400, detail="Số ngày chuyến đi phải từ 1 đến 14")
 
-    prompt = _build_planner_prompt(req)
+    prompt = build_planner_prompt(
+        destination=destination,
+        days=days,
+        start_date=start_date,
+        end_date=end_date,
+        budget=budget,
+        currency=currency,
+        travel_style=travel_style,
+        interests=interests,
+        notes=notes,
+    )
 
     try:
-        response = _planner_model.generate_content(prompt)
-        raw = response.text.strip()
+        raw_text = ""
+        if _client:
+            response = _client.models.generate_content(
+                model=settings.PLANNER_MODEL,
+                contents=prompt,
+                config=types.GenerateContentConfig(
+                    temperature=0.7,
+                    max_output_tokens=settings.PLANNER_MAX_OUTPUT_TOKENS,
+                    response_mime_type="application/json",
+                    http_options=types.HttpOptions(timeout=settings.PLANNER_TIMEOUT_MS),
+                ),
+            )
+            raw_text = response.text or ""
+            finish = None
+            try:
+                finish = response.candidates[0].finish_reason
+            except Exception:
+                finish = None
+            if finish is not None and "MAX_TOKENS" in str(finish):
+                logger.error("Planner output truncated (MAX_TOKENS) model=%s", settings.PLANNER_MODEL)
+                raise HTTPException(
+                    status_code=502,
+                    detail="AI tra ve ket qua khong day du. Vui long thu lai.",
+                )
+        else:
+            # Fallback mock for testing when no Gemini key is present
+            raw_text = json.dumps({
+                "destination": destination,
+                "total_days": days,
+                "overview": f"Hành trình khám phá {destination} {days} ngày tuyệt vời.",
+                "best_time_to_visit": "Quanh năm",
+                "general_tips": ["Mang theo trang phục thoải mái"],
+                "days": [
+                    {
+                        "day_number": i + 1,
+                        "title": f"Ngày {i + 1}: Trải nghiệm {destination}",
+                        "items": [
+                            {
+                                "order_index": 1,
+                                "start_time": "08:30",
+                                "end_time": "11:00",
+                                "activity": f"Tham quan điểm nổi bật {destination}",
+                                "place_name": destination,
+                                "notes": "Điểm tham quan tiêu biểu",
+                                "estimated_cost": 50000,
+                                "transport_mode": "taxi"
+                            }
+                        ]
+                    }
+                    for i in range(days)
+                ]
+            })
 
-        # Làm sạch JSON: bỏ markdown wrapper nếu có
-        if "```" in raw:
-            parts = raw.split("```")
-            for part in parts:
-                part = part.strip()
-                if part.startswith("json"):
-                    part = part[4:].strip()
-                if part.startswith("{"):
-                    raw = part
-                    break
+        cleaned_json = _clean_json_response(raw_text)
+        data = json.loads(cleaned_json)
 
-        raw = raw.strip()
+        # Parse days and items with deterministic calculation
+        raw_days = data.get("days", data.get("itinerary", []))
+        itinerary_days: list[ItineraryDay] = []
+        deterministic_total_cost = 0
 
-        # Tìm JSON object trong response (bắt đầu từ { đầu tiên)
-        start = raw.find("{")
-        end = raw.rfind("}") + 1
-        if start >= 0 and end > start:
-            raw = raw[start:end]
+        for idx, day_data in enumerate(raw_days):
+            day_num = int(day_data.get("day_number", day_data.get("day", idx + 1)))
+            day_title = str(day_data.get("title", f"Ngày {day_num}"))
+            day_date = day_data.get("date")
 
-        # Fix trailing commas (JSON không cho phép)
-        import re
-        raw = re.sub(r',\s*}', '}', raw)
-        raw = re.sub(r',\s*]', ']', raw)
+            items: list[ItineraryItem] = []
+            day_cost = 0
 
-        data = json.loads(raw)
+            raw_items = day_data.get("items", day_data.get("activities", []))
+            for item_idx, itm in enumerate(raw_items):
+                item_cost = int(itm.get("estimated_cost", itm.get("cost", 0)))
+                # Guard against negative costs
+                if item_cost < 0:
+                    item_cost = 0
 
-        # Parse itinerary
-        itinerary = []
-        for day_data in data.get("itinerary", []):
-            activities = []
-            for act in day_data.get("activities", []):
-                activities.append(Activity(
-                    time=str(act.get("time", "09:00")),
-                    name=str(act.get("name", "")),
-                    type=str(act.get("type", "attraction")),
-                    address=str(act.get("address", "")),
-                    duration=str(act.get("duration", "1 tiếng")),
-                    cost=int(act.get("cost", 0)),
-                    tip=str(act.get("tip", "")),
-                ))
-            itinerary.append(DayPlan(
-                day=int(day_data.get("day", 1)),
-                title=str(day_data.get("title", f"Ngày {day_data.get('day', 1)}")),
-                activities=activities,
-                day_total_cost=int(day_data.get("day_total_cost", 0)),
-            ))
+                day_cost += item_cost
+                items.append(
+                    ItineraryItem(
+                        order_index=int(itm.get("order_index", item_idx + 1)),
+                        start_time=itm.get("start_time", itm.get("time")),
+                        end_time=itm.get("end_time"),
+                        activity=str(itm.get("activity", itm.get("name", ""))),
+                        place_name=itm.get("place_name", itm.get("address")),
+                        notes=itm.get("notes", itm.get("tip")),
+                        estimated_cost=item_cost,
+                        transport_mode=itm.get("transport_mode", itm.get("type")),
+                    )
+                )
+
+            deterministic_total_cost += day_cost
+            itinerary_days.append(
+                ItineraryDay(
+                    day_number=day_num,
+                    date=day_date,
+                    title=day_title,
+                    items=items,
+                    day_cost=day_cost,
+                )
+            )
+
+        # Budget analysis deterministically computed by code
+        is_over = False
+        variance = 0
+        if budget is not None and budget > 0:
+            is_over = deterministic_total_cost > budget
+            variance = budget - deterministic_total_cost
+
+        budget_analysis = BudgetAnalysis(
+            total_budget=budget,
+            estimated_cost=deterministic_total_cost,
+            currency=currency,
+            is_over_budget=is_over,
+            variance=variance,
+        )
 
         return PlanResponse(
-            plan_id=str(uuid.uuid4()),
-            destination=req.destination,
-            days=req.days,
-            total_cost_min=int(data.get("total_cost_min", 0)),
-            total_cost_max=int(data.get("total_cost_max", 0)),
-            overview=str(data.get("overview", "")),
-            itinerary=itinerary,
+            plan_id=trip_id or str(uuid.uuid4()),
+            destination=destination,
+            total_days=len(itinerary_days),
+            overview=str(data.get("overview", f"Lịch trình khám phá {destination}")),
+            best_time_to_visit=str(data.get("best_time_to_visit", "Thời điểm lý tưởng trong năm")),
             general_tips=list(data.get("general_tips", [])),
-            best_time_to_visit=str(data.get("best_time_to_visit", "")),
+            budget_analysis=budget_analysis,
+            days=itinerary_days,
         )
 
     except json.JSONDecodeError as e:
-        from fastapi import HTTPException
-        raise HTTPException(status_code=500, detail=f"AI trả về JSON không hợp lệ: {str(e)}")
+        logger.error("Planner returned invalid JSON: %s", e)
+        raise HTTPException(
+            status_code=502,
+            detail="AI trả về định dạng không hợp lệ. Vui lòng thử lại.",
+        )
+    except HTTPException:
+        raise
     except Exception as e:
-        from fastapi import HTTPException
-        raise HTTPException(status_code=500, detail=f"Lỗi tạo lịch trình: {str(e)}")
+        # Log details server-side only; never leak provider/stack details to the client.
+        logger.exception("Planner provider/processing failure: %s", type(e).__name__)
+        raise HTTPException(
+            status_code=502,
+            detail="Nhà cung cấp AI không phản hồi. Vui lòng thử lại sau.",
+        )

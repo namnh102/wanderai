@@ -1,0 +1,19 @@
+{
+    "success":  true,
+    "data":  {
+                 "reply":  "Hien tai AI dang ban, ban doi 1 phut roi thu lai nhe!",
+                 "session_id":  "176a077f-f9b7-410d-a5d1-3cfe5080ced6",
+                 "tools_used":  [
+
+                                ],
+                 "tool_calls":  [
+
+                                ],
+                 "sources":  [
+                                 "https://en.wikivoyage.org/wiki/Vietnam",
+                                 "https://en.wikivoyage.org/wiki/Hanoi",
+                                 "https://www.openstreetmap.org/way/37933256"
+                             ]
+             },
+    "timestamp":  "2026-10-03T19:43:40.669Z"
+}

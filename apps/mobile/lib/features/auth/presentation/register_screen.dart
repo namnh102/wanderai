@@ -11,214 +11,110 @@ class RegisterScreen extends ConsumerStatefulWidget {
 }
 
 class _RegisterScreenState extends ConsumerState<RegisterScreen> {
+  final _nameCtrl = TextEditingController();
+  final _emailCtrl = TextEditingController();
+  final _passCtrl = TextEditingController();
+  final _confirmCtrl = TextEditingController();
   final _formKey = GlobalKey<FormState>();
-  final _nameController = TextEditingController();
-  final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
-  final _confirmController = TextEditingController();
-  bool _obscurePassword = true;
+  bool _obscure = true;
+  bool _loading = false;
 
   @override
   void dispose() {
-    _nameController.dispose();
-    _emailController.dispose();
-    _passwordController.dispose();
-    _confirmController.dispose();
+    _nameCtrl.dispose();
+    _emailCtrl.dispose();
+    _passCtrl.dispose();
+    _confirmCtrl.dispose();
     super.dispose();
   }
 
-  void _submit() async {
-    if (_formKey.currentState!.validate()) {
-      final success = await ref.read(authProvider.notifier).register(
-            _nameController.text.trim(),
-            _emailController.text.trim(),
-            _passwordController.text,
-          );
-      if (!success && mounted) {
-        final error = ref.read(authProvider).error ?? 'Ä Ã£ xáº£y ra lá»—i';
+  Future<void> _register() async {
+    if (!_formKey.currentState!.validate()) return;
+    setState(() => _loading = true);
+
+    final ok = await ref.read(authProvider.notifier).register(
+      _nameCtrl.text.trim(),
+      _emailCtrl.text.trim(),
+      _passCtrl.text,
+    );
+
+    if (mounted) {
+      setState(() => _loading = false);
+      if (!ok) {
+        final errorMsg = ref.read(authProvider).errorMessage ?? 'Dang ky that bai.';
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(error),
-            backgroundColor: Colors.red.shade400,
+            content: Text(errorMsg),
+            backgroundColor: Theme.of(context).colorScheme.error,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
           ),
         );
-      } else if (mounted) {
-        context.go('/');
       }
+      // On success, GoRouter redirect handles navigation automatically
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final authState = ref.watch(authProvider);
-
     return Scaffold(
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              Theme.of(context).colorScheme.surface,
-              Theme.of(context).colorScheme.surfaceContainerHighest,
-            ],
-          ),
-        ),
-        child: SafeArea(
-          child: Center(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(24.0),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    'Táº¡o tÃ i khoáº£n',
-                    style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: Colors.teal,
-                        ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Tham gia cÃ¹ng WanderAI âœˆï¸ ',
-                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                          color: Colors.grey.shade600,
-                        ),
-                  ),
-                  const SizedBox(height: 32),
-                  Card(
-                    elevation: 4,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(24),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(24.0),
-                      child: Form(
-                        key: _formKey,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            TextFormField(
-                              controller: _nameController,
-                              decoration: InputDecoration(
-                                labelText: 'Há»  vÃ  tÃªn',
-                                prefixIcon: const Icon(Icons.person_outline),
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(16),
-                                ),
-                              ),
-                              validator: (v) =>
-                                  v!.isEmpty ? 'Vui lÃ²ng nháº­p há»  tÃªn' : null,
-                            ),
-                            const SizedBox(height: 16),
-                            TextFormField(
-                              controller: _emailController,
-                              keyboardType: TextInputType.emailAddress,
-                              decoration: InputDecoration(
-                                labelText: 'Email',
-                                prefixIcon: const Icon(Icons.email_outlined),
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(16),
-                                ),
-                              ),
-                              validator: (v) =>
-                                  v!.isEmpty ? 'Vui lÃ²ng nháº­p email' : null,
-                            ),
-                            const SizedBox(height: 16),
-                            TextFormField(
-                              controller: _passwordController,
-                              obscureText: _obscurePassword,
-                              decoration: InputDecoration(
-                                labelText: 'Máº­t kháº©u',
-                                prefixIcon: const Icon(Icons.lock_outline),
-                                suffixIcon: IconButton(
-                                  icon: Icon(
-                                    _obscurePassword
-                                        ? Icons.visibility_off
-                                        : Icons.visibility,
-                                  ),
-                                  onPressed: () {
-                                    setState(() {
-                                      _obscurePassword = !_obscurePassword;
-                                    });
-                                  },
-                                ),
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(16),
-                                ),
-                              ),
-                              onChanged: (v) => setState(() {}),
-                              validator: (v) =>
-                                  v!.length < 6 ? 'Máº­t kháº©u > 6 kÃ½ tá»±' : null,
-                            ),
-                            const SizedBox(height: 8),
-                            LinearProgressIndicator(
-                              value: _passwordController.text.length / 10,
-                              color: _passwordController.text.length >= 6
-                                  ? Colors.green
-                                  : Colors.orange,
-                              backgroundColor: Colors.grey.shade200,
-                            ),
-                            const SizedBox(height: 16),
-                            TextFormField(
-                              controller: _confirmController,
-                              obscureText: _obscurePassword,
-                              decoration: InputDecoration(
-                                labelText: 'XÃ¡c nháº­n máº­t kháº©u',
-                                prefixIcon: const Icon(Icons.lock_outline),
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(16),
-                                ),
-                              ),
-                              validator: (v) {
-                                if (v != _passwordController.text) {
-                                  return 'Máº­t kháº©u khÃ´ng khá»›p';
-                                }
-                                return null;
-                              },
-                            ),
-                            const SizedBox(height: 32),
-                            FilledButton(
-                              onPressed: authState.isLoading ? null : _submit,
-                              style: FilledButton.styleFrom(
-                                padding: const EdgeInsets.symmetric(vertical: 16),
-                                backgroundColor: Colors.teal,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(16),
-                                ),
-                              ),
-                              child: authState.isLoading
-                                  ? const SizedBox(
-                                      height: 24,
-                                      width: 24,
-                                      child: CircularProgressIndicator(
-                                        color: Colors.white,
-                                        strokeWidth: 2,
-                                      ),
-                                    )
-                                  : const Text(
-                                      'Ä Äƒng kÃ½',
-                                      style: TextStyle(fontSize: 16),
-                                    ),
-                            ),
-                          ],
-                        ),
-                      ),
+      appBar: AppBar(title: const Text('Tao tai khoan')),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(24),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              children: [
+                TextFormField(
+                  controller: _nameCtrl,
+                  decoration: const InputDecoration(labelText: 'Ho va ten', prefixIcon: Icon(Icons.person_outlined)),
+                  validator: (v) => (v == null || v.isEmpty) ? 'Vui long nhap ten' : null,
+                ),
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: _emailCtrl,
+                  keyboardType: TextInputType.emailAddress,
+                  decoration: const InputDecoration(labelText: 'Email', prefixIcon: Icon(Icons.email_outlined)),
+                  validator: (v) => (v == null || !v.contains('@')) ? 'Email khong hop le' : null,
+                ),
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: _passCtrl,
+                  obscureText: _obscure,
+                  decoration: InputDecoration(
+                    labelText: 'Mat khau',
+                    prefixIcon: const Icon(Icons.lock_outlined),
+                    suffixIcon: IconButton(
+                      icon: Icon(_obscure ? Icons.visibility_off : Icons.visibility),
+                      onPressed: () => setState(() => _obscure = !_obscure),
                     ),
                   ),
-                  const SizedBox(height: 24),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Text('Ä Ã£ cÃ³ tÃ i khoáº£n?'),
-                      TextButton(
-                        onPressed: () => context.go('/login'),
-                        child: const Text('Ä Äƒng nháº­p'),
-                      ),
-                    ],
+                  validator: (v) => (v == null || v.length < 6) ? 'Mat khau it nhat 6 ky tu' : null,
+                ),
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: _confirmCtrl,
+                  obscureText: true,
+                  decoration: const InputDecoration(labelText: 'Xac nhan mat khau', prefixIcon: Icon(Icons.lock_outlined)),
+                  validator: (v) => v != _passCtrl.text ? 'Mat khau khong khop' : null,
+                ),
+                const SizedBox(height: 24),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: _loading ? null : _register,
+                    child: _loading
+                        ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                        : const Text('Dang ky'),
                   ),
-                ],
-              ),
+                ),
+                const SizedBox(height: 16),
+                TextButton(
+                  onPressed: () => context.go('/login'),
+                  child: const Text('Da co tai khoan? Dang nhap'),
+                ),
+              ],
             ),
           ),
         ),

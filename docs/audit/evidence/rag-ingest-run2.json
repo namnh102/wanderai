@@ -1,0 +1,41 @@
+{
+  "command": "python -m app.rag.ingest_osm",
+  "timestamp": "2026-10-03T19:30:16.644728+00:00",
+  "database": "localhost:5432/wanderai",
+  "embedding_model": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
+  "embedding_dimension": 384,
+  "before": {
+    "documents_total": 821,
+    "documents_by_source": {
+      "osm": 357,
+      "wikivoyage": 464
+    },
+    "wikivoyage_fingerprint": "66c2f19e40d0524c8aaeb46b89870c361cb1936501a12b9eab7f77869c566692",
+    "embeddings_null": 0,
+    "duplicate_content_hashes": 0,
+    "document_quarantine": 164,
+    "verified_places": 357
+  },
+  "result": {
+    "source": "OpenStreetMap",
+    "license": "ODbL 1.0",
+    "embedding_model": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
+    "verified_places": 357,
+    "documents_generated": 357,
+    "chunks_upserted": 357,
+    "stale_osm_documents_quarantined_and_removed": 0
+  },
+  "after": {
+    "documents_total": 821,
+    "documents_by_source": {
+      "osm": 357,
+      "wikivoyage": 464
+    },
+    "wikivoyage_fingerprint": "66c2f19e40d0524c8aaeb46b89870c361cb1936501a12b9eab7f77869c566692",
+    "embeddings_null": 0,
+    "duplicate_content_hashes": 0,
+    "document_quarantine": 164,
+    "verified_places": 357
+  },
+  "wikivoyage_unchanged": true
+}

@@ -1,0 +1,584 @@
+{
+  "verified_places": 108,
+  "osm_sources_checked": 110,
+  "violations": [
+    {
+      "place": "b8736146-31e2-4040-a944-b3caa52b0d22",
+      "name": "Cafe Win",
+      "issue": "fabricated default rating 4.5"
+    },
+    {
+      "place": "e2ca3e09-5e27-49be-8cb8-2b4de0aad198",
+      "name": "CafeKhanh Ly",
+      "issue": "fabricated default rating 4.5"
+    },
+    {
+      "place": "bb1f7c06-a890-4e93-9adb-8f4feb337b13",
+      "name": "ThanhBinh Coffee",
+      "issue": "fabricated default rating 4.5"
+    },
+    {
+      "place": "6e362397-926d-4d3d-8c17-6efb33c70deb",
+      "name": "CaPhe Fantasy",
+      "issue": "fabricated default rating 4.5"
+    },
+    {
+      "place": "90ac9b6b-f6f8-4108-b08f-0d34fc120d12",
+      "name": "CaPhe Lang Tien",
+      "issue": "fabricated default rating 4.5"
+    },
+    {
+      "place": "106e4cce-a105-4960-91f3-c7404f2cc0b7",
+      "name": "KieuLien Coffee",
+      "issue": "fabricated default rating 4.5"
+    },
+    {
+      "place": "0e23f5f0-be20-429a-93ee-6fc36bfa56d4",
+      "name": "Cafe Truc Phuong",
+      "issue": "fabricated default rating 4.5"
+    },
+    {
+      "place": "8ebf0429-fabb-4701-bbc1-cb2fea86d587",
+      "name": "Ca Phe 83",
+      "issue": "fabricated default rating 4.5"
+    },
+    {
+      "place": "e05198ce-ad69-42ff-a6e2-7127b4d57020",
+      "name": "Cafe Dong Xanh",
+      "issue": "fabricated default rating 4.5"
+    },
+    {
+      "place": "5069b8a3-89c1-4388-8d90-2849a7161bbc",
+      "name": "CafeTo Be",
+      "issue": "fabricated default rating 4.5"
+    },
+    {
+      "place": "37dafa44-02aa-4249-91be-32a45771d515",
+      "name": "CaPhe Sao Mai",
+      "issue": "fabricated default rating 4.5"
+    },
+    {
+      "place": "0e700a5f-4c74-43af-b6b8-b8ee9050d811",
+      "name": "MienThao Coffee",
+      "issue": "fabricated default rating 4.5"
+    },
+    {
+      "place": "db313e4a-f824-4d0c-a0b4-50ffa0e54c92",
+      "name": "GmcCoffee",
+      "issue": "fabricated default rating 4.5"
+    },
+    {
+      "place": "cb696281-f372-41cc-b1d8-96c557359629",
+      "name": "CaPhe 3 Ladies",
+      "issue": "fabricated default rating 4.5"
+    },
+    {
+      "place": "cf254f06-4d4c-4c19-b1ea-d06679a5f429",
+      "name": "OnenineCoffee",
+      "issue": "fabricated default rating 4.5"
+    },
+    {
+      "place": "2dff8b62-2005-48d2-a216-3f0c78bf930d",
+      "name": "Ca Phe Thuan",
+      "issue": "fabricated default rating 4.5"
+    },
+    {
+      "place": "70618fb3-8373-45d3-95e9-f00de8a77401",
+      "name": "CafeGiai Khat 204",
+      "issue": "fabricated default rating 4.5"
+    },
+    {
+      "place": "2df6ec00-eada-4cdc-8307-435080bf4d34",
+      "name": "CaPhe Konia",
+      "issue": "fabricated default rating 4.5"
+    },
+    {
+      "place": "fd87da97-b3a1-42f8-b195-c7da9b492929",
+      "name": "VuonNguyet Khue Vien Coffee",
+      "issue": "fabricated default rating 4.5"
+    },
+    {
+      "place": "bd651d9d-d4da-437c-95ea-d323b70da8ff",
+      "name": "CafeNguyen",
+      "issue": "fabricated default rating 4.5"
+    },
+    {
+      "place": "aa7e39ef-0355-4d7d-801b-b6b62e615bf0",
+      "name": "NgocVan Coffee",
+      "issue": "fabricated default rating 4.5"
+    },
+    {
+      "place": "6cf7ba51-b528-4a36-a018-de7a6d883d17",
+      "name": "CafeLuna",
+      "issue": "fabricated default rating 4.5"
+    },
+    {
+      "place": "b571207d-ce89-47e9-83be-ff590ce5a603",
+      "name": "CafeBao Dang",
+      "issue": "fabricated default rating 4.5"
+    },
+    {
+      "place": "e785000a-dd1f-4156-954d-5ad52c13c0b7",
+      "name": "AnhLinh Coffee",
+      "issue": "fabricated default rating 4.5"
+    },
+    {
+      "place": "91277439-d542-47f2-9825-e13814d483af",
+      "name": "HoaTieu Coffee",
+      "issue": "fabricated default rating 4.5"
+    },
+    {
+      "place": "65cd2e60-e033-4b64-bf0b-a76f80281e31",
+      "name": "Giai Khat Quang",
+      "issue": "fabricated default rating 4.5"
+    },
+    {
+      "place": "ee500089-d251-441d-8e22-cf2ab022eb9b",
+      "name": "Cafe72",
+      "issue": "fabricated default rating 4.5"
+    },
+    {
+      "place": "10f54122-dbbc-4f01-b09a-4505bc86df27",
+      "name": "ThanhHuong Coffee",
+      "issue": "fabricated default rating 4.5"
+    },
+    {
+      "place": "0fad00f2-c21a-458d-b5af-9a7a31192061",
+      "name": "CaPhe Hoang Anh",
+      "issue": "fabricated default rating 4.5"
+    },
+    {
+      "place": "630f4de9-0d28-4eeb-ae4c-d5fc7eb36024",
+      "name": "AnhLinh Coffee",
+      "issue": "fabricated default rating 4.5"
+    },
+    {
+      "place": "450844a1-1aaa-47de-8776-12183a70b17f",
+      "name": "VuonThao Coffee",
+      "issue": "fabricated default rating 4.5"
+    },
+    {
+      "place": "7d7e049e-d3f9-436a-aa1a-bf49ca0d1206",
+      "name": "324Coffee",
+      "issue": "fabricated default rating 4.5"
+    },
+    {
+      "place": "61b29632-3b0a-4d72-b4fc-4f1c1873b12b",
+      "name": "Nhà Hàng Chay & Cà Phê Thúp An",
+      "issue": "fabricated default rating 4.5"
+    },
+    {
+      "place": "0d80df76-7568-45cb-a732-423175b64542",
+      "name": "CaPhe Nhat Linh",
+      "issue": "fabricated default rating 4.5"
+    },
+    {
+      "place": "2a4b6214-f12f-42ae-b29f-bb2fccea4332",
+      "name": "CafeThoang Sai Gon",
+      "issue": "fabricated default rating 4.5"
+    },
+    {
+      "place": "901c8604-f171-4ae7-819f-7ab8141e6c8b",
+      "name": "CaPhe Trung",
+      "issue": "fabricated default rating 4.5"
+    },
+    {
+      "place": "838778f3-cab3-41ce-9c77-0a05cacbc914",
+      "name": "CaPhe Thu Dung",
+      "issue": "fabricated default rating 4.5"
+    },
+    {
+      "place": "35f2457e-8cd4-440a-b3a6-fb3dac62868f",
+      "name": "Cafe219",
+      "issue": "fabricated default rating 4.5"
+    },
+    {
+      "place": "5f06d67b-ec9c-491e-b676-983c5f0a7b2d",
+      "name": "ThanhThuy Coffee",
+      "issue": "fabricated default rating 4.5"
+    },
+    {
+      "place": "aef9a458-dbbc-4a6a-b4ff-32f261292805",
+      "name": "CaPhe Long",
+      "issue": "fabricated default rating 4.5"
+    },
+    {
+      "place": "e7551f04-dbba-4077-83b1-d0689396f681",
+      "name": "MyDuyen Coffee",
+      "issue": "fabricated default rating 4.5"
+    },
+    {
+      "place": "da7f0562-2bee-4244-86c8-26a21474f8e0",
+      "name": "Ca Phe New Life",
+      "issue": "fabricated default rating 4.5"
+    },
+    {
+      "place": "282fc847-15d7-49d4-84ac-a69363d256e8",
+      "name": "CaPhe Bong Da 14",
+      "issue": "fabricated default rating 4.5"
+    },
+    {
+      "place": "94fa3f20-ad89-4c85-9b18-28afcbee4e03",
+      "name": "CaPhe New Life",
+      "issue": "fabricated default rating 4.5"
+    },
+    {
+      "place": "0ab131df-43f2-48b1-a9d1-bbc2f38970c9",
+      "name": "ThanhHuong Coffee",
+      "issue": "fabricated default rating 4.5"
+    },
+    {
+      "place": "da64cc83-b270-4cb3-ab90-0abc172cf763",
+      "name": "Khách Sạn Đức Thái",
+      "issue": "fabricated default rating 4.5"
+    },
+    {
+      "place": "ef76a682-35ef-4088-94ef-fe05fadf6a1d",
+      "name": "Cà Phê Cây Bàng Đổ",
+      "issue": "fabricated default rating 4.5"
+    },
+    {
+      "place": "a2fc15de-d609-4d4f-abf1-9779d57901a6",
+      "name": "Cà Phê Kafa",
+      "issue": "fabricated default rating 4.5"
+    },
+    {
+      "place": "bac279ff-37a6-4f87-8b4a-e05fe1ecb174",
+      "name": "Nhà Hàng Chay Phương Nam",
+      "issue": "fabricated default rating 4.5"
+    },
+    {
+      "place": "8708d047-6900-4dbc-80e9-381a269ba488",
+      "name": "Nhà hàng Nam Phương",
+      "issue": "fabricated default rating 4.5"
+    },
+    {
+      "place": "29a380ee-5690-453f-9e5b-13b64f2cd997",
+      "name": "Nha Hang Little Italian",
+      "issue": "fabricated default rating 4.5"
+    },
+    {
+      "place": "ac39bb02-5154-445b-af31-7d832351b379",
+      "name": "Nha Hang Indochine",
+      "issue": "fabricated default rating 4.5"
+    },
+    {
+      "place": "0ef5ad18-1c3a-49a6-8243-7d8d70e91e3c",
+      "name": "Khách Sạn Prince",
+      "issue": "fabricated default rating 4.5"
+    },
+    {
+      "place": "9a96e0a0-e040-4e16-a3f2-682ca373dd8e",
+      "name": "Somerset Grand Hanoi",
+      "issue": "fabricated default rating 4.5"
+    },
+    {
+      "place": "82150ecb-f97e-4f82-bbcc-b183d12bb503",
+      "name": "Cà Phê Big One",
+      "issue": "fabricated default rating 4.5"
+    },
+    {
+      "place": "5bd45eb7-a691-4426-9691-a5a00f38d1ad",
+      "name": "Highlands Coffee",
+      "issue": "fabricated default rating 4.5"
+    },
+    {
+      "place": "54cb11e4-f1b9-48ed-aeed-6383a6e42f03",
+      "name": "Sushi Tiger",
+      "issue": "fabricated default rating 4.5"
+    },
+    {
+      "place": "afb3793b-7227-4645-a68a-3647c7468638",
+      "name": "Sen Tây Hồ",
+      "issue": "fabricated default rating 4.5"
+    },
+    {
+      "place": "fba71fa1-0b3f-406d-9192-6ab9c8057f6a",
+      "name": "Tượng đài Lý Thái Tổ",
+      "issue": "fabricated default rating 4.5"
+    },
+    {
+      "place": "3b3ca713-1a38-491f-9106-fe8d061275a7",
+      "name": "Nhà 48 phố Hàng Ngang",
+      "issue": "fabricated default rating 4.5"
+    },
+    {
+      "place": "0d2e75ea-0868-4759-a4c1-e8d08373846e",
+      "name": "Thành Công",
+      "issue": "fabricated default rating 4.5"
+    },
+    {
+      "place": "a3ff8bb3-cf45-490f-9d6c-3a6ffdd7ab19",
+      "name": "Trà Xuân Tửu",
+      "issue": "fabricated default rating 4.5"
+    },
+    {
+      "place": "f6f82c88-2577-4b65-a225-ee98afb345a9",
+      "name": "Cây Si",
+      "issue": "fabricated default rating 4.5"
+    },
+    {
+      "place": "17f25462-dbb9-457d-a946-e4d0cf1a688e",
+      "name": "Nhà hàng Thành Lộc",
+      "issue": "fabricated default rating 4.5"
+    },
+    {
+      "place": "a7bfcb70-18f2-42f7-9901-b6772874ca28",
+      "name": "Cà Phê Hao",
+      "issue": "fabricated default rating 4.5"
+    },
+    {
+      "place": "a4a59fc4-08f7-4f8c-a4f2-643a857026da",
+      "name": "Khách Sạn Đông Á",
+      "issue": "fabricated default rating 4.5"
+    },
+    {
+      "place": "b82492e3-ca7a-4a0d-a709-9e2529351d4a",
+      "name": "Thu Giang Guest House",
+      "issue": "fabricated default rating 4.5"
+    },
+    {
+      "place": "6ad4a9fb-f6d0-4268-b50a-d485d4fcff4b",
+      "name": "Real Darling Cafe Guesthouse",
+      "issue": "fabricated default rating 4.5"
+    },
+    {
+      "place": "95e4dd6b-ce28-4642-838d-bd14f786a71b",
+      "name": "Khách Sạn Classic 2",
+      "issue": "fabricated default rating 4.5"
+    },
+    {
+      "place": "54965bd3-db07-495f-b636-460a84310d2c",
+      "name": "Khách Sạn Indochina Queen",
+      "issue": "fabricated default rating 4.5"
+    },
+    {
+      "place": "904c9200-2262-4df1-888b-ce8d7884e714",
+      "name": "Khách Sạn Hanoi Backpackers",
+      "issue": "fabricated default rating 4.5"
+    },
+    {
+      "place": "557f3c33-eaa8-418c-adab-8106ce640903",
+      "name": "Khách Sạn Hanoi Phoenix II",
+      "issue": "fabricated default rating 4.5"
+    },
+    {
+      "place": "6926cde2-14ce-4f11-a956-0d9b0090ed6f",
+      "name": "Bảo tàng Điêu khắc Chăm",
+      "issue": "fabricated default rating 4.5"
+    },
+    {
+      "place": "5531ae5f-f525-4651-a984-6bff4945ea60",
+      "name": "Lăng Chủ tịch Hồ Chí Minh",
+      "issue": "fabricated default rating 4.5"
+    },
+    {
+      "place": "89dd46e9-fc95-4911-a9d4-685390dc25eb",
+      "name": "Tháp Bà Ponagar",
+      "issue": "fabricated default rating 4.5"
+    },
+    {
+      "place": "d3de2c7d-2fa6-4bb1-9f0a-c106741322c0",
+      "name": "CaPhe Thu Uyen",
+      "issue": "fabricated default rating 4.5"
+    },
+    {
+      "place": "e7ae2f9e-f63b-415b-bdb7-96d276e8fa12",
+      "name": "MuoiChau Coffee",
+      "issue": "fabricated default rating 4.5"
+    },
+    {
+      "place": "13241745-f946-400d-9246-b7247a2255ea",
+      "name": "PhoSao Coffee",
+      "issue": "fabricated default rating 4.5"
+    },
+    {
+      "place": "462eecc9-4cf2-4b10-9248-7bb7dce7326d",
+      "name": "BaoNhi Coffee",
+      "issue": "fabricated default rating 4.5"
+    },
+    {
+      "place": "c68c362a-aa05-42c1-aa5b-6934519da8ed",
+      "name": "CafeBan Toi",
+      "issue": "fabricated default rating 4.5"
+    },
+    {
+      "place": "b0641225-0f38-4bcc-9f4c-34f65fa50d45",
+      "name": "Cửa Hàng Bánh Tôm Hồ Tây",
+      "issue": "fabricated default rating 4.5"
+    },
+    {
+      "place": "40f78727-b11e-49d2-8127-fa9619a0df77",
+      "name": "Phu Hoa",
+      "issue": "fabricated default rating 4.5"
+    },
+    {
+      "place": "c693a3f8-e323-41ec-803f-04dd01b65bde",
+      "name": "Khách Sạn Little Hanoi Diamond",
+      "issue": "fabricated default rating 4.5"
+    },
+    {
+      "place": "c04b7f76-28b3-4548-8aa3-84a608d1f077",
+      "name": "Prince Hotel",
+      "issue": "fabricated default rating 4.5"
+    },
+    {
+      "place": "65b612a7-79d4-4dbb-9f13-656b9540e553",
+      "name": "Prince 57 Hotel",
+      "issue": "fabricated default rating 4.5"
+    },
+    {
+      "place": "34e677eb-5a2f-42f2-a2ba-373b6af40cef",
+      "name": "Khách Sạn Hanoi Youth",
+      "issue": "fabricated default rating 4.5"
+    },
+    {
+      "place": "939a2b1e-5557-46a8-918f-5841ec320b33",
+      "name": "Tien Thuy Hotel",
+      "issue": "fabricated default rating 4.5"
+    },
+    {
+      "place": "b33b6d8e-4dc2-4281-b88f-138bc4edbae3",
+      "name": "Khách Sạn Hanoi Gecko 2",
+      "issue": "fabricated default rating 4.5"
+    },
+    {
+      "place": "6ccaef28-4739-48f8-bd75-be205773666e",
+      "name": "Khách Sạn Golden Lotus",
+      "issue": "fabricated default rating 4.5"
+    },
+    {
+      "place": "6490cf19-2a35-4128-8b2c-ad795f1f2a07",
+      "name": "Zephyr Hotel",
+      "issue": "fabricated default rating 4.5"
+    },
+    {
+      "place": "39e061bd-478a-488a-a803-6c9342400b6b",
+      "name": "Khách Sạn Bạch Tùng Điệp",
+      "issue": "fabricated default rating 4.5"
+    },
+    {
+      "place": "9244a3af-2a8e-42da-8a04-092627863b74",
+      "name": "Khách Sạn Camellia",
+      "issue": "fabricated default rating 4.5"
+    },
+    {
+      "place": "7035a23e-b828-4ad3-a937-d4e69f296711",
+      "name": "Khách Sạn Hanoi Gecko III",
+      "issue": "fabricated default rating 4.5"
+    },
+    {
+      "place": "2c99e80d-25a7-4b7c-9dbc-6138c8e5d5be",
+      "name": "The Drift Backpackers Hostel",
+      "issue": "fabricated default rating 4.5"
+    },
+    {
+      "place": "03e7eb46-afc0-4b25-91b0-dae3befb68da",
+      "name": "Khách Sạn Maison D'Hanoi",
+      "issue": "fabricated default rating 4.5"
+    },
+    {
+      "place": "2ae50f31-e1dd-4be4-bffc-680318074f7f",
+      "name": "Nhà Hàng Little Hanoi",
+      "issue": "fabricated default rating 4.5"
+    },
+    {
+      "place": "0180e390-f144-4efc-849e-00eeb6cb3992",
+      "name": "Nhà Hàng New Day",
+      "issue": "fabricated default rating 4.5"
+    },
+    {
+      "place": "acb22336-1124-49d5-a279-6357c2b2b445",
+      "name": "Quán Ăn Ngon - Phan Bội Châu",
+      "issue": "fabricated default rating 4.5"
+    },
+    {
+      "place": "5abba2de-af4b-4c0d-a3b7-7347cd0b266a",
+      "name": "Xoi Van Anh",
+      "issue": "fabricated default rating 4.5"
+    },
+    {
+      "place": "4146f2b7-8289-4309-b7e6-60ba7de3470e",
+      "name": "Cà Phê Nola",
+      "issue": "fabricated default rating 4.5"
+    },
+    {
+      "place": "95e4dd6b-ce28-4642-838d-bd14f786a71b",
+      "name": "Khách Sạn Classic 2",
+      "issue": "node/708488382 is 307 m from stored coordinates"
+    },
+    {
+      "place": "e30d5e7a-47c2-44ec-a52c-3a5a0411b2f9",
+      "name": "Cầu Rồng",
+      "issue": "node/859302194 is 9469989 m from stored coordinates"
+    },
+    {
+      "place": "21f381fc-e64b-45ce-ba79-e0b5da0022cc",
+      "name": "Danh thắng Ngũ Hành Sơn",
+      "issue": "node/348291039 is 9839191 m from stored coordinates"
+    },
+    {
+      "place": "6926cde2-14ce-4f11-a956-0d9b0090ed6f",
+      "name": "Bảo tàng Điêu khắc Chăm",
+      "issue": "node/923847291 does not exist upstream"
+    },
+    {
+      "place": "f1fb1c77-b6f5-4e44-803a-c83911021728",
+      "name": "Văn Miếu - Quốc Tử Giám",
+      "issue": "node/675849302 does not exist upstream"
+    },
+    {
+      "place": "5531ae5f-f525-4651-a984-6bff4945ea60",
+      "name": "Lăng Chủ tịch Hồ Chí Minh",
+      "issue": "node/564738291 is 8224888 m from stored coordinates"
+    },
+    {
+      "place": "26de0c50-1697-4a3a-a913-216dd744d303",
+      "name": "Đại Nội Huế",
+      "issue": "node/890123456 does not exist upstream"
+    },
+    {
+      "place": "89dd46e9-fc95-4911-a9d4-685390dc25eb",
+      "name": "Tháp Bà Ponagar",
+      "issue": "node/901234567 does not exist upstream"
+    },
+    {
+      "place": "c693a3f8-e323-41ec-803f-04dd01b65bde",
+      "name": "Khách Sạn Little Hanoi Diamond",
+      "issue": "node/708488342 is 156 m from stored coordinates"
+    },
+    {
+      "place": "a9fcefd6-4679-4c62-96ae-97bb9ded7cd1",
+      "name": "Chùa Linh Ứng",
+      "issue": "node/1459203941 does not exist upstream"
+    },
+    {
+      "place": "b16800de-9e07-44ac-894b-b6daf8d66069",
+      "name": "Hồ Hoàn Kiếm",
+      "issue": "node/192837465 is 13366552 m from stored coordinates"
+    },
+    {
+      "place": "8ef9b37a-2bfe-4050-9358-dc70ba093c43",
+      "name": "Chùa Cầu Hội An",
+      "issue": "node/789456123 is 9805429 m from stored coordinates"
+    },
+    {
+      "place": "e9af8edc-0c38-4028-b9af-da67f6de341f",
+      "name": "Bãi biển Mỹ Khê",
+      "issue": "node/268491823 does not exist upstream"
+    }
+  ],
+  "name_differences_informational": [
+    {
+      "place": "Khách Sạn Classic 2",
+      "upstream": "Khách Sạn Classic",
+      "source": "node/708488382"
+    },
+    {
+      "place": "Khách Sạn Little Hanoi Diamond",
+      "upstream": "Khách Sạn Little Hanoi",
+      "source": "node/708488342"
+    }
+  ],
+  "result": "FAIL"
+}

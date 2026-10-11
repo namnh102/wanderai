@@ -1,0 +1,22 @@
+{
+  "scenario_id": "eval_ha_giang_3d",
+  "name": "Hà Giang 3 Ngày 2 Đêm - Chinh Phục Cung Đường",
+  "request": {
+    "destination": "Hà Giang",
+    "days": 3,
+    "start_date": "2026-10-20",
+    "end_date": "2026-10-22",
+    "budget": 3500000,
+    "currency": "VND",
+    "travel_style": "adventure",
+    "interests": ["mountain", "photography", "culture"],
+    "notes": "Đi xe máy qua đèo Mã Pí Lèng, sông Nho Quế, Cột cờ Lũng Cú"
+  },
+  "expected_constraints": {
+    "min_days": 3,
+    "max_days": 3,
+    "max_budget": 3500000,
+    "required_keywords": ["Mã Pí Lèng", "Đồng Văn", "Lũng Cú"],
+    "min_items_per_day": 3
+  }
+}
