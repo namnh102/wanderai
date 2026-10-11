@@ -1,0 +1,85 @@
+{
+  "_comment": "Verifier compatibility record for Dataset Freeze V1 legacy EOL erratum. NOT part of Freeze V1; does not alter any frozen hash. See docs/data/dataset-freeze-v1-eol-erratum.md.",
+  "schema_version": 1,
+  "freeze_manifest": "data/manifests/dataset-freeze-v1.sha256",
+  "exceptions": [
+    {
+      "path": "data/raw/osm/collection_metadata_2026-10-07.json",
+      "historical_expected_sha256": "7ee17315987643457128ec79cc9f1eb72a98bc29c5f1d860cb7fd0e872531b66",
+      "historical_eol_form": "CRLF",
+      "canonical_git_eol_form": "LF"
+    },
+    {
+      "path": "data/processed/osm/hanoi_normalized_v1.json",
+      "historical_expected_sha256": "a71fd59b8f0f741359dffb49fcda50fcc8fc9618a19b7e718ad903ca39c88bf3",
+      "historical_eol_form": "CRLF",
+      "canonical_git_eol_form": "LF"
+    },
+    {
+      "path": "data/processed/osm/halong_normalized_v1.json",
+      "historical_expected_sha256": "35dd75a73023868739b6874b9879025984b39ab58fc0fb206517f2372634521a",
+      "historical_eol_form": "CRLF",
+      "canonical_git_eol_form": "LF"
+    },
+    {
+      "path": "data/processed/osm/normalization_quality_stats_2026-10-07.json",
+      "historical_expected_sha256": "2ed161e45597156ff6518f8431952ea47e9ccf1ddad6fc53e6fe361320bbbfbb",
+      "historical_eol_form": "CRLF",
+      "canonical_git_eol_form": "LF"
+    },
+    {
+      "path": "data/curated/overture/halong_overture_crosscheck_v1.json",
+      "historical_expected_sha256": "3267b1ee1bf38f76023057c395a0cb9171f7b3c5b3326a6cb6b8f232c8ae88e2",
+      "historical_eol_form": "CRLF",
+      "canonical_git_eol_form": "LF"
+    },
+    {
+      "path": "data/curated/overture/hanoi_overture_crosscheck_v1.json",
+      "historical_expected_sha256": "2f3477e774373ec8beb7cb24f778447ced323db57c40251ae2e3a528256161f5",
+      "historical_eol_form": "CRLF",
+      "canonical_git_eol_form": "LF"
+    },
+    {
+      "path": "data/curated/overture/overture_crosscheck_summary_2026-10-07.json",
+      "historical_expected_sha256": "1c245d97b8e04fe9590466f5201f8c03e726e3ffc23131377a849c75a456f50c",
+      "historical_eol_form": "CRLF",
+      "canonical_git_eol_form": "LF"
+    },
+    {
+      "path": "data/curated/gomate_places_freeze_v1.json",
+      "historical_expected_sha256": "d687b08cd6f3ef2f1ea0bdeb41d5b2647f848add70ddfed5144d55fcb0b23d4b",
+      "historical_eol_form": "CRLF",
+      "canonical_git_eol_form": "LF"
+    },
+    {
+      "path": "data/research/preferences/synthetic_preferences_v1.jsonl",
+      "historical_expected_sha256": "f33af6cb91189b1b43d0a8a229c364fe41fab6f392250617a3d77d2b7824ff92",
+      "historical_eol_form": "CRLF",
+      "canonical_git_eol_form": "LF"
+    },
+    {
+      "path": "data/evaluation/synthetic/preferences_n300_seed42.json",
+      "historical_expected_sha256": "1e883266bf6b145de0b7debf02d4881fc2f5293c9cf693ed34cd01715f6ab21a",
+      "historical_eol_form": "CRLF",
+      "canonical_git_eol_form": "LF"
+    },
+    {
+      "path": "data/research/preferences/synthetic_preferences_distribution_v1.json",
+      "historical_expected_sha256": "4175db65e33e14b6c540bf57bc899e35a0d3c83f243abd4b32faef4c00ca01dd",
+      "historical_eol_form": "CRLF",
+      "canonical_git_eol_form": "LF"
+    },
+    {
+      "path": "data/manifests/db_import_plan_v1.json",
+      "historical_expected_sha256": "18400ad20a221f4bed76c47845dec868137d4587b5c1d993af9c16f0ed8efb5e",
+      "historical_eol_form": "CRLF",
+      "canonical_git_eol_form": "LF"
+    },
+    {
+      "path": "data/manifests/pre_data02_rollback_state.json",
+      "historical_expected_sha256": "c1f0f517899ffab5a231797eb148d1c16810deb0596659ac9d655d3bf277b20e",
+      "historical_eol_form": "CRLF",
+      "canonical_git_eol_form": "LF"
+    }
+  ]
+}

@@ -91,11 +91,16 @@ def test_synthetic_preferences_determinism():
 
     json_file = REPO_ROOT / "data" / "evaluation" / "synthetic" / "preferences_n300_seed42.json"
     assert json_file.exists()
-    h = hashlib.sha256()
-    with open(json_file, "rb") as f:
-        while chunk := f.read(65536):
-            h.update(chunk)
-    assert h.hexdigest() == "1e883266bf6b145de0b7debf02d4881fc2f5293c9cf693ed34cd01715f6ab21a"
+    from scripts.freeze_checksum import (
+        DEFAULT_COMPAT_RELPATH, PASS, LEGACY_EOL_COMPAT_PASS, load_compat, verify_artifact,
+    )
+    status, detail = verify_artifact(
+        json_file,
+        "data/evaluation/synthetic/preferences_n300_seed42.json",
+        "1e883266bf6b145de0b7debf02d4881fc2f5293c9cf693ed34cd01715f6ab21a",
+        load_compat(REPO_ROOT / DEFAULT_COMPAT_RELPATH),
+    )
+    assert status in (PASS, LEGACY_EOL_COMPAT_PASS), detail
 
     # Check distribution constraints
     stats = analyze_distributions(run1)
@@ -174,25 +179,18 @@ def test_curated_places_freeze_invariants():
 
 # 7. Quality Tests: Manifest & SHA-256 Integrity
 def test_freeze_manifest_sha256_integrity():
+    from scripts.freeze_checksum import (
+        DEFAULT_COMPAT_RELPATH, PASS, LEGACY_EOL_COMPAT_PASS,
+        parse_manifest, verify_manifest,
+    )
+
     sha_file = REPO_ROOT / "data" / "manifests" / "dataset-freeze-v1.sha256"
     assert sha_file.exists()
+    assert len(parse_manifest(sha_file)) == 23, "Expected 23 frozen artifacts"
 
-    with open(sha_file, "r", encoding="utf-8") as f:
-        lines = [line.strip() for line in f if line.strip()]
-
-    assert len(lines) == 23, f"Expected 23 frozen artifacts, got {len(lines)}"
-
-    for line in lines:
-        expected_sha, rel_path = line.split("  ", 1)
-        full_path = REPO_ROOT / rel_path
-        assert full_path.exists(), f"Frozen file missing: {rel_path}"
-
-        h = hashlib.sha256()
-        with open(full_path, "rb") as f:
-            while chunk := f.read(65536):
-                h.update(chunk)
-        actual_sha = h.hexdigest()
-        assert actual_sha == expected_sha, f"SHA-256 mismatch for {rel_path}: expected {expected_sha}, got {actual_sha}"
+    results = verify_manifest(REPO_ROOT, sha_file, REPO_ROOT / DEFAULT_COMPAT_RELPATH)
+    bad = [d for _, st, d in results if st not in (PASS, LEGACY_EOL_COMPAT_PASS)]
+    assert not bad, "Freeze V1 verification failed: " + "; ".join(bad)
 
 # 8. DATA-02-R1 Governance Closure Tests
 import subprocess

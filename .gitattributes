@@ -1,0 +1,20 @@
+# Repository EOL policy: text is stored and checked out as LF on every platform.
+# Not applied retroactively (no mass renormalisation); see
+# docs/data/dataset-freeze-v1-eol-erratum.md for the legacy Freeze V1 exceptions.
+* text=auto eol=lf
+
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.webp binary
+*.gif binary
+*.ico binary
+*.zip binary
+*.gz binary
+*.pdf binary
+*.docx binary
+*.xlsx binary
+*.ttf binary
+*.otf binary
+*.woff binary
+*.woff2 binary
