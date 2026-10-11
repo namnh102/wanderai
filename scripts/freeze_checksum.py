@@ -4,7 +4,8 @@ Policy (see docs/data/dataset-freeze-v1-eol-erratum.md):
 
 * Raw working-tree bytes are hashed first. A match is a normal PASS.
 * On mismatch, ONLY paths explicitly listed in
-  data/manifests/dataset-freeze-v1-eol-compat.json may be re-checked against the
+  data/manifests/dataset-freeze-v1-eol-compat.json or
+  data/manifests/dataset-freeze-v2-eol-compat.json may be re-checked against the
   historical CRLF byte representation. Anything else is a FAIL.
 * The compat record is NOT part of Freeze V1 and never replaces a frozen hash:
   the historical hash must still be reproduced exactly from reconstructed bytes.
@@ -23,6 +24,9 @@ FAIL = "FAIL"
 MISSING = "MISSING"
 
 DEFAULT_COMPAT_RELPATH = "data/manifests/dataset-freeze-v1-eol-compat.json"
+DEFAULT_COMPAT_V2_RELPATH = "data/manifests/dataset-freeze-v2-eol-compat.json"
+# V1 and V2 records are logically separate files; the verifier merges them in memory only.
+DEFAULT_COMPAT_RELPATHS = (DEFAULT_COMPAT_RELPATH, DEFAULT_COMPAT_V2_RELPATH)
 
 
 def sha256_bytes(data: bytes) -> str:
@@ -47,19 +51,34 @@ def parse_manifest(manifest_path: Path) -> List[Tuple[str, str]]:
     with open(manifest_path, "r", encoding="utf-8") as f:
         for line in f:
             line = line.strip()
-            if line:
-                sha, rel = line.split("  ", 1)
-                entries.append((sha, rel))
+            if line and not line.startswith("#"):
+                sha, rel = line.split(None, 1)
+                entries.append((sha, rel.strip()))
     return entries
 
 
-def load_compat(compat_path: Optional[Path]) -> Dict[str, dict]:
-    """Return {path: exception_record}. Missing file => no exceptions."""
-    if compat_path is None or not Path(compat_path).exists():
+def load_compat(compat_path) -> Dict[str, dict]:
+    """Return {path: exception_record} merged from one path or an iterable of paths.
+
+    Missing files contribute no exceptions. The same path listed twice with a
+    different historical hash is a configuration error.
+    """
+    if compat_path is None:
         return {}
-    with open(compat_path, "r", encoding="utf-8") as f:
-        doc = json.load(f)
-    return {e["path"]: e for e in doc.get("exceptions", [])}
+    paths = [compat_path] if isinstance(compat_path, (str, Path)) else list(compat_path)
+    merged: Dict[str, dict] = {}
+    for cp in paths:
+        cp = Path(cp)
+        if not cp.exists():
+            continue
+        with open(cp, "r", encoding="utf-8") as f:
+            doc = json.load(f)
+        for e in doc.get("exceptions", []):
+            prev = merged.get(e["path"])
+            if prev is not None and prev["historical_expected_sha256"] != e["historical_expected_sha256"]:
+                raise ValueError(f"conflicting compat records for {e['path']}")
+            merged[e["path"]] = e
+    return merged
 
 
 def verify_artifact(
@@ -97,7 +116,7 @@ def verify_artifact(
 
 
 def verify_manifest(
-    repo_root: Path, manifest_path: Path, compat_path: Optional[Path] = None
+    repo_root: Path, manifest_path: Path, compat_path=None
 ) -> List[Tuple[str, str, str]]:
     """Return [(rel_path, status, detail)] for every manifest entry."""
     compat = load_compat(compat_path)
@@ -113,7 +132,7 @@ if __name__ == "__main__":  # pragma: no cover
     res = verify_manifest(
         root,
         root / "data/manifests/dataset-freeze-v1.sha256",
-        root / DEFAULT_COMPAT_RELPATH,
+        [root / p for p in DEFAULT_COMPAT_RELPATHS],
     )
     for rel, status, detail in res:
         print(f"{status:24s} {rel}")

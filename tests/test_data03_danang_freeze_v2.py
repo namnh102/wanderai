@@ -102,33 +102,26 @@ def test_danang_overture_crosscheck():
 
     assert autolink_count == 549, f"Expected 549 AUTO_LINK, got {autolink_count}"
 
+def _assert_frozen_manifest(manifest_name: str, label: str):
+    """Shared documented freeze verifier (raw PASS | LEGACY_EOL_COMPAT_PASS | FAIL)."""
+    from scripts.freeze_checksum import (
+        DEFAULT_COMPAT_RELPATHS, LEGACY_EOL_COMPAT_PASS, PASS, verify_manifest,
+    )
+    manifest = REPO_ROOT / "data" / "manifests" / manifest_name
+    assert manifest.exists()
+    results = verify_manifest(REPO_ROOT, manifest, [REPO_ROOT / p for p in DEFAULT_COMPAT_RELPATHS])
+    assert results, f"{label}: empty manifest"
+    bad = [d for _, st, d in results if st not in (PASS, LEGACY_EOL_COMPAT_PASS)]
+    assert not bad, f"{label} verification failed: " + "; ".join(bad)
+
+
 # 3. Freeze V1 Immutability
 def test_freeze_v1_immutability():
-    v1_sha = REPO_ROOT / "data" / "manifests" / "dataset-freeze-v1.sha256"
-    assert v1_sha.exists()
-    with open(v1_sha, "r", encoding="utf-8") as f:
-        for line in f:
-            line = line.strip()
-            if not line or line.startswith("#"):
-                continue
-            exp_sha, rel_p = line.split(None, 1)
-            target = REPO_ROOT / rel_p.strip()
-            assert target.exists(), f"Freeze V1 file missing: {rel_p}"
-            assert compute_sha256(target) == exp_sha, f"Freeze V1 byte mutation in {rel_p}!"
+    _assert_frozen_manifest("dataset-freeze-v1.sha256", "Freeze V1")
 
 # 4. Freeze V2 Checksum Integrity
 def test_freeze_v2_checksum_integrity():
-    v2_sha = REPO_ROOT / "data" / "manifests" / "dataset-freeze-v2.sha256"
-    assert v2_sha.exists()
-    with open(v2_sha, "r", encoding="utf-8") as f:
-        for line in f:
-            line = line.strip()
-            if not line or line.startswith("#"):
-                continue
-            exp_sha, rel_p = line.split(None, 1)
-            target = REPO_ROOT / rel_p.strip()
-            assert target.exists(), f"Freeze V2 file missing: {rel_p}"
-            assert compute_sha256(target) == exp_sha, f"Freeze V2 checksum mismatch in {rel_p}!"
+    _assert_frozen_manifest("dataset-freeze-v2.sha256", "Freeze V2")
 
 # 5. REC-A-CORE-V2 Item Universe
 def test_reca_core_v2_item_universe():

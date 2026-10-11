@@ -1,0 +1,70 @@
+{
+  "_comment": "Post-freeze VERIFICATION metadata. NOT part of Dataset Freeze V2; does not alter any frozen hash. V1 legacy paths that also appear in the V2 manifest are covered by dataset-freeze-v1-eol-compat.json.",
+  "schema_version": 1,
+  "freeze_manifest": "data/manifests/dataset-freeze-v2.sha256",
+  "exceptions": [
+    {
+      "path": "data/raw/osm/danang_collection_metadata_2026-10-07_v2.json",
+      "historical_expected_sha256": "21e1c4435115e5720f90b70152073d80b0a14f1e6c45caa28643081df34649e5",
+      "historical_eol_form": "CRLF",
+      "canonical_repository_eol_form": "LF",
+      "reason": "Freeze V2 manifest hash was computed over CRLF working-copy bytes; Git blob is LF. Pure LF->CRLF transformation reproduces the frozen hash (proven by W3-00-FIX2)."
+    },
+    {
+      "path": "data/processed/osm/danang_normalized_v2.json",
+      "historical_expected_sha256": "950a2b120ae3791a6ebf63ca11f71d0d0fd5d827fe151062e7ef1213c9cca2a6",
+      "historical_eol_form": "CRLF",
+      "canonical_repository_eol_form": "LF",
+      "reason": "Freeze V2 manifest hash was computed over CRLF working-copy bytes; Git blob is LF. Pure LF->CRLF transformation reproduces the frozen hash (proven by W3-00-FIX2)."
+    },
+    {
+      "path": "data/processed/osm/danang_normalization_quality_stats_v2.json",
+      "historical_expected_sha256": "a146fac815af0007bdb3dda0d834221fd0175ff273f95f786713e03e95d8222e",
+      "historical_eol_form": "CRLF",
+      "canonical_repository_eol_form": "LF",
+      "reason": "Freeze V2 manifest hash was computed over CRLF working-copy bytes; Git blob is LF. Pure LF->CRLF transformation reproduces the frozen hash (proven by W3-00-FIX2)."
+    },
+    {
+      "path": "data/curated/overture/danang_overture_crosscheck_v2.json",
+      "historical_expected_sha256": "c1e7d47c62e7845db6ff246d942c790baa4955363fea98432d14dacdfd635a20",
+      "historical_eol_form": "CRLF",
+      "canonical_repository_eol_form": "LF",
+      "reason": "Freeze V2 manifest hash was computed over CRLF working-copy bytes; Git blob is LF. Pure LF->CRLF transformation reproduces the frozen hash (proven by W3-00-FIX2)."
+    },
+    {
+      "path": "data/curated/overture/danang_overture_crosscheck_summary_v2.json",
+      "historical_expected_sha256": "439c6a587508859d530f5ef267fb65b7bbfca2a76984e75e001fb3a57749556f",
+      "historical_eol_form": "CRLF",
+      "canonical_repository_eol_form": "LF",
+      "reason": "Freeze V2 manifest hash was computed over CRLF working-copy bytes; Git blob is LF. Pure LF->CRLF transformation reproduces the frozen hash (proven by W3-00-FIX2)."
+    },
+    {
+      "path": "data/manifests/danang_coordinate_drift_stats_v2.json",
+      "historical_expected_sha256": "8cefe81512e4aa06982b3527ae73ef71b8da67530e67cc66d9c45608a249dc6e",
+      "historical_eol_form": "CRLF",
+      "canonical_repository_eol_form": "LF",
+      "reason": "Freeze V2 manifest hash was computed over CRLF working-copy bytes; Git blob is LF. Pure LF->CRLF transformation reproduces the frozen hash (proven by W3-00-FIX2)."
+    },
+    {
+      "path": "data/manifests/db_import_plan_danang_v2.json",
+      "historical_expected_sha256": "2e52d58e3480c97eb31e538642c8fd3d5a54ff47a053630e6629b2790b77c04a",
+      "historical_eol_form": "CRLF",
+      "canonical_repository_eol_form": "LF",
+      "reason": "Freeze V2 manifest hash was computed over CRLF working-copy bytes; Git blob is LF. Pure LF->CRLF transformation reproduces the frozen hash (proven by W3-00-FIX2)."
+    },
+    {
+      "path": "data/curated/gomate_places_freeze_v2.json",
+      "historical_expected_sha256": "93681135d94b379f28802aa75204a0a4c7bec4039f85d28e76ae6737e792e245",
+      "historical_eol_form": "CRLF",
+      "canonical_repository_eol_form": "LF",
+      "reason": "Freeze V2 manifest hash was computed over CRLF working-copy bytes; Git blob is LF. Pure LF->CRLF transformation reproduces the frozen hash (proven by W3-00-FIX2)."
+    },
+    {
+      "path": "data/manifests/freeze-v1-to-v2-place-lineage.json",
+      "historical_expected_sha256": "076aeb3804320ba7f0b2f8da846aae3e18d083cf74c10e8c336e448a33464561",
+      "historical_eol_form": "CRLF",
+      "canonical_repository_eol_form": "LF",
+      "reason": "Freeze V2 manifest hash was computed over CRLF working-copy bytes; Git blob is LF. Pure LF->CRLF transformation reproduces the frozen hash (proven by W3-00-FIX2)."
+    }
+  ]
+}

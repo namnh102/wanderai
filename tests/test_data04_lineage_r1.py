@@ -217,14 +217,12 @@ def test_assertion_13_primary_metric_contract_documented():
 
 # Assertion 14: Freeze V1 SHA integrity remains unchanged
 def test_assertion_14_freeze_v1_sha_integrity():
+    from scripts.freeze_checksum import (
+        DEFAULT_COMPAT_RELPATHS, LEGACY_EOL_COMPAT_PASS, PASS, verify_manifest,
+    )
     v1_sha = REPO_ROOT / "data" / "manifests" / "dataset-freeze-v1.sha256"
     assert v1_sha.exists()
-    with open(v1_sha, "r", encoding="utf-8") as f:
-        for line in f:
-            line = line.strip()
-            if not line or line.startswith("#"):
-                continue
-            exp_sha, rel_p = line.split(None, 1)
-            target = REPO_ROOT / rel_p.strip()
-            assert target.exists(), f"Freeze V1 file missing: {rel_p}"
-            assert compute_sha256(target) == exp_sha, f"Freeze V1 byte mutation in {rel_p}!"
+    results = verify_manifest(REPO_ROOT, v1_sha, [REPO_ROOT / p for p in DEFAULT_COMPAT_RELPATHS])
+    assert results
+    bad = [d for _, st, d in results if st not in (PASS, LEGACY_EOL_COMPAT_PASS)]
+    assert not bad, "Freeze V1 byte mutation: " + "; ".join(bad)

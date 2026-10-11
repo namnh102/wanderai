@@ -35,3 +35,12 @@ are git-ignored (licensing) and verified from the local working tree only.
 - `.gitattributes` sets `* text=auto eol=lf`. Repository text is LF on every platform.
 - **New freezes must hash canonical repository (LF) bytes** and must not add compat entries.
 - Local `core.autocrlf` is not part of the solution.
+
+## Addendum — Freeze V2 (W3-00-FIX2)
+- The same CRLF-vs-LF issue affects 9 additional V2-only artifacts in `dataset-freeze-v2.sha256`,
+  including `gomate_places_freeze_v2.json` (`93681135…`) and `freeze-v1-to-v2-place-lineage.json` (`076aeb38…`).
+- For each one the exact Git blob matches the frozen hash **only** after a pure LF→CRLF newline transformation
+  (no lone CR, no whitespace/JSON changes). Nothing in V2 is modified.
+- Record: `data/manifests/dataset-freeze-v2-eol-compat.json` (verification metadata, not part of Freeze V2),
+  kept separate from the V1 record. The 13 V1 paths that also appear in the V2 manifest are resolved via the V1 record.
+- The single shared verifier `scripts/freeze_checksum.py` reads both records; unknown mismatches still `FAIL`.
