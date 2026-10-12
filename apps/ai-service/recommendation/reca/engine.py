@@ -10,6 +10,7 @@ from typing import List, Dict, Any, Optional, Union
 
 from recommendation.reca.contract import (
     CANONICAL_INTERESTS,
+    INTEREST_INDEX,
     UNSUPPORTED_USER_FEATURES,
     SUPPORTED_MODELS,
     SUPPORTED_DESTINATIONS,
@@ -25,6 +26,7 @@ from recommendation.reca.contract import (
 from recommendation.reca.models import (
     RecA0TaxonomyBaseline,
     RecA1CosineBaseline,
+    RecA2DiversityReranker,
     ColdStartDiverseBaseline,
     build_explanation,
 )
@@ -102,8 +104,8 @@ class PlaceRecommender:
             preferences: Dict containing 'interests' key or list of canonical interest strings.
             destination: Optional destination filter ('ha-noi', 'da-nang', 'ha-long' or None for all).
             top_k: Number of recommendations to return (1 <= top_k <= 50, default 10).
-            model: Algorithm baseline ('rec-a1' for cosine, 'rec-a0' for taxonomy overlap).
-                   If omitted or None, defaults to 'rec-a1'.
+            model: Algorithm baseline ('rec-a1' for cosine, 'rec-a0' for taxonomy overlap,
+                   'rec-a2' for diversity reranker). If omitted or None, defaults to 'rec-a1'.
 
         Raises:
             ValueError: If model, destination, or top_k fail validation constraints.
@@ -178,9 +180,22 @@ class PlaceRecommender:
                 "unsupported_user_features": UNSUPPORTED_USER_FEATURES,
             }
 
-        # 7. Score candidates using specified baseline
-        scorer = RecA0TaxonomyBaseline if normalized_model == "rec-a0" else RecA1CosineBaseline
-        model_name = scorer.name
+        # 7. Score candidates using specified baseline / model
+        if normalized_model == "rec-a0":
+            scorer = RecA0TaxonomyBaseline
+            model_name = scorer.name
+            algorithm_desc = scorer.description
+            strategy_name = f"{model_name}_content_match"
+        elif normalized_model == "rec-a2":
+            scorer = RecA1CosineBaseline  # A2 uses A1 cosine similarity as base relevance
+            model_name = RecA2DiversityReranker.name
+            algorithm_desc = RecA2DiversityReranker.description
+            strategy_name = RecA2DiversityReranker.strategy
+        else:
+            scorer = RecA1CosineBaseline
+            model_name = scorer.name
+            algorithm_desc = scorer.description
+            strategy_name = f"{model_name}_content_match"
 
         scored_items = []
         for p in candidates:
@@ -201,14 +216,22 @@ class PlaceRecommender:
                 "matched_taxonomy": p_tax,
             })
 
-        # 5. Stable deterministic tie-break:
-        # Sort key: (-score, name_normalized, place_id)
-        scored_items.sort(
-            key=lambda x: (-x["score"], x["name_normalized"], x["place_id"])
-        )
+        # 8. Selection / Reranking
+        if normalized_model == "rec-a2":
+            declared_interests = [
+                ci for ci in CANONICAL_INTERESTS if user_vec[INTEREST_INDEX[ci]] > 0
+            ]
+            top_items = RecA2DiversityReranker.rerank(
+                scored_items, declared_interests=declared_interests, top_k=top_k
+            )
+        else:
+            # Baseline stable deterministic tie-break: (-score, name_normalized, place_id)
+            scored_items.sort(
+                key=lambda x: (-x["score"], x["name_normalized"], x["place_id"])
+            )
+            top_items = scored_items[:top_k]
 
-        # 6. Build Top-K results with explanations
-        top_items = scored_items[:top_k]
+        # 9. Build Top-K results with explanations
         recommendations = []
         for rank, item in enumerate(top_items, start=1):
             explanation = build_explanation(
@@ -226,13 +249,13 @@ class PlaceRecommender:
                 "rank": rank,
                 "matched_interests": item["matched_interests"],
                 "explanation": explanation,
-                "strategy": f"{model_name}_content_match",
+                "strategy": strategy_name,
             })
 
         return {
             "recommendations": recommendations,
             "metadata": {
-                "algorithm": scorer.description,
+                "algorithm": algorithm_desc,
                 "model": model_name,
                 "destination_filter": dest_slug,
                 "total_candidates": len(candidates),

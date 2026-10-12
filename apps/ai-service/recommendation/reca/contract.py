@@ -20,7 +20,7 @@ CANONICAL_INTERESTS = [
     "nightlife_entertainment",
 ]
 
-SUPPORTED_MODELS = ("rec-a0", "rec-a1")
+SUPPORTED_MODELS = ("rec-a0", "rec-a1", "rec-a2")
 SUPPORTED_DESTINATIONS = ("ha-noi", "da-nang", "ha-long")
 MIN_TOP_K = 1
 MAX_TOP_K = 50

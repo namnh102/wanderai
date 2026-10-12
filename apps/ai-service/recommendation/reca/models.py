@@ -3,6 +3,7 @@
 Implements:
 - REC-A0: Taxonomy Match Overlap Baseline
 - REC-A1: Cosine Content-Based Baseline
+- REC-A2: Deterministic Relevance-Preserving Multi-Interest Diversity Reranker
 - ColdStartDiverseBaseline: Deterministic Catalog-Diverse Fallback (NOT popularity)
 """
 
@@ -180,3 +181,82 @@ class ColdStartDiverseBaseline:
             })
 
         return ranked_results
+
+
+class RecA2DiversityReranker:
+    """REC-A2: Deterministic Relevance-Preserving Multi-Interest Diversity Reranker.
+
+    Uses REC-A1 cosine similarity as base relevance score, then performs deterministic
+    greedy lexicographic selection to balance multi-interest coverage and category diversity:
+
+    1. Relevance tier (positive base_score > 0 strictly outranks zero base_score == 0)
+    2. Uncovered declared-interest gain (covers an interest declared by the user not yet represented in the current cycle)
+    3. Unseen-category gain (category has not yet appeared in selected results)
+    4. Base REC-A1 cosine relevance score (descending)
+    5. Deterministic tie-break by normalized name (ascending)
+    6. Deterministic tie-break by place_id (ascending)
+    """
+
+    name = "rec-a2"
+    description = "Deterministic Relevance-Preserving Multi-Interest Diversity Reranker"
+    strategy = "rec-a2_relevance_preserving_diversity"
+
+    @classmethod
+    def rerank(
+        cls,
+        scored_candidates: List[Dict[str, Any]],
+        declared_interests: List[str],
+        top_k: int = 10,
+    ) -> List[Dict[str, Any]]:
+        """Rerank candidates using deterministic lexicographic selection."""
+        remaining = list(scored_candidates)
+        selected: List[Dict[str, Any]] = []
+        current_cycle_interests: set[str] = set()
+        user_declared_set = set(declared_interests)
+
+        while len(selected) < top_k and remaining:
+            # Determine declared interests remaining in the positive candidate pool
+            rem_pos_interests = {
+                m
+                for c in remaining
+                if c["score"] > 0
+                for m in c.get("matched_interests", [])
+                if m in user_declared_set
+            }
+
+            # If all available declared interests in remaining positive pool have been covered in current cycle,
+            # reset cycle so the next round of multi-interest coverage can proceed.
+            uncovered_declared = rem_pos_interests - current_cycle_interests
+            if rem_pos_interests and not uncovered_declared:
+                current_cycle_interests = set()
+                uncovered_declared = rem_pos_interests
+
+            seen_categories = {
+                s["category"] for s in selected if s.get("category")
+            }
+
+            def sort_key(c: Dict[str, Any]):
+                is_pos = 1 if c["score"] > 0 else 0
+                has_interest_gain = (
+                    1 if any(m in uncovered_declared for m in c.get("matched_interests", [])) else 0
+                )
+                cat = c.get("category") or ""
+                has_cat_gain = 1 if (cat and cat not in seen_categories) else 0
+                return (
+                    -is_pos,
+                    -has_interest_gain,
+                    -has_cat_gain,
+                    -c["score"],
+                    c.get("name_normalized", ""),
+                    c["place_id"],
+                )
+
+            best_idx, _ = min(enumerate(remaining), key=lambda x: sort_key(x[1]))
+            selected_item = remaining.pop(best_idx)
+            selected.append(selected_item)
+
+            for m in selected_item.get("matched_interests", []):
+                if m in user_declared_set:
+                    current_cycle_interests.add(m)
+
+        return selected

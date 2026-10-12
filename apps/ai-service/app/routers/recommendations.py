@@ -30,7 +30,7 @@ class PlaceRecommendationRequest(BaseModel):
     top_k: int = Field(default=10, ge=MIN_TOP_K, le=MAX_TOP_K, description="Number of recommendations to return")
     model: str = Field(
         default="rec-a1",
-        description="Algorithm baseline to use ('rec-a1' for cosine, 'rec-a0' for taxonomy overlap)",
+        description="Algorithm baseline to use ('rec-a1' for cosine, 'rec-a0' for taxonomy overlap, 'rec-a2' for diversity reranker)",
         json_schema_extra={"example": "rec-a1"},
     )
 

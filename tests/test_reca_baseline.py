@@ -687,3 +687,477 @@ def test_val_reg_04_secondary_leakage_remains_zero(recommender):
     for r in res["recommendations"]:
         assert r["place_id"] in core_ids
         assert r["place_id"] not in sec_ids
+
+
+# ============================================================================
+# W4-A2-01: Focused REC-A2 Diversity Reranker Tests
+# ============================================================================
+
+def test_a2_micro_01_synthetic_in_memory_fixture():
+    """Section 18 required micro-fixture test.
+
+    User interests: food_cuisine, coffee_culture, shopping_local
+    Candidates:
+    R1 restaurant -> food
+    R2 restaurant -> food
+    R3 cafe -> coffee
+    R4 market -> shopping
+    R5 restaurant -> food
+    Z1 hotel -> zero-vector
+    Z2 attraction -> zero-vector
+
+    Invariant: Top-3 must cover food, coffee, shopping before any food repetition.
+    Z1 and Z2 must not enter Top-5.
+    """
+    synthetic_places = [
+        {
+            "place_id": "r1",
+            "name": "An Restaurant",
+            "category": "restaurant",
+            "is_rec_a_core_v2": True,
+            "destination_slug": "da-nang",
+            "sources": [{"source_name": "osm", "raw_data": {"tier_1": "FOOD_BEVERAGE", "tier_2": "restaurant_dining"}}],
+        },
+        {
+            "place_id": "r2",
+            "name": "Binh Restaurant",
+            "category": "restaurant",
+            "is_rec_a_core_v2": True,
+            "destination_slug": "da-nang",
+            "sources": [{"source_name": "osm", "raw_data": {"tier_1": "FOOD_BEVERAGE", "tier_2": "restaurant_dining"}}],
+        },
+        {
+            "place_id": "r3",
+            "name": "Ca Cafe",
+            "category": "cafe",
+            "is_rec_a_core_v2": True,
+            "destination_slug": "da-nang",
+            "sources": [{"source_name": "osm", "raw_data": {"tier_1": "FOOD_BEVERAGE", "tier_2": "cafe_tea"}}],
+        },
+        {
+            "place_id": "r4",
+            "name": "Dan Market",
+            "category": "market",
+            "is_rec_a_core_v2": True,
+            "destination_slug": "da-nang",
+            "sources": [{"source_name": "osm", "raw_data": {"tier_1": "SHOPPING_COMMERCE", "tier_2": "traditional_market"}}],
+        },
+        {
+            "place_id": "r5",
+            "name": "Em Restaurant",
+            "category": "restaurant",
+            "is_rec_a_core_v2": True,
+            "destination_slug": "da-nang",
+            "sources": [{"source_name": "osm", "raw_data": {"tier_1": "FOOD_BEVERAGE", "tier_2": "restaurant_dining"}}],
+        },
+        {
+            "place_id": "z1",
+            "name": "A Hotel",
+            "category": "hotel",
+            "is_rec_a_core_v2": True,
+            "destination_slug": "da-nang",
+            "sources": [{"source_name": "osm", "raw_data": {"tier_1": "HOSPITALITY", "tier_2": "hotel_resort"}}],
+        },
+        {
+            "place_id": "z2",
+            "name": "B Attraction",
+            "category": "attraction",
+            "is_rec_a_core_v2": True,
+            "destination_slug": "da-nang",
+            "sources": [{"source_name": "osm", "raw_data": {"tier_1": "ATTRACTIONS_LEISURE", "tier_2": "attraction"}}],
+        },
+    ]
+
+    engine = PlaceRecommender(places_source=synthetic_places)
+    res = engine.recommend(
+        preferences={"interests": ["food_cuisine", "coffee_culture", "shopping_local"]},
+        destination="da-nang",
+        top_k=5,
+        model="rec-a2",
+    )
+    recs = res["recommendations"]
+    assert len(recs) == 5
+
+    # Top-3 must cover all 3 declared interests before repeating food
+    top_3_interests = {m for r in recs[:3] for m in r["matched_interests"]}
+    assert top_3_interests == {"food_cuisine", "coffee_culture", "shopping_local"}
+
+    # Slots 4 and 5 must be the remaining positive food items (r2, r5)
+    remaining_ids = {r["place_id"] for r in recs[3:]}
+    assert remaining_ids == {"r2", "r5"}
+
+    # Zero-vector items (z1, z2) must not enter Top-5
+    for r in recs:
+        assert r["place_id"] not in ("z1", "z2")
+
+
+def test_a2_u0_01_empty_interests_fallback(recommender):
+    """A2-U0-01: empty interests -> existing cold-start fallback."""
+    res = recommender.recommend(
+        preferences={"interests": []},
+        destination="da-nang",
+        top_k=10,
+        model="rec-a2",
+    )
+    assert res["metadata"]["cold_start"] is True
+    assert res["metadata"]["algorithm"] == "COLD_START_DIVERSE_CATALOG_BASELINE"
+    assert res["metadata"]["model"] == "cold-start-diverse"
+    assert len(res["recommendations"]) == 10
+
+
+def test_a2_u1_01_positive_relevance_ahead_of_zero(recommender):
+    """A2-U1-01: positive-relevance items rank ahead of zero-relevance items."""
+    res = recommender.recommend(
+        preferences={"interests": ["food_cuisine"]},
+        destination="da-nang",
+        top_k=10,
+        model="rec-a2",
+    )
+    assert res["metadata"]["model"] == "rec-a2"
+    for r in res["recommendations"]:
+        assert r["score"] > 0.0
+        assert "food_cuisine" in r["matched_interests"]
+
+
+def test_a2_u1_02_same_relevance_prefers_unseen_category():
+    """A2-U1-02: same relevance/interest situation may prefer unseen category."""
+    synthetic_places = [
+        {
+            "place_id": "f1",
+            "name": "An Restaurant",
+            "category": "restaurant",
+            "is_rec_a_core_v2": True,
+            "destination_slug": "da-nang",
+            "sources": [{"source_name": "osm", "raw_data": {"tier_1": "FOOD_BEVERAGE", "tier_2": "restaurant_dining"}}],
+        },
+        {
+            "place_id": "f2",
+            "name": "Binh Restaurant",
+            "category": "restaurant",
+            "is_rec_a_core_v2": True,
+            "destination_slug": "da-nang",
+            "sources": [{"source_name": "osm", "raw_data": {"tier_1": "FOOD_BEVERAGE", "tier_2": "restaurant_dining"}}],
+        },
+        {
+            "place_id": "f3",
+            "name": "Z Street Food",
+            "category": "street_food",
+            "is_rec_a_core_v2": True,
+            "destination_slug": "da-nang",
+            "sources": [{"source_name": "osm", "raw_data": {"tier_1": "FOOD_BEVERAGE", "tier_2": "street_food"}}],
+        },
+    ]
+    engine = PlaceRecommender(places_source=synthetic_places)
+    res = engine.recommend(
+        preferences={"interests": ["food_cuisine"]},
+        destination="da-nang",
+        top_k=3,
+        model="rec-a2",
+    )
+    recs = res["recommendations"]
+    assert recs[0]["place_id"] == "f1"  # Best name 'An'
+    # Second place must be f3 because 'street_food' is an unseen category, beating f2 ('restaurant') despite 'Z' vs 'Binh'
+    assert recs[1]["place_id"] == "f3"
+    assert recs[2]["place_id"] == "f2"
+
+
+def test_a2_u2_01_multi_interest_coverage_before_unnecessary_repetition(recommender):
+    """A2-U2-01: multi-interest coverage occurs before unnecessary repetition."""
+    res = recommender.recommend(
+        preferences={"interests": ["food_cuisine", "coffee_culture", "shopping_local"]},
+        destination="da-nang",
+        top_k=10,
+        model="rec-a2",
+    )
+    # The first 3 places must cover all 3 declared interests
+    top_3_interests = {m for r in res["recommendations"][:3] for m in r["matched_interests"]}
+    assert top_3_interests == {"food_cuisine", "coffee_culture", "shopping_local"}
+
+
+def test_a2_u2_02_missing_interest_does_not_crash_or_fabricate():
+    """A2-U2-02: missing one requested interest does not crash or fabricate matches."""
+    # Synthetic pool where candidates only have food_cuisine, but user requests beach_island and food_cuisine
+    synthetic_places = [
+        {
+            "place_id": f"p{i}",
+            "name": f"Food Place {i}",
+            "category": "restaurant",
+            "is_rec_a_core_v2": True,
+            "destination_slug": "da-nang",
+            "sources": [{"source_name": "osm", "raw_data": {"tier_1": "FOOD_BEVERAGE", "tier_2": "restaurant_dining"}}],
+        }
+        for i in range(5)
+    ]
+    engine = PlaceRecommender(places_source=synthetic_places)
+    res = engine.recommend(
+        preferences={"interests": ["beach_island", "food_cuisine"]},
+        destination="da-nang",
+        top_k=5,
+        model="rec-a2",
+    )
+    assert res["metadata"]["model"] == "rec-a2"
+    assert len(res["recommendations"]) == 5
+    for r in res["recommendations"]:
+        assert "beach_island" not in r["matched_interests"]
+        assert "food_cuisine" in r["matched_interests"]
+
+
+def test_a2_rel_01_zero_relevance_cannot_outrank_positive():
+    """A2-REL-01: zero-relevance new-category item cannot outrank positive relevant item."""
+    synthetic_places = [
+        {
+            "place_id": "p1",
+            "name": "Z Food",
+            "category": "restaurant",
+            "is_rec_a_core_v2": True,
+            "destination_slug": "da-nang",
+            "sources": [{"source_name": "osm", "raw_data": {"tier_1": "FOOD_BEVERAGE", "tier_2": "restaurant_dining"}}],
+        },
+        {
+            "place_id": "z1",
+            "name": "A Museum",
+            "category": "museum",
+            "is_rec_a_core_v2": True,
+            "destination_slug": "da-nang",
+            # User only likes food, so z1 has base_score = 0.0
+            "sources": [{"source_name": "osm", "raw_data": {"tier_1": "CULTURE_HERITAGE", "tier_2": "museum_gallery"}}],
+        },
+    ]
+    engine = PlaceRecommender(places_source=synthetic_places)
+    res = engine.recommend(
+        preferences={"interests": ["food_cuisine"]},
+        destination="da-nang",
+        top_k=2,
+        model="rec-a2",
+    )
+    recs = res["recommendations"]
+    assert recs[0]["place_id"] == "p1"
+    assert recs[1]["place_id"] == "z1"
+
+
+def test_a2_cat_01_unseen_category_preferred_in_equivalent_conditions():
+    """A2-CAT-01: within equivalent relevance/coverage conditions, unseen category is preferred."""
+    synthetic_places = [
+        {
+            "place_id": "c1",
+            "name": "Cafe Alpha",
+            "category": "cafe",
+            "is_rec_a_core_v2": True,
+            "destination_slug": "da-nang",
+            "sources": [{"source_name": "osm", "raw_data": {"tier_1": "FOOD_BEVERAGE", "tier_2": "cafe_tea"}}],
+        },
+        {
+            "place_id": "c2",
+            "name": "Cafe Beta",
+            "category": "cafe",
+            "is_rec_a_core_v2": True,
+            "destination_slug": "da-nang",
+            "sources": [{"source_name": "osm", "raw_data": {"tier_1": "FOOD_BEVERAGE", "tier_2": "cafe_tea"}}],
+        },
+        {
+            "place_id": "c3",
+            "name": "Tea Gamma",
+            "category": "tea_house",
+            "is_rec_a_core_v2": True,
+            "destination_slug": "da-nang",
+            "sources": [{"source_name": "osm", "raw_data": {"tier_1": "FOOD_BEVERAGE", "tier_2": "cafe_tea"}}],
+        },
+    ]
+    engine = PlaceRecommender(places_source=synthetic_places)
+    res = engine.recommend(
+        preferences={"interests": ["coffee_culture"]},
+        destination="da-nang",
+        top_k=3,
+        model="rec-a2",
+    )
+    recs = res["recommendations"]
+    assert recs[0]["place_id"] == "c1"  # First cafe
+    assert recs[1]["place_id"] == "c3"  # Unseen category 'tea_house' preferred over c2 ('cafe')
+    assert recs[2]["place_id"] == "c2"
+
+
+def test_a2_zv_01_zero_vectors_do_not_appear_when_enough_positive(recommender):
+    """A2-ZV-01: when >= top_k positive items exist, zero-vector items do not appear in Top-K."""
+    res = recommender.recommend(
+        preferences={"interests": ["food_cuisine"]},
+        destination="da-nang",
+        top_k=10,
+        model="rec-a2",
+    )
+    for r in res["recommendations"]:
+        assert r["score"] > 0.0
+        assert len(r["matched_interests"]) > 0
+
+
+def test_a2_zv_02_zero_items_fill_remaining_slots():
+    """A2-ZV-02: when positive items < top_k, zero items only fill the remaining slots."""
+    synthetic_places = [
+        {
+            "place_id": "p1",
+            "name": "P1 Food",
+            "category": "restaurant",
+            "is_rec_a_core_v2": True,
+            "destination_slug": "da-nang",
+            "sources": [{"source_name": "osm", "raw_data": {"tier_1": "FOOD_BEVERAGE", "tier_2": "restaurant_dining"}}],
+        },
+        {
+            "place_id": "p2",
+            "name": "P2 Food",
+            "category": "restaurant",
+            "is_rec_a_core_v2": True,
+            "destination_slug": "da-nang",
+            "sources": [{"source_name": "osm", "raw_data": {"tier_1": "FOOD_BEVERAGE", "tier_2": "restaurant_dining"}}],
+        },
+        {
+            "place_id": "z1",
+            "name": "Z1 Hotel",
+            "category": "hotel",
+            "is_rec_a_core_v2": True,
+            "destination_slug": "da-nang",
+            "sources": [{"source_name": "osm", "raw_data": {"tier_1": "HOSPITALITY", "tier_2": "hotel_resort"}}],
+        },
+        {
+            "place_id": "z2",
+            "name": "Z2 Hotel",
+            "category": "hotel",
+            "is_rec_a_core_v2": True,
+            "destination_slug": "da-nang",
+            "sources": [{"source_name": "osm", "raw_data": {"tier_1": "HOSPITALITY", "tier_2": "hotel_resort"}}],
+        },
+    ]
+    engine = PlaceRecommender(places_source=synthetic_places)
+    res = engine.recommend(
+        preferences={"interests": ["food_cuisine"]},
+        destination="da-nang",
+        top_k=3,
+        model="rec-a2",
+    )
+    recs = res["recommendations"]
+    assert len(recs) == 3
+    # First 2 are positive
+    assert recs[0]["score"] > 0.0
+    assert recs[1]["score"] > 0.0
+    # 3rd is zero-vector fill
+    assert recs[2]["score"] == 0.0
+    assert recs[2]["place_id"] in ("z1", "z2")
+
+
+def test_a2_det_01_repeated_100_times_identical(recommender):
+    """A2-DET-01: same request repeated 100 times produces identical place_id order."""
+    first_res = recommender.recommend(
+        preferences={"interests": ["food_cuisine", "coffee_culture", "shopping_local"]},
+        destination="da-nang",
+        top_k=10,
+        model="rec-a2",
+    )
+    expected_ids = [r["place_id"] for r in first_res["recommendations"]]
+    for _ in range(100):
+        res = recommender.recommend(
+            preferences={"interests": ["food_cuisine", "coffee_culture", "shopping_local"]},
+            destination="da-nang",
+            top_k=10,
+            model="rec-a2",
+        )
+        assert [r["place_id"] for r in res["recommendations"]] == expected_ids
+
+
+def test_a2_dst_01_destination_isolation_preserved(recommender):
+    """A2-DST-01: destination isolation preserved."""
+    for dst in ["ha-noi", "da-nang", "ha-long"]:
+        res = recommender.recommend(
+            preferences={"interests": ["food_cuisine"]},
+            destination=dst,
+            top_k=10,
+            model="rec-a2",
+        )
+        assert res["metadata"]["destination_filter"] == dst
+        for r in res["recommendations"]:
+            assert r["destination_slug"] == dst
+
+
+def test_a2_core_01_secondary_pois_never_returned(recommender):
+    """A2-CORE-01: secondary POIs never returned."""
+    res = recommender.recommend(
+        preferences={"interests": ["food_cuisine", "nature_outdoor"]},
+        destination=None,
+        top_k=50,
+        model="rec-a2",
+    )
+    core_ids = {p["place_id"] for p in recommender.core_places}
+    sec_ids = {p["place_id"] for p in recommender.secondary_places}
+    for r in res["recommendations"]:
+        assert r["place_id"] in core_ids
+        assert r["place_id"] not in sec_ids
+
+
+def test_a2_k_01_top_k_boundaries(recommender):
+    """A2-K-01: valid top_k boundaries remain correct."""
+    r1 = recommender.recommend(preferences={"interests": ["food_cuisine"]}, destination="da-nang", top_k=1, model="rec-a2")
+    assert len(r1["recommendations"]) == 1
+    r50 = recommender.recommend(preferences={"interests": ["food_cuisine"]}, destination="da-nang", top_k=50, model="rec-a2")
+    assert len(r50["recommendations"]) == 50
+    with pytest.raises(ValueError):
+        recommender.recommend(preferences={"interests": ["food_cuisine"]}, destination="da-nang", top_k=0, model="rec-a2")
+    with pytest.raises(ValueError):
+        recommender.recommend(preferences={"interests": ["food_cuisine"]}, destination="da-nang", top_k=51, model="rec-a2")
+
+
+def test_a2_val_01_invalid_model_still_rejected(recommender):
+    """A2-VAL-01: invalid model still rejected."""
+    with pytest.raises(ValueError, match="Unsupported recommendation model"):
+        recommender.recommend(preferences={"interests": ["food_cuisine"]}, destination="da-nang", top_k=5, model="rec-a9")
+    with pytest.raises(ValueError, match="Unsupported recommendation model"):
+        recommender.recommend(preferences={"interests": ["food_cuisine"]}, destination="da-nang", top_k=5, model="garbage")
+
+
+def test_a2_reg_01_reca0_unchanged(recommender):
+    """A2-REG-01: rec-a0 behavior unchanged."""
+    res = recommender.recommend(preferences={"interests": ["food_cuisine"]}, destination="da-nang", top_k=5, model="rec-a0")
+    assert res["metadata"]["model"] == "rec-a0"
+    assert res["recommendations"][0]["strategy"] == "rec-a0_content_match"
+    assert res["recommendations"][0]["score"] == 1.0
+
+
+def test_a2_reg_02_reca1_unchanged(recommender):
+    """A2-REG-02: rec-a1 behavior unchanged."""
+    res = recommender.recommend(preferences={"interests": ["food_cuisine"]}, destination="da-nang", top_k=5, model="rec-a1")
+    assert res["metadata"]["model"] == "rec-a1"
+    assert res["recommendations"][0]["strategy"] == "rec-a1_content_match"
+    assert math.isclose(res["recommendations"][0]["score"], 1.0, rel_tol=1e-5)
+
+
+def test_a2_out_01_response_contract_complete(recommender):
+    """A2-OUT-01: A2 response contract complete."""
+    res = recommender.recommend(
+        preferences={"interests": ["food_cuisine", "coffee_culture"]},
+        destination="da-nang",
+        top_k=5,
+        model="rec-a2",
+    )
+    assert res["metadata"]["model"] == "rec-a2"
+    assert res["metadata"]["algorithm"] == "Deterministic Relevance-Preserving Multi-Interest Diversity Reranker"
+    for r in res["recommendations"]:
+        for field in ["place_id", "name", "destination", "destination_slug", "category", "score", "rank", "matched_interests", "explanation", "strategy"]:
+            assert field in r
+        assert r["strategy"] == "rec-a2_relevance_preserving_diversity"
+
+
+def test_a2_score_01_public_score_equals_base_a1_relevance(recommender):
+    """A2-SCORE-01: public `score` equals base A1 relevance, not diversity/reranking score."""
+    res_a1 = recommender.recommend(
+        preferences={"interests": ["food_cuisine", "coffee_culture"]},
+        destination="da-nang",
+        top_k=50,
+        model="rec-a1",
+    )
+    res_a2 = recommender.recommend(
+        preferences={"interests": ["food_cuisine", "coffee_culture"]},
+        destination="da-nang",
+        top_k=50,
+        model="rec-a2",
+    )
+    a1_scores = {r["place_id"]: r["score"] for r in res_a1["recommendations"]}
+    for r2 in res_a2["recommendations"]:
+        pid = r2["place_id"]
+        if pid in a1_scores:
+            assert math.isclose(r2["score"], a1_scores[pid], rel_tol=1e-5)

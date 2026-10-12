@@ -131,7 +131,7 @@ def test_omitted_destination_still_means_all_core_candidates():
     assert meta["total_candidates"] == 622
 
 
-@pytest.mark.parametrize("model", ["rec-a0", "rec-a1", "REC-A1"])
+@pytest.mark.parametrize("model", ["rec-a0", "rec-a1", "REC-A1", "rec-a2", "REC-A2"])
 def test_supported_models_accepted(model):
     response = client.post(
         "/recommendations/places",
