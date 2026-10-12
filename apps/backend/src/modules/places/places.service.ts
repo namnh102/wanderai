@@ -3,29 +3,11 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { Prisma } from '@prisma/client';
 import { AiProxyService } from '../ai-proxy/ai-proxy.service';
 
-/**
- * Factual address from OSM `addr:*` tags only (null when OSM has none).
- * Never built from place name / destination. The stored `places.address` column is importer-generated
- * ("<name>, <city>") and is therefore NOT a factual address and is never served.
- * Must stay equivalent to the SQL expression in `findNearby`.
- */
-export function osmAddress(tags: Record<string, unknown> | null | undefined): string | null {
-  const t = tags ?? {};
-  const get = (...keys: string[]): string | null => {
-    for (const k of keys) {
-      const v = t[k];
-      if (typeof v === 'string' && v.trim() !== '') return v.trim();
-    }
-    return null;
-  };
-  const parts = [
-    [get('addr:housenumber'), get('addr:street')].filter(Boolean).join(' ') || null,
-    get('addr:suburb', 'addr:district'),
-    get('addr:city'),
-  ].filter((x): x is string => !!x);
-  return parts.length > 0 ? parts.join(', ') : null;
-}
+import { osmAddress, osmAddressSql, osmOpeningHours, osmPhone, osmWebsite } from './osm-tags';
+import { sanitizeDestination } from '../destinations/destination-trust';
 
+// Re-exported for backwards compatibility; canonical implementation lives in osm-tags.ts.
+export { osmAddress };
 
 @Injectable()
 export class PlacesService {
@@ -70,7 +52,9 @@ export class PlacesService {
         where,
         skip,
         take: limit,
-        orderBy: [{ rating: { sort: 'desc', nulls: 'last' } }, { reviewCount: 'desc' }],
+        // `id` is the final unique tiebreaker: rating/reviewCount tie for nearly every verified POI, and
+        // without a unique last key OFFSET pagination yields duplicate and missing rows across pages.
+        orderBy: [{ rating: { sort: 'desc', nulls: 'last' } }, { reviewCount: 'desc' }, { id: 'asc' }],
         include: {
           destination: {
             select: { id: true, name: true, slug: true, province: true },
@@ -97,8 +81,10 @@ export class PlacesService {
 
     const items = rawItems.map((p) => {
       const osm = p.placeSources.find((s) => s.sourceName === 'osm');
+      // Legacy seed prices are not backed by any authoritative dataset: never exposed publicly.
+      const { priceMin: _priceMin, priceMax: _priceMax, ...publicPlace } = p;
       return {
-        ...p,
+        ...publicPlace,
         placeSources: p.placeSources.map(({ rawData: _raw, ...s }) => s),
         // Factual OSM address only; never the importer-generated places.address.
         address: osmAddress((osm?.rawData ?? null) as Record<string, unknown> | null),
@@ -155,22 +141,15 @@ export class PlacesService {
       },
     });
 
-    if (!place || place.deletedAt) {
+    // Trust boundary (W3-04 / PDG-004): a place without any provenance source is a legacy seed record, not a
+    // verified tourism POI. It is not publicly servable. (No itinerary item or mobile path references them.)
+    if (!place || place.deletedAt || place.placeSources.length === 0) {
       throw new NotFoundException(`Place with ID "${id}" not found`);
     }
 
     const osm = place.placeSources.find((s) => s.sourceName === 'osm');
-    const tags = (osm?.rawData ?? {}) as Record<string, unknown>;
-    const tag = (...keys: string[]): string | null => {
-      for (const k of keys) {
-        const v = tags[k];
-        if (typeof v === 'string' && v.trim() !== '') return v.trim();
-      }
-      return null;
-    };
-    const isVerified = place.placeSources.length > 0;
+    const raw = (osm?.rawData ?? null) as Record<string, unknown> | null;
 
-    // Chỉ tin cậy dữ kiện của bản ghi có provenance; bản ghi dev/test không có nguồn thì không công bố mô tả/giờ mở cửa.
     const sources = place.placeSources.map(({ rawData: _raw, ...s }) => ({
       ...s,
       canonicalUrl: s.sourceName === 'osm' ? `https://www.openstreetmap.org/${s.sourceId}` : null,
@@ -178,17 +157,21 @@ export class PlacesService {
       attribution: s.sourceName === 'osm' ? '© OpenStreetMap contributors' : null,
     }));
 
+    // Legacy seed prices are not backed by any authoritative dataset: never exposed publicly.
+    const { priceMin: _priceMin, priceMax: _priceMax, ...publicPlace } = place;
+
     return {
-      ...place,
+      ...publicPlace,
+      destination: sanitizeDestination(place.destination),
       placeSources: sources,
-      isVerified,
+      isVerified: true,
       provenanceCount: place.placeSources.length,
-      // Dữ kiện dẫn xuất (null = không có dữ liệu)
-      address: isVerified ? osmAddress(tags) : null,
-      description: isVerified ? place.description : null,
-      openingHours: isVerified ? (tag('opening_hours') ?? place.openingHours) : null,
-      website: isVerified ? tag('website', 'contact:website') : null,
-      phone: isVerified ? tag('phone', 'contact:phone') : null,
+      // Dữ kiện dẫn xuất từ OSM tags (null = không có dữ liệu). Không dùng places.address (importer-generated).
+      address: osmAddress(raw),
+      description: place.description,
+      openingHours: osmOpeningHours(raw) ?? place.openingHours,
+      website: osmWebsite(raw),
+      phone: osmPhone(raw),
       source: osm
         ? {
             name: 'OpenStreetMap',
@@ -215,11 +198,7 @@ export class PlacesService {
         p.name, 
         p.name_en AS "nameEn", 
         (
-          SELECT NULLIF(concat_ws(', ',
-            NULLIF(concat_ws(' ', NULLIF(btrim(ps.raw_data->>'addr:housenumber'), ''), NULLIF(btrim(ps.raw_data->>'addr:street'), '')), ''),
-            COALESCE(NULLIF(btrim(ps.raw_data->>'addr:suburb'), ''), NULLIF(btrim(ps.raw_data->>'addr:district'), '')),
-            NULLIF(btrim(ps.raw_data->>'addr:city'), '')
-          ), '')
+          SELECT ${osmAddressSql('ps.raw_data')}
           FROM place_sources ps
           WHERE ps.place_id = p.id AND ps.source_name = 'osm'
           ORDER BY ps.created_at ASC
@@ -247,7 +226,7 @@ export class PlacesService {
           ST_SetSRID(ST_MakePoint(${lng}, ${lat}), 4326)::geography,
           ${radiusKm * 1000}
         )
-      ORDER BY "distanceKm" ASC
+      ORDER BY "distanceKm" ASC, p.id ASC
       LIMIT ${limit};
     `;
 

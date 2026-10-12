@@ -95,7 +95,7 @@ describe('PlacesController (e2e)', () => {
 
     it('should filter strictly by verifiedOnly=true isolating synthetic records', () => {
       return request(app.getHttpServer())
-        .get('/places?verifiedOnly=true&limit=200')
+        .get('/places?verifiedOnly=true&limit=100')
         .expect(200)
         .expect((res) => {
           expect(res.body).toHaveProperty('success', true);

@@ -1,6 +1,8 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { Prisma } from '@prisma/client';
+import { sanitizeDestination } from './destination-trust';
+import { osmAddress } from '../places/osm-tags';
 
 @Injectable()
 export class DestinationsService {
@@ -35,7 +37,8 @@ export class DestinationsService {
       this.prisma.destination.count({ where }),
     ]);
 
-    return { items, total, page, limit, totalPages: Math.ceil(total / limit) };
+    // Seeded destination ratings are synthetic: only reviewed ratings are exposed (see destination-trust.ts).
+    return { items: items.map((d) => sanitizeDestination(d)), total, page, limit, totalPages: Math.ceil(total / limit) };
   }
 
   // Lấy chi tiết destination + places
@@ -44,30 +47,45 @@ export class DestinationsService {
       where: { id },
       include: {
         places: {
-          where: { deletedAt: null },
-          include: { category: true },
+          // Only provenance-backed (verified) places are public; legacy seed prices are never exposed.
+          where: { deletedAt: null, placeSources: { some: {} } },
+          include: {
+            category: true,
+            // Internal input only (factual OSM address); stripped before the response is returned.
+            placeSources: { where: { sourceName: 'osm' }, select: { rawData: true } },
+          },
           orderBy: { rating: 'desc' },
         },
       },
     });
 
     if (!dest) throw new NotFoundException('Destination không tồn tại');
-    return dest;
+    return {
+      ...sanitizeDestination(dest),
+      // Public nested places: factual OSM-derived address only (never the importer-generated places.address),
+      // no rawData / placeSources, no legacy seed prices.
+      places: dest.places.map(({ priceMin: _priceMin, priceMax: _priceMax, placeSources, ...p }) => ({
+        ...p,
+        address: osmAddress((placeSources[0]?.rawData ?? null) as Record<string, unknown> | null),
+      })),
+    };
   }
 
   // Lấy destinations nổi bật
   async findPopular(limit: number = 10) {
-    return this.prisma.destination.findMany({
+    const popular = await this.prisma.destination.findMany({
       where: { isPopular: true, deletedAt: null },
       take: limit,
       orderBy: { rating: 'desc' },
     });
+    return popular.map((d) => sanitizeDestination(d));
   }
 
   // Tìm destinations gần vị trí GPS (PostGIS)
   async findNearby(lat: number, lng: number, radiusKm: number = 50) {
     const result = await this.prisma.$queryRaw`
-      SELECT id, name, province, region, latitude, longitude, rating,
+      SELECT id, name, province, region, latitude, longitude,
+        CASE WHEN review_count > 0 AND rating > 0 THEN rating ELSE NULL END AS rating,
         ST_Distance(
           ST_SetSRID(ST_MakePoint(longitude, latitude), 4326)::geography,
           ST_SetSRID(ST_MakePoint(${lng}, ${lat}), 4326)::geography

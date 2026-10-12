@@ -3,7 +3,7 @@ import { INestApplication, ValidationPipe } from '@nestjs/common';
 import * as request from 'supertest';
 import { AppModule } from '../src/app.module';
 import { PrismaService } from '../src/prisma/prisma.service';
-import { osmAddress } from '../src/modules/places/places.service';
+import { osmAddress, osmTag } from '../src/modules/places/osm-tags';
 import { TransformInterceptor } from '../src/common/interceptors/transform.interceptor';
 import { HttpExceptionFilter } from '../src/common/filters/http-exception.filter';
 
@@ -18,8 +18,8 @@ describe('Place Detail (e2e)', () => {
   const osmSourceWith = async (present: string[], absent: string[]) => {
     const rows = await prisma.placeSource.findMany({ where: { sourceName: 'osm' } });
     return rows.find((r) => {
-      const tags = (r.rawData ?? {}) as Record<string, unknown>;
-      return present.every((k) => !!tags[k]) && absent.every((k) => !tags[k]);
+      const raw = (r.rawData ?? {}) as Record<string, unknown>;
+      return present.every((k) => !!osmTag(raw, k)) && absent.every((k) => !osmTag(raw, k));
     });
   };
 
@@ -76,21 +76,24 @@ describe('Place Detail (e2e)', () => {
     await request(app.getHttpServer()).get('/places/00000000-0000-0000-0000-000000000000').expect(404);
   });
 
-  it('unverified place gets no verified badge, no source and no descriptive facts', async () => {
+  it('PDG-004: legacy unverified place is not publicly servable (404)', async () => {
     const place = await prisma.place.findFirst({
       where: { deletedAt: null, placeSources: { none: {} } },
     });
     expect(place).toBeTruthy();
-    const p = await getDetail(place!.id);
-    expect(p.isVerified).toBe(false);
-    expect(p.provenanceCount).toBe(0);
-    expect(p.source).toBeNull();
-    expect(p.placeSources).toEqual([]);
-    expect(p.address).toBeNull();
-    expect(p.description).toBeNull();
-    expect(p.openingHours).toBeNull();
-    expect(p.website).toBeNull();
-    expect(p.phone).toBeNull();
+    await request(app.getHttpServer()).get(`/places/${place!.id}`).expect(404);
+  });
+
+  it('PDG-004: detail never exposes legacy priceMin/priceMax', async () => {
+    const legacyPriced = await prisma.place.findFirst({
+      where: { deletedAt: null, priceMin: { not: null }, placeSources: { some: {} } },
+    });
+    const src = await prisma.placeSource.findFirst({ where: { sourceName: 'osm' } });
+    for (const id of [legacyPriced?.id, src!.placeId].filter(Boolean) as string[]) {
+      const p = await getDetail(id);
+      expect(p).not.toHaveProperty('priceMin');
+      expect(p).not.toHaveProperty('priceMax');
+    }
   });
 
   it('missing optional fields are null, not invented', async () => {
@@ -107,23 +110,26 @@ describe('Place Detail (e2e)', () => {
     const withHours = await osmSourceWith(['opening_hours'], []);
     expect(withHours).toBeTruthy();
     const h = await getDetail(withHours!.placeId);
-    expect(h.openingHours).toBe(((withHours!.rawData as any).opening_hours as string).trim());
+    expect(h.openingHours).toBe(osmTag(withHours!.rawData as any, 'opening_hours'));
 
     const withSite = await osmSourceWith(['website'], []);
     expect(withSite).toBeTruthy();
     const w = await getDetail(withSite!.placeId);
-    expect(w.website).toBe(((withSite!.rawData as any).website as string).trim());
+    expect(w.website).toBe(osmTag(withSite!.rawData as any, 'website'));
 
     const withPhone = await osmSourceWith(['phone'], []);
     expect(withPhone).toBeTruthy();
     const ph = await getDetail(withPhone!.placeId);
-    expect(ph.phone).toBe(((withPhone!.rawData as any).phone as string).trim());
+    expect(ph.phone).toBe(osmTag(withPhone!.rawData as any, 'phone'));
   });
 
   it('never exposes untrusted (synthetic) reviews', async () => {
     const synthetic = await prisma.review.findFirst({ where: { trusted: false } });
     if (!synthetic) return; // no synthetic reviews present — nothing to leak
-    const p = await getDetail(synthetic.placeId);
+    const res = await request(app.getHttpServer()).get(`/places/${synthetic.placeId}`);
+    if (res.status === 404) return; // legacy unverified place: not publicly servable (W3-04)
+    expect(res.status).toBe(200);
+    const p = res.body.data;
     expect(p.reviews.map((r: any) => r.id)).not.toContain(synthetic.id);
     for (const r of p.reviews) expect(r.trusted).toBe(true);
   });
@@ -164,7 +170,7 @@ describe('Place Detail (e2e)', () => {
 
     it('nearby (SQL) address equals the shared osmAddress for every verified place in range', async () => {
       const res = await request(app.getHttpServer())
-        .get('/places/nearby?lat=21.0285&lng=105.8542&radius=100&limit=1000')
+        .get('/places/nearby?lat=21.0285&lng=105.8542&radius=100&limit=100')
         .expect(200);
       const items: any[] = res.body.data;
       expect(items.length).toBeGreaterThan(0);
@@ -184,11 +190,21 @@ describe('Place Detail (e2e)', () => {
       }
     });
 
-    it('unverified place has null address in list (verifiedOnly=false) and detail', async () => {
-      const res = await request(app.getHttpServer()).get('/places?verifiedOnly=false&limit=500').expect(200);
-      const unverified = res.body.data.items.filter((i: any) => !i.isVerified);
+    it('unverified place has null address and no price in list (verifiedOnly=false)', async () => {
+      const unverified: any[] = [];
+      for (let page = 1; page <= 20; page++) {
+        const res = await request(app.getHttpServer())
+          .get(`/places?verifiedOnly=false&limit=100&page=${page}`)
+          .expect(200);
+        if (res.body.data.items.length === 0) break;
+        unverified.push(...res.body.data.items.filter((i: any) => !i.isVerified));
+      }
       expect(unverified.length).toBeGreaterThan(0);
-      for (const it of unverified) expect(it.address).toBeNull();
+      for (const it of unverified) {
+        expect(it.address).toBeNull();
+        expect(it).not.toHaveProperty('priceMin');
+        expect(it).not.toHaveProperty('priceMax');
+      }
     });
   });
 });

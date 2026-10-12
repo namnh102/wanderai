@@ -1,4 +1,4 @@
-﻿import { Test, TestingModule } from '@nestjs/testing';
+import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import * as request from 'supertest';
 import * as fs from 'fs';
@@ -140,7 +140,9 @@ describe('Provenance & data integrity (e2e)', () => {
     expect(synthetic.length).toBeGreaterThan(0);
     for (const r of synthetic) {
       expect(r.trusted).toBe(false);
-      const res = await request(app.getHttpServer()).get(`/places/${r.placeId}`).expect(200);
+      const res = await request(app.getHttpServer()).get(`/places/${r.placeId}`);
+      if (res.status === 404) continue; // legacy unverified place: not publicly servable at all (W3-04)
+      expect(res.status).toBe(200);
       const ids = res.body.data.reviews.map((x: any) => x.id);
       expect(ids).not.toContain(r.id);
     }
