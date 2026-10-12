@@ -15,7 +15,7 @@ Strict Invariants:
   wikivoyage_documents == 464
   places_with_non_null_rating == 0
   Hanoi = 145, Ha Long = 188, Da Nang = 293
-  REC-A-CORE-V2 = 626
+  Three-city map-discovery total = 626 (distinct from REC-A-CORE-V2 = 622 personalized core)
 """
 
 import asyncio
