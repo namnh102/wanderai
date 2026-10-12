@@ -112,14 +112,17 @@ flowchart LR
 
 | Canonical Interest | Primary Tier-1 Macro Domain | Target Tier-2 Micro Categories | Fallback POI Category Slug |
 | :--- | :--- | :--- | :--- |
-| `food_cuisine` | `FOOD_BEVERAGE` | `restaurant_dining`, `street_food`, `street_food_market`, `seafood_dining` | `restaurant` |
+| `food_cuisine` | `FOOD_BEVERAGE` | `restaurant_dining`, `street_food`, `street_food_market`, `seafood_dining` | `restaurant`, `food` |
 | `culture_history` | `CULTURE_HERITAGE` | `temple_pagoda`, `religious_temple`, `museum_gallery`, `historic_monument`, `heritage_craft` (or Tier-1 `CULTURE_HERITAGE`) | `culture`, `temple`, `museum` |
-| `nature_outdoor` | `NATURE_SCENERY` | `park_garden`, `cave_grotto`, `lake_river`, `zoo_wildlife`, `scenic_viewpoint`, `viewpoint_scenic` | `nature`, `attraction` |
+| `nature_outdoor` | `NATURE_SCENERY` | `park_garden`, `cave_grotto`, `lake_river`, `zoo_wildlife`, `scenic_viewpoint`, `viewpoint_scenic` | `nature`, `park` |
 | `coffee_culture` | `FOOD_BEVERAGE` | `cafe_tea` *(Does not automatically imply `food_cuisine` unless explicit dining subtype)* | `cafe` |
-| `beach_island` | `NATURE_SCENERY` | `beach_coastal`, `island_landmark` | `beach`, `attraction` |
-| `shopping_local` | `SHOPPING_COMMERCE` | `traditional_market`, `shopping_mall`, `souvenir_craft` | `market`, `attraction` |
-| `nightlife_entertainment` | `ATTRACTIONS_LEISURE` | `nightlife_entertainment` *(Generic attractions, iconic landmarks, theme parks do NOT map to nightlife)* | `nightlife`, `attraction` |
+| `beach_island` | `NATURE_SCENERY` | `beach_coastal`, `island_landmark` | `beach` |
+| `shopping_local` | `SHOPPING_COMMERCE` | `traditional_market`, `shopping_mall`, `souvenir_craft` | `market` |
+| `nightlife_entertainment` | `ATTRACTIONS_LEISURE` | `nightlife_entertainment` *(Generic attractions, iconic landmarks, theme parks do NOT map to nightlife)* | `nightlife` |
 | *(None)* | `HOSPITALITY` | `hotel_resort`, `homestay_hostel` *(No activity feature mapping in REC-A V1; yields $[0.0]^7$)* | `hotel` |
+
+> [!NOTE]
+> Generic `category=attraction` is not itself a canonical-interest signal. Unless taxonomy/tags resolve it to a supported specific subtype, it remains `tier_2=attraction` and produces a zero canonical-interest vector.
 
 ### 4.2 Current Audited POI Vector Distribution
 Across all **622 `REC-A-CORE-V2` places**:
