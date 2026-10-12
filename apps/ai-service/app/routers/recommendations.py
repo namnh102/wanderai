@@ -4,13 +4,16 @@ from typing import List, Dict, Any, Optional
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel, Field, field_validator
 
-from recommendation.reca.contract import normalize_destination
+from recommendation.reca.contract import (
+    SUPPORTED_DESTINATIONS,
+    SUPPORTED_MODELS,
+    MIN_TOP_K,
+    MAX_TOP_K,
+    normalize_destination,
+)
 from recommendation.reca.engine import get_place_recommender
 
 router = APIRouter(prefix="/recommendations", tags=["Recommendations"])
-
-SUPPORTED_DESTINATIONS = ("ha-noi", "da-nang", "ha-long")
-SUPPORTED_MODELS = ("rec-a0", "rec-a1")
 
 
 class PlaceRecommendationRequest(BaseModel):
@@ -24,7 +27,7 @@ class PlaceRecommendationRequest(BaseModel):
         description="Optional destination filter (e.g. 'ha-noi', 'da-nang', 'ha-long')",
         json_schema_extra={"example": "da-nang"},
     )
-    top_k: int = Field(default=10, ge=1, le=50, description="Number of recommendations to return")
+    top_k: int = Field(default=10, ge=MIN_TOP_K, le=MAX_TOP_K, description="Number of recommendations to return")
     model: str = Field(
         default="rec-a1",
         description="Algorithm baseline to use ('rec-a1' for cosine, 'rec-a0' for taxonomy overlap)",
@@ -107,5 +110,7 @@ async def recommend_places(request: PlaceRecommendationRequest):
             model=request.model,
         )
         return result
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Recommendation error: {str(e)}")

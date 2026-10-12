@@ -191,7 +191,7 @@ def test_assertion_6_destination_filtering(recommender):
         res = recommender.recommend(
             preferences={"interests": ["food_cuisine"]},
             destination=dest_slug,
-            top_k=300,
+            top_k=50,
             model="rec-a1",
         )
         for r in res["recommendations"]:
@@ -515,3 +515,175 @@ def test_r1_explanation_matched_interests_exactly_reflect_score_features(recomme
             idx = CANONICAL_INTERESTS.index(m)
             assert poi_vec[idx] > 0.0
 
+
+# ============================================================================
+# W4-GATE-02: Focused Internal Validation Hardening Tests
+# ============================================================================
+
+# MODEL:
+def test_val_model_01_valid_reca0_works(recommender):
+    res = recommender.recommend(preferences={"interests": ["food_cuisine"]}, destination="da-nang", top_k=5, model="rec-a0")
+    assert res["metadata"]["model"] == "rec-a0"
+    assert len(res["recommendations"]) == 5
+
+
+def test_val_model_02_valid_reca1_works(recommender):
+    res = recommender.recommend(preferences={"interests": ["food_cuisine"]}, destination="da-nang", top_k=5, model="rec-a1")
+    assert res["metadata"]["model"] == "rec-a1"
+    assert len(res["recommendations"]) == 5
+
+
+@pytest.mark.parametrize("bad_model", ["garbage", "rec-a9", "abc", "", "rec-b1"])
+def test_val_model_03_explicit_garbage_model_fails(recommender, bad_model):
+    with pytest.raises(ValueError, match="Unsupported recommendation model"):
+        recommender.recommend(preferences={"interests": ["food_cuisine"]}, destination="da-nang", top_k=5, model=bad_model)
+
+
+def test_val_model_04_omitted_model_preserves_default(recommender):
+    # Omitted model defaults to rec-a1
+    res = recommender.recommend(preferences={"interests": ["food_cuisine"]}, destination="da-nang", top_k=5)
+    assert res["metadata"]["model"] == "rec-a1"
+    # Explicit None also defaults to rec-a1
+    res_none = recommender.recommend(preferences={"interests": ["food_cuisine"]}, destination="da-nang", top_k=5, model=None)
+    assert res_none["metadata"]["model"] == "rec-a1"
+
+
+# DESTINATION:
+def test_val_dst_01_hanoi_works(recommender):
+    res = recommender.recommend(preferences={"interests": ["food_cuisine"]}, destination="ha-noi", top_k=5)
+    assert res["metadata"]["destination_filter"] == "ha-noi"
+    assert res["metadata"]["total_candidates"] == 145
+
+
+def test_val_dst_02_danang_works(recommender):
+    res = recommender.recommend(preferences={"interests": ["food_cuisine"]}, destination="da-nang", top_k=5)
+    assert res["metadata"]["destination_filter"] == "da-nang"
+    assert res["metadata"]["total_candidates"] == 289
+
+
+def test_val_dst_03_halong_works(recommender):
+    res = recommender.recommend(preferences={"interests": ["food_cuisine"]}, destination="ha-long", top_k=5)
+    assert res["metadata"]["destination_filter"] == "ha-long"
+    assert res["metadata"]["total_candidates"] == 188
+
+
+@pytest.mark.parametrize(
+    "alias,expected_slug",
+    [
+        ("Hanoi", "ha-noi"),
+        ("hanoi", "ha-noi"),
+        ("hn", "ha-noi"),
+        ("Hà Nội", "ha-noi"),
+        ("Danang", "da-nang"),
+        ("danang", "da-nang"),
+        ("dn", "da-nang"),
+        ("Đà Nẵng", "da-nang"),
+        ("Halong", "ha-long"),
+        ("halong", "ha-long"),
+        ("hl", "ha-long"),
+        ("Hạ Long", "ha-long"),
+    ],
+)
+def test_val_dst_04_supported_aliases_normalize(recommender, alias, expected_slug):
+    res = recommender.recommend(preferences={"interests": ["food_cuisine"]}, destination=alias, top_k=5)
+    assert res["metadata"]["destination_filter"] == expected_slug
+
+
+@pytest.mark.parametrize("bad_dst", ["paris", "hue", "abc", "unknown-city", "quang-nam", "da nang city"])
+def test_val_dst_05_explicit_invalid_destination_fails(recommender, bad_dst):
+    with pytest.raises(ValueError, match="Unsupported destination"):
+        recommender.recommend(preferences={"interests": ["food_cuisine"]}, destination=bad_dst, top_k=5)
+
+
+def test_val_dst_06_invalid_destination_must_not_return_global_catalog(recommender):
+    with pytest.raises(ValueError):
+        recommender.recommend(preferences={"interests": ["food_cuisine"]}, destination="paris", top_k=10)
+
+
+def test_val_dst_07_omitted_destination_preserves_global_scope(recommender):
+    res = recommender.recommend(preferences={"interests": ["food_cuisine"]}, destination=None, top_k=10)
+    assert res["metadata"]["destination_filter"] is None
+    assert res["metadata"]["total_candidates"] == 622
+
+
+# TOP_K:
+def test_val_k_01_min_top_k_works(recommender):
+    res = recommender.recommend(preferences={"interests": ["food_cuisine"]}, destination="da-nang", top_k=1)
+    assert len(res["recommendations"]) == 1
+
+
+def test_val_k_02_max_top_k_works(recommender):
+    res = recommender.recommend(preferences={"interests": ["food_cuisine"]}, destination="da-nang", top_k=50)
+    assert len(res["recommendations"]) == 50
+
+
+@pytest.mark.parametrize("below_min", [0, -1, -10])
+def test_val_k_03_below_min_fails(recommender, below_min):
+    with pytest.raises(ValueError, match="must be between 1 and 50"):
+        recommender.recommend(preferences={"interests": ["food_cuisine"]}, destination="da-nang", top_k=below_min)
+
+
+@pytest.mark.parametrize("above_max", [51, 100, 9999])
+def test_val_k_04_above_max_fails(recommender, above_max):
+    with pytest.raises(ValueError, match="must be between 1 and 50"):
+        recommender.recommend(preferences={"interests": ["food_cuisine"]}, destination="da-nang", top_k=above_max)
+
+
+def test_val_k_05_negative_fails(recommender):
+    with pytest.raises(ValueError, match="must be between 1 and 50"):
+        recommender.recommend(preferences={"interests": ["food_cuisine"]}, destination="da-nang", top_k=-5)
+
+
+@pytest.mark.parametrize("bad_type", ["10", 10.5, True, False, [10]])
+def test_val_k_06_non_integer_fails(recommender, bad_type):
+    with pytest.raises(ValueError, match="Invalid top_k"):
+        recommender.recommend(preferences={"interests": ["food_cuisine"]}, destination="da-nang", top_k=bad_type)
+
+
+# COLD START:
+def test_val_cs_01_empty_interests_use_cold_start(recommender):
+    for empty in [[], None, {}]:
+        prefs = {"interests": empty} if empty is not None else {}
+        res = recommender.recommend(preferences=prefs, destination="da-nang", top_k=10)
+        assert res["metadata"]["cold_start"] is True
+        assert res["metadata"]["algorithm"] == "COLD_START_DIVERSE_CATALOG_BASELINE"
+
+
+def test_val_cs_02_cold_start_deterministic(recommender):
+    res1 = recommender.recommend(preferences={"interests": []}, destination="da-nang", top_k=10)
+    res2 = recommender.recommend(preferences={"interests": []}, destination="da-nang", top_k=10)
+    ids1 = [r["place_id"] for r in res1["recommendations"]]
+    ids2 = [r["place_id"] for r in res2["recommendations"]]
+    assert ids1 == ids2
+
+
+# REGRESSION:
+def test_val_reg_01_valid_a0_behavior_unchanged(recommender):
+    res = recommender.recommend(preferences={"interests": ["food_cuisine"]}, destination="ha-noi", top_k=5, model="rec-a0")
+    assert res["metadata"]["model"] == "rec-a0"
+    assert res["recommendations"][0]["score"] == 1.0
+
+
+def test_val_reg_02_valid_a1_behavior_unchanged(recommender):
+    res = recommender.recommend(preferences={"interests": ["food_cuisine"]}, destination="ha-noi", top_k=5, model="rec-a1")
+    assert res["metadata"]["model"] == "rec-a1"
+    assert math.isclose(res["recommendations"][0]["score"], 1.0, rel_tol=1e-5)
+
+
+def test_val_reg_03_reca_core_counts_unchanged(recommender):
+    assert len(recommender.core_places) == 622
+    hn = [p for p in recommender.core_places if p.get("destination_slug") == "ha-noi"]
+    dn = [p for p in recommender.core_places if p.get("destination_slug") == "da-nang"]
+    hl = [p for p in recommender.core_places if p.get("destination_slug") == "ha-long"]
+    assert len(hn) == 145
+    assert len(dn) == 289
+    assert len(hl) == 188
+
+
+def test_val_reg_04_secondary_leakage_remains_zero(recommender):
+    res = recommender.recommend(preferences={"interests": ["food_cuisine"]}, destination=None, top_k=50)
+    core_ids = {p["place_id"] for p in recommender.core_places}
+    sec_ids = {p["place_id"] for p in recommender.secondary_places}
+    for r in res["recommendations"]:
+        assert r["place_id"] in core_ids
+        assert r["place_id"] not in sec_ids

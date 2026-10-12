@@ -11,6 +11,10 @@ from typing import List, Dict, Any, Optional, Union
 from recommendation.reca.contract import (
     CANONICAL_INTERESTS,
     UNSUPPORTED_USER_FEATURES,
+    SUPPORTED_MODELS,
+    SUPPORTED_DESTINATIONS,
+    MIN_TOP_K,
+    MAX_TOP_K,
     normalize_destination,
     normalize_string,
     poi_to_canonical_vector,
@@ -90,15 +94,19 @@ class PlaceRecommender:
         preferences: Optional[Union[Dict[str, Any], List[str]]] = None,
         destination: Optional[str] = None,
         top_k: int = 10,
-        model: str = "rec-a1",
+        model: Optional[str] = "rec-a1",
     ) -> Dict[str, Any]:
-        """Generate ranked place recommendations.
+        """Generate ranked place recommendations with strict input validation.
 
         Args:
             preferences: Dict containing 'interests' key or list of canonical interest strings.
-            destination: Optional destination filter ('ha-noi', 'da-nang', 'ha-long').
-            top_k: Number of recommendations to return (default 10).
+            destination: Optional destination filter ('ha-noi', 'da-nang', 'ha-long' or None for all).
+            top_k: Number of recommendations to return (1 <= top_k <= 50, default 10).
             model: Algorithm baseline ('rec-a1' for cosine, 'rec-a0' for taxonomy overlap).
+                   If omitted or None, defaults to 'rec-a1'.
+
+        Raises:
+            ValueError: If model, destination, or top_k fail validation constraints.
 
         Returns:
             Dict containing recommendations, metadata, and unsupported user features.
@@ -106,7 +114,39 @@ class PlaceRecommender:
         if not self._is_loaded:
             self.load()
 
-        # 1. Normalize and extract user canonical interests
+        # 1. Validate top_k (MIN_TOP_K <= top_k <= MAX_TOP_K, integer only)
+        if isinstance(top_k, bool) or not isinstance(top_k, int):
+            raise ValueError(f"Invalid top_k: expected integer, got {type(top_k).__name__}")
+        if top_k < MIN_TOP_K or top_k > MAX_TOP_K:
+            raise ValueError(
+                f"Invalid top_k '{top_k}': must be between {MIN_TOP_K} and {MAX_TOP_K}"
+            )
+
+        # 2. Validate and normalize model
+        if model is None:
+            normalized_model = "rec-a1"
+        elif not isinstance(model, str):
+            raise ValueError(f"Invalid model type: expected string, got {type(model).__name__}")
+        else:
+            normalized_model = model.strip().lower()
+            if normalized_model not in SUPPORTED_MODELS:
+                raise ValueError(
+                    f"Unsupported recommendation model '{model}'. Supported models: {', '.join(SUPPORTED_MODELS)}"
+                )
+
+        # 3. Validate and normalize destination
+        if destination is None or (isinstance(destination, str) and not destination.strip()):
+            dest_slug = None
+        elif not isinstance(destination, str):
+            raise ValueError(f"Invalid destination type: expected string, got {type(destination).__name__}")
+        else:
+            dest_slug = normalize_destination(destination)
+            if dest_slug is None:
+                raise ValueError(
+                    f"Unsupported destination '{destination}'. Supported: {', '.join(SUPPORTED_DESTINATIONS)}"
+                )
+
+        # 4. Normalize and extract user canonical interests
         raw_interests: List[str] = []
         if isinstance(preferences, dict):
             raw_interests = preferences.get("interests") or []
@@ -116,14 +156,13 @@ class PlaceRecommender:
         user_vec = user_to_canonical_vector(raw_interests)
         user_norm = l2_norm(user_vec)
 
-        # 2. Filter eligible candidate universe by destination
-        dest_slug = normalize_destination(destination)
+        # 5. Filter eligible candidate universe by destination
         if dest_slug:
             candidates = [p for p in self.core_places if p.get("destination_slug") == dest_slug]
         else:
             candidates = list(self.core_places)
 
-        # 3. Cold-Start Check: user has zero canonical interests
+        # 6. Cold-Start Check: user has zero canonical interests
         if user_norm == 0.0:
             recs = ColdStartDiverseBaseline.rank(candidates, top_k=top_k)
             return {
@@ -139,8 +178,8 @@ class PlaceRecommender:
                 "unsupported_user_features": UNSUPPORTED_USER_FEATURES,
             }
 
-        # 4. Score candidates using specified baseline
-        scorer = RecA0TaxonomyBaseline if model.lower() == "rec-a0" else RecA1CosineBaseline
+        # 7. Score candidates using specified baseline
+        scorer = RecA0TaxonomyBaseline if normalized_model == "rec-a0" else RecA1CosineBaseline
         model_name = scorer.name
 
         scored_items = []
