@@ -291,7 +291,17 @@ void main() {
         longitude: 105.833,
         isVerified: true,
       );
-      fakeRepo.searchResults = [samplePlace];
+      // W3-05: exactly one result is auto-selected (spec); two results keep
+      // this test about "a new search clears the previous selection".
+      const otherPlace = PlaceModel(
+        id: 'place-2',
+        name: 'Văn Miếu',
+        categoryName: 'culture',
+        latitude: 21.028,
+        longitude: 105.835,
+        isVerified: true,
+      );
+      fakeRepo.searchResults = [samplePlace, otherPlace];
 
       final container = ProviderContainer(
         overrides: [

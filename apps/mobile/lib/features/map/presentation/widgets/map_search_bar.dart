@@ -2,14 +2,20 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 /// Search bar overlay on the map.
+///
+/// An optional external [controller] lets the owner clear the visible text
+/// (e.g. when a destination chip is tapped). When none is given the bar owns
+/// a private controller, exactly as before.
 class MapSearchBar extends StatefulWidget {
   final ValueChanged<String> onSearch;
   final VoidCallback onClear;
+  final TextEditingController? controller;
 
   const MapSearchBar({
     super.key,
     required this.onSearch,
     required this.onClear,
+    this.controller,
   });
 
   @override
@@ -17,19 +23,34 @@ class MapSearchBar extends StatefulWidget {
 }
 
 class _MapSearchBarState extends State<MapSearchBar> {
-  final _controller = TextEditingController();
+  late final TextEditingController _controller =
+      widget.controller ?? TextEditingController();
   Timer? _debounce;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller.addListener(_onControllerChanged);
+  }
+
+  void _onControllerChanged() {
+    // Keeps the clear (x) button in sync, also for external clears.
+    if (mounted) setState(() {});
+  }
 
   @override
   void dispose() {
     _debounce?.cancel();
-    _controller.dispose();
+    _controller.removeListener(_onControllerChanged);
+    if (widget.controller == null) _controller.dispose();
     super.dispose();
   }
 
   void _onChanged(String value) {
     _debounce?.cancel();
     _debounce = Timer(const Duration(milliseconds: 500), () {
+      // The text may have been cleared externally while the debounce ran.
+      if (_controller.text.trim() != value.trim()) return;
       if (value.trim().isEmpty) {
         widget.onClear();
       } else {
@@ -60,9 +81,9 @@ class _MapSearchBarState extends State<MapSearchBar> {
               ? IconButton(
                   icon: const Icon(Icons.clear, size: 20),
                   onPressed: () {
+                    _debounce?.cancel();
                     _controller.clear();
                     widget.onClear();
-                    setState(() {});
                   },
                 )
               : null,

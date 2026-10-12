@@ -34,6 +34,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   Future<void> _loadDestinations() async {
+    if (!mounted) return;
     setState(() {
       _loading = true;
       _error = null;
@@ -42,17 +43,21 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       final dio = ref.read(apiClientProvider);
       final response =
           await dio.get('/destinations', queryParameters: {'limit': 50});
+      // The widget may have been disposed while the request was in flight.
+      if (!mounted) return;
       final data = response.data;
       setState(() {
         _destinations = data['data']?['items'] ?? [];
         _loading = false;
       });
     } on DioException catch (e) {
+      if (!mounted) return;
       setState(() {
         _error = 'Không thể tải dữ liệu điểm đến: ${e.message}';
         _loading = false;
       });
     } catch (e) {
+      if (!mounted) return;
       setState(() {
         _error = 'Đã xảy ra lỗi không mong muốn: $e';
         _loading = false;

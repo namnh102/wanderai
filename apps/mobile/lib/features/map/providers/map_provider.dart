@@ -1,11 +1,18 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:latlong2/latlong.dart';
 import '../../../core/network/api_client.dart';
+import '../data/destination_model.dart';
 import '../data/place_model.dart';
 import '../data/place_repository.dart';
 
 // ── Default location: Hanoi ──
 const _defaultCenter = LatLng(21.0285, 105.8542);
+
+/// Zoom used when the camera is sent to a destination (city overview).
+const destinationZoom = 12.0;
+
+/// Zoom used when a single search result is shown.
+const singleResultZoom = 16.0;
 
 // ── Category definitions matching backend place_categories ──
 class PlaceCategory {
@@ -35,6 +42,37 @@ const radiusOptions = [1.0, 5.0, 10.0, 25.0];
 // ── Map State ──
 enum MapLoadingStatus { initial, loading, loaded, empty, error }
 
+/// How the Map currently decides which places to show.
+enum MapMode {
+  /// A supported destination is selected and all its verified places shown.
+  destination,
+
+  /// Global text search (not limited by destination).
+  search,
+
+  /// Places around the user's location (after "Vị trí của tôi").
+  nearby,
+}
+
+/// A one-shot camera instruction. [seq] is strictly increasing so listeners
+/// can tell a new request from a re-delivered one; the screen applies it from
+/// a listener (never from `build()`).
+class MapCameraRequest {
+  final int seq;
+  final LatLng center;
+  final double zoom;
+
+  /// When it holds 2+ points the camera must fit all of them (with padding).
+  final List<LatLng> fitPoints;
+
+  const MapCameraRequest({
+    required this.seq,
+    required this.center,
+    required this.zoom,
+    this.fitPoints = const [],
+  });
+}
+
 class MapState {
   final MapLoadingStatus status;
   final List<PlaceModel> places;
@@ -46,6 +84,19 @@ class MapState {
   final String? errorMessage;
   final bool useLocation;
 
+  final MapMode mode;
+
+  /// Supported destinations resolved from `GET /destinations`, by slug.
+  final Map<String, DestinationModel> destinations;
+
+  /// Highlighted destination (null in SEARCH / NEARBY: neutral state).
+  final String? activeDestinationSlug;
+
+  /// Last destination browsed; restored when search is cleared.
+  final String? lastBrowseSlug;
+
+  final MapCameraRequest? cameraRequest;
+
   const MapState({
     this.status = MapLoadingStatus.initial,
     this.places = const [],
@@ -56,6 +107,11 @@ class MapState {
     this.selectedPlace,
     this.errorMessage,
     this.useLocation = false,
+    this.mode = MapMode.destination,
+    this.destinations = const {},
+    this.activeDestinationSlug,
+    this.lastBrowseSlug,
+    this.cameraRequest,
   });
 
   MapState copyWith({
@@ -68,10 +124,16 @@ class MapState {
     PlaceModel? selectedPlace,
     String? errorMessage,
     bool? useLocation,
+    MapMode? mode,
+    Map<String, DestinationModel>? destinations,
+    String? activeDestinationSlug,
+    String? lastBrowseSlug,
+    MapCameraRequest? cameraRequest,
     bool clearSelectedPlace = false,
     bool clearCategory = false,
     bool clearSearch = false,
     bool clearError = false,
+    bool clearActiveDestination = false,
   }) {
     return MapState(
       status: status ?? this.status,
@@ -85,6 +147,13 @@ class MapState {
           clearSelectedPlace ? null : (selectedPlace ?? this.selectedPlace),
       errorMessage: clearError ? null : (errorMessage ?? this.errorMessage),
       useLocation: useLocation ?? this.useLocation,
+      mode: mode ?? this.mode,
+      destinations: destinations ?? this.destinations,
+      activeDestinationSlug: clearActiveDestination
+          ? null
+          : (activeDestinationSlug ?? this.activeDestinationSlug),
+      lastBrowseSlug: lastBrowseSlug ?? this.lastBrowseSlug,
+      cameraRequest: cameraRequest ?? this.cameraRequest,
     );
   }
 }
@@ -93,17 +162,104 @@ class MapState {
 class MapNotifier extends StateNotifier<MapState> {
   final PlaceRepository _repo;
 
+  /// Request token: every operation that loads places takes a new one, and
+  /// only the newest operation may write state. This makes late responses
+  /// from superseded requests harmless.
+  int _seq = 0;
+  int _cameraSeq = 0;
+
   MapNotifier(this._repo) : super(const MapState());
 
-  /// Load nearby places from PostGIS.
+  bool _stale(int token) => !mounted || token != _seq;
+
+  void _emitCamera(LatLng center, double zoom,
+      {List<LatLng> fitPoints = const []}) {
+    state = state.copyWith(
+      center: center,
+      cameraRequest: MapCameraRequest(
+        seq: ++_cameraSeq,
+        center: center,
+        zoom: zoom,
+        fitPoints: fitPoints,
+      ),
+    );
+  }
+
+  /// First open of the Map: no-op if places were already loaded.
+  Future<void> ensureInitialized() async {
+    if (state.status == MapLoadingStatus.initial ||
+        (state.status == MapLoadingStatus.error &&
+            state.destinations.isEmpty)) {
+      await selectDestination(supportedDestinations.first.slug);
+    }
+  }
+
+  /// Browse a supported destination: loads all its verified places (server
+  /// side destination + category filter, paginated) and moves the camera to
+  /// the backend destination coordinates.
+  Future<void> selectDestination(String slug, {bool recenter = true}) async {
+    final token = ++_seq;
+    state = state.copyWith(
+      status: MapLoadingStatus.loading,
+      mode: MapMode.destination,
+      activeDestinationSlug: slug,
+      lastBrowseSlug: slug,
+      places: const [],
+      clearSearch: true,
+      clearSelectedPlace: true,
+      clearError: true,
+    );
+
+    try {
+      var dests = state.destinations;
+      if (dests.isEmpty) {
+        final all = await _repo.getDestinations();
+        if (_stale(token)) return;
+        dests = resolveSupportedDestinations(all);
+        state = state.copyWith(destinations: dests);
+      }
+      final dest = dests[slug];
+      if (dest == null) {
+        throw DestinationResolutionException(
+            'Điểm đến "$slug" không được hỗ trợ.');
+      }
+      if (recenter) _emitCamera(dest.center, destinationZoom);
+
+      final places = await _repo.getAllPlacesForDestination(
+        destinationId: dest.id,
+        category: state.selectedCategory,
+      );
+      if (_stale(token)) return;
+      final withCoords = places.where((p) => p.hasCoordinates).toList();
+      state = state.copyWith(
+        status:
+            withCoords.isEmpty ? MapLoadingStatus.empty : MapLoadingStatus.loaded,
+        places: withCoords,
+      );
+    } catch (e) {
+      if (_stale(token)) return;
+      state = state.copyWith(
+        status: MapLoadingStatus.error,
+        errorMessage: e is DestinationResolutionException
+            ? e.message
+            : 'Không thể tải địa điểm. Vui lòng thử lại.',
+      );
+    }
+  }
+
+  /// Load nearby places from PostGIS (NEARBY mode).
   Future<void> loadNearby({LatLng? center, double? radiusKm}) async {
+    final token = ++_seq;
     final c = center ?? state.center;
     final r = radiusKm ?? state.radiusKm;
 
     state = state.copyWith(
       status: MapLoadingStatus.loading,
+      mode: MapMode.nearby,
       center: c,
       radiusKm: r,
+      clearActiveDestination: true,
+      clearSearch: true,
       clearError: true,
       clearSelectedPlace: true,
     );
@@ -116,6 +272,7 @@ class MapNotifier extends StateNotifier<MapState> {
         limit: 100,
         verifiedOnly: true,
       );
+      if (_stale(token)) return;
 
       final filtered = _applyClientFilters(places);
 
@@ -124,6 +281,7 @@ class MapNotifier extends StateNotifier<MapState> {
         places: filtered,
       );
     } catch (e) {
+      if (_stale(token)) return;
       state = state.copyWith(
         status: MapLoadingStatus.error,
         errorMessage: 'Không thể tải địa điểm: ${e.toString().length > 80 ? e.toString().substring(0, 80) : e}',
@@ -131,43 +289,73 @@ class MapNotifier extends StateNotifier<MapState> {
     }
   }
 
-  /// Search places by text.
+  /// Search places globally by text (not limited by destination).
+  ///
+  /// Camera policy: 0 results → untouched; 1 result → centre on it and
+  /// select it; 2+ results → fit all markers.
   Future<void> searchPlaces(String query) async {
-    if (query.trim().isEmpty) {
+    final q = query.trim();
+    if (q.isEmpty) {
       state = state.copyWith(clearSearch: true, clearSelectedPlace: true);
-      return loadNearby();
+      if (state.mode != MapMode.search) return;
+      // Leaving SEARCH: back to the last browsed destination.
+      final slug = state.lastBrowseSlug;
+      return selectDestination(slug ?? supportedDestinations.first.slug);
     }
 
+    final token = ++_seq;
     state = state.copyWith(
       status: MapLoadingStatus.loading,
-      searchQuery: query,
+      mode: MapMode.search,
+      searchQuery: q,
+      places: const [],
+      clearActiveDestination: true,
       clearError: true,
       clearSelectedPlace: true,
     );
 
     try {
       final places = await _repo.getPlaces(
-        search: query,
-        limit: 50,
+        search: q,
+        limit: placesMaxPageSize,
         verifiedOnly: true,
         category: state.selectedCategory,
       );
+      if (_stale(token)) return;
 
-      final withCoords = places.where((p) => p.hasCoordinates).toList();
+      final seen = <String>{};
+      final withCoords = places
+          .where((p) => p.hasCoordinates && seen.add(p.id))
+          .toList();
 
       state = state.copyWith(
         status: withCoords.isEmpty ? MapLoadingStatus.empty : MapLoadingStatus.loaded,
         places: withCoords,
       );
+
+      if (withCoords.length == 1) {
+        final p = withCoords.single;
+        final pt = LatLng(p.latitude!, p.longitude!);
+        state = state.copyWith(selectedPlace: p);
+        _emitCamera(pt, singleResultZoom);
+      } else if (withCoords.length > 1) {
+        final pts = withCoords
+            .map((p) => LatLng(p.latitude!, p.longitude!))
+            .toList();
+        final lat = pts.map((p) => p.latitude).reduce((a, b) => a + b) / pts.length;
+        final lng = pts.map((p) => p.longitude).reduce((a, b) => a + b) / pts.length;
+        _emitCamera(LatLng(lat, lng), destinationZoom, fitPoints: pts);
+      }
     } catch (e) {
+      if (_stale(token)) return;
       state = state.copyWith(
         status: MapLoadingStatus.error,
-        errorMessage: 'Lỗi tìm kiếm: $e',
+        errorMessage: 'Không thể tìm kiếm. Vui lòng thử lại.',
       );
     }
   }
 
-  /// Filter by category.
+  /// Filter by category (re-queries the current mode; never keeps stale rows).
   void setCategory(String? category) {
     if (category == 'all') category = null;
     state = state.copyWith(
@@ -176,15 +364,48 @@ class MapNotifier extends StateNotifier<MapState> {
       clearSelectedPlace: true,
     );
 
-    // Re-apply filter or reload
-    if (state.searchQuery != null && state.searchQuery!.isNotEmpty) {
-      searchPlaces(state.searchQuery!);
-    } else {
-      loadNearby();
+    switch (state.mode) {
+      case MapMode.search:
+        final q = state.searchQuery;
+        if (q != null && q.isNotEmpty) {
+          searchPlaces(q);
+        } else {
+          loadNearby();
+        }
+        break;
+      case MapMode.nearby:
+        loadNearby();
+        break;
+      case MapMode.destination:
+        selectDestination(
+          state.activeDestinationSlug ??
+              state.lastBrowseSlug ??
+              supportedDestinations.first.slug,
+          recenter: false,
+        );
+        break;
     }
   }
 
-  /// Change radius and reload.
+  /// Retry the operation that failed, without silently switching mode.
+  Future<void> retry() {
+    switch (state.mode) {
+      case MapMode.search:
+        final q = state.searchQuery;
+        if (q != null && q.isNotEmpty) return searchPlaces(q);
+        return selectDestination(
+            state.lastBrowseSlug ?? supportedDestinations.first.slug);
+      case MapMode.nearby:
+        return loadNearby();
+      case MapMode.destination:
+        return selectDestination(
+            state.activeDestinationSlug ??
+                state.lastBrowseSlug ??
+                supportedDestinations.first.slug);
+    }
+  }
+
+  /// Change radius and reload (NEARBY mode).
   void setRadius(double radiusKm) {
     loadNearby(radiusKm: radiusKm);
   }
@@ -204,7 +425,7 @@ class MapNotifier extends StateNotifier<MapState> {
     state = state.copyWith(clearSelectedPlace: true);
   }
 
-  /// Set user location as center.
+  /// Set user location as center: enters NEARBY mode.
   void setUserLocation(LatLng location) {
     state = state.copyWith(useLocation: true);
     loadNearby(center: location);
