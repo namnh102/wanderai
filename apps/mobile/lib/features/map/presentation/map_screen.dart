@@ -16,6 +16,7 @@ import '../providers/map_provider.dart';
 import 'widgets/place_preview_sheet.dart';
 import 'widgets/map_category_bar.dart';
 import 'widgets/map_search_bar.dart';
+import 'widgets/map_destination_selector.dart';
 import 'widgets/map_radius_selector.dart';
 
 class MapScreen extends ConsumerStatefulWidget {
@@ -36,6 +37,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
   AnimationController? _cameraAnimationController;
   Timer? _pillDismissTimer;
   bool _showLocationPill = true;
+  final TextEditingController _searchController = TextEditingController();
 
   @override
   void initState() {
@@ -49,12 +51,14 @@ class _MapScreenState extends ConsumerState<MapScreen>
   void dispose() {
     _pillDismissTimer?.cancel();
     _cameraAnimationController?.dispose();
+    _cameraAnimationController = null;
+    _searchController.dispose();
     super.dispose();
   }
 
   Future<void> _initMap() async {
-    // Load POIs first (around the default map centre); never blocks on GPS.
-    ref.read(mapProvider.notifier).loadNearby();
+    // Load the default destination (Hà Nội) first; never blocks on GPS.
+    ref.read(mapProvider.notifier).ensureInitialized();
     // Silent: only picks up a fix if permission was already granted. It never
     // prompts and never moves the camera.
     await ref.read(userLocationProvider.notifier).refreshIfPermitted();
@@ -108,6 +112,38 @@ class _MapScreenState extends ConsumerState<MapScreen>
     controller.forward();
   }
 
+  /// Applies a [MapCameraRequest] emitted by the notifier. Called only from a
+  /// provider listener (never from build). A newer request cancels any
+  /// animation still running for an older one.
+  void _applyCameraRequest(MapCameraRequest req) {
+    if (!mounted) return;
+    _cameraAnimationController?.dispose();
+    _cameraAnimationController = null;
+
+    if (req.fitPoints.length > 1) {
+      final bounds = LatLngBounds.fromPoints(req.fitPoints);
+      final identical = bounds.south == bounds.north && bounds.west == bounds.east;
+      if (!identical) {
+        _mapController.fitCamera(
+          CameraFit.bounds(
+            bounds: bounds,
+            padding: const EdgeInsets.fromLTRB(56, 250, 56, 150),
+            maxZoom: 17,
+          ),
+        );
+        return;
+      }
+      _mapController.move(req.fitPoints.first, singleResultZoom);
+      return;
+    }
+
+    if (widget.mapController != null) {
+      _mapController.move(req.center, req.zoom);
+    } else {
+      _animatedMapMove(req.center, req.zoom);
+    }
+  }
+
   /// "Vị trí của tôi": explicit request. First tap asks for permission and a
   /// fix; later taps refresh the fix and recenter. The camera is only moved
   /// here, never on passive location updates.
@@ -156,6 +192,10 @@ class _MapScreenState extends ConsumerState<MapScreen>
     final currentZoom = _mapController.camera.zoom;
     final targetZoom = currentZoom < 14.0 ? 15.0 : currentZoom;
 
+    // Enter NEARBY mode: clears search/destination highlight, loads nearby.
+    _searchController.clear();
+    ref.read(mapProvider.notifier).setUserLocation(pos);
+
     if (widget.mapController != null) {
       _mapController.move(pos, targetZoom);
     } else {
@@ -175,6 +215,21 @@ class _MapScreenState extends ConsumerState<MapScreen>
     final userLoc = ref.watch(userLocationProvider);
     final userPos = userLoc.position;
     final theme = Theme.of(context);
+    final topInset = MediaQuery.of(context).padding.top;
+
+    // Camera moves are driven by events, never from build().
+    ref.listen<MapCameraRequest?>(
+      mapProvider.select((s) => s.cameraRequest),
+      (prev, next) {
+        if (next != null && next.seq != prev?.seq) _applyCameraRequest(next);
+      },
+    );
+    // Search text is cleared when the search is left by other means.
+    ref.listen<String?>(mapProvider.select((s) => s.searchQuery), (prev, next) {
+      if (next == null && _searchController.text.isNotEmpty) {
+        _searchController.clear();
+      }
+    });
 
     return Scaffold(
       body: Stack(
@@ -285,6 +340,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
               maxWidth: 600.0,
               padding: const EdgeInsets.symmetric(horizontal: 12),
               child: MapSearchBar(
+                controller: _searchController,
                 onSearch: (query) {
                   ref.read(mapProvider.notifier).searchPlaces(query);
                 },
@@ -295,9 +351,28 @@ class _MapScreenState extends ConsumerState<MapScreen>
             ),
           ),
 
-          // ─── Category filter (below search) ───
+          // ─── Destination selector (below search) ───
           Positioned(
-            top: MediaQuery.of(context).padding.top + 68,
+            top: topInset + 64,
+            left: 0,
+            right: 0,
+            child: ResponsiveWrapper(
+              maxWidth: 640.0,
+              child: MapDestinationSelector(
+                selectedSlug: state.mode == MapMode.destination
+                    ? state.activeDestinationSlug
+                    : null,
+                onSelected: (slug) {
+                  _searchController.clear();
+                  ref.read(mapProvider.notifier).selectDestination(slug);
+                },
+              ),
+            ),
+          ),
+
+          // ─── Category filter (below destination chips) ───
+          Positioned(
+            top: topInset + 106,
             left: 0,
             right: 0,
             child: ResponsiveWrapper(
@@ -324,13 +399,15 @@ class _MapScreenState extends ConsumerState<MapScreen>
                   state: userLoc,
                   onTap: _onMyLocationTap,
                 ),
-                const SizedBox(height: 8),
-                MapRadiusSelector(
-                  currentRadius: state.radiusKm,
-                  onRadiusChanged: (r) {
-                    ref.read(mapProvider.notifier).setRadius(r);
-                  },
-                ),
+                if (state.mode == MapMode.nearby) ...[
+                  const SizedBox(height: 8),
+                  MapRadiusSelector(
+                    currentRadius: state.radiusKm,
+                    onRadiusChanged: (r) {
+                      ref.read(mapProvider.notifier).setRadius(r);
+                    },
+                  ),
+                ],
               ],
             ),
           ),
@@ -338,7 +415,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
           // ─── Loading indicator ───
           if (state.status == MapLoadingStatus.loading)
             Positioned(
-              top: MediaQuery.of(context).padding.top + 120,
+              top: topInset + 160,
               left: 0,
               right: 0,
               child: Center(
@@ -377,7 +454,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
           // ─── Empty state ───
           if (state.status == MapLoadingStatus.empty)
             Positioned(
-              top: MediaQuery.of(context).padding.top + 120,
+              top: topInset + 160,
               left: 40,
               right: 40,
               child: Center(
@@ -395,20 +472,21 @@ class _MapScreenState extends ConsumerState<MapScreen>
                       ),
                     ],
                   ),
-                  child: const Column(
+                  child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.location_off_outlined,
+                      const Icon(Icons.location_off_outlined,
                           size: 32, color: AppColors.textTertiary),
-                      SizedBox(height: AppSpacing.sm),
-                      Text(
+                      const SizedBox(height: AppSpacing.sm),
+                      const Text(
                         'Không tìm thấy địa điểm',
                         style: AppTypography.h3,
                         textAlign: TextAlign.center,
                       ),
-                      SizedBox(height: 4),
+                      const SizedBox(height: 4),
                       Text(
-                        'Thử mở rộng bán kính hoặc chọn danh mục khác',
+                        _emptyHint(state),
+                        key: const Key('map_empty_hint'),
                         style: AppTypography.bodyS,
                         textAlign: TextAlign.center,
                       ),
@@ -421,7 +499,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
           // ─── Error state ───
           if (state.status == MapLoadingStatus.error)
             Positioned(
-              top: MediaQuery.of(context).padding.top + 120,
+              top: topInset + 160,
               left: 40,
               right: 40,
               child: Center(
@@ -446,7 +524,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
                       const SizedBox(height: AppSpacing.sm),
                       TextButton(
                         onPressed: () =>
-                            ref.read(mapProvider.notifier).loadNearby(),
+                            ref.read(mapProvider.notifier).retry(),
                         child: const Text('Thử lại'),
                       ),
                     ],
@@ -588,6 +666,17 @@ class _MapScreenState extends ConsumerState<MapScreen>
         ],
       ),
     );
+  }
+
+  String _emptyHint(MapState state) {
+    switch (state.mode) {
+      case MapMode.search:
+        return 'Không có địa điểm đã xác minh khớp với "${state.searchQuery ?? ''}". Hãy thử từ khóa khác.';
+      case MapMode.destination:
+        return 'Chưa có địa điểm trong danh mục này. Hãy chọn danh mục khác.';
+      case MapMode.nearby:
+        return 'Thử mở rộng bán kính hoặc chọn danh mục khác';
+    }
   }
 
   Marker _buildMarker(PlaceModel place, MapState state, ThemeData theme) {
