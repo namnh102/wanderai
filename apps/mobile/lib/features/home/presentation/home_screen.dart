@@ -155,6 +155,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     onTap: () => context.go('/ai'),
                   ),
 
+                  const SizedBox(height: AppSpacing.sm),
+                  _RecommendationEntryCard(
+                    onTap: () => context.push('/recommendations'),
+                  ),
+
                   const SizedBox(height: AppSpacing.lg),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -199,6 +204,41 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               ),
             ),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Entry point to the personalised REC-A recommendations (reachable from Khám phá).
+class _RecommendationEntryCard extends StatelessWidget {
+  final VoidCallback onTap;
+
+  const _RecommendationEntryCard({required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return AppCard(
+      key: const Key('home_recommendation_entry'),
+      onTap: onTap,
+      child: const Row(
+        children: [
+          Icon(Icons.thumb_up_alt_outlined, color: AppColors.primary),
+          SizedBox(width: AppSpacing.md),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Gợi ý cho bạn', style: AppTypography.h3),
+                SizedBox(height: 2),
+                Text(
+                  'Địa điểm phù hợp với sở thích của bạn',
+                  style: AppTypography.bodyS,
+                ),
+              ],
+            ),
+          ),
+          Icon(Icons.chevron_right, color: AppColors.textSecondary),
         ],
       ),
     );

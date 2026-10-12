@@ -69,6 +69,7 @@ class ProfileNotifier extends StateNotifier<ProfileState> {
     state = state.copyWith(status: ProfileEditStatus.initialLoading, clearErrors: true);
     try {
       final user = await _repo.getProfile();
+      if (!mounted) return;
       final prefs = user.preferences ?? const TravelPreferences();
       state = state.copyWith(
         status: ProfileEditStatus.loaded,
@@ -77,11 +78,13 @@ class ProfileNotifier extends StateNotifier<ProfileState> {
         formPreferences: prefs,
       );
     } on DioException catch (e) {
+      if (!mounted) return;
       state = state.copyWith(
         status: ProfileEditStatus.networkError,
         errorMessage: _mapError(e),
       );
     } catch (e) {
+      if (!mounted) return;
       state = state.copyWith(
         status: ProfileEditStatus.networkError,
         errorMessage: 'Lỗi tải thông tin: $e',
@@ -194,6 +197,7 @@ class ProfileNotifier extends StateNotifier<ProfileState> {
 
     try {
       final updated = await _repo.updatePreferences(state.formPreferences);
+      if (!mounted) return false;
       state = state.copyWith(
         status: ProfileEditStatus.success,
         persistedPreferences: updated,
@@ -202,12 +206,14 @@ class ProfileNotifier extends StateNotifier<ProfileState> {
       );
       return true;
     } on DioException catch (e) {
+      if (!mounted) return false;
       state = state.copyWith(
         status: ProfileEditStatus.networkError,
         errorMessage: _mapError(e),
       );
       return false;
     } catch (e) {
+      if (!mounted) return false;
       state = state.copyWith(
         status: ProfileEditStatus.networkError,
         errorMessage: 'Lỗi không xác định: $e',
@@ -225,8 +231,10 @@ class ProfileNotifier extends StateNotifier<ProfileState> {
       return 'Không có kết nối mạng.';
     }
     final data = e.response?.data;
-    if (data is Map && data['message'] != null) {
-      return data['message'].toString();
+    if (data is Map) {
+      final msg = data['message'];
+      if (msg is String && msg.trim().isNotEmpty) return msg;
+      if (msg is List && msg.isNotEmpty) return msg.whereType<String>().join('; ');
     }
     return 'Lỗi máy chủ (${e.response?.statusCode ?? 'Unknown'}). Vui lòng thử lại.';
   }

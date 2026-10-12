@@ -14,6 +14,8 @@ import '../../features/trips/presentation/trip_detail_screen.dart';
 import '../../features/map/presentation/map_screen.dart';
 import '../../features/places/presentation/place_detail_screen.dart';
 import '../../features/profile/presentation/preferences_screen.dart';
+import '../../features/recommendations/presentation/recommendation_screen.dart';
+import '../session/session_reset.dart';
 
 // Placeholder screens for tabs not yet implemented
 class _PlaceholderScreen extends StatelessWidget {
@@ -55,7 +57,13 @@ class RouterNotifier extends ChangeNotifier {
   RouterNotifier(this._ref) {
     _ref.listen<AuthState>(
       authProvider,
-      (_, __) => notifyListeners(),
+      (previous, next) {
+        // G-01: never carry one user's preferences/recommendations into the next session.
+        if (previous?.status != next.status) {
+          resetSessionScopedState(_ref);
+        }
+        notifyListeners();
+      },
     );
   }
 
@@ -120,6 +128,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/profile/preferences',
         builder: (context, state) => const PreferencesScreen(),
+      ),
+      GoRoute(
+        path: '/recommendations',
+        builder: (context, state) => const RecommendationScreen(),
       ),
       ShellRoute(
         navigatorKey: _shellNavigatorKey,
