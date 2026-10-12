@@ -5,7 +5,7 @@ Calendar dates are **not recorded in the repository**; only the week numbering a
 
 | Week | Focus | Packages | Gate |
 |---|---|---|---|
-| W3 | Core architecture, privacy controls, dataset freeze, integration baseline | W3-00 (this), `DATA-03`, `WP-PROF-02`, `WP-AUTH-01` | integration baseline |
+| W3 | Core architecture, privacy controls, dataset freeze, integration baseline | W3-00 to W3-06 and `DATA-03` (engineering/integration gate **CLOSED**). `WP-AUTH-01` remains a product target / later work; `WP-PROF-02` remains a product target / before Buddy work. Their non-completion does not reopen W3. | integration baseline (CLOSED) |
 | W4 | Recommendation baseline | `REC-01`, `REC-02` | REC baseline |
 | W5 | Offline recommender evaluation, cold start | `REC-EVAL-01` | REC-EVAL |
 | W6 | Itinerary agent constraint benchmark | `AGENT-EVAL-01`, `WP-WANDY-01` | AGENT-EVAL |
@@ -19,4 +19,4 @@ Calendar dates are **not recorded in the repository**; only the week numbering a
 | W14 | **Final submission** (manifest, code, demo, report) | - | THESIS-DEF |
 
 Main deadlines: **W11 feature freeze**, **W14 final submission**.
-Personalised recommendations in the product app remain `FUTURE`; REC work is a research experiment (Triple Boundary rule).
+A live recommendation flow exists in the app (NestJS -> FastAPI -> REC-A) with `rec-a0` / `rec-a1` as baseline implementations. It must NOT be described as scientifically validated personalization: W4 / W5 remain the research methodology and scientific evaluation milestones (Triple Boundary rule).

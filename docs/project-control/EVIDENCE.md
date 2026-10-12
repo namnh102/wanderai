@@ -1,3 +1,11 @@
+> **HISTORICAL SNAPSHOT - W3-00**
+>
+> This document records the W3-00 evidence state and must not be interpreted as the current project status.
+>
+> Current project status: see CURRENT_STATE.md.
+>
+> Final W3 closure: see docs/w3/w3-06-w3-exit-gate.md and associated evidence.
+
 # EVIDENCE (W3-00)
 
 ## Branch heads and integration commits (local, unpushed)
