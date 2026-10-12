@@ -237,4 +237,28 @@ describe('W3-04 place contract hardening (e2e)', () => {
       expect(n).toBe(0);
     });
   });
-});
+
+  describe('R1. Destination detail nested places are factual (no unsafe address)', () => {
+    it.each(['ha-noi', 'da-nang', 'ha-long'])('GET /destinations/:id (%s): address == osmAddress(OSM rawData), no price/rawData/sources', async (slug) => {
+      const dest = await prisma.destination.findFirst({ where: { slug } });
+      const detail = (await http().get(`/destinations/${dest!.id}`).expect(200)).body.data;
+      expect(detail.places.length).toBeGreaterThan(0);
+      let unsafeStored = 0;
+      for (const p of detail.places) {
+        expect(p).not.toHaveProperty('priceMin');
+        expect(p).not.toHaveProperty('priceMax');
+        expect(p).not.toHaveProperty('rawData');
+        expect(p).not.toHaveProperty('placeSources');
+        const src = await prisma.placeSource.findFirst({ where: { placeId: p.id, sourceName: 'osm' } });
+        expect(src).toBeTruthy(); // only provenance-backed places
+        const expected = osmAddress((src!.rawData ?? null) as any);
+        expect(p.address).toBe(expected);
+        const stored = (await prisma.place.findUnique({ where: { id: p.id } }))!.address;
+        if (stored && stored !== expected) {
+          unsafeStored++; // stored importer text differs from the factual result: must not be served
+          expect(p.address).not.toBe(stored);
+        }
+      }
+      expect(unsafeStored).toBeGreaterThan(0); // the scenario under test really occurs in this data
+    }, 60000);
+  });});

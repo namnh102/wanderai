@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { Prisma } from '@prisma/client';
 import { sanitizeDestination } from './destination-trust';
+import { osmAddress } from '../places/osm-tags';
 
 @Injectable()
 export class DestinationsService {
@@ -48,7 +49,11 @@ export class DestinationsService {
         places: {
           // Only provenance-backed (verified) places are public; legacy seed prices are never exposed.
           where: { deletedAt: null, placeSources: { some: {} } },
-          include: { category: true },
+          include: {
+            category: true,
+            // Internal input only (factual OSM address); stripped before the response is returned.
+            placeSources: { where: { sourceName: 'osm' }, select: { rawData: true } },
+          },
           orderBy: { rating: 'desc' },
         },
       },
@@ -57,7 +62,12 @@ export class DestinationsService {
     if (!dest) throw new NotFoundException('Destination không tồn tại');
     return {
       ...sanitizeDestination(dest),
-      places: dest.places.map(({ priceMin: _priceMin, priceMax: _priceMax, ...p }) => p),
+      // Public nested places: factual OSM-derived address only (never the importer-generated places.address),
+      // no rawData / placeSources, no legacy seed prices.
+      places: dest.places.map(({ priceMin: _priceMin, priceMax: _priceMax, placeSources, ...p }) => ({
+        ...p,
+        address: osmAddress((placeSources[0]?.rawData ?? null) as Record<string, unknown> | null),
+      })),
     };
   }
 

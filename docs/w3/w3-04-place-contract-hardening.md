@@ -20,7 +20,7 @@ Not touched: PDG-007…012, 014…017, TECH-DEBT-MOB-01, ANDROID-RELEASE-01, CI-
 - New [`osm-tags.ts`](../../apps/backend/src/modules/places/osm-tags.ts) — one TS extractor + SQL mirror (`osmTagSql`, `osmAddressSql`).
 - New [`dto/place-query.dto.ts`](../../apps/backend/src/modules/places/dto/place-query.dto.ts) — `PlaceListQueryDto`, `NearbyQueryDto`.
 - [`places.controller.ts`](../../apps/backend/src/modules/places/places.controller.ts), [`places.service.ts`](../../apps/backend/src/modules/places/places.service.ts).
-- New [`destination-trust.ts`](../../apps/backend/src/modules/destinations/destination-trust.ts); [`destinations.service.ts`](../../apps/backend/src/modules/destinations/destinations.service.ts).
+- New [`destination-trust.ts`](../../apps/backend/src/modules/destinations/destination-trust.ts); [`destinations.service.ts`](../../apps/backend/src/modules/destinations/destinations.service.ts) (R1: nested place addresses).
 - Tests: new `test/place-contract.e2e-spec.ts`; updated `place-detail`, `places`, `provenance` e2e specs (contract changes below).
 - No Prisma schema change, no mobile change, no Freeze/REC-A change.
 
@@ -35,7 +35,7 @@ Not touched: PDG-007…012, 014…017, TECH-DEBT-MOB-01, ANDROID-RELEASE-01, CI-
 | `GET /places/:id` unverified | 200 | **404** |
 | `priceMin/priceMax` | exposed (list, detail, destination detail) | removed |
 | destination `rating` | seed value | `null` unless `reviewCount > 0` (none today) |
-| `GET /destinations/:id` places | all non-deleted | only provenance-backed places |
+| `GET /destinations/:id` places | all non-deleted, stored `address` served | only provenance-backed places; `address = osmAddress(OSM rawData)` (R1); no price, `rawData` or `placeSources` |
 
 ## 6. OSM metadata recovery (live DB, all 759 verified places, via `GET /places/:id`)
 Expected value computed independently in Python from the raw `place_sources.raw_data`.
@@ -48,6 +48,8 @@ Expected value computed independently in Python from the raw `place_sources.raw_
 | opening hours (tag or column) | 124 | 124 | **0** |
 
 W3-03 baseline was address 31 / website 6 / phone 6 served. List address mismatches: 0 of 759. Nearby SQL vs TS: 300 results checked in 3 areas, 0 mismatches. Detail never exposes `priceMin/priceMax` (759/759).
+
+Factual-address handling now covers `GET /places`, `GET /places/:id`, `GET /places/nearby` and `GET /destinations/:id` -> `places[]` (all via `osm-tags.ts`; stored `places.address` is never served).
 
 ## 7. Pagination proof (live)
 | verifiedOnly | limit | total | unique | duplicates | missing |
@@ -105,5 +107,20 @@ Live: `/destinations?limit=50` → 50 items, 0 non-null ratings; `/destinations/
 PDG-007, 008, 009, 010, 011, 012 (except price), 014, 015, 016, 017; TECH-DEBT-MOB-01, ANDROID-RELEASE-01, CI-ANDROID-01.
 Note: destination ordering still uses the seeded `rating` as a sort key (value not exposed); revisit with PDG-017.
 
-## 14. Final status
-**W3-04 candidate PASS** — all target gaps closed, none blocked; no schema, Freeze or REC-A change.
+## 14. R1 - destination detail address leak (follow-up)
+**Root cause:** `GET /destinations/:id` returned full Prisma place rows; W3-04 stripped only `priceMin/priceMax`, so the importer-generated `places.address` (e.g. `Bảo tàng Chiến thắng B52, hanoi`) was still public.
+
+**Fix:** `destinations.service.ts` selects the OSM `PlaceSource.rawData` only as internal input, sets `address = osmAddress(rawData)` (existing helper, no new implementation) and strips `placeSources`/`rawData`/prices before returning. No schema or data change.
+
+**New e2e test** (`place-contract.e2e-spec.ts`): for ha-noi, da-nang, ha-long every nested place has no `priceMin/priceMax/rawData/placeSources`, an OSM source exists, `address == osmAddress(rawData)`, and where the stored column differs from the factual result the API never serves the stored value (the test asserts such places exist).
+
+**Live (626 nested places = 145 + 293 + 188):** API-vs-OSM mismatches 0; unsafe stored-address leaks 0; price/rawData/placeSources leaks 0. Samples:
+- Hà Nội *Bảo tàng Chiến thắng B52*: stored `..., hanoi` -> API `null`.
+- Hà Nội *Thai Village*: stored `3B Phố Lê Thái Tổ, Hàng Trống, Hoàn Kiếm, Hà Nội` -> API `3B Phố Lê Thái Tổ, Hoàn Kiếm, Hà Nội`.
+- Đà Nẵng *CaPhe Konia*: stored `..., da_nang` -> API `null`.
+- Hạ Long *Nhà Hàng Phương Nam 2*: stored `Sun Premier Village, Hạ long, Quảng Ninh` -> API `LV2, 03, Sun Premier Village, Hạ long, Quảng Ninh`.
+
+**Re-run:** `tsc` pass; lint 0 errors (84 warnings); full e2e 13 suites / 153 tests pass.
+
+## 15. Final status
+**W3-04 candidate PASS (after R1)** — all target gaps closed, none blocked; no schema, Freeze or REC-A change.
