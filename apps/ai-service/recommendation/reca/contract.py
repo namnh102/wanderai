@@ -20,6 +20,11 @@ CANONICAL_INTERESTS = [
     "nightlife_entertainment",
 ]
 
+SUPPORTED_MODELS = ("rec-a0", "rec-a1")
+SUPPORTED_DESTINATIONS = ("ha-noi", "da-nang", "ha-long")
+MIN_TOP_K = 1
+MAX_TOP_K = 50
+
 INTEREST_INDEX = {k: i for i, k in enumerate(CANONICAL_INTERESTS)}
 
 INTEREST_LABELS_VI = {
