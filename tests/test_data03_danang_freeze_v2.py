@@ -6,7 +6,7 @@ Verifies:
 - Overture cross-check & strict license resolution
 - Freeze V1 100% byte-for-byte immutability
 - Freeze V2 cryptographic SHA-256 integrity
-- REC-A-CORE-V2 item universe definition (Hanoi 145 + Da Nang 293 + Ha Long 188 = 626)
+- Three-city map-discovery total (Hanoi 145 + Da Nang 293 + Ha Long 188 = 626; distinct from REC-A-CORE-V2 = 622)
 - Research corpus invariants: rating is NULL, review_count is 0, zero Google/Tripadvisor sources
 - WP-PROF-01 7 canonical preference dimensions mapping
 - Live database invariants (counts, RAG documents, Wikivoyage preservation)

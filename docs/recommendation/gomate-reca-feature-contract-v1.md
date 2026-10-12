@@ -1,29 +1,44 @@
 # GoMate REC-A Recommender Feature & Input Contract (V1)
 
-**Specification Identifier:** `gomate-reca-feature-contract-v1`  
-**Version:** `1.0.0`  
-**Status:** RATIFIED & LOCKED  
-**Date:** 2026-10-07  
-**Branch:** `feature/profile-preferences`  
-**Target Consumer:** REC-A Recommender Evaluation Track & Cold-Start Matching  
-**Upstream Source Model:** PostgreSQL `travel_preferences` table (`TravelPreference`)  
-**Evaluation Item Universe:** 580 Canonical Verified OSM POIs ([`gomate_places_freeze_v1.json`](file:///d:/Do_an/wanderai/data/curated/gomate_places_freeze_v1.json))
+**Specification Identifier:** `gomate-reca-feature-contract-v1`
+**Version:** `1.1.0` (Audited & Reconciled with Dataset Freeze V2 / W4-GATE-01)
+**Status:** RATIFIED & LOCKED (Audited Post-W3)
+**Date:** 2026-10-13
+**Branch:** `chore/w4-gate-01-reca-feature-contract`
+**Target Consumer:** REC-A Recommender Baseline Track (`rec-a0`, `rec-a1`, Cold-Start Fallback)
+**Upstream Source Model:** PostgreSQL `travel_preferences` table (`TravelPreference`)
+**Authoritative Item Universe:** 622 Canonical Verified OSM POIs (`REC-A-CORE-V2` from [`gomate_places_freeze_v2.json`](file:///d:/Do_an/wanderai/data/curated/gomate_places_freeze_v2.json))
 
 ---
 
 ## 1. Executive Summary
 
-This document establishes the official feature contract between user travel preference profiles (`TravelPreference`) and the recommender item universe (REC-A) for the GoMate platform.
+This document establishes the authoritative feature contract between user travel preference profiles (`TravelPreference`) and the recommender item universe (`REC-A`) for the GoMate platform.
 
 It defines:
-1. **Canonical Interest Vocabulary:** A controlled 7-key vocabulary for new preference writes.
-2. **POI Taxonomy Mapping:** Explicit semantic projections from user interests to GoMate Taxonomy V1.1 (Tier-1 macro domains and Tier-2 micro categories).
-3. **Attribute Semantics:** Concrete representations for budget constraints, travel styles, preferred group sizes, avoidances, and dietary requirements.
-4. **Backward Compatibility & Defense-in-Depth:** Permissive parsing of legacy free-form preferences combined with strict validation for new persistence operations.
+1. **Canonical Interest Vocabulary:** A controlled 7-key vocabulary for new preference writes and recommendation feature vectors.
+2. **Item Universe Boundaries:** Strict segregation between the **622 REC-A personalized core** places, the **626 map-discovery scope**, and the **137 secondary places**.
+3. **Active vs. Stored Profile Attributes:** Rigorous distinction between active ranking signals (the 7 canonical interests) and stored profile fields (`travelStyle`, `budgetMin`, `budgetMax`, `preferredGroup`, `avoidances`, `dietaryNeeds`) that are preserved for product/profile functionality but **not consumed** by the current REC-A A0/A1 ranking function.
+4. **POI Taxonomy Projection:** Deterministic semantic mapping from canonical user interests to GoMate Taxonomy V1.1 (Tier-1 macro domains and Tier-2 micro categories).
+5. **Baseline Algorithmic & Cold-Start Semantics:** Mathematical formulations of `rec-a0` (taxonomy overlap) and `rec-a1` (cosine), cold-start fallback mechanics, and audited representation limitations.
+6. **Backward Compatibility & Defense-in-Depth:** Permissive parsing of legacy free-form preferences combined with strict validation for new persistence operations.
 
 ---
 
-## 2. Canonical Preference Vocabulary
+## 2. Authoritative Item Universe: 622 vs. 626 vs. 137
+
+The GoMate data foundation establishes strict boundaries between recommendation, map discovery, and secondary research corpora:
+
+| Dataset Segment | Count | Scope & Destination Breakdown | Recommender Role |
+| :--- | :--- | :--- | :--- |
+| **`REC-A-CORE-V2`** | **622** | **Personalized Recommender Core:**<br/>• Đà Nẵng (`da-nang`): 289<br/>• Hạ Long (`ha-long`): 188<br/>• Hà Nội (`ha-noi`): 145 | **Exclusive Candidate Pool** for `rec-a0`, `rec-a1`, and cold-start personalization. Filtered by `is_rec_a_core_v2: true`. |
+| **Map Discovery Scope** | **626** | **3-City Verified Map Catalog:**<br/>• Đà Nẵng: 293 (includes 4 secondary boundary POIs)<br/>• Hạ Long: 188<br/>• Hà Nội: 145 | **Map/Spatial Browsing Only.** Must **NOT** be described as the REC-A personalized core universe. |
+| **Secondary Corpus** | **137** | **Secondary Research Scope:**<br/>• Hội An: 50<br/>• Huế: 50<br/>• Nha Trang: 33<br/>• Đà Nẵng outside core: 4 | **Strictly Excluded** from REC-A candidate universe (`is_rec_a_core_v2: false`). Secondary $\to$ REC-A leakage is exactly 0. |
+| **Total Verified Places** | **759** | $622 + 137 = 759$ verified OSM places in Dataset Freeze V2 | Complete factual verified research corpus. |
+
+---
+
+## 3. Canonical Preference Vocabulary (7 Dimensions)
 
 To eliminate free-text entropy and ensure reproducible feature vectors for recommendation algorithms without exposing low-level OSM tagging, all user interest inputs are restricted to the following 7 canonical keys:
 
@@ -37,15 +52,24 @@ To eliminate free-text entropy and ensure reproducible feature vectors for recom
 | `shopping_local` | Mua sắm & Chợ địa phương | Mua sắm đặc sản, quà lưu niệm, khám phá chợ truyền thống và trung tâm thương mại. |
 | `nightlife_entertainment` | Giải trí & Đời sống về đêm | Phố đi bộ, quán bar, pub, biểu diễn nghệ thuật, chợ đêm và hoạt động giải trí đêm. |
 
+### 3.1 User Vector Construction
+For a given `TravelPreference` profile containing active interests $I \subseteq \mathcal{D}$:
+- Projected into a 7-dimensional binary vector $u \in \{0, 1\}^7$.
+- Duplicate interest selections do not amplify weight ($u_i \in \{0.0, 1.0\}$).
+- Case and whitespace normalization occurs deterministically (lowercase, trimmed).
+- Unknown canonical interests are not valid ranking features (rejected by public API validation, ignored by vectorizer).
+- Vector Euclidean norm $\|u\|_2 = \sqrt{\sum_{i=1}^7 u_i^2} = \sqrt{|I|}$.
+- If $\|u\|_2 = 0.0$ (empty or no valid canonical interests), the request routes to the deterministic cold-start fallback.
+
 ---
 
-## 3. Preference → POI Taxonomy V1.1 Mapping
+## 4. Preference $\to$ POI Taxonomy V1.1 Mapping & POI Representation
 
 The recommender candidate selection and scoring engine projects canonical interest keys into POI taxonomy dimensions:
 
 ```mermaid
 flowchart LR
-    subgraph UserPreferences ["User Interest Profile"]
+    subgraph UserPreferences ["User Interest Profile (7D)"]
         I1["food_cuisine"]
         I2["culture_history"]
         I3["nature_outdoor"]
@@ -84,75 +108,137 @@ flowchart LR
     M_Night --> T_AL
 ```
 
-### Detailed Mapping Rules
+### 4.1 Detailed Mapping Rules (`recommendation/reca/contract.py`)
 
-| Canonical Interest | Primary Tier-1 Macro Domain | Target Tier-2 Micro Categories | Fallback POI Legacy Category |
+| Canonical Interest | Primary Tier-1 Macro Domain | Target Tier-2 Micro Categories | Fallback POI Category Slug |
 | :--- | :--- | :--- | :--- |
-| `food_cuisine` | `FOOD_BEVERAGE` | `restaurant_dining`, `street_food`, `seafood_dining` | `restaurant` |
-| `culture_history` | `CULTURE_HERITAGE` | `temple_pagoda`, `museum_gallery`, `historic_monument`, `heritage_craft` | `culture`, `temple`, `museum` |
-| `nature_outdoor` | `NATURE_SCENERY` | `park_garden`, `cave_grotto`, `lake_river`, `zoo_wildlife`, `scenic_viewpoint` | `nature`, `attraction` |
-| `coffee_culture` | `FOOD_BEVERAGE` | `cafe_tea` | `cafe` |
-| `beach_island` | `NATURE_SCENERY` | `beach_coastal`, `island_landmark`, `cave_grotto` | `beach`, `attraction` |
+| `food_cuisine` | `FOOD_BEVERAGE` | `restaurant_dining`, `street_food`, `street_food_market`, `seafood_dining` | `restaurant` |
+| `culture_history` | `CULTURE_HERITAGE` | `temple_pagoda`, `religious_temple`, `museum_gallery`, `historic_monument`, `heritage_craft` (or Tier-1 `CULTURE_HERITAGE`) | `culture`, `temple`, `museum` |
+| `nature_outdoor` | `NATURE_SCENERY` | `park_garden`, `cave_grotto`, `lake_river`, `zoo_wildlife`, `scenic_viewpoint`, `viewpoint_scenic` | `nature`, `attraction` |
+| `coffee_culture` | `FOOD_BEVERAGE` | `cafe_tea` *(Does not automatically imply `food_cuisine` unless explicit dining subtype)* | `cafe` |
+| `beach_island` | `NATURE_SCENERY` | `beach_coastal`, `island_landmark` | `beach`, `attraction` |
 | `shopping_local` | `SHOPPING_COMMERCE` | `traditional_market`, `shopping_mall`, `souvenir_craft` | `market`, `attraction` |
-| `nightlife_entertainment` | `ATTRACTIONS_LEISURE` | `nightlife_entertainment`, `theme_park_leisure`, `water_park` | `nightlife`, `attraction` |
+| `nightlife_entertainment` | `ATTRACTIONS_LEISURE` | `nightlife_entertainment` *(Generic attractions, iconic landmarks, theme parks do NOT map to nightlife)* | `nightlife`, `attraction` |
+| *(None)* | `HOSPITALITY` | `hotel_resort`, `homestay_hostel` *(No activity feature mapping in REC-A V1; yields $[0.0]^7$)* | `hotel` |
+
+### 4.2 Current Audited POI Vector Distribution
+Across all **622 `REC-A-CORE-V2` places**:
+- **Binary 7D vector:** $p \in \{0, 1\}^7$.
+- **Non-Zero Vectors (I0):** 405 POIs (65.11%).
+- **Zero-Vectors (I1):** 217 POIs (34.89%).
+- **Multi-Interest POIs:** **0 POIs**. Maximum active canonical dimensions per POI is exactly 1.
+- **Active Dimension Histogram:** `{1: 405, 0: 217}`.
+
+#### Canonical Interest Counts Across Core POIs:
+- `food_cuisine`: 110 POIs
+- `culture_history`: 106 POIs
+- `coffee_culture`: 78 POIs
+- `shopping_local`: 39 POIs
+- `nature_outdoor`: 30 POIs
+- `nightlife_entertainment`: 28 POIs
+- `beach_island`: 14 POIs
+*(Sum of active dimensions = 405)*.
+
+#### Zero-Vector Breakdown (217 POIs):
+- `hotel`: 150 POIs (pure accommodation places without activity taxonomy mapping)
+- `attraction`: 63 POIs (iconic landmarks, ferry/boat terminals, and generic attractions without specific activity tags)
+- `entertainment`: 4 POIs (theme parks / leisure venues without nightlife tags)
+*(100% of the 217 zero-vector POIs retain usable category slugs and contract taxonomy Tier-1 metadata: `HOSPITALITY`: 150, `ATTRACTIONS_LEISURE`: 56, `TRANSPORT_HUBS`: 11)*.
 
 ---
 
-## 4. Attribute Semantics
+## 5. Profile Fields — Critical Semantics (Active vs. Stored)
 
-### 4.1 Travel Style (`travelStyle`)
-Stored as PostgreSQL enum `TravelStyle`:
-- `BACKPACKER`: Phượt, tối ưu tính cơ động, trải nghiệm khám phá bản địa, chi phí tối thiểu.
-- `BUDGET`: Du lịch tiết kiệm, tập trung tối ưu chi tiêu nhưng ưu tiên dịch vụ cơ bản ổn định.
-- `COMFORT` *(Default)*: Thoải mái, cân bằng chi phí và tiện nghi, khách sạn 3-4 sao, ẩm thực chọn lọc.
-- `LUXURY`: Sang trọng, khu nghỉ dưỡng 4-5 sao, dịch vụ cao cấp, trải nghiệm ẩm thực tinh hoa.
+The GoMate user profile database model (`travel_preferences`) and API DTOs support multiple user preference dimensions. For the **current REC-A A0/A1 ranking function**, these fields are **NOT active ranking signals**.
 
-*Recommender Semantic:* Sets the prior distribution for price tier filtering and venue ambiance scoring.
+They are classified as:
+> **`AVAILABLE_USER_FEATURE_NOT_USED_IN_V1`**
+> Stored and profile-supported in PostgreSQL and API DTOs, but not consumed by the current REC-A ranking function. Reserved for future/context-aware recommendation work; not part of the current A0/A1 canonical ranking information set.
 
-### 4.2 Budget Range (`budgetMin`, `budgetMax`)
-- **Unit:** Integer in Vietnamese Đồng (VND).
-- **Invariants:**
-  - $\text{budgetMin} \ge 0$
-  - $\text{budgetMax} \ge 0$
-  - $\text{budgetMin} \le \text{budgetMax}$
-- **Default Baseline:** $\text{budgetMin} = 0$, $\text{budgetMax} = 10,000,000$ VND.
-- *Recommender Semantic:* Hard/soft constraint on cumulative trip cost or per-venue estimated price level.
+| Profile Field | Model & Schema Type | Current REC-A Status | Recommender Behavior & Manifest Reason |
+| :--- | :--- | :--- | :--- |
+| `travelStyle` | Enum `TravelStyle` (`BACKPACKER`, `BUDGET`, `COMFORT`, `LUXURY`) | **NOT USED IN RANKING** | *Reason:* No validated POI-side travel-style compatibility signal exists in Dataset Freeze V2. Stored for user profile display and future accommodation tier matching. |
+| `budgetMin` | Integer (VND) $\ge 0$ | **NOT USED IN RANKING** | *Reason:* POI price data is not reliably standardized in OSM/Overture factual dataset. Stored for future budget-aware trip planning. |
+| `budgetMax` | Integer (VND) $\ge \text{budgetMin}$ | **NOT USED IN RANKING** | *Reason:* POI price data is not reliably standardized in OSM/Overture factual dataset. Stored for future budget-aware trip planning. |
+| `preferredGroup` | Enum `GroupSize` (`SOLO`, `COUPLE`, `SMALL_GROUP`, `LARGE_GROUP`, `FAMILY`) | **NOT USED IN RANKING** | *Reason:* Group dynamics and party size constraints are not modeled in REC-A baseline. Stored for future Buddy Matching and group itinerary filtering. |
+| `avoidances` | String Array (e.g. `['crowds', 'heights']`) | **NOT USED IN RANKING** | *Reason:* Negative preference filtering is deferred to post-filtering in later milestones. |
+| `dietaryNeeds` | String Array (e.g. `['vegetarian', 'vegan', 'halal']`) | **NOT USED IN RANKING** | *Reason:* Detailed dietary certification is not universally populated in OSM nodes. Stored for future dining-specific filtering. |
 
-### 4.3 Preferred Group Size (`preferredGroup`)
-Stored as PostgreSQL enum `GroupSize`:
-- `SOLO`: 1 người.
-- `COUPLE`: 2 người (ưu tiên không gian lãng mạn, ẩm thực ấm cúng).
-- `SMALL_GROUP`: 3–5 người (bạn bè, gia đình nhỏ).
-- `LARGE_GROUP`: 6+ người (ưu tiên địa điểm có sức chứa lớn, bàn tiệc, dịch vụ đoàn).
-- `FAMILY`: Gia đình (có người già hoặc trẻ em; ưu tiên an toàn, tiếp cận dễ dàng, không gian thân thiện trẻ nhỏ).
-
-*Recommender Semantic:* Filters venues unsuitable for large groups or families with children.
-
-### 4.4 Avoidances (`avoidances`)
-- Free-form string array capturing user aversion (e.g. `['crowds', 'heights', 'loud_music', 'steep_stairs']`).
-- *Recommender Semantic:* Negative penalty filter. Venues tagged with matching negative attributes receive a score penalty or are excluded.
-
-### 4.5 Dietary Needs (`dietaryNeeds`)
-- Free-form string array capturing dietary restrictions (e.g. `['vegetarian', 'vegan', 'halal', 'no_seafood']`).
-- *Recommender Semantic:* Dining filter. For recommendations within `FOOD_BEVERAGE`, restaurants lacking support for specified dietary needs are deprioritized or filtered out.
+**Runtime Contract:** Every recommendation API response from `POST /recommendations/places` explicitly returns the `unsupported_user_features` manifest detailing each unused field and its operational reason. Clients supplying these fields will have them accepted without error, but ranking order is identical to requests supplying only `interests`.
 
 ---
 
-## 5. Backward Compatibility & Defense-in-Depth
+## 6. Baseline Algorithms & Audited Representation Limitation
+
+### 6.1 REC-A0: Taxonomy Match Overlap Baseline
+`REC-A0` computes an unnormalized overlap count reflecting how many canonical interest domains are simultaneously active in both the user profile and the place:
+
+$$\text{score}_{\text{A0}}(u, p) = \sum_{i=1}^7 \min(u_i, p_i) \quad \text{for } u_i > 0 \land p_i > 0$$
+
+- **Score Range:** $[0.0, 1.0]$ in practice (since max active dimensions per current POI is 1).
+- **Strategy Code:** `rec-a0_content_match`.
+
+### 6.2 REC-A1: Cosine Content-Based Vector Baseline
+`REC-A1` normalizes for user vector length by computing the cosine similarity between the 7D user vector and the 7D item vector:
+
+$$\text{score}_{\text{A1}}(u, p) = \frac{u \cdot p}{\|u\|_2 \|p\|_2} = \frac{\sum_{i=1}^7 u_i p_i}{\sqrt{\sum_{i=1}^7 u_i^2} \sqrt{\sum_{i=1}^7 p_i^2}}$$
+
+- **Score Range:** $[0.0, 1.0]$. If $\|u\|_2 = 0$ or $\|p\|_2 = 0$, $\text{score}_{\text{A1}}(u, p) = 0.0$.
+- **Strategy Code:** `rec-a1_content_match`.
+
+### 6.3 Audited Representation Limitation: Effective Rank Equivalence
+Because every non-zero POI in `REC-A-CORE-V2` has exactly one active canonical interest ($\|p\|_2 = 1.0$):
+$$\text{score}_{\text{A1}}(u, p) = \frac{\text{score}_{\text{A0}}(u, p)}{\|u\|_2}$$
+For any given user query with fixed interests, $\|u\|_2$ is a constant scaling factor. Consequently:
+- For any user profile, dividing all candidate scores by a positive constant does not change their relative ordering.
+- In the audited N300 benchmark (300 profiles $\times$ Top-10), `REC-A0` and `REC-A1` produce the **identical Top-10 place ID ranking order** across all 300 profiles.
+- **Scientific Disclosure:** `REC-A0` and `REC-A1` are **two distinct mathematical scoring implementations**, but under the current single-interest POI representation they form **one effective ranking baseline**. They must **NOT** be presented as two independent ranking comparators in the thesis evaluation.
+
+### 6.4 Deterministic Tie-Breaking
+When candidates achieve identical scores, GoMate applies a strict 3-tuple sort key:
+
+$$\text{SortKey}(item) = (-\text{score}, \text{NormalizeString}(name), \text{place\_id})$$
+
+Where `NormalizeString` removes diacritics, strips punctuation, and lowercases text. Ranking is bit-identical and reproducible across runs.
+
+---
+
+## 7. Cold-Start Semantics (`COLD_START_DIVERSE_CATALOG_BASELINE`)
+
+When a user has no persisted preferences, empty interests, or completely unrecognized tags ($\|u\|_2 = 0$):
+1. **Never Fabricate Popularity:** GoMate does not invent ratings, review counts, or popularity metrics.
+2. **Stratified Domain Interleaving:** Candidates are partitioned by contract taxonomy domain (`CULTURE_HERITAGE`, `NATURE_SCENERY`, `FOOD_BEVERAGE`, `SHOPPING_COMMERCE`, `ATTRACTIONS_LEISURE`, `HOSPITALITY`, `TRANSPORT_HUBS`).
+3. **Round-Robin Selection:** The engine samples items across distinct domains using deterministic sorting `(NormalizeString(name), place_id)`.
+4. **Deterministic Pseudo-Score:**
+   $$\text{score}(rank) = 1.0 - \frac{rank - 1}{n} \times 0.9$$
+   *(Where $n = \text{top\_k}$)*.
+   > [!IMPORTANT]
+   > The cold-start fallback pseudo-score is a **deterministic rank-derived display signal only**. It must **NEVER** be described as:
+   > - a probability
+   > - human relevance
+   > - a rating
+   > - algorithmic confidence
+5. **Metadata & Audit Trails:** Tagged with `cold_start: true`, `algorithm: "COLD_START_DIVERSE_CATALOG_BASELINE"`, `strategy: "COLD_START_DIVERSE_CATALOG_BASELINE"`, and reason code `COLD_START_DIVERSE_FALLBACK`.
+
+---
+
+## 8. Backward Compatibility & Defense-in-Depth
 
 1. **Permissive Legacy Read:**
-   - Pre-existing user profiles or benchmark datasets (e.g. synthetic fixtures) may contain unnormalized string tags (`'beach'`, `'mountain'`, `'historic_architecture'`).
-   - `GET /users/me` returns these tags verbatim without throwing validation errors.
+   - Pre-existing user profiles or benchmark datasets may contain legacy string tags. `GET /users/me` returns these tags without throwing validation errors.
 2. **Strict Canonical New Writes:**
    - Any `PUT /users/me/preferences` invocation must pass strict validation against `CANONICAL_INTERESTS`.
-   - Unknown keys, negative budgets, inverted budget ranges, or disallowed attributes are rejected with HTTP 400.
+   - Unknown canonical keys, negative budgets, inverted budget ranges, or disallowed attributes are rejected with HTTP 400.
 3. **Field Whitelisting:**
    - Unsupported or un-migrated fields (`pace`, `presence`, `online`, `showActivityStatus`, `userId`) are rejected by NestJS `ValidationPipe({ forbidNonWhitelisted: true })`.
 
 ---
 
-## 6. Scientific Limitations & Out-of-Scope Declarations
+## 9. Scientific Limitations & Research Boundaries
 
-- **No Ranking Algorithm:** This contract specifies the input representation only. Scoring functions, collaborative filtering models (REC-B), and graph-based rerankers will be evaluated in subsequent tasks.
-- **No Dietary Medical Diagnostics:** `dietaryNeeds` serves strictly as venue tag filtering and does not provide allergen safety guarantees.
-- **Fixed Item Universe:** Recommender candidate selection evaluates strictly against the 580 canonical verified OSM POIs frozen in [`data/curated/gomate_places_freeze_v1.json`](file:///d:/Do_an/wanderai/data/curated/gomate_places_freeze_v1.json).
+- **Fixed Item Universe:** Recommender candidate selection evaluates strictly against the **622 canonical verified OSM POIs** (`REC-A-CORE-V2`) frozen in [`data/curated/gomate_places_freeze_v2.json`](file:///d:/Do_an/wanderai/data/curated/gomate_places_freeze_v2.json).
+- **Candidate Pool Limitation:** 217 core POIs (34.89%) have zero-vectors under the 7 canonical activity interests (primarily hotels and generic landmarks), meaning they can only score 0.0 in activity matching and appear in cold-start or tie scenarios.
+- **Top-K Catalog Concentration:** In unconstrained global ranking ($K=10$), deterministic lexical tie-breaking results in 52 unique items recommended across 300 synthetic profiles (8.36% catalog coverage).
+- **No A2 Implementation:** Diversity-aware reranking (A2) is a research candidate only. It is **NOT implemented** in production and is **NOT** the final selected model.
+- **No Collaborative Filtering in REC-A:** Collaborative filtering models and latent factor transfers are strictly out of scope for REC-A. ViHoRec is a separate, restricted benchmark corpus and its hotel IDs must never be merged with GoMate POI UUIDs.
+- **No Human Ground Truth in W3:** The N300 benchmark is an engineering determinism track only. Scientific evaluation against independent human relevance judgments is deferred to `REC-EVAL-01` (Week 5).
