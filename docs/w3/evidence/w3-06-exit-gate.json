@@ -3,12 +3,24 @@
   "w3_exit": "PASS",
   "data": {
     "freeze_v1_v2_checksum": "PASS",
-    "root_tests": { "passed": 65, "failed": 0 },
+    "root_tests": {
+      "passed": 65,
+      "failed": 0
+    },
     "db_places_total": 882,
     "db_verified": 759,
     "db_legacy_unverified": 123,
-    "map_verified": { "ha-noi": 145, "da-nang": 293, "ha-long": 188 },
-    "reca_core": { "total": 622, "ha-noi": 145, "da-nang": 289, "ha-long": 188 },
+    "map_verified": {
+      "ha-noi": 145,
+      "da-nang": 293,
+      "ha-long": 188
+    },
+    "reca_core": {
+      "total": 622,
+      "ha-noi": 145,
+      "da-nang": 289,
+      "ha-long": 188
+    },
     "reca_secondary": 137,
     "reca_secondary_leak": 0
   },
@@ -16,33 +28,72 @@
     "typecheck": "PASS",
     "lint_check": "PASS",
     "build": "PASS",
-    "e2e": { "suites": 13, "tests": 153, "passed": 153, "failed": 0, "skipped": 0 },
+    "e2e": {
+      "suites": 13,
+      "tests": 153,
+      "passed": 153,
+      "failed": 0,
+      "skipped": 0
+    },
     "trust_checks": {
       "legacy_unverified_detail": 404,
       "price_leak": 0,
       "invalid_query_status": 400,
       "invalid_nearby_status": 400,
-      "pagination": { "rows": 759, "unique": 759, "duplicates": 0 },
+      "pagination": {
+        "rows": 759,
+        "unique": 759,
+        "duplicates": 0
+      },
       "destination_non_null_ratings": 0
     }
   },
   "ai": {
     "ruff": "PASS",
     "openapi_snapshot": "PASS",
-    "pytest": { "passed": 115, "skipped": 2, "failed": 1 },
+    "offline_gate": {
+      "status": "PASS",
+      "source": "GitHub Actions",
+      "run_id": 38254995326,
+      "job": "ai-service"
+    },
+    "local_full_suite_with_live_db": {
+      "passed": 115,
+      "skipped": 2,
+      "failed": 1,
+      "status": "KNOWN_PREEXISTING_FAILURE"
+    },
     "known_preexisting_failure": "tests/test_rag_osm_ingestion.py::test_grounding_opening_hours_only_states_source_metadata",
+    "new_w3_ai_regressions": 0,
     "unknown_destination_status": 422,
     "invalid_model_status": 422,
     "n300_label": "SANITY / ENGINEERING DATA ONLY"
   },
   "preferences": {
-    "fields": ["travelStyle", "budgetMin", "budgetMax", "preferredGroup", "interests", "avoidances", "dietaryNeeds"],
+    "fields": [
+      "travelStyle",
+      "budgetMin",
+      "budgetMax",
+      "preferredGroup",
+      "interests",
+      "avoidances",
+      "dietaryNeeds"
+    ],
     "roundtrip_equal": true,
     "non_canonical_interest_status": 400,
     "canonical_interest_count": 7
   },
-  "mobile": { "analyze": "No issues found", "tests_passed": 215, "tests_skipped": 1, "tests_failed": 0, "flutter": "3.47.5" },
-  "android": { "debug_apk": "PASS", "ndk": "28.2.13676358" },
+  "mobile": {
+    "analyze": "No issues found",
+    "tests_passed": 215,
+    "tests_skipped": 1,
+    "tests_failed": 0,
+    "flutter": "3.47.5"
+  },
+  "android": {
+    "debug_apk": "PASS",
+    "ndk": "28.2.13676358"
+  },
   "e2e": {
     "avd": "GoMate_W3_Test",
     "E2E-01": "PASS",
@@ -56,15 +107,44 @@
     "REAL_GPS_EMULATOR": "NOT_VERIFIED"
   },
   "gaps": {
-    "closed": ["PDG-001", "PDG-002", "PDG-003", "PDG-004", "PDG-005", "PDG-006", "PDG-009", "PDG-010", "PDG-013", "TECH-DEBT-MOB-01"],
-    "deferred": ["PDG-007", "PDG-008", "PDG-011", "PDG-012", "PDG-014", "PDG-015"],
-    "external_data_limitation": ["PDG-016", "PDG-017"]
+    "closed": [
+      "PDG-001",
+      "PDG-002",
+      "PDG-003",
+      "PDG-004",
+      "PDG-005",
+      "PDG-006",
+      "PDG-009",
+      "PDG-010",
+      "PDG-013",
+      "TECH-DEBT-MOB-01"
+    ],
+    "deferred": [
+      "PDG-007",
+      "PDG-008",
+      "PDG-011",
+      "PDG-012",
+      "PDG-014",
+      "PDG-015"
+    ],
+    "external_data_limitation": [
+      "PDG-016",
+      "PDG-017"
+    ]
   },
   "open_p0": 0,
   "open_p1": 0,
   "deferred": [
-    "PDG-007", "PDG-008", "PDG-011", "PDG-012", "PDG-014", "PDG-015", "PDG-016", "PDG-017",
-    "ANDROID-RELEASE-01", "CI-ANDROID-01",
+    "PDG-007",
+    "PDG-008",
+    "PDG-011",
+    "PDG-012",
+    "PDG-014",
+    "PDG-015",
+    "PDG-016",
+    "PDG-017",
+    "ANDROID-RELEASE-01",
+    "CI-ANDROID-01",
     "W3-05 global search capped at one 100-result page",
     "W3-05 destination overview zoom fixed at 12",
     "REAL_GPS_EMULATOR not verified",

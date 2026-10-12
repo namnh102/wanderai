@@ -5,8 +5,9 @@
 **W3 EXIT = PASS** (audit/regression only; no production source, schema, data, CI, or Android config changed).
 
 - Open P0 = 0, open P1 (W3 scope) = 0.
-- Every required gate passed (sections 4–10), with the labelled limitations in section 12.
-- One pre-existing, environment-dependent ai-service test failure is reported honestly (section 6); it is not a W3 regression.
+- All required W3 gates (sections 4–10) pass, including the **required AI offline regression gate** (GitHub CI run `38254995326`, `ai-service` job PASS). New W3 AI regressions: **0**.
+- The extra local full ai-service suite with live PostgreSQL / RAG retrieval is **not PASS**: 115 passed, 2 skipped, 1 known pre-existing environment-dependent failure (`tests/test_rag_osm_ingestion.py::test_grounding_opening_hours_only_states_source_metadata`). It is outside W3 changes, not closed, and explicitly deferred (sections 6 and 12).
+- Other labelled limitations are in section 12.
 
 ## 2. Base / environment
 
@@ -65,9 +66,11 @@ Live W3-04 trust assertions (script against running NestJS):
 |---|---|
 | `ruff check .` | PASS |
 | `python scripts/export_openapi_ai.py --check` (repo root) | PASS (snapshot up to date) |
-| Full pytest (`tests`, no deselects) | **115 passed, 2 skipped, 1 failed** |
+| **A. Required W3 AI OFFLINE gate** (CI, no PostgreSQL/Redis; run `38254995326`, `ai-service` job) | **PASS** |
+| **B. Extra local full suite with live PostgreSQL / RAG retrieval** (`tests`, no deselects) | **115 passed, 2 skipped, 1 failed — KNOWN_PREEXISTING_FAILURE (not PASS)** |
+| **C. New W3 AI regressions** | **0** |
 
-The single failure is `tests/test_rag_osm_ingestion.py::test_grounding_opening_hours_only_states_source_metadata` (RAG retrieval: "Bào Tàng Alexandre Yersin not retrieved"). It depends on the local live DB / retrieval index state, is unrelated to W3 changes (no RAG code touched in W3), was already failing before W3-06, and was not patched. Classified **known pre-existing, non-W3, environment-dependent** (not P0/P1 for W3 exit). It is carried into deferred items.
+The single failing test in B is `tests/test_rag_osm_ingestion.py::test_grounding_opening_hours_only_states_source_metadata` (RAG retrieval: "Bào Tàng Alexandre Yersin not retrieved"). It belongs to the live-DB RAG group and depends on local DB / retrieval index state. It is unrelated to W3 changes (no RAG code touched in W3), was already failing before W3-06, and was not patched. It is **not closed**: it is a known pre-existing environment-dependent failure, explicitly deferred (section 12). The local full suite is therefore not reported as PASS; the required gate is A (offline), which passes.
 
 REC-A baseline (REC-A0 / REC-A1) tests are in the 65-test root suite and unchanged.
 
@@ -143,9 +146,13 @@ Required closed set (PDG-001, 002, 003, 004, 005, 006, 009, 010, 013, TECH-DEBT-
 
 ## 13. W3 exit decision
 
-All required gates are met: open P0 = 0; open P1 = 0; Freeze integrity; REC-A contract; preference persistence; place data trust; map destination discovery; map search camera; session isolation; backend full e2e; AI offline regression (with the one labelled pre-existing failure); mobile analyze + tests; Android debug build; real E2E smoke; tree clean except W3-06 docs.
+All required gates are met: open P0 = 0; open P1 = 0; Freeze integrity; REC-A contract; preference persistence; place data trust; map destination discovery; map search camera; session isolation; backend full e2e; **required AI offline regression gate = PASS** (GitHub CI run `38254995326`, `ai-service` job PASS); mobile analyze + tests; Android debug build; real E2E smoke; tree clean except W3-06 docs.
 
-**Decision: W3 EXIT = PASS. Ready for W4 (not started).**
+Not part of that statement: the extra local full ai-service suite with live PostgreSQL / RAG retrieval is **not PASS** (115 passed, 2 skipped, 1 known pre-existing environment-dependent failure). It is not claimed as passing and is not classified as closed; it is explicitly deferred (section 12).
+
+New AI regressions caused by W3 work: **0**.
+
+**Decision: W3 EXIT = PASS.** Reason: the required offline regression gate passes, there are 0 new W3 AI regressions, and the remaining failure is a previously known live-DB RAG retrieval anomaly outside W3 changes. Ready for W4 (not started).
 
 ## 14. Commands / evidence
 
