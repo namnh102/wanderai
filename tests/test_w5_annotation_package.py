@@ -35,6 +35,8 @@ import subprocess
 import sys
 from pathlib import Path
 
+import pytest
+
 REPO_ROOT = str(Path(__file__).resolve().parent.parent)
 if REPO_ROOT not in sys.path:
     sys.path.insert(0, REPO_ROOT)
@@ -43,7 +45,9 @@ from scripts.analyze_w5_judgments import (
     aggregate_three_judgments,
     calculate_krippendorff_alpha_ci,
     calculate_krippendorff_alpha_ordinal,
+    compute_agreement_statistics,
     interpret_reliability_gate,
+    validate_judgment_label,
 )
 from scripts.build_w5_annotation_package import (
     BASE_SEED,
@@ -194,18 +198,36 @@ def test_ann_order_02_same_candidate_membership() -> None:
 
 def test_ann_order_03_reproducible_builder() -> None:
     """ANN-ORDER-03: re-running builder gives identical package hashes."""
-    # Capture current hashes
     paths = [
         os.path.join(ANNOTATION_DIR, f"w5_judge_{jid}_v1.json") for jid in ["J1", "J2", "J3"]
     ]
-    initial_hashes = [hashlib.sha256(open(p, "rb").read()).hexdigest() for p in paths]
+    # Backup all files in ANNOTATION_DIR so tracked git artifacts are not left modified
+    backup = {
+        fname: open(os.path.join(ANNOTATION_DIR, fname), "rb").read()
+        for fname in os.listdir(ANNOTATION_DIR)
+        if os.path.isfile(os.path.join(ANNOTATION_DIR, fname))
+    }
+    # Compare canonical LF-normalized content for cross-platform reproducibility
+    initial_hashes = [
+        hashlib.sha256(backup[os.path.basename(p)].replace(b"\r\n", b"\n")).hexdigest()
+        for p in paths
+    ]
 
-    # Re-run builder
-    res = subprocess.run(["python", "scripts/build_w5_annotation_package.py"], cwd=REPO_ROOT, check=True)
-    assert res.returncode == 0
+    try:
+        # Re-run builder
+        res = subprocess.run(["python", "scripts/build_w5_annotation_package.py"], cwd=REPO_ROOT, check=True)
+        assert res.returncode == 0
 
-    re_run_hashes = [hashlib.sha256(open(p, "rb").read()).hexdigest() for p in paths]
-    assert initial_hashes == re_run_hashes
+        re_run_hashes = [
+            hashlib.sha256(open(p, "rb").read().replace(b"\r\n", b"\n")).hexdigest()
+            for p in paths
+        ]
+        assert initial_hashes == re_run_hashes
+    finally:
+        # Restore original file bytes so git status remains clean
+        for fname, raw_bytes in backup.items():
+            with open(os.path.join(ANNOTATION_DIR, fname), "wb") as f:
+                f.write(raw_bytes)
 
 
 def test_ann_fact_01_factual_context_allowlist() -> None:
@@ -305,7 +327,7 @@ def test_ann_cal_03_excluded_from_final_metrics() -> None:
 
 
 def test_ann_agg_01_median_cases() -> None:
-    """ANN-AGG-01: median cases work."""
+    """ANN-AGG-01: median cases work for non-severe numeric disagreement (range < 2)."""
     test_cases = [
         (0, 0, 0, 0),
         (0, 0, 1, 0),
@@ -317,51 +339,143 @@ def test_ann_agg_01_median_cases() -> None:
     for j1, j2, j3, expected_median in test_cases:
         res = aggregate_three_judgments(j1, j2, j3)
         assert res["final_relevance"] == expected_median
+        assert res["provisional_median"] == expected_median
         assert res["severe_disagreement"] is False
         assert res["adjudication_required"] is False
-        assert res["judgment_status"] == "CONSENSUS"
+        assert res["judgment_status"] == "RESOLVED_BY_MEDIAN"
 
 
 def test_ann_agg_02_severe_disagreement_012() -> None:
-    """ANN-AGG-02: 0/1/2 flags severe disagreement."""
+    """ANN-AGG-02: [0, 1, 2] flags severe disagreement -> final_relevance is None."""
     res = aggregate_three_judgments(0, 1, 2)
     assert res["severe_disagreement"] is True
     assert res["adjudication_required"] is True
     assert res["judgment_status"] == "PENDING_ADJUDICATION"
     assert res["agreement_range"] == 2
-    assert res["final_relevance"] == 1
+    assert res["final_relevance"] is None
+    assert res["provisional_median"] == 1
 
 
 def test_ann_agg_03_severe_disagreement_002() -> None:
-    """ANN-AGG-03: 0/0/2 flags severe disagreement."""
+    """ANN-AGG-03: [0, 0, 2] flags severe disagreement -> final_relevance is None."""
     res = aggregate_three_judgments(0, 0, 2)
     assert res["severe_disagreement"] is True
     assert res["adjudication_required"] is True
     assert res["judgment_status"] == "PENDING_ADJUDICATION"
     assert res["agreement_range"] == 2
-    assert res["final_relevance"] == 0
+    assert res["final_relevance"] is None
+    assert res["provisional_median"] == 0
 
 
 def test_ann_agg_04_severe_disagreement_022() -> None:
-    """ANN-AGG-04: 0/2/2 flags severe disagreement."""
+    """ANN-AGG-04: [0, 2, 2] flags severe disagreement -> final_relevance is None."""
     res = aggregate_three_judgments(0, 2, 2)
     assert res["severe_disagreement"] is True
     assert res["adjudication_required"] is True
     assert res["judgment_status"] == "PENDING_ADJUDICATION"
     assert res["agreement_range"] == 2
-    assert res["final_relevance"] == 2
+    assert res["final_relevance"] is None
+    assert res["provisional_median"] == 2
+
+
+def test_ann_agg_05_severe_disagreement_permuted() -> None:
+    """ANN-AGG-05: Order permutations of severe disagreement all yield None final_relevance."""
+    for triple in [(2, 0, 1), (1, 2, 0), (2, 0, 0), (2, 2, 0)]:
+        res = aggregate_three_judgments(*triple)
+        assert res["severe_disagreement"] is True
+        assert res["adjudication_required"] is True
+        assert res["judgment_status"] == "PENDING_ADJUDICATION"
+        assert res["final_relevance"] is None
 
 
 def test_ann_na_01_na_never_converted_to_zero() -> None:
-    """ANN-NA-01: NA is never converted to 0."""
-    res1 = aggregate_three_judgments("NA", 1, 2)
-    assert res1["final_relevance"] is None
-    assert res1["judgment_status"] == "INSUFFICIENT_JUDGMENT_EVIDENCE"
-    assert res1["adjudication_required"] is True
+    """ANN-NA-01: [1, 1, 'NA'] -> final None, PENDING_EVIDENCE_ADJUDICATION."""
+    res = aggregate_three_judgments(1, 1, "NA")
+    assert res["final_relevance"] is None
+    assert res["judgment_status"] == "PENDING_EVIDENCE_ADJUDICATION"
+    assert res["adjudication_required"] is True
+    assert res["severe_disagreement"] is False
+    assert res["provisional_median"] is None
 
-    res2 = aggregate_three_judgments(0, 0, "NA")
-    assert res2["final_relevance"] is None
-    assert res2["judgment_status"] == "INSUFFICIENT_JUDGMENT_EVIDENCE"
+
+def test_ann_na_02_na_middle_no_median() -> None:
+    """ANN-NA-02: [2, 'NA', 1] -> final None, no numeric median."""
+    res = aggregate_three_judgments(2, "NA", 1)
+    assert res["final_relevance"] is None
+    assert res["judgment_status"] == "PENDING_EVIDENCE_ADJUDICATION"
+    assert res["adjudication_required"] is True
+    assert res["provisional_median"] is None
+
+
+def test_ann_na_03_none_first_pending_evidence() -> None:
+    """ANN-NA-03: [None, 1, 1] -> final None, PENDING_EVIDENCE_ADJUDICATION."""
+    res = aggregate_three_judgments(None, 1, 1)
+    assert res["final_relevance"] is None
+    assert res["judgment_status"] == "PENDING_EVIDENCE_ADJUDICATION"
+    assert res["adjudication_required"] is True
+    assert res["provisional_median"] is None
+
+
+MALFORMED_JUDGMENT_VALUES = [
+    True,
+    False,
+    "0",
+    "1",
+    "2",
+    1.0,
+    1.5,
+    2.0,
+    -1,
+    3,
+    "bad",
+    "INSUFFICIENT_EVIDENCE",
+    [],
+    {},
+]
+
+
+def test_ann_malformed_01_aggregate_three_judgments() -> None:
+    """ANN-MALFORMED-01: aggregate_three_judgments strictly rejects malformed values."""
+    for bad in MALFORMED_JUDGMENT_VALUES:
+        with pytest.raises(ValueError):
+            aggregate_three_judgments(bad, 1, 2)
+        with pytest.raises(ValueError):
+            aggregate_three_judgments(1, bad, 2)
+        with pytest.raises(ValueError):
+            aggregate_three_judgments(1, 2, bad)
+
+
+def test_ann_malformed_02_krippendorff_alpha_ordinal() -> None:
+    """ANN-MALFORMED-02: calculate_krippendorff_alpha_ordinal strictly rejects malformed values."""
+    for bad in MALFORMED_JUDGMENT_VALUES:
+        with pytest.raises(ValueError):
+            calculate_krippendorff_alpha_ordinal([[bad, 1, 2], [0, 1, 2]])
+
+
+def test_ann_malformed_03_krippendorff_alpha_ci() -> None:
+    """ANN-MALFORMED-03: calculate_krippendorff_alpha_ci strictly rejects malformed values."""
+    for bad in MALFORMED_JUDGMENT_VALUES:
+        with pytest.raises(ValueError):
+            calculate_krippendorff_alpha_ci([[bad, 1, 2], [0, 1, 2]], replicates=10)
+
+
+def test_ann_malformed_04_compute_agreement_statistics() -> None:
+    """ANN-MALFORMED-04: compute_agreement_statistics strictly rejects malformed values."""
+    for bad in MALFORMED_JUDGMENT_VALUES:
+        with pytest.raises(ValueError):
+            compute_agreement_statistics([(bad, 1, 2), (0, 1, 2)])
+
+
+def test_ann_malformed_05_validate_judgment_label() -> None:
+    """ANN-MALFORMED-05: validate_judgment_label contract."""
+    assert validate_judgment_label(0) == 0
+    assert validate_judgment_label(1) == 1
+    assert validate_judgment_label(2) == 2
+    assert validate_judgment_label("NA") is None
+    assert validate_judgment_label(None) is None
+    for bad in MALFORMED_JUDGMENT_VALUES:
+        with pytest.raises(ValueError):
+            validate_judgment_label(bad)
 
 
 def test_ann_alpha_01_perfect_agreement() -> None:

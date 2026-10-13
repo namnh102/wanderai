@@ -314,9 +314,16 @@ def test_w5_rep_01_builder_idempotence_and_hash_identity():
     """W5-REP-01: Same builder run twice produces identical artifact hash."""
     from scripts.build_w5_eval_pool import build_and_save_artifacts
 
-    hashes_run1 = build_and_save_artifacts()
-    hashes_run2 = build_and_save_artifacts()
-    assert hashes_run1 == hashes_run2, "Non-deterministic artifact output across runs!"
+    tracked_paths = [PRIMARY_PATH, THIN_PATH, INTERNAL_PATH, BLINDED_PATH, REPRODUCIBILITY_PATH]
+    backup = {p: p.read_bytes() for p in tracked_paths if p.exists()}
+
+    try:
+        hashes_run1 = build_and_save_artifacts()
+        hashes_run2 = build_and_save_artifacts()
+        assert hashes_run1 == hashes_run2, "Non-deterministic artifact output across runs!"
+    finally:
+        for p, raw in backup.items():
+            p.write_bytes(raw)
 
 
 def test_w5_parity_01_information_parity(

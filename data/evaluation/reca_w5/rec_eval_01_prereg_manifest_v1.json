@@ -1,0 +1,160 @@
+{
+  "preregistration_version": "REC-EVAL-01-PREREG-V1",
+  "status": "FROZEN_BEFORE_HUMAN_GT",
+  "roadmap_package": "REC-EVAL-01",
+  "source_commit_sha": "35f82b30aa474d33036df656d70528dc20328d39",
+  "original_experiment_base_commit": "6ef96664c994cb2c1da4d94820ee78f4b4b48805",
+  "artifact_hash_basis": "sha256_git_committed_blob_content",
+  "systems": [
+    "shared_a0_a1_baseline",
+    "rec-a2"
+  ],
+  "primary_metric": "NDCG@10",
+  "top_k": 10,
+  "allowed_judgment_values": [
+    0,
+    1,
+    2,
+    "NA"
+  ],
+  "relevance_semantics": {
+    "ordinal_labels": [
+      0,
+      1,
+      2
+    ],
+    "missing_code": "NA",
+    "na_is_ordinal": false,
+    "na_is_zero": false
+  },
+  "gt_aggregation": {
+    "three_numeric_non_severe": "MEDIAN",
+    "non_severe_status": "RESOLVED_BY_MEDIAN",
+    "severe_range": 2,
+    "severe_action": "BLIND_ADJUDICATION",
+    "severe_status": "PENDING_ADJUDICATION",
+    "severe_final_relevance": null,
+    "any_na_action": "PENDING_EVIDENCE_ADJUDICATION",
+    "any_na_final_relevance": null,
+    "adjudicator_may_output_na": true
+  },
+  "reliability": {
+    "metric": "ordinal_krippendorff_alpha",
+    "na_treatment": "MISSING",
+    "bootstrap_seed": 20261013,
+    "bootstrap_replicates": 10000,
+    "good_threshold": 0.8,
+    "qualified_threshold": 0.67
+  },
+  "endpoint_roles": {
+    "NDCG@10": "PRIMARY_CONFIRMATORY",
+    "Precision@10": "SECONDARY",
+    "Pooled Recall@10": "SECONDARY",
+    "HitRate@10": "DIAGNOSTIC_SECONDARY",
+    "Category-ILD@10": "SECONDARY_SUPPORTING_STRUCTURAL_PROXY",
+    "CatalogCoverage@10": "SECONDARY_SUPPORTING",
+    "I1Exposure@10": "DIAGNOSTIC_ONLY"
+  },
+  "u1_u2_analysis_role": "EXPLORATORY_SUBGROUP",
+  "current_rubric_version": "W5-RUBRIC-V1",
+  "final_gt_rubric_policy": "REFERENCE_EXACT_FROZEN_RUBRIC_USED_FOR_PRIMARY_ANNOTATION",
+  "binary_relevance_threshold": 1,
+  "gain_formula": "2^rel - 1",
+  "category_ild_semantics": "structural_category_diversity_proxy",
+  "recall_metric_name": "Pooled Recall@10",
+  "aggregation_strategy": "destination_macro_mean",
+  "bootstrap": {
+    "seed": 20261013,
+    "replicates": 10000,
+    "paired": true,
+    "destination_stratified": true
+  },
+  "primary_scenarios": 30,
+  "u1": 15,
+  "u2": 15,
+  "thin": 6,
+  "thin_role": "DIAGNOSTIC_ONLY",
+  "u0_role": "COLD_START_FALLBACK_EXCLUDED_FROM_PERSONALIZED_WINNER",
+  "candidate_records": 474,
+  "rec_a_core": 622,
+  "destinations": {
+    "ha-noi": 145,
+    "da-nang": 289,
+    "ha-long": 188
+  },
+  "item_strata": {
+    "I0": 405,
+    "I1": 217
+  },
+  "i1_exposure_role": "DIAGNOSTIC_ONLY",
+  "verdict_rules": [
+    "A2_RELEVANCE_SUPERIOR",
+    "BASELINE_PREFERRED",
+    "A2_DIVERSITY_TRADEOFF",
+    "INCONCLUSIVE"
+  ],
+  "human_judgments_collected": 0,
+  "human_gt_available": false,
+  "duplicate_policy_status": "PENDING",
+  "external_cross_check_status": "PENDING",
+  "calibration_status": "NOT_STARTED",
+  "scientific_winner": "UNKNOWN",
+  "artifact_hashes": {
+    "gomate_places_freeze_v2.json": {
+      "path": "data/curated/gomate_places_freeze_v2.json",
+      "sha256": "f7517938598e3923906763f8f31334a500ee88bc06232f2992d38e2fcb28a444"
+    },
+    "w5_primary_scenarios_v1.json": {
+      "path": "data/evaluation/reca_w5/w5_primary_scenarios_v1.json",
+      "sha256": "4f0c77dccc2c0bae32f5d87f1364a8e1487a83e9b7344a9d8d3c9d0528bc29fb"
+    },
+    "w5_thin_diagnostic_scenarios_v1.json": {
+      "path": "data/evaluation/reca_w5/w5_thin_diagnostic_scenarios_v1.json",
+      "sha256": "538233a937acdd38ea208980a9ba629391b61e721363189f10f6087186fcfa77"
+    },
+    "w5_candidate_pool_internal_v1.json": {
+      "path": "data/evaluation/reca_w5/w5_candidate_pool_internal_v1.json",
+      "sha256": "32b25ef8ffc19d671513f771d3d3a0d23ceb9d0cf614ace1eded94d8c84126c6"
+    },
+    "w5_candidate_pool_blinded_v1.json": {
+      "path": "data/evaluation/reca_w5/w5_candidate_pool_blinded_v1.json",
+      "sha256": "8f178e06b1b93e59b3a53f1b2bf1b6ecc697ccfa610d56783b613b6aa2f06ec7"
+    },
+    "w5_reproducibility_manifest_v1.json": {
+      "path": "data/evaluation/reca_w5/w5_reproducibility_manifest_v1.json",
+      "sha256": "ae2cbb97689148274723617e00a833093971c5f7cc11c7cdec39ec19619f6388"
+    },
+    "w5_rubric_v1.md": {
+      "path": "data/evaluation/reca_w5/annotation/w5_rubric_v1.md",
+      "sha256": "98601330b366ea99b2254509adf84762375460ab66a93ef3af2ef32df63ef8a4"
+    },
+    "w5_judge_instructions_v1.md": {
+      "path": "data/evaluation/reca_w5/annotation/w5_judge_instructions_v1.md",
+      "sha256": "5d579d4c0b76a9c37eadac869db6e4f6abaa6c8c36f146d3176452d1fc56b4bb"
+    },
+    "w5_calibration_v1.json": {
+      "path": "data/evaluation/reca_w5/annotation/w5_calibration_v1.json",
+      "sha256": "598bde75d464f3e58299522090833a8521a59d4c0755e13399ad46050a2ca823"
+    },
+    "w5_annotation_manifest_v1.json": {
+      "path": "data/evaluation/reca_w5/annotation/w5_annotation_manifest_v1.json",
+      "sha256": "9fa7e9e66f331e881cdb6cae0d29eecdfd77fe6cfa2108dad07a68c3fadde106"
+    },
+    "w5_metadata_sufficiency_v1.json": {
+      "path": "data/evaluation/reca_w5/annotation/w5_metadata_sufficiency_v1.json",
+      "sha256": "c58f9a709cb338596536fae78ae444e9c8de9e070cf3b8449cbba64fe05fa989"
+    },
+    "w5_merged_ground_truth_template_v1.json": {
+      "path": "data/evaluation/reca_w5/annotation/w5_merged_ground_truth_template_v1.json",
+      "sha256": "3f33c6f866dec90f33212c5851a389ecc0b0f10d6e9da8ab8077aa8e305ab830"
+    },
+    "evaluate_w5_recommenders.py": {
+      "path": "scripts/evaluate_w5_recommenders.py",
+      "sha256": "ec494c7b8f2cea7eb28e78816c4ad2ae88e52aa5221878cf686d7796e85527d6"
+    },
+    "analyze_w5_judgments.py": {
+      "path": "scripts/analyze_w5_judgments.py",
+      "sha256": "f2f748c8ae6e178ae7f380b662eebb3a37c4166e5cbbed0a60cdf5cd2190d82c"
+    }
+  }
+}
