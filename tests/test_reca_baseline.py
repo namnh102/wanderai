@@ -902,6 +902,81 @@ def test_a2_u2_02_missing_interest_does_not_crash_or_fabricate():
         assert "food_cuisine" in r["matched_interests"]
 
 
+def test_a2_interest_coverage_does_not_reset_after_first_global_coverage():
+    """A2-COVERAGE-02: test_a2_interest_coverage_does_not_reset_after_first_global_coverage.
+
+    Declared interests: food_cuisine, coffee_culture
+    Candidates all have equal positive base relevance.
+    F1: matched_interests=[food_cuisine], category=restaurant, name=A Food 1
+    C1: matched_interests=[coffee_culture], category=cafe, name=B Coffee 1
+    F2: matched_interests=[food_cuisine], category=restaurant, name=C Food 2
+    F3: matched_interests=[food_cuisine], category=restaurant, name=D Food 3
+    C2: matched_interests=[coffee_culture], category=cafe, name=Z Coffee 2
+
+    Expected:
+    rank 1 = F1
+    rank 2 = C1
+    At this point both declared interests have been covered globally.
+    Then interest_gain must be 0 for F2/F3/C2.
+    Because categories are already seen and scores are equal,
+    stable lexical order should apply:
+    rank 3 = F2
+    rank 4 = F3
+    rank 5 = C2
+    """
+    synthetic_places = [
+        {
+            "place_id": "f1",
+            "name": "A Food 1",
+            "category": "restaurant",
+            "is_rec_a_core_v2": True,
+            "destination_slug": "da-nang",
+            "sources": [{"source_name": "osm", "raw_data": {"tier_1": "FOOD_BEVERAGE", "tier_2": "restaurant_dining"}}],
+        },
+        {
+            "place_id": "c1",
+            "name": "B Coffee 1",
+            "category": "cafe",
+            "is_rec_a_core_v2": True,
+            "destination_slug": "da-nang",
+            "sources": [{"source_name": "osm", "raw_data": {"tier_1": "FOOD_BEVERAGE", "tier_2": "cafe_tea"}}],
+        },
+        {
+            "place_id": "f2",
+            "name": "C Food 2",
+            "category": "restaurant",
+            "is_rec_a_core_v2": True,
+            "destination_slug": "da-nang",
+            "sources": [{"source_name": "osm", "raw_data": {"tier_1": "FOOD_BEVERAGE", "tier_2": "restaurant_dining"}}],
+        },
+        {
+            "place_id": "f3",
+            "name": "D Food 3",
+            "category": "restaurant",
+            "is_rec_a_core_v2": True,
+            "destination_slug": "da-nang",
+            "sources": [{"source_name": "osm", "raw_data": {"tier_1": "FOOD_BEVERAGE", "tier_2": "restaurant_dining"}}],
+        },
+        {
+            "place_id": "c2",
+            "name": "Z Coffee 2",
+            "category": "cafe",
+            "is_rec_a_core_v2": True,
+            "destination_slug": "da-nang",
+            "sources": [{"source_name": "osm", "raw_data": {"tier_1": "FOOD_BEVERAGE", "tier_2": "cafe_tea"}}],
+        },
+    ]
+    engine = PlaceRecommender(places_source=synthetic_places)
+    res = engine.recommend(
+        preferences={"interests": ["food_cuisine", "coffee_culture"]},
+        destination="da-nang",
+        top_k=5,
+        model="rec-a2",
+    )
+    recs = res["recommendations"]
+    assert [r["place_id"] for r in recs] == ["f1", "c1", "f2", "f3", "c2"]
+
+
 def test_a2_rel_01_zero_relevance_cannot_outrank_positive():
     """A2-REL-01: zero-relevance new-category item cannot outrank positive relevant item."""
     synthetic_places = [

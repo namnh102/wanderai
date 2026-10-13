@@ -190,11 +190,15 @@ class RecA2DiversityReranker:
     greedy lexicographic selection to balance multi-interest coverage and category diversity:
 
     1. Relevance tier (positive base_score > 0 strictly outranks zero base_score == 0)
-    2. Uncovered declared-interest gain (covers an interest declared by the user not yet represented in the current cycle)
+    2. Globally uncovered declared-interest gain (covers an interest declared by the user not yet represented in selected results)
     3. Unseen-category gain (category has not yet appeared in selected results)
     4. Base REC-A1 cosine relevance score (descending)
     5. Deterministic tie-break by normalized name (ascending)
     6. Deterministic tie-break by place_id (ascending)
+
+    Declared-interest coverage is global over the selected Top-K list.
+    Once an available declared interest has been represented once,
+    it remains covered for the remainder of the request.
     """
 
     name = "rec-a2"
@@ -211,26 +215,10 @@ class RecA2DiversityReranker:
         """Rerank candidates using deterministic lexicographic selection."""
         remaining = list(scored_candidates)
         selected: List[Dict[str, Any]] = []
-        current_cycle_interests: set[str] = set()
+        covered_interests: set[str] = set()
         user_declared_set = set(declared_interests)
 
         while len(selected) < top_k and remaining:
-            # Determine declared interests remaining in the positive candidate pool
-            rem_pos_interests = {
-                m
-                for c in remaining
-                if c["score"] > 0
-                for m in c.get("matched_interests", [])
-                if m in user_declared_set
-            }
-
-            # If all available declared interests in remaining positive pool have been covered in current cycle,
-            # reset cycle so the next round of multi-interest coverage can proceed.
-            uncovered_declared = rem_pos_interests - current_cycle_interests
-            if rem_pos_interests and not uncovered_declared:
-                current_cycle_interests = set()
-                uncovered_declared = rem_pos_interests
-
             seen_categories = {
                 s["category"] for s in selected if s.get("category")
             }
@@ -238,7 +226,12 @@ class RecA2DiversityReranker:
             def sort_key(c: Dict[str, Any]):
                 is_pos = 1 if c["score"] > 0 else 0
                 has_interest_gain = (
-                    1 if any(m in uncovered_declared for m in c.get("matched_interests", [])) else 0
+                    1
+                    if any(
+                        m in user_declared_set and m not in covered_interests
+                        for m in c.get("matched_interests", [])
+                    )
+                    else 0
                 )
                 cat = c.get("category") or ""
                 has_cat_gain = 1 if (cat and cat not in seen_categories) else 0
@@ -257,6 +250,6 @@ class RecA2DiversityReranker:
 
             for m in selected_item.get("matched_interests", []):
                 if m in user_declared_set:
-                    current_cycle_interests.add(m)
+                    covered_interests.add(m)
 
         return selected
