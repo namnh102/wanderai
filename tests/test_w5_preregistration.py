@@ -50,7 +50,7 @@ def test_prereg_04_primary_metric() -> None:
     """PREREG-04: Primary metric must be NDCG@10 with graded gain 2^rel - 1."""
     manifest = _load_manifest()
     assert manifest["primary_metric"] == "NDCG@10"
-    assert manifest["relevance_scale"] == [0, 1, 2, "NA"]
+    assert manifest["allowed_judgment_values"] == [0, 1, 2, "NA"]
     assert manifest["binary_relevance_threshold"] == 1
     assert manifest.get("gain_formula") == "2^rel - 1"
 
@@ -146,32 +146,40 @@ def test_prereg_15_recorded_sha256_matches_canonical() -> None:
     """PREREG-15: Every recorded SHA256 in manifest matches committed Git blob content at source commit."""
     manifest = _load_manifest()
     source_commit = manifest["source_commit_sha"]
-    assert source_commit == "6ef96664c994cb2c1da4d94820ee78f4b4b48805"
+    assert source_commit == "35f82b30aa474d33036df656d70528dc20328d39"
+    assert manifest["original_experiment_base_commit"] == "6ef96664c994cb2c1da4d94820ee78f4b4b48805"
     assert manifest["artifact_hash_basis"] == "sha256_git_committed_blob_content"
 
     hashes = manifest["artifact_hashes"]
     assert len(hashes) >= 12
 
+    # Ensure source_commit is available in local git repository (fetches shallowly if in shallow CI)
+    res_avail = subprocess.run(
+        ["git", "cat-file", "-e", f"{source_commit}^{{commit}}"],
+        cwd=REPO_ROOT,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+    )
+    if res_avail.returncode != 0:
+        subprocess.run(
+            ["git", "fetch", "origin", source_commit, "--depth=1"],
+            cwd=REPO_ROOT,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            check=True,
+        )
+
     for key, info in hashes.items():
         relpath = info["path"]
         expected_sha = info["sha256"]
-        # Fetch committed blob from Git (try source_commit first; in shallow CI clones, fall back to HEAD)
-        blob_bytes: bytes | None = None
-        for ref in [f"{source_commit}:{relpath}", f"HEAD:{relpath}"]:
-            try:
-                res = subprocess.run(
-                    ["git", "show", ref],
-                    cwd=REPO_ROOT,
-                    stdout=subprocess.PIPE,
-                    stderr=subprocess.PIPE,
-                    check=True,
-                )
-                blob_bytes = res.stdout
-                break
-            except subprocess.CalledProcessError:
-                continue
-        assert blob_bytes is not None, f"Could not retrieve git blob for {relpath}"
-        actual_sha = hashlib.sha256(blob_bytes).hexdigest()
+        res = subprocess.run(
+            ["git", "show", f"{source_commit}:{relpath}"],
+            cwd=REPO_ROOT,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            check=True,
+        )
+        actual_sha = hashlib.sha256(res.stdout).hexdigest()
         assert actual_sha == expected_sha, (
             f"Committed blob SHA256 mismatch for {relpath} ({key}): expected {expected_sha}, got {actual_sha}"
         )
@@ -259,6 +267,8 @@ def test_prereg_23_any_na_requires_evidence_adjudication() -> None:
     manifest = _load_manifest()
     agg = manifest["gt_aggregation"]
     assert agg["any_na_action"] == "PENDING_EVIDENCE_ADJUDICATION"
+    assert agg["any_na_final_relevance"] is None
+    assert agg["adjudicator_may_output_na"] is True
 
     doc_text = DOC_PATH.read_text(encoding="utf-8")
     assert "PENDING_EVIDENCE_ADJUDICATION" in doc_text
@@ -271,6 +281,10 @@ def test_prereg_24_severe_numeric_disagreement_requires_adjudication() -> None:
     agg = manifest["gt_aggregation"]
     assert agg["severe_range"] == 2
     assert agg["severe_action"] == "BLIND_ADJUDICATION"
+    assert agg["severe_status"] == "PENDING_ADJUDICATION"
+    assert agg["severe_final_relevance"] is None
+    assert agg["three_numeric_non_severe"] == "MEDIAN"
+    assert agg["non_severe_status"] == "RESOLVED_BY_MEDIAN"
 
     doc_text = DOC_PATH.read_text(encoding="utf-8")
     assert "PENDING_ADJUDICATION" in doc_text
@@ -341,7 +355,8 @@ def test_prereg_30_future_gt_uses_final_frozen_rubric_policy() -> None:
 def test_prereg_31_artifact_hash_basis_is_committed_blob() -> None:
     """PREREG-31: Artifact hash basis is committed Git blob content at source commit."""
     manifest = _load_manifest()
-    assert manifest["source_commit_sha"] == "6ef96664c994cb2c1da4d94820ee78f4b4b48805"
+    assert manifest["source_commit_sha"] == "35f82b30aa474d33036df656d70528dc20328d39"
+    assert manifest["original_experiment_base_commit"] == "6ef96664c994cb2c1da4d94820ee78f4b4b48805"
     assert manifest["artifact_hash_basis"] == "sha256_git_committed_blob_content"
 
 

@@ -6,7 +6,9 @@
 **Roadmap Package:** `REC-EVAL-01` (Offline Recommender Evaluation & Cold-Start Split)<br>
 **Target Repository:** `d:\Do_an\wanderai`<br>
 **Base Commit SHA:** `6ef96664c994cb2c1da4d94820ee78f4b4b48805`<br>
-**Source Commit SHA:** `6ef96664c994cb2c1da4d94820ee78f4b4b48805`<br>
+**Original Experiment Base Commit:** `6ef96664c994cb2c1da4d94820ee78f4b4b48805`<br>
+**Source Implementation Commit SHA:** `35f82b30aa474d33036df656d70528dc20328d39`<br>
+**Source Commit SHA:** `35f82b30aa474d33036df656d70528dc20328d39`<br>
 **Artifact Hash Basis:** `sha256_git_committed_blob_content`<br>
 **Methodology Owner & PASS/FAIL Gatekeeper:** ChatGPT<br>
 **Implementation & Evidence Agent:** Antigravity<br>
@@ -480,7 +482,7 @@ To maintain scientific integrity, the following limitations are explicitly prere
 
 ## 25. Artifact & Provenance Checksums
 
-All configuration and baseline inputs are locked against the following single-valued SHA256 checksums, computed from committed Git blob content at source commit `6ef96664c994cb2c1da4d94820ee78f4b4b48805`:
+All configuration and baseline inputs are locked against the following single-valued SHA256 checksums, computed from committed Git blob content at source implementation commit `35f82b30aa474d33036df656d70528dc20328d39` (original experiment base commit `6ef96664c994cb2c1da4d94820ee78f4b4b48805`):
 
 | Artifact Path | Description | Canonical Committed Blob SHA256 |
 | :--- | :--- | :--- |
@@ -497,4 +499,4 @@ All configuration and baseline inputs are locked against the following single-va
 | `data/evaluation/reca_w5/annotation/w5_metadata_sufficiency_v1.json` | Factual Context Sufficiency Audit | `c58f9a709cb338596536fae78ae444e9c8de9e070cf3b8449cbba64fe05fa989` |
 | `data/evaluation/reca_w5/annotation/w5_merged_ground_truth_template_v1.json` | Consolidated Ground Truth Schema Template | `3f33c6f866dec90f33212c5851a389ecc0b0f10d6e9da8ab8077aa8e305ab830` |
 | `scripts/evaluate_w5_recommenders.py` | Metric Runner & Scientific Evaluation Pipeline | `ec494c7b8f2cea7eb28e78816c4ad2ae88e52aa5221878cf686d7796e85527d6` |
-| `scripts/analyze_w5_judgments.py` | Reliability Tooling & Krippendorff Alpha Calculator | `5f1723f1e8dd23d9bdf6bd7ccdc992d04f9c819357b1a11402e4a97a651d5fad` |
+| `scripts/analyze_w5_judgments.py` | Reliability Tooling & Krippendorff Alpha Calculator | `f2f748c8ae6e178ae7f380b662eebb3a37c4166e5cbbed0a60cdf5cd2190d82c` |

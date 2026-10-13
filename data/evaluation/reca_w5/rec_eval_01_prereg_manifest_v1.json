@@ -2,7 +2,8 @@
   "preregistration_version": "REC-EVAL-01-PREREG-V1",
   "status": "FROZEN_BEFORE_HUMAN_GT",
   "roadmap_package": "REC-EVAL-01",
-  "source_commit_sha": "6ef96664c994cb2c1da4d94820ee78f4b4b48805",
+  "source_commit_sha": "35f82b30aa474d33036df656d70528dc20328d39",
+  "original_experiment_base_commit": "6ef96664c994cb2c1da4d94820ee78f4b4b48805",
   "artifact_hash_basis": "sha256_git_committed_blob_content",
   "systems": [
     "shared_a0_a1_baseline",
@@ -10,7 +11,7 @@
   ],
   "primary_metric": "NDCG@10",
   "top_k": 10,
-  "relevance_scale": [
+  "allowed_judgment_values": [
     0,
     1,
     2,
@@ -28,9 +29,14 @@
   },
   "gt_aggregation": {
     "three_numeric_non_severe": "MEDIAN",
+    "non_severe_status": "RESOLVED_BY_MEDIAN",
     "severe_range": 2,
     "severe_action": "BLIND_ADJUDICATION",
-    "any_na_action": "PENDING_EVIDENCE_ADJUDICATION"
+    "severe_status": "PENDING_ADJUDICATION",
+    "severe_final_relevance": null,
+    "any_na_action": "PENDING_EVIDENCE_ADJUDICATION",
+    "any_na_final_relevance": null,
+    "adjudicator_may_output_na": true
   },
   "reliability": {
     "metric": "ordinal_krippendorff_alpha",
@@ -148,7 +154,7 @@
     },
     "analyze_w5_judgments.py": {
       "path": "scripts/analyze_w5_judgments.py",
-      "sha256": "5f1723f1e8dd23d9bdf6bd7ccdc992d04f9c819357b1a11402e4a97a651d5fad"
+      "sha256": "f2f748c8ae6e178ae7f380b662eebb3a37c4166e5cbbed0a60cdf5cd2190d82c"
     }
   }
 }
