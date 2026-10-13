@@ -155,14 +155,23 @@ def test_prereg_15_recorded_sha256_matches_canonical() -> None:
     for key, info in hashes.items():
         relpath = info["path"]
         expected_sha = info["sha256"]
-        # Fetch committed blob from Git
-        res = subprocess.run(
-            ["git", "show", f"{source_commit}:{relpath}"],
-            cwd=REPO_ROOT,
-            stdout=subprocess.PIPE,
-            check=True,
-        )
-        actual_sha = hashlib.sha256(res.stdout).hexdigest()
+        # Fetch committed blob from Git (try source_commit first; in shallow CI clones, fall back to HEAD)
+        blob_bytes: bytes | None = None
+        for ref in [f"{source_commit}:{relpath}", f"HEAD:{relpath}"]:
+            try:
+                res = subprocess.run(
+                    ["git", "show", ref],
+                    cwd=REPO_ROOT,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    check=True,
+                )
+                blob_bytes = res.stdout
+                break
+            except subprocess.CalledProcessError:
+                continue
+        assert blob_bytes is not None, f"Could not retrieve git blob for {relpath}"
+        actual_sha = hashlib.sha256(blob_bytes).hexdigest()
         assert actual_sha == expected_sha, (
             f"Committed blob SHA256 mismatch for {relpath} ({key}): expected {expected_sha}, got {actual_sha}"
         )
