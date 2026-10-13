@@ -1,0 +1,380 @@
+{
+  "artifact_version": "W5-DUP-EVIDENCE-V1",
+  "status": "EVIDENCE_REVIEWED",
+  "source_freeze": "REC-A-CORE-V2",
+  "source_develop_commit": "a2e132dd9383ae7c9f6ea535972903d603831064",
+  "candidate_pair_origin": "HISTORICAL_REPOSITORY_EVIDENCE",
+  "new_pair_discovery_performed": false,
+  "human_relevance_labels_used": false,
+  "web_evidence_used": false,
+  "freeze_v2_canonical_sha256": "f7517938598e3923906763f8f31334a500ee88bc06232f2992d38e2fcb28a444",
+  "candidate_pool_internal_canonical_sha256": "32b25ef8ffc19d671513f771d3d3a0d23ceb9d0cf614ace1eded94d8c84126c6",
+  "groups": [
+    {
+      "candidate_group_id": "DUP-CORE-DN-01",
+      "historical_group_id": "DUP-CORE-DN-01",
+      "place_ids": [
+        "6db09251-706a-4225-8ee5-4d22165f6b3f",
+        "408aaa5a-7e34-41eb-b39f-acfa4393fc5f"
+      ],
+      "destination": "da-nang",
+      "classification": "CONFIRMED_EQUIVALENT",
+      "classification_reason": "Both records represent the exact same Buddhist pagoda entity (Chùa Linh Ứng - Bà Nà) located at Sun World Ba Na Hills, Đà Nẵng. Both records have identical raw name ('Chùa Linh Ứng') and normalized name ('chua linh ung'), identical official_name tag ('Chùa Linh Ứng - Bà Nà'), identical website base targeting the Sun World Ba Na Hills pagoda page, identical religion ('buddhist') and denomination ('mahayana'), and coordinates separated by only 27.80 meters. Record 6db09251-706a-4225-8ee5-4d22165f6b3f represents the OSM site relation (relation/20707914) while record 408aaa5a-7e34-41eb-b39f-acfa4393fc5f represents the primary pagoda building way (way/746227054) within the same complex. Explicitly audited and documented as a duplicate core pair in docs/w3/w3-03-place-data-gap-audit.md (PDG-008).",
+      "evidence_fields": {
+        "distance_meters": 27.8,
+        "coordinate_delta": {
+          "latitude_delta": 0.000152,
+          "longitude_delta": 0.0002065
+        },
+        "name_match": {
+          "raw_name_exact_match": true,
+          "normalized_name_exact_match": true
+        },
+        "items": [
+          {
+            "place_id": "6db09251-706a-4225-8ee5-4d22165f6b3f",
+            "name": "Chùa Linh Ứng",
+            "normalized_name": "chua linh ung",
+            "destination": "Đà Nẵng",
+            "destination_slug": "da-nang",
+            "category": "temple",
+            "latitude": 15.9972033,
+            "longitude": 107.9941376,
+            "address": null,
+            "website": "https://sunworld.vn/vi/banahills/check-in/chua-linh-ung",
+            "phone": null,
+            "canonical_active_interests": [
+              "culture_history"
+            ],
+            "canonical_vector": [
+              0.0,
+              1.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            "canonical_tiers": [
+              "CULTURE_HERITAGE"
+            ],
+            "sources": [
+              {
+                "source_name": "osm",
+                "source_id": "relation/20707914",
+                "confidence_score": 1
+              }
+            ],
+            "raw_osm_tags": {
+              "name": "Chùa Linh Ứng",
+              "site": "amenity",
+              "type": "site",
+              "amenity": "place_of_worship",
+              "name:en": "Linh Ung Pagoda",
+              "name:ru": "Пагода Линь Унг",
+              "name:vi": "Chùa Linh Ứng",
+              "website": "https://sunworld.vn/vi/banahills/check-in/chua-linh-ung",
+              "religion": "buddhist",
+              "denomination": "mahayana",
+              "official_name": "Chùa Linh Ứng - Bà Nà"
+            }
+          },
+          {
+            "place_id": "408aaa5a-7e34-41eb-b39f-acfa4393fc5f",
+            "name": "Chùa Linh Ứng",
+            "normalized_name": "chua linh ung",
+            "destination": "Đà Nẵng",
+            "destination_slug": "da-nang",
+            "category": "temple",
+            "latitude": 15.9973553,
+            "longitude": 107.9939311,
+            "address": null,
+            "website": "https://sunworld.vn/vi/banahills/check-in/chua-linh-ung-ba-nahtml",
+            "phone": null,
+            "canonical_active_interests": [
+              "culture_history"
+            ],
+            "canonical_vector": [
+              0.0,
+              1.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            "canonical_tiers": [
+              "CULTURE_HERITAGE"
+            ],
+            "sources": [
+              {
+                "source_name": "osm",
+                "source_id": "way/746227054",
+                "confidence_score": 1
+              },
+              {
+                "source_name": "overture",
+                "source_id": "8bd686ee-9cec-405c-adfd-47a980bac9c4",
+                "confidence_score": 1
+              }
+            ],
+            "raw_osm_tags": {
+              "name": "Chùa Linh Ứng",
+              "amenity": "place_of_worship",
+              "name:en": "Linh Ung Pagoda",
+              "name:ru": "Пагода Линь Унг",
+              "name:vi": "Chùa Linh Ứng",
+              "website": "https://sunworld.vn/vi/banahills/check-in/chua-linh-ung-ba-nahtml",
+              "building": "yes",
+              "religion": "buddhist",
+              "start_date": "2004-03-06",
+              "denomination": "mahayana",
+              "official_name": "Chùa Linh Ứng - Bà Nà",
+              "description:en": "A prominent Buddhist pagoda of the Mahayana school, situated at an altitude of around 1,500 meters. It features a monumental 27-meter-tall statue of the seated Shakyamuni Buddha, a grand main hall, and panoramic views of the Ba Na mountains.",
+              "description:ru": "Буддийский храмовый комплекс школы Махаяна, расположенный на высоте около 1500 метров. Известен своей монументальной 27-метровой статуей сидящего Будды Шакьямуни, величественным главным залом и панорамным видом на горы Бана."
+            }
+          }
+        ]
+      },
+      "source_history_provenance": {
+        "historical_builder_commit": "0edcf343cdeef72aa980417d5f628cd79de4ca74",
+        "historical_builder_file": "scripts/build_w5_eval_pool.py",
+        "historical_audit_commit": "e15d5a99d7e47c2940d54aee5d81cd64e1fb9d37",
+        "historical_audit_file": "docs/w3/w3-03-place-data-gap-audit.md"
+      }
+    },
+    {
+      "candidate_group_id": "DUP-CORE-DN-02",
+      "historical_group_id": "DUP-CORE-DN-02",
+      "place_ids": [
+        "098e6a53-5ce5-4d20-b75e-4a00d00bb8cf",
+        "83d8e5c4-b91e-415e-9fd6-fd2a887cb4c0"
+      ],
+      "destination": "da-nang",
+      "classification": "CONFIRMED_EQUIVALENT",
+      "classification_reason": "Both records represent the exact same temple entity (Đền Lĩnh Chúa Linh Từ / Đền Bà Chúa Thượng Ngàn) atop Ba Na Hills, Đà Nẵng at 1,487m elevation. Both records have identical raw name ('Đền Lĩnh Chúa Linh Từ') and normalized name ('den linh chua linh tu'), identical alt_name ('Đền Bà Chúa Thượng Ngàn'), identical official website URL ('https://sunworld.vn/vi/banahills/check-in/den-linh-chua-linh-tu'), identical religion ('vietnamese_folk'), and coordinates separated by only 21.00 meters. Record 098e6a53-5ce5-4d20-b75e-4a00d00bb8cf represents the OSM site relation (relation/20704135) while record 83d8e5c4-b91e-415e-9fd6-fd2a887cb4c0 represents the temple building polygon (way/1109970004). Explicitly audited and documented as a duplicate core pair in docs/w3/w3-03-place-data-gap-audit.md (PDG-008).",
+      "evidence_fields": {
+        "distance_meters": 21.0,
+        "coordinate_delta": {
+          "latitude_delta": 0.0001627,
+          "longitude_delta": 9.98e-05
+        },
+        "name_match": {
+          "raw_name_exact_match": true,
+          "normalized_name_exact_match": true
+        },
+        "items": [
+          {
+            "place_id": "098e6a53-5ce5-4d20-b75e-4a00d00bb8cf",
+            "name": "Đền Lĩnh Chúa Linh Từ",
+            "normalized_name": "đen linh chua linh tu",
+            "destination": "Đà Nẵng",
+            "destination_slug": "da-nang",
+            "category": "temple",
+            "latitude": 15.9977275,
+            "longitude": 107.9857833,
+            "address": null,
+            "website": "https://sunworld.vn/vi/banahills/check-in/den-linh-chua-linh-tu",
+            "phone": null,
+            "canonical_active_interests": [
+              "culture_history"
+            ],
+            "canonical_vector": [
+              0.0,
+              1.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            "canonical_tiers": [
+              "CULTURE_HERITAGE"
+            ],
+            "sources": [
+              {
+                "source_name": "osm",
+                "source_id": "relation/20704135",
+                "confidence_score": 1
+              }
+            ],
+            "raw_osm_tags": {
+              "name": "Đền Lĩnh Chúa Linh Từ",
+              "site": "amenity",
+              "type": "site",
+              "amenity": "place_of_worship",
+              "name:en": "Linh Chua Linh Tu Temple",
+              "name:ru": "Храм Линь Чуа Линь Ты",
+              "name:vi": "Đền Lĩnh Chúa Linh Từ",
+              "website": "https://sunworld.vn/vi/banahills/check-in/den-linh-chua-linh-tu",
+              "alt_name": "Đền Bà Chúa Thượng Ngàn",
+              "religion": "vietnamese_folk",
+              "alt_name:en": "Holy Mountain Mother Temple",
+              "alt_name:ru": "Храм Горной Владычицы",
+              "alt_name:vi": "Đền Bà Chúa Thượng Ngàn"
+            }
+          },
+          {
+            "place_id": "83d8e5c4-b91e-415e-9fd6-fd2a887cb4c0",
+            "name": "Đền Lĩnh Chúa Linh Từ",
+            "normalized_name": "đen linh chua linh tu",
+            "destination": "Đà Nẵng",
+            "destination_slug": "da-nang",
+            "category": "temple",
+            "latitude": 15.9975648,
+            "longitude": 107.9856835,
+            "address": null,
+            "website": "https://sunworld.vn/vi/banahills/check-in/den-linh-chua-linh-tu",
+            "phone": null,
+            "canonical_active_interests": [
+              "culture_history"
+            ],
+            "canonical_vector": [
+              0.0,
+              1.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            "canonical_tiers": [
+              "CULTURE_HERITAGE"
+            ],
+            "sources": [
+              {
+                "source_name": "osm",
+                "source_id": "way/1109970004",
+                "confidence_score": 1
+              }
+            ],
+            "raw_osm_tags": {
+              "ele": "1487",
+              "name": "Đền Lĩnh Chúa Linh Từ",
+              "amenity": "place_of_worship",
+              "name:en": "Linh Chua Linh Tu Temple",
+              "name:ru": "Храм Линь Чуа Линь Ты",
+              "name:vi": "Đền Lĩnh Chúa Linh Từ",
+              "website": "https://sunworld.vn/vi/banahills/check-in/den-linh-chua-linh-tu",
+              "alt_name": "Đền Bà Chúa Thượng Ngàn",
+              "building": "temple",
+              "religion": "vietnamese_folk",
+              "alt_name:en": "Holy Mountain Mother Temple",
+              "alt_name:ru": "Храм Горной Владычицы",
+              "alt_name:vi": "Đền Bà Chúa Thượng Ngàn",
+              "description:ru": "Храм вьетнамской народной религии Поклонения Матерям (Đạo Mẫu)"
+            }
+          }
+        ]
+      },
+      "source_history_provenance": {
+        "historical_builder_commit": "0edcf343cdeef72aa980417d5f628cd79de4ca74",
+        "historical_builder_file": "scripts/build_w5_eval_pool.py",
+        "historical_audit_commit": "e15d5a99d7e47c2940d54aee5d81cd64e1fb9d37",
+        "historical_audit_file": "docs/w3/w3-03-place-data-gap-audit.md"
+      }
+    },
+    {
+      "candidate_group_id": "DUP-CORE-HL-01",
+      "historical_group_id": "DUP-CORE-HL-01",
+      "place_ids": [
+        "13317b2d-7b15-40e5-8a3d-63c80425ae8e",
+        "0118b23e-ed95-4fc4-b26a-74b761e3eb6f"
+      ],
+      "destination": "ha-long",
+      "classification": "CONFIRMED_EQUIVALENT",
+      "classification_reason": "Both records represent the exact same passenger ferry/cruise terminal facility ('Cảng tàu khách quốc tế Hạ Long' / Ha Long International Cruise Port) at Bãi Cháy, Hạ Long. Both records have identical raw name ('Cảng tàu khách quốc tế Hạ Long') and normalized name ('cang tau khach quoc te ha long'), identical destination ('ha-long'), identical category ('attraction'), identical OSM tags ('ferry=yes', 'amenity=ferry_terminal', 'public_transport=station'), identical taxonomy classification ('TRANSPORT_HUBS' / 'boat_terminal'), and coordinates separated by only 48.75 meters located on the exact same passenger port pier facility. They represent two duplicate OSM node points (node/12759133301 and node/14053384506) mapped for the same physical terminal.",
+      "evidence_fields": {
+        "distance_meters": 48.75,
+        "coordinate_delta": {
+          "latitude_delta": 0.0003678,
+          "longitude_delta": 0.0002555
+        },
+        "name_match": {
+          "raw_name_exact_match": true,
+          "normalized_name_exact_match": true
+        },
+        "items": [
+          {
+            "place_id": "13317b2d-7b15-40e5-8a3d-63c80425ae8e",
+            "name": "Cảng tàu khách quốc tế Hạ Long",
+            "normalized_name": "cang tau khach quoc te ha long",
+            "destination": "Hạ Long",
+            "destination_slug": "ha-long",
+            "category": "attraction",
+            "latitude": 20.953275,
+            "longitude": 107.05571,
+            "address": null,
+            "website": null,
+            "phone": null,
+            "canonical_active_interests": [],
+            "canonical_vector": [
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            "canonical_tiers": [],
+            "sources": [
+              {
+                "source_name": "osm",
+                "source_id": "node/12759133301",
+                "confidence_score": 1
+              }
+            ],
+            "raw_osm_tags": {
+              "name": "Cảng tàu khách quốc tế Hạ Long",
+              "ferry": "yes",
+              "amenity": "ferry_terminal",
+              "public_transport": "station"
+            }
+          },
+          {
+            "place_id": "0118b23e-ed95-4fc4-b26a-74b761e3eb6f",
+            "name": "Cảng tàu khách quốc tế Hạ Long",
+            "normalized_name": "cang tau khach quoc te ha long",
+            "destination": "Hạ Long",
+            "destination_slug": "ha-long",
+            "category": "attraction",
+            "latitude": 20.9536428,
+            "longitude": 107.0554545,
+            "address": null,
+            "website": null,
+            "phone": null,
+            "canonical_active_interests": [],
+            "canonical_vector": [
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            "canonical_tiers": [],
+            "sources": [
+              {
+                "source_name": "osm",
+                "source_id": "node/14053384506",
+                "confidence_score": 1
+              }
+            ],
+            "raw_osm_tags": {
+              "name": "Cảng tàu khách quốc tế Hạ Long",
+              "ferry": "yes",
+              "amenity": "ferry_terminal",
+              "public_transport": "station"
+            }
+          }
+        ]
+      },
+      "source_history_provenance": {
+        "historical_builder_commit": "0edcf343cdeef72aa980417d5f628cd79de4ca74",
+        "historical_builder_file": "scripts/build_w5_eval_pool.py"
+      }
+    }
+  ]
+}

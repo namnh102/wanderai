@@ -1,0 +1,30 @@
+{
+  "artifact_version": "W5-DUP-MAP-V1",
+  "evidence_version": "W5-DUP-EVIDENCE-V1",
+  "groups": [
+    {
+      "equivalence_group_id": "DUP-CORE-DN-01",
+      "destination": "da-nang",
+      "place_ids": [
+        "6db09251-706a-4225-8ee5-4d22165f6b3f",
+        "408aaa5a-7e34-41eb-b39f-acfa4393fc5f"
+      ]
+    },
+    {
+      "equivalence_group_id": "DUP-CORE-DN-02",
+      "destination": "da-nang",
+      "place_ids": [
+        "098e6a53-5ce5-4d20-b75e-4a00d00bb8cf",
+        "83d8e5c4-b91e-415e-9fd6-fd2a887cb4c0"
+      ]
+    },
+    {
+      "equivalence_group_id": "DUP-CORE-HL-01",
+      "destination": "ha-long",
+      "place_ids": [
+        "13317b2d-7b15-40e5-8a3d-63c80425ae8e",
+        "0118b23e-ed95-4fc4-b26a-74b761e3eb6f"
+      ]
+    }
+  ]
+}
