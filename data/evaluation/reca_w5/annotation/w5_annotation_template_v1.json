@@ -1,0 +1,21 @@
+{
+  "template_version": "W5-RAW-ANNOTATION-TEMPLATE-V1",
+  "rubric_version": "W5-RUBRIC-V1",
+  "description": "Template schema for individual judge raw annotation submissions.",
+  "allowed_labels": [
+    0,
+    1,
+    2,
+    "NA"
+  ],
+  "fields": {
+    "judge_id": "string (J1, J2, or J3)",
+    "scenario_id": "string (e.g. HN-U1-01)",
+    "judge_item_id": "string (e.g. HN-U1-01-J01)",
+    "place_id": "string (UUID)",
+    "label": "integer in {0, 1, 2} or string 'NA'",
+    "judge_note": "string or null",
+    "completed_at": "ISO 8601 string or null"
+  },
+  "records": []
+}
