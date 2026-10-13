@@ -44,13 +44,16 @@ from scripts.evaluate_w5_recommenders import (
     CATEGORY_ILD_SEMANTICS,
     EVALUATION_VERSION,
     EXPECTED_CATALOG_SIZES,
+    EXPECTED_METADATA_VERSION,
     EXPECTED_POOL_VERSION,
     EXPECTED_RUBRIC_VERSION,
+    EXPECTED_TEMPLATE_VERSION,
     EXPECTED_TOTAL_CORE,
     FREEZE_V2_ACCEPTED_SHA256,
     FROZEN_DESTINATIONS,
     SYSTEM_A2,
     SYSTEM_BASELINE,
+    VALID_SYSTEMS,
     W5_METRIC_BOOTSTRAP_SEED,
     aggregate_destination_macro,
     aggregate_unweighted_mean,
@@ -76,6 +79,8 @@ from scripts.evaluate_w5_recommenders import (
     pooled_recall_at_k,
     precision_at_k,
     run_dry_run_validation,
+    run_full_evaluation,
+    validate_pool_manifest_consistency,
     validate_primary_scenario_manifest,
     validate_relevance_label,
     validate_system_ranking_integrity,
@@ -907,113 +912,551 @@ def test_met_ver_04_verdict_safety_on_missing_inference() -> None:
 
 
 # ============================================================
-# 18. FULL SYNTHETIC END-TO-END PIPELINE (MET-SYNTH-E2E)
+# 18. COVERAGE CORRECTNESS (MET-E2E-COV-01)
+# ============================================================
+
+
+def test_met_e2e_cov_01_catalog_coverage_pairing() -> None:
+    """MET-E2E-COV-01: CatalogCoverage@10 uses actual validated Top-10 IDs and generates correct analytical delta."""
+    scenarios = [
+        {"scenario_id": "HN-01", "destination": "ha-noi"},
+        {"scenario_id": "HN-02", "destination": "ha-noi"},
+        {"scenario_id": "DN-01", "destination": "da-nang"},
+        {"scenario_id": "DN-02", "destination": "da-nang"},
+        {"scenario_id": "HL-01", "destination": "ha-long"},
+        {"scenario_id": "HL-02", "destination": "ha-long"},
+    ]
+    catalog_sizes = {"ha-noi": 100, "da-nang": 100, "ha-long": 100}
+
+    # Baseline uses identical 10 places across all scenarios in each city -> 10 unique places per city
+    # Baseline city coverage = 10/100 = 0.10. Macro baseline coverage = 0.10.
+    base_results = []
+    for sc in scenarios:
+        sid = sc["scenario_id"]
+        dest = sc["destination"]
+        pids = [f"{dest}_base_p{i}" for i in range(10)]
+        base_results.append({
+            "scenario_id": sid,
+            "destination": dest,
+            "topk_place_ids": pids,
+            "ndcg_at_10": 0.8,
+            "precision_at_10": 0.8,
+            "pooled_recall_at_10": 0.8,
+            "hit_rate_at_10": 1.0,
+            "category_ild_at_10": 0.5,
+            "i1_exposure_at_10": 0.0,
+        })
+
+    # A2 uses distinct places across scenarios:
+    # HN-01 has 10 places (0..9), HN-02 has 10 places (10..19) -> 20 unique places in HN (cov = 0.20)
+    # DN-01 has 10 places (0..9), DN-02 has 10 places (10..19) -> 20 unique places in DN (cov = 0.20)
+    # HL-01 has 10 places (0..9), HL-02 has 10 places (10..19) -> 20 unique places in HL (cov = 0.20)
+    # Macro A2 coverage = 0.20.
+    # Expected analytical coverage delta = 0.20 - 0.10 = 0.10.
+    a2_results = []
+    for sc in scenarios:
+        sid = sc["scenario_id"]
+        dest = sc["destination"]
+        offset = 0 if sid.endswith("01") else 10
+        pids = [f"{dest}_a2_p{i + offset}" for i in range(10)]
+        a2_results.append({
+            "scenario_id": sid,
+            "destination": dest,
+            "topk_place_ids": pids,
+            "ndcg_at_10": 0.85,
+            "precision_at_10": 0.85,
+            "pooled_recall_at_10": 0.85,
+            "hit_rate_at_10": 1.0,
+            "category_ild_at_10": 0.5,
+            "i1_exposure_at_10": 0.0,
+        })
+
+    comparison = build_paired_comparison(
+        baseline_eval={"scenario_results": base_results},
+        a2_eval={"scenario_results": a2_results},
+        scenarios=scenarios,
+        catalog_sizes=catalog_sizes,
+        replicates=200,
+    )
+
+    cov_info = comparison["metrics"]["catalog_coverage_at_10"]
+    assert cov_info["status"] == "ESTIMATED"
+    assert math.isclose(cov_info["observed_point_delta"], 0.10, abs_tol=1e-5)
+    assert cov_info["ci_95"] is not None
+    assert cov_info["ci_95"][0] >= 0.0
+    assert cov_info["ci_95"][1] >= 0.10
+
+    # Empty list regression: if topk_place_ids is missing, build_paired_comparison must fail!
+    bad_base_results = [{k: v for k, v in r.items() if k != "topk_place_ids"} for r in base_results]
+    with pytest.raises(ValueError, match="Missing validated baseline topk_place_ids"):
+        build_paired_comparison(
+            baseline_eval={"scenario_results": bad_base_results},
+            a2_eval={"scenario_results": a2_results},
+            scenarios=scenarios,
+            catalog_sizes=catalog_sizes,
+            replicates=50,
+        )
+
+
+# ============================================================
+# 19. EXACT SCENARIO SET TESTS (MET-SCENARIO-ID-01 .. 06)
+# ============================================================
+
+
+def test_met_scenario_id_01_canonical_manifest_passes() -> None:
+    """MET-SCENARIO-ID-01: Canonical frozen manifest passes exact identity verification."""
+    primary_path = REPO_ROOT / "data/evaluation/reca_w5/w5_primary_scenarios_v1.json"
+    scenarios = json.loads(primary_path.read_text(encoding="utf-8"))
+    validate_primary_scenario_manifest(scenarios)
+
+
+def test_met_scenario_id_02_fake_scenario_id_rejected() -> None:
+    """MET-SCENARIO-ID-02: Change one valid scenario ID to a fake ID is rejected."""
+    primary_path = REPO_ROOT / "data/evaluation/reca_w5/w5_primary_scenarios_v1.json"
+    scenarios = json.loads(primary_path.read_text(encoding="utf-8"))
+    scenarios[0]["scenario_id"] = "HN-U1-99"
+    with pytest.raises(ValueError, match="Primary scenario ID mismatch|unknown IDs|missing"):
+        validate_primary_scenario_manifest(scenarios)
+
+
+def test_met_scenario_id_03_interest_mismatch_rejected() -> None:
+    """MET-SCENARIO-ID-03: Keep scenario ID but change declared_interests is rejected."""
+    primary_path = REPO_ROOT / "data/evaluation/reca_w5/w5_primary_scenarios_v1.json"
+    scenarios = json.loads(primary_path.read_text(encoding="utf-8"))
+    scenarios[0]["declared_interests"] = ["shopping"]
+    with pytest.raises(ValueError, match="field 'declared_interests' mismatch"):
+        validate_primary_scenario_manifest(scenarios)
+
+
+def test_met_scenario_id_04_destination_mismatch_rejected() -> None:
+    """MET-SCENARIO-ID-04: Change destination is rejected."""
+    primary_path = REPO_ROOT / "data/evaluation/reca_w5/w5_primary_scenarios_v1.json"
+    scenarios = json.loads(primary_path.read_text(encoding="utf-8"))
+    scenarios[0]["destination"] = "da-nang"
+    with pytest.raises(ValueError, match="field 'destination' mismatch"):
+        validate_primary_scenario_manifest(scenarios)
+
+
+def test_met_scenario_id_05_scenario_version_mismatch_rejected() -> None:
+    """MET-SCENARIO-ID-05: Change scenario_version is rejected."""
+    primary_path = REPO_ROOT / "data/evaluation/reca_w5/w5_primary_scenarios_v1.json"
+    scenarios = json.loads(primary_path.read_text(encoding="utf-8"))
+    scenarios[0]["scenario_version"] = "W5-SCENARIO-V2"
+    with pytest.raises(ValueError, match="field 'scenario_version' mismatch"):
+        validate_primary_scenario_manifest(scenarios)
+
+
+def test_met_scenario_id_06_top_k_or_catalog_mismatch_rejected() -> None:
+    """MET-SCENARIO-ID-06: Change top_k or candidate_catalog is rejected."""
+    primary_path = REPO_ROOT / "data/evaluation/reca_w5/w5_primary_scenarios_v1.json"
+    scenarios = json.loads(primary_path.read_text(encoding="utf-8"))
+    scenarios[0]["top_k"] = 20
+    with pytest.raises(ValueError, match="field 'top_k' mismatch"):
+        validate_primary_scenario_manifest(scenarios)
+
+    scenarios = json.loads(primary_path.read_text(encoding="utf-8"))
+    scenarios[0]["candidate_catalog"] = "REC-A-CORE-V2:da-nang"
+    with pytest.raises(ValueError, match="field 'candidate_catalog' mismatch"):
+        validate_primary_scenario_manifest(scenarios)
+
+
+# ============================================================
+# 20. EXACT GT MEMBERSHIP TESTS (MET-GT-KEY-01 .. 07)
+# ============================================================
+
+
+def test_met_gt_key_01_exact_frozen_keys_pass() -> None:
+    """MET-GT-KEY-01: Exact canonical 474 frozen keys pass when labels are valid."""
+    pool_path = REPO_ROOT / "data/evaluation/reca_w5/w5_candidate_pool_internal_v1.json"
+    pool_data = json.loads(pool_path.read_text(encoding="utf-8"))
+
+    records = []
+    for sc in pool_data:
+        for it in sc["items"]:
+            records.append({
+                "scenario_id": sc["scenario_id"],
+                "place_id": it["place_id"],
+                "judge_item_id": it["judge_item_id"],
+                "final_relevance": 1,
+                "pool_version": EXPECTED_POOL_VERSION,
+                "rubric_version": EXPECTED_RUBRIC_VERSION,
+                "metadata_version": EXPECTED_METADATA_VERSION,
+            })
+
+    payload = {
+        "template_version": "W5-SYNTHETIC-GT-V1",
+        "pool_version": EXPECTED_POOL_VERSION,
+        "rubric_version": EXPECTED_RUBRIC_VERSION,
+        "metadata_version": EXPECTED_METADATA_VERSION,
+        "total_records": len(records),
+        "records": records,
+    }
+    gt = load_and_validate_ground_truth(payload)
+    assert gt["total_records"] == 474
+    assert len(gt["gt_map"]) == 474
+
+
+def test_met_gt_key_02_duplicate_scenario_place_rejected() -> None:
+    """MET-GT-KEY-02: Duplicate (scenario_id, place_id) in GT is rejected."""
+    pool_path = REPO_ROOT / "data/evaluation/reca_w5/w5_candidate_pool_internal_v1.json"
+    pool_data = json.loads(pool_path.read_text(encoding="utf-8"))
+
+    records = []
+    for sc in pool_data:
+        for it in sc["items"]:
+            records.append({
+                "scenario_id": sc["scenario_id"],
+                "place_id": it["place_id"],
+                "judge_item_id": it["judge_item_id"],
+                "final_relevance": 1,
+            })
+
+    dup_rec = dict(records[0])
+    dup_rec["judge_item_id"] = "DUP-JID-01"
+    records.append(dup_rec)
+
+    payload = {
+        "pool_version": EXPECTED_POOL_VERSION,
+        "rubric_version": EXPECTED_RUBRIC_VERSION,
+        "total_records": len(records),
+        "records": records,
+    }
+    with pytest.raises(ValueError, match="Duplicate \\(scenario_id, place_id\\) in GT"):
+        load_and_validate_ground_truth(payload)
+
+
+def test_met_gt_key_03_unknown_place_rejected() -> None:
+    """MET-GT-KEY-03: 474 count preserved but one expected place replaced by unknown place is rejected."""
+    pool_path = REPO_ROOT / "data/evaluation/reca_w5/w5_candidate_pool_internal_v1.json"
+    pool_data = json.loads(pool_path.read_text(encoding="utf-8"))
+
+    records = []
+    for sc in pool_data:
+        for it in sc["items"]:
+            records.append({
+                "scenario_id": sc["scenario_id"],
+                "place_id": it["place_id"],
+                "final_relevance": 1,
+            })
+
+    records[0]["place_id"] = "00000000-0000-0000-0000-000000000000"
+
+    payload = {
+        "pool_version": EXPECTED_POOL_VERSION,
+        "rubric_version": EXPECTED_RUBRIC_VERSION,
+        "total_records": len(records),
+        "records": records,
+    }
+    with pytest.raises(ValueError, match="GT key mismatch"):
+        load_and_validate_ground_truth(payload)
+
+
+def test_met_gt_key_04_missing_one_record_rejected() -> None:
+    """MET-GT-KEY-04: Missing one expected record is rejected."""
+    pool_path = REPO_ROOT / "data/evaluation/reca_w5/w5_candidate_pool_internal_v1.json"
+    pool_data = json.loads(pool_path.read_text(encoding="utf-8"))
+
+    records = []
+    for sc in pool_data:
+        for it in sc["items"]:
+            records.append({
+                "scenario_id": sc["scenario_id"],
+                "place_id": it["place_id"],
+                "final_relevance": 1,
+            })
+
+    records.pop()
+
+    payload = {
+        "pool_version": EXPECTED_POOL_VERSION,
+        "rubric_version": EXPECTED_RUBRIC_VERSION,
+        "total_records": len(records),
+        "records": records,
+    }
+    with pytest.raises(ValueError, match="GT missing 1 expected"):
+        load_and_validate_ground_truth(payload)
+
+
+def test_met_gt_key_05_extra_unexpected_record_rejected() -> None:
+    """MET-GT-KEY-05: Extra unexpected record is rejected."""
+    pool_path = REPO_ROOT / "data/evaluation/reca_w5/w5_candidate_pool_internal_v1.json"
+    pool_data = json.loads(pool_path.read_text(encoding="utf-8"))
+
+    records = []
+    for sc in pool_data:
+        for it in sc["items"]:
+            records.append({
+                "scenario_id": sc["scenario_id"],
+                "place_id": it["place_id"],
+                "final_relevance": 1,
+            })
+
+    records.append({
+        "scenario_id": "HN-U1-01",
+        "place_id": "99999999-9999-9999-9999-999999999999",
+        "final_relevance": 1,
+    })
+
+    payload = {
+        "pool_version": EXPECTED_POOL_VERSION,
+        "rubric_version": EXPECTED_RUBRIC_VERSION,
+        "total_records": len(records),
+        "records": records,
+    }
+    with pytest.raises(ValueError, match="GT contains 1 unexpected"):
+        load_and_validate_ground_truth(payload)
+
+
+def test_met_gt_key_06_wrong_scenario_membership_rejected() -> None:
+    """MET-GT-KEY-06: Valid place_id attached to wrong scenario is rejected."""
+    pool_path = REPO_ROOT / "data/evaluation/reca_w5/w5_candidate_pool_internal_v1.json"
+    pool_data = json.loads(pool_path.read_text(encoding="utf-8"))
+
+    records = []
+    for sc in pool_data:
+        for it in sc["items"]:
+            records.append({
+                "scenario_id": sc["scenario_id"],
+                "place_id": it["place_id"],
+                "final_relevance": 1,
+            })
+
+    hn_rec = [r for r in records if r["scenario_id"] == "HN-U1-01"][0]
+    hn_rec["scenario_id"] = "DN-U1-01"
+
+    payload = {
+        "pool_version": EXPECTED_POOL_VERSION,
+        "rubric_version": EXPECTED_RUBRIC_VERSION,
+        "total_records": len(records),
+        "records": records,
+    }
+    with pytest.raises(ValueError, match="GT key mismatch"):
+        load_and_validate_ground_truth(payload)
+
+
+def test_met_gt_key_07_duplicate_judge_item_id_rejected() -> None:
+    """MET-GT-KEY-07: Duplicate judge_item_id is rejected."""
+    expected_keys = {("HN-U1-01", "p1"), ("HN-U1-01", "p2")}
+    records = [
+        {"scenario_id": "HN-U1-01", "place_id": "p1", "judge_item_id": "JID-SAME", "final_relevance": 1},
+        {"scenario_id": "HN-U1-01", "place_id": "p2", "judge_item_id": "JID-SAME", "final_relevance": 1},
+    ]
+    payload = {
+        "pool_version": EXPECTED_POOL_VERSION,
+        "rubric_version": EXPECTED_RUBRIC_VERSION,
+        "total_records": 2,
+        "records": records,
+    }
+    with pytest.raises(ValueError, match="Duplicate judge_item_id in GT"):
+        load_and_validate_ground_truth(payload, expected_keys=expected_keys)
+
+
+# ============================================================
+# 21. RECORD-LEVEL VERSION & VERSION SEMANTICS TESTS
+# ============================================================
+
+
+def test_met_gt_ver_01_record_level_version_mismatch_rejected() -> None:
+    """Record-level pool_version / rubric_version / metadata_version mismatch is rejected."""
+    expected_keys = {("HN-U1-01", "p1")}
+    payload_bad_pool = {
+        "pool_version": EXPECTED_POOL_VERSION,
+        "rubric_version": EXPECTED_RUBRIC_VERSION,
+        "total_records": 1,
+        "records": [
+            {
+                "scenario_id": "HN-U1-01",
+                "place_id": "p1",
+                "pool_version": "W5-POOL-V2",  # Mismatch with top-level W5-POOL-V1
+                "final_relevance": 1,
+            }
+        ],
+    }
+    with pytest.raises(ValueError, match="pool_version mismatch"):
+        load_and_validate_ground_truth(payload_bad_pool, expected_keys=expected_keys)
+
+
+def test_met_gt_ver_02_template_version_distinguished_no_fabrication() -> None:
+    """Template version is distinguished from gt_version; missing gt_version is None, not fabricated."""
+    template_path = REPO_ROOT / "data/evaluation/reca_w5/annotation/w5_merged_ground_truth_template_v1.json"
+    template_data = json.loads(template_path.read_text(encoding="utf-8"))
+
+    gt_meta = load_and_validate_ground_truth(template_data)
+    assert gt_meta["template_version"] == "W5-MERGED-GROUND-TRUTH-TEMPLATE-V1"
+    assert gt_meta["gt_version"] is None  # MUST NOT be fabricated to "W5-GT-V1"
+
+
+# ============================================================
+# 22. SYSTEM EXECUTION BOUNDARY & INTEGRITY TESTS (MET-SYSTEM-EXEC-01 .. 06)
+# ============================================================
+
+
+def test_met_system_exec_01_unknown_system_rejected() -> None:
+    """MET-SYSTEM-EXEC-01: evaluate_system rejects systems outside {shared_a0_a1_baseline, rec-a2}."""
+    with pytest.raises(ValueError, match="Invalid system_name 'rec-a3'"):
+        evaluate_system(
+            system_name="rec-a3",
+            scenarios=[],
+            internal_pool=[],
+            system_rankings={},
+            gt_map={},
+        )
+
+
+def test_met_system_exec_02_missing_scenario_ranking_rejected() -> None:
+    """MET-SYSTEM-EXEC-02: Missing scenario ranking in evaluate_system is rejected."""
+    scenarios = [{"scenario_id": "HN-U1-01", "destination": "ha-noi"}]
+    pool = [{"scenario_id": "HN-U1-01", "destination": "ha-noi", "items": [{"place_id": f"p_{i}"} for i in range(10)]}]
+    with pytest.raises(ValueError, match="Missing ranking for system"):
+        evaluate_system(
+            system_name=SYSTEM_BASELINE,
+            scenarios=scenarios,
+            internal_pool=pool,
+            system_rankings={},
+            gt_map={},
+            destination_catalogs={"ha-noi": {f"p_{i}" for i in range(20)}},
+        )
+
+
+def test_met_system_exec_03_ranking_length_not_10_rejected() -> None:
+    """MET-SYSTEM-EXEC-03: Ranking length != 10 in evaluate_system is rejected."""
+    scenarios = [{"scenario_id": "HN-U1-01", "destination": "ha-noi"}]
+    pool = [{"scenario_id": "HN-U1-01", "destination": "ha-noi", "items": [{"place_id": f"p_{i}"} for i in range(10)]}]
+    rankings = {"HN-U1-01": [{"place_id": f"p_{i}"} for i in range(9)]}
+    with pytest.raises(ValueError, match="must have length 10"):
+        evaluate_system(
+            system_name=SYSTEM_BASELINE,
+            scenarios=scenarios,
+            internal_pool=pool,
+            system_rankings=rankings,
+            gt_map={},
+            destination_catalogs={"ha-noi": {f"p_{i}" for i in range(20)}},
+        )
+
+
+def test_met_system_exec_04_duplicate_topk_place_rejected() -> None:
+    """MET-SYSTEM-EXEC-04: Duplicate place in Top-10 is rejected."""
+    scenarios = [{"scenario_id": "HN-U1-01", "destination": "ha-noi"}]
+    pool = [{"scenario_id": "HN-U1-01", "destination": "ha-noi", "items": [{"place_id": f"p_{i}"} for i in range(10)]}]
+    rankings = {"HN-U1-01": [{"place_id": "p_0"}] * 2 + [{"place_id": f"p_{i}"} for i in range(2, 10)]}
+    with pytest.raises(ValueError, match="Duplicate place_ids"):
+        evaluate_system(
+            system_name=SYSTEM_BASELINE,
+            scenarios=scenarios,
+            internal_pool=pool,
+            system_rankings=rankings,
+            gt_map={},
+            destination_catalogs={"ha-noi": {f"p_{i}" for i in range(20)}},
+        )
+
+
+def test_met_system_exec_05_wrong_destination_place_rejected() -> None:
+    """MET-SYSTEM-EXEC-05: Place belongs to core but to wrong destination catalog is rejected."""
+    scenarios = [{"scenario_id": "HN-U1-01", "destination": "ha-noi"}]
+    pool = [{"scenario_id": "HN-U1-01", "destination": "ha-noi", "items": [{"place_id": f"p_{i}"} for i in range(10)]}]
+    rankings = {"HN-U1-01": [{"place_id": f"p_{i}"} for i in range(10)]}
+    with pytest.raises(ValueError, match="does not belong to ha-noi catalog"):
+        evaluate_system(
+            system_name=SYSTEM_BASELINE,
+            scenarios=scenarios,
+            internal_pool=pool,
+            system_rankings=rankings,
+            gt_map={},
+            destination_catalogs={"ha-noi": {f"p_{i}" for i in range(9)}},  # Only 0..8
+        )
+
+
+def test_met_system_exec_06_out_of_candidate_pool_rejected() -> None:
+    """MET-SYSTEM-EXEC-06: Place in destination catalog but outside candidate pool is rejected."""
+    scenarios = [{"scenario_id": "HN-U1-01", "destination": "ha-noi"}]
+    pool = [{"scenario_id": "HN-U1-01", "destination": "ha-noi", "items": [{"place_id": f"p_{i}"} for i in range(9)]}]
+    rankings = {"HN-U1-01": [{"place_id": f"p_{i}"} for i in range(9)] + [{"place_id": "p_99"}]}
+    with pytest.raises(ValueError, match="does not belong to candidate pool"):
+        evaluate_system(
+            system_name=SYSTEM_BASELINE,
+            scenarios=scenarios,
+            internal_pool=pool,
+            system_rankings=rankings,
+            gt_map={},
+            destination_catalogs={"ha-noi": {f"p_{i}" for i in range(9)} | {"p_99"}},
+        )
+
+
+# ============================================================
+# 23. POOL ↔ MANIFEST CONSISTENCY TESTS
+# ============================================================
+
+
+def test_met_pool_manifest_01_missing_scenario_rejected() -> None:
+    """validate_pool_manifest_consistency rejects pool missing a primary scenario."""
+    scenarios = [
+        {"scenario_id": "HN-U1-01", "destination": "ha-noi"},
+        {"scenario_id": "HN-U1-02", "destination": "ha-noi"},
+    ]
+    pool = [{"scenario_id": "HN-U1-01", "destination": "ha-noi", "items": []}]
+    with pytest.raises(ValueError, match="Pool scenario count mismatch"):
+        validate_pool_manifest_consistency(scenarios, pool)
+
+
+def test_met_pool_manifest_02_destination_mismatch_rejected() -> None:
+    """validate_pool_manifest_consistency rejects scenario destination mismatch."""
+    scenarios = [{"scenario_id": "HN-U1-01", "destination": "ha-noi"}]
+    pool = [{"scenario_id": "HN-U1-01", "destination": "da-nang", "items": []}]
+    with pytest.raises(ValueError, match="destination mismatch"):
+        validate_pool_manifest_consistency(scenarios, pool)
+
+
+# ============================================================
+# 24. FULL SYNTHETIC END-TO-END PIPELINE (MET-SYNTH-E2E)
 # ============================================================
 
 
 def test_met_synth_e2e_full_evaluation_pipeline() -> None:
-    """MET-SYNTH-E2E [SYNTHETIC_TEST_ONLY]: Full future evaluation pipeline executes cleanly on synthetic data."""
-    # 1. Synthetic Scenarios (6 scenarios: 2 per destination, 3 U1, 3 U2)
-    synthetic_scenarios = [
-        {"scenario_id": "HN-U1-01", "destination": "ha-noi", "user_stratum": "U1", "declared_interests": ["food_cuisine"]},
-        {"scenario_id": "HN-U2-01", "destination": "ha-noi", "user_stratum": "U2", "declared_interests": ["food_cuisine", "culture_history"]},
-        {"scenario_id": "DN-U1-01", "destination": "da-nang", "user_stratum": "U1", "declared_interests": ["beach_island"]},
-        {"scenario_id": "DN-U2-01", "destination": "da-nang", "user_stratum": "U2", "declared_interests": ["beach_island", "coffee_culture"]},
-        {"scenario_id": "HL-U1-01", "destination": "ha-long", "user_stratum": "U1", "declared_interests": ["nature_outdoor"]},
-        {"scenario_id": "HL-U2-01", "destination": "ha-long", "user_stratum": "U2", "declared_interests": ["nature_outdoor", "food_cuisine"]},
-    ]
+    """MET-SYNTH-E2E [SYNTHETIC_TEST_ONLY]: Full future evaluation pipeline executes cleanly via run_full_evaluation."""
+    pool_path = REPO_ROOT / "data/evaluation/reca_w5/w5_candidate_pool_internal_v1.json"
+    pool_data = json.loads(pool_path.read_text(encoding="utf-8"))
 
-    # 2. Synthetic Candidate Pools (15 items per scenario)
-    synthetic_pool: List[Dict[str, Any]] = []
-    synthetic_rankings_base: Dict[str, List[Dict[str, Any]]] = {}
-    synthetic_rankings_a2: Dict[str, List[Dict[str, Any]]] = {}
-    synthetic_gt_records: List[Dict[str, Any]] = []
-
-    for sc in synthetic_scenarios:
+    synthetic_gt_records = []
+    for sc in pool_data:
         sid = sc["scenario_id"]
-        dest = sc["destination"]
-        items = []
-        base_items = []
-        a2_items = []
-
-        for idx in range(15):
-            pid = f"{sid}_place_{idx:02d}"
-            category = "restaurant" if idx % 2 == 0 else "museum"
-            stratum = "I0" if idx < 12 else "I1"
-
-            item = {
-                "place_id": pid,
-                "category": category,
-                "i0_i1_stratum": stratum,
-                "destination": dest,
-            }
-            items.append(item)
-
-            if idx < 10:
-                base_items.append(item)
-                a2_items.append(item)
-
-            # Synthetic relevance: first 5 are relevant (2 or 1), rest 0
-            rel = 2 if idx < 3 else (1 if idx < 6 else 0)
+        for idx, it in enumerate(sc["items"]):
+            pid = it["place_id"]
+            # Synthetic relevance: graded 0, 1, 2
+            rel = 2 if idx < 3 else (1 if idx < 7 else 0)
             synthetic_gt_records.append({
                 "scenario_id": sid,
                 "place_id": pid,
+                "judge_item_id": it["judge_item_id"],
                 "final_relevance": rel,
+                "pool_version": EXPECTED_POOL_VERSION,
+                "rubric_version": EXPECTED_RUBRIC_VERSION,
+                "metadata_version": EXPECTED_METADATA_VERSION,
             })
 
-        synthetic_pool.append({
-            "scenario_id": sid,
-            "destination": dest,
-            "items": items,
-        })
-        synthetic_rankings_base[sid] = base_items
-        # Make A2 slightly different by swapping ranks
-        a2_permuted = list(reversed(a2_items[:5])) + a2_items[5:]
-        synthetic_rankings_a2[sid] = a2_permuted
-
-    # 3. Load & Validate Synthetic Ground Truth
-    gt_payload = {
+    synthetic_gt_payload = {
         "template_version": "W5-SYNTHETIC-GT-V1",
         "pool_version": EXPECTED_POOL_VERSION,
         "rubric_version": EXPECTED_RUBRIC_VERSION,
-        "metadata_version": "W5-METADATA-V1",
+        "metadata_version": EXPECTED_METADATA_VERSION,
         "total_records": len(synthetic_gt_records),
         "records": synthetic_gt_records,
     }
-    validated_gt = load_and_validate_ground_truth(gt_payload)
-    assert validated_gt["total_records"] == 90
 
-    # 4. Evaluate Systems
-    synth_cat_sizes = {"ha-noi": 20, "da-nang": 20, "ha-long": 20}
-    base_eval = evaluate_system(
-        system_name=SYSTEM_BASELINE,
-        scenarios=synthetic_scenarios,
-        internal_pool=synthetic_pool,
-        system_rankings=synthetic_rankings_base,
-        gt_map=validated_gt["gt_map"],
-        catalog_sizes=synth_cat_sizes,
-    )
-    assert base_eval["overall_destination_macro"]["ndcg_at_10"] is not None
-
-    a2_eval = evaluate_system(
-        system_name=SYSTEM_A2,
-        scenarios=synthetic_scenarios,
-        internal_pool=synthetic_pool,
-        system_rankings=synthetic_rankings_a2,
-        gt_map=validated_gt["gt_map"],
-        catalog_sizes=synth_cat_sizes,
-    )
-    assert a2_eval["overall_destination_macro"]["ndcg_at_10"] is not None
-
-    # 5. Build Paired Comparison
-    comparison = build_paired_comparison(
-        baseline_eval=base_eval,
-        a2_eval=a2_eval,
-        scenarios=synthetic_scenarios,
-        catalog_sizes=synth_cat_sizes,
+    # Execute single central orchestration function!
+    res = run_full_evaluation(
+        gt_source=synthetic_gt_payload,
         replicates=200,
+        is_synthetic_test=True,
     )
-    assert comparison["primary_metric"] == "ndcg_at_10"
+
+    assert res["evaluation_version"] == EVALUATION_VERSION
+    assert res["synthetic_test_flag"] == "SYNTHETIC_TEST_ONLY"
+    assert res["duplicate_policy_status"] == "PENDING"
+    assert res["final_scientific_evaluation_ready"] is False
+    assert res["category_ild_semantics"] == "structural_category_diversity_proxy"
+    assert res["primary_metric"] == "NDCG@10"
+
+    comparison = res["paired_comparison"]
     assert comparison["scientific_verdict"] in [
         "A2_RELEVANCE_SUPERIOR",
         "BASELINE_PREFERRED",
@@ -1021,15 +1464,27 @@ def test_met_synth_e2e_full_evaluation_pipeline() -> None:
         "INCONCLUSIVE",
     ]
 
-    # 6. Build Final Result Document
-    final_doc = build_final_evaluation_result(
-        baseline_eval=base_eval,
-        a2_eval=a2_eval,
-        comparison=comparison,
-        gt_meta=validated_gt,
-    )
-    assert final_doc["evaluation_version"] == EVALUATION_VERSION
-    assert final_doc["category_ild_semantics"] == "structural_category_diversity_proxy"
-    assert final_doc["duplicate_policy_status"] == "PENDING"
-    assert final_doc["final_scientific_evaluation_ready"] is False
-    assert final_doc["scientific_verdict"] == comparison["scientific_verdict"]
+    metrics = comparison["metrics"]
+    for m in (
+        "ndcg_at_10",
+        "precision_at_10",
+        "pooled_recall_at_10",
+        "hit_rate_at_10",
+        "category_ild_at_10",
+        "catalog_coverage_at_10",
+    ):
+        assert m in metrics
+        assert metrics[m]["status"] == "ESTIMATED"
+        assert metrics[m]["ci_95"] is not None
+
+    for sys_name in (SYSTEM_BASELINE, SYSTEM_A2):
+        sys_data = res["systems"][sys_name]
+        for d in FROZEN_DESTINATIONS:
+            assert d in sys_data["destination_breakdown"]
+            assert sys_data["destination_breakdown"][d]["coverage_at_10"] > 0
+        for strat in ("U1", "U2"):
+            assert strat in sys_data["stratum_breakdown"]
+
+    assert res["effective_sample_counts"]["total_primary_scenarios"] == 30
+    assert res["effective_sample_counts"]["paired_scorable_scenarios"] == 30
+    assert res["effective_sample_counts"]["excluded_scenarios"] == 0

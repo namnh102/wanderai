@@ -63,6 +63,7 @@ EXPECTED_TOTAL_CORE: int = 622
 
 SYSTEM_BASELINE = "shared_a0_a1_baseline"
 SYSTEM_A2 = "rec-a2"
+VALID_SYSTEMS: Set[str] = {SYSTEM_BASELINE, SYSTEM_A2}
 
 # Scientific Semantics Metadata
 CATEGORY_ILD_SEMANTICS: str = "structural_category_diversity_proxy"
@@ -70,6 +71,9 @@ EVALUATION_VERSION: str = "W5-EVAL-V1"
 EXPECTED_RUBRIC_VERSION: str = "W5-RUBRIC-V1"
 EXPECTED_POOL_VERSION: str = "W5-POOL-V1"
 EXPECTED_SCENARIO_VERSION: str = "W5-SCENARIO-V1"
+EXPECTED_METADATA_VERSION: str = "W5-METADATA-V1"
+EXPECTED_TEMPLATE_VERSION: str = "W5-MERGED-GROUND-TRUTH-TEMPLATE-V1"
+
 
 
 # ============================================================
@@ -741,6 +745,7 @@ def evaluate_scenario(
         "unresolved_pool_count": unresolved_pool_count,
         "metric_status": overall_status,
         "category_ild_semantics": CATEGORY_ILD_SEMANTICS,
+        "topk_place_ids": [item["place_id"] for item in ranked_places[:k_eff]],
     }
 
 
@@ -770,47 +775,125 @@ def extract_system_rankings(
 # ============================================================
 
 
-def validate_primary_scenario_manifest(scenarios: List[Dict[str, Any]]) -> None:
-    """Validate that the primary scenarios match the frozen manifest exactly."""
-    if len(scenarios) != 30:
-        raise ValueError(f"Expected exactly 30 primary scenarios, got {len(scenarios)}")
+def validate_primary_scenario_manifest(
+    scenarios: List[Dict[str, Any]],
+    canonical_manifest: Optional[List[Dict[str, Any]]] = None,
+) -> None:
+    """Validate that the primary scenarios match the canonical frozen manifest exactly.
+
+    Compares against canonical w5_primary_scenarios_v1.json.
+    Verifies exact match for every scenario:
+    - scenario_id
+    - scenario_version
+    - track
+    - user_stratum
+    - destination
+    - declared_interests
+    - top_k
+    - candidate_catalog
+    """
+    if canonical_manifest is None:
+        canonical_path = REPO_ROOT / PRIMARY_SCENARIOS_RELPATH
+        if not canonical_path.exists():
+            raise FileNotFoundError(f"Canonical primary scenario manifest not found at {canonical_path}")
+        canonical_manifest = json.loads(canonical_path.read_text(encoding="utf-8"))
+
+    if len(scenarios) != len(canonical_manifest):
+        raise ValueError(
+            f"Expected exactly {len(canonical_manifest)} primary scenarios, got {len(scenarios)}"
+        )
+
+    canonical_map = {sc["scenario_id"]: sc for sc in canonical_manifest}
+    input_ids = [sc.get("scenario_id") for sc in scenarios]
 
     seen_ids: Set[str] = set()
-    u1_count = 0
-    u2_count = 0
-    dest_counts: Dict[str, int] = {d: 0 for d in FROZEN_DESTINATIONS}
-
-    for sc in scenarios:
-        sid = sc.get("scenario_id")
+    for sid in input_ids:
         if not sid or not isinstance(sid, str):
             raise ValueError(f"Invalid or missing scenario_id: {sid!r}")
         if sid in seen_ids:
-            raise ValueError(f"Duplicate scenario_id: {sid}")
+            raise ValueError(f"Duplicate scenario_id in primary scenarios: {sid}")
         seen_ids.add(sid)
 
-        dest = sc.get("destination")
-        if dest not in FROZEN_DESTINATIONS:
-            raise ValueError(f"Unknown destination {dest!r} in scenario {sid}")
-        dest_counts[dest] += 1
+    if seen_ids != set(canonical_map.keys()):
+        missing = set(canonical_map.keys()) - seen_ids
+        extra = seen_ids - set(canonical_map.keys())
+        if missing and extra:
+            raise ValueError(f"Primary scenario ID mismatch: missing {missing}, extra {extra}")
+        if missing:
+            raise ValueError(f"Primary scenarios missing canonical IDs: {missing}")
+        if extra:
+            raise ValueError(f"Primary scenarios contain unknown IDs: {extra}")
 
-        stratum = sc.get("user_stratum")
-        if stratum == "U1":
-            u1_count += 1
-            if len(sc.get("declared_interests", [])) != 1:
-                raise ValueError(f"U1 scenario {sid} must have exactly 1 declared interest")
-        elif stratum == "U2":
-            u2_count += 1
-            if len(sc.get("declared_interests", [])) < 2:
-                raise ValueError(f"U2 scenario {sid} must have >= 2 declared interests")
-        else:
-            raise ValueError(f"Invalid user_stratum {stratum!r} in scenario {sid}")
+    identity_fields = (
+        "scenario_id",
+        "scenario_version",
+        "track",
+        "user_stratum",
+        "destination",
+        "declared_interests",
+        "top_k",
+        "candidate_catalog",
+    )
 
+    for sc in scenarios:
+        sid = sc["scenario_id"]
+        canonical_sc = canonical_map[sid]
+        for field in identity_fields:
+            if field not in sc:
+                raise ValueError(f"Scenario {sid} is missing required field {field!r}")
+            val = sc[field]
+            canon_val = canonical_sc[field]
+            if val != canon_val:
+                raise ValueError(
+                    f"Scenario {sid} field {field!r} mismatch: got {val!r}, expected {canon_val!r}"
+                )
+
+    # Invariants verification
+    u1_count = sum(1 for s in scenarios if s.get("user_stratum") == "U1")
+    u2_count = sum(1 for s in scenarios if s.get("user_stratum") == "U2")
     if u1_count != 15 or u2_count != 15:
         raise ValueError(f"Expected 15 U1 and 15 U2 scenarios, got {u1_count} U1, {u2_count} U2")
 
+    dest_counts = {
+        d: sum(1 for s in scenarios if s.get("destination") == d) for d in FROZEN_DESTINATIONS
+    }
     expected_dest_counts = {"ha-noi": 9, "da-nang": 11, "ha-long": 10}
     if dest_counts != expected_dest_counts:
         raise ValueError(f"Destination scenario counts mismatch: {dest_counts} != {expected_dest_counts}")
+
+
+def validate_pool_manifest_consistency(
+    scenarios: List[Dict[str, Any]],
+    internal_pool: List[Dict[str, Any]],
+) -> None:
+    """Verify internal pool has exactly one record per canonical primary scenario, matching destination."""
+    scenario_map = {sc["scenario_id"]: sc for sc in scenarios}
+    pool_seen_ids: Set[str] = set()
+
+    if len(internal_pool) != len(scenarios):
+        raise ValueError(f"Pool scenario count mismatch: expected {len(scenarios)}, got {len(internal_pool)}")
+
+    for pool_sc in internal_pool:
+        sid = pool_sc.get("scenario_id")
+        if not sid or not isinstance(sid, str):
+            raise ValueError(f"Pool record missing or invalid scenario_id: {sid!r}")
+        if sid in pool_seen_ids:
+            raise ValueError(f"Duplicate scenario_id in candidate pool: {sid}")
+        pool_seen_ids.add(sid)
+
+        if sid not in scenario_map:
+            raise ValueError(f"Candidate pool contains unknown scenario_id: {sid}")
+
+        expected_dest = scenario_map[sid]["destination"]
+        actual_dest = pool_sc.get("destination")
+        if actual_dest != expected_dest:
+            raise ValueError(
+                f"Candidate pool scenario {sid} destination mismatch: got {actual_dest!r}, expected {expected_dest!r}"
+            )
+
+    if pool_seen_ids != set(scenario_map.keys()):
+        missing = set(scenario_map.keys()) - pool_seen_ids
+        raise ValueError(f"Candidate pool missing scenarios: {missing}")
 
 
 def validate_system_ranking_integrity(
@@ -825,7 +908,9 @@ def validate_system_ranking_integrity(
     dest = scenario["destination"]
 
     if len(ranking) != 10:
-        raise ValueError(f"Canonical primary ranking for {system_name} on {sid} must have length 10, got {len(ranking)}")
+        raise ValueError(
+            f"Canonical primary ranking for {system_name} on {sid} must have length 10, got {len(ranking)}"
+        )
 
     pids: List[str] = []
     for idx, item in enumerate(ranking):
@@ -846,14 +931,22 @@ def load_and_validate_ground_truth(
     gt_source: Union[str, Path, Dict[str, Any]],
     expected_pool_version: str = EXPECTED_POOL_VERSION,
     expected_rubric_version: str = EXPECTED_RUBRIC_VERSION,
+    expected_metadata_version: str = EXPECTED_METADATA_VERSION,
+    expected_keys: Optional[Set[Tuple[str, str]]] = None,
 ) -> Dict[str, Any]:
     """Load and validate ground truth data.
 
     Validates:
     - pool_version == expected_pool_version
     - rubric_version == expected_rubric_version
+    - metadata_version == expected_metadata_version
     - records list exists and total_records matches
-    - all labels are strictly valid via validate_relevance_label (raises on malformed)
+    - exact (scenario_id, place_id) membership matching 474 frozen keys (or expected_keys)
+    - no duplicate (scenario_id, place_id) keys
+    - no duplicate judge_item_id
+    - record-level pool_version, rubric_version, metadata_version match top-level contract
+    - all labels are strictly valid via validate_relevance_label
+    - distinguishes template_version from gt_version (does NOT fabricate gt_version when absent)
     """
     if isinstance(gt_source, (str, Path)):
         path = Path(gt_source)
@@ -874,6 +967,10 @@ def load_and_validate_ground_truth(
     if rubric_ver != expected_rubric_version:
         raise ValueError(f"GT rubric_version mismatch: got {rubric_ver!r}, expected {expected_rubric_version!r}")
 
+    meta_ver = data.get("metadata_version")
+    if meta_ver is not None and meta_ver != expected_metadata_version:
+        raise ValueError(f"GT metadata_version mismatch: got {meta_ver!r}, expected {expected_metadata_version!r}")
+
     records = data.get("records")
     if not isinstance(records, list):
         raise ValueError("GT data must contain a 'records' list")
@@ -882,12 +979,44 @@ def load_and_validate_ground_truth(
     if len(records) != total_records:
         raise ValueError(f"GT record count mismatch: header specifies {total_records}, got {len(records)}")
 
+    seen_keys: Set[Tuple[str, str]] = set()
+    seen_judge_item_ids: Set[str] = set()
     gt_map: Dict[Tuple[str, str], Optional[int]] = {}
+
     for idx, rec in enumerate(records):
         sid = rec.get("scenario_id")
         pid = rec.get("place_id")
-        if not sid or not pid:
-            raise ValueError(f"Missing scenario_id or place_id at record {idx}")
+        if not sid or not pid or not isinstance(sid, str) or not isinstance(pid, str):
+            raise ValueError(f"Missing or invalid scenario_id or place_id at record {idx}: ({sid!r}, {pid!r})")
+
+        key = (sid, pid)
+        if key in seen_keys:
+            raise ValueError(f"Duplicate (scenario_id, place_id) in GT at record {idx}: {key}")
+        seen_keys.add(key)
+
+        jid = rec.get("judge_item_id")
+        if jid is not None:
+            if not isinstance(jid, str):
+                raise ValueError(f"Invalid judge_item_id at record {idx}: {jid!r}")
+            if jid in seen_judge_item_ids:
+                raise ValueError(f"Duplicate judge_item_id in GT at record {idx}: {jid}")
+            seen_judge_item_ids.add(jid)
+
+        rec_pool_ver = rec.get("pool_version")
+        if rec_pool_ver is not None and rec_pool_ver != expected_pool_version:
+            raise ValueError(
+                f"Record {idx} ({sid}, {pid}) pool_version mismatch: got {rec_pool_ver!r}, expected {expected_pool_version!r}"
+            )
+        rec_rubric_ver = rec.get("rubric_version")
+        if rec_rubric_ver is not None and rec_rubric_ver != expected_rubric_version:
+            raise ValueError(
+                f"Record {idx} ({sid}, {pid}) rubric_version mismatch: got {rec_rubric_ver!r}, expected {expected_rubric_version!r}"
+            )
+        rec_meta_ver = rec.get("metadata_version")
+        if rec_meta_ver is not None and rec_meta_ver != expected_metadata_version:
+            raise ValueError(
+                f"Record {idx} ({sid}, {pid}) metadata_version mismatch: got {rec_meta_ver!r}, expected {expected_metadata_version!r}"
+            )
 
         raw_rel = rec.get("final_relevance")
         try:
@@ -895,13 +1024,43 @@ def load_and_validate_ground_truth(
         except ValueError as err:
             raise ValueError(f"Invalid relevance in GT record {idx} ({sid}, {pid}): {err}") from err
 
-        gt_map[(sid, pid)] = validated_rel
+        gt_map[key] = validated_rel
+
+    # Validate exact GT key membership against expected 474 frozen keys or expected_keys
+    target_expected_keys = expected_keys
+    if target_expected_keys is None:
+        canonical_pool_path = REPO_ROOT / INTERNAL_POOL_RELPATH
+        if canonical_pool_path.exists():
+            pool_data = json.loads(canonical_pool_path.read_text(encoding="utf-8"))
+            target_expected_keys = {
+                (sc["scenario_id"], item["place_id"])
+                for sc in pool_data
+                for item in sc.get("items", [])
+            }
+
+    if target_expected_keys is not None:
+        if seen_keys != target_expected_keys:
+            missing = target_expected_keys - seen_keys
+            extra = seen_keys - target_expected_keys
+            if missing and extra:
+                raise ValueError(
+                    f"GT key mismatch: {len(missing)} missing keys and {len(extra)} extra keys"
+                )
+            if missing:
+                raise ValueError(f"GT missing {len(missing)} expected (scenario_id, place_id) keys: sample {list(missing)[:3]}")
+            if extra:
+                raise ValueError(f"GT contains {len(extra)} unexpected (scenario_id, place_id) keys: sample {list(extra)[:3]}")
+
+    # Distinguish template_version from gt_version; do not fabricate gt_version when absent
+    template_version = data.get("template_version")
+    gt_version = data.get("gt_version")
 
     return {
-        "gt_version": data.get("template_version") or data.get("gt_version", "W5-GT-V1"),
+        "template_version": template_version,
+        "gt_version": gt_version,
         "pool_version": pool_ver,
         "rubric_version": rubric_ver,
-        "metadata_version": data.get("metadata_version", "W5-METADATA-V1"),
+        "metadata_version": data.get("metadata_version", expected_metadata_version),
         "total_records": len(records),
         "gt_map": gt_map,
     }
@@ -914,17 +1073,58 @@ def evaluate_system(
     system_rankings: Dict[str, List[Dict[str, Any]]],
     gt_map: Dict[Tuple[str, str], Optional[int]],
     catalog_sizes: Dict[str, int] = EXPECTED_CATALOG_SIZES,
+    destination_catalogs: Optional[Dict[str, Set[str]]] = None,
     duplicate_map: Optional[Dict[str, str]] = None,
     k: int = 10,
 ) -> Dict[str, Any]:
     """Execute full evaluation of one system across all scenarios."""
+    if system_name not in VALID_SYSTEMS:
+        raise ValueError(
+            f"Invalid system_name {system_name!r}. Allowed systems: {sorted(list(VALID_SYSTEMS))}"
+        )
+
+    # Validate pool ↔ scenario manifest consistency
+    validate_pool_manifest_consistency(scenarios, internal_pool)
+
+    # Resolve destination catalogs if not provided
+    if destination_catalogs is None:
+        freeze_path = REPO_ROOT / DATASET_FREEZE_V2_RELPATH
+        if freeze_path.exists():
+            freeze_places = json.loads(freeze_path.read_text(encoding="utf-8"))
+            destination_catalogs = {d: set() for d in FROZEN_DESTINATIONS}
+            for p in freeze_places:
+                if p.get("is_rec_a_core_v2") is True:
+                    slug = p.get("destination_slug")
+                    if slug in destination_catalogs:
+                        destination_catalogs[slug].add(p["place_id"])
+        else:
+            destination_catalogs = {d: set() for d in FROZEN_DESTINATIONS}
+
     pool_map = {sc["scenario_id"]: sc for sc in internal_pool}
     scenario_results: List[Dict[str, Any]] = []
 
     for sc in scenarios:
         sid = sc["scenario_id"]
+        dest = sc["destination"]
+        if sid not in pool_map:
+            raise ValueError(f"Scenario {sid} not found in internal pool")
         pool_sc = pool_map[sid]
-        ranked_places = system_rankings.get(sid, [])
+
+        if sid not in system_rankings:
+            raise ValueError(f"Missing ranking for system {system_name} on scenario {sid}")
+        ranked_places = system_rankings[sid]
+
+        # Enforce ranking integrity directly inside evaluate_system
+        pool_pids = {it["place_id"] for it in pool_sc["items"]}
+        dest_pids = destination_catalogs.get(dest, set())
+        validate_system_ranking_integrity(
+            system_name=system_name,
+            scenario=sc,
+            ranking=ranked_places,
+            pool_place_ids=pool_pids,
+            destination_catalog_ids=dest_pids,
+        )
+
         scenario_gt = {item["place_id"]: gt_map.get((sid, item["place_id"])) for item in pool_sc["items"]}
 
         res = evaluate_scenario(
@@ -989,7 +1189,9 @@ def evaluate_system(
         d_scs = [sc["scenario_id"] for sc in scenarios if sc["destination"] == d]
         unique_pids: Set[str] = set()
         for sid in d_scs:
-            for item in system_rankings.get(sid, [])[:k]:
+            if sid not in system_rankings:
+                raise ValueError(f"Missing ranking for system {system_name} on scenario {sid}")
+            for item in system_rankings[sid][:k]:
                 unique_pids.add(item["place_id"])
         coverage_by_dest[d] = catalog_coverage_at_k(len(unique_pids), catalog_sizes[d])
 
@@ -1053,6 +1255,8 @@ def build_paired_comparison(
         for sc in scenarios:
             sid = sc["scenario_id"]
             d = sc["destination"]
+            if sid not in base_res or sid not in a2_res:
+                raise ValueError(f"Scenario {sid} missing from evaluation results")
             b_val = base_res[sid].get(m)
             a_val = a2_res[sid].get(m)
             paired_by_dest[d].append((b_val, a_val))
@@ -1062,13 +1266,21 @@ def build_paired_comparison(
         )
         metrics_comparison[m] = boot_res
 
-    # Coverage paired bootstrap
+    # Coverage paired bootstrap using validated topk_place_ids
     scenarios_by_dest: Dict[str, List[Dict[str, Any]]] = {d: [] for d in FROZEN_DESTINATIONS}
     for sc in scenarios:
         sid = sc["scenario_id"]
         d = sc["destination"]
-        b_pids = [it["place_id"] for it in base_res[sid].get("ranked_places", [])] if "ranked_places" in base_res[sid] else []
-        a_pids = [it["place_id"] for it in a2_res[sid].get("ranked_places", [])] if "ranked_places" in a2_res[sid] else []
+        if "topk_place_ids" not in base_res[sid]:
+            raise ValueError(f"Missing validated baseline topk_place_ids for scenario {sid}")
+        if "topk_place_ids" not in a2_res[sid]:
+            raise ValueError(f"Missing validated A2 topk_place_ids for scenario {sid}")
+        b_pids = list(base_res[sid]["topk_place_ids"])
+        a_pids = list(a2_res[sid]["topk_place_ids"])
+        if len(b_pids) != 10:
+            raise ValueError(f"Baseline topk_place_ids for {sid} must have length 10, got {len(b_pids)}")
+        if len(a_pids) != 10:
+            raise ValueError(f"A2 topk_place_ids for {sid} must have length 10, got {len(a_pids)}")
         scenarios_by_dest[d].append({
             "scenario_id": sid,
             "baseline_top10": b_pids,
@@ -1115,16 +1327,21 @@ def build_final_evaluation_result(
     gt_meta: Dict[str, Any],
 ) -> Dict[str, Any]:
     """Construct final comprehensive evaluation document."""
+    ndcg_info = comparison.get("metrics", {}).get("ndcg_at_10", {})
+    effective_sample_counts = ndcg_info.get("sample_attrition", {})
+
     return {
         "evaluation_version": EVALUATION_VERSION,
+        "template_version": gt_meta.get("template_version"),
         "gt_version": gt_meta.get("gt_version"),
         "pool_version": gt_meta.get("pool_version"),
         "rubric_version": gt_meta.get("rubric_version"),
         "metadata_version": gt_meta.get("metadata_version"),
+        "primary_metric": "NDCG@10",
         "duplicate_policy_status": "PENDING",
         "final_scientific_evaluation_ready": False,
         "category_ild_semantics": CATEGORY_ILD_SEMANTICS,
-        "primary_metric": "NDCG@10",
+        "effective_sample_counts": effective_sample_counts,
         "systems": {
             SYSTEM_BASELINE: {
                 "overall_destination_macro": baseline_eval["overall_destination_macro"],
@@ -1142,6 +1359,162 @@ def build_final_evaluation_result(
         "paired_comparison": comparison,
         "scientific_verdict": comparison["scientific_verdict"],
     }
+
+
+def run_full_evaluation(
+    gt_source: Union[str, Path, Dict[str, Any]],
+    repo_root: Optional[Path] = None,
+    primary_scenarios_source: Optional[Union[str, Path, List[Dict[str, Any]]]] = None,
+    canonical_manifest_source: Optional[Union[str, Path, List[Dict[str, Any]]]] = None,
+    internal_pool_source: Optional[Union[str, Path, List[Dict[str, Any]]]] = None,
+    freeze_places_source: Optional[Union[str, Path, List[Dict[str, Any]]]] = None,
+    system_rankings_source: Optional[Dict[str, Dict[str, List[Dict[str, Any]]]]] = None,
+    catalog_sizes: Optional[Dict[str, int]] = None,
+    destination_catalogs: Optional[Dict[str, Set[str]]] = None,
+    seed: int = W5_METRIC_BOOTSTRAP_SEED,
+    replicates: int = BOOTSTRAP_REPLICATES,
+    duplicate_map: Optional[Dict[str, str]] = None,
+    is_synthetic_test: bool = False,
+) -> Dict[str, Any]:
+    """Single central orchestration pipeline for W5 recommender evaluation.
+
+    Executes in strict order:
+    1. Load primary scenarios manifest
+    2. Validate exact frozen scenario identity against canonical manifest
+    3. Load internal candidate pool
+    4. Validate pool ↔ scenario manifest consistency
+    5. Build destination catalog IDs from Freeze V2 (or provided sources)
+    6. Construct expected 474 frozen candidate pool keys
+    7. Load + validate GT, enforcing exact key-set membership and label validity
+    8. Extract/validate baseline ranking and A2 ranking
+    9. Evaluate baseline system (enforcing ranking integrity inside evaluate_system)
+    10. Evaluate A2 system (enforcing ranking integrity inside evaluate_system)
+    11. Paired query-level metrics aggregation and stratified bootstrap
+    12. Paired catalog coverage stratified bootstrap
+    13. Final verdict determination
+    14. Assemble final comprehensive evaluation result
+    """
+    root = repo_root or REPO_ROOT
+
+    # 1. Load primary scenarios
+    if primary_scenarios_source is None:
+        p_path = root / PRIMARY_SCENARIOS_RELPATH
+        primary_scenarios = json.loads(p_path.read_text(encoding="utf-8"))
+    elif isinstance(primary_scenarios_source, (str, Path)):
+        primary_scenarios = json.loads(Path(primary_scenarios_source).read_text(encoding="utf-8"))
+    elif isinstance(primary_scenarios_source, list):
+        primary_scenarios = primary_scenarios_source
+    else:
+        raise TypeError(f"Invalid primary_scenarios_source: {type(primary_scenarios_source).__name__}")
+
+    # 2. Validate exact frozen scenario identity
+    validate_primary_scenario_manifest(primary_scenarios, canonical_manifest=canonical_manifest_source)
+
+    # 3. Load internal pool
+    if internal_pool_source is None:
+        pool_path = root / INTERNAL_POOL_RELPATH
+        internal_pool = json.loads(pool_path.read_text(encoding="utf-8"))
+    elif isinstance(internal_pool_source, (str, Path)):
+        internal_pool = json.loads(Path(internal_pool_source).read_text(encoding="utf-8"))
+    elif isinstance(internal_pool_source, list):
+        internal_pool = internal_pool_source
+    else:
+        raise TypeError(f"Invalid internal_pool_source: {type(internal_pool_source).__name__}")
+
+    # 4. Validate pool ↔ manifest consistency
+    validate_pool_manifest_consistency(primary_scenarios, internal_pool)
+
+    # 5. Build destination catalog IDs from Freeze V2
+    if destination_catalogs is None:
+        if freeze_places_source is None:
+            freeze_path = root / DATASET_FREEZE_V2_RELPATH
+            freeze_places = json.loads(freeze_path.read_text(encoding="utf-8"))
+        elif isinstance(freeze_places_source, (str, Path)):
+            freeze_places = json.loads(Path(freeze_places_source).read_text(encoding="utf-8"))
+        elif isinstance(freeze_places_source, list):
+            freeze_places = freeze_places_source
+        else:
+            raise TypeError(f"Invalid freeze_places_source: {type(freeze_places_source).__name__}")
+
+        destination_catalogs = {d: set() for d in FROZEN_DESTINATIONS}
+        for p in freeze_places:
+            if p.get("is_rec_a_core_v2") is True:
+                slug = p.get("destination_slug")
+                if slug in destination_catalogs:
+                    destination_catalogs[slug].add(p["place_id"])
+
+    cat_sizes = catalog_sizes or {d: len(destination_catalogs[d]) for d in FROZEN_DESTINATIONS}
+
+    # 6. Expected GT keys
+    expected_gt_keys = {
+        (sc["scenario_id"], item["place_id"])
+        for sc in internal_pool
+        for item in sc.get("items", [])
+    }
+
+    # 7. Load + validate GT
+    gt_data = load_and_validate_ground_truth(gt_source, expected_keys=expected_gt_keys)
+
+    # 8. Extract system rankings
+    if system_rankings_source is None:
+        system_rankings = extract_system_rankings(internal_pool)
+    else:
+        system_rankings = system_rankings_source
+
+    if SYSTEM_BASELINE not in system_rankings:
+        raise ValueError(f"system_rankings missing baseline system: {SYSTEM_BASELINE}")
+    if SYSTEM_A2 not in system_rankings:
+        raise ValueError(f"system_rankings missing A2 system: {SYSTEM_A2}")
+
+    baseline_rankings = system_rankings[SYSTEM_BASELINE]
+    a2_rankings = system_rankings[SYSTEM_A2]
+
+    # 9. Evaluate baseline
+    baseline_eval = evaluate_system(
+        system_name=SYSTEM_BASELINE,
+        scenarios=primary_scenarios,
+        internal_pool=internal_pool,
+        system_rankings=baseline_rankings,
+        gt_map=gt_data["gt_map"],
+        catalog_sizes=cat_sizes,
+        destination_catalogs=destination_catalogs,
+        duplicate_map=duplicate_map,
+    )
+
+    # 10. Evaluate A2
+    a2_eval = evaluate_system(
+        system_name=SYSTEM_A2,
+        scenarios=primary_scenarios,
+        internal_pool=internal_pool,
+        system_rankings=a2_rankings,
+        gt_map=gt_data["gt_map"],
+        catalog_sizes=cat_sizes,
+        destination_catalogs=destination_catalogs,
+        duplicate_map=duplicate_map,
+    )
+
+    # 11-13. Paired comparison & bootstrap & verdict
+    comparison = build_paired_comparison(
+        baseline_eval=baseline_eval,
+        a2_eval=a2_eval,
+        scenarios=primary_scenarios,
+        catalog_sizes=cat_sizes,
+        seed=seed,
+        replicates=replicates,
+    )
+
+    # 14. Final evaluation result
+    final_res = build_final_evaluation_result(
+        baseline_eval=baseline_eval,
+        a2_eval=a2_eval,
+        comparison=comparison,
+        gt_meta=gt_data,
+    )
+
+    if is_synthetic_test:
+        final_res["synthetic_test_flag"] = "SYNTHETIC_TEST_ONLY"
+
+    return final_res
 
 
 # ============================================================
@@ -1221,6 +1594,8 @@ def run_dry_run_validation(repo_root: Optional[Path] = None) -> Dict[str, Any]:
     total_pool_records = sum(len(sc["items"]) for sc in internal_pool)
     if total_pool_records != 474:
         raise ValueError(f"Expected 474 candidate pool records, got {total_pool_records}")
+
+    validate_pool_manifest_consistency(primary_scenarios, internal_pool)
 
     # Validate Top-10 structural properties for each system
     system_rankings = extract_system_rankings(internal_pool)
@@ -1319,8 +1694,17 @@ def main() -> None:
     # Future ground truth evaluation path
     print(f"Ground truth file specified: {args.gt_file}")
     gt_data = load_and_validate_ground_truth(args.gt_file)
-    print(f"Loaded ground truth version {gt_data['gt_version']} with {gt_data['total_records']} records.")
-    print("Scientific evaluation with real HUMAN-GT is gated until human judgments are collected.")
+    print(f"Loaded ground truth template {gt_data['template_version']} (gt_version={gt_data['gt_version']}) with {gt_data['total_records']} records.")
+
+    all_unresolved = all(v is None for v in gt_data["gt_map"].values())
+    if all_unresolved:
+        print("\nGround truth file is an empty/unadjudicated template (0 labels completed).")
+        print("Scientific evaluation cannot be executed until human judgments are collected and adjudicated at W5-GT-01.")
+        print("Scientific winner: UNKNOWN.")
+        print("Validation status: SCHEMA_VALID_BUT_EVALUATION_GATED.")
+        sys.exit(0)
+
+    print("Scientific evaluation with real HUMAN-GT is gated until W5-METH-LOCK and human judgments are collected.")
     sys.exit(0)
 
 
