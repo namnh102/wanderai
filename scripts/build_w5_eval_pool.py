@@ -44,15 +44,16 @@ INTERNAL_POOL_RELPATH = "data/evaluation/reca_w5/w5_candidate_pool_internal_v1.j
 BLINDED_POOL_RELPATH = "data/evaluation/reca_w5/w5_candidate_pool_blinded_v1.json"
 REPRODUCIBILITY_MANIFEST_RELPATH = "data/evaluation/reca_w5/w5_reproducibility_manifest_v1.json"
 
-# Known R6/A6 duplicate equivalence pairs intersecting REC-A core
-REC_A_CORE_DUPLICATE_MAP = {
-    "6db09251-706a-4225-8ee5-4d22165f6b3f": "DUP-CORE-DN-01",
-    "408aaa5a-7e34-41eb-b39f-acfa4393fc5f": "DUP-CORE-DN-01",
-    "098e6a53-5ce5-4d20-b75e-4a00d00bb8cf": "DUP-CORE-DN-02",
-    "83d8e5c4-b91e-415e-9fd6-fd2a887cb4c0": "DUP-CORE-DN-02",
-    "13317b2d-7b15-40e5-8a3d-63c80425ae8e": "DUP-CORE-HL-01",
-    "0118b23e-ed95-4fc4-b26a-74b761e3eb6f": "DUP-CORE-HL-01",
-}
+# Canonical Blinded Pool Note:
+# w5_candidate_pool_blinded_v1.json is the canonical blinded pool artifact.
+# Its deterministic shuffled order is NOT the final per-judge presentation order.
+# W5-PREP-02 will derive independent J1/J2/J3 presentation permutations from this canonical pool.
+# No judge-specific packages are generated in W5-PREP-01.
+
+# Duplicate Group Note:
+# No repo-grounded duplicate evidence artifact is currently committed on develop.
+# Duplicate group assignment is deferred until a formal repo-native artifact exists.
+# All items are flagged as PENDING_EXISTING_A6_EVIDENCE_JOIN with duplicate_equivalence_group = None.
 
 # Frozen Primary Scenarios Specification
 # 15 U1: All destination x interest pairs with >= 10 I0 POIs
@@ -290,8 +291,6 @@ def build_pools(
                 CANONICAL_INTERESTS[idx] for idx, v in enumerate(vec) if v > 0
             ]
 
-            dup_group = REC_A_CORE_DUPLICATE_MAP.get(pid)
-
             internal_items.append({
                 "scenario_id": scn_id,
                 "judge_item_id": place_to_judge_id[pid],
@@ -307,8 +306,8 @@ def build_pools(
                 "i0_i1_stratum": "I0" if is_i0 else "I1",
                 "category": raw_place.get("category"),
                 "canonical_active_interests": active_interests,
-                "duplicate_equivalence_group": dup_group,
-                "duplicate_group_status": "JOINED_R6_A6_EVIDENCE" if dup_group else "PENDING_EXISTING_A6_EVIDENCE_JOIN",
+                "duplicate_equivalence_group": None,
+                "duplicate_group_status": "PENDING_EXISTING_A6_EVIDENCE_JOIN",
             })
 
         # 7. Build Blinded Human-Judgment Records (NO model leakage)

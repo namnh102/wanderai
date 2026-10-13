@@ -362,3 +362,30 @@ def test_w5_data_02_secondary_leakage(
     for scn in internal_pool:
         for item in scn["items"]:
             assert item["place_id"] not in secondary_ids, f"Secondary POI {item['place_id']} leaked into pool!"
+
+
+# --- W5-DUP: Duplicate Policy and Reproducibility Boundary Tests ---
+
+
+def test_w5_dup_01_duplicate_fields_pending_and_no_hardcoded_map(
+    internal_pool: List[Dict[str, Any]],
+):
+    """W5-DUP-01: Duplicate groups are pending repo-native evidence; builder has no hardcoded map."""
+    # 1. Assert all internal items have duplicate_equivalence_group is None
+    # and duplicate_group_status == 'PENDING_EXISTING_A6_EVIDENCE_JOIN'
+    for scn in internal_pool:
+        for item in scn["items"]:
+            assert item["duplicate_equivalence_group"] is None, (
+                f"Item {item['place_id']} has premature duplicate group {item['duplicate_equivalence_group']}"
+            )
+            assert item["duplicate_group_status"] == "PENDING_EXISTING_A6_EVIDENCE_JOIN", (
+                f"Item {item['place_id']} has unexpected duplicate status {item['duplicate_group_status']}"
+            )
+
+    # 2. Assert builder script contains no hardcoded duplicate UUID map
+    builder_path = REPO_ROOT / "scripts" / "build_w5_eval_pool.py"
+    assert builder_path.exists()
+    builder_source = builder_path.read_text(encoding="utf-8")
+    assert "REC_A_CORE_DUPLICATE_MAP" not in builder_source
+    assert "DUP-CORE-DN-01" not in builder_source
+    assert "DUP-CORE-HL-01" not in builder_source
