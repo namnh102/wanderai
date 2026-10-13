@@ -2,6 +2,7 @@
 
 Operationalizes frozen R7 human-validation methodology:
 - Standalone Ordinal Krippendorff's Alpha calculation (no external dependency)
+- 95% bootstrap confidence interval tooling (10,000 unit-level resamples)
 - 3-judge aggregation: median rule, severe-disagreement flags (range == 2)
 - Explicit NA handling: never converted to 0, flags INSUFFICIENT_JUDGMENT_EVIDENCE
 - Operational reliability gate interpretations:
@@ -12,7 +13,11 @@ Operationalizes frozen R7 human-validation methodology:
 
 from __future__ import annotations
 
+import random
 from typing import Any
+
+W5_RELIABILITY_BOOTSTRAP_SEED: int = 20261013
+BOOTSTRAP_REPLICATES: int = 10000
 
 
 def calculate_krippendorff_alpha_ordinal(matrix: list[list[Any]]) -> float:
@@ -105,6 +110,105 @@ def calculate_krippendorff_alpha_ordinal(matrix: list[list[Any]]) -> float:
 
     alpha = 1.0 - (d_observed / d_expected)
     return round(alpha, 4)
+
+
+def calculate_krippendorff_alpha_ci(
+    matrix: list[list[Any]],
+    replicates: int = BOOTSTRAP_REPLICATES,
+    seed: int = W5_RELIABILITY_BOOTSTRAP_SEED,
+) -> list[float]:
+    """Calculate 95% bootstrap confidence interval for ordinal Krippendorff alpha.
+
+    Resampling unit: one scenario-POI judgment unit (row of J1, J2, J3 ratings).
+    Sampling with replacement of N units, preserving all ratings inside each unit.
+
+    Returns:
+        alpha_ci_95 as [lower_2_5th_percentile, upper_97_5th_percentile]
+    """
+    # Filter valid units with at least 2 ratings
+    valid_units: list[list[int]] = []
+    for row in matrix:
+        valid_ratings: list[int] = []
+        for r in row:
+            if r is None or r == "NA":
+                continue
+            try:
+                valid_ratings.append(int(r))
+            except (ValueError, TypeError):
+                continue
+        if len(valid_ratings) >= 2:
+            valid_units.append(valid_ratings)
+
+    num_units = len(valid_units)
+    if num_units < 2:
+        val = calculate_krippendorff_alpha_ordinal(matrix)
+        return [val, val]
+
+    # Precompute unit properties for fast exact evaluation
+    # Check if all ratings belong to standard {0, 1, 2}
+    all_ratings = [r for u in valid_units for r in u]
+    is_standard_012 = all(r in {0, 1, 2} for r in all_ratings)
+
+    rng = random.Random(seed)
+    bootstrap_alphas: list[float] = []
+
+    if is_standard_012:
+        # Precomputed fast exact 3-class statistics
+        precomputed: list[tuple[int, int, int, float, float, float, int]] = []
+        for u in valid_units:
+            c0 = u.count(0)
+            c1 = u.count(1)
+            c2 = u.count(2)
+            m = len(u)
+            denom = m - 1.0
+            p01 = c0 * c1 / denom
+            p12 = c1 * c2 / denom
+            p02 = c0 * c2 / denom
+            precomputed.append((c0, c1, c2, p01, p12, p02, m))
+
+        for _ in range(replicates):
+            sampled = [precomputed[rng.randint(0, num_units - 1)] for _ in range(num_units)]
+            s0 = sum(x[0] for x in sampled)
+            s1 = sum(x[1] for x in sampled)
+            s2 = sum(x[2] for x in sampled)
+            sp01 = sum(x[3] for x in sampled)
+            sp12 = sum(x[4] for x in sampled)
+            sp02 = sum(x[5] for x in sampled)
+            n_tot = sum(x[6] for x in sampled)
+
+            nonzero = sum(1 for c in [s0, s1, s2] if c > 0)
+            if nonzero <= 1:
+                bootstrap_alphas.append(1.0)
+                continue
+
+            d01_sq = ((s0 + s1) / 2.0) ** 2
+            d12_sq = ((s1 + s2) / 2.0) ** 2
+            d02_sq = (s1 + (s0 + s2) / 2.0) ** 2
+
+            sum_do = 2.0 * (sp01 * d01_sq + sp12 * d12_sq + sp02 * d02_sq)
+            d_obs = sum_do / n_tot
+
+            sum_de = 2.0 * (s0 * s1 * d01_sq + s1 * s2 * d12_sq + s0 * s2 * d02_sq)
+            d_exp = sum_de / (n_tot * (n_tot - 1.0))
+
+            if d_exp == 0.0:
+                a = 1.0 if d_obs == 0.0 else 0.0
+            else:
+                a = 1.0 - (d_obs / d_exp)
+            bootstrap_alphas.append(a)
+    else:
+        # Fallback to general formula
+        for _ in range(replicates):
+            sampled_units = [valid_units[rng.randint(0, num_units - 1)] for _ in range(num_units)]
+            bootstrap_alphas.append(calculate_krippendorff_alpha_ordinal(sampled_units))
+
+    bootstrap_alphas.sort()
+    lower_idx = int(replicates * 0.025)
+    upper_idx = int(replicates * 0.975)
+    ci_lower = round(bootstrap_alphas[lower_idx], 4)
+    ci_upper = round(bootstrap_alphas[upper_idx], 4)
+
+    return [ci_lower, ci_upper]
 
 
 def interpret_reliability_gate(alpha: float) -> str:
@@ -207,6 +311,9 @@ def compute_agreement_statistics(records: list[tuple[Any, Any, Any]]) -> dict[st
             "adjacent_disagreement_pct": 0.0,
             "severe_disagreement_pct": 0.0,
             "na_records_pct": 0.0,
+            "ordinal_krippendorff_alpha": 0.0,
+            "ordinal_krippendorff_alpha_ci_95": [0.0, 0.0],
+            "operational_gate": "STOP_REVIEW_RUBRIC",
         }
 
     exact = 0
@@ -231,6 +338,7 @@ def compute_agreement_statistics(records: list[tuple[Any, Any, Any]]) -> dict[st
             severe += 1
 
     alpha = calculate_krippendorff_alpha_ordinal(matrix_for_alpha)
+    alpha_ci = calculate_krippendorff_alpha_ci(matrix_for_alpha)
 
     return {
         "total_records": total,
@@ -243,5 +351,6 @@ def compute_agreement_statistics(records: list[tuple[Any, Any, Any]]) -> dict[st
         "na_count": na_count,
         "na_pct": round(na_count / total * 100, 2),
         "ordinal_krippendorff_alpha": alpha,
+        "ordinal_krippendorff_alpha_ci_95": alpha_ci,
         "operational_gate": interpret_reliability_gate(alpha),
     }

@@ -41,6 +41,7 @@ if REPO_ROOT not in sys.path:
 
 from scripts.analyze_w5_judgments import (
     aggregate_three_judgments,
+    calculate_krippendorff_alpha_ci,
     calculate_krippendorff_alpha_ordinal,
     interpret_reliability_gate,
 )
@@ -241,37 +242,66 @@ def test_ann_meta_01_all_474_have_sufficiency() -> None:
     assert counts["SUFFICIENT_FACTUAL_CONTEXT"] + counts["LIMITED_FACTUAL_CONTEXT"] + counts["INSUFFICIENT_FACTUAL_CONTEXT"] == 474
     assert counts["INSUFFICIENT_FACTUAL_CONTEXT"] == 0
     assert len(meta["records"]) == 474
+    assert meta["human_judging_metadata_gate_recommendation"] == "PASS_WITH_QUALIFICATION"
+    assert meta["human_judging_metadata_gate"] == "PASS_WITH_QUALIFICATION"
 
     for rec in meta["records"]:
         assert rec["sufficiency_status"] in {"SUFFICIENT_FACTUAL_CONTEXT", "LIMITED_FACTUAL_CONTEXT", "INSUFFICIENT_FACTUAL_CONTEXT"}
         assert len(rec["sufficiency_reason"]) > 0
 
 
-def test_ann_cal_01_exactly_three_scenarios() -> None:
-    """ANN-CAL-01: exactly 3 calibration scenarios."""
+def test_ann_cal_01_dedicated_scenario_ids() -> None:
+    """ANN-CAL-01: dedicated calibration scenario IDs not in primary manifest."""
     cal_path = os.path.join(ANNOTATION_DIR, "w5_calibration_v1.json")
+    primary_path = os.path.join(EVAL_DIR, "w5_primary_scenarios_v1.json")
+
     cal = json.load(open(cal_path, encoding="utf-8"))
+    primary = json.load(open(primary_path, encoding="utf-8"))
 
-    assert cal["scenario_count"] == 3
-    assert len(cal["scenarios"]) == 3
-    scenario_ids = [sc["scenario_id"] for sc in cal["scenarios"]]
-    assert "HN-U1-01" in scenario_ids
-    assert "DN-U1-01" in scenario_ids
-    assert "HL-U1-01" in scenario_ids
-    assert cal["total_items"] == 45
+    cal_ids = [sc["scenario_id"] for sc in cal["scenarios"]]
+    primary_ids = [sc["scenario_id"] for sc in primary]
+
+    assert cal_ids == ["CAL-HN-01", "CAL-DN-01", "CAL-HL-01"]
+    assert len(set(cal_ids) & set(primary_ids)) == 0, "Calibration scenario ID collides with primary scenarios!"
 
 
-def test_ann_cal_02_excluded_from_final_metrics() -> None:
-    """ANN-CAL-02: calibration excluded from final metrics."""
+def test_ann_cal_02_disjoint_from_primary_pool() -> None:
+    """ANN-CAL-02: calibration place IDs have zero intersection with primary candidate pool."""
+    cal_path = os.path.join(ANNOTATION_DIR, "w5_calibration_v1.json")
+    blinded_pool_path = os.path.join(EVAL_DIR, "w5_candidate_pool_blinded_v1.json")
+
+    cal = json.load(open(cal_path, encoding="utf-8"))
+    pool = json.load(open(blinded_pool_path, encoding="utf-8"))
+
+    cal_pids = set(it["place_id"] for sc in cal["scenarios"] for it in sc["items"])
+    pool_pids = set(it["place_id"] for sc in pool for it in sc["items"])
+
+    assert len(cal_pids) == 45, f"Expected 45 unique calibration places, got {len(cal_pids)}"
+    overlap = cal_pids & pool_pids
+    assert len(overlap) == 0, f"Found place_id overlap between calibration and primary pool: {overlap}"
+
+
+def test_ann_cal_03_excluded_from_final_metrics() -> None:
+    """ANN-CAL-03: calibration excluded from final metrics and all labels null."""
     cal_path = os.path.join(ANNOTATION_DIR, "w5_calibration_v1.json")
     cal = json.load(open(cal_path, encoding="utf-8"))
 
     assert cal["track"] == "CALIBRATION_ONLY"
     assert cal["excluded_from_final_metrics"] is True
+    assert cal["scenario_count"] == 3
+    assert cal["total_items"] == 45
+
+    destinations = [sc["destination"] for sc in cal["scenarios"]]
+    assert destinations == ["ha-noi", "da-nang", "ha-long"]
+
     for sc in cal["scenarios"]:
+        assert len(sc["items"]) == 15
         for it in sc["items"]:
             assert it["label"] is None
             assert it["judge_note"] is None
+            assert "name" in it
+            assert "category" in it
+            assert "factual_context" in it
 
 
 def test_ann_agg_01_median_cases() -> None:
@@ -359,6 +389,33 @@ def test_ann_alpha_02_synthetic_disagreement() -> None:
     ]
     alpha = calculate_krippendorff_alpha_ordinal(synthetic_disagree)
     assert alpha < 1.0
+
+
+def test_ann_alpha_03_reference_fixture() -> None:
+    """ANN-ALPHA-03: frozen hand-check/reference fixture yields ~0.6868."""
+    fixture = [
+        [0, 0, 1],
+        [1, 1, 2],
+        [2, 2, 2],
+    ]
+    alpha = calculate_krippendorff_alpha_ordinal(fixture)
+    # Expected: approximately 0.6868
+    assert abs(alpha - 0.6868) < 1e-3, f"Expected ~0.6868, got {alpha}"
+
+
+def test_ann_alpha_04_bootstrap_ci_deterministic() -> None:
+    """ANN-ALPHA-04: deterministic unit-level bootstrap CI on repeated runs."""
+    fixture = [
+        [0, 0, 1],
+        [1, 1, 2],
+        [2, 2, 2],
+    ]
+    ci1 = calculate_krippendorff_alpha_ci(fixture, replicates=1000, seed=20261013)
+    ci2 = calculate_krippendorff_alpha_ci(fixture, replicates=1000, seed=20261013)
+
+    assert ci1 == ci2, f"Bootstrap CI non-deterministic: {ci1} vs {ci2}"
+    assert len(ci1) == 2
+    assert ci1[0] <= ci1[1]
 
 
 def test_ann_data_01_canonical_pool_unchanged() -> None:

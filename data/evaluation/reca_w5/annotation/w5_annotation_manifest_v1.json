@@ -17,11 +17,11 @@
     "w5_judge_J1_v1.json": "96ee079836407c423a7b2cfb3559f11ead970d92c24f5d6c839796a372faa687",
     "w5_judge_J2_v1.json": "2e0a256a37b0634a4641495da36e234df790444de5b3821035c3f3261ab7f703",
     "w5_judge_J3_v1.json": "827e32b7e8cf4572a455a117236cafb57de1c1b5cac1c6e96902725f8e722c7f",
-    "w5_calibration_v1.json": "02becee7888c981a0cc97ed697c2b478156c241e14146c016441cfac1d3d219c",
+    "w5_calibration_v1.json": "740d81e3c3a613575a687af9291102d27e9dd8c61f1fc8f40e913c4c2ccfbc60",
     "w5_annotation_template_v1.json": "bdc92d7885d7043311303d7bbd8a168e088c8c3a5cc361b7983154daa4e390fd",
     "w5_merged_ground_truth_template_v1.json": "624ab82038099b33d775610001bb99b8b5f6321a10381f068483b12619e5be30",
     "w5_adjudication_template_v1.json": "f092b918a339151f012d724809c687ccf276ce20cf6b08bde7bcccbe3bb752b2",
-    "w5_metadata_sufficiency_v1.json": "47ee11605003b5c2c78271912b301fb87812768b7aadcc1bbb741ec87116e4a5"
+    "w5_metadata_sufficiency_v1.json": "302a47f2c774ccf51302a8a6ae1b991a92c1cd93e5bf19579bae245547f4224b"
   },
   "judge_packages": {
     "J1": {
@@ -47,7 +47,7 @@
     "path": "data/evaluation/reca_w5/annotation/w5_calibration_v1.json",
     "scenario_count": 3,
     "total_items": 45,
-    "sha256": "02becee7888c981a0cc97ed697c2b478156c241e14146c016441cfac1d3d219c"
+    "sha256": "740d81e3c3a613575a687af9291102d27e9dd8c61f1fc8f40e913c4c2ccfbc60"
   },
   "factual_context_allowlist": [
     "amenity",
@@ -135,6 +135,8 @@
     "sufficient": 389,
     "limited": 85,
     "insufficient": 0,
-    "human_judging_metadata_gate_recommendation": "PASS"
+    "human_judging_metadata_gate": "PASS_WITH_QUALIFICATION",
+    "human_judging_metadata_gate_recommendation": "PASS_WITH_QUALIFICATION",
+    "gate_rationale": "389/474 SUFFICIENT, 85/474 LIMITED, 0/474 INSUFFICIENT; prose description coverage is 0/474; judges retain NA for cases where presented facts remain inadequate."
   }
 }
