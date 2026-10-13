@@ -1,0 +1,22 @@
+{
+  "gate": "W5-GATE-DUP",
+  "gate_version": "W5-GATE-DUP-V1",
+  "preregistration_version": "REC-EVAL-01-PREREG-V1",
+  "status": "PASS",
+  "duplicate_policy_status": "CLOSED_NO_PRIMARY_EVAL_IMPACT",
+  "evidence_artifact": "data/evaluation/reca_w5/w5_duplicate_equivalence_evidence_v1.json",
+  "map_artifact": "data/evaluation/reca_w5/w5_duplicate_equivalence_map_v1.json",
+  "confirmed_group_count": 3,
+  "ambiguous_group_count": 0,
+  "not_confirmed_group_count": 0,
+  "primary_pool_intersection_count": 0,
+  "affected_primary_scenarios": [],
+  "frozen_pool_modified": false,
+  "recommender_modified": false,
+  "human_labels_used": false,
+  "source_develop_commit": "a2e132dd9383ae7c9f6ea535972903d603831064",
+  "total_confirmed_duplicate_place_ids": 6,
+  "primary_candidate_pool_records": 474,
+  "primary_candidate_pool_unique_places": 255,
+  "conclusion": "Known confirmed duplicate-equivalent records do not intersect the frozen primary W5 judgment universe; therefore no duplicate correction is required for REC-EVAL-01 primary scoring."
+}
