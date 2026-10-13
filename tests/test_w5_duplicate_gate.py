@@ -1,7 +1,9 @@
 """Tests for W5 Duplicate Equivalence Evidence and Evaluation Impact Gate (W5-GATE-DUP-01).
 
-Validates DUP-01 to DUP-18 specifications:
+Validates DUP-01 to DUP-18 specifications and hardened evidence claims:
 - DUP-01: Historical candidate groups recovered from repository evidence.
+- DUP-01A: Historical map parsed via AST from commit exactly equals evidence group mapping.
+- DUP-01B: Exactly 3 historical candidate groups and 6 unique place IDs.
 - DUP-02: Evidence artifact version and status valid.
 - DUP-03: Each candidate pair has exactly one classification.
 - DUP-04: Active duplicate map contains only CONFIRMED_EQUIVALENT groups.
@@ -19,10 +21,16 @@ Validates DUP-01 to DUP-18 specifications:
 - DUP-16: No recommender code modified.
 - DUP-17: Branch decision: intersection 0 -> PASS & CLOSED_NO_PRIMARY_EVAL_IMPACT.
 - DUP-18: No duplicate-aware metric scoring is activated.
+- DUP-EVIDENCE-01: Stored DN-01 website strings differ; no claim of identical URLs or web resolution.
+- DUP-EVIDENCE-02: Documented normalized names match exact evidence artifact values.
+- DUP-CLAIM-01: Documentation contains scoped known-group conclusion.
+- DUP-CLAIM-02: Documentation does not claim global duplicate-free catalog or uncorrupted evaluation.
+- DUP-CONTROL-01: Documentation reports control non-selection descriptively, not causally attributed to I1.
 """
 
 from __future__ import annotations
 
+import ast
 import hashlib
 import json
 import subprocess
@@ -35,6 +43,7 @@ EVAL_DIR = REPO_ROOT / "data" / "evaluation" / "reca_w5"
 EVIDENCE_PATH = EVAL_DIR / "w5_duplicate_equivalence_evidence_v1.json"
 MAP_PATH = EVAL_DIR / "w5_duplicate_equivalence_map_v1.json"
 GATE_RESULT_PATH = EVAL_DIR / "w5_duplicate_gate_result_v1.json"
+GATE_DOC_PATH = REPO_ROOT / "docs" / "research" / "w5_duplicate_gate_v1.md"
 
 FREEZE_V2_PATH = REPO_ROOT / "data" / "curated" / "gomate_places_freeze_v2.json"
 INTERNAL_POOL_PATH = EVAL_DIR / "w5_candidate_pool_internal_v1.json"
@@ -115,6 +124,57 @@ def test_dup_01_historical_candidate_recovery() -> None:
     assert "REC_A_CORE_DUPLICATE_MAP" not in builder_source
     assert "DUP-CORE-DN-01" not in builder_source
     assert "DUP-CORE-HL-01" not in builder_source
+
+
+def test_dup_01a_historical_map_parsed_exact_equality() -> None:
+    """DUP-01A: Historical map parsed via AST from commit exactly equals evidence group mapping."""
+    _ensure_commit(HISTORICAL_COMMIT)
+
+    res = subprocess.run(
+        ["git", "show", f"{HISTORICAL_COMMIT}:scripts/build_w5_eval_pool.py"],
+        cwd=REPO_ROOT,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+        encoding="utf-8",
+        check=True,
+    )
+
+    tree = ast.parse(res.stdout)
+    historical_map = None
+    for stmt in tree.body:
+        if isinstance(stmt, ast.Assign):
+            for target in stmt.targets:
+                if isinstance(target, ast.Name) and target.id == "REC_A_CORE_DUPLICATE_MAP":
+                    historical_map = ast.literal_eval(stmt.value)
+                    break
+
+    assert isinstance(historical_map, dict), "Failed to AST-parse REC_A_CORE_DUPLICATE_MAP"
+
+    historical_group_map: Dict[str, Set[str]] = {}
+    for pid, gid in historical_map.items():
+        historical_group_map.setdefault(gid, set()).add(pid)
+
+    ev = _load_json(EVIDENCE_PATH)
+    evidence_group_map = {g["candidate_group_id"]: set(g["place_ids"]) for g in ev["groups"]}
+
+    assert historical_group_map == evidence_group_map, (
+        f"Historical parsed groups {historical_group_map} != evidence groups {evidence_group_map}"
+    )
+
+
+def test_dup_01b_group_and_place_counts() -> None:
+    """DUP-01B: Exactly 3 historical candidate groups and 6 unique place IDs."""
+    ev = _load_json(EVIDENCE_PATH)
+    mp = _load_json(MAP_PATH)
+
+    ev_pids = {pid for g in ev["groups"] for pid in g["place_ids"]}
+    mp_pids = {pid for g in mp["groups"] for pid in g["place_ids"]}
+
+    assert len(ev["groups"]) == 3
+    assert len(ev_pids) == 6
+    assert len(mp["groups"]) == 3
+    assert len(mp_pids) == 6
 
 
 def test_dup_02_evidence_artifact_validity() -> None:
@@ -383,3 +443,75 @@ def test_dup_18_no_duplicate_aware_metric_scoring_activated() -> None:
     assert val_res["status"] == "VALIDATION_PASSED"
     assert val_res["duplicate_policy_status"] == "PENDING"
 
+
+def test_dup_evidence_01_dn01_website_strings_differ() -> None:
+    """DUP-EVIDENCE-01: Stored DN-01 website strings differ; no claim of identical URLs or web resolution."""
+    ev = _load_json(EVIDENCE_PATH)
+    dn01 = next(g for g in ev["groups"] if g["candidate_group_id"] == "DUP-CORE-DN-01")
+    items = dn01["evidence_fields"]["items"]
+    urls = [it.get("website") for it in items]
+    assert len(urls) == 2
+    assert urls[0] != urls[1], f"Expected distinct stored website strings, got {urls[0]} == {urls[1]}"
+
+    reason = dn01["classification_reason"]
+    assert "differ" in reason.lower()
+    assert "no external web resolution" in reason.lower()
+
+    # Documentation check
+    doc_text = GATE_DOC_PATH.read_text(encoding="utf-8")
+    assert "Stored URL strings differ" in doc_text
+    assert "no web resolution performed" in doc_text or "no external web resolution was performed" in doc_text
+
+
+def test_dup_evidence_02_documented_normalized_names_match_artifact() -> None:
+    """DUP-EVIDENCE-02: Documented normalized names match exact evidence artifact values."""
+    ev = _load_json(EVIDENCE_PATH)
+    dn02 = next(g for g in ev["groups"] if g["candidate_group_id"] == "DUP-CORE-DN-02")
+    norm_name_items = [it["normalized_name"] for it in dn02["evidence_fields"]["items"]]
+    assert all(n == "đen linh chua linh tu" for n in norm_name_items)
+
+    doc_text = GATE_DOC_PATH.read_text(encoding="utf-8")
+    assert "đen linh chua linh tu" in doc_text
+    # Ensure ASCII 'den linh chua linh tu' is not documented as the normalized name
+    assert "`den linh chua linh tu`" not in doc_text
+
+
+def test_dup_claim_01_scoped_known_group_conclusion() -> None:
+    """DUP-CLAIM-01: Documentation contains scoped known-group conclusion."""
+    doc_text = GATE_DOC_PATH.read_text(encoding="utf-8")
+    expected_scoped_claim = (
+        "REC-EVAL-01 primary scoring is not affected by the three known confirmed "
+        "duplicate-equivalence groups reviewed in W5-GATE-DUP-V1."
+    )
+    assert expected_scoped_claim in doc_text
+
+    expected_formal_stmt = (
+        "Known confirmed duplicate-equivalent records reviewed by this gate do not "
+        "intersect the frozen primary W5 judgment universe; therefore no duplicate "
+        "correction is required for REC-EVAL-01 primary scoring."
+    )
+    assert expected_formal_stmt in doc_text
+
+
+def test_dup_claim_02_no_global_duplicate_free_or_uncorrupted_claim() -> None:
+    """DUP-CLAIM-02: Documentation does NOT claim global duplicate-free catalog or uncorrupted evaluation."""
+    doc_text = GATE_DOC_PATH.read_text(encoding="utf-8")
+    assert "uncorrupted by duplicate place records" not in doc_text
+    assert "scientifically uncorrupted" not in doc_text
+
+    for line in doc_text.splitlines():
+        if "duplicate-free" in line.lower():
+            assert "not claim" in line.lower() or "does not claim" in line.lower(), (
+                f"Unsupported global duplicate-free claim in line: {line}"
+            )
+
+
+def test_dup_control_01_no_zero_vector_control_ineligibility_claim() -> None:
+    """DUP-CONTROL-01: Documentation reports control non-selection descriptively, not causally attributed to I1."""
+    doc_text = GATE_DOC_PATH.read_text(encoding="utf-8")
+    assert "cannot be sampled as control" not in doc_text
+    assert "ineligible for control" not in doc_text
+    assert "not sampled among random controls" not in doc_text
+
+    assert "seed 20261013" in doc_text
+    assert "I0 and I1 strata" in doc_text or "draws from both" in doc_text

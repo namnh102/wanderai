@@ -73,12 +73,12 @@ To assign an equivalence classification, each historical candidate pair is evalu
 | **Coordinates** | 15.9972033, 107.9941376 | 15.9973553, 107.9939311 | Distance: 27.80 m |
 | **OSM Source** | `relation/20707914` (site relation) | `way/746227054` (building polygon) | Complementary OSM site/building |
 | **Official Name Tag** | `Chùa Linh Ứng - Bà Nà` | `Chùa Linh Ứng - Bà Nà` | Exact match |
-| **Website** | `https://sunworld.vn/vi/banahills/check-in/chua-linh-ung` | `https://sunworld.vn/vi/banahills/check-in/chua-linh-ung-ba-nahtml` | Same Sun World Ba Na Hills page |
+| **Website** | `https://sunworld.vn/vi/banahills/check-in/chua-linh-ung` | `https://sunworld.vn/vi/banahills/check-in/chua-linh-ung-ba-nahtml` | Stored URL strings differ; both associated with Sun World Ba Na Hills pagoda; no web resolution performed |
 | **Religion / Denom** | `buddhist` / `mahayana` | `buddhist` / `mahayana` | Exact match |
 | **Canonical Vector** | `[0, 1, 0, 0, 0, 0, 0]` (`culture_history`) | `[0, 1, 0, 0, 0, 0, 0]` (`culture_history`) | Exact match |
 
 **Classification:** `CONFIRMED_EQUIVALENT`  
-**Rationale:** Both records represent the exact same Buddhist pagoda entity (Chùa Linh Ứng - Bà Nà) located at Sun World Ba Na Hills, Đà Nẵng. Record 1 is the OSM site relation for the pagoda grounds, and Record 2 is the primary pagoda building polygon within those grounds (separated by 27.8 meters). Documented under gap PDG-008.
+**Rationale:** Both records represent the Buddhist pagoda entity (Chùa Linh Ứng - Bà Nà) located at Sun World Ba Na Hills, Đà Nẵng. Stored website URLs differ in string path and no external web resolution was performed. Equivalence is supported primarily by exact raw name, exact normalized name (`chua linh ung`), exact official_name (`Chùa Linh Ứng - Bà Nà`), exact religion (`buddhist`) and denomination (`mahayana`), complementary OSM site relation (`relation/20707914`) vs building way polygon (`way/746227054`), 27.80m colocation, and historical audit PDG-008 in docs/w3/w3-03-place-data-gap-audit.md.
 
 ---
 
@@ -87,7 +87,7 @@ To assign an equivalence classification, each historical candidate pair is evalu
 | Field | Record 1 (`098e6a53-…`) | Record 2 (`83d8e5c4-…`) | Match Status |
 |---|---|---|---|
 | **Name** | Đền Lĩnh Chúa Linh Từ | Đền Lĩnh Chúa Linh Từ | Exact match |
-| **Normalized Name** | `den linh chua linh tu` | `den linh chua linh tu` | Exact match |
+| **Normalized Name** | `đen linh chua linh tu` | `đen linh chua linh tu` | Exact match |
 | **Destination** | Đà Nẵng (`da-nang`) | Đà Nẵng (`da-nang`) | Exact match |
 | **Category** | `temple` | `temple` | Exact match |
 | **Coordinates** | 15.9977275, 107.9857833 | 15.9975648, 107.9856835 | Distance: 21.00 m |
@@ -98,7 +98,7 @@ To assign an equivalence classification, each historical candidate pair is evalu
 | **Canonical Vector** | `[0, 1, 0, 0, 0, 0, 0]` (`culture_history`) | `[0, 1, 0, 0, 0, 0, 0]` (`culture_history`) | Exact match |
 
 **Classification:** `CONFIRMED_EQUIVALENT`  
-**Rationale:** Both records represent the exact same temple entity (Đền Lĩnh Chúa Linh Từ / Đền Bà Chúa Thượng Ngàn) atop Ba Na Hills, Đà Nẵng at 1,487m elevation. Record 1 is the site relation and Record 2 is the temple building polygon, separated by only 21.0 meters, sharing identical official website and folk religion tags. Documented under gap PDG-008.
+**Rationale:** Both records represent the temple entity (Đền Lĩnh Chúa Linh Từ / Đền Bà Chúa Thượng Ngàn) atop Ba Na Hills, Đà Nẵng at 1,487m elevation. Both share exact raw name (`Đền Lĩnh Chúa Linh Từ`), exact normalized name (`đen linh chua linh tu`), exact alt_name (`Đền Bà Chúa Thượng Ngàn`), exact official website URL (`https://sunworld.vn/vi/banahills/check-in/den-linh-chua-linh-tu`), exact folk religion (`vietnamese_folk`), 21.00m colocation, complementary site relation (`relation/20704135`) vs building polygon (`way/1109970004`), and historical audit PDG-008 in docs/w3/w3-03-place-data-gap-audit.md.
 
 ---
 
@@ -111,13 +111,13 @@ To assign an equivalence classification, each historical candidate pair is evalu
 | **Destination** | Hạ Long (`ha-long`) | Hạ Long (`ha-long`) | Exact match |
 | **Category** | `attraction` | `attraction` | Exact match |
 | **Coordinates** | 20.9532750, 107.0557100 | 20.9536428, 107.0554545 | Distance: 48.75 m |
-| **OSM Source** | `node/12759133301` | `node/14053384506` | Duplicate OSM nodes |
+| **OSM Source** | `node/12759133301` | `node/14053384506` | Two OSM nodes on same facility |
 | **OSM Tags** | `ferry=yes`, `amenity=ferry_terminal`, `public_transport=station` | `ferry=yes`, `amenity=ferry_terminal`, `public_transport=station` | Exact match |
 | **Taxonomy Tiers** | `TRANSPORT_HUBS` / `boat_terminal` | `TRANSPORT_HUBS` / `boat_terminal` | Exact match |
 | **Canonical Vector** | `[0, 0, 0, 0, 0, 0, 0]` (empty) | `[0, 0, 0, 0, 0, 0, 0]` (empty) | Exact match |
 
 **Classification:** `CONFIRMED_EQUIVALENT`  
-**Rationale:** Both records represent the single international passenger cruise and ferry terminal facility at Bãi Cháy, Hạ Long. They consist of two separate OSM node points mapped 48.75 meters apart along the same terminal pier facility with identical names and identical ferry/terminal tags.
+**Rationale:** At GoMate POI/entity granularity, repository evidence supports treating the two OSM nodes (node/12759133301 and node/14053384506) as the same named passenger-terminal POI ('Cảng tàu khách quốc tế Hạ Long' / Ha Long International Passenger Port) at Bãi Cháy, Hạ Long. Both records have identical raw name, identical normalized name (`cang tau khach quoc te ha long`), identical destination (`ha-long`), identical category (`attraction`), identical OSM tags (`ferry=yes`, `amenity=ferry_terminal`, `public_transport=station`), identical taxonomy classification (`TRANSPORT_HUBS` / `boat_terminal`), and 48.75m separation along the terminal pier facility. Avoids unsupported claims that the two node geometries represent the same physical coordinate.
 
 ---
 
@@ -150,8 +150,11 @@ To determine the impact on the frozen `REC-EVAL-01` primary evaluation, the conf
    - **THIN Diagnostic Scenarios (6):** 0 occurrences across all history item sets.
    - **Calibration Items (3 scenarios):** 0 occurrences in calibration set.
 
-### Why No Intersection Occurred
-In Đà Nẵng, the temples (`Chùa Linh Ứng`, `Đền Lĩnh Chúa Linh Từ`) achieved rank 15 and 17 respectively in `DN-U1-03` under deterministic tie-breaking (`-score, normalize_string(name), place_id`), placing them outside the Top-10 ($k=10$). In Hạ Long, the cruise port terminal carries category `attraction` with zero active interest tags, so it never ranked in the Top-10 for any interest scenario and was not sampled among random controls.
+### Ranking and Sampling Observations
+- In Đà Nẵng, the temples (`Chùa Linh Ứng`, `Đền Lĩnh Chúa Linh Từ`) achieved rank 15 and 17 respectively in `DN-U1-03` under deterministic tie-breaking (`-score, normalize_string(name), place_id`), placing them outside the Top-10 ($k=10$).
+- In Hạ Long, the cruise port terminal pair had zero occurrences in baseline Top-10, zero occurrences in A2 Top-10, and zero occurrences in deterministic controls under frozen seed 20261013.
+- Control non-selection is reported strictly as an observed descriptive fact under frozen seed 20261013, not attributed causally to I1 stratum status (since the frozen W5 control sampling explicitly draws from both I0 and I1 strata).
+- Therefore, none of the 6 duplicate candidate place IDs enter the 474 primary candidate pool.
 
 ---
 
@@ -166,17 +169,17 @@ Because `primary_pool_intersection_count == 0`, the decision branch conforms str
 - **Human Relevance Labels Used:** `false`
 
 ### Formal Scientific Statement
-> "Known confirmed duplicate-equivalent records do not intersect the frozen primary W5 judgment universe; therefore no duplicate correction is required for REC-EVAL-01 primary scoring."
+> "Known confirmed duplicate-equivalent records reviewed by this gate do not intersect the frozen primary W5 judgment universe; therefore no duplicate correction is required for REC-EVAL-01 primary scoring."
+>
+> "REC-EVAL-01 primary scoring is not affected by the three known confirmed duplicate-equivalence groups reviewed in W5-GATE-DUP-V1."
 
 ---
 
 ## 9. Limitations
 
 1. **Catalog Scope:** This gate evaluates the known historical duplicate candidates identified in repository audits (specifically `docs/w3/w3-03-place-data-gap-audit.md` and `scripts/build_w5_eval_pool.py`).
-2. **Not a Global Deduplication Claim:** This gate does NOT claim that the entire 622-item Freeze V2 catalog is globally duplicate-free, nor does it resolve all 67 duplicate pairs identified in the full 882-place database during Week 3 audits.
-3. **Primary Evaluation Sufficiency:** It establishes rigorously that no duplicate pair enters the frozen 474 primary candidate judgment universe, guaranteeing that `REC-EVAL-01` primary metric scoring (NDCG@10, Precision@10, Pooled Recall@10, Category-ILD@10, CatalogCoverage@10) is mathematically and scientifically uncorrupted by duplicate place records.
-
----
+2. **Not a Global Deduplication Claim:** This gate is strictly scoped to known historical evidence leads. It does NOT claim that the entire 622-item Freeze V2 catalog is globally duplicate-free, nor does it claim that all duplicates in REC-A-CORE-V2 are known. Unknown or unreviewed duplicates cannot be excluded by this gate.
+3. **Primary Evaluation Scope:** It establishes rigorously that REC-EVAL-01 primary scoring is not affected by the three known confirmed duplicate-equivalence groups reviewed in W5-GATE-DUP-V1.
 
 ## 10. Artifact Summary
 
