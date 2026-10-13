@@ -3,8 +3,11 @@
 Operationalizes frozen R7 human-validation methodology:
 - Standalone Ordinal Krippendorff's Alpha calculation (no external dependency)
 - 95% bootstrap confidence interval tooling (10,000 unit-level resamples)
-- 3-judge aggregation: median rule, severe-disagreement flags (range == 2)
-- Explicit NA handling: never converted to 0, flags INSUFFICIENT_JUDGMENT_EVIDENCE
+- 3-judge aggregation:
+    - Non-severe numeric (range < 2): RESOLVED_BY_MEDIAN with final_relevance = median
+    - Severe disagreement (range == 2): PENDING_ADJUDICATION with final_relevance = None
+    - Any NA / None: PENDING_EVIDENCE_ADJUDICATION with final_relevance = None
+- Strict raw judgment validation: rejects booleans, floats, malformed strings, out-of-range ints
 - Operational reliability gate interpretations:
     alpha >= 0.80: GOOD
     0.67 <= alpha < 0.80: USABLE_WITH_QUALIFICATION
@@ -20,12 +23,35 @@ W5_RELIABILITY_BOOTSTRAP_SEED: int = 20261013
 BOOTSTRAP_REPLICATES: int = 10000
 
 
+def validate_judgment_label(val: Any) -> int | None:
+    """Strict validator for raw human judgment labels.
+
+    Permitted numeric relevance labels:
+        type(val) is int (NOT bool) AND val in {0, 1, 2} -> returns int in {0, 1, 2}
+    Permitted missing values:
+        val == "NA" or val is None -> returns None
+    All other values:
+        raise ValueError (no implicit int coercion, no booleans, no floats, no malformed strings)
+    """
+    if isinstance(val, bool):
+        raise ValueError(f"Boolean values are not permitted as judgment labels: {val!r}")
+    if val is None or val == "NA":
+        return None
+    if type(val) is int and val in {0, 1, 2}:
+        return val
+    raise ValueError(
+        f"Invalid raw judgment label {val!r} of type {type(val).__name__}: "
+        "must be int in {0, 1, 2} or missing ('NA' / None)"
+    )
+
+
 def calculate_krippendorff_alpha_ordinal(matrix: list[list[Any]]) -> float:
     """Calculate Krippendorff's alpha for ordinal data.
 
     Args:
         matrix: A list of units (rows), where each row is a list of ratings
             from coders. Missing values can be represented as None or 'NA'.
+            Malformed values raise ValueError immediately (no silent dropping).
 
     Returns:
         alpha value as a float rounded to 4 decimal places.
@@ -35,12 +61,9 @@ def calculate_krippendorff_alpha_ordinal(matrix: list[list[Any]]) -> float:
     for row in matrix:
         valid_ratings: list[int] = []
         for r in row:
-            if r is None or r == "NA":
-                continue
-            try:
-                valid_ratings.append(int(r))
-            except (ValueError, TypeError):
-                continue
+            v = validate_judgment_label(r)
+            if v is not None:
+                valid_ratings.append(v)
         if len(valid_ratings) >= 2:
             units.append(valid_ratings)
 
@@ -121,6 +144,7 @@ def calculate_krippendorff_alpha_ci(
 
     Resampling unit: one scenario-POI judgment unit (row of J1, J2, J3 ratings).
     Sampling with replacement of N units, preserving all ratings inside each unit.
+    Malformed values raise ValueError immediately (no silent dropping).
 
     Returns:
         alpha_ci_95 as [lower_2_5th_percentile, upper_97_5th_percentile]
@@ -130,12 +154,9 @@ def calculate_krippendorff_alpha_ci(
     for row in matrix:
         valid_ratings: list[int] = []
         for r in row:
-            if r is None or r == "NA":
-                continue
-            try:
-                valid_ratings.append(int(r))
-            except (ValueError, TypeError):
-                continue
+            v = validate_judgment_label(r)
+            if v is not None:
+                valid_ratings.append(v)
         if len(valid_ratings) >= 2:
             valid_units.append(valid_ratings)
 
@@ -226,28 +247,37 @@ def aggregate_three_judgments(
 ) -> dict[str, Any]:
     """Aggregate judgments from three independent judges (J1, J2, J3).
 
-    Rules:
+    Strict rules:
+    - All inputs must be valid raw judgment labels (int in {0, 1, 2}, "NA", or None).
+      Malformed inputs raise ValueError.
     - If any judge returned 'NA' or None:
         - NA is NEVER converted to 0.
-        - judgment_status = 'INSUFFICIENT_JUDGMENT_EVIDENCE'
+        - judgment_status = 'PENDING_EVIDENCE_ADJUDICATION'
         - final_relevance = None
+        - provisional_median = None
         - adjudication_required = True
-    - For numeric labels {0, 1, 2}:
+        - severe_disagreement = False
+    - For three numeric labels in {0, 1, 2}:
         - agreement_range = max - min
-        - severe_disagreement = (agreement_range == 2)
-        - If severe_disagreement:
-            - adjudication_required = True
+        - If severe_disagreement (agreement_range == 2):
             - judgment_status = 'PENDING_ADJUDICATION'
-            - final_relevance = median (default provisional value)
-        - If not severe:
+            - final_relevance = None (MUST NOT store provisional median as final GT)
+            - provisional_median = median_val
+            - adjudication_required = True
+            - severe_disagreement = True
+        - If not severe (agreement_range < 2):
+            - judgment_status = 'RESOLVED_BY_MEDIAN'
+            - final_relevance = median_val
+            - provisional_median = median_val
             - adjudication_required = False
-            - judgment_status = 'CONSENSUS'
-            - final_relevance = median
+            - severe_disagreement = False
     """
-    raw_labels = [j1, j2, j3]
+    v1 = validate_judgment_label(j1)
+    v2 = validate_judgment_label(j2)
+    v3 = validate_judgment_label(j3)
 
     # Check for NA or missing
-    if any(label is None or label == "NA" or label == "INSUFFICIENT_EVIDENCE" for label in raw_labels):
+    if v1 is None or v2 is None or v3 is None:
         return {
             "judge_1_label": j1,
             "judge_2_label": j2,
@@ -255,21 +285,13 @@ def aggregate_three_judgments(
             "agreement_range": None,
             "severe_disagreement": False,
             "adjudication_required": True,
-            "judgment_status": "INSUFFICIENT_JUDGMENT_EVIDENCE",
+            "judgment_status": "PENDING_EVIDENCE_ADJUDICATION",
             "final_relevance": None,
+            "provisional_median": None,
         }
 
-    # Parse numeric labels
-    try:
-        numeric = [int(x) for x in raw_labels]
-    except (ValueError, TypeError) as exc:
-        raise ValueError(f"Invalid judgment labels {raw_labels}: must be 0, 1, 2, or 'NA'") from exc
-
-    for val in numeric:
-        if val not in {0, 1, 2}:
-            raise ValueError(f"Label {val} outside permitted set {{0, 1, 2, 'NA'}}")
-
-    sorted_vals = sorted(numeric)
+    # All three labels are valid numeric ints in {0, 1, 2}
+    sorted_vals = sorted([v1, v2, v3])
     min_val = sorted_vals[0]
     median_val = sorted_vals[1]
     max_val = sorted_vals[2]
@@ -279,38 +301,49 @@ def aggregate_three_judgments(
 
     if is_severe:
         return {
-            "judge_1_label": numeric[0],
-            "judge_2_label": numeric[1],
-            "judge_3_label": numeric[2],
+            "judge_1_label": v1,
+            "judge_2_label": v2,
+            "judge_3_label": v3,
             "agreement_range": agreement_range,
             "severe_disagreement": True,
             "adjudication_required": True,
             "judgment_status": "PENDING_ADJUDICATION",
-            "final_relevance": median_val,
+            "final_relevance": None,
+            "provisional_median": median_val,
         }
     else:
         return {
-            "judge_1_label": numeric[0],
-            "judge_2_label": numeric[1],
-            "judge_3_label": numeric[2],
+            "judge_1_label": v1,
+            "judge_2_label": v2,
+            "judge_3_label": v3,
             "agreement_range": agreement_range,
             "severe_disagreement": False,
             "adjudication_required": False,
-            "judgment_status": "CONSENSUS",
+            "judgment_status": "RESOLVED_BY_MEDIAN",
             "final_relevance": median_val,
+            "provisional_median": median_val,
         }
 
 
 def compute_agreement_statistics(records: list[tuple[Any, Any, Any]]) -> dict[str, Any]:
-    """Compute agreement breakdown from a list of (j1, j2, j3) judgment triples."""
+    """Compute agreement breakdown from a list of (j1, j2, j3) judgment triples.
+
+    Strict rules:
+    - All inputs must be valid raw judgment labels (int in {0, 1, 2}, 'NA', or None).
+      Malformed inputs raise ValueError immediately (no silent dropping).
+    """
     total = len(records)
     if total == 0:
         return {
             "total_records": 0,
+            "exact_agreement_count": 0,
             "exact_agreement_pct": 0.0,
+            "adjacent_disagreement_count": 0,
             "adjacent_disagreement_pct": 0.0,
+            "severe_disagreement_count": 0,
             "severe_disagreement_pct": 0.0,
-            "na_records_pct": 0.0,
+            "na_count": 0,
+            "na_pct": 0.0,
             "ordinal_krippendorff_alpha": 0.0,
             "ordinal_krippendorff_alpha_ci_95": [0.0, 0.0],
             "operational_gate": "STOP_REVIEW_RUBRIC",
@@ -323,12 +356,22 @@ def compute_agreement_statistics(records: list[tuple[Any, Any, Any]]) -> dict[st
 
     matrix_for_alpha: list[list[Any]] = []
 
-    for j1, j2, j3 in records:
+    for record in records:
+        if len(record) != 3:
+            raise ValueError(f"Record must have exactly 3 judgments, got {len(record)}: {record}")
+        j1, j2, j3 = record
+        # Validate each label strictly
+        v1 = validate_judgment_label(j1)
+        v2 = validate_judgment_label(j2)
+        v3 = validate_judgment_label(j3)
+
         matrix_for_alpha.append([j1, j2, j3])
-        if any(x is None or x == "NA" for x in (j1, j2, j3)):
+
+        if v1 is None or v2 is None or v3 is None:
             na_count += 1
             continue
-        vals = sorted([int(j1), int(j2), int(j3)])
+
+        vals = sorted([v1, v2, v3])
         rng = vals[2] - vals[0]
         if rng == 0:
             exact += 1
