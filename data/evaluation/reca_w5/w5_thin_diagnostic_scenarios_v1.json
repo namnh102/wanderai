@@ -1,0 +1,80 @@
+[
+  {
+    "scenario_id": "HN-THIN-01",
+    "scenario_version": "W5-SCENARIO-V1",
+    "track": "THIN_DIAGNOSTIC",
+    "user_stratum": "U1",
+    "destination": "ha-noi",
+    "declared_interests": [
+      "coffee_culture"
+    ],
+    "top_k": 10,
+    "candidate_catalog": "REC-A-CORE-V2:ha-noi",
+    "i0_inventory_count": 8
+  },
+  {
+    "scenario_id": "HN-THIN-02",
+    "scenario_version": "W5-SCENARIO-V1",
+    "track": "THIN_DIAGNOSTIC",
+    "user_stratum": "U1",
+    "destination": "ha-noi",
+    "declared_interests": [
+      "beach_island"
+    ],
+    "top_k": 10,
+    "candidate_catalog": "REC-A-CORE-V2:ha-noi",
+    "i0_inventory_count": 1
+  },
+  {
+    "scenario_id": "HN-THIN-03",
+    "scenario_version": "W5-SCENARIO-V1",
+    "track": "THIN_DIAGNOSTIC",
+    "user_stratum": "U1",
+    "destination": "ha-noi",
+    "declared_interests": [
+      "shopping_local"
+    ],
+    "top_k": 10,
+    "candidate_catalog": "REC-A-CORE-V2:ha-noi",
+    "i0_inventory_count": 3
+  },
+  {
+    "scenario_id": "DN-THIN-01",
+    "scenario_version": "W5-SCENARIO-V1",
+    "track": "THIN_DIAGNOSTIC",
+    "user_stratum": "U1",
+    "destination": "da-nang",
+    "declared_interests": [
+      "nature_outdoor"
+    ],
+    "top_k": 10,
+    "candidate_catalog": "REC-A-CORE-V2:da-nang",
+    "i0_inventory_count": 8
+  },
+  {
+    "scenario_id": "HL-THIN-01",
+    "scenario_version": "W5-SCENARIO-V1",
+    "track": "THIN_DIAGNOSTIC",
+    "user_stratum": "U1",
+    "destination": "ha-long",
+    "declared_interests": [
+      "beach_island"
+    ],
+    "top_k": 10,
+    "candidate_catalog": "REC-A-CORE-V2:ha-long",
+    "i0_inventory_count": 3
+  },
+  {
+    "scenario_id": "HL-THIN-02",
+    "scenario_version": "W5-SCENARIO-V1",
+    "track": "THIN_DIAGNOSTIC",
+    "user_stratum": "U1",
+    "destination": "ha-long",
+    "declared_interests": [
+      "nightlife_entertainment"
+    ],
+    "top_k": 10,
+    "candidate_catalog": "REC-A-CORE-V2:ha-long",
+    "i0_inventory_count": 5
+  }
+]
