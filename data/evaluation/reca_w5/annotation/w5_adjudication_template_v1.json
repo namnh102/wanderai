@@ -1,0 +1,19 @@
+{
+  "template_version": "W5-ADJUDICATION-TEMPLATE-V1",
+  "rubric_version": "W5-RUBRIC-V1",
+  "description": "Empty adjudication package template for resolving future severe disagreements.",
+  "fields": {
+    "scenario_id": "string",
+    "place_id": "string",
+    "judge_item_id": "string",
+    "judge_labels": {
+      "J1": "0|1|2|NA",
+      "J2": "0|1|2|NA",
+      "J3": "0|1|2|NA"
+    },
+    "adjudicator_label": "null (to be completed by adjudicator: 0, 1, 2, or NA)",
+    "adjudication_reason": "null (mandatory rationale for resolution)",
+    "status": "PENDING"
+  },
+  "records": []
+}

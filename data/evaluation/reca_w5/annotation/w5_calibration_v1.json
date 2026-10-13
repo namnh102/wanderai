@@ -1,0 +1,1307 @@
+{
+  "calibration_version": "W5-CALIBRATION-V1",
+  "rubric_version": "W5-RUBRIC-V1",
+  "pool_version": "W5-POOL-V1",
+  "track": "CALIBRATION_ONLY",
+  "excluded_from_final_metrics": true,
+  "description": "Deterministic calibration package for pre-annotation alignment across HN, DN, and HL scenarios. Labels remain strictly null.",
+  "scenario_count": 3,
+  "total_items": 45,
+  "scenarios": [
+    {
+      "scenario_id": "HN-U1-01",
+      "destination": "ha-noi",
+      "declared_interests": [
+        "food_cuisine"
+      ],
+      "user_stratum": "U1",
+      "item_count": 15,
+      "items": [
+        {
+          "scenario_id": "HN-U1-01",
+          "judge_item_id": "HN-U1-01-J01",
+          "place_id": "2ae50f31-e1dd-4be4-bffc-680318074f7f",
+          "name": "Nhà Hàng Little Hanoi",
+          "category": "restaurant",
+          "factual_context": {
+            "name": "Nhà Hàng Little Hanoi",
+            "category": "restaurant",
+            "destination": "Hà Nội",
+            "destination_slug": "ha-noi",
+            "address": "21 Phố Hàng Gai",
+            "latitude": 21.03219,
+            "longitude": 105.850937,
+            "opening_hours": null,
+            "osm_source": {
+              "source_name": "osm",
+              "source_id": "node/721788305"
+            },
+            "osm_factual_tags": {
+              "amenity": "restaurant"
+            }
+          },
+          "metadata_sufficiency": "SUFFICIENT_FACTUAL_CONTEXT",
+          "label": null,
+          "judge_note": null
+        },
+        {
+          "scenario_id": "HN-U1-01",
+          "judge_item_id": "HN-U1-01-J02",
+          "place_id": "b0641225-0f38-4bcc-9f4c-34f65fa50d45",
+          "name": "Cửa Hàng Bánh Tôm Hồ Tây",
+          "category": "restaurant",
+          "factual_context": {
+            "name": "Cửa Hàng Bánh Tôm Hồ Tây",
+            "category": "restaurant",
+            "destination": "Hà Nội",
+            "destination_slug": "ha-noi",
+            "address": "Cửa Hàng Bánh Tôm Hồ Tây, hanoi",
+            "latitude": 21.047321,
+            "longitude": 105.837626,
+            "opening_hours": null,
+            "osm_source": {
+              "source_name": "osm",
+              "source_id": "node/310727632"
+            },
+            "osm_factual_tags": {
+              "amenity": "restaurant"
+            }
+          },
+          "metadata_sufficiency": "SUFFICIENT_FACTUAL_CONTEXT",
+          "label": null,
+          "judge_note": null
+        },
+        {
+          "scenario_id": "HN-U1-01",
+          "judge_item_id": "HN-U1-01-J03",
+          "place_id": "afb3793b-7227-4645-a68a-3647c7468638",
+          "name": "Sen Tây Hồ",
+          "category": "restaurant",
+          "factual_context": {
+            "name": "Sen Tây Hồ",
+            "category": "restaurant",
+            "destination": "Hà Nội",
+            "destination_slug": "ha-noi",
+            "address": "Sen Tây Hồ, hanoi",
+            "latitude": 21.074149,
+            "longitude": 105.815469,
+            "opening_hours": null,
+            "osm_source": {
+              "source_name": "osm",
+              "source_id": "node/443000681"
+            },
+            "osm_factual_tags": {
+              "amenity": "restaurant",
+              "website": "https://nhahangsen.vn/"
+            }
+          },
+          "metadata_sufficiency": "SUFFICIENT_FACTUAL_CONTEXT",
+          "label": null,
+          "judge_note": null
+        },
+        {
+          "scenario_id": "HN-U1-01",
+          "judge_item_id": "HN-U1-01-J04",
+          "place_id": "8708d047-6900-4dbc-80e9-381a269ba488",
+          "name": "Nhà hàng Nam Phương",
+          "category": "restaurant",
+          "factual_context": {
+            "name": "Nhà hàng Nam Phương",
+            "category": "restaurant",
+            "destination": "Hà Nội",
+            "destination_slug": "ha-noi",
+            "address": "Nhà hàng Nam Phương, hanoi",
+            "latitude": 21.021755,
+            "longitude": 105.856386,
+            "opening_hours": null,
+            "osm_source": {
+              "source_name": "osm",
+              "source_id": "node/442030367"
+            },
+            "osm_factual_tags": {
+              "amenity": "restaurant"
+            }
+          },
+          "metadata_sufficiency": "SUFFICIENT_FACTUAL_CONTEXT",
+          "label": null,
+          "judge_note": null
+        },
+        {
+          "scenario_id": "HN-U1-01",
+          "judge_item_id": "HN-U1-01-J05",
+          "place_id": "ac39bb02-5154-445b-af31-7d832351b379",
+          "name": "Nha Hang Indochine",
+          "category": "restaurant",
+          "factual_context": {
+            "name": "Nha Hang Indochine",
+            "category": "restaurant",
+            "destination": "Hà Nội",
+            "destination_slug": "ha-noi",
+            "address": "Nam Ngư",
+            "latitude": 21.026587,
+            "longitude": 105.843005,
+            "opening_hours": null,
+            "osm_source": {
+              "source_name": "osm",
+              "source_id": "node/442031761"
+            },
+            "osm_factual_tags": {
+              "amenity": "restaurant"
+            }
+          },
+          "metadata_sufficiency": "LIMITED_FACTUAL_CONTEXT",
+          "label": null,
+          "judge_note": null
+        },
+        {
+          "scenario_id": "HN-U1-01",
+          "judge_item_id": "HN-U1-01-J06",
+          "place_id": "7773c82b-4bc6-5e1b-8c12-6b0fdfbd32c5",
+          "name": "Nhà hát Lớn",
+          "category": "attraction",
+          "factual_context": {
+            "name": "Nhà hát Lớn",
+            "category": "attraction",
+            "destination": "Hà Nội",
+            "destination_slug": "ha-noi",
+            "address": "1A Phố Tràng Tiền",
+            "latitude": 21.024193,
+            "longitude": 105.857825,
+            "opening_hours": null,
+            "osm_source": {
+              "source_name": "osm",
+              "source_id": "way/37933050"
+            },
+            "osm_factual_tags": {
+              "amenity": "theatre",
+              "heritage": "2",
+              "tourism": "attraction"
+            }
+          },
+          "metadata_sufficiency": "SUFFICIENT_FACTUAL_CONTEXT",
+          "label": null,
+          "judge_note": null
+        },
+        {
+          "scenario_id": "HN-U1-01",
+          "judge_item_id": "HN-U1-01-J07",
+          "place_id": "19a2bdd8-ac79-4543-a685-bf1ea15f1142",
+          "name": "Nhà Hàng Mediterraneo",
+          "category": "restaurant",
+          "factual_context": {
+            "name": "Nhà Hàng Mediterraneo",
+            "category": "restaurant",
+            "destination": "Hà Nội",
+            "destination_slug": "ha-noi",
+            "address": null,
+            "latitude": 21.0288946,
+            "longitude": 105.8498777,
+            "opening_hours": null,
+            "osm_source": {
+              "source_name": "osm",
+              "source_id": "node/723671523"
+            },
+            "osm_factual_tags": {
+              "amenity": "restaurant"
+            }
+          },
+          "metadata_sufficiency": "LIMITED_FACTUAL_CONTEXT",
+          "label": null,
+          "judge_note": null
+        },
+        {
+          "scenario_id": "HN-U1-01",
+          "judge_item_id": "HN-U1-01-J08",
+          "place_id": "29a380ee-5690-453f-9e5b-13b64f2cd997",
+          "name": "Nha Hang Little Italian",
+          "category": "restaurant",
+          "factual_context": {
+            "name": "Nha Hang Little Italian",
+            "category": "restaurant",
+            "destination": "Hà Nội",
+            "destination_slug": "ha-noi",
+            "address": "Nha Hang Little Italian, hanoi",
+            "latitude": 21.016954,
+            "longitude": 105.852831,
+            "opening_hours": null,
+            "osm_source": {
+              "source_name": "osm",
+              "source_id": "node/442030389"
+            },
+            "osm_factual_tags": {
+              "amenity": "restaurant"
+            }
+          },
+          "metadata_sufficiency": "SUFFICIENT_FACTUAL_CONTEXT",
+          "label": null,
+          "judge_note": null
+        },
+        {
+          "scenario_id": "HN-U1-01",
+          "judge_item_id": "HN-U1-01-J09",
+          "place_id": "b82492e3-ca7a-4a0d-a709-9e2529351d4a",
+          "name": "Thu Giang Guest House",
+          "category": "hotel",
+          "factual_context": {
+            "name": "Thu Giang Guest House",
+            "category": "hotel",
+            "destination": "Hà Nội",
+            "destination_slug": "ha-noi",
+            "address": "Hà Nội",
+            "latitude": 21.031678,
+            "longitude": 105.847975,
+            "opening_hours": null,
+            "osm_source": {
+              "source_name": "osm",
+              "source_id": "node/707253042"
+            },
+            "osm_factual_tags": {
+              "tourism": "hotel"
+            }
+          },
+          "metadata_sufficiency": "SUFFICIENT_FACTUAL_CONTEXT",
+          "label": null,
+          "judge_note": null
+        },
+        {
+          "scenario_id": "HN-U1-01",
+          "judge_item_id": "HN-U1-01-J10",
+          "place_id": "f6f82c88-2577-4b65-a225-ee98afb345a9",
+          "name": "Cây Si",
+          "category": "restaurant",
+          "factual_context": {
+            "name": "Cây Si",
+            "category": "restaurant",
+            "destination": "Hà Nội",
+            "destination_slug": "ha-noi",
+            "address": "Cây Si, hanoi",
+            "latitude": 21.028867,
+            "longitude": 105.843101,
+            "opening_hours": null,
+            "osm_source": {
+              "source_name": "osm",
+              "source_id": "node/446043425"
+            },
+            "osm_factual_tags": {
+              "amenity": "restaurant"
+            }
+          },
+          "metadata_sufficiency": "SUFFICIENT_FACTUAL_CONTEXT",
+          "label": null,
+          "judge_note": null
+        },
+        {
+          "scenario_id": "HN-U1-01",
+          "judge_item_id": "HN-U1-01-J11",
+          "place_id": "ca16bdd4-00a2-4c99-a8a7-33f640b85a44",
+          "name": "Quán Bar Dragonfly",
+          "category": "nightlife",
+          "factual_context": {
+            "name": "Quán Bar Dragonfly",
+            "category": "nightlife",
+            "destination": "Hà Nội",
+            "destination_slug": "ha-noi",
+            "address": null,
+            "latitude": 21.0358287,
+            "longitude": 105.8522274,
+            "opening_hours": null,
+            "osm_source": {
+              "source_name": "osm",
+              "source_id": "node/723795404"
+            },
+            "osm_factual_tags": {
+              "amenity": "bar"
+            }
+          },
+          "metadata_sufficiency": "LIMITED_FACTUAL_CONTEXT",
+          "label": null,
+          "judge_note": null
+        },
+        {
+          "scenario_id": "HN-U1-01",
+          "judge_item_id": "HN-U1-01-J12",
+          "place_id": "dc09ceb3-06f0-5b0a-be20-01c6a4742036",
+          "name": "Vietgangz Farm",
+          "category": "nature",
+          "factual_context": {
+            "name": "Vietgangz Farm",
+            "category": "nature",
+            "destination": "Hà Nội",
+            "destination_slug": "ha-noi",
+            "address": "Vietgangz Farm, hanoi",
+            "latitude": 20.985871,
+            "longitude": 105.947439,
+            "opening_hours": "Mo-Su 09:00-12:00,15:00-22:30",
+            "osm_source": {
+              "source_name": "osm",
+              "source_id": "way/1296795442"
+            },
+            "osm_factual_tags": {
+              "phone": "+84862419444",
+              "tourism": "zoo",
+              "website": "https://www.facebook.com/vietgangzfarm"
+            }
+          },
+          "metadata_sufficiency": "SUFFICIENT_FACTUAL_CONTEXT",
+          "label": null,
+          "judge_note": null
+        },
+        {
+          "scenario_id": "HN-U1-01",
+          "judge_item_id": "HN-U1-01-J13",
+          "place_id": "bac279ff-37a6-4f87-8b4a-e05fe1ecb174",
+          "name": "Nhà Hàng Chay Phương Nam",
+          "category": "restaurant",
+          "factual_context": {
+            "name": "Nhà Hàng Chay Phương Nam",
+            "category": "restaurant",
+            "destination": "Hà Nội",
+            "destination_slug": "ha-noi",
+            "address": "Nhà Hàng Chay Phương Nam, hanoi",
+            "latitude": 21.022232,
+            "longitude": 105.84695,
+            "opening_hours": null,
+            "osm_source": {
+              "source_name": "osm",
+              "source_id": "node/442030353"
+            },
+            "osm_factual_tags": {
+              "amenity": "restaurant",
+              "diet:vegetarian": "only"
+            }
+          },
+          "metadata_sufficiency": "SUFFICIENT_FACTUAL_CONTEXT",
+          "label": null,
+          "judge_note": null
+        },
+        {
+          "scenario_id": "HN-U1-01",
+          "judge_item_id": "HN-U1-01-J14",
+          "place_id": "6cc58952-68f8-46c9-b9fe-dc674dc4299e",
+          "name": "KFC",
+          "category": "restaurant",
+          "factual_context": {
+            "name": "KFC",
+            "category": "restaurant",
+            "destination": "Hà Nội",
+            "destination_slug": "ha-noi",
+            "address": "405 Đường Nguyễn Văn Cừ",
+            "latitude": 21.0470606,
+            "longitude": 105.8781666,
+            "opening_hours": null,
+            "osm_source": {
+              "source_name": "osm",
+              "source_id": "node/481837568"
+            },
+            "osm_factual_tags": {
+              "amenity": "fast_food",
+              "cuisine": "fried_chicken"
+            }
+          },
+          "metadata_sufficiency": "SUFFICIENT_FACTUAL_CONTEXT",
+          "label": null,
+          "judge_note": null
+        },
+        {
+          "scenario_id": "HN-U1-01",
+          "judge_item_id": "HN-U1-01-J15",
+          "place_id": "06020762-6ea5-45d8-8a16-221113c26050",
+          "name": "KFC",
+          "category": "restaurant",
+          "factual_context": {
+            "name": "KFC",
+            "category": "restaurant",
+            "destination": "Hà Nội",
+            "destination_slug": "ha-noi",
+            "address": null,
+            "latitude": 21.0109485,
+            "longitude": 105.8114367,
+            "opening_hours": null,
+            "osm_source": {
+              "source_name": "osm",
+              "source_id": "node/442913494"
+            },
+            "osm_factual_tags": {
+              "amenity": "fast_food",
+              "cuisine": "fried_chicken"
+            }
+          },
+          "metadata_sufficiency": "SUFFICIENT_FACTUAL_CONTEXT",
+          "label": null,
+          "judge_note": null
+        }
+      ]
+    },
+    {
+      "scenario_id": "DN-U1-01",
+      "destination": "da-nang",
+      "declared_interests": [
+        "food_cuisine"
+      ],
+      "user_stratum": "U1",
+      "item_count": 15,
+      "items": [
+        {
+          "scenario_id": "DN-U1-01",
+          "judge_item_id": "DN-U1-01-J01",
+          "place_id": "62a874a9-13e2-44d2-95b5-30e980b98965",
+          "name": "Bánh Xèo Bà Dưỡng",
+          "category": "restaurant",
+          "factual_context": {
+            "name": "Bánh Xèo Bà Dưỡng",
+            "category": "restaurant",
+            "destination": "Đà Nẵng",
+            "destination_slug": "da-nang",
+            "address": "23 Kiệt 280 Hoàng Diệu",
+            "latitude": 16.0588034,
+            "longitude": 108.2160349,
+            "opening_hours": "Mo-Su 09:30-21:30",
+            "osm_source": {
+              "source_name": "osm",
+              "source_id": "node/4541527689"
+            },
+            "osm_factual_tags": {
+              "amenity": "restaurant",
+              "cuisine": "vietnamese;pancake",
+              "phone": "+84 236 3873 168"
+            }
+          },
+          "metadata_sufficiency": "SUFFICIENT_FACTUAL_CONTEXT",
+          "label": null,
+          "judge_note": null
+        },
+        {
+          "scenario_id": "DN-U1-01",
+          "judge_item_id": "DN-U1-01-J02",
+          "place_id": "93c10c41-2091-4620-b5d7-d45d1a1133e8",
+          "name": "Bánh Bèo Nóng",
+          "category": "restaurant",
+          "factual_context": {
+            "name": "Bánh Bèo Nóng",
+            "category": "restaurant",
+            "destination": "Đà Nẵng",
+            "destination_slug": "da-nang",
+            "address": "90 Đinh Tiên Hoàng",
+            "latitude": 16.0740857,
+            "longitude": 108.2095703,
+            "opening_hours": "Mo-Su 05:30+",
+            "osm_source": {
+              "source_name": "osm",
+              "source_id": "node/12603314868"
+            },
+            "osm_factual_tags": {
+              "amenity": "restaurant",
+              "cuisine": "vietnamese",
+              "phone": "+84905072638"
+            }
+          },
+          "metadata_sufficiency": "SUFFICIENT_FACTUAL_CONTEXT",
+          "label": null,
+          "judge_note": null
+        },
+        {
+          "scenario_id": "DN-U1-01",
+          "judge_item_id": "DN-U1-01-J03",
+          "place_id": "dccf4c8b-2526-5abc-8b7c-a9603d4537c9",
+          "name": "Tượng Phật Phước Lý",
+          "category": "attraction",
+          "factual_context": {
+            "name": "Tượng Phật Phước Lý",
+            "category": "attraction",
+            "destination": "Đà Nẵng",
+            "destination_slug": "da-nang",
+            "address": "Hòa Khánh Nam, quận Liên Chiểu, Đà Nẵng",
+            "latitude": 16.0405625,
+            "longitude": 108.1489375,
+            "opening_hours": null,
+            "osm_source": {
+              "source_name": "osm",
+              "source_id": "node/13734880501"
+            },
+            "osm_factual_tags": {
+              "description:en": "A 65-meter giant rock-cut Buddha statue located in the Da Son Spiritual Complex",
+              "historic": "monument",
+              "religion": "buddhist",
+              "tourism": "attraction"
+            }
+          },
+          "metadata_sufficiency": "SUFFICIENT_FACTUAL_CONTEXT",
+          "label": null,
+          "judge_note": null
+        },
+        {
+          "scenario_id": "DN-U1-01",
+          "judge_item_id": "DN-U1-01-J04",
+          "place_id": "11201442-7048-5ca4-974d-3ad73b9d4e89",
+          "name": "Bãi Bà Đa",
+          "category": "beach",
+          "factual_context": {
+            "name": "Bãi Bà Đa",
+            "category": "beach",
+            "destination": "Đà Nẵng",
+            "destination_slug": "da-nang",
+            "address": "Bãi Bà Đa, da_nang",
+            "latitude": 16.1939524,
+            "longitude": 108.16435,
+            "opening_hours": null,
+            "osm_source": {
+              "source_name": "osm",
+              "source_id": "way/1415072216"
+            },
+            "osm_factual_tags": {
+              "natural": "beach"
+            }
+          },
+          "metadata_sufficiency": "SUFFICIENT_FACTUAL_CONTEXT",
+          "label": null,
+          "judge_note": null
+        },
+        {
+          "scenario_id": "DN-U1-01",
+          "judge_item_id": "DN-U1-01-J05",
+          "place_id": "ce81851c-290c-430d-87d3-35cca6d4834c",
+          "name": "BaBaBa Japanese Restaurant",
+          "category": "restaurant",
+          "factual_context": {
+            "name": "BaBaBa Japanese Restaurant",
+            "category": "restaurant",
+            "destination": "Đà Nẵng",
+            "destination_slug": "da-nang",
+            "address": "333 Đường Hồ Nghinh",
+            "latitude": 16.0622398,
+            "longitude": 108.2436944,
+            "opening_hours": "Mo-Su 10:00-22:00",
+            "osm_source": {
+              "source_name": "osm",
+              "source_id": "node/11906566069"
+            },
+            "osm_factual_tags": {
+              "amenity": "restaurant",
+              "cuisine": "japanese",
+              "phone": "0789 686 856",
+              "website": "https://www.bababajapan.com"
+            }
+          },
+          "metadata_sufficiency": "SUFFICIENT_FACTUAL_CONTEXT",
+          "label": null,
+          "judge_note": null
+        },
+        {
+          "scenario_id": "DN-U1-01",
+          "judge_item_id": "DN-U1-01-J06",
+          "place_id": "6e713ba1-97f5-4ba1-bf5e-84d03d7b4d93",
+          "name": "Avora Hotel",
+          "category": "hotel",
+          "factual_context": {
+            "name": "Avora Hotel",
+            "category": "hotel",
+            "destination": "Đà Nẵng",
+            "destination_slug": "da-nang",
+            "address": "170 Bạch Đằng",
+            "latitude": 16.0664261,
+            "longitude": 108.2246379,
+            "opening_hours": null,
+            "osm_source": {
+              "source_name": "osm",
+              "source_id": "node/2987525036"
+            },
+            "osm_factual_tags": {
+              "tourism": "hotel",
+              "website": "https://avorahotel.vn"
+            }
+          },
+          "metadata_sufficiency": "SUFFICIENT_FACTUAL_CONTEXT",
+          "label": null,
+          "judge_note": null
+        },
+        {
+          "scenario_id": "DN-U1-01",
+          "judge_item_id": "DN-U1-01-J07",
+          "place_id": "feaa2cfd-fe3d-4658-b29a-5fd0d08af312",
+          "name": "Bún bò Chum",
+          "category": "restaurant",
+          "factual_context": {
+            "name": "Bún bò Chum",
+            "category": "restaurant",
+            "destination": "Đà Nẵng",
+            "destination_slug": "da-nang",
+            "address": "78 Đường Châu Thị Vĩnh Tế",
+            "latitude": 16.051573,
+            "longitude": 108.2401295,
+            "opening_hours": null,
+            "osm_source": {
+              "source_name": "osm",
+              "source_id": "node/10837001505"
+            },
+            "osm_factual_tags": {
+              "amenity": "restaurant",
+              "cuisine": "noodles;vietnamese",
+              "phone": "0766 716 241"
+            }
+          },
+          "metadata_sufficiency": "SUFFICIENT_FACTUAL_CONTEXT",
+          "label": null,
+          "judge_note": null
+        },
+        {
+          "scenario_id": "DN-U1-01",
+          "judge_item_id": "DN-U1-01-J08",
+          "place_id": "24a753d9-9948-4c3b-8782-4dc7cf890dac",
+          "name": "Chợ Nại Hiên",
+          "category": "market",
+          "factual_context": {
+            "name": "Chợ Nại Hiên",
+            "category": "market",
+            "destination": "Đà Nẵng",
+            "destination_slug": "da-nang",
+            "address": "17 Đường Trưng Nữ Vương",
+            "latitude": 16.0595644,
+            "longitude": 108.2223515,
+            "opening_hours": null,
+            "osm_source": {
+              "source_name": "osm",
+              "source_id": "way/1326238459"
+            },
+            "osm_factual_tags": {
+              "amenity": "marketplace"
+            }
+          },
+          "metadata_sufficiency": "SUFFICIENT_FACTUAL_CONTEXT",
+          "label": null,
+          "judge_note": null
+        },
+        {
+          "scenario_id": "DN-U1-01",
+          "judge_item_id": "DN-U1-01-J09",
+          "place_id": "e11ace92-c8cf-459d-b9fb-20e333a949ee",
+          "name": "Bún chả cá 109",
+          "category": "restaurant",
+          "factual_context": {
+            "name": "Bún chả cá 109",
+            "category": "restaurant",
+            "destination": "Đà Nẵng",
+            "destination_slug": "da-nang",
+            "address": null,
+            "latitude": 16.0743887,
+            "longitude": 108.2207958,
+            "opening_hours": null,
+            "osm_source": {
+              "source_name": "osm",
+              "source_id": "node/5484764821"
+            },
+            "osm_factual_tags": {
+              "amenity": "restaurant",
+              "cuisine": "vietnamese",
+              "phone": "+84 94 571 31 71"
+            }
+          },
+          "metadata_sufficiency": "SUFFICIENT_FACTUAL_CONTEXT",
+          "label": null,
+          "judge_note": null
+        },
+        {
+          "scenario_id": "DN-U1-01",
+          "judge_item_id": "DN-U1-01-J10",
+          "place_id": "52f11641-8aa1-420d-bd08-9deb1e513b77",
+          "name": "Bánh mì Chang Chang",
+          "category": "restaurant",
+          "factual_context": {
+            "name": "Bánh mì Chang Chang",
+            "category": "restaurant",
+            "destination": "Đà Nẵng",
+            "destination_slug": "da-nang",
+            "address": "56b Ông Ích Khiêm",
+            "latitude": 16.0774255,
+            "longitude": 108.2119935,
+            "opening_hours": null,
+            "osm_source": {
+              "source_name": "osm",
+              "source_id": "node/12609103130"
+            },
+            "osm_factual_tags": {
+              "amenity": "restaurant",
+              "cuisine": "sandwich;rice",
+              "phone": "+84978360835"
+            }
+          },
+          "metadata_sufficiency": "SUFFICIENT_FACTUAL_CONTEXT",
+          "label": null,
+          "judge_note": null
+        },
+        {
+          "scenario_id": "DN-U1-01",
+          "judge_item_id": "DN-U1-01-J11",
+          "place_id": "725a967e-f17e-43e0-9d9b-5943aad34da9",
+          "name": "Babylon Steakgarden",
+          "category": "restaurant",
+          "factual_context": {
+            "name": "Babylon Steakgarden",
+            "category": "restaurant",
+            "destination": "Đà Nẵng",
+            "destination_slug": "da-nang",
+            "address": null,
+            "latitude": 16.0417737,
+            "longitude": 108.2483585,
+            "opening_hours": "Mo-Su 10:00-22:00",
+            "osm_source": {
+              "source_name": "osm",
+              "source_id": "node/4352266089"
+            },
+            "osm_factual_tags": {
+              "amenity": "restaurant",
+              "cuisine": "steak_house",
+              "website": "http://blog.naver.com/PostView.nhn?blogId=double_latte&logNo=220683786253"
+            }
+          },
+          "metadata_sufficiency": "SUFFICIENT_FACTUAL_CONTEXT",
+          "label": null,
+          "judge_note": null
+        },
+        {
+          "scenario_id": "DN-U1-01",
+          "judge_item_id": "DN-U1-01-J12",
+          "place_id": "eb46ff3b-5ac4-42ba-9b86-a6a5fda185b5",
+          "name": "Bikini Bottom Express",
+          "category": "restaurant",
+          "factual_context": {
+            "name": "Bikini Bottom Express",
+            "category": "restaurant",
+            "destination": "Đà Nẵng",
+            "destination_slug": "da-nang",
+            "address": "45-47 An Thuong 2, Mỹ An, Ngũ Hành Sơn, Đà Nẵng",
+            "latitude": 16.0486661,
+            "longitude": 108.2475717,
+            "opening_hours": "mo-su 08:00-22:45",
+            "osm_source": {
+              "source_name": "osm",
+              "source_id": "node/6984061285"
+            },
+            "osm_factual_tags": {
+              "amenity": "restaurant",
+              "cuisine": "breakfast;coffee_shop;american;burger",
+              "phone": "0934 916 911",
+              "website": "https://bikinibottomexpress.com/"
+            }
+          },
+          "metadata_sufficiency": "SUFFICIENT_FACTUAL_CONTEXT",
+          "label": null,
+          "judge_note": null
+        },
+        {
+          "scenario_id": "DN-U1-01",
+          "judge_item_id": "DN-U1-01-J13",
+          "place_id": "b5ea1253-6b6a-5f5a-b910-5ef18cd29c94",
+          "name": "Ban Co Peak",
+          "category": "nature",
+          "factual_context": {
+            "name": "Ban Co Peak",
+            "category": "nature",
+            "destination": "Đà Nẵng",
+            "destination_slug": "da-nang",
+            "address": "Ban Co Peak, da_nang",
+            "latitude": 16.1189286,
+            "longitude": 108.2720036,
+            "opening_hours": null,
+            "osm_source": {
+              "source_name": "osm",
+              "source_id": "node/1538334281"
+            },
+            "osm_factual_tags": {
+              "tourism": "viewpoint"
+            }
+          },
+          "metadata_sufficiency": "SUFFICIENT_FACTUAL_CONTEXT",
+          "label": null,
+          "judge_note": null
+        },
+        {
+          "scenario_id": "DN-U1-01",
+          "judge_item_id": "DN-U1-01-J14",
+          "place_id": "78dabdd6-ffe7-4d42-92a5-0d7050cf6bf6",
+          "name": "Bún Chả Hà Nội",
+          "category": "restaurant",
+          "factual_context": {
+            "name": "Bún Chả Hà Nội",
+            "category": "restaurant",
+            "destination": "Đà Nẵng",
+            "destination_slug": "da-nang",
+            "address": null,
+            "latitude": 16.0746282,
+            "longitude": 108.218807,
+            "opening_hours": null,
+            "osm_source": {
+              "source_name": "osm",
+              "source_id": "node/5898266285"
+            },
+            "osm_factual_tags": {
+              "amenity": "restaurant",
+              "phone": "0972702568"
+            }
+          },
+          "metadata_sufficiency": "SUFFICIENT_FACTUAL_CONTEXT",
+          "label": null,
+          "judge_note": null
+        },
+        {
+          "scenario_id": "DN-U1-01",
+          "judge_item_id": "DN-U1-01-J15",
+          "place_id": "68aefb55-c116-4a34-88fb-05961a972b12",
+          "name": "Bếp Của Mạ - Cơm niêu và món Huế",
+          "category": "restaurant",
+          "factual_context": {
+            "name": "Bếp Của Mạ - Cơm niêu và món Huế",
+            "category": "restaurant",
+            "destination": "Đà Nẵng",
+            "destination_slug": "da-nang",
+            "address": "346 Hai Tháng Chín, Hòa Cường Bắc, Hải Châu, Đà Nẵng",
+            "latitude": 16.0389193,
+            "longitude": 108.2234461,
+            "opening_hours": "Mo-Su 10:00-21:00",
+            "osm_source": {
+              "source_name": "osm",
+              "source_id": "node/11758839350"
+            },
+            "osm_factual_tags": {
+              "amenity": "restaurant",
+              "cuisine": "vietnamese",
+              "phone": "0866353739",
+              "website": "fb.com/comnieuvamonhue"
+            }
+          },
+          "metadata_sufficiency": "SUFFICIENT_FACTUAL_CONTEXT",
+          "label": null,
+          "judge_note": null
+        }
+      ]
+    },
+    {
+      "scenario_id": "HL-U1-01",
+      "destination": "ha-long",
+      "declared_interests": [
+        "food_cuisine"
+      ],
+      "user_stratum": "U1",
+      "item_count": 15,
+      "items": [
+        {
+          "scenario_id": "HL-U1-01",
+          "judge_item_id": "HL-U1-01-J01",
+          "place_id": "e8781d17-1371-4c14-a1c9-d0d8aced2fdd",
+          "name": "DIAMOND PALACE HẠ LONG",
+          "category": "restaurant",
+          "factual_context": {
+            "name": "DIAMOND PALACE HẠ LONG",
+            "category": "restaurant",
+            "destination": "Hạ Long",
+            "destination_slug": "ha-long",
+            "address": null,
+            "latitude": 20.9575084,
+            "longitude": 107.0184615,
+            "opening_hours": null,
+            "osm_source": {
+              "source_name": "osm",
+              "source_id": "way/1527569413"
+            },
+            "osm_factual_tags": {
+              "amenity": "restaurant"
+            }
+          },
+          "metadata_sufficiency": "LIMITED_FACTUAL_CONTEXT",
+          "label": null,
+          "judge_note": null
+        },
+        {
+          "scenario_id": "HL-U1-01",
+          "judge_item_id": "HL-U1-01-J02",
+          "place_id": "0f3ef736-a272-4d9a-9153-2ec7eec65d09",
+          "name": "Café 16A",
+          "category": "cafe",
+          "factual_context": {
+            "name": "Café 16A",
+            "category": "cafe",
+            "destination": "Hạ Long",
+            "destination_slug": "ha-long",
+            "address": null,
+            "latitude": 20.9574189,
+            "longitude": 107.0510431,
+            "opening_hours": null,
+            "osm_source": {
+              "source_name": "osm",
+              "source_id": "node/13124410039"
+            },
+            "osm_factual_tags": {
+              "amenity": "cafe"
+            }
+          },
+          "metadata_sufficiency": "LIMITED_FACTUAL_CONTEXT",
+          "label": null,
+          "judge_note": null
+        },
+        {
+          "scenario_id": "HL-U1-01",
+          "judge_item_id": "HL-U1-01-J03",
+          "place_id": "caacd95a-a413-4744-a613-53535e2d848d",
+          "name": "An Nhiên",
+          "category": "restaurant",
+          "factual_context": {
+            "name": "An Nhiên",
+            "category": "restaurant",
+            "destination": "Hạ Long",
+            "destination_slug": "ha-long",
+            "address": null,
+            "latitude": 20.941223,
+            "longitude": 107.1177582,
+            "opening_hours": "Mo-Su 18:00-22:00",
+            "osm_source": {
+              "source_name": "osm",
+              "source_id": "node/13515995778"
+            },
+            "osm_factual_tags": {
+              "amenity": "restaurant",
+              "cuisine": "vietnamese",
+              "diet:vegan": "only",
+              "diet:vegetarian": "only"
+            }
+          },
+          "metadata_sufficiency": "SUFFICIENT_FACTUAL_CONTEXT",
+          "label": null,
+          "judge_note": null
+        },
+        {
+          "scenario_id": "HL-U1-01",
+          "judge_item_id": "HL-U1-01-J04",
+          "place_id": "8a8131ac-d783-4903-9e26-ff42502f9fc8",
+          "name": "Buffet Viên Chiên 49K",
+          "category": "restaurant",
+          "factual_context": {
+            "name": "Buffet Viên Chiên 49K",
+            "category": "restaurant",
+            "destination": "Hạ Long",
+            "destination_slug": "ha-long",
+            "address": null,
+            "latitude": 20.9735212,
+            "longitude": 107.0997931,
+            "opening_hours": null,
+            "osm_source": {
+              "source_name": "osm",
+              "source_id": "node/13619338993"
+            },
+            "osm_factual_tags": {
+              "amenity": "restaurant",
+              "cuisine": "coffee_shop;vietnamese",
+              "phone": "0344537880"
+            }
+          },
+          "metadata_sufficiency": "SUFFICIENT_FACTUAL_CONTEXT",
+          "label": null,
+          "judge_note": null
+        },
+        {
+          "scenario_id": "HL-U1-01",
+          "judge_item_id": "HL-U1-01-J05",
+          "place_id": "d6a2fe7b-0e18-4be8-b2a9-c4b11e37dc46",
+          "name": "Cua Vàng",
+          "category": "restaurant",
+          "factual_context": {
+            "name": "Cua Vàng",
+            "category": "restaurant",
+            "destination": "Hạ Long",
+            "destination_slug": "ha-long",
+            "address": null,
+            "latitude": 20.9594177,
+            "longitude": 107.0187657,
+            "opening_hours": null,
+            "osm_source": {
+              "source_name": "osm",
+              "source_id": "node/995293185"
+            },
+            "osm_factual_tags": {
+              "amenity": "restaurant"
+            }
+          },
+          "metadata_sufficiency": "LIMITED_FACTUAL_CONTEXT",
+          "label": null,
+          "judge_note": null
+        },
+        {
+          "scenario_id": "HL-U1-01",
+          "judge_item_id": "HL-U1-01-J06",
+          "place_id": "9a979427-a0bb-421d-b75f-2a6ee79b120b",
+          "name": "Động Thiên Cung",
+          "category": "attraction",
+          "factual_context": {
+            "name": "Động Thiên Cung",
+            "category": "attraction",
+            "destination": "Hạ Long",
+            "destination_slug": "ha-long",
+            "address": null,
+            "latitude": 20.9126814,
+            "longitude": 107.0172114,
+            "opening_hours": null,
+            "osm_source": {
+              "source_name": "osm",
+              "source_id": "node/4730928605"
+            },
+            "osm_factual_tags": {
+              "natural": "cave_entrance"
+            }
+          },
+          "metadata_sufficiency": "SUFFICIENT_FACTUAL_CONTEXT",
+          "label": null,
+          "judge_note": null
+        },
+        {
+          "scenario_id": "HL-U1-01",
+          "judge_item_id": "HL-U1-01-J07",
+          "place_id": "00784463-d47e-4ee9-86ee-fcb7196bf835",
+          "name": "Chùa Minh Tâm",
+          "category": "temple",
+          "factual_context": {
+            "name": "Chùa Minh Tâm",
+            "category": "temple",
+            "destination": "Hạ Long",
+            "destination_slug": "ha-long",
+            "address": null,
+            "latitude": 20.9868709,
+            "longitude": 107.0009613,
+            "opening_hours": null,
+            "osm_source": {
+              "source_name": "osm",
+              "source_id": "way/676796073"
+            },
+            "osm_factual_tags": {
+              "amenity": "place_of_worship",
+              "denomination": "mahayana",
+              "religion": "buddhist"
+            }
+          },
+          "metadata_sufficiency": "SUFFICIENT_FACTUAL_CONTEXT",
+          "label": null,
+          "judge_note": null
+        },
+        {
+          "scenario_id": "HL-U1-01",
+          "judge_item_id": "HL-U1-01-J08",
+          "place_id": "7a02c55f-5bfb-44f4-ab00-d9e93c48b85d",
+          "name": "14 Pizza Halong",
+          "category": "restaurant",
+          "factual_context": {
+            "name": "14 Pizza Halong",
+            "category": "restaurant",
+            "destination": "Hạ Long",
+            "destination_slug": "ha-long",
+            "address": "17 Lê Văn Lương",
+            "latitude": 20.9540605,
+            "longitude": 107.0236927,
+            "opening_hours": "We-Mo 10:00-22:00",
+            "osm_source": {
+              "source_name": "osm",
+              "source_id": "node/5229975822"
+            },
+            "osm_factual_tags": {
+              "amenity": "restaurant",
+              "cuisine": "american;pasta;chicken;italian_pizza",
+              "phone": "+84 97 343 41 14"
+            }
+          },
+          "metadata_sufficiency": "SUFFICIENT_FACTUAL_CONTEXT",
+          "label": null,
+          "judge_note": null
+        },
+        {
+          "scenario_id": "HL-U1-01",
+          "judge_item_id": "HL-U1-01-J09",
+          "place_id": "38f88b5b-9ec4-453e-8166-8d0e553e23fb",
+          "name": "Chala De Villa",
+          "category": "hotel",
+          "factual_context": {
+            "name": "Chala De Villa",
+            "category": "hotel",
+            "destination": "Hạ Long",
+            "destination_slug": "ha-long",
+            "address": null,
+            "latitude": 20.9452969,
+            "longitude": 107.0290404,
+            "opening_hours": null,
+            "osm_source": {
+              "source_name": "osm",
+              "source_id": "node/12346832201"
+            },
+            "osm_factual_tags": {
+              "tourism": "hotel"
+            }
+          },
+          "metadata_sufficiency": "SUFFICIENT_FACTUAL_CONTEXT",
+          "label": null,
+          "judge_note": null
+        },
+        {
+          "scenario_id": "HL-U1-01",
+          "judge_item_id": "HL-U1-01-J10",
+          "place_id": "fafe2f2e-7d18-402d-8831-84a24a6345bd",
+          "name": "MINH PHÁT HOTEL",
+          "category": "hotel",
+          "factual_context": {
+            "name": "MINH PHÁT HOTEL",
+            "category": "hotel",
+            "destination": "Hạ Long",
+            "destination_slug": "ha-long",
+            "address": null,
+            "latitude": 20.9464005,
+            "longitude": 107.03296,
+            "opening_hours": null,
+            "osm_source": {
+              "source_name": "osm",
+              "source_id": "way/1526053606"
+            },
+            "osm_factual_tags": {
+              "tourism": "hotel"
+            }
+          },
+          "metadata_sufficiency": "SUFFICIENT_FACTUAL_CONTEXT",
+          "label": null,
+          "judge_note": null
+        },
+        {
+          "scenario_id": "HL-U1-01",
+          "judge_item_id": "HL-U1-01-J11",
+          "place_id": "783f6bde-db54-40d1-a5c8-f78cf7fbde09",
+          "name": "Ánh Dương",
+          "category": "restaurant",
+          "factual_context": {
+            "name": "Ánh Dương",
+            "category": "restaurant",
+            "destination": "Hạ Long",
+            "destination_slug": "ha-long",
+            "address": null,
+            "latitude": 20.9527446,
+            "longitude": 107.0438781,
+            "opening_hours": null,
+            "osm_source": {
+              "source_name": "osm",
+              "source_id": "way/677184635"
+            },
+            "osm_factual_tags": {
+              "amenity": "restaurant"
+            }
+          },
+          "metadata_sufficiency": "LIMITED_FACTUAL_CONTEXT",
+          "label": null,
+          "judge_note": null
+        },
+        {
+          "scenario_id": "HL-U1-01",
+          "judge_item_id": "HL-U1-01-J12",
+          "place_id": "981caa27-82d7-419a-8c02-a0752b682ace",
+          "name": "An Phát",
+          "category": "restaurant",
+          "factual_context": {
+            "name": "An Phát",
+            "category": "restaurant",
+            "destination": "Hạ Long",
+            "destination_slug": "ha-long",
+            "address": null,
+            "latitude": 20.9731454,
+            "longitude": 107.0125564,
+            "opening_hours": null,
+            "osm_source": {
+              "source_name": "osm",
+              "source_id": "node/13017062701"
+            },
+            "osm_factual_tags": {
+              "amenity": "restaurant"
+            }
+          },
+          "metadata_sufficiency": "LIMITED_FACTUAL_CONTEXT",
+          "label": null,
+          "judge_note": null
+        },
+        {
+          "scenario_id": "HL-U1-01",
+          "judge_item_id": "HL-U1-01-J13",
+          "place_id": "7ba92734-bfdf-40a2-9c57-9f7894f0fd6e",
+          "name": "Bia Tâm Hưng 2",
+          "category": "restaurant",
+          "factual_context": {
+            "name": "Bia Tâm Hưng 2",
+            "category": "restaurant",
+            "destination": "Hạ Long",
+            "destination_slug": "ha-long",
+            "address": "Đường Lê Thánh Tông",
+            "latitude": 20.9560183,
+            "longitude": 107.0675253,
+            "opening_hours": null,
+            "osm_source": {
+              "source_name": "osm",
+              "source_id": "node/13003599202"
+            },
+            "osm_factual_tags": {
+              "amenity": "restaurant",
+              "phone": "0978680666"
+            }
+          },
+          "metadata_sufficiency": "SUFFICIENT_FACTUAL_CONTEXT",
+          "label": null,
+          "judge_note": null
+        },
+        {
+          "scenario_id": "HL-U1-01",
+          "judge_item_id": "HL-U1-01-J14",
+          "place_id": "c16c5737-9c2b-4057-946a-73e32014ab08",
+          "name": "Dau Co Viet",
+          "category": "restaurant",
+          "factual_context": {
+            "name": "Dau Co Viet",
+            "category": "restaurant",
+            "destination": "Hạ Long",
+            "destination_slug": "ha-long",
+            "address": null,
+            "latitude": 20.95643,
+            "longitude": 107.0549514,
+            "opening_hours": null,
+            "osm_source": {
+              "source_name": "osm",
+              "source_id": "node/12189361146"
+            },
+            "osm_factual_tags": {
+              "amenity": "restaurant",
+              "cuisine": "vietnamese"
+            }
+          },
+          "metadata_sufficiency": "SUFFICIENT_FACTUAL_CONTEXT",
+          "label": null,
+          "judge_note": null
+        },
+        {
+          "scenario_id": "HL-U1-01",
+          "judge_item_id": "HL-U1-01-J15",
+          "place_id": "1a1c68b4-fbd1-49d4-9f17-3243b34b57e0",
+          "name": "Dược Điến Chay Quán",
+          "category": "restaurant",
+          "factual_context": {
+            "name": "Dược Điến Chay Quán",
+            "category": "restaurant",
+            "destination": "Hạ Long",
+            "destination_slug": "ha-long",
+            "address": null,
+            "latitude": 20.9541886,
+            "longitude": 107.0850687,
+            "opening_hours": "07:00-22:00",
+            "osm_source": {
+              "source_name": "osm",
+              "source_id": "node/13511189920"
+            },
+            "osm_factual_tags": {
+              "amenity": "restaurant",
+              "cuisine": "vietnamese",
+              "diet:vegan": "only"
+            }
+          },
+          "metadata_sufficiency": "SUFFICIENT_FACTUAL_CONTEXT",
+          "label": null,
+          "judge_note": null
+        }
+      ]
+    }
+  ]
+}
