@@ -1,0 +1,19 @@
+{
+  "artifact_version": "W5-REPRODUCIBILITY-MANIFEST-V1",
+  "generated_from_git_sha": "a01a7285ed7ac2282615129f85b184ee84941e0b",
+  "freeze_id": "REC-A-FREEZE-V2",
+  "freeze_checksum": "93681135d94b379f28802aa75204a0a4c7bec4039f85d28e76ae6737e792e245",
+  "primary_scenario_manifest_sha256": "98a86723e7a2d16fbb2acebe1a39379f525a973cc0d854191318931484e9d553",
+  "thin_diagnostic_manifest_sha256": "c90773202aab20e6e30fd8c9cd37157c6d1a4fcb6bf7b718d023c32a6fc50f69",
+  "internal_pool_sha256": "29c3c8192f8d39e733b6753d3c4ccdd19025324b673ce7b8601a0ca15843bd24",
+  "blinded_pool_sha256": "8a4dce96ea156ae6ef3d79a31863d441a3d77df914f3b500f872475102d965be",
+  "pool_builder_version": "w5-pool-builder-v1",
+  "control_seed": 20261013,
+  "control_seed_method": "sha256(f'{control_seed}|{scenario_id}') -> int64",
+  "blind_order_seed_method": "sha256(f'{control_seed}|{scenario_id}|blind') -> int64",
+  "models_used": [
+    "shared_a0_a1_baseline",
+    "rec-a2"
+  ],
+  "top_k": 10
+}

@@ -1,0 +1,383 @@
+[
+  {
+    "scenario_id": "HN-U1-01",
+    "scenario_version": "W5-SCENARIO-V1",
+    "track": "CS-PERSONALIZED",
+    "user_stratum": "U1",
+    "destination": "ha-noi",
+    "declared_interests": [
+      "food_cuisine"
+    ],
+    "top_k": 10,
+    "candidate_catalog": "REC-A-CORE-V2:ha-noi"
+  },
+  {
+    "scenario_id": "HN-U1-02",
+    "scenario_version": "W5-SCENARIO-V1",
+    "track": "CS-PERSONALIZED",
+    "user_stratum": "U1",
+    "destination": "ha-noi",
+    "declared_interests": [
+      "culture_history"
+    ],
+    "top_k": 10,
+    "candidate_catalog": "REC-A-CORE-V2:ha-noi"
+  },
+  {
+    "scenario_id": "HN-U1-03",
+    "scenario_version": "W5-SCENARIO-V1",
+    "track": "CS-PERSONALIZED",
+    "user_stratum": "U1",
+    "destination": "ha-noi",
+    "declared_interests": [
+      "nature_outdoor"
+    ],
+    "top_k": 10,
+    "candidate_catalog": "REC-A-CORE-V2:ha-noi"
+  },
+  {
+    "scenario_id": "HN-U1-04",
+    "scenario_version": "W5-SCENARIO-V1",
+    "track": "CS-PERSONALIZED",
+    "user_stratum": "U1",
+    "destination": "ha-noi",
+    "declared_interests": [
+      "nightlife_entertainment"
+    ],
+    "top_k": 10,
+    "candidate_catalog": "REC-A-CORE-V2:ha-noi"
+  },
+  {
+    "scenario_id": "DN-U1-01",
+    "scenario_version": "W5-SCENARIO-V1",
+    "track": "CS-PERSONALIZED",
+    "user_stratum": "U1",
+    "destination": "da-nang",
+    "declared_interests": [
+      "food_cuisine"
+    ],
+    "top_k": 10,
+    "candidate_catalog": "REC-A-CORE-V2:da-nang"
+  },
+  {
+    "scenario_id": "DN-U1-02",
+    "scenario_version": "W5-SCENARIO-V1",
+    "track": "CS-PERSONALIZED",
+    "user_stratum": "U1",
+    "destination": "da-nang",
+    "declared_interests": [
+      "culture_history"
+    ],
+    "top_k": 10,
+    "candidate_catalog": "REC-A-CORE-V2:da-nang"
+  },
+  {
+    "scenario_id": "DN-U1-03",
+    "scenario_version": "W5-SCENARIO-V1",
+    "track": "CS-PERSONALIZED",
+    "user_stratum": "U1",
+    "destination": "da-nang",
+    "declared_interests": [
+      "coffee_culture"
+    ],
+    "top_k": 10,
+    "candidate_catalog": "REC-A-CORE-V2:da-nang"
+  },
+  {
+    "scenario_id": "DN-U1-04",
+    "scenario_version": "W5-SCENARIO-V1",
+    "track": "CS-PERSONALIZED",
+    "user_stratum": "U1",
+    "destination": "da-nang",
+    "declared_interests": [
+      "beach_island"
+    ],
+    "top_k": 10,
+    "candidate_catalog": "REC-A-CORE-V2:da-nang"
+  },
+  {
+    "scenario_id": "DN-U1-05",
+    "scenario_version": "W5-SCENARIO-V1",
+    "track": "CS-PERSONALIZED",
+    "user_stratum": "U1",
+    "destination": "da-nang",
+    "declared_interests": [
+      "shopping_local"
+    ],
+    "top_k": 10,
+    "candidate_catalog": "REC-A-CORE-V2:da-nang"
+  },
+  {
+    "scenario_id": "DN-U1-06",
+    "scenario_version": "W5-SCENARIO-V1",
+    "track": "CS-PERSONALIZED",
+    "user_stratum": "U1",
+    "destination": "da-nang",
+    "declared_interests": [
+      "nightlife_entertainment"
+    ],
+    "top_k": 10,
+    "candidate_catalog": "REC-A-CORE-V2:da-nang"
+  },
+  {
+    "scenario_id": "HL-U1-01",
+    "scenario_version": "W5-SCENARIO-V1",
+    "track": "CS-PERSONALIZED",
+    "user_stratum": "U1",
+    "destination": "ha-long",
+    "declared_interests": [
+      "food_cuisine"
+    ],
+    "top_k": 10,
+    "candidate_catalog": "REC-A-CORE-V2:ha-long"
+  },
+  {
+    "scenario_id": "HL-U1-02",
+    "scenario_version": "W5-SCENARIO-V1",
+    "track": "CS-PERSONALIZED",
+    "user_stratum": "U1",
+    "destination": "ha-long",
+    "declared_interests": [
+      "culture_history"
+    ],
+    "top_k": 10,
+    "candidate_catalog": "REC-A-CORE-V2:ha-long"
+  },
+  {
+    "scenario_id": "HL-U1-03",
+    "scenario_version": "W5-SCENARIO-V1",
+    "track": "CS-PERSONALIZED",
+    "user_stratum": "U1",
+    "destination": "ha-long",
+    "declared_interests": [
+      "nature_outdoor"
+    ],
+    "top_k": 10,
+    "candidate_catalog": "REC-A-CORE-V2:ha-long"
+  },
+  {
+    "scenario_id": "HL-U1-04",
+    "scenario_version": "W5-SCENARIO-V1",
+    "track": "CS-PERSONALIZED",
+    "user_stratum": "U1",
+    "destination": "ha-long",
+    "declared_interests": [
+      "coffee_culture"
+    ],
+    "top_k": 10,
+    "candidate_catalog": "REC-A-CORE-V2:ha-long"
+  },
+  {
+    "scenario_id": "HL-U1-05",
+    "scenario_version": "W5-SCENARIO-V1",
+    "track": "CS-PERSONALIZED",
+    "user_stratum": "U1",
+    "destination": "ha-long",
+    "declared_interests": [
+      "shopping_local"
+    ],
+    "top_k": 10,
+    "candidate_catalog": "REC-A-CORE-V2:ha-long"
+  },
+  {
+    "scenario_id": "HN-U2-01",
+    "scenario_version": "W5-SCENARIO-V1",
+    "track": "CS-PERSONALIZED",
+    "user_stratum": "U2",
+    "destination": "ha-noi",
+    "declared_interests": [
+      "food_cuisine",
+      "culture_history"
+    ],
+    "top_k": 10,
+    "candidate_catalog": "REC-A-CORE-V2:ha-noi"
+  },
+  {
+    "scenario_id": "HN-U2-02",
+    "scenario_version": "W5-SCENARIO-V1",
+    "track": "CS-PERSONALIZED",
+    "user_stratum": "U2",
+    "destination": "ha-noi",
+    "declared_interests": [
+      "nature_outdoor",
+      "nightlife_entertainment"
+    ],
+    "top_k": 10,
+    "candidate_catalog": "REC-A-CORE-V2:ha-noi"
+  },
+  {
+    "scenario_id": "HN-U2-03",
+    "scenario_version": "W5-SCENARIO-V1",
+    "track": "CS-PERSONALIZED",
+    "user_stratum": "U2",
+    "destination": "ha-noi",
+    "declared_interests": [
+      "food_cuisine",
+      "nature_outdoor"
+    ],
+    "top_k": 10,
+    "candidate_catalog": "REC-A-CORE-V2:ha-noi"
+  },
+  {
+    "scenario_id": "HN-U2-04",
+    "scenario_version": "W5-SCENARIO-V1",
+    "track": "CS-PERSONALIZED",
+    "user_stratum": "U2",
+    "destination": "ha-noi",
+    "declared_interests": [
+      "culture_history",
+      "nature_outdoor",
+      "nightlife_entertainment"
+    ],
+    "top_k": 10,
+    "candidate_catalog": "REC-A-CORE-V2:ha-noi"
+  },
+  {
+    "scenario_id": "HN-U2-05",
+    "scenario_version": "W5-SCENARIO-V1",
+    "track": "CS-PERSONALIZED",
+    "user_stratum": "U2",
+    "destination": "ha-noi",
+    "declared_interests": [
+      "food_cuisine",
+      "culture_history",
+      "nightlife_entertainment"
+    ],
+    "top_k": 10,
+    "candidate_catalog": "REC-A-CORE-V2:ha-noi"
+  },
+  {
+    "scenario_id": "DN-U2-01",
+    "scenario_version": "W5-SCENARIO-V1",
+    "track": "CS-PERSONALIZED",
+    "user_stratum": "U2",
+    "destination": "da-nang",
+    "declared_interests": [
+      "food_cuisine",
+      "culture_history"
+    ],
+    "top_k": 10,
+    "candidate_catalog": "REC-A-CORE-V2:da-nang"
+  },
+  {
+    "scenario_id": "DN-U2-02",
+    "scenario_version": "W5-SCENARIO-V1",
+    "track": "CS-PERSONALIZED",
+    "user_stratum": "U2",
+    "destination": "da-nang",
+    "declared_interests": [
+      "coffee_culture",
+      "beach_island"
+    ],
+    "top_k": 10,
+    "candidate_catalog": "REC-A-CORE-V2:da-nang"
+  },
+  {
+    "scenario_id": "DN-U2-03",
+    "scenario_version": "W5-SCENARIO-V1",
+    "track": "CS-PERSONALIZED",
+    "user_stratum": "U2",
+    "destination": "da-nang",
+    "declared_interests": [
+      "shopping_local",
+      "nightlife_entertainment"
+    ],
+    "top_k": 10,
+    "candidate_catalog": "REC-A-CORE-V2:da-nang"
+  },
+  {
+    "scenario_id": "DN-U2-04",
+    "scenario_version": "W5-SCENARIO-V1",
+    "track": "CS-PERSONALIZED",
+    "user_stratum": "U2",
+    "destination": "da-nang",
+    "declared_interests": [
+      "food_cuisine",
+      "coffee_culture",
+      "shopping_local"
+    ],
+    "top_k": 10,
+    "candidate_catalog": "REC-A-CORE-V2:da-nang"
+  },
+  {
+    "scenario_id": "DN-U2-05",
+    "scenario_version": "W5-SCENARIO-V1",
+    "track": "CS-PERSONALIZED",
+    "user_stratum": "U2",
+    "destination": "da-nang",
+    "declared_interests": [
+      "culture_history",
+      "beach_island",
+      "nightlife_entertainment"
+    ],
+    "top_k": 10,
+    "candidate_catalog": "REC-A-CORE-V2:da-nang"
+  },
+  {
+    "scenario_id": "HL-U2-01",
+    "scenario_version": "W5-SCENARIO-V1",
+    "track": "CS-PERSONALIZED",
+    "user_stratum": "U2",
+    "destination": "ha-long",
+    "declared_interests": [
+      "food_cuisine",
+      "culture_history"
+    ],
+    "top_k": 10,
+    "candidate_catalog": "REC-A-CORE-V2:ha-long"
+  },
+  {
+    "scenario_id": "HL-U2-02",
+    "scenario_version": "W5-SCENARIO-V1",
+    "track": "CS-PERSONALIZED",
+    "user_stratum": "U2",
+    "destination": "ha-long",
+    "declared_interests": [
+      "nature_outdoor",
+      "coffee_culture"
+    ],
+    "top_k": 10,
+    "candidate_catalog": "REC-A-CORE-V2:ha-long"
+  },
+  {
+    "scenario_id": "HL-U2-03",
+    "scenario_version": "W5-SCENARIO-V1",
+    "track": "CS-PERSONALIZED",
+    "user_stratum": "U2",
+    "destination": "ha-long",
+    "declared_interests": [
+      "shopping_local",
+      "food_cuisine"
+    ],
+    "top_k": 10,
+    "candidate_catalog": "REC-A-CORE-V2:ha-long"
+  },
+  {
+    "scenario_id": "HL-U2-04",
+    "scenario_version": "W5-SCENARIO-V1",
+    "track": "CS-PERSONALIZED",
+    "user_stratum": "U2",
+    "destination": "ha-long",
+    "declared_interests": [
+      "culture_history",
+      "nature_outdoor",
+      "shopping_local"
+    ],
+    "top_k": 10,
+    "candidate_catalog": "REC-A-CORE-V2:ha-long"
+  },
+  {
+    "scenario_id": "HL-U2-05",
+    "scenario_version": "W5-SCENARIO-V1",
+    "track": "CS-PERSONALIZED",
+    "user_stratum": "U2",
+    "destination": "ha-long",
+    "declared_interests": [
+      "food_cuisine",
+      "coffee_culture",
+      "shopping_local"
+    ],
+    "top_k": 10,
+    "candidate_catalog": "REC-A-CORE-V2:ha-long"
+  }
+]
