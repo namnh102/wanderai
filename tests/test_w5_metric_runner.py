@@ -6,9 +6,9 @@ Tests all requirements and specifications:
 - MET-P-01 (Precision@10)
 - MET-R-01, MET-R-02 (Pooled Recall@10, denominator=0 handling)
 - MET-HR-01, MET-HR-02 (HitRate@10)
-- MET-ILD-01 .. MET-ILD-03 (Category-ILD@10)
+- MET-ILD-01 .. MET-ILD-03 (Category-ILD@10 structural proxy)
 - MET-COV-01, MET-COV-02 (CatalogCoverage@10, destination macro vs pooled)
-- MET-I1-01 .. MET-I1-03 (I1Exposure@10 diagnostic)
+- MET-I1-01 .. MET-I1-03 (I1Exposure@10 diagnostic and strict validation)
 - MET-MACRO-01 (Destination macro vs unweighted scenario mean)
 - MET-BOOT-01 .. MET-BOOT-06 (Paired destination-stratified bootstrap)
 - MET-VERDICT-01 .. MET-VERDICT-04 (Pre-registered verdict rules)
@@ -17,6 +17,11 @@ Tests all requirements and specifications:
 - MET-SYS-01 .. MET-SYS-03 (System identity, single shared baseline representation)
 - MET-DUP-01, MET-DUP-02 (Duplicate policy status PENDING, duplicate map interface)
 - MET-VAL-01 (Dry-run validation passes with zero human labels)
+- MET-MISS-01 .. MET-MISS-04 (Missingness and non-estimable primary inference, zero-imputation forbidden)
+- MET-EFFECT-01 .. MET-EFFECT-03 (Observed point delta separated from bootstrap mean)
+- MET-LABEL-01 .. MET-LABEL-04 (Strict label validation: booleans, floats, strings, bounds)
+- MET-VER-01 .. MET-VER-05 (Version contract and identity validation)
+- MET-SYNTH-E2E (SYNTHETIC_TEST_ONLY: Full end-to-end future evaluation pipeline)
 """
 
 from __future__ import annotations
@@ -36,18 +41,22 @@ if str(REPO_ROOT) not in sys.path:
 
 from scripts.evaluate_w5_recommenders import (
     BOOTSTRAP_REPLICATES,
+    CATEGORY_ILD_SEMANTICS,
+    EVALUATION_VERSION,
     EXPECTED_CATALOG_SIZES,
+    EXPECTED_POOL_VERSION,
+    EXPECTED_RUBRIC_VERSION,
     EXPECTED_TOTAL_CORE,
     FREEZE_V2_ACCEPTED_SHA256,
     FROZEN_DESTINATIONS,
-    INTERNAL_POOL_RELPATH,
-    PRIMARY_SCENARIOS_RELPATH,
     SYSTEM_A2,
     SYSTEM_BASELINE,
     W5_METRIC_BOOTSTRAP_SEED,
     aggregate_destination_macro,
     aggregate_unweighted_mean,
     apply_duplicate_equivalence,
+    build_final_evaluation_result,
+    build_paired_comparison,
     calculate_gain,
     calculate_percentile,
     catalog_coverage_at_k,
@@ -55,9 +64,11 @@ from scripts.evaluate_w5_recommenders import (
     classify_final_verdict,
     dcg_at_k,
     evaluate_scenario,
+    evaluate_system,
     hit_rate_at_k,
     i1_exposure_at_k,
     idcg_at_k,
+    load_and_validate_ground_truth,
     macro_destination_coverage,
     ndcg_at_k,
     paired_coverage_stratified_bootstrap,
@@ -65,9 +76,10 @@ from scripts.evaluate_w5_recommenders import (
     pooled_recall_at_k,
     precision_at_k,
     run_dry_run_validation,
+    validate_primary_scenario_manifest,
+    validate_relevance_label,
+    validate_system_ranking_integrity,
 )
-
-REPO_ROOT = Path(__file__).resolve().parent.parent
 
 # Pinned Baseline Hashes
 EXPECTED_W5_PREP_01_HASHES: Dict[str, Union[str, Set[str]]] = {
@@ -286,8 +298,6 @@ def test_met_i1_02_half_i1_exposure() -> None:
 
 def test_met_i1_03_diagnostic_only_not_in_verdict() -> None:
     """MET-I1-03: I1Exposure is labeled diagnostic and does not enter verdict."""
-    # classify_final_verdict signature does not include I1 exposure
-    # High or low I1 exposure cannot flip verdict
     verdict = classify_final_verdict(
         ndcg_ci=(0.02, 0.08),
         ild_ci=(0.01, 0.05),
@@ -340,7 +350,8 @@ def test_met_boot_01_deterministic_reproducibility() -> None:
     }
     res1 = paired_destination_stratified_bootstrap(data, seed=W5_METRIC_BOOTSTRAP_SEED, replicates=1000)
     res2 = paired_destination_stratified_bootstrap(data, seed=W5_METRIC_BOOTSTRAP_SEED, replicates=1000)
-    assert res1["mean_delta"] == res2["mean_delta"]
+    assert res1["observed_point_delta"] == res2["observed_point_delta"]
+    assert res1["bootstrap_mean"] == res2["bootstrap_mean"]
     assert res1["ci_95"] == res2["ci_95"]
 
 
@@ -353,22 +364,20 @@ def test_met_boot_02_paired_preservation() -> None:
         "ha-long": [(0.4, 0.5), (0.8, 0.9)],
     }
     res = paired_destination_stratified_bootstrap(data, seed=W5_METRIC_BOOTSTRAP_SEED, replicates=500)
-    assert math.isclose(res["mean_delta"], 0.10, rel_tol=1e-5)
+    assert math.isclose(res["observed_point_delta"], 0.10, rel_tol=1e-5)
     assert math.isclose(res["ci_95"][0], 0.10, rel_tol=1e-5)
     assert math.isclose(res["ci_95"][1], 0.10, rel_tol=1e-5)
 
 
 def test_met_boot_03_and_04_destination_stratified_resampling() -> None:
     """MET-BOOT-03 & 04: Scenario-level resampling is stratified within destinations."""
-    # Destination A has strictly delta +0.3, Dest B has strictly delta 0.0, Dest C has strictly delta 0.0
     data = {
         "ha-noi": [(0.1, 0.4), (0.2, 0.5)],  # all +0.3
         "da-nang": [(0.5, 0.5), (0.6, 0.6)],  # all 0.0
         "ha-long": [(0.7, 0.7), (0.8, 0.8)],  # all 0.0
     }
     res = paired_destination_stratified_bootstrap(data, seed=W5_METRIC_BOOTSTRAP_SEED, replicates=500)
-    # Stratified macro mean must always be (0.3 + 0.0 + 0.0) / 3 = 0.10
-    assert math.isclose(res["mean_delta"], 0.10, rel_tol=1e-5)
+    assert math.isclose(res["observed_point_delta"], 0.10, rel_tol=1e-5)
     assert math.isclose(res["ci_95"][0], 0.10, rel_tol=1e-5)
     assert math.isclose(res["ci_95"][1], 0.10, rel_tol=1e-5)
 
@@ -451,7 +460,6 @@ def test_met_verdict_03_a2_diversity_tradeoff() -> None:
 
 def test_met_verdict_04_inconclusive() -> None:
     """MET-VERDICT-04: Insufficient evidence -> INCONCLUSIVE."""
-    # NDCG CI includes 0, neither diversity metric lower bound > 0
     verdict = classify_final_verdict(
         ndcg_ci=(-0.03, 0.04),
         ild_ci=(-0.02, 0.05),
@@ -470,7 +478,7 @@ def test_met_verdict_04_inconclusive() -> None:
 def test_met_na_01_na_is_not_zero() -> None:
     """MET-NA-01: NA is never converted to 0."""
     with pytest.raises(ValueError):
-        calculate_gain("NA")  # type: ignore
+        calculate_gain("NA")
 
 
 def test_met_na_02_unresolved_top10_marks_not_scorable() -> None:
@@ -487,19 +495,18 @@ def test_met_na_02_unresolved_top10_marks_not_scorable() -> None:
     pool_items = [
         {"place_id": f"p_{i}"} for i in range(15)
     ]
-    # place p_3 is unresolved NA
     gt_map: Dict[str, Any] = {f"p_{i}": 1 for i in range(15)}
     gt_map["p_3"] = "NA"
 
-    res = evaluate_scenario(scenario_info, ranked_places, pool_items, gt_map)
+    res = evaluate_scenario(scenario_info, ranked_places, pool_items, gt_map, system_name=SYSTEM_BASELINE)
     assert res["metric_status"] == "NOT_SCORABLE_UNRESOLVED_TOPK"
     assert res["ndcg_at_10"] is None
     assert res["precision_at_10"] is None
     assert res["pooled_recall_at_10"] is None
     assert res["hit_rate_at_10"] is None
-    # Category ILD and I1 exposure are catalog-based and remain scorable
     assert res["category_ild_at_10"] is not None
     assert res["i1_exposure_at_10"] is not None
+    assert res["system"] == SYSTEM_BASELINE
 
 
 def test_met_na_03_unresolved_pool_count_always_reported() -> None:
@@ -521,7 +528,7 @@ def test_met_na_03_unresolved_pool_count_always_reported() -> None:
     gt_map["p_13"] = None
     gt_map["p_14"] = "NA"
 
-    res = evaluate_scenario(scenario_info, ranked_places, pool_items, gt_map)
+    res = evaluate_scenario(scenario_info, ranked_places, pool_items, gt_map, system_name=SYSTEM_BASELINE)
     assert res["judged_pool_count"] == 12
     assert res["unresolved_pool_count"] == 3
 
@@ -611,10 +618,8 @@ def test_met_dup_01_duplicate_policy_pending() -> None:
 def test_met_dup_02_duplicate_map_interface_hook() -> None:
     """MET-DUP-02: Runner accepts optional duplicate map interface without hardcoded data."""
     place_ids = ["pid_1", "pid_2", "pid_3"]
-    # Without map -> unchanged
     assert apply_duplicate_equivalence(place_ids, None) == place_ids
 
-    # With synthetic map -> equivalence groups applied
     dup_map = {"pid_1": "group_A", "pid_2": "group_A"}
     mapped = apply_duplicate_equivalence(place_ids, dup_map)
     assert mapped == ["group_A", "group_A", "pid_3"]
@@ -640,3 +645,391 @@ def test_met_val_01_dry_run_validation_passes() -> None:
     assert res["human_judgments_collected"] == 0
     assert res["human_gt_available"] is False
     assert res["scientific_winner"] == "UNKNOWN"
+    assert res["category_ild_semantics"] == CATEGORY_ILD_SEMANTICS
+
+
+# ============================================================
+# 13. MISSINGNESS & NON-ESTIMABLE TESTS (MET-MISS-01 .. MET-MISS-04)
+# ============================================================
+
+
+def test_met_miss_01_zero_scorable_destination_not_estimable() -> None:
+    """MET-MISS-01: One destination has zero paired scorable scenarios -> PRIMARY_INFERENCE_NOT_ESTIMABLE (NEVER delta 0)."""
+    # Da Nang has zero scorable scenarios
+    data = {
+        "ha-noi": [(0.5, 0.7), (0.6, 0.8)],
+        "da-nang": [],  # zero scorable scenarios
+        "ha-long": [(0.4, 0.5), (0.7, 0.7)],
+    }
+    res = paired_destination_stratified_bootstrap(data, seed=W5_METRIC_BOOTSTRAP_SEED, replicates=100)
+    assert res["status"] == "PRIMARY_INFERENCE_NOT_ESTIMABLE"
+    assert res["observed_point_delta"] is None
+    assert res["ci_95"] is None
+    assert res["bootstrap_mean"] is None
+    assert res["sample_attrition"]["per_destination"]["da-nang"]["paired_scorable"] == 0
+
+    # Also test for coverage
+    cov_scs = {
+        "ha-noi": [{"baseline_top10": ["h1"], "a2_top10": ["h2"]}],
+        "da-nang": [],  # zero scenarios
+        "ha-long": [{"baseline_top10": ["l1"], "a2_top10": ["l2"]}],
+    }
+    cov_res = paired_coverage_stratified_bootstrap(cov_scs, EXPECTED_CATALOG_SIZES, replicates=100)
+    assert cov_res["status"] == "PRIMARY_INFERENCE_NOT_ESTIMABLE"
+    assert cov_res["observed_point_delta"] is None
+    assert cov_res["ci_95"] is None
+
+
+def test_met_miss_02_excluded_unresolved_scenarios_counted() -> None:
+    """MET-MISS-02: Excluded/unresolved scenarios are explicitly tracked in sample_attrition."""
+    data = {
+        "ha-noi": [(0.5, 0.6), (None, 0.7), (0.4, None)],  # 1 paired, 2 excluded
+        "da-nang": [(0.3, 0.5), (0.6, 0.7)],  # 2 paired, 0 excluded
+        "ha-long": [(0.5, 0.5)],  # 1 paired, 0 excluded
+    }
+    res = paired_destination_stratified_bootstrap(data, seed=W5_METRIC_BOOTSTRAP_SEED, replicates=100)
+    assert res["status"] == "ESTIMATED"
+    assert res["sample_attrition"]["total_primary_scenarios"] == 6
+    assert res["sample_attrition"]["paired_scorable_scenarios"] == 4
+    assert res["sample_attrition"]["excluded_scenarios"] == 2
+    assert res["sample_attrition"]["per_destination"]["ha-noi"]["excluded"] == 2
+    assert res["sample_attrition"]["per_destination"]["ha-noi"]["paired_scorable"] == 1
+
+
+def test_met_miss_03_no_silent_denominator_changes() -> None:
+    """MET-MISS-03: Denominators in attrition match inputs exactly."""
+    data = {
+        "ha-noi": [(0.5, 0.6)] * 9,
+        "da-nang": [(0.4, 0.5)] * 11,
+        "ha-long": [(0.6, 0.7)] * 10,
+    }
+    res = paired_destination_stratified_bootstrap(data, seed=W5_METRIC_BOOTSTRAP_SEED, replicates=100)
+    assert res["sample_attrition"]["total_primary_scenarios"] == 30
+    assert res["sample_attrition"]["paired_scorable_scenarios"] == 30
+    assert res["sample_attrition"]["excluded_scenarios"] == 0
+    assert res["sample_attrition"]["per_destination"]["ha-noi"]["total"] == 9
+    assert res["sample_attrition"]["per_destination"]["da-nang"]["total"] == 11
+    assert res["sample_attrition"]["per_destination"]["ha-long"]["total"] == 10
+
+
+def test_met_miss_04_destination_macro_requires_all_destinations() -> None:
+    """MET-MISS-04: Destination macro returns None if any required destination is missing/unestimable."""
+    dest_means = {
+        "ha-noi": 0.8,
+        "da-nang": None,
+        "ha-long": 0.7,
+    }
+    assert aggregate_destination_macro(dest_means) is None
+
+
+# ============================================================
+# 14. OBSERVED EFFECT TESTS (MET-EFFECT-01 .. MET-EFFECT-03)
+# ============================================================
+
+
+def test_met_effect_01_observed_point_delta_exact() -> None:
+    """MET-EFFECT-01: observed_point_delta equals the analytically calculated original destination macro delta."""
+    # Ha Noi delta: (0.8 - 0.4) = 0.40
+    # Da Nang delta: (0.7 - 0.5) = 0.20
+    # Ha Long delta: (0.9 - 0.3) = 0.60
+    # Expected macro: (0.40 + 0.20 + 0.60) / 3 = 0.40
+    data = {
+        "ha-noi": [(0.4, 0.8)],
+        "da-nang": [(0.5, 0.7)],
+        "ha-long": [(0.3, 0.9)],
+    }
+    res = paired_destination_stratified_bootstrap(data, seed=W5_METRIC_BOOTSTRAP_SEED, replicates=500)
+    assert res["status"] == "ESTIMATED"
+    assert math.isclose(res["observed_point_delta"], 0.40, rel_tol=1e-5)
+
+
+def test_met_effect_02_observed_delta_independent_of_bootstrap_mean() -> None:
+    """MET-EFFECT-02: observed_point_delta is calculated directly from original data, distinct from bootstrap mean."""
+    data = {
+        "ha-noi": [(0.1, 0.3), (0.2, 0.8)],  # mean delta: (0.2 + 0.6)/2 = 0.40
+        "da-nang": [(0.3, 0.4), (0.1, 0.7)],  # mean delta: (0.1 + 0.6)/2 = 0.35
+        "ha-long": [(0.2, 0.5), (0.4, 0.8)],  # mean delta: (0.3 + 0.4)/2 = 0.35
+    }
+    # Expected macro observed delta = (0.40 + 0.35 + 0.35) / 3 = 0.366667
+    res = paired_destination_stratified_bootstrap(data, seed=W5_METRIC_BOOTSTRAP_SEED, replicates=1000)
+    assert res["observed_point_delta"] == 0.366667
+    assert isinstance(res["bootstrap_mean"], float)
+
+
+def test_met_effect_03_coverage_observed_delta() -> None:
+    """MET-EFFECT-03: Coverage observed delta is calculated directly on original scenario set."""
+    scenarios_by_dest = {
+        "ha-noi": [{"baseline_top10": ["h1"], "a2_top10": ["h1", "h2"]}],
+        "da-nang": [{"baseline_top10": ["d1"], "a2_top10": ["d1", "d2"]}],
+        "ha-long": [{"baseline_top10": ["l1"], "a2_top10": ["l1", "l2"]}],
+    }
+    catalog_sizes = {"ha-noi": 10, "da-nang": 10, "ha-long": 10}
+    # Delta each = (2 - 1)/10 = 0.10. Macro = 0.10
+    res = paired_coverage_stratified_bootstrap(scenarios_by_dest, catalog_sizes, replicates=500)
+    assert res["status"] == "ESTIMATED"
+    assert math.isclose(res["observed_point_delta"], 0.10, rel_tol=1e-5)
+
+
+# ============================================================
+# 15. STRICT LABEL VALIDATION TESTS (MET-LABEL-01 .. MET-LABEL-04)
+# ============================================================
+
+
+def test_met_label_01_valid_labels() -> None:
+    """MET-LABEL-01: Valid labels (0, 1, 2, 'NA', None) pass validator."""
+    assert validate_relevance_label(0) == 0
+    assert validate_relevance_label(1) == 1
+    assert validate_relevance_label(2) == 2
+    assert validate_relevance_label("NA") is None
+    assert validate_relevance_label(None) is None
+
+
+def test_met_label_02_booleans_strictly_rejected() -> None:
+    """MET-LABEL-02: Booleans (True, False) are strictly rejected with ValueError."""
+    with pytest.raises(ValueError, match="boolean True is not permitted"):
+        validate_relevance_label(True)
+    with pytest.raises(ValueError, match="boolean False is not permitted"):
+        validate_relevance_label(False)
+
+
+def test_met_label_03_invalid_types_and_values_rejected() -> None:
+    """MET-LABEL-03: Out-of-bound numbers, floats, strings, and types rejected."""
+    for invalid in [3, -1, 100, 1.5, -0.5, "1", "2", "0", "bad", [], {}, (1,)]:
+        with pytest.raises(ValueError):
+            validate_relevance_label(invalid)
+
+
+def test_met_label_04_pool_and_topk_malformed_labels_raise() -> None:
+    """MET-LABEL-04: Malformed pool and Top-K labels are not silently dropped, they raise ValueError."""
+    valid_pool = [2, 1, 0]
+    valid_ranked = [2, 1, 0]
+
+    # Malformed in Top-K
+    with pytest.raises(ValueError):
+        ndcg_at_k([2, "bad", 0], valid_pool)
+    with pytest.raises(ValueError):
+        ndcg_at_k([2, True, 0], valid_pool)
+
+    # Malformed in Pool
+    with pytest.raises(ValueError):
+        ndcg_at_k(valid_ranked, [2, "bad", 0])
+    with pytest.raises(ValueError):
+        idcg_at_k([2, 1, "bad", 0])
+    with pytest.raises(ValueError):
+        precision_at_k([2, "bad", 0])
+    with pytest.raises(ValueError):
+        pooled_recall_at_k([2, 1, 0], [2, 1, "bad", 0])
+
+
+# ============================================================
+# 16. I1 STRICT VALIDATION TEST (MET-STRAT-01)
+# ============================================================
+
+
+def test_met_strat_01_i1_stratum_strict_validation() -> None:
+    """MET-STRAT-01: Stratum must be strictly 'I0' or 'I1'; unknown values raise ValueError."""
+    assert i1_exposure_at_k(["I0", "I1"]) == 0.5
+    with pytest.raises(ValueError, match="Invalid stratum 'I2'"):
+        i1_exposure_at_k(["I0", "I2"])
+    with pytest.raises(ValueError, match="Invalid stratum 'UNKNOWN'"):
+        i1_exposure_at_k(["I0", "UNKNOWN"])
+
+
+# ============================================================
+# 17. VERSION & IDENTITY VALIDATION TESTS (MET-VER-01 .. MET-VER-05)
+# ============================================================
+
+
+def test_met_ver_01_gt_version_mismatch() -> None:
+    """MET-VER-01: load_and_validate_ground_truth rejects pool or rubric version mismatch."""
+    gt_payload = {
+        "pool_version": "W5-POOL-V2",  # Mismatch
+        "rubric_version": EXPECTED_RUBRIC_VERSION,
+        "total_records": 1,
+        "records": [{"scenario_id": "HN-U1-01", "place_id": "p1", "final_relevance": 1}],
+    }
+    with pytest.raises(ValueError, match="GT pool_version mismatch"):
+        load_and_validate_ground_truth(gt_payload)
+
+    gt_payload_rubric = {
+        "pool_version": EXPECTED_POOL_VERSION,
+        "rubric_version": "WRONG-RUBRIC",  # Mismatch
+        "total_records": 1,
+        "records": [{"scenario_id": "HN-U1-01", "place_id": "p1", "final_relevance": 1}],
+    }
+    with pytest.raises(ValueError, match="GT rubric_version mismatch"):
+        load_and_validate_ground_truth(gt_payload_rubric)
+
+
+def test_met_ver_02_primary_scenario_manifest_identity() -> None:
+    """MET-VER-02: validate_primary_scenario_manifest rejects invalid count, duplicates, or wrong fields."""
+    with pytest.raises(ValueError, match="Expected exactly 30 primary scenarios"):
+        validate_primary_scenario_manifest([{"scenario_id": "HN-U1-01"}] * 29)
+
+    # 30 scenarios with a duplicate ID
+    scenarios_dup = [{"scenario_id": "HN-U1-01", "destination": "ha-noi", "user_stratum": "U1", "declared_interests": ["food_cuisine"]}] * 30
+    with pytest.raises(ValueError, match="Duplicate scenario_id"):
+        validate_primary_scenario_manifest(scenarios_dup)
+
+
+def test_met_ver_03_system_ranking_integrity() -> None:
+    """MET-VER-03: validate_system_ranking_integrity rejects wrong length, duplicates, or out-of-pool items."""
+    scenario = {"scenario_id": "HN-U1-01", "destination": "ha-noi"}
+    dest_catalog = {f"p_{i}" for i in range(20)}
+    pool = {f"p_{i}" for i in range(15)}
+
+    # Length != 10
+    short_ranking = [{"place_id": f"p_{i}"} for i in range(9)]
+    with pytest.raises(ValueError, match="must have length 10"):
+        validate_system_ranking_integrity(SYSTEM_BASELINE, scenario, short_ranking, pool, dest_catalog)
+
+    # Duplicate place_id
+    dup_ranking = [{"place_id": "p_0"}] * 2 + [{"place_id": f"p_{i}"} for i in range(2, 10)]
+    with pytest.raises(ValueError, match="Duplicate place_ids"):
+        validate_system_ranking_integrity(SYSTEM_BASELINE, scenario, dup_ranking, pool, dest_catalog)
+
+    # Place not in pool
+    out_of_pool_ranking = [{"place_id": f"p_{i}"} for i in range(9)] + [{"place_id": "p_99"}]
+    with pytest.raises(ValueError, match="does not belong to candidate pool"):
+        validate_system_ranking_integrity(SYSTEM_BASELINE, scenario, out_of_pool_ranking, pool, dest_catalog)
+
+
+def test_met_ver_04_verdict_safety_on_missing_inference() -> None:
+    """MET-VER-04: classify_final_verdict returns INCONCLUSIVE when primary inference cannot be estimated."""
+    verdict = classify_final_verdict(
+        ndcg_ci=None,
+        ild_ci=(0.02, 0.05),
+        cov_ci=(0.01, 0.04),
+        ild_point_delta=0.03,
+        cov_point_delta=0.02,
+    )
+    assert verdict == "INCONCLUSIVE"
+
+
+# ============================================================
+# 18. FULL SYNTHETIC END-TO-END PIPELINE (MET-SYNTH-E2E)
+# ============================================================
+
+
+def test_met_synth_e2e_full_evaluation_pipeline() -> None:
+    """MET-SYNTH-E2E [SYNTHETIC_TEST_ONLY]: Full future evaluation pipeline executes cleanly on synthetic data."""
+    # 1. Synthetic Scenarios (6 scenarios: 2 per destination, 3 U1, 3 U2)
+    synthetic_scenarios = [
+        {"scenario_id": "HN-U1-01", "destination": "ha-noi", "user_stratum": "U1", "declared_interests": ["food_cuisine"]},
+        {"scenario_id": "HN-U2-01", "destination": "ha-noi", "user_stratum": "U2", "declared_interests": ["food_cuisine", "culture_history"]},
+        {"scenario_id": "DN-U1-01", "destination": "da-nang", "user_stratum": "U1", "declared_interests": ["beach_island"]},
+        {"scenario_id": "DN-U2-01", "destination": "da-nang", "user_stratum": "U2", "declared_interests": ["beach_island", "coffee_culture"]},
+        {"scenario_id": "HL-U1-01", "destination": "ha-long", "user_stratum": "U1", "declared_interests": ["nature_outdoor"]},
+        {"scenario_id": "HL-U2-01", "destination": "ha-long", "user_stratum": "U2", "declared_interests": ["nature_outdoor", "food_cuisine"]},
+    ]
+
+    # 2. Synthetic Candidate Pools (15 items per scenario)
+    synthetic_pool: List[Dict[str, Any]] = []
+    synthetic_rankings_base: Dict[str, List[Dict[str, Any]]] = {}
+    synthetic_rankings_a2: Dict[str, List[Dict[str, Any]]] = {}
+    synthetic_gt_records: List[Dict[str, Any]] = []
+
+    for sc in synthetic_scenarios:
+        sid = sc["scenario_id"]
+        dest = sc["destination"]
+        items = []
+        base_items = []
+        a2_items = []
+
+        for idx in range(15):
+            pid = f"{sid}_place_{idx:02d}"
+            category = "restaurant" if idx % 2 == 0 else "museum"
+            stratum = "I0" if idx < 12 else "I1"
+
+            item = {
+                "place_id": pid,
+                "category": category,
+                "i0_i1_stratum": stratum,
+                "destination": dest,
+            }
+            items.append(item)
+
+            if idx < 10:
+                base_items.append(item)
+                a2_items.append(item)
+
+            # Synthetic relevance: first 5 are relevant (2 or 1), rest 0
+            rel = 2 if idx < 3 else (1 if idx < 6 else 0)
+            synthetic_gt_records.append({
+                "scenario_id": sid,
+                "place_id": pid,
+                "final_relevance": rel,
+            })
+
+        synthetic_pool.append({
+            "scenario_id": sid,
+            "destination": dest,
+            "items": items,
+        })
+        synthetic_rankings_base[sid] = base_items
+        # Make A2 slightly different by swapping ranks
+        a2_permuted = list(reversed(a2_items[:5])) + a2_items[5:]
+        synthetic_rankings_a2[sid] = a2_permuted
+
+    # 3. Load & Validate Synthetic Ground Truth
+    gt_payload = {
+        "template_version": "W5-SYNTHETIC-GT-V1",
+        "pool_version": EXPECTED_POOL_VERSION,
+        "rubric_version": EXPECTED_RUBRIC_VERSION,
+        "metadata_version": "W5-METADATA-V1",
+        "total_records": len(synthetic_gt_records),
+        "records": synthetic_gt_records,
+    }
+    validated_gt = load_and_validate_ground_truth(gt_payload)
+    assert validated_gt["total_records"] == 90
+
+    # 4. Evaluate Systems
+    synth_cat_sizes = {"ha-noi": 20, "da-nang": 20, "ha-long": 20}
+    base_eval = evaluate_system(
+        system_name=SYSTEM_BASELINE,
+        scenarios=synthetic_scenarios,
+        internal_pool=synthetic_pool,
+        system_rankings=synthetic_rankings_base,
+        gt_map=validated_gt["gt_map"],
+        catalog_sizes=synth_cat_sizes,
+    )
+    assert base_eval["overall_destination_macro"]["ndcg_at_10"] is not None
+
+    a2_eval = evaluate_system(
+        system_name=SYSTEM_A2,
+        scenarios=synthetic_scenarios,
+        internal_pool=synthetic_pool,
+        system_rankings=synthetic_rankings_a2,
+        gt_map=validated_gt["gt_map"],
+        catalog_sizes=synth_cat_sizes,
+    )
+    assert a2_eval["overall_destination_macro"]["ndcg_at_10"] is not None
+
+    # 5. Build Paired Comparison
+    comparison = build_paired_comparison(
+        baseline_eval=base_eval,
+        a2_eval=a2_eval,
+        scenarios=synthetic_scenarios,
+        catalog_sizes=synth_cat_sizes,
+        replicates=200,
+    )
+    assert comparison["primary_metric"] == "ndcg_at_10"
+    assert comparison["scientific_verdict"] in [
+        "A2_RELEVANCE_SUPERIOR",
+        "BASELINE_PREFERRED",
+        "A2_DIVERSITY_TRADEOFF",
+        "INCONCLUSIVE",
+    ]
+
+    # 6. Build Final Result Document
+    final_doc = build_final_evaluation_result(
+        baseline_eval=base_eval,
+        a2_eval=a2_eval,
+        comparison=comparison,
+        gt_meta=validated_gt,
+    )
+    assert final_doc["evaluation_version"] == EVALUATION_VERSION
+    assert final_doc["category_ild_semantics"] == "structural_category_diversity_proxy"
+    assert final_doc["duplicate_policy_status"] == "PENDING"
+    assert final_doc["final_scientific_evaluation_ready"] is False
+    assert final_doc["scientific_verdict"] == comparison["scientific_verdict"]

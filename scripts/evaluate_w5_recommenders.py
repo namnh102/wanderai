@@ -7,9 +7,13 @@ Pre-registered evaluation runner for GoMate / WanderAI recommendation systems:
 - Paired destination-stratified bootstrap (seed 20261013, 10,000 replicates)
 - Pure metric functions: NDCG@10, Precision@10, Pooled Recall@10, HitRate@10,
   Category-ILD@10, CatalogCoverage@10, I1Exposure@10 (diagnostic)
-- Strict NA handling: NA is evidence insufficiency, never cast to 0
+- Strict relevance label validation: 0, 1, 2, 'NA', None (booleans/malformed strictly rejected)
+- Strict missingness handling: missing destination evidence is NEVER imputed as 0
+- Separated observed effect size (observed_point_delta) from bootstrap distribution
 - Pre-registered verdict classification (Rule A, B, C, INCONCLUSIVE)
 - Duplicate-equivalence map interface (status PENDING until W5-GATE-DUP)
+- Complete future evaluation pipeline (load_and_validate_ground_truth, evaluate_system,
+  build_paired_comparison, build_final_evaluation_result) ready before human labels exist.
 
 CRITICAL INVARIANTS:
 - No human labels collected or prefilled in repository
@@ -60,57 +64,119 @@ EXPECTED_TOTAL_CORE: int = 622
 SYSTEM_BASELINE = "shared_a0_a1_baseline"
 SYSTEM_A2 = "rec-a2"
 
+# Scientific Semantics Metadata
+CATEGORY_ILD_SEMANTICS: str = "structural_category_diversity_proxy"
+EVALUATION_VERSION: str = "W5-EVAL-V1"
+EXPECTED_RUBRIC_VERSION: str = "W5-RUBRIC-V1"
+EXPECTED_POOL_VERSION: str = "W5-POOL-V1"
+EXPECTED_SCENARIO_VERSION: str = "W5-SCENARIO-V1"
+
+
+# ============================================================
+# STRICT RELEVANCE LABEL VALIDATION
+# ============================================================
+
+
+def validate_relevance_label(val: Any) -> Optional[int]:
+    """Strictly validate a relevance label.
+
+    Allowed:
+      0, 1, 2 -> valid integer relevance
+      "NA", None -> unresolved judgment (returns None)
+
+    Explicitly rejected (raises ValueError):
+      bool (True, False) - bool is a subclass of int in Python!
+      int not in {0, 1, 2} (e.g. 3, -1)
+      float (e.g. 1.5)
+      str not in {"NA"} (e.g. "0", "1", "2", "bad")
+      any other type/value (list, dict, etc.)
+    """
+    if isinstance(val, bool):
+        raise ValueError(f"Invalid relevance label: boolean {val} is not permitted")
+    if val is None or val == "NA":
+        return None
+    if isinstance(val, int):
+        if val in (0, 1, 2):
+            return val
+        raise ValueError(f"Invalid integer relevance label: {val}. Allowed: 0, 1, 2")
+    raise ValueError(
+        f"Invalid relevance label: {val!r} of type {type(val).__name__}. Allowed: 0, 1, 2, 'NA', None"
+    )
+
+
+def validate_relevance_sequence(labels: Sequence[Any], context_name: str = "relevance") -> List[Optional[int]]:
+    """Validate a sequence of labels. Raises ValueError on any malformed label."""
+    validated: List[Optional[int]] = []
+    for idx, item in enumerate(labels):
+        try:
+            validated.append(validate_relevance_label(item))
+        except ValueError as err:
+            raise ValueError(f"Malformed label in {context_name} at index {idx}: {err}") from err
+    return validated
+
 
 # ============================================================
 # PURE METRIC FUNCTIONS
 # ============================================================
 
 
-def calculate_gain(rel: int) -> float:
+def calculate_gain(rel: Any) -> float:
     """Graded relevance gain: 2^rel - 1.
 
     rel=0 -> 0.0
     rel=1 -> 1.0
     rel=2 -> 3.0
+    Unresolved ('NA', None) or invalid values raise ValueError.
     """
-    if rel not in (0, 1, 2):
-        raise ValueError(f"Invalid relevance label {rel}. Expected 0, 1, or 2.")
-    return float((1 << rel) - 1)
+    validated = validate_relevance_label(rel)
+    if validated is None:
+        raise ValueError(f"Cannot calculate gain for unresolved label {rel!r}")
+    return float((1 << validated) - 1)
 
 
-def dcg_at_k(relevances: Sequence[int], k: int = 10) -> float:
+def dcg_at_k(relevances: Sequence[Any], k: int = 10) -> float:
     """Calculate Discounted Cumulative Gain at k using standard log2(i + 1) discount.
 
     DCG@k = sum_{i=1..k} (2^{rel_i} - 1) / log2(i + 1)
     """
-    k_eff = min(k, len(relevances))
+    validated = validate_relevance_sequence(relevances, context_name="dcg_at_k relevances")
+    k_eff = min(k, len(validated))
     dcg = 0.0
     for i in range(k_eff):
+        r = validated[i]
+        if r is None:
+            raise ValueError(f"Cannot compute DCG on unresolved relevance at rank {i + 1}")
         rank = i + 1
-        gain = calculate_gain(relevances[i])
+        gain = calculate_gain(r)
         discount = math.log2(rank + 1)
         dcg += gain / discount
     return dcg
 
 
-def idcg_at_k(pool_relevances: Sequence[int], k: int = 10) -> float:
+def idcg_at_k(pool_relevances: Sequence[Any], k: int = 10) -> float:
     """Calculate Ideal DCG at k from numerically judged scenario candidate pool.
 
     Sorts all numerically judged candidate items descending by relevance, takes top k.
+    Unresolved (NA, None) pool items are safely excluded from IDCG.
+    Malformed items raise ValueError.
     """
-    valid_labels = [r for r in pool_relevances if r in (0, 1, 2)]
-    sorted_relevances = sorted(valid_labels, reverse=True)
+    validated_pool = validate_relevance_sequence(pool_relevances, context_name="idcg_at_k pool")
+    valid_numeric = [r for r in validated_pool if r is not None]
+    sorted_relevances = sorted(valid_numeric, reverse=True)
     return dcg_at_k(sorted_relevances[:k], k=k)
 
 
 def ndcg_at_k(
-    ranked_relevances: Sequence[Optional[Union[int, str]]],
-    pool_relevances: Sequence[Optional[Union[int, str]]],
+    ranked_relevances: Sequence[Any],
+    pool_relevances: Sequence[Any],
     k: int = 10,
 ) -> Tuple[Optional[float], str]:
     """Calculate standard graded NDCG@10 against common judged pool.
 
     IDCG is constructed from all numerically judged items in the scenario candidate pool.
+
+    Validation:
+      Malformed labels in ranked_relevances or pool_relevances raise ValueError.
 
     NA / Unresolved Policy:
       If any item in evaluated Top-k is unresolved (NA or None), returns
@@ -123,14 +189,16 @@ def ndcg_at_k(
     Returns:
       (ndcg_value, status_code)
     """
-    k_eff = min(k, len(ranked_relevances))
+    valid_pool = validate_relevance_sequence(pool_relevances, context_name="pool_relevances")
+    valid_ranked = validate_relevance_sequence(ranked_relevances, context_name="ranked_relevances")
+
+    k_eff = min(k, len(valid_ranked))
     for i in range(k_eff):
-        r = ranked_relevances[i]
-        if r is None or r == "NA" or not isinstance(r, int) or r not in (0, 1, 2):
+        if valid_ranked[i] is None:
             return None, "NOT_SCORABLE_UNRESOLVED_TOPK"
 
-    clean_ranked: List[int] = [int(r) for r in ranked_relevances[:k_eff]]  # type: ignore
-    clean_pool: List[int] = [int(r) for r in pool_relevances if isinstance(r, int) and r in (0, 1, 2)]
+    clean_ranked: List[int] = [int(r) for r in valid_ranked[:k_eff]]  # type: ignore
+    clean_pool: List[int] = [int(r) for r in valid_pool if r is not None]
 
     idcg = idcg_at_k(clean_pool, k=k)
     if idcg == 0.0:
@@ -141,29 +209,29 @@ def ndcg_at_k(
 
 
 def precision_at_k(
-    ranked_relevances: Sequence[Optional[Union[int, str]]],
+    ranked_relevances: Sequence[Any],
     k: int = 10,
 ) -> Tuple[Optional[float], str]:
     """Precision at k with rel >= 1 threshold.
 
     If any item in evaluated Top-k is unresolved, returns (None, 'NOT_SCORABLE_UNRESOLVED_TOPK').
     """
-    k_eff = min(k, len(ranked_relevances))
+    valid_ranked = validate_relevance_sequence(ranked_relevances, context_name="ranked_relevances")
+    k_eff = min(k, len(valid_ranked))
     if k_eff == 0:
         return None, "EMPTY_RANKING"
 
     for i in range(k_eff):
-        r = ranked_relevances[i]
-        if r is None or r == "NA" or not isinstance(r, int) or r not in (0, 1, 2):
+        if valid_ranked[i] is None:
             return None, "NOT_SCORABLE_UNRESOLVED_TOPK"
 
-    relevant_count = sum(1 for i in range(k_eff) if int(ranked_relevances[i]) >= 1)  # type: ignore
+    relevant_count = sum(1 for i in range(k_eff) if int(valid_ranked[i]) >= 1)  # type: ignore
     return round(relevant_count / k_eff, 6), "OK"
 
 
 def pooled_recall_at_k(
-    ranked_relevances: Sequence[Optional[Union[int, str]]],
-    pool_relevances: Sequence[Optional[Union[int, str]]],
+    ranked_relevances: Sequence[Any],
+    pool_relevances: Sequence[Any],
     k: int = 10,
 ) -> Tuple[Optional[float], str]:
     """Pooled Recall at k: # relevant in Top-k / # relevant in common judged pool.
@@ -172,42 +240,44 @@ def pooled_recall_at_k(
     If pool contains zero relevant items, returns (None, 'NO_RELEVANT_ITEM_IN_JUDGED_POOL').
     If any item in evaluated Top-k is unresolved, returns (None, 'NOT_SCORABLE_UNRESOLVED_TOPK').
     """
-    k_eff = min(k, len(ranked_relevances))
+    valid_pool = validate_relevance_sequence(pool_relevances, context_name="pool_relevances")
+    valid_ranked = validate_relevance_sequence(ranked_relevances, context_name="ranked_relevances")
+
+    k_eff = min(k, len(valid_ranked))
     if k_eff == 0:
         return None, "EMPTY_RANKING"
 
     for i in range(k_eff):
-        r = ranked_relevances[i]
-        if r is None or r == "NA" or not isinstance(r, int) or r not in (0, 1, 2):
+        if valid_ranked[i] is None:
             return None, "NOT_SCORABLE_UNRESOLVED_TOPK"
 
-    pool_numeric = [int(r) for r in pool_relevances if isinstance(r, int) and r in (0, 1, 2)]
+    pool_numeric = [r for r in valid_pool if r is not None]
     pool_relevant = sum(1 for r in pool_numeric if r >= 1)
     if pool_relevant == 0:
         return None, "NO_RELEVANT_ITEM_IN_JUDGED_POOL"
 
-    topk_relevant = sum(1 for i in range(k_eff) if int(ranked_relevances[i]) >= 1)  # type: ignore
+    topk_relevant = sum(1 for i in range(k_eff) if int(valid_ranked[i]) >= 1)  # type: ignore
     return round(topk_relevant / pool_relevant, 6), "OK"
 
 
 def hit_rate_at_k(
-    ranked_relevances: Sequence[Optional[Union[int, str]]],
+    ranked_relevances: Sequence[Any],
     k: int = 10,
 ) -> Tuple[Optional[float], str]:
     """HitRate at k: 1.0 if at least one item in evaluated Top-k has rel >= 1, else 0.0.
 
     If any item in evaluated Top-k is unresolved, returns (None, 'NOT_SCORABLE_UNRESOLVED_TOPK').
     """
-    k_eff = min(k, len(ranked_relevances))
+    valid_ranked = validate_relevance_sequence(ranked_relevances, context_name="ranked_relevances")
+    k_eff = min(k, len(valid_ranked))
     if k_eff == 0:
         return None, "EMPTY_RANKING"
 
     for i in range(k_eff):
-        r = ranked_relevances[i]
-        if r is None or r == "NA" or not isinstance(r, int) or r not in (0, 1, 2):
+        if valid_ranked[i] is None:
             return None, "NOT_SCORABLE_UNRESOLVED_TOPK"
 
-    hits = any(int(ranked_relevances[i]) >= 1 for i in range(k_eff))  # type: ignore
+    hits = any(int(valid_ranked[i]) >= 1 for i in range(k_eff))  # type: ignore
     return (1.0 if hits else 0.0), "OK"
 
 
@@ -216,6 +286,9 @@ def category_ild_at_k(
     k: int = 10,
 ) -> Optional[float]:
     """Calculate Intra-List Distance (ILD) based on factual POI category.
+
+    Category-ILD@10 is explicitly a STRUCTURAL CATEGORY-DIVERSITY PROXY.
+    It does not measure semantic diversity, human-perceived diversity, or user satisfaction.
 
     d(i, j) = 0 if category(i) == category(j) else 1
     ILD(L) = 2 / (n * (n - 1)) * sum_{i < j} d(i, j)
@@ -259,10 +332,14 @@ def i1_exposure_at_k(strata: Sequence[str], k: int = 10) -> float:
     """Diagnostic ratio of zero-vector I1 items in evaluated Top-k.
 
     Diagnostic only: does NOT enter relevance verdict.
+    Strictly validates that every stratum is 'I0' or 'I1'. Unknown values raise ValueError.
     """
     k_eff = min(k, len(strata))
     if k_eff == 0:
         return 0.0
+    for idx, s in enumerate(strata[:k_eff]):
+        if s not in ("I0", "I1"):
+            raise ValueError(f"Invalid stratum {s!r} at rank {idx + 1}. Expected 'I0' or 'I1'.")
     i1_count = sum(1 for s in strata[:k_eff] if s == "I1")
     return round(i1_count / k_eff, 6)
 
@@ -289,11 +366,13 @@ def aggregate_destination_macro(destination_means: Dict[str, Optional[float]]) -
     """Compute primary overall macro mean across Hanoi, Da Nang, and Ha Long.
 
     Equal city weighting: mean(HN_mean, DN_mean, HL_mean).
+    If any required destination mean is None (not estimable), returns None.
     """
-    required = ["ha-noi", "da-nang", "ha-long"]
-    vals = [destination_means[d] for d in required if d in destination_means and destination_means[d] is not None]
-    if len(vals) < len(required):
-        return None
+    required = FROZEN_DESTINATIONS
+    for d in required:
+        if d not in destination_means or destination_means[d] is None:
+            return None
+    vals = [destination_means[d] for d in required if destination_means[d] is not None]  # type: ignore
     return round(sum(vals) / len(vals), 6)
 
 
@@ -312,27 +391,86 @@ def paired_destination_stratified_bootstrap(
 ) -> Dict[str, Any]:
     """Paired destination-stratified bootstrap for query-level metrics.
 
-    For each replicate:
-      For each destination independently:
-        Sample with replacement N_d pairs from that destination's scorable scenarios.
-        Compute destination mean delta: mean(a2 - baseline).
-      Primary replicate delta: mean(delta_HN, delta_DN, delta_HL).
+    CRITICAL SCIENTIFIC RULES:
+    1. Observed Point Delta:
+       Direct analytical mean of (A2 - Baseline) across original paired scorable scenarios.
+       Separated from bootstrap replicate mean.
+    2. Missingness / Non-Estimability:
+       If ANY destination has 0 paired scorable scenarios, delta 0 is NEVER imputed!
+       Returns status: "PRIMARY_INFERENCE_NOT_ESTIMABLE", observed_point_delta: None, ci_95: None.
+    3. Attrition Reporting:
+       Exposes total, paired scorable, and excluded counts globally and per destination.
 
     Returns:
       {
-        "mean_delta": float,
-        "ci_95": (float, float),
+        "status": "ESTIMATED" | "PRIMARY_INFERENCE_NOT_ESTIMABLE",
+        "observed_point_delta": Optional[float],
+        "ci_95": Optional[Tuple[float, float]],
+        "bootstrap_mean": Optional[float],
         "replicates": int,
         "seed": int,
+        "sample_attrition": Dict[str, Any],
       }
     """
     destinations = FROZEN_DESTINATIONS
     clean_data: Dict[str, List[Tuple[float, float]]] = {}
+    attrition_per_dest: Dict[str, Dict[str, int]] = {}
+
+    total_primary = 0
+    total_paired_scorable = 0
+    total_excluded = 0
+
+    has_empty_destination = False
+
     for d in destinations:
         pairs = paired_scenarios_by_dest.get(d, [])
+        n_total = len(pairs)
         valid_pairs = [(b, a) for b, a in pairs if b is not None and a is not None]
+        n_scorable = len(valid_pairs)
+        n_excluded = n_total - n_scorable
+
+        total_primary += n_total
+        total_paired_scorable += n_scorable
+        total_excluded += n_excluded
+
+        attrition_per_dest[d] = {
+            "total": n_total,
+            "paired_scorable": n_scorable,
+            "excluded": n_excluded,
+        }
         clean_data[d] = valid_pairs
 
+        if n_scorable == 0:
+            has_empty_destination = True
+
+    sample_attrition = {
+        "total_primary_scenarios": total_primary,
+        "paired_scorable_scenarios": total_paired_scorable,
+        "excluded_scenarios": total_excluded,
+        "per_destination": attrition_per_dest,
+    }
+
+    # Blocker A: Zero imputation is strictly forbidden!
+    if has_empty_destination:
+        return {
+            "status": "PRIMARY_INFERENCE_NOT_ESTIMABLE",
+            "observed_point_delta": None,
+            "ci_95": None,
+            "bootstrap_mean": None,
+            "replicates": replicates,
+            "seed": seed,
+            "sample_attrition": sample_attrition,
+        }
+
+    # Blocker B: Calculate OBSERVED point delta directly from original scenarios
+    observed_dest_deltas: List[float] = []
+    for d in destinations:
+        pairs = clean_data[d]
+        diffs = [a - b for b, a in pairs]
+        observed_dest_deltas.append(sum(diffs) / len(diffs))
+    observed_point_delta = round(sum(observed_dest_deltas) / len(destinations), 6)
+
+    # Bootstrap Resampling
     rng = random.Random(seed)
     replicate_deltas: List[float] = []
 
@@ -341,9 +479,6 @@ def paired_destination_stratified_bootstrap(
         for d in destinations:
             pairs = clean_data[d]
             n = len(pairs)
-            if n == 0:
-                dest_deltas.append(0.0)
-                continue
             sampled = rng.choices(pairs, k=n)
             diffs = [a - b for b, a in sampled]
             dest_deltas.append(sum(diffs) / n)
@@ -353,13 +488,16 @@ def paired_destination_stratified_bootstrap(
     sorted_deltas = sorted(replicate_deltas)
     ci_lower = calculate_percentile(sorted_deltas, 2.5)
     ci_upper = calculate_percentile(sorted_deltas, 97.5)
-    mean_delta = sum(replicate_deltas) / len(replicate_deltas)
+    bootstrap_mean = round(sum(replicate_deltas) / len(replicate_deltas), 6)
 
     return {
-        "mean_delta": round(mean_delta, 6),
+        "status": "ESTIMATED",
+        "observed_point_delta": observed_point_delta,
         "ci_95": (round(ci_lower, 6), round(ci_upper, 6)),
+        "bootstrap_mean": bootstrap_mean,
         "replicates": replicates,
         "seed": seed,
+        "sample_attrition": sample_attrition,
     }
 
 
@@ -371,35 +509,83 @@ def paired_coverage_stratified_bootstrap(
 ) -> Dict[str, Any]:
     """Paired destination-stratified bootstrap for CatalogCoverage@10.
 
-    For each replicate:
-      For each destination independently:
-        Sample with replacement N_d scenarios.
-        Recompute unique coverage for baseline and a2 in resampled scenario set.
-        delta_d = (unique_a2 - unique_base) / catalog_size_d.
-      Primary replicate delta: mean(delta_HN, delta_DN, delta_HL).
+    CRITICAL SCIENTIFIC RULES:
+    1. Observed Point Delta:
+       Direct analytical coverage delta on original scenarios:
+       delta_d = (unique_a2_d - unique_base_d) / catalog_size_d
+       observed_point_delta = mean(delta_HN, delta_DN, delta_HL)
+    2. Missingness / Non-Estimability:
+       If any required destination has 0 scenarios, returns PRIMARY_INFERENCE_NOT_ESTIMABLE.
     """
     destinations = FROZEN_DESTINATIONS
+    attrition_per_dest: Dict[str, Dict[str, int]] = {}
+    has_empty_destination = False
+
+    for d in destinations:
+        sc_list = scenarios_by_dest.get(d, [])
+        cat_size = catalog_sizes.get(d, 0)
+        n = len(sc_list)
+        attrition_per_dest[d] = {
+            "total": n,
+            "paired_scorable": n,
+            "excluded": 0,
+        }
+        if n == 0 or cat_size <= 0:
+            has_empty_destination = True
+
+    sample_attrition = {
+        "total_primary_scenarios": sum(len(scenarios_by_dest.get(d, [])) for d in destinations),
+        "paired_scorable_scenarios": sum(len(scenarios_by_dest.get(d, [])) for d in destinations),
+        "excluded_scenarios": 0,
+        "per_destination": attrition_per_dest,
+    }
+
+    if has_empty_destination:
+        return {
+            "status": "PRIMARY_INFERENCE_NOT_ESTIMABLE",
+            "observed_point_delta": None,
+            "ci_95": None,
+            "bootstrap_mean": None,
+            "replicates": replicates,
+            "seed": seed,
+            "sample_attrition": sample_attrition,
+        }
+
+    # Observed Point Delta from original scenario set
+    observed_dest_deltas: List[float] = []
+    for d in destinations:
+        sc_list = scenarios_by_dest[d]
+        cat_size = catalog_sizes[d]
+        base_places: Set[str] = set()
+        a2_places: Set[str] = set()
+        for sc in sc_list:
+            base_places.update(sc.get("baseline_top10", []))
+            a2_places.update(sc.get("a2_top10", []))
+        cov_base = len(base_places) / cat_size
+        cov_a2 = len(a2_places) / cat_size
+        observed_dest_deltas.append(cov_a2 - cov_base)
+
+    observed_point_delta = round(sum(observed_dest_deltas) / len(destinations), 6)
+
+    # Bootstrap Resampling
     rng = random.Random(seed)
     replicate_deltas: List[float] = []
 
     for _ in range(replicates):
         dest_deltas: List[float] = []
         for d in destinations:
-            sc_list = scenarios_by_dest.get(d, [])
+            sc_list = scenarios_by_dest[d]
             n = len(sc_list)
-            cat_size = catalog_sizes.get(d, 1)
-            if n == 0 or cat_size <= 0:
-                dest_deltas.append(0.0)
-                continue
+            cat_size = catalog_sizes[d]
             sampled_sc = rng.choices(sc_list, k=n)
-            base_places: Set[str] = set()
-            a2_places: Set[str] = set()
+            b_places: Set[str] = set()
+            a_places: Set[str] = set()
             for sc in sampled_sc:
-                base_places.update(sc.get("baseline_top10", []))
-                a2_places.update(sc.get("a2_top10", []))
-            cov_base = len(base_places) / cat_size
-            cov_a2 = len(a2_places) / cat_size
-            dest_deltas.append(cov_a2 - cov_base)
+                b_places.update(sc.get("baseline_top10", []))
+                a_places.update(sc.get("a2_top10", []))
+            cov_b = len(b_places) / cat_size
+            cov_a = len(a_places) / cat_size
+            dest_deltas.append(cov_a - cov_b)
 
         macro_delta = sum(dest_deltas) / len(destinations)
         replicate_deltas.append(macro_delta)
@@ -407,13 +593,16 @@ def paired_coverage_stratified_bootstrap(
     sorted_deltas = sorted(replicate_deltas)
     ci_lower = calculate_percentile(sorted_deltas, 2.5)
     ci_upper = calculate_percentile(sorted_deltas, 97.5)
-    mean_delta = sum(replicate_deltas) / len(replicate_deltas)
+    bootstrap_mean = round(sum(replicate_deltas) / len(replicate_deltas), 6)
 
     return {
-        "mean_delta": round(mean_delta, 6),
+        "status": "ESTIMATED",
+        "observed_point_delta": observed_point_delta,
         "ci_95": (round(ci_lower, 6), round(ci_upper, 6)),
+        "bootstrap_mean": bootstrap_mean,
         "replicates": replicates,
         "seed": seed,
+        "sample_attrition": sample_attrition,
     }
 
 
@@ -423,24 +612,25 @@ def paired_coverage_stratified_bootstrap(
 
 
 def classify_final_verdict(
-    ndcg_ci: Tuple[float, float],
-    ild_ci: Tuple[float, float],
-    cov_ci: Tuple[float, float],
-    ild_point_delta: float,
-    cov_point_delta: float,
+    ndcg_ci: Optional[Tuple[float, float]],
+    ild_ci: Optional[Tuple[float, float]],
+    cov_ci: Optional[Tuple[float, float]],
+    ild_point_delta: Optional[float],
+    cov_point_delta: Optional[float],
 ) -> str:
     """Classify final scientific verdict according to pre-registered rules.
 
-    Rule A: 95% CI lower bound for Delta NDCG@10 > 0
-            -> A2_RELEVANCE_SUPERIOR
-    Rule B: 95% CI upper bound for Delta NDCG@10 < 0
-            -> BASELINE_PREFERRED
-    Rule C: NDCG CI includes 0, AND at least one diversity metric CI lower bound > 0
-            with the point estimate of the other >= 0
-            -> A2_DIVERSITY_TRADEOFF
-    Otherwise:
-            -> INCONCLUSIVE
+    Permitted Verdict Labels:
+      A2_RELEVANCE_SUPERIOR
+      BASELINE_PREFERRED
+      A2_DIVERSITY_TRADEOFF
+      INCONCLUSIVE
+
+    If primary inference cannot be estimated (ndcg_ci is None), returns INCONCLUSIVE.
     """
+    if ndcg_ci is None:
+        return "INCONCLUSIVE"
+
     ndcg_lower, ndcg_upper = ndcg_ci
     if ndcg_lower > 0.0:
         return "A2_RELEVANCE_SUPERIOR"
@@ -449,10 +639,13 @@ def classify_final_verdict(
 
     # NDCG CI includes zero
     if ndcg_lower <= 0.0 <= ndcg_upper:
-        ild_lower, _ = ild_ci
-        cov_lower, _ = cov_ci
-        rule_c1 = ild_lower > 0.0 and cov_point_delta >= 0.0
-        rule_c2 = cov_lower > 0.0 and ild_point_delta >= 0.0
+        ild_lower = ild_ci[0] if ild_ci is not None else -1.0
+        cov_lower = cov_ci[0] if cov_ci is not None else -1.0
+        c_p_ild = ild_point_delta if ild_point_delta is not None else -1.0
+        c_p_cov = cov_point_delta if cov_point_delta is not None else -1.0
+
+        rule_c1 = ild_lower > 0.0 and c_p_cov >= 0.0
+        rule_c2 = cov_lower > 0.0 and c_p_ild >= 0.0
         if rule_c1 or rule_c2:
             return "A2_DIVERSITY_TRADEOFF"
 
@@ -486,7 +679,8 @@ def evaluate_scenario(
     scenario_info: Dict[str, Any],
     ranked_places: List[Dict[str, Any]],
     pool_items: List[Dict[str, Any]],
-    gt_map: Dict[str, Optional[Union[int, str]]],
+    gt_map: Dict[str, Any],
+    system_name: str,
     duplicate_map: Optional[Dict[str, str]] = None,
     k: int = 10,
 ) -> Dict[str, Any]:
@@ -497,7 +691,7 @@ def evaluate_scenario(
 
     # Extract ranked relevances and metadata
     k_eff = min(k, len(ranked_places))
-    ranked_relevances: List[Optional[Union[int, str]]] = []
+    ranked_relevances: List[Any] = []
     ranked_categories: List[str] = []
     ranked_strata: List[str] = []
 
@@ -508,14 +702,15 @@ def evaluate_scenario(
         ranked_strata.append(item.get("i0_i1_stratum", "I0"))
 
     # Extract pool relevances
-    pool_relevances: List[Optional[Union[int, str]]] = []
+    pool_relevances: List[Any] = []
     for item in pool_items:
         pid = item["place_id"]
         pool_relevances.append(gt_map.get(pid))
 
     # Pool counts
-    judged_pool_count = sum(1 for r in pool_relevances if isinstance(r, int) and r in (0, 1, 2))
-    unresolved_pool_count = sum(1 for r in pool_relevances if r is None or r == "NA")
+    validated_pool = validate_relevance_sequence(pool_relevances, context_name=f"{scenario_id} pool")
+    judged_pool_count = sum(1 for r in validated_pool if r is not None)
+    unresolved_pool_count = sum(1 for r in validated_pool if r is None)
 
     # Compute metrics
     ndcg_val, ndcg_status = ndcg_at_k(ranked_relevances, pool_relevances, k=k)
@@ -535,6 +730,7 @@ def evaluate_scenario(
         "scenario_id": scenario_id,
         "destination": destination,
         "user_stratum": user_stratum,
+        "system": system_name,
         "ndcg_at_10": ndcg_val,
         "precision_at_10": p_val,
         "pooled_recall_at_10": r_val,
@@ -544,6 +740,7 @@ def evaluate_scenario(
         "judged_pool_count": judged_pool_count,
         "unresolved_pool_count": unresolved_pool_count,
         "metric_status": overall_status,
+        "category_ild_semantics": CATEGORY_ILD_SEMANTICS,
     }
 
 
@@ -569,6 +766,385 @@ def extract_system_rankings(
 
 
 # ============================================================
+# STRICT IDENTITY & GROUND TRUTH VALIDATION
+# ============================================================
+
+
+def validate_primary_scenario_manifest(scenarios: List[Dict[str, Any]]) -> None:
+    """Validate that the primary scenarios match the frozen manifest exactly."""
+    if len(scenarios) != 30:
+        raise ValueError(f"Expected exactly 30 primary scenarios, got {len(scenarios)}")
+
+    seen_ids: Set[str] = set()
+    u1_count = 0
+    u2_count = 0
+    dest_counts: Dict[str, int] = {d: 0 for d in FROZEN_DESTINATIONS}
+
+    for sc in scenarios:
+        sid = sc.get("scenario_id")
+        if not sid or not isinstance(sid, str):
+            raise ValueError(f"Invalid or missing scenario_id: {sid!r}")
+        if sid in seen_ids:
+            raise ValueError(f"Duplicate scenario_id: {sid}")
+        seen_ids.add(sid)
+
+        dest = sc.get("destination")
+        if dest not in FROZEN_DESTINATIONS:
+            raise ValueError(f"Unknown destination {dest!r} in scenario {sid}")
+        dest_counts[dest] += 1
+
+        stratum = sc.get("user_stratum")
+        if stratum == "U1":
+            u1_count += 1
+            if len(sc.get("declared_interests", [])) != 1:
+                raise ValueError(f"U1 scenario {sid} must have exactly 1 declared interest")
+        elif stratum == "U2":
+            u2_count += 1
+            if len(sc.get("declared_interests", [])) < 2:
+                raise ValueError(f"U2 scenario {sid} must have >= 2 declared interests")
+        else:
+            raise ValueError(f"Invalid user_stratum {stratum!r} in scenario {sid}")
+
+    if u1_count != 15 or u2_count != 15:
+        raise ValueError(f"Expected 15 U1 and 15 U2 scenarios, got {u1_count} U1, {u2_count} U2")
+
+    expected_dest_counts = {"ha-noi": 9, "da-nang": 11, "ha-long": 10}
+    if dest_counts != expected_dest_counts:
+        raise ValueError(f"Destination scenario counts mismatch: {dest_counts} != {expected_dest_counts}")
+
+
+def validate_system_ranking_integrity(
+    system_name: str,
+    scenario: Dict[str, Any],
+    ranking: List[Dict[str, Any]],
+    pool_place_ids: Set[str],
+    destination_catalog_ids: Set[str],
+) -> None:
+    """Validate Top-10 ranking properties strictly."""
+    sid = scenario["scenario_id"]
+    dest = scenario["destination"]
+
+    if len(ranking) != 10:
+        raise ValueError(f"Canonical primary ranking for {system_name} on {sid} must have length 10, got {len(ranking)}")
+
+    pids: List[str] = []
+    for idx, item in enumerate(ranking):
+        pid = item.get("place_id")
+        if not pid or not isinstance(pid, str):
+            raise ValueError(f"Missing place_id in {system_name} on {sid} at rank {idx + 1}")
+        if pid not in pool_place_ids:
+            raise ValueError(f"Place {pid} in {system_name} on {sid} does not belong to candidate pool")
+        if pid not in destination_catalog_ids:
+            raise ValueError(f"Place {pid} in {system_name} on {sid} does not belong to {dest} catalog")
+        pids.append(pid)
+
+    if len(set(pids)) != 10:
+        raise ValueError(f"Duplicate place_ids in Top-10 ranking for {system_name} on {sid}: {pids}")
+
+
+def load_and_validate_ground_truth(
+    gt_source: Union[str, Path, Dict[str, Any]],
+    expected_pool_version: str = EXPECTED_POOL_VERSION,
+    expected_rubric_version: str = EXPECTED_RUBRIC_VERSION,
+) -> Dict[str, Any]:
+    """Load and validate ground truth data.
+
+    Validates:
+    - pool_version == expected_pool_version
+    - rubric_version == expected_rubric_version
+    - records list exists and total_records matches
+    - all labels are strictly valid via validate_relevance_label (raises on malformed)
+    """
+    if isinstance(gt_source, (str, Path)):
+        path = Path(gt_source)
+        if not path.exists():
+            raise FileNotFoundError(f"Ground truth file not found: {path}")
+        raw_text = path.read_text(encoding="utf-8")
+        data = json.loads(raw_text)
+    elif isinstance(gt_source, dict):
+        data = gt_source
+    else:
+        raise TypeError(f"Expected path or dict for gt_source, got {type(gt_source).__name__}")
+
+    pool_ver = data.get("pool_version")
+    if pool_ver != expected_pool_version:
+        raise ValueError(f"GT pool_version mismatch: got {pool_ver!r}, expected {expected_pool_version!r}")
+
+    rubric_ver = data.get("rubric_version")
+    if rubric_ver != expected_rubric_version:
+        raise ValueError(f"GT rubric_version mismatch: got {rubric_ver!r}, expected {expected_rubric_version!r}")
+
+    records = data.get("records")
+    if not isinstance(records, list):
+        raise ValueError("GT data must contain a 'records' list")
+
+    total_records = data.get("total_records", len(records))
+    if len(records) != total_records:
+        raise ValueError(f"GT record count mismatch: header specifies {total_records}, got {len(records)}")
+
+    gt_map: Dict[Tuple[str, str], Optional[int]] = {}
+    for idx, rec in enumerate(records):
+        sid = rec.get("scenario_id")
+        pid = rec.get("place_id")
+        if not sid or not pid:
+            raise ValueError(f"Missing scenario_id or place_id at record {idx}")
+
+        raw_rel = rec.get("final_relevance")
+        try:
+            validated_rel = validate_relevance_label(raw_rel)
+        except ValueError as err:
+            raise ValueError(f"Invalid relevance in GT record {idx} ({sid}, {pid}): {err}") from err
+
+        gt_map[(sid, pid)] = validated_rel
+
+    return {
+        "gt_version": data.get("template_version") or data.get("gt_version", "W5-GT-V1"),
+        "pool_version": pool_ver,
+        "rubric_version": rubric_ver,
+        "metadata_version": data.get("metadata_version", "W5-METADATA-V1"),
+        "total_records": len(records),
+        "gt_map": gt_map,
+    }
+
+
+def evaluate_system(
+    system_name: str,
+    scenarios: List[Dict[str, Any]],
+    internal_pool: List[Dict[str, Any]],
+    system_rankings: Dict[str, List[Dict[str, Any]]],
+    gt_map: Dict[Tuple[str, str], Optional[int]],
+    catalog_sizes: Dict[str, int] = EXPECTED_CATALOG_SIZES,
+    duplicate_map: Optional[Dict[str, str]] = None,
+    k: int = 10,
+) -> Dict[str, Any]:
+    """Execute full evaluation of one system across all scenarios."""
+    pool_map = {sc["scenario_id"]: sc for sc in internal_pool}
+    scenario_results: List[Dict[str, Any]] = []
+
+    for sc in scenarios:
+        sid = sc["scenario_id"]
+        pool_sc = pool_map[sid]
+        ranked_places = system_rankings.get(sid, [])
+        scenario_gt = {item["place_id"]: gt_map.get((sid, item["place_id"])) for item in pool_sc["items"]}
+
+        res = evaluate_scenario(
+            scenario_info=sc,
+            ranked_places=ranked_places,
+            pool_items=pool_sc["items"],
+            gt_map=scenario_gt,
+            system_name=system_name,
+            duplicate_map=duplicate_map,
+            k=k,
+        )
+        scenario_results.append(res)
+
+    # Aggregations
+    dest_means: Dict[str, Dict[str, Optional[float]]] = {}
+    dest_counts: Dict[str, Dict[str, int]] = {}
+
+    metrics_keys = [
+        "ndcg_at_10",
+        "precision_at_10",
+        "pooled_recall_at_10",
+        "hit_rate_at_10",
+        "category_ild_at_10",
+        "i1_exposure_at_10",
+    ]
+
+    for d in FROZEN_DESTINATIONS:
+        d_res = [r for r in scenario_results if r["destination"] == d]
+        dest_means[d] = {}
+        dest_counts[d] = {}
+        for m in metrics_keys:
+            scorable = [r[m] for r in d_res if r[m] is not None]
+            dest_counts[d][m] = len(scorable)
+            dest_means[d][m] = round(sum(scorable) / len(scorable), 6) if scorable else None
+
+    # Overall macro means
+    overall_macro: Dict[str, Optional[float]] = {}
+    for m in metrics_keys:
+        per_d = {d: dest_means[d][m] for d in FROZEN_DESTINATIONS}
+        overall_macro[m] = aggregate_destination_macro(per_d)
+
+    # Unweighted all-scenario means
+    unweighted_means: Dict[str, Optional[float]] = {}
+    for m in metrics_keys:
+        unweighted_means[m] = aggregate_unweighted_mean([r[m] for r in scenario_results])
+
+    # Stratum breakdowns (U1, U2)
+    stratum_means: Dict[str, Dict[str, Optional[float]]] = {}
+    stratum_counts: Dict[str, Dict[str, int]] = {}
+    for strat in ("U1", "U2"):
+        s_res = [r for r in scenario_results if r["user_stratum"] == strat]
+        stratum_means[strat] = {}
+        stratum_counts[strat] = {}
+        for m in metrics_keys:
+            scorable = [r[m] for r in s_res if r[m] is not None]
+            stratum_counts[strat][m] = len(scorable)
+            stratum_means[strat][m] = round(sum(scorable) / len(scorable), 6) if scorable else None
+
+    # Catalog Coverage
+    coverage_by_dest: Dict[str, float] = {}
+    for d in FROZEN_DESTINATIONS:
+        d_scs = [sc["scenario_id"] for sc in scenarios if sc["destination"] == d]
+        unique_pids: Set[str] = set()
+        for sid in d_scs:
+            for item in system_rankings.get(sid, [])[:k]:
+                unique_pids.add(item["place_id"])
+        coverage_by_dest[d] = catalog_coverage_at_k(len(unique_pids), catalog_sizes[d])
+
+    macro_cov = macro_destination_coverage(
+        coverage_by_dest["ha-noi"],
+        coverage_by_dest["da-nang"],
+        coverage_by_dest["ha-long"],
+    )
+    overall_macro["catalog_coverage_at_10"] = macro_cov
+
+    return {
+        "system": system_name,
+        "overall_destination_macro": overall_macro,
+        "unweighted_all_scenario_mean": unweighted_means,
+        "destination_breakdown": {
+            d: {
+                "means": dest_means[d],
+                "scorable_counts": dest_counts[d],
+                "coverage_at_10": coverage_by_dest[d],
+            }
+            for d in FROZEN_DESTINATIONS
+        },
+        "stratum_breakdown": {
+            strat: {
+                "means": stratum_means[strat],
+                "scorable_counts": stratum_counts[strat],
+            }
+            for strat in ("U1", "U2")
+        },
+        "scenario_results": scenario_results,
+    }
+
+
+def build_paired_comparison(
+    baseline_eval: Dict[str, Any],
+    a2_eval: Dict[str, Any],
+    scenarios: List[Dict[str, Any]],
+    catalog_sizes: Dict[str, int] = EXPECTED_CATALOG_SIZES,
+    seed: int = W5_METRIC_BOOTSTRAP_SEED,
+    replicates: int = BOOTSTRAP_REPLICATES,
+) -> Dict[str, Any]:
+    """Execute paired destination-stratified comparisons across all metrics."""
+    base_res = {r["scenario_id"]: r for r in baseline_eval["scenario_results"]}
+    a2_res = {r["scenario_id"]: r for r in a2_eval["scenario_results"]}
+
+    query_metrics = [
+        "ndcg_at_10",
+        "precision_at_10",
+        "pooled_recall_at_10",
+        "hit_rate_at_10",
+        "category_ild_at_10",
+        "i1_exposure_at_10",
+    ]
+
+    metrics_comparison: Dict[str, Any] = {}
+
+    for m in query_metrics:
+        paired_by_dest: Dict[str, List[Tuple[Optional[float], Optional[float]]]] = {
+            d: [] for d in FROZEN_DESTINATIONS
+        }
+        for sc in scenarios:
+            sid = sc["scenario_id"]
+            d = sc["destination"]
+            b_val = base_res[sid].get(m)
+            a_val = a2_res[sid].get(m)
+            paired_by_dest[d].append((b_val, a_val))
+
+        boot_res = paired_destination_stratified_bootstrap(
+            paired_by_dest, seed=seed, replicates=replicates
+        )
+        metrics_comparison[m] = boot_res
+
+    # Coverage paired bootstrap
+    scenarios_by_dest: Dict[str, List[Dict[str, Any]]] = {d: [] for d in FROZEN_DESTINATIONS}
+    for sc in scenarios:
+        sid = sc["scenario_id"]
+        d = sc["destination"]
+        b_pids = [it["place_id"] for it in base_res[sid].get("ranked_places", [])] if "ranked_places" in base_res[sid] else []
+        a_pids = [it["place_id"] for it in a2_res[sid].get("ranked_places", [])] if "ranked_places" in a2_res[sid] else []
+        scenarios_by_dest[d].append({
+            "scenario_id": sid,
+            "baseline_top10": b_pids,
+            "a2_top10": a_pids,
+        })
+
+    # Coverage from system results
+    cov_boot = paired_coverage_stratified_bootstrap(
+        scenarios_by_dest, catalog_sizes=catalog_sizes, seed=seed, replicates=replicates
+    )
+    metrics_comparison["catalog_coverage_at_10"] = cov_boot
+
+    # Verdict determination
+    ndcg_info = metrics_comparison["ndcg_at_10"]
+    ild_info = metrics_comparison["category_ild_at_10"]
+    cov_info = metrics_comparison["catalog_coverage_at_10"]
+
+    verdict = classify_final_verdict(
+        ndcg_ci=ndcg_info.get("ci_95"),
+        ild_ci=ild_info.get("ci_95"),
+        cov_ci=cov_info.get("ci_95"),
+        ild_point_delta=ild_info.get("observed_point_delta"),
+        cov_point_delta=cov_info.get("observed_point_delta"),
+    )
+
+    verdict_reason = None
+    if ndcg_info.get("status") == "PRIMARY_INFERENCE_NOT_ESTIMABLE":
+        verdict_reason = "PRIMARY_INFERENCE_NOT_ESTIMABLE"
+
+    return {
+        "primary_metric": "ndcg_at_10",
+        "observed_delta_ndcg_at_10": ndcg_info.get("observed_point_delta"),
+        "ndcg_ci_95": ndcg_info.get("ci_95"),
+        "scientific_verdict": verdict,
+        "verdict_reason": verdict_reason,
+        "metrics": metrics_comparison,
+    }
+
+
+def build_final_evaluation_result(
+    baseline_eval: Dict[str, Any],
+    a2_eval: Dict[str, Any],
+    comparison: Dict[str, Any],
+    gt_meta: Dict[str, Any],
+) -> Dict[str, Any]:
+    """Construct final comprehensive evaluation document."""
+    return {
+        "evaluation_version": EVALUATION_VERSION,
+        "gt_version": gt_meta.get("gt_version"),
+        "pool_version": gt_meta.get("pool_version"),
+        "rubric_version": gt_meta.get("rubric_version"),
+        "metadata_version": gt_meta.get("metadata_version"),
+        "duplicate_policy_status": "PENDING",
+        "final_scientific_evaluation_ready": False,
+        "category_ild_semantics": CATEGORY_ILD_SEMANTICS,
+        "primary_metric": "NDCG@10",
+        "systems": {
+            SYSTEM_BASELINE: {
+                "overall_destination_macro": baseline_eval["overall_destination_macro"],
+                "unweighted_all_scenario_mean": baseline_eval["unweighted_all_scenario_mean"],
+                "destination_breakdown": baseline_eval["destination_breakdown"],
+                "stratum_breakdown": baseline_eval["stratum_breakdown"],
+            },
+            SYSTEM_A2: {
+                "overall_destination_macro": a2_eval["overall_destination_macro"],
+                "unweighted_all_scenario_mean": a2_eval["unweighted_all_scenario_mean"],
+                "destination_breakdown": a2_eval["destination_breakdown"],
+                "stratum_breakdown": a2_eval["stratum_breakdown"],
+            },
+        },
+        "paired_comparison": comparison,
+        "scientific_verdict": comparison["scientific_verdict"],
+    }
+
+
+# ============================================================
 # DRY-RUN VALIDATION
 # ============================================================
 
@@ -578,7 +1154,7 @@ def run_dry_run_validation(repo_root: Optional[Path] = None) -> Dict[str, Any]:
 
     Validates:
     - Freeze V2 catalog integrity (622 core, 145 HN, 289 DN, 188 HL, 0 leakage)
-    - Scenario manifest integrity (30 primary: 15 U1, 15 U2; 6 thin)
+    - Scenario manifest exact identity (30 primary: 15 U1, 15 U2; 6 thin)
     - Internal candidate pool integrity (30 scenarios, 474 unique candidate pool records)
     - Recommender top-10 structural integrity (no duplicates, exactly 10 items)
     - Preserves scientific boundary: NO human labels, NO winner, NO comparison.
@@ -597,9 +1173,16 @@ def run_dry_run_validation(repo_root: Optional[Path] = None) -> Dict[str, Any]:
     core_places = [p for p in freeze_places if p.get("is_rec_a_core_v2") is True]
     if len(core_places) != EXPECTED_TOTAL_CORE:
         raise ValueError(f"Expected {EXPECTED_TOTAL_CORE} core places, got {len(core_places)}")
-    hn_count = sum(1 for p in core_places if p.get("destination_slug") == "ha-noi")
-    dn_count = sum(1 for p in core_places if p.get("destination_slug") == "da-nang")
-    hl_count = sum(1 for p in core_places if p.get("destination_slug") == "ha-long")
+
+    core_by_dest: Dict[str, Set[str]] = {d: set() for d in FROZEN_DESTINATIONS}
+    for p in core_places:
+        slug = p.get("destination_slug")
+        if slug in core_by_dest:
+            core_by_dest[slug].add(p["place_id"])
+
+    hn_count = len(core_by_dest["ha-noi"])
+    dn_count = len(core_by_dest["da-nang"])
+    hl_count = len(core_by_dest["ha-long"])
     if hn_count != EXPECTED_CATALOG_SIZES["ha-noi"]:
         raise ValueError(f"HN core count mismatch: {hn_count} != {EXPECTED_CATALOG_SIZES['ha-noi']}")
     if dn_count != EXPECTED_CATALOG_SIZES["da-nang"]:
@@ -617,12 +1200,7 @@ def run_dry_run_validation(repo_root: Optional[Path] = None) -> Dict[str, Any]:
     if not primary_path.exists():
         raise FileNotFoundError(f"Primary scenarios manifest missing: {primary_path}")
     primary_scenarios = json.loads(primary_path.read_text(encoding="utf-8"))
-    if len(primary_scenarios) != 30:
-        raise ValueError(f"Expected 30 primary scenarios, got {len(primary_scenarios)}")
-    u1_scenarios = [s for s in primary_scenarios if s.get("user_stratum") == "U1"]
-    u2_scenarios = [s for s in primary_scenarios if s.get("user_stratum") == "U2"]
-    if len(u1_scenarios) != 15 or len(u2_scenarios) != 15:
-        raise ValueError(f"Expected 15 U1 and 15 U2 scenarios, got {len(u1_scenarios)} U1, {len(u2_scenarios)} U2")
+    validate_primary_scenario_manifest(primary_scenarios)
 
     # 3. Thin scenarios validation
     thin_path = root / THIN_SCENARIOS_RELPATH
@@ -646,23 +1224,26 @@ def run_dry_run_validation(repo_root: Optional[Path] = None) -> Dict[str, Any]:
 
     # Validate Top-10 structural properties for each system
     system_rankings = extract_system_rankings(internal_pool)
-    for sid_idx, sc in enumerate(internal_pool):
+    scenario_map = {sc["scenario_id"]: sc for sc in primary_scenarios}
+
+    for sc in internal_pool:
         sid = sc["scenario_id"]
+        primary_spec = scenario_map[sid]
+        dest = primary_spec["destination"]
+        dest_catalog = core_by_dest[dest]
+        pool_pids = {it["place_id"] for it in sc["items"]}
+
         base_top10 = system_rankings[SYSTEM_BASELINE][sid]
         a2_top10 = system_rankings[SYSTEM_A2][sid]
-        if len(base_top10) != 10:
-            raise ValueError(f"Scenario {sid} baseline ranking length != 10: {len(base_top10)}")
-        if len(a2_top10) != 10:
-            raise ValueError(f"Scenario {sid} A2 ranking length != 10: {len(a2_top10)}")
 
-        base_ids = [it["place_id"] for it in base_top10]
-        a2_ids = [it["place_id"] for it in a2_top10]
-        if len(set(base_ids)) != 10:
-            raise ValueError(f"Scenario {sid} baseline contains duplicate place_ids")
-        if len(set(a2_ids)) != 10:
-            raise ValueError(f"Scenario {sid} A2 contains duplicate place_ids")
+        validate_system_ranking_integrity(
+            SYSTEM_BASELINE, primary_spec, base_top10, pool_pids, dest_catalog
+        )
+        validate_system_ranking_integrity(
+            SYSTEM_A2, primary_spec, a2_top10, pool_pids, dest_catalog
+        )
 
-        # Check secondary leakage
+        # Check secondary leakage and item valid attributes
         for it in sc["items"]:
             if it["place_id"] in secondary_ids:
                 raise ValueError(f"Secondary place {it['place_id']} leaked into pool for {sid}")
@@ -670,6 +1251,9 @@ def run_dry_run_validation(repo_root: Optional[Path] = None) -> Dict[str, Any]:
                 raise ValueError(f"Missing category for place {it['place_id']} in {sid}")
             if it.get("i0_i1_stratum") not in ("I0", "I1"):
                 raise ValueError(f"Invalid stratum {it.get('i0_i1_stratum')} in {sid}")
+
+    u1_scenarios = [s for s in primary_scenarios if s.get("user_stratum") == "U1"]
+    u2_scenarios = [s for s in primary_scenarios if s.get("user_stratum") == "U2"]
 
     return {
         "status": "VALIDATION_PASSED",
@@ -690,6 +1274,7 @@ def run_dry_run_validation(repo_root: Optional[Path] = None) -> Dict[str, Any]:
         "human_judgments_collected": 0,
         "human_gt_available": False,
         "scientific_winner": "UNKNOWN",
+        "category_ild_semantics": CATEGORY_ILD_SEMANTICS,
     }
 
 
@@ -727,13 +1312,16 @@ def main() -> None:
         print(f"Human Judgments Collected:   {res['human_judgments_collected']}")
         print(f"Human GT Available:          {res['human_gt_available']}")
         print(f"Scientific Winner:           {res['scientific_winner']}")
+        print(f"Category ILD Semantics:      {res['category_ild_semantics']}")
         print("\nNote: Scientific comparison and winner declaration are strictly gated until HUMAN-GT is collected.")
         sys.exit(0)
 
     # Future ground truth evaluation path
     print(f"Ground truth file specified: {args.gt_file}")
-    print("Scientific evaluation with real HUMAN-GT is not permitted in W5-PREP-03.")
-    sys.exit(1)
+    gt_data = load_and_validate_ground_truth(args.gt_file)
+    print(f"Loaded ground truth version {gt_data['gt_version']} with {gt_data['total_records']} records.")
+    print("Scientific evaluation with real HUMAN-GT is gated until human judgments are collected.")
+    sys.exit(0)
 
 
 if __name__ == "__main__":
