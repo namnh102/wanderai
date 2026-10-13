@@ -5,7 +5,7 @@
 **Status:** RATIFIED & LOCKED (Audited Post-W3)
 **Date:** 2026-10-13
 **Branch:** `chore/w4-gate-01-reca-feature-contract`
-**Target Consumer:** REC-A Recommender Baseline Track (`rec-a0`, `rec-a1`, Cold-Start Fallback)
+**Target Consumer:** REC-A Recommender Track (`rec-a0`, `rec-a1`, `rec-a2`, Cold-Start Fallback)
 **Upstream Source Model:** PostgreSQL `travel_preferences` table (`TravelPreference`)
 **Authoritative Item Universe:** 622 Canonical Verified OSM POIs (`REC-A-CORE-V2` from [`gomate_places_freeze_v2.json`](file:///d:/Do_an/wanderai/data/curated/gomate_places_freeze_v2.json))
 
@@ -242,6 +242,6 @@ When a user has no persisted preferences, empty interests, or completely unrecog
 - **Fixed Item Universe:** Recommender candidate selection evaluates strictly against the **622 canonical verified OSM POIs** (`REC-A-CORE-V2`) frozen in [`data/curated/gomate_places_freeze_v2.json`](file:///d:/Do_an/wanderai/data/curated/gomate_places_freeze_v2.json).
 - **Candidate Pool Limitation:** 217 core POIs (34.89%) have zero-vectors under the 7 canonical activity interests (primarily hotels and generic landmarks), meaning they can only score 0.0 in activity matching and appear in cold-start or tie scenarios.
 - **Top-K Catalog Concentration:** In unconstrained global ranking ($K=10$), deterministic lexical tie-breaking results in 52 unique items recommended across 300 synthetic profiles (8.36% catalog coverage).
-- **No A2 Implementation:** Diversity-aware reranking (A2) is a research candidate only. It is **NOT implemented** in production and is **NOT** the final selected model.
+- **REC-A2 Implementation Candidate:** `rec-a2` exists as an implementation candidate providing deterministic relevance-preserving diversity reranking on top of A1 base cosine relevance. Declared-interest coverage is global over the selected Top-K list. Once an available declared interest has been represented once, it remains covered for the remainder of the request. It uses no human-GT, no collaborative filtering, no embeddings, and no external LLM calls. Its scientific superiority is NOT yet established and is pending evaluation in Week 5 (W5).
 - **No Collaborative Filtering in REC-A:** Collaborative filtering models and latent factor transfers are strictly out of scope for REC-A. ViHoRec is a separate, restricted benchmark corpus and its hotel IDs must never be merged with GoMate POI UUIDs.
 - **No Human Ground Truth in W3:** The N300 benchmark is an engineering determinism track only. Scientific evaluation against independent human relevance judgments is deferred to `REC-EVAL-01` (Week 5).

@@ -344,7 +344,7 @@
           },
           "model": {
             "default": "rec-a1",
-            "description": "Algorithm baseline to use ('rec-a1' for cosine, 'rec-a0' for taxonomy overlap)",
+            "description": "Algorithm baseline to use ('rec-a1' for cosine, 'rec-a0' for taxonomy overlap, 'rec-a2' for diversity reranker)",
             "example": "rec-a1",
             "title": "Model",
             "type": "string"
