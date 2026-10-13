@@ -2,6 +2,8 @@
   "preregistration_version": "REC-EVAL-01-PREREG-V1",
   "status": "FROZEN_BEFORE_HUMAN_GT",
   "roadmap_package": "REC-EVAL-01",
+  "source_commit_sha": "6ef96664c994cb2c1da4d94820ee78f4b4b48805",
+  "artifact_hash_basis": "sha256_git_committed_blob_content",
   "systems": [
     "shared_a0_a1_baseline",
     "rec-a2"
@@ -14,6 +16,42 @@
     2,
     "NA"
   ],
+  "relevance_semantics": {
+    "ordinal_labels": [
+      0,
+      1,
+      2
+    ],
+    "missing_code": "NA",
+    "na_is_ordinal": false,
+    "na_is_zero": false
+  },
+  "gt_aggregation": {
+    "three_numeric_non_severe": "MEDIAN",
+    "severe_range": 2,
+    "severe_action": "BLIND_ADJUDICATION",
+    "any_na_action": "PENDING_EVIDENCE_ADJUDICATION"
+  },
+  "reliability": {
+    "metric": "ordinal_krippendorff_alpha",
+    "na_treatment": "MISSING",
+    "bootstrap_seed": 20261013,
+    "bootstrap_replicates": 10000,
+    "good_threshold": 0.8,
+    "qualified_threshold": 0.67
+  },
+  "endpoint_roles": {
+    "NDCG@10": "PRIMARY_CONFIRMATORY",
+    "Precision@10": "SECONDARY",
+    "Pooled Recall@10": "SECONDARY",
+    "HitRate@10": "DIAGNOSTIC_SECONDARY",
+    "Category-ILD@10": "SECONDARY_SUPPORTING_STRUCTURAL_PROXY",
+    "CatalogCoverage@10": "SECONDARY_SUPPORTING",
+    "I1Exposure@10": "DIAGNOSTIC_ONLY"
+  },
+  "u1_u2_analysis_role": "EXPLORATORY_SUBGROUP",
+  "current_rubric_version": "W5-RUBRIC-V1",
+  "final_gt_rubric_policy": "REFERENCE_EXACT_FROZEN_RUBRIC_USED_FOR_PRIMARY_ANNOTATION",
   "binary_relevance_threshold": 1,
   "gain_formula": "2^rel - 1",
   "category_ild_semantics": "structural_category_diversity_proxy",

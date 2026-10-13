@@ -1,17 +1,15 @@
 """Tests for REC-EVAL-01 scientific preregistration package.
 
-Validates that:
-- Preregistration manifest is complete and frozen before human GT
-- Systems under comparison are strictly baseline and REC-A2
-- Invariants for catalogs, scenarios, candidate records, and item strata hold
-- SHA256 checksums match current canonical repository bytes
-- Scientific boundaries (0 human judgments, winner UNKNOWN, etc.) are strictly maintained
+Validates:
+- PREREG-01 to PREREG-20: Base preregistration manifest and invariant specifications
+- PREREG-21 to PREREG-33: Hardened scientific semantics, consensus policies, and provenance
 """
 
 from __future__ import annotations
 
 import hashlib
 import json
+import subprocess
 from pathlib import Path
 from typing import Any, Dict
 
@@ -145,45 +143,33 @@ def test_prereg_14_calibration_not_started() -> None:
 
 
 def test_prereg_15_recorded_sha256_matches_canonical() -> None:
-    """PREREG-15: Every recorded SHA256 in manifest matches current canonical file bytes."""
+    """PREREG-15: Every recorded SHA256 in manifest matches committed Git blob content at source commit."""
     manifest = _load_manifest()
+    source_commit = manifest["source_commit_sha"]
+    assert source_commit == "6ef96664c994cb2c1da4d94820ee78f4b4b48805"
+    assert manifest["artifact_hash_basis"] == "sha256_git_committed_blob_content"
+
     hashes = manifest["artifact_hashes"]
     assert len(hashes) >= 12
-
-    # Manifest artifacts can exist in either their committed git state or their
-    # post-builder reproduced state when builder tests execute earlier in the test suite:
-    accepted_manifest_hashes = {
-        "w5_reproducibility_manifest_v1.json": {
-            "ae2cbb97689148274723617e00a833093971c5f7cc11c7cdec39ec19619f6388",
-            "d99f3187c3fa0535710ae7f3fc82c60d9f298ba399257e61b47562bdff48b51c",
-        },
-        "w5_annotation_manifest_v1.json": {
-            "9fa7e9e66f331e881cdb6cae0d29eecdfd77fe6cfa2108dad07a68c3fadde106",
-            "e6f9839cc51b0cb282fa2ad7f644258dd1c03bd9914261ef6d60f0cfcf95f40d",
-        },
-    }
 
     for key, info in hashes.items():
         relpath = info["path"]
         expected_sha = info["sha256"]
-        target = REPO_ROOT / relpath
-        assert target.exists(), f"File {relpath} not found on disk"
-        actual_sha = hashlib.sha256(target.read_bytes()).hexdigest()
-        if key in accepted_manifest_hashes:
-            allowed = accepted_manifest_hashes[key]
-            assert actual_sha in allowed, (
-                f"SHA256 mismatch for {relpath} ({key}): got {actual_sha}, "
-                f"expected one of {allowed}"
-            )
-        else:
-            assert actual_sha == expected_sha, (
-                f"SHA256 mismatch for {relpath} ({key}): expected {expected_sha}, got {actual_sha}"
-            )
+        # Fetch committed blob from Git
+        res = subprocess.run(
+            ["git", "show", f"{source_commit}:{relpath}"],
+            cwd=REPO_ROOT,
+            stdout=subprocess.PIPE,
+            check=True,
+        )
+        actual_sha = hashlib.sha256(res.stdout).hexdigest()
+        assert actual_sha == expected_sha, (
+            f"Committed blob SHA256 mismatch for {relpath} ({key}): expected {expected_sha}, got {actual_sha}"
+        )
 
 
 def test_prereg_16_no_human_relevance_labels_added() -> None:
     """PREREG-16: Confirm zero human relevance labels exist across templates and manifests."""
-    # Check merged ground truth template has null labels
     template_p = (
         REPO_ROOT / "data" / "evaluation" / "reca_w5" / "annotation" / "w5_merged_ground_truth_template_v1.json"
     )
@@ -196,7 +182,6 @@ def test_prereg_16_no_human_relevance_labels_added() -> None:
             assert r.get("j3_label") is None
             assert r.get("consensus_label") is None
 
-    # Check calibration template has null labels
     calib_p = REPO_ROOT / "data" / "evaluation" / "reca_w5" / "annotation" / "w5_calibration_v1.json"
     if calib_p.exists():
         cal = json.loads(calib_p.read_text(encoding="utf-8"))
@@ -218,8 +203,7 @@ def test_prereg_18_pooled_recall_terminology_preserved() -> None:
     doc_text = DOC_PATH.read_text(encoding="utf-8")
     assert "Pooled Recall@10" in doc_text
     assert "Full-Catalog Recall" in doc_text
-    # Confirm doc explicitly warns against renaming
-    assert "must NEVER be termed \"Full-Catalog Recall@10\"" in doc_text
+    assert 'must NEVER be termed "Full-Catalog Recall@10"' in doc_text
 
 
 def test_prereg_19_thin_diagnostic_only() -> None:
@@ -234,3 +218,142 @@ def test_prereg_20_u0_excluded_from_personalized_winner() -> None:
     assert "EXCLUDED_FROM_PERSONALIZED_WINNER" in manifest.get("u0_role", "")
     assert manifest.get("item_strata") == {"I0": 405, "I1": 217}
     assert manifest.get("i1_exposure_role") == "DIAGNOSTIC_ONLY"
+
+
+# ============================================================
+# EXTENDED PREREG TESTS (W5-METH-LOCK-01-FIX-01)
+# ============================================================
+
+
+def test_prereg_21_na_is_non_ordinal() -> None:
+    """PREREG-21: NA is non-ordinal missingness code, not a fourth ordinal relevance level."""
+    manifest = _load_manifest()
+    sem = manifest["relevance_semantics"]
+    assert sem["na_is_ordinal"] is False
+    assert sem["na_is_zero"] is False
+    assert sem["missing_code"] == "NA"
+
+    doc_text = DOC_PATH.read_text(encoding="utf-8")
+    assert "NA is NOT an ordinal relevance level" in doc_text
+    assert "NA != 0" in doc_text
+
+
+def test_prereg_22_ordinal_labels_exactly_0_1_2() -> None:
+    """PREREG-22: Ordinal labels must be strictly [0, 1, 2]."""
+    manifest = _load_manifest()
+    sem = manifest["relevance_semantics"]
+    assert sem["ordinal_labels"] == [0, 1, 2]
+
+
+def test_prereg_23_any_na_requires_evidence_adjudication() -> None:
+    """PREREG-23: Any NA among primary judges mandates evidence adjudication (no median calculation)."""
+    manifest = _load_manifest()
+    agg = manifest["gt_aggregation"]
+    assert agg["any_na_action"] == "PENDING_EVIDENCE_ADJUDICATION"
+
+    doc_text = DOC_PATH.read_text(encoding="utf-8")
+    assert "PENDING_EVIDENCE_ADJUDICATION" in doc_text
+    assert "DO NOT compute median from the remaining numeric labels" in doc_text or "DO NOT take median" in doc_text
+
+
+def test_prereg_24_severe_numeric_disagreement_requires_adjudication() -> None:
+    """PREREG-24: Severe numeric disagreement (max-min = 2) mandates blind adjudication."""
+    manifest = _load_manifest()
+    agg = manifest["gt_aggregation"]
+    assert agg["severe_range"] == 2
+    assert agg["severe_action"] == "BLIND_ADJUDICATION"
+
+    doc_text = DOC_PATH.read_text(encoding="utf-8")
+    assert "PENDING_ADJUDICATION" in doc_text
+
+
+def test_prereg_25_primary_confirmatory_endpoint_ndcg10() -> None:
+    """PREREG-25: Primary confirmatory endpoint is strictly NDCG@10."""
+    manifest = _load_manifest()
+    roles = manifest["endpoint_roles"]
+    assert roles["NDCG@10"] == "PRIMARY_CONFIRMATORY"
+    assert manifest["primary_metric"] == "NDCG@10"
+
+    doc_text = DOC_PATH.read_text(encoding="utf-8")
+    assert "PRIMARY_CONFIRMATORY" in doc_text
+    assert "Primary Confirmatory Hypothesis" in doc_text
+
+
+def test_prereg_26_category_ild_and_coverage_are_supporting_secondary() -> None:
+    """PREREG-26: Category-ILD and Coverage are supporting secondary endpoints (not confirmatory)."""
+    manifest = _load_manifest()
+    roles = manifest["endpoint_roles"]
+    assert roles["Category-ILD@10"] == "SECONDARY_SUPPORTING_STRUCTURAL_PROXY"
+    assert roles["CatalogCoverage@10"] == "SECONDARY_SUPPORTING"
+
+    doc_text = DOC_PATH.read_text(encoding="utf-8")
+    assert "SECONDARY_SUPPORTING" in doc_text
+    assert "not evaluated as independently confirmatory" in doc_text
+
+
+def test_prereg_27_u1_u2_comparison_marked_exploratory() -> None:
+    """PREREG-27: U1 vs U2 subgroup analysis is explicitly designated exploratory."""
+    manifest = _load_manifest()
+    assert manifest["u1_u2_analysis_role"] == "EXPLORATORY_SUBGROUP"
+
+    doc_text = DOC_PATH.read_text(encoding="utf-8")
+    assert "EXPLORATORY_SUBGROUP_ANALYSIS" in doc_text
+
+
+def test_prereg_28_ndcg_ci_including_zero_not_equivalence_or_parity() -> None:
+    """PREREG-28: NDCG CI spanning zero means difference is not demonstrated / inconclusive, NOT equivalence/parity."""
+    doc_text = DOC_PATH.read_text(encoding="utf-8")
+    assert "relevance difference is not demonstrated / remains inconclusive" in doc_text
+    assert "NOT establish relevance parity, equivalence, or non-inferiority" in doc_text
+    assert "No non-inferiority margin has been preregistered" in doc_text
+
+
+def test_prereg_29_coverage_primary_claim_is_destination_macro() -> None:
+    """PREREG-29: Primary coverage claim is destination-macro, not an all-three-destinations improvement."""
+    manifest = _load_manifest()
+    assert manifest["aggregation_strategy"] == "destination_macro_mean"
+
+    doc_text = DOC_PATH.read_text(encoding="utf-8")
+    assert "positive destination-macro catalog coverage effect" in doc_text
+    assert "Report HN/DN/HL individually as mandatory breakdowns" in doc_text or "mandatory breakdowns" in doc_text
+
+
+def test_prereg_30_future_gt_uses_final_frozen_rubric_policy() -> None:
+    """PREREG-30: Future GT references exact final frozen rubric version, not hard-coded V1."""
+    manifest = _load_manifest()
+    assert manifest["current_rubric_version"] == "W5-RUBRIC-V1"
+    assert manifest["final_gt_rubric_policy"] == "REFERENCE_EXACT_FROZEN_RUBRIC_USED_FOR_PRIMARY_ANNOTATION"
+
+    doc_text = DOC_PATH.read_text(encoding="utf-8")
+    assert "exact final frozen rubric version used for primary annotation" in doc_text
+    assert "W5-RUBRIC-V1 is immutable and must never be edited in place" in doc_text
+
+
+def test_prereg_31_artifact_hash_basis_is_committed_blob() -> None:
+    """PREREG-31: Artifact hash basis is committed Git blob content at source commit."""
+    manifest = _load_manifest()
+    assert manifest["source_commit_sha"] == "6ef96664c994cb2c1da4d94820ee78f4b4b48805"
+    assert manifest["artifact_hash_basis"] == "sha256_git_committed_blob_content"
+
+
+def test_prereg_32_every_artifact_has_exactly_one_canonical_hash() -> None:
+    """PREREG-32: Every artifact in manifest has exactly one string-valued SHA256 hash (no allowlists)."""
+    manifest = _load_manifest()
+    hashes = manifest["artifact_hashes"]
+    assert len(hashes) >= 14
+    for key, info in hashes.items():
+        sha = info["sha256"]
+        assert isinstance(sha, str), f"Hash for {key} is not a string: {sha!r}"
+        assert len(sha) == 64, f"Hash for {key} is not 64 chars: {sha}"
+        assert all(c in "0123456789abcdef" for c in sha), f"Hash for {key} has non-hex characters: {sha}"
+
+
+def test_prereg_33_historical_roadmap_wording() -> None:
+    """PREREG-33: Methodology amendment accurately cites @K roadmap and K=5/K=10 engineering benchmarks."""
+    doc_text = DOC_PATH.read_text(encoding="utf-8")
+    assert "NDCG@K" in doc_text
+    assert "Recall@K" in doc_text
+    assert "K=5 and K=10" in doc_text
+    assert "top-10 recommendation lists" in doc_text
+    # Prohibit travel itineraries wording for recommender evaluation
+    assert "10-item travel itineraries" not in doc_text

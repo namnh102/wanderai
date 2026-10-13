@@ -194,18 +194,36 @@ def test_ann_order_02_same_candidate_membership() -> None:
 
 def test_ann_order_03_reproducible_builder() -> None:
     """ANN-ORDER-03: re-running builder gives identical package hashes."""
-    # Capture current hashes
     paths = [
         os.path.join(ANNOTATION_DIR, f"w5_judge_{jid}_v1.json") for jid in ["J1", "J2", "J3"]
     ]
-    initial_hashes = [hashlib.sha256(open(p, "rb").read()).hexdigest() for p in paths]
+    # Backup all files in ANNOTATION_DIR so tracked git artifacts are not left modified
+    backup = {
+        fname: open(os.path.join(ANNOTATION_DIR, fname), "rb").read()
+        for fname in os.listdir(ANNOTATION_DIR)
+        if os.path.isfile(os.path.join(ANNOTATION_DIR, fname))
+    }
+    # Compare canonical LF-normalized content for cross-platform reproducibility
+    initial_hashes = [
+        hashlib.sha256(backup[os.path.basename(p)].replace(b"\r\n", b"\n")).hexdigest()
+        for p in paths
+    ]
 
-    # Re-run builder
-    res = subprocess.run(["python", "scripts/build_w5_annotation_package.py"], cwd=REPO_ROOT, check=True)
-    assert res.returncode == 0
+    try:
+        # Re-run builder
+        res = subprocess.run(["python", "scripts/build_w5_annotation_package.py"], cwd=REPO_ROOT, check=True)
+        assert res.returncode == 0
 
-    re_run_hashes = [hashlib.sha256(open(p, "rb").read()).hexdigest() for p in paths]
-    assert initial_hashes == re_run_hashes
+        re_run_hashes = [
+            hashlib.sha256(open(p, "rb").read().replace(b"\r\n", b"\n")).hexdigest()
+            for p in paths
+        ]
+        assert initial_hashes == re_run_hashes
+    finally:
+        # Restore original file bytes so git status remains clean
+        for fname, raw_bytes in backup.items():
+            with open(os.path.join(ANNOTATION_DIR, fname), "wb") as f:
+                f.write(raw_bytes)
 
 
 def test_ann_fact_01_factual_context_allowlist() -> None:
