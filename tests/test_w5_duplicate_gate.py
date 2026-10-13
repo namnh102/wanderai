@@ -47,6 +47,27 @@ EXPECTED_INTERNAL_POOL_SHA256 = "32b25ef8ffc19d671513f771d3d3a0d23ceb9d0cf614ace
 EXPECTED_BLINDED_POOL_SHA256 = "8f178e06b1b93e59b3a53f1b2bf1b6ecc697ccfa610d56783b613b6aa2f06ec7"
 EXPECTED_PRIMARY_SCENARIOS_SHA256 = "4f0c77dccc2c0bae32f5d87f1364a8e1487a83e9b7344a9d8d3c9d0528bc29fb"
 
+BASE_DEVELOP_COMMIT = "a2e132dd9383ae7c9f6ea535972903d603831064"
+HISTORICAL_COMMIT = "0edcf343cdeef72aa980417d5f628cd79de4ca74"
+
+
+def _ensure_commit(commit_sha: str) -> None:
+    """Ensure commit is available locally; shallow-fetches from origin in CI if missing."""
+    res = subprocess.run(
+        ["git", "cat-file", "-e", f"{commit_sha}^{{commit}}"],
+        cwd=REPO_ROOT,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+    )
+    if res.returncode != 0:
+        subprocess.run(
+            ["git", "fetch", "origin", commit_sha, "--depth=1"],
+            cwd=REPO_ROOT,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            check=True,
+        )
+
 
 def _sha256_bytes(path: Path) -> str:
     h = hashlib.sha256()
@@ -63,17 +84,18 @@ def _load_json(path: Path) -> Any:
 
 def test_dup_01_historical_candidate_recovery() -> None:
     """DUP-01: Historical candidate groups are recovered from repository evidence."""
-    # Verify historical commit context
-    hist_commit = "0edcf343cdeef72aa980417d5f628cd79de4ca74"
+    # Ensure historical commit is available in local git repository
+    _ensure_commit(HISTORICAL_COMMIT)
+
     res = subprocess.run(
-        ["git", "show", f"{hist_commit}:scripts/build_w5_eval_pool.py"],
+        ["git", "show", f"{HISTORICAL_COMMIT}:scripts/build_w5_eval_pool.py"],
         cwd=REPO_ROOT,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         text=True,
         encoding="utf-8",
+        check=True,
     )
-    assert res.returncode == 0, f"Could not inspect historical commit {hist_commit}"
     assert "REC_A_CORE_DUPLICATE_MAP" in res.stdout
     assert "DUP-CORE-DN-01" in res.stdout
     assert "DUP-CORE-DN-02" in res.stdout
@@ -255,37 +277,46 @@ def test_dup_12_frozen_candidate_pool_bytes_unchanged() -> None:
     """DUP-12: No frozen candidate pool bytes changed."""
     assert _sha256_bytes(INTERNAL_POOL_PATH) == EXPECTED_INTERNAL_POOL_SHA256
     assert _sha256_bytes(BLINDED_POOL_PATH) == EXPECTED_BLINDED_POOL_SHA256
+    _ensure_commit(BASE_DEVELOP_COMMIT)
     res = subprocess.run(
-        ["git", "diff", "origin/develop", "--", str(INTERNAL_POOL_PATH), str(BLINDED_POOL_PATH)],
+        ["git", "diff", BASE_DEVELOP_COMMIT, "--", str(INTERNAL_POOL_PATH), str(BLINDED_POOL_PATH)],
         cwd=REPO_ROOT,
         stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
         text=True,
+        check=True,
     )
-    assert res.stdout.strip() == "", "Frozen candidate pool files modified relative to origin/develop"
+    assert res.stdout.strip() == "", "Frozen candidate pool files modified relative to base commit!"
 
 
 def test_dup_13_primary_scenarios_bytes_unchanged() -> None:
     """DUP-13: No primary scenario bytes changed."""
     assert _sha256_bytes(PRIMARY_SCENARIOS_PATH) == EXPECTED_PRIMARY_SCENARIOS_SHA256
+    _ensure_commit(BASE_DEVELOP_COMMIT)
     res = subprocess.run(
-        ["git", "diff", "origin/develop", "--", str(PRIMARY_SCENARIOS_PATH)],
+        ["git", "diff", BASE_DEVELOP_COMMIT, "--", str(PRIMARY_SCENARIOS_PATH)],
         cwd=REPO_ROOT,
         stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
         text=True,
+        check=True,
     )
-    assert res.stdout.strip() == "", "Primary scenarios file modified relative to origin/develop"
+    assert res.stdout.strip() == "", "Primary scenarios file modified relative to base commit!"
 
 
 def test_dup_14_freeze_v2_bytes_unchanged() -> None:
     """DUP-14: No Freeze V2 bytes changed."""
     assert _sha256_bytes(FREEZE_V2_PATH) == EXPECTED_FREEZE_V2_SHA256
+    _ensure_commit(BASE_DEVELOP_COMMIT)
     res = subprocess.run(
-        ["git", "diff", "origin/develop", "--", str(FREEZE_V2_PATH)],
+        ["git", "diff", BASE_DEVELOP_COMMIT, "--", str(FREEZE_V2_PATH)],
         cwd=REPO_ROOT,
         stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
         text=True,
+        check=True,
     )
-    assert res.stdout.strip() == "", "Freeze V2 file modified relative to origin/develop"
+    assert res.stdout.strip() == "", "Freeze V2 file modified relative to base commit!"
 
 
 def test_dup_15_human_judgments_remain_zero() -> None:
@@ -304,15 +335,16 @@ def test_dup_16_no_recommender_code_modified() -> None:
     assert gr["recommender_modified"] is False
     assert gr["frozen_pool_modified"] is False
 
+    _ensure_commit(BASE_DEVELOP_COMMIT)
     res = subprocess.run(
-        ["git", "diff", "origin/develop", "--", "apps/ai-service/recommendation"],
+        ["git", "diff", BASE_DEVELOP_COMMIT, "--", "apps/ai-service/recommendation"],
         cwd=REPO_ROOT,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         text=True,
+        check=True,
     )
-    assert res.returncode == 0
-    assert res.stdout.strip() == "", "Recommender code was modified relative to origin/develop!"
+    assert res.stdout.strip() == "", "Recommender code was modified relative to base commit!"
 
 
 def test_dup_17_gate_status_and_policy_status_branch() -> None:
@@ -334,13 +366,16 @@ def test_dup_18_no_duplicate_aware_metric_scoring_activated() -> None:
     """DUP-18: No duplicate-aware metric scoring is activated by this task."""
     runner_path = REPO_ROOT / "scripts" / "evaluate_w5_recommenders.py"
     assert runner_path.exists()
+    _ensure_commit(BASE_DEVELOP_COMMIT)
     res = subprocess.run(
-        ["git", "diff", "origin/develop", "--", str(runner_path)],
+        ["git", "diff", BASE_DEVELOP_COMMIT, "--", str(runner_path)],
         cwd=REPO_ROOT,
         stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
         text=True,
+        check=True,
     )
-    assert res.stdout.strip() == "", "Evaluation runner script modified relative to origin/develop!"
+    assert res.stdout.strip() == "", "Evaluation runner script modified relative to base commit!"
 
     # Dry-run validation executes and verifies duplicate_policy_status remains PENDING in runner
     from scripts.evaluate_w5_recommenders import run_dry_run_validation
