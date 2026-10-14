@@ -1,0 +1,21 @@
+{
+  "execution_version": "W5-CAL-R02-EXEC-V1",
+  "round_id": "W5-CAL-ROUND-02",
+  "calibration_version": "W5-CALIBRATION-V2",
+  "rubric_version": "W5-RUBRIC-V1",
+  "presentation_version": "W5-CAL-R02-OPS-V1",
+  "template_only": true,
+  "status": "READY_FOR_HUMAN_ASSIGNMENT",
+  "actual_human_roles_assigned": false,
+  "distinct_actual_humans_confirmed": false,
+  "packages_distributed": false,
+  "human_submissions_received": 0,
+  "qualifying_submissions": 0,
+  "all_three_submissions_received": false,
+  "all_three_submissions_qualifying": false,
+  "all_three_submissions_locked": false,
+  "calibration_review_eligible": false,
+  "human_gt": false,
+  "primary_annotation_started": false,
+  "recommender_evaluation_performed": false
+}
