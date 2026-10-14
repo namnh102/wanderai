@@ -239,11 +239,12 @@ def test_cal_inc_11_primary_annotation_not_started() -> None:
     assert manifest["scientific_boundary"]["primary_annotation_started"] is False
     assert incident["primary_annotation_started"] is False
 
-    blinded = _load_json(BLINDED_POOL_PATH)
-    for sc in blinded["scenarios"]:
-        for cand in sc["candidates"]:
-            for jid in ALLOWED_JUDGES:
-                assert cand["judgments"][jid] is None
+    for jid in ALLOWED_JUDGES:
+        pkg = _load_json(ANNOTATION_DIR / f"w5_judge_{jid}_v1.json")
+        for sc in pkg["scenarios"]:
+            for item in sc["items"]:
+                assert item["label"] is None
+                assert item["judge_note"] is None
 
 
 def test_cal_inc_12_rubric_unchanged() -> None:
