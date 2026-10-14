@@ -1,0 +1,91 @@
+{
+  "artifact_version": "W5-CAL-INTEGRITY-INCIDENT-V1",
+  "round": "W5-CAL-ROUND-01",
+  "calibration_version": "W5-CALIBRATION-V1",
+  "rubric_version": "W5-RUBRIC-V1",
+  "presentation_version": "W5-CAL-OPS-V1",
+  "status": "INVALIDATED_FOR_PROTOCOL",
+  "file_integrity_status": "PASS",
+  "session_integrity_status": "FAILED",
+  "detected_stage": "POST_SUBMISSION_PRE_CALIBRATION_REVIEW",
+  "total_raw_labels_received": 135,
+  "qualifying_independent_human_judgments": 0,
+  "calibration_qualification_eligible": false,
+  "calibration_review_eligible": false,
+  "primary_annotation_started": false,
+  "human_gt_created": false,
+  "rubric_changed": false,
+  "recommender_evaluation_performed": false,
+  "raw_labels_modified": false,
+  "invalidity_reasons": [
+    "AI_ASSISTED_OR_AI_GENERATED_LABELS",
+    "INTER_JUDGE_LABEL_EXPOSURE"
+  ],
+  "prohibited_uses": [
+    "rubric_qualification",
+    "rubric_freeze",
+    "human_reliability_conclusions",
+    "HUMAN-GT",
+    "primary_annotation_decisions",
+    "model_comparison"
+  ],
+  "judge_attestations": {
+    "J1": {
+      "judge_id": "J1",
+      "qualifying_independent_human_judge": false,
+      "completed_own_45_labels_before_others_submitted": true,
+      "inspected_other_completed_files_before_submission": false,
+      "external_web_search_used": false,
+      "ai_llm_used_for_label_decisions": true,
+      "prior_label_exposure_before_judging": false,
+      "pre_submission_direct_discussion_with_other_judges": false,
+      "post_submission_saw_other_judge_summaries": true,
+      "published_own_label_summaries_before_others_completed": true,
+      "role_assignment_mode": "SELF_SELECTED",
+      "summary": "Completed own 45 labels before J2/J3 submitted without inspecting J2/J3 files or using web search, and without direct pre-submission discussion, but used AI/LLM to determine labels, self-selected role J1, and published some own label summaries before J2/J3 completed."
+    },
+    "J2": {
+      "judge_id": "J2",
+      "qualifying_independent_human_judge": false,
+      "completed_all_45_labels_without_opening_other_files": true,
+      "inspected_other_completed_files_before_submission": false,
+      "external_web_search_used": false,
+      "ai_llm_used_for_label_decisions": true,
+      "prior_label_exposure_before_judging": true,
+      "exposure_detail": "Exposed to J1 summary containing some specific labels before judging",
+      "pre_submission_direct_discussion_with_other_judges": false,
+      "role_assignment_mode": "SELF_SELECTED",
+      "summary": "Completed all 45 labels without opening completed J1/J3 files, without web search, and without direct pre-submission discussion, but labels were AI-generated / decided by an AI assistant, judge had prior exposure to J1 summary containing specific labels before judging, and role J2 was self-selected."
+    },
+    "J3": {
+      "judge_id": "J3",
+      "qualifying_independent_human_judge": false,
+      "completed_all_45_labels_without_opening_other_files": true,
+      "inspected_other_completed_files_before_submission": false,
+      "external_web_search_used": false,
+      "ai_llm_used_for_label_decisions": true,
+      "prior_label_exposure_before_judging": true,
+      "exposure_detail": "Exposed to J1/J2 summaries containing some specific labels before judging",
+      "pre_submission_direct_discussion_with_other_judges": false,
+      "role_assignment_mode": "SELF_SELECTED",
+      "summary": "Completed all 45 labels without opening completed J1/J2 files, without web search, and without direct pre-submission discussion, but labels were AI-generated / decided by an AI assistant, judge had prior exposure to J1/J2 summaries containing specific labels before judging, and role J3 was self-selected."
+    }
+  },
+  "raw_evidence_preservation": {
+    "J1_sha256": "7a3b58f20169c98a7b472952e480afb96d34e58613afa0032a58d540062393ba",
+    "J2_sha256": "b8464c133df5757cd4c1e741a21a5b2392544a175dc2ec32e5d1e6a4d2721707",
+    "J3_sha256": "b2094cafb458f0ebdea1dd28ec4d5ef723062e449c3b51602edaaee00a86ba3f",
+    "raw_files_preserved_byte_identical": true
+  },
+  "next_round_policy": {
+    "next_round_id": "W5-CAL-ROUND-02",
+    "next_round_required": true,
+    "required_actual_human_judges": 3,
+    "ai_llm_assistance_allowed": false,
+    "external_search_allowed": false,
+    "prior_label_exposure_allowed": false,
+    "pre_assigned_judge_roles_required": true,
+    "fresh_calibration_package_preferred": true,
+    "fresh_calibration_package_reason": "W5-CALIBRATION-V1 labels have been exposed across judges during Round 01."
+  }
+}

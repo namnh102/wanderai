@@ -1,26 +1,21 @@
-"""Tests for W5 Raw Human Calibration Submissions (W5-CAL-01-SUBMIT-01).
+"""Tests for W5 Raw Calibration Submissions & Protocol Incident (W5-CAL-INCIDENT-01).
 
-Covers required tests CAL-SUB-01 through CAL-SUB-20:
-- CAL-SUB-01: exactly J1/J2/J3 raw files exist.
-- CAL-SUB-02: 45 rows each.
-- CAL-SUB-03: all three pass frozen submission validator.
-- CAL-SUB-04: same canonical item membership.
-- CAL-SUB-05: no duplicate item per judge.
-- CAL-SUB-06: all labels populated.
-- CAL-SUB-07: labels strictly in {0,1,2,NA} under frozen type semantics.
-- CAL-SUB-08: read-only context exactly frozen.
-- CAL-SUB-09: raw file SHA256 matches manifest.
-- CAL-SUB-10: total judgments = 135.
-- CAL-SUB-11: calibration_only = true.
-- CAL-SUB-12: excluded_from_final_metrics = true.
-- CAL-SUB-13: human_gt = false.
-- CAL-SUB-14: no consensus/final_relevance field exists.
-- CAL-SUB-15: no recommender metric result created.
-- CAL-SUB-16: canonical calibration package unchanged.
-- CAL-SUB-17: rubric unchanged.
-- CAL-SUB-18: primary pool unchanged.
-- CAL-SUB-19: R8B remains METHOD_RETAINED.
-- CAL-SUB-20: duplicate policy remains CLOSED_NO_PRIMARY_EVAL_IMPACT.
+Covers:
+- Raw preservation & file integrity tests (CAL-SUB-01 through CAL-SUB-20)
+- Protocol invalidation & session integrity incident tests (CAL-INC-01 through CAL-INC-13):
+  - CAL-INC-01: round status == INVALIDATED_FOR_PROTOCOL
+  - CAL-INC-02: qualifying_independent_human_judgments == 0
+  - CAL-INC-03: total_raw_labels_received == 135
+  - CAL-INC-04: calibration_review_eligible == false
+  - CAL-INC-05: human_gt == false
+  - CAL-INC-06: raw hashes unchanged
+  - CAL-INC-07: raw labels unchanged
+  - CAL-INC-08: invalidity includes AI-assisted/generated labels
+  - CAL-INC-09: invalidity includes inter-judge label exposure
+  - CAL-INC-10: session integrity == FAILED
+  - CAL-INC-11: primary annotation has not started
+  - CAL-INC-12: rubric unchanged
+  - CAL-INC-13: no recommender evaluation performed
 """
 
 from __future__ import annotations
@@ -53,6 +48,7 @@ SUBMISSIONS_DIR = EVAL_DIR / "calibration_submissions"
 INBOX_DIR = SUBMISSIONS_DIR / "inbox"
 RAW_V1_DIR = SUBMISSIONS_DIR / "raw_v1"
 RAW_MANIFEST_PATH = SUBMISSIONS_DIR / "w5_calibration_raw_manifest_v1.json"
+INCIDENT_PATH = SUBMISSIONS_DIR / "w5_calibration_round_01_integrity_incident_v1.json"
 RECEIPT_DOC_PATH = REPO_ROOT / "docs" / "research" / "w5_calibration_submission_receipt_v1.md"
 
 PRIMARY_SCENARIOS_PATH = EVAL_DIR / "w5_primary_scenarios_v1.json"
@@ -62,6 +58,18 @@ RUBRIC_PATH = ANNOTATION_DIR / "w5_rubric_v1.md"
 PREREG_MANIFEST_PATH = EVAL_DIR / "rec_eval_01_prereg_manifest_v1.json"
 R8B_JSON_PATH = EVAL_DIR / "r8b_contingency_method_decision_v1.json"
 DUP_GATE_PATH = EVAL_DIR / "w5_duplicate_gate_result_v1.json"
+
+EXPECTED_RAW_HASHES = {
+    "J1": "7a3b58f20169c98a7b472952e480afb96d34e58613afa0032a58d540062393ba",
+    "J2": "b8464c133df5757cd4c1e741a21a5b2392544a175dc2ec32e5d1e6a4d2721707",
+    "J3": "b2094cafb458f0ebdea1dd28ec4d5ef723062e449c3b51602edaaee00a86ba3f",
+}
+
+EXPECTED_DISTRIBUTIONS = {
+    "J1": {"0": 30, "1": 7, "2": 3, "NA": 5},
+    "J2": {"0": 31, "1": 7, "2": 3, "NA": 4},
+    "J3": {"0": 29, "1": 9, "2": 3, "NA": 4},
+}
 
 
 def _load_json(path: Path) -> Any:
@@ -84,6 +92,188 @@ def _git_blob_sha256(relpath: str, ref: str = "HEAD") -> str:
     return hashlib.sha256(res.stdout).hexdigest()
 
 
+# ============================================================
+# CAL-INC-01 .. CAL-INC-13 (W5-CAL-INCIDENT-01)
+# ============================================================
+
+
+def test_cal_inc_01_round_status_invalidated_for_protocol() -> None:
+    """CAL-INC-01: round status == INVALIDATED_FOR_PROTOCOL."""
+    manifest = _load_json(RAW_MANIFEST_PATH)
+    incident = _load_json(INCIDENT_PATH)
+    assert manifest["round"] == "W5-CAL-ROUND-01"
+    assert manifest["round_status"] == "INVALIDATED_FOR_PROTOCOL"
+    assert manifest["status"] == "INVALIDATED_FOR_PROTOCOL"
+    assert incident["artifact_version"] == "W5-CAL-INTEGRITY-INCIDENT-V1"
+    assert incident["round"] == "W5-CAL-ROUND-01"
+    assert incident["status"] == "INVALIDATED_FOR_PROTOCOL"
+    assert incident["detected_stage"] == "POST_SUBMISSION_PRE_CALIBRATION_REVIEW"
+
+
+def test_cal_inc_02_qualifying_independent_human_judgments_is_zero() -> None:
+    """CAL-INC-02: qualifying_independent_human_judgments == 0."""
+    manifest = _load_json(RAW_MANIFEST_PATH)
+    incident = _load_json(INCIDENT_PATH)
+    assert manifest["qualifying_independent_human_judgments"] == 0
+    assert incident["qualifying_independent_human_judgments"] == 0
+    assert "total_human_judgments" not in manifest
+    for jid in ALLOWED_JUDGES:
+        assert manifest["judge_records"][jid]["qualifying_independent_human_judge"] is False
+        assert incident["judge_attestations"][jid]["qualifying_independent_human_judge"] is False
+
+
+def test_cal_inc_03_total_raw_labels_received_is_135() -> None:
+    """CAL-INC-03: total_raw_labels_received == 135."""
+    manifest = _load_json(RAW_MANIFEST_PATH)
+    incident = _load_json(INCIDENT_PATH)
+    assert manifest["total_raw_labels_received"] == 135
+    assert incident["total_raw_labels_received"] == 135
+
+
+def test_cal_inc_04_calibration_review_eligible_is_false() -> None:
+    """CAL-INC-04: calibration_review_eligible == false."""
+    manifest = _load_json(RAW_MANIFEST_PATH)
+    incident = _load_json(INCIDENT_PATH)
+    assert manifest["calibration_review_eligible"] is False
+    assert manifest["calibration_qualification_eligible"] is False
+    assert incident["calibration_review_eligible"] is False
+    assert incident["calibration_qualification_eligible"] is False
+    assert (
+        manifest["descriptive_agreement_summary"]["diagnostic_status"]
+        == "NON_QUALIFYING_CONTAMINATED_ROUND_DIAGNOSTICS"
+    )
+    assert (
+        manifest["descriptive_agreement_summary"]["qualifying_for_inter_rater_reliability"] is False
+    )
+    assert manifest["descriptive_agreement_summary"]["qualifying_for_rubric_quality"] is False
+
+
+def test_cal_inc_05_human_gt_is_false() -> None:
+    """CAL-INC-05: human_gt == false."""
+    manifest = _load_json(RAW_MANIFEST_PATH)
+    incident = _load_json(INCIDENT_PATH)
+    assert manifest["human_gt"] is False
+    assert manifest["scientific_boundary"]["human_gt_created"] is False
+    assert incident["human_gt_created"] is False
+
+
+def test_cal_inc_06_raw_hashes_unchanged() -> None:
+    """CAL-INC-06: Raw hashes unchanged for J1, J2, J3."""
+    manifest = _load_json(RAW_MANIFEST_PATH)
+    incident = _load_json(INCIDENT_PATH)
+    for jid, expected_sha in EXPECTED_RAW_HASHES.items():
+        raw_path = RAW_V1_DIR / f"{jid}_w5_calibration_raw_v1.csv"
+        inbox_path = INBOX_DIR / f"w5_calibration_{jid}_completed.csv"
+        assert _sha256_file(raw_path) == expected_sha
+        assert _sha256_file(inbox_path) == expected_sha
+        assert manifest["judge_records"][jid]["sha256"] == expected_sha
+        assert incident["raw_evidence_preservation"][f"{jid}_sha256"] == expected_sha
+
+
+def test_cal_inc_07_raw_labels_unchanged() -> None:
+    """CAL-INC-07: Raw labels unchanged across J1, J2, J3."""
+    manifest = _load_json(RAW_MANIFEST_PATH)
+    incident = _load_json(INCIDENT_PATH)
+    assert manifest["raw_labels_modified"] is False
+    assert incident["raw_labels_modified"] is False
+    for jid in ALLOWED_JUDGES:
+        raw_path = RAW_V1_DIR / f"{jid}_w5_calibration_raw_v1.csv"
+        inbox_path = INBOX_DIR / f"w5_calibration_{jid}_completed.csv"
+        assert raw_path.read_bytes() == inbox_path.read_bytes()
+        with raw_path.open("r", encoding="utf-8", newline="") as f:
+            rows = list(csv.DictReader(f))
+        assert len(rows) == 45
+        dist = {"0": 0, "1": 0, "2": 0, "NA": 0}
+        for r in rows:
+            dist[r["label"]] += 1
+        assert dist == EXPECTED_DISTRIBUTIONS[jid]
+        assert manifest["judge_records"][jid]["label_distribution"] == EXPECTED_DISTRIBUTIONS[jid]
+
+
+def test_cal_inc_08_invalidity_includes_ai_assisted_or_generated_labels() -> None:
+    """CAL-INC-08: Invalidity includes AI-assisted/generated labels."""
+    manifest = _load_json(RAW_MANIFEST_PATH)
+    incident = _load_json(INCIDENT_PATH)
+    assert "AI_ASSISTED_OR_AI_GENERATED_LABELS" in manifest["invalidity_reasons"]
+    assert "AI_ASSISTED_OR_AI_GENERATED_LABELS" in incident["invalidity_reasons"]
+    for jid in ALLOWED_JUDGES:
+        assert manifest["judge_records"][jid]["ai_llm_used_for_label_decisions"] is True
+        assert incident["judge_attestations"][jid]["ai_llm_used_for_label_decisions"] is True
+
+
+def test_cal_inc_09_invalidity_includes_inter_judge_label_exposure() -> None:
+    """CAL-INC-09: Invalidity includes inter-judge label exposure."""
+    manifest = _load_json(RAW_MANIFEST_PATH)
+    incident = _load_json(INCIDENT_PATH)
+    assert "INTER_JUDGE_LABEL_EXPOSURE" in manifest["invalidity_reasons"]
+    assert "INTER_JUDGE_LABEL_EXPOSURE" in incident["invalidity_reasons"]
+    assert incident["judge_attestations"]["J1"]["prior_label_exposure_before_judging"] is False
+    assert (
+        incident["judge_attestations"]["J1"]["published_own_label_summaries_before_others_completed"]
+        is True
+    )
+    assert incident["judge_attestations"]["J2"]["prior_label_exposure_before_judging"] is True
+    assert incident["judge_attestations"]["J3"]["prior_label_exposure_before_judging"] is True
+
+
+def test_cal_inc_10_session_integrity_failed() -> None:
+    """CAL-INC-10: session integrity == FAILED."""
+    manifest = _load_json(RAW_MANIFEST_PATH)
+    incident = _load_json(INCIDENT_PATH)
+    assert manifest["session_integrity_status"] == "FAILED"
+    assert incident["session_integrity_status"] == "FAILED"
+    assert manifest["file_integrity_status"] == "PASS"
+    assert incident["file_integrity_status"] == "PASS"
+
+    receipt_text = RECEIPT_DOC_PATH.read_text(encoding="utf-8")
+    assert "FILE INTEGRITY: `PASS`" in receipt_text
+    assert "SESSION / SCIENTIFIC INTEGRITY: `FAIL`" in receipt_text
+    assert "NON_QUALIFYING_CONTAMINATED_ROUND_DIAGNOSTICS" in receipt_text
+    assert "W5-CAL-ROUND-02" in receipt_text
+
+
+def test_cal_inc_11_primary_annotation_not_started() -> None:
+    """CAL-INC-11: Primary annotation has not started."""
+    manifest = _load_json(RAW_MANIFEST_PATH)
+    incident = _load_json(INCIDENT_PATH)
+    assert manifest["scientific_boundary"]["primary_annotation_started"] is False
+    assert incident["primary_annotation_started"] is False
+
+    blinded = _load_json(BLINDED_POOL_PATH)
+    for sc in blinded["scenarios"]:
+        for cand in sc["candidates"]:
+            for jid in ALLOWED_JUDGES:
+                assert cand["judgments"][jid] is None
+
+
+def test_cal_inc_12_rubric_unchanged() -> None:
+    """CAL-INC-12: Rubric unchanged."""
+    manifest = _load_json(RAW_MANIFEST_PATH)
+    incident = _load_json(INCIDENT_PATH)
+    assert manifest["scientific_boundary"]["rubric_changed"] is False
+    assert incident["rubric_changed"] is False
+    prereg = _load_json(PREREG_MANIFEST_PATH)
+    expected_sha = prereg["artifact_hashes"]["w5_rubric_v1.md"]["sha256"]
+    assert (
+        _git_blob_sha256("data/evaluation/reca_w5/annotation/w5_rubric_v1.md")
+        == expected_sha
+    )
+
+
+def test_cal_inc_13_no_recommender_evaluation_performed() -> None:
+    """CAL-INC-13: No recommender evaluation performed."""
+    manifest = _load_json(RAW_MANIFEST_PATH)
+    incident = _load_json(INCIDENT_PATH)
+    assert manifest["scientific_boundary"]["recommender_evaluation_performed"] is False
+    assert manifest["scientific_boundary"]["scientific_winner"] == "UNKNOWN"
+    assert incident["recommender_evaluation_performed"] is False
+
+
+# ============================================================
+# CAL-SUB-01 .. CAL-SUB-20 (Raw File & Boundary Preservation)
+# ============================================================
+
+
 def test_cal_sub_01_exact_j1_j2_j3_raw_files_exist() -> None:
     """CAL-SUB-01: Exactly J1/J2/J3 raw files exist."""
     raw_files = sorted(RAW_V1_DIR.glob("*_w5_calibration_raw_v1.csv"))
@@ -99,6 +289,7 @@ def test_cal_sub_01_exact_j1_j2_j3_raw_files_exist() -> None:
         "w5_calibration_J3_completed.csv",
     ]
     assert RAW_MANIFEST_PATH.exists()
+    assert INCIDENT_PATH.exists()
     assert RECEIPT_DOC_PATH.exists()
 
 
@@ -223,11 +414,12 @@ def test_cal_sub_09_raw_file_sha256_matches_manifest() -> None:
         assert inbox_sha == rec["sha256"]
 
 
-def test_cal_sub_10_total_judgments_is_135() -> None:
-    """CAL-SUB-10: Total judgments = 135."""
+def test_cal_sub_10_total_raw_labels_is_135_and_qualifying_is_0() -> None:
+    """CAL-SUB-10: Total raw labels = 135 and qualifying human judgments = 0."""
     manifest = _load_json(RAW_MANIFEST_PATH)
     assert manifest["items_per_judge"] == 45
-    assert manifest["total_human_judgments"] == 135
+    assert manifest["total_raw_labels_received"] == 135
+    assert manifest["qualifying_independent_human_judgments"] == 0
 
     total_counted = 0
     for jid in ALLOWED_JUDGES:
@@ -251,7 +443,7 @@ def test_cal_sub_11_calibration_only_true() -> None:
     """CAL-SUB-11: calibration_only = true."""
     manifest = _load_json(RAW_MANIFEST_PATH)
     assert manifest["calibration_only"] is True
-    assert manifest["status"] == "RAW_SUBMISSIONS_FROZEN"
+    assert manifest["raw_file_preservation_status"] == "RAW_SUBMISSIONS_FROZEN"
 
 
 def test_cal_sub_12_excluded_from_final_metrics_true() -> None:
