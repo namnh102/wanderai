@@ -1,0 +1,574 @@
+{
+  "erratum_id": "W5-HASH-ERRATUM-01",
+  "status": "ACTIVE",
+  "base_develop_sha": "8f7db565e9ea70085a505745fd78326b49c1e243",
+  "source_audit_id": "W5-HASH-AUDIT-01",
+  "source_audit_base_sha": "1c7e43b39f4009e9620181d0c0c5a8151788abb7",
+  "source_audit_artifact": "data/evaluation/reca_w5/audits/w5_hash_eol_audit_v1.json",
+  "source_audit_report": "docs/research/w5_hash_eol_audit_v1.md",
+  "hashed_artifact_count": 35,
+  "stored_hash_reference_count": 83,
+  "classification": "HISTORICAL_MANIFEST_INCONSISTENCY",
+  "overall_classification": "HISTORICAL_MANIFEST_INCONSISTENCY",
+  "content_integrity_failure": false,
+  "content_difference_found": false,
+  "representation_only_difference_found": true,
+  "unknown_hash_basis_count": 0,
+  "historical_hashes_rewritten": false,
+  "preregistration_modified": false,
+  "scientific_data_modified": false,
+  "scientific_result_impact": "NONE",
+  "authoritative_w5_hash_basis": "sha256_git_committed_blob_content",
+  "legacy_pre_prereg_manifests": {
+    "classification": "PRE_PREREGISTRATION_LEGACY_PROVENANCE_MANIFESTS",
+    "historical_hash_basis": "PRECOMMIT_WINDOWS_CRLF_BYTES",
+    "canonical_interpretation": "HISTORICAL_PROVENANCE_ONLY_NOT_CANONICAL_GIT_BLOB_HASHES",
+    "action": "DO_NOT_REWRITE",
+    "historical_hash_values_preserved_unchanged": true,
+    "evidence_of_content_corruption": false,
+    "reproduces_by_lf_to_crlf_normalization": true,
+    "must_not_be_treated_as_canonical_committed_git_blob_hashes": true,
+    "total_affected_fields": 19,
+    "manifests": {
+      "w5_reproducibility_manifest_v1.json": {
+        "path": "data/evaluation/reca_w5/w5_reproducibility_manifest_v1.json",
+        "committed_git_blob_sha256": "ae2cbb97689148274723617e00a833093971c5f7cc11c7cdec39ec19619f6388",
+        "lf_regenerated_manifest_sha256": "d99f3187c3fa0535710ae7f3fc82c60d9f298ba399257e61b47562bdff48b51c",
+        "affected_fields_count": 5,
+        "origin_task": "W5-PREP-01",
+        "origin_script": "scripts/build_w5_eval_pool.py",
+        "root_cause": "LF_VS_CRLF",
+        "explanation": "Generated on Windows before Git LF normalization; target hashes were computed over pre-commit CRLF working-tree bytes (plus legacy CRLF Freeze V2 checksum). Pure LF->CRLF conversion of committed Git blobs reproduces all 5 stored hashes."
+      },
+      "w5_annotation_manifest_v1.json": {
+        "path": "data/evaluation/reca_w5/annotation/w5_annotation_manifest_v1.json",
+        "committed_git_blob_sha256": "9fa7e9e66f331e881cdb6cae0d29eecdfd77fe6cfa2108dad07a68c3fadde106",
+        "lf_regenerated_manifest_sha256": "e6f9839cc51b0cb282fa2ad7f644258dd1c03bd9914261ef6d60f0cfcf95f40d",
+        "affected_fields_count": 14,
+        "unique_target_artifacts_count": 10,
+        "origin_task": "W5-PREP-02",
+        "origin_script": "scripts/build_w5_annotation_package.py",
+        "root_cause": "LF_VS_CRLF",
+        "explanation": "Generated on Windows before Git LF normalization; target hashes were computed over pre-commit CRLF working-tree bytes. Pure LF->CRLF conversion of committed Git blobs reproduces all 14 stored hash references (10 unique target artifacts)."
+      }
+    }
+  },
+  "authoritative_preregistration": {
+    "manifest_path": "data/evaluation/reca_w5/rec_eval_01_prereg_manifest_v1.json",
+    "preregistration_version": "REC-EVAL-01-PREREG-V1",
+    "status": "FROZEN_BEFORE_HUMAN_GT",
+    "source_commit_sha": "35f82b30aa474d33036df656d70528dc20328d39",
+    "declared_hash_basis": "sha256_git_committed_blob_content",
+    "canonical_interpretation": "CANONICAL_W5_SCIENTIFIC_FREEZE",
+    "action": "USE_AS_AUTHORITATIVE",
+    "manifest_committed_git_blob_sha256": "122110e640034c1e99bcce2a1f9486b85e1b9ef5cf9f825c00c06be5c3370d31",
+    "preregistered_artifact_count": 14,
+    "all_preregistered_hashes_match_committed_git_blob_lf": true,
+    "preregistration_modified": false,
+    "artifact_hashes": {
+      "gomate_places_freeze_v2.json": {
+        "path": "data/curated/gomate_places_freeze_v2.json",
+        "sha256": "f7517938598e3923906763f8f31334a500ee88bc06232f2992d38e2fcb28a444"
+      },
+      "w5_primary_scenarios_v1.json": {
+        "path": "data/evaluation/reca_w5/w5_primary_scenarios_v1.json",
+        "sha256": "4f0c77dccc2c0bae32f5d87f1364a8e1487a83e9b7344a9d8d3c9d0528bc29fb"
+      },
+      "w5_thin_diagnostic_scenarios_v1.json": {
+        "path": "data/evaluation/reca_w5/w5_thin_diagnostic_scenarios_v1.json",
+        "sha256": "538233a937acdd38ea208980a9ba629391b61e721363189f10f6087186fcfa77"
+      },
+      "w5_candidate_pool_internal_v1.json": {
+        "path": "data/evaluation/reca_w5/w5_candidate_pool_internal_v1.json",
+        "sha256": "32b25ef8ffc19d671513f771d3d3a0d23ceb9d0cf614ace1eded94d8c84126c6"
+      },
+      "w5_candidate_pool_blinded_v1.json": {
+        "path": "data/evaluation/reca_w5/w5_candidate_pool_blinded_v1.json",
+        "sha256": "8f178e06b1b93e59b3a53f1b2bf1b6ecc697ccfa610d56783b613b6aa2f06ec7"
+      },
+      "w5_reproducibility_manifest_v1.json": {
+        "path": "data/evaluation/reca_w5/w5_reproducibility_manifest_v1.json",
+        "sha256": "ae2cbb97689148274723617e00a833093971c5f7cc11c7cdec39ec19619f6388"
+      },
+      "w5_rubric_v1.md": {
+        "path": "data/evaluation/reca_w5/annotation/w5_rubric_v1.md",
+        "sha256": "98601330b366ea99b2254509adf84762375460ab66a93ef3af2ef32df63ef8a4"
+      },
+      "w5_judge_instructions_v1.md": {
+        "path": "data/evaluation/reca_w5/annotation/w5_judge_instructions_v1.md",
+        "sha256": "5d579d4c0b76a9c37eadac869db6e4f6abaa6c8c36f146d3176452d1fc56b4bb"
+      },
+      "w5_calibration_v1.json": {
+        "path": "data/evaluation/reca_w5/annotation/w5_calibration_v1.json",
+        "sha256": "598bde75d464f3e58299522090833a8521a59d4c0755e13399ad46050a2ca823"
+      },
+      "w5_annotation_manifest_v1.json": {
+        "path": "data/evaluation/reca_w5/annotation/w5_annotation_manifest_v1.json",
+        "sha256": "9fa7e9e66f331e881cdb6cae0d29eecdfd77fe6cfa2108dad07a68c3fadde106"
+      },
+      "w5_metadata_sufficiency_v1.json": {
+        "path": "data/evaluation/reca_w5/annotation/w5_metadata_sufficiency_v1.json",
+        "sha256": "c58f9a709cb338596536fae78ae444e9c8de9e070cf3b8449cbba64fe05fa989"
+      },
+      "w5_merged_ground_truth_template_v1.json": {
+        "path": "data/evaluation/reca_w5/annotation/w5_merged_ground_truth_template_v1.json",
+        "sha256": "3f33c6f866dec90f33212c5851a389ecc0b0f10d6e9da8ab8077aa8e305ab830"
+      },
+      "evaluate_w5_recommenders.py": {
+        "path": "scripts/evaluate_w5_recommenders.py",
+        "sha256": "ec494c7b8f2cea7eb28e78816c4ad2ae88e52aa5221878cf686d7796e85527d6"
+      },
+      "analyze_w5_judgments.py": {
+        "path": "scripts/analyze_w5_judgments.py",
+        "sha256": "f2f748c8ae6e178ae7f380b662eebb3a37c4166e5cbbed0a60cdf5cd2190d82c"
+      }
+    }
+  },
+  "round01_raw_forensic_hash_policy": {
+    "round_id": "W5-CAL-ROUND-01",
+    "manifest_path": "data/evaluation/reca_w5/calibration_submissions/w5_calibration_raw_manifest_v1.json",
+    "incident_artifact_path": "data/evaluation/reca_w5/calibration_submissions/w5_calibration_round_01_integrity_incident_v1.json",
+    "hash_basis": "RAW_RECEIVED_FILE_BYTES_SHA256",
+    "gitattributes_path": "data/evaluation/reca_w5/calibration_submissions/.gitattributes",
+    "gitattributes_rule": "*.csv -text whitespace=cr-at-eol",
+    "preserved_byte_eol": "CRLF",
+    "file_integrity_status": "PASS",
+    "scientific_qualification_status": "FAIL",
+    "round_status": "INVALIDATED_FOR_PROTOCOL",
+    "scientific_use": "FORENSIC_NON_QUALIFYING_EVIDENCE_ONLY",
+    "qualifying_independent_human_judgments": 0,
+    "calibration_review_eligible": false,
+    "human_gt": false,
+    "canonical_interpretation": "FORENSIC_EVIDENCE_ONLY_NEVER_VALID_HUMAN_LABELS",
+    "action": "PRESERVE_EXACT_BYTES",
+    "authoritative_raw_csv_sha256": {
+      "J1": {
+        "raw_v1_path": "data/evaluation/reca_w5/calibration_submissions/raw_v1/J1_w5_calibration_raw_v1.csv",
+        "inbox_path": "data/evaluation/reca_w5/calibration_submissions/inbox/w5_calibration_J1_completed.csv",
+        "sha256": "7a3b58f20169c98a7b472952e480afb96d34e58613afa0032a58d540062393ba"
+      },
+      "J2": {
+        "raw_v1_path": "data/evaluation/reca_w5/calibration_submissions/raw_v1/J2_w5_calibration_raw_v1.csv",
+        "inbox_path": "data/evaluation/reca_w5/calibration_submissions/inbox/w5_calibration_J2_completed.csv",
+        "sha256": "b8464c133df5757cd4c1e741a21a5b2392544a175dc2ec32e5d1e6a4d2721707"
+      },
+      "J3": {
+        "raw_v1_path": "data/evaluation/reca_w5/calibration_submissions/raw_v1/J3_w5_calibration_raw_v1.csv",
+        "inbox_path": "data/evaluation/reca_w5/calibration_submissions/inbox/w5_calibration_J3_completed.csv",
+        "sha256": "b2094cafb458f0ebdea1dd28ec4d5ef723062e449c3b51602edaaee00a86ba3f"
+      }
+    }
+  },
+  "round02_hash_policy": {
+    "round_id": "W5-CAL-ROUND-02",
+    "manifest_path": "data/evaluation/reca_w5/calibration_round02_ops/w5_calibration_round02_manifest_v1.json",
+    "round_status": "PREPARED_NOT_STARTED",
+    "primary_hash_basis": "COMMITTED_GIT_BLOB_UTF8_LF_NORMALIZED_SHA256",
+    "secondary_json_hash_basis": "CANONICAL_SORTED_COMPACT_JSON_UTF8_SHA256",
+    "line_ending_policy": "LF_ONLY_FOR_ALL_NEW_ROUND02_ARTIFACTS",
+    "canonical_interpretation": "CROSS_PLATFORM_CANONICAL",
+    "action": "USE_DECLARED_POLICY",
+    "round02_hashes_unchanged": true,
+    "round02_packages_regenerated": false,
+    "actual_human_judgments_collected": 0,
+    "qualifying_independent_human_judgments": 0,
+    "human_gt": false,
+    "primary_annotation_started": false,
+    "recommender_evaluation_performed": false,
+    "artifacts": {
+      "w5_calibration_v2.json": {
+        "path": "data/evaluation/reca_w5/annotation/w5_calibration_v2.json",
+        "canonical_lf_sha256": "8be5eb82004e9ffa67cd5c5ce5676a5ad7c63a4f4df017c355ca42692df39457",
+        "canonical_json_sha256": "abaa039c910c04107a6f9b8a2c7758db7a481dad94b73f780a8c9508a6899348"
+      },
+      "w5_calibration_round02_role_assignment_contract_v1.json": {
+        "path": "data/evaluation/reca_w5/calibration_round02_ops/w5_calibration_round02_role_assignment_contract_v1.json",
+        "canonical_lf_sha256": "3ede436168d07b6307de80b8bc0df61df9fa78a84889af645087dae5af8cd122",
+        "canonical_json_sha256": "a6766d71b72b0eaa5ef6e9e0abaf144c9ef20e6e8e206b77a1782515ea44711d"
+      },
+      "w5_calibration_round02_session_attestation_template_v1.json": {
+        "path": "data/evaluation/reca_w5/calibration_round02_ops/w5_calibration_round02_session_attestation_template_v1.json",
+        "canonical_lf_sha256": "7894325132c4467d3597add9882195bc0462a0fee275228d09e25b47ccfe21d7",
+        "canonical_json_sha256": "24b4a692ce4e1f8bba4f40c32d7f4827f20c833777aa08ffb46840bb19af376a"
+      },
+      "w5_calibration_round02_submission_contract_v1.json": {
+        "path": "data/evaluation/reca_w5/calibration_round02_ops/w5_calibration_round02_submission_contract_v1.json",
+        "canonical_lf_sha256": "90c38df02aab11dae03e2b8fe8ad1fb1a1f69d1243f15963cf5e4a0956e7fb54",
+        "canonical_json_sha256": "36716fb40f2a06a7390e1a5dfbfe45a0b01945dffc164f17df785c05babcd4fe"
+      }
+    },
+    "judge_packages": {
+      "J1": {
+        "judge_id": "J1",
+        "json_path": "data/evaluation/reca_w5/calibration_round02_ops/judge_packages/w5_calibration_round02_J1_v2.json",
+        "json_canonical_lf_sha256": "de3435fabb5e936042592319c1cb999ba3b0ca1a6c97def7258ad3deb022c051",
+        "json_canonical_object_sha256": "f10c7ea2fa864403535cbe9dcbb07924149bf7af77a799f3c0bdb6af3c749559",
+        "csv_path": "data/evaluation/reca_w5/calibration_round02_ops/judge_packages/w5_calibration_round02_J1_v2.csv",
+        "csv_canonical_lf_sha256": "052f8e0a166a4d3eded6b46fafe716e0c9bb76e8b3476f7822361228c80e4e4c",
+        "scenario_count": 3,
+        "total_items": 45,
+        "presentation_order_sha256": "49c2727f1ad13be2178fde305f4995cb0c292924a8826af26a1ac4ee0ae8ce87",
+        "scenario_first3_items": {
+          "CAL2-HN-01": [
+            "CAL2-HN-01-J14",
+            "CAL2-HN-01-J09",
+            "CAL2-HN-01-J13"
+          ],
+          "CAL2-DN-01": [
+            "CAL2-DN-01-J06",
+            "CAL2-DN-01-J15",
+            "CAL2-DN-01-J10"
+          ],
+          "CAL2-HL-01": [
+            "CAL2-HL-01-J11",
+            "CAL2-HL-01-J02",
+            "CAL2-HL-01-J06"
+          ]
+        }
+      },
+      "J2": {
+        "judge_id": "J2",
+        "json_path": "data/evaluation/reca_w5/calibration_round02_ops/judge_packages/w5_calibration_round02_J2_v2.json",
+        "json_canonical_lf_sha256": "30f7766dc3f9c5c817b6cd85b8733e5ca46a17ad23cb7ea55144c5e91d43fb85",
+        "json_canonical_object_sha256": "4c5006f513a4cd44d6634d5510405c7e9bed111a50aa2f7e85d20085a6e1a54b",
+        "csv_path": "data/evaluation/reca_w5/calibration_round02_ops/judge_packages/w5_calibration_round02_J2_v2.csv",
+        "csv_canonical_lf_sha256": "7483e0db085d42374f47e0d6054b72ca4194e14ff8a2fa0660bf0aafdaac0b1b",
+        "scenario_count": 3,
+        "total_items": 45,
+        "presentation_order_sha256": "83a3d06e4defe3922e8b83a880d50b5c70620864d27d7001368bc717297c26b8",
+        "scenario_first3_items": {
+          "CAL2-HN-01": [
+            "CAL2-HN-01-J02",
+            "CAL2-HN-01-J07",
+            "CAL2-HN-01-J03"
+          ],
+          "CAL2-DN-01": [
+            "CAL2-DN-01-J11",
+            "CAL2-DN-01-J10",
+            "CAL2-DN-01-J06"
+          ],
+          "CAL2-HL-01": [
+            "CAL2-HL-01-J11",
+            "CAL2-HL-01-J10",
+            "CAL2-HL-01-J09"
+          ]
+        }
+      },
+      "J3": {
+        "judge_id": "J3",
+        "json_path": "data/evaluation/reca_w5/calibration_round02_ops/judge_packages/w5_calibration_round02_J3_v2.json",
+        "json_canonical_lf_sha256": "8a4f2413548938ad0ad9ee36c4f14977a072bffc00765adef5b20c0cb0cf53bc",
+        "json_canonical_object_sha256": "b1dd5934a657f38537cd03262513726a8a2ace951da949714e26a0089cd1167f",
+        "csv_path": "data/evaluation/reca_w5/calibration_round02_ops/judge_packages/w5_calibration_round02_J3_v2.csv",
+        "csv_canonical_lf_sha256": "08599d1b1c3bf2c485d66220e2bab2692d91c74d359ea1e28979e33ab7ab8428",
+        "scenario_count": 3,
+        "total_items": 45,
+        "presentation_order_sha256": "5df63c63624dc34a98d141c0d9aceeb29f162088f81690d3528c2c5dc793ac96",
+        "scenario_first3_items": {
+          "CAL2-HN-01": [
+            "CAL2-HN-01-J06",
+            "CAL2-HN-01-J10",
+            "CAL2-HN-01-J09"
+          ],
+          "CAL2-DN-01": [
+            "CAL2-DN-01-J15",
+            "CAL2-DN-01-J12",
+            "CAL2-DN-01-J01"
+          ],
+          "CAL2-HL-01": [
+            "CAL2-HL-01-J12",
+            "CAL2-HL-01-J06",
+            "CAL2-HL-01-J04"
+          ]
+        }
+      }
+    }
+  },
+  "interpretation_rules": {
+    "artifact_class_summary_table": [
+      {
+        "artifact_class": "Legacy PREP manifests",
+        "historical_basis": "PRECOMMIT_WINDOWS_CRLF_BYTES",
+        "canonical_interpretation": "historical provenance only",
+        "action": "DO NOT REWRITE"
+      },
+      {
+        "artifact_class": "Authoritative prereg manifest",
+        "historical_basis": "COMMITTED_GIT_BLOB_BYTES",
+        "canonical_interpretation": "canonical W5 scientific freeze",
+        "action": "USE AS AUTHORITATIVE"
+      },
+      {
+        "artifact_class": "Round01 raw CSV",
+        "historical_basis": "RAW_RECEIVED_FILE_BYTES",
+        "canonical_interpretation": "forensic evidence only",
+        "action": "PRESERVE EXACT BYTES"
+      },
+      {
+        "artifact_class": "Round02 artifacts",
+        "historical_basis": "LF Git blob + canonical JSON",
+        "canonical_interpretation": "cross-platform canonical",
+        "action": "USE DECLARED POLICY"
+      }
+    ],
+    "mandatory_developer_and_researcher_rules": [
+      "RULE-01: Treat data/evaluation/reca_w5/rec_eval_01_prereg_manifest_v1.json (artifact_hash_basis = sha256_git_committed_blob_content) as the sole authoritative W5 preregistration hash freeze.",
+      "RULE-02: Never edit, overwrite, or re-freeze data/evaluation/reca_w5/w5_reproducibility_manifest_v1.json or data/evaluation/reca_w5/annotation/w5_annotation_manifest_v1.json; interpret their 19 target hash entries strictly as pre-commit Windows CRLF provenance hashes that reproduce via LF -> CRLF normalization.",
+      "RULE-03: Preserve Round 01 raw CSV submissions (J1=7a3b58f20169c98a7b472952e480afb96d34e58613afa0032a58d540062393ba, J2=b8464c133df5757cd4c1e741a21a5b2392544a175dc2ec32e5d1e6a4d2721707, J3=b2094cafb458f0ebdea1dd28ec4d5ef723062e449c3b51602edaaee00a86ba3f) byte-identically under RAW_RECEIVED_FILE_BYTES_SHA256 as non-qualifying forensic evidence only (INVALIDATED_FOR_PROTOCOL); never treat Round 01 labels as valid human judgments.",
+      "RULE-04: Write all new W5/Round 02+ artifacts with explicit LF line endings and record both COMMITTED_GIT_BLOB_UTF8_LF_NORMALIZED_SHA256 and (for JSON) CANONICAL_SORTED_COMPACT_JSON_UTF8_SHA256."
+    ]
+  },
+  "legacy_to_canonical_resolution_index": {
+    "description": "Read-only resolution mapping from the 19 legacy pre-preregistration CRLF manifest fields in w5_reproducibility_manifest_v1.json (5 fields) and w5_annotation_manifest_v1.json (14 fields) to their canonical committed Git-blob LF SHA256 and authoritative preregistration reference.",
+    "total_mapped_fields": 19,
+    "entries": [
+      {
+        "legacy_manifest": "data/evaluation/reca_w5/w5_reproducibility_manifest_v1.json",
+        "legacy_field_key": "freeze_checksum",
+        "target_artifact": "data/curated/gomate_places_freeze_v2.json",
+        "historical_stored_crlf_sha256": "93681135d94b379f28802aa75204a0a4c7bec4039f85d28e76ae6737e792e245",
+        "historical_hash_basis": "PRECOMMIT_WINDOWS_CRLF_WORKING_TREE_BYTES_SHA256",
+        "reproduces_via_lf_to_crlf_normalization": true,
+        "canonical_committed_git_blob_lf_sha256": "f7517938598e3923906763f8f31334a500ee88bc06232f2992d38e2fcb28a444",
+        "canonical_json_sha256": "8e81199253e3029779077d3c2e33a34c5258130de9084bc8b263a9ea25a5fcdd",
+        "in_authoritative_prereg_manifest": true,
+        "authoritative_prereg_field_key": "artifact_hashes.gomate_places_freeze_v2.json.sha256",
+        "authoritative_prereg_sha256": "f7517938598e3923906763f8f31334a500ee88bc06232f2992d38e2fcb28a444"
+      },
+      {
+        "legacy_manifest": "data/evaluation/reca_w5/w5_reproducibility_manifest_v1.json",
+        "legacy_field_key": "primary_scenario_manifest_sha256",
+        "target_artifact": "data/evaluation/reca_w5/w5_primary_scenarios_v1.json",
+        "historical_stored_crlf_sha256": "98a86723e7a2d16fbb2acebe1a39379f525a973cc0d854191318931484e9d553",
+        "historical_hash_basis": "PRECOMMIT_WINDOWS_CRLF_WORKING_TREE_BYTES_SHA256",
+        "reproduces_via_lf_to_crlf_normalization": true,
+        "canonical_committed_git_blob_lf_sha256": "4f0c77dccc2c0bae32f5d87f1364a8e1487a83e9b7344a9d8d3c9d0528bc29fb",
+        "canonical_json_sha256": "f808b4fad707527a3a0c6c8725039cb7cc0b631a4ca4bb4051905c32b283aa6a",
+        "in_authoritative_prereg_manifest": true,
+        "authoritative_prereg_field_key": "artifact_hashes.w5_primary_scenarios_v1.json.sha256",
+        "authoritative_prereg_sha256": "4f0c77dccc2c0bae32f5d87f1364a8e1487a83e9b7344a9d8d3c9d0528bc29fb"
+      },
+      {
+        "legacy_manifest": "data/evaluation/reca_w5/w5_reproducibility_manifest_v1.json",
+        "legacy_field_key": "thin_diagnostic_manifest_sha256",
+        "target_artifact": "data/evaluation/reca_w5/w5_thin_diagnostic_scenarios_v1.json",
+        "historical_stored_crlf_sha256": "c90773202aab20e6e30fd8c9cd37157c6d1a4fcb6bf7b718d023c32a6fc50f69",
+        "historical_hash_basis": "PRECOMMIT_WINDOWS_CRLF_WORKING_TREE_BYTES_SHA256",
+        "reproduces_via_lf_to_crlf_normalization": true,
+        "canonical_committed_git_blob_lf_sha256": "538233a937acdd38ea208980a9ba629391b61e721363189f10f6087186fcfa77",
+        "canonical_json_sha256": "f1411126b9e80103e3e55aa71d02251aea7c4062c470ef557926c7a1f188cb64",
+        "in_authoritative_prereg_manifest": true,
+        "authoritative_prereg_field_key": "artifact_hashes.w5_thin_diagnostic_scenarios_v1.json.sha256",
+        "authoritative_prereg_sha256": "538233a937acdd38ea208980a9ba629391b61e721363189f10f6087186fcfa77"
+      },
+      {
+        "legacy_manifest": "data/evaluation/reca_w5/w5_reproducibility_manifest_v1.json",
+        "legacy_field_key": "internal_pool_sha256",
+        "target_artifact": "data/evaluation/reca_w5/w5_candidate_pool_internal_v1.json",
+        "historical_stored_crlf_sha256": "29c3c8192f8d39e733b6753d3c4ccdd19025324b673ce7b8601a0ca15843bd24",
+        "historical_hash_basis": "PRECOMMIT_WINDOWS_CRLF_WORKING_TREE_BYTES_SHA256",
+        "reproduces_via_lf_to_crlf_normalization": true,
+        "canonical_committed_git_blob_lf_sha256": "32b25ef8ffc19d671513f771d3d3a0d23ceb9d0cf614ace1eded94d8c84126c6",
+        "canonical_json_sha256": "96fa45d7b2470146e16ce0c0261f26b94364feb8f4f05464cffcb4a153ceebf1",
+        "in_authoritative_prereg_manifest": true,
+        "authoritative_prereg_field_key": "artifact_hashes.w5_candidate_pool_internal_v1.json.sha256",
+        "authoritative_prereg_sha256": "32b25ef8ffc19d671513f771d3d3a0d23ceb9d0cf614ace1eded94d8c84126c6"
+      },
+      {
+        "legacy_manifest": "data/evaluation/reca_w5/w5_reproducibility_manifest_v1.json",
+        "legacy_field_key": "blinded_pool_sha256",
+        "target_artifact": "data/evaluation/reca_w5/w5_candidate_pool_blinded_v1.json",
+        "historical_stored_crlf_sha256": "8a4dce96ea156ae6ef3d79a31863d441a3d77df914f3b500f872475102d965be",
+        "historical_hash_basis": "PRECOMMIT_WINDOWS_CRLF_WORKING_TREE_BYTES_SHA256",
+        "reproduces_via_lf_to_crlf_normalization": true,
+        "canonical_committed_git_blob_lf_sha256": "8f178e06b1b93e59b3a53f1b2bf1b6ecc697ccfa610d56783b613b6aa2f06ec7",
+        "canonical_json_sha256": "5a62ad2464dcdd872d877212a65e388884b2d31271a1c59ce22dbb3b220ff28f",
+        "in_authoritative_prereg_manifest": true,
+        "authoritative_prereg_field_key": "artifact_hashes.w5_candidate_pool_blinded_v1.json.sha256",
+        "authoritative_prereg_sha256": "8f178e06b1b93e59b3a53f1b2bf1b6ecc697ccfa610d56783b613b6aa2f06ec7"
+      },
+      {
+        "legacy_manifest": "data/evaluation/reca_w5/annotation/w5_annotation_manifest_v1.json",
+        "legacy_field_key": "artifact_hashes.w5_rubric_v1.md",
+        "target_artifact": "data/evaluation/reca_w5/annotation/w5_rubric_v1.md",
+        "historical_stored_crlf_sha256": "b1c799247ce39763a941fafdc929780c32007e88a5fdc4bf62c41ee34a7b510e",
+        "historical_hash_basis": "PRECOMMIT_WINDOWS_CRLF_WORKING_TREE_BYTES_SHA256",
+        "reproduces_via_lf_to_crlf_normalization": true,
+        "canonical_committed_git_blob_lf_sha256": "98601330b366ea99b2254509adf84762375460ab66a93ef3af2ef32df63ef8a4",
+        "canonical_json_sha256": null,
+        "in_authoritative_prereg_manifest": true,
+        "authoritative_prereg_field_key": "artifact_hashes.w5_rubric_v1.md.sha256",
+        "authoritative_prereg_sha256": "98601330b366ea99b2254509adf84762375460ab66a93ef3af2ef32df63ef8a4"
+      },
+      {
+        "legacy_manifest": "data/evaluation/reca_w5/annotation/w5_annotation_manifest_v1.json",
+        "legacy_field_key": "artifact_hashes.w5_judge_instructions_v1.md",
+        "target_artifact": "data/evaluation/reca_w5/annotation/w5_judge_instructions_v1.md",
+        "historical_stored_crlf_sha256": "70d802364c80197993f7ca8e08b6385a7cd72f5eaa5d915a1dfa61c2e7e49dde",
+        "historical_hash_basis": "PRECOMMIT_WINDOWS_CRLF_WORKING_TREE_BYTES_SHA256",
+        "reproduces_via_lf_to_crlf_normalization": true,
+        "canonical_committed_git_blob_lf_sha256": "5d579d4c0b76a9c37eadac869db6e4f6abaa6c8c36f146d3176452d1fc56b4bb",
+        "canonical_json_sha256": null,
+        "in_authoritative_prereg_manifest": true,
+        "authoritative_prereg_field_key": "artifact_hashes.w5_judge_instructions_v1.md.sha256",
+        "authoritative_prereg_sha256": "5d579d4c0b76a9c37eadac869db6e4f6abaa6c8c36f146d3176452d1fc56b4bb"
+      },
+      {
+        "legacy_manifest": "data/evaluation/reca_w5/annotation/w5_annotation_manifest_v1.json",
+        "legacy_field_key": "artifact_hashes.w5_judge_J1_v1.json",
+        "target_artifact": "data/evaluation/reca_w5/annotation/w5_judge_J1_v1.json",
+        "historical_stored_crlf_sha256": "96ee079836407c423a7b2cfb3559f11ead970d92c24f5d6c839796a372faa687",
+        "historical_hash_basis": "PRECOMMIT_WINDOWS_CRLF_WORKING_TREE_BYTES_SHA256",
+        "reproduces_via_lf_to_crlf_normalization": true,
+        "canonical_committed_git_blob_lf_sha256": "11a28f8f026ef5c70ed03d896c94270d9c8c3252bdc70e1bc838705425c61b5b",
+        "canonical_json_sha256": "f81f8eb3c7a23cd01a7771a77b27044a8513a41d19c4e0c544afcda24760cc47",
+        "in_authoritative_prereg_manifest": false,
+        "authoritative_prereg_field_key": null,
+        "authoritative_prereg_sha256": null
+      },
+      {
+        "legacy_manifest": "data/evaluation/reca_w5/annotation/w5_annotation_manifest_v1.json",
+        "legacy_field_key": "artifact_hashes.w5_judge_J2_v1.json",
+        "target_artifact": "data/evaluation/reca_w5/annotation/w5_judge_J2_v1.json",
+        "historical_stored_crlf_sha256": "2e0a256a37b0634a4641495da36e234df790444de5b3821035c3f3261ab7f703",
+        "historical_hash_basis": "PRECOMMIT_WINDOWS_CRLF_WORKING_TREE_BYTES_SHA256",
+        "reproduces_via_lf_to_crlf_normalization": true,
+        "canonical_committed_git_blob_lf_sha256": "63dafdf77e50d7c437996b738a750daf895a8d8192b7eeec6ca73ecc09728f3e",
+        "canonical_json_sha256": "9a878e3929d60d688d19d7477fcf0c4632b48e4d8ba5580c8ed534d3c0a86fff",
+        "in_authoritative_prereg_manifest": false,
+        "authoritative_prereg_field_key": null,
+        "authoritative_prereg_sha256": null
+      },
+      {
+        "legacy_manifest": "data/evaluation/reca_w5/annotation/w5_annotation_manifest_v1.json",
+        "legacy_field_key": "artifact_hashes.w5_judge_J3_v1.json",
+        "target_artifact": "data/evaluation/reca_w5/annotation/w5_judge_J3_v1.json",
+        "historical_stored_crlf_sha256": "827e32b7e8cf4572a455a117236cafb57de1c1b5cac1c6e96902725f8e722c7f",
+        "historical_hash_basis": "PRECOMMIT_WINDOWS_CRLF_WORKING_TREE_BYTES_SHA256",
+        "reproduces_via_lf_to_crlf_normalization": true,
+        "canonical_committed_git_blob_lf_sha256": "9959326d1e306b9c52e3632cb67c4320df9e633881c14f02961bd6e9b2a19b8e",
+        "canonical_json_sha256": "e3aee501cb7f3d3eaf1dfe6de970dcdf69b9f4d069b36ca564935e196147dcc9",
+        "in_authoritative_prereg_manifest": false,
+        "authoritative_prereg_field_key": null,
+        "authoritative_prereg_sha256": null
+      },
+      {
+        "legacy_manifest": "data/evaluation/reca_w5/annotation/w5_annotation_manifest_v1.json",
+        "legacy_field_key": "artifact_hashes.w5_calibration_v1.json",
+        "target_artifact": "data/evaluation/reca_w5/annotation/w5_calibration_v1.json",
+        "historical_stored_crlf_sha256": "740d81e3c3a613575a687af9291102d27e9dd8c61f1fc8f40e913c4c2ccfbc60",
+        "historical_hash_basis": "PRECOMMIT_WINDOWS_CRLF_WORKING_TREE_BYTES_SHA256",
+        "reproduces_via_lf_to_crlf_normalization": true,
+        "canonical_committed_git_blob_lf_sha256": "598bde75d464f3e58299522090833a8521a59d4c0755e13399ad46050a2ca823",
+        "canonical_json_sha256": "14cc397d8a40ab3ea2d9caacc5d76b0893f22287045054cb1e7c886e61f20134",
+        "in_authoritative_prereg_manifest": true,
+        "authoritative_prereg_field_key": "artifact_hashes.w5_calibration_v1.json.sha256",
+        "authoritative_prereg_sha256": "598bde75d464f3e58299522090833a8521a59d4c0755e13399ad46050a2ca823"
+      },
+      {
+        "legacy_manifest": "data/evaluation/reca_w5/annotation/w5_annotation_manifest_v1.json",
+        "legacy_field_key": "artifact_hashes.w5_annotation_template_v1.json",
+        "target_artifact": "data/evaluation/reca_w5/annotation/w5_annotation_template_v1.json",
+        "historical_stored_crlf_sha256": "bdc92d7885d7043311303d7bbd8a168e088c8c3a5cc361b7983154daa4e390fd",
+        "historical_hash_basis": "PRECOMMIT_WINDOWS_CRLF_WORKING_TREE_BYTES_SHA256",
+        "reproduces_via_lf_to_crlf_normalization": true,
+        "canonical_committed_git_blob_lf_sha256": "9badb4f3c41c3b86ebe5246a7abd22d68ac57234a62aeb1525d8116566d482c5",
+        "canonical_json_sha256": "2ab43bf4ca75074d1465cac217bad59f2279220bb68750eceda2920b965dab97",
+        "in_authoritative_prereg_manifest": false,
+        "authoritative_prereg_field_key": null,
+        "authoritative_prereg_sha256": null
+      },
+      {
+        "legacy_manifest": "data/evaluation/reca_w5/annotation/w5_annotation_manifest_v1.json",
+        "legacy_field_key": "artifact_hashes.w5_merged_ground_truth_template_v1.json",
+        "target_artifact": "data/evaluation/reca_w5/annotation/w5_merged_ground_truth_template_v1.json",
+        "historical_stored_crlf_sha256": "624ab82038099b33d775610001bb99b8b5f6321a10381f068483b12619e5be30",
+        "historical_hash_basis": "PRECOMMIT_WINDOWS_CRLF_WORKING_TREE_BYTES_SHA256",
+        "reproduces_via_lf_to_crlf_normalization": true,
+        "canonical_committed_git_blob_lf_sha256": "3f33c6f866dec90f33212c5851a389ecc0b0f10d6e9da8ab8077aa8e305ab830",
+        "canonical_json_sha256": "da5a2656fbf73e304c33e4b901117b09abcc32def726dcec1c51d64fb76e2b1f",
+        "in_authoritative_prereg_manifest": true,
+        "authoritative_prereg_field_key": "artifact_hashes.w5_merged_ground_truth_template_v1.json.sha256",
+        "authoritative_prereg_sha256": "3f33c6f866dec90f33212c5851a389ecc0b0f10d6e9da8ab8077aa8e305ab830"
+      },
+      {
+        "legacy_manifest": "data/evaluation/reca_w5/annotation/w5_annotation_manifest_v1.json",
+        "legacy_field_key": "artifact_hashes.w5_adjudication_template_v1.json",
+        "target_artifact": "data/evaluation/reca_w5/annotation/w5_adjudication_template_v1.json",
+        "historical_stored_crlf_sha256": "f092b918a339151f012d724809c687ccf276ce20cf6b08bde7bcccbe3bb752b2",
+        "historical_hash_basis": "PRECOMMIT_WINDOWS_CRLF_WORKING_TREE_BYTES_SHA256",
+        "reproduces_via_lf_to_crlf_normalization": true,
+        "canonical_committed_git_blob_lf_sha256": "9d811ef8f9c1ff6e248fedd4ae5f4b0d409937abab8ba80c68a9ab227604c775",
+        "canonical_json_sha256": "1f8254eb28b4c35d8b9b0aea604d732972f9eb29060441e456276c8cbc848eea",
+        "in_authoritative_prereg_manifest": false,
+        "authoritative_prereg_field_key": null,
+        "authoritative_prereg_sha256": null
+      },
+      {
+        "legacy_manifest": "data/evaluation/reca_w5/annotation/w5_annotation_manifest_v1.json",
+        "legacy_field_key": "artifact_hashes.w5_metadata_sufficiency_v1.json",
+        "target_artifact": "data/evaluation/reca_w5/annotation/w5_metadata_sufficiency_v1.json",
+        "historical_stored_crlf_sha256": "302a47f2c774ccf51302a8a6ae1b991a92c1cd93e5bf19579bae245547f4224b",
+        "historical_hash_basis": "PRECOMMIT_WINDOWS_CRLF_WORKING_TREE_BYTES_SHA256",
+        "reproduces_via_lf_to_crlf_normalization": true,
+        "canonical_committed_git_blob_lf_sha256": "c58f9a709cb338596536fae78ae444e9c8de9e070cf3b8449cbba64fe05fa989",
+        "canonical_json_sha256": "cfc69ab59028a7871fd8c35927f724d31abfd59103a041b5e9176f731b53e8d0",
+        "in_authoritative_prereg_manifest": true,
+        "authoritative_prereg_field_key": "artifact_hashes.w5_metadata_sufficiency_v1.json.sha256",
+        "authoritative_prereg_sha256": "c58f9a709cb338596536fae78ae444e9c8de9e070cf3b8449cbba64fe05fa989"
+      },
+      {
+        "legacy_manifest": "data/evaluation/reca_w5/annotation/w5_annotation_manifest_v1.json",
+        "legacy_field_key": "judge_packages.J1.sha256",
+        "target_artifact": "data/evaluation/reca_w5/annotation/w5_judge_J1_v1.json",
+        "historical_stored_crlf_sha256": "96ee079836407c423a7b2cfb3559f11ead970d92c24f5d6c839796a372faa687",
+        "historical_hash_basis": "PRECOMMIT_WINDOWS_CRLF_WORKING_TREE_BYTES_SHA256",
+        "reproduces_via_lf_to_crlf_normalization": true,
+        "canonical_committed_git_blob_lf_sha256": "11a28f8f026ef5c70ed03d896c94270d9c8c3252bdc70e1bc838705425c61b5b",
+        "canonical_json_sha256": "f81f8eb3c7a23cd01a7771a77b27044a8513a41d19c4e0c544afcda24760cc47",
+        "in_authoritative_prereg_manifest": false,
+        "authoritative_prereg_field_key": null,
+        "authoritative_prereg_sha256": null
+      },
+      {
+        "legacy_manifest": "data/evaluation/reca_w5/annotation/w5_annotation_manifest_v1.json",
+        "legacy_field_key": "judge_packages.J2.sha256",
+        "target_artifact": "data/evaluation/reca_w5/annotation/w5_judge_J2_v1.json",
+        "historical_stored_crlf_sha256": "2e0a256a37b0634a4641495da36e234df790444de5b3821035c3f3261ab7f703",
+        "historical_hash_basis": "PRECOMMIT_WINDOWS_CRLF_WORKING_TREE_BYTES_SHA256",
+        "reproduces_via_lf_to_crlf_normalization": true,
+        "canonical_committed_git_blob_lf_sha256": "63dafdf77e50d7c437996b738a750daf895a8d8192b7eeec6ca73ecc09728f3e",
+        "canonical_json_sha256": "9a878e3929d60d688d19d7477fcf0c4632b48e4d8ba5580c8ed534d3c0a86fff",
+        "in_authoritative_prereg_manifest": false,
+        "authoritative_prereg_field_key": null,
+        "authoritative_prereg_sha256": null
+      },
+      {
+        "legacy_manifest": "data/evaluation/reca_w5/annotation/w5_annotation_manifest_v1.json",
+        "legacy_field_key": "judge_packages.J3.sha256",
+        "target_artifact": "data/evaluation/reca_w5/annotation/w5_judge_J3_v1.json",
+        "historical_stored_crlf_sha256": "827e32b7e8cf4572a455a117236cafb57de1c1b5cac1c6e96902725f8e722c7f",
+        "historical_hash_basis": "PRECOMMIT_WINDOWS_CRLF_WORKING_TREE_BYTES_SHA256",
+        "reproduces_via_lf_to_crlf_normalization": true,
+        "canonical_committed_git_blob_lf_sha256": "9959326d1e306b9c52e3632cb67c4320df9e633881c14f02961bd6e9b2a19b8e",
+        "canonical_json_sha256": "e3aee501cb7f3d3eaf1dfe6de970dcdf69b9f4d069b36ca564935e196147dcc9",
+        "in_authoritative_prereg_manifest": false,
+        "authoritative_prereg_field_key": null,
+        "authoritative_prereg_sha256": null
+      },
+      {
+        "legacy_manifest": "data/evaluation/reca_w5/annotation/w5_annotation_manifest_v1.json",
+        "legacy_field_key": "calibration_package.sha256",
+        "target_artifact": "data/evaluation/reca_w5/annotation/w5_calibration_v1.json",
+        "historical_stored_crlf_sha256": "740d81e3c3a613575a687af9291102d27e9dd8c61f1fc8f40e913c4c2ccfbc60",
+        "historical_hash_basis": "PRECOMMIT_WINDOWS_CRLF_WORKING_TREE_BYTES_SHA256",
+        "reproduces_via_lf_to_crlf_normalization": true,
+        "canonical_committed_git_blob_lf_sha256": "598bde75d464f3e58299522090833a8521a59d4c0755e13399ad46050a2ca823",
+        "canonical_json_sha256": "14cc397d8a40ab3ea2d9caacc5d76b0893f22287045054cb1e7c886e61f20134",
+        "in_authoritative_prereg_manifest": true,
+        "authoritative_prereg_field_key": "artifact_hashes.w5_calibration_v1.json.sha256",
+        "authoritative_prereg_sha256": "598bde75d464f3e58299522090833a8521a59d4c0755e13399ad46050a2ca823"
+      }
+    ]
+  }
+}
