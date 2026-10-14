@@ -1,0 +1,344 @@
+{
+  "manifest_version": "W5-CAL-R02-MANIFEST-V1",
+  "round_id": "W5-CAL-ROUND-02",
+  "calibration_version": "W5-CALIBRATION-V2",
+  "rubric_version": "W5-RUBRIC-V1",
+  "pool_version": "W5-POOL-V1",
+  "presentation_version": "W5-CAL-R02-OPS-V1",
+  "track": "CALIBRATION_ONLY",
+  "excluded_from_final_metrics": true,
+  "status": "PREPARED_NOT_STARTED",
+  "base_seed": 20261014,
+  "actual_human_judgments_collected": 0,
+  "qualifying_independent_human_judgments": 0,
+  "calibration_review_eligible": false,
+  "human_gt": false,
+  "primary_annotation_started": false,
+  "recommender_evaluation_performed": false,
+  "scientific_winner": "UNKNOWN",
+  "round_01_status": "INVALIDATED_FOR_PROTOCOL",
+  "round_01_scientific_use": "FORENSIC_NON_QUALIFYING_EVIDENCE_ONLY",
+  "hash_basis_policy": {
+    "primary_hash_basis": "COMMITTED_GIT_BLOB_UTF8_LF_NORMALIZED_SHA256",
+    "secondary_json_hash_basis": "CANONICAL_SORTED_COMPACT_JSON_UTF8_SHA256",
+    "line_ending_policy": "LF_ONLY_FOR_ALL_NEW_ROUND02_ARTIFACTS",
+    "historical_hash_note": "Historical W5 freeze hashes are untouched; any historical LF/CRLF hash representation concern is tracked separately as W5-HASH-AUDIT-CANDIDATE."
+  },
+  "scenario_summary": [
+    {
+      "scenario_id": "CAL2-HN-01",
+      "destination": "ha-noi",
+      "declared_interests": [
+        "culture_history",
+        "nature_outdoor",
+        "nightlife_entertainment"
+      ],
+      "item_count": 15
+    },
+    {
+      "scenario_id": "CAL2-DN-01",
+      "destination": "da-nang",
+      "declared_interests": [
+        "food_cuisine",
+        "beach_island"
+      ],
+      "item_count": 15
+    },
+    {
+      "scenario_id": "CAL2-HL-01",
+      "destination": "ha-long",
+      "declared_interests": [
+        "coffee_culture",
+        "shopping_local"
+      ],
+      "item_count": 15
+    }
+  ],
+  "canonical_interest_coverage": {
+    "required_canonical_interests": [
+      "food_cuisine",
+      "culture_history",
+      "nature_outdoor",
+      "coffee_culture",
+      "beach_island",
+      "shopping_local",
+      "nightlife_entertainment"
+    ],
+    "covered_interests": [
+      "beach_island",
+      "coffee_culture",
+      "culture_history",
+      "food_cuisine",
+      "nature_outdoor",
+      "nightlife_entertainment",
+      "shopping_local"
+    ],
+    "all_7_covered": true
+  },
+  "sampling_and_exclusion_audit": {
+    "sampling_algorithm": "Deterministic stratified sampling per destination from REC-A-CORE-V2 (seed=20261014) excluding all 45 Round 01 calibration place_ids and all 255 primary candidate pool place_ids; target 10 I0 + 5 I1 per scenario with non-sufficient metadata inclusion cap (<=2 in I0, <=1 in I1) and seeded category round-robin; zero expected relevance labels computed or stored.",
+    "source_universe": "REC-A-CORE-V2",
+    "round01_excluded_place_count": 45,
+    "primary_pool_excluded_place_count": 255,
+    "total_excluded_place_count": 300,
+    "round01_place_overlap": 0,
+    "primary_pool_place_overlap": 0,
+    "secondary_non_core_poi_leakage": 0,
+    "unique_round02_place_count": 45,
+    "total_i0_count": 30,
+    "total_i1_count": 15,
+    "total_metadata_sufficiency_counts": {
+      "SUFFICIENT_FACTUAL_CONTEXT": 33,
+      "LIMITED_FACTUAL_CONTEXT": 11,
+      "INSUFFICIENT_FACTUAL_CONTEXT": 1
+    },
+    "by_scenario": {
+      "CAL2-HN-01": {
+        "scenario_id": "CAL2-HN-01",
+        "destination": "ha-noi",
+        "sampling_seed_basis": "20261014|CAL2-HN-01|round02-calibration-sampling",
+        "sampling_seed_sha256_prefix16": "1bb2b59d4136122c",
+        "eligible_fresh_core_count": 57,
+        "selected_count": 15,
+        "i0_i1_counts": {
+          "I0": 10,
+          "I1": 5
+        },
+        "metadata_sufficiency_counts": {
+          "SUFFICIENT_FACTUAL_CONTEXT": 13,
+          "LIMITED_FACTUAL_CONTEXT": 2,
+          "INSUFFICIENT_FACTUAL_CONTEXT": 0
+        },
+        "category_counts": {
+          "attraction": 5,
+          "beach": 1,
+          "cafe": 1,
+          "culture": 1,
+          "hotel": 2,
+          "nature": 1,
+          "nightlife": 1,
+          "restaurant": 1,
+          "temple": 2
+        },
+        "representation_by_place_id": {
+          "8f6623e0-69fd-491d-ab2d-f2e1cefdfcc8": "I0",
+          "82150ecb-f97e-4f82-bbcc-b183d12bb503": "I0",
+          "c41383b0-231b-51a4-90e9-7f146fda7f9f": "I0",
+          "dd91802f-d8ed-5cfb-a57b-9dbebee3d4b3": "I1",
+          "368e87d3-a03b-5b3f-b9be-79142ce8eb99": "I1",
+          "8b3e5a81-6765-4aa6-a94a-d84300ce8c8b": "I0",
+          "4c76ded0-e7df-54f7-bc5d-87ceed138bb2": "I0",
+          "c8ff94c6-666c-4d50-883b-605bd0c8ff98": "I0",
+          "79624561-abc4-5c9a-a068-3d5f83cbb07d": "I0",
+          "6775ce64-9699-5818-ad57-d86c84981f36": "I1",
+          "cb4e11b7-3909-53a7-9023-c3bf5a79172d": "I0",
+          "d2a4e091-aa2f-5a48-aea7-b58126b79eac": "I0",
+          "e5729e0c-08a4-41c4-ad37-ecbfaa244efc": "I1",
+          "5abba2de-af4b-4c0d-a3b7-7347cd0b266a": "I0",
+          "c4a4f14c-8217-4681-a13a-16f1ff8237a8": "I1"
+        }
+      },
+      "CAL2-DN-01": {
+        "scenario_id": "CAL2-DN-01",
+        "destination": "da-nang",
+        "sampling_seed_basis": "20261014|CAL2-DN-01|round02-calibration-sampling",
+        "sampling_seed_sha256_prefix16": "d5b08b770c2536de",
+        "eligible_fresh_core_count": 175,
+        "selected_count": 15,
+        "i0_i1_counts": {
+          "I0": 10,
+          "I1": 5
+        },
+        "metadata_sufficiency_counts": {
+          "SUFFICIENT_FACTUAL_CONTEXT": 12,
+          "LIMITED_FACTUAL_CONTEXT": 3,
+          "INSUFFICIENT_FACTUAL_CONTEXT": 0
+        },
+        "category_counts": {
+          "attraction": 3,
+          "cafe": 1,
+          "culture": 1,
+          "hotel": 2,
+          "market": 3,
+          "nature": 1,
+          "park": 2,
+          "restaurant": 1,
+          "temple": 1
+        },
+        "representation_by_place_id": {
+          "4c8bea71-925c-443f-9489-2f2ecd004d06": "I0",
+          "ddf65b04-2939-43d2-9e87-3cbf19778079": "I0",
+          "b4e16383-fb05-4b29-b353-f601ebf7c293": "I1",
+          "760327fb-459c-41fb-b66c-8542100371f0": "I1",
+          "2865a014-fb9c-46cb-8b8c-a413770d8514": "I1",
+          "94cc21c5-60dd-55b1-8bc8-7038785946fe": "I0",
+          "182869e0-13e2-4504-8383-46002589ee9c": "I0",
+          "26e5ef85-1a6e-4b6b-b747-c631a3144eca": "I0",
+          "3779102f-50bb-5c7e-b9a6-50b321f665d6": "I1",
+          "caeb4ed0-983e-5626-9a9b-7e964b43a04e": "I1",
+          "ee500089-d251-441d-8e22-cf2ab022eb9b": "I0",
+          "c98a44ad-58df-41d7-b961-d2fd2a90da1c": "I0",
+          "493cafba-7c4d-453a-a542-21a01c5bbbdf": "I0",
+          "55bee6c0-dd92-445e-865f-3601442aac8d": "I0",
+          "ab28b1af-56b7-5564-983b-8b6375bddfc1": "I0"
+        }
+      },
+      "CAL2-HL-01": {
+        "scenario_id": "CAL2-HL-01",
+        "destination": "ha-long",
+        "sampling_seed_basis": "20261014|CAL2-HL-01|round02-calibration-sampling",
+        "sampling_seed_sha256_prefix16": "4d3694380a60703d",
+        "eligible_fresh_core_count": 90,
+        "selected_count": 15,
+        "i0_i1_counts": {
+          "I0": 10,
+          "I1": 5
+        },
+        "metadata_sufficiency_counts": {
+          "SUFFICIENT_FACTUAL_CONTEXT": 8,
+          "LIMITED_FACTUAL_CONTEXT": 6,
+          "INSUFFICIENT_FACTUAL_CONTEXT": 1
+        },
+        "category_counts": {
+          "attraction": 5,
+          "cafe": 1,
+          "hotel": 2,
+          "market": 1,
+          "nightlife": 2,
+          "restaurant": 3,
+          "temple": 1
+        },
+        "representation_by_place_id": {
+          "69da6325-2393-4b5a-9726-c26c61dd2861": "I0",
+          "d66eca7e-16c1-4b76-b314-89e3b59669d2": "I1",
+          "26416ec6-dea5-4807-95f5-069b8de3b296": "I0",
+          "764329ed-28ff-4b20-822e-307083de6ef6": "I1",
+          "86f2be58-77f3-4bbb-a4cd-dec70f84e311": "I1",
+          "30570282-9162-4ed0-995b-1fc1af5d9486": "I0",
+          "10933968-832f-4d32-8900-e1fcf7acb8ce": "I0",
+          "b936f9d5-8edf-4fc1-93f1-c4c154ce24eb": "I0",
+          "d3644148-dd45-4d0c-b35a-71062f10dbe0": "I0",
+          "77af14b6-85ac-4c91-873a-e7da27d555f4": "I1",
+          "205a8100-faa1-42f0-8fa7-8c46fd60bedc": "I0",
+          "69ae25c4-b4e7-4e87-99c5-7c0c70377f15": "I0",
+          "34e57396-9ca6-433f-b4a8-9b51aa28ebb1": "I0",
+          "939c66a4-0aa0-4897-bc28-6672bc2741d5": "I0",
+          "13317b2d-7b15-40e5-8a3d-63c80425ae8e": "I1"
+        }
+      }
+    }
+  },
+  "artifacts": {
+    "w5_calibration_v2.json": {
+      "path": "data/evaluation/reca_w5/annotation/w5_calibration_v2.json",
+      "canonical_lf_sha256": "8be5eb82004e9ffa67cd5c5ce5676a5ad7c63a4f4df017c355ca42692df39457",
+      "canonical_json_sha256": "abaa039c910c04107a6f9b8a2c7758db7a481dad94b73f780a8c9508a6899348"
+    },
+    "w5_calibration_round02_role_assignment_contract_v1.json": {
+      "path": "data/evaluation/reca_w5/calibration_round02_ops/w5_calibration_round02_role_assignment_contract_v1.json",
+      "canonical_lf_sha256": "3ede436168d07b6307de80b8bc0df61df9fa78a84889af645087dae5af8cd122",
+      "canonical_json_sha256": "a6766d71b72b0eaa5ef6e9e0abaf144c9ef20e6e8e206b77a1782515ea44711d"
+    },
+    "w5_calibration_round02_session_attestation_template_v1.json": {
+      "path": "data/evaluation/reca_w5/calibration_round02_ops/w5_calibration_round02_session_attestation_template_v1.json",
+      "canonical_lf_sha256": "7894325132c4467d3597add9882195bc0462a0fee275228d09e25b47ccfe21d7",
+      "canonical_json_sha256": "24b4a692ce4e1f8bba4f40c32d7f4827f20c833777aa08ffb46840bb19af376a"
+    },
+    "w5_calibration_round02_submission_contract_v1.json": {
+      "path": "data/evaluation/reca_w5/calibration_round02_ops/w5_calibration_round02_submission_contract_v1.json",
+      "canonical_lf_sha256": "90c38df02aab11dae03e2b8fe8ad1fb1a1f69d1243f15963cf5e4a0956e7fb54",
+      "canonical_json_sha256": "36716fb40f2a06a7390e1a5dfbfe45a0b01945dffc164f17df785c05babcd4fe"
+    }
+  },
+  "judge_packages": {
+    "J1": {
+      "judge_id": "J1",
+      "json_path": "data/evaluation/reca_w5/calibration_round02_ops/judge_packages/w5_calibration_round02_J1_v2.json",
+      "json_canonical_lf_sha256": "de3435fabb5e936042592319c1cb999ba3b0ca1a6c97def7258ad3deb022c051",
+      "json_canonical_object_sha256": "f10c7ea2fa864403535cbe9dcbb07924149bf7af77a799f3c0bdb6af3c749559",
+      "csv_path": "data/evaluation/reca_w5/calibration_round02_ops/judge_packages/w5_calibration_round02_J1_v2.csv",
+      "csv_canonical_lf_sha256": "052f8e0a166a4d3eded6b46fafe716e0c9bb76e8b3476f7822361228c80e4e4c",
+      "scenario_count": 3,
+      "total_items": 45,
+      "presentation_order_sha256": "49c2727f1ad13be2178fde305f4995cb0c292924a8826af26a1ac4ee0ae8ce87",
+      "scenario_first3_items": {
+        "CAL2-HN-01": [
+          "CAL2-HN-01-J14",
+          "CAL2-HN-01-J09",
+          "CAL2-HN-01-J13"
+        ],
+        "CAL2-DN-01": [
+          "CAL2-DN-01-J06",
+          "CAL2-DN-01-J15",
+          "CAL2-DN-01-J10"
+        ],
+        "CAL2-HL-01": [
+          "CAL2-HL-01-J11",
+          "CAL2-HL-01-J02",
+          "CAL2-HL-01-J06"
+        ]
+      }
+    },
+    "J2": {
+      "judge_id": "J2",
+      "json_path": "data/evaluation/reca_w5/calibration_round02_ops/judge_packages/w5_calibration_round02_J2_v2.json",
+      "json_canonical_lf_sha256": "30f7766dc3f9c5c817b6cd85b8733e5ca46a17ad23cb7ea55144c5e91d43fb85",
+      "json_canonical_object_sha256": "4c5006f513a4cd44d6634d5510405c7e9bed111a50aa2f7e85d20085a6e1a54b",
+      "csv_path": "data/evaluation/reca_w5/calibration_round02_ops/judge_packages/w5_calibration_round02_J2_v2.csv",
+      "csv_canonical_lf_sha256": "7483e0db085d42374f47e0d6054b72ca4194e14ff8a2fa0660bf0aafdaac0b1b",
+      "scenario_count": 3,
+      "total_items": 45,
+      "presentation_order_sha256": "83a3d06e4defe3922e8b83a880d50b5c70620864d27d7001368bc717297c26b8",
+      "scenario_first3_items": {
+        "CAL2-HN-01": [
+          "CAL2-HN-01-J02",
+          "CAL2-HN-01-J07",
+          "CAL2-HN-01-J03"
+        ],
+        "CAL2-DN-01": [
+          "CAL2-DN-01-J11",
+          "CAL2-DN-01-J10",
+          "CAL2-DN-01-J06"
+        ],
+        "CAL2-HL-01": [
+          "CAL2-HL-01-J11",
+          "CAL2-HL-01-J10",
+          "CAL2-HL-01-J09"
+        ]
+      }
+    },
+    "J3": {
+      "judge_id": "J3",
+      "json_path": "data/evaluation/reca_w5/calibration_round02_ops/judge_packages/w5_calibration_round02_J3_v2.json",
+      "json_canonical_lf_sha256": "8a4f2413548938ad0ad9ee36c4f14977a072bffc00765adef5b20c0cb0cf53bc",
+      "json_canonical_object_sha256": "b1dd5934a657f38537cd03262513726a8a2ace951da949714e26a0089cd1167f",
+      "csv_path": "data/evaluation/reca_w5/calibration_round02_ops/judge_packages/w5_calibration_round02_J3_v2.csv",
+      "csv_canonical_lf_sha256": "08599d1b1c3bf2c485d66220e2bab2692d91c74d359ea1e28979e33ab7ab8428",
+      "scenario_count": 3,
+      "total_items": 45,
+      "presentation_order_sha256": "5df63c63624dc34a98d141c0d9aceeb29f162088f81690d3528c2c5dc793ac96",
+      "scenario_first3_items": {
+        "CAL2-HN-01": [
+          "CAL2-HN-01-J06",
+          "CAL2-HN-01-J10",
+          "CAL2-HN-01-J09"
+        ],
+        "CAL2-DN-01": [
+          "CAL2-DN-01-J15",
+          "CAL2-DN-01-J12",
+          "CAL2-DN-01-J01"
+        ],
+        "CAL2-HL-01": [
+          "CAL2-HL-01-J12",
+          "CAL2-HL-01-J06",
+          "CAL2-HL-01-J04"
+        ]
+      }
+    }
+  },
+  "presentation_order_hashes": {
+    "J1": "49c2727f1ad13be2178fde305f4995cb0c292924a8826af26a1ac4ee0ae8ce87",
+    "J2": "83a3d06e4defe3922e8b83a880d50b5c70620864d27d7001368bc717297c26b8",
+    "J3": "5df63c63624dc34a98d141c0d9aceeb29f162088f81690d3528c2c5dc793ac96"
+  }
+}
