@@ -1,6 +1,6 @@
-"""Tests for W5 Human Calibration Operational Readiness (W5-CAL-OPS-PREP-01 & FIX-01).
+"""Tests for W5 Human Calibration Operational Readiness (W5-CAL-OPS-PREP-01, FIX-01 & FIX-02).
 
-Covers required tests CAL-OPS-01 through CAL-OPS-45:
+Covers required tests CAL-OPS-01 through CAL-OPS-58:
 - CAL-OPS-01: Exactly 3 judge packages exist: J1/J2/J3.
 - CAL-OPS-02: Each judge package contains exactly 45 items.
 - CAL-OPS-03: J1/J2/J3 contain identical canonical item membership.
@@ -46,6 +46,19 @@ Covers required tests CAL-OPS-01 through CAL-OPS-45:
 - CAL-OPS-43: Operations doc does NOT define .80/.67 as an automatic calibration PASS/FAIL gate.
 - CAL-OPS-44: Operations doc routes post-submission decision to W5-CAL-REVIEW + RUBRIC-FREEZE.
 - CAL-OPS-45: external_help_used remains null in template and operational wording requires truthful recording rather than forced false.
+- CAL-OPS-46: JSON rejects missing top-level pool_version.
+- CAL-OPS-47: JSON rejects missing top-level base_seed.
+- CAL-OPS-48: JSON rejects missing scenario_count / total_items.
+- CAL-OPS-49: JSON rejects missing top-level track.
+- CAL-OPS-50: JSON rejects missing excluded_from_final_metrics.
+- CAL-OPS-51: JSON rejects unexpected extra top-level field.
+- CAL-OPS-52: JSON rejects missing scenario track.
+- CAL-OPS-53: JSON rejects missing scenario excluded_from_final_metrics.
+- CAL-OPS-54: JSON rejects missing order_seed_basis.
+- CAL-OPS-55: JSON rejects missing item_count.
+- CAL-OPS-56: JSON rejects unexpected extra scenario-level field.
+- CAL-OPS-57: Valid completed J1/J2/J3 JSON submissions still PASS when ONLY label/judge_note differ.
+- CAL-OPS-58: Empty frozen J1/J2/J3 packages still PASS empty-package mode.
 """
 
 from __future__ import annotations
@@ -594,7 +607,7 @@ def test_cal_ops_29_json_rejects_modified_destination() -> None:
 
     sub_sc = _make_valid_synthetic_completed_fixture("J1")
     sub_sc["scenarios"][0]["destination"] = "da-nang"
-    with pytest.raises(ValueError, match="destination modified"):
+    with pytest.raises(ValueError, match="Read-only field 'destination' modified"):
         validate_calibration_submission(sub_sc)
 
 
@@ -607,7 +620,7 @@ def test_cal_ops_30_json_rejects_modified_declared_interests() -> None:
 
     sub_sc = _make_valid_synthetic_completed_fixture("J1")
     sub_sc["scenarios"][0]["declared_interests"] = ["beach_island"]
-    with pytest.raises(ValueError, match="declared_interests modified"):
+    with pytest.raises(ValueError, match="Read-only field 'declared_interests' modified"):
         validate_calibration_submission(sub_sc)
 
 
@@ -759,6 +772,10 @@ def test_cal_ops_42_submission_contract_states_frozen_read_only_policy() -> None
         contract["read_only_context_policy"]
         == "EXACT_MATCH_TO_FROZEN_PRESENTATION_PACKAGE"
     )
+    assert (
+        contract["json_shape_policy"]
+        == "EXACT_REFERENCE_SHAPE_EXCEPT_EDITABLE_FIELDS"
+    )
     assert contract["editable_fields"] == ["label", "judge_note"]
     assert contract["read_only_context_mutation"] == "REJECT"
 
@@ -790,3 +807,119 @@ def test_cal_ops_45_external_help_used_template_and_truthful_wording() -> None:
     assert "external_help_used" in doc_text
     assert "falsify" in doc_text
     assert "w5-cal-review" in doc_text
+
+
+def test_cal_ops_46_json_rejects_missing_top_level_pool_version() -> None:
+    """CAL-OPS-46: JSON rejects missing top-level pool_version."""
+    sub = _make_valid_synthetic_completed_fixture("J1")
+    del sub["pool_version"]
+    with pytest.raises(ValueError, match="pool_version"):
+        validate_calibration_submission(sub)
+
+
+def test_cal_ops_47_json_rejects_missing_top_level_base_seed() -> None:
+    """CAL-OPS-47: JSON rejects missing top-level base_seed."""
+    sub = _make_valid_synthetic_completed_fixture("J1")
+    del sub["base_seed"]
+    with pytest.raises(ValueError, match="base_seed"):
+        validate_calibration_submission(sub)
+
+
+def test_cal_ops_48_json_rejects_missing_scenario_count_or_total_items() -> None:
+    """CAL-OPS-48: JSON rejects missing scenario_count / total_items."""
+    sub_sc = _make_valid_synthetic_completed_fixture("J1")
+    del sub_sc["scenario_count"]
+    with pytest.raises(ValueError, match="scenario_count"):
+        validate_calibration_submission(sub_sc)
+
+    sub_tot = _make_valid_synthetic_completed_fixture("J1")
+    del sub_tot["total_items"]
+    with pytest.raises(ValueError, match="total_items"):
+        validate_calibration_submission(sub_tot)
+
+
+def test_cal_ops_49_json_rejects_missing_top_level_track() -> None:
+    """CAL-OPS-49: JSON rejects missing top-level track."""
+    sub = _make_valid_synthetic_completed_fixture("J1")
+    del sub["track"]
+    with pytest.raises(ValueError, match="track"):
+        validate_calibration_submission(sub)
+
+
+def test_cal_ops_50_json_rejects_missing_top_level_excluded_flag() -> None:
+    """CAL-OPS-50: JSON rejects missing top-level excluded_from_final_metrics."""
+    sub = _make_valid_synthetic_completed_fixture("J1")
+    del sub["excluded_from_final_metrics"]
+    with pytest.raises(ValueError, match="excluded_from_final_metrics"):
+        validate_calibration_submission(sub)
+
+
+def test_cal_ops_51_json_rejects_unexpected_extra_top_level_field() -> None:
+    """CAL-OPS-51: JSON rejects unexpected extra top-level field."""
+    sub = _make_valid_synthetic_completed_fixture("J1")
+    sub["custom_extra_field"] = "unexpected"
+    with pytest.raises(ValueError, match="custom_extra_field"):
+        validate_calibration_submission(sub)
+
+
+def test_cal_ops_52_json_rejects_missing_scenario_track() -> None:
+    """CAL-OPS-52: JSON rejects missing scenario track."""
+    sub = _make_valid_synthetic_completed_fixture("J1")
+    del sub["scenarios"][0]["track"]
+    with pytest.raises(ValueError, match="track"):
+        validate_calibration_submission(sub)
+
+
+def test_cal_ops_53_json_rejects_missing_scenario_excluded_flag() -> None:
+    """CAL-OPS-53: JSON rejects missing scenario excluded_from_final_metrics."""
+    sub = _make_valid_synthetic_completed_fixture("J1")
+    del sub["scenarios"][0]["excluded_from_final_metrics"]
+    with pytest.raises(ValueError, match="excluded_from_final_metrics"):
+        validate_calibration_submission(sub)
+
+
+def test_cal_ops_54_json_rejects_missing_scenario_order_seed_basis() -> None:
+    """CAL-OPS-54: JSON rejects missing order_seed_basis."""
+    sub = _make_valid_synthetic_completed_fixture("J1")
+    del sub["scenarios"][0]["order_seed_basis"]
+    with pytest.raises(ValueError, match="order_seed_basis"):
+        validate_calibration_submission(sub)
+
+
+def test_cal_ops_55_json_rejects_missing_scenario_item_count() -> None:
+    """CAL-OPS-55: JSON rejects missing item_count."""
+    sub = _make_valid_synthetic_completed_fixture("J1")
+    del sub["scenarios"][0]["item_count"]
+    with pytest.raises(ValueError, match="item_count"):
+        validate_calibration_submission(sub)
+
+
+def test_cal_ops_56_json_rejects_unexpected_extra_scenario_field() -> None:
+    """CAL-OPS-56: JSON rejects unexpected extra scenario-level field."""
+    sub = _make_valid_synthetic_completed_fixture("J1")
+    sub["scenarios"][0]["extra_scenario_metadata"] = 123
+    with pytest.raises(ValueError, match="extra_scenario_metadata"):
+        validate_calibration_submission(sub)
+
+
+def test_cal_ops_57_valid_completed_j1_j2_j3_json_submissions_pass() -> None:
+    """CAL-OPS-57: Valid completed J1/J2/J3 JSON submissions still PASS when ONLY label/judge_note differ."""
+    for jid in ALLOWED_JUDGES:
+        sub = _make_valid_synthetic_completed_fixture(jid)
+        res = validate_calibration_submission(sub, validate_empty_package=False)
+        assert res["status"] == "PASS"
+        assert res["mode"] == "COMPLETED_SUBMISSION"
+        assert res["judge_id"] == jid
+        assert res["total_items"] == 45
+
+
+def test_cal_ops_58_empty_frozen_j1_j2_j3_packages_pass_empty_mode() -> None:
+    """CAL-OPS-58: Empty frozen J1/J2/J3 packages still PASS empty-package mode."""
+    for jid in ALLOWED_JUDGES:
+        json_path = CALIBRATION_OPS_DIR / f"w5_calibration_{jid}_v1.json"
+        pkg = _load_json(json_path)
+        res = validate_calibration_submission(pkg, validate_empty_package=True)
+        assert res["status"] == "PASS"
+        assert res["mode"] == "EMPTY_PACKAGE"
+        assert res["judge_id"] == jid
+        assert res["total_items"] == 45

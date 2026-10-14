@@ -6,6 +6,7 @@
   "track": "CALIBRATION_ONLY",
   "excluded_from_final_metrics": true,
   "read_only_context_policy": "EXACT_MATCH_TO_FROZEN_PRESENTATION_PACKAGE",
+  "json_shape_policy": "EXACT_REFERENCE_SHAPE_EXCEPT_EDITABLE_FIELDS",
   "editable_fields": [
     "label",
     "judge_note"
@@ -77,8 +78,24 @@
     "judge_id",
     "calibration_version",
     "rubric_version",
+    "pool_version",
     "presentation_version",
+    "base_seed",
+    "track",
+    "excluded_from_final_metrics",
+    "scenario_count",
+    "total_items",
     "scenarios"
+  ],
+  "required_scenario_fields": [
+    "scenario_id",
+    "destination",
+    "declared_interests",
+    "track",
+    "excluded_from_final_metrics",
+    "order_seed_basis",
+    "item_count",
+    "items"
   ],
   "required_item_fields": [
     "judge_id",

@@ -7,8 +7,8 @@ packages and submissions for the W5 calibration phase (CAL-HN-01, CAL-DN-01, CAL
 Scientific boundaries enforced:
 - Calibration is CALIBRATION_ONLY and strictly disjoint from the 30 primary scenarios
   and 474 primary candidate pool records.
-- Enforces strict immutability of all read-only context fields in both JSON and CSV
-  submissions (only 'label' and 'judge_note' are mutable).
+- Enforces exact presentation shape and strict immutability of all read-only context
+  fields in both JSON and CSV submissions (only 'label' and 'judge_note' are mutable).
 - Does NOT populate or simulate human relevance labels.
 - Does NOT aggregate judges, calculate final reliability, create HUMAN-GT,
   adjudicate, or compute recommender metrics.
@@ -129,6 +129,39 @@ def _strict_equal(a: Any, b: Any) -> bool:
             return False
         return all(_strict_equal(x, y) for x, y in zip(a, b, strict=True))
     return bool(a == b)
+
+
+def _enforce_exact_dict_shape_and_read_only_values(
+    actual_obj: dict[str, Any],
+    reference_obj: dict[str, Any],
+    *,
+    context_label: str,
+    mutable_or_child_keys: frozenset[str],
+) -> None:
+    """Verify exact key set equality and strict read-only value equality against reference_obj."""
+    expected_keys = set(reference_obj.keys())
+    actual_keys = set(actual_obj.keys())
+
+    missing_keys = sorted(expected_keys - actual_keys)
+    if missing_keys:
+        raise ValueError(
+            f"{context_label} is missing required read-only field(s): {missing_keys}."
+        )
+
+    extra_keys = sorted(actual_keys - expected_keys)
+    if extra_keys:
+        raise ValueError(
+            f"{context_label} contains unexpected extra field(s): {extra_keys}."
+        )
+
+    for key in reference_obj:
+        if key in mutable_or_child_keys:
+            continue
+        if not _strict_equal(actual_obj[key], reference_obj[key]):
+            raise ValueError(
+                f"Read-only field {key!r} modified on {context_label}: "
+                f"got {actual_obj[key]!r}, expected {reference_obj[key]!r}."
+            )
 
 
 def compute_scenario_seed_basis(scenario_id: str, judge_id: str) -> str:
@@ -292,6 +325,7 @@ def build_submission_contract_doc() -> dict[str, Any]:
         "track": "CALIBRATION_ONLY",
         "excluded_from_final_metrics": True,
         "read_only_context_policy": "EXACT_MATCH_TO_FROZEN_PRESENTATION_PACKAGE",
+        "json_shape_policy": "EXACT_REFERENCE_SHAPE_EXCEPT_EDITABLE_FIELDS",
         "editable_fields": list(EDITABLE_ITEM_FIELDS),
         "read_only_context_mutation": "REJECT",
         "enforcement_mechanism": "VALIDATOR_ENFORCED_IMMUTABILITY",
@@ -323,8 +357,24 @@ def build_submission_contract_doc() -> dict[str, Any]:
             "judge_id",
             "calibration_version",
             "rubric_version",
+            "pool_version",
             "presentation_version",
+            "base_seed",
+            "track",
+            "excluded_from_final_metrics",
+            "scenario_count",
+            "total_items",
             "scenarios",
+        ],
+        "required_scenario_fields": [
+            "scenario_id",
+            "destination",
+            "declared_interests",
+            "track",
+            "excluded_from_final_metrics",
+            "order_seed_basis",
+            "item_count",
+            "items",
         ],
         "required_item_fields": [
             "judge_id",
@@ -477,9 +527,9 @@ def validate_calibration_submission(
 ) -> dict[str, Any]:
     """Validate a judge calibration package or submission against canonical & judge contracts.
 
-    Enforces exact immutability of all read-only fields at top-level, scenario-level,
-    and item-level (including factual_context). Only 'label' and 'judge_note' may differ
-    in a completed submission.
+    Enforces exact presentation shape and strict immutability of all read-only fields
+    at top-level, scenario-level, and item-level (including factual_context).
+    Only item 'label' and 'judge_note' may differ in a completed submission.
     """
     if not isinstance(submission_data, dict):
         raise ValueError("Submission root must be a JSON object.")
@@ -492,7 +542,7 @@ def validate_calibration_submission(
     if leakage:
         raise ValueError(f"Forbidden leakage fields detected: {leakage}")
 
-    # 2. Validate judge_id
+    # 2. Validate judge_id and version identifiers first
     judge_id = submission_data.get("judge_id")
     if judge_id not in ALLOWED_JUDGES:
         raise ValueError(
@@ -508,7 +558,6 @@ def validate_calibration_submission(
             f"reference package has {reference_package.get('judge_id')!r}."
         )
 
-    # 3. Validate top-level read-only fields
     cal_ver = submission_data.get("calibration_version")
     if cal_ver != CALIBRATION_VERSION:
         raise ValueError(
@@ -527,36 +576,13 @@ def validate_calibration_submission(
             f"Invalid presentation_version {pres_ver!r}; expected {PRESENTATION_VERSION!r}."
         )
 
-    if "pool_version" in submission_data and submission_data["pool_version"] != POOL_VERSION:
-        raise ValueError(
-            f"Invalid pool_version {submission_data['pool_version']!r}; expected {POOL_VERSION!r}."
-        )
-    if "base_seed" in submission_data and not _strict_equal(
-        submission_data["base_seed"], ORDER_SEED_BASE
-    ):
-        raise ValueError(
-            f"Invalid base_seed {submission_data['base_seed']!r}; expected {ORDER_SEED_BASE!r}."
-        )
-    if submission_data.get("track", "CALIBRATION_ONLY") != "CALIBRATION_ONLY":
-        raise ValueError(
-            f"Invalid track {submission_data.get('track')!r}; expected 'CALIBRATION_ONLY'."
-        )
-    if submission_data.get("excluded_from_final_metrics", True) is not True:
-        raise ValueError("excluded_from_final_metrics must be true.")
-    if "scenario_count" in submission_data and not _strict_equal(
-        submission_data["scenario_count"], len(EXPECTED_SCENARIO_IDS)
-    ):
-        raise ValueError(
-            f"Invalid scenario_count {submission_data['scenario_count']!r}; "
-            f"expected {len(EXPECTED_SCENARIO_IDS)}."
-        )
-    if "total_items" in submission_data and not _strict_equal(
-        submission_data["total_items"], EXPECTED_TOTAL_ITEMS
-    ):
-        raise ValueError(
-            f"Invalid total_items {submission_data['total_items']!r}; "
-            f"expected {EXPECTED_TOTAL_ITEMS}."
-        )
+    # 3. Enforce exact top-level shape and read-only values against reference_package
+    _enforce_exact_dict_shape_and_read_only_values(
+        submission_data,
+        reference_package,
+        context_label="top-level submission",
+        mutable_or_child_keys=frozenset({"scenarios"}),
+    )
 
     # 4. Build canonical item lookup and reference lookups
     canonical_items_by_id: dict[str, dict[str, Any]] = {}
@@ -651,24 +677,7 @@ def validate_calibration_submission(
             f"Expected exactly {EXPECTED_TOTAL_ITEMS} items, got {len(flat_items)}."
         )
 
-    # 7. Per-scenario and per-item read-only context immutability + label/note checks
-    read_only_item_keys = (
-        "judge_id",
-        "calibration_version",
-        "rubric_version",
-        "presentation_version",
-        "scenario_id",
-        "presentation_index",
-        "global_presentation_index",
-        "calibration_item_id",
-        "judge_item_id",
-        "place_id",
-        "destination",
-        "declared_interests",
-        "name",
-        "category",
-    )
-
+    # 7. Per-scenario and per-item exact shape and read-only context immutability
     for sc in sub_scenarios:
         sc_id = sc["scenario_id"]
         ref_sc = ref_scenarios_by_id[sc_id]
@@ -679,33 +688,13 @@ def validate_calibration_submission(
                 f"Scenario {sc_id!r} must have {EXPECTED_ITEMS_PER_SCENARIO} items, got {len(items)}."
             )
 
-        # Scenario-level read-only fields check
-        if not _strict_equal(sc.get("destination"), ref_sc["destination"]):
-            raise ValueError(
-                f"Scenario {sc_id!r} destination modified: "
-                f"got {sc.get('destination')!r}, expected {ref_sc['destination']!r}."
-            )
-        if not _strict_equal(sc.get("declared_interests"), ref_sc["declared_interests"]):
-            raise ValueError(
-                f"Scenario {sc_id!r} declared_interests modified: "
-                f"got {sc.get('declared_interests')!r}, expected {ref_sc['declared_interests']!r}."
-            )
-        if sc.get("track", "CALIBRATION_ONLY") != "CALIBRATION_ONLY":
-            raise ValueError(f"Scenario {sc_id!r} track must be 'CALIBRATION_ONLY'.")
-        if sc.get("excluded_from_final_metrics", True) is not True:
-            raise ValueError(f"Scenario {sc_id!r} excluded_from_final_metrics must be true.")
-        if "order_seed_basis" in sc and not _strict_equal(
-            sc["order_seed_basis"], ref_sc["order_seed_basis"]
-        ):
-            raise ValueError(
-                f"Scenario {sc_id!r} order_seed_basis modified: "
-                f"got {sc['order_seed_basis']!r}, expected {ref_sc['order_seed_basis']!r}."
-            )
-        if "item_count" in sc and not _strict_equal(sc["item_count"], ref_sc["item_count"]):
-            raise ValueError(
-                f"Scenario {sc_id!r} item_count modified: "
-                f"got {sc['item_count']!r}, expected {ref_sc['item_count']!r}."
-            )
+        # Enforce exact scenario-level shape and read-only values
+        _enforce_exact_dict_shape_and_read_only_values(
+            sc,
+            ref_sc,
+            context_label=f"scenario {sc_id!r}",
+            mutable_or_child_keys=frozenset({"items"}),
+        )
 
         actual_ids = [it.get("judge_item_id") or it.get("calibration_item_id") for it in items]
         expected_ids = expected_order_by_scenario[sc_id]
@@ -718,28 +707,19 @@ def validate_calibration_submission(
             item_id = item.get("judge_item_id") or item.get("calibration_item_id")
             ref_item = ref_items_by_id[item_id]
 
-            # Reject any unexpected extra keys on item
-            extra_keys = set(item.keys()) - set(ref_item.keys())
-            if extra_keys:
-                raise ValueError(
-                    f"Item {item_id!r} contains unsupported extra keys: {sorted(extra_keys)}."
-                )
-
-            # Verify every read-only item field strictly matches reference package
-            for key in read_only_item_keys:
-                if key not in item:
-                    raise ValueError(f"Item {item_id!r} is missing required read-only field {key!r}.")
-                if not _strict_equal(item[key], ref_item[key]):
-                    raise ValueError(
-                        f"Read-only field {key!r} modified on item {item_id!r}: "
-                        f"got {item[key]!r}, expected {ref_item[key]!r}."
-                    )
-
-            # Verify factual_context is present and strictly matches reference package
+            # Verify factual_context first so missing/modified factual_context produces a targeted message
             _validate_item_factual_context(
                 item_id,
                 item.get("factual_context"),
                 ref_item["factual_context"],
+            )
+
+            # Enforce exact item-level key set and read-only field equality
+            _enforce_exact_dict_shape_and_read_only_values(
+                item,
+                ref_item,
+                context_label=f"item {item_id!r}",
+                mutable_or_child_keys=frozenset({"label", "judge_note", "factual_context"}),
             )
 
             label = item.get("label")
