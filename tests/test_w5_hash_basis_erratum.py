@@ -304,12 +304,36 @@ def test_hash_erratum_13_no_historical_artifact_modified_by_branch() -> None:
     """HASH-ERRATUM-13: no historical artifact is modified by this PR."""
     audit = _load_json(AUDIT_JSON_PATH)
     historical_paths = list(audit["artifact_results"].keys())
+    assert len(historical_paths) == 35
+    for rel_path, entry in audit["artifact_results"].items():
+        actual_sha = _sha256_bytes((ROOT / rel_path).read_bytes())
+        assert actual_sha == entry["bases"]["GIT_BLOB_BYTES_SHA256"], (
+            f"Historical artifact modified: {rel_path}"
+        )
+
+    base_sha = "8f7db565e9ea70085a505745fd78326b49c1e243"
+    has_commit = subprocess.run(
+        ["git", "cat-file", "-e", f"{base_sha}^{{commit}}"],
+        cwd=ROOT,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+        check=False,
+    )
+    if has_commit.returncode != 0:
+        subprocess.run(
+            ["git", "fetch", "origin", base_sha, "--depth=1"],
+            cwd=ROOT,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            check=True,
+        )
+
     diff_out = subprocess.check_output(
         [
             "git",
             "diff",
             "--name-only",
-            "8f7db565e9ea70085a505745fd78326b49c1e243",
+            base_sha,
             "--",
             *historical_paths,
         ],
