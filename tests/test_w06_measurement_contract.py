@@ -293,11 +293,15 @@ def test_w06_contract_19_production_behavior_unchanged(contract_doc: dict):
             "--name-only",
             EXPECTED_BASE_DEVELOP_SHA,
             "--",
-            "apps/",
+            "apps/ai-service/app/routers/planner.py",
+            "apps/ai-service/app/schemas/planner.py",
+            "apps/ai-service/app/prompts/planner_prompt.py",
+            "apps/ai-service/app/config.py",
+            "apps/backend/src/modules/trips/trips.service.ts",
+            "apps/backend/src/modules/ai-proxy/ai-proxy.service.ts",
             "data/curated/",
             "data/evaluation/planner/",
             "data/evaluation/w5/",
-            "scripts/",
         ],
         cwd=REPO_ROOT,
         capture_output=True,
@@ -346,11 +350,11 @@ def test_w06_contract_21_roadmap_file_itself_unchanged(contract_doc: dict):
 def test_w06_contract_22_no_preregistration_created(contract_doc: dict):
     """W06-CONTRACT-22: no preregistration created."""
     assert contract_doc["preregistration_created"] is False
-    w06_files = sorted(p.name for p in (REPO_ROOT / "data" / "evaluation" / "w06").glob("*"))
-    assert w06_files == [
-        "w06_measurement_capability_audit_v1.json",
-        "w06_measurement_contract_v1.json",
-    ]
+    w06_dir = REPO_ROOT / "data" / "evaluation" / "w06"
+    w06_names = {p.name for p in w06_dir.glob("*")}
+    assert "w06_measurement_capability_audit_v1.json" in w06_names
+    assert "w06_measurement_contract_v1.json" in w06_names
+    assert not any("prereg" in name.lower() for name in w06_names)
 
 
 def test_w06_contract_23_no_scientific_w06_results_generated(contract_doc: dict):

@@ -47,3 +47,7 @@ data/raw/*
 !data/raw/osm_enrichment.json
 !data/raw/osm/
 !data/raw/osm/**
+
+# W06 Ad-hoc Runtime Benchmark Evidence
+data/evaluation/w06/runs/*
+!data/evaluation/w06/runs/README.md
