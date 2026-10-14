@@ -22,9 +22,26 @@
   ],
   "primary_metric": "NDCG@10",
   "primary_scenarios": 30,
+  "primary_destination_counts": {
+    "ha-noi": 9,
+    "da-nang": 11,
+    "ha-long": 10
+  },
   "u1_scenarios": 15,
   "u2_scenarios": 15,
   "thin_scenarios": 6,
+  "thin_role": "DIAGNOSTIC_ONLY",
+  "endpoint_roles": {
+    "NDCG@10": "PRIMARY_CONFIRMATORY",
+    "Precision@10": "SECONDARY",
+    "Pooled Recall@10": "SECONDARY",
+    "HitRate@10": "DIAGNOSTIC_SECONDARY",
+    "Category-ILD@10": "SECONDARY_SUPPORTING_STRUCTURAL_PROXY",
+    "CatalogCoverage@10": "SECONDARY_SUPPORTING",
+    "I1Exposure@10": "DIAGNOSTIC_ONLY"
+  },
+  "i1_count": 217,
+  "i1_definition": "ZERO_CANONICAL_7D_VECTOR",
   "candidate_records": 474,
   "candidate_unique_places": 255
 }

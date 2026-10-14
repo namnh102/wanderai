@@ -1,6 +1,6 @@
 """Tests for R8B Contingency and Final Method Decision (R8B-CONTINGENCY-01).
 
-Validates R8B-CONT-01 to R8B-CONT-17 specifications:
+Validates R8B-CONT-01 to R8B-CONT-27 specifications:
 - R8B-CONT-01: Artifact version correct (R8B-CONTINGENCY-V1).
 - R8B-CONT-02: external_report_received == false.
 - R8B-CONT-03: external_cross_check_completed == false.
@@ -18,6 +18,16 @@ Validates R8B-CONT-01 to R8B-CONT-17 specifications:
 - R8B-CONT-15: Primary scenarios count remains 30.
 - R8B-CONT-16: No human labels were populated.
 - R8B-CONT-17: No frozen W5 artifact bytes changed.
+- R8B-CONT-18: Primary destination counts recomputed from w5_primary_scenarios_v1.json (HN=9, DN=11, HL=10).
+- R8B-CONT-19: endpoint_roles in contingency artifact exactly match rec_eval_01_prereg_manifest_v1.json.
+- R8B-CONT-20: NDCG@10 is PRIMARY_CONFIRMATORY.
+- R8B-CONT-21: HitRate@10 is DIAGNOSTIC_SECONDARY.
+- R8B-CONT-22: Category-ILD@10 is SECONDARY_SUPPORTING_STRUCTURAL_PROXY.
+- R8B-CONT-23: I1Exposure@10 is DIAGNOSTIC_ONLY.
+- R8B-CONT-24: I1 count matches prereg manifest (217).
+- R8B-CONT-25: Documentation does not contain forbidden inaccurate phrases.
+- R8B-CONT-26: Documentation contains exact REC-A2 algorithm identity.
+- R8B-CONT-27: Documentation describes THIN as low-inventory diagnostic scenarios, not history scenarios.
 """
 
 from __future__ import annotations
@@ -25,6 +35,7 @@ from __future__ import annotations
 import hashlib
 import json
 import subprocess
+from collections import Counter
 from pathlib import Path
 from typing import Any
 
@@ -252,3 +263,81 @@ def test_r8b_cont_17_no_frozen_w5_artifact_bytes_changed() -> None:
         check=True,
     )
     assert res.stdout.strip() == "", "Frozen W5 artifacts modified relative to base commit!"
+
+
+def test_r8b_cont_18_primary_destination_counts_recomputed() -> None:
+    """R8B-CONT-18: Primary destination counts recomputed from w5_primary_scenarios_v1.json equal HN=9, DN=11, HL=10."""
+    scenarios = _load_json(PRIMARY_SCENARIOS_PATH)
+    computed_counts = dict(Counter(s["destination"] for s in scenarios))
+    expected_counts = {"ha-noi": 9, "da-nang": 11, "ha-long": 10}
+    assert computed_counts == expected_counts
+
+    data = _load_json(CONTINGENCY_JSON_PATH)
+    assert data["primary_destination_counts"] == computed_counts
+
+
+def test_r8b_cont_19_endpoint_roles_match_prereg_manifest() -> None:
+    """R8B-CONT-19: endpoint_roles in contingency artifact exactly match rec_eval_01_prereg_manifest_v1.json."""
+    data = _load_json(CONTINGENCY_JSON_PATH)
+    manifest = _load_json(PREREG_MANIFEST_PATH)
+    assert data["endpoint_roles"] == manifest["endpoint_roles"]
+
+
+def test_r8b_cont_20_ndcg10_is_primary_confirmatory() -> None:
+    """R8B-CONT-20: NDCG@10 is PRIMARY_CONFIRMATORY."""
+    data = _load_json(CONTINGENCY_JSON_PATH)
+    assert data["endpoint_roles"]["NDCG@10"] == "PRIMARY_CONFIRMATORY"
+
+
+def test_r8b_cont_21_hitrate10_is_diagnostic_secondary() -> None:
+    """R8B-CONT-21: HitRate@10 is DIAGNOSTIC_SECONDARY."""
+    data = _load_json(CONTINGENCY_JSON_PATH)
+    assert data["endpoint_roles"]["HitRate@10"] == "DIAGNOSTIC_SECONDARY"
+
+
+def test_r8b_cont_22_category_ild10_role() -> None:
+    """R8B-CONT-22: Category-ILD@10 is SECONDARY_SUPPORTING_STRUCTURAL_PROXY."""
+    data = _load_json(CONTINGENCY_JSON_PATH)
+    assert data["endpoint_roles"]["Category-ILD@10"] == "SECONDARY_SUPPORTING_STRUCTURAL_PROXY"
+
+
+def test_r8b_cont_23_i1_exposure10_is_diagnostic_only() -> None:
+    """R8B-CONT-23: I1Exposure@10 is DIAGNOSTIC_ONLY."""
+    data = _load_json(CONTINGENCY_JSON_PATH)
+    assert data["endpoint_roles"]["I1Exposure@10"] == "DIAGNOSTIC_ONLY"
+
+
+def test_r8b_cont_24_i1_count_matches_prereg_manifest() -> None:
+    """R8B-CONT-24: I1 count matches prereg manifest (217)."""
+    data = _load_json(CONTINGENCY_JSON_PATH)
+    manifest = _load_json(PREREG_MANIFEST_PATH)
+    assert data["i1_count"] == 217
+    assert data["i1_count"] == manifest["item_strata"]["I1"]
+    assert data["i1_definition"] == "ZERO_CANONICAL_7D_VECTOR"
+
+
+def test_r8b_cont_25_doc_excludes_inaccurate_terminology() -> None:
+    """R8B-CONT-25: Documentation does NOT contain forbidden inaccurate phrases."""
+    doc_text = CONTINGENCY_DOC_PATH.read_text(encoding="utf-8")
+    doc_lower = doc_text.lower()
+
+    assert "triple-blind" not in doc_lower
+    assert "hybrid taxonomy" not in doc_lower
+    assert "contextual reranker" not in doc_lower
+    assert "10 hanoi, 10 da nang, 10 ha long" not in doc_lower
+    assert "secondary confirmatory endpoints" not in doc_lower
+    assert "unindexed item diagnostic" not in doc_lower
+
+
+def test_r8b_cont_26_doc_contains_exact_reca2_identity() -> None:
+    """R8B-CONT-26: Documentation contains the exact algorithm identity for REC-A2."""
+    doc_text = CONTINGENCY_DOC_PATH.read_text(encoding="utf-8")
+    assert "Deterministic Relevance-Preserving Multi-Interest Diversity Reranker" in doc_text
+
+
+def test_r8b_cont_27_doc_thin_terminology() -> None:
+    """R8B-CONT-27: Documentation describes THIN as diagnostic/low-inventory, not history scenarios."""
+    doc_text = CONTINGENCY_DOC_PATH.read_text(encoding="utf-8")
+    assert "THIN history scenarios" not in doc_text
+    assert "low-inventory diagnostic scenarios" in doc_text
+    assert "DIAGNOSTIC_ONLY" in doc_text

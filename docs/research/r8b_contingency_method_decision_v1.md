@@ -16,7 +16,7 @@
 
 ## 1. Purpose
 
-The `R8B` milestone was conceived as an optional external research cross-check and challenge against the internal recommender evaluation methodology (`REC-EVAL-01-PREREG-V1`) prior to launching human calibration and primary relevance annotation. Specifically, an external perspective ("Researcher-1") was invited to review the experimental design, metric definitions, and candidate pooling strategy.
+`R8B` was a planned external cross-check dependency that required either completion or formal contingency resolution before primary human annotation. Specifically, an independent external perspective ("Researcher-1") was invited to challenge and review the preregistered experimental design, metric definitions, and candidate pooling strategy (`REC-EVAL-01-PREREG-V1`) prior to human calibration and primary relevance annotation.
 
 ---
 
@@ -34,27 +34,30 @@ No external research report, written feedback, or structured evaluation from Res
 
 ## 3. Closure Rationale
 
-No Researcher-1 report was received before the project owner elected to proceed without waiting further. 
+No Researcher-1 report was received before the project owner elected to proceed without waiting further.
 
-To maintain scientific momentum and proceed toward human calibration without unbounded blocking on external correspondence, the project formally closes the external cross-check dependency using this preregistered contingency decision.
+The project therefore closes the dependency using the preregistered contingency path before launching human calibration.
 
 ### Negative Boundary
 * No endorsement or approval from Researcher-1 is claimed or implied.
 * No claim is made that an external review concluded successfully.
-* No independent external verification was conducted.
+* No independent external verification is claimed.
 * No synthetic or fabricated external review comments have been created.
 
 ---
 
-## 4. Internal Evidence State
+## 4. Internal Evidence State & Algorithm Definitions
 
 Before executing this contingency closure, all internal scientific gates and preparatory milestones were audited and confirmed:
 
 * **Internal Research Milestones (R1–R8A):** `COMPLETE`
-  * Content baseline (`REC-A0`), hybrid taxonomy (`REC-A1`), and contextual reranker (`REC-A2`) implementations frozen.
-  * Evaluation pool builder and deterministic control sampling verified (`W5-PREP-01`).
-  * Triple-blind annotation package, rubric, and calibration split generated (`W5-PREP-02`).
-  * Metric runner with destination-stratified paired bootstrap verified (`W5-PREP-03`).
+  * **`REC-A0`:** Unweighted dot-product ranking under binary 7D preference representation.
+  * **`REC-A1`:** Destination-filtered normalized cosine ranking under the same binary 7D representation.
+  * **`A0/A1` Equivalence:** Rank-equivalent under the frozen representation and represented by the single scientific comparator `shared_a0_a1_baseline`.
+  * **`REC-A2`:** Deterministic Relevance-Preserving Multi-Interest Diversity Reranker. (`REC-A2` does not perform geographic reranking, time/context reranking, semantic embeddings, collaborative filtering, or learned ranking.)
+  * **Evaluation Pool Builder (`W5-PREP-01`):** Candidate pool and deterministic control sampling verified.
+  * **Human Relevance Package (`W5-PREP-02`):** Three-judge blinded human relevance protocol, rubric, and calibration split generated.
+  * **Metric Runner (`W5-PREP-03`):** Evaluation runner with destination-stratified paired bootstrap verified.
 * **W5 Methodology Preregistration (`REC-EVAL-01-PREREG-V1`):** `CLOSED`
 * **W5 Duplicate Equivalence Evidence Gate (`W5-GATE-DUP`):** `CLOSED` (`CLOSED_NO_PRIMARY_EVAL_IMPACT`)
 * **Human Relevance Labels Collected:** `0`
@@ -73,10 +76,10 @@ $$\text{Final Decision} = \mathbf{METHOD\_RETAINED}$$
 
 No modifications are made to:
 1. Recommender systems under evaluation (`shared_a0_a1_baseline` vs `rec-a2`).
-2. Scenario universe (30 primary scenarios: 15 U1 single-interest, 15 U2 multi-interest; 6 THIN diagnostic).
+2. Scenario universe (30 primary scenarios across Hanoi = 9, Da Nang = 11, Ha Long = 10: 15 U1 single-interest, 15 U2 multi-interest; 6 THIN low-inventory diagnostic scenarios).
 3. Candidate judgment pool (474 primary candidate records across 255 unique places).
-4. Human annotation protocol (3 independent judges, ordinal scale $\{0, 1, 2\}$, non-ordinal missing code `NA`).
-5. Metric hierarchy and formulas ($NDCG@10$ primary; Precision@10, Pooled Recall@10, HitRate@10 secondary; Category-ILD@10 supporting structural proxy; CatalogCoverage@10 supporting).
+4. Human annotation protocol (three-judge blinded human relevance protocol with 3 independent human judges, ordinal scale $\{0, 1, 2\}$, non-ordinal missing code `NA`).
+5. Metric hierarchy and endpoint roles (`NDCG@10` as `PRIMARY_CONFIRMATORY`; `Precision@10` and `Pooled Recall@10` as `SECONDARY`; `HitRate@10` as `DIAGNOSTIC_SECONDARY`; `Category-ILD@10` as `SECONDARY_SUPPORTING_STRUCTURAL_PROXY`; `CatalogCoverage@10` as `SECONDARY_SUPPORTING`; `I1Exposure@10` as `DIAGNOSTIC_ONLY`).
 6. Statistical inference ($B=10000$ paired, destination-stratified bootstrap replicates, seed `20261013`).
 7. Formal verdict rules (`A2_RELEVANCE_SUPERIOR`, `BASELINE_PREFERRED`, `A2_DIVERSITY_TRADEOFF`, `INCONCLUSIVE`).
 8. Duplicate policy (`CLOSED_NO_PRIMARY_EVAL_IMPACT`).
@@ -91,19 +94,20 @@ The retained experimental contract is locked exactly as preregistered in `REC-EV
 | Protocol Dimension | Specification | Role / Contract |
 |---|---|---|
 | **Systems Under Test** | `shared_a0_a1_baseline`, `rec-a2` | Frozen algorithms; A0/A1 represented by single shared baseline |
-| **Primary Scenarios** | 30 scenarios (10 Hanoi, 10 Da Nang, 10 Ha Long) | Confirmatory evaluation set |
-| **Subgroups** | 15 single-interest (U1), 15 multi-interest (U2) | Exploratory subgroup analysis |
-| **Diagnostic Scenarios** | 6 THIN history scenarios | Diagnostic only; strictly excluded from winner verdict |
-| **Primary Endpoint** | $NDCG@10$ ($\text{gain} = 2^{\text{rel}} - 1$) | Primary confirmatory endpoint |
-| **Secondary Relevance** | Precision@10, Pooled Recall@10, HitRate@10 | Secondary confirmatory endpoints |
-| **Supporting Diversity** | Category-ILD@10 | Structural category-diversity proxy only |
-| **Supporting Coverage** | CatalogCoverage@10 | Equal-destination macro mean ratio |
-| **Diagnostic Exposure** | I1Exposure@10 | Unindexed item diagnostic only |
-| **Human Judges** | 3 independent, fully blinded human annotators | Triple-blind adjudication contract |
+| **Primary Scenarios** | 30 scenarios (`ha-noi`: 9, `da-nang`: 11, `ha-long`: 10) | Primary evaluation scenario set |
+| **Subgroups** | 15 single-interest (U1), 15 multi-interest (U2) | `EXPLORATORY_SUBGROUP` analysis |
+| **THIN Scenarios** | 6 THIN low-inventory diagnostic scenarios | `DIAGNOSTIC_ONLY`; excluded from primary relevance superiority / winner determination |
+| **Primary Endpoint** | `NDCG@10` ($\text{gain} = 2^{\text{rel}} - 1$) | `PRIMARY_CONFIRMATORY` |
+| **Secondary Relevance** | `Precision@10`, `Pooled Recall@10` | `SECONDARY` |
+| **Diagnostic Hit Rate** | `HitRate@10` | `DIAGNOSTIC_SECONDARY` |
+| **Supporting Diversity** | `Category-ILD@10` | `SECONDARY_SUPPORTING_STRUCTURAL_PROXY` (`structural_category_diversity_proxy`) |
+| **Supporting Coverage** | `CatalogCoverage@10` | `SECONDARY_SUPPORTING` (`destination_macro_mean`) |
+| **Diagnostic Exposure** | `I1Exposure@10` (217 zero-vector POIs with all-zero canonical 7D interest vectors) | `DIAGNOSTIC_ONLY` |
+| **Human Protocol** | Three-judge blinded human relevance protocol (3 independent human judges) | Blinded to algorithm/system identity, recommendation rank, model score, system strategy, and control status; adjudication separately blind to model identity/rank/score/strategy |
 | **Label Space** | $\{0, 1, 2\}$ ordinal; `NA` non-ordinal | Strict data typing; booleans/floats rejected |
-| **Statistical Test** | Paired, destination-stratified bootstrap | $B=10000$ replicates, seed `20261013` |
-| **Candidate Universe** | 474 records in primary pool | 255 unique places from 622-item Freeze V2 |
-| **Verdict Rules** | 4 preregistered mutually exclusive outcomes | Formal gatekeeping rules |
+| **Statistical Test** | Paired, scenario-level, destination-stratified bootstrap | $B=10000$ replicates, seed `20261013` |
+| **Candidate Universe** | 474 records in primary pool | 255 unique places from 622-item Freeze V2 (405 I0, 217 I1) |
+| **Verdict Rules** | `A2_RELEVANCE_SUPERIOR`, `BASELINE_PREFERRED`, `A2_DIVERSITY_TRADEOFF`, `INCONCLUSIVE` | Formal gatekeeping rules |
 
 ---
 
@@ -114,13 +118,13 @@ The decision `METHOD_RETAINED` carries specific scientific boundaries:
 * **It does NOT imply that REC-A2 is superior.** The relative performance of the models remains unknown until human ground truth is collected and formal inference is computed.
 * **It does NOT imply external consensus.** External researchers have not reviewed or endorsed this methodology.
 * **It does NOT claim universal optimality.** The protocol is an offline laboratory experiment scoped to the GoMate 622-item Freeze V2 catalog.
-* **It solely denotes:** In the absence of external challenge evidence, the rigorously preregistered, internally audited methodology (`REC-EVAL-01-PREREG-V1`) is retained in full without ad-hoc alterations.
+* **It solely denotes:** No external evidence was available to justify changing the already-preregistered protocol before human data collection.
 
 ---
 
 ## 8. Downstream Clearance
 
-With `W5-GATE-DUP` closed (`CLOSED_NO_PRIMARY_EVAL_IMPACT`) and `R8B` closed by contingency (`METHOD_RETAINED`), all preregistered external and preparatory dependencies are cleared:
+With `W5-GATE-DUP` closed (`CLOSED_NO_PRIMARY_EVAL_IMPACT`) and `R8B` closed by contingency (`METHOD_RETAINED`), all preregistered dependencies prior to calibration are resolved:
 
 1. **W5 Calibration Operation:** `CLEARED_TO_PROCEED`.
 2. **Primary Annotation:** Unblocked pending successful calibration qualification.
