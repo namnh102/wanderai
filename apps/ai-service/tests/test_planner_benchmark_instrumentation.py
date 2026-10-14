@@ -573,6 +573,24 @@ def test_w06_i01a_17_no_silent_retry_exists_in_benchmark_execution_path(tmp_path
     assert result.parsed_plan_response is None
 
 
+def _ensure_commit_present(commit_sha: str) -> None:
+    res = subprocess.run(
+        ["git", "cat-file", "-e", f"{commit_sha}^{{commit}}"],
+        cwd=str(REPO_ROOT),
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+        check=False,
+    )
+    if res.returncode != 0:
+        subprocess.run(
+            ["git", "fetch", "origin", commit_sha, "--depth=1"],
+            cwd=str(REPO_ROOT),
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            check=True,
+        )
+
+
 def test_w06_i01a_18_production_planner_regression_tests_still_pass():
     """W06-I01A-18: production /planner endpoint, schema, and prompt remain backward compatible."""
     from app.prompts.planner_prompt import build_planner_prompt
@@ -582,6 +600,7 @@ def test_w06_i01a_18_production_planner_regression_tests_still_pass():
     prod_prompt = build_planner_prompt(destination=prod_req.destination, days=prod_req.days)
     assert "Đà Nẵng" in prod_prompt
 
+    _ensure_commit_present(MEASUREMENT_CONTRACT_SOURCE_COMMIT)
     res = subprocess.run(
         [
             "git",
