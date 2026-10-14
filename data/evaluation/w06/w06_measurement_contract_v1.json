@@ -1,6 +1,6 @@
 {
   "contract_id": "W06-MEASUREMENT-CONTRACT-01",
-  "contract_version": "1.0.0",
+  "contract_version": "1.1.0",
   "base_develop_sha": "495ed4f731db723366a585617472795540e8a914",
   "status": "DRAFT_FOR_SCIENTIFIC_GATE",
   "audit_basis": {
@@ -69,24 +69,60 @@
       }
     }
   },
+  "grounding_item_universe_contract": {
+    "controlled_activity_kinds": [
+      "POI_VISIT",
+      "TRANSIT_ONLY"
+    ],
+    "other_activity_kinds_allowed_without_preregistered_amendment": false,
+    "place_id_required_iff_activity_kind_equals": "POI_VISIT",
+    "grounded_poi_rate_denominator": "all_poi_visit_items",
+    "activity_kind_semantics": {
+      "POI_VISIT": {
+        "description": "Activity represents visit or use of a specific physical place.",
+        "canonical_place_id_required": true,
+        "included_in_grounded_poi_rate_denominator": true,
+        "destination_validation_applies": true,
+        "duplicate_poi_validation_applies": true
+      },
+      "TRANSIT_ONLY": {
+        "description": "Pure movement/transit between POI visits.",
+        "canonical_place_id_required": false,
+        "included_in_grounded_poi_rate_denominator": false,
+        "excluded_from_grounded_poi_rate_denominator": true,
+        "destination_validation_applies": false,
+        "duplicate_poi_validation_applies": false,
+        "may_represent_named_attraction_restaurant_cafe_museum_park_venue_or_visitable_poi": false,
+        "anti_gaming_rule": "TRANSIT_ONLY must never represent a named attraction, restaurant, cafe, museum, park, venue, or any other visitable POI to evade the grounding denominator."
+      }
+    },
+    "unknown_or_missing_activity_kind_policy": {
+      "classification": "INVALID_OR_SCHEMA_NONCOMPLIANT_ITEM",
+      "fail_closed": true,
+      "can_silently_disappear_from_grounding_denominator": false,
+      "causes_scenario_core_pass_failure": true,
+      "explanation": "Any itinerary item with a missing or unknown activity_kind in a final benchmark output is classified as INVALID_OR_SCHEMA_NONCOMPLIANT_ITEM and fails closed; it may never silently escape the grounding denominator."
+    }
+  },
   "primary_hard_measurement_dimensions": {
     "CATALOG_GROUNDING": {
       "dimension_id": "CATALOG_GROUNDING",
       "tier": "PRIMARY_HARD",
-      "grounding_definition": "An itinerary POI activity is grounded if and only if (1) it carries a canonical place_id field and (2) that place_id exists in the frozen evaluation catalog (REC-A-CORE-V2).",
+      "grounding_definition": "Every itinerary item with activity_kind == 'POI_VISIT' is grounded if and only if (1) it carries a non-empty canonical place_id field and (2) that place_id exists in the frozen evaluation catalog (REC-A-CORE-V2).",
       "requires_canonical_place_id": true,
+      "place_id_required_iff": "activity_kind == 'POI_VISIT'",
       "free_text_place_name_matching_sufficient": false,
       "item_level_metric": {
         "name": "Grounded POI Rate",
         "key": "grounded_poi_rate",
-        "numerator": "valid_grounded_itinerary_poi_items",
-        "denominator": "all_itinerary_poi_items",
-        "formula": "valid_grounded_itinerary_poi_items / all_itinerary_poi_items"
+        "numerator": "valid_grounded_poi_visit_items",
+        "denominator": "all_poi_visit_items",
+        "formula": "valid_grounded_poi_visit_items / all_poi_visit_items"
       },
       "scenario_level_metric": {
         "name": "ALL_POIS_GROUNDED",
         "key": "all_pois_grounded",
-        "definition": "true if and only if all itinerary POI items in the scenario have valid grounded canonical place_id in the frozen catalog (and itinerary has >= 1 POI item)."
+        "definition": "true if and only if all itinerary items have valid controlled activity_kind, the scenario contains >= 1 POI_VISIT item, and every POI_VISIT item has a valid grounded canonical place_id in the frozen catalog."
       },
       "roadmap_scientific_target": 1.0,
       "roadmap_scientific_target_percentage": 100.0
@@ -94,26 +130,27 @@
     "DESTINATION_CORRECTNESS": {
       "dimension_id": "DESTINATION_CORRECTNESS",
       "tier": "PRIMARY_HARD",
-      "definition": "For every grounded place_id in the itinerary, the catalog record's destination_slug must equal the requested benchmark scenario destination_slug.",
+      "definition": "For every grounded POI_VISIT item's place_id in the itinerary, the catalog record's destination_slug must equal the requested benchmark scenario destination_slug.",
       "name_string_inference_allowed": false,
       "item_level_metric": {
         "name": "Destination-Correct POI Rate",
         "key": "destination_correct_poi_rate",
-        "numerator": "grounded_poi_items_matching_requested_destination",
-        "denominator": "grounded_itinerary_poi_items"
+        "numerator": "grounded_poi_visit_items_matching_requested_destination",
+        "denominator": "grounded_poi_visit_items"
       },
       "scenario_level_metric": {
         "name": "scenario_destination_valid",
         "key": "scenario_destination_valid",
-        "definition": "true if and only if all POI items are grounded and every grounded POI item belongs to the requested scenario destination."
+        "definition": "true if and only if all POI_VISIT items are grounded and every grounded POI_VISIT item belongs to the requested scenario destination."
       }
     },
     "DUPLICATE_POI": {
       "dimension_id": "DUPLICATE_POI",
       "tier": "PRIMARY_HARD",
       "operates_on": "canonical_place_id",
+      "applies_to_activity_kind": "POI_VISIT",
       "free_text_alias_equality_sufficient": false,
-      "default_benchmark_policy": "The same canonical place_id must not appear more than once across an entire itinerary unless a future scenario explicitly preregisters revisits as allowed.",
+      "default_benchmark_policy": "The same canonical place_id must not appear more than once across POI_VISIT items in an entire itinerary unless a future scenario explicitly preregisters revisits as allowed.",
       "metrics": [
         "duplicate_poi_violation_count",
         "duplicate_poi_violation_rate"
@@ -170,7 +207,7 @@
   },
   "opening_hours_semantics": {
     "dimension_id": "OPENING_HOURS_COMPLIANCE",
-    "tier": "SECONDARY_EVIDENCE_CONDITIONAL",
+    "tier": "EVIDENCE_CONDITIONAL_HARD",
     "audit_evidence": {
       "core_pois_with_opening_hours": 101,
       "total_core_pois": 622,
@@ -182,12 +219,33 @@
       "VIOLATION",
       "UNKNOWN"
     ],
+    "per_item_state_definitions": {
+      "COMPLIANT": "Opening-hours evidence exists in the frozen catalog, is parseable, the scheduled visit interval and date/day-of-week are known, and the visit interval complies with the open hours.",
+      "VIOLATION": "Opening-hours evidence exists in the frozen catalog, is parseable, the scheduled visit interval and date/day-of-week are known, and the visit interval conflicts with the known open hours.",
+      "UNKNOWN": "Required opening-hours evidence or parseability is absent."
+    },
     "unknown_state_contract": {
       "is_pass": false,
       "is_violation": false,
       "never_silently_convert_to_pass_or_violation": true,
       "excluded_from_compliance_denominator": true,
-      "causes_core_scenario_pass_failure": false
+      "causes_core_scenario_pass_failure": false,
+      "neutral_with_respect_to_core_scenario_pass": true
+    },
+    "known_violation_contract": {
+      "causes_core_scenario_pass_failure": true,
+      "required_known_violation_count_for_core_scenario_pass": 0,
+      "rule": "Any known opening-hours VIOLATION on an evaluable POI_VISIT item (opening_hours_known_violation_count > 0) MUST cause CORE_SCENARIO_PASS = false."
+    },
+    "scenario_level_fields": {
+      "known_violation_count_field": "opening_hours_known_violation_count",
+      "evidence_status_field": "opening_hours_evidence_status",
+      "allowed_evidence_status_values": [
+        "FULLY_EVALUABLE",
+        "PARTIALLY_EVALUABLE",
+        "NO_EVALUABLE_EVIDENCE"
+      ],
+      "no_evaluable_evidence_treated_as_opening_hours_success": false
     },
     "prerequisites_for_evaluable_item": [
       "grounded_place_id",
@@ -200,10 +258,12 @@
       "opening_hours_evaluable_items",
       "opening_hours_unknown_items",
       "opening_hours_evidence_coverage",
-      "opening_hours_compliance_rate_on_evaluable_items"
+      "opening_hours_compliance_rate_on_evaluable_items",
+      "opening_hours_known_violation_count",
+      "opening_hours_evidence_status"
     ],
     "compliance_rate_denominator": "opening_hours_evaluable_items_only",
-    "global_hard_scenario_pass_inclusion_policy": "Excluded from global hard CORE_SCENARIO_PASS denominator when required opening-hours evidence is UNKNOWN; known VIOLATION on evaluable items is reported separately."
+    "global_hard_scenario_pass_inclusion_policy": "EVIDENCE_CONDITIONAL_HARD: UNKNOWN items are excluded from the compliance denominator and remain neutral with respect to CORE_SCENARIO_PASS, whereas any known VIOLATION on an evaluable item (opening_hours_known_violation_count > 0) MUST cause CORE_SCENARIO_PASS = false."
   },
   "geo_and_routing_semantics": {
     "catalog_coordinates_coverage": "759 / 759 all POIs (622 / 622 core POIs)",
@@ -245,30 +305,51 @@
   },
   "primary_scenario_pass_semantics": {
     "indicator_name": "CORE_SCENARIO_PASS",
-    "rate_metric_name": "CORE_SCENARIO_PASS_RATE",
+    "rate_metric_name": "CORE_SCENARIO_PASS_RATE_ALL_100",
+    "primary_rate_metric": {
+      "name": "CORE_SCENARIO_PASS_RATE_ALL_100",
+      "numerator": "core_scenario_pass_count",
+      "denominator": 100,
+      "formula": "core_scenario_pass_count / 100"
+    },
+    "secondary_diagnostic_conditional_rate_metric": {
+      "name": "CORE_SCENARIO_PASS_RATE_CONDITIONAL_ON_VALID_RUNS",
+      "status": "SECONDARY_DIAGNOSTIC_ONLY",
+      "numerator": "core_scenario_pass_count",
+      "denominator": "valid_run_count",
+      "formula": "core_scenario_pass_count / valid_run_count",
+      "can_replace_primary_all_100_rate": false
+    },
     "weighted_composite_score_allowed": false,
     "report_each_dimension_independently": true,
     "required_pass_conditions": [
       "benchmark_run_is_valid",
+      "all_items_have_valid_controlled_activity_kind",
       "required_day_structure_passes",
-      "all_itinerary_poi_items_are_canonically_grounded",
-      "all_grounded_pois_match_requested_destination",
+      "all_poi_visit_items_are_canonically_grounded",
+      "all_grounded_poi_visit_items_match_requested_destination",
       "duplicate_poi_policy_passes",
       "schedule_parsing_interval_and_overlap_checks_pass",
-      "estimated_budget_compliance_passes_when_budget_is_present"
+      "estimated_budget_compliance_passes_when_budget_is_present",
+      "zero_known_opening_hours_violations_on_evaluable_items"
     ],
     "opening_hours_policy_in_core_pass": {
+      "tier": "EVIDENCE_CONDITIONAL_HARD",
       "unknown_causes_core_scenario_pass_failure": false,
+      "known_violation_causes_core_scenario_pass_failure": true,
+      "required_opening_hours_known_violation_count": 0,
       "known_violation_reported_separately": true
     },
     "included_in_core_scenario_pass": [
       "VALID_RUN",
+      "CONTROLLED_ACTIVITY_KIND_COMPLIANCE",
       "DAY_STRUCTURE",
       "CATALOG_GROUNDING",
       "DESTINATION_CORRECTNESS",
       "DUPLICATE_POI",
       "SCHEDULE_VALIDITY",
-      "ESTIMATED_BUDGET_COMPLIANCE"
+      "ESTIMATED_BUDGET_COMPLIANCE",
+      "OPENING_HOURS_KNOWN_VIOLATION_FREE"
     ],
     "excluded_from_core_scenario_pass": [
       "OPENING_HOURS_WHEN_UNKNOWN",
@@ -281,19 +362,26 @@
   },
   "hard_roadmap_grounding_gate": {
     "gate_name": "GROUNDING_GATE",
-    "pass_condition": "grounded_poi_rate == 1.0",
+    "pass_condition": "grounded_poi_rate == 1.0 (over all POI_VISIT items across the final 100-scenario primary benchmark)",
     "required_grounded_poi_rate": 1.0,
     "fail_if_below_1_0": true,
-    "other_dimensions_threshold_policy": "Do not invent arbitrary numerical pass thresholds for schedule, estimated-budget, or diagnostic dimensions; report point estimates and 95% Wilson confidence intervals."
+    "other_dimensions_threshold_policy": "Do not invent arbitrary numerical pass thresholds for schedule, estimated-budget, or diagnostic dimensions; report point estimates and confidence intervals."
   },
   "statistical_reporting_contract": {
     "scenario_level_binary_metrics_reporting": [
       "point_estimate",
       "95_percent_wilson_confidence_interval"
     ],
-    "grounded_poi_rate_reporting": [
-      "item_level_point_estimate",
-      "item_level_95_percent_wilson_confidence_interval",
+    "item_level_grounded_poi_rate_uncertainty": {
+      "point_estimate": "item_level_point_estimate (valid_grounded_poi_visit_items / all_poi_visit_items)",
+      "ci_method": "95_PERCENT_SCENARIO_CLUSTER_BOOTSTRAP_CI",
+      "resampling_unit": "scenario",
+      "individual_poi_item_bernoulli_resampling_allowed": false,
+      "bootstrap_iterations": 10000,
+      "bootstrap_seed": 20261015,
+      "rationale": "Multiple POI_VISIT items within one generated itinerary originate from the same model call and cannot be treated as independent Bernoulli observations for inferential uncertainty."
+    },
+    "scenario_level_all_pois_grounded_reporting": [
       "scenario_level_all_pois_grounded_point_estimate",
       "scenario_level_95_percent_wilson_confidence_interval"
     ],
@@ -327,6 +415,27 @@
     }
   },
   "valid_and_invalid_run_contract": {
+    "primary_benchmark_assigned_scenarios": 100,
+    "valid_run_rate_metric": {
+      "name": "VALID_RUN_RATE",
+      "numerator": "valid_run_count",
+      "denominator": 100,
+      "formula": "valid_run_count / 100"
+    },
+    "primary_pass_rate_metric": {
+      "name": "CORE_SCENARIO_PASS_RATE_ALL_100",
+      "numerator": "core_scenario_pass_count",
+      "denominator": 100,
+      "formula": "core_scenario_pass_count / 100"
+    },
+    "conditional_pass_rate_metric": {
+      "name": "CORE_SCENARIO_PASS_RATE_CONDITIONAL_ON_VALID_RUNS",
+      "status": "SECONDARY_DIAGNOSTIC_ONLY",
+      "numerator": "core_scenario_pass_count",
+      "denominator": "valid_run_count",
+      "formula": "core_scenario_pass_count / valid_run_count",
+      "can_replace_primary_all_100_rate": false
+    },
     "valid_run_requirements": [
       "real_provider_execution_confirmed",
       "expected_model_identifier_recorded",
@@ -343,6 +452,8 @@
       "MISSING_REQUIRED_RUN_METADATA"
     ],
     "invalid_runs_counted_as_successful_scenarios": false,
+    "invalid_run_numerator_contribution": 0,
+    "invalid_runs_remain_in_primary_100_denominator": true,
     "invalid_runs_must_be_reported_separately": true,
     "silent_retry_until_success_forbidden": true,
     "retry_policy_rule": "Zero silent retries allowed; any retry behavior must be explicitly preregistered and logged before final benchmark execution."
@@ -372,22 +483,22 @@
   "required_instrumentation_prerequisites": [
     {
       "id": "P1",
-      "requirement": "Canonical place_id in every POI itinerary item.",
+      "requirement": "Controlled activity_kind ('POI_VISIT' | 'TRANSIT_ONLY') on every itinerary item, with canonical place_id REQUIRED iff activity_kind == 'POI_VISIT' (and fail-closed INVALID_OR_SCHEMA_NONCOMPLIANT_ITEM on missing/unknown activity_kind).",
       "implemented_in_this_task": false
     },
     {
       "id": "P2",
-      "requirement": "Deterministic catalog membership validation against frozen REC-A-CORE-V2 catalog.",
+      "requirement": "Deterministic catalog membership validation against frozen REC-A-CORE-V2 catalog for all POI_VISIT items.",
       "implemented_in_this_task": false
     },
     {
       "id": "P3",
-      "requirement": "Destination membership validation by canonical place_id.",
+      "requirement": "Destination membership validation by canonical place_id for all POI_VISIT items.",
       "implemented_in_this_task": false
     },
     {
       "id": "P4",
-      "requirement": "Canonical duplicate-place validation by place_id.",
+      "requirement": "Canonical duplicate-place validation by place_id across POI_VISIT items.",
       "implemented_in_this_task": false
     },
     {
@@ -402,12 +513,12 @@
     },
     {
       "id": "P7",
-      "requirement": "Opening-hours parser with explicit three-state (COMPLIANT / VIOLATION / UNKNOWN) handling.",
+      "requirement": "Opening-hours parser with explicit three-state (COMPLIANT / VIOLATION / UNKNOWN) handling where known VIOLATION fails CORE_SCENARIO_PASS and UNKNOWN remains neutral.",
       "implemented_in_this_task": false
     },
     {
       "id": "P8",
-      "requirement": "Benchmark harness that rejects mock/fallback execution (FAIL CLOSED on MOCK_OR_FALLBACK_RUN).",
+      "requirement": "Benchmark harness that rejects mock/fallback execution (FAIL CLOSED on MOCK_OR_FALLBACK_RUN) and retains invalid runs in the primary 100-scenario denominator.",
       "implemented_in_this_task": false
     },
     {
@@ -479,8 +590,9 @@
     "clarified_points": {
       "benchmark_trip_count_requirement": 100,
       "poi_grounding_target_requirement": 1.0,
+      "grounding_item_universe": "Controlled activity_kind ('POI_VISIT' | 'TRANSIT_ONLY'); Grounded POI Rate denominator is all POI_VISIT items; unknown/missing activity_kind is INVALID_OR_SCHEMA_NONCOMPLIANT_ITEM",
       "budget_operationalization": "ESTIMATED_BUDGET_COMPLIANCE (sum of planner-declared item estimated_cost <= requested budget ceiling; no claim of real-world price accuracy because catalog numeric price coverage is 0/759)",
-      "opening_hours_unknown_policy": "Three-state (COMPLIANT / VIOLATION / UNKNOWN); UNKNOWN is excluded from compliance denominator and does not fail CORE_SCENARIO_PASS",
+      "opening_hours_unknown_and_violation_policy": "EVIDENCE_CONDITIONAL_HARD three-state (COMPLIANT / VIOLATION / UNKNOWN); UNKNOWN is excluded from compliance denominator and neutral to CORE_SCENARIO_PASS, whereas any known VIOLATION on an evaluable item causes CORE_SCENARIO_PASS = false",
       "travel_time_policy": "TRAVEL_TIME and ROUTE_DISTANCE are NOT_EVALUABLE in W06 V1 due to absence of road-network routing data; Haversine is strictly GEO_DISTANCE_PROXY (diagnostic only)",
       "preference_satisfaction_policy": "NOT_PRIMARY_EVALUABLE because all 300 preference records are synthetic (0 verified real-user preference GT)"
     }
