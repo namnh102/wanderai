@@ -1,0 +1,92 @@
+{
+  "artifact_version": "W5-CAL-RAW-MANIFEST-V1",
+  "calibration_version": "W5-CALIBRATION-V1",
+  "rubric_version": "W5-RUBRIC-V1",
+  "presentation_version": "W5-CAL-OPS-V1",
+  "status": "RAW_SUBMISSIONS_FROZEN",
+  "judges": [
+    "J1",
+    "J2",
+    "J3"
+  ],
+  "items_per_judge": 45,
+  "total_human_judgments": 135,
+  "human_gt": false,
+  "calibration_only": true,
+  "excluded_from_final_metrics": true,
+  "session_integrity_status": "PENDING_ATTESTATION",
+  "judge_records": {
+    "J1": {
+      "judge_id": "J1",
+      "filename": "data/evaluation/reca_w5/calibration_submissions/raw_v1/J1_w5_calibration_raw_v1.csv",
+      "inbox_filename": "data/evaluation/reca_w5/calibration_submissions/inbox/w5_calibration_J1_completed.csv",
+      "sha256": "7a3b58f20169c98a7b472952e480afb96d34e58613afa0032a58d540062393ba",
+      "row_count": 45,
+      "label_count": 45,
+      "label_distribution": {
+        "0": 30,
+        "1": 7,
+        "2": 3,
+        "NA": 5
+      },
+      "nonblank_note_count": 45,
+      "validation_status": "PASS",
+      "session_attestation_status": "PENDING"
+    },
+    "J2": {
+      "judge_id": "J2",
+      "filename": "data/evaluation/reca_w5/calibration_submissions/raw_v1/J2_w5_calibration_raw_v1.csv",
+      "inbox_filename": "data/evaluation/reca_w5/calibration_submissions/inbox/w5_calibration_J2_completed.csv",
+      "sha256": "b8464c133df5757cd4c1e741a21a5b2392544a175dc2ec32e5d1e6a4d2721707",
+      "row_count": 45,
+      "label_count": 45,
+      "label_distribution": {
+        "0": 31,
+        "1": 7,
+        "2": 3,
+        "NA": 4
+      },
+      "nonblank_note_count": 45,
+      "validation_status": "PASS",
+      "session_attestation_status": "PENDING"
+    },
+    "J3": {
+      "judge_id": "J3",
+      "filename": "data/evaluation/reca_w5/calibration_submissions/raw_v1/J3_w5_calibration_raw_v1.csv",
+      "inbox_filename": "data/evaluation/reca_w5/calibration_submissions/inbox/w5_calibration_J3_completed.csv",
+      "sha256": "b2094cafb458f0ebdea1dd28ec4d5ef723062e449c3b51602edaaee00a86ba3f",
+      "row_count": 45,
+      "label_count": 45,
+      "label_distribution": {
+        "0": 29,
+        "1": 9,
+        "2": 3,
+        "NA": 4
+      },
+      "nonblank_note_count": 45,
+      "validation_status": "PASS",
+      "session_attestation_status": "PENDING"
+    }
+  },
+  "descriptive_agreement_summary": {
+    "same_item_membership_across_judges": true,
+    "total_calibration_items": 45,
+    "unanimous_items": 42,
+    "disagreement_items": 3,
+    "items_with_any_na": 5,
+    "numeric_adjacent_disagreements": 2,
+    "numeric_severe_range_2_disagreements": 0,
+    "disagreement_resolved": false,
+    "consensus_generated": false
+  },
+  "scientific_boundary": {
+    "r8b_status": "CLOSED_BY_CONTINGENCY",
+    "final_method_decision": "METHOD_RETAINED",
+    "duplicate_policy_status": "CLOSED_NO_PRIMARY_EVAL_IMPACT",
+    "rubric_changed": false,
+    "disagreement_resolution_performed": false,
+    "human_gt_created": false,
+    "recommender_evaluation_performed": false,
+    "scientific_winner": "UNKNOWN"
+  }
+}
