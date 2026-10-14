@@ -1,0 +1,48 @@
+{
+  "template_version": "W5-CAL-R02-DISTRIBUTION-RECEIPT-TEMPLATE-V1",
+  "execution_version": "W5-CAL-R02-EXEC-V1",
+  "round_id": "W5-CAL-ROUND-02",
+  "calibration_version": "W5-CALIBRATION-V2",
+  "rubric_version": "W5-RUBRIC-V1",
+  "presentation_version": "W5-CAL-R02-OPS-V1",
+  "template_only": true,
+  "personal_identifiable_information_stored": false,
+  "actual_human_roles_assigned": false,
+  "distinct_actual_humans_confirmed": false,
+  "packages_distributed": false,
+  "judges": {
+    "J1": {
+      "judge_id": "J1",
+      "assigned": false,
+      "distinct_actual_human_confirmed": false,
+      "package_distributed": false,
+      "package_path": "data/evaluation/reca_w5/calibration_round02_ops/judge_packages/w5_calibration_round02_J1_v2.csv",
+      "package_hash": "052f8e0a166a4d3eded6b46fafe716e0c9bb76e8b3476f7822361228c80e4e4c",
+      "json_package_path": "data/evaluation/reca_w5/calibration_round02_ops/judge_packages/w5_calibration_round02_J1_v2.json",
+      "json_package_hash": "de3435fabb5e936042592319c1cb999ba3b0ca1a6c97def7258ad3deb022c051",
+      "distribution_timestamp_utc": null
+    },
+    "J2": {
+      "judge_id": "J2",
+      "assigned": false,
+      "distinct_actual_human_confirmed": false,
+      "package_distributed": false,
+      "package_path": "data/evaluation/reca_w5/calibration_round02_ops/judge_packages/w5_calibration_round02_J2_v2.csv",
+      "package_hash": "7483e0db085d42374f47e0d6054b72ca4194e14ff8a2fa0660bf0aafdaac0b1b",
+      "json_package_path": "data/evaluation/reca_w5/calibration_round02_ops/judge_packages/w5_calibration_round02_J2_v2.json",
+      "json_package_hash": "30f7766dc3f9c5c817b6cd85b8733e5ca46a17ad23cb7ea55144c5e91d43fb85",
+      "distribution_timestamp_utc": null
+    },
+    "J3": {
+      "judge_id": "J3",
+      "assigned": false,
+      "distinct_actual_human_confirmed": false,
+      "package_distributed": false,
+      "package_path": "data/evaluation/reca_w5/calibration_round02_ops/judge_packages/w5_calibration_round02_J3_v2.csv",
+      "package_hash": "08599d1b1c3bf2c485d66220e2bab2692d91c74d359ea1e28979e33ab7ab8428",
+      "json_package_path": "data/evaluation/reca_w5/calibration_round02_ops/judge_packages/w5_calibration_round02_J3_v2.json",
+      "json_package_hash": "8a4f2413548938ad0ad9ee36c4f14977a072bffc00765adef5b20c0cb0cf53bc",
+      "distribution_timestamp_utc": null
+    }
+  }
+}

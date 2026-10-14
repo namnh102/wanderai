@@ -1,0 +1,47 @@
+{
+  "template_version": "W5-CAL-R02-SUBMISSION-RECEIPT-TEMPLATE-V1",
+  "execution_version": "W5-CAL-R02-EXEC-V1",
+  "round_id": "W5-CAL-ROUND-02",
+  "calibration_version": "W5-CALIBRATION-V2",
+  "rubric_version": "W5-RUBRIC-V1",
+  "presentation_version": "W5-CAL-R02-OPS-V1",
+  "template_only": true,
+  "judges": {
+    "J1": {
+      "judge_id": "J1",
+      "submission_received": false,
+      "submission_path": null,
+      "submission_sha256": null,
+      "file_validation_status": "NOT_RUN",
+      "attestation_validation_status": "NOT_RUN",
+      "qualification_status": "NOT_EVALUATED",
+      "received_at_utc": null,
+      "locked": false
+    },
+    "J2": {
+      "judge_id": "J2",
+      "submission_received": false,
+      "submission_path": null,
+      "submission_sha256": null,
+      "file_validation_status": "NOT_RUN",
+      "attestation_validation_status": "NOT_RUN",
+      "qualification_status": "NOT_EVALUATED",
+      "received_at_utc": null,
+      "locked": false
+    },
+    "J3": {
+      "judge_id": "J3",
+      "submission_received": false,
+      "submission_path": null,
+      "submission_sha256": null,
+      "file_validation_status": "NOT_RUN",
+      "attestation_validation_status": "NOT_RUN",
+      "qualification_status": "NOT_EVALUATED",
+      "received_at_utc": null,
+      "locked": false
+    }
+  },
+  "all_three_received": false,
+  "all_three_qualifying": false,
+  "round_ready_to_lock": false
+}

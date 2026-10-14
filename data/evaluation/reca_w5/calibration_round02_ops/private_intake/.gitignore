@@ -1,0 +1,5 @@
+# Ignore all local private intake files (completed human submissions, attestations, private mappings)
+# so partial or unverified Round 02 submissions can never be accidentally committed to Git.
+*
+!.gitignore
+!README.md
