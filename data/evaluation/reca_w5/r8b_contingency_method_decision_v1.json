@@ -1,0 +1,47 @@
+{
+  "artifact_version": "R8B-CONTINGENCY-V1",
+  "status": "CLOSED_WITHOUT_EXTERNAL_REPORT",
+  "contingency_status": "EXTERNAL_CROSS_CHECK_NOT_COMPLETED_AT_METHOD_FREEZE",
+  "external_report_received": false,
+  "external_cross_check_completed": false,
+  "external_agreement_claimed": false,
+  "closure_reason": "PROJECT_OWNER_ELECTED_TO_PROCEED_WITHOUT_WAITING_FURTHER",
+  "internal_research_status": "R1_R8A_COMPLETE",
+  "final_method_decision": "METHOD_RETAINED",
+  "methodology_changed": false,
+  "human_judgments_collected": 0,
+  "human_gt_available": false,
+  "calibration_status": "NOT_STARTED",
+  "scientific_winner": "UNKNOWN",
+  "duplicate_policy_status": "CLOSED_NO_PRIMARY_EVAL_IMPACT",
+  "retained_preregistration": "REC-EVAL-01-PREREG-V1",
+  "source_develop_commit": "e21f5d60c58d8ff1a63a85e14169190b8f5879ee",
+  "systems": [
+    "shared_a0_a1_baseline",
+    "rec-a2"
+  ],
+  "primary_metric": "NDCG@10",
+  "primary_scenarios": 30,
+  "primary_destination_counts": {
+    "ha-noi": 9,
+    "da-nang": 11,
+    "ha-long": 10
+  },
+  "u1_scenarios": 15,
+  "u2_scenarios": 15,
+  "thin_scenarios": 6,
+  "thin_role": "DIAGNOSTIC_ONLY",
+  "endpoint_roles": {
+    "NDCG@10": "PRIMARY_CONFIRMATORY",
+    "Precision@10": "SECONDARY",
+    "Pooled Recall@10": "SECONDARY",
+    "HitRate@10": "DIAGNOSTIC_SECONDARY",
+    "Category-ILD@10": "SECONDARY_SUPPORTING_STRUCTURAL_PROXY",
+    "CatalogCoverage@10": "SECONDARY_SUPPORTING",
+    "I1Exposure@10": "DIAGNOSTIC_ONLY"
+  },
+  "i1_count": 217,
+  "i1_definition": "ZERO_CANONICAL_7D_VECTOR",
+  "candidate_records": 474,
+  "candidate_unique_places": 255
+}
