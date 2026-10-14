@@ -1,0 +1,703 @@
+{
+  "audit_id": "W06-MEASUREMENT-AUDIT-01",
+  "audit_version": "1.0.0",
+  "base_develop_sha": "4de240aeaa5277420695ed5f1de85f7b67cd6c54",
+  "scientific_results_generated": false,
+  "planner_behavior_modified": false,
+  "evaluator_behavior_modified": false,
+  "scenarios_modified": false,
+  "preregistration_created": false,
+  "repository_mutation_scope": "AUDIT_ARTIFACTS_AND_TESTS_ONLY",
+  "allowed_status_vocabulary": [
+    "SUPPORTED",
+    "PARTIALLY_SUPPORTED",
+    "NOT_EVALUABLE",
+    "UNKNOWN"
+  ],
+  "asset_inventory": {
+    "itinerary_planner_evaluators": [
+      "data/evaluation/planner/evaluate_planner.py"
+    ],
+    "planner_router_and_orchestrator": [
+      "apps/ai-service/app/routers/planner.py",
+      "apps/ai-service/app/prompts/planner_prompt.py",
+      "apps/backend/src/modules/trips/trips.service.ts",
+      "apps/backend/src/modules/ai-proxy/ai-proxy.service.ts",
+      "apps/ai-service/app/services/agent.py"
+    ],
+    "itinerary_output_schemas_and_models": [
+      "apps/ai-service/app/schemas/planner.py",
+      "apps/backend/src/modules/trips/dto/plan-trip.dto.ts",
+      "apps/backend/src/modules/trips/dto/bulk-itinerary.dto.ts",
+      "apps/backend/src/modules/trips/dto/add-itinerary.dto.ts",
+      "apps/backend/prisma/schema.prisma",
+      "apps/mobile/lib/features/trips/data/trip_models.dart"
+    ],
+    "benchmark_scenario_files": [
+      "data/evaluation/planner/da_nang_4d.json",
+      "data/evaluation/planner/ha_giang_3d.json",
+      "data/evaluation/planner/moc_chau_3d.json"
+    ],
+    "planner_tests": [
+      "apps/ai-service/tests/test_planner.py",
+      "apps/ai-service/tests/test_planner_failures.py",
+      "apps/ai-service/tests/test_planner_live.py",
+      "apps/backend/test/planner.e2e-spec.ts",
+      "apps/mobile/test/planner_test.dart"
+    ],
+    "mock_and_fallback_paths": [
+      "apps/ai-service/app/routers/planner.py",
+      "apps/ai-service/app/services/agent.py"
+    ],
+    "ai_provider_and_model_configuration": [
+      "apps/ai-service/app/config.py",
+      "apps/ai-service/app/routers/planner.py"
+    ],
+    "poi_freeze_and_catalog": [
+      "data/curated/gomate_places_freeze_v2.json",
+      "data/curated/gomate_places_freeze_v1.json",
+      "data/manifests/dataset-freeze-v2.yaml",
+      "data/manifests/dataset-freeze-v2.sha256"
+    ],
+    "preference_seed_and_data": [
+      "data/evaluation/synthetic/preferences_n300_seed42.json",
+      "data/research/preferences/synthetic_preferences_v1.jsonl",
+      "data/research/preferences/synthetic_preferences_distribution_v1.json",
+      "scripts/generate_synthetic_preferences.py",
+      "apps/backend/prisma/schema.prisma",
+      "apps/backend/src/modules/users/dto/update-preferences.dto.ts"
+    ],
+    "w06_roadmap_and_alignment_documents": [
+      "docs/roadmap/gomate-thesis-research-roadmap-v1.md",
+      "docs/roadmap/gomate-product-research-alignment-matrix-v1.md",
+      "docs/project-control/ROADMAP.md",
+      "docs/ai/ai-planner.md",
+      "docs/api/ai-planner-api.md",
+      "docs/design/gomate-ai-planner-contract-v1.md",
+      "docs/audit/ui/task-08.2.3.6-ai-planner-contract-lock.md"
+    ]
+  },
+  "scenario_audit": {
+    "current_scenario_count": 3,
+    "current_destinations": [
+      "Đà Nẵng",
+      "Hà Giang",
+      "Mộc Châu"
+    ],
+    "scenarios": [
+      {
+        "file_path": "data/evaluation/planner/da_nang_4d.json",
+        "scenario_id": "eval_da_nang_4d",
+        "name": "Đà Nẵng 4 Ngày 3 Đêm - Gia Đình Nghỉ Dưỡng",
+        "destination": "Đà Nẵng",
+        "number_of_days": 4,
+        "request_fields": {
+          "destination": "Đà Nẵng",
+          "days": 4,
+          "start_date": "2026-06-15",
+          "end_date": "2026-06-18",
+          "budget": 8000000,
+          "currency": "VND",
+          "travel_style": "family",
+          "interests": [
+            "beach",
+            "food",
+            "culture"
+          ],
+          "notes": "Có trẻ nhỏ và người cao tuổi, lịch trình thư thả không quá gấp gáp"
+        },
+        "expected_constraints": {
+          "min_days": 4,
+          "max_days": 4,
+          "max_budget": 8000000,
+          "required_keywords": [
+            "Mỹ Khê",
+            "Hội An",
+            "Cầu Rồng"
+          ],
+          "min_items_per_day": 3
+        },
+        "grounding_scope": "SUPPORTED",
+        "grounding_scope_notes": "Destination Đà Nẵng has 289 REC-A-CORE-V2 POIs and 4 non-core POIs (293 total) in gomate_places_freeze_v2.json. Note that required_keywords includes 'Hội An', which has 50 secondary non-core POIs (destination_slug='hoi-an', is_rec_a_core_v2=false) in freeze_v2."
+      },
+      {
+        "file_path": "data/evaluation/planner/ha_giang_3d.json",
+        "scenario_id": "eval_ha_giang_3d",
+        "name": "Hà Giang 3 Ngày 2 Đêm - Chinh Phục Cung Đường",
+        "destination": "Hà Giang",
+        "number_of_days": 3,
+        "request_fields": {
+          "destination": "Hà Giang",
+          "days": 3,
+          "start_date": "2026-10-20",
+          "end_date": "2026-10-22",
+          "budget": 3500000,
+          "currency": "VND",
+          "travel_style": "adventure",
+          "interests": [
+            "mountain",
+            "photography",
+            "culture"
+          ],
+          "notes": "Đi xe máy qua đèo Mã Pí Lèng, sông Nho Quế, Cột cờ Lũng Cú"
+        },
+        "expected_constraints": {
+          "min_days": 3,
+          "max_days": 3,
+          "max_budget": 3500000,
+          "required_keywords": [
+            "Mã Pí Lèng",
+            "Đồng Văn",
+            "Lũng Cú"
+          ],
+          "min_items_per_day": 3
+        },
+        "grounding_scope": "OUT_OF_CATALOG_SCOPE",
+        "grounding_scope_notes": "Hà Giang has 0 verified POIs in gomate_places_freeze_v2.json (both core=0 and total=0). It exists only as a destination entry in legacy database/seed/destinations.json."
+      },
+      {
+        "file_path": "data/evaluation/planner/moc_chau_3d.json",
+        "scenario_id": "eval_moc_chau_3d",
+        "name": "Mộc Châu 3 Ngày 2 Đêm - Phượt Tiết Kiệm",
+        "destination": "Mộc Châu",
+        "number_of_days": 3,
+        "request_fields": {
+          "destination": "Mộc Châu",
+          "days": 3,
+          "start_date": "2026-11-10",
+          "end_date": "2026-11-12",
+          "budget": 2500000,
+          "currency": "VND",
+          "travel_style": "budget",
+          "interests": [
+            "nature",
+            "food",
+            "photography"
+          ],
+          "notes": "Muốn săn mây Tà Xùa hoặc ngắm đồi chè Trái Tim, hoa cải"
+        },
+        "expected_constraints": {
+          "min_days": 3,
+          "max_days": 3,
+          "max_budget": 2500000,
+          "required_keywords": [
+            "Đồi chè",
+            "Mộc Châu",
+            "thác"
+          ],
+          "min_items_per_day": 3
+        },
+        "grounding_scope": "OUT_OF_CATALOG_SCOPE",
+        "grounding_scope_notes": "Mộc Châu has 0 verified POIs in gomate_places_freeze_v2.json (both core=0 and total=0). It is not present in the frozen GoMate POI catalog."
+      }
+    ],
+    "destination_scope_summary": {
+      "da_nang": {
+        "grounding_scope": "SUPPORTED",
+        "core_poi_count": 289,
+        "non_core_poi_count": 4,
+        "total_poi_count": 293,
+        "caveat": "Scenario eval_da_nang_4d includes required_keyword 'Hội An' (50 secondary non-core POIs in freeze_v2)."
+      },
+      "ha_giang": {
+        "grounding_scope": "OUT_OF_CATALOG_SCOPE",
+        "core_poi_count": 0,
+        "non_core_poi_count": 0,
+        "total_poi_count": 0,
+        "caveat": "Zero verified OSM POIs in gomate_places_freeze_v2.json; cannot be grounded against the frozen GoMate catalog."
+      },
+      "moc_chau": {
+        "grounding_scope": "OUT_OF_CATALOG_SCOPE",
+        "core_poi_count": 0,
+        "non_core_poi_count": 0,
+        "total_poi_count": 0,
+        "caveat": "Zero verified OSM POIs in gomate_places_freeze_v2.json; cannot be grounded against the frozen GoMate catalog."
+      }
+    }
+  },
+  "roadmap_100_scenario_claim_audit": {
+    "claim_status": "REPO_CONFIRMED_100_SCENARIO_REQUIREMENT",
+    "authoritative_file": "docs/roadmap/gomate-thesis-research-roadmap-v1.md",
+    "evidence_excerpts": [
+      {
+        "file": "docs/roadmap/gomate-thesis-research-roadmap-v1.md",
+        "lines": "87-92",
+        "section": "AGENT-EVAL-01: Itinerary Agent Constraint & Grounding Evaluation",
+        "excerpt": "Objective: Empirically evaluate the Gemini itinerary planning agent across 100 test prompts: Constraint Satisfaction: Total budget compliance (|Cost - Budget| <= Threshold), opening hours compliance, time-slot overlap conflicts. Grounding Integrity: 100% of generated POIs must map to verified PostGIS IDs (zero fabricated places). Deliverables: apps/ai-service/tests/test_planner_evaluation.py and benchmark report."
+      },
+      {
+        "file": "docs/roadmap/gomate-thesis-research-roadmap-v1.md",
+        "lines": "166-167",
+        "section": "Week 6: Itinerary Agent Constraint Satisfaction Benchmarking (AGENT-EVAL-01, WP-WANDY-01)",
+        "excerpt": "Research Deliverables: Evaluation of Gemini itinerary planner over 100 benchmark trips: budget violation rate, schedule conflict rate, valid POI grounding rate (= 100%)."
+      }
+    ],
+    "implementation_reality": {
+      "current_scenario_files_in_repo": 3,
+      "missing_scenarios_for_roadmap_target": 97,
+      "test_planner_evaluation_py_exists": false
+    }
+  },
+  "evaluator_logic_audit": {
+    "evaluator_file": "data/evaluation/planner/evaluate_planner.py",
+    "function_name": "evaluate_itinerary(response_data: dict, scenario_spec: dict) -> dict",
+    "implemented_checks": [
+      {
+        "check_name": "DAY_COUNT_RANGE_CHECK",
+        "input_field": "response_data['days'], scenario_spec['expected_constraints']['min_days'], scenario_spec['expected_constraints']['max_days']",
+        "implementation": "Checks min_days <= len(days) <= max_days (lines 16-21). Appends to failed_checks if outside bounds.",
+        "what_it_really_proves": "The returned JSON array 'days' has length between min_days and max_days.",
+        "what_it_does_not_prove": "Does not verify sequential 1..N day_number numbering, valid calendar dates matching start_date..end_date, or non-empty meaningful activities."
+      },
+      {
+        "check_name": "DAY_COST_ARITHMETIC_CONSISTENCY",
+        "input_field": "day['day_cost'], day['items'][*]['estimated_cost']",
+        "implementation": "Computes computed_day_cost = sum(i.get('estimated_cost', 0) for i in items) and checks computed_day_cost == day_cost (lines 29-37).",
+        "what_it_really_proves": "Internal arithmetic self-consistency between item estimated_cost values and day_cost (which router code in planner.py already deterministically sums from the same items).",
+        "what_it_does_not_prove": "Does NOT prove real-world price accuracy, catalog price grounding, or compliance with scenario max_budget."
+      },
+      {
+        "check_name": "MIN_ITEMS_PER_DAY_CHECK",
+        "input_field": "day['items'], scenario_spec['expected_constraints']['min_items_per_day']",
+        "implementation": "Checks len(items) < min_items (lines 39-43). Appends to failed_checks if fewer items.",
+        "what_it_really_proves": "Each day dict contains at least min_items_per_day item dicts.",
+        "what_it_does_not_prove": "Does not verify that activities are distinct, non-trivial, geographically valid, or grounded in the catalog."
+      },
+      {
+        "check_name": "TOTAL_COST_ARITHMETIC_CONSISTENCY",
+        "input_field": "response_data['budget_analysis']['estimated_cost'], sum of computed_day_cost",
+        "implementation": "Checks calculated_total == reported_total (lines 48-53). Appends to failed_checks if unequal.",
+        "what_it_really_proves": "Internal arithmetic self-consistency that budget_analysis.estimated_cost equals the sum of item estimated_cost across all days.",
+        "what_it_does_not_prove": "Does NOT check whether calculated_total <= max_budget, nor whether item estimated_cost values reflect real external prices."
+      },
+      {
+        "check_name": "REQUIRED_KEYWORDS_LOGGING_ONLY",
+        "input_field": "scenario_spec['expected_constraints']['required_keywords'], item['activity'], item['place_name']",
+        "implementation": "Matches substring kw.lower() in all_activities_text.lower() and unconditionally appends to passed_checks (lines 56-58). Never appends to failed_checks.",
+        "what_it_really_proves": "Logs how many required_keywords appeared as case-insensitive substrings in concatenated activity + place_name text.",
+        "what_it_does_not_prove": "Cannot fail a scenario even when 0/N required keywords match (soft logging only; success == (len(failed_checks) == 0) remains True)."
+      }
+    ],
+    "specific_verification_15_dimensions": {
+      "exact_number_of_days": {
+        "checked_by_evaluator": true,
+        "enforces_pass_fail": true,
+        "verification_type": "STRUCTURAL_SELF_CONSISTENCY",
+        "details": "Checks min_days <= len(days) <= max_days; in current scenarios min_days == max_days."
+      },
+      "minimum_activities_per_day": {
+        "checked_by_evaluator": true,
+        "enforces_pass_fail": true,
+        "verification_type": "STRUCTURAL_SELF_CONSISTENCY",
+        "details": "Checks len(day['items']) >= min_items_per_day."
+      },
+      "total_cost_arithmetic": {
+        "checked_by_evaluator": true,
+        "enforces_pass_fail": true,
+        "verification_type": "INTERNAL_ARITHMETIC_SELF_CONSISTENCY",
+        "details": "Recomputes sum of item.estimated_cost and compares against day.day_cost and budget_analysis.estimated_cost from the same response."
+      },
+      "max_budget_constraint": {
+        "checked_by_evaluator": false,
+        "enforces_pass_fail": false,
+        "verification_type": "NOT_IMPLEMENTED_IN_EVALUATOR",
+        "details": "expected_constraints.max_budget is declared in all 3 scenario JSONs but never read or checked by evaluate_planner.py."
+      },
+      "place_catalog_grounding": {
+        "checked_by_evaluator": false,
+        "enforces_pass_fail": false,
+        "verification_type": "NOT_IMPLEMENTED",
+        "details": "Evaluator never loads gomate_places_freeze_v2.json or queries any catalog."
+      },
+      "place_id_existence": {
+        "checked_by_evaluator": false,
+        "enforces_pass_fail": false,
+        "verification_type": "NOT_IMPLEMENTED",
+        "details": "ItineraryItem schema has no place_id field; evaluator does not check place_id."
+      },
+      "duplicate_pois": {
+        "checked_by_evaluator": false,
+        "enforces_pass_fail": false,
+        "verification_type": "NOT_IMPLEMENTED",
+        "details": "Evaluator does not check for repeated place_name or duplicate POIs within or across days."
+      },
+      "correct_destination": {
+        "checked_by_evaluator": false,
+        "enforces_pass_fail": false,
+        "verification_type": "NOT_IMPLEMENTED",
+        "details": "Evaluator does not verify response_data['destination'] or whether suggested places belong to the target destination."
+      },
+      "category_diversity": {
+        "checked_by_evaluator": false,
+        "enforces_pass_fail": false,
+        "verification_type": "NOT_IMPLEMENTED",
+        "details": "ItineraryItem has no category field and evaluator performs no category diversity check."
+      },
+      "opening_hours": {
+        "checked_by_evaluator": false,
+        "enforces_pass_fail": false,
+        "verification_type": "NOT_IMPLEMENTED",
+        "details": "No opening-hours check or parser exists in the evaluator or codebase."
+      },
+      "schedule_overlap": {
+        "checked_by_evaluator": false,
+        "enforces_pass_fail": false,
+        "verification_type": "NOT_IMPLEMENTED",
+        "details": "Evaluator never inspects or parses start_time or end_time."
+      },
+      "travel_time": {
+        "checked_by_evaluator": false,
+        "enforces_pass_fail": false,
+        "verification_type": "NOT_IMPLEMENTED",
+        "details": "Evaluator performs no travel time check and no routing engine/matrix exists."
+      },
+      "geographic_efficiency": {
+        "checked_by_evaluator": false,
+        "enforces_pass_fail": false,
+        "verification_type": "NOT_IMPLEMENTED",
+        "details": "ItineraryItem has no coordinates/place_id and evaluator performs no geographic distance check."
+      },
+      "required_keywords": {
+        "checked_by_evaluator": true,
+        "enforces_pass_fail": false,
+        "verification_type": "SOFT_SUBSTRING_LOG_ONLY",
+        "details": "Appends matched count to passed_checks unconditionally; 0 matches still yields success=True."
+      },
+      "preference_satisfaction": {
+        "checked_by_evaluator": false,
+        "enforces_pass_fail": false,
+        "verification_type": "NOT_IMPLEMENTED",
+        "details": "Evaluator does not read request.interests or request.travel_style and performs no preference alignment check."
+      }
+    }
+  },
+  "itinerary_output_contract_audit": {
+    "schema_file": "apps/ai-service/app/schemas/planner.py",
+    "model_name": "ItineraryItem",
+    "fields_present": {
+      "place_id": false,
+      "place_name": true,
+      "category": false,
+      "coordinates": false,
+      "start_time": true,
+      "end_time": true,
+      "estimated_cost": true,
+      "source_or_provenance_fields": false,
+      "order_index": true,
+      "activity": true,
+      "notes": true,
+      "transport_mode": true
+    },
+    "grounding_identifier_status": "NOT_CURRENTLY_MEASURABLE",
+    "grounding_identifier_explanation": "ItineraryItem (apps/ai-service/app/schemas/planner.py:29-38) contains only free-text place_name: Optional[str] = None and no place_id, osm_id, coordinates, category, or provenance fields. Furthermore, the planner prompt (TRAVEL_PLANNER_V1) does not receive the frozen catalog POIs and does not output place_id. No deterministic entity-linking/mapping function from planner free-text place_name to gomate_places_freeze_v2.json place_id exists in the planner or evaluator."
+  },
+  "catalog_data_capability_audit": {
+    "catalog_file": "data/curated/gomate_places_freeze_v2.json",
+    "total_pois": 759,
+    "core_pois": 622,
+    "non_core_secondary_pois": 137,
+    "by_destination_counts": {
+      "ha-noi": {
+        "destination_name": "Hà Nội",
+        "total_pois": 145,
+        "rec_a_core_pois": 145,
+        "non_core_pois": 0
+      },
+      "da-nang": {
+        "destination_name": "Đà Nẵng",
+        "total_pois": 293,
+        "rec_a_core_pois": 289,
+        "non_core_pois": 4
+      },
+      "ha-long": {
+        "destination_name": "Hạ Long",
+        "total_pois": 188,
+        "rec_a_core_pois": 188,
+        "non_core_pois": 0
+      },
+      "hoi-an": {
+        "destination_name": "Hội An",
+        "total_pois": 50,
+        "rec_a_core_pois": 0,
+        "non_core_pois": 50
+      },
+      "hue": {
+        "destination_name": "Huế",
+        "total_pois": 50,
+        "rec_a_core_pois": 0,
+        "non_core_pois": 50
+      },
+      "nha-trang": {
+        "destination_name": "Nha Trang",
+        "total_pois": 33,
+        "rec_a_core_pois": 0,
+        "non_core_pois": 33
+      }
+    },
+    "da_nang_split_verified": {
+      "rec_a_core_count": 289,
+      "non_core_count": 4,
+      "all_destination_map_count": 293,
+      "matches_289_plus_4_equals_293": true
+    },
+    "coordinates": {
+      "all_pois_count": 759,
+      "all_pois_pct": 100.0,
+      "core_pois_count": 622,
+      "core_pois_pct": 100.0
+    },
+    "category": {
+      "all_pois_count": 759,
+      "all_pois_pct": 100.0,
+      "core_pois_count": 622,
+      "core_pois_pct": 100.0
+    },
+    "opening_hours": {
+      "all_pois_count": 101,
+      "all_pois_pct": 13.31,
+      "core_pois_count": 101,
+      "core_pois_pct": 16.24,
+      "by_destination": {
+        "da-nang": 59,
+        "ha-noi": 27,
+        "ha-long": 15,
+        "hoi-an": 0,
+        "hue": 0,
+        "nha-trang": 0
+      },
+      "raw_format_examples": [
+        "24/7",
+        "08:00-17:00",
+        "Mo-Su 09:00-17:00",
+        "Mo-Fr 10:00-22:00; Sa-Su 09:00-22:00",
+        "Mo off; Tu-Su 08:00-12:00,13:30-17:00",
+        "Mo-Su 05:30+",
+        "Fr-Su 18:00-00:00"
+      ],
+      "parser_exists": false,
+      "parseability_status": "UNPARSED_RAW_OSM_STRINGS_NO_PARSER_IN_REPO"
+    },
+    "numeric_price": {
+      "structured_price_min_max_in_freeze_v2_count": 0,
+      "structured_price_min_max_in_freeze_v2_pct": 0.0,
+      "charge_tag_all_pois_count": 6,
+      "charge_tag_all_pois_pct": 0.79,
+      "charge_tag_core_pois_count": 4,
+      "charge_tag_core_pois_pct": 0.64,
+      "notes": "Freeze V2 POI objects do not carry structured priceMin/priceMax fields (0/759 = 0.00%), and backend PlacesService explicitly strips legacy database priceMin/priceMax as unverified. Only 6/759 POIs (0.79%) have a raw OSM 'charge' tag string."
+    },
+    "fee_tag": {
+      "all_pois_count": 23,
+      "all_pois_pct": 3.03,
+      "core_pois_count": 12,
+      "core_pois_pct": 1.93,
+      "value_distribution_all_pois": {
+        "yes": 18,
+        "no": 5
+      },
+      "value_distribution_core_pois": {
+        "yes": 10,
+        "no": 2
+      }
+    },
+    "charge_tag": {
+      "all_pois_count": 6,
+      "all_pois_pct": 0.79,
+      "core_pois_count": 4,
+      "core_pois_pct": 0.64,
+      "examples": [
+        {
+          "place_id": "f0d424bd-f722-540f-8964-5e6fd8875b56",
+          "charge": "40000 VND",
+          "is_core": true
+        },
+        {
+          "place_id": "89982921-9495-52a1-a2a1-204961327524",
+          "charge": "40000 VND",
+          "is_core": true
+        },
+        {
+          "place_id": "dc6593cd-eefb-59a9-bbf3-1e69c944d5c3",
+          "charge": "40000 VND",
+          "is_core": true
+        },
+        {
+          "place_id": "1f9c2b46-e032-5cbc-a9dc-dc68c435c594",
+          "charge": "50000 VND",
+          "is_core": true
+        },
+        {
+          "place_id": "de4b167b-b43d-59da-b3ab-6ab07c717c79",
+          "charge": "30000 VND",
+          "is_core": false
+        },
+        {
+          "place_id": "d07256ed-a32e-5d1c-aeeb-b692d1ba985f",
+          "charge": "30 VND",
+          "is_core": false
+        }
+      ]
+    },
+    "routing_or_travel_time_data": {
+      "exists": false,
+      "source": null,
+      "notes": "No road-network routing graph, OSRM/Valhalla/GraphHopper matrix, or empirical travel-time dataset exists in the repository. apps/ai-service/app/tools/calculate_route.py computes only straight-line Haversine distance divided by a hardcoded 50 km/h constant, which is a rough heuristic and NOT road travel-time or route distance data."
+    },
+    "address": {
+      "top_level_non_null_all_pois_count": 529,
+      "top_level_non_null_all_pois_pct": 69.7,
+      "heuristic_importer_fallback_all_pois_count": 249,
+      "heuristic_importer_fallback_all_pois_pct": 32.81,
+      "factual_osm_addr_tags_all_pois_count": 284,
+      "factual_osm_addr_tags_all_pois_pct": 37.42,
+      "top_level_non_null_core_pois_count": 392,
+      "top_level_non_null_core_pois_pct": 63.02,
+      "heuristic_importer_fallback_core_pois_count": 143,
+      "heuristic_importer_fallback_core_pois_pct": 22.99,
+      "factual_osm_addr_tags_core_pois_count": 253,
+      "factual_osm_addr_tags_core_pois_pct": 40.68,
+      "notes": "Top-level 'address' in gomate_places_freeze_v2.json mixes factual OSM addr:* tags with importer-generated heuristic strings of the form '<name>, <city_slug>' (249/759 = 32.81%). Backend osm-tags.ts (osmAddress) explicitly ignores places.address and extracts only factual OSM addr:housenumber, addr:street, addr:suburb/district, and addr:city tags (present on 284/759 = 37.42% of all POIs and 253/622 = 40.68% of core POIs)."
+    }
+  },
+  "preference_evidence_audit": {
+    "prisma_schema_model": "TravelPreference (apps/backend/prisma/schema.prisma:91-107)",
+    "schema_supports_interests": true,
+    "canonical_interests_vocabulary": [
+      "food_cuisine",
+      "culture_history",
+      "nature_outdoor",
+      "coffee_culture",
+      "beach_island",
+      "shopping_local",
+      "nightlife_entertainment"
+    ],
+    "planner_prompt_interest_keys": [
+      "beach",
+      "mountain",
+      "culture",
+      "food",
+      "nature",
+      "photography",
+      "nightlife",
+      "shopping"
+    ],
+    "vocabulary_mismatch_noted": "Backend UpdatePreferencesDto and synthetic preferences use 7 canonical taxonomy tags (e.g. 'food_cuisine', 'beach_island'), whereas planner_prompt.py INTEREST_TRANSLATIONS and the 3 planner scenario JSONs use short keys ('food', 'beach', 'mountain', 'photography').",
+    "preference_records_total": 300,
+    "preference_records_marked_synthetic": 300,
+    "preference_records_verified_real_user": 0,
+    "preference_ground_truth_status": "NO_REAL_USER_GT_AVAILABLE",
+    "safe_usage_policy": "Synthetic preferences (preferences_n300_seed42.json / synthetic_preferences_v1.jsonl) have isSynthetic=True on all 300 records and may be used as deterministic engineering/diagnostic fixtures only, never as scientific evidence of real-user preference satisfaction."
+  },
+  "model_and_reproducibility_audit": {
+    "provider": "google-genai (Google Gemini API)",
+    "model_identifier": "gemini-3.5-flash",
+    "configured_via": "settings.PLANNER_MODEL in apps/ai-service/app/config.py:10",
+    "generation_parameters": {
+      "temperature": 0.7,
+      "max_output_tokens": 16384,
+      "response_mime_type": "application/json",
+      "timeout_ms": 55000,
+      "top_p": null,
+      "top_k": null,
+      "seed": null
+    },
+    "raw_model_output_persisted": false,
+    "final_structured_output_persisted_by_planner_or_evaluator": false,
+    "deterministic_reproducibility_manifest_exists": false,
+    "manifest_capture_status": {
+      "model_provider_version": false,
+      "parameters": false,
+      "scenario_hash": false,
+      "catalog_hash": false,
+      "evaluator_hash": false,
+      "raw_output_hash": false,
+      "parsed_output_hash": false
+    },
+    "mock_or_fallback_behavior": {
+      "exists": true,
+      "location": "apps/ai-service/app/routers/planner.py:24, 100-150",
+      "trigger_conditions": "When settings.GEMINI_API_KEY is empty/unset, _client is None (line 24). In create_plan (lines 123-150), the else branch silently synthesizes a canned JSON itinerary with 1 item per day ('Tham quan điểm nổi bật {destination}', place_name=destination, estimated_cost=50000, transport_mode='taxi') and returns HTTP 200 PlanResponse.",
+      "secondary_dead_stub": "apps/ai-service/app/services/agent.py:73-98 (TravelAgent.handle_plan) is an unused legacy method returning a hardcoded 1-day stub with outdated field names.",
+      "can_response_schema_distinguish_real_vs_mock_run": false,
+      "distinction_assessment": "PlanResponse contains no execution_mode, is_mock, model_id, or provenance metadata field. A caller or evaluator inspecting only PlanResponse JSON cannot deterministically distinguish REAL_MODEL_RUN from MOCK_OR_FALLBACK_RUN except by heuristic inspection of canned strings."
+    }
+  },
+  "measurement_capability_matrix": {
+    "CATALOG_GROUNDING": {
+      "status": "NOT_EVALUABLE",
+      "evidence": "ItineraryItem (apps/ai-service/app/schemas/planner.py:29-38) emits only free-text place_name (no place_id, osm_id, or coordinates); planner prompt receives no catalog POIs; 2 of 3 scenarios (Hà Giang, Mộc Châu) have 0 POIs in gomate_places_freeze_v2.json; evaluate_planner.py performs no catalog check.",
+      "blocking_gap": "No place_id in planner output schema, no catalog retrieval/injection in planner pipeline, no deterministic entity-resolution linker in evaluator, and out-of-scope benchmark scenarios.",
+      "safe_interpretation": "Cannot currently measure whether planner outputs are grounded in the verified GoMate POI catalog."
+    },
+    "NO_DUPLICATE_POI": {
+      "status": "PARTIALLY_SUPPORTED",
+      "evidence": "ItineraryItem provides free-text place_name, allowing exact/normalized string duplicate detection in principle, though evaluate_planner.py currently implements no duplicate check and canonical place_id is absent.",
+      "blocking_gap": "Lack of canonical place_id prevents alias/entity-level duplicate detection; evaluate_planner.py lacks a duplicate check.",
+      "safe_interpretation": "Only surface-level string duplication of place_name could be inspected; canonical entity non-duplication is not verifiable without place_id grounding."
+    },
+    "DESTINATION_CORRECTNESS": {
+      "status": "PARTIALLY_SUPPORTED",
+      "evidence": "PlanResponse echoes the requested destination string, and gomate_places_freeze_v2.json maps 622 core POIs to ha-noi, da-nang, and ha-long. However, itinerary items have no place_id or coordinates, evaluate_planner.py does not check destination membership, and 2 of 3 current scenarios are outside the catalog.",
+      "blocking_gap": "No place_id or coordinate linkage on ItineraryItem to verify that generated activities actually lie within the target destination boundary.",
+      "safe_interpretation": "Can only verify top-level request/response destination string echo or keyword mentions for in-scope cities, not verified geographic containment of each POI."
+    },
+    "CATEGORY_DIVERSITY": {
+      "status": "NOT_EVALUABLE",
+      "evidence": "gomate_places_freeze_v2.json has 100% category coverage (759/759 POIs), but ItineraryItem has no category or place_id field, and evaluate_planner.py does not inspect categories.",
+      "blocking_gap": "Planner output items neither carry a category field nor link to catalog place_id records where category is known.",
+      "safe_interpretation": "Category diversity of generated itineraries cannot be deterministically measured from current planner outputs."
+    },
+    "GEO_DISTANCE": {
+      "status": "NOT_EVALUABLE",
+      "evidence": "gomate_places_freeze_v2.json has 100% latitude/longitude coverage (759/759 POIs), enabling straight-line Haversine GEO_DISTANCE_PROXY between catalog POIs. However, ItineraryItem has no coordinates or place_id, and evaluate_planner.py performs no geographic distance computation.",
+      "blocking_gap": "Generated itinerary items lack coordinates and canonical place_id linkage to catalog coordinates.",
+      "safe_interpretation": "Even straight-line GEO_DISTANCE_PROXY cannot be computed on planner outputs until items are grounded to catalog place_ids with coordinates."
+    },
+    "TRAVEL_TIME": {
+      "status": "NOT_EVALUABLE",
+      "evidence": "Zero road-network routing data, travel-time matrices, or routing engines (OSRM/Valhalla/GraphHopper) exist in the repository. calculate_route.py divides straight-line Haversine distance by a constant 50 km/h.",
+      "blocking_gap": "Complete absence of road-network distance/duration data and absence of POI coordinate grounding in itinerary outputs.",
+      "safe_interpretation": "Real travel time and route efficiency cannot be measured. Straight-line Haversine distance must only ever be labeled GEO_DISTANCE_PROXY, never travel time or route quality."
+    },
+    "OPENING_HOURS": {
+      "status": "NOT_EVALUABLE",
+      "evidence": "Only 101/759 (13.31%) of all catalog POIs and 101/622 (16.24%) of core POIs have opening_hours strings in gomate_places_freeze_v2.json; no OSM opening_hours parser exists in the repo; ItineraryItem is ungrounded; evaluate_planner.py does not check opening hours.",
+      "blocking_gap": "83.76% missing opening_hours in core catalog, no OSM opening_hours interval parser, and no place_id grounding on itinerary items.",
+      "safe_interpretation": "Opening-hours compliance cannot be evaluated across the catalog and could at best be a sparse diagnostic on the 16.24% of core POIs with raw tags once grounded and parsed."
+    },
+    "SCHEDULE_OVERLAP": {
+      "status": "PARTIALLY_SUPPORTED",
+      "evidence": "ItineraryItem schema includes start_time and end_time strings (prompted as HH:MM in TRAVEL_PLANNER_V1), so chronological ordering and intra-day time-window overlap are structurally inspectable from the output JSON, although evaluate_planner.py does not currently check them.",
+      "blocking_gap": "evaluate_planner.py does not parse or validate start_time/end_time ordering or overlaps, and schema types them as optional free-text strings rather than strict HH:MM.",
+      "safe_interpretation": "Internal schedule non-overlap is a structural self-consistency property that can be checked once time-window parsing is added to the evaluator, without proving real-world transit feasibility."
+    },
+    "BUDGET": {
+      "status": "PARTIALLY_SUPPORTED",
+      "evidence": "planner.py deterministically sums item.estimated_cost into day_cost and budget_analysis.estimated_cost and flags is_over_budget against request.budget. evaluate_planner.py verifies internal summation consistency (calculated_total == reported_total) but ignores expected_constraints.max_budget. Critically, gomate_places_freeze_v2.json has 0% structured numeric price coverage (0/759 priceMin/priceMax; only 6/759 raw 'charge' tags), so item.estimated_cost is an ungrounded LLM estimate.",
+      "blocking_gap": "evaluate_planner.py does not enforce calculated_total <= max_budget, and the catalog lacks real numeric POI prices (99.21% missing) to verify whether LLM item cost estimates are factual.",
+      "safe_interpretation": "Can measure internal arithmetic self-consistency and whether the sum of LLM-stated item costs stays within the user's stated budget ceiling, but CANNOT measure real-world price accuracy."
+    },
+    "PREFERENCE_SATISFACTION": {
+      "status": "NOT_EVALUABLE",
+      "evidence": "All 300 preference records in preferences_n300_seed42.json / synthetic_preferences_v1.jsonl are synthetic (isSynthetic=True, 0 real users); planner interest keys ('beach', 'food') differ from canonical taxonomy interest keys ('beach_island', 'food_cuisine'); ItineraryItem has no category/place_id; evaluate_planner.py only logs substring matches of required_keywords without failing.",
+      "blocking_gap": "No real-user preference ground truth (NO_REAL_USER_GT_AVAILABLE), no grounded POI category/tag linkage in planner outputs, and no enforceable preference check in evaluator.",
+      "safe_interpretation": "Cannot make scientific claims of user preference satisfaction; only synthetic persona/keyword alignment diagnostics are possible."
+    },
+    "REPRODUCIBILITY": {
+      "status": "NOT_EVALUABLE",
+      "evidence": "planner.py calls gemini-3.5-flash with temperature=0.7 and no seed, does not persist raw LLM text or parsed PlanResponse to disk, and writes no reproducibility manifest capturing model version, parameters, scenario hash, catalog hash, evaluator hash, or output hashes.",
+      "blocking_gap": "Stochastic generation (temperature=0.7, no seed), ephemeral unpersisted outputs, and absence of a cryptographic benchmark run manifest.",
+      "safe_interpretation": "Live planner generation runs are currently non-reproducible and un-audited by any cryptographic manifest."
+    },
+    "MOCK_RUN_DETECTION": {
+      "status": "PARTIALLY_SUPPORTED",
+      "evidence": "In apps/ai-service/app/routers/planner.py:24, 123-150, when GEMINI_API_KEY is empty, create_plan silently returns a canned 200 OK PlanResponse with identical schema to a live Gemini run and no is_mock/provider/model metadata field in PlanResponse.",
+      "blocking_gap": "PlanResponse schema lacks explicit execution provenance fields (e.g. execution_mode, model_id, is_fallback), so evaluators inspecting saved response JSONs cannot rely on a schema contract to reject mock runs.",
+      "safe_interpretation": "Code-level inspection or environment gating (requiring GEMINI_API_KEY and patching/disabling fallback) can identify or prevent mock runs, but the response payload itself does not explicitly declare mock vs real execution."
+    }
+  },
+  "current_instrument_validity": {
+    "can_current_evaluator_produce_a_scientific_w06_pass_rate": "NO",
+    "rationale": "data/evaluation/planner/evaluate_planner.py currently checks only three structural/internal properties: (1) min_days <= len(days) <= max_days, (2) len(items) >= min_items_per_day, and (3) internal arithmetic equality between item.estimated_cost sums and day_cost / budget_analysis.estimated_cost (which planner.py already computes deterministically from the same items). Its fourth check (required_keywords) is a soft log that appends to passed_checks unconditionally and never fails. It does not check max_budget compliance, catalog POI grounding, duplicate POIs, destination containment, category diversity, opening hours, schedule overlaps, geographic distance, or mock-run provenance. Furthermore, 2 of the 3 benchmark scenarios (Hà Giang, Mộc Châu) are outside the frozen GoMate POI catalog. Note: this finding reflects missing measurement instrumentation and schema linkage, NOT poor planner performance."
+  }
+}
