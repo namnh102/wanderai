@@ -270,6 +270,48 @@ def test_cal_inc_13_no_recommender_evaluation_performed() -> None:
     assert incident["recommender_evaluation_performed"] is False
 
 
+def test_cal_inc_14_exact_incident_root_contract() -> None:
+    """CAL-INC-14: Verify exact root-level machine-readable incident contract fields."""
+    incident = _load_json(INCIDENT_PATH)
+    assert incident["round_id"] == "W5-CAL-ROUND-01"
+    assert incident["round_status"] == "INVALIDATED_FOR_PROTOCOL"
+    assert incident["raw_evidence_preserved"] is True
+    assert incident["total_raw_labels_received"] == 135
+    assert incident["qualifying_independent_human_judgments"] == 0
+    assert incident["calibration_qualification_eligible"] is False
+    assert incident["calibration_review_eligible"] is False
+    assert incident["human_gt"] is False
+    assert incident["session_integrity_status"] == "FAILED"
+    assert incident["invalidity_reasons"] == [
+        "AI_ASSISTED_OR_AI_GENERATED_LABELS",
+        "INTER_JUDGE_LABEL_EXPOSURE",
+    ]
+    assert incident["scientific_use"] == "FORENSIC_NON_QUALIFYING_EVIDENCE_ONLY"
+    assert incident["reliability_analysis_eligible"] is False
+    assert incident["final_model_comparison_eligible"] is False
+    assert incident["fresh_round_required"] is True
+
+
+def test_cal_inc_15_round_02_fresh_package_required_policy() -> None:
+    """CAL-INC-15: Verify fresh calibration package is explicitly REQUIRED for Round 02."""
+    incident = _load_json(INCIDENT_PATH)
+    policy = incident["next_round_policy"]
+    assert policy["next_round_id"] == "W5-CAL-ROUND-02"
+    assert policy["next_round_required"] is True
+    assert policy["required_actual_human_judges"] == 3
+    assert policy["ai_llm_assistance_allowed"] is False
+    assert policy["external_search_allowed"] is False
+    assert policy["prior_label_exposure_allowed"] is False
+    assert policy["pre_assigned_judge_roles_required"] is True
+    assert policy["fresh_calibration_package_required"] is True
+    assert "fresh_calibration_package_preferred" not in policy
+
+    receipt_text = RECEIPT_DOC_PATH.read_text(encoding="utf-8")
+    assert "A fresh Round 02 calibration package/version is REQUIRED before collection" in receipt_text
+    assert "fresh_calibration_package_required: true" in receipt_text
+    assert "preferred" not in receipt_text.lower()
+
+
 # ============================================================
 # CAL-SUB-01 .. CAL-SUB-20 (Raw File & Boundary Preservation)
 # ============================================================

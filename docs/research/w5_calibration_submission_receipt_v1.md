@@ -119,13 +119,13 @@ These numbers **MUST NOT** be used to infer inter-rater reliability, agreement q
 
 ## 5. Next Round Policy (`W5-CAL-ROUND-02`)
 
-`W5-CAL-ROUND-02` is required before any calibration review or primary annotation can proceed. Round 02 must enforce:
+`W5-CAL-ROUND-02` is required before any calibration review or primary annotation can proceed. No primary annotation may begin before valid Round 02 calibration closure. Round 02 must enforce:
 1. **3 actual human judges** making their own relevance judgments directly from the rubric and frozen item context.
 2. **No AI/LLM assistance** for label decisions (`ai_llm_assistance_allowed: false`).
 3. **No external search** (`external_search_allowed: false`).
 4. **No exposure to another judge's labels or label summaries** before all 3 submissions are locked (`prior_label_exposure_allowed: false`).
 5. **Judge roles (`J1`, `J2`, `J3`) assigned BEFORE files are distributed** (`pre_assigned_judge_roles_required: true`).
-6. **Fresh calibration package/version preferred** because `W5-CALIBRATION-V1` item labels were exposed during Round 01.
+6. **A fresh Round 02 calibration package/version is REQUIRED before collection** (`fresh_calibration_package_required: true`) because `W5-CALIBRATION-V1` item labels/context were exposed during contaminated Round 01.
 
 *(Round 02 is not created in this task.)*
 

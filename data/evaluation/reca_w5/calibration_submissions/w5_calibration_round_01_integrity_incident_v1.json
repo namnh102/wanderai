@@ -1,17 +1,25 @@
 {
   "artifact_version": "W5-CAL-INTEGRITY-INCIDENT-V1",
+  "round_id": "W5-CAL-ROUND-01",
   "round": "W5-CAL-ROUND-01",
   "calibration_version": "W5-CALIBRATION-V1",
   "rubric_version": "W5-RUBRIC-V1",
   "presentation_version": "W5-CAL-OPS-V1",
+  "round_status": "INVALIDATED_FOR_PROTOCOL",
   "status": "INVALIDATED_FOR_PROTOCOL",
   "file_integrity_status": "PASS",
   "session_integrity_status": "FAILED",
   "detected_stage": "POST_SUBMISSION_PRE_CALIBRATION_REVIEW",
+  "raw_evidence_preserved": true,
   "total_raw_labels_received": 135,
   "qualifying_independent_human_judgments": 0,
   "calibration_qualification_eligible": false,
   "calibration_review_eligible": false,
+  "human_gt": false,
+  "scientific_use": "FORENSIC_NON_QUALIFYING_EVIDENCE_ONLY",
+  "reliability_analysis_eligible": false,
+  "final_model_comparison_eligible": false,
+  "fresh_round_required": true,
   "primary_annotation_started": false,
   "human_gt_created": false,
   "rubric_changed": false,
@@ -85,7 +93,7 @@
     "external_search_allowed": false,
     "prior_label_exposure_allowed": false,
     "pre_assigned_judge_roles_required": true,
-    "fresh_calibration_package_preferred": true,
-    "fresh_calibration_package_reason": "W5-CALIBRATION-V1 labels have been exposed across judges during Round 01."
+    "fresh_calibration_package_required": true,
+    "fresh_calibration_package_reason": "W5-CALIBRATION-V1 item labels/context were exposed during contaminated Round 01, therefore a fresh Round 02 calibration package must be prepared BEFORE new human calibration collection begins."
   }
 }
