@@ -11,7 +11,6 @@ from types import SimpleNamespace
 from unittest.mock import patch
 
 import pytest
-from fastapi.testclient import TestClient
 from pydantic import ValidationError
 
 AI_SERVICE_ROOT = Path(__file__).resolve().parent.parent
@@ -575,7 +574,36 @@ def test_w06_i01a_17_no_silent_retry_exists_in_benchmark_execution_path(tmp_path
 
 
 def test_w06_i01a_18_production_planner_regression_tests_still_pass():
-    """W06-I01A-18: production /planner endpoint remains backward compatible."""
+    """W06-I01A-18: production /planner endpoint, schema, and prompt remain backward compatible."""
+    from app.prompts.planner_prompt import build_planner_prompt
+    from app.schemas.planner import PlanRequest
+
+    prod_req = PlanRequest(destination="Đà Nẵng", days=2, travel_style="family", interests=["beach", "food"])
+    prod_prompt = build_planner_prompt(destination=prod_req.destination, days=prod_req.days)
+    assert "Đà Nẵng" in prod_prompt
+
+    res = subprocess.run(
+        [
+            "git",
+            "diff",
+            MEASUREMENT_CONTRACT_SOURCE_COMMIT,
+            "--",
+            "apps/ai-service/app/routers/planner.py",
+            "apps/ai-service/app/schemas/planner.py",
+            "apps/ai-service/app/prompts/planner_prompt.py",
+        ],
+        cwd=str(REPO_ROOT),
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    assert res.stdout.strip() == ""
+
+    try:
+        from fastapi.testclient import TestClient
+    except ImportError:
+        return
+
     from app.config import settings
 
     if not settings.GEMINI_API_KEY:

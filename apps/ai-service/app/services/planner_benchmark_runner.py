@@ -12,10 +12,16 @@ import uuid
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
+from types import SimpleNamespace
 from typing import Any, Callable, Dict, List, Optional
 
-from google import genai
-from google.genai import types
+try:
+    from google import genai
+    from google.genai import types
+except ImportError:  # pragma: no cover - used when running in minimal data-contract env
+    genai = None  # type: ignore[assignment]
+    types = None  # type: ignore[assignment]
+
 from pydantic import ValidationError
 
 from app.config import settings
@@ -440,7 +446,31 @@ def execute_benchmark_scenario(
             error_detail="GEMINI_API_KEY is absent; live provider execution is required and canned mock fallback is forbidden.",
         )
 
-    active_client = client if client is not None else genai.Client(api_key=effective_api_key)
+    if client is not None:
+        active_client = client
+    else:
+        if genai is None:
+            return _finalize(
+                BenchmarkRunStatus.LIVE_PROVIDER_REQUIRED,
+                "NOT_EXECUTED_FAIL_CLOSED",
+                error_detail="google-genai SDK is not installed in the current environment.",
+            )
+        active_client = genai.Client(api_key=effective_api_key)
+
+    if types is not None:
+        call_config = types.GenerateContentConfig(
+            temperature=BENCHMARK_TEMPERATURE,
+            max_output_tokens=settings.PLANNER_MAX_OUTPUT_TOKENS,
+            response_mime_type="application/json",
+            http_options=types.HttpOptions(timeout=settings.PLANNER_TIMEOUT_MS),
+        )
+    else:
+        call_config = SimpleNamespace(
+            temperature=BENCHMARK_TEMPERATURE,
+            max_output_tokens=settings.PLANNER_MAX_OUTPUT_TOKENS,
+            response_mime_type="application/json",
+            http_options=SimpleNamespace(timeout=settings.PLANNER_TIMEOUT_MS),
+        )
 
     # Live provider call with tight latency measurement boundary (no retries)
     t_start = clock_fn()
@@ -448,12 +478,7 @@ def execute_benchmark_scenario(
         provider_response = active_client.models.generate_content(
             model=actual_model_id,
             contents=prompt,
-            config=types.GenerateContentConfig(
-                temperature=BENCHMARK_TEMPERATURE,
-                max_output_tokens=settings.PLANNER_MAX_OUTPUT_TOKENS,
-                response_mime_type="application/json",
-                http_options=types.HttpOptions(timeout=settings.PLANNER_TIMEOUT_MS),
-            ),
+            config=call_config,
         )
     except Exception as exc:
         t_end = clock_fn()
