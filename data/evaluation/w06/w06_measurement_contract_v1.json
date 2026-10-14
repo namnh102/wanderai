@@ -1,0 +1,488 @@
+{
+  "contract_id": "W06-MEASUREMENT-CONTRACT-01",
+  "contract_version": "1.0.0",
+  "base_develop_sha": "495ed4f731db723366a585617472795540e8a914",
+  "status": "DRAFT_FOR_SCIENTIFIC_GATE",
+  "audit_basis": {
+    "audit_id": "W06-MEASUREMENT-AUDIT-01",
+    "audit_status": "CLOSED",
+    "audit_json_path": "data/evaluation/w06/w06_measurement_capability_audit_v1.json",
+    "audit_markdown_path": "docs/research/w06_measurement_capability_audit_v1.md"
+  },
+  "benchmark_target_scenarios": 100,
+  "primary_destinations": [
+    "ha-noi",
+    "da-nang",
+    "ha-long"
+  ],
+  "primary_destination_allocation": {
+    "ha-noi": 34,
+    "da-nang": 33,
+    "ha-long": 33
+  },
+  "scientific_results_generated": false,
+  "production_behavior_modified": false,
+  "scenarios_generated": false,
+  "preregistration_created": false,
+  "final_benchmark_executed": false,
+  "repository_mutation_scope": "CONTRACT_ARTIFACTS_AND_TESTS_ONLY",
+  "benchmark_population": {
+    "roadmap_requirement_scenarios": 100,
+    "primary_catalog_scope": "REC-A-CORE-V2",
+    "primary_catalog_file": "data/curated/gomate_places_freeze_v2.json",
+    "primary_catalog_filter_predicate": "is_rec_a_core_v2 == true",
+    "only_rec_a_core_v2_destinations_allowed_in_primary_benchmark": true,
+    "primary_catalog_poi_counts": {
+      "ha-noi": 145,
+      "da-nang": 289,
+      "ha-long": 188,
+      "total": 622
+    },
+    "primary_destination_allocation": {
+      "ha-noi": 34,
+      "da-nang": 33,
+      "ha-long": 33,
+      "total": 100
+    },
+    "existing_repository_scenarios_disposition": {
+      "eval_ha_giang_3d": {
+        "file_path": "data/evaluation/planner/ha_giang_3d.json",
+        "destination": "Hà Giang",
+        "classification": "LEGACY_OUT_OF_CATALOG_DIAGNOSTIC",
+        "allowed_in_primary_100_benchmark": false,
+        "rationale": "Hà Giang has 0 verified POIs in gomate_places_freeze_v2.json and cannot be grounded against REC-A-CORE-V2."
+      },
+      "eval_moc_chau_3d": {
+        "file_path": "data/evaluation/planner/moc_chau_3d.json",
+        "destination": "Mộc Châu",
+        "classification": "LEGACY_OUT_OF_CATALOG_DIAGNOSTIC",
+        "allowed_in_primary_100_benchmark": false,
+        "rationale": "Mộc Châu has 0 verified POIs in gomate_places_freeze_v2.json and cannot be grounded against REC-A-CORE-V2."
+      },
+      "eval_da_nang_4d": {
+        "file_path": "data/evaluation/planner/da_nang_4d.json",
+        "destination": "Đà Nẵng",
+        "classification": "DESIGN_EVIDENCE_ONLY_PENDING_SCENARIO_FREEZE",
+        "allowed_in_primary_100_benchmark": false,
+        "automatically_counted_in_final_100": false,
+        "rationale": "May be used as design evidence, but is not automatically counted as one of the final frozen 100 scenarios until a dedicated scenario-freeze task explicitly validates and freezes the 100-scenario benchmark (noting its current required_keyword 'Hội An' refers to non-core POIs)."
+      }
+    }
+  },
+  "primary_hard_measurement_dimensions": {
+    "CATALOG_GROUNDING": {
+      "dimension_id": "CATALOG_GROUNDING",
+      "tier": "PRIMARY_HARD",
+      "grounding_definition": "An itinerary POI activity is grounded if and only if (1) it carries a canonical place_id field and (2) that place_id exists in the frozen evaluation catalog (REC-A-CORE-V2).",
+      "requires_canonical_place_id": true,
+      "free_text_place_name_matching_sufficient": false,
+      "item_level_metric": {
+        "name": "Grounded POI Rate",
+        "key": "grounded_poi_rate",
+        "numerator": "valid_grounded_itinerary_poi_items",
+        "denominator": "all_itinerary_poi_items",
+        "formula": "valid_grounded_itinerary_poi_items / all_itinerary_poi_items"
+      },
+      "scenario_level_metric": {
+        "name": "ALL_POIS_GROUNDED",
+        "key": "all_pois_grounded",
+        "definition": "true if and only if all itinerary POI items in the scenario have valid grounded canonical place_id in the frozen catalog (and itinerary has >= 1 POI item)."
+      },
+      "roadmap_scientific_target": 1.0,
+      "roadmap_scientific_target_percentage": 100.0
+    },
+    "DESTINATION_CORRECTNESS": {
+      "dimension_id": "DESTINATION_CORRECTNESS",
+      "tier": "PRIMARY_HARD",
+      "definition": "For every grounded place_id in the itinerary, the catalog record's destination_slug must equal the requested benchmark scenario destination_slug.",
+      "name_string_inference_allowed": false,
+      "item_level_metric": {
+        "name": "Destination-Correct POI Rate",
+        "key": "destination_correct_poi_rate",
+        "numerator": "grounded_poi_items_matching_requested_destination",
+        "denominator": "grounded_itinerary_poi_items"
+      },
+      "scenario_level_metric": {
+        "name": "scenario_destination_valid",
+        "key": "scenario_destination_valid",
+        "definition": "true if and only if all POI items are grounded and every grounded POI item belongs to the requested scenario destination."
+      }
+    },
+    "DUPLICATE_POI": {
+      "dimension_id": "DUPLICATE_POI",
+      "tier": "PRIMARY_HARD",
+      "operates_on": "canonical_place_id",
+      "free_text_alias_equality_sufficient": false,
+      "default_benchmark_policy": "The same canonical place_id must not appear more than once across an entire itinerary unless a future scenario explicitly preregisters revisits as allowed.",
+      "metrics": [
+        "duplicate_poi_violation_count",
+        "duplicate_poi_violation_rate"
+      ],
+      "scenario_pass_condition": "duplicate_poi_violation_count == 0 (under default no-revisit policy)"
+    },
+    "SCHEDULE_VALIDITY": {
+      "dimension_id": "SCHEDULE_VALIDITY",
+      "tier": "PRIMARY_HARD",
+      "expected_time_format": "HH:MM",
+      "interval_ordering_requirement": "start_time < end_time",
+      "intra_day_non_overlap_requirement": "Within the same itinerary day, any two timed activity intervals [start_time_i, end_time_i) and [start_time_j, end_time_j) must not overlap (end_time_earlier <= start_time_later).",
+      "violation_categories": [
+        "TIME_PARSE_INVALID",
+        "TIME_INTERVAL_INVALID",
+        "SCHEDULE_OVERLAP"
+      ],
+      "metric": "schedule_violation_rate",
+      "scenario_pass_condition": "Scenario schedule PASS if and only if zero TIME_PARSE_INVALID, zero TIME_INTERVAL_INVALID, and zero SCHEDULE_OVERLAP occur across all days of the itinerary."
+    },
+    "DAY_STRUCTURE": {
+      "dimension_id": "DAY_STRUCTURE",
+      "tier": "PRIMARY_HARD",
+      "structural_checks": [
+        "expected_number_of_days",
+        "minimum_required_items_per_day"
+      ],
+      "claim_boundary": "Structural completeness verification only; passing DAY_STRUCTURE does NOT imply semantic itinerary quality."
+    }
+  },
+  "budget_semantics": {
+    "dimension_id": "ESTIMATED_BUDGET_COMPLIANCE",
+    "tier": "PRIMARY_HARD_DECLARED_ESTIMATE_CEILING",
+    "audit_price_evidence": {
+      "structured_numeric_poi_price_coverage": "0 / 759",
+      "structured_numeric_poi_price_coverage_count": 0,
+      "total_catalog_pois": 759
+    },
+    "forbidden_claims": [
+      "REAL_WORLD_BUDGET_ACCURACY",
+      "PRICE_GROUNDING"
+    ],
+    "claims_real_world_price_accuracy": false,
+    "claims_catalog_price_grounding": false,
+    "definition": "For scenarios specifying a user budget ceiling, the sum of the planner's own declared item estimated_cost values across the itinerary must be <= the requested scenario budget ceiling.",
+    "metric": "estimated_budget_violation_rate",
+    "what_it_measures": "Compliance of the planner's own declared estimated_cost values with the requested budget ceiling.",
+    "what_it_does_not_measure": "Real-world price correctness or factual grounding against external/catalog ticket or meal prices.",
+    "separate_engineering_check": {
+      "check_id": "ARITHMETIC_SELF_CONSISTENCY",
+      "definition": "Verifies that each day_cost equals the sum of its items' estimated_cost values and budget_analysis.estimated_cost equals the sum of day_cost values.",
+      "must_remain_separate_from_factual_budget_accuracy": true
+    }
+  },
+  "opening_hours_semantics": {
+    "dimension_id": "OPENING_HOURS_COMPLIANCE",
+    "tier": "SECONDARY_EVIDENCE_CONDITIONAL",
+    "audit_evidence": {
+      "core_pois_with_opening_hours": 101,
+      "total_core_pois": 622,
+      "core_coverage_ratio": "101 / 622",
+      "parser_currently_exists": false
+    },
+    "evaluation_states": [
+      "COMPLIANT",
+      "VIOLATION",
+      "UNKNOWN"
+    ],
+    "unknown_state_contract": {
+      "is_pass": false,
+      "is_violation": false,
+      "never_silently_convert_to_pass_or_violation": true,
+      "excluded_from_compliance_denominator": true,
+      "causes_core_scenario_pass_failure": false
+    },
+    "prerequisites_for_evaluable_item": [
+      "grounded_place_id",
+      "frozen_opening_hours_evidence",
+      "validated_parser",
+      "known_itinerary_date_or_day_of_week",
+      "parsed_scheduled_visit_interval"
+    ],
+    "required_reported_metrics": [
+      "opening_hours_evaluable_items",
+      "opening_hours_unknown_items",
+      "opening_hours_evidence_coverage",
+      "opening_hours_compliance_rate_on_evaluable_items"
+    ],
+    "compliance_rate_denominator": "opening_hours_evaluable_items_only",
+    "global_hard_scenario_pass_inclusion_policy": "Excluded from global hard CORE_SCENARIO_PASS denominator when required opening-hours evidence is UNKNOWN; known VIOLATION on evaluable items is reported separately."
+  },
+  "geo_and_routing_semantics": {
+    "catalog_coordinates_coverage": "759 / 759 all POIs (622 / 622 core POIs)",
+    "road_network_routing_or_travel_time_evidence_exists": false,
+    "dimensions": {
+      "TRAVEL_TIME": "NOT_EVALUABLE",
+      "ROUTE_DISTANCE": "NOT_EVALUABLE",
+      "GEO_DISTANCE_PROXY": "SECONDARY_DIAGNOSTIC_ONLY"
+    },
+    "haversine_naming_contract": {
+      "required_metric_name": "GEO_DISTANCE_PROXY",
+      "diagnostic_only_in_v1": true,
+      "forbidden_labels": [
+        "travel time",
+        "route distance",
+        "routing quality"
+      ]
+    }
+  },
+  "preference_satisfaction_semantics": {
+    "dimension_id": "PREFERENCE_SATISFACTION",
+    "status": "NOT_PRIMARY_EVALUABLE",
+    "audit_evidence": {
+      "synthetic_preference_records": 300,
+      "verified_real_user_preference_gt_records": 0,
+      "preference_ground_truth_status": "NO_REAL_USER_GT_AVAILABLE"
+    },
+    "allowed_uses_of_synthetic_profiles": [
+      "scenario_construction",
+      "engineering_diagnostics",
+      "coverage_analysis"
+    ],
+    "forbidden_claims_from_synthetic_profiles": [
+      "real_user_preference_satisfaction",
+      "user_utility",
+      "user_acceptance"
+    ],
+    "llm_as_judge_allowed_as_final_human_preference_gt": false
+  },
+  "primary_scenario_pass_semantics": {
+    "indicator_name": "CORE_SCENARIO_PASS",
+    "rate_metric_name": "CORE_SCENARIO_PASS_RATE",
+    "weighted_composite_score_allowed": false,
+    "report_each_dimension_independently": true,
+    "required_pass_conditions": [
+      "benchmark_run_is_valid",
+      "required_day_structure_passes",
+      "all_itinerary_poi_items_are_canonically_grounded",
+      "all_grounded_pois_match_requested_destination",
+      "duplicate_poi_policy_passes",
+      "schedule_parsing_interval_and_overlap_checks_pass",
+      "estimated_budget_compliance_passes_when_budget_is_present"
+    ],
+    "opening_hours_policy_in_core_pass": {
+      "unknown_causes_core_scenario_pass_failure": false,
+      "known_violation_reported_separately": true
+    },
+    "included_in_core_scenario_pass": [
+      "VALID_RUN",
+      "DAY_STRUCTURE",
+      "CATALOG_GROUNDING",
+      "DESTINATION_CORRECTNESS",
+      "DUPLICATE_POI",
+      "SCHEDULE_VALIDITY",
+      "ESTIMATED_BUDGET_COMPLIANCE"
+    ],
+    "excluded_from_core_scenario_pass": [
+      "OPENING_HOURS_WHEN_UNKNOWN",
+      "REAL_WORLD_BUDGET_ACCURACY",
+      "TRAVEL_TIME",
+      "ROUTE_DISTANCE",
+      "GEO_DISTANCE_PROXY",
+      "PREFERENCE_SATISFACTION"
+    ]
+  },
+  "hard_roadmap_grounding_gate": {
+    "gate_name": "GROUNDING_GATE",
+    "pass_condition": "grounded_poi_rate == 1.0",
+    "required_grounded_poi_rate": 1.0,
+    "fail_if_below_1_0": true,
+    "other_dimensions_threshold_policy": "Do not invent arbitrary numerical pass thresholds for schedule, estimated-budget, or diagnostic dimensions; report point estimates and 95% Wilson confidence intervals."
+  },
+  "statistical_reporting_contract": {
+    "scenario_level_binary_metrics_reporting": [
+      "point_estimate",
+      "95_percent_wilson_confidence_interval"
+    ],
+    "grounded_poi_rate_reporting": [
+      "item_level_point_estimate",
+      "item_level_95_percent_wilson_confidence_interval",
+      "scenario_level_all_pois_grounded_point_estimate",
+      "scenario_level_95_percent_wilson_confidence_interval"
+    ],
+    "required_stratifications": [
+      "overall_micro",
+      "per_destination_ha_noi",
+      "per_destination_da_nang",
+      "per_destination_ha_long",
+      "equal_destination_macro_average"
+    ],
+    "equal_destination_macro_average_rationale": "Prevents the 34/33/33 scenario allocation from slightly over-weighting ha-noi relative to da-nang and ha-long.",
+    "significance_testing_policy": "No statistical significance claim may be made unless a specific comparison hypothesis is formally preregistered prior to final benchmark execution."
+  },
+  "performance_metrics_contract": {
+    "latency": {
+      "metric_name": "generation_latency_ms",
+      "required_summary_statistics": [
+        "median",
+        "p95"
+      ],
+      "measurement_boundary": "Measured directly around the live provider API call inside the benchmark harness."
+    },
+    "token_efficiency": {
+      "authoritative_provider_fields": [
+        "input_tokens",
+        "output_tokens",
+        "total_tokens"
+      ],
+      "fallback_status_when_unavailable": "NOT_EVALUABLE",
+      "string_length_token_heuristic_forbidden": true
+    }
+  },
+  "valid_and_invalid_run_contract": {
+    "valid_run_requirements": [
+      "real_provider_execution_confirmed",
+      "expected_model_identifier_recorded",
+      "benchmark_configuration_recorded",
+      "scenario_id_is_frozen",
+      "catalog_snapshot_and_sha256_recorded",
+      "evaluator_version_and_sha256_recorded"
+    ],
+    "fail_closed_invalid_run_reasons": [
+      "MOCK_OR_FALLBACK_RUN",
+      "API_ERROR",
+      "UNPARSABLE_MODEL_OUTPUT",
+      "MODEL_ID_MISMATCH",
+      "MISSING_REQUIRED_RUN_METADATA"
+    ],
+    "invalid_runs_counted_as_successful_scenarios": false,
+    "invalid_runs_must_be_reported_separately": true,
+    "silent_retry_until_success_forbidden": true,
+    "retry_policy_rule": "Zero silent retries allowed; any retry behavior must be explicitly preregistered and logged before final benchmark execution."
+  },
+  "reproducibility_contract": {
+    "reproducibility_standard": "AUDITABLE_PROCESS_REPRODUCIBILITY",
+    "bitwise_llm_output_determinism_claimed": false,
+    "required_persisted_artifacts_and_fields": [
+      "scenario_input",
+      "raw_provider_response",
+      "parsed_plan_response",
+      "execution_timestamp_utc",
+      "provider",
+      "model_id",
+      "generation_parameters",
+      "api_execution_mode",
+      "latency",
+      "usage_metadata_if_available",
+      "scenario_sha256",
+      "catalog_sha256",
+      "evaluator_sha256",
+      "code_commit_sha",
+      "raw_response_sha256",
+      "parsed_response_sha256"
+    ]
+  },
+  "required_instrumentation_prerequisites": [
+    {
+      "id": "P1",
+      "requirement": "Canonical place_id in every POI itinerary item.",
+      "implemented_in_this_task": false
+    },
+    {
+      "id": "P2",
+      "requirement": "Deterministic catalog membership validation against frozen REC-A-CORE-V2 catalog.",
+      "implemented_in_this_task": false
+    },
+    {
+      "id": "P3",
+      "requirement": "Destination membership validation by canonical place_id.",
+      "implemented_in_this_task": false
+    },
+    {
+      "id": "P4",
+      "requirement": "Canonical duplicate-place validation by place_id.",
+      "implemented_in_this_task": false
+    },
+    {
+      "id": "P5",
+      "requirement": "HH:MM time parser, start_time < end_time validator, and intra-day interval overlap checker.",
+      "implemented_in_this_task": false
+    },
+    {
+      "id": "P6",
+      "requirement": "Estimated-budget ceiling checker separate from real-world price-grounding claims.",
+      "implemented_in_this_task": false
+    },
+    {
+      "id": "P7",
+      "requirement": "Opening-hours parser with explicit three-state (COMPLIANT / VIOLATION / UNKNOWN) handling.",
+      "implemented_in_this_task": false
+    },
+    {
+      "id": "P8",
+      "requirement": "Benchmark harness that rejects mock/fallback execution (FAIL CLOSED on MOCK_OR_FALLBACK_RUN).",
+      "implemented_in_this_task": false
+    },
+    {
+      "id": "P9",
+      "requirement": "Raw provider response and parsed PlanResponse output persistence for evaluation runs.",
+      "implemented_in_this_task": false
+    },
+    {
+      "id": "P10",
+      "requirement": "Cryptographic reproducibility run manifest capturing all required SHA256 digests and run metadata.",
+      "implemented_in_this_task": false
+    },
+    {
+      "id": "P11",
+      "requirement": "Frozen 100-scenario benchmark manifest (34 ha-noi, 33 da-nang, 33 ha-long) with per-scenario SHA256.",
+      "implemented_in_this_task": false
+    },
+    {
+      "id": "P12",
+      "requirement": "Benchmark-only execution path that cannot accidentally return canned mock responses as scientific evidence.",
+      "implemented_in_this_task": false
+    }
+  ],
+  "scenario_design_contract": {
+    "must_be_frozen_before_final_benchmark_execution": true,
+    "required_variation_dimensions": [
+      "destination",
+      "trip_length",
+      "travel_style",
+      "interest_profile",
+      "budget_ceiling",
+      "weekday_weekend_dates"
+    ],
+    "independent_of_final_model_outputs": true,
+    "no_scenario_addition_removal_or_editing_based_on_model_performance": true,
+    "stable_scenario_ids_required": true,
+    "per_scenario_sha256_required_in_manifest": true,
+    "scenarios_generated_in_this_task": false
+  },
+  "interest_taxonomy_contract": {
+    "canonical_scientific_taxonomy": [
+      "food_cuisine",
+      "culture_history",
+      "nature_outdoor",
+      "coffee_culture",
+      "beach_island",
+      "shopping_local",
+      "nightlife_entertainment"
+    ],
+    "canonical_taxonomy_count": 7,
+    "allowed_future_scenario_strategies": [
+      "A_USE_CANONICAL_KEYS_DIRECTLY",
+      "B_USE_FROZEN_DETERMINISTIC_ALIAS_TO_CANONICAL_MAPPING"
+    ],
+    "ad_hoc_prompt_specific_mapping_forbidden": true,
+    "production_preference_schema_modified_in_this_task": false
+  },
+  "legacy_evaluator_contract": {
+    "evaluator_file": "data/evaluation/planner/evaluate_planner.py",
+    "classification": "LEGACY_INSUFFICIENT_FOR_FINAL_AGENT_EVAL",
+    "deleted_in_this_task": false,
+    "modified_in_this_task": false,
+    "relabeling_existing_outputs_as_final_w06_scientific_results_forbidden": true
+  },
+  "roadmap_methodology_clarification": {
+    "clarification_file": "docs/research/w06_roadmap_methodology_clarification_v1.md",
+    "locked_roadmap_file": "docs/roadmap/gomate-thesis-research-roadmap-v1.md",
+    "locked_roadmap_modified": false,
+    "clarified_points": {
+      "benchmark_trip_count_requirement": 100,
+      "poi_grounding_target_requirement": 1.0,
+      "budget_operationalization": "ESTIMATED_BUDGET_COMPLIANCE (sum of planner-declared item estimated_cost <= requested budget ceiling; no claim of real-world price accuracy because catalog numeric price coverage is 0/759)",
+      "opening_hours_unknown_policy": "Three-state (COMPLIANT / VIOLATION / UNKNOWN); UNKNOWN is excluded from compliance denominator and does not fail CORE_SCENARIO_PASS",
+      "travel_time_policy": "TRAVEL_TIME and ROUTE_DISTANCE are NOT_EVALUABLE in W06 V1 due to absence of road-network routing data; Haversine is strictly GEO_DISTANCE_PROXY (diagnostic only)",
+      "preference_satisfaction_policy": "NOT_PRIMARY_EVALUABLE because all 300 preference records are synthetic (0 verified real-user preference GT)"
+    }
+  }
+}
