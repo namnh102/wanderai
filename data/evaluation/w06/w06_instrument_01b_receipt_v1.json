@@ -1,0 +1,106 @@
+{
+  "task_id": "W06-INSTRUMENT-01B",
+  "receipt_version": "1.0.0",
+  "base_develop_sha": "770ead820e16716ce29a1a39d54a12b8a2246a3b",
+  "measurement_contract_id": "W06-MEASUREMENT-CONTRACT-01",
+  "measurement_contract_version": "1.1.0",
+  "measurement_contract_source_commit": "7fd5364ed4671c06b0c911b6fd53bd9f54cbc322",
+  "instrument_01a_receipt_version": "1.1.0",
+  "evaluator_module": "apps/ai-service/app/evaluation/planner_benchmark_evaluator.py",
+  "evaluator_cli": "scripts/evaluate_w06_planner_run.py",
+  "evaluator_version": "W06-CORE-EVALUATOR-01B-V1.0.0",
+  "hash_basis_version": "W06-ARTIFACT-HASH-BASIS-V1",
+  "opening_hours_status": "NOT_EVALUATED_IN_01B",
+  "core_pass_field": "core_scenario_pass_pre_opening_hours",
+  "final_core_scenario_pass_status": "NOT_COMPUTED_IN_01B_REQUIRES_01C_OPENING_HOURS",
+  "minimum_items_per_day_contract_status": "NOT_FORMALLY_FROZEN",
+  "minimum_items_per_day_rule_source": "data/evaluation/w06/w06_measurement_contract_v1.json (DAY_STRUCTURE lists minimum_required_items_per_day without freezing a numeric constant > 1; apps/ai-service/app/schemas/planner_benchmark.py BenchmarkItineraryDay.items enforces min_length=1 and legacy data/evaluation/planner/evaluate_planner.py:L39 defaults min_items_per_day=1)",
+  "scientific_boundaries": {
+    "final_100_scenarios_generated": false,
+    "final_benchmark_executed": false,
+    "final_core_scenario_pass_computed": false,
+    "opening_hours_final_evaluation_computed": false,
+    "scientific_results_generated": false,
+    "preregistration_created": false,
+    "human_gt_created": false,
+    "W5_modified": false,
+    "measurement_contract_semantics_modified": false,
+    "production_planner_endpoint_modified": false,
+    "weighted_composite_score_exists": false
+  },
+  "evaluated_dimensions_in_01b": {
+    "RUN_VALIDITY_AND_HASH_INTEGRITY": "SUPPORTED_FAIL_CLOSED",
+    "CATALOG_GROUNDING": "SUPPORTED_EXACT_PLACE_ID",
+    "DESTINATION_CORRECTNESS": "SUPPORTED_EXACT_CATALOG_DESTINATION_SLUG",
+    "DUPLICATE_POI": "SUPPORTED_EXACT_PLACE_ID",
+    "TRANSIT_ONLY_ANTI_GAMING": "SUPPORTED_DETERMINISTIC_PLACE_NAME_NULL_CHECK",
+    "DAY_STRUCTURE": "SUPPORTED_EXPECTED_DAYS_AND_NON_EMPTY_DAYS",
+    "SCHEDULE_VALIDITY": "SUPPORTED_STRICT_HHMM_AND_HALF_OPEN_INTERVALS",
+    "ESTIMATED_BUDGET_COMPLIANCE": "SUPPORTED_DECLARED_ESTIMATE_CEILING_ONLY",
+    "ARITHMETIC_SELF_CONSISTENCY": "SUPPORTED_DETERMINISTIC_SUM_CHECK",
+    "GEO_DISTANCE_PROXY": "DIAGNOSTIC_ONLY_EXCLUDED_FROM_CORE_PASS",
+    "OPENING_HOURS_COMPLIANCE": "NOT_EVALUATED_IN_01B"
+  },
+  "prerequisite_implementation_matrix": {
+    "P1": {
+      "contract_requirement": "Controlled activity_kind ('POI_VISIT' | 'TRANSIT_ONLY') on every itinerary item, with canonical place_id REQUIRED iff activity_kind == 'POI_VISIT' (and fail-closed INVALID_OR_SCHEMA_NONCOMPLIANT_ITEM on missing/unknown activity_kind).",
+      "status": "IMPLEMENTED",
+      "evidence": "BenchmarkItineraryItem (01A) enforces controlled activity_kind ('POI_VISIT' | 'TRANSIT_ONLY') and required place_id; planner_benchmark_evaluator.py (01B) deterministically enforces TRANSIT_ONLY_NAMED_POI_VIOLATION when a TRANSIT_ONLY item carries a non-null place_name."
+    },
+    "P2": {
+      "contract_requirement": "Deterministic catalog membership validation against frozen REC-A-CORE-V2 catalog for all POI_VISIT items.",
+      "status": "IMPLEMENTED",
+      "evidence": "evaluate_benchmark_scenario in apps/ai-service/app/evaluation/planner_benchmark_evaluator.py validates every POI_VISIT item's place_id against the 622 REC-A-CORE-V2 POIs in data/curated/gomate_places_freeze_v2.json without place_name inference."
+    },
+    "P3": {
+      "contract_requirement": "Destination membership validation by canonical place_id for all POI_VISIT items.",
+      "status": "IMPLEMENTED",
+      "evidence": "evaluate_benchmark_scenario verifies that every grounded POI_VISIT item's catalog destination_slug equals scenario.destination_slug and computes destination_correct_poi_rate and scenario_destination_valid."
+    },
+    "P4": {
+      "contract_requirement": "Canonical duplicate-place validation by place_id across POI_VISIT items.",
+      "status": "IMPLEMENTED",
+      "evidence": "evaluate_benchmark_scenario counts repeated canonical place_id values across POI_VISIT items and enforces duplicate_poi_violation_count == 0 when allow_revisit_place_ids == false."
+    },
+    "P5": {
+      "contract_requirement": "HH:MM time parser, start_time < end_time validator, and intra-day interval overlap checker.",
+      "status": "IMPLEMENTED",
+      "evidence": "parse_strict_hhmm and evaluate_benchmark_scenario validate 24-hour HH:MM strings (00:00..23:59), enforce start_time < end_time, and detect intra-day overlaps using half-open [start, end) intervals."
+    },
+    "P6": {
+      "contract_requirement": "Estimated-budget ceiling checker separate from real-world price-grounding claims.",
+      "status": "IMPLEMENTED",
+      "evidence": "evaluate_benchmark_scenario computes estimated_total_cost across all items, checks estimated_total_cost <= scenario.budget (or NOT_APPLICABLE when budget is null), and separately verifies ARITHMETIC_SELF_CONSISTENCY against day_cost and budget_analysis.estimated_cost."
+    },
+    "P7": {
+      "contract_requirement": "Opening-hours parser with explicit three-state (COMPLIANT / VIOLATION / UNKNOWN) handling where known VIOLATION fails CORE_SCENARIO_PASS and UNKNOWN remains neutral.",
+      "status": "NOT_IMPLEMENTED",
+      "evidence": "Deferred to W06-INSTRUMENT-01C; ScenarioEvaluationResult records opening_hours_status = 'NOT_EVALUATED_IN_01B' and computes core_scenario_pass_pre_opening_hours only."
+    },
+    "P8": {
+      "contract_requirement": "Benchmark harness that rejects mock/fallback execution (FAIL CLOSED on MOCK_OR_FALLBACK_RUN) and retains invalid runs in the primary 100-scenario denominator.",
+      "status": "PARTIALLY_IMPLEMENTED",
+      "evidence": "Single-scenario runner (01A) and evaluator (01B) fail closed on non-VALID runs (classification INVALID_RUN, core_scenario_pass_pre_opening_hours = false); 100-scenario batch denominator aggregation belongs to 01C."
+    },
+    "P9": {
+      "contract_requirement": "Raw provider response and parsed PlanResponse output persistence for evaluation runs.",
+      "status": "IMPLEMENTED",
+      "evidence": "01A persists scenario_input.json, raw_provider_response.txt, parsed_plan_response.json, and run_manifest.json; 01B persists deterministic scenario_evaluation.json."
+    },
+    "P10": {
+      "contract_requirement": "Cryptographic reproducibility run manifest capturing all required SHA256 digests and run metadata.",
+      "status": "PARTIALLY_IMPLEMENTED",
+      "evidence": "01A and 01B verify scenario_sha256, catalog_sha256, and parsed_response_sha256 under W06-ARTIFACT-HASH-BASIS-V1 and record source_run_manifest_sha256 and evaluator_code_sha256; batch benchmark manifest belongs to 01C."
+    },
+    "P11": {
+      "contract_requirement": "Frozen 100-scenario benchmark manifest (34 ha-noi, 33 da-nang, 33 ha-long) with per-scenario SHA256.",
+      "status": "NOT_IMPLEMENTED",
+      "evidence": "Deferred to the dedicated W06 100-scenario freeze task (final_100_scenarios_generated = false)."
+    },
+    "P12": {
+      "contract_requirement": "Benchmark-only execution path that cannot accidentally return canned mock responses as scientific evidence.",
+      "status": "IMPLEMENTED",
+      "evidence": "Benchmark execution (01A) and deterministic evaluation (01B) are completely isolated from the production POST /planner mock fallback."
+    }
+  }
+}
