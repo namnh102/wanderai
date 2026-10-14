@@ -1,20 +1,33 @@
 {
   "artifact_version": "W5-CAL-RAW-MANIFEST-V1",
+  "round": "W5-CAL-ROUND-01",
   "calibration_version": "W5-CALIBRATION-V1",
   "rubric_version": "W5-RUBRIC-V1",
   "presentation_version": "W5-CAL-OPS-V1",
-  "status": "RAW_SUBMISSIONS_FROZEN",
+  "status": "INVALIDATED_FOR_PROTOCOL",
+  "round_status": "INVALIDATED_FOR_PROTOCOL",
+  "raw_file_preservation_status": "RAW_SUBMISSIONS_FROZEN",
+  "file_integrity_status": "PASS",
+  "session_integrity_status": "FAILED",
   "judges": [
     "J1",
     "J2",
     "J3"
   ],
   "items_per_judge": 45,
-  "total_human_judgments": 135,
+  "total_raw_labels_received": 135,
+  "qualifying_independent_human_judgments": 0,
+  "calibration_qualification_eligible": false,
+  "calibration_review_eligible": false,
   "human_gt": false,
   "calibration_only": true,
   "excluded_from_final_metrics": true,
-  "session_integrity_status": "PENDING_ATTESTATION",
+  "raw_labels_modified": false,
+  "invalidity_reasons": [
+    "AI_ASSISTED_OR_AI_GENERATED_LABELS",
+    "INTER_JUDGE_LABEL_EXPOSURE"
+  ],
+  "incident_artifact": "data/evaluation/reca_w5/calibration_submissions/w5_calibration_round_01_integrity_incident_v1.json",
   "judge_records": {
     "J1": {
       "judge_id": "J1",
@@ -31,7 +44,13 @@
       },
       "nonblank_note_count": 45,
       "validation_status": "PASS",
-      "session_attestation_status": "PENDING"
+      "file_validation_status": "PASS",
+      "session_attestation_status": "FAILED_PROTOCOL",
+      "qualifying_independent_human_judge": false,
+      "ai_llm_used_for_label_decisions": true,
+      "prior_label_exposure_before_judging": false,
+      "published_own_label_summaries_before_others_completed": true,
+      "role_assignment_mode": "SELF_SELECTED"
     },
     "J2": {
       "judge_id": "J2",
@@ -48,7 +67,13 @@
       },
       "nonblank_note_count": 45,
       "validation_status": "PASS",
-      "session_attestation_status": "PENDING"
+      "file_validation_status": "PASS",
+      "session_attestation_status": "FAILED_PROTOCOL",
+      "qualifying_independent_human_judge": false,
+      "ai_llm_used_for_label_decisions": true,
+      "prior_label_exposure_before_judging": true,
+      "published_own_label_summaries_before_others_completed": true,
+      "role_assignment_mode": "SELF_SELECTED"
     },
     "J3": {
       "judge_id": "J3",
@@ -65,10 +90,19 @@
       },
       "nonblank_note_count": 45,
       "validation_status": "PASS",
-      "session_attestation_status": "PENDING"
+      "file_validation_status": "PASS",
+      "session_attestation_status": "FAILED_PROTOCOL",
+      "qualifying_independent_human_judge": false,
+      "ai_llm_used_for_label_decisions": true,
+      "prior_label_exposure_before_judging": true,
+      "published_own_label_summaries_before_others_completed": false,
+      "role_assignment_mode": "SELF_SELECTED"
     }
   },
   "descriptive_agreement_summary": {
+    "diagnostic_status": "NON_QUALIFYING_CONTAMINATED_ROUND_DIAGNOSTICS",
+    "qualifying_for_inter_rater_reliability": false,
+    "qualifying_for_rubric_quality": false,
     "same_item_membership_across_judges": true,
     "total_calibration_items": 45,
     "unanimous_items": 42,
@@ -83,6 +117,7 @@
     "r8b_status": "CLOSED_BY_CONTINGENCY",
     "final_method_decision": "METHOD_RETAINED",
     "duplicate_policy_status": "CLOSED_NO_PRIMARY_EVAL_IMPACT",
+    "primary_annotation_started": false,
     "rubric_changed": false,
     "disagreement_resolution_performed": false,
     "human_gt_created": false,
