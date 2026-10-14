@@ -1,0 +1,49 @@
+{
+  "contract_version": "W5-CAL-R02-SUBMISSION-CONTRACT-V1",
+  "round_id": "W5-CAL-ROUND-02",
+  "calibration_version": "W5-CALIBRATION-V2",
+  "rubric_version": "W5-RUBRIC-V1",
+  "presentation_version": "W5-CAL-R02-OPS-V1",
+  "track": "CALIBRATION_ONLY",
+  "excluded_from_final_metrics": true,
+  "allowed_judges": [
+    "J1",
+    "J2",
+    "J3"
+  ],
+  "expected_scenarios": [
+    "CAL2-HN-01",
+    "CAL2-DN-01",
+    "CAL2-HL-01"
+  ],
+  "expected_items_per_scenario": 15,
+  "expected_total_items": 45,
+  "allowed_completed_labels": [
+    0,
+    1,
+    2,
+    "NA"
+  ],
+  "editable_fields": [
+    "label",
+    "judge_note"
+  ],
+  "read_only_context_policy": "EXACT_MATCH_TO_FROZEN_ROUND02_PRESENTATION_PACKAGE",
+  "attestation_gate_required": true,
+  "required_boolean_attestations": {
+    "actual_human_judge": true,
+    "ai_llm_used_for_label_decisions": false,
+    "external_search_used": false,
+    "inspected_other_judge_labels_before_submission": false,
+    "exposed_to_other_judge_label_summary_before_submission": false,
+    "direct_label_discussion_before_all_submissions_locked": false,
+    "assigned_role_before_distribution": true,
+    "completed_all_required_items": true
+  },
+  "missing_or_failed_attestation_outcome": "NON_QUALIFYING",
+  "privacy_and_locking_rules": [
+    "Each judge submits their completed file and attestation privately to the project owner.",
+    "No judge may post label counts, examples, or summaries before all 3 submissions are locked.",
+    "Both file validation AND session attestation validation must PASS for a submission to be QUALIFYING."
+  ]
+}

@@ -1,0 +1,40 @@
+{
+  "contract_version": "W5-CAL-R02-ROLE-ASSIGNMENT-CONTRACT-V1",
+  "round_id": "W5-CAL-ROUND-02",
+  "calibration_version": "W5-CALIBRATION-V2",
+  "status": "PRE_DISTRIBUTION_TEMPLATE",
+  "pre_distribution_assignment_required": true,
+  "self_selected_roles_prohibited": true,
+  "single_package_per_judge_distribution_required": true,
+  "personal_identifiable_information_stored_in_repo": false,
+  "private_mapping_owner": "PROJECT_OWNER_OFF_REPO",
+  "required_role_assignments": {
+    "J1": {
+      "judge_id": "J1",
+      "assigned_before_package_distribution": true,
+      "assigned_package_json": "data/evaluation/reca_w5/calibration_round02_ops/judge_packages/w5_calibration_round02_J1_v2.json",
+      "assigned_package_csv": "data/evaluation/reca_w5/calibration_round02_ops/judge_packages/w5_calibration_round02_J1_v2.csv",
+      "other_judge_packages_withheld": true
+    },
+    "J2": {
+      "judge_id": "J2",
+      "assigned_before_package_distribution": true,
+      "assigned_package_json": "data/evaluation/reca_w5/calibration_round02_ops/judge_packages/w5_calibration_round02_J2_v2.json",
+      "assigned_package_csv": "data/evaluation/reca_w5/calibration_round02_ops/judge_packages/w5_calibration_round02_J2_v2.csv",
+      "other_judge_packages_withheld": true
+    },
+    "J3": {
+      "judge_id": "J3",
+      "assigned_before_package_distribution": true,
+      "assigned_package_json": "data/evaluation/reca_w5/calibration_round02_ops/judge_packages/w5_calibration_round02_J3_v2.json",
+      "assigned_package_csv": "data/evaluation/reca_w5/calibration_round02_ops/judge_packages/w5_calibration_round02_J3_v2.csv",
+      "other_judge_packages_withheld": true
+    }
+  },
+  "distribution_rules": [
+    "Project owner assigns three distinct actual human judges to J1, J2, and J3 BEFORE distributing any package files.",
+    "Each human judge receives ONLY their assigned Jk package and the frozen rubric (W5-RUBRIC-V1).",
+    "No human judge may choose their own judge_id or inspect another judge's package.",
+    "Repository artifacts store only pseudonyms J1, J2, and J3; no personal names or contact details are committed."
+  ]
+}
