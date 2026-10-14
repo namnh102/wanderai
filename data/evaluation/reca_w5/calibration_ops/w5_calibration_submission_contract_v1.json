@@ -1,0 +1,117 @@
+{
+  "contract_version": "W5-CAL-SUBMISSION-CONTRACT-V1",
+  "calibration_version": "W5-CALIBRATION-V1",
+  "rubric_version": "W5-RUBRIC-V1",
+  "presentation_version": "W5-CAL-OPS-V1",
+  "track": "CALIBRATION_ONLY",
+  "excluded_from_final_metrics": true,
+  "allowed_judges": [
+    "J1",
+    "J2",
+    "J3"
+  ],
+  "expected_scenarios": [
+    "CAL-HN-01",
+    "CAL-DN-01",
+    "CAL-HL-01"
+  ],
+  "expected_items_per_scenario": 15,
+  "expected_total_items": 45,
+  "allowed_completed_labels": [
+    0,
+    1,
+    2,
+    "NA"
+  ],
+  "label_semantics": {
+    "0": "NOT_RELEVANT (ordinal numeric)",
+    "1": "RELEVANT (ordinal numeric)",
+    "2": "HIGHLY_RELEVANT (ordinal numeric)",
+    "NA": "INSUFFICIENT_EVIDENCE (non-ordinal missing evidence code; NA != 0)"
+  },
+  "rejected_label_types_and_values": [
+    "null / blank in completed submission",
+    "boolean True or False",
+    "float values (e.g. 0.0, 1.0, 2.0, 1.5)",
+    "numeric strings (e.g. '0', '1', '2')",
+    "lowercase or alternative NA strings (e.g. 'na', 'N/A', 'null', 'none')",
+    "out-of-range integers (e.g. -1, 3)"
+  ],
+  "csv_column_layout": {
+    "read_only_context_columns": [
+      "judge_id",
+      "calibration_version",
+      "rubric_version",
+      "presentation_version",
+      "scenario_id",
+      "presentation_index",
+      "global_presentation_index",
+      "calibration_item_id",
+      "judge_item_id",
+      "place_id",
+      "destination",
+      "declared_interests",
+      "name",
+      "category",
+      "address",
+      "latitude",
+      "longitude",
+      "opening_hours",
+      "osm_source_id",
+      "osm_factual_tags_json"
+    ],
+    "editable_columns": [
+      "label",
+      "judge_note"
+    ],
+    "spreadsheet_formulas_allowed": false
+  },
+  "required_top_level_fields": [
+    "judge_id",
+    "calibration_version",
+    "rubric_version",
+    "presentation_version",
+    "scenarios"
+  ],
+  "required_item_fields": [
+    "judge_id",
+    "calibration_version",
+    "rubric_version",
+    "presentation_version",
+    "scenario_id",
+    "presentation_index",
+    "calibration_item_id",
+    "judge_item_id",
+    "place_id",
+    "label",
+    "judge_note"
+  ],
+  "forbidden_leakage_fields": [
+    "a2_membership",
+    "baseline_membership",
+    "canonical_active_interests",
+    "canonical_interest_vector",
+    "confidence_score",
+    "control_flag",
+    "duplicate_equivalence_group",
+    "duplicate_group",
+    "duplicate_group_status",
+    "is_control",
+    "legacy_category",
+    "matched_interests",
+    "metadata_sufficiency",
+    "model",
+    "model_id",
+    "model_identity",
+    "rank",
+    "recommendation_explanation",
+    "score",
+    "similarity_score",
+    "source_systems",
+    "strategy",
+    "sufficiency_reason",
+    "sufficiency_status",
+    "tier_1",
+    "tier_2"
+  ]
+}

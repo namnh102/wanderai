@@ -1,0 +1,22 @@
+{
+  "template_version": "W5-CAL-SESSION-LOG-TEMPLATE-V1",
+  "judge_id": null,
+  "rubric_version": "W5-RUBRIC-V1",
+  "calibration_version": "W5-CALIBRATION-V1",
+  "presentation_version": "W5-CAL-OPS-V1",
+  "started_at": null,
+  "completed_at": null,
+  "submission_sha256": null,
+  "independence_attestation": null,
+  "required_attestation_statements": [
+    "I completed calibration independently.",
+    "I did not view another judge's labels.",
+    "I did not see model identity, ranking, score, strategy, or control status.",
+    "I did not use an LLM to generate relevance labels.",
+    "I used only the factual evidence provided in the calibration package.",
+    "I used NA when the provided evidence was insufficient."
+  ],
+  "external_help_used": null,
+  "issues_reported": null,
+  "discussion_started": false
+}
