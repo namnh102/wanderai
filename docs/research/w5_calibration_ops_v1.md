@@ -20,6 +20,10 @@ This document defines the blinded, reproducible operational protocol for executi
 
 ### Calibration-Only Contract
 * **Role / Track:** `CALIBRATION_ONLY` (`excluded_from_final_metrics: true`)
+* **Purpose:**
+  * Rubric alignment
+  * Anchor interpretation
+  * Boundary discussion
 * **Calibration Scenarios:** 3 dedicated scenarios:
   * `CAL-HN-01` (`ha-noi`: `["food_cuisine", "nightlife_entertainment"]`, 15 items)
   * `CAL-DN-01` (`da-nang`: `["food_cuisine", "beach_island"]`, 15 items)
@@ -29,7 +33,7 @@ This document defines the blinded, reproducible operational protocol for executi
   * **Scenario Overlap with 30 Primary Scenarios:** `0`
   * **Place ID Overlap with 474 Primary Candidate Pool Records:** `0`
 
-Calibration aligns human evaluators on the frozen rubric (`W5-RUBRIC-V1`) and verifies inter-annotator reliability before primary annotation begins. Calibration items are strictly excluded from final recommender evaluation metrics (`NDCG@10`, `Precision@10`, `Pooled Recall@10`, `HitRate@10`, `Category-ILD@10`, `CatalogCoverage@10`, `I1Exposure@10`) and winner determination.
+Calibration does **not** create `HUMAN-GT` and does **not** determine the recommender model winner. Calibration items are strictly excluded from final recommender evaluation metrics (`NDCG@10`, `Precision@10`, `Pooled Recall@10`, `HitRate@10`, `Category-ILD@10`, `CatalogCoverage@10`, `I1Exposure@10`) and winner determination.
 
 ### Current Execution State
 * **Calibration Status:** `NOT_STARTED`
@@ -64,9 +68,9 @@ All human evaluators are identified exclusively by fixed pseudonyms throughout t
 
 ---
 
-## 4. Blinding Requirements
+## 4. Blinding & Read-Only Context Immutability
 
-To prevent confirmation bias, position bias, and system leakage, all judge-visible calibration packages enforce strict blinding:
+To prevent confirmation bias, position bias, and system leakage, all judge-visible calibration packages enforce strict blinding and read-only context immutability:
 
 ### A. What Judges May See (Approved Factual Context Only)
 Each calibration item exposes only approved factual fields:
@@ -89,11 +93,17 @@ Each calibration item exposes only approved factual fields:
   * `opening_hours` (when available)
   * `osm_source` (`source_name`, `source_id`)
   * `osm_factual_tags` (allowlisted raw factual OSM tags)
-* Writable fields initialized to `null` (JSON) or blank `""` (CSV):
+* Editable fields initialized to `null` (JSON) or blank `""` (CSV):
   * `label`
   * `judge_note`
 
-### B. What Judges Must NOT See (Forbidden Leakage Fields)
+### B. Read-Only Context Immutability Contract
+* **Read-Only Policy:** `EXACT_MATCH_TO_FROZEN_PRESENTATION_PACKAGE`
+* **Editable Fields:** Only `label` and `judge_note` may be modified in a completed submission.
+* **Read-Only Mutation Handling:** `REJECT`
+* **Enforcement Mechanism:** Scientific protection is enforced programmatically by `scripts/validate_w5_calibration_submission.py`, which verifies that every top-level, scenario-level, item-level, `factual_context`, and CSV `READ-ONLY CONTEXT` field matches the judge's deterministic reference presentation package. No spreadsheet-level XLSX cell locking is claimed; any mutation to a read-only field in JSON or CSV causes immediate validator rejection.
+
+### C. What Judges Must NOT See (Forbidden Leakage Fields)
 Judge-visible packages strip and forbid all model, ranking, scoring, control, and internal diagnostic fields:
 * `model`, `model_id`, `model_identity`, `source_systems`
 * `strategy`
@@ -107,7 +117,7 @@ Judge-visible packages strip and forbid all model, ranking, scoring, control, an
 * `recommendation_explanation`
 * `tier_1`, `tier_2`, `legacy_category`
 
-### C. Deterministic Independent Presentation Ordering
+### D. Deterministic Independent Presentation Ordering
 All three judge packages (`J1`, `J2`, `J3`) contain the exact same 45 canonical calibration items, but items within each scenario are ordered independently per judge using a SHA256-derived deterministic key:
 
 $$\text{order\_key}(\text{scenario\_id}, \text{judge\_id}, \text{judge\_item\_id}) = \text{SHA256}(\texttt{"20261013:"} \parallel \text{scenario\_id} \parallel \texttt{":"} \parallel \text{judge\_id} \parallel \texttt{":calibration-presentation:"} \parallel \text{judge\_item\_id})$$
@@ -132,7 +142,6 @@ Judges must assign exactly one label from the frozen rubric (`W5-RUBRIC-V1`) to 
 * **`NA` is a non-ordinal insufficient-evidence code.**
 * **`NA != 0` (`NA` is NOT zero):** `NA` represents absence of sufficient factual evidence in the package, **not** evidence of irrelevance (`0`).
 * `NA` must never be cast to `0` or treated as an ordinal rank below `0`.
-* In ordinal Krippendorff's $\alpha$, `NA` is treated strictly as missing (`MISSING`), never as `0`.
 
 ---
 
@@ -149,7 +158,7 @@ All operational calibration artifacts reside in `data/evaluation/reca_w5/calibra
    * `data/evaluation/reca_w5/calibration_ops/w5_calibration_J2_v1.csv`
    * `data/evaluation/reca_w5/calibration_ops/w5_calibration_J3_v1.csv`
    * Each CSV preserves the exact 45-item membership and presentation order of its corresponding JSON package.
-   * Columns `1..20` (`judge_id` through `osm_factual_tags_json`) are **READ-ONLY CONTEXT** columns.
+   * Columns `1..20` (`judge_id` through `osm_factual_tags_json`) are **READ-ONLY CONTEXT** columns enforced by the submission validator.
    * Columns `21..22` (`label`, `judge_note`) are **EDITABLE** columns (initialized blank `""`, with zero spreadsheet formulas).
 3. **Machine-Readable Submission Contract:**
    * `data/evaluation/reca_w5/calibration_ops/w5_calibration_submission_contract_v1.json`
@@ -187,13 +196,20 @@ Any version mismatch is automatically rejected by `scripts/validate_w5_calibrati
    * Correct `judge_id` (`J1`, `J2`, or `J3`)
    * Exact version match (`W5-CALIBRATION-V1`, `W5-RUBRIC-V1`, `W5-CAL-OPS-V1`)
    * Exact 45 canonical item membership and deterministic judge presentation order (no missing, extra, or duplicate items)
+   * Exact immutability of all read-only context fields against the judge's frozen reference presentation package (`EXACT_MATCH_TO_FROZEN_PRESENTATION_PACKAGE`; only `label` and `judge_note` may change)
    * Strict label validity (`0`, `1`, `2`, or `"NA"`; rejecting `null`/blank, booleans `True`/`False`, floats, numeric strings `"0"`/`"1"`/`"2"` in JSON, and lowercase `"na"` or aliases)
    * Zero forbidden leakage fields and zero spreadsheet formulas
 
-### D. Session Completion Procedure & Independence Attestation
+### D. Session Completion Procedure, Truthful External-Help Recording & Independence Attestation
 1. Once the submission validator reports `PASS`, the judge computes the SHA256 digest of their completed submission file and records it in `submission_sha256` in their session log.
-2. The judge records the UTC ISO-8601 timestamp in `completed_at`, sets `external_help_used` (`false`), records any ambiguity notes in `issues_reported`, keeps `discussion_started: false` at submission time, and completes `independence_attestation`.
-3. **Mandatory Independence Attestation:** Each judge must explicitly attest to all six operational integrity statements:
+2. The judge records the UTC ISO-8601 timestamp in `completed_at`, records any ambiguity notes in `issues_reported`, keeps `discussion_started: false` at submission time, and completes `independence_attestation`.
+3. **Truthful Recording of `external_help_used`:**
+   * In `w5_calibration_session_log_template_v1.json`, `external_help_used` is initialized to `null`.
+   * Upon completion, the judge must record the **actual** value truthfully.
+   * **Expected compliant value:** `false`.
+   * **If external help was actually used:** the judge must record `true` — do **not** falsify it to `false`.
+   * Any session recording `external_help_used: true` must be flagged for `W5-CAL-REVIEW` before qualification (no automatic silent repair).
+4. **Mandatory Independence Attestation:** Each judge must explicitly attest to all six operational integrity statements:
    * `"I completed calibration independently."`
    * `"I did not view another judge's labels."`
    * `"I did not see model identity, ranking, score, strategy, or control status."`
@@ -203,10 +219,16 @@ Any version mismatch is automatically rejected by `scripts/validate_w5_calibrati
 
 *(Note: In this `W5-CAL-OPS-PREP-01` operational readiness task, all human-execution fields and attestations remain strictly `null`.)*
 
-### E. Post-Submission Calibration Discussion Procedure
-1. **Lock Gate Before Discussion:** Post-submission discussion may begin **only AFTER** all three judges (`J1`, `J2`, `J3`) have submitted validated 45-item calibration files and completed session logs, and their SHA256 hashes have been locked.
-2. **Reliability Assessment:** Once all three submissions are locked, ordinal Krippendorff's $\alpha$ (with `NA` treated as `MISSING` and 10,000 bootstrap replicates under seed `20261013`) is computed on the 45 calibration items:
-   * $\alpha \ge 0.80$: `GOOD` — proceed to primary annotation under frozen `W5-RUBRIC-V1`.
-   * $0.67 \le \alpha < 0.80$: `USABLE_WITH_QUALIFICATION` — review disagreement patterns and document qualification before primary annotation.
-   * $\alpha < 0.67$: `STOP_REVIEW_RUBRIC` — halt before primary annotation, review disagreement causes (`0` vs `1`, `1` vs `2`, or `NA` triggers), clarify rubric (`W5-RUBRIC-V1.1`) if authorized by methodology gatekeeper, and re-verify before touching the 474 primary candidate items.
-3. **Retroactive Modification Prohibited:** Pre-discussion calibration submissions remain immutable audit records; judges must not retroactively alter their initial pre-discussion calibration files after discussion begins.
+### E. Post-Submission Calibration Review & Discussion Procedure
+Calibration's frozen role is `CALIBRATION_ONLY` (for rubric alignment, anchor interpretation, and boundary discussion); it does not establish an automatic numeric reliability pass/fail gate. After all three judges complete their independent sessions, the following procedure governs post-submission review:
+
+1. **Lock All Three Independent Submissions:** Lock all three completed judge submissions (`J1`, `J2`, `J3`) and their session logs (`submission_sha256`) before any inter-judge communication begins.
+2. **Preserve Immutable Raw Calibration Labels:** Archive the pre-discussion calibration submissions as immutable audit records; judges must never retroactively modify their initial independent calibration files.
+3. **Compute Descriptive Agreement / Disagreement Evidence Only If Authorized:** Descriptive agreement and disagreement patterns across the 45 calibration items may be summarized only when authorized for calibration review.
+4. **Send Calibration Evidence to `W5-CAL-REVIEW`:** Submit the locked calibration evidence, boundary notes, and session logs (including any flagged `external_help_used` or `NA` ambiguity reports) to the formal `W5-CAL-REVIEW` gate.
+5. **Gatekeeper Decision (`W5-CAL-REVIEW`):** The ChatGPT methodology gatekeeper reviews the calibration evidence and decides whether:
+   * The rubric remains `W5-RUBRIC-V1`
+   * Wording clarification or a versioned rubric amendment is required
+   * Metadata amendment is required
+   * Calibration must be rerun
+6. **Hold Primary Annotation Until Gate Closure:** No primary annotation on the 474 primary candidate pool items may start until both `W5-CAL-REVIEW` and `RUBRIC-FREEZE` formally close.

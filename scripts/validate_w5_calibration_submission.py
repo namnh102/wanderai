@@ -7,6 +7,8 @@ packages and submissions for the W5 calibration phase (CAL-HN-01, CAL-DN-01, CAL
 Scientific boundaries enforced:
 - Calibration is CALIBRATION_ONLY and strictly disjoint from the 30 primary scenarios
   and 474 primary candidate pool records.
+- Enforces strict immutability of all read-only context fields in both JSON and CSV
+  submissions (only 'label' and 'judge_note' are mutable).
 - Does NOT populate or simulate human relevance labels.
 - Does NOT aggregate judges, calculate final reliability, create HUMAN-GT,
   adjudicate, or compute recommender metrics.
@@ -45,6 +47,7 @@ EXPECTED_ITEMS_PER_SCENARIO = 15
 EXPECTED_TOTAL_ITEMS = 45
 ALLOWED_ORDINAL_LABELS = (0, 1, 2)
 ALLOWED_MISSING_CODE = "NA"
+EDITABLE_ITEM_FIELDS = ("label", "judge_note")
 
 # Forbidden fields that must never appear in judge-visible calibration packages or submissions
 FORBIDDEN_LEAKAGE_KEYS = frozenset(
@@ -113,6 +116,21 @@ REQUIRED_ATTESTATION_STATEMENTS = [
 ]
 
 
+def _strict_equal(a: Any, b: Any) -> bool:
+    """Recursively compare two JSON values with strict type equality."""
+    if type(a) is not type(b):
+        return False
+    if isinstance(a, dict):
+        if set(a.keys()) != set(b.keys()):
+            return False
+        return all(_strict_equal(a[k], b[k]) for k in a)
+    if isinstance(a, list):
+        if len(a) != len(b):
+            return False
+        return all(_strict_equal(x, y) for x, y in zip(a, b, strict=True))
+    return bool(a == b)
+
+
 def compute_scenario_seed_basis(scenario_id: str, judge_id: str) -> str:
     """Return the canonical seed basis string for a scenario and judge."""
     return f"{ORDER_SEED_BASE}:{scenario_id}:{judge_id}:{ORDER_PURPOSE_TAG}"
@@ -165,7 +183,6 @@ def build_judge_calibration_package(
         for p_idx, item in enumerate(ordered_items, start=1):
             global_idx += 1
             factual_ctx = copy.deepcopy(item.get("factual_context", {}))
-            # Ensure no forbidden leakage keys exist inside factual_context
             for k in list(factual_ctx.keys()):
                 if k in FORBIDDEN_LEAKAGE_KEYS:
                     factual_ctx.pop(k, None)
@@ -274,6 +291,10 @@ def build_submission_contract_doc() -> dict[str, Any]:
         "presentation_version": PRESENTATION_VERSION,
         "track": "CALIBRATION_ONLY",
         "excluded_from_final_metrics": True,
+        "read_only_context_policy": "EXACT_MATCH_TO_FROZEN_PRESENTATION_PACKAGE",
+        "editable_fields": list(EDITABLE_ITEM_FIELDS),
+        "read_only_context_mutation": "REJECT",
+        "enforcement_mechanism": "VALIDATOR_ENFORCED_IMMUTABILITY",
         "allowed_judges": list(ALLOWED_JUDGES),
         "expected_scenarios": list(EXPECTED_SCENARIO_IDS),
         "expected_items_per_scenario": EXPECTED_ITEMS_PER_SCENARIO,
@@ -312,9 +333,15 @@ def build_submission_contract_doc() -> dict[str, Any]:
             "presentation_version",
             "scenario_id",
             "presentation_index",
+            "global_presentation_index",
             "calibration_item_id",
             "judge_item_id",
             "place_id",
+            "destination",
+            "declared_interests",
+            "name",
+            "category",
+            "factual_context",
             "label",
             "judge_note",
         ],
@@ -393,13 +420,6 @@ def validate_completed_calibration_label(val: Any) -> int | str:
     Allowed values:
       - int 0, 1, 2 (strictly int, NOT bool)
       - str "NA" (exact uppercase "NA")
-    Rejects:
-      - None / blank
-      - bool (True / False)
-      - float (0.0, 1.0, etc.)
-      - numeric strings ("0", "1", "2", etc.)
-      - alternative NA strings ("na", "N/A", "null", etc.)
-      - out-of-range ints
     """
     if isinstance(val, bool):
         raise ValueError(f"Boolean label {val!r} is forbidden; must be int in {{0, 1, 2}} or 'NA'.")
@@ -424,6 +444,30 @@ def validate_completed_calibration_label(val: Any) -> int | str:
     raise ValueError(f"Unsupported label type {type(val).__name__}: {val!r}")
 
 
+def _validate_item_factual_context(
+    item_id: str,
+    actual_fctx: Any,
+    expected_fctx: dict[str, Any],
+) -> None:
+    """Verify that item.factual_context is present and strictly matches reference."""
+    if not isinstance(actual_fctx, dict):
+        raise ValueError(
+            f"Item {item_id!r} is missing required 'factual_context' object."
+        )
+    if set(actual_fctx.keys()) != set(expected_fctx.keys()):
+        raise ValueError(
+            f"Item {item_id!r} factual_context keys mismatch: "
+            f"got {sorted(actual_fctx.keys())}, expected {sorted(expected_fctx.keys())}."
+        )
+    for k, exp_val in expected_fctx.items():
+        act_val = actual_fctx.get(k)
+        if not _strict_equal(act_val, exp_val):
+            raise ValueError(
+                f"Read-only factual_context.{k} modified on item {item_id!r}: "
+                f"got {act_val!r}, expected {exp_val!r}."
+            )
+
+
 def validate_calibration_submission(
     submission_data: dict[str, Any],
     canonical_doc: dict[str, Any] | None = None,
@@ -433,8 +477,9 @@ def validate_calibration_submission(
 ) -> dict[str, Any]:
     """Validate a judge calibration package or submission against canonical & judge contracts.
 
-    Raises ValueError with a descriptive diagnostic message on any contract violation.
-    Returns a summary dict when validation passes.
+    Enforces exact immutability of all read-only fields at top-level, scenario-level,
+    and item-level (including factual_context). Only 'label' and 'judge_note' may differ
+    in a completed submission.
     """
     if not isinstance(submission_data, dict):
         raise ValueError("Submission root must be a JSON object.")
@@ -463,7 +508,7 @@ def validate_calibration_submission(
             f"reference package has {reference_package.get('judge_id')!r}."
         )
 
-    # 3. Validate versions and track flags
+    # 3. Validate top-level read-only fields
     cal_ver = submission_data.get("calibration_version")
     if cal_ver != CALIBRATION_VERSION:
         raise ValueError(
@@ -482,17 +527,38 @@ def validate_calibration_submission(
             f"Invalid presentation_version {pres_ver!r}; expected {PRESENTATION_VERSION!r}."
         )
 
-    if "track" in submission_data and submission_data["track"] != "CALIBRATION_ONLY":
+    if "pool_version" in submission_data and submission_data["pool_version"] != POOL_VERSION:
         raise ValueError(
-            f"Invalid track {submission_data['track']!r}; expected 'CALIBRATION_ONLY'."
+            f"Invalid pool_version {submission_data['pool_version']!r}; expected {POOL_VERSION!r}."
         )
-    if (
-        "excluded_from_final_metrics" in submission_data
-        and submission_data["excluded_from_final_metrics"] is not True
+    if "base_seed" in submission_data and not _strict_equal(
+        submission_data["base_seed"], ORDER_SEED_BASE
     ):
+        raise ValueError(
+            f"Invalid base_seed {submission_data['base_seed']!r}; expected {ORDER_SEED_BASE!r}."
+        )
+    if submission_data.get("track", "CALIBRATION_ONLY") != "CALIBRATION_ONLY":
+        raise ValueError(
+            f"Invalid track {submission_data.get('track')!r}; expected 'CALIBRATION_ONLY'."
+        )
+    if submission_data.get("excluded_from_final_metrics", True) is not True:
         raise ValueError("excluded_from_final_metrics must be true.")
+    if "scenario_count" in submission_data and not _strict_equal(
+        submission_data["scenario_count"], len(EXPECTED_SCENARIO_IDS)
+    ):
+        raise ValueError(
+            f"Invalid scenario_count {submission_data['scenario_count']!r}; "
+            f"expected {len(EXPECTED_SCENARIO_IDS)}."
+        )
+    if "total_items" in submission_data and not _strict_equal(
+        submission_data["total_items"], EXPECTED_TOTAL_ITEMS
+    ):
+        raise ValueError(
+            f"Invalid total_items {submission_data['total_items']!r}; "
+            f"expected {EXPECTED_TOTAL_ITEMS}."
+        )
 
-    # 4. Build canonical item lookup and expected judge presentation order
+    # 4. Build canonical item lookup and reference lookups
     canonical_items_by_id: dict[str, dict[str, Any]] = {}
     canonical_scenarios = canonical_doc.get("scenarios", [])
     if len(canonical_scenarios) != len(EXPECTED_SCENARIO_IDS):
@@ -506,17 +572,19 @@ def validate_calibration_submission(
                 "scenario_id": sc_id,
                 "judge_item_id": item_id,
                 "place_id": it["place_id"],
-                "name": it["name"],
-                "category": it["category"],
-                "destination": sc["destination"],
-                "declared_interests": list(sc["declared_interests"]),
             }
 
+    ref_scenarios_by_id: dict[str, dict[str, Any]] = {}
     expected_order_by_scenario: dict[str, list[str]] = {}
+    ref_items_by_id: dict[str, dict[str, Any]] = {}
     for sc in reference_package.get("scenarios", []):
-        expected_order_by_scenario[sc["scenario_id"]] = [
+        sc_id = sc["scenario_id"]
+        ref_scenarios_by_id[sc_id] = sc
+        expected_order_by_scenario[sc_id] = [
             it["judge_item_id"] for it in sc.get("items", [])
         ]
+        for it in sc.get("items", []):
+            ref_items_by_id[it["judge_item_id"]] = it
 
     # 5. Extract scenarios and items from submission
     sub_scenarios = submission_data.get("scenarios")
@@ -545,7 +613,7 @@ def validate_calibration_submission(
                 raise ValueError(f"Each item in scenario {sc_id!r} must be a JSON object.")
             flat_items.append(item)
 
-    # 6. Check duplicate, extra, and missing items before checking count
+    # 6. Check duplicate, extra, and missing items
     for item in flat_items:
         item_id = item.get("judge_item_id") or item.get("calibration_item_id")
         if not isinstance(item_id, str) or not item_id:
@@ -583,13 +651,60 @@ def validate_calibration_submission(
             f"Expected exactly {EXPECTED_TOTAL_ITEMS} items, got {len(flat_items)}."
         )
 
-    # 7. Per-scenario ordering, metadata integrity, and label/note checks
+    # 7. Per-scenario and per-item read-only context immutability + label/note checks
+    read_only_item_keys = (
+        "judge_id",
+        "calibration_version",
+        "rubric_version",
+        "presentation_version",
+        "scenario_id",
+        "presentation_index",
+        "global_presentation_index",
+        "calibration_item_id",
+        "judge_item_id",
+        "place_id",
+        "destination",
+        "declared_interests",
+        "name",
+        "category",
+    )
+
     for sc in sub_scenarios:
         sc_id = sc["scenario_id"]
+        ref_sc = ref_scenarios_by_id[sc_id]
         items = sc["items"]
+
         if len(items) != EXPECTED_ITEMS_PER_SCENARIO:
             raise ValueError(
                 f"Scenario {sc_id!r} must have {EXPECTED_ITEMS_PER_SCENARIO} items, got {len(items)}."
+            )
+
+        # Scenario-level read-only fields check
+        if not _strict_equal(sc.get("destination"), ref_sc["destination"]):
+            raise ValueError(
+                f"Scenario {sc_id!r} destination modified: "
+                f"got {sc.get('destination')!r}, expected {ref_sc['destination']!r}."
+            )
+        if not _strict_equal(sc.get("declared_interests"), ref_sc["declared_interests"]):
+            raise ValueError(
+                f"Scenario {sc_id!r} declared_interests modified: "
+                f"got {sc.get('declared_interests')!r}, expected {ref_sc['declared_interests']!r}."
+            )
+        if sc.get("track", "CALIBRATION_ONLY") != "CALIBRATION_ONLY":
+            raise ValueError(f"Scenario {sc_id!r} track must be 'CALIBRATION_ONLY'.")
+        if sc.get("excluded_from_final_metrics", True) is not True:
+            raise ValueError(f"Scenario {sc_id!r} excluded_from_final_metrics must be true.")
+        if "order_seed_basis" in sc and not _strict_equal(
+            sc["order_seed_basis"], ref_sc["order_seed_basis"]
+        ):
+            raise ValueError(
+                f"Scenario {sc_id!r} order_seed_basis modified: "
+                f"got {sc['order_seed_basis']!r}, expected {ref_sc['order_seed_basis']!r}."
+            )
+        if "item_count" in sc and not _strict_equal(sc["item_count"], ref_sc["item_count"]):
+            raise ValueError(
+                f"Scenario {sc_id!r} item_count modified: "
+                f"got {sc['item_count']!r}, expected {ref_sc['item_count']!r}."
             )
 
         actual_ids = [it.get("judge_item_id") or it.get("calibration_item_id") for it in items]
@@ -599,38 +714,33 @@ def validate_calibration_submission(
                 f"Presentation order mismatch in scenario {sc_id!r} for judge {judge_id!r}."
             )
 
-        for idx, item in enumerate(items, start=1):
+        for item in items:
             item_id = item.get("judge_item_id") or item.get("calibration_item_id")
-            canon = canonical_items_by_id[item_id]
+            ref_item = ref_items_by_id[item_id]
 
-            if item.get("judge_id") != judge_id:
+            # Reject any unexpected extra keys on item
+            extra_keys = set(item.keys()) - set(ref_item.keys())
+            if extra_keys:
                 raise ValueError(
-                    f"Item {item_id!r} has judge_id {item.get('judge_id')!r}, expected {judge_id!r}."
+                    f"Item {item_id!r} contains unsupported extra keys: {sorted(extra_keys)}."
                 )
-            if item.get("calibration_version") != CALIBRATION_VERSION:
-                raise ValueError(
-                    f"Item {item_id!r} has invalid calibration_version {item.get('calibration_version')!r}."
-                )
-            if item.get("rubric_version") != RUBRIC_VERSION:
-                raise ValueError(
-                    f"Item {item_id!r} has invalid rubric_version {item.get('rubric_version')!r}."
-                )
-            if item.get("presentation_version") != PRESENTATION_VERSION:
-                raise ValueError(
-                    f"Item {item_id!r} has invalid presentation_version {item.get('presentation_version')!r}."
-                )
-            if item.get("scenario_id") != canon["scenario_id"]:
-                raise ValueError(
-                    f"Item {item_id!r} scenario_id mismatch: {item.get('scenario_id')!r} != {canon['scenario_id']!r}."
-                )
-            if item.get("place_id") != canon["place_id"]:
-                raise ValueError(
-                    f"Item {item_id!r} place_id mismatch: {item.get('place_id')!r} != {canon['place_id']!r}."
-                )
-            if item.get("presentation_index") != idx:
-                raise ValueError(
-                    f"Item {item_id!r} presentation_index mismatch: {item.get('presentation_index')!r} != {idx}."
-                )
+
+            # Verify every read-only item field strictly matches reference package
+            for key in read_only_item_keys:
+                if key not in item:
+                    raise ValueError(f"Item {item_id!r} is missing required read-only field {key!r}.")
+                if not _strict_equal(item[key], ref_item[key]):
+                    raise ValueError(
+                        f"Read-only field {key!r} modified on item {item_id!r}: "
+                        f"got {item[key]!r}, expected {ref_item[key]!r}."
+                    )
+
+            # Verify factual_context is present and strictly matches reference package
+            _validate_item_factual_context(
+                item_id,
+                item.get("factual_context"),
+                ref_item["factual_context"],
+            )
 
             label = item.get("label")
             note = item.get("judge_note")
@@ -670,10 +780,15 @@ def validate_calibration_submission(
 
 def load_csv_package_as_submission_dict(
     csv_path: Path,
+    canonical_doc: dict[str, Any] | None = None,
     *,
     validate_empty_package: bool = False,
 ) -> dict[str, Any]:
-    """Load a judge calibration CSV file into the canonical submission dict structure."""
+    """Load and validate a judge calibration CSV file against the deterministic reference CSV/package.
+
+    Enforces that all CSV_READ_ONLY_COLUMNS match the judge's deterministic reference rows
+    before parsing the mutable 'label' and 'judge_note' columns.
+    """
     with csv_path.open("r", encoding="utf-8", newline="") as f:
         reader = csv.DictReader(f)
         if reader.fieldnames is None:
@@ -696,84 +811,109 @@ def load_csv_package_as_submission_dict(
                     f"Spreadsheet formula detected in row {r_idx}, column {col!r}: {cell!r}"
                 )
 
+    if canonical_doc is None:
+        canonical_doc = load_canonical_calibration()
+
     judge_id = rows[0]["judge_id"]
-    cal_ver = rows[0]["calibration_version"]
-    rubric_ver = rows[0]["rubric_version"]
-    pres_ver = rows[0]["presentation_version"]
+    if judge_id not in ALLOWED_JUDGES:
+        raise ValueError(
+            f"Invalid judge_id {judge_id!r} in CSV row 1; expected one of {ALLOWED_JUDGES}."
+        )
 
-    scenarios_map: dict[str, list[dict[str, Any]]] = {}
-    scenario_meta: dict[str, dict[str, Any]] = {}
+    reference_package = build_judge_calibration_package(canonical_doc, judge_id)
+    expected_rows = package_to_csv_rows(reference_package)
 
-    for row in rows:
-        sc_id = row["scenario_id"]
-        scenarios_map.setdefault(sc_id, [])
-        if sc_id not in scenario_meta:
-            scenario_meta[sc_id] = {
-                "destination": row["destination"],
-                "declared_interests": json.loads(row["declared_interests"]),
-            }
+    # Check duplicate, extra, and missing items in CSV rows first
+    canonical_item_ids = {r["judge_item_id"] for r in expected_rows}
+    seen_csv_ids: set[str] = set()
+    for r_idx, row in enumerate(rows, start=1):
+        item_id = row.get("judge_item_id") or row.get("calibration_item_id") or ""
+        if not item_id:
+            raise ValueError(f"CSV row {r_idx} is missing judge_item_id / calibration_item_id.")
+        if row.get("calibration_item_id") != row.get("judge_item_id"):
+            raise ValueError(
+                f"CSV row {r_idx} has mismatched calibration_item_id and judge_item_id."
+            )
+        if item_id in seen_csv_ids:
+            raise ValueError(f"Duplicate calibration item detected in CSV: {item_id!r}.")
+        seen_csv_ids.add(item_id)
+        if item_id not in canonical_item_ids:
+            raise ValueError(f"Extra or unknown calibration item detected in CSV: {item_id!r}.")
 
-        raw_label = row["label"]
-        raw_note = row["judge_note"]
+    missing_csv_ids = sorted(canonical_item_ids - seen_csv_ids)
+    if missing_csv_ids:
+        raise ValueError(f"Missing canonical calibration item(s) in CSV: {missing_csv_ids}")
 
-        if validate_empty_package:
-            parsed_label: Any = None if raw_label == "" else raw_label
-        else:
-            if raw_label == "":
-                parsed_label = None
-            elif raw_label in {"0", "1", "2"}:
-                parsed_label = int(raw_label)
+    if len(rows) != len(expected_rows):
+        raise ValueError(
+            f"Expected {len(expected_rows)} CSV rows, got {len(rows)}."
+        )
+
+    # Compare every read-only column row-by-row against deterministic reference CSV rows
+    for r_idx, (row, exp_row) in enumerate(zip(rows, expected_rows, strict=True), start=1):
+        item_id = exp_row["judge_item_id"]
+        for col in CSV_READ_ONLY_COLUMNS:
+            actual_cell = row[col]
+            expected_cell = exp_row[col]
+            if col == "declared_interests":
+                try:
+                    actual_parsed = json.loads(actual_cell)
+                except Exception as exc:
+                    raise ValueError(
+                        f"CSV row {r_idx} ({item_id}) has invalid JSON in read-only column "
+                        f"'declared_interests': {actual_cell!r}"
+                    ) from exc
+                expected_parsed = json.loads(expected_cell)
+                if not _strict_equal(actual_parsed, expected_parsed):
+                    raise ValueError(
+                        f"CSV read-only column 'declared_interests' modified on row {r_idx} ({item_id}): "
+                        f"got {actual_cell!r}, expected {expected_cell!r}."
+                    )
+            elif col == "osm_factual_tags_json":
+                try:
+                    actual_tags = json.loads(actual_cell)
+                except Exception as exc:
+                    raise ValueError(
+                        f"CSV row {r_idx} ({item_id}) has invalid JSON in read-only column "
+                        f"'osm_factual_tags_json': {actual_cell!r}"
+                    ) from exc
+                expected_tags = json.loads(expected_cell)
+                if not _strict_equal(actual_tags, expected_tags):
+                    raise ValueError(
+                        f"CSV read-only column 'osm_factual_tags_json' modified on row {r_idx} ({item_id}): "
+                        f"got {actual_cell!r}, expected {expected_cell!r}."
+                    )
             else:
-                parsed_label = raw_label
+                if actual_cell != expected_cell:
+                    raise ValueError(
+                        f"CSV read-only column {col!r} modified on row {r_idx} ({item_id}): "
+                        f"got {actual_cell!r}, expected {expected_cell!r}."
+                    )
 
-        parsed_note = None if raw_note == "" else raw_note
+    # All read-only columns match the frozen reference package; populate label and judge_note
+    submission_doc = copy.deepcopy(reference_package)
+    row_by_item_id = {r["judge_item_id"]: r for r in rows}
 
-        scenarios_map[sc_id].append(
-            {
-                "judge_id": row["judge_id"],
-                "calibration_version": row["calibration_version"],
-                "rubric_version": row["rubric_version"],
-                "presentation_version": row["presentation_version"],
-                "scenario_id": sc_id,
-                "presentation_index": int(row["presentation_index"]),
-                "global_presentation_index": int(row["global_presentation_index"]),
-                "calibration_item_id": row["calibration_item_id"],
-                "judge_item_id": row["judge_item_id"],
-                "place_id": row["place_id"],
-                "destination": row["destination"],
-                "declared_interests": json.loads(row["declared_interests"]),
-                "name": row["name"],
-                "category": row["category"],
-                "label": parsed_label,
-                "judge_note": parsed_note,
-            }
-        )
+    for sc in submission_doc["scenarios"]:
+        for item in sc["items"]:
+            row = row_by_item_id[item["judge_item_id"]]
+            raw_label = row["label"]
+            raw_note = row["judge_note"]
 
-    scenarios_list = []
-    for sc_id, items in scenarios_map.items():
-        scenarios_list.append(
-            {
-                "scenario_id": sc_id,
-                "destination": scenario_meta[sc_id]["destination"],
-                "declared_interests": scenario_meta[sc_id]["declared_interests"],
-                "track": "CALIBRATION_ONLY",
-                "excluded_from_final_metrics": True,
-                "item_count": len(items),
-                "items": items,
-            }
-        )
+            if validate_empty_package:
+                parsed_label: Any = None if raw_label == "" else raw_label
+            else:
+                if raw_label == "":
+                    parsed_label = None
+                elif raw_label in {"0", "1", "2"}:
+                    parsed_label = int(raw_label)
+                else:
+                    parsed_label = raw_label
 
-    return {
-        "judge_id": judge_id,
-        "calibration_version": cal_ver,
-        "rubric_version": rubric_ver,
-        "presentation_version": pres_ver,
-        "track": "CALIBRATION_ONLY",
-        "excluded_from_final_metrics": True,
-        "scenario_count": len(scenarios_list),
-        "total_items": len(rows),
-        "scenarios": scenarios_list,
-    }
+            item["label"] = parsed_label
+            item["judge_note"] = None if raw_note == "" else raw_note
+
+    return submission_doc
 
 
 def main(argv: list[str] | None = None) -> int:

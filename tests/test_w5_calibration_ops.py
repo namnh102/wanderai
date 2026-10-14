@@ -1,6 +1,6 @@
-"""Tests for W5 Human Calibration Operational Readiness (W5-CAL-OPS-PREP-01).
+"""Tests for W5 Human Calibration Operational Readiness (W5-CAL-OPS-PREP-01 & FIX-01).
 
-Covers required tests CAL-OPS-01 through CAL-OPS-26:
+Covers required tests CAL-OPS-01 through CAL-OPS-45:
 - CAL-OPS-01: Exactly 3 judge packages exist: J1/J2/J3.
 - CAL-OPS-02: Each judge package contains exactly 45 items.
 - CAL-OPS-03: J1/J2/J3 contain identical canonical item membership.
@@ -27,6 +27,25 @@ Covers required tests CAL-OPS-01 through CAL-OPS-26:
 - CAL-OPS-24: Human judgment count remains 0.
 - CAL-OPS-25: R8B artifact remains: METHOD_RETAINED, CLOSED_WITHOUT_EXTERNAL_REPORT.
 - CAL-OPS-26: Duplicate policy remains: CLOSED_NO_PRIMARY_EVAL_IMPACT.
+- CAL-OPS-27: JSON completed submission rejects modified name.
+- CAL-OPS-28: JSON rejects modified category.
+- CAL-OPS-29: JSON rejects modified destination.
+- CAL-OPS-30: JSON rejects modified declared_interests.
+- CAL-OPS-31: JSON rejects modified factual_context address.
+- CAL-OPS-32: JSON rejects modified coordinate.
+- CAL-OPS-33: JSON rejects modified OSM factual tag/source.
+- CAL-OPS-34: JSON rejects modified global_presentation_index.
+- CAL-OPS-35: JSON rejects missing factual_context.
+- CAL-OPS-36: CSV rejects modified read-only name.
+- CAL-OPS-37: CSV rejects modified address.
+- CAL-OPS-38: CSV rejects modified coordinate.
+- CAL-OPS-39: CSV rejects modified declared_interests.
+- CAL-OPS-40: CSV rejects modified OSM tags/source.
+- CAL-OPS-41: CSV still permits editing ONLY label and judge_note.
+- CAL-OPS-42: Submission contract states exact frozen read-only-context policy.
+- CAL-OPS-43: Operations doc does NOT define .80/.67 as an automatic calibration PASS/FAIL gate.
+- CAL-OPS-44: Operations doc routes post-submission decision to W5-CAL-REVIEW + RUBRIC-FREEZE.
+- CAL-OPS-45: external_help_used remains null in template and operational wording requires truthful recording rather than forced false.
 """
 
 from __future__ import annotations
@@ -52,6 +71,7 @@ from scripts.validate_w5_calibration_submission import (
     load_canonical_calibration,
     load_csv_package_as_submission_dict,
     main as validator_cli_main,
+    package_to_csv_rows,
     validate_calibration_submission,
 )
 
@@ -68,6 +88,9 @@ R8B_JSON_PATH = EVAL_DIR / "r8b_contingency_method_decision_v1.json"
 DUP_GATE_PATH = EVAL_DIR / "w5_duplicate_gate_result_v1.json"
 SESSION_LOG_TEMPLATE_PATH = (
     CALIBRATION_OPS_DIR / "w5_calibration_session_log_template_v1.json"
+)
+SUBMISSION_CONTRACT_PATH = (
+    CALIBRATION_OPS_DIR / "w5_calibration_submission_contract_v1.json"
 )
 CALIBRATION_OPS_DOC_PATH = REPO_ROOT / "docs" / "research" / "w5_calibration_ops_v1.md"
 
@@ -100,6 +123,19 @@ def _make_valid_synthetic_completed_fixture(judge_id: str = "J1") -> dict[str, A
             item["judge_note"] = "synthetic test note" if item["label"] == "NA" else None
             idx += 1
     return pkg
+
+
+def _write_csv_rows(path: Path, rows: list[dict[str, str]]) -> None:
+    with path.open("w", encoding="utf-8", newline="") as f:
+        writer = csv.DictWriter(f, fieldnames=list(CSV_ALL_COLUMNS))
+        writer.writeheader()
+        writer.writerows(rows)
+
+
+def _make_valid_synthetic_completed_csv_rows(judge_id: str = "J1") -> list[dict[str, str]]:
+    """Build in-memory synthetic CSV rows with valid labels/notes for validator unit tests."""
+    pkg = _make_valid_synthetic_completed_fixture(judge_id)
+    return package_to_csv_rows(pkg)
 
 
 def test_cal_ops_01_three_judge_packages_exist() -> None:
@@ -269,7 +305,6 @@ def test_cal_ops_11_no_model_rank_score_strategy_control_leakage() -> None:
                 fctx = it.get("factual_context", {})
                 assert not (set(fctx.keys()) & FORBIDDEN_LEAKAGE_KEYS)
 
-    # Also verify validator rejects a submission injected with a forbidden leakage key
     leaked = _make_valid_synthetic_completed_fixture("J1")
     leaked["scenarios"][0]["items"][0]["rank"] = 1
     with pytest.raises(ValueError, match="Forbidden leakage fields"):
@@ -339,7 +374,6 @@ def test_cal_ops_13_empty_package_validation_pass() -> None:
             == 0
         )
 
-        # Also verify completed-mode rejects the empty package because labels are null
         with pytest.raises(ValueError, match="cannot be null"):
             validate_calibration_submission(
                 _load_json(json_path), validate_empty_package=False
@@ -354,7 +388,6 @@ def test_cal_ops_13_empty_package_validation_pass() -> None:
 def test_cal_ops_14_completed_validator_rejects_missing_item() -> None:
     """CAL-OPS-14: Completed validator rejects missing item."""
     sub = _make_valid_synthetic_completed_fixture("J1")
-    # Confirm baseline synthetic fixture passes
     res = validate_calibration_submission(sub)
     assert res["status"] == "PASS"
 
@@ -534,3 +567,226 @@ def test_cal_ops_26_duplicate_policy_remains_closed_no_impact() -> None:
 
     r8b = _load_json(R8B_JSON_PATH)
     assert r8b["duplicate_policy_status"] == "CLOSED_NO_PRIMARY_EVAL_IMPACT"
+
+
+def test_cal_ops_27_json_rejects_modified_name() -> None:
+    """CAL-OPS-27: JSON completed submission rejects modified name."""
+    sub = _make_valid_synthetic_completed_fixture("J1")
+    sub["scenarios"][0]["items"][0]["name"] = "Tampered Place Name"
+    with pytest.raises(ValueError, match="Read-only field 'name' modified"):
+        validate_calibration_submission(sub)
+
+
+def test_cal_ops_28_json_rejects_modified_category() -> None:
+    """CAL-OPS-28: JSON rejects modified category."""
+    sub = _make_valid_synthetic_completed_fixture("J1")
+    sub["scenarios"][0]["items"][0]["category"] = "tampered_category"
+    with pytest.raises(ValueError, match="Read-only field 'category' modified"):
+        validate_calibration_submission(sub)
+
+
+def test_cal_ops_29_json_rejects_modified_destination() -> None:
+    """CAL-OPS-29: JSON rejects modified destination."""
+    sub = _make_valid_synthetic_completed_fixture("J1")
+    sub["scenarios"][0]["items"][0]["destination"] = "da-nang"
+    with pytest.raises(ValueError, match="Read-only field 'destination' modified"):
+        validate_calibration_submission(sub)
+
+    sub_sc = _make_valid_synthetic_completed_fixture("J1")
+    sub_sc["scenarios"][0]["destination"] = "da-nang"
+    with pytest.raises(ValueError, match="destination modified"):
+        validate_calibration_submission(sub_sc)
+
+
+def test_cal_ops_30_json_rejects_modified_declared_interests() -> None:
+    """CAL-OPS-30: JSON rejects modified declared_interests."""
+    sub = _make_valid_synthetic_completed_fixture("J1")
+    sub["scenarios"][0]["items"][0]["declared_interests"] = ["beach_island"]
+    with pytest.raises(ValueError, match="Read-only field 'declared_interests' modified"):
+        validate_calibration_submission(sub)
+
+    sub_sc = _make_valid_synthetic_completed_fixture("J1")
+    sub_sc["scenarios"][0]["declared_interests"] = ["beach_island"]
+    with pytest.raises(ValueError, match="declared_interests modified"):
+        validate_calibration_submission(sub_sc)
+
+
+def test_cal_ops_31_json_rejects_modified_factual_context_address() -> None:
+    """CAL-OPS-31: JSON rejects modified factual_context address."""
+    sub = _make_valid_synthetic_completed_fixture("J1")
+    sub["scenarios"][0]["items"][0]["factual_context"]["address"] = "999 Fake Street"
+    with pytest.raises(ValueError, match="factual_context.address modified"):
+        validate_calibration_submission(sub)
+
+
+def test_cal_ops_32_json_rejects_modified_coordinate() -> None:
+    """CAL-OPS-32: JSON rejects modified coordinate."""
+    sub_lat = _make_valid_synthetic_completed_fixture("J1")
+    sub_lat["scenarios"][0]["items"][0]["factual_context"]["latitude"] = 10.123456
+    with pytest.raises(ValueError, match="factual_context.latitude modified"):
+        validate_calibration_submission(sub_lat)
+
+    sub_lng = _make_valid_synthetic_completed_fixture("J1")
+    sub_lng["scenarios"][0]["items"][0]["factual_context"]["longitude"] = 106.123456
+    with pytest.raises(ValueError, match="factual_context.longitude modified"):
+        validate_calibration_submission(sub_lng)
+
+
+def test_cal_ops_33_json_rejects_modified_osm_tag_or_source() -> None:
+    """CAL-OPS-33: JSON rejects modified OSM factual tag/source."""
+    sub_tag = _make_valid_synthetic_completed_fixture("J1")
+    sub_tag["scenarios"][0]["items"][0]["factual_context"]["osm_factual_tags"] = {
+        "cuisine": "tampered"
+    }
+    with pytest.raises(ValueError, match="factual_context.osm_factual_tags modified"):
+        validate_calibration_submission(sub_tag)
+
+    sub_src = _make_valid_synthetic_completed_fixture("J1")
+    sub_src["scenarios"][0]["items"][0]["factual_context"]["osm_source"] = {
+        "source_name": "osm",
+        "source_id": "node/999999999",
+    }
+    with pytest.raises(ValueError, match="factual_context.osm_source modified"):
+        validate_calibration_submission(sub_src)
+
+
+def test_cal_ops_34_json_rejects_modified_global_presentation_index() -> None:
+    """CAL-OPS-34: JSON rejects modified global_presentation_index."""
+    sub = _make_valid_synthetic_completed_fixture("J1")
+    sub["scenarios"][0]["items"][0]["global_presentation_index"] = 99
+    with pytest.raises(
+        ValueError, match="Read-only field 'global_presentation_index' modified"
+    ):
+        validate_calibration_submission(sub)
+
+
+def test_cal_ops_35_json_rejects_missing_factual_context() -> None:
+    """CAL-OPS-35: JSON rejects missing factual_context."""
+    sub = _make_valid_synthetic_completed_fixture("J1")
+    del sub["scenarios"][0]["items"][0]["factual_context"]
+    with pytest.raises(ValueError, match="missing required 'factual_context'"):
+        validate_calibration_submission(sub)
+
+
+def test_cal_ops_36_csv_rejects_modified_read_only_name(tmp_path: Path) -> None:
+    """CAL-OPS-36: CSV rejects modified read-only name."""
+    rows = _make_valid_synthetic_completed_csv_rows("J1")
+    rows[0]["name"] = "Tampered CSV Name"
+    csv_file = tmp_path / "tampered_name.csv"
+    _write_csv_rows(csv_file, rows)
+
+    with pytest.raises(ValueError, match="CSV read-only column 'name' modified"):
+        load_csv_package_as_submission_dict(csv_file)
+
+
+def test_cal_ops_37_csv_rejects_modified_address(tmp_path: Path) -> None:
+    """CAL-OPS-37: CSV rejects modified address."""
+    rows = _make_valid_synthetic_completed_csv_rows("J1")
+    rows[0]["address"] = "Tampered CSV Address"
+    csv_file = tmp_path / "tampered_address.csv"
+    _write_csv_rows(csv_file, rows)
+
+    with pytest.raises(ValueError, match="CSV read-only column 'address' modified"):
+        load_csv_package_as_submission_dict(csv_file)
+
+
+def test_cal_ops_38_csv_rejects_modified_coordinate(tmp_path: Path) -> None:
+    """CAL-OPS-38: CSV rejects modified coordinate."""
+    rows = _make_valid_synthetic_completed_csv_rows("J1")
+    rows[0]["latitude"] = "12.345678"
+    csv_file = tmp_path / "tampered_lat.csv"
+    _write_csv_rows(csv_file, rows)
+
+    with pytest.raises(ValueError, match="CSV read-only column 'latitude' modified"):
+        load_csv_package_as_submission_dict(csv_file)
+
+
+def test_cal_ops_39_csv_rejects_modified_declared_interests(tmp_path: Path) -> None:
+    """CAL-OPS-39: CSV rejects modified declared_interests."""
+    rows = _make_valid_synthetic_completed_csv_rows("J1")
+    rows[0]["declared_interests"] = json.dumps(["nature_outdoor"])
+    csv_file = tmp_path / "tampered_interests.csv"
+    _write_csv_rows(csv_file, rows)
+
+    with pytest.raises(
+        ValueError, match="CSV read-only column 'declared_interests' modified"
+    ):
+        load_csv_package_as_submission_dict(csv_file)
+
+
+def test_cal_ops_40_csv_rejects_modified_osm_tags_or_source(tmp_path: Path) -> None:
+    """CAL-OPS-40: CSV rejects modified OSM tags/source."""
+    rows_tags = _make_valid_synthetic_completed_csv_rows("J1")
+    rows_tags[0]["osm_factual_tags_json"] = json.dumps({"tourism": "museum"})
+    csv_tags = tmp_path / "tampered_tags.csv"
+    _write_csv_rows(csv_tags, rows_tags)
+
+    with pytest.raises(
+        ValueError, match="CSV read-only column 'osm_factual_tags_json' modified"
+    ):
+        load_csv_package_as_submission_dict(csv_tags)
+
+    rows_src = _make_valid_synthetic_completed_csv_rows("J1")
+    rows_src[0]["osm_source_id"] = "osm:node/123"
+    csv_src = tmp_path / "tampered_src.csv"
+    _write_csv_rows(csv_src, rows_src)
+
+    with pytest.raises(
+        ValueError, match="CSV read-only column 'osm_source_id' modified"
+    ):
+        load_csv_package_as_submission_dict(csv_src)
+
+
+def test_cal_ops_41_csv_permits_editing_only_label_and_judge_note(
+    tmp_path: Path,
+) -> None:
+    """CAL-OPS-41: CSV still permits editing ONLY label and judge_note."""
+    rows = _make_valid_synthetic_completed_csv_rows("J1")
+    csv_file = tmp_path / "valid_completed.csv"
+    _write_csv_rows(csv_file, rows)
+
+    loaded = load_csv_package_as_submission_dict(csv_file, validate_empty_package=False)
+    res = validate_calibration_submission(loaded, validate_empty_package=False)
+    assert res["status"] == "PASS"
+    assert res["mode"] == "COMPLETED_SUBMISSION"
+    assert validator_cli_main(["--package", str(csv_file)]) == 0
+
+
+def test_cal_ops_42_submission_contract_states_frozen_read_only_policy() -> None:
+    """CAL-OPS-42: Submission contract states exact frozen read-only-context policy."""
+    contract = _load_json(SUBMISSION_CONTRACT_PATH)
+    assert (
+        contract["read_only_context_policy"]
+        == "EXACT_MATCH_TO_FROZEN_PRESENTATION_PACKAGE"
+    )
+    assert contract["editable_fields"] == ["label", "judge_note"]
+    assert contract["read_only_context_mutation"] == "REJECT"
+
+
+def test_cal_ops_43_ops_doc_has_no_unregistered_alpha_auto_gate() -> None:
+    """CAL-OPS-43: Operations doc does NOT define .80/.67 as an automatic calibration PASS/FAIL gate."""
+    doc_text = CALIBRATION_OPS_DOC_PATH.read_text(encoding="utf-8")
+    assert "0.80" not in doc_text
+    assert "0.67" not in doc_text
+    assert "USABLE_WITH_QUALIFICATION" not in doc_text
+    assert "STOP_REVIEW_RUBRIC" not in doc_text
+
+
+def test_cal_ops_44_ops_doc_routes_post_submission_to_cal_review_and_rubric_freeze() -> None:
+    """CAL-OPS-44: Operations doc routes post-submission decision to W5-CAL-REVIEW + RUBRIC-FREEZE."""
+    doc_text = CALIBRATION_OPS_DOC_PATH.read_text(encoding="utf-8")
+    assert "W5-CAL-REVIEW" in doc_text
+    assert "RUBRIC-FREEZE" in doc_text
+    assert "CALIBRATION_ONLY" in doc_text
+
+
+def test_cal_ops_45_external_help_used_template_and_truthful_wording() -> None:
+    """CAL-OPS-45: external_help_used remains null in template and wording requires truthful recording."""
+    tpl = _load_json(SESSION_LOG_TEMPLATE_PATH)
+    assert tpl["external_help_used"] is None
+
+    doc_text = CALIBRATION_OPS_DOC_PATH.read_text(encoding="utf-8").lower()
+    assert "truthfully" in doc_text
+    assert "external_help_used" in doc_text
+    assert "falsify" in doc_text
+    assert "w5-cal-review" in doc_text

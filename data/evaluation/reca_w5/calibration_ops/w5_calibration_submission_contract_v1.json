@@ -5,6 +5,13 @@
   "presentation_version": "W5-CAL-OPS-V1",
   "track": "CALIBRATION_ONLY",
   "excluded_from_final_metrics": true,
+  "read_only_context_policy": "EXACT_MATCH_TO_FROZEN_PRESENTATION_PACKAGE",
+  "editable_fields": [
+    "label",
+    "judge_note"
+  ],
+  "read_only_context_mutation": "REJECT",
+  "enforcement_mechanism": "VALIDATOR_ENFORCED_IMMUTABILITY",
   "allowed_judges": [
     "J1",
     "J2",
@@ -80,9 +87,15 @@
     "presentation_version",
     "scenario_id",
     "presentation_index",
+    "global_presentation_index",
     "calibration_item_id",
     "judge_item_id",
     "place_id",
+    "destination",
+    "declared_interests",
+    "name",
+    "category",
+    "factual_context",
     "label",
     "judge_note"
   ],
