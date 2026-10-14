@@ -103,6 +103,8 @@ def _valid_attestation(judge_id: str = "J1") -> dict[str, Any]:
         "direct_label_discussion_before_all_submissions_locked": False,
         "assigned_role_before_distribution": True,
         "completed_all_required_items": True,
+        "submitted_privately_to_project_owner": True,
+        "published_or_shared_own_labels_or_summary_before_all_submissions_locked": False,
     }
 
 
@@ -524,3 +526,93 @@ def test_r02_prep_21_manifest_hashes_and_lf_invariants() -> None:
         assert canonical_lf_sha256_file(csv_path) == jrec["csv_canonical_lf_sha256"]
 
     assert ROUND02_SEED == 20261014
+
+
+def test_r02_prep_22_submitted_privately_to_project_owner_gate() -> None:
+    """R02-PREP-22: submitted_privately_to_project_owner missing/null/false => NON_QUALIFYING."""
+    for bad_val in (None, False, "true", 1):
+        att = _valid_attestation("J1")
+        att["submitted_privately_to_project_owner"] = bad_val
+        res = validate_round02_session_attestation(att, expected_judge_id="J1")
+        assert res["qualification_status"] == "NON_QUALIFYING"
+        assert res["valid"] is False
+
+    missing_att = _valid_attestation("J1")
+    missing_att.pop("submitted_privately_to_project_owner")
+    res_missing = validate_round02_session_attestation(missing_att, expected_judge_id="J1")
+    assert res_missing["qualification_status"] == "NON_QUALIFYING"
+    assert res_missing["valid"] is False
+
+
+def test_r02_prep_23_published_or_shared_own_labels_gate() -> None:
+    """R02-PREP-23: published_or_shared_own_labels_or_summary_before_all_submissions_locked missing/null/true => NON_QUALIFYING."""
+    key = "published_or_shared_own_labels_or_summary_before_all_submissions_locked"
+    for bad_val in (None, True, "false", 0):
+        att = _valid_attestation("J1")
+        att[key] = bad_val
+        res = validate_round02_session_attestation(att, expected_judge_id="J1")
+        assert res["qualification_status"] == "NON_QUALIFYING"
+        assert res["valid"] is False
+
+    missing_att = _valid_attestation("J1")
+    missing_att.pop(key)
+    res_missing = validate_round02_session_attestation(missing_att, expected_judge_id="J1")
+    assert res_missing["qualification_status"] == "NON_QUALIFYING"
+    assert res_missing["valid"] is False
+
+
+def test_r02_prep_24_valid_attestation_requires_private_submission_and_no_own_publication() -> None:
+    """R02-PREP-24: Valid attestation requires submitted_privately_to_project_owner == True AND published_or_shared_own_labels_or_summary_before_all_submissions_locked == False."""
+    att_template = _load_json(ROUND02_ATTESTATION_TEMPLATE_PATH)
+    sub_contract = _load_json(ROUND02_SUBMISSION_CONTRACT_PATH)
+
+    for doc in (att_template, sub_contract):
+        req = doc["required_boolean_attestations"]
+        assert req["submitted_privately_to_project_owner"] is True
+        assert (
+            req["published_or_shared_own_labels_or_summary_before_all_submissions_locked"]
+            is False
+        )
+
+    tmpl_fields = att_template["per_judge_attestation_template"]
+    assert tmpl_fields["submitted_privately_to_project_owner"] is None
+    assert (
+        tmpl_fields[
+            "published_or_shared_own_labels_or_summary_before_all_submissions_locked"
+        ]
+        is None
+    )
+
+    valid_att = _valid_attestation("J3")
+    res = validate_round02_session_attestation(valid_att, expected_judge_id="J3")
+    assert res["qualification_status"] == "QUALIFYING"
+    assert res["valid"] is True
+
+
+def test_r02_prep_25_role_assignment_execution_state_is_not_started() -> None:
+    """R02-PREP-25: Role assignment artifact records assignment_execution_status == NOT_STARTED and unexecuted booleans."""
+    role_contract = _load_json(ROUND02_ROLE_CONTRACT_PATH)
+    assert role_contract["status"] == "PRE_DISTRIBUTION_TEMPLATE"
+    assert role_contract["assignment_execution_status"] == "NOT_STARTED"
+    assert role_contract["actual_human_roles_assigned"] is False
+    assert role_contract["distinct_actual_humans_confirmed"] is False
+    assert role_contract["packages_distributed"] is False
+
+
+def test_r02_prep_26_role_contract_does_not_falsely_assert_completed_assignment() -> None:
+    """R02-PREP-26: Role contract separates normative requirements from execution state per judge."""
+    role_contract = _load_json(ROUND02_ROLE_CONTRACT_PATH)
+    for jid in ALLOWED_JUDGES:
+        rec = role_contract["required_role_assignments"][jid]
+        assert rec["must_be_assigned_before_package_distribution"] is True
+        assert rec["other_judge_packages_must_be_withheld"] is True
+        assert rec["actual_human_assigned"] is False
+        assert rec["package_distributed"] is False
+        assert "assigned_before_package_distribution" not in rec
+        assert "other_judge_packages_withheld" not in rec
+
+    ops_text = ROUND02_OPS_DOC_PATH.read_text(encoding="utf-8")
+    assert "REQUIREMENT != EXECUTED FACT" in ops_text
+    assert 'assignment_execution_status = "NOT_STARTED"' in ops_text
+    assert "actual_human_roles_assigned = false" in ops_text
+    assert "packages_distributed = false" in ops_text

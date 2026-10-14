@@ -117,6 +117,8 @@ REQUIRED_ATTESTATION_BOOLEANS: dict[str, bool] = {
     "direct_label_discussion_before_all_submissions_locked": False,
     "assigned_role_before_distribution": True,
     "completed_all_required_items": True,
+    "submitted_privately_to_project_owner": True,
+    "published_or_shared_own_labels_or_summary_before_all_submissions_locked": False,
 }
 
 FREEZE_V2_PATH = REPO_ROOT / "data" / "curated" / "gomate_places_freeze_v2.json"
@@ -551,6 +553,10 @@ def build_role_assignment_contract_doc() -> dict[str, Any]:
         "round_id": ROUND_ID,
         "calibration_version": CALIBRATION_VERSION,
         "status": "PRE_DISTRIBUTION_TEMPLATE",
+        "assignment_execution_status": "NOT_STARTED",
+        "actual_human_roles_assigned": False,
+        "distinct_actual_humans_confirmed": False,
+        "packages_distributed": False,
         "pre_distribution_assignment_required": True,
         "self_selected_roles_prohibited": True,
         "single_package_per_judge_distribution_required": True,
@@ -559,47 +565,53 @@ def build_role_assignment_contract_doc() -> dict[str, Any]:
         "required_role_assignments": {
             "J1": {
                 "judge_id": "J1",
-                "assigned_before_package_distribution": True,
-                "assigned_package_json": (
+                "must_be_assigned_before_package_distribution": True,
+                "other_judge_packages_must_be_withheld": True,
+                "actual_human_assigned": False,
+                "package_distributed": False,
+                "target_package_json": (
                     "data/evaluation/reca_w5/calibration_round02_ops/judge_packages/"
                     "w5_calibration_round02_J1_v2.json"
                 ),
-                "assigned_package_csv": (
+                "target_package_csv": (
                     "data/evaluation/reca_w5/calibration_round02_ops/judge_packages/"
                     "w5_calibration_round02_J1_v2.csv"
                 ),
-                "other_judge_packages_withheld": True,
             },
             "J2": {
                 "judge_id": "J2",
-                "assigned_before_package_distribution": True,
-                "assigned_package_json": (
+                "must_be_assigned_before_package_distribution": True,
+                "other_judge_packages_must_be_withheld": True,
+                "actual_human_assigned": False,
+                "package_distributed": False,
+                "target_package_json": (
                     "data/evaluation/reca_w5/calibration_round02_ops/judge_packages/"
                     "w5_calibration_round02_J2_v2.json"
                 ),
-                "assigned_package_csv": (
+                "target_package_csv": (
                     "data/evaluation/reca_w5/calibration_round02_ops/judge_packages/"
                     "w5_calibration_round02_J2_v2.csv"
                 ),
-                "other_judge_packages_withheld": True,
             },
             "J3": {
                 "judge_id": "J3",
-                "assigned_before_package_distribution": True,
-                "assigned_package_json": (
+                "must_be_assigned_before_package_distribution": True,
+                "other_judge_packages_must_be_withheld": True,
+                "actual_human_assigned": False,
+                "package_distributed": False,
+                "target_package_json": (
                     "data/evaluation/reca_w5/calibration_round02_ops/judge_packages/"
                     "w5_calibration_round02_J3_v2.json"
                 ),
-                "assigned_package_csv": (
+                "target_package_csv": (
                     "data/evaluation/reca_w5/calibration_round02_ops/judge_packages/"
                     "w5_calibration_round02_J3_v2.csv"
                 ),
-                "other_judge_packages_withheld": True,
             },
         },
         "distribution_rules": [
-            "Project owner assigns three distinct actual human judges to J1, J2, and J3 BEFORE distributing any package files.",
-            "Each human judge receives ONLY their assigned Jk package and the frozen rubric (W5-RUBRIC-V1).",
+            "Project owner MUST assign three distinct actual human judges to J1, J2, and J3 BEFORE distributing any package files.",
+            "Each human judge MUST receive ONLY their assigned Jk package and the frozen rubric (W5-RUBRIC-V1).",
             "No human judge may choose their own judge_id or inspect another judge's package.",
             "Repository artifacts store only pseudonyms J1, J2, and J3; no personal names or contact details are committed.",
         ],
@@ -626,6 +638,8 @@ def build_session_attestation_template_doc() -> dict[str, Any]:
             "direct_label_discussion_before_all_submissions_locked != false",
             "assigned_role_before_distribution != true",
             "completed_all_required_items != true",
+            "submitted_privately_to_project_owner != true",
+            "published_or_shared_own_labels_or_summary_before_all_submissions_locked != false",
             "judge_id_mismatch_or_invalid",
             "round_id_or_calibration_version_mismatch",
         ],
@@ -644,6 +658,7 @@ def build_session_attestation_template_doc() -> dict[str, Any]:
             "assigned_role_before_distribution": None,
             "completed_all_required_items": None,
             "submitted_privately_to_project_owner": None,
+            "published_or_shared_own_labels_or_summary_before_all_submissions_locked": None,
             "completed_at_utc": None,
         },
     }

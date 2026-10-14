@@ -38,7 +38,9 @@
     "exposed_to_other_judge_label_summary_before_submission": false,
     "direct_label_discussion_before_all_submissions_locked": false,
     "assigned_role_before_distribution": true,
-    "completed_all_required_items": true
+    "completed_all_required_items": true,
+    "submitted_privately_to_project_owner": true,
+    "published_or_shared_own_labels_or_summary_before_all_submissions_locked": false
   },
   "missing_or_failed_attestation_outcome": "NON_QUALIFYING",
   "privacy_and_locking_rules": [

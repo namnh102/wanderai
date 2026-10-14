@@ -236,18 +236,18 @@
     },
     "w5_calibration_round02_role_assignment_contract_v1.json": {
       "path": "data/evaluation/reca_w5/calibration_round02_ops/w5_calibration_round02_role_assignment_contract_v1.json",
-      "canonical_lf_sha256": "420db6c35ac817a4eec7c5aadd1672442963a58a0423ce2de3041e659f0f6e1d",
-      "canonical_json_sha256": "359719c504e960118b1f71373caaa570797f9568be23b6810fdfdb86b66cca5f"
+      "canonical_lf_sha256": "3ede436168d07b6307de80b8bc0df61df9fa78a84889af645087dae5af8cd122",
+      "canonical_json_sha256": "a6766d71b72b0eaa5ef6e9e0abaf144c9ef20e6e8e206b77a1782515ea44711d"
     },
     "w5_calibration_round02_session_attestation_template_v1.json": {
       "path": "data/evaluation/reca_w5/calibration_round02_ops/w5_calibration_round02_session_attestation_template_v1.json",
-      "canonical_lf_sha256": "84c12e5899f79950a483b928f52d23657a28b63a409a6442d16ba15cf02176e9",
-      "canonical_json_sha256": "2789076b92ff05dfb0728465cb3c16b4bbb03f28929abc35dab408053beb5aa5"
+      "canonical_lf_sha256": "7894325132c4467d3597add9882195bc0462a0fee275228d09e25b47ccfe21d7",
+      "canonical_json_sha256": "24b4a692ce4e1f8bba4f40c32d7f4827f20c833777aa08ffb46840bb19af376a"
     },
     "w5_calibration_round02_submission_contract_v1.json": {
       "path": "data/evaluation/reca_w5/calibration_round02_ops/w5_calibration_round02_submission_contract_v1.json",
-      "canonical_lf_sha256": "2b34ad8ad50bdda1ba048bbcaea5886ccf2af44b3d2e0930e953acf466546a9d",
-      "canonical_json_sha256": "d928d80b82dd498053e3b3c47d76fe7f7e089263d31ee8c682fa98e1e10710f2"
+      "canonical_lf_sha256": "90c38df02aab11dae03e2b8fe8ad1fb1a1f69d1243f15963cf5e4a0956e7fb54",
+      "canonical_json_sha256": "36716fb40f2a06a7390e1a5dfbfe45a0b01945dffc164f17df785c05babcd4fe"
     }
   },
   "judge_packages": {
