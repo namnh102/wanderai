@@ -292,9 +292,9 @@ def test_hash_audit_10_historical_artifacts_modified_is_false() -> None:
     assert "HISTORICAL_MANIFEST_INCONSISTENCY" in doc_text
     assert "REPRESENTATION_ONLY_DIFFERENCE" in doc_text
 
-    # Verify git diff against develop contains ONLY the 3 new audit files
+    # Verify git diff against BASE_DEVELOP_SHA over all 35 historical hashed artifacts is empty
     res = subprocess.run(
-        ["git", "diff", "--name-only", BASE_DEVELOP_SHA],
+        ["git", "diff", "--name-only", BASE_DEVELOP_SHA, "--", *HASHED_ARTIFACT_RELPATHS],
         cwd=REPO_ROOT,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
@@ -302,10 +302,4 @@ def test_hash_audit_10_historical_artifacts_modified_is_false() -> None:
         check=True,
     )
     changed = sorted(line.strip() for line in res.stdout.splitlines() if line.strip())
-    for c in changed:
-        assert c in {
-            "data/evaluation/reca_w5/audits/w5_hash_eol_audit_v1.json",
-            "docs/research/w5_hash_eol_audit_v1.md",
-            "scripts/audit_w5_hash_eol.py",
-            "tests/test_w5_hash_eol_audit.py",
-        }, f"Unexpected modified historical file: {c}"
+    assert changed == [], f"Unexpected modified historical file(s): {changed}"

@@ -302,19 +302,24 @@ def test_hash_erratum_12_round02_hashes_remain_unchanged() -> None:
 
 def test_hash_erratum_13_no_historical_artifact_modified_by_branch() -> None:
     """HASH-ERRATUM-13: no historical artifact is modified by this PR."""
-    allowed_paths = {
-        "data/evaluation/reca_w5/audits/w5_hash_basis_erratum_v1.json",
-        "docs/research/w5_hash_basis_erratum_v1.md",
-        "tests/test_w5_hash_basis_erratum.py",
-    }
-    status_out = subprocess.check_output(
-        ["git", "status", "--porcelain"], cwd=ROOT, text=True
+    audit = _load_json(AUDIT_JSON_PATH)
+    historical_paths = list(audit["artifact_results"].keys())
+    diff_out = subprocess.check_output(
+        [
+            "git",
+            "diff",
+            "--name-only",
+            "8f7db565e9ea70085a505745fd78326b49c1e243",
+            "--",
+            *historical_paths,
+        ],
+        cwd=ROOT,
+        text=True,
     ).splitlines()
-    for line in status_out:
-        if not line.strip():
-            continue
-        rel_path = line[3:].strip().replace("\\", "/")
-        assert rel_path in allowed_paths, f"Unexpected dirty/untracked file: {rel_path}"
+    modified_historical = [line.strip() for line in diff_out if line.strip()]
+    assert modified_historical == [], (
+        f"Historical artifacts modified: {modified_historical}"
+    )
 
     assert b"\r\n" not in ERRATUM_JSON_PATH.read_bytes()
     assert b"\r\n" not in ERRATUM_MD_PATH.read_bytes()
