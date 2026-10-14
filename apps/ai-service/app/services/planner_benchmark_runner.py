@@ -33,6 +33,8 @@ from app.prompts.planner_benchmark_prompt import (
     build_destination_catalog_context,
 )
 from app.schemas.planner_benchmark import (
+    HASH_BASIS_BY_ARTIFACT,
+    HASH_BASIS_VERSION,
     BenchmarkBudgetAnalysis,
     BenchmarkCatalogPOI,
     BenchmarkItineraryDay,
@@ -47,7 +49,6 @@ from app.schemas.planner_benchmark import (
 MEASUREMENT_CONTRACT_ID = "W06-MEASUREMENT-CONTRACT-01"
 MEASUREMENT_CONTRACT_VERSION = "1.1.0"
 MEASUREMENT_CONTRACT_SOURCE_COMMIT = "7fd5364ed4671c06b0c911b6fd53bd9f54cbc322"
-HASH_BASIS = "EXACT_PERSISTED_UTF8_LF_BYTES_SHA256"
 PROVIDER_NAME = "google-genai"
 BENCHMARK_TEMPERATURE = 0.7
 
@@ -63,13 +64,17 @@ def normalize_lf_bytes(data: bytes) -> bytes:
 
 
 def canonical_json_bytes(obj: Any) -> bytes:
-    """Serialize structured JSON deterministically to UTF-8 bytes with LF newline."""
+    """Serialize structured JSON deterministically to UTF-8 bytes with exactly one final LF newline.
+
+    Hash basis: SHA256_CANONICAL_JSON_UTF8_LF_BYTES
+    Rules: UTF-8, ensure_ascii=False, sort_keys=True, indent=2, exactly one final LF newline.
+    """
     text = json.dumps(obj, ensure_ascii=False, sort_keys=True, indent=2) + "\n"
     return text.encode("utf-8")
 
 
 def write_canonical_json(path: Path, obj: Any) -> str:
-    """Persist canonical UTF-8 LF JSON bytes to disk and return exact SHA256."""
+    """Persist canonical UTF-8 LF JSON bytes to disk and return SHA256 over exact persisted bytes."""
     raw = canonical_json_bytes(obj)
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_bytes(raw)
@@ -77,7 +82,11 @@ def write_canonical_json(path: Path, obj: Any) -> str:
 
 
 def write_exact_utf8_text(path: Path, text: str) -> str:
-    """Persist exact UTF-8 bytes of a text artifact without OS line-ending conversion and return SHA256."""
+    """Persist exact UTF-8 bytes of a text artifact without LF normalization and return SHA256.
+
+    Hash basis: SHA256_EXACT_PERSISTED_UTF8_BYTES
+    If the input string contains CRLF, CRLF bytes are preserved verbatim on disk and in the SHA256.
+    """
     raw = text.encode("utf-8")
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_bytes(raw)
@@ -85,7 +94,10 @@ def write_exact_utf8_text(path: Path, text: str) -> str:
 
 
 def compute_catalog_sha256(catalog_path: Optional[Path] = None) -> str:
-    """Compute deterministic SHA256 of the frozen catalog (LF-normalized UTF-8 bytes)."""
+    """Compute deterministic SHA256 of the frozen source catalog over LF-normalized UTF-8 bytes.
+
+    Hash basis: SHA256_LF_NORMALIZED_SOURCE_BYTES
+    """
     target = catalog_path or DEFAULT_CATALOG_PATH
     return sha256_bytes(normalize_lf_bytes(target.read_bytes()))
 
@@ -291,6 +303,8 @@ def prepare_benchmark_scenario(
         "measurement_contract_id": MEASUREMENT_CONTRACT_ID,
         "measurement_contract_version": MEASUREMENT_CONTRACT_VERSION,
         "measurement_contract_source_commit": MEASUREMENT_CONTRACT_SOURCE_COMMIT,
+        "hash_basis_version": HASH_BASIS_VERSION,
+        "hash_basis_by_artifact": dict(HASH_BASIS_BY_ARTIFACT),
         "provider_called": False,
     }
     write_canonical_json(output_dir / "preparation_manifest.json", prep_manifest)
@@ -389,7 +403,8 @@ def execute_benchmark_scenario(
             measurement_contract_id=MEASUREMENT_CONTRACT_ID,
             measurement_contract_version=MEASUREMENT_CONTRACT_VERSION,
             measurement_contract_source_commit=MEASUREMENT_CONTRACT_SOURCE_COMMIT,
-            hash_basis=HASH_BASIS,
+            hash_basis_version=HASH_BASIS_VERSION,
+            hash_basis_by_artifact=dict(HASH_BASIS_BY_ARTIFACT),
             claims_bitwise_model_determinism=False,
             run_status=status,
             error_detail=error_detail,

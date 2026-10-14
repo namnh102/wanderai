@@ -198,6 +198,33 @@ class BenchmarkUsageMetadata(BaseModel):
     total_tokens: Optional[int] = None
 
 
+HASH_BASIS_VERSION: str = "W06-ARTIFACT-HASH-BASIS-V1"
+
+HASH_BASIS_BY_ARTIFACT: Dict[str, str] = {
+    "RAW_PROVIDER_RESPONSE": "SHA256_EXACT_PERSISTED_UTF8_BYTES",
+    "BENCHMARK_PROMPT": "SHA256_EXACT_PERSISTED_UTF8_BYTES",
+    "SCENARIO_INPUT": "SHA256_CANONICAL_JSON_UTF8_LF_BYTES",
+    "PARSED_PLAN_RESPONSE": "SHA256_CANONICAL_JSON_UTF8_LF_BYTES",
+    "RUN_MANIFEST": "SHA256_CANONICAL_JSON_UTF8_LF_BYTES",
+    "CATALOG_CONTEXT": "SHA256_CANONICAL_JSON_UTF8_LF_BYTES",
+    "SOURCE_CATALOG": "SHA256_LF_NORMALIZED_SOURCE_BYTES",
+    "PREPARATION_MANIFEST": "SHA256_CANONICAL_JSON_UTF8_LF_BYTES",
+}
+
+MANIFEST_HASH_FIELD_TO_ARTIFACT_MAP: Dict[str, str] = {
+    "scenario_sha256": "SCENARIO_INPUT",
+    "catalog_sha256": "SOURCE_CATALOG",
+    "raw_response_sha256": "RAW_PROVIDER_RESPONSE",
+    "parsed_response_sha256": "PARSED_PLAN_RESPONSE",
+}
+
+NORMALIZED_TOKEN_USAGE_FIELDS: tuple[str, ...] = (
+    "input_tokens",
+    "output_tokens",
+    "total_tokens",
+)
+
+
 class BenchmarkRunManifest(BaseModel):
     """Deterministic cryptographic run manifest for W06 benchmark executions."""
 
@@ -222,7 +249,10 @@ class BenchmarkRunManifest(BaseModel):
     measurement_contract_id: str = "W06-MEASUREMENT-CONTRACT-01"
     measurement_contract_version: str = "1.1.0"
     measurement_contract_source_commit: str = "7fd5364ed4671c06b0c911b6fd53bd9f54cbc322"
-    hash_basis: str = "EXACT_PERSISTED_UTF8_LF_BYTES_SHA256"
+    hash_basis_version: str = HASH_BASIS_VERSION
+    hash_basis_by_artifact: Dict[str, str] = Field(
+        default_factory=lambda: dict(HASH_BASIS_BY_ARTIFACT)
+    )
     claims_bitwise_model_determinism: bool = False
     run_status: BenchmarkRunStatus
     error_detail: Optional[str] = None

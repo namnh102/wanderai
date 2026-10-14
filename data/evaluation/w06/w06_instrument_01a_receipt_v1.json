@@ -1,12 +1,42 @@
 {
   "task_id": "W06-INSTRUMENT-01A",
-  "receipt_version": "1.0.0",
+  "receipt_version": "1.1.0",
   "base_develop_sha": "7fd5364ed4671c06b0c911b6fd53bd9f54cbc322",
   "measurement_contract_id": "W06-MEASUREMENT-CONTRACT-01",
   "measurement_contract_version": "1.1.0",
   "measurement_contract_source_commit": "7fd5364ed4671c06b0c911b6fd53bd9f54cbc322",
   "benchmark_prompt_version": "TRAVEL_PLANNER_BENCHMARK_V1",
-  "hash_basis": "EXACT_PERSISTED_UTF8_LF_BYTES_SHA256",
+  "hash_basis_version": "W06-ARTIFACT-HASH-BASIS-V1",
+  "hash_basis_by_artifact": {
+    "RAW_PROVIDER_RESPONSE": "SHA256_EXACT_PERSISTED_UTF8_BYTES",
+    "BENCHMARK_PROMPT": "SHA256_EXACT_PERSISTED_UTF8_BYTES",
+    "SCENARIO_INPUT": "SHA256_CANONICAL_JSON_UTF8_LF_BYTES",
+    "PARSED_PLAN_RESPONSE": "SHA256_CANONICAL_JSON_UTF8_LF_BYTES",
+    "RUN_MANIFEST": "SHA256_CANONICAL_JSON_UTF8_LF_BYTES",
+    "CATALOG_CONTEXT": "SHA256_CANONICAL_JSON_UTF8_LF_BYTES",
+    "SOURCE_CATALOG": "SHA256_LF_NORMALIZED_SOURCE_BYTES",
+    "PREPARATION_MANIFEST": "SHA256_CANONICAL_JSON_UTF8_LF_BYTES"
+  },
+  "manifest_hash_field_to_artifact_map": {
+    "scenario_sha256": "SCENARIO_INPUT",
+    "catalog_sha256": "SOURCE_CATALOG",
+    "raw_response_sha256": "RAW_PROVIDER_RESPONSE",
+    "parsed_response_sha256": "PARSED_PLAN_RESPONSE"
+  },
+  "canonical_json_serializer_rules": {
+    "encoding": "UTF-8",
+    "ensure_ascii": false,
+    "sort_keys": true,
+    "indent": 2,
+    "final_newline": "LF_SINGLE"
+  },
+  "raw_response_byte_preservation_rule": "Exact UTF-8 encoding of provider response string received by runner; CRLF is preserved if present without LF normalization.",
+  "source_catalog_hash_rule": "SHA256 over LF-normalized source bytes of data/curated/gomate_places_freeze_v2.json (distinct from catalog_context.json which is canonical JSON UTF-8 LF bytes).",
+  "normalized_token_fields": [
+    "input_tokens",
+    "output_tokens",
+    "total_tokens"
+  ],
   "scientific_boundaries": {
     "scientific_results_generated": false,
     "final_100_scenarios_generated": false,
@@ -53,54 +83,66 @@
   ],
   "prerequisite_implementation_matrix": {
     "P1": {
+      "contract_requirement": "Controlled activity_kind ('POI_VISIT' | 'TRANSIT_ONLY') on every itinerary item, with canonical place_id REQUIRED iff activity_kind == 'POI_VISIT' (and fail-closed INVALID_OR_SCHEMA_NONCOMPLIANT_ITEM on missing/unknown activity_kind).",
       "status": "PARTIALLY_IMPLEMENTED",
       "evidence": "BenchmarkItineraryItem in apps/ai-service/app/schemas/planner_benchmark.py enforces controlled activity_kind ('POI_VISIT' | 'TRANSIT_ONLY'), requires non-empty canonical place_id and place_name for POI_VISIT, requires place_id=None for TRANSIT_ONLY, and rejects missing/unknown activity_kind with fail-closed SCHEMA_NONCOMPLIANT_OUTPUT in planner_benchmark_runner.py.",
       "remaining_for_01b": "Evaluator-side item-level classification (INVALID_OR_SCHEMA_NONCOMPLIANT_ITEM) and TRANSIT_ONLY anti-gaming inspection in the W06 evaluator."
     },
     "P2": {
+      "contract_requirement": "Deterministic catalog membership validation against frozen REC-A-CORE-V2 catalog for all POI_VISIT items.",
       "status": "PARTIALLY_IMPLEMENTED",
       "evidence": "build_destination_catalog_context in apps/ai-service/app/prompts/planner_benchmark_prompt.py deterministically loads and filters REC-A-CORE-V2 POIs (ha-noi=145, da-nang=289, ha-long=188) sorted by place_id ascending for prompt construction.",
       "remaining_for_01b": "Post-generation evaluator catalog membership verification (Grounded POI Rate and ALL_POIS_GROUNDED)."
     },
     "P3": {
+      "contract_requirement": "Destination membership validation by canonical place_id for all POI_VISIT items.",
       "status": "NOT_IMPLEMENTED",
       "evidence": "Deferred to W06-INSTRUMENT-01B (post-generation destination membership validation by canonical place_id)."
     },
     "P4": {
+      "contract_requirement": "Canonical duplicate-place validation by place_id across POI_VISIT items.",
       "status": "NOT_IMPLEMENTED",
       "evidence": "Deferred to W06-INSTRUMENT-01B (post-generation canonical duplicate-place validation across POI_VISIT items)."
     },
     "P5": {
+      "contract_requirement": "HH:MM time parser, start_time < end_time validator, and intra-day interval overlap checker.",
       "status": "NOT_IMPLEMENTED",
       "evidence": "Deferred to W06-INSTRUMENT-01B (HH:MM time parser, start_time < end_time validator, and intra-day overlap checker)."
     },
     "P6": {
+      "contract_requirement": "Estimated-budget ceiling checker separate from real-world price-grounding claims.",
       "status": "NOT_IMPLEMENTED",
       "evidence": "Deferred to W06-INSTRUMENT-01B (evaluator-level estimated_budget_violation_rate checker)."
     },
     "P7": {
+      "contract_requirement": "Opening-hours parser with explicit three-state (COMPLIANT / VIOLATION / UNKNOWN) handling where known VIOLATION fails CORE_SCENARIO_PASS and UNKNOWN remains neutral.",
       "status": "NOT_IMPLEMENTED",
       "evidence": "Deferred to W06-INSTRUMENT-01B (opening-hours parser with COMPLIANT / VIOLATION / UNKNOWN three-state evaluation)."
     },
     "P8": {
+      "contract_requirement": "Benchmark harness that rejects mock/fallback execution (FAIL CLOSED on MOCK_OR_FALLBACK_RUN) and retains invalid runs in the primary 100-scenario denominator.",
       "status": "PARTIALLY_IMPLEMENTED",
       "evidence": "execute_benchmark_scenario in apps/ai-service/app/services/planner_benchmark_runner.py fails closed on missing API key (LIVE_PROVIDER_REQUIRED), mock mode (MOCK_OR_FALLBACK_RUN), model mismatch (MODEL_ID_MISMATCH), API errors (API_ERROR), and unparsable/schema-noncompliant outputs with zero silent retries.",
       "remaining_for_01b_01c": "Batch 100-scenario denominator aggregation (VALID_RUN_RATE and CORE_SCENARIO_PASS_RATE_ALL_100)."
     },
     "P9": {
+      "contract_requirement": "Raw provider response and parsed PlanResponse output persistence for evaluation runs.",
       "status": "IMPLEMENTED",
       "evidence": "execute_benchmark_scenario persists scenario_input.json, unmodified raw_provider_response.txt (even on JSON parse or schema validation failure), parsed_plan_response.json, and run_manifest.json."
     },
     "P10": {
+      "contract_requirement": "Cryptographic reproducibility run manifest capturing all required SHA256 digests and run metadata.",
       "status": "PARTIALLY_IMPLEMENTED",
-      "evidence": "BenchmarkRunManifest in apps/ai-service/app/schemas/planner_benchmark.py and planner_benchmark_runner.py records run_id, scenario_id, execution_timestamp_utc, provider, model_id, generation_parameters, execution_mode, latency_ms, nullable authoritative usage_metadata, code_commit_sha, scenario_sha256, catalog_sha256, benchmark_prompt_version, raw_response_sha256, parsed_response_sha256, contract metadata, and run_status.",
+      "evidence": "BenchmarkRunManifest in apps/ai-service/app/schemas/planner_benchmark.py and planner_benchmark_runner.py records run_id, scenario_id, execution_timestamp_utc, provider, model_id, generation_parameters, execution_mode, latency_ms, nullable authoritative usage_metadata (input_tokens, output_tokens, total_tokens), code_commit_sha, scenario_sha256, catalog_sha256, benchmark_prompt_version, raw_response_sha256, parsed_response_sha256, artifact-specific hash_basis_version/hash_basis_by_artifact, contract metadata, and run_status.",
       "remaining_for_01b_01c": "Addition of evaluator_sha256 and aggregate benchmark run manifest once the W06 evaluator is implemented."
     },
     "P11": {
+      "contract_requirement": "Frozen 100-scenario benchmark manifest (34 ha-noi, 33 da-nang, 33 ha-long) with per-scenario SHA256.",
       "status": "NOT_IMPLEMENTED",
       "evidence": "Deferred to the dedicated W06 100-scenario freeze task (final_100_scenarios_generated = false)."
     },
     "P12": {
+      "contract_requirement": "Benchmark-only execution path that cannot accidentally return canned mock responses as scientific evidence.",
       "status": "IMPLEMENTED",
       "evidence": "Benchmark execution is isolated in apps/ai-service/app/services/planner_benchmark_runner.py and scripts/run_w06_planner_benchmark.py, completely bypassing the production POST /planner canned mock fallback while keeping POST /planner untouched."
     }

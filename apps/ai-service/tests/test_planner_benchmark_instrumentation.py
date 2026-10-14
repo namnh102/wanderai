@@ -27,6 +27,11 @@ from app.prompts.planner_benchmark_prompt import (  # noqa: E402
     build_destination_catalog_context,
 )
 from app.schemas.planner_benchmark import (  # noqa: E402
+    CANONICAL_BENCHMARK_INTERESTS,
+    HASH_BASIS_BY_ARTIFACT,
+    HASH_BASIS_VERSION,
+    MANIFEST_HASH_FIELD_TO_ARTIFACT_MAP,
+    NORMALIZED_TOKEN_USAGE_FIELDS,
     ActivityKind,
     BenchmarkItineraryItem,
     BenchmarkRunStatus,
@@ -36,6 +41,8 @@ from app.services.planner_benchmark_runner import (  # noqa: E402
     MEASUREMENT_CONTRACT_ID,
     MEASUREMENT_CONTRACT_SOURCE_COMMIT,
     MEASUREMENT_CONTRACT_VERSION,
+    canonical_json_bytes,
+    compute_catalog_sha256,
     execute_benchmark_scenario,
     normalize_lf_bytes,
     prepare_benchmark_scenario,
@@ -696,3 +703,218 @@ def test_w06_i01a_20_no_scientific_w06_performance_result_generated_and_cli_work
     prep_manifest = json.loads((prep_dir / "preparation_manifest.json").read_text(encoding="utf-8"))
     assert prep_manifest["provider_called"] is False
     assert prep_manifest["catalog_poi_count"] == 289
+
+
+def test_w06_i01a_21_artifact_specific_hash_basis_map_exists_and_covers_all_artifacts(tmp_path: Path):
+    """W06-I01A-21: artifact-specific hash basis map exists and covers scenario/catalog/raw/parsed artifacts."""
+    assert HASH_BASIS_VERSION == "W06-ARTIFACT-HASH-BASIS-V1"
+    expected_map = {
+        "RAW_PROVIDER_RESPONSE": "SHA256_EXACT_PERSISTED_UTF8_BYTES",
+        "BENCHMARK_PROMPT": "SHA256_EXACT_PERSISTED_UTF8_BYTES",
+        "SCENARIO_INPUT": "SHA256_CANONICAL_JSON_UTF8_LF_BYTES",
+        "PARSED_PLAN_RESPONSE": "SHA256_CANONICAL_JSON_UTF8_LF_BYTES",
+        "RUN_MANIFEST": "SHA256_CANONICAL_JSON_UTF8_LF_BYTES",
+        "CATALOG_CONTEXT": "SHA256_CANONICAL_JSON_UTF8_LF_BYTES",
+        "SOURCE_CATALOG": "SHA256_LF_NORMALIZED_SOURCE_BYTES",
+        "PREPARATION_MANIFEST": "SHA256_CANONICAL_JSON_UTF8_LF_BYTES",
+    }
+    assert HASH_BASIS_BY_ARTIFACT == expected_map
+    assert MANIFEST_HASH_FIELD_TO_ARTIFACT_MAP == {
+        "scenario_sha256": "SCENARIO_INPUT",
+        "catalog_sha256": "SOURCE_CATALOG",
+        "raw_response_sha256": "RAW_PROVIDER_RESPONSE",
+        "parsed_response_sha256": "PARSED_PLAN_RESPONSE",
+    }
+
+    scenario = _make_synthetic_test_scenario("da-nang")
+    result = execute_benchmark_scenario(
+        scenario=scenario,
+        output_dir=tmp_path / "hash_map_run",
+        api_key="",
+        client=None,
+        configured_model_id="gemini-3.5-flash",
+        code_commit_sha="7fd5364ed4671c06b0c911b6fd53bd9f54cbc322",
+    )
+    manifest_dump = result.manifest.model_dump()
+    assert "hash_basis" not in manifest_dump
+    assert manifest_dump["hash_basis_version"] == "W06-ARTIFACT-HASH-BASIS-V1"
+    assert manifest_dump["hash_basis_by_artifact"] == expected_map
+
+
+def test_w06_i01a_22_raw_provider_response_with_crlf_persisted_byte_identically(tmp_path: Path):
+    """W06-I01A-22: raw provider response with CRLF is persisted byte-identically."""
+    scenario = _make_synthetic_test_scenario("da-nang")
+    catalog = build_destination_catalog_context("da-nang")
+    valid_json_lf = _make_valid_provider_json(
+        catalog[0].place_id,
+        catalog[0].name,
+        catalog[1].place_id,
+        catalog[1].name,
+    )
+    raw_crlf_response = "```json\r\n" + valid_json_lf.replace("\n", "\r\n") + "\r\n```\r\n"
+    assert "\r\n" in raw_crlf_response
+
+    fake_client = SimpleNamespace(
+        models=SimpleNamespace(
+            generate_content=lambda **_kwargs: SimpleNamespace(
+                text=raw_crlf_response,
+                usage_metadata=None,
+            )
+        )
+    )
+    out_dir = tmp_path / "crlf_raw_run"
+    result = execute_benchmark_scenario(
+        scenario=scenario,
+        output_dir=out_dir,
+        client=fake_client,
+        configured_model_id="gemini-3.5-flash",
+        code_commit_sha="7fd5364ed4671c06b0c911b6fd53bd9f54cbc322",
+    )
+    assert result.run_status == BenchmarkRunStatus.VALID
+    persisted_bytes = (out_dir / "raw_provider_response.txt").read_bytes()
+    assert b"\r\n" in persisted_bytes
+    assert persisted_bytes == raw_crlf_response.encode("utf-8")
+
+
+def test_w06_i01a_23_crlf_raw_response_sha256_reproduces_from_exact_bytes_and_not_labeled_lf_normalized(
+    tmp_path: Path,
+):
+    """W06-I01A-23: CRLF raw response SHA256 reproduces from exact persisted bytes and is NOT falsely described as LF-normalized."""
+    scenario = _make_synthetic_test_scenario("da-nang")
+    catalog = build_destination_catalog_context("da-nang")
+    valid_json_lf = _make_valid_provider_json(
+        catalog[0].place_id,
+        catalog[0].name,
+        catalog[1].place_id,
+        catalog[1].name,
+    )
+    raw_crlf_response = "```json\r\n" + valid_json_lf.replace("\n", "\r\n") + "\r\n```\r\n"
+
+    fake_client = SimpleNamespace(
+        models=SimpleNamespace(
+            generate_content=lambda **_kwargs: SimpleNamespace(
+                text=raw_crlf_response,
+                usage_metadata=None,
+            )
+        )
+    )
+    out_dir = tmp_path / "crlf_hash_run"
+    result = execute_benchmark_scenario(
+        scenario=scenario,
+        output_dir=out_dir,
+        client=fake_client,
+        configured_model_id="gemini-3.5-flash",
+        code_commit_sha="7fd5364ed4671c06b0c911b6fd53bd9f54cbc322",
+    )
+    persisted_bytes = (out_dir / "raw_provider_response.txt").read_bytes()
+    lf_normalized_bytes = persisted_bytes.replace(b"\r\n", b"\n")
+
+    exact_sha = hashlib.sha256(persisted_bytes).hexdigest()
+    lf_sha = hashlib.sha256(lf_normalized_bytes).hexdigest()
+    assert exact_sha != lf_sha
+    assert result.manifest.raw_response_sha256 == exact_sha
+    assert (
+        result.manifest.hash_basis_by_artifact["RAW_PROVIDER_RESPONSE"]
+        == "SHA256_EXACT_PERSISTED_UTF8_BYTES"
+    )
+    assert "LF" not in result.manifest.hash_basis_by_artifact["RAW_PROVIDER_RESPONSE"]
+
+
+def test_w06_i01a_24_canonical_structured_json_serialization_deterministic_and_ends_with_single_lf(
+    tmp_path: Path,
+):
+    """W06-I01A-24: canonical structured JSON serialization is deterministic and ends with exactly one LF."""
+    obj_a = {"z_key": "Đà Nẵng", "a_key": 1, "nested": {"b": 2, "a": 1}}
+    obj_b = {"a_key": 1, "nested": {"a": 1, "b": 2}, "z_key": "Đà Nẵng"}
+
+    bytes_a = canonical_json_bytes(obj_a)
+    bytes_b = canonical_json_bytes(obj_b)
+    assert bytes_a == bytes_b
+    assert b"\r\n" not in bytes_a
+    assert bytes_a.endswith(b"\n")
+    assert not bytes_a.endswith(b"\n\n")
+    assert "Đà Nẵng".encode("utf-8") in bytes_a
+
+    scenario = _make_synthetic_test_scenario("da-nang")
+    prep_dir = tmp_path / "prep_canonical_json"
+    prep_manifest = prepare_benchmark_scenario(scenario=scenario, output_dir=prep_dir)
+    for fname, sha_key in (
+        ("scenario_input.json", "scenario_sha256"),
+        ("catalog_context.json", "catalog_context_sha256"),
+    ):
+        raw = (prep_dir / fname).read_bytes()
+        assert b"\r\n" not in raw
+        assert raw.endswith(b"\n")
+        assert not raw.endswith(b"\n\n")
+        assert prep_manifest[sha_key] == hashlib.sha256(raw).hexdigest()
+
+
+def test_w06_i01a_25_source_catalog_hash_basis_explicitly_states_lf_normalization(tmp_path: Path):
+    """W06-I01A-25: source catalog hash basis explicitly states LF normalization and is distinct from catalog_context."""
+    assert HASH_BASIS_BY_ARTIFACT["SOURCE_CATALOG"] == "SHA256_LF_NORMALIZED_SOURCE_BYTES"
+    assert HASH_BASIS_BY_ARTIFACT["CATALOG_CONTEXT"] == "SHA256_CANONICAL_JSON_UTF8_LF_BYTES"
+
+    sample_catalog_lf = b'[\n  {"place_id": "p1", "name": "A"}\n]\n'
+    sample_catalog_crlf = sample_catalog_lf.replace(b"\n", b"\r\n")
+    lf_file = tmp_path / "cat_lf.json"
+    crlf_file = tmp_path / "cat_crlf.json"
+    lf_file.write_bytes(sample_catalog_lf)
+    crlf_file.write_bytes(sample_catalog_crlf)
+
+    assert compute_catalog_sha256(lf_file) == compute_catalog_sha256(crlf_file)
+    assert compute_catalog_sha256(lf_file) == sha256_bytes(normalize_lf_bytes(sample_catalog_crlf))
+
+
+def test_w06_i01a_26_receipt_p1_to_p12_match_frozen_contract_prerequisites():
+    """W06-I01A-26: receipt P1..P12 IDs and requirements match the frozen contract prerequisite IDs."""
+    contract = json.loads(CONTRACT_JSON_PATH.read_text(encoding="utf-8"))
+    receipt = json.loads(RECEIPT_JSON_PATH.read_text(encoding="utf-8"))
+
+    contract_prereqs = {
+        item["id"]: item["requirement"]
+        for item in contract["required_instrumentation_prerequisites"]
+    }
+    receipt_matrix = receipt["prerequisite_implementation_matrix"]
+    assert list(receipt_matrix.keys()) == [f"P{i}" for i in range(1, 13)]
+
+    for pid, expected_req in contract_prereqs.items():
+        assert receipt_matrix[pid]["contract_requirement"] == expected_req
+
+    assert "canned mock responses" in receipt_matrix["P12"]["contract_requirement"]
+    assert "interest" not in receipt_matrix["P12"]["contract_requirement"].lower()
+
+
+def test_w06_i01a_27_receipt_canonical_interests_equal_frozen_7_interest_taxonomy():
+    """W06-I01A-27: receipt canonical interests and token fields exactly match frozen contract taxonomy."""
+    expected_interests = [
+        "food_cuisine",
+        "culture_history",
+        "nature_outdoor",
+        "coffee_culture",
+        "beach_island",
+        "shopping_local",
+        "nightlife_entertainment",
+    ]
+    forbidden_interests = {
+        "culture_heritage",
+        "nature_scenic",
+        "food_cafe",
+        "beach_water",
+        "shopping_nightlife",
+        "entertainment_activity",
+        "wellness_relaxation",
+    }
+
+    receipt = json.loads(RECEIPT_JSON_PATH.read_text(encoding="utf-8"))
+    md_text = RECEIPT_MD_PATH.read_text(encoding="utf-8")
+
+    assert list(CANONICAL_BENCHMARK_INTERESTS) == expected_interests
+    assert receipt["canonical_interests"] == expected_interests
+    for bad in forbidden_interests:
+        assert bad not in receipt["canonical_interests"]
+        assert bad not in md_text
+
+    assert list(NORMALIZED_TOKEN_USAGE_FIELDS) == ["input_tokens", "output_tokens", "total_tokens"]
+    assert receipt["normalized_token_fields"] == ["input_tokens", "output_tokens", "total_tokens"]
+    assert "thoughts_token_count" not in receipt["normalized_token_fields"]
+    assert "thoughts_token_count" not in md_text
