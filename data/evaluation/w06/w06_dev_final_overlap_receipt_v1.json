@@ -1,0 +1,22 @@
+{
+  "all_dev_exact_overlap_with_final": 0,
+  "all_dev_unique_exact_signatures": true,
+  "artifact_id": "W06-DEV-FINAL-OVERLAP-RECEIPT-01",
+  "dev_bundle_sha256": "bb0f051446ea3da8229298f22f4ce92b4db20751695273c6d01b7766da044050",
+  "dev_duplicate_exact_signature_count": 0,
+  "dev_fixture_seed": 2026101507,
+  "dev_manifest_sha256": "15cf3af6c93d3de967703dbc52d7e082bfd4a1e657409c0678ff51bd081e3c98",
+  "dev_select_count": 60,
+  "dev_select_near_overlap_rate": 0.166667,
+  "dev_select_near_overlap_with_final": 10,
+  "dev_tune_count": 20,
+  "dev_tune_near_overlap_with_final": 0,
+  "final_bundle_sha256": "c03bc6dc300604ac395505d59b6413c1a47339b21408cfd637671e81d4b555a1",
+  "final_semantics_printed_to_operator_logs": false,
+  "hash_basis": "SHA256_CANONICAL_JSON_UTF8_LF_BYTES",
+  "overlap_audit_status": "PASS",
+  "p11_sha256": "0aa9ae923d0e7f29df49735fa41e87530b1caf62418fcbec09a1eff81d83af62",
+  "task_id": "W06-DEV-FIXTURE-FREEZE-01",
+  "total_dev_count": 80,
+  "version": "1.0.0"
+}
