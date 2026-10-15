@@ -432,12 +432,16 @@ def test_frz_26_duplicate_signatures_zero(p11_manifest: Dict[str, Any]):
 def test_frz_27_per_scenario_hashes_all_verify(
     frozen_bundle: Dict[str, Any], p11_manifest: Dict[str, Any]
 ):
-    """FRZ-27: per-scenario hashes all verify."""
+    """FRZ-27: per-scenario hashes all verify independently."""
+    from scripts.verify_w06_scenario_freeze import independent_sha256_canonical_json_lf
+
     hashes = []
     for scen, p11_row in zip(frozen_bundle["scenarios"], p11_manifest["assignments"]):
-        computed = sha256_canonical_json_lf(scen)
-        assert p11_row["scenario_sha256"] == computed
-        hashes.append(computed)
+        ind_computed = independent_sha256_canonical_json_lf(scen)
+        prod_computed = sha256_canonical_json_lf(scen)
+        assert ind_computed == prod_computed
+        assert p11_row["scenario_sha256"] == ind_computed
+        hashes.append(ind_computed)
     assert len(hashes) == 100
     assert len(set(hashes)) == 100
 
@@ -445,8 +449,11 @@ def test_frz_27_per_scenario_hashes_all_verify(
 def test_frz_28_scenario_bundle_sha_verifies(
     frozen_bundle: Dict[str, Any], p11_manifest: Dict[str, Any], freeze_receipt: Dict[str, Any]
 ):
-    """FRZ-28: scenario bundle SHA verifies."""
+    """FRZ-28: scenario bundle SHA verifies independently."""
+    from scripts.verify_w06_scenario_freeze import independent_canonical_json_lf
+
     raw_bytes = SCENARIO_BUNDLE_PATH.read_bytes()
+    assert raw_bytes == independent_canonical_json_lf(frozen_bundle)
     assert raw_bytes == serialize_canonical_json_lf(frozen_bundle)
     sha = hashlib.sha256(raw_bytes).hexdigest()
     assert sha == EXPECTED_BUNDLE_SHA256
@@ -455,8 +462,11 @@ def test_frz_28_scenario_bundle_sha_verifies(
 
 
 def test_frz_29_p11_sha_deterministic(p11_manifest: Dict[str, Any], freeze_receipt: Dict[str, Any]):
-    """FRZ-29: P11 SHA deterministic."""
+    """FRZ-29: P11 SHA deterministic and verifies independently."""
+    from scripts.verify_w06_scenario_freeze import independent_canonical_json_lf
+
     raw_bytes = P11_MANIFEST_PATH.read_bytes()
+    assert raw_bytes == independent_canonical_json_lf(p11_manifest)
     assert raw_bytes == serialize_canonical_json_lf(p11_manifest)
     sha = hashlib.sha256(raw_bytes).hexdigest()
     assert sha == EXPECTED_P11_SHA256
@@ -641,3 +651,131 @@ def test_frz_45_final_scenario_file_contains_no_qa_or_generator_metadata_leakage
         )
     assert exc_info.value.code == "SCENARIO_METADATA_LEAKAGE"
     assert FREEZE_DOC_PATH.exists()
+
+
+def test_frz_fix_01_verifier_canonical_serializer_is_locally_implemented_and_independent(
+    frozen_bundle: Dict[str, Any], p11_manifest: Dict[str, Any]
+):
+    """FRZ-FIX-01: verifier canonical serializer is locally implemented and does not import producer hash helpers."""
+    import ast
+    from scripts.verify_w06_scenario_freeze import (
+        independent_canonical_json_lf,
+        independent_sha256_canonical_json_lf,
+    )
+
+    verifier_path = REPO_ROOT / "scripts" / "verify_w06_scenario_freeze.py"
+    source = verifier_path.read_text(encoding="utf-8")
+    tree = ast.parse(source)
+
+    forbidden_imported_names = {
+        "serialize_canonical_json_lf",
+        "sha256_canonical_json_lf",
+        "canonical_json_bytes",
+    }
+    imported_names = set()
+    for node in ast.walk(tree):
+        if isinstance(node, ast.ImportFrom):
+            for alias in node.names:
+                imported_names.add(alias.name)
+        elif isinstance(node, ast.Import):
+            for alias in node.names:
+                imported_names.add(alias.name)
+
+    assert forbidden_imported_names.isdisjoint(imported_names)
+    assert independent_canonical_json_lf.__module__ == "scripts.verify_w06_scenario_freeze"
+    assert independent_sha256_canonical_json_lf.__module__ == "scripts.verify_w06_scenario_freeze"
+    assert independent_sha256_canonical_json_lf(frozen_bundle) == EXPECTED_BUNDLE_SHA256
+    assert independent_sha256_canonical_json_lf(p11_manifest) == EXPECTED_P11_SHA256
+
+
+def test_frz_fix_02_tampered_non_canonical_whitespace_or_key_order_bytes_rejected(
+    tmp_path: Path, frozen_bundle: Dict[str, Any], p11_manifest: Dict[str, Any]
+):
+    """FRZ-FIX-02: tampered non-canonical whitespace or key-order bytes rejected."""
+    # 1. Non-canonical key order in scenario bundle file
+    reversed_keys_bundle = {k: frozen_bundle[k] for k in reversed(list(frozen_bundle.keys()))}
+    non_canonical_bundle_bytes = (
+        json.dumps(reversed_keys_bundle, indent=2, sort_keys=False, ensure_ascii=False) + "\n"
+    ).encode("utf-8")
+    bad_bundle_path = tmp_path / "non_canonical_bundle.json"
+    bad_bundle_path.write_bytes(non_canonical_bundle_bytes)
+
+    with pytest.raises(FreezeVerificationError) as exc_bundle:
+        verify_frozen_scenario_artifacts_independently(
+            scenario_bundle_path=bad_bundle_path, check_two_run_determinism=False
+        )
+    assert exc_bundle.value.code == "BUNDLE_NON_CANONICAL_BYTES"
+
+    # 2. Non-canonical trailing whitespace in P11 manifest file
+    non_canonical_p11_bytes = P11_MANIFEST_PATH.read_bytes() + b"\n"
+    bad_p11_path = tmp_path / "non_canonical_p11.json"
+    bad_p11_path.write_bytes(non_canonical_p11_bytes)
+
+    with pytest.raises(FreezeVerificationError) as exc_p11:
+        verify_frozen_scenario_artifacts_independently(
+            p11_path=bad_p11_path, check_two_run_determinism=False
+        )
+    assert exc_p11.value.code == "P11_NON_CANONICAL_BYTES"
+
+
+def test_frz_fix_03_per_scenario_hash_mutation_independently_detected(
+    p11_manifest: Dict[str, Any]
+):
+    """FRZ-FIX-03: per-scenario hash mutation independently detected."""
+    bad_p11 = copy.deepcopy(p11_manifest)
+    bad_p11["assignments"][49]["scenario_sha256"] = "0" * 64
+    with pytest.raises(FreezeVerificationError) as exc_info:
+        verify_frozen_scenario_artifacts_independently(
+            p11_manifest_dict=bad_p11, check_two_run_determinism=False
+        )
+    assert exc_info.value.code == "P11_SCENARIO_SHA_MISMATCH"
+
+
+def test_frz_fix_04_p11_scenario_bundle_path_pinned_and_mutation_rejected(
+    p11_manifest: Dict[str, Any]
+):
+    """FRZ-FIX-04: P11 scenario_bundle_path pinned and mutation rejected."""
+    from scripts.verify_w06_scenario_freeze import EXPECTED_P11_SCENARIO_BUNDLE_PATH
+
+    assert EXPECTED_P11_SCENARIO_BUNDLE_PATH == "data/evaluation/w06/w06_scenarios_freeze_v1.json"
+    assert p11_manifest["scenario_bundle_path"] == EXPECTED_P11_SCENARIO_BUNDLE_PATH
+
+    bad_p11 = copy.deepcopy(p11_manifest)
+    bad_p11["scenario_bundle_path"] = "data/evaluation/w06/other_scenarios.json"
+    with pytest.raises(FreezeVerificationError) as exc_info:
+        verify_frozen_scenario_artifacts_independently(
+            p11_manifest_dict=bad_p11, check_two_run_determinism=False
+        )
+    assert exc_info.value.code == "P11_BUNDLE_PATH_INVALID"
+
+
+def test_frz_fix_05_reproducibility_claim_bounded_and_historical_test_compatibility_hardened(
+    freeze_receipt: Dict[str, Any]
+):
+    """FRZ-FIX-05: reproducibility claim bounded and receipt/docs record FIX-01 audit metadata."""
+    doc_text = FREEZE_DOC_PATH.read_text(encoding="utf-8")
+    freeze_script_text = (REPO_ROOT / "scripts" / "freeze_w06_scenarios.py").read_text(encoding="utf-8")
+
+    bounded_statement = (
+        "Under the audited repository revision, frozen scientific inputs, "
+        "recorded dependency/runtime environment, and seed 2026101506, "
+        "the two recorded clean regeneration runs produced identical "
+        "canonical bytes and SHA256 values. This does not claim universal "
+        "bit-for-bit reproducibility across arbitrary platforms, runtimes, "
+        "dependency sets, or environments."
+    )
+    assert bounded_statement in doc_text
+    assert bounded_statement in " ".join(freeze_script_text.split())
+    assert "guaranteeing byte-for-byte identical regeneration across clean runs" not in doc_text
+
+    assert freeze_receipt["reproducibility_claim_bounded"] is True
+    assert freeze_receipt["independent_hash_verifier_uses_producer_hash_helpers"] is False
+    assert freeze_receipt["historical_scientific_artifacts_modified"] is False
+    assert freeze_receipt["methodology_modified"] is False
+    assert freeze_receipt["historical_test_compatibility_update"] is True
+    assert freeze_receipt["historical_test_compatibility_files"] == [
+        "apps/ai-service/tests/test_planner_scenario_generator.py",
+        "tests/test_w06_instrument_01d.py",
+        "tests/test_w06_scenario_method_lock.py",
+    ]
+    assert FREEZE_RECEIPT_PATH.read_bytes() == serialize_canonical_json_lf(freeze_receipt)

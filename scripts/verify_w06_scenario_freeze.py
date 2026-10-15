@@ -36,7 +36,6 @@ if str(REPO_ROOT) not in sys.path:
 from app.evaluation.planner_scenario_generator import (  # noqa: E402
     DEFAULT_SCENARIO_GENERATION_SEED,
     SCENARIO_GENERATOR_VERSION,
-    canonical_json_bytes,
     generate_dry_run_scenarios,
 )
 from app.schemas.planner_benchmark import BenchmarkScenarioInput  # noqa: E402
@@ -54,13 +53,31 @@ from scripts.freeze_w06_scenarios import (  # noqa: E402
     DEFAULT_P11_REL_PATH,
     DEFAULT_SCENARIO_BUNDLE_REL_PATH,
     SEMANTIC_1_TO_1_INVARIANT_FIELDS,
-    serialize_canonical_json_lf,
-    sha256_canonical_json_lf,
     write_frozen_scenario_artifacts,
 )
 
 SCENARIO_BUNDLE_PATH = REPO_ROOT / DEFAULT_SCENARIO_BUNDLE_REL_PATH
 P11_MANIFEST_PATH = REPO_ROOT / DEFAULT_P11_REL_PATH
+EXPECTED_P11_SCENARIO_BUNDLE_PATH = "data/evaluation/w06/w06_scenarios_freeze_v1.json"
+
+
+def independent_canonical_json_lf(obj: Any) -> bytes:
+    """Independently serialize a JSON object to canonical UTF-8 LF bytes."""
+    return (
+        json.dumps(
+            obj,
+            indent=2,
+            sort_keys=True,
+            ensure_ascii=False,
+        )
+        + "\n"
+    ).encode("utf-8")
+
+
+def independent_sha256_canonical_json_lf(obj: Any) -> str:
+    """Independently compute SHA256 hex digest over canonical UTF-8 LF JSON bytes."""
+    return hashlib.sha256(independent_canonical_json_lf(obj)).hexdigest()
+
 
 FORBIDDEN_SCENARIO_LEAKAGE_KEYS: Set[str] = {
     "candidate_index",
@@ -104,6 +121,8 @@ class FreezeVerificationError(ValueError):
 
 def verify_frozen_scenario_artifacts_independently(
     *,
+    scenario_bundle_path: Optional[Path] = None,
+    p11_path: Optional[Path] = None,
     scenario_bundle_dict: Optional[Dict[str, Any]] = None,
     p11_manifest_dict: Optional[Dict[str, Any]] = None,
     scenario_bundle_raw_bytes: Optional[bytes] = None,
@@ -112,30 +131,34 @@ def verify_frozen_scenario_artifacts_independently(
     check_two_run_determinism: bool = True,
 ) -> Dict[str, Any]:
     """Independently verify W06 frozen scenario bundle and P11 assignment manifest."""
+    bundle_file = scenario_bundle_path or SCENARIO_BUNDLE_PATH
+    p11_file = p11_path or P11_MANIFEST_PATH
     if scenario_bundle_dict is None:
-        if not SCENARIO_BUNDLE_PATH.exists():
-            raise FreezeVerificationError("BUNDLE_MISSING", f"Missing {SCENARIO_BUNDLE_PATH}")
-        scenario_bundle_raw_bytes = SCENARIO_BUNDLE_PATH.read_bytes()
+        if not bundle_file.exists():
+            raise FreezeVerificationError("BUNDLE_MISSING", f"Missing {bundle_file}")
+        if scenario_bundle_raw_bytes is None:
+            scenario_bundle_raw_bytes = bundle_file.read_bytes()
         scenario_bundle_dict = json.loads(scenario_bundle_raw_bytes.decode("utf-8"))
     elif scenario_bundle_raw_bytes is None:
-        scenario_bundle_raw_bytes = serialize_canonical_json_lf(scenario_bundle_dict)
+        scenario_bundle_raw_bytes = independent_canonical_json_lf(scenario_bundle_dict)
 
     if p11_manifest_dict is None:
-        if not P11_MANIFEST_PATH.exists():
-            raise FreezeVerificationError("P11_MISSING", f"Missing {P11_MANIFEST_PATH}")
-        p11_raw_bytes = P11_MANIFEST_PATH.read_bytes()
+        if not p11_file.exists():
+            raise FreezeVerificationError("P11_MISSING", f"Missing {p11_file}")
+        if p11_raw_bytes is None:
+            p11_raw_bytes = p11_file.read_bytes()
         p11_manifest_dict = json.loads(p11_raw_bytes.decode("utf-8"))
     elif p11_raw_bytes is None:
-        p11_raw_bytes = serialize_canonical_json_lf(p11_manifest_dict)
+        p11_raw_bytes = independent_canonical_json_lf(p11_manifest_dict)
 
-    # Check canonical byte formatting
-    expected_bundle_bytes = serialize_canonical_json_lf(scenario_bundle_dict)
+    # Check canonical byte formatting independently
+    expected_bundle_bytes = independent_canonical_json_lf(scenario_bundle_dict)
     if scenario_bundle_raw_bytes != expected_bundle_bytes:
         raise FreezeVerificationError(
             "BUNDLE_NON_CANONICAL_BYTES",
             "Scenario bundle file bytes are not canonical UTF-8 LF JSON.",
         )
-    expected_p11_bytes = serialize_canonical_json_lf(p11_manifest_dict)
+    expected_p11_bytes = independent_canonical_json_lf(p11_manifest_dict)
     if p11_raw_bytes != expected_p11_bytes:
         raise FreezeVerificationError(
             "P11_NON_CANONICAL_BYTES",
@@ -154,7 +177,7 @@ def verify_frozen_scenario_artifacts_independently(
     if dry_run_dict is None:
         dry_run_bundle = generate_dry_run_scenarios(seed=DEFAULT_SCENARIO_GENERATION_SEED)
         dry_run_dict = dry_run_bundle.model_dump(mode="json")
-    computed_dry_run_sha256 = hashlib.sha256(canonical_json_bytes(dry_run_dict)).hexdigest()
+    computed_dry_run_sha256 = independent_sha256_canonical_json_lf(dry_run_dict)
     if computed_dry_run_sha256 != EXPECTED_DRY_RUN_SHA256:
         raise FreezeVerificationError(
             "SOURCE_DRY_RUN_SHA_MISMATCH",
@@ -190,6 +213,11 @@ def verify_frozen_scenario_artifacts_independently(
         raise FreezeVerificationError("P11_SEED_INVALID", "Invalid P11 generator_seed")
     if p11_manifest_dict.get("source_dry_run_sha256") != EXPECTED_DRY_RUN_SHA256:
         raise FreezeVerificationError("P11_DRY_RUN_SHA_INVALID", "Invalid P11 source_dry_run_sha256")
+    if p11_manifest_dict.get("scenario_bundle_path") != EXPECTED_P11_SCENARIO_BUNDLE_PATH:
+        raise FreezeVerificationError(
+            "P11_BUNDLE_PATH_INVALID",
+            f"P11 scenario_bundle_path={p11_manifest_dict.get('scenario_bundle_path')!r} != {EXPECTED_P11_SCENARIO_BUNDLE_PATH!r}",
+        )
     if p11_manifest_dict.get("scenario_bundle_sha256") != computed_bundle_sha256:
         raise FreezeVerificationError(
             "P11_BUNDLE_SHA_MISMATCH",
@@ -337,7 +365,7 @@ def verify_frozen_scenario_artifacts_independently(
                 )
 
         # Per-scenario SHA256 verification
-        recomputed_scen_sha = sha256_canonical_json_lf(scen)
+        recomputed_scen_sha = independent_sha256_canonical_json_lf(scen)
         if recomputed_scen_sha in seen_scenario_hashes:
             raise FreezeVerificationError("DUPLICATE_SCENARIO_SHA", f"Duplicate scenario_sha256 at {expected_scen_id}")
         seen_scenario_hashes.add(recomputed_scen_sha)

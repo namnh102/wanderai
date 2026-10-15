@@ -122,7 +122,15 @@ def test_w06_i01d_repo_frozen_artifacts_and_boundaries():
     # Confirm no unauthorized P11 or preregistration files exist
     w06_dir = REPO_ROOT / "data" / "evaluation" / "w06"
     freeze_receipt = w06_dir / "w06_scenario_freeze_01_receipt_v1.json"
-    allowed_p11 = {"w06_p11_assignment_manifest_v1.json"} if freeze_receipt.exists() else set()
+    allowed_p11 = set()
+    if freeze_receipt.exists():
+        receipt_obj = json.loads(freeze_receipt.read_text(encoding="utf-8"))
+        if (
+            receipt_obj.get("task_id") == "W06-SCENARIO-FREEZE-01"
+            and receipt_obj.get("final_scenario_count") == 100
+            and receipt_obj.get("p11_path") == "data/evaluation/w06/w06_p11_assignment_manifest_v1.json"
+        ):
+            allowed_p11 = {"w06_p11_assignment_manifest_v1.json"}
     for p in w06_dir.rglob("*"):
         name_lower = p.name.lower()
         if p.name not in allowed_p11:

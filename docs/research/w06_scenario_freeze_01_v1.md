@@ -36,7 +36,7 @@ All frozen JSON artifacts are serialized deterministically as UTF-8 LF bytes (`S
 ```python
 (json.dumps(obj, indent=2, sort_keys=True, ensure_ascii=False) + "\n").encode("utf-8")
 ```
-No wall-clock timestamps are embedded inside `w06_scenarios_freeze_v1.json` or `w06_p11_assignment_manifest_v1.json`, guaranteeing byte-for-byte identical regeneration across clean runs.
+No wall-clock timestamps are embedded inside `w06_scenarios_freeze_v1.json` or `w06_p11_assignment_manifest_v1.json`. Under the audited repository revision, frozen scientific inputs, recorded dependency/runtime environment, and seed 2026101506, the two recorded clean regeneration runs produced identical canonical bytes and SHA256 values. This does not claim universal bit-for-bit reproducibility across arbitrary platforms, runtimes, dependency sets, or environments.
 
 | Artifact | Path | Canonical UTF-8 LF SHA256 |
 |---|---|---|
@@ -76,7 +76,7 @@ No wall-clock timestamps are embedded inside `w06_scenarios_freeze_v1.json` or `
 
 ---
 
-## 6. Scientific Boundaries
+## 6. Scientific Boundaries & Historical Test Compatibility
 - `method_lock_modified = false`
 - `support_matrix_modified = false`
 - `generator_modified = false`
@@ -84,6 +84,16 @@ No wall-clock timestamps are embedded inside `w06_scenarios_freeze_v1.json` or `
 - `catalog_modified = false`
 - `reca_contract_modified = false`
 - `measurement_contract_modified = false`
+- `historical_scientific_artifacts_modified = false`
+- `methodology_modified = false`
+- `independent_hash_verifier_uses_producer_hash_helpers = false`
+- `reproducibility_claim_bounded = true`
+- `historical_test_compatibility_update = true`
+- `historical_test_compatibility_files`:
+  - `apps/ai-service/tests/test_planner_scenario_generator.py`
+  - `tests/test_w06_instrument_01d.py`
+  - `tests/test_w06_scenario_method_lock.py`
+  *(Earlier phase tests originally asserted that no `P11` file existed on disk prior to `W06-SCENARIO-FREEZE-01`. Once `W06-SCENARIO-FREEZE-01` legitimately created `data/evaluation/w06/w06_p11_assignment_manifest_v1.json`, those three tests were updated to allow only that exact canonical `P11` filename when `data/evaluation/w06/w06_scenario_freeze_01_receipt_v1.json` exists and parses with `task_id == "W06-SCENARIO-FREEZE-01"`, `final_scenario_count == 100`, and `p11_path == "data/evaluation/w06/w06_p11_assignment_manifest_v1.json"`, while continuing to reject any other `p11` or `assignment_manifest` file.)*
 - `model_selection_started = false`
 - `gemini_called = false`, `openai_called = false`, `claude_called = false`, `grok_called = false`
 - `preregistration_created = false`

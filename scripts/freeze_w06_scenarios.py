@@ -13,7 +13,11 @@ Scientific Boundaries:
 - Strips all generator/QA audit metadata from BenchmarkScenarioInput objects and
   places audit metadata into P11 only.
 - Uses canonical UTF-8 LF JSON serialization (`indent=2, sort_keys=True, ensure_ascii=False`)
-  with zero wall-clock timestamps so repeated runs are byte-for-byte deterministic.
+  with zero wall-clock timestamps. Under the audited repository revision, frozen scientific
+  inputs, recorded dependency/runtime environment, and seed 2026101506, the two recorded
+  clean regeneration runs produced identical canonical bytes and SHA256 values. This does
+  not claim universal bit-for-bit reproducibility across arbitrary platforms, runtimes,
+  dependency sets, or environments.
 """
 
 from __future__ import annotations
