@@ -1,0 +1,184 @@
+{
+  "adversarial_test_count": 44,
+  "adversarial_test_fail_count": 0,
+  "adversarial_test_ids": [
+    "W06-VAL-01",
+    "W06-VAL-02",
+    "W06-VAL-03",
+    "W06-VAL-04",
+    "W06-VAL-05",
+    "W06-VAL-06",
+    "W06-VAL-07",
+    "W06-VAL-08",
+    "W06-VAL-09",
+    "W06-VAL-10",
+    "W06-VAL-11",
+    "W06-VAL-12",
+    "W06-VAL-13",
+    "W06-VAL-14",
+    "W06-VAL-15",
+    "W06-VAL-16",
+    "W06-VAL-17",
+    "W06-VAL-18",
+    "W06-VAL-19",
+    "W06-VAL-20",
+    "W06-VAL-21",
+    "W06-VAL-22",
+    "W06-VAL-23",
+    "W06-VAL-24",
+    "W06-VAL-25",
+    "W06-VAL-26",
+    "W06-VAL-27",
+    "W06-VAL-28",
+    "W06-VAL-29",
+    "W06-VAL-30",
+    "W06-VAL-31",
+    "W06-VAL-32",
+    "W06-VAL-33",
+    "W06-VAL-34",
+    "W06-VAL-35",
+    "W06-VAL-36",
+    "W06-VAL-37",
+    "W06-VAL-38",
+    "W06-VAL-39",
+    "W06-VAL-40",
+    "W06-VAL-41",
+    "W06-VAL-42",
+    "W06-VAL-43",
+    "W06-VAL-44"
+  ],
+  "adversarial_test_pass_count": 44,
+  "aggregator_version": "W06-BATCH-AGGREGATOR-01C-V1.0.0",
+  "assignment_manifest_canonical_policy": "REJECT_NON_CANONICAL_FINAL_100_ASSIGNMENT_MANIFEST",
+  "assignment_manifest_hash_basis": "SHA256_CANONICAL_JSON_UTF8_LF_BYTES",
+  "base_develop_sha": "8d599bd8fe1a167a64c375c43148928daeb94dca",
+  "bootstrap_gate_status": "PASS",
+  "budget_gate_test_status": "PASS",
+  "date_alignment_gate_test_status": "PASS",
+  "denominator_gate_status": "PASS",
+  "determinism_gate_status": "PASS",
+  "evaluator_version": "W06-CORE-EVALUATOR-01C-V1.0.0",
+  "evidence_integrity_gate_status": "PASS",
+  "final_100_manifest_hash_contract_defined": true,
+  "followup_note_a_resolution": {
+    "core_scenario_pass_rate_all_100_final_100_behavior": "Populated with denominator == 100 and status == FINAL_100_PRIMARY_METRIC",
+    "core_scenario_pass_rate_all_100_nonfinal_behavior": "Null (with core_scenario_pass_rate_all_100_ci95 == null and status == NOT_APPLICABLE_NON_FINAL_100_MODE)",
+    "generic_assigned_metric": "core_scenario_pass_rate_all_assigned = core_scenario_pass_count / assigned_scenario_count (with core_scenario_pass_rate_all_assigned_ci95)",
+    "status": "RESOLVED"
+  },
+  "followup_note_a_status": "RESOLVED",
+  "followup_note_b_resolution": {
+    "assignment_manifest_canonical_policy": "REJECT_NON_CANONICAL_FINAL_100_ASSIGNMENT_MANIFEST",
+    "assignment_manifest_hash_basis": "SHA256_CANONICAL_JSON_UTF8_LF_BYTES",
+    "hash_basis_version": "W06-ARTIFACT-HASH-BASIS-V1",
+    "p11_implemented": false,
+    "scenario_sha256_rule": "Required non-null 64-character lowercase hexadecimal SHA256 digest on every scenario in FINAL_100 mode",
+    "status": "RESOLVED"
+  },
+  "followup_note_b_status": "RESOLVED",
+  "gate_id": "W06-INSTRUMENT-VALIDATION-01",
+  "gate_purpose": "PRE_SCENARIO_FREEZE_MEASUREMENT_SYSTEM_VALIDATION",
+  "gate_version": "1.0.0",
+  "grounding_gate_test_status": "PASS",
+  "hash_basis_version": "W06-ARTIFACT-HASH-BASIS-V1",
+  "instrument_01a_status": "CLOSED",
+  "instrument_01b_status": "CLOSED",
+  "instrument_01c_status": "CLOSED",
+  "measurement_contract_id": "W06-MEASUREMENT-CONTRACT-01",
+  "measurement_contract_source_commit": "7fd5364ed4671c06b0c911b6fd53bd9f54cbc322",
+  "measurement_contract_version": "1.1.0",
+  "metric_name_ambiguity_resolved": true,
+  "opening_hours_gate_status": "PASS",
+  "opening_hours_parser_version": "W06-OPENING-HOURS-PARSER-01C-V1.0.0",
+  "overall_gate_status": "PASS",
+  "parser_corpus_reproduction_status": "EXACT_MATCH_622_101_73_91_10",
+  "parser_corpus_reproduction_summary": {
+    "core_opening_hours_records": 101,
+    "parser_supported_ratio": 0.90099,
+    "parser_supported_record_count": 91,
+    "parser_unsupported_record_count": 10,
+    "total_core_pois": 622,
+    "unique_opening_hours_string_count": 73,
+    "unsupported_reason_counts": {
+      "UNSUPPORTED_CROSS_MIDNIGHT_SYNTAX": 8,
+      "UNSUPPORTED_HOLIDAY_SELECTOR": 1,
+      "UNSUPPORTED_OPEN_ENDED_PLUS": 1
+    }
+  },
+  "prerequisite_implementation_matrix": {
+    "P1": {
+      "contract_requirement": "Controlled activity_kind ('POI_VISIT' | 'TRANSIT_ONLY') on every itinerary item, with canonical place_id REQUIRED iff activity_kind == 'POI_VISIT' (and fail-closed INVALID_OR_SCHEMA_NONCOMPLIANT_ITEM on missing/unknown activity_kind).",
+      "evidence": "BenchmarkItineraryItem (01A) enforces controlled activity_kind ('POI_VISIT' | 'TRANSIT_ONLY') and required place_id; planner_benchmark_evaluator.py (01B/01C) enforces TRANSIT_ONLY_NAMED_POI_VIOLATION when a TRANSIT_ONLY item carries a non-null place_name.",
+      "status": "IMPLEMENTED"
+    },
+    "P2": {
+      "contract_requirement": "Deterministic catalog membership validation against frozen REC-A-CORE-V2 catalog for all POI_VISIT items.",
+      "evidence": "evaluate_benchmark_scenario validates every POI_VISIT item's place_id against the 622 REC-A-CORE-V2 POIs in data/curated/gomate_places_freeze_v2.json without place_name inference.",
+      "status": "IMPLEMENTED"
+    },
+    "P3": {
+      "contract_requirement": "Destination membership validation by canonical place_id for all POI_VISIT items.",
+      "evidence": "evaluate_benchmark_scenario verifies that every grounded POI_VISIT item's catalog destination_slug equals scenario.destination_slug and computes destination_correct_poi_rate and scenario_destination_valid.",
+      "status": "IMPLEMENTED"
+    },
+    "P4": {
+      "contract_requirement": "Canonical duplicate-place validation by place_id across POI_VISIT items.",
+      "evidence": "evaluate_benchmark_scenario counts repeated canonical place_id values across POI_VISIT items and enforces duplicate_poi_violation_count == 0 when allow_revisit_place_ids == false.",
+      "status": "IMPLEMENTED"
+    },
+    "P5": {
+      "contract_requirement": "HH:MM time parser, start_time < end_time validator, and intra-day interval overlap checker.",
+      "evidence": "parse_strict_hhmm and evaluate_benchmark_scenario validate 24-hour HH:MM strings (00:00..23:59), enforce start_time < end_time, and detect intra-day overlaps using half-open [start, end) intervals.",
+      "status": "IMPLEMENTED"
+    },
+    "P6": {
+      "contract_requirement": "Estimated-budget ceiling checker separate from real-world price-grounding claims.",
+      "evidence": "evaluate_benchmark_scenario computes estimated_total_cost across all items, checks estimated_total_cost <= scenario.budget (or NOT_APPLICABLE when budget is null, or UNDEFINED_ZERO_BUDGET_DENOMINATOR for overrun fraction when budget == 0), and separately verifies ARITHMETIC_SELF_CONSISTENCY.",
+      "status": "IMPLEMENTED"
+    },
+    "P7": {
+      "contract_requirement": "Opening-hours parser with explicit three-state (COMPLIANT / VIOLATION / UNKNOWN) handling where known VIOLATION fails CORE_SCENARIO_PASS and UNKNOWN remains neutral.",
+      "evidence": "opening_hours_evaluator.py and planner_benchmark_evaluator.py implement conservative three-state OSM opening_hours evaluation, scenario day/date alignment validation, and evidence-conditional final core_scenario_pass.",
+      "status": "IMPLEMENTED"
+    },
+    "P8": {
+      "contract_requirement": "Benchmark harness that rejects mock/fallback execution (FAIL CLOSED on MOCK_OR_FALLBACK_RUN) and retains invalid runs in the primary 100-scenario denominator.",
+      "evidence": "Single-scenario runner (01A), evaluator (01B/01C), and batch aggregator (01C + Validation Gate 01) fail closed on non-VALID runs and retain invalid runs as non-passes (numerator contribution 0) in core_scenario_pass_rate_all_assigned and core_scenario_pass_rate_all_100.",
+      "status": "IMPLEMENTED"
+    },
+    "P9": {
+      "contract_requirement": "Raw provider response and parsed PlanResponse output persistence for evaluation runs.",
+      "evidence": "01A persists scenario_input.json, raw_provider_response.txt, parsed_plan_response.json, and run_manifest.json; 01B/01C persist deterministic scenario_evaluation.json and batch aggregation JSON.",
+      "status": "IMPLEMENTED"
+    },
+    "P10": {
+      "contract_requirement": "Cryptographic reproducibility run manifest capturing all required SHA256 digests and run metadata.",
+      "evidence": "01A, 01B, 01C, and Validation Gate 01 verify and record scenario_sha256, catalog_sha256, raw_response_sha256, parsed_response_sha256, source_run_manifest_sha256, evaluator_code_sha256, aggregator_code_sha256, and canonical assignment_manifest_sha256 under W06-ARTIFACT-HASH-BASIS-V1.",
+      "status": "IMPLEMENTED"
+    },
+    "P11": {
+      "contract_requirement": "Frozen 100-scenario benchmark manifest (34 ha-noi, 33 da-nang, 33 ha-long) with per-scenario SHA256.",
+      "evidence": "Schema and cryptographic hash contract frozen and adversarially validated in W06-INSTRUMENT-VALIDATION-01; actual frozen 100-scenario generation and manifest creation remain deferred (real_100_scenarios_generated = false, real_100_assignment_manifest_created = false).",
+      "status": "NOT_IMPLEMENTED"
+    },
+    "P12": {
+      "contract_requirement": "Benchmark-only execution path that cannot accidentally return canned mock responses as scientific evidence.",
+      "evidence": "Benchmark execution (01A), evaluation (01B/01C), and aggregation (01C) are completely isolated from the production POST /planner mock fallback.",
+      "status": "IMPLEMENTED"
+    }
+  },
+  "schedule_gate_test_status": "PASS",
+  "scientific_boundaries": {
+    "Gemini_called": false,
+    "P11_implemented": false,
+    "W5_modified": false,
+    "final_benchmark_executed": false,
+    "historical_measurement_contract_modified": false,
+    "preregistration_created": false,
+    "production_planner_behavior_modified": false,
+    "real_100_assignment_manifest_created": false,
+    "real_100_scenarios_generated": false,
+    "scientific_performance_results_generated": false
+  },
+  "wilson_edge_case_status": "PASS"
+}

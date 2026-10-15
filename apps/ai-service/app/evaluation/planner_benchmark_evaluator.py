@@ -130,6 +130,7 @@ class ScenarioEvaluationResult(BaseModel):
     estimated_budget_compliant: Optional[bool] = None
     estimated_budget_violation_amount: Optional[int] = None
     budget_overrun_fraction: Optional[float] = None
+    budget_overrun_fraction_status: str = "NOT_EVALUATED"
     arithmetic_self_consistency: bool
 
     geo_leg_count: int
@@ -663,8 +664,26 @@ def evaluate_benchmark_scenario(
         estimated_budget_compliant: Optional[bool] = None
         estimated_budget_violation_amount: Optional[int] = None
         budget_overrun_fraction: Optional[float] = None
+        budget_overrun_fraction_status = "NOT_APPLICABLE_NULL_BUDGET"
         budget_pass_for_core = True
+    elif budget_ceiling == 0:
+        # Zero budget ceiling: compliance is well-defined (cost == 0 compliant, cost > 0 violation),
+        # but overrun fraction (cost - 0) / 0 has a zero denominator and is mathematically undefined.
+        budget_overrun_fraction = None
+        budget_overrun_fraction_status = "UNDEFINED_ZERO_BUDGET_DENOMINATOR"
+        if estimated_total_cost == 0:
+            budget_status = "COMPLIANT"
+            estimated_budget_compliant = True
+            estimated_budget_violation_amount = 0
+            budget_pass_for_core = True
+        else:
+            budget_status = "VIOLATION"
+            estimated_budget_compliant = False
+            estimated_budget_violation_amount = estimated_total_cost
+            budget_pass_for_core = False
+            failure_reasons.append("ESTIMATED_BUDGET_VIOLATION")
     else:
+        budget_overrun_fraction_status = "COMPUTED_POSITIVE_BUDGET"
         if estimated_total_cost <= budget_ceiling:
             budget_status = "COMPLIANT"
             estimated_budget_compliant = True
@@ -675,10 +694,8 @@ def evaluate_benchmark_scenario(
             budget_status = "VIOLATION"
             estimated_budget_compliant = False
             estimated_budget_violation_amount = estimated_total_cost - budget_ceiling
-            budget_overrun_fraction = (
-                round(max(0, estimated_total_cost - budget_ceiling) / budget_ceiling, 6)
-                if budget_ceiling > 0
-                else 1.0
+            budget_overrun_fraction = round(
+                max(0, estimated_total_cost - budget_ceiling) / budget_ceiling, 6
             )
             budget_pass_for_core = False
             failure_reasons.append("ESTIMATED_BUDGET_VIOLATION")
@@ -829,6 +846,7 @@ def evaluate_benchmark_scenario(
         estimated_budget_compliant=estimated_budget_compliant,
         estimated_budget_violation_amount=estimated_budget_violation_amount,
         budget_overrun_fraction=budget_overrun_fraction,
+        budget_overrun_fraction_status=budget_overrun_fraction_status,
         arithmetic_self_consistency=arithmetic_self_consistency,
         geo_leg_count=geo_leg_count,
         total_geo_distance_proxy_km=total_geo_distance_proxy_km,
