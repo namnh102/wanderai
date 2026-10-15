@@ -1,0 +1,472 @@
+{
+  "artifact_id": "W06-MODEL-ARCH-SELECTION-METHOD-LOCK-01",
+  "base_develop_sha": "6043402ab102a6bc116aabc0319932208184e102",
+  "decision_provenance": {
+    "grok_made_final_decision": false,
+    "inputs": [
+      "W06 Research Scout Phase 1",
+      "W06 Architecture Auditor Phase 1",
+      "W06 Scientific Red Team Phase 1",
+      "W06 Grok Council Phase 2 cross-critique",
+      "final ChatGPT methodology decision"
+    ],
+    "methodology_owner": "ChatGPT"
+  },
+  "dev_fixture_methodology": {
+    "dev_fixture_ids_and_paths_distinct_from_final_w06": true,
+    "dev_fixture_seed": 2026101507,
+    "dev_select_count": 60,
+    "dev_select_target_balance": {
+      "budget": {
+        "B1": 15,
+        "B2": 15,
+        "B3": 15,
+        "null": 15
+      },
+      "days": {
+        "2": 20,
+        "3": 20,
+        "4": 20
+      },
+      "destination": {
+        "da-nang": 20,
+        "ha-long": 20,
+        "ha-noi": 20
+      },
+      "interest_count": {
+        "1": 20,
+        "2": 20,
+        "3": 20
+      },
+      "travel_style": {
+        "BACKPACKER": 15,
+        "BUDGET": 15,
+        "COMFORT": 15,
+        "LUXURY": 15
+      },
+      "weekend": {
+        "false": 30,
+        "true": 30
+      }
+    },
+    "dev_tune_balance_policy": "APPROXIMATELY_BALANCED_DETERMINISTICALLY_EXACT_MARGINALS_RECORDED_BEFORE_MODEL_EXECUTION",
+    "dev_tune_count": 20,
+    "final_100_forbidden_for_model_selection": true,
+    "seed_shopping": false,
+    "total_dev_fixtures": 80
+  },
+  "dev_model_candidates_policy": {
+    "automatic_substitution_or_alias_allowed": false,
+    "candidates": [
+      {
+        "candidate_id": "C1",
+        "model": "gemini-3.8-flash",
+        "provider": "Google",
+        "role": "CANDIDATE_NOT_SELECTED_FINAL_MODEL"
+      },
+      {
+        "candidate_id": "C2",
+        "model": "gpt-6.1-sol",
+        "provider": "OpenAI",
+        "role": "CANDIDATE_NOT_SELECTED_FINAL_MODEL"
+      },
+      {
+        "candidate_id": "C3",
+        "model": "claude-sonnet-5-5",
+        "provider": "Anthropic",
+        "role": "CANDIDATE_NOT_SELECTED_FINAL_MODEL"
+      }
+    ],
+    "candidates_are_final_selected_models": false,
+    "failed_preflight_status": "FAILED_PREFLIGHT",
+    "gemini_flash_lite_or_open_weight_addition_without_formal_amendment_before_dev_select_allowed": false,
+    "max_dev_select_candidates": 3,
+    "replace_failed_candidate_after_dev_results_allowed": false,
+    "required_preflight_verification_fields": [
+      "provider_documentation_url",
+      "access_date",
+      "endpoint_semantics",
+      "resolved_or_runtime_model_version_or_fingerprint_if_exposed",
+      "structured_output_capability"
+    ]
+  },
+  "dev_select_execution_policy": {
+    "automatic_retry": 0,
+    "best_of_n_selection_allowed": false,
+    "dev_select_fixture_count": 60,
+    "executions_per_candidate_per_fixture": 1,
+    "max_dev_select_configs": 3,
+    "max_model_executions_in_one_dev_select": 180,
+    "repair": 0,
+    "stochasticity_probes_allowed_on": "SELECTED_CONFIG_ONLY_AFTER_DEV_SELECT_ON_5_DETERMINISTIC_DEV_TUNE_FIXTURES"
+  },
+  "final_benchmark_design": {
+    "automatic_retry": 0,
+    "claim_model_superiority_from_final_100_allowed": false,
+    "dev_evidence_role": "MODEL_CONFIG_SELECTION_EVIDENCE_ONLY_NOT_FINAL_SCIENTIFIC_PERFORMANCE_EVIDENCE",
+    "executions_per_scenario": 1,
+    "final_primary_config_count": 1,
+    "final_scenario_count": 100
+  },
+  "final_dev_overlap_policy": {
+    "all_80_dev_exact_signature_overlap_with_final_100": 0,
+    "automated_overlap_checker_allowed_outputs": [
+      "counts",
+      "hashes",
+      "PASS_FAIL",
+      "aggregate_diagnostics"
+    ],
+    "automated_overlap_checker_prints_final_scenario_semantics": false,
+    "dev_select_exact_overlap_with_final_100": 0,
+    "dev_select_near_overlap_count_must_be_reported": true,
+    "dev_select_near_overlap_may_exist": true,
+    "dev_tune_near_overlap_with_final_100": 0,
+    "exact_signature_fields": [
+      "destination_slug",
+      "days",
+      "sorted_interests",
+      "budget_tier_or_null",
+      "weekend_exposure",
+      "travel_style"
+    ],
+    "infeasible_20_dev_tune_zero_near_overlap_action": "STOP_DO_NOT_SILENTLY_RELAX_DEFINITION",
+    "near_overlap_definition": "same destination_slug AND same sorted(interests) AND same budget_tier_or_null AND abs(days_dev - days_final) <= 1"
+  },
+  "harness_error_policy": {
+    "harness_error_determination_basis": "INFRASTRUCTURE_AND_CODE_EVIDENCE_AND_LOGS_ONLY_NOT_OBSERVED_PERFORMANCE",
+    "if_scientific_metrics_inspected_before_defect_declaration": "ORIGINAL_PRIMARY_BATCH_CONSIDERED_COMPROMISED_DISCLOSE_LATER_RUN_AS_AMENDED_OR_SECONDARY_UNLESS_FORMAL_CHATGPT_AMENDMENT",
+    "on_objectively_demonstrated_harness_error": [
+      "STOP_ENTIRE_BATCH",
+      "PRESERVE_ALL_OLD_ARTIFACTS",
+      "DO_NOT_SILENTLY_CONTINUE",
+      "REQUIRE_FORMAL_AMENDMENT",
+      "RE_FREEZE_CHANGED_CONFIG_OR_CODE",
+      "AMEND_PREREGISTRATION",
+      "RERUN_COMPLETE_100_AS_NEW_RUN_ID_IF_ALLOWED"
+    ],
+    "single_scenario_harness_rerun_allowed": false
+  },
+  "hash_basis": "SHA256_CANONICAL_JSON_UTF8_LF_BYTES",
+  "model_config_selection_rule": {
+    "add_candidate_or_config_after_inspecting_dev_select_allowed": false,
+    "administrative_tie_break_claims_scientific_superiority": false,
+    "cost_criterion_policy": {
+      "cost_skipped_status": "COST_CRITERION_SKIPPED_NOT_COMPARABLE",
+      "criterion_name": "MEDIAN_COST_PER_SCENARIO",
+      "if_authoritative_comparable_cost_exists_for_all_current_survivors": "KEEP_MINIMUM_UNROUNDED_CANONICAL_MEDIAN_COST",
+      "if_cost_unavailable_or_non_comparable_for_any_current_survivor": "SKIP_COST_FOR_ALL_CURRENT_SURVIVORS",
+      "penalize_single_provider_lacking_comparable_cost_allowed": false,
+      "select_immediately_when_single_survivor_remains": true
+    },
+    "criteria_1_to_3_practical_tie_abs_diff_percentage_points": 10.0,
+    "criteria_1_to_3_practical_tie_abs_diff_ratio": 0.1,
+    "criteria_1_to_3_survivor_algorithm": {
+      "algorithm_id": "BEST_RELATIVE_SURVIVOR_SET_REDUCTION",
+      "best_score_formula": "max(score[c] for c in current_survivors)",
+      "initial_survivors": "ALL_CANDIDATES_THAT_PASSED_TECHNICAL_PREFLIGHT_AND_ENTERED_DEV_SELECT",
+      "next_survivors_formula": "[c for c in current_survivors if best_score - score[c] <= 0.10]",
+      "nontransitive_reference_example": {
+        "best_score": 0.9,
+        "eliminated": [
+          "C3"
+        ],
+        "input_scores": {
+          "C1": 0.9,
+          "C2": 0.82,
+          "C3": 0.74
+        },
+        "next_survivors": [
+          "C1",
+          "C2"
+        ]
+      },
+      "ordered_rate_criteria": [
+        "VALID_RUN_AND_SCHEMA_RATE",
+        "EXACT_GROUNDING_PASS_RATE",
+        "FINAL_CORE_PASS_RATE"
+      ],
+      "pairwise_chaining_allowed": false,
+      "select_immediately_when_single_survivor_remains": true,
+      "tie_comparison_reference": "BEST_SCORE_AMONG_CURRENT_SURVIVORS"
+    },
+    "criterion_4_tie_breaker": "LOWER_UNROUNDED_CANONICAL_MEDIAN_COST_IF_COMPARABLE_FOR_ALL_SURVIVORS_ELSE_SKIP_FOR_ALL",
+    "criterion_5_tie_breaker": "LOWER_UNROUNDED_CANONICAL_MEDIAN_LATENCY_WINS",
+    "final_exact_tie_candidate_order": [
+      "C1",
+      "C2",
+      "C3"
+    ],
+    "final_exact_tie_rule": "SELECT_FIRST_CANDIDATE_IN_FROZEN_ORDER_C1_GT_C2_GT_C3",
+    "final_tie_breaker": "FINAL_EXACT_TIE_CANDIDATE_ORDER",
+    "human_judgment_after_dev_select_allowed": false,
+    "known_opening_hours_violation_reporting": "REPORTED_SEPARATELY_ALREADY_INCLUDED_IN_FINAL_CORE_PASS_NOT_A_SEPARATE_LEXICOGRAPHIC_LEVEL",
+    "latency_criterion_policy": {
+      "criterion_name": "MEDIAN_LATENCY",
+      "rule": "KEEP_MINIMUM_UNROUNDED_CANONICAL_MEDIAN_LATENCY",
+      "select_immediately_when_single_survivor_remains": true
+    },
+    "on_tie_action": "REPLACE_CURRENT_SURVIVORS_WITH_NEXT_SURVIVORS_AND_ADVANCE_IF_MULTIPLE_REMAIN",
+    "ordered_criteria": [
+      "VALID_RUN_AND_SCHEMA_RATE",
+      "EXACT_GROUNDING_PASS_RATE",
+      "FINAL_CORE_PASS_RATE",
+      "MEDIAN_COST_PER_SCENARIO",
+      "MEDIAN_LATENCY"
+    ],
+    "report_every_candidate_result_required": true,
+    "rule_type": "LEXICOGRAPHIC_BEST_RELATIVE_SURVIVOR_SET_REDUCTION",
+    "stop_permanently_after_one_dev_select_comparison": true,
+    "subjective_pinability_tie_break_allowed": false,
+    "weighted_composite_allowed": false
+  },
+  "opening_hours_coverage_audit_authorization": {
+    "allowed_computed_fields": [
+      "total_reca_core_pois",
+      "known_opening_hours_count",
+      "unknown_opening_hours_count",
+      "coverage_rate",
+      "per_destination_coverage",
+      "catalog_sha256",
+      "parser_version"
+    ],
+    "authorized": true,
+    "inspect_final_scenario_model_outputs_allowed": false,
+    "mode": "READ_ONLY_CATALOG_EVIDENCE_AUDIT",
+    "modify_frozen_scenarios_allowed": false,
+    "reporting_role": "BENCHMARK_EVIDENCE_COVERAGE_ONLY",
+    "target_catalog_path": "data/curated/gomate_places_freeze_v2.json"
+  },
+  "preconditions": {
+    "catalog_path": "data/curated/gomate_places_freeze_v2.json",
+    "catalog_sha256": "f7517938598e3923906763f8f31334a500ee88bc06232f2992d38e2fcb28a444",
+    "chatgpt_methodology_decision": "FINAL_FOR_DEV_SELECTION",
+    "frozen_scenario_bundle_path": "data/evaluation/w06/w06_scenarios_freeze_v1.json",
+    "frozen_scenario_bundle_sha256": "c03bc6dc300604ac395505d59b6413c1a47339b21408cfd637671e81d4b555a1",
+    "generator_source_path": "apps/ai-service/app/evaluation/planner_scenario_generator.py",
+    "generator_source_sha256": "623c52cbdd98d181cd9cbbc1e68697a7299cb6c864628e97e743afd9e09ceae1",
+    "grok_council_phase_2_status": "COMPLETE",
+    "measurement_contract_path": "data/evaluation/w06/w06_measurement_contract_v1.json",
+    "measurement_contract_sha256": "0ddc1f8d879493517cee25f247d2365a0bacb816dc33b129b0c6110d4bfb8298",
+    "p11_path": "data/evaluation/w06/w06_p11_assignment_manifest_v1.json",
+    "p11_sha256": "0aa9ae923d0e7f29df49735fa41e87530b1caf62418fcbec09a1eff81d83af62",
+    "qa_verifier_path": "scripts/audit_w06_scenario_generator_dryrun.py",
+    "qa_verifier_sha256": "2e5a218fc49d4af0052dffa49c14a8a7d5d9818847fd6d37f647422a9cadc6fc",
+    "reca_contract_path": "apps/ai-service/recommendation/reca/contract.py",
+    "reca_contract_sha256": "1a62c36a95092be35ab78dca43e20f646016e154746ee051a499bdebfc67538c",
+    "scenario_method_lock_path": "data/evaluation/w06/w06_scenario_method_lock_v1.json",
+    "scenario_method_lock_sha256": "5e5359f9f10a0248a9cf031f8e8b26c0314c46aecfe0d9df479388bbe4fd1af9",
+    "scenario_support_matrix_path": "data/evaluation/w06/w06_scenario_support_matrix_v1.json",
+    "scenario_support_matrix_sha256": "68c2bfc2164e664b3856c31b99a92d75a588f64465526b47c9104918a51cedb4",
+    "w06_scenario_freeze_01_status": "CLOSED"
+  },
+  "primary_architecture": {
+    "architecture_class": "DIRECT_ONE_CALL_PLUS_READ_ONLY_DETERMINISTIC_VALIDATION",
+    "architecture_id": "LLM_BASED_ITINERARY_PLANNER_WITH_DETERMINISTIC_GROUNDING_AND_VALIDATION_V1",
+    "automatic_retry_count": 0,
+    "autonomous_or_multi_agent_claim_allowed": false,
+    "deterministic_catalog_before_model": true,
+    "deterministic_semantic_repair_enabled": false,
+    "fallback_model_allowed": false,
+    "llm_calls_per_execution": 1,
+    "llm_repair_calls": 0,
+    "model_initiated_tool_calls": 0,
+    "offline_evaluator_is_scientific_score_authority": true,
+    "preferred_thesis_label": "LLM-based itinerary planner with deterministic grounding and validation",
+    "validator_feedback_to_model": false
+  },
+  "primary_json_normalization_policy": {
+    "diagnostic_metric_name": "LEGACY_RECOVERABLE_PARSE_RATE",
+    "legacy_cleaner_function": "clean_benchmark_json_response",
+    "legacy_cleaner_replaces_primary_artifact": false,
+    "legacy_cleaner_role": "DIAGNOSTIC_ONLY_RECOVERY_REPORTING",
+    "malformed_json_rescue_affects_primary_metrics": false,
+    "primary_code_fence_removal": false,
+    "primary_json_repair_enabled": false,
+    "primary_llm_json_repair": false,
+    "primary_substring_json_extraction": false,
+    "primary_trailing_comma_repair": false,
+    "raw_provider_artifact_preserved": true
+  },
+  "prompt_tuning_policy": {
+    "allowed_prompt_version_ids": [
+      "P1",
+      "P2"
+    ],
+    "allowed_provider_adapter_differences": [
+      "API_SYNTAX",
+      "STRUCTURED_OUTPUT_WIRING"
+    ],
+    "dev_select_rerun_on_disappointing_result_allowed": false,
+    "if_only_p1_exists_action": "LOCK_P1_WITHOUT_PERFORMANCE_COMPARISON",
+    "max_shared_semantic_prompt_versions_on_dev_tune": 2,
+    "prompt_lock_before_dev_select": true,
+    "provider_specific_semantic_prompts_allowed": false,
+    "record_every_attempted_prompt_version": true,
+    "required_prompt_lock_fields_before_dev_select": [
+      "selected_prompt_version_id",
+      "selected_prompt_hash",
+      "all_attempted_prompt_version_ids",
+      "all_attempted_prompt_hashes"
+    ],
+    "semantic_prompt_edit_after_dev_select_begins_allowed": false,
+    "single_prompt_only_allowed_id": "P1",
+    "technical_api_or_schema_adapters_count_as_separate_semantic_prompts": false,
+    "two_prompt_comparison_protocol": {
+      "aggregation_method": "POOLED_EQUAL_WEIGHT_ACROSS_ALL_CANDIDATE_BY_DEV_TUNE_FIXTURE_CELLS",
+      "automatic_retry": 0,
+      "best_of_n_allowed": false,
+      "create_p3_after_viewing_results_allowed": false,
+      "dev_tune_fixture_count": 20,
+      "evaluated_candidates": "ALL_CANDIDATES_THAT_PASSED_TECHNICAL_PREFLIGHT",
+      "executions_per_prompt_candidate_fixture_cell": 1,
+      "max_prompt_tune_executions_formula": "2 * 20 * number_of_preflight_passed_candidates",
+      "max_prompt_tune_executions_hard_cap": 120,
+      "ordered_selection_criteria": [
+        "VALID_RUN_AND_SCHEMA_RATE",
+        "EXACT_GROUNDING_PASS_RATE",
+        "FINAL_CORE_PASS_RATE"
+      ],
+      "practical_tie_abs_diff_percentage_points": 10.0,
+      "practical_tie_abs_diff_ratio": 0.1,
+      "repair": 0,
+      "same_20_dev_tune_fixtures_required": true,
+      "survivor_algorithm": "BEST_RELATIVE_10PP_SURVIVOR_REDUCTION",
+      "tie_after_criterion_3_winner": "P1",
+      "use_cost_or_latency_for_prompt_selection_allowed": false
+    }
+  },
+  "required_pre_preregistration_config_freeze_fields": [
+    "provider",
+    "provider_endpoint",
+    "region",
+    "requested_model_id",
+    "resolved_or_returned_model_metadata_if_exposed",
+    "sdk_exact_version",
+    "dependency_lock_or_environment_hash",
+    "architecture_id",
+    "llm_calls_per_execution",
+    "tool_call_policy",
+    "system_prompt",
+    "user_template",
+    "prompt_hashes",
+    "response_schema",
+    "schema_hash",
+    "structured_output_mode",
+    "temperature",
+    "top_p",
+    "top_k",
+    "seed",
+    "thinking_or_reasoning_setting",
+    "max_output_tokens",
+    "timeout",
+    "automatic_retry",
+    "transport_retry",
+    "fallback_policy",
+    "repair_policy",
+    "json_normalization_policy",
+    "catalog_sha",
+    "scenario_bundle_sha",
+    "p11_sha",
+    "evaluator_sha",
+    "opening_hours_evidence_state_or_hash",
+    "failure_taxonomy",
+    "execution_ordering",
+    "logging_schema_or_version",
+    "code_commit_sha"
+  ],
+  "retry_and_failure_policy": {
+    "all_final_outcomes_remain_in_assigned_denominator": true,
+    "fallback_model_or_provider_allowed": false,
+    "forbidden_retry_outcomes": [
+      "HTTP_429",
+      "HTTP_5XX",
+      "TIMEOUT",
+      "PARTIAL_TIMEOUT",
+      "MALFORMED_MODEL_OUTPUT",
+      "SCHEMA_NONCOMPLIANCE",
+      "REFUSAL",
+      "CONSTRAINT_FAILURE"
+    ],
+    "model_id_or_resolved_version_mismatch_action": "CONFIGURATION_INTEGRITY_FAILURE_STOP_BATCH_BEFORE_SCIENTIFIC_REPORTING",
+    "scenario_retry_allowed_after": [],
+    "sdk_automatic_retry": 0,
+    "simulated_transport_or_server_failure_single_request_validation_required": true,
+    "transport_retry": 0
+  },
+  "sampling_policy": {
+    "bitwise_determinism_claimed": false,
+    "seed_if_supported": 2026101508,
+    "seed_if_unsupported": "UNSUPPORTED",
+    "seed_shopping_allowed": false,
+    "temperature_grid_search_allowed": false,
+    "temperature_if_supported": 0,
+    "temperature_if_unsupported": "UNSUPPORTED",
+    "temperature_or_seed_selected_by_dev_performance": false,
+    "thinking_or_reasoning_level_policy": "FIXED_DURING_TECHNICAL_PREFLIGHT_DOCUMENTED_AND_NOT_TUNED_ON_DEV_SELECT",
+    "unsupported_temperature_requires_documented_provider_fixed_behavior": true
+  },
+  "scientific_claim_boundaries": {
+    "preferred_system_description": "LLM-based itinerary planner with deterministic grounding and validation",
+    "w06_does_not_establish": [
+      "real-world price accuracy",
+      "travel-time optimization",
+      "true preference understanding",
+      "generalization to all Vietnam",
+      "universal bit-for-bit reproducibility",
+      "model superiority without preregistered comparison",
+      "infeasibility handling not evaluated",
+      "factual travel knowledge merely from place_id grounding"
+    ]
+  },
+  "status": "FROZEN_BEFORE_DEV_MODEL_EXECUTION",
+  "stochasticity_diagnostic_policy": {
+    "allowed_uses": [
+      "ESTIMATE_OBSERVED_OUTPUT_VARIABILITY",
+      "REPORT_AS_LIMITATION_OR_DIAGNOSTIC"
+    ],
+    "automatic_retry": 0,
+    "best_of_n": false,
+    "diagnostic_executions_per_fixture": 3,
+    "fixture_selection_rule": "FIVE_LEXICOGRAPHICALLY_SMALLEST_FROZEN_DEV_TUNE_SCENARIO_IDS",
+    "max_diagnostic_calls": 15,
+    "may_alter_prompt": false,
+    "may_alter_sampling_configuration": false,
+    "may_alter_selected_model": false,
+    "may_trigger_another_dev_select": false,
+    "stochasticity_diagnostic_dataset": "DEV_TUNE",
+    "stochasticity_diagnostic_fixture_count": 5,
+    "stochasticity_diagnostic_may_affect_selection": false,
+    "stochasticity_diagnostic_selected_config_only": true,
+    "stochasticity_diagnostic_timing": "AFTER_DEV_SELECT_WINNER_SELECTED"
+  },
+  "structured_output_policy": {
+    "candidate_without_semantic_schema_support_enters_dev_select": false,
+    "encode_catalog_place_ids_as_provider_side_enum": false,
+    "native_structured_output_required_for_dev_select": true,
+    "offline_pydantic_validation_identical_across_providers": true,
+    "provider_decoding_is_part_of_evaluated_system": true,
+    "required_semantic_schema": "BenchmarkPlanResponse",
+    "structured_output_mode_determined_by": "TECHNICAL_CAPABILITY_PREFLIGHT_NOT_DEV_PERFORMANCE"
+  },
+  "task_execution_boundaries": {
+    "claude_called": false,
+    "dev_fixtures_generated": false,
+    "dev_model_outputs_generated": false,
+    "final_100_scenario_contents_inspected": false,
+    "final_benchmark_executed": false,
+    "final_scenario_bundle_modified": false,
+    "gemini_called": false,
+    "generator_modified": false,
+    "grok_called": false,
+    "measurement_contract_modified": false,
+    "openai_called": false,
+    "p11_modified": false,
+    "preregistration_created": false,
+    "qa_verifier_modified": false,
+    "scenario_method_lock_modified": false,
+    "scenario_support_matrix_modified": false,
+    "winning_model_selected": false
+  },
+  "task_id": "W06-MODEL-ARCH-SELECTION-METHOD-LOCK-01",
+  "version": "1.0.0"
+}
