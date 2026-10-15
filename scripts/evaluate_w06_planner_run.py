@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
-"""Controlled CLI entrypoint for W06 Deterministic Core Constraint Evaluator (W06-INSTRUMENT-01B).
+"""Controlled CLI entrypoint for W06 Deterministic Constraint Evaluator (W06-INSTRUMENT-01B / 01C).
 
-Evaluates a single persisted benchmark scenario run directory and writes scenario_evaluation.json.
-Does NOT aggregate multiple scenarios or compute final CORE_SCENARIO_PASS (opening-hours evaluation belongs to 01C).
+Evaluates a single persisted benchmark scenario run directory (including core constraints,
+scenario day/date alignment, conservative three-state opening-hours evaluation, and final
+core_scenario_pass) and writes scenario_evaluation.json.
 """
 import argparse
 import json
@@ -22,7 +23,7 @@ from app.evaluation.planner_benchmark_evaluator import (  # noqa: E402
 
 def build_arg_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description="W06 Deterministic Core Constraint Evaluator CLI (W06-INSTRUMENT-01B)"
+        description="W06 Deterministic Core & Opening-Hours Constraint Evaluator CLI (W06-INSTRUMENT-01B / 01C)"
     )
     parser.add_argument(
         "--run-dir",

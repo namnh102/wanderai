@@ -16,9 +16,12 @@ if str(REPO_ROOT) not in sys.path:
 
 from app.evaluation.planner_benchmark_evaluator import (  # noqa: E402
     EVALUATOR_VERSION,
+    EVALUATOR_VERSION_01B,
     FINAL_CORE_PASS_STATUS_01B,
+    FINAL_CORE_PASS_STATUS_01C,
     MINIMUM_ITEMS_PER_DAY_CONTRACT_STATUS,
     OPENING_HOURS_STATUS_01B,
+    OPENING_HOURS_STATUS_01C,
     compute_haversine_geo_distance_proxy_km,
     evaluate_benchmark_scenario,
     evaluate_run_directory,
@@ -61,14 +64,18 @@ def _make_scenario(
     budget: Optional[int] = 2000000,
     allow_revisit_place_ids: bool = False,
 ) -> BenchmarkScenarioInput:
+    import datetime
+
     dest_names = {"ha-noi": "Hà Nội", "da-nang": "Đà Nẵng", "ha-long": "Hạ Long"}
+    start_dt = datetime.date(2026, 7, 1)
+    end_dt = start_dt + datetime.timedelta(days=days - 1)
     return BenchmarkScenarioInput(
         scenario_id="SYNTHETIC_01B_TEST_SCENARIO",
         destination_slug=destination_slug,
         destination=dest_names[destination_slug],
         days=days,
-        start_date="2026-07-01",
-        end_date="2026-07-02",
+        start_date=start_dt.isoformat(),
+        end_date=end_dt.isoformat(),
         budget=budget,
         currency="VND",
         travel_style="comfort",
@@ -581,13 +588,16 @@ def test_w06_i01b_20_geo_proxy_excluded_from_core_pass():
 
 
 def test_w06_i01b_21_opening_hours_remains_not_evaluated_in_01b():
-    """W06-I01B-21: opening hours remains NOT_EVALUATED_IN_01B."""
+    """W06-I01B-21: 01B receipt records NOT_EVALUATED_IN_01B; 01C evaluator upgrades status to EVALUATED."""
+    receipt = json.loads(RECEIPT_01B_JSON_PATH.read_text(encoding="utf-8"))
+    assert receipt["opening_hours_status"] == OPENING_HOURS_STATUS_01B == "NOT_EVALUATED_IN_01B"
+
     dn_pois = build_destination_catalog_context("da-nang")
     scenario = _make_scenario(destination_slug="da-nang")
     plan, manifest = _make_plan_and_manifest(scenario, _make_default_valid_days(dn_pois))
 
     res = evaluate_benchmark_scenario(scenario, plan, manifest)
-    assert res.opening_hours_status == OPENING_HOURS_STATUS_01B == "NOT_EVALUATED_IN_01B"
+    assert res.opening_hours_status == OPENING_HOURS_STATUS_01C == "EVALUATED"
 
 
 def test_w06_i01b_22_invalid_run_status_fails_closed():
@@ -611,6 +621,7 @@ def test_w06_i01b_22_invalid_run_status_fails_closed():
         assert res.run_valid is False
         assert res.run_status == non_valid_status.value
         assert res.core_scenario_pass_pre_opening_hours is False
+        assert res.core_scenario_pass is False
         assert "INVALID_RUN" in res.failure_reasons
 
 
@@ -625,6 +636,7 @@ def test_w06_i01b_23_scenario_hash_mismatch_causes_evidence_integrity_failure():
     assert res.evaluation_status == "EVIDENCE_INTEGRITY_FAILURE"
     assert res.evidence_integrity_valid is False
     assert res.core_scenario_pass_pre_opening_hours is False
+    assert res.core_scenario_pass is False
     assert "SCENARIO_SHA256_MISMATCH" in res.failure_reasons
 
 
@@ -639,6 +651,7 @@ def test_w06_i01b_24_parsed_response_hash_mismatch_causes_evidence_integrity_fai
     assert res.evaluation_status == "EVIDENCE_INTEGRITY_FAILURE"
     assert res.evidence_integrity_valid is False
     assert res.core_scenario_pass_pre_opening_hours is False
+    assert res.core_scenario_pass is False
     assert "PARSED_RESPONSE_SHA256_MISMATCH" in res.failure_reasons
 
 
@@ -653,6 +666,7 @@ def test_w06_i01b_25_catalog_hash_mismatch_causes_evidence_integrity_failure():
     assert res.evaluation_status == "EVIDENCE_INTEGRITY_FAILURE"
     assert res.evidence_integrity_valid is False
     assert res.core_scenario_pass_pre_opening_hours is False
+    assert res.core_scenario_pass is False
     assert "CATALOG_SHA256_MISMATCH" in res.failure_reasons
 
 
@@ -694,28 +708,38 @@ def test_w06_i01b_27_no_weighted_composite_score_exists():
 
 
 def test_w06_i01b_28_no_final_core_scenario_pass_field_or_result_produced():
-    """W06-I01B-28: no final CORE_SCENARIO_PASS boolean field/result produced in 01B."""
+    """W06-I01B-28: 01B receipt preserves pre-opening-hours gate; 01C computes both pre and final core_scenario_pass."""
+    receipt = json.loads(RECEIPT_01B_JSON_PATH.read_text(encoding="utf-8"))
+    assert receipt["core_pass_field"] == "core_scenario_pass_pre_opening_hours"
+    assert receipt["final_core_scenario_pass_status"] == FINAL_CORE_PASS_STATUS_01B
+
     dn_pois = build_destination_catalog_context("da-nang")
     scenario = _make_scenario(destination_slug="da-nang")
     plan, manifest = _make_plan_and_manifest(scenario, _make_default_valid_days(dn_pois))
 
     res = evaluate_benchmark_scenario(scenario, plan, manifest)
     res_dict = res.model_dump()
-    assert "core_scenario_pass" not in res_dict
-    assert "CORE_SCENARIO_PASS" not in res_dict
     assert "core_scenario_pass_pre_opening_hours" in res_dict
-    assert res.final_core_scenario_pass_status == FINAL_CORE_PASS_STATUS_01B
+    assert "core_scenario_pass" in res_dict
+    assert res.final_core_scenario_pass_status == FINAL_CORE_PASS_STATUS_01C
 
 
 def test_w06_i01b_29_no_opening_hours_final_result_produced():
-    """W06-I01B-29: no opening-hours COMPLIANT / VIOLATION / UNKNOWN result produced in 01B."""
+    """W06-I01B-29: 01B receipt preserves NOT_EVALUATED_IN_01B; 01C evaluates item states."""
+    receipt = json.loads(RECEIPT_01B_JSON_PATH.read_text(encoding="utf-8"))
+    assert receipt["opening_hours_status"] == "NOT_EVALUATED_IN_01B"
+
     dn_pois = build_destination_catalog_context("da-nang")
     scenario = _make_scenario(destination_slug="da-nang")
     plan, manifest = _make_plan_and_manifest(scenario, _make_default_valid_days(dn_pois))
 
     res = evaluate_benchmark_scenario(scenario, plan, manifest)
-    assert res.opening_hours_status == "NOT_EVALUATED_IN_01B"
-    assert res.opening_hours_status not in {"COMPLIANT", "VIOLATION", "UNKNOWN"}
+    assert res.opening_hours_status == "EVALUATED"
+    assert res.opening_hours_evidence_status in {
+        "FULLY_EVALUABLE",
+        "PARTIALLY_EVALUABLE",
+        "NO_EVALUABLE_EVIDENCE",
+    }
 
 
 def test_w06_i01b_30_no_final_100_scenario_benchmark_produced_and_cli_verified(tmp_path: Path):
@@ -736,7 +760,8 @@ def test_w06_i01b_30_no_final_100_scenario_benchmark_produced_and_cli_verified(t
     assert bounds["W5_modified"] is False
     assert bounds["measurement_contract_semantics_modified"] is False
 
-    assert receipt["evaluator_version"] == EVALUATOR_VERSION
+    assert receipt["evaluator_version"] == EVALUATOR_VERSION_01B
+    assert EVALUATOR_VERSION == "W06-CORE-EVALUATOR-01C-V1.0.0"
     assert receipt["minimum_items_per_day_contract_status"] == MINIMUM_ITEMS_PER_DAY_CONTRACT_STATUS
 
     contract_prereqs = {
