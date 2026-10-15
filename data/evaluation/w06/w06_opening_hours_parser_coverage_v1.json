@@ -1,0 +1,158 @@
+{
+  "artifact_id": "W06-OPENING-HOURS-PARSER-COVERAGE-V1",
+  "claims_planner_performance": false,
+  "core_opening_hours_records": 101,
+  "core_with_opening_hours": 101,
+  "evidence_scope": "INSTRUMENT_PARSER_CAPABILITY_ONLY_NOT_PLANNER_COMPLIANCE",
+  "observed_syntax_family_presence": {
+    "24/7": true,
+    "comments_or_unsupported_tokens": false,
+    "cross_midnight_ranges": true,
+    "end_of_day_24_00": true,
+    "explicit_off_rules": true,
+    "hhmm_to_hhmm_ranges": true,
+    "month_or_date_selectors": false,
+    "multiple_same_day_time_ranges": true,
+    "open_ended_plus": true,
+    "public_or_school_holiday_selectors": true,
+    "semicolon_separated_rules": true,
+    "sunrise_or_sunset": false,
+    "time_range_only_daily": true,
+    "weekday_lists": true,
+    "weekday_names": true,
+    "weekday_ranges": true
+  },
+  "observed_syntax_family_record_counts": {
+    "24/7": 18,
+    "cross_midnight_ranges": 8,
+    "end_of_day_24_00": 1,
+    "explicit_off_rules": 2,
+    "hhmm_to_hhmm_ranges": 82,
+    "multiple_same_day_time_ranges": 9,
+    "open_ended_plus": 1,
+    "public_or_school_holiday_selectors": 1,
+    "semicolon_separated_rules": 6,
+    "time_range_only_daily": 6,
+    "weekday_lists": 2,
+    "weekday_names": 77,
+    "weekday_ranges": 77
+  },
+  "opening_hours_parser_version": "W06-OPENING-HOURS-PARSER-01C-V1.0.0",
+  "parser_supported_ratio": 0.90099,
+  "parser_supported_record_count": 91,
+  "parser_unsupported_record_count": 10,
+  "per_destination_coverage": {
+    "da-nang": {
+      "parser_supported": 53,
+      "parser_unsupported": 6,
+      "total_core": 289,
+      "with_opening_hours": 59
+    },
+    "ha-long": {
+      "parser_supported": 15,
+      "parser_unsupported": 0,
+      "total_core": 188,
+      "with_opening_hours": 15
+    },
+    "ha-noi": {
+      "parser_supported": 23,
+      "parser_unsupported": 4,
+      "total_core": 145,
+      "with_opening_hours": 27
+    }
+  },
+  "source_catalog_file": "data/curated/gomate_places_freeze_v2.json",
+  "source_catalog_scope": "REC-A-CORE-V2",
+  "supported_grammar": [
+    "24/7",
+    "HH:MM-HH:MM daily same-day ranges without weekday selector",
+    "weekday selectors (Mo, Tu, We, Th, Fr, Sa, Su; case-insensitive)",
+    "weekday lists (e.g. Sa,Su)",
+    "weekday ranges including cyclical ranges (e.g. Mo-Fr, Mo-Su, Tu-Su, Th-Tu, We-Mo)",
+    "multiple same-day HH:MM-HH:MM time ranges (including comma-separated repeated weekday clauses)",
+    "semicolon-separated rules with deterministic later-rule weekday override",
+    "explicit off rules (e.g. Mo off, Fr off)",
+    "24:00 as explicit end-of-day opening-hours boundary (1440 minutes)"
+  ],
+  "supported_reason_counts": {
+    "SUPPORTED_24_7": 18,
+    "SUPPORTED_STANDARD_OPENING_HOURS": 73
+  },
+  "total_core_pois": 622,
+  "unique_opening_hours_string_count": 73,
+  "unsupported_grammar": [
+    "cross-midnight / overnight ranges where end <= start or end == 00:00 (UNSUPPORTED_CROSS_MIDNIGHT_SYNTAX)",
+    "open-ended '+' syntax such as 05:30+ (UNSUPPORTED_OPEN_ENDED_PLUS)",
+    "public/school holiday selectors PH / SH (UNSUPPORTED_HOLIDAY_SELECTOR)",
+    "month/date/week selectors (UNSUPPORTED_DATE_OR_MONTH_SELECTOR)",
+    "solar event tokens sunrise/sunset/dawn/dusk (UNSUPPORTED_SOLAR_EVENT_SYNTAX)",
+    "non-2-digit hour tokens or free-text comments (UNSUPPORTED_SYNTAX)"
+  ],
+  "unsupported_reason_counts": {
+    "UNSUPPORTED_CROSS_MIDNIGHT_SYNTAX": 8,
+    "UNSUPPORTED_HOLIDAY_SELECTOR": 1,
+    "UNSUPPORTED_OPEN_ENDED_PLUS": 1
+  },
+  "unsupported_records": [
+    {
+      "destination_slug": "da-nang",
+      "opening_hours": "Mo-Su 20:00-03:00",
+      "place_id": "123e3585-921a-48f8-a459-4e03cbb207fc",
+      "reason_code": "UNSUPPORTED_CROSS_MIDNIGHT_SYNTAX"
+    },
+    {
+      "destination_slug": "da-nang",
+      "opening_hours": "Mo-Su 11:00-01:00",
+      "place_id": "18f3ceb0-1489-4ac1-8e6c-e950600d847f",
+      "reason_code": "UNSUPPORTED_CROSS_MIDNIGHT_SYNTAX"
+    },
+    {
+      "destination_slug": "da-nang",
+      "opening_hours": "Mo-Su 18:00-02:00",
+      "place_id": "241dbbe0-e4f8-43d7-b2c5-ac9100011c3d",
+      "reason_code": "UNSUPPORTED_CROSS_MIDNIGHT_SYNTAX"
+    },
+    {
+      "destination_slug": "da-nang",
+      "opening_hours": "Mo-Su 11:30-01:00",
+      "place_id": "d99cd6ce-31fe-48f8-b3d8-376532ccc511",
+      "reason_code": "UNSUPPORTED_CROSS_MIDNIGHT_SYNTAX"
+    },
+    {
+      "destination_slug": "da-nang",
+      "opening_hours": "Mo-Su 18:00-02:00",
+      "place_id": "ff1791b2-da73-4451-a750-0a78dd1ee160",
+      "reason_code": "UNSUPPORTED_CROSS_MIDNIGHT_SYNTAX"
+    },
+    {
+      "destination_slug": "ha-noi",
+      "opening_hours": "Mo-Su 20:00-2:00",
+      "place_id": "8aefb46d-b6c6-4a07-a5f5-7c0d294f8224",
+      "reason_code": "UNSUPPORTED_CROSS_MIDNIGHT_SYNTAX"
+    },
+    {
+      "destination_slug": "ha-noi",
+      "opening_hours": "Fr-Su 18:00-00:00",
+      "place_id": "c41383b0-231b-51a4-90e9-7f146fda7f9f",
+      "reason_code": "UNSUPPORTED_CROSS_MIDNIGHT_SYNTAX"
+    },
+    {
+      "destination_slug": "ha-noi",
+      "opening_hours": "Mo-Su 09:00-00:00",
+      "place_id": "dc3ce5f4-b073-5871-9db5-76599b9c58df",
+      "reason_code": "UNSUPPORTED_CROSS_MIDNIGHT_SYNTAX"
+    },
+    {
+      "destination_slug": "ha-noi",
+      "opening_hours": "Tu-Th,Sa-Su,PH 08:00-11:30,13:00-16:30",
+      "place_id": "0c8675a6-db2d-594a-85d5-7d1cbaebb1e4",
+      "reason_code": "UNSUPPORTED_HOLIDAY_SELECTOR"
+    },
+    {
+      "destination_slug": "da-nang",
+      "opening_hours": "Mo-Su 05:30+",
+      "place_id": "93c10c41-2091-4620-b5d7-d45d1a1133e8",
+      "reason_code": "UNSUPPORTED_OPEN_ENDED_PLUS"
+    }
+  ]
+}
