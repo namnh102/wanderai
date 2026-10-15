@@ -97,7 +97,10 @@ The 80 DEV-only scenario fixtures (`DEV-TUNE = 20`, `DEV-SELECT = 60`) are stric
   - Distinct `(destination_slug, sorted(interests))` pairs used: **`70`** (out of 80 fixtures)
   - `max_interest_combination_reuse`: **`2`**
   - `mean_interest_combination_reuse`: **`1.142857`**
-  - Support class distribution: `CLEAR = 58`, `STRESS = 22`, `EXCLUDED = 0` (`DEV-TUNE`: `CLEAR = 15, STRESS = 5`; `DEV-SELECT`: `CLEAR = 43, STRESS = 17`).
+  - Observed descriptive support-class distribution (no fixed `STRESS` quota is imposed):
+    - **`DEV-TUNE`:** `CLEAR = 16`, `STRESS = 4`, `EXCLUDED = 0`
+    - **`DEV-SELECT`:** `CLEAR = 48`, `STRESS = 12`, `EXCLUDED = 0`
+    - **Total (`80` fixtures):** `CLEAR = 64`, `STRESS = 16`, `EXCLUDED = 0`
 
 ### 5.2 Fail-Closed Protocol
 - If 20 `DEV-TUNE` fixtures with zero near-overlap cannot be produced, the generator fails closed immediately with `DevFixtureFreezeInfeasibleError` and status `DEV_TUNE_ZERO_NEAR_OVERLAP_INFEASIBLE`.

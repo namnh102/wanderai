@@ -544,3 +544,119 @@ def test_dev_frz_40_no_preregistration_or_final_execution(
         name_lower = p.name.lower()
         assert "prereg" not in name_lower
         assert "final_100" not in name_lower
+
+
+def test_dev_frz_fix_01_verifier_constants_independent_from_producer() -> None:
+    """DEV-FRZ-FIX-01: Verifier expected marginal constants do not come from planner_dev_fixture_generator LOCKED_DEV_* constants."""
+    import scripts.verify_w06_dev_fixture_freeze as verifier_mod
+
+    verifier_src = (REPO_ROOT / "scripts" / "verify_w06_dev_fixture_freeze.py").read_text(
+        encoding="utf-8"
+    )
+    assert "LOCKED_DEV_TUNE_MARGINALS" not in verifier_src
+    assert "LOCKED_DEV_SELECT_MARGINALS" not in verifier_src
+    assert verifier_mod.EXPECTED_DEV_TUNE_MARGINALS == LOCKED_DEV_TUNE_MARGINALS
+    assert verifier_mod.EXPECTED_DEV_SELECT_MARGINALS == LOCKED_DEV_SELECT_MARGINALS
+    assert verifier_mod.EXPECTED_DEV_TUNE_MARGINALS is not LOCKED_DEV_TUNE_MARGINALS
+    assert verifier_mod.EXPECTED_DEV_SELECT_MARGINALS is not LOCKED_DEV_SELECT_MARGINALS
+
+
+def test_dev_frz_fix_02_mutate_manifest_tune_support_class_fails_closed(
+    manifest_data: Dict[str, Any],
+    overlap_data: Dict[str, Any],
+    receipt_data: Dict[str, Any],
+) -> None:
+    """DEV-FRZ-FIX-02: Mutating dev_manifest['dev_tune_marginals']['support_class'] causes independent verifier to FAIL."""
+    with tempfile.TemporaryDirectory() as tmpdir:
+        tmp_p = Path(tmpdir)
+        mut_manifest = json.loads(json.dumps(manifest_data))
+        mut_manifest["dev_tune_marginals"]["support_class"] = {
+            "CLEAR": 15,
+            "STRESS": 5,
+            "EXCLUDED": 0,
+        }
+        mut_manifest_bytes = _canonical_json_lf_bytes(mut_manifest)
+        mut_manifest_sha = _sha256_bytes(mut_manifest_bytes)
+        mut_manifest_path = tmp_p / "w06_dev_fixture_manifest_v1.json"
+        mut_manifest_path.write_bytes(mut_manifest_bytes)
+
+        # Also update downstream SHA pointers so failure is specifically proven to catch support_class mismatch
+        mut_overlap = json.loads(json.dumps(overlap_data))
+        mut_overlap["dev_manifest_sha256"] = mut_manifest_sha
+        mut_overlap_bytes = _canonical_json_lf_bytes(mut_overlap)
+        mut_overlap_sha = _sha256_bytes(mut_overlap_bytes)
+        mut_overlap_path = tmp_p / "w06_dev_final_overlap_receipt_v1.json"
+        mut_overlap_path.write_bytes(mut_overlap_bytes)
+
+        mut_receipt = json.loads(json.dumps(receipt_data))
+        mut_receipt["generated_artifacts"]["dev_manifest_sha256"] = mut_manifest_sha
+        mut_receipt["generated_artifacts"]["overlap_receipt_sha256"] = mut_overlap_sha
+        mut_receipt_path = tmp_p / "w06_dev_fixture_freeze_01_receipt_v1.json"
+        mut_receipt_path.write_bytes(_canonical_json_lf_bytes(mut_receipt))
+
+        report = verify_w06_dev_fixture_freeze_independently(
+            dev_manifest_path=mut_manifest_path,
+            overlap_receipt_path=mut_overlap_path,
+            freeze_receipt_path=mut_receipt_path,
+            run_determinism_check=False,
+        )
+        assert report["status"] == "FAIL"
+        assert any(
+            "dev_manifest['dev_tune_marginals']['support_class'] mismatch" in e
+            for e in report["errors"]
+        )
+
+
+def test_dev_frz_fix_03_mutate_receipt_select_support_class_fails_closed(
+    receipt_data: Dict[str, Any],
+) -> None:
+    """DEV-FRZ-FIX-03: Mutating freeze_receipt['marginals']['dev_select']['support_class'] causes independent verifier to FAIL."""
+    with tempfile.TemporaryDirectory() as tmpdir:
+        tmp_p = Path(tmpdir)
+        mut_receipt = json.loads(json.dumps(receipt_data))
+        mut_receipt["marginals"]["dev_select"]["support_class"] = {
+            "CLEAR": 43,
+            "STRESS": 17,
+            "EXCLUDED": 0,
+        }
+        mut_receipt_path = tmp_p / "w06_dev_fixture_freeze_01_receipt_v1.json"
+        mut_receipt_path.write_bytes(_canonical_json_lf_bytes(mut_receipt))
+
+        report = verify_w06_dev_fixture_freeze_independently(
+            freeze_receipt_path=mut_receipt_path,
+            run_determinism_check=False,
+        )
+        assert report["status"] == "FAIL"
+        assert any(
+            "freeze_receipt['marginals']['dev_select']['support_class'] mismatch" in e
+            for e in report["errors"]
+        )
+
+
+def test_dev_frz_fix_04_independent_support_class_counts_exact(
+    independent_report: Dict[str, Any],
+) -> None:
+    """DEV-FRZ-FIX-04: Independent recomputation returns DEV-TUNE=16/4/0 and DEV-SELECT=48/12/0."""
+    assert independent_report["dev_tune_support_class_counts"] == {
+        "CLEAR": 16,
+        "STRESS": 4,
+        "EXCLUDED": 0,
+    }
+    assert independent_report["dev_select_support_class_counts"] == {
+        "CLEAR": 48,
+        "STRESS": 12,
+        "EXCLUDED": 0,
+    }
+
+
+def test_dev_frz_fix_05_documentation_support_class_counts_accurate() -> None:
+    """DEV-FRZ-FIX-05: Documentation contains actual observed support-class counts and no stale counts."""
+    doc_path = REPO_ROOT / "docs" / "research" / "w06_dev_fixture_freeze_01_v1.md"
+    doc_text = doc_path.read_text(encoding="utf-8")
+
+    assert "`CLEAR = 16`, `STRESS = 4`, `EXCLUDED = 0`" in doc_text
+    assert "`CLEAR = 48`, `STRESS = 12`, `EXCLUDED = 0`" in doc_text
+    assert "`CLEAR = 64`, `STRESS = 16`, `EXCLUDED = 0`" in doc_text
+
+    for stale in ("CLEAR = 15", "STRESS = 5", "CLEAR = 43", "STRESS = 17", "CLEAR = 58", "STRESS = 22"):
+        assert stale not in doc_text

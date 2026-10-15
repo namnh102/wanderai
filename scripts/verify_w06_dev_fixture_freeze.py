@@ -4,11 +4,13 @@ Independently verifies:
 - 80 total DEV fixtures (DEV-TUNE = 20, DEV-SELECT = 60)
 - Exact IDs (W06-DEV-TUNE-001..020, W06-DEV-SELECT-001..060)
 - BenchmarkScenarioInput schema validation and fixture_label values
-- Exact DEV-TUNE and DEV-SELECT marginals
+- Exact DEV-TUNE and DEV-SELECT marginals (defined independently on verifier side)
 - Exact budget tier formulas (B1=500000*days, B2=1000000*days, B3=2000000*days, null=None)
 - Date window (2026-11-02..2026-12-13), contiguous trip spans, and weekend exposure
 - Canonical interest membership, sorting, and uniqueness
 - Independent Rule A and Rule B (direct place_id set union) from gomate_places_freeze_v2.json
+- Independent partition-level support-class aggregation (DEV-TUNE: CLEAR=16, STRESS=4, EXCLUDED=0;
+  DEV-SELECT: CLEAR=48, STRESS=12, EXCLUDED=0) and cross-verification against DEV manifest and freeze receipt
 - EXCLUDED = 0
 - All 80 DEV exact signatures unique (0 internal or cross-partition duplicates)
 - Exact overlap with final 100 = 0
@@ -41,9 +43,6 @@ if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
 from app.evaluation.planner_dev_fixture_generator import (  # noqa: E402
-    DEV_FIXTURE_GENERATION_SEED,
-    LOCKED_DEV_SELECT_MARGINALS,
-    LOCKED_DEV_TUNE_MARGINALS,
     write_frozen_dev_fixture_files,
 )
 from app.schemas.planner_benchmark import (  # noqa: E402
@@ -55,6 +54,48 @@ from recommendation.reca.contract import (  # noqa: E402
     CANONICAL_INTERESTS,
     poi_to_canonical_vector,
 )
+
+EXPECTED_DEV_FIXTURE_SEED: int = 2026101507
+
+EXPECTED_DEV_TUNE_MARGINALS: Dict[str, Any] = {
+    "destination": {"ha-noi": 7, "da-nang": 7, "ha-long": 6},
+    "days": {"2": 7, "3": 7, "4": 6},
+    "interest_count": {"1": 7, "2": 7, "3": 6},
+    "budget": {"B1": 5, "B2": 5, "B3": 5, "null": 5},
+    "travel_style": {
+        "BACKPACKER": 5,
+        "BUDGET": 5,
+        "COMFORT": 5,
+        "LUXURY": 5,
+    },
+    "weekend": {"weekend_exposed": 10, "non_weekend_exposed": 10},
+}
+
+EXPECTED_DEV_SELECT_MARGINALS: Dict[str, Any] = {
+    "destination": {"ha-noi": 20, "da-nang": 20, "ha-long": 20},
+    "days": {"2": 20, "3": 20, "4": 20},
+    "interest_count": {"1": 20, "2": 20, "3": 20},
+    "budget": {"B1": 15, "B2": 15, "B3": 15, "null": 15},
+    "travel_style": {
+        "BACKPACKER": 15,
+        "BUDGET": 15,
+        "COMFORT": 15,
+        "LUXURY": 15,
+    },
+    "weekend": {"weekend_exposed": 30, "non_weekend_exposed": 30},
+}
+
+EXPECTED_DEV_TUNE_SUPPORT_CLASS_COUNTS: Dict[str, int] = {
+    "CLEAR": 16,
+    "STRESS": 4,
+    "EXCLUDED": 0,
+}
+
+EXPECTED_DEV_SELECT_SUPPORT_CLASS_COUNTS: Dict[str, int] = {
+    "CLEAR": 48,
+    "STRESS": 12,
+    "EXCLUDED": 0,
+}
 
 EXPECTED_AUTHORITY_HASHES: Dict[str, str] = {
     "data/evaluation/w06/w06_scenarios_freeze_v1.json": (
@@ -184,6 +225,16 @@ def _independent_marginal_counts(records: List[Dict[str, Any]]) -> Dict[str, Any
     }
 
 
+def _independent_support_class_counts(records: List[Dict[str, Any]]) -> Dict[str, int]:
+    sc_c = {"CLEAR": 0, "STRESS": 0, "EXCLUDED": 0}
+    for r in records:
+        sc = r["support_class"]
+        if sc not in sc_c:
+            raise ValueError(f"Unexpected support_class {sc!r}")
+        sc_c[sc] += 1
+    return sc_c
+
+
 def verify_w06_dev_fixture_freeze_independently(
     *,
     dev_bundle_path: Optional[Path] = None,
@@ -234,6 +285,28 @@ def verify_w06_dev_fixture_freeze_independently(
             errors.append(f"Missing target artifact {label} at {p}")
     if errors:
         return {"status": "FAIL", "errors": errors}
+
+    # Cross-validate verifier-side EXPECTED_DEV_SELECT_MARGINALS against frozen Method Lock
+    model_sel_lock_p = (
+        REPO_ROOT / "data" / "evaluation" / "w06" / "w06_model_arch_selection_method_lock_v1.json"
+    )
+    model_sel_lock = json.loads(model_sel_lock_p.read_text(encoding="utf-8"))
+    lock_select_bal = model_sel_lock.get("dev_fixture_methodology", {}).get(
+        "dev_select_target_balance", {}
+    )
+    if (
+        lock_select_bal.get("destination") != EXPECTED_DEV_SELECT_MARGINALS["destination"]
+        or lock_select_bal.get("days") != EXPECTED_DEV_SELECT_MARGINALS["days"]
+        or lock_select_bal.get("interest_count") != EXPECTED_DEV_SELECT_MARGINALS["interest_count"]
+        or lock_select_bal.get("budget") != EXPECTED_DEV_SELECT_MARGINALS["budget"]
+        or lock_select_bal.get("travel_style") != EXPECTED_DEV_SELECT_MARGINALS["travel_style"]
+        or {
+            "weekend_exposed": lock_select_bal.get("weekend", {}).get("true"),
+            "non_weekend_exposed": lock_select_bal.get("weekend", {}).get("false"),
+        }
+        != EXPECTED_DEV_SELECT_MARGINALS["weekend"]
+    ):
+        errors.append("Verifier EXPECTED_DEV_SELECT_MARGINALS disagrees with frozen Method Lock")
 
     # 2. Verify canonical UTF-8 LF JSON byte formatting of all 4 DEV files
     bundle_raw = bundle_p.read_bytes()
@@ -295,7 +368,7 @@ def verify_w06_dev_fixture_freeze_independently(
     # 5. Verify DEV bundle top-level metadata and all 80 fixtures
     if bundle_data.get("artifact_id") != "W06-DEV-FIXTURES-FREEZE-01":
         errors.append(f"Unexpected bundle artifact_id: {bundle_data.get('artifact_id')}")
-    if bundle_data.get("seed") != DEV_FIXTURE_GENERATION_SEED:
+    if bundle_data.get("seed") != EXPECTED_DEV_FIXTURE_SEED:
         errors.append(f"Unexpected bundle seed: {bundle_data.get('seed')}")
     if (
         bundle_data.get("fixture_count") != 80
@@ -441,22 +514,68 @@ def verify_w06_dev_fixture_freeze_independently(
             "budget_tier_or_null": b_tier,
             "travel_style": style,
             "weekend_exposure": wk,
+            "support_class": sc,
         }
         if is_tune:
             tune_records.append(rec)
         else:
             select_records.append(rec)
 
-    # 6. Verify exact marginals
+    # 6. Verify exact marginals and independent support-class counts
     actual_tune_marginals = _independent_marginal_counts(tune_records)
     actual_select_marginals = _independent_marginal_counts(select_records)
-    if actual_tune_marginals != LOCKED_DEV_TUNE_MARGINALS:
+    if actual_tune_marginals != EXPECTED_DEV_TUNE_MARGINALS:
         errors.append(
-            f"DEV-TUNE marginals mismatch: {actual_tune_marginals} != {LOCKED_DEV_TUNE_MARGINALS}"
+            f"DEV-TUNE marginals mismatch: {actual_tune_marginals} != {EXPECTED_DEV_TUNE_MARGINALS}"
         )
-    if actual_select_marginals != LOCKED_DEV_SELECT_MARGINALS:
+    if actual_select_marginals != EXPECTED_DEV_SELECT_MARGINALS:
         errors.append(
-            f"DEV-SELECT marginals mismatch: {actual_select_marginals} != {LOCKED_DEV_SELECT_MARGINALS}"
+            f"DEV-SELECT marginals mismatch: {actual_select_marginals} != {EXPECTED_DEV_SELECT_MARGINALS}"
+        )
+
+    dev_tune_support_class_counts = _independent_support_class_counts(tune_records)
+    dev_select_support_class_counts = _independent_support_class_counts(select_records)
+
+    if dev_tune_support_class_counts != EXPECTED_DEV_TUNE_SUPPORT_CLASS_COUNTS:
+        errors.append(
+            f"DEV-TUNE support_class counts mismatch: {dev_tune_support_class_counts} != "
+            f"{EXPECTED_DEV_TUNE_SUPPORT_CLASS_COUNTS}"
+        )
+    if dev_select_support_class_counts != EXPECTED_DEV_SELECT_SUPPORT_CLASS_COUNTS:
+        errors.append(
+            f"DEV-SELECT support_class counts mismatch: {dev_select_support_class_counts} != "
+            f"{EXPECTED_DEV_SELECT_SUPPORT_CLASS_COUNTS}"
+        )
+
+    # Compare independently recomputed support_class counts against manifest and freeze_receipt
+    manifest_tune_sc = manifest_data.get("dev_tune_marginals", {}).get("support_class")
+    manifest_select_sc = manifest_data.get("dev_select_marginals", {}).get("support_class")
+    receipt_tune_sc = (
+        receipt_data.get("marginals", {}).get("dev_tune", {}).get("support_class")
+    )
+    receipt_select_sc = (
+        receipt_data.get("marginals", {}).get("dev_select", {}).get("support_class")
+    )
+
+    if manifest_tune_sc != dev_tune_support_class_counts:
+        errors.append(
+            f"dev_manifest['dev_tune_marginals']['support_class'] mismatch: "
+            f"{manifest_tune_sc} != {dev_tune_support_class_counts}"
+        )
+    if manifest_select_sc != dev_select_support_class_counts:
+        errors.append(
+            f"dev_manifest['dev_select_marginals']['support_class'] mismatch: "
+            f"{manifest_select_sc} != {dev_select_support_class_counts}"
+        )
+    if receipt_tune_sc != dev_tune_support_class_counts:
+        errors.append(
+            f"freeze_receipt['marginals']['dev_tune']['support_class'] mismatch: "
+            f"{receipt_tune_sc} != {dev_tune_support_class_counts}"
+        )
+    if receipt_select_sc != dev_select_support_class_counts:
+        errors.append(
+            f"freeze_receipt['marginals']['dev_select']['support_class'] mismatch: "
+            f"{receipt_select_sc} != {dev_select_support_class_counts}"
         )
 
     if rule_a_failures != 0:
@@ -483,7 +602,7 @@ def verify_w06_dev_fixture_freeze_independently(
         != EXPECTED_AUTHORITY_HASHES["data/evaluation/w06/w06_scenarios_freeze_v1.json"]
         or overlap_data.get("dev_bundle_sha256") != bundle_sha
         or overlap_data.get("dev_manifest_sha256") != manifest_sha
-        or overlap_data.get("dev_fixture_seed") != DEV_FIXTURE_GENERATION_SEED
+        or overlap_data.get("dev_fixture_seed") != EXPECTED_DEV_FIXTURE_SEED
         or overlap_data.get("total_dev_count") != 80
         or overlap_data.get("dev_tune_count") != 20
         or overlap_data.get("dev_select_count") != 60
@@ -510,7 +629,7 @@ def verify_w06_dev_fixture_freeze_independently(
 
     if (
         receipt_data.get("base_develop_sha") != "2873b161b241573cf9d5db2df64b3e1594a1a595"
-        or receipt_data.get("seed") != DEV_FIXTURE_GENERATION_SEED
+        or receipt_data.get("seed") != EXPECTED_DEV_FIXTURE_SEED
         or receipt_data.get("provider_calls") != 0
         or receipt_data.get("winning_model_selected") is not False
         or receipt_data.get("preregistration_created") is not False
@@ -554,7 +673,7 @@ def verify_w06_dev_fixture_freeze_independently(
     return {
         "status": "PASS" if not errors else "FAIL",
         "errors": errors,
-        "seed": DEV_FIXTURE_GENERATION_SEED,
+        "seed": EXPECTED_DEV_FIXTURE_SEED,
         "total_dev_count": len(fixtures),
         "dev_tune_count": len(tune_records),
         "dev_select_count": len(select_records),
@@ -564,6 +683,8 @@ def verify_w06_dev_fixture_freeze_independently(
         "freeze_receipt_sha256": receipt_sha,
         "dev_tune_marginals": actual_tune_marginals,
         "dev_select_marginals": actual_select_marginals,
+        "dev_tune_support_class_counts": dev_tune_support_class_counts,
+        "dev_select_support_class_counts": dev_select_support_class_counts,
         "rule_a_failures": rule_a_failures,
         "rule_b_failures": rule_b_failures,
         "excluded_count": excluded_count,
