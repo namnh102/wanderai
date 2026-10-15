@@ -1,0 +1,2509 @@
+{
+  "artifact_id": "W06-DEV-FIXTURE-MANIFEST-01",
+  "dev_bundle_path": "data/evaluation/w06/w06_dev_fixtures_freeze_v1.json",
+  "dev_bundle_sha256": "bb0f051446ea3da8229298f22f4ce92b4db20751695273c6d01b7766da044050",
+  "dev_select_count": 60,
+  "dev_select_marginals": {
+    "budget": {
+      "B1": 15,
+      "B2": 15,
+      "B3": 15,
+      "null": 15
+    },
+    "days": {
+      "2": 20,
+      "3": 20,
+      "4": 20
+    },
+    "destination": {
+      "da-nang": 20,
+      "ha-long": 20,
+      "ha-noi": 20
+    },
+    "interest_count": {
+      "1": 20,
+      "2": 20,
+      "3": 20
+    },
+    "support_class": {
+      "CLEAR": 48,
+      "EXCLUDED": 0,
+      "STRESS": 12
+    },
+    "travel_style": {
+      "BACKPACKER": 15,
+      "BUDGET": 15,
+      "COMFORT": 15,
+      "LUXURY": 15
+    },
+    "weekend": {
+      "non_weekend_exposed": 30,
+      "weekend_exposed": 30
+    }
+  },
+  "dev_tune_count": 20,
+  "dev_tune_marginals": {
+    "budget": {
+      "B1": 5,
+      "B2": 5,
+      "B3": 5,
+      "null": 5
+    },
+    "days": {
+      "2": 7,
+      "3": 7,
+      "4": 6
+    },
+    "destination": {
+      "da-nang": 7,
+      "ha-long": 6,
+      "ha-noi": 7
+    },
+    "interest_count": {
+      "1": 7,
+      "2": 7,
+      "3": 6
+    },
+    "support_class": {
+      "CLEAR": 16,
+      "EXCLUDED": 0,
+      "STRESS": 4
+    },
+    "travel_style": {
+      "BACKPACKER": 5,
+      "BUDGET": 5,
+      "COMFORT": 5,
+      "LUXURY": 5
+    },
+    "weekend": {
+      "non_weekend_exposed": 10,
+      "weekend_exposed": 10
+    }
+  },
+  "final_bundle_sha256": "c03bc6dc300604ac395505d59b6413c1a47339b21408cfd637671e81d4b555a1",
+  "fixture_count": 80,
+  "fixtures": [
+    {
+      "budget_tier_or_null": "B1",
+      "canonical_signature": [
+        "ha-noi",
+        2,
+        [
+          "coffee_culture"
+        ],
+        "B1",
+        false,
+        "LUXURY"
+      ],
+      "days": 2,
+      "destination_slug": "ha-noi",
+      "global_index": 1,
+      "interest_count": 1,
+      "partition": "DEV_TUNE",
+      "partition_index": 1,
+      "scenario_id": "W06-DEV-TUNE-001",
+      "scenario_sha256": "bfa6b214bdbd5c55d67f3bb335783d49ed080f50ed65497c92b3f86b31b9f4f1",
+      "sorted_interests": [
+        "coffee_culture"
+      ],
+      "support_class": "CLEAR",
+      "travel_style": "LUXURY",
+      "weekend_exposure": false
+    },
+    {
+      "budget_tier_or_null": "B3",
+      "canonical_signature": [
+        "ha-noi",
+        2,
+        [
+          "nature_outdoor",
+          "shopping_local"
+        ],
+        "B3",
+        true,
+        "BACKPACKER"
+      ],
+      "days": 2,
+      "destination_slug": "ha-noi",
+      "global_index": 2,
+      "interest_count": 2,
+      "partition": "DEV_TUNE",
+      "partition_index": 2,
+      "scenario_id": "W06-DEV-TUNE-002",
+      "scenario_sha256": "f90391e2de2ee38c865569f4a01cfe383721e8e66fd95bad5ff2f7195530eb5d",
+      "sorted_interests": [
+        "nature_outdoor",
+        "shopping_local"
+      ],
+      "support_class": "STRESS",
+      "travel_style": "BACKPACKER",
+      "weekend_exposure": true
+    },
+    {
+      "budget_tier_or_null": null,
+      "canonical_signature": [
+        "ha-noi",
+        2,
+        [
+          "food_cuisine",
+          "nature_outdoor",
+          "nightlife_entertainment"
+        ],
+        null,
+        false,
+        "BUDGET"
+      ],
+      "days": 2,
+      "destination_slug": "ha-noi",
+      "global_index": 3,
+      "interest_count": 3,
+      "partition": "DEV_TUNE",
+      "partition_index": 3,
+      "scenario_id": "W06-DEV-TUNE-003",
+      "scenario_sha256": "3727acb129ec3b0b52400696fc28a03f7b7a26ae29ce5e9e64686892d7989971",
+      "sorted_interests": [
+        "food_cuisine",
+        "nature_outdoor",
+        "nightlife_entertainment"
+      ],
+      "support_class": "CLEAR",
+      "travel_style": "BUDGET",
+      "weekend_exposure": false
+    },
+    {
+      "budget_tier_or_null": "B2",
+      "canonical_signature": [
+        "ha-noi",
+        3,
+        [
+          "culture_history"
+        ],
+        "B2",
+        true,
+        "COMFORT"
+      ],
+      "days": 3,
+      "destination_slug": "ha-noi",
+      "global_index": 4,
+      "interest_count": 1,
+      "partition": "DEV_TUNE",
+      "partition_index": 4,
+      "scenario_id": "W06-DEV-TUNE-004",
+      "scenario_sha256": "a30206309ca6bb1df5d90818d3565207dfdf6fb2abba1ef7389a31fc899cc973",
+      "sorted_interests": [
+        "culture_history"
+      ],
+      "support_class": "CLEAR",
+      "travel_style": "COMFORT",
+      "weekend_exposure": true
+    },
+    {
+      "budget_tier_or_null": "B1",
+      "canonical_signature": [
+        "ha-noi",
+        3,
+        [
+          "culture_history",
+          "nature_outdoor"
+        ],
+        "B1",
+        false,
+        "BUDGET"
+      ],
+      "days": 3,
+      "destination_slug": "ha-noi",
+      "global_index": 5,
+      "interest_count": 2,
+      "partition": "DEV_TUNE",
+      "partition_index": 5,
+      "scenario_id": "W06-DEV-TUNE-005",
+      "scenario_sha256": "f30de3e78feab37286a822f318d02e5482d15419b7a85f5183e024cf400748fb",
+      "sorted_interests": [
+        "culture_history",
+        "nature_outdoor"
+      ],
+      "support_class": "CLEAR",
+      "travel_style": "BUDGET",
+      "weekend_exposure": false
+    },
+    {
+      "budget_tier_or_null": null,
+      "canonical_signature": [
+        "ha-noi",
+        4,
+        [
+          "nature_outdoor"
+        ],
+        null,
+        true,
+        "BACKPACKER"
+      ],
+      "days": 4,
+      "destination_slug": "ha-noi",
+      "global_index": 6,
+      "interest_count": 1,
+      "partition": "DEV_TUNE",
+      "partition_index": 6,
+      "scenario_id": "W06-DEV-TUNE-006",
+      "scenario_sha256": "499c0e5cc61e09d2d4a27c7fcc2b0bdb4ff8217b5434e7555c147bfcf208aecc",
+      "sorted_interests": [
+        "nature_outdoor"
+      ],
+      "support_class": "CLEAR",
+      "travel_style": "BACKPACKER",
+      "weekend_exposure": true
+    },
+    {
+      "budget_tier_or_null": "B3",
+      "canonical_signature": [
+        "ha-noi",
+        4,
+        [
+          "coffee_culture",
+          "culture_history",
+          "nature_outdoor"
+        ],
+        "B3",
+        true,
+        "LUXURY"
+      ],
+      "days": 4,
+      "destination_slug": "ha-noi",
+      "global_index": 7,
+      "interest_count": 3,
+      "partition": "DEV_TUNE",
+      "partition_index": 7,
+      "scenario_id": "W06-DEV-TUNE-007",
+      "scenario_sha256": "b74f1551127fa35e67086ae3f82f6baf749251ef48fa95d80677bed495d8cd6d",
+      "sorted_interests": [
+        "coffee_culture",
+        "culture_history",
+        "nature_outdoor"
+      ],
+      "support_class": "CLEAR",
+      "travel_style": "LUXURY",
+      "weekend_exposure": true
+    },
+    {
+      "budget_tier_or_null": "B2",
+      "canonical_signature": [
+        "da-nang",
+        2,
+        [
+          "culture_history"
+        ],
+        "B2",
+        true,
+        "BUDGET"
+      ],
+      "days": 2,
+      "destination_slug": "da-nang",
+      "global_index": 8,
+      "interest_count": 1,
+      "partition": "DEV_TUNE",
+      "partition_index": 8,
+      "scenario_id": "W06-DEV-TUNE-008",
+      "scenario_sha256": "68d489a08df520a581f61c77ec05a2e126f783daf793b5cba78051c84a503082",
+      "sorted_interests": [
+        "culture_history"
+      ],
+      "support_class": "CLEAR",
+      "travel_style": "BUDGET",
+      "weekend_exposure": true
+    },
+    {
+      "budget_tier_or_null": null,
+      "canonical_signature": [
+        "da-nang",
+        2,
+        [
+          "beach_island",
+          "nightlife_entertainment"
+        ],
+        null,
+        false,
+        "COMFORT"
+      ],
+      "days": 2,
+      "destination_slug": "da-nang",
+      "global_index": 9,
+      "interest_count": 2,
+      "partition": "DEV_TUNE",
+      "partition_index": 9,
+      "scenario_id": "W06-DEV-TUNE-009",
+      "scenario_sha256": "f97fe0ac64aaa38f084788801a630281c8ed16c7e8f80bb64c01df06615211e6",
+      "sorted_interests": [
+        "beach_island",
+        "nightlife_entertainment"
+      ],
+      "support_class": "CLEAR",
+      "travel_style": "COMFORT",
+      "weekend_exposure": false
+    },
+    {
+      "budget_tier_or_null": "B3",
+      "canonical_signature": [
+        "da-nang",
+        3,
+        [
+          "beach_island"
+        ],
+        "B3",
+        false,
+        "LUXURY"
+      ],
+      "days": 3,
+      "destination_slug": "da-nang",
+      "global_index": 10,
+      "interest_count": 1,
+      "partition": "DEV_TUNE",
+      "partition_index": 10,
+      "scenario_id": "W06-DEV-TUNE-010",
+      "scenario_sha256": "0fdd83774024cea4ff47c64421e940578c4d7ec38adc2c5082646fab44935098",
+      "sorted_interests": [
+        "beach_island"
+      ],
+      "support_class": "CLEAR",
+      "travel_style": "LUXURY",
+      "weekend_exposure": false
+    },
+    {
+      "budget_tier_or_null": "B1",
+      "canonical_signature": [
+        "da-nang",
+        3,
+        [
+          "food_cuisine",
+          "shopping_local"
+        ],
+        "B1",
+        true,
+        "BACKPACKER"
+      ],
+      "days": 3,
+      "destination_slug": "da-nang",
+      "global_index": 11,
+      "interest_count": 2,
+      "partition": "DEV_TUNE",
+      "partition_index": 11,
+      "scenario_id": "W06-DEV-TUNE-011",
+      "scenario_sha256": "48743d390e4168b8972978e5902a722804635bc9f0b9ecab5f20e06d2b3dfa97",
+      "sorted_interests": [
+        "food_cuisine",
+        "shopping_local"
+      ],
+      "support_class": "CLEAR",
+      "travel_style": "BACKPACKER",
+      "weekend_exposure": true
+    },
+    {
+      "budget_tier_or_null": "B2",
+      "canonical_signature": [
+        "da-nang",
+        3,
+        [
+          "nature_outdoor",
+          "nightlife_entertainment",
+          "shopping_local"
+        ],
+        "B2",
+        false,
+        "BACKPACKER"
+      ],
+      "days": 3,
+      "destination_slug": "da-nang",
+      "global_index": 12,
+      "interest_count": 3,
+      "partition": "DEV_TUNE",
+      "partition_index": 12,
+      "scenario_id": "W06-DEV-TUNE-012",
+      "scenario_sha256": "cb9edb0701fa7e7ca06d465fab222051ee52302f2b9e953b172b8684dfa59b53",
+      "sorted_interests": [
+        "nature_outdoor",
+        "nightlife_entertainment",
+        "shopping_local"
+      ],
+      "support_class": "CLEAR",
+      "travel_style": "BACKPACKER",
+      "weekend_exposure": false
+    },
+    {
+      "budget_tier_or_null": null,
+      "canonical_signature": [
+        "da-nang",
+        4,
+        [
+          "culture_history",
+          "nightlife_entertainment"
+        ],
+        null,
+        true,
+        "LUXURY"
+      ],
+      "days": 4,
+      "destination_slug": "da-nang",
+      "global_index": 13,
+      "interest_count": 2,
+      "partition": "DEV_TUNE",
+      "partition_index": 13,
+      "scenario_id": "W06-DEV-TUNE-013",
+      "scenario_sha256": "be0a47eae5af68776f996c57bd04906c9fceb4d0c46cc1d7032ace4adf2dbf79",
+      "sorted_interests": [
+        "culture_history",
+        "nightlife_entertainment"
+      ],
+      "support_class": "CLEAR",
+      "travel_style": "LUXURY",
+      "weekend_exposure": true
+    },
+    {
+      "budget_tier_or_null": "B1",
+      "canonical_signature": [
+        "da-nang",
+        4,
+        [
+          "beach_island",
+          "coffee_culture",
+          "food_cuisine"
+        ],
+        "B1",
+        false,
+        "COMFORT"
+      ],
+      "days": 4,
+      "destination_slug": "da-nang",
+      "global_index": 14,
+      "interest_count": 3,
+      "partition": "DEV_TUNE",
+      "partition_index": 14,
+      "scenario_id": "W06-DEV-TUNE-014",
+      "scenario_sha256": "f189133610d3c5bc39b2b9609f7b892174dc1e0d409ba01ad1c514030aa6b61c",
+      "sorted_interests": [
+        "beach_island",
+        "coffee_culture",
+        "food_cuisine"
+      ],
+      "support_class": "CLEAR",
+      "travel_style": "COMFORT",
+      "weekend_exposure": false
+    },
+    {
+      "budget_tier_or_null": "B3",
+      "canonical_signature": [
+        "ha-long",
+        2,
+        [
+          "coffee_culture"
+        ],
+        "B3",
+        true,
+        "COMFORT"
+      ],
+      "days": 2,
+      "destination_slug": "ha-long",
+      "global_index": 15,
+      "interest_count": 1,
+      "partition": "DEV_TUNE",
+      "partition_index": 15,
+      "scenario_id": "W06-DEV-TUNE-015",
+      "scenario_sha256": "265c1a354a32b71fe164bcc27c57f2782bb90f133bca973297fad5f4aa618298",
+      "sorted_interests": [
+        "coffee_culture"
+      ],
+      "support_class": "CLEAR",
+      "travel_style": "COMFORT",
+      "weekend_exposure": true
+    },
+    {
+      "budget_tier_or_null": "B2",
+      "canonical_signature": [
+        "ha-long",
+        2,
+        [
+          "beach_island",
+          "coffee_culture",
+          "shopping_local"
+        ],
+        "B2",
+        true,
+        "LUXURY"
+      ],
+      "days": 2,
+      "destination_slug": "ha-long",
+      "global_index": 16,
+      "interest_count": 3,
+      "partition": "DEV_TUNE",
+      "partition_index": 16,
+      "scenario_id": "W06-DEV-TUNE-016",
+      "scenario_sha256": "182d14bae4959ffaef5844a6afd0286d87c63ab528bf14735ca23693ff6b65aa",
+      "sorted_interests": [
+        "beach_island",
+        "coffee_culture",
+        "shopping_local"
+      ],
+      "support_class": "STRESS",
+      "travel_style": "LUXURY",
+      "weekend_exposure": true
+    },
+    {
+      "budget_tier_or_null": "B3",
+      "canonical_signature": [
+        "ha-long",
+        3,
+        [
+          "food_cuisine",
+          "nature_outdoor"
+        ],
+        "B3",
+        false,
+        "BUDGET"
+      ],
+      "days": 3,
+      "destination_slug": "ha-long",
+      "global_index": 17,
+      "interest_count": 2,
+      "partition": "DEV_TUNE",
+      "partition_index": 17,
+      "scenario_id": "W06-DEV-TUNE-017",
+      "scenario_sha256": "add990c2547de92ea78f142471479ea7d8bd36fccb90381dde81fa4b7b480354",
+      "sorted_interests": [
+        "food_cuisine",
+        "nature_outdoor"
+      ],
+      "support_class": "CLEAR",
+      "travel_style": "BUDGET",
+      "weekend_exposure": false
+    },
+    {
+      "budget_tier_or_null": null,
+      "canonical_signature": [
+        "ha-long",
+        3,
+        [
+          "beach_island",
+          "nature_outdoor",
+          "shopping_local"
+        ],
+        null,
+        true,
+        "COMFORT"
+      ],
+      "days": 3,
+      "destination_slug": "ha-long",
+      "global_index": 18,
+      "interest_count": 3,
+      "partition": "DEV_TUNE",
+      "partition_index": 18,
+      "scenario_id": "W06-DEV-TUNE-018",
+      "scenario_sha256": "47c53dfba90f7841abc5f9ff8f017f638dc7396f44fdabc0ba377a7c6bc91eff",
+      "sorted_interests": [
+        "beach_island",
+        "nature_outdoor",
+        "shopping_local"
+      ],
+      "support_class": "STRESS",
+      "travel_style": "COMFORT",
+      "weekend_exposure": true
+    },
+    {
+      "budget_tier_or_null": "B1",
+      "canonical_signature": [
+        "ha-long",
+        4,
+        [
+          "shopping_local"
+        ],
+        "B1",
+        false,
+        "BUDGET"
+      ],
+      "days": 4,
+      "destination_slug": "ha-long",
+      "global_index": 19,
+      "interest_count": 1,
+      "partition": "DEV_TUNE",
+      "partition_index": 19,
+      "scenario_id": "W06-DEV-TUNE-019",
+      "scenario_sha256": "9194a64b97f50c2a313e798c034367bd88fe8d9d8d14929864664590220b2a3f",
+      "sorted_interests": [
+        "shopping_local"
+      ],
+      "support_class": "CLEAR",
+      "travel_style": "BUDGET",
+      "weekend_exposure": false
+    },
+    {
+      "budget_tier_or_null": "B2",
+      "canonical_signature": [
+        "ha-long",
+        4,
+        [
+          "food_cuisine",
+          "nightlife_entertainment"
+        ],
+        "B2",
+        false,
+        "BACKPACKER"
+      ],
+      "days": 4,
+      "destination_slug": "ha-long",
+      "global_index": 20,
+      "interest_count": 2,
+      "partition": "DEV_TUNE",
+      "partition_index": 20,
+      "scenario_id": "W06-DEV-TUNE-020",
+      "scenario_sha256": "e6f61308e9c7fc7ddef7c4b95a43876b031ee7cd9e5152b76c157c3892ba2906",
+      "sorted_interests": [
+        "food_cuisine",
+        "nightlife_entertainment"
+      ],
+      "support_class": "STRESS",
+      "travel_style": "BACKPACKER",
+      "weekend_exposure": false
+    },
+    {
+      "budget_tier_or_null": "B2",
+      "canonical_signature": [
+        "ha-noi",
+        2,
+        [
+          "nightlife_entertainment"
+        ],
+        "B2",
+        true,
+        "BUDGET"
+      ],
+      "days": 2,
+      "destination_slug": "ha-noi",
+      "global_index": 21,
+      "interest_count": 1,
+      "partition": "DEV_SELECT",
+      "partition_index": 1,
+      "scenario_id": "W06-DEV-SELECT-001",
+      "scenario_sha256": "271f962f5cf2ee43da4199a630cd6cc8188f44a2574a9ad6d5ea591e2c240983",
+      "sorted_interests": [
+        "nightlife_entertainment"
+      ],
+      "support_class": "CLEAR",
+      "travel_style": "BUDGET",
+      "weekend_exposure": true
+    },
+    {
+      "budget_tier_or_null": null,
+      "canonical_signature": [
+        "ha-noi",
+        2,
+        [
+          "food_cuisine"
+        ],
+        null,
+        false,
+        "COMFORT"
+      ],
+      "days": 2,
+      "destination_slug": "ha-noi",
+      "global_index": 22,
+      "interest_count": 1,
+      "partition": "DEV_SELECT",
+      "partition_index": 2,
+      "scenario_id": "W06-DEV-SELECT-002",
+      "scenario_sha256": "7097d74cbebded114ef3d8777d210aacf80b5038e9a22297e8baf2f821671305",
+      "sorted_interests": [
+        "food_cuisine"
+      ],
+      "support_class": "CLEAR",
+      "travel_style": "COMFORT",
+      "weekend_exposure": false
+    },
+    {
+      "budget_tier_or_null": "B1",
+      "canonical_signature": [
+        "ha-noi",
+        2,
+        [
+          "nightlife_entertainment"
+        ],
+        "B1",
+        false,
+        "BACKPACKER"
+      ],
+      "days": 2,
+      "destination_slug": "ha-noi",
+      "global_index": 23,
+      "interest_count": 1,
+      "partition": "DEV_SELECT",
+      "partition_index": 3,
+      "scenario_id": "W06-DEV-SELECT-003",
+      "scenario_sha256": "0846ec23393daf6763613b524143aa4c3274bc45f9578bd4c38f72b79eb3f571",
+      "sorted_interests": [
+        "nightlife_entertainment"
+      ],
+      "support_class": "CLEAR",
+      "travel_style": "BACKPACKER",
+      "weekend_exposure": false
+    },
+    {
+      "budget_tier_or_null": "B3",
+      "canonical_signature": [
+        "ha-noi",
+        2,
+        [
+          "coffee_culture",
+          "shopping_local"
+        ],
+        "B3",
+        true,
+        "LUXURY"
+      ],
+      "days": 2,
+      "destination_slug": "ha-noi",
+      "global_index": 24,
+      "interest_count": 2,
+      "partition": "DEV_SELECT",
+      "partition_index": 4,
+      "scenario_id": "W06-DEV-SELECT-004",
+      "scenario_sha256": "91fbb7ac4d73a38d1fa7c7c2e438a351872e751ac30d5a29c1a28de21430ce96",
+      "sorted_interests": [
+        "coffee_culture",
+        "shopping_local"
+      ],
+      "support_class": "STRESS",
+      "travel_style": "LUXURY",
+      "weekend_exposure": true
+    },
+    {
+      "budget_tier_or_null": "B1",
+      "canonical_signature": [
+        "ha-noi",
+        2,
+        [
+          "coffee_culture",
+          "food_cuisine"
+        ],
+        "B1",
+        false,
+        "BUDGET"
+      ],
+      "days": 2,
+      "destination_slug": "ha-noi",
+      "global_index": 25,
+      "interest_count": 2,
+      "partition": "DEV_SELECT",
+      "partition_index": 5,
+      "scenario_id": "W06-DEV-SELECT-005",
+      "scenario_sha256": "737768e122496b54c94c9c721df9590bf37a99d81d8ea4c79640aa6e7526be4e",
+      "sorted_interests": [
+        "coffee_culture",
+        "food_cuisine"
+      ],
+      "support_class": "CLEAR",
+      "travel_style": "BUDGET",
+      "weekend_exposure": false
+    },
+    {
+      "budget_tier_or_null": null,
+      "canonical_signature": [
+        "ha-noi",
+        2,
+        [
+          "food_cuisine",
+          "nightlife_entertainment",
+          "shopping_local"
+        ],
+        null,
+        true,
+        "BACKPACKER"
+      ],
+      "days": 2,
+      "destination_slug": "ha-noi",
+      "global_index": 26,
+      "interest_count": 3,
+      "partition": "DEV_SELECT",
+      "partition_index": 6,
+      "scenario_id": "W06-DEV-SELECT-006",
+      "scenario_sha256": "4689d79058f0a158d67a640050d78a9e03d08fe66d874b7e3eeefc22ffd43511",
+      "sorted_interests": [
+        "food_cuisine",
+        "nightlife_entertainment",
+        "shopping_local"
+      ],
+      "support_class": "STRESS",
+      "travel_style": "BACKPACKER",
+      "weekend_exposure": true
+    },
+    {
+      "budget_tier_or_null": "B3",
+      "canonical_signature": [
+        "ha-noi",
+        2,
+        [
+          "culture_history",
+          "nature_outdoor",
+          "nightlife_entertainment"
+        ],
+        "B3",
+        false,
+        "COMFORT"
+      ],
+      "days": 2,
+      "destination_slug": "ha-noi",
+      "global_index": 27,
+      "interest_count": 3,
+      "partition": "DEV_SELECT",
+      "partition_index": 7,
+      "scenario_id": "W06-DEV-SELECT-007",
+      "scenario_sha256": "ad37d1eb679f94a8d12b370961e2f0ae95a322c38f4208fe5a710a07ed075203",
+      "sorted_interests": [
+        "culture_history",
+        "nature_outdoor",
+        "nightlife_entertainment"
+      ],
+      "support_class": "CLEAR",
+      "travel_style": "COMFORT",
+      "weekend_exposure": false
+    },
+    {
+      "budget_tier_or_null": "B2",
+      "canonical_signature": [
+        "ha-noi",
+        3,
+        [
+          "culture_history"
+        ],
+        "B2",
+        true,
+        "LUXURY"
+      ],
+      "days": 3,
+      "destination_slug": "ha-noi",
+      "global_index": 28,
+      "interest_count": 1,
+      "partition": "DEV_SELECT",
+      "partition_index": 8,
+      "scenario_id": "W06-DEV-SELECT-008",
+      "scenario_sha256": "58e7eb4df67b6f0c65da37ab736a0e0c6a85c49f36c0f1505449a0a8a58ff1b7",
+      "sorted_interests": [
+        "culture_history"
+      ],
+      "support_class": "CLEAR",
+      "travel_style": "LUXURY",
+      "weekend_exposure": true
+    },
+    {
+      "budget_tier_or_null": "B3",
+      "canonical_signature": [
+        "ha-noi",
+        3,
+        [
+          "coffee_culture"
+        ],
+        "B3",
+        false,
+        "BACKPACKER"
+      ],
+      "days": 3,
+      "destination_slug": "ha-noi",
+      "global_index": 29,
+      "interest_count": 1,
+      "partition": "DEV_SELECT",
+      "partition_index": 9,
+      "scenario_id": "W06-DEV-SELECT-009",
+      "scenario_sha256": "4f7059f15f04671b5f8e043d87e723e92b2791cfe4bc7d9522315a47d17e5609",
+      "sorted_interests": [
+        "coffee_culture"
+      ],
+      "support_class": "CLEAR",
+      "travel_style": "BACKPACKER",
+      "weekend_exposure": false
+    },
+    {
+      "budget_tier_or_null": null,
+      "canonical_signature": [
+        "ha-noi",
+        3,
+        [
+          "food_cuisine",
+          "shopping_local"
+        ],
+        null,
+        true,
+        "COMFORT"
+      ],
+      "days": 3,
+      "destination_slug": "ha-noi",
+      "global_index": 30,
+      "interest_count": 2,
+      "partition": "DEV_SELECT",
+      "partition_index": 10,
+      "scenario_id": "W06-DEV-SELECT-010",
+      "scenario_sha256": "f7ac498c7e6006c1b4f0154bd54248ad5b847007eaf62aab0e8d8c7cdc69ab5b",
+      "sorted_interests": [
+        "food_cuisine",
+        "shopping_local"
+      ],
+      "support_class": "STRESS",
+      "travel_style": "COMFORT",
+      "weekend_exposure": true
+    },
+    {
+      "budget_tier_or_null": "B1",
+      "canonical_signature": [
+        "ha-noi",
+        3,
+        [
+          "coffee_culture",
+          "culture_history"
+        ],
+        "B1",
+        false,
+        "BUDGET"
+      ],
+      "days": 3,
+      "destination_slug": "ha-noi",
+      "global_index": 31,
+      "interest_count": 2,
+      "partition": "DEV_SELECT",
+      "partition_index": 11,
+      "scenario_id": "W06-DEV-SELECT-011",
+      "scenario_sha256": "3f9bfab093da6895ef9f7a9014f7b5691b5603e679a869a4440378170dd3f964",
+      "sorted_interests": [
+        "coffee_culture",
+        "culture_history"
+      ],
+      "support_class": "CLEAR",
+      "travel_style": "BUDGET",
+      "weekend_exposure": false
+    },
+    {
+      "budget_tier_or_null": "B2",
+      "canonical_signature": [
+        "ha-noi",
+        3,
+        [
+          "nightlife_entertainment",
+          "shopping_local"
+        ],
+        "B2",
+        true,
+        "LUXURY"
+      ],
+      "days": 3,
+      "destination_slug": "ha-noi",
+      "global_index": 32,
+      "interest_count": 2,
+      "partition": "DEV_SELECT",
+      "partition_index": 12,
+      "scenario_id": "W06-DEV-SELECT-012",
+      "scenario_sha256": "9869137efbcdc72a212238def2a6e6136bd835ec4a1a0035feea352a04e0d428",
+      "sorted_interests": [
+        "nightlife_entertainment",
+        "shopping_local"
+      ],
+      "support_class": "STRESS",
+      "travel_style": "LUXURY",
+      "weekend_exposure": true
+    },
+    {
+      "budget_tier_or_null": "B1",
+      "canonical_signature": [
+        "ha-noi",
+        3,
+        [
+          "coffee_culture",
+          "food_cuisine",
+          "nightlife_entertainment"
+        ],
+        "B1",
+        false,
+        "BUDGET"
+      ],
+      "days": 3,
+      "destination_slug": "ha-noi",
+      "global_index": 33,
+      "interest_count": 3,
+      "partition": "DEV_SELECT",
+      "partition_index": 13,
+      "scenario_id": "W06-DEV-SELECT-013",
+      "scenario_sha256": "104f6486e1af3296e847cb0d9d9b5f6b5e91be99cdc03a4d273037bb6f453c4f",
+      "sorted_interests": [
+        "coffee_culture",
+        "food_cuisine",
+        "nightlife_entertainment"
+      ],
+      "support_class": "CLEAR",
+      "travel_style": "BUDGET",
+      "weekend_exposure": false
+    },
+    {
+      "budget_tier_or_null": "B3",
+      "canonical_signature": [
+        "ha-noi",
+        3,
+        [
+          "food_cuisine",
+          "nature_outdoor",
+          "shopping_local"
+        ],
+        "B3",
+        true,
+        "LUXURY"
+      ],
+      "days": 3,
+      "destination_slug": "ha-noi",
+      "global_index": 34,
+      "interest_count": 3,
+      "partition": "DEV_SELECT",
+      "partition_index": 14,
+      "scenario_id": "W06-DEV-SELECT-014",
+      "scenario_sha256": "fe7cebe4fae896e379ce6f6a6b32d9dcc99c0f15701caffa94c8d54aed876c85",
+      "sorted_interests": [
+        "food_cuisine",
+        "nature_outdoor",
+        "shopping_local"
+      ],
+      "support_class": "STRESS",
+      "travel_style": "LUXURY",
+      "weekend_exposure": true
+    },
+    {
+      "budget_tier_or_null": null,
+      "canonical_signature": [
+        "ha-noi",
+        4,
+        [
+          "food_cuisine"
+        ],
+        null,
+        true,
+        "COMFORT"
+      ],
+      "days": 4,
+      "destination_slug": "ha-noi",
+      "global_index": 35,
+      "interest_count": 1,
+      "partition": "DEV_SELECT",
+      "partition_index": 15,
+      "scenario_id": "W06-DEV-SELECT-015",
+      "scenario_sha256": "be7725708f6ff67e029772974f3f2368d6b9e321844d32184a5ab060303e747a",
+      "sorted_interests": [
+        "food_cuisine"
+      ],
+      "support_class": "CLEAR",
+      "travel_style": "COMFORT",
+      "weekend_exposure": true
+    },
+    {
+      "budget_tier_or_null": "B2",
+      "canonical_signature": [
+        "ha-noi",
+        4,
+        [
+          "nature_outdoor"
+        ],
+        "B2",
+        false,
+        "BACKPACKER"
+      ],
+      "days": 4,
+      "destination_slug": "ha-noi",
+      "global_index": 36,
+      "interest_count": 1,
+      "partition": "DEV_SELECT",
+      "partition_index": 16,
+      "scenario_id": "W06-DEV-SELECT-016",
+      "scenario_sha256": "7ed66b69813d945f6855cf34970da1148c9c0c4dee4504e158ffc7438f2898f5",
+      "sorted_interests": [
+        "nature_outdoor"
+      ],
+      "support_class": "CLEAR",
+      "travel_style": "BACKPACKER",
+      "weekend_exposure": false
+    },
+    {
+      "budget_tier_or_null": "B3",
+      "canonical_signature": [
+        "ha-noi",
+        4,
+        [
+          "food_cuisine",
+          "nature_outdoor"
+        ],
+        "B3",
+        false,
+        "BACKPACKER"
+      ],
+      "days": 4,
+      "destination_slug": "ha-noi",
+      "global_index": 37,
+      "interest_count": 2,
+      "partition": "DEV_SELECT",
+      "partition_index": 17,
+      "scenario_id": "W06-DEV-SELECT-017",
+      "scenario_sha256": "5ffe574b601003dfc3e0043e3ced00def425e40e5ef6c6573079d44a69c02d4d",
+      "sorted_interests": [
+        "food_cuisine",
+        "nature_outdoor"
+      ],
+      "support_class": "CLEAR",
+      "travel_style": "BACKPACKER",
+      "weekend_exposure": false
+    },
+    {
+      "budget_tier_or_null": "B2",
+      "canonical_signature": [
+        "ha-noi",
+        4,
+        [
+          "nature_outdoor",
+          "nightlife_entertainment"
+        ],
+        "B2",
+        true,
+        "COMFORT"
+      ],
+      "days": 4,
+      "destination_slug": "ha-noi",
+      "global_index": 38,
+      "interest_count": 2,
+      "partition": "DEV_SELECT",
+      "partition_index": 18,
+      "scenario_id": "W06-DEV-SELECT-018",
+      "scenario_sha256": "fe9e31c3e028079d1545fe594ebf4e7183e02febe7082501ba64959f5e708379",
+      "sorted_interests": [
+        "nature_outdoor",
+        "nightlife_entertainment"
+      ],
+      "support_class": "CLEAR",
+      "travel_style": "COMFORT",
+      "weekend_exposure": true
+    },
+    {
+      "budget_tier_or_null": "B1",
+      "canonical_signature": [
+        "ha-noi",
+        4,
+        [
+          "coffee_culture",
+          "food_cuisine",
+          "nature_outdoor"
+        ],
+        "B1",
+        true,
+        "LUXURY"
+      ],
+      "days": 4,
+      "destination_slug": "ha-noi",
+      "global_index": 39,
+      "interest_count": 3,
+      "partition": "DEV_SELECT",
+      "partition_index": 19,
+      "scenario_id": "W06-DEV-SELECT-019",
+      "scenario_sha256": "887a9627c67ab3085099a624d3358e29e9c30db1ceaa2537b7a8ede487a5af6c",
+      "sorted_interests": [
+        "coffee_culture",
+        "food_cuisine",
+        "nature_outdoor"
+      ],
+      "support_class": "CLEAR",
+      "travel_style": "LUXURY",
+      "weekend_exposure": true
+    },
+    {
+      "budget_tier_or_null": null,
+      "canonical_signature": [
+        "ha-noi",
+        4,
+        [
+          "coffee_culture",
+          "culture_history",
+          "food_cuisine"
+        ],
+        null,
+        false,
+        "BUDGET"
+      ],
+      "days": 4,
+      "destination_slug": "ha-noi",
+      "global_index": 40,
+      "interest_count": 3,
+      "partition": "DEV_SELECT",
+      "partition_index": 20,
+      "scenario_id": "W06-DEV-SELECT-020",
+      "scenario_sha256": "64481c650bb932dc405d99c6be0c05322f86e2e3474f99eac346944d0ed1dc6d",
+      "sorted_interests": [
+        "coffee_culture",
+        "culture_history",
+        "food_cuisine"
+      ],
+      "support_class": "CLEAR",
+      "travel_style": "BUDGET",
+      "weekend_exposure": false
+    },
+    {
+      "budget_tier_or_null": "B3",
+      "canonical_signature": [
+        "da-nang",
+        2,
+        [
+          "shopping_local"
+        ],
+        "B3",
+        true,
+        "LUXURY"
+      ],
+      "days": 2,
+      "destination_slug": "da-nang",
+      "global_index": 41,
+      "interest_count": 1,
+      "partition": "DEV_SELECT",
+      "partition_index": 21,
+      "scenario_id": "W06-DEV-SELECT-021",
+      "scenario_sha256": "cdbeb0326eae46232b599cdcdebbb968b9c4a9127d72929cd2697ba801e1465b",
+      "sorted_interests": [
+        "shopping_local"
+      ],
+      "support_class": "CLEAR",
+      "travel_style": "LUXURY",
+      "weekend_exposure": true
+    },
+    {
+      "budget_tier_or_null": "B1",
+      "canonical_signature": [
+        "da-nang",
+        2,
+        [
+          "food_cuisine"
+        ],
+        "B1",
+        false,
+        "BUDGET"
+      ],
+      "days": 2,
+      "destination_slug": "da-nang",
+      "global_index": 42,
+      "interest_count": 1,
+      "partition": "DEV_SELECT",
+      "partition_index": 22,
+      "scenario_id": "W06-DEV-SELECT-022",
+      "scenario_sha256": "95c3eb73b53ad01b365dbdbb686d87025179ccb72087b3de01dc87ece859a49c",
+      "sorted_interests": [
+        "food_cuisine"
+      ],
+      "support_class": "CLEAR",
+      "travel_style": "BUDGET",
+      "weekend_exposure": false
+    },
+    {
+      "budget_tier_or_null": null,
+      "canonical_signature": [
+        "da-nang",
+        2,
+        [
+          "food_cuisine",
+          "nightlife_entertainment"
+        ],
+        null,
+        true,
+        "BACKPACKER"
+      ],
+      "days": 2,
+      "destination_slug": "da-nang",
+      "global_index": 43,
+      "interest_count": 2,
+      "partition": "DEV_SELECT",
+      "partition_index": 23,
+      "scenario_id": "W06-DEV-SELECT-023",
+      "scenario_sha256": "ad5b3ae25b0cb4b359da7b355fa14c8b8039c3627bd58da799e3732367149594",
+      "sorted_interests": [
+        "food_cuisine",
+        "nightlife_entertainment"
+      ],
+      "support_class": "CLEAR",
+      "travel_style": "BACKPACKER",
+      "weekend_exposure": true
+    },
+    {
+      "budget_tier_or_null": "B2",
+      "canonical_signature": [
+        "da-nang",
+        2,
+        [
+          "beach_island",
+          "food_cuisine"
+        ],
+        "B2",
+        false,
+        "COMFORT"
+      ],
+      "days": 2,
+      "destination_slug": "da-nang",
+      "global_index": 44,
+      "interest_count": 2,
+      "partition": "DEV_SELECT",
+      "partition_index": 24,
+      "scenario_id": "W06-DEV-SELECT-024",
+      "scenario_sha256": "43a18ded84b5dfa3195c6eb6cc21785005aa113240b1d525a3f723da2e5bf62f",
+      "sorted_interests": [
+        "beach_island",
+        "food_cuisine"
+      ],
+      "support_class": "CLEAR",
+      "travel_style": "COMFORT",
+      "weekend_exposure": false
+    },
+    {
+      "budget_tier_or_null": "B2",
+      "canonical_signature": [
+        "da-nang",
+        2,
+        [
+          "beach_island",
+          "coffee_culture",
+          "shopping_local"
+        ],
+        "B2",
+        true,
+        "LUXURY"
+      ],
+      "days": 2,
+      "destination_slug": "da-nang",
+      "global_index": 45,
+      "interest_count": 3,
+      "partition": "DEV_SELECT",
+      "partition_index": 25,
+      "scenario_id": "W06-DEV-SELECT-025",
+      "scenario_sha256": "8c0469ed248776a176ed68df61dae8d10527595d5ffe0883d3caef181de27887",
+      "sorted_interests": [
+        "beach_island",
+        "coffee_culture",
+        "shopping_local"
+      ],
+      "support_class": "CLEAR",
+      "travel_style": "LUXURY",
+      "weekend_exposure": true
+    },
+    {
+      "budget_tier_or_null": "B1",
+      "canonical_signature": [
+        "da-nang",
+        2,
+        [
+          "coffee_culture",
+          "food_cuisine",
+          "nature_outdoor"
+        ],
+        "B1",
+        false,
+        "COMFORT"
+      ],
+      "days": 2,
+      "destination_slug": "da-nang",
+      "global_index": 46,
+      "interest_count": 3,
+      "partition": "DEV_SELECT",
+      "partition_index": 26,
+      "scenario_id": "W06-DEV-SELECT-026",
+      "scenario_sha256": "65a8c1ddf3a53158f0873bc3e67b2af8929494c7c11b568d5adbc5cda515af07",
+      "sorted_interests": [
+        "coffee_culture",
+        "food_cuisine",
+        "nature_outdoor"
+      ],
+      "support_class": "CLEAR",
+      "travel_style": "COMFORT",
+      "weekend_exposure": false
+    },
+    {
+      "budget_tier_or_null": null,
+      "canonical_signature": [
+        "da-nang",
+        2,
+        [
+          "beach_island",
+          "coffee_culture",
+          "nature_outdoor"
+        ],
+        null,
+        true,
+        "BACKPACKER"
+      ],
+      "days": 2,
+      "destination_slug": "da-nang",
+      "global_index": 47,
+      "interest_count": 3,
+      "partition": "DEV_SELECT",
+      "partition_index": 27,
+      "scenario_id": "W06-DEV-SELECT-027",
+      "scenario_sha256": "11471a82731318af06752b7602ce610e9be3c7098a759b690828fa774b88c35e",
+      "sorted_interests": [
+        "beach_island",
+        "coffee_culture",
+        "nature_outdoor"
+      ],
+      "support_class": "CLEAR",
+      "travel_style": "BACKPACKER",
+      "weekend_exposure": true
+    },
+    {
+      "budget_tier_or_null": "B3",
+      "canonical_signature": [
+        "da-nang",
+        3,
+        [
+          "nightlife_entertainment"
+        ],
+        "B3",
+        true,
+        "BUDGET"
+      ],
+      "days": 3,
+      "destination_slug": "da-nang",
+      "global_index": 48,
+      "interest_count": 1,
+      "partition": "DEV_SELECT",
+      "partition_index": 28,
+      "scenario_id": "W06-DEV-SELECT-028",
+      "scenario_sha256": "73e60f6bdf93edd528e0a4901b03cb4d656d99f0d9f3ec071071cd2bf176213a",
+      "sorted_interests": [
+        "nightlife_entertainment"
+      ],
+      "support_class": "CLEAR",
+      "travel_style": "BUDGET",
+      "weekend_exposure": true
+    },
+    {
+      "budget_tier_or_null": null,
+      "canonical_signature": [
+        "da-nang",
+        3,
+        [
+          "nature_outdoor"
+        ],
+        null,
+        false,
+        "COMFORT"
+      ],
+      "days": 3,
+      "destination_slug": "da-nang",
+      "global_index": 49,
+      "interest_count": 1,
+      "partition": "DEV_SELECT",
+      "partition_index": 29,
+      "scenario_id": "W06-DEV-SELECT-029",
+      "scenario_sha256": "f476518b542374cb8da67d4fb6e4919c49698088c11c9615f20cc2d4034294ce",
+      "sorted_interests": [
+        "nature_outdoor"
+      ],
+      "support_class": "CLEAR",
+      "travel_style": "COMFORT",
+      "weekend_exposure": false
+    },
+    {
+      "budget_tier_or_null": "B1",
+      "canonical_signature": [
+        "da-nang",
+        3,
+        [
+          "beach_island",
+          "coffee_culture"
+        ],
+        "B1",
+        false,
+        "BACKPACKER"
+      ],
+      "days": 3,
+      "destination_slug": "da-nang",
+      "global_index": 50,
+      "interest_count": 2,
+      "partition": "DEV_SELECT",
+      "partition_index": 30,
+      "scenario_id": "W06-DEV-SELECT-030",
+      "scenario_sha256": "4bcd1a497dd3db5ce58796b13f1e7a969378cf567cf99abf1a7dede0a3bc7955",
+      "sorted_interests": [
+        "beach_island",
+        "coffee_culture"
+      ],
+      "support_class": "CLEAR",
+      "travel_style": "BACKPACKER",
+      "weekend_exposure": false
+    },
+    {
+      "budget_tier_or_null": "B3",
+      "canonical_signature": [
+        "da-nang",
+        3,
+        [
+          "coffee_culture",
+          "nature_outdoor"
+        ],
+        "B3",
+        true,
+        "BUDGET"
+      ],
+      "days": 3,
+      "destination_slug": "da-nang",
+      "global_index": 51,
+      "interest_count": 2,
+      "partition": "DEV_SELECT",
+      "partition_index": 31,
+      "scenario_id": "W06-DEV-SELECT-031",
+      "scenario_sha256": "25ea0db1d4058d019d25ed1652edd337c629aa1a7fa9b3e83269c8ae13093d97",
+      "sorted_interests": [
+        "coffee_culture",
+        "nature_outdoor"
+      ],
+      "support_class": "CLEAR",
+      "travel_style": "BUDGET",
+      "weekend_exposure": true
+    },
+    {
+      "budget_tier_or_null": "B2",
+      "canonical_signature": [
+        "da-nang",
+        3,
+        [
+          "coffee_culture",
+          "nature_outdoor",
+          "nightlife_entertainment"
+        ],
+        "B2",
+        false,
+        "BACKPACKER"
+      ],
+      "days": 3,
+      "destination_slug": "da-nang",
+      "global_index": 52,
+      "interest_count": 3,
+      "partition": "DEV_SELECT",
+      "partition_index": 32,
+      "scenario_id": "W06-DEV-SELECT-032",
+      "scenario_sha256": "ba176009e50675758998308aca3ad1ebf7c3631b9169cd8e85d982d55e0a5f26",
+      "sorted_interests": [
+        "coffee_culture",
+        "nature_outdoor",
+        "nightlife_entertainment"
+      ],
+      "support_class": "CLEAR",
+      "travel_style": "BACKPACKER",
+      "weekend_exposure": false
+    },
+    {
+      "budget_tier_or_null": "B2",
+      "canonical_signature": [
+        "da-nang",
+        3,
+        [
+          "food_cuisine",
+          "nightlife_entertainment",
+          "shopping_local"
+        ],
+        "B2",
+        false,
+        "COMFORT"
+      ],
+      "days": 3,
+      "destination_slug": "da-nang",
+      "global_index": 53,
+      "interest_count": 3,
+      "partition": "DEV_SELECT",
+      "partition_index": 33,
+      "scenario_id": "W06-DEV-SELECT-033",
+      "scenario_sha256": "d860c3738bb1aa5923440dd64711fb5b6370c92af93d065e6fbb1ebbf7dd3024",
+      "sorted_interests": [
+        "food_cuisine",
+        "nightlife_entertainment",
+        "shopping_local"
+      ],
+      "support_class": "CLEAR",
+      "travel_style": "COMFORT",
+      "weekend_exposure": false
+    },
+    {
+      "budget_tier_or_null": "B1",
+      "canonical_signature": [
+        "da-nang",
+        4,
+        [
+          "coffee_culture"
+        ],
+        "B1",
+        true,
+        "LUXURY"
+      ],
+      "days": 4,
+      "destination_slug": "da-nang",
+      "global_index": 54,
+      "interest_count": 1,
+      "partition": "DEV_SELECT",
+      "partition_index": 34,
+      "scenario_id": "W06-DEV-SELECT-034",
+      "scenario_sha256": "9a2b38ba5dd1cae23560cf995c4c9015e2f39393939be092008059daf55588bc",
+      "sorted_interests": [
+        "coffee_culture"
+      ],
+      "support_class": "CLEAR",
+      "travel_style": "LUXURY",
+      "weekend_exposure": true
+    },
+    {
+      "budget_tier_or_null": "B3",
+      "canonical_signature": [
+        "da-nang",
+        4,
+        [
+          "beach_island"
+        ],
+        "B3",
+        false,
+        "BUDGET"
+      ],
+      "days": 4,
+      "destination_slug": "da-nang",
+      "global_index": 55,
+      "interest_count": 1,
+      "partition": "DEV_SELECT",
+      "partition_index": 35,
+      "scenario_id": "W06-DEV-SELECT-035",
+      "scenario_sha256": "a80e398299f23d62544e801314ed01af04930b199fe09e8ae40da575713042e4",
+      "sorted_interests": [
+        "beach_island"
+      ],
+      "support_class": "CLEAR",
+      "travel_style": "BUDGET",
+      "weekend_exposure": false
+    },
+    {
+      "budget_tier_or_null": null,
+      "canonical_signature": [
+        "da-nang",
+        4,
+        [
+          "food_cuisine"
+        ],
+        null,
+        true,
+        "LUXURY"
+      ],
+      "days": 4,
+      "destination_slug": "da-nang",
+      "global_index": 56,
+      "interest_count": 1,
+      "partition": "DEV_SELECT",
+      "partition_index": 36,
+      "scenario_id": "W06-DEV-SELECT-036",
+      "scenario_sha256": "91cd8e512126fc2c5c9abcddfbe13e8af3b22369e9574749c1eefb47b0053f0d",
+      "sorted_interests": [
+        "food_cuisine"
+      ],
+      "support_class": "CLEAR",
+      "travel_style": "LUXURY",
+      "weekend_exposure": true
+    },
+    {
+      "budget_tier_or_null": "B2",
+      "canonical_signature": [
+        "da-nang",
+        4,
+        [
+          "nature_outdoor",
+          "nightlife_entertainment"
+        ],
+        "B2",
+        false,
+        "BUDGET"
+      ],
+      "days": 4,
+      "destination_slug": "da-nang",
+      "global_index": 57,
+      "interest_count": 2,
+      "partition": "DEV_SELECT",
+      "partition_index": 37,
+      "scenario_id": "W06-DEV-SELECT-037",
+      "scenario_sha256": "d05bb4cbbbc9742b600c5c0c5c1d337cfed9c69d5482f5c9563ecde007c0f321",
+      "sorted_interests": [
+        "nature_outdoor",
+        "nightlife_entertainment"
+      ],
+      "support_class": "CLEAR",
+      "travel_style": "BUDGET",
+      "weekend_exposure": false
+    },
+    {
+      "budget_tier_or_null": "B1",
+      "canonical_signature": [
+        "da-nang",
+        4,
+        [
+          "beach_island",
+          "nature_outdoor"
+        ],
+        "B1",
+        true,
+        "COMFORT"
+      ],
+      "days": 4,
+      "destination_slug": "da-nang",
+      "global_index": 58,
+      "interest_count": 2,
+      "partition": "DEV_SELECT",
+      "partition_index": 38,
+      "scenario_id": "W06-DEV-SELECT-038",
+      "scenario_sha256": "1faa969447adc669f3f1ecd160e014e635edc80545035bc06d0e47d2b6b49ef9",
+      "sorted_interests": [
+        "beach_island",
+        "nature_outdoor"
+      ],
+      "support_class": "CLEAR",
+      "travel_style": "COMFORT",
+      "weekend_exposure": true
+    },
+    {
+      "budget_tier_or_null": "B3",
+      "canonical_signature": [
+        "da-nang",
+        4,
+        [
+          "beach_island",
+          "food_cuisine",
+          "nightlife_entertainment"
+        ],
+        "B3",
+        true,
+        "BACKPACKER"
+      ],
+      "days": 4,
+      "destination_slug": "da-nang",
+      "global_index": 59,
+      "interest_count": 3,
+      "partition": "DEV_SELECT",
+      "partition_index": 39,
+      "scenario_id": "W06-DEV-SELECT-039",
+      "scenario_sha256": "7142a68848ce113fbbf48c1c4c51ef0c583aa8750801ba50449407d1627bbbc6",
+      "sorted_interests": [
+        "beach_island",
+        "food_cuisine",
+        "nightlife_entertainment"
+      ],
+      "support_class": "CLEAR",
+      "travel_style": "BACKPACKER",
+      "weekend_exposure": true
+    },
+    {
+      "budget_tier_or_null": null,
+      "canonical_signature": [
+        "da-nang",
+        4,
+        [
+          "coffee_culture",
+          "nature_outdoor",
+          "shopping_local"
+        ],
+        null,
+        false,
+        "LUXURY"
+      ],
+      "days": 4,
+      "destination_slug": "da-nang",
+      "global_index": 60,
+      "interest_count": 3,
+      "partition": "DEV_SELECT",
+      "partition_index": 40,
+      "scenario_id": "W06-DEV-SELECT-040",
+      "scenario_sha256": "ed2d2c6a0b0e2559fe947440b9c3a5ae66bdbdf5a946e663aa7422244913d328",
+      "sorted_interests": [
+        "coffee_culture",
+        "nature_outdoor",
+        "shopping_local"
+      ],
+      "support_class": "CLEAR",
+      "travel_style": "LUXURY",
+      "weekend_exposure": false
+    },
+    {
+      "budget_tier_or_null": "B2",
+      "canonical_signature": [
+        "ha-long",
+        2,
+        [
+          "culture_history"
+        ],
+        "B2",
+        true,
+        "BACKPACKER"
+      ],
+      "days": 2,
+      "destination_slug": "ha-long",
+      "global_index": 61,
+      "interest_count": 1,
+      "partition": "DEV_SELECT",
+      "partition_index": 41,
+      "scenario_id": "W06-DEV-SELECT-041",
+      "scenario_sha256": "7f09e8975dff683b1a523e736bfb7f6a40c7440124c9f650a142f63e304c98a6",
+      "sorted_interests": [
+        "culture_history"
+      ],
+      "support_class": "CLEAR",
+      "travel_style": "BACKPACKER",
+      "weekend_exposure": true
+    },
+    {
+      "budget_tier_or_null": "B1",
+      "canonical_signature": [
+        "ha-long",
+        2,
+        [
+          "food_cuisine"
+        ],
+        "B1",
+        false,
+        "COMFORT"
+      ],
+      "days": 2,
+      "destination_slug": "ha-long",
+      "global_index": 62,
+      "interest_count": 1,
+      "partition": "DEV_SELECT",
+      "partition_index": 42,
+      "scenario_id": "W06-DEV-SELECT-042",
+      "scenario_sha256": "2d0dcfb12e46af497394b642a2c2f17147e64f341a7f1206c0f2f71c3dd9a5c5",
+      "sorted_interests": [
+        "food_cuisine"
+      ],
+      "support_class": "CLEAR",
+      "travel_style": "COMFORT",
+      "weekend_exposure": false
+    },
+    {
+      "budget_tier_or_null": "B3",
+      "canonical_signature": [
+        "ha-long",
+        2,
+        [
+          "coffee_culture",
+          "nature_outdoor"
+        ],
+        "B3",
+        false,
+        "LUXURY"
+      ],
+      "days": 2,
+      "destination_slug": "ha-long",
+      "global_index": 63,
+      "interest_count": 2,
+      "partition": "DEV_SELECT",
+      "partition_index": 43,
+      "scenario_id": "W06-DEV-SELECT-043",
+      "scenario_sha256": "cf8dc45141b97b3e49d65c56b5b4f1326c75c0de78a9dd3b1550333ed876af7b",
+      "sorted_interests": [
+        "coffee_culture",
+        "nature_outdoor"
+      ],
+      "support_class": "CLEAR",
+      "travel_style": "LUXURY",
+      "weekend_exposure": false
+    },
+    {
+      "budget_tier_or_null": null,
+      "canonical_signature": [
+        "ha-long",
+        2,
+        [
+          "beach_island",
+          "nature_outdoor"
+        ],
+        null,
+        true,
+        "BUDGET"
+      ],
+      "days": 2,
+      "destination_slug": "ha-long",
+      "global_index": 64,
+      "interest_count": 2,
+      "partition": "DEV_SELECT",
+      "partition_index": 44,
+      "scenario_id": "W06-DEV-SELECT-044",
+      "scenario_sha256": "cb53f38807e3d76aba5a7b644a5ef7bde50c94206571c59c49382ed14049263d",
+      "sorted_interests": [
+        "beach_island",
+        "nature_outdoor"
+      ],
+      "support_class": "STRESS",
+      "travel_style": "BUDGET",
+      "weekend_exposure": true
+    },
+    {
+      "budget_tier_or_null": "B3",
+      "canonical_signature": [
+        "ha-long",
+        2,
+        [
+          "culture_history",
+          "food_cuisine",
+          "shopping_local"
+        ],
+        "B3",
+        true,
+        "BUDGET"
+      ],
+      "days": 2,
+      "destination_slug": "ha-long",
+      "global_index": 65,
+      "interest_count": 3,
+      "partition": "DEV_SELECT",
+      "partition_index": 45,
+      "scenario_id": "W06-DEV-SELECT-045",
+      "scenario_sha256": "f85a56748772fd7cb4f2c0c2fa7431c8c8f899be2e04520c48b6623526402171",
+      "sorted_interests": [
+        "culture_history",
+        "food_cuisine",
+        "shopping_local"
+      ],
+      "support_class": "CLEAR",
+      "travel_style": "BUDGET",
+      "weekend_exposure": true
+    },
+    {
+      "budget_tier_or_null": "B2",
+      "canonical_signature": [
+        "ha-long",
+        2,
+        [
+          "beach_island",
+          "coffee_culture",
+          "food_cuisine"
+        ],
+        "B2",
+        false,
+        "LUXURY"
+      ],
+      "days": 2,
+      "destination_slug": "ha-long",
+      "global_index": 66,
+      "interest_count": 3,
+      "partition": "DEV_SELECT",
+      "partition_index": 46,
+      "scenario_id": "W06-DEV-SELECT-046",
+      "scenario_sha256": "63c03794bc2de62ccf19e11d59cc6ad69edc2171de2f1a49381abe440138c75c",
+      "sorted_interests": [
+        "beach_island",
+        "coffee_culture",
+        "food_cuisine"
+      ],
+      "support_class": "STRESS",
+      "travel_style": "LUXURY",
+      "weekend_exposure": false
+    },
+    {
+      "budget_tier_or_null": null,
+      "canonical_signature": [
+        "ha-long",
+        3,
+        [
+          "nature_outdoor"
+        ],
+        null,
+        true,
+        "BACKPACKER"
+      ],
+      "days": 3,
+      "destination_slug": "ha-long",
+      "global_index": 67,
+      "interest_count": 1,
+      "partition": "DEV_SELECT",
+      "partition_index": 47,
+      "scenario_id": "W06-DEV-SELECT-047",
+      "scenario_sha256": "a0bd4dbe3472349748b9e4c5f6d57409c0bb35abd9d4a2c8dc80ebea97716dc9",
+      "sorted_interests": [
+        "nature_outdoor"
+      ],
+      "support_class": "CLEAR",
+      "travel_style": "BACKPACKER",
+      "weekend_exposure": true
+    },
+    {
+      "budget_tier_or_null": "B1",
+      "canonical_signature": [
+        "ha-long",
+        3,
+        [
+          "culture_history"
+        ],
+        "B1",
+        false,
+        "COMFORT"
+      ],
+      "days": 3,
+      "destination_slug": "ha-long",
+      "global_index": 68,
+      "interest_count": 1,
+      "partition": "DEV_SELECT",
+      "partition_index": 48,
+      "scenario_id": "W06-DEV-SELECT-048",
+      "scenario_sha256": "6479a9ee3f58b6b1a081868453a3574f5ec3ad4f14d3903208ed759bd81aaeed",
+      "sorted_interests": [
+        "culture_history"
+      ],
+      "support_class": "CLEAR",
+      "travel_style": "COMFORT",
+      "weekend_exposure": false
+    },
+    {
+      "budget_tier_or_null": null,
+      "canonical_signature": [
+        "ha-long",
+        3,
+        [
+          "coffee_culture",
+          "shopping_local"
+        ],
+        null,
+        false,
+        "LUXURY"
+      ],
+      "days": 3,
+      "destination_slug": "ha-long",
+      "global_index": 69,
+      "interest_count": 2,
+      "partition": "DEV_SELECT",
+      "partition_index": 49,
+      "scenario_id": "W06-DEV-SELECT-049",
+      "scenario_sha256": "8af123852260742cbd0aebe8a7112cd70f7a820cdff2fe980e76a0b3c00f3d3e",
+      "sorted_interests": [
+        "coffee_culture",
+        "shopping_local"
+      ],
+      "support_class": "CLEAR",
+      "travel_style": "LUXURY",
+      "weekend_exposure": false
+    },
+    {
+      "budget_tier_or_null": "B3",
+      "canonical_signature": [
+        "ha-long",
+        3,
+        [
+          "beach_island",
+          "shopping_local"
+        ],
+        "B3",
+        true,
+        "BACKPACKER"
+      ],
+      "days": 3,
+      "destination_slug": "ha-long",
+      "global_index": 70,
+      "interest_count": 2,
+      "partition": "DEV_SELECT",
+      "partition_index": 50,
+      "scenario_id": "W06-DEV-SELECT-050",
+      "scenario_sha256": "579d46669191cf7c3547371bcbd883f0097700f076d9d65006fbe72ce761e373",
+      "sorted_interests": [
+        "beach_island",
+        "shopping_local"
+      ],
+      "support_class": "STRESS",
+      "travel_style": "BACKPACKER",
+      "weekend_exposure": true
+    },
+    {
+      "budget_tier_or_null": "B1",
+      "canonical_signature": [
+        "ha-long",
+        3,
+        [
+          "culture_history",
+          "food_cuisine",
+          "nature_outdoor"
+        ],
+        "B1",
+        true,
+        "COMFORT"
+      ],
+      "days": 3,
+      "destination_slug": "ha-long",
+      "global_index": 71,
+      "interest_count": 3,
+      "partition": "DEV_SELECT",
+      "partition_index": 51,
+      "scenario_id": "W06-DEV-SELECT-051",
+      "scenario_sha256": "2de5e152a1ac1e3612a4d7c0b2e2ae6d77f39691a7b67a42e7c2f944d8eda4ec",
+      "sorted_interests": [
+        "culture_history",
+        "food_cuisine",
+        "nature_outdoor"
+      ],
+      "support_class": "CLEAR",
+      "travel_style": "COMFORT",
+      "weekend_exposure": true
+    },
+    {
+      "budget_tier_or_null": "B2",
+      "canonical_signature": [
+        "ha-long",
+        3,
+        [
+          "food_cuisine",
+          "nature_outdoor",
+          "nightlife_entertainment"
+        ],
+        "B2",
+        false,
+        "BUDGET"
+      ],
+      "days": 3,
+      "destination_slug": "ha-long",
+      "global_index": 72,
+      "interest_count": 3,
+      "partition": "DEV_SELECT",
+      "partition_index": 52,
+      "scenario_id": "W06-DEV-SELECT-052",
+      "scenario_sha256": "5377550ef65b1ea2b3fda8c6262a306772ca8a79f076cd53443a5ca9def4a951",
+      "sorted_interests": [
+        "food_cuisine",
+        "nature_outdoor",
+        "nightlife_entertainment"
+      ],
+      "support_class": "STRESS",
+      "travel_style": "BUDGET",
+      "weekend_exposure": false
+    },
+    {
+      "budget_tier_or_null": null,
+      "canonical_signature": [
+        "ha-long",
+        3,
+        [
+          "coffee_culture",
+          "culture_history",
+          "shopping_local"
+        ],
+        null,
+        true,
+        "BUDGET"
+      ],
+      "days": 3,
+      "destination_slug": "ha-long",
+      "global_index": 73,
+      "interest_count": 3,
+      "partition": "DEV_SELECT",
+      "partition_index": 53,
+      "scenario_id": "W06-DEV-SELECT-053",
+      "scenario_sha256": "73660395b42e6ffaf55b92a1ed03c3d4662ca03607d7e591dd0b3d7312764fa2",
+      "sorted_interests": [
+        "coffee_culture",
+        "culture_history",
+        "shopping_local"
+      ],
+      "support_class": "CLEAR",
+      "travel_style": "BUDGET",
+      "weekend_exposure": true
+    },
+    {
+      "budget_tier_or_null": "B2",
+      "canonical_signature": [
+        "ha-long",
+        4,
+        [
+          "nature_outdoor"
+        ],
+        "B2",
+        false,
+        "BUDGET"
+      ],
+      "days": 4,
+      "destination_slug": "ha-long",
+      "global_index": 74,
+      "interest_count": 1,
+      "partition": "DEV_SELECT",
+      "partition_index": 54,
+      "scenario_id": "W06-DEV-SELECT-054",
+      "scenario_sha256": "94a13a93eb915dba17f75036d6c26d15dd842e0eb890b0edd1af306f418a8e7d",
+      "sorted_interests": [
+        "nature_outdoor"
+      ],
+      "support_class": "CLEAR",
+      "travel_style": "BUDGET",
+      "weekend_exposure": false
+    },
+    {
+      "budget_tier_or_null": "B3",
+      "canonical_signature": [
+        "ha-long",
+        4,
+        [
+          "shopping_local"
+        ],
+        "B3",
+        true,
+        "LUXURY"
+      ],
+      "days": 4,
+      "destination_slug": "ha-long",
+      "global_index": 75,
+      "interest_count": 1,
+      "partition": "DEV_SELECT",
+      "partition_index": 55,
+      "scenario_id": "W06-DEV-SELECT-055",
+      "scenario_sha256": "f8ac5591621832facc095aa15856cb939aaba6826cf7a500ebe98e71c11ed350",
+      "sorted_interests": [
+        "shopping_local"
+      ],
+      "support_class": "CLEAR",
+      "travel_style": "LUXURY",
+      "weekend_exposure": true
+    },
+    {
+      "budget_tier_or_null": "B1",
+      "canonical_signature": [
+        "ha-long",
+        4,
+        [
+          "nightlife_entertainment",
+          "shopping_local"
+        ],
+        "B1",
+        false,
+        "BACKPACKER"
+      ],
+      "days": 4,
+      "destination_slug": "ha-long",
+      "global_index": 76,
+      "interest_count": 2,
+      "partition": "DEV_SELECT",
+      "partition_index": 56,
+      "scenario_id": "W06-DEV-SELECT-056",
+      "scenario_sha256": "6928ae0bd613119dc7f7d556eb5abb5ed0fa5df197e9c4a0f6df91c6e3662e14",
+      "sorted_interests": [
+        "nightlife_entertainment",
+        "shopping_local"
+      ],
+      "support_class": "STRESS",
+      "travel_style": "BACKPACKER",
+      "weekend_exposure": false
+    },
+    {
+      "budget_tier_or_null": "B2",
+      "canonical_signature": [
+        "ha-long",
+        4,
+        [
+          "coffee_culture",
+          "food_cuisine"
+        ],
+        "B2",
+        true,
+        "COMFORT"
+      ],
+      "days": 4,
+      "destination_slug": "ha-long",
+      "global_index": 77,
+      "interest_count": 2,
+      "partition": "DEV_SELECT",
+      "partition_index": 57,
+      "scenario_id": "W06-DEV-SELECT-057",
+      "scenario_sha256": "bfdc1ff411bfddb517b7b0e1f4462969026e9063113648d54712515035d05e67",
+      "sorted_interests": [
+        "coffee_culture",
+        "food_cuisine"
+      ],
+      "support_class": "CLEAR",
+      "travel_style": "COMFORT",
+      "weekend_exposure": true
+    },
+    {
+      "budget_tier_or_null": null,
+      "canonical_signature": [
+        "ha-long",
+        4,
+        [
+          "coffee_culture",
+          "nightlife_entertainment"
+        ],
+        null,
+        false,
+        "LUXURY"
+      ],
+      "days": 4,
+      "destination_slug": "ha-long",
+      "global_index": 78,
+      "interest_count": 2,
+      "partition": "DEV_SELECT",
+      "partition_index": 58,
+      "scenario_id": "W06-DEV-SELECT-058",
+      "scenario_sha256": "7529fb6ca932ba3f87897a6117bf41ce13821f38aabb864cc929711817cd9ca8",
+      "sorted_interests": [
+        "coffee_culture",
+        "nightlife_entertainment"
+      ],
+      "support_class": "STRESS",
+      "travel_style": "LUXURY",
+      "weekend_exposure": false
+    },
+    {
+      "budget_tier_or_null": "B1",
+      "canonical_signature": [
+        "ha-long",
+        4,
+        [
+          "coffee_culture",
+          "nature_outdoor",
+          "shopping_local"
+        ],
+        "B1",
+        true,
+        "BACKPACKER"
+      ],
+      "days": 4,
+      "destination_slug": "ha-long",
+      "global_index": 79,
+      "interest_count": 3,
+      "partition": "DEV_SELECT",
+      "partition_index": 59,
+      "scenario_id": "W06-DEV-SELECT-059",
+      "scenario_sha256": "9e916b3c9fa1cf6e0ef10bd2ff6787c2c6eeb444296a45d59d9b3e81a0f08115",
+      "sorted_interests": [
+        "coffee_culture",
+        "nature_outdoor",
+        "shopping_local"
+      ],
+      "support_class": "CLEAR",
+      "travel_style": "BACKPACKER",
+      "weekend_exposure": true
+    },
+    {
+      "budget_tier_or_null": "B3",
+      "canonical_signature": [
+        "ha-long",
+        4,
+        [
+          "culture_history",
+          "nature_outdoor",
+          "nightlife_entertainment"
+        ],
+        "B3",
+        false,
+        "COMFORT"
+      ],
+      "days": 4,
+      "destination_slug": "ha-long",
+      "global_index": 80,
+      "interest_count": 3,
+      "partition": "DEV_SELECT",
+      "partition_index": 60,
+      "scenario_id": "W06-DEV-SELECT-060",
+      "scenario_sha256": "7ba66c33e92df75138964162a2774e65023b7918cbaa0b28e0d1bed331837ea6",
+      "sorted_interests": [
+        "culture_history",
+        "nature_outdoor",
+        "nightlife_entertainment"
+      ],
+      "support_class": "STRESS",
+      "travel_style": "COMFORT",
+      "weekend_exposure": false
+    }
+  ],
+  "hash_basis": "SHA256_CANONICAL_JSON_UTF8_LF_BYTES",
+  "interest_combination_diversity": {
+    "distinct_destination_interest_combinations_used": 70,
+    "max_interest_combination_reuse": 2,
+    "mean_interest_combination_reuse": 1.142857,
+    "reuse_distribution_by_destination_and_interest_count": {
+      "da-nang": {
+        "1": {
+          "distinct_combinations_used": 7,
+          "max_reuse": 2,
+          "mean_reuse": 1.285714,
+          "reuse_count_histogram": {
+            "1": 5,
+            "2": 2
+          }
+        },
+        "2": {
+          "distinct_combinations_used": 9,
+          "max_reuse": 1,
+          "mean_reuse": 1.0,
+          "reuse_count_histogram": {
+            "1": 9
+          }
+        },
+        "3": {
+          "distinct_combinations_used": 9,
+          "max_reuse": 1,
+          "mean_reuse": 1.0,
+          "reuse_count_histogram": {
+            "1": 9
+          }
+        }
+      },
+      "ha-long": {
+        "1": {
+          "distinct_combinations_used": 5,
+          "max_reuse": 2,
+          "mean_reuse": 1.6,
+          "reuse_count_histogram": {
+            "1": 2,
+            "2": 3
+          }
+        },
+        "2": {
+          "distinct_combinations_used": 9,
+          "max_reuse": 1,
+          "mean_reuse": 1.0,
+          "reuse_count_histogram": {
+            "1": 9
+          }
+        },
+        "3": {
+          "distinct_combinations_used": 9,
+          "max_reuse": 1,
+          "mean_reuse": 1.0,
+          "reuse_count_histogram": {
+            "1": 9
+          }
+        }
+      },
+      "ha-noi": {
+        "1": {
+          "distinct_combinations_used": 5,
+          "max_reuse": 2,
+          "mean_reuse": 2.0,
+          "reuse_count_histogram": {
+            "2": 5
+          }
+        },
+        "2": {
+          "distinct_combinations_used": 9,
+          "max_reuse": 1,
+          "mean_reuse": 1.0,
+          "reuse_count_histogram": {
+            "1": 9
+          }
+        },
+        "3": {
+          "distinct_combinations_used": 8,
+          "max_reuse": 1,
+          "mean_reuse": 1.0,
+          "reuse_count_histogram": {
+            "1": 8
+          }
+        }
+      }
+    }
+  },
+  "method_lock": "W06-MODEL-ARCH-SELECTION-METHOD-LOCK-01",
+  "p11_sha256": "0aa9ae923d0e7f29df49735fa41e87530b1caf62418fcbec09a1eff81d83af62",
+  "priority_order": [
+    "EXACT_PARTITION_SIZE",
+    "EXACT_LOCKED_MARGINALS",
+    "ELIGIBILITY",
+    "FINAL_EXACT_OVERLAP_EXCLUSION",
+    "DEV_TUNE_NEAR_OVERLAP_EXCLUSION",
+    "NO_DUPLICATE_DEV_EXACT_SIGNATURES",
+    "MAINTAIN_INTEREST_COMBINATION_DIVERSITY",
+    "CLEAR_STRESS_COVERAGE_WITHOUT_FIXED_QUOTA",
+    "MINIMIZE_REMAINING_CROSS_DIMENSION_IMBALANCE",
+    "DETERMINISTIC_TIE_BREAK"
+  ],
+  "seed": 2026101507,
+  "version": "1.0.0"
+}

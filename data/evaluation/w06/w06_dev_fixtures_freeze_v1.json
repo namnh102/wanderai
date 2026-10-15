@@ -1,0 +1,1453 @@
+{
+  "artifact_id": "W06-DEV-FIXTURES-FREEZE-01",
+  "dev_select_count": 60,
+  "dev_tune_count": 20,
+  "final_bundle_sha256": "c03bc6dc300604ac395505d59b6413c1a47339b21408cfd637671e81d4b555a1",
+  "fixture_count": 80,
+  "fixtures": [
+    {
+      "allow_revisit_place_ids": false,
+      "budget": 1000000,
+      "currency": "VND",
+      "days": 2,
+      "destination": "Hà Nội",
+      "destination_slug": "ha-noi",
+      "end_date": "2026-11-18",
+      "fixture_label": "W06_DEV_TUNE",
+      "interests": [
+        "coffee_culture"
+      ],
+      "notes": null,
+      "scenario_id": "W06-DEV-TUNE-001",
+      "start_date": "2026-11-17",
+      "travel_style": "LUXURY"
+    },
+    {
+      "allow_revisit_place_ids": false,
+      "budget": 4000000,
+      "currency": "VND",
+      "days": 2,
+      "destination": "Hà Nội",
+      "destination_slug": "ha-noi",
+      "end_date": "2026-11-30",
+      "fixture_label": "W06_DEV_TUNE",
+      "interests": [
+        "nature_outdoor",
+        "shopping_local"
+      ],
+      "notes": null,
+      "scenario_id": "W06-DEV-TUNE-002",
+      "start_date": "2026-11-29",
+      "travel_style": "BACKPACKER"
+    },
+    {
+      "allow_revisit_place_ids": false,
+      "budget": null,
+      "currency": "VND",
+      "days": 2,
+      "destination": "Hà Nội",
+      "destination_slug": "ha-noi",
+      "end_date": "2026-12-04",
+      "fixture_label": "W06_DEV_TUNE",
+      "interests": [
+        "food_cuisine",
+        "nature_outdoor",
+        "nightlife_entertainment"
+      ],
+      "notes": null,
+      "scenario_id": "W06-DEV-TUNE-003",
+      "start_date": "2026-12-03",
+      "travel_style": "BUDGET"
+    },
+    {
+      "allow_revisit_place_ids": false,
+      "budget": 3000000,
+      "currency": "VND",
+      "days": 3,
+      "destination": "Hà Nội",
+      "destination_slug": "ha-noi",
+      "end_date": "2026-11-14",
+      "fixture_label": "W06_DEV_TUNE",
+      "interests": [
+        "culture_history"
+      ],
+      "notes": null,
+      "scenario_id": "W06-DEV-TUNE-004",
+      "start_date": "2026-11-12",
+      "travel_style": "COMFORT"
+    },
+    {
+      "allow_revisit_place_ids": false,
+      "budget": 1500000,
+      "currency": "VND",
+      "days": 3,
+      "destination": "Hà Nội",
+      "destination_slug": "ha-noi",
+      "end_date": "2026-11-26",
+      "fixture_label": "W06_DEV_TUNE",
+      "interests": [
+        "culture_history",
+        "nature_outdoor"
+      ],
+      "notes": null,
+      "scenario_id": "W06-DEV-TUNE-005",
+      "start_date": "2026-11-24",
+      "travel_style": "BUDGET"
+    },
+    {
+      "allow_revisit_place_ids": false,
+      "budget": null,
+      "currency": "VND",
+      "days": 4,
+      "destination": "Hà Nội",
+      "destination_slug": "ha-noi",
+      "end_date": "2026-11-21",
+      "fixture_label": "W06_DEV_TUNE",
+      "interests": [
+        "nature_outdoor"
+      ],
+      "notes": null,
+      "scenario_id": "W06-DEV-TUNE-006",
+      "start_date": "2026-11-18",
+      "travel_style": "BACKPACKER"
+    },
+    {
+      "allow_revisit_place_ids": false,
+      "budget": 8000000,
+      "currency": "VND",
+      "days": 4,
+      "destination": "Hà Nội",
+      "destination_slug": "ha-noi",
+      "end_date": "2026-12-09",
+      "fixture_label": "W06_DEV_TUNE",
+      "interests": [
+        "coffee_culture",
+        "culture_history",
+        "nature_outdoor"
+      ],
+      "notes": null,
+      "scenario_id": "W06-DEV-TUNE-007",
+      "start_date": "2026-12-06",
+      "travel_style": "LUXURY"
+    },
+    {
+      "allow_revisit_place_ids": false,
+      "budget": 2000000,
+      "currency": "VND",
+      "days": 2,
+      "destination": "Đà Nẵng",
+      "destination_slug": "da-nang",
+      "end_date": "2026-12-07",
+      "fixture_label": "W06_DEV_TUNE",
+      "interests": [
+        "culture_history"
+      ],
+      "notes": null,
+      "scenario_id": "W06-DEV-TUNE-008",
+      "start_date": "2026-12-06",
+      "travel_style": "BUDGET"
+    },
+    {
+      "allow_revisit_place_ids": false,
+      "budget": null,
+      "currency": "VND",
+      "days": 2,
+      "destination": "Đà Nẵng",
+      "destination_slug": "da-nang",
+      "end_date": "2026-12-08",
+      "fixture_label": "W06_DEV_TUNE",
+      "interests": [
+        "beach_island",
+        "nightlife_entertainment"
+      ],
+      "notes": null,
+      "scenario_id": "W06-DEV-TUNE-009",
+      "start_date": "2026-12-07",
+      "travel_style": "COMFORT"
+    },
+    {
+      "allow_revisit_place_ids": false,
+      "budget": 6000000,
+      "currency": "VND",
+      "days": 3,
+      "destination": "Đà Nẵng",
+      "destination_slug": "da-nang",
+      "end_date": "2026-11-13",
+      "fixture_label": "W06_DEV_TUNE",
+      "interests": [
+        "beach_island"
+      ],
+      "notes": null,
+      "scenario_id": "W06-DEV-TUNE-010",
+      "start_date": "2026-11-11",
+      "travel_style": "LUXURY"
+    },
+    {
+      "allow_revisit_place_ids": false,
+      "budget": 1500000,
+      "currency": "VND",
+      "days": 3,
+      "destination": "Đà Nẵng",
+      "destination_slug": "da-nang",
+      "end_date": "2026-11-29",
+      "fixture_label": "W06_DEV_TUNE",
+      "interests": [
+        "food_cuisine",
+        "shopping_local"
+      ],
+      "notes": null,
+      "scenario_id": "W06-DEV-TUNE-011",
+      "start_date": "2026-11-27",
+      "travel_style": "BACKPACKER"
+    },
+    {
+      "allow_revisit_place_ids": false,
+      "budget": 3000000,
+      "currency": "VND",
+      "days": 3,
+      "destination": "Đà Nẵng",
+      "destination_slug": "da-nang",
+      "end_date": "2026-11-04",
+      "fixture_label": "W06_DEV_TUNE",
+      "interests": [
+        "nature_outdoor",
+        "nightlife_entertainment",
+        "shopping_local"
+      ],
+      "notes": null,
+      "scenario_id": "W06-DEV-TUNE-012",
+      "start_date": "2026-11-02",
+      "travel_style": "BACKPACKER"
+    },
+    {
+      "allow_revisit_place_ids": false,
+      "budget": null,
+      "currency": "VND",
+      "days": 4,
+      "destination": "Đà Nẵng",
+      "destination_slug": "da-nang",
+      "end_date": "2026-11-29",
+      "fixture_label": "W06_DEV_TUNE",
+      "interests": [
+        "culture_history",
+        "nightlife_entertainment"
+      ],
+      "notes": null,
+      "scenario_id": "W06-DEV-TUNE-013",
+      "start_date": "2026-11-26",
+      "travel_style": "LUXURY"
+    },
+    {
+      "allow_revisit_place_ids": false,
+      "budget": 2000000,
+      "currency": "VND",
+      "days": 4,
+      "destination": "Đà Nẵng",
+      "destination_slug": "da-nang",
+      "end_date": "2026-11-27",
+      "fixture_label": "W06_DEV_TUNE",
+      "interests": [
+        "beach_island",
+        "coffee_culture",
+        "food_cuisine"
+      ],
+      "notes": null,
+      "scenario_id": "W06-DEV-TUNE-014",
+      "start_date": "2026-11-24",
+      "travel_style": "COMFORT"
+    },
+    {
+      "allow_revisit_place_ids": false,
+      "budget": 4000000,
+      "currency": "VND",
+      "days": 2,
+      "destination": "Hạ Long",
+      "destination_slug": "ha-long",
+      "end_date": "2026-11-21",
+      "fixture_label": "W06_DEV_TUNE",
+      "interests": [
+        "coffee_culture"
+      ],
+      "notes": null,
+      "scenario_id": "W06-DEV-TUNE-015",
+      "start_date": "2026-11-20",
+      "travel_style": "COMFORT"
+    },
+    {
+      "allow_revisit_place_ids": false,
+      "budget": 2000000,
+      "currency": "VND",
+      "days": 2,
+      "destination": "Hạ Long",
+      "destination_slug": "ha-long",
+      "end_date": "2026-11-23",
+      "fixture_label": "W06_DEV_TUNE",
+      "interests": [
+        "beach_island",
+        "coffee_culture",
+        "shopping_local"
+      ],
+      "notes": null,
+      "scenario_id": "W06-DEV-TUNE-016",
+      "start_date": "2026-11-22",
+      "travel_style": "LUXURY"
+    },
+    {
+      "allow_revisit_place_ids": false,
+      "budget": 6000000,
+      "currency": "VND",
+      "days": 3,
+      "destination": "Hạ Long",
+      "destination_slug": "ha-long",
+      "end_date": "2026-11-12",
+      "fixture_label": "W06_DEV_TUNE",
+      "interests": [
+        "food_cuisine",
+        "nature_outdoor"
+      ],
+      "notes": null,
+      "scenario_id": "W06-DEV-TUNE-017",
+      "start_date": "2026-11-10",
+      "travel_style": "BUDGET"
+    },
+    {
+      "allow_revisit_place_ids": false,
+      "budget": null,
+      "currency": "VND",
+      "days": 3,
+      "destination": "Hạ Long",
+      "destination_slug": "ha-long",
+      "end_date": "2026-11-09",
+      "fixture_label": "W06_DEV_TUNE",
+      "interests": [
+        "beach_island",
+        "nature_outdoor",
+        "shopping_local"
+      ],
+      "notes": null,
+      "scenario_id": "W06-DEV-TUNE-018",
+      "start_date": "2026-11-07",
+      "travel_style": "COMFORT"
+    },
+    {
+      "allow_revisit_place_ids": false,
+      "budget": 2000000,
+      "currency": "VND",
+      "days": 4,
+      "destination": "Hạ Long",
+      "destination_slug": "ha-long",
+      "end_date": "2026-12-11",
+      "fixture_label": "W06_DEV_TUNE",
+      "interests": [
+        "shopping_local"
+      ],
+      "notes": null,
+      "scenario_id": "W06-DEV-TUNE-019",
+      "start_date": "2026-12-08",
+      "travel_style": "BUDGET"
+    },
+    {
+      "allow_revisit_place_ids": false,
+      "budget": 4000000,
+      "currency": "VND",
+      "days": 4,
+      "destination": "Hạ Long",
+      "destination_slug": "ha-long",
+      "end_date": "2026-11-26",
+      "fixture_label": "W06_DEV_TUNE",
+      "interests": [
+        "food_cuisine",
+        "nightlife_entertainment"
+      ],
+      "notes": null,
+      "scenario_id": "W06-DEV-TUNE-020",
+      "start_date": "2026-11-23",
+      "travel_style": "BACKPACKER"
+    },
+    {
+      "allow_revisit_place_ids": false,
+      "budget": 2000000,
+      "currency": "VND",
+      "days": 2,
+      "destination": "Hà Nội",
+      "destination_slug": "ha-noi",
+      "end_date": "2026-12-07",
+      "fixture_label": "W06_DEV_SELECT",
+      "interests": [
+        "nightlife_entertainment"
+      ],
+      "notes": null,
+      "scenario_id": "W06-DEV-SELECT-001",
+      "start_date": "2026-12-06",
+      "travel_style": "BUDGET"
+    },
+    {
+      "allow_revisit_place_ids": false,
+      "budget": null,
+      "currency": "VND",
+      "days": 2,
+      "destination": "Hà Nội",
+      "destination_slug": "ha-noi",
+      "end_date": "2026-11-04",
+      "fixture_label": "W06_DEV_SELECT",
+      "interests": [
+        "food_cuisine"
+      ],
+      "notes": null,
+      "scenario_id": "W06-DEV-SELECT-002",
+      "start_date": "2026-11-03",
+      "travel_style": "COMFORT"
+    },
+    {
+      "allow_revisit_place_ids": false,
+      "budget": 1000000,
+      "currency": "VND",
+      "days": 2,
+      "destination": "Hà Nội",
+      "destination_slug": "ha-noi",
+      "end_date": "2026-11-12",
+      "fixture_label": "W06_DEV_SELECT",
+      "interests": [
+        "nightlife_entertainment"
+      ],
+      "notes": null,
+      "scenario_id": "W06-DEV-SELECT-003",
+      "start_date": "2026-11-11",
+      "travel_style": "BACKPACKER"
+    },
+    {
+      "allow_revisit_place_ids": false,
+      "budget": 4000000,
+      "currency": "VND",
+      "days": 2,
+      "destination": "Hà Nội",
+      "destination_slug": "ha-noi",
+      "end_date": "2026-12-12",
+      "fixture_label": "W06_DEV_SELECT",
+      "interests": [
+        "coffee_culture",
+        "shopping_local"
+      ],
+      "notes": null,
+      "scenario_id": "W06-DEV-SELECT-004",
+      "start_date": "2026-12-11",
+      "travel_style": "LUXURY"
+    },
+    {
+      "allow_revisit_place_ids": false,
+      "budget": 1000000,
+      "currency": "VND",
+      "days": 2,
+      "destination": "Hà Nội",
+      "destination_slug": "ha-noi",
+      "end_date": "2026-11-27",
+      "fixture_label": "W06_DEV_SELECT",
+      "interests": [
+        "coffee_culture",
+        "food_cuisine"
+      ],
+      "notes": null,
+      "scenario_id": "W06-DEV-SELECT-005",
+      "start_date": "2026-11-26",
+      "travel_style": "BUDGET"
+    },
+    {
+      "allow_revisit_place_ids": false,
+      "budget": null,
+      "currency": "VND",
+      "days": 2,
+      "destination": "Hà Nội",
+      "destination_slug": "ha-noi",
+      "end_date": "2026-12-06",
+      "fixture_label": "W06_DEV_SELECT",
+      "interests": [
+        "food_cuisine",
+        "nightlife_entertainment",
+        "shopping_local"
+      ],
+      "notes": null,
+      "scenario_id": "W06-DEV-SELECT-006",
+      "start_date": "2026-12-05",
+      "travel_style": "BACKPACKER"
+    },
+    {
+      "allow_revisit_place_ids": false,
+      "budget": 4000000,
+      "currency": "VND",
+      "days": 2,
+      "destination": "Hà Nội",
+      "destination_slug": "ha-noi",
+      "end_date": "2026-11-06",
+      "fixture_label": "W06_DEV_SELECT",
+      "interests": [
+        "culture_history",
+        "nature_outdoor",
+        "nightlife_entertainment"
+      ],
+      "notes": null,
+      "scenario_id": "W06-DEV-SELECT-007",
+      "start_date": "2026-11-05",
+      "travel_style": "COMFORT"
+    },
+    {
+      "allow_revisit_place_ids": false,
+      "budget": 3000000,
+      "currency": "VND",
+      "days": 3,
+      "destination": "Hà Nội",
+      "destination_slug": "ha-noi",
+      "end_date": "2026-11-15",
+      "fixture_label": "W06_DEV_SELECT",
+      "interests": [
+        "culture_history"
+      ],
+      "notes": null,
+      "scenario_id": "W06-DEV-SELECT-008",
+      "start_date": "2026-11-13",
+      "travel_style": "LUXURY"
+    },
+    {
+      "allow_revisit_place_ids": false,
+      "budget": 6000000,
+      "currency": "VND",
+      "days": 3,
+      "destination": "Hà Nội",
+      "destination_slug": "ha-noi",
+      "end_date": "2026-12-04",
+      "fixture_label": "W06_DEV_SELECT",
+      "interests": [
+        "coffee_culture"
+      ],
+      "notes": null,
+      "scenario_id": "W06-DEV-SELECT-009",
+      "start_date": "2026-12-02",
+      "travel_style": "BACKPACKER"
+    },
+    {
+      "allow_revisit_place_ids": false,
+      "budget": null,
+      "currency": "VND",
+      "days": 3,
+      "destination": "Hà Nội",
+      "destination_slug": "ha-noi",
+      "end_date": "2026-12-07",
+      "fixture_label": "W06_DEV_SELECT",
+      "interests": [
+        "food_cuisine",
+        "shopping_local"
+      ],
+      "notes": null,
+      "scenario_id": "W06-DEV-SELECT-010",
+      "start_date": "2026-12-05",
+      "travel_style": "COMFORT"
+    },
+    {
+      "allow_revisit_place_ids": false,
+      "budget": 1500000,
+      "currency": "VND",
+      "days": 3,
+      "destination": "Hà Nội",
+      "destination_slug": "ha-noi",
+      "end_date": "2026-11-20",
+      "fixture_label": "W06_DEV_SELECT",
+      "interests": [
+        "coffee_culture",
+        "culture_history"
+      ],
+      "notes": null,
+      "scenario_id": "W06-DEV-SELECT-011",
+      "start_date": "2026-11-18",
+      "travel_style": "BUDGET"
+    },
+    {
+      "allow_revisit_place_ids": false,
+      "budget": 3000000,
+      "currency": "VND",
+      "days": 3,
+      "destination": "Hà Nội",
+      "destination_slug": "ha-noi",
+      "end_date": "2026-11-23",
+      "fixture_label": "W06_DEV_SELECT",
+      "interests": [
+        "nightlife_entertainment",
+        "shopping_local"
+      ],
+      "notes": null,
+      "scenario_id": "W06-DEV-SELECT-012",
+      "start_date": "2026-11-21",
+      "travel_style": "LUXURY"
+    },
+    {
+      "allow_revisit_place_ids": false,
+      "budget": 1500000,
+      "currency": "VND",
+      "days": 3,
+      "destination": "Hà Nội",
+      "destination_slug": "ha-noi",
+      "end_date": "2026-12-11",
+      "fixture_label": "W06_DEV_SELECT",
+      "interests": [
+        "coffee_culture",
+        "food_cuisine",
+        "nightlife_entertainment"
+      ],
+      "notes": null,
+      "scenario_id": "W06-DEV-SELECT-013",
+      "start_date": "2026-12-09",
+      "travel_style": "BUDGET"
+    },
+    {
+      "allow_revisit_place_ids": false,
+      "budget": 6000000,
+      "currency": "VND",
+      "days": 3,
+      "destination": "Hà Nội",
+      "destination_slug": "ha-noi",
+      "end_date": "2026-11-10",
+      "fixture_label": "W06_DEV_SELECT",
+      "interests": [
+        "food_cuisine",
+        "nature_outdoor",
+        "shopping_local"
+      ],
+      "notes": null,
+      "scenario_id": "W06-DEV-SELECT-014",
+      "start_date": "2026-11-08",
+      "travel_style": "LUXURY"
+    },
+    {
+      "allow_revisit_place_ids": false,
+      "budget": null,
+      "currency": "VND",
+      "days": 4,
+      "destination": "Hà Nội",
+      "destination_slug": "ha-noi",
+      "end_date": "2026-11-30",
+      "fixture_label": "W06_DEV_SELECT",
+      "interests": [
+        "food_cuisine"
+      ],
+      "notes": null,
+      "scenario_id": "W06-DEV-SELECT-015",
+      "start_date": "2026-11-27",
+      "travel_style": "COMFORT"
+    },
+    {
+      "allow_revisit_place_ids": false,
+      "budget": 4000000,
+      "currency": "VND",
+      "days": 4,
+      "destination": "Hà Nội",
+      "destination_slug": "ha-noi",
+      "end_date": "2026-12-11",
+      "fixture_label": "W06_DEV_SELECT",
+      "interests": [
+        "nature_outdoor"
+      ],
+      "notes": null,
+      "scenario_id": "W06-DEV-SELECT-016",
+      "start_date": "2026-12-08",
+      "travel_style": "BACKPACKER"
+    },
+    {
+      "allow_revisit_place_ids": false,
+      "budget": 8000000,
+      "currency": "VND",
+      "days": 4,
+      "destination": "Hà Nội",
+      "destination_slug": "ha-noi",
+      "end_date": "2026-12-03",
+      "fixture_label": "W06_DEV_SELECT",
+      "interests": [
+        "food_cuisine",
+        "nature_outdoor"
+      ],
+      "notes": null,
+      "scenario_id": "W06-DEV-SELECT-017",
+      "start_date": "2026-11-30",
+      "travel_style": "BACKPACKER"
+    },
+    {
+      "allow_revisit_place_ids": false,
+      "budget": 4000000,
+      "currency": "VND",
+      "days": 4,
+      "destination": "Hà Nội",
+      "destination_slug": "ha-noi",
+      "end_date": "2026-11-28",
+      "fixture_label": "W06_DEV_SELECT",
+      "interests": [
+        "nature_outdoor",
+        "nightlife_entertainment"
+      ],
+      "notes": null,
+      "scenario_id": "W06-DEV-SELECT-018",
+      "start_date": "2026-11-25",
+      "travel_style": "COMFORT"
+    },
+    {
+      "allow_revisit_place_ids": false,
+      "budget": 2000000,
+      "currency": "VND",
+      "days": 4,
+      "destination": "Hà Nội",
+      "destination_slug": "ha-noi",
+      "end_date": "2026-11-18",
+      "fixture_label": "W06_DEV_SELECT",
+      "interests": [
+        "coffee_culture",
+        "food_cuisine",
+        "nature_outdoor"
+      ],
+      "notes": null,
+      "scenario_id": "W06-DEV-SELECT-019",
+      "start_date": "2026-11-15",
+      "travel_style": "LUXURY"
+    },
+    {
+      "allow_revisit_place_ids": false,
+      "budget": null,
+      "currency": "VND",
+      "days": 4,
+      "destination": "Hà Nội",
+      "destination_slug": "ha-noi",
+      "end_date": "2026-11-20",
+      "fixture_label": "W06_DEV_SELECT",
+      "interests": [
+        "coffee_culture",
+        "culture_history",
+        "food_cuisine"
+      ],
+      "notes": null,
+      "scenario_id": "W06-DEV-SELECT-020",
+      "start_date": "2026-11-17",
+      "travel_style": "BUDGET"
+    },
+    {
+      "allow_revisit_place_ids": false,
+      "budget": 4000000,
+      "currency": "VND",
+      "days": 2,
+      "destination": "Đà Nẵng",
+      "destination_slug": "da-nang",
+      "end_date": "2026-11-21",
+      "fixture_label": "W06_DEV_SELECT",
+      "interests": [
+        "shopping_local"
+      ],
+      "notes": null,
+      "scenario_id": "W06-DEV-SELECT-021",
+      "start_date": "2026-11-20",
+      "travel_style": "LUXURY"
+    },
+    {
+      "allow_revisit_place_ids": false,
+      "budget": 1000000,
+      "currency": "VND",
+      "days": 2,
+      "destination": "Đà Nẵng",
+      "destination_slug": "da-nang",
+      "end_date": "2026-11-13",
+      "fixture_label": "W06_DEV_SELECT",
+      "interests": [
+        "food_cuisine"
+      ],
+      "notes": null,
+      "scenario_id": "W06-DEV-SELECT-022",
+      "start_date": "2026-11-12",
+      "travel_style": "BUDGET"
+    },
+    {
+      "allow_revisit_place_ids": false,
+      "budget": null,
+      "currency": "VND",
+      "days": 2,
+      "destination": "Đà Nẵng",
+      "destination_slug": "da-nang",
+      "end_date": "2026-11-08",
+      "fixture_label": "W06_DEV_SELECT",
+      "interests": [
+        "food_cuisine",
+        "nightlife_entertainment"
+      ],
+      "notes": null,
+      "scenario_id": "W06-DEV-SELECT-023",
+      "start_date": "2026-11-07",
+      "travel_style": "BACKPACKER"
+    },
+    {
+      "allow_revisit_place_ids": false,
+      "budget": 2000000,
+      "currency": "VND",
+      "days": 2,
+      "destination": "Đà Nẵng",
+      "destination_slug": "da-nang",
+      "end_date": "2026-11-26",
+      "fixture_label": "W06_DEV_SELECT",
+      "interests": [
+        "beach_island",
+        "food_cuisine"
+      ],
+      "notes": null,
+      "scenario_id": "W06-DEV-SELECT-024",
+      "start_date": "2026-11-25",
+      "travel_style": "COMFORT"
+    },
+    {
+      "allow_revisit_place_ids": false,
+      "budget": 2000000,
+      "currency": "VND",
+      "days": 2,
+      "destination": "Đà Nẵng",
+      "destination_slug": "da-nang",
+      "end_date": "2026-11-09",
+      "fixture_label": "W06_DEV_SELECT",
+      "interests": [
+        "beach_island",
+        "coffee_culture",
+        "shopping_local"
+      ],
+      "notes": null,
+      "scenario_id": "W06-DEV-SELECT-025",
+      "start_date": "2026-11-08",
+      "travel_style": "LUXURY"
+    },
+    {
+      "allow_revisit_place_ids": false,
+      "budget": 1000000,
+      "currency": "VND",
+      "days": 2,
+      "destination": "Đà Nẵng",
+      "destination_slug": "da-nang",
+      "end_date": "2026-11-17",
+      "fixture_label": "W06_DEV_SELECT",
+      "interests": [
+        "coffee_culture",
+        "food_cuisine",
+        "nature_outdoor"
+      ],
+      "notes": null,
+      "scenario_id": "W06-DEV-SELECT-026",
+      "start_date": "2026-11-16",
+      "travel_style": "COMFORT"
+    },
+    {
+      "allow_revisit_place_ids": false,
+      "budget": null,
+      "currency": "VND",
+      "days": 2,
+      "destination": "Đà Nẵng",
+      "destination_slug": "da-nang",
+      "end_date": "2026-11-22",
+      "fixture_label": "W06_DEV_SELECT",
+      "interests": [
+        "beach_island",
+        "coffee_culture",
+        "nature_outdoor"
+      ],
+      "notes": null,
+      "scenario_id": "W06-DEV-SELECT-027",
+      "start_date": "2026-11-21",
+      "travel_style": "BACKPACKER"
+    },
+    {
+      "allow_revisit_place_ids": false,
+      "budget": 6000000,
+      "currency": "VND",
+      "days": 3,
+      "destination": "Đà Nẵng",
+      "destination_slug": "da-nang",
+      "end_date": "2026-12-08",
+      "fixture_label": "W06_DEV_SELECT",
+      "interests": [
+        "nightlife_entertainment"
+      ],
+      "notes": null,
+      "scenario_id": "W06-DEV-SELECT-028",
+      "start_date": "2026-12-06",
+      "travel_style": "BUDGET"
+    },
+    {
+      "allow_revisit_place_ids": false,
+      "budget": null,
+      "currency": "VND",
+      "days": 3,
+      "destination": "Đà Nẵng",
+      "destination_slug": "da-nang",
+      "end_date": "2026-11-19",
+      "fixture_label": "W06_DEV_SELECT",
+      "interests": [
+        "nature_outdoor"
+      ],
+      "notes": null,
+      "scenario_id": "W06-DEV-SELECT-029",
+      "start_date": "2026-11-17",
+      "travel_style": "COMFORT"
+    },
+    {
+      "allow_revisit_place_ids": false,
+      "budget": 1500000,
+      "currency": "VND",
+      "days": 3,
+      "destination": "Đà Nẵng",
+      "destination_slug": "da-nang",
+      "end_date": "2026-11-18",
+      "fixture_label": "W06_DEV_SELECT",
+      "interests": [
+        "beach_island",
+        "coffee_culture"
+      ],
+      "notes": null,
+      "scenario_id": "W06-DEV-SELECT-030",
+      "start_date": "2026-11-16",
+      "travel_style": "BACKPACKER"
+    },
+    {
+      "allow_revisit_place_ids": false,
+      "budget": 6000000,
+      "currency": "VND",
+      "days": 3,
+      "destination": "Đà Nẵng",
+      "destination_slug": "da-nang",
+      "end_date": "2026-12-13",
+      "fixture_label": "W06_DEV_SELECT",
+      "interests": [
+        "coffee_culture",
+        "nature_outdoor"
+      ],
+      "notes": null,
+      "scenario_id": "W06-DEV-SELECT-031",
+      "start_date": "2026-12-11",
+      "travel_style": "BUDGET"
+    },
+    {
+      "allow_revisit_place_ids": false,
+      "budget": 3000000,
+      "currency": "VND",
+      "days": 3,
+      "destination": "Đà Nẵng",
+      "destination_slug": "da-nang",
+      "end_date": "2026-11-05",
+      "fixture_label": "W06_DEV_SELECT",
+      "interests": [
+        "coffee_culture",
+        "nature_outdoor",
+        "nightlife_entertainment"
+      ],
+      "notes": null,
+      "scenario_id": "W06-DEV-SELECT-032",
+      "start_date": "2026-11-03",
+      "travel_style": "BACKPACKER"
+    },
+    {
+      "allow_revisit_place_ids": false,
+      "budget": 3000000,
+      "currency": "VND",
+      "days": 3,
+      "destination": "Đà Nẵng",
+      "destination_slug": "da-nang",
+      "end_date": "2026-11-12",
+      "fixture_label": "W06_DEV_SELECT",
+      "interests": [
+        "food_cuisine",
+        "nightlife_entertainment",
+        "shopping_local"
+      ],
+      "notes": null,
+      "scenario_id": "W06-DEV-SELECT-033",
+      "start_date": "2026-11-10",
+      "travel_style": "COMFORT"
+    },
+    {
+      "allow_revisit_place_ids": false,
+      "budget": 2000000,
+      "currency": "VND",
+      "days": 4,
+      "destination": "Đà Nẵng",
+      "destination_slug": "da-nang",
+      "end_date": "2026-12-13",
+      "fixture_label": "W06_DEV_SELECT",
+      "interests": [
+        "coffee_culture"
+      ],
+      "notes": null,
+      "scenario_id": "W06-DEV-SELECT-034",
+      "start_date": "2026-12-10",
+      "travel_style": "LUXURY"
+    },
+    {
+      "allow_revisit_place_ids": false,
+      "budget": 8000000,
+      "currency": "VND",
+      "days": 4,
+      "destination": "Đà Nẵng",
+      "destination_slug": "da-nang",
+      "end_date": "2026-11-27",
+      "fixture_label": "W06_DEV_SELECT",
+      "interests": [
+        "beach_island"
+      ],
+      "notes": null,
+      "scenario_id": "W06-DEV-SELECT-035",
+      "start_date": "2026-11-24",
+      "travel_style": "BUDGET"
+    },
+    {
+      "allow_revisit_place_ids": false,
+      "budget": null,
+      "currency": "VND",
+      "days": 4,
+      "destination": "Đà Nẵng",
+      "destination_slug": "da-nang",
+      "end_date": "2026-11-09",
+      "fixture_label": "W06_DEV_SELECT",
+      "interests": [
+        "food_cuisine"
+      ],
+      "notes": null,
+      "scenario_id": "W06-DEV-SELECT-036",
+      "start_date": "2026-11-06",
+      "travel_style": "LUXURY"
+    },
+    {
+      "allow_revisit_place_ids": false,
+      "budget": 4000000,
+      "currency": "VND",
+      "days": 4,
+      "destination": "Đà Nẵng",
+      "destination_slug": "da-nang",
+      "end_date": "2026-11-06",
+      "fixture_label": "W06_DEV_SELECT",
+      "interests": [
+        "nature_outdoor",
+        "nightlife_entertainment"
+      ],
+      "notes": null,
+      "scenario_id": "W06-DEV-SELECT-037",
+      "start_date": "2026-11-03",
+      "travel_style": "BUDGET"
+    },
+    {
+      "allow_revisit_place_ids": false,
+      "budget": 2000000,
+      "currency": "VND",
+      "days": 4,
+      "destination": "Đà Nẵng",
+      "destination_slug": "da-nang",
+      "end_date": "2026-12-02",
+      "fixture_label": "W06_DEV_SELECT",
+      "interests": [
+        "beach_island",
+        "nature_outdoor"
+      ],
+      "notes": null,
+      "scenario_id": "W06-DEV-SELECT-038",
+      "start_date": "2026-11-29",
+      "travel_style": "COMFORT"
+    },
+    {
+      "allow_revisit_place_ids": false,
+      "budget": 8000000,
+      "currency": "VND",
+      "days": 4,
+      "destination": "Đà Nẵng",
+      "destination_slug": "da-nang",
+      "end_date": "2026-11-17",
+      "fixture_label": "W06_DEV_SELECT",
+      "interests": [
+        "beach_island",
+        "food_cuisine",
+        "nightlife_entertainment"
+      ],
+      "notes": null,
+      "scenario_id": "W06-DEV-SELECT-039",
+      "start_date": "2026-11-14",
+      "travel_style": "BACKPACKER"
+    },
+    {
+      "allow_revisit_place_ids": false,
+      "budget": null,
+      "currency": "VND",
+      "days": 4,
+      "destination": "Đà Nẵng",
+      "destination_slug": "da-nang",
+      "end_date": "2026-11-26",
+      "fixture_label": "W06_DEV_SELECT",
+      "interests": [
+        "coffee_culture",
+        "nature_outdoor",
+        "shopping_local"
+      ],
+      "notes": null,
+      "scenario_id": "W06-DEV-SELECT-040",
+      "start_date": "2026-11-23",
+      "travel_style": "LUXURY"
+    },
+    {
+      "allow_revisit_place_ids": false,
+      "budget": 2000000,
+      "currency": "VND",
+      "days": 2,
+      "destination": "Hạ Long",
+      "destination_slug": "ha-long",
+      "end_date": "2026-11-28",
+      "fixture_label": "W06_DEV_SELECT",
+      "interests": [
+        "culture_history"
+      ],
+      "notes": null,
+      "scenario_id": "W06-DEV-SELECT-041",
+      "start_date": "2026-11-27",
+      "travel_style": "BACKPACKER"
+    },
+    {
+      "allow_revisit_place_ids": false,
+      "budget": 1000000,
+      "currency": "VND",
+      "days": 2,
+      "destination": "Hạ Long",
+      "destination_slug": "ha-long",
+      "end_date": "2026-12-10",
+      "fixture_label": "W06_DEV_SELECT",
+      "interests": [
+        "food_cuisine"
+      ],
+      "notes": null,
+      "scenario_id": "W06-DEV-SELECT-042",
+      "start_date": "2026-12-09",
+      "travel_style": "COMFORT"
+    },
+    {
+      "allow_revisit_place_ids": false,
+      "budget": 4000000,
+      "currency": "VND",
+      "days": 2,
+      "destination": "Hạ Long",
+      "destination_slug": "ha-long",
+      "end_date": "2026-12-03",
+      "fixture_label": "W06_DEV_SELECT",
+      "interests": [
+        "coffee_culture",
+        "nature_outdoor"
+      ],
+      "notes": null,
+      "scenario_id": "W06-DEV-SELECT-043",
+      "start_date": "2026-12-02",
+      "travel_style": "LUXURY"
+    },
+    {
+      "allow_revisit_place_ids": false,
+      "budget": null,
+      "currency": "VND",
+      "days": 2,
+      "destination": "Hạ Long",
+      "destination_slug": "ha-long",
+      "end_date": "2026-11-29",
+      "fixture_label": "W06_DEV_SELECT",
+      "interests": [
+        "beach_island",
+        "nature_outdoor"
+      ],
+      "notes": null,
+      "scenario_id": "W06-DEV-SELECT-044",
+      "start_date": "2026-11-28",
+      "travel_style": "BUDGET"
+    },
+    {
+      "allow_revisit_place_ids": false,
+      "budget": 4000000,
+      "currency": "VND",
+      "days": 2,
+      "destination": "Hạ Long",
+      "destination_slug": "ha-long",
+      "end_date": "2026-11-23",
+      "fixture_label": "W06_DEV_SELECT",
+      "interests": [
+        "culture_history",
+        "food_cuisine",
+        "shopping_local"
+      ],
+      "notes": null,
+      "scenario_id": "W06-DEV-SELECT-045",
+      "start_date": "2026-11-22",
+      "travel_style": "BUDGET"
+    },
+    {
+      "allow_revisit_place_ids": false,
+      "budget": 2000000,
+      "currency": "VND",
+      "days": 2,
+      "destination": "Hạ Long",
+      "destination_slug": "ha-long",
+      "end_date": "2026-12-09",
+      "fixture_label": "W06_DEV_SELECT",
+      "interests": [
+        "beach_island",
+        "coffee_culture",
+        "food_cuisine"
+      ],
+      "notes": null,
+      "scenario_id": "W06-DEV-SELECT-046",
+      "start_date": "2026-12-08",
+      "travel_style": "LUXURY"
+    },
+    {
+      "allow_revisit_place_ids": false,
+      "budget": null,
+      "currency": "VND",
+      "days": 3,
+      "destination": "Hạ Long",
+      "destination_slug": "ha-long",
+      "end_date": "2026-12-12",
+      "fixture_label": "W06_DEV_SELECT",
+      "interests": [
+        "nature_outdoor"
+      ],
+      "notes": null,
+      "scenario_id": "W06-DEV-SELECT-047",
+      "start_date": "2026-12-10",
+      "travel_style": "BACKPACKER"
+    },
+    {
+      "allow_revisit_place_ids": false,
+      "budget": 1500000,
+      "currency": "VND",
+      "days": 3,
+      "destination": "Hạ Long",
+      "destination_slug": "ha-long",
+      "end_date": "2026-11-11",
+      "fixture_label": "W06_DEV_SELECT",
+      "interests": [
+        "culture_history"
+      ],
+      "notes": null,
+      "scenario_id": "W06-DEV-SELECT-048",
+      "start_date": "2026-11-09",
+      "travel_style": "COMFORT"
+    },
+    {
+      "allow_revisit_place_ids": false,
+      "budget": null,
+      "currency": "VND",
+      "days": 3,
+      "destination": "Hạ Long",
+      "destination_slug": "ha-long",
+      "end_date": "2026-11-27",
+      "fixture_label": "W06_DEV_SELECT",
+      "interests": [
+        "coffee_culture",
+        "shopping_local"
+      ],
+      "notes": null,
+      "scenario_id": "W06-DEV-SELECT-049",
+      "start_date": "2026-11-25",
+      "travel_style": "LUXURY"
+    },
+    {
+      "allow_revisit_place_ids": false,
+      "budget": 6000000,
+      "currency": "VND",
+      "days": 3,
+      "destination": "Hạ Long",
+      "destination_slug": "ha-long",
+      "end_date": "2026-11-17",
+      "fixture_label": "W06_DEV_SELECT",
+      "interests": [
+        "beach_island",
+        "shopping_local"
+      ],
+      "notes": null,
+      "scenario_id": "W06-DEV-SELECT-050",
+      "start_date": "2026-11-15",
+      "travel_style": "BACKPACKER"
+    },
+    {
+      "allow_revisit_place_ids": false,
+      "budget": 1500000,
+      "currency": "VND",
+      "days": 3,
+      "destination": "Hạ Long",
+      "destination_slug": "ha-long",
+      "end_date": "2026-11-22",
+      "fixture_label": "W06_DEV_SELECT",
+      "interests": [
+        "culture_history",
+        "food_cuisine",
+        "nature_outdoor"
+      ],
+      "notes": null,
+      "scenario_id": "W06-DEV-SELECT-051",
+      "start_date": "2026-11-20",
+      "travel_style": "COMFORT"
+    },
+    {
+      "allow_revisit_place_ids": false,
+      "budget": 3000000,
+      "currency": "VND",
+      "days": 3,
+      "destination": "Hạ Long",
+      "destination_slug": "ha-long",
+      "end_date": "2026-12-02",
+      "fixture_label": "W06_DEV_SELECT",
+      "interests": [
+        "food_cuisine",
+        "nature_outdoor",
+        "nightlife_entertainment"
+      ],
+      "notes": null,
+      "scenario_id": "W06-DEV-SELECT-052",
+      "start_date": "2026-11-30",
+      "travel_style": "BUDGET"
+    },
+    {
+      "allow_revisit_place_ids": false,
+      "budget": null,
+      "currency": "VND",
+      "days": 3,
+      "destination": "Hạ Long",
+      "destination_slug": "ha-long",
+      "end_date": "2026-11-30",
+      "fixture_label": "W06_DEV_SELECT",
+      "interests": [
+        "coffee_culture",
+        "culture_history",
+        "shopping_local"
+      ],
+      "notes": null,
+      "scenario_id": "W06-DEV-SELECT-053",
+      "start_date": "2026-11-28",
+      "travel_style": "BUDGET"
+    },
+    {
+      "allow_revisit_place_ids": false,
+      "budget": 4000000,
+      "currency": "VND",
+      "days": 4,
+      "destination": "Hạ Long",
+      "destination_slug": "ha-long",
+      "end_date": "2026-11-05",
+      "fixture_label": "W06_DEV_SELECT",
+      "interests": [
+        "nature_outdoor"
+      ],
+      "notes": null,
+      "scenario_id": "W06-DEV-SELECT-054",
+      "start_date": "2026-11-02",
+      "travel_style": "BUDGET"
+    },
+    {
+      "allow_revisit_place_ids": false,
+      "budget": 8000000,
+      "currency": "VND",
+      "days": 4,
+      "destination": "Hạ Long",
+      "destination_slug": "ha-long",
+      "end_date": "2026-12-08",
+      "fixture_label": "W06_DEV_SELECT",
+      "interests": [
+        "shopping_local"
+      ],
+      "notes": null,
+      "scenario_id": "W06-DEV-SELECT-055",
+      "start_date": "2026-12-05",
+      "travel_style": "LUXURY"
+    },
+    {
+      "allow_revisit_place_ids": false,
+      "budget": 2000000,
+      "currency": "VND",
+      "days": 4,
+      "destination": "Hạ Long",
+      "destination_slug": "ha-long",
+      "end_date": "2026-12-10",
+      "fixture_label": "W06_DEV_SELECT",
+      "interests": [
+        "nightlife_entertainment",
+        "shopping_local"
+      ],
+      "notes": null,
+      "scenario_id": "W06-DEV-SELECT-056",
+      "start_date": "2026-12-07",
+      "travel_style": "BACKPACKER"
+    },
+    {
+      "allow_revisit_place_ids": false,
+      "budget": 4000000,
+      "currency": "VND",
+      "days": 4,
+      "destination": "Hạ Long",
+      "destination_slug": "ha-long",
+      "end_date": "2026-12-05",
+      "fixture_label": "W06_DEV_SELECT",
+      "interests": [
+        "coffee_culture",
+        "food_cuisine"
+      ],
+      "notes": null,
+      "scenario_id": "W06-DEV-SELECT-057",
+      "start_date": "2026-12-02",
+      "travel_style": "COMFORT"
+    },
+    {
+      "allow_revisit_place_ids": false,
+      "budget": null,
+      "currency": "VND",
+      "days": 4,
+      "destination": "Hạ Long",
+      "destination_slug": "ha-long",
+      "end_date": "2026-11-13",
+      "fixture_label": "W06_DEV_SELECT",
+      "interests": [
+        "coffee_culture",
+        "nightlife_entertainment"
+      ],
+      "notes": null,
+      "scenario_id": "W06-DEV-SELECT-058",
+      "start_date": "2026-11-10",
+      "travel_style": "LUXURY"
+    },
+    {
+      "allow_revisit_place_ids": false,
+      "budget": 2000000,
+      "currency": "VND",
+      "days": 4,
+      "destination": "Hạ Long",
+      "destination_slug": "ha-long",
+      "end_date": "2026-12-06",
+      "fixture_label": "W06_DEV_SELECT",
+      "interests": [
+        "coffee_culture",
+        "nature_outdoor",
+        "shopping_local"
+      ],
+      "notes": null,
+      "scenario_id": "W06-DEV-SELECT-059",
+      "start_date": "2026-12-03",
+      "travel_style": "BACKPACKER"
+    },
+    {
+      "allow_revisit_place_ids": false,
+      "budget": 8000000,
+      "currency": "VND",
+      "days": 4,
+      "destination": "Hạ Long",
+      "destination_slug": "ha-long",
+      "end_date": "2026-11-12",
+      "fixture_label": "W06_DEV_SELECT",
+      "interests": [
+        "culture_history",
+        "nature_outdoor",
+        "nightlife_entertainment"
+      ],
+      "notes": null,
+      "scenario_id": "W06-DEV-SELECT-060",
+      "start_date": "2026-11-09",
+      "travel_style": "COMFORT"
+    }
+  ],
+  "hash_basis": "SHA256_CANONICAL_JSON_UTF8_LF_BYTES",
+  "method_lock": "W06-MODEL-ARCH-SELECTION-METHOD-LOCK-01",
+  "p11_sha256": "0aa9ae923d0e7f29df49735fa41e87530b1caf62418fcbec09a1eff81d83af62",
+  "seed": 2026101507,
+  "version": "1.0.0"
+}

@@ -1,0 +1,228 @@
+{
+  "artifact_id": "W06-DEV-FIXTURE-FREEZE-01-RECEIPT-V1",
+  "authorities": {
+    "catalog_path": "data/curated/gomate_places_freeze_v2.json",
+    "catalog_sha256": "f7517938598e3923906763f8f31334a500ee88bc06232f2992d38e2fcb28a444",
+    "final_bundle_path": "data/evaluation/w06/w06_scenarios_freeze_v1.json",
+    "final_bundle_sha256": "c03bc6dc300604ac395505d59b6413c1a47339b21408cfd637671e81d4b555a1",
+    "measurement_contract_path": "data/evaluation/w06/w06_measurement_contract_v1.json",
+    "measurement_contract_sha256": "0ddc1f8d879493517cee25f247d2365a0bacb816dc33b129b0c6110d4bfb8298",
+    "model_selection_method_lock_path": "data/evaluation/w06/w06_model_arch_selection_method_lock_v1.json",
+    "model_selection_method_lock_sha256": "6f30cdf90355dd720795de8e0b21beba45f527767892ca7eb88769141a64210c",
+    "p11_path": "data/evaluation/w06/w06_p11_assignment_manifest_v1.json",
+    "p11_sha256": "0aa9ae923d0e7f29df49735fa41e87530b1caf62418fcbec09a1eff81d83af62",
+    "reca_mapping_path": "apps/ai-service/recommendation/reca/contract.py",
+    "reca_mapping_sha256": "1a62c36a95092be35ab78dca43e20f646016e154746ee051a499bdebfc67538c",
+    "scenario_method_lock_path": "data/evaluation/w06/w06_scenario_method_lock_v1.json",
+    "scenario_method_lock_sha256": "5e5359f9f10a0248a9cf031f8e8b26c0314c46aecfe0d9df479388bbe4fd1af9",
+    "support_matrix_path": "data/evaluation/w06/w06_scenario_support_matrix_v1.json",
+    "support_matrix_sha256": "68c2bfc2164e664b3856c31b99a92d75a588f64465526b47c9104918a51cedb4"
+  },
+  "base_develop_sha": "2873b161b241573cf9d5db2df64b3e1594a1a595",
+  "claude_called": false,
+  "counts": {
+    "dev_select_count": 60,
+    "dev_tune_count": 20,
+    "fixture_count": 80
+  },
+  "dev_model_outputs_generated": false,
+  "final_benchmark_executed": false,
+  "final_semantics_printed_to_operator_logs": false,
+  "gemini_called": false,
+  "generated_artifacts": {
+    "dev_bundle_path": "data/evaluation/w06/w06_dev_fixtures_freeze_v1.json",
+    "dev_bundle_sha256": "bb0f051446ea3da8229298f22f4ce92b4db20751695273c6d01b7766da044050",
+    "dev_manifest_path": "data/evaluation/w06/w06_dev_fixture_manifest_v1.json",
+    "dev_manifest_sha256": "15cf3af6c93d3de967703dbc52d7e082bfd4a1e657409c0678ff51bd081e3c98",
+    "overlap_receipt_path": "data/evaluation/w06/w06_dev_final_overlap_receipt_v1.json",
+    "overlap_receipt_sha256": "285699ee1370b537a6579b88a7fb02781b51ac52e0ed14f469d77969261f04aa"
+  },
+  "generator_version": "W06-DEV-FIXTURE-GENERATOR-01-V1.0.0",
+  "grok_called": false,
+  "hash_basis": "SHA256_CANONICAL_JSON_UTF8_LF_BYTES",
+  "interest_combination_diversity": {
+    "distinct_destination_interest_combinations_used": 70,
+    "max_interest_combination_reuse": 2,
+    "mean_interest_combination_reuse": 1.142857,
+    "reuse_distribution_by_destination_and_interest_count": {
+      "da-nang": {
+        "1": {
+          "distinct_combinations_used": 7,
+          "max_reuse": 2,
+          "mean_reuse": 1.285714,
+          "reuse_count_histogram": {
+            "1": 5,
+            "2": 2
+          }
+        },
+        "2": {
+          "distinct_combinations_used": 9,
+          "max_reuse": 1,
+          "mean_reuse": 1.0,
+          "reuse_count_histogram": {
+            "1": 9
+          }
+        },
+        "3": {
+          "distinct_combinations_used": 9,
+          "max_reuse": 1,
+          "mean_reuse": 1.0,
+          "reuse_count_histogram": {
+            "1": 9
+          }
+        }
+      },
+      "ha-long": {
+        "1": {
+          "distinct_combinations_used": 5,
+          "max_reuse": 2,
+          "mean_reuse": 1.6,
+          "reuse_count_histogram": {
+            "1": 2,
+            "2": 3
+          }
+        },
+        "2": {
+          "distinct_combinations_used": 9,
+          "max_reuse": 1,
+          "mean_reuse": 1.0,
+          "reuse_count_histogram": {
+            "1": 9
+          }
+        },
+        "3": {
+          "distinct_combinations_used": 9,
+          "max_reuse": 1,
+          "mean_reuse": 1.0,
+          "reuse_count_histogram": {
+            "1": 9
+          }
+        }
+      },
+      "ha-noi": {
+        "1": {
+          "distinct_combinations_used": 5,
+          "max_reuse": 2,
+          "mean_reuse": 2.0,
+          "reuse_count_histogram": {
+            "2": 5
+          }
+        },
+        "2": {
+          "distinct_combinations_used": 9,
+          "max_reuse": 1,
+          "mean_reuse": 1.0,
+          "reuse_count_histogram": {
+            "1": 9
+          }
+        },
+        "3": {
+          "distinct_combinations_used": 8,
+          "max_reuse": 1,
+          "mean_reuse": 1.0,
+          "reuse_count_histogram": {
+            "1": 8
+          }
+        }
+      }
+    }
+  },
+  "marginals": {
+    "dev_select": {
+      "budget": {
+        "B1": 15,
+        "B2": 15,
+        "B3": 15,
+        "null": 15
+      },
+      "days": {
+        "2": 20,
+        "3": 20,
+        "4": 20
+      },
+      "destination": {
+        "da-nang": 20,
+        "ha-long": 20,
+        "ha-noi": 20
+      },
+      "interest_count": {
+        "1": 20,
+        "2": 20,
+        "3": 20
+      },
+      "support_class": {
+        "CLEAR": 48,
+        "EXCLUDED": 0,
+        "STRESS": 12
+      },
+      "travel_style": {
+        "BACKPACKER": 15,
+        "BUDGET": 15,
+        "COMFORT": 15,
+        "LUXURY": 15
+      },
+      "weekend": {
+        "non_weekend_exposed": 30,
+        "weekend_exposed": 30
+      }
+    },
+    "dev_tune": {
+      "budget": {
+        "B1": 5,
+        "B2": 5,
+        "B3": 5,
+        "null": 5
+      },
+      "days": {
+        "2": 7,
+        "3": 7,
+        "4": 6
+      },
+      "destination": {
+        "da-nang": 7,
+        "ha-long": 6,
+        "ha-noi": 7
+      },
+      "interest_count": {
+        "1": 7,
+        "2": 7,
+        "3": 6
+      },
+      "support_class": {
+        "CLEAR": 16,
+        "EXCLUDED": 0,
+        "STRESS": 4
+      },
+      "travel_style": {
+        "BACKPACKER": 5,
+        "BUDGET": 5,
+        "COMFORT": 5,
+        "LUXURY": 5
+      },
+      "weekend": {
+        "non_weekend_exposed": 10,
+        "weekend_exposed": 10
+      }
+    }
+  },
+  "openai_called": false,
+  "preregistration_created": false,
+  "provider_calls": 0,
+  "seed": 2026101507,
+  "status": "FROZEN_FOR_DEV_EXECUTION_ONLY",
+  "task_id": "W06-DEV-FIXTURE-FREEZE-01",
+  "verification_summary": {
+    "dev_duplicate_count": 0,
+    "dev_select_final_near_overlap_count": 10,
+    "dev_select_final_near_overlap_rate": 0.166667,
+    "dev_tune_final_near_overlap_count": 0,
+    "excluded_count": 0,
+    "final_exact_overlap_count": 0,
+    "max_interest_combination_reuse": 2,
+    "mean_interest_combination_reuse": 1.142857,
+    "rule_a_failures": 0,
+    "rule_b_failures": 0
+  },
+  "version": "1.0.0",
+  "winning_model_selected": false
+}
