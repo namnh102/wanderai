@@ -1,0 +1,622 @@
+{
+  "artifact_hash_basis": "SHA256_CANONICAL_JSON_UTF8_LF_BYTES",
+  "base_develop_sha": "de0c664f9831caaeda34a996d90f6d6d98643848",
+  "budget_policy": {
+    "budget_applicable_scenarios": 80,
+    "budget_null_scenarios": 20,
+    "metric": "ESTIMATED_BUDGET_COMPLIANCE",
+    "model_output_may_determine_benchmark_budget_ceilings": false,
+    "nominal_tiers": {
+      "B1": {
+        "daily_nominal_vnd": 500000,
+        "scenario_budget_by_days_vnd": {
+          "2": 1000000,
+          "3": 1500000,
+          "4": 2000000
+        },
+        "scenario_count": 27
+      },
+      "B2": {
+        "daily_nominal_vnd": 1000000,
+        "scenario_budget_by_days_vnd": {
+          "2": 2000000,
+          "3": 3000000,
+          "4": 4000000
+        },
+        "scenario_count": 27
+      },
+      "B3": {
+        "daily_nominal_vnd": 2000000,
+        "scenario_budget_by_days_vnd": {
+          "2": 4000000,
+          "3": 6000000,
+          "4": 8000000
+        },
+        "scenario_count": 26
+      }
+    },
+    "represents_price_ground_truth": false,
+    "represents_real_world_travel_prices": false,
+    "represents_validated_cost_estimates": false,
+    "same_model_gemini_budget_calibration": "FORBIDDEN",
+    "scenario_budget_formula": "daily_nominal_tier_vnd * scenario.days",
+    "tier_classification": "NOMINAL_BENCHMARK_BUDGET_TIERS",
+    "total_scenarios": 100,
+    "zero_estimated_cost_frequency_role": "DESCRIPTIVE_ONLY",
+    "zero_estimated_cost_may_independently_fail_scenario": false
+  },
+  "date_policy": {
+    "marginal_counts": {
+      "non_weekend_exposed": 50,
+      "weekend_exposed": 50
+    },
+    "non_weekend_exposed_count": 50,
+    "role": "INPUT_VARIATION_ONLY",
+    "scientific_weekday_weekend_subgroup_defined": false,
+    "trip_dates_must_be_contiguous": true,
+    "weekend_exposed_count": 50,
+    "weekend_exposed_definition": "The contiguous itinerary date range [start_date, end_date] contains at least one Saturday or Sunday.",
+    "weekend_opening_hours_performance_claims_allowed": false,
+    "window_end_date": "2026-12-13",
+    "window_start_date": "2026-11-02"
+  },
+  "difficulty_policy": {
+    "allowed_pre_run_descriptive_metadata": [
+      "days",
+      "interest_count",
+      "support_class",
+      "budget_tier",
+      "weekend_exposure",
+      "travel_style"
+    ],
+    "forbidden_difficulty_strata": [
+      "EASY",
+      "MEDIUM",
+      "HARD"
+    ],
+    "policy": "NO_FORMAL_DIFFICULTY_TIER"
+  },
+  "execution_policy": {
+    "PRIMARY_RESULT_INTERPRETATION": "ONE_SHOT_BENCHMARK_OUTCOME_UNDER_RECORDED_CONFIGURATION",
+    "automatic_retry_count": 0,
+    "claim_stable_expected_performance_across_repeated_stochastic_executions_allowed": false,
+    "executions_per_scenario": 1,
+    "invalid_execution_remains_non_pass_in_assigned_denominator": true
+  },
+  "gemini_called": false,
+  "generation_seed_policy": {
+    "allowed_seed_count": 1,
+    "scenario_generation_seed": 2026101506,
+    "seed_committed_before_generation": true,
+    "seed_shopping_allowed": false
+  },
+  "generator_policy": {
+    "deterministic_required": true,
+    "may_inspect_gemini_or_model_output": false,
+    "priority_order": [
+      {
+        "priority": 1,
+        "rule": "exact destination allocation"
+      },
+      {
+        "priority": 2,
+        "rule": "exact days marginal"
+      },
+      {
+        "priority": 3,
+        "rule": "exact interest-count marginal"
+      },
+      {
+        "priority": 4,
+        "rule": "exact budget applicability/tier marginal"
+      },
+      {
+        "priority": 5,
+        "rule": "exact travel-style marginal"
+      },
+      {
+        "priority": 6,
+        "rule": "exact weekend-exposure marginal"
+      },
+      {
+        "priority": 7,
+        "rule": "scenario eligibility"
+      },
+      {
+        "priority": 8,
+        "rule": "duplicate/near-duplicate rules"
+      },
+      {
+        "priority": 9,
+        "rule": "CLEAR/STRESS coverage"
+      },
+      {
+        "priority": 10,
+        "rule": "minimize remaining cross-dimension imbalance"
+      }
+    ]
+  },
+  "hash_basis_version": "W06-ARTIFACT-HASH-BASIS-V1",
+  "historical_discrepancies": {
+    "historical_charge_tag_count_discrepancy": "NON_BLOCKING_HISTORICAL_COUNT_DISCREPANCY",
+    "historical_charge_tag_count_explanation": "W06-MEASUREMENT-AUDIT-01 reported 6/759 all-catalog POIs with charge strings (including 2 non-core POIs with charge-related key substrings outside tags.charge) and 4/622 REC-A-CORE-V2 POIs with tags.charge; structured priceMin/priceMax coverage is 0/759 (0/622 core) under both counts. Historical Measurement Contract text is not rewritten.",
+    "historical_measurement_contract_rewritten": false,
+    "historical_parser_currently_exists_explanation": "In w06_measurement_contract_v1.json (frozen at W06-MEASUREMENT-CONTRACT-01), opening_hours_semantics.audit_evidence.parser_currently_exists was recorded as false prior to W06-INSTRUMENT-01C implementing opening_hours_evaluator.py. Historical contract text is not rewritten.",
+    "historical_parser_currently_exists_false": "EXPECTED_HISTORICAL_STATE_SUPERSEDED_BY_IMPLEMENTATION"
+  },
+  "historical_measurement_contract_modified": false,
+  "infeasible_scenarios_policy": {
+    "INFEASIBLE_DIAGNOSTIC_POLICY": "DEFERRED_OUTSIDE_PRIMARY_W06_V1",
+    "claim_planner_detects_infeasibility_or_refusal_allowed": false,
+    "infeasible_diagnostic_set_created_in_this_task": false,
+    "intentionally_infeasible_scenarios_in_primary_100": 0
+  },
+  "instrument_amendment_required": true,
+  "instrumentation_amendment_required": true,
+  "interest_claim_boundary": {
+    "claim_planner_satisfies_real_user_interests_allowed": false,
+    "interest_support_role": "SCENARIO_FEASIBILITY_METADATA_ONLY",
+    "preference_satisfaction_is_primary_w06_metric": false
+  },
+  "interest_count_target": {
+    "allowed_interest_counts": [
+      1,
+      2,
+      3
+    ],
+    "canonical_interest_taxonomy_only": true,
+    "canonical_interests": [
+      "food_cuisine",
+      "culture_history",
+      "nature_outdoor",
+      "coffee_culture",
+      "beach_island",
+      "shopping_local",
+      "nightlife_entertainment"
+    ],
+    "marginal_counts": {
+      "1": 33,
+      "2": 34,
+      "3": 33
+    },
+    "total_scenarios": 100
+  },
+  "interest_mapping": {
+    "catalog_file_path": "data/curated/gomate_places_freeze_v2.json",
+    "catalog_hash_basis": "SHA256_LF_NORMALIZED_SOURCE_BYTES",
+    "catalog_lf_sha256": "f7517938598e3923906763f8f31334a500ee88bc06232f2992d38e2fcb28a444",
+    "function_name": "poi_to_canonical_vector",
+    "new_mapping_created": false,
+    "pre_freeze_support_matrix_hash_basis": "SHA256_CANONICAL_JSON_UTF8_LF_BYTES",
+    "pre_freeze_support_matrix_is_final_100_scenarios": false,
+    "pre_freeze_support_matrix_path": "data/evaluation/w06/w06_scenario_support_matrix_v1.json",
+    "pre_freeze_support_matrix_sha256": "94835f42c67260939548fbde21e41924227feae6d4d78d0e787a4edaaf45a36d",
+    "source_commit_sha": "de0c664f9831caaeda34a996d90f6d6d98643848",
+    "source_file_hash_basis": "SHA256_LF_NORMALIZED_SOURCE_BYTES",
+    "source_file_lf_sha256": "1a62c36a95092be35ab78dca43e20f646016e154746ee051a499bdebfc67538c",
+    "source_file_path": "apps/ai-service/recommendation/reca/contract.py"
+  },
+  "manual_qa_policy": {
+    "hand_written_replacement_scenario_allowed": false,
+    "manual_rejection_requires_allowed_reason_code": true,
+    "replacement_policy": "NEXT_DETERMINISTIC_ELIGIBLE_CANDIDATE_IN_GENERATOR_STREAM",
+    "reviewer_allowed_to_inspect": [
+      "scenario_input",
+      "catalog_evidence",
+      "support_matrix",
+      "schema_validity",
+      "date_validity",
+      "deterministic_generation_metadata"
+    ],
+    "reviewer_forbidden_to_inspect": [
+      "Gemini_output",
+      "planner_pass_fail",
+      "planner_estimated_cost",
+      "future_scientific_result"
+    ]
+  },
+  "method_lock_id": "W06-SCENARIO-METHOD-LOCK-01",
+  "method_lock_version": "1.0.0",
+  "minimum_poi_visits_per_day_policy": {
+    "definition": "At least TWO itinerary items with activity_kind == POI_VISIT per itinerary day; TRANSIT_ONLY does not count.",
+    "evaluator_modified_in_this_task": false,
+    "instrument_amendment_required": true,
+    "instrumentation_amendment_rationale": "The currently merged W06 evaluator (W06-CORE-EVALUATOR-01C-V1.0.0) checks min_items_observed_per_day >= 1 and records MINIMUM_ITEMS_PER_DAY_CONTRACT_STATUS = NOT_FORMALLY_FROZEN. A formal instrumentation amendment task is required to enforce min_poi_visits_per_day == 2 on POI_VISIT items per day before final scenario freeze.",
+    "instrumentation_amendment_required": true,
+    "min_poi_visits_per_day": 2,
+    "required_activity_kind": "POI_VISIT",
+    "transit_only_counts_toward_minimum": false
+  },
+  "near_duplicate_policy": {
+    "canonical_scenario_signature": [
+      "destination_slug",
+      "days",
+      "sorted(interests)",
+      "budget_tier_or_null",
+      "weekend_exposure",
+      "travel_style"
+    ],
+    "compute_repeat_cap_before_candidate_sampling": true,
+    "exact_duplicate_signature_policy": "FORBIDDEN",
+    "exceed_repeat_cap_without_mathematical_infeasibility_proof_allowed": false,
+    "free_text_notes_can_create_uniqueness": false,
+    "infeasibility_protocol": "STOP_DO_NOT_SILENTLY_RELAX_REQUIRE_FORMAL_METHOD_AMENDMENT",
+    "interest_combination_repeat_cap_formula": "ceil(destination_scenario_count / number_of_distinct_eligible_interest_combinations_for_destination)",
+    "precomputed_repeat_cap_diagnostics": {
+      "da-nang": {
+        "destination_scenario_count": 33,
+        "distinct_eligible_by_interest_count_any_days": {
+          "1": 7,
+          "2": 21,
+          "3": 35
+        },
+        "distinct_eligible_combinations_all_days": 63,
+        "distinct_eligible_combinations_any_days": 63,
+        "repeat_cap_over_all_days": 1,
+        "repeat_cap_over_any_days": 1
+      },
+      "ha-long": {
+        "destination_scenario_count": 33,
+        "distinct_eligible_by_interest_count_any_days": {
+          "1": 6,
+          "2": 21,
+          "3": 35
+        },
+        "distinct_eligible_combinations_all_days": 40,
+        "distinct_eligible_combinations_any_days": 62,
+        "repeat_cap_over_all_days": 1,
+        "repeat_cap_over_any_days": 1
+      },
+      "ha-noi": {
+        "destination_scenario_count": 34,
+        "distinct_eligible_by_interest_count_any_days": {
+          "1": 5,
+          "2": 15,
+          "3": 20
+        },
+        "distinct_eligible_combinations_all_days": 25,
+        "distinct_eligible_combinations_any_days": 40,
+        "repeat_cap_over_all_days": 2,
+        "repeat_cap_over_any_days": 1
+      },
+      "single_interest_marginal_pigeonhole_note": "Total distinct eligible 1-interest (destination, interest) pairs across ha-noi (5), da-nang (7), and ha-long (6 at d=2; 5 at d in {3,4}) is 18, while the locked 1-interest marginal is 33. Under an unstratified repeat_cap=1, at most 18 1-interest scenarios could be constructed (< 33). Per Section 18, the future generator must not silently relax this constraint; if unstratified repeat_cap=1 is applied to k=1, the generator must STOP and require a formal method amendment (e.g., conditioning repeat_cap on (destination, interest_count) cell)."
+    }
+  },
+  "opening_hours_policy": {
+    "mandatory_future_reporting": [
+      "opening_hours_evidence_coverage",
+      "known_opening_hours_violations",
+      "UNKNOWN_count_and_rate",
+      "per_destination_evidence_coverage"
+    ],
+    "oh_enriched_quota_allowed": false,
+    "primary_100_policy": "NATURAL_EXPOSURE_ONLY",
+    "select_primary_scenario_for_more_opening_hours_evidence_allowed": false,
+    "separate_oh_probe_set_created": false,
+    "separate_oh_probe_set_status": "DEFERRED_FOR_W06_V1"
+  },
+  "p11_created": false,
+  "pilot_policy": {
+    "allowed_pre_freeze_activities": [
+      "synthetic_fixture_tests",
+      "offline_generator_qa",
+      "schema_validation",
+      "support_matrix_validation"
+    ],
+    "gemini_or_model_behavior_pilot_influencing_scenario_design": "FORBIDDEN",
+    "same_model_budget_calibration": "FORBIDDEN",
+    "send_final_scenario_to_gemini_before_p11_and_preregistration_allowed": false
+  },
+  "preregistration_created": false,
+  "primary_benchmark": {
+    "allow_other_primary_destinations": false,
+    "benchmark_target": 100,
+    "catalog_file_path": "data/curated/gomate_places_freeze_v2.json",
+    "catalog_filter_predicate": "is_rec_a_core_v2 == true",
+    "catalog_scope": "REC-A-CORE-V2",
+    "destination_allocation": {
+      "da-nang": 33,
+      "ha-long": 33,
+      "ha-noi": 34
+    },
+    "primary_destinations": [
+      "ha-noi",
+      "da-nang",
+      "ha-long"
+    ]
+  },
+  "production_planner_behavior_modified": false,
+  "real_scenarios_generated": false,
+  "rejection_log_policy": {
+    "allowed_reason_codes": [
+      "CATALOG_SUPPORT_BELOW_THRESHOLD",
+      "TOTAL_INTEREST_CAPACITY_INSUFFICIENT",
+      "SCHEMA_INVALID",
+      "DATE_RANGE_INVALID",
+      "NEAR_DUPLICATE_SIGNATURE",
+      "INTEREST_COMBINATION_REPEAT_CAP",
+      "ALLOCATION_CELL_FULL",
+      "NON_CANONICAL_FIELD",
+      "TEXT_AMBIGUOUS_NOTES",
+      "MANUAL_QA_REJECT"
+    ],
+    "include_model_output_allowed": false,
+    "log_every_rejected_candidate": true,
+    "reason_may_depend_on_gemini_behavior": false,
+    "required_deterministic_fields": [
+      "candidate_index",
+      "candidate_sha256",
+      "reason_code",
+      "rule_version",
+      "replacement_candidate_index"
+    ]
+  },
+  "scenario_counts_and_cross_balance_policy": {
+    "optimize_based_on_model_performance_allowed": false,
+    "require_perfect_factorial_balance": false,
+    "required_generator_reporting": [
+      "all_locked_marginal_counts",
+      "cross_tab_counts",
+      "max_min_cross_cell_imbalance",
+      "unavoidable_imbalance"
+    ]
+  },
+  "scenario_generator_implemented": false,
+  "scientific_basis": {
+    "instrument_01a_status": "CLOSED",
+    "instrument_01b_status": "CLOSED",
+    "instrument_01c_status": "CLOSED",
+    "instrument_validation_01_status": "CLOSED",
+    "measurement_audit_id": "W06-MEASUREMENT-AUDIT-01",
+    "measurement_audit_status": "CLOSED",
+    "measurement_contract_id": "W06-MEASUREMENT-CONTRACT-01",
+    "measurement_contract_status": "CLOSED",
+    "measurement_contract_version": "1.1.0",
+    "methodology_inputs": [
+      "W06-SCENARIO-RESEARCH-01",
+      "W06-SCENARIO-RESEARCH-02",
+      "W06-SCENARIO-RESEARCH-03",
+      "W06-SCENARIO-COUNCIL-PHASE-2",
+      "CHATGPT_METHODOLOGY_DECISION"
+    ]
+  },
+  "scientific_results_generated": false,
+  "status": "LOCKED_PENDING_INSTRUMENT_AMENDMENT",
+  "stress_policy": {
+    "final_stress_count_nature": "OUTPUT_OF_FROZEN_GENERATION_PROCEDURE",
+    "fixed_stress_percentage": null,
+    "generator_selection_policy": "Round-robin / balance CLEAR and STRESS where feasible without violating higher-priority locked marginals.",
+    "manual_stress_quota_allowed": false,
+    "stress_status_source": "FROZEN_SUPPORT_RULES_ONLY",
+    "systematic_exclusion_of_eligible_stress_candidates_forbidden": true
+  },
+  "subgroup_policy": {
+    "frozen_bootstrap_resampling_unit": "scenario",
+    "inferential_subgroup_claims_allowed": false,
+    "p_values_allowed": false,
+    "primary_required_reporting": [
+      "overall",
+      "per_destination",
+      "equal_destination_macro"
+    ],
+    "scenario_level_bootstrap_unit_modified": false,
+    "secondary_axes_classification": "SECONDARY_DESCRIPTIVE_ONLY",
+    "secondary_descriptive_axes": [
+      "budget_applicability",
+      "trip_length",
+      "interest_count",
+      "support_class",
+      "travel_style",
+      "weekday_weekend",
+      "individual_interest"
+    ]
+  },
+  "support_eligibility_rule": {
+    "classes": {
+      "CLEAR": {
+        "allowed_in_primary_100": true,
+        "definition": "Passes eligibility (Rule A and Rule B), and every requested interest i satisfies n_i >= d * m"
+      },
+      "EXCLUDED": {
+        "allowed_in_primary_100": false,
+        "definition": "Fails Rule A or Rule B"
+      },
+      "STRESS": {
+        "allowed_in_primary_100": true,
+        "definition": "Passes eligibility (Rule A and Rule B), but at least one requested interest i satisfies d <= n_i < d * m",
+        "fixed_stress_percentage": null
+      }
+    },
+    "days_symbol": "d",
+    "excluded_allowed_in_primary_100": false,
+    "fixed_stress_percentage": null,
+    "interest_support_symbol": "n_i",
+    "min_poi_visits_per_day": 2,
+    "min_poi_visits_per_day_symbol": "m",
+    "rule_a": {
+      "condition": "for every requested interest i: n_i >= d",
+      "rejection_reason_code": "CATALOG_SUPPORT_BELOW_THRESHOLD",
+      "rule_id": "RULE_A"
+    },
+    "rule_b": {
+      "assume_zero_multi_interest_overlap_forever": false,
+      "condition": "union_support(requested_interests) >= d * m and sum(n_i across requested_interests) >= d * m",
+      "current_core_catalog_multi_interest_overlap_poi_count": 0,
+      "rejection_reason_code": "TOTAL_INTEREST_CAPACITY_INSUFFICIENT",
+      "rule_id": "RULE_B",
+      "union_support_computation": "DIRECT_SET_UNION_OF_CANONICAL_PLACE_IDS"
+    },
+    "stress_allowed_in_primary_100": true
+  },
+  "support_matrix_summary": {
+    "by_destination": {
+      "da-nang": {
+        "canonical_interest_support_counts": {
+          "beach_island": 10,
+          "coffee_culture": 49,
+          "culture_history": 53,
+          "food_cuisine": 52,
+          "nature_outdoor": 8,
+          "nightlife_entertainment": 11,
+          "shopping_local": 21
+        },
+        "cell_summary_across_days_2_3_4": {
+          "clear_cells": 189,
+          "eligible_cells": 189,
+          "excluded_cells": 0,
+          "stress_cells": 0,
+          "total_cells": 189
+        },
+        "clear_combinations_by_days": {
+          "2": 63,
+          "3": 63,
+          "4": 63
+        },
+        "distinct_eligible_combinations_all_days_count": 63,
+        "distinct_eligible_combinations_any_days_count": 63,
+        "distinct_stress_combinations_any_days_count": 0,
+        "eligible_combinations_by_days": {
+          "2": 63,
+          "3": 63,
+          "4": 63
+        },
+        "excluded_combinations_by_days": {
+          "2": 0,
+          "3": 0,
+          "4": 0
+        },
+        "scenario_allocation": 33,
+        "stress_combinations_by_days": {
+          "2": 0,
+          "3": 0,
+          "4": 0
+        },
+        "total_core_pois": 289
+      },
+      "ha-long": {
+        "canonical_interest_support_counts": {
+          "beach_island": 3,
+          "coffee_culture": 21,
+          "culture_history": 16,
+          "food_cuisine": 37,
+          "nature_outdoor": 10,
+          "nightlife_entertainment": 5,
+          "shopping_local": 15
+        },
+        "cell_summary_across_days_2_3_4": {
+          "clear_cells": 91,
+          "eligible_cells": 163,
+          "excluded_cells": 26,
+          "stress_cells": 72,
+          "total_cells": 189
+        },
+        "clear_combinations_by_days": {
+          "2": 41,
+          "3": 25,
+          "4": 25
+        },
+        "distinct_eligible_combinations_all_days_count": 40,
+        "distinct_eligible_combinations_any_days_count": 62,
+        "distinct_stress_combinations_any_days_count": 36,
+        "eligible_combinations_by_days": {
+          "2": 62,
+          "3": 61,
+          "4": 40
+        },
+        "excluded_combinations_by_days": {
+          "2": 1,
+          "3": 2,
+          "4": 23
+        },
+        "scenario_allocation": 33,
+        "stress_combinations_by_days": {
+          "2": 21,
+          "3": 36,
+          "4": 15
+        },
+        "total_core_pois": 188
+      },
+      "ha-noi": {
+        "canonical_interest_support_counts": {
+          "beach_island": 1,
+          "coffee_culture": 8,
+          "culture_history": 37,
+          "food_cuisine": 21,
+          "nature_outdoor": 12,
+          "nightlife_entertainment": 12,
+          "shopping_local": 3
+        },
+        "cell_summary_across_days_2_3_4": {
+          "clear_cells": 75,
+          "eligible_cells": 105,
+          "excluded_cells": 84,
+          "stress_cells": 30,
+          "total_cells": 189
+        },
+        "clear_combinations_by_days": {
+          "2": 25,
+          "3": 25,
+          "4": 25
+        },
+        "distinct_eligible_combinations_all_days_count": 25,
+        "distinct_eligible_combinations_any_days_count": 40,
+        "distinct_stress_combinations_any_days_count": 15,
+        "eligible_combinations_by_days": {
+          "2": 40,
+          "3": 40,
+          "4": 25
+        },
+        "excluded_combinations_by_days": {
+          "2": 23,
+          "3": 23,
+          "4": 38
+        },
+        "scenario_allocation": 34,
+        "stress_combinations_by_days": {
+          "2": 15,
+          "3": 15,
+          "4": 0
+        },
+        "total_core_pois": 145
+      }
+    },
+    "total_clear_cells": 355,
+    "total_destination_day_combination_cells": 567,
+    "total_eligible_cells": 457,
+    "total_excluded_cells": 110,
+    "total_stress_cells": 102
+  },
+  "travel_style_policy": {
+    "has_primary_metric": false,
+    "inferential_subgroup_claim_allowed": false,
+    "marginal_counts": {
+      "BACKPACKER": 25,
+      "BUDGET": 25,
+      "COMFORT": 25,
+      "LUXURY": 25
+    },
+    "role": "DESCRIPTIVE_INPUT_VARIATION_ONLY",
+    "total_scenarios": 100,
+    "vocabulary": [
+      "BACKPACKER",
+      "BUDGET",
+      "COMFORT",
+      "LUXURY"
+    ]
+  },
+  "trip_length_target": {
+    "allow_other_trip_lengths_in_primary_100": false,
+    "allowed_days": [
+      2,
+      3,
+      4
+    ],
+    "marginal_counts": {
+      "2": 33,
+      "3": 34,
+      "4": 33
+    },
+    "total_scenarios": 100
+  },
+  "w5_artifacts_modified": false
+}
