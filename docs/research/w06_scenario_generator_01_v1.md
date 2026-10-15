@@ -17,12 +17,14 @@
 
 Deterministic scenario generation is required so that:
 1. Every benchmark scenario input is constructed strictly from pre-committed catalog support evidence and frozen marginal targets without human cherry-picking, seed shopping, or inspection of model outputs.
-2. Any independent researcher running the generator with the frozen seed (`2026101506`) and frozen support matrix obtains byte-identical canonical outputs and identical cryptographic SHA256 digests (`5761a289c6713feee42917bbff3fe8c6872d32a542264c0b1eb852d88f030898`).
+2. Under the audited repository revision, frozen scientific inputs, recorded dependency environment, and seed `2026101506`, repeated executions produced identical canonical output and SHA256 (`3c3b5314c2fca0fb3c2fb53cc1b4fc26cc06b83d058218adfa13f8b641c1f769`). This does not claim universal bit-for-bit reproducibility across arbitrary environments.
 3. Every rejected candidate in the generator stream is deterministically logged with an auditable reason code from the frozen vocabulary and linked to its replacement candidate index.
 
 ---
 
-## 2. Authoritative Source Artifacts
+## 2. Authoritative Source Artifacts & Runtime Hash Pinning
+
+At runtime, the generator verifies and fails closed unless all frozen scientific authorities match the Method Lock (`method_lock["interest_mapping"]` and expected LF-normalized SHA256 digests):
 
 | Artifact | Path | LF-Normalized SHA256 |
 |---|---|---|
@@ -42,38 +44,46 @@ Deterministic scenario generation is required so that:
 
 ---
 
-## 4. Allocation Priority Order & Candidate Stream
+## 4. Executable Allocation Priority Order & Candidate Stream
 
-The generator strictly enforces the frozen 10-level priority hierarchy from `W06-SCENARIO-METHOD-LOCK-01`:
+The generator executes the frozen 10-level priority hierarchy from `W06-SCENARIO-METHOD-LOCK-01` in four strict sequential phases (`EXECUTABLE_PRIORITY_TRACE`):
 
-1. **Exact destination allocation:** `ha-noi = 34`, `da-nang = 33`, `ha-long = 33` (total `100`).
-2. **Exact days marginal & destination $\times$ days cross-allocation:**
+### PHASE A (Priorities 1..3)
+1. **`DESTINATION_ALLOCATION` (Priority 1 — exact destination allocation):** `ha-noi = 34`, `da-nang = 33`, `ha-long = 33` (total `100`).
+2. **`DAYS_ALLOCATION` (Priority 2 — exact days marginal & destination $\times$ days cross-allocation):**
    - `ha-noi`: `2d = 11, 3d = 12, 4d = 11`
    - `da-nang`: `2d = 11, 3d = 11, 4d = 11`
    - `ha-long`: `2d = 11, 3d = 11, 4d = 11`
    - Global: `2d = 33, 3d = 34, 4d = 33`.
-3. **Exact interest-count marginal & destination $\times$ interest_count cross-allocation:**
+3. **`INTEREST_COUNT_ALLOCATION` (Priority 3 — exact interest-count marginal & destination $\times$ interest_count cross-allocation):**
    - `ha-noi`: `k1 = 11, k2 = 12, k3 = 11`
    - `da-nang`: `k1 = 11, k2 = 11, k3 = 11`
    - `ha-long`: `k1 = 11, k2 = 11, k3 = 11`
    - Global: `k1 = 33, k2 = 34, k3 = 33`.
    - Using a rotated 3D `(destination, days, interest_count)` cell grid (`4` or `3` per cell), the global `days × interest_count` table is `11` in 8 cells and `12` in `(3, 2)`, achieving the theoretical minimum cross-cell imbalance (`max - min = 1`).
-4. **Exact budget applicability/tier marginal:** `B1 = 27`, `B2 = 27`, `B3 = 26`, `null = 20` (`80` budget-applicable, `20` null).
-5. **Exact travel-style marginal:** `BACKPACKER = 25`, `BUDGET = 25`, `COMFORT = 25`, `LUXURY = 25` (`DESCRIPTIVE_INPUT_VARIATION_ONLY`).
-6. **Exact weekend-exposure marginal:** `weekend_exposed = 50`, `non_weekend_exposed = 50` within `2026-11-02..2026-12-13`.
-7. **Scenario eligibility (Two-Stage Rule A & Rule B):**
+
+### PHASE B (Priorities 4..6 — Locked Before Interest Selection)
+4. **`BUDGET_ALLOCATION` (Priority 4 — exact budget applicability/tier marginal):** `B1 = 27`, `B2 = 27`, `B3 = 26`, `null = 20` (`80` budget-applicable, `20` null) assigned across all 100 slots.
+5. **`TRAVEL_STYLE_ALLOCATION` (Priority 5 — exact travel-style marginal):** `BACKPACKER = 25`, `BUDGET = 25`, `COMFORT = 25`, `LUXURY = 25` (`DESCRIPTIVE_INPUT_VARIATION_ONLY`) assigned across all 100 slots.
+6. **`WEEKEND_EXPOSURE_ALLOCATION` (Priority 6 — exact weekend-exposure marginal & contiguous dates):** `weekend_exposed = 50`, `non_weekend_exposed = 50` within `2026-11-02..2026-12-13` assigned across all 100 slots, freezing immutable `PhaseBLockedSlot` records (`phase_b_locked_slots_sha256 = 2ef58c4a2c74f8355330c0e6c7005cc5828d939da219ba56b776378a68fec4ae`).
+
+### PHASE C (Priorities 7..9 — Executed Under Locked Priorities 1..6)
+7. **`SCENARIO_ELIGIBILITY` (Priority 7 — Two-Stage Rule A & Rule B):**
    - **Rule A:** $\forall i \in C,\; n_i \ge \text{days}$. Failure logs `CATALOG_SUPPORT_BELOW_THRESHOLD`.
    - **Rule B:** Direct set union $|\bigcup_{i \in C} P_i| \ge 2 \times \text{days}$ AND $\sum_{i \in C} n_i \ge 2 \times \text{days}$. Failure logs `TOTAL_INTEREST_CAPACITY_INSUFFICIENT`.
    - `EXCLUDED` combinations are never permitted (`excluded_combinations_used = 0`).
-8. **Duplicate / Near-Duplicate & Repeat-Cap Rules:**
+8. **`DUPLICATE_REPEAT_CAP` (Priority 8 — Duplicate / Near-Duplicate & Repeat-Cap Rules):**
    - **Repeat Counting Key:** `(destination_slug, sorted(interests))` across all days, budgets, weekend exposures, and travel styles.
    - **Frozen Repeat Caps:** `ha-noi: {1: 3, 2: 1, 3: 1}`, `da-nang: {1: 2, 2: 1, 3: 1}`, `ha-long: {1: 2, 2: 1, 3: 1}`. Exceeding the cap logs `INTEREST_COMBINATION_REPEAT_CAP`.
-   - **Canonical Scenario Signature:** `(destination_slug, days, sorted(interests), budget_tier_or_null, weekend_exposure, travel_style)`. Exact duplicates are forbidden (`duplicate_canonical_signatures = 0`); collisions log `NEAR_DUPLICATE_SIGNATURE`.
-9. **CLEAR / STRESS Coverage:**
-   - Within each destination, the candidate selector alternates preferred support class (`CLEAR` / `STRESS`) in round-robin order among eligible combinations at the minimum usage count.
+   - **Canonical Scenario Signature:** `(destination_slug, days, sorted(interests), budget_tier_or_null, weekend_exposure, travel_style)`. Exact duplicates are forbidden (`duplicate_canonical_signatures = 0`); collisions against locked Phase B attributes log `NEAR_DUPLICATE_SIGNATURE`.
+9. **`CLEAR_STRESS_COVERAGE` (Priority 9 — CLEAR / STRESS Coverage):**
+   - Within each destination, the candidate selector alternates preferred support class (`CLEAR` / `STRESS`) in round-robin order among admissible combinations at the minimum usage count.
    - No fixed `STRESS` quota is imposed; in the dry-run assignment (`seed = 2026101506`), `CLEAR = 81` and `STRESS = 19` (`ha-noi: 26 CLEAR / 8 STRESS`, `da-nang: 33 CLEAR / 0 STRESS`, `ha-long: 22 CLEAR / 11 STRESS`).
-10. **Minimize Remaining Cross-Dimension Imbalance:**
-    - Stage 2 assigns budget tiers, travel styles, and weekend exposures using minimax + sum of normalized cross-cell loads across `destination`, `days`, and `interest_count`.
+   - If Phase C cannot satisfy any slot under its locked Priority 1..6 assignments, the generator fails closed with `STOP_DO_NOT_SILENTLY_RELAX_REQUIRE_FORMAL_METHOD_AMENDMENT` and never alters Priorities 1..6.
+
+### PHASE D (Priority 10)
+10. **`CROSS_DIMENSION_IMBALANCE` (Priority 10 — Minimize & Report Remaining Cross-Dimension Imbalance):**
+    - Computes and verifies the complete marginal and cross-dimension balance report (`CrossBalanceReport`).
 
 ---
 
@@ -100,7 +110,7 @@ Every rejected candidate in the generator stream is recorded as a `CandidateReje
 - `rule_version` (`"W06-SCENARIO-METHOD-LOCK-01-V1.0.0"`)
 - `replacement_candidate_index`
 
-If any marginal target, repeat cap, date window, or support constraint is infeasible or violated, the generator raises `ScenarioGenerationInfeasibleError` with `protocol_status = "STOP_DO_NOT_SILENTLY_RELAX_REQUIRE_FORMAL_METHOD_AMENDMENT"`.
+If any runtime authority hash, marginal target, repeat cap, date window, or support constraint is infeasible or violated, the generator raises `ScenarioGenerationInfeasibleError` with `protocol_status = "STOP_DO_NOT_SILENTLY_RELAX_REQUIRE_FORMAL_METHOD_AMENDMENT"`.
 
 ---
 

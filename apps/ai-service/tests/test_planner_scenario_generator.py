@@ -26,15 +26,20 @@ from app.evaluation.planner_scenario_generator import (  # noqa: E402
     ALLOWED_REJECTION_REASON_CODES,
     DEFAULT_CATALOG_PATH,
     DEFAULT_METHOD_LOCK_PATH,
+    DEFAULT_RECA_CONTRACT_PATH,
     DEFAULT_SCENARIO_GENERATION_SEED,
     DEFAULT_SUPPORT_MATRIX_PATH,
     DRY_RUN_FIXTURE_LABEL,
     DRY_RUN_MODE,
+    EXPECTED_CATALOG_LF_SHA256,
+    FROZEN_EXECUTABLE_PRIORITY_TRACE,
     INFEASIBILITY_PROTOCOL_STATUS,
     ORDERED_DESTINATIONS,
     ORDERED_TRAVEL_STYLES,
     SCENARIO_GENERATOR_VERSION,
     ScenarioGenerationInfeasibleError,
+    _run_phase_a_allocate_core_marginals,
+    _run_phase_b_allocate_secondary_marginals,
     canonical_json_bytes,
     generate_dry_run_scenarios,
     lf_normalized_file_sha256,
@@ -61,6 +66,7 @@ EXPECTED_MEASUREMENT_CONTRACT_SHA256 = "0ddc1f8d879493517cee25f247d2365a0bacb816
 EXPECTED_RECA_CONTRACT_SHA256 = "1a62c36a95092be35ab78dca43e20f646016e154746ee051a499bdebfc67538c"
 EXPECTED_PLANNER_PROMPT_SHA256 = "31387107994ed10aa0b5d42999dc4c46dcf5f408c6d9ca454db2b0ab8084ef65"
 EXPECTED_PLANNER_SCHEMA_SHA256 = "1792dadcfa681ef75df3d66fb291b4d6702c6cced4fb4aab5d9e571884dc8685"
+EXPECTED_DRY_RUN_SHA256 = "3c3b5314c2fca0fb3c2fb53cc1b4fc26cc06b83d058218adfa13f8b641c1f769"
 
 
 @lru_cache(maxsize=1)
@@ -89,7 +95,7 @@ def test_w06_gen_02_same_input_same_seed_identical_sha256():
     sha_1 = sha256_hex(canonical_json_bytes(b1.model_dump(mode="json")))
     sha_2 = sha256_hex(canonical_json_bytes(b2.model_dump(mode="json")))
     assert sha_1 == sha_2
-    assert sha_1 == "5761a289c6713feee42917bbff3fe8c6872d32a542264c0b1eb852d88f030898"
+    assert sha_1 == EXPECTED_DRY_RUN_SHA256
 
 
 def test_w06_gen_03_no_global_random_or_hash_ordering_dependence():
@@ -607,8 +613,248 @@ def test_w06_gen_40_cross_balance_report_and_receipt_complete():
     assert receipt["schema_source_sha256"] == lf_normalized_file_sha256(schema_source_path)
     assert receipt["method_lock_sha256"] == EXPECTED_METHOD_LOCK_SHA256
     assert receipt["support_matrix_sha256"] == EXPECTED_SUPPORT_MATRIX_SHA256
+    assert receipt["catalog_sha256"] == EXPECTED_CATALOG_LF_SHA256
+    assert receipt["reca_contract_sha256"] == EXPECTED_RECA_CONTRACT_SHA256
+    assert receipt["artifact_hashes"]["catalog_sha256"] == EXPECTED_CATALOG_LF_SHA256
+    assert receipt["dry_run_verification_summary"]["determinism_sha256"] == EXPECTED_DRY_RUN_SHA256
+    assert receipt["dry_run_verification_summary"]["executable_priority_trace"] == list(
+        FROZEN_EXECUTABLE_PRIORITY_TRACE
+    )
 
     assert DOC_PATH.exists()
     doc_text = DOC_PATH.read_text(encoding="utf-8")
     assert "W06-SCENARIO-GENERATOR-01" in doc_text
     assert "STOP_DO_NOT_SILENTLY_RELAX_REQUIRE_FORMAL_METHOD_AMENDMENT" in doc_text
+    assert (
+        "Under the audited repository revision, frozen scientific inputs, "
+        "recorded dependency environment, and seed `2026101506`, repeated "
+        "executions produced identical canonical output and SHA256"
+    ) in doc_text
+    assert (
+        "This does not claim universal bit-for-bit reproducibility across arbitrary environments."
+        in doc_text
+    )
+    assert "Any independent researcher running the generator" not in doc_text
+
+
+def test_w06_gen_fix_01_frozen_executable_priority_order():
+    """GEN-FIX-01: frozen executable priority order = 1..10 exactly; Phase B (4..6) finishes before Phase C (7..9)."""
+    bundle = _cached_bundle()
+    expected_trace = [
+        "DESTINATION_ALLOCATION",
+        "DAYS_ALLOCATION",
+        "INTEREST_COUNT_ALLOCATION",
+        "BUDGET_ALLOCATION",
+        "TRAVEL_STYLE_ALLOCATION",
+        "WEEKEND_EXPOSURE_ALLOCATION",
+        "SCENARIO_ELIGIBILITY",
+        "DUPLICATE_REPEAT_CAP",
+        "CLEAR_STRESS_COVERAGE",
+        "CROSS_DIMENSION_IMBALANCE",
+    ]
+    assert bundle.executable_priority_trace == expected_trace
+
+    # Directly verify Phase A (1..3) and Phase B (4..6) execute and freeze all 100 slots
+    # BEFORE any interest combination eligibility or selection takes place
+    method_lock = load_method_lock_config(DEFAULT_METHOD_LOCK_PATH)
+    trace_ab: list[str] = []
+    phase_a_slots = _run_phase_a_allocate_core_marginals(method_lock, trace_ab)
+    assert trace_ab == [
+        "DESTINATION_ALLOCATION",
+        "DAYS_ALLOCATION",
+        "INTEREST_COUNT_ALLOCATION",
+    ]
+    assert len(phase_a_slots) == 100
+    for s in phase_a_slots:
+        assert set(s.keys()) == {
+            "slot_index",
+            "destination_slug",
+            "destination",
+            "days",
+            "interest_count",
+        }
+
+    phase_b_slots = _run_phase_b_allocate_secondary_marginals(
+        phase_a_slots,
+        method_lock,
+        DEFAULT_SCENARIO_GENERATION_SEED,
+        trace_ab,
+    )
+    assert trace_ab == expected_trace[:6]
+    assert len(phase_b_slots) == 100
+
+    phase_b_sha = sha256_hex(
+        canonical_json_bytes([s.model_dump(mode="json") for s in phase_b_slots])
+    )
+    assert phase_b_sha == bundle.phase_b_locked_slots_sha256
+
+    # Verify every final slot in bundle preserves the exact Phase B Priority 1..6 assignments
+    for pslot, fslot in zip(phase_b_slots, bundle.slots):
+        assert not hasattr(pslot, "interests")
+        assert fslot.slot_index == pslot.slot_index
+        assert fslot.destination_slug == pslot.destination_slug
+        assert fslot.days == pslot.days
+        assert fslot.interest_count == pslot.interest_count
+        assert fslot.budget_tier_or_null == pslot.budget_tier_or_null
+        assert fslot.budget == pslot.budget
+        assert fslot.travel_style == pslot.travel_style
+        assert fslot.weekend_exposure == pslot.weekend_exposure
+        assert fslot.start_date == pslot.start_date
+        assert fslot.end_date == pslot.end_date
+
+
+def test_w06_gen_fix_02_phase_7_plus_failure_does_not_alter_priorities_1_to_6():
+    """GEN-FIX-02: failure in Phase C (priority 7+) fails closed and never alters assignments made by Priorities 1..6."""
+    baseline_bundle = _cached_bundle()
+    baseline_p1_to_p6 = [
+        (
+            s.slot_index,
+            s.destination_slug,
+            s.days,
+            s.interest_count,
+            s.budget_tier_or_null,
+            s.budget,
+            s.travel_style,
+            s.weekend_exposure,
+            s.start_date,
+            s.end_date,
+        )
+        for s in baseline_bundle.slots
+    ]
+
+    # Case A: Phase C fails in Priority 7 (SCENARIO_ELIGIBILITY)
+    base_matrix = load_support_matrix(DEFAULT_SUPPORT_MATRIX_PATH)
+    bad_matrix = copy.deepcopy(base_matrix)
+    for c in bad_matrix["destinations"]["ha-noi"]["by_days"]["4"]["combinations"]:
+        if c["interest_count"] == 1:
+            c["eligible"] = False
+            c["support_class"] = "EXCLUDED"
+
+    with pytest.raises(ScenarioGenerationInfeasibleError) as exc_p7:
+        generate_dry_run_scenarios(support_matrix_override=bad_matrix)
+    assert exc_p7.value.protocol_status == INFEASIBILITY_PROTOCOL_STATUS
+    assert exc_p7.value.phase_b_slots is not None
+    assert list(exc_p7.value.executable_priority_trace[:6]) == [
+        "DESTINATION_ALLOCATION",
+        "DAYS_ALLOCATION",
+        "INTEREST_COUNT_ALLOCATION",
+        "BUDGET_ALLOCATION",
+        "TRAVEL_STYLE_ALLOCATION",
+        "WEEKEND_EXPOSURE_ALLOCATION",
+    ]
+    assert [
+        (
+            s.slot_index,
+            s.destination_slug,
+            s.days,
+            s.interest_count,
+            s.budget_tier_or_null,
+            s.budget,
+            s.travel_style,
+            s.weekend_exposure,
+            s.start_date,
+            s.end_date,
+        )
+        for s in exc_p7.value.phase_b_slots
+    ] == baseline_p1_to_p6
+
+    # Case B: Phase C fails in Priority 8/9 (candidate stream exhausted after eligibility)
+    with pytest.raises(ScenarioGenerationInfeasibleError) as exc_p8:
+        generate_dry_run_scenarios(manual_reject_candidate_indices=set(range(1, 5000)))
+    assert exc_p8.value.protocol_status == INFEASIBILITY_PROTOCOL_STATUS
+    assert exc_p8.value.phase_b_slots is not None
+    assert list(exc_p8.value.executable_priority_trace) == [
+        "DESTINATION_ALLOCATION",
+        "DAYS_ALLOCATION",
+        "INTEREST_COUNT_ALLOCATION",
+        "BUDGET_ALLOCATION",
+        "TRAVEL_STYLE_ALLOCATION",
+        "WEEKEND_EXPOSURE_ALLOCATION",
+        "SCENARIO_ELIGIBILITY",
+        "DUPLICATE_REPEAT_CAP",
+        "CLEAR_STRESS_COVERAGE",
+    ]
+    assert [
+        (
+            s.slot_index,
+            s.destination_slug,
+            s.days,
+            s.interest_count,
+            s.budget_tier_or_null,
+            s.budget,
+            s.travel_style,
+            s.weekend_exposure,
+            s.start_date,
+            s.end_date,
+        )
+        for s in exc_p8.value.phase_b_slots
+    ] == baseline_p1_to_p6
+
+
+def test_w06_gen_fix_03_catalog_hash_mismatch_fails_closed(tmp_path: Path):
+    """GEN-FIX-03: catalog hash mismatch -> FAIL CLOSED."""
+    tmp_catalog = tmp_path / "corrupted_catalog.json"
+    tmp_catalog.write_bytes(DEFAULT_CATALOG_PATH.read_bytes() + b"\n")
+
+    with pytest.raises(ScenarioGenerationInfeasibleError) as exc_cat:
+        generate_dry_run_scenarios(catalog_path=tmp_catalog)
+    assert exc_cat.value.protocol_status == INFEASIBILITY_PROTOCOL_STATUS
+    assert "catalog LF SHA256 mismatch" in str(exc_cat.value)
+
+    # Also test mismatch in method_lock["interest_mapping"]["catalog_lf_sha256"]
+    bad_lock = copy.deepcopy(load_method_lock_config(DEFAULT_METHOD_LOCK_PATH))
+    bad_lock["interest_mapping"]["catalog_lf_sha256"] = "0" * 64
+    with pytest.raises(ScenarioGenerationInfeasibleError) as exc_lock_cat:
+        generate_dry_run_scenarios(method_lock_override=bad_lock)
+    assert exc_lock_cat.value.protocol_status == INFEASIBILITY_PROTOCOL_STATUS
+
+    # Real catalog file remains untouched
+    assert lf_normalized_file_sha256(DEFAULT_CATALOG_PATH) == EXPECTED_CATALOG_LF_SHA256
+
+
+def test_w06_gen_fix_04_reca_contract_mapping_authority_mismatch_fails_closed(tmp_path: Path):
+    """GEN-FIX-04: REC-A contract/mapping authority mismatch -> FAIL CLOSED."""
+    tmp_reca = tmp_path / "corrupted_reca_contract.py"
+    tmp_reca.write_bytes(DEFAULT_RECA_CONTRACT_PATH.read_bytes() + b"\n# modified\n")
+
+    with pytest.raises(ScenarioGenerationInfeasibleError) as exc_reca:
+        generate_dry_run_scenarios(reca_contract_path=tmp_reca)
+    assert exc_reca.value.protocol_status == INFEASIBILITY_PROTOCOL_STATUS
+    assert "REC-A contract LF SHA256 mismatch" in str(exc_reca.value)
+
+    # Also test mismatch in method_lock["interest_mapping"]["source_file_lf_sha256"] and function_name
+    bad_lock_sha = copy.deepcopy(load_method_lock_config(DEFAULT_METHOD_LOCK_PATH))
+    bad_lock_sha["interest_mapping"]["source_file_lf_sha256"] = "f" * 64
+    with pytest.raises(ScenarioGenerationInfeasibleError) as exc_lock_sha:
+        generate_dry_run_scenarios(method_lock_override=bad_lock_sha)
+    assert exc_lock_sha.value.protocol_status == INFEASIBILITY_PROTOCOL_STATUS
+
+    bad_lock_fn = copy.deepcopy(load_method_lock_config(DEFAULT_METHOD_LOCK_PATH))
+    bad_lock_fn["interest_mapping"]["function_name"] = "wrong_mapping_fn"
+    with pytest.raises(ScenarioGenerationInfeasibleError) as exc_lock_fn:
+        generate_dry_run_scenarios(method_lock_override=bad_lock_fn)
+    assert exc_lock_fn.value.protocol_status == INFEASIBILITY_PROTOCOL_STATUS
+
+    # Real REC-A contract remains untouched
+    assert lf_normalized_file_sha256(DEFAULT_RECA_CONTRACT_PATH) == EXPECTED_RECA_CONTRACT_SHA256
+
+
+def test_w06_gen_fix_05_support_matrix_hash_mismatch_fails_closed(tmp_path: Path):
+    """GEN-FIX-05: support matrix hash mismatch -> FAIL CLOSED."""
+    tmp_matrix = tmp_path / "corrupted_support_matrix.json"
+    tmp_matrix.write_bytes(DEFAULT_SUPPORT_MATRIX_PATH.read_bytes() + b"\n")
+
+    with pytest.raises(ScenarioGenerationInfeasibleError) as exc_sm:
+        generate_dry_run_scenarios(support_matrix_path=tmp_matrix)
+    assert exc_sm.value.protocol_status == INFEASIBILITY_PROTOCOL_STATUS
+    assert "support matrix SHA256 mismatch" in str(exc_sm.value)
+
+    # Also test mismatch in method_lock["interest_mapping"]["pre_freeze_support_matrix_sha256"]
+    bad_lock_sm = copy.deepcopy(load_method_lock_config(DEFAULT_METHOD_LOCK_PATH))
+    bad_lock_sm["interest_mapping"]["pre_freeze_support_matrix_sha256"] = "a" * 64
+    with pytest.raises(ScenarioGenerationInfeasibleError) as exc_lock_sm:
+        generate_dry_run_scenarios(method_lock_override=bad_lock_sm)
+    assert exc_lock_sm.value.protocol_status == INFEASIBILITY_PROTOCOL_STATUS
+
+    # Real support matrix remains untouched
+    assert lf_normalized_file_sha256(DEFAULT_SUPPORT_MATRIX_PATH) == EXPECTED_SUPPORT_MATRIX_SHA256
