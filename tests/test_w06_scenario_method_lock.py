@@ -1,16 +1,19 @@
-"""Verification suite for W06-SCENARIO-METHOD-LOCK-01 (METHOD-01 .. METHOD-33).
+"""Verification suite for W06-SCENARIO-METHOD-LOCK-01 + FIX-01 (METHOD-01 .. METHOD-42).
 
 Verifies that the W06 scenario-generation methodology lock and pre-freeze
 catalog support matrix are deterministically frozen, cryptographically pinned,
-and fully reproducible before any final 100-scenario creation (P11).
+jointly feasible under the destination x interest_count repeat-cap rule, and
+fully reproducible before any final 100-scenario creation (P11).
 """
+from collections import Counter
 import datetime
 import hashlib
 import itertools
 import json
+import math
 from pathlib import Path
 import sys
-from typing import Dict, Set, Tuple
+from typing import Dict, List, Set, Tuple
 
 ROOT_DIR = Path(__file__).resolve().parents[1]
 AI_SERVICE_DIR = ROOT_DIR / "apps" / "ai-service"
@@ -34,6 +37,11 @@ RECA_CONTRACT_PATH = ROOT_DIR / "apps" / "ai-service" / "recommendation" / "reca
 EXPECTED_BASE_DEVELOP_SHA = "de0c664f9831caaeda34a996d90f6d6d98643848"
 EXPECTED_RECA_CONTRACT_LF_SHA256 = "1a62c36a95092be35ab78dca43e20f646016e154746ee051a499bdebfc67538c"
 EXPECTED_CATALOG_LF_SHA256 = "f7517938598e3923906763f8f31334a500ee88bc06232f2992d38e2fcb28a444"
+EXPECTED_REPEAT_CAP_FORMULA = (
+    "repeat_cap(destination, interest_count) = "
+    "ceil(assigned_scenario_count(destination, interest_count) / "
+    "number_of_distinct_eligible_interest_combinations(destination, interest_count))"
+)
 
 
 def _lf_normalized_sha256(path: Path) -> str:
@@ -108,6 +116,116 @@ def _evaluate_combination_support(
         "stress_interests": stress_interests if eligible else [],
         "exclusion_reason_code": exclusion_reason_code,
     }
+
+
+def _recompute_repeat_caps(lock: dict, matrix: dict) -> Dict[str, Dict[str, dict]]:
+    """Recompute repeat caps dynamically from frozen support matrix and cross-allocation."""
+    cross_k = lock["destination_interest_count_cross_allocation"]
+    result: Dict[str, Dict[str, dict]] = {}
+    for dest in ("ha-noi", "da-nang", "ha-long"):
+        d_entry = matrix["destinations"][dest]
+        result[dest] = {}
+        for k_str in ("1", "2", "3"):
+            k_int = int(k_str)
+            distinct_eligible_across_days = set()
+            for d_str in ("2", "3", "4"):
+                for c in d_entry["by_days"][d_str]["combinations"]:
+                    if c["interest_count"] == k_int and c["eligible"] is True:
+                        distinct_eligible_across_days.add(tuple(c["interests_sorted"]))
+            elig_count = len(distinct_eligible_across_days)
+            assigned_count = cross_k[dest][k_str]
+            cap = math.ceil(assigned_count / elig_count)
+            result[dest][k_str] = {
+                "assigned_scenario_count": assigned_count,
+                "distinct_eligible_interest_combinations": elig_count,
+                "repeat_cap": cap,
+                "max_combination_slot_capacity": elig_count * cap,
+            }
+    return result
+
+
+def _construct_feasible_abstract_assignment(lock: dict, matrix: dict) -> List[dict]:
+    """Dependency-free deterministic offline constructive solver proving joint method feasibility."""
+    cross_k = lock["destination_interest_count_cross_allocation"]
+    cross_d = lock["destination_days_cross_allocation"]
+    recomputed_caps = _recompute_repeat_caps(lock, matrix)
+
+    # Exact 3D cell counts (destination, days, interest_count) compatible with both
+    # destination_interest_count_cross_allocation and destination_days_cross_allocation:
+    cell_3d: Dict[str, Dict[Tuple[int, int], int]] = {
+        "ha-noi": {
+            (2, 1): 4, (2, 2): 4, (2, 3): 3,
+            (3, 1): 4, (3, 2): 4, (3, 3): 4,
+            (4, 1): 3, (4, 2): 4, (4, 3): 4,
+        },
+        "da-nang": {
+            (2, 1): 4, (2, 2): 4, (2, 3): 3,
+            (3, 1): 4, (3, 2): 3, (3, 3): 4,
+            (4, 1): 3, (4, 2): 4, (4, 3): 4,
+        },
+        "ha-long": {
+            (2, 1): 4, (2, 2): 4, (2, 3): 3,
+            (3, 1): 4, (3, 2): 3, (3, 3): 4,
+            (4, 1): 3, (4, 2): 4, (4, 3): 4,
+        },
+    }
+
+    for dest in ("ha-noi", "da-nang", "ha-long"):
+        for d in (2, 3, 4):
+            assert sum(cell_3d[dest][(d, k)] for k in (1, 2, 3)) == cross_d[dest][str(d)]
+        for k in (1, 2, 3):
+            assert sum(cell_3d[dest][(d, k)] for d in (2, 3, 4)) == cross_k[dest][str(k)]
+
+    abstract_assignments: List[dict] = []
+    for dest in ("ha-noi", "da-nang", "ha-long"):
+        d_info = matrix["destinations"][dest]
+        used_combo_counts: Counter = Counter()
+        for k in (1, 2, 3):
+            cap_k = recomputed_caps[dest][str(k)]["repeat_cap"]
+            # Assign from d=4 down to d=2 so the strictest day length selects from its eligible pool first
+            for d in (4, 3, 2):
+                need = cell_3d[dest][(d, k)]
+                eligible_for_d_k = [
+                    c for c in d_info["by_days"][str(d)]["combinations"]
+                    if c["interest_count"] == k and c["eligible"] is True
+                ]
+                for _ in range(need):
+                    candidates = [
+                        c for c in eligible_for_d_k
+                        if used_combo_counts[tuple(c["interests_sorted"])] < cap_k
+                    ]
+                    assert candidates, f"No eligible candidate under repeat cap at {dest} d={d} k={k}"
+                    candidates.sort(
+                        key=lambda c: (
+                            used_combo_counts[tuple(c["interests_sorted"])],
+                            0 if c["support_class"] == "STRESS" else 1,
+                            c["combination_id"],
+                        )
+                    )
+                    chosen = candidates[0]
+                    combo_key = tuple(chosen["interests_sorted"])
+                    used_combo_counts[combo_key] += 1
+                    abstract_assignments.append(
+                        {
+                            "destination_slug": dest,
+                            "days": d,
+                            "interest_count": k,
+                            "interests_sorted": list(combo_key),
+                            "support_class": chosen["support_class"],
+                            "eligible": chosen["eligible"],
+                        }
+                    )
+
+    budgets = ["B1"] * 27 + ["B2"] * 27 + ["B3"] * 26 + [None] * 20
+    travel_styles = ["BACKPACKER", "BUDGET", "COMFORT", "LUXURY"] * 25
+    weekend_flags = [True, False] * 50
+
+    for idx, slot in enumerate(abstract_assignments):
+        slot["budget_tier_or_null"] = budgets[idx]
+        slot["travel_style"] = travel_styles[idx]
+        slot["weekend_exposure"] = weekend_flags[idx]
+
+    return abstract_assignments
 
 
 def test_method_01_primary_benchmark_100_and_destination_allocation():
@@ -215,10 +333,6 @@ def test_method_07_union_support_computed_directly_not_assuming_zero_overlap():
     assert rule["rule_b"]["assume_zero_multi_interest_overlap_forever"] is False
     assert rule["rule_b"]["current_core_catalog_multi_interest_overlap_poi_count"] == 0
 
-    # Verify on a synthetic overlapping catalog fixture where sum_support >= 2d but union_support < 2d:
-    # For d=3, m=2 (threshold 6): interest A has 3 POIs {p1, p2, p3}, interest B has 3 POIs {p1, p2, p4}.
-    # Here n_A=3 >= 3, n_B=3 >= 3 (Rule A passes) and sum_support=6 >= 6,
-    # but direct union_support = |{p1, p2, p3, p4}| = 4 < 6, so Rule B MUST fail!
     synthetic_map = {
         "food_cuisine": {"p1", "p2", "p3"},
         "coffee_culture": {"p1", "p2", "p4"},
@@ -457,10 +571,7 @@ def test_method_22_dynamic_interest_combination_repeat_cap_formula_frozen():
     """METHOD-22: dynamic interest-combination repeat-cap formula and stop-on-infeasibility rule frozen."""
     lock = _load_method_lock()
     nd = lock["near_duplicate_policy"]
-    assert (
-        nd["interest_combination_repeat_cap_formula"]
-        == "ceil(destination_scenario_count / number_of_distinct_eligible_interest_combinations_for_destination)"
-    )
+    assert nd["interest_combination_repeat_cap_formula"] == EXPECTED_REPEAT_CAP_FORMULA
     assert nd["compute_repeat_cap_before_candidate_sampling"] is True
     assert nd["exceed_repeat_cap_without_mathematical_infeasibility_proof_allowed"] is False
     assert nd["infeasibility_protocol"] == "STOP_DO_NOT_SILENTLY_RELAX_REQUIRE_FORMAL_METHOD_AMENDMENT"
@@ -627,13 +738,11 @@ def test_method_32_instrumentation_amendment_required_and_historical_contract_un
     assert hd["historical_parser_currently_exists_false"] == "EXPECTED_HISTORICAL_STATE_SUPERSEDED_BY_IMPLEMENTATION"
     assert hd["historical_measurement_contract_rewritten"] is False
 
-    # Verify historical contract still carries its original frozen fields untouched
     mc = json.loads(MEASUREMENT_CONTRACT_JSON_PATH.read_text(encoding="utf-8"))
     assert mc["contract_id"] == "W06-MEASUREMENT-CONTRACT-01"
     assert mc["contract_version"] == "1.1.0"
     assert mc["opening_hours_semantics"]["audit_evidence"]["parser_currently_exists"] is False
 
-    # Verify required markdown documentation artifacts exist and reference key constants
     assert METHOD_LOCK_MD_PATH.exists()
     assert GENERATION_POLICY_MD_PATH.exists()
     md_lock_text = METHOD_LOCK_MD_PATH.read_text(encoding="utf-8")
@@ -744,3 +853,278 @@ def test_method_33_support_matrix_fully_reproducible_from_catalog_and_mapping():
                 assert item["exclusion_reason_code"] == ref["exclusion_reason_code"]
 
     assert lock["support_matrix_summary"] == matrix["global_summary"]
+
+
+def test_method_34_destination_interest_count_and_days_cross_allocation_exact():
+    """METHOD-34: destination x interest-count (and destination x days) cross-allocation exact."""
+    lock = _load_method_lock()
+    cross_k = lock["destination_interest_count_cross_allocation"]
+    assert cross_k == {
+        "ha-noi": {"1": 11, "2": 12, "3": 11},
+        "da-nang": {"1": 11, "2": 11, "3": 11},
+        "ha-long": {"1": 11, "2": 11, "3": 11},
+    }
+    row_totals_k = {dest: sum(row.values()) for dest, row in cross_k.items()}
+    assert row_totals_k == {"ha-noi": 34, "da-nang": 33, "ha-long": 33}
+    col_totals_k = {
+        k: sum(cross_k[dest][k] for dest in ("ha-noi", "da-nang", "ha-long"))
+        for k in ("1", "2", "3")
+    }
+    assert col_totals_k == {"1": 33, "2": 34, "3": 33}
+    assert sum(row_totals_k.values()) == 100
+
+    cross_d = lock["destination_days_cross_allocation"]
+    assert cross_d == {
+        "ha-noi": {"2": 11, "3": 12, "4": 11},
+        "da-nang": {"2": 11, "3": 11, "4": 11},
+        "ha-long": {"2": 11, "3": 11, "4": 11},
+    }
+    row_totals_d = {dest: sum(row.values()) for dest, row in cross_d.items()}
+    assert row_totals_d == {"ha-noi": 34, "da-nang": 33, "ha-long": 33}
+    col_totals_d = {
+        d: sum(cross_d[dest][d] for dest in ("ha-noi", "da-nang", "ha-long"))
+        for d in ("2", "3", "4")
+    }
+    assert col_totals_d == {"2": 33, "3": 34, "4": 33}
+
+
+def test_method_35_repeat_cap_formula_scoped_by_destination_and_interest_count():
+    """METHOD-35: repeat-cap formula is scoped by (destination, interest_count) across allowed days."""
+    lock = _load_method_lock()
+    matrix = _load_support_matrix()
+    nd = lock["near_duplicate_policy"]
+    assert nd["interest_combination_repeat_cap_formula"] == EXPECTED_REPEAT_CAP_FORMULA
+    assert nd["repeat_cap_scope"] == "DESTINATION_AND_INTEREST_COUNT"
+    assert nd["repeat_counting_key"] == "(destination_slug, sorted(interests))"
+    assert nd["variation_in_days_budget_weekend_or_travel_style_resets_repeat_counter"] is False
+
+    for dest in ("ha-noi", "da-nang", "ha-long"):
+        assert matrix["destinations"][dest]["repeat_cap_formula"] == EXPECTED_REPEAT_CAP_FORMULA
+
+
+def test_method_36_expected_repeat_caps_reproduce_from_support_matrix():
+    """METHOD-36: expected repeat caps reproduce dynamically: HN 3/1/1, DN 2/1/1, HL 2/1/1."""
+    lock = _load_method_lock()
+    matrix = _load_support_matrix()
+    recomputed = _recompute_repeat_caps(lock, matrix)
+
+    expected = {
+        "ha-noi": {
+            "1": {
+                "assigned_scenario_count": 11,
+                "distinct_eligible_interest_combinations": 5,
+                "repeat_cap": 3,
+                "max_combination_slot_capacity": 15,
+            },
+            "2": {
+                "assigned_scenario_count": 12,
+                "distinct_eligible_interest_combinations": 15,
+                "repeat_cap": 1,
+                "max_combination_slot_capacity": 15,
+            },
+            "3": {
+                "assigned_scenario_count": 11,
+                "distinct_eligible_interest_combinations": 20,
+                "repeat_cap": 1,
+                "max_combination_slot_capacity": 20,
+            },
+        },
+        "da-nang": {
+            "1": {
+                "assigned_scenario_count": 11,
+                "distinct_eligible_interest_combinations": 7,
+                "repeat_cap": 2,
+                "max_combination_slot_capacity": 14,
+            },
+            "2": {
+                "assigned_scenario_count": 11,
+                "distinct_eligible_interest_combinations": 21,
+                "repeat_cap": 1,
+                "max_combination_slot_capacity": 21,
+            },
+            "3": {
+                "assigned_scenario_count": 11,
+                "distinct_eligible_interest_combinations": 35,
+                "repeat_cap": 1,
+                "max_combination_slot_capacity": 35,
+            },
+        },
+        "ha-long": {
+            "1": {
+                "assigned_scenario_count": 11,
+                "distinct_eligible_interest_combinations": 6,
+                "repeat_cap": 2,
+                "max_combination_slot_capacity": 12,
+            },
+            "2": {
+                "assigned_scenario_count": 11,
+                "distinct_eligible_interest_combinations": 21,
+                "repeat_cap": 1,
+                "max_combination_slot_capacity": 21,
+            },
+            "3": {
+                "assigned_scenario_count": 11,
+                "distinct_eligible_interest_combinations": 35,
+                "repeat_cap": 1,
+                "max_combination_slot_capacity": 35,
+            },
+        },
+    }
+
+    assert recomputed == expected
+    assert lock["near_duplicate_policy"]["repeat_caps_by_destination_and_interest_count"] == expected
+    for dest, caps_dict in expected.items():
+        short_caps = {k: v["repeat_cap"] for k, v in caps_dict.items()}
+        assert matrix["destinations"][dest]["repeat_cap_by_interest_count"] == short_caps
+
+
+def test_method_37_single_interest_capacity_is_sufficient_for_33_scenarios():
+    """METHOD-37: single-interest capacity under scoped repeat_cap is 15+14+12=41 >= 33."""
+    lock = _load_method_lock()
+    matrix = _load_support_matrix()
+    recomputed = _recompute_repeat_caps(lock, matrix)
+
+    k1_capacities = {
+        dest: recomputed[dest]["1"]["max_combination_slot_capacity"]
+        for dest in ("ha-noi", "da-nang", "ha-long")
+    }
+    assert k1_capacities == {"ha-noi": 15, "da-nang": 14, "ha-long": 12}
+    for dest in ("ha-noi", "da-nang", "ha-long"):
+        assert k1_capacities[dest] >= lock["destination_interest_count_cross_allocation"][dest]["1"]
+    assert sum(k1_capacities.values()) == 41 >= 33
+
+    summary = lock["near_duplicate_policy"]["single_interest_capacity_summary"]
+    assert summary["required_single_interest_scenarios"] == 33
+    assert summary["max_capacity_by_destination"] == {"ha-noi": 15, "da-nang": 14, "ha-long": 12}
+    assert summary["total_max_single_interest_capacity"] == 41
+    assert summary["capacity_sufficient_for_33_scenarios"] is True
+
+
+def test_method_38_old_pooled_repeat_cap_interpretation_is_not_authoritative():
+    """METHOD-38: old pooled repeat_cap interpretation is removed as authoritative and marked resolved."""
+    lock = _load_method_lock()
+    matrix = _load_support_matrix()
+    nd = lock["near_duplicate_policy"]
+    assert nd["old_pooled_repeat_cap_authoritative"] is False
+    assert (
+        nd["old_pooled_pigeonhole_conflict_status"]
+        == "RESOLVED_BY_DESTINATION_INTEREST_COUNT_SCOPED_REPEAT_CAP"
+    )
+    assert "precomputed_repeat_cap_diagnostics" not in nd
+    for dest in ("ha-noi", "da-nang", "ha-long"):
+        assert "repeat_cap_over_distinct_eligible_any_days" not in matrix["destinations"][dest]
+        assert "repeat_cap_over_distinct_eligible_all_days" not in matrix["destinations"][dest]
+
+
+def test_method_39_joint_methodology_feasibility_pass():
+    """METHOD-39: offline deterministic constructive check proves JOINT_METHOD_FEASIBILITY = PASS."""
+    lock = _load_method_lock()
+    matrix = _load_support_matrix()
+    gate = lock["joint_method_feasibility_gate"]
+    assert gate["JOINT_METHOD_FEASIBILITY"] == "PASS"
+    assert gate["status"] == "PASS"
+
+    assignments = _construct_feasible_abstract_assignment(lock, matrix)
+    assert len(assignments) == 100
+
+    # 1. Verify destination totals: 34 / 33 / 33
+    dest_counts = Counter(a["destination_slug"] for a in assignments)
+    assert dict(dest_counts) == {"ha-noi": 34, "da-nang": 33, "ha-long": 33}
+
+    # 2. Verify interest-count totals: 33 / 34 / 33
+    k_counts = Counter(str(a["interest_count"]) for a in assignments)
+    assert dict(k_counts) == {"1": 33, "2": 34, "3": 33}
+
+    # 3. Verify destination x interest-count cross-allocation: 11/12/11, 11/11/11, 11/11/11
+    for dest in ("ha-noi", "da-nang", "ha-long"):
+        for k_str in ("1", "2", "3"):
+            cnt = sum(
+                1 for a in assignments
+                if a["destination_slug"] == dest and str(a["interest_count"]) == k_str
+            )
+            assert cnt == lock["destination_interest_count_cross_allocation"][dest][k_str]
+
+    # 4. Verify trip-length totals (33/34/33) and destination x days cross-allocation
+    d_counts = Counter(str(a["days"]) for a in assignments)
+    assert dict(d_counts) == {"2": 33, "3": 34, "4": 33}
+    for dest in ("ha-noi", "da-nang", "ha-long"):
+        for d_str in ("2", "3", "4"):
+            cnt = sum(
+                1 for a in assignments
+                if a["destination_slug"] == dest and str(a["days"]) == d_str
+            )
+            assert cnt == lock["destination_days_cross_allocation"][dest][d_str]
+
+    # 5. Verify support eligibility: zero EXCLUDED combinations used
+    for a in assignments:
+        assert a["eligible"] is True
+        assert a["support_class"] in ("CLEAR", "STRESS")
+        dest_d_combos = {
+            tuple(c["interests_sorted"]): c
+            for c in matrix["destinations"][a["destination_slug"]]["by_days"][str(a["days"])]["combinations"]
+        }
+        matrix_entry = dest_d_combos[tuple(a["interests_sorted"])]
+        assert matrix_entry["eligible"] is True
+        assert matrix_entry["support_class"] != "EXCLUDED"
+
+    # 6. Verify repeat_cap(destination, interest_count) across all days
+    recomputed_caps = _recompute_repeat_caps(lock, matrix)
+    combo_usage = Counter((a["destination_slug"], tuple(a["interests_sorted"])) for a in assignments)
+    for (dest, interests_tuple), count in combo_usage.items():
+        k_str = str(len(interests_tuple))
+        cap = recomputed_caps[dest][k_str]["repeat_cap"]
+        assert count <= cap, f"Repeat cap exceeded for {(dest, interests_tuple)}: {count} > {cap}"
+
+    # 7. Verify budget, travel_style, weekend_exposure marginals and 100 unique canonical signatures
+    budget_counts = Counter(a["budget_tier_or_null"] for a in assignments)
+    assert budget_counts == {"B1": 27, "B2": 27, "B3": 26, None: 20}
+    style_counts = Counter(a["travel_style"] for a in assignments)
+    assert style_counts == {"BACKPACKER": 25, "BUDGET": 25, "COMFORT": 25, "LUXURY": 25}
+    weekend_counts = Counter(a["weekend_exposure"] for a in assignments)
+    assert weekend_counts == {True: 50, False: 50}
+
+    signatures = {
+        (
+            a["destination_slug"],
+            a["days"],
+            tuple(a["interests_sorted"]),
+            a["budget_tier_or_null"],
+            a["weekend_exposure"],
+            a["travel_style"],
+        )
+        for a in assignments
+    }
+    assert len(signatures) == 100
+
+
+def test_method_40_joint_feasibility_check_uses_no_gemini_or_model_output():
+    """METHOD-40: joint feasibility check is 100% offline and uses no Gemini or model output."""
+    lock = _load_method_lock()
+    gate = lock["joint_method_feasibility_gate"]
+    assert gate["uses_gemini_or_model_output"] is False
+    assert lock["gemini_called"] is False
+    assert lock["generator_policy"]["may_inspect_gemini_or_model_output"] is False
+
+
+def test_method_41_no_real_scenarios_generated_during_feasibility_proof():
+    """METHOD-41: no real scenario files are generated on disk during feasibility proof."""
+    lock = _load_method_lock()
+    matrix = _load_support_matrix()
+    before_files = sorted(p.name for p in (ROOT_DIR / "data" / "evaluation" / "w06").iterdir())
+    _ = _construct_feasible_abstract_assignment(lock, matrix)
+    after_files = sorted(p.name for p in (ROOT_DIR / "data" / "evaluation" / "w06").iterdir())
+    assert before_files == after_files
+    assert lock["joint_method_feasibility_gate"]["writes_final_scenario_files"] is False
+    assert lock["joint_method_feasibility_gate"]["real_scenarios_generated"] is False
+    assert lock["real_scenarios_generated"] is False
+
+
+def test_method_42_p11_still_not_created():
+    """METHOD-42: P11 assignment manifest is still not created."""
+    lock = _load_method_lock()
+    matrix = _load_support_matrix()
+    assert lock["p11_created"] is False
+    assert lock["joint_method_feasibility_gate"]["p11_created"] is False
+    assert matrix["p11_created"] is False
+    w06_files = {p.name for p in (ROOT_DIR / "data" / "evaluation" / "w06").iterdir()}
+    assert not any("p11" in name.lower() or "assignment_manifest" in name.lower() for name in w06_files)

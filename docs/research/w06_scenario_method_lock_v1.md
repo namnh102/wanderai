@@ -9,8 +9,9 @@
 | **Base `develop` SHA** | `de0c664f9831caaeda34a996d90f6d6d98643848` |
 | **Status** | `LOCKED_PENDING_INSTRUMENT_AMENDMENT` |
 | **Machine-Readable Lock Artifact** | `data/evaluation/w06/w06_scenario_method_lock_v1.json` |
-| **Pre-Freeze Support Matrix Artifact** | `data/evaluation/w06/w06_scenario_support_matrix_v1.json` (`94835f42c67260939548fbde21e41924227feae6d4d78d0e787a4edaaf45a36d`) |
+| **Pre-Freeze Support Matrix Artifact** | `data/evaluation/w06/w06_scenario_support_matrix_v1.json` (`68c2bfc2164e664b3856c31b99a92d75a588f64465526b47c9104918a51cedb4`) |
 | **Operational Generation Policy** | `docs/research/w06_scenario_generation_policy_v1.md` |
+| **Joint Method Feasibility Gate** | `PASS` (`DETERMINISTIC_OFFLINE_CELL_ASSIGNMENT_AND_EXACT_CONSTRAINT_VERIFICATION`) |
 | **Instrumentation Amendment Required** | `true` (`min_poi_visits_per_day = 2` not yet formally enforced in `planner_benchmark_evaluator.py`) |
 | **Real 100 Scenarios Generated** | `false` |
 | **`P11` Manifest Created** | `false` |
@@ -52,31 +53,35 @@ This methodology lock freezes the scenario-generation contract prior to any fina
 
 ---
 
-## 4. Trip Length & Interest-Count Marginals
+## 4. Trip Length, Interest-Count Marginals & Authoritative Cross-Allocations
 
 ### 4.1 Trip Length Target (`days`)
 - **Allowed Values:** `{2, 3, 4}` only (no other trip length permitted in primary 100).
-- **Locked Marginal Totals:**
-  - `2 days`: `33` scenarios
-  - `3 days`: `34` scenarios
-  - `4 days`: `33` scenarios
-  - **Total:** `100` scenarios
+- **Locked Marginal Totals:** `2 days = 33`, `3 days = 34`, `4 days = 33` (total `100`).
 
-### 4.2 Interest Count Target (`len(interests)`)
+### 4.2 Authoritative Destination $\times$ Days Cross-Allocation (`destination_days_cross_allocation`)
+
+| Destination | `2 days` | `3 days` | `4 days` | **TOTAL** |
+| :--- | ---: | ---: | ---: | ---: |
+| **`ha-noi`** | 11 | 12 | 11 | **34** |
+| **`da-nang`** | 11 | 11 | 11 | **33** |
+| **`ha-long`** | 11 | 11 | 11 | **33** |
+| **TOTAL** | **33** | **34** | **33** | **100** |
+
+### 4.3 Interest Count Target (`len(interests)`)
 - **Allowed Values:** `{1, 2, 3}` canonical interests per scenario.
-- **Locked Marginal Totals:**
-  - `1 interest`: `33` scenarios
-  - `2 interests`: `34` scenarios
-  - `3 interests`: `33` scenarios
-  - **Total:** `100` scenarios
+- **Locked Marginal Totals:** `1 interest = 33`, `2 interests = 34`, `3 interests = 33` (total `100`).
 - **Canonical Interest Taxonomy Only (7 categories):**
-  1. `food_cuisine`
-  2. `culture_history`
-  3. `nature_outdoor`
-  4. `coffee_culture`
-  5. `beach_island`
-  6. `shopping_local`
-  7. `nightlife_entertainment`
+  `food_cuisine`, `culture_history`, `nature_outdoor`, `coffee_culture`, `beach_island`, `shopping_local`, `nightlife_entertainment`.
+
+### 4.4 Authoritative Destination $\times$ Interest-Count Cross-Allocation (`destination_interest_count_cross_allocation`)
+
+| Destination | `k=1` | `k=2` | `k=3` | **TOTAL** |
+| :--- | ---: | ---: | ---: | ---: |
+| **`ha-noi`** | 11 | 12 | 11 | **34** |
+| **`da-nang`** | 11 | 11 | 11 | **33** |
+| **`ha-long`** | 11 | 11 | 11 | **33** |
+| **TOTAL** | **33** | **34** | **33** | **100** |
 
 ---
 
@@ -95,7 +100,7 @@ No new interest-mapping heuristic is created for W06. Catalog support is determi
 | **Catalog Hash Basis (`SOURCE_CATALOG`)** | `SHA256_LF_NORMALIZED_SOURCE_BYTES` |
 | **Catalog LF-Normalized SHA256** | `f7517938598e3923906763f8f31334a500ee88bc06232f2992d38e2fcb28a444` |
 | **Pre-Freeze Support Matrix File** | `data/evaluation/w06/w06_scenario_support_matrix_v1.json` |
-| **Pre-Freeze Support Matrix SHA256** | `94835f42c67260939548fbde21e41924227feae6d4d78d0e787a4edaaf45a36d` |
+| **Pre-Freeze Support Matrix SHA256** | `68c2bfc2164e664b3856c31b99a92d75a588f64465526b47c9104918a51cedb4` |
 
 ### Individual Canonical Interest Support Counts (`REC-A-CORE-V2`)
 
@@ -158,56 +163,50 @@ Interest support is **scenario feasibility metadata only**. It does **not** make
 
 ---
 
-## 7. Budget, Travel Style, Date, Opening-Hours, Difficulty & Infeasibility Policies
+## 7. Near-Duplicate Signature, Scoped Repeat Caps & Joint Method Feasibility
 
-### 7.1 Budget Policy (`NOMINAL_BENCHMARK_BUDGET_TIERS`)
-- **Same-Model Calibration Forbidden:** Same-model Gemini budget calibration is strictly `FORBIDDEN`. No model output may determine benchmark budget ceilings.
-- **Applicability Split:**
-  - `budget_applicable_scenarios = 80`
-  - `budget_null_scenarios = 20` (`budget = null`)
-- **Nominal Benchmark Tiers (among the 80 budget-applicable scenarios):**
-  - `B1`: `500,000 VND` per trip day $\rightarrow$ `27` scenarios (`1,000,000` / `1,500,000` / `2,000,000` VND for `2` / `3` / `4` days)
-  - `B2`: `1,000,000 VND` per trip day $\rightarrow$ `27` scenarios (`2,000,000` / `3,000,000` / `4,000,000` VND for `2` / `3` / `4` days)
-  - `B3`: `2,000,000 VND` per trip day $\rightarrow$ `26` scenarios (`4,000,000` / `6,000,000` / `8,000,000` VND for `2` / `3` / `4` days)
-- **Formula:** $\text{scenario.budget} = \text{daily\_nominal\_tier\_vnd} \times \text{scenario.days}$
-- **Semantic Boundary:** These tiers are `NOMINAL_BENCHMARK_BUDGET_TIERS`. They are **not** real-world travel prices, validated cost estimates, or price ground truth. The evaluated metric remains `ESTIMATED_BUDGET_COMPLIANCE`. Frequency of zero `estimated_cost` items is descriptive only and may not independently fail a scenario.
+### 7.1 Canonical Scenario Signature
+```text
+(destination_slug, days, sorted(interests), budget_tier_or_null, weekend_exposure, travel_style)
+```
+Exact duplicate signatures are `FORBIDDEN`; free-text notes cannot create uniqueness.
 
-### 7.2 Travel Style Policy
-- **Frozen Vocabulary (4 values):** `BACKPACKER`, `BUDGET`, `COMFORT`, `LUXURY`
-- **Marginal Counts:** `25` scenarios each (`25 × 4 = 100`).
-- **Role:** `DESCRIPTIVE_INPUT_VARIATION_ONLY` (no primary metric; no inferential subgroup claim).
+### 7.2 Scoped Interest-Combination Repeat-Cap Formula
+$$\text{repeat\_cap}(\text{destination}, \text{interest\_count}) = \left\lceil \frac{\text{assigned\_scenario\_count}(\text{destination}, \text{interest\_count})}{\text{number\_of\_distinct\_eligible\_interest\_combinations}(\text{destination}, \text{interest\_count})} \right\rceil$$
 
-### 7.3 Date Policy
-- **Generation Window:** `2026-11-02` through `2026-12-13` (inclusive; 6 full weeks, Monday to Sunday).
-- **Contiguity:** Trip dates `[start_date, end_date]` must be contiguous with `(end_date - start_date).days + 1 == scenario.days`.
-- **Weekend Exposure Marginal:**
-  - `weekend_exposed = 50` (date range contains at least one Saturday or Sunday)
-  - `non_weekend_exposed = 50` (date range contains only Monday–Friday)
-- **Role:** `INPUT_VARIATION_ONLY` (no scientific weekday/weekend subgroup; no weekend-opening-hours performance claims).
+Repeat counting applies to `(destination_slug, sorted(interests))` across the entire benchmark (different `days`, `budget_tier_or_null`, `weekend_exposure`, or `travel_style` do not reset the repetition counter).
 
-### 7.4 Opening Hours Policy
-- **Primary 100 Policy:** `NATURAL_EXPOSURE_ONLY` (no OH-enriched quota; no primary scenario may be selected because it has more opening-hours evidence).
-- **Mandatory Future Reporting:** `opening_hours_evidence_coverage`, `known_opening_hours_violations`, `UNKNOWN_count_and_rate`, and `per_destination_evidence_coverage`.
-- **Separate OH Probe Set:** `DEFERRED_FOR_W06_V1` (not created).
+| Destination | Interest Count ($k$) | Assigned Scenarios | Distinct Eligible Combinations (across $d \in \{2,3,4\}$) | `repeat_cap(destination, k)` | Max Slot Capacity |
+| :--- | :---: | ---: | ---: | ---: | ---: |
+| **`ha-noi`** | `1` | 11 | 5 | **3** | 15 |
+| **`ha-noi`** | `2` | 12 | 15 | **1** | 15 |
+| **`ha-noi`** | `3` | 11 | 20 | **1** | 20 |
+| **`da-nang`** | `1` | 11 | 7 | **2** | 14 |
+| **`da-nang`** | `2` | 11 | 21 | **1** | 21 |
+| **`da-nang`** | `3` | 11 | 35 | **1** | 35 |
+| **`ha-long`** | `1` | 11 | 6 | **2** | 12 |
+| **`ha-long`** | `2` | 11 | 21 | **1** | 21 |
+| **`ha-long`** | `3` | 11 | 35 | **1** | 35 |
 
-### 7.5 Difficulty & Infeasible Scenario Policies
-- **Difficulty Policy:** `NO_FORMAL_DIFFICULTY_TIER`. Labels `EASY`, `MEDIUM`, `HARD` are forbidden as scientific strata. Allowed pre-run descriptive metadata: `days`, `interest_count`, `support_class`, `budget_tier`, `weekend_exposure`, `travel_style`.
-- **Infeasible Scenario Policy:** `INFEASIBLE_DIAGNOSTIC_POLICY = "DEFERRED_OUTSIDE_PRIMARY_W06_V1"`. Zero intentionally infeasible scenarios in the primary 100, no infeasible diagnostic set created, and no claim that the planner detects infeasibility or refusal.
-- **Stress Policy:** No manual stress quota (`fixed_stress_percentage = null`). `STRESS` status derives solely from the frozen support rules; the future generator must not systematically exclude eligible `STRESS` candidates and should round-robin/balance `CLEAR` and `STRESS` where feasible without violating higher-priority locked marginals.
+- **Old Pooled Conflict Status:** `RESOLVED_BY_DESTINATION_INTEREST_COUNT_SCOPED_REPEAT_CAP` (single-interest capacity is $15 + 14 + 12 = 41 \ge 33$).
+- **Joint Method Feasibility Gate (`JOINT_METHOD_FEASIBILITY = PASS`):** Deterministic offline verification confirms simultaneous compatibility of all locked marginals, cross-allocations, support eligibility rules (`0` `EXCLUDED` combinations), scoped repeat caps (`0` violations), and 100 unique canonical scenario signatures without using any Gemini/model output or generating final scenario files.
 
 ---
 
-## 8. Generation Seed, Priority Order, Near-Duplicate & Execution Policies
+## 8. Budget, Travel Style, Date, Opening-Hours, Difficulty, Seed & Execution Policies
 
-- **Frozen Generation Seed:** `scenario_generation_seed = 2026101506` (one seed only; no seed shopping; committed before generation).
-- **Execution Policy:** `executions_per_scenario = 1`, `automatic_retry_count = 0`, `PRIMARY_RESULT_INTERPRETATION = "ONE_SHOT_BENCHMARK_OUTCOME_UNDER_RECORDED_CONFIGURATION"`. Invalid executions remain non-pass in the assigned denominator.
-- **Subgroup Policy:** Primary/required reporting covers `overall`, `per_destination`, and `equal_destination_macro`. All other axes (`budget_applicability`, `trip_length`, `interest_count`, `support_class`, `travel_style`, `weekday_weekend`, `individual_interest`) are `SECONDARY_DESCRIPTIVE_ONLY` with no p-values and no inferential subgroup claims. The scenario-level bootstrap resampling unit remains unchanged.
+- **Budget Policy (`NOMINAL_BENCHMARK_BUDGET_TIERS`):** Same-model Gemini budget calibration is `FORBIDDEN`. `budget_applicable_scenarios = 80`, `budget_null_scenarios = 20`. Nominal tiers: `B1 = 500,000 VND/day` (`27` scenarios), `B2 = 1,000,000 VND/day` (`27` scenarios), `B3 = 2,000,000 VND/day` (`26` scenarios); `scenario.budget = daily_nominal_tier_vnd * scenario.days`. Metric remains `ESTIMATED_BUDGET_COMPLIANCE`; zero `estimated_cost` frequency is `DESCRIPTIVE_ONLY`.
+- **Travel Style Policy:** `BACKPACKER`, `BUDGET`, `COMFORT`, `LUXURY` (`25` each); `DESCRIPTIVE_INPUT_VARIATION_ONLY`.
+- **Date Policy:** `2026-11-02` through `2026-12-13`, contiguous dates, `weekend_exposed = 50` and `non_weekend_exposed = 50`; `INPUT_VARIATION_ONLY`.
+- **Opening Hours Policy:** `NATURAL_EXPOSURE_ONLY` in primary 100 (no OH quota); separate OH probe set `DEFERRED_FOR_W06_V1`.
+- **Difficulty & Infeasibility Policies:** `NO_FORMAL_DIFFICULTY_TIER` (`EASY`/`MEDIUM`/`HARD` forbidden); `INFEASIBLE_DIAGNOSTIC_POLICY = "DEFERRED_OUTSIDE_PRIMARY_W06_V1"`.
+- **Frozen Seed:** `scenario_generation_seed = 2026101506` (one seed only; no seed shopping).
+- **Execution & Subgroup Policies:** `executions_per_scenario = 1`, `automatic_retry_count = 0`, `PRIMARY_RESULT_INTERPRETATION = "ONE_SHOT_BENCHMARK_OUTCOME_UNDER_RECORDED_CONFIGURATION"`. Primary reporting: `overall`, `per_destination`, `equal_destination_macro`; all other axes are `SECONDARY_DESCRIPTIVE_ONLY`.
 
 ---
 
 ## 9. Historical Discrepancies Record
 
-- **`historical_charge_tag_count_discrepancy = "NON_BLOCKING_HISTORICAL_COUNT_DISCREPANCY"`:**
-  `W06-MEASUREMENT-AUDIT-01` noted `6/759` all-catalog POIs with raw `charge` strings (which included 2 non-core POIs matching `charge` outside `tags.charge`) alongside `4/622` `REC-A-CORE-V2` POIs with `tags.charge`. Structured numeric `priceMin`/`priceMax` coverage is `0/759` (`0/622` core) in all cases. Historical Measurement Contract text is preserved unmodified.
-- **`historical_parser_currently_exists_false = "EXPECTED_HISTORICAL_STATE_SUPERSEDED_BY_IMPLEMENTATION"`:**
-  In `w06_measurement_contract_v1.json` (frozen at `W06-MEASUREMENT-CONTRACT-01`), `opening_hours_semantics.audit_evidence.parser_currently_exists` was recorded as `false` prior to `W06-INSTRUMENT-01C` implementing `opening_hours_evaluator.py`. Historical contract text is preserved unmodified.
+- `historical_charge_tag_count_discrepancy = "NON_BLOCKING_HISTORICAL_COUNT_DISCREPANCY"`
+- `historical_parser_currently_exists_false = "EXPECTED_HISTORICAL_STATE_SUPERSEDED_BY_IMPLEMENTATION"`
+- Historical Measurement Contract text (`w06_measurement_contract_v1.json` / `.md`) is preserved unmodified.
