@@ -496,10 +496,23 @@ def test_w06_gen_31_no_final_scenario_artifact_written_and_cli_protects_final_pa
 
 
 def test_w06_gen_32_no_p11_created():
-    """GEN-32: no P11 artifact created anywhere in data/evaluation/w06."""
+    """GEN-32: generator dry-run bundle does not create P11; only canonical freeze P11 allowed if freeze receipt exists."""
+    bundle = _cached_bundle()
+    assert bundle.p11_created is False
     w06_dir = REPO_ROOT / "data" / "evaluation" / "w06"
+    freeze_receipt = w06_dir / "w06_scenario_freeze_01_receipt_v1.json"
+    allowed_p11 = set()
+    if freeze_receipt.exists():
+        receipt_obj = json.loads(freeze_receipt.read_text(encoding="utf-8"))
+        if (
+            receipt_obj.get("task_id") == "W06-SCENARIO-FREEZE-01"
+            and receipt_obj.get("final_scenario_count") == 100
+            and receipt_obj.get("p11_path") == "data/evaluation/w06/w06_p11_assignment_manifest_v1.json"
+        ):
+            allowed_p11 = {"w06_p11_assignment_manifest_v1.json"}
     for p in w06_dir.rglob("*"):
-        assert "p11" not in p.name.lower(), f"Forbidden P11 artifact found: {p}"
+        if p.name not in allowed_p11:
+            assert "p11" not in p.name.lower(), f"Forbidden P11 artifact found: {p}"
         assert "final_100" not in p.name.lower(), f"Forbidden final_100 artifact found: {p}"
 
 

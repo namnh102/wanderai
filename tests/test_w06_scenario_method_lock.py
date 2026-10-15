@@ -1120,11 +1120,22 @@ def test_method_41_no_real_scenarios_generated_during_feasibility_proof():
 
 
 def test_method_42_p11_still_not_created():
-    """METHOD-42: P11 assignment manifest is still not created."""
+    """METHOD-42: Historical method lock and support matrix record p11_created=False."""
     lock = _load_method_lock()
     matrix = _load_support_matrix()
     assert lock["p11_created"] is False
     assert lock["joint_method_feasibility_gate"]["p11_created"] is False
     assert matrix["p11_created"] is False
-    w06_files = {p.name for p in (ROOT_DIR / "data" / "evaluation" / "w06").iterdir()}
+    w06_dir = ROOT_DIR / "data" / "evaluation" / "w06"
+    freeze_receipt = w06_dir / "w06_scenario_freeze_01_receipt_v1.json"
+    allowed_p11 = set()
+    if freeze_receipt.exists():
+        receipt_obj = json.loads(freeze_receipt.read_text(encoding="utf-8"))
+        if (
+            receipt_obj.get("task_id") == "W06-SCENARIO-FREEZE-01"
+            and receipt_obj.get("final_scenario_count") == 100
+            and receipt_obj.get("p11_path") == "data/evaluation/w06/w06_p11_assignment_manifest_v1.json"
+        ):
+            allowed_p11 = {"w06_p11_assignment_manifest_v1.json"}
+    w06_files = {p.name for p in w06_dir.iterdir()} - allowed_p11
     assert not any("p11" in name.lower() or "assignment_manifest" in name.lower() for name in w06_files)

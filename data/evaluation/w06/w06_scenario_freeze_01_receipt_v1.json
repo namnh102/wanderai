@@ -1,0 +1,155 @@
+{
+  "authority_hashes": {
+    "catalog_path": "data/curated/gomate_places_freeze_v2.json",
+    "catalog_sha256": "f7517938598e3923906763f8f31334a500ee88bc06232f2992d38e2fcb28a444",
+    "dryrun_cli_path": "scripts/generate_w06_scenarios_dryrun.py",
+    "dryrun_cli_sha256": "475b722011e5851ad3ddb445955c6d3a537e95de76e0179cc92df7e9f7153f08",
+    "generator_receipt_path": "data/evaluation/w06/w06_scenario_generator_01_receipt_v1.json",
+    "generator_receipt_sha256": "7903055b80676c2140a08e570e4149b59721defeb37b5719292673c92f5e86f9",
+    "generator_source_path": "apps/ai-service/app/evaluation/planner_scenario_generator.py",
+    "generator_source_sha256": "623c52cbdd98d181cd9cbbc1e68697a7299cb6c864628e97e743afd9e09ceae1",
+    "hash_basis": "SHA256_LF_NORMALIZED_UTF8_BYTES",
+    "hash_basis_version": "W06-ARTIFACT-HASH-BASIS-V1",
+    "measurement_contract_path": "data/evaluation/w06/w06_measurement_contract_v1.json",
+    "measurement_contract_sha256": "0ddc1f8d879493517cee25f247d2365a0bacb816dc33b129b0c6110d4bfb8298",
+    "method_lock_path": "data/evaluation/w06/w06_scenario_method_lock_v1.json",
+    "method_lock_sha256": "5e5359f9f10a0248a9cf031f8e8b26c0314c46aecfe0d9df479388bbe4fd1af9",
+    "qa_receipt_path": "data/evaluation/w06/w06_scenario_generator_qa_01_receipt_v1.json",
+    "qa_receipt_sha256": "eb94c359276782e1e91dd669f34caa3f8ba430da7dcf8c4fbffb648a27313bf3",
+    "qa_verifier_path": "scripts/audit_w06_scenario_generator_dryrun.py",
+    "qa_verifier_sha256": "2e5a218fc49d4af0052dffa49c14a8a7d5d9818847fd6d37f647422a9cadc6fc",
+    "reca_contract_path": "apps/ai-service/recommendation/reca/contract.py",
+    "reca_contract_sha256": "1a62c36a95092be35ab78dca43e20f646016e154746ee051a499bdebfc67538c",
+    "support_matrix_path": "data/evaluation/w06/w06_scenario_support_matrix_v1.json",
+    "support_matrix_sha256": "68c2bfc2164e664b3856c31b99a92d75a588f64465526b47c9104918a51cedb4"
+  },
+  "base_develop_sha": "b36dffa0f4a0e20ca4a970cf93b09650ad778c78",
+  "benchmark_execution_started": false,
+  "benchmark_schema_validation": "PASS",
+  "catalog_modified": false,
+  "claude_called": false,
+  "duplicate_canonical_signatures": 0,
+  "excluded_combinations_used": 0,
+  "final_id_range": "W06-SCENARIO-001 .. W06-SCENARIO-100",
+  "final_scenario_bundle_path": "data/evaluation/w06/w06_scenarios_freeze_v1.json",
+  "final_scenario_bundle_sha256": "c03bc6dc300604ac395505d59b6413c1a47339b21408cfd637671e81d4b555a1",
+  "final_scenario_count": 100,
+  "freeze_determinism": {
+    "freeze_run_1_bundle_sha256": "c03bc6dc300604ac395505d59b6413c1a47339b21408cfd637671e81d4b555a1",
+    "freeze_run_1_p11_sha256": "0aa9ae923d0e7f29df49735fa41e87530b1caf62418fcbec09a1eff81d83af62",
+    "freeze_run_2_bundle_sha256": "c03bc6dc300604ac395505d59b6413c1a47339b21408cfd637671e81d4b555a1",
+    "freeze_run_2_p11_sha256": "0aa9ae923d0e7f29df49735fa41e87530b1caf62418fcbec09a1eff81d83af62",
+    "status": "PASS"
+  },
+  "frozen_marginals": {
+    "budget_counts": {
+      "B1": 27,
+      "B2": 27,
+      "B3": 26,
+      "null": 20
+    },
+    "days_counts": {
+      "2": 33,
+      "3": 34,
+      "4": 33
+    },
+    "destination_by_days": {
+      "da-nang": {
+        "2": 11,
+        "3": 11,
+        "4": 11
+      },
+      "ha-long": {
+        "2": 11,
+        "3": 11,
+        "4": 11
+      },
+      "ha-noi": {
+        "2": 11,
+        "3": 12,
+        "4": 11
+      }
+    },
+    "destination_by_interest_count": {
+      "da-nang": {
+        "1": 11,
+        "2": 11,
+        "3": 11
+      },
+      "ha-long": {
+        "1": 11,
+        "2": 11,
+        "3": 11
+      },
+      "ha-noi": {
+        "1": 11,
+        "2": 12,
+        "3": 11
+      }
+    },
+    "destination_counts": {
+      "da-nang": 33,
+      "ha-long": 33,
+      "ha-noi": 34
+    },
+    "interest_count_counts": {
+      "1": 33,
+      "2": 34,
+      "3": 33
+    },
+    "support_class_counts": {
+      "CLEAR": 81,
+      "EXCLUDED": 0,
+      "STRESS": 19
+    },
+    "travel_style_counts": {
+      "BACKPACKER": 25,
+      "BUDGET": 25,
+      "COMFORT": 25,
+      "LUXURY": 25
+    },
+    "weekend_counts": {
+      "non_weekend_exposed": 50,
+      "weekend_exposed": 50
+    }
+  },
+  "gemini_called": false,
+  "generator_modified": false,
+  "generator_seed": 2026101506,
+  "generator_version": "W06-SCENARIO-GENERATOR-01-V1.0.0",
+  "grok_called": false,
+  "historical_scientific_artifacts_modified": false,
+  "historical_test_compatibility_files": [
+    "apps/ai-service/tests/test_planner_scenario_generator.py",
+    "tests/test_w06_instrument_01d.py",
+    "tests/test_w06_scenario_method_lock.py"
+  ],
+  "historical_test_compatibility_update": true,
+  "independent_hash_verifier_uses_producer_hash_helpers": false,
+  "measurement_contract_modified": false,
+  "method_lock_modified": false,
+  "methodology_modified": false,
+  "model_selection_started": false,
+  "openai_called": false,
+  "p11_assignment_validation": "PASS",
+  "p11_path": "data/evaluation/w06/w06_p11_assignment_manifest_v1.json",
+  "p11_sha256": "0aa9ae923d0e7f29df49735fa41e87530b1caf62418fcbec09a1eff81d83af62",
+  "per_scenario_hash_count": 100,
+  "preregistration_created": false,
+  "production_planner_modified": false,
+  "qa_gate": "W06-SCENARIO-GENERATOR-QA-01",
+  "qa_gate_status": "CLOSED",
+  "qa_verifier_modified": false,
+  "reca_contract_modified": false,
+  "repeat_cap_violations": 0,
+  "reproducibility_claim_bounded": true,
+  "rule_a_failures": 0,
+  "rule_b_failures": 0,
+  "scientific_performance_results_generated": false,
+  "semantic_1_to_1_transformation": "PASS",
+  "source_dry_run_sha256": "3c3b5314c2fca0fb3c2fb53cc1b4fc26cc06b83d058218adfa13f8b641c1f769",
+  "support_matrix_modified": false,
+  "task_id": "W06-SCENARIO-FREEZE-01",
+  "version": "1.0.0",
+  "w5_modified": false
+}
