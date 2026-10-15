@@ -19,9 +19,10 @@ import json
 import math
 from pathlib import Path
 import random
+import re
 from typing import Dict, List, Optional, Sequence, Tuple
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from app.evaluation.opening_hours_evaluator import OPENING_HOURS_PARSER_VERSION
 from app.evaluation.planner_benchmark_evaluator import (
@@ -45,6 +46,12 @@ AGGREGATOR_VERSION: str = "W06-BATCH-AGGREGATOR-01C-V1.0.0"
 BOOTSTRAP_ITERATIONS: int = 10000
 BOOTSTRAP_SEED: int = 20261015
 WILSON_Z_95: float = 1.959963984540054
+
+ASSIGNMENT_MANIFEST_HASH_BASIS: str = "SHA256_CANONICAL_JSON_UTF8_LF_BYTES"
+ASSIGNMENT_MANIFEST_CANONICAL_POLICY: str = (
+    "REJECT_NON_CANONICAL_FINAL_100_ASSIGNMENT_MANIFEST"
+)
+LOWERCASE_SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
 
 FINAL_100_EXPECTED_TOTAL: int = 100
 FINAL_100_EXPECTED_ALLOCATION: Dict[str, int] = {
@@ -107,6 +114,17 @@ class AssignedScenarioSpec(BaseModel):
             )
         return slug
 
+    @field_validator("scenario_sha256")
+    @classmethod
+    def validate_scenario_sha256(cls, v: Optional[str]) -> Optional[str]:
+        if v is None:
+            return None
+        if not isinstance(v, str) or not LOWERCASE_SHA256_RE.match(v):
+            raise ValueError(
+                f"Invalid scenario_sha256 {v!r}: must be exactly 64 lowercase hexadecimal characters."
+            )
+        return v
+
 
 class BenchmarkAssignmentManifest(BaseModel):
     """Authoritative list of assigned benchmark scenarios defining the primary denominator."""
@@ -114,9 +132,34 @@ class BenchmarkAssignmentManifest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     manifest_id: str = Field(..., min_length=1)
-    manifest_version: str = "1.0.0"
+    manifest_version: str = Field(default="1.0.0", min_length=1)
     is_final_100_frozen: bool = False
+    hash_basis_version: str = HASH_BASIS_VERSION
+    assignment_manifest_hash_basis: str = ASSIGNMENT_MANIFEST_HASH_BASIS
     assigned_scenarios: List[AssignedScenarioSpec] = Field(..., min_length=1)
+
+    @model_validator(mode="after")
+    def validate_manifest_hash_contract(self) -> "BenchmarkAssignmentManifest":
+        if self.hash_basis_version != HASH_BASIS_VERSION:
+            raise ValueError(
+                f"Unsupported hash_basis_version {self.hash_basis_version!r} "
+                f"(expected {HASH_BASIS_VERSION!r})."
+            )
+        if self.assignment_manifest_hash_basis != ASSIGNMENT_MANIFEST_HASH_BASIS:
+            raise ValueError(
+                f"Unsupported assignment_manifest_hash_basis {self.assignment_manifest_hash_basis!r} "
+                f"(expected {ASSIGNMENT_MANIFEST_HASH_BASIS!r})."
+            )
+        if self.is_final_100_frozen:
+            missing_shas = [
+                s.scenario_id for s in self.assigned_scenarios if not s.scenario_sha256
+            ]
+            if missing_shas:
+                raise ValueError(
+                    "FINAL_100 frozen assignment manifest requires non-null 64-character lowercase hex "
+                    f"scenario_sha256 for every scenario; missing in: {missing_shas}"
+                )
+        return self
 
 
 class DestinationAggregationSummary(BaseModel):
@@ -224,6 +267,8 @@ class BenchmarkBatchAggregationResult(BaseModel):
     measurement_contract_id: str = MEASUREMENT_CONTRACT_ID
     measurement_contract_version: str = MEASUREMENT_CONTRACT_VERSION
     hash_basis_version: str = HASH_BASIS_VERSION
+    assignment_manifest_hash_basis: str = ASSIGNMENT_MANIFEST_HASH_BASIS
+    assignment_manifest_canonical_policy: str = ASSIGNMENT_MANIFEST_CANONICAL_POLICY
     assignment_manifest_id: str
     assignment_manifest_sha256: str
     final_100_mode: bool
@@ -240,8 +285,13 @@ class BenchmarkBatchAggregationResult(BaseModel):
 
     primary_pass_rate_denominator: int
     core_scenario_pass_count: int
-    core_scenario_pass_rate_all_100: float
-    core_scenario_pass_rate_all_100_ci95: ConfidenceInterval95
+    core_scenario_pass_rate_all_assigned: float
+    core_scenario_pass_rate_all_assigned_ci95: ConfidenceInterval95
+    core_scenario_pass_rate_all_100: Optional[float] = None
+    core_scenario_pass_rate_all_100_ci95: Optional[ConfidenceInterval95] = None
+    core_scenario_pass_rate_all_100_status: str = (
+        "NOT_APPLICABLE_NON_FINAL_100_MODE"
+    )
 
     conditional_core_pass_rate_on_valid_runs: Optional[float] = None
     conditional_core_pass_rate_on_valid_runs_ci95: Optional[ConfidenceInterval95] = None
@@ -294,6 +344,54 @@ def compute_aggregator_code_sha256() -> str:
     """Compute SHA256 over LF-normalized UTF-8 bytes of this aggregator module."""
     aggregator_path = Path(__file__).resolve()
     return sha256_bytes(normalize_lf_bytes(aggregator_path.read_bytes()))
+
+
+def canonicalize_assignment_manifest_bytes(
+    manifest: BenchmarkAssignmentManifest,
+) -> bytes:
+    """Serialize a BenchmarkAssignmentManifest into deterministic canonical UTF-8 LF JSON bytes."""
+    return canonical_json_bytes(manifest.model_dump())
+
+
+def compute_assignment_manifest_sha256(
+    manifest: BenchmarkAssignmentManifest,
+) -> str:
+    """Compute SHA256 over the canonical UTF-8 LF JSON bytes of a BenchmarkAssignmentManifest."""
+    return sha256_bytes(canonicalize_assignment_manifest_bytes(manifest))
+
+
+def load_and_validate_assignment_manifest_bytes(
+    manifest_bytes: bytes,
+    *,
+    final_100_mode: bool = False,
+    require_canonical_bytes: Optional[bool] = None,
+) -> Tuple[BenchmarkAssignmentManifest, str]:
+    """Parse and validate persisted assignment manifest bytes under Policy A.
+
+    Under Policy A (REJECT_NON_CANONICAL_FINAL_100_ASSIGNMENT_MANIFEST):
+    - When final_100_mode=True, manifest.is_final_100_frozen=True, or require_canonical_bytes=True,
+      persisted bytes must match canonical UTF-8 JSON (ensure_ascii=False, sort_keys=True, indent=2,
+      single trailing LF) byte-for-byte, or a ValueError is raised before aggregation.
+    - For non-final synthetic manifests when require_canonical_bytes is False, the canonical semantic
+      SHA256 is returned.
+    """
+    raw_obj = json.loads(manifest_bytes.decode("utf-8"))
+    manifest = BenchmarkAssignmentManifest.model_validate(raw_obj)
+    canonical_bytes = canonicalize_assignment_manifest_bytes(manifest)
+
+    effective_require_canonical = (
+        require_canonical_bytes
+        if require_canonical_bytes is not None
+        else bool(final_100_mode or manifest.is_final_100_frozen)
+    )
+    if effective_require_canonical and manifest_bytes != canonical_bytes:
+        raise ValueError(
+            "Non-canonical assignment manifest bytes rejected under Policy A "
+            f"({ASSIGNMENT_MANIFEST_CANONICAL_POLICY}): persisted manifest file must use "
+            "canonical UTF-8 JSON (sort_keys=True, indent=2, ensure_ascii=False, single trailing LF)."
+        )
+
+    return manifest, sha256_bytes(canonical_bytes)
 
 
 def compute_wilson_ci95(
@@ -587,7 +685,29 @@ def validate_assignment_and_evaluations(
     *,
     final_100_mode: bool = False,
 ) -> Dict[str, ScenarioEvaluationResult]:
-    """Fail-closed validation of assigned scenarios and evaluation results (Sections 18 & 19)."""
+    """Fail-closed validation of assigned scenarios and evaluation results."""
+    if assignment_manifest.hash_basis_version != HASH_BASIS_VERSION:
+        raise ValueError(
+            f"Unsupported hash_basis_version {assignment_manifest.hash_basis_version!r} "
+            f"(expected {HASH_BASIS_VERSION!r})."
+        )
+    if assignment_manifest.assignment_manifest_hash_basis != ASSIGNMENT_MANIFEST_HASH_BASIS:
+        raise ValueError(
+            f"Unsupported assignment_manifest_hash_basis {assignment_manifest.assignment_manifest_hash_basis!r} "
+            f"(expected {ASSIGNMENT_MANIFEST_HASH_BASIS!r})."
+        )
+
+    for s in assignment_manifest.assigned_scenarios:
+        if s.destination_slug not in PRIMARY_BENCHMARK_DESTINATIONS:
+            raise ValueError(
+                f"Unsupported destination_slug {s.destination_slug!r} in assignment manifest."
+            )
+        if s.scenario_sha256 is not None and not LOWERCASE_SHA256_RE.match(s.scenario_sha256):
+            raise ValueError(
+                f"Malformed scenario_sha256 {s.scenario_sha256!r} for {s.scenario_id!r}: "
+                "must be 64 lowercase hexadecimal characters."
+            )
+
     assigned_ids = [s.scenario_id for s in assignment_manifest.assigned_scenarios]
     id_counts = Counter(assigned_ids)
     duplicates = sorted(sid for sid, cnt in id_counts.items() if cnt > 1)
@@ -597,6 +717,10 @@ def validate_assignment_and_evaluations(
     assigned_by_id = {s.scenario_id: s for s in assignment_manifest.assigned_scenarios}
 
     if final_100_mode or assignment_manifest.is_final_100_frozen:
+        if not assignment_manifest.is_final_100_frozen:
+            raise ValueError(
+                "FINAL_100 mode requires assignment_manifest.is_final_100_frozen == True."
+            )
         if len(assigned_by_id) != FINAL_100_EXPECTED_TOTAL:
             raise ValueError(
                 f"FINAL_100 mode requires exactly {FINAL_100_EXPECTED_TOTAL} unique assigned scenarios "
@@ -608,6 +732,16 @@ def validate_assignment_and_evaluations(
             raise ValueError(
                 f"FINAL_100 mode requires exact destination allocation {FINAL_100_EXPECTED_ALLOCATION} "
                 f"(got {actual_alloc})."
+            )
+        missing_shas = [
+            s.scenario_id
+            for s in assignment_manifest.assigned_scenarios
+            if not s.scenario_sha256 or not LOWERCASE_SHA256_RE.match(s.scenario_sha256)
+        ]
+        if missing_shas:
+            raise ValueError(
+                "FINAL_100 mode requires a valid 64-character lowercase hex scenario_sha256 for "
+                f"every scenario; missing or invalid in: {missing_shas}"
             )
 
     eval_by_id: Dict[str, ScenarioEvaluationResult] = {}
@@ -676,13 +810,29 @@ def aggregate_benchmark_evaluations(
     valid_run_rate_ci95 = compute_wilson_ci95(valid_count, assigned_count)
     assert valid_run_rate_ci95 is not None
 
-    # Primary CORE_SCENARIO_PASS_RATE_ALL_100 retains all assigned scenarios (100 in FINAL_100 mode)
-    # Invalid runs contribute 0 to core_scenario_pass_count.
+    # Generic assigned-denominator pass rate (present in all modes; invalid runs remain in denominator as 0)
     core_pass_count = sum(1 for ev in valid_evals if ev.core_scenario_pass is True)
-    primary_denom = FINAL_100_EXPECTED_TOTAL if effective_final_100 else assigned_count
-    core_pass_rate_all_100 = round(core_pass_count / primary_denom, 6)
-    core_pass_rate_all_100_ci95 = compute_wilson_ci95(core_pass_count, primary_denom)
-    assert core_pass_rate_all_100_ci95 is not None
+    core_pass_rate_all_assigned = round(core_pass_count / assigned_count, 6)
+    core_pass_rate_all_assigned_ci95 = compute_wilson_ci95(core_pass_count, assigned_count)
+    assert core_pass_rate_all_assigned_ci95 is not None
+
+    # Primary CORE_SCENARIO_PASS_RATE_ALL_100 is populated ONLY in FINAL_100 mode (denominator == 100).
+    # Outside FINAL_100 mode, it is explicitly null / NOT_APPLICABLE_NON_FINAL_100_MODE.
+    if effective_final_100:
+        assert assigned_count == FINAL_100_EXPECTED_TOTAL
+        primary_denom = FINAL_100_EXPECTED_TOTAL
+        core_pass_rate_all_100: Optional[float] = round(
+            core_pass_count / FINAL_100_EXPECTED_TOTAL, 6
+        )
+        core_pass_rate_all_100_ci95: Optional[ConfidenceInterval95] = compute_wilson_ci95(
+            core_pass_count, FINAL_100_EXPECTED_TOTAL
+        )
+        core_pass_rate_all_100_status = "FINAL_100_PRIMARY_METRIC"
+    else:
+        primary_denom = assigned_count
+        core_pass_rate_all_100 = None
+        core_pass_rate_all_100_ci95 = None
+        core_pass_rate_all_100_status = "NOT_APPLICABLE_NON_FINAL_100_MODE"
 
     # Secondary diagnostic: conditional on valid runs
     cond_core_pass_rate = (
@@ -828,8 +978,8 @@ def aggregate_benchmark_evaluations(
         interpretation_note=gate_note,
     )
 
-    effective_manifest_sha = assignment_manifest_sha256 or sha256_bytes(
-        canonical_json_bytes(assignment_manifest.model_dump())
+    effective_manifest_sha = assignment_manifest_sha256 or compute_assignment_manifest_sha256(
+        assignment_manifest
     )
 
     return BenchmarkBatchAggregationResult(
@@ -846,8 +996,11 @@ def aggregate_benchmark_evaluations(
         valid_run_rate_ci95=valid_run_rate_ci95,
         primary_pass_rate_denominator=primary_denom,
         core_scenario_pass_count=core_pass_count,
+        core_scenario_pass_rate_all_assigned=core_pass_rate_all_assigned,
+        core_scenario_pass_rate_all_assigned_ci95=core_pass_rate_all_assigned_ci95,
         core_scenario_pass_rate_all_100=core_pass_rate_all_100,
         core_scenario_pass_rate_all_100_ci95=core_pass_rate_all_100_ci95,
+        core_scenario_pass_rate_all_100_status=core_pass_rate_all_100_status,
         conditional_core_pass_rate_on_valid_runs=cond_core_pass_rate,
         conditional_core_pass_rate_on_valid_runs_ci95=cond_core_pass_ci,
         grounding_evaluable_scenario_count=valid_count,
@@ -893,6 +1046,7 @@ def aggregate_evaluations_from_disk(
     evaluations_dir: Path,
     output_path: Path,
     final_100_mode: bool = False,
+    require_canonical_manifest_bytes: Optional[bool] = None,
 ) -> BenchmarkBatchAggregationResult:
     """Load an assignment manifest and persisted scenario_evaluation.json files and write batch aggregation JSON."""
     if not assignment_manifest_path.exists():
@@ -901,8 +1055,10 @@ def aggregate_evaluations_from_disk(
         raise FileNotFoundError(f"Evaluations directory not found: {evaluations_dir}")
 
     manifest_bytes = assignment_manifest_path.read_bytes()
-    manifest = BenchmarkAssignmentManifest.model_validate(
-        json.loads(manifest_bytes.decode("utf-8"))
+    manifest, manifest_sha = load_and_validate_assignment_manifest_bytes(
+        manifest_bytes,
+        final_100_mode=final_100_mode,
+        require_canonical_bytes=require_canonical_manifest_bytes,
     )
 
     evaluations: List[ScenarioEvaluationResult] = []
@@ -919,7 +1075,7 @@ def aggregate_evaluations_from_disk(
         manifest,
         evaluations,
         final_100_mode=final_100_mode,
-        assignment_manifest_sha256=sha256_bytes(manifest_bytes),
+        assignment_manifest_sha256=manifest_sha,
     )
     write_canonical_json(output_path, result.model_dump())
     return result

@@ -673,7 +673,8 @@ def test_w06_i01c_15_invalid_provider_run_not_classified_as_factual_schedule_vio
     assert agg.schedule_evaluable_scenario_count == 1
     assert agg.schedule_violation_scenario_count == 0
     assert agg.schedule_violation_rate == 0.0
-    assert agg.core_scenario_pass_rate_all_100 == 0.5
+    assert agg.core_scenario_pass_rate_all_assigned == 0.5
+    assert agg.core_scenario_pass_rate_all_100 is None
 
 
 def test_w06_i01c_16_estimated_budget_violation_rate_denominator_uses_only_budget_applicable_valid_scenarios():
@@ -926,7 +927,8 @@ def test_w06_i01c_30_equal_destination_macro_gives_each_destination_equal_weight
     manifest = BenchmarkAssignmentManifest(manifest_id="test-macro", assigned_scenarios=specs)
     agg = aggregate_benchmark_evaluations(manifest, evals)
 
-    assert agg.core_scenario_pass_rate_all_100 == round(4 / 6, 6)
+    assert agg.core_scenario_pass_rate_all_assigned == round(4 / 6, 6)
+    assert agg.core_scenario_pass_rate_all_100 is None
     assert agg.equal_destination_macro.core_scenario_pass_rate_macro == round(1 / 3, 6)
 
 

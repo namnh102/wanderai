@@ -81,3 +81,16 @@ $$\text{core\_scenario\_pass} = \text{core\_scenario\_pass\_pre\_opening\_hours}
   Used for item-level `Grounded POI Rate`:
   $$\text{Grounded POI Rate} = \frac{\sum_{s \in \text{valid}} \text{grounded\_item\_count}_s}{\sum_{s \in \text{valid}} \text{poi\_visit\_item\_count}_s}$$
   Resamples `scenario` clusters with replacement (`iterations = 10000`, `seed = 20261015`), summing grounded numerator and `POI_VISIT` denominator within each bootstrap sample. Individual POI items are never resampled independently.
+
+---
+
+## 7. Additive Clarification (`W06-INSTRUMENT-VALIDATION-01`)
+
+- **Follow-up Note A Resolution (`core_scenario_pass_rate_all_assigned` vs `core_scenario_pass_rate_all_100`):**
+  - `core_scenario_pass_rate_all_assigned = core_scenario_pass_count / assigned_scenario_count` (with `core_scenario_pass_rate_all_assigned_ci95`) is always computed across all aggregation modes (`FINAL_100` and non-final synthetic modes).
+  - `core_scenario_pass_rate_all_100` and `core_scenario_pass_rate_all_100_ci95` are populated ONLY when `FINAL_100` mode is active (`final_100_mode == true` or `is_final_100_frozen == true`) with denominator strictly equal to `100`. Outside `FINAL_100` mode, both fields are `null` (`core_scenario_pass_rate_all_100_status = "NOT_APPLICABLE_NON_FINAL_100_MODE"`), preventing any `N != 100` synthetic run from being labeled `_all_100`.
+- **Follow-up Note B Resolution (Future `P11` Assignment Manifest Hash Contract & Policy A):**
+  - Any `FINAL_100` frozen assignment manifest must specify `is_final_100_frozen = true`, `hash_basis_version = "W06-ARTIFACT-HASH-BASIS-V1"`, `assignment_manifest_hash_basis = "SHA256_CANONICAL_JSON_UTF8_LF_BYTES"`, exact 100 scenarios (`34 ha-noi / 33 da-nang / 33 ha-long`), and a required 64-character lowercase hexadecimal `scenario_sha256` on every scenario entry.
+  - Under **Policy A (`REJECT_NON_CANONICAL_FINAL_100_ASSIGNMENT_MANIFEST`)**, persisted `FINAL_100` assignment manifest files must match canonical UTF-8 JSON (`ensure_ascii = false`, `sort_keys = true`, `indent = 2`, single final LF) byte-for-byte or are rejected before aggregation.
+- **Zero-Budget Denominator Rule (`budget = 0`):**
+  - When `budget_ceiling == 0`, compliance remains well-defined (`estimated_total_cost == 0` is `COMPLIANT`; `estimated_total_cost > 0` is `VIOLATION`), while `budget_overrun_fraction` is `null` with `budget_overrun_fraction_status = "UNDEFINED_ZERO_BUDGET_DENOMINATOR"` (never dividing by zero and never emitting arbitrary `1.0`).
