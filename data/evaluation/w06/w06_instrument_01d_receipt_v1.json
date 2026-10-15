@@ -1,0 +1,82 @@
+{
+  "amendment_semantics": {
+    "day_structure_failure_reasons": {
+      "day_count_mismatch": "DAY_STRUCTURE_VIOLATION",
+      "minimum_poi_visits_per_day_below_threshold": "MINIMUM_POI_VISITS_PER_DAY_VIOLATION"
+    },
+    "day_structure_pass_formula": "day_count_pass and minimum_poi_visits_per_day_pass",
+    "legacy_evaluator_rule": "all(len(day.items) >= 1 for day in parsed_plan.days)",
+    "minimum_poi_visits_per_day_method_status": "FORMALLY_FROZEN_BY_W06_SCENARIO_METHOD_LOCK_01",
+    "minimum_poi_visits_per_day_pass_formula": "len(parsed_plan.days) > 0 and all(count >= 2 for count in poi_visit_count_by_day)",
+    "minimum_poi_visits_per_day_required": 2,
+    "minimum_poi_visits_per_day_rule_source": "data/evaluation/w06/w06_scenario_method_lock_v1.json#minimum_poi_visits_per_day_policy",
+    "new_evaluator_fields": [
+      "minimum_poi_visits_per_day_required",
+      "minimum_poi_visits_per_day_method_status",
+      "minimum_poi_visits_per_day_rule_source",
+      "poi_visit_count_by_day",
+      "min_poi_visits_observed_per_day",
+      "minimum_poi_visits_per_day_pass"
+    ],
+    "orthogonal_constraints_separated_from_minimum_count": [
+      "catalog_grounding",
+      "destination_consistency",
+      "duplicate_poi_detection",
+      "transit_only_named_poi_violation",
+      "schedule_validity",
+      "budget_validity",
+      "opening_hours_validity"
+    ],
+    "schema_day_items_min_length_unchanged": 1
+  },
+  "artifact_hashes": {
+    "evaluator_source_file_path": "apps/ai-service/app/evaluation/planner_benchmark_evaluator.py",
+    "evaluator_source_file_sha256": "1b299f75a3a51d01b63b1b004df3d8b9d92224591ccde5d537b83735ca268f66",
+    "hash_basis": "SHA256_LF_NORMALIZED_UTF8_BYTES (identical to raw UTF-8 LF bytes on disk)",
+    "hash_basis_version": "W06-ARTIFACT-HASH-BASIS-V1",
+    "method_lock_artifact_path": "data/evaluation/w06/w06_scenario_method_lock_v1.json",
+    "method_lock_artifact_sha256": "5e5359f9f10a0248a9cf031f8e8b26c0314c46aecfe0d9df479388bbe4fd1af9",
+    "prompt_source_file_path": "apps/ai-service/app/prompts/planner_benchmark_prompt.py",
+    "prompt_source_file_sha256": "22aa9cd172548fe51a8699704e5832ad44e1d8e946a1ad79437aed99d46c98cb",
+    "support_matrix_artifact_path": "data/evaluation/w06/w06_scenario_support_matrix_v1.json",
+    "support_matrix_artifact_sha256": "68c2bfc2164e664b3856c31b99a92d75a588f64465526b47c9104918a51cedb4"
+  },
+  "boundary_flags": {
+    "gemini_called": false,
+    "historical_measurement_contract_modified": false,
+    "p11_created": false,
+    "preregistration_created": false,
+    "production_planner_modified": false,
+    "real_scenarios_generated": false,
+    "scientific_results_generated": false,
+    "w5_modified": false
+  },
+  "evaluator_source_file": "apps/ai-service/app/evaluation/planner_benchmark_evaluator.py",
+  "evaluator_source_sha256": "1b299f75a3a51d01b63b1b004df3d8b9d92224591ccde5d537b83735ca268f66",
+  "evaluator_version": "W06-CORE-EVALUATOR-01D-V1.0.0",
+  "gemini_called": false,
+  "hash_basis": "SHA256_LF_NORMALIZED_UTF8_BYTES",
+  "historical_measurement_contract_modified": false,
+  "instrument_id": "W06-INSTRUMENT-01D",
+  "instrument_version": "1.0.0",
+  "method_lock_artifact": "data/evaluation/w06/w06_scenario_method_lock_v1.json",
+  "method_lock_sha256": "5e5359f9f10a0248a9cf031f8e8b26c0314c46aecfe0d9df479388bbe4fd1af9",
+  "min_poi_visits_per_day": 2,
+  "p11_created": false,
+  "preregistration_created": false,
+  "production_planner_modified": false,
+  "prompt_source_file": "apps/ai-service/app/prompts/planner_benchmark_prompt.py",
+  "prompt_source_sha256": "22aa9cd172548fe51a8699704e5832ad44e1d8e946a1ad79437aed99d46c98cb",
+  "prompt_version": "TRAVEL_PLANNER_BENCHMARK_V2",
+  "purpose": "ALIGN_EVALUATOR_AND_BENCHMARK_PROMPT_WITH_FROZEN_MINIMUM_POI_VISITS_PER_DAY",
+  "real_scenarios_generated": false,
+  "required_activity_kind": "POI_VISIT",
+  "scientific_results_generated": false,
+  "source_develop_sha": "e5e1f450f68772b2fdc09e37eef58fd6bd5509ba",
+  "source_method_lock_id": "W06-SCENARIO-METHOD-LOCK-01",
+  "source_method_lock_version": "1.0.0",
+  "support_matrix_artifact": "data/evaluation/w06/w06_scenario_support_matrix_v1.json",
+  "support_matrix_sha256": "68c2bfc2164e664b3856c31b99a92d75a588f64465526b47c9104918a51cedb4",
+  "transit_only_counts_toward_minimum": false,
+  "w5_modified": false
+}

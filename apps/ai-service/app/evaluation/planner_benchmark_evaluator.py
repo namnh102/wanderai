@@ -1,12 +1,16 @@
-"""Deterministic Core & Opening-Hours Constraint Evaluator for W06 Itinerary Agent Benchmark (W06-INSTRUMENT-01B / 01C).
+"""Deterministic Core & Opening-Hours Constraint Evaluator for W06 Itinerary Agent Benchmark (W06-INSTRUMENT-01B / 01C / 01D).
 
 Grounded in:
 - W06-MEASUREMENT-CONTRACT-01 v1.1.0 (data/evaluation/w06/w06_measurement_contract_v1.json)
 - W06-INSTRUMENT-01A v1.1.0 (data/evaluation/w06/w06_instrument_01a_receipt_v1.json)
 - W06-INSTRUMENT-01B v1.0.0 (data/evaluation/w06/w06_instrument_01b_receipt_v1.json)
+- W06-INSTRUMENT-01C v1.0.0 (data/evaluation/w06/w06_instrument_01c_receipt_v1.json)
+- W06-SCENARIO-METHOD-LOCK-01 v1.0.0 (data/evaluation/w06/w06_scenario_method_lock_v1.json)
 
 Strict scientific rules:
 - Deterministic only: no LLM calls, no fuzzy place-name matching, no web/API calls, no random operations.
+- Enforces min_poi_visits_per_day = 2 (activity_kind == POI_VISIT only; TRANSIT_ONLY excluded) per W06-SCENARIO-METHOD-LOCK-01,
+  remaining orthogonal to grounding, duplicate, destination, schedule, budget, and opening-hours checks.
 - Evaluates conservative three-state OSM opening_hours (COMPLIANT / VIOLATION / UNKNOWN) for grounded POI_VISIT items.
 - Enforces scenario day/date alignment (YYYY-MM-DD matching scenario.start_date..end_date) so missing/invalid dates
   cannot turn a known opening-hours constraint into a harmless pass.
@@ -52,13 +56,28 @@ from app.services.planner_benchmark_runner import (
 )
 
 EVALUATOR_VERSION_01B: str = "W06-CORE-EVALUATOR-01B-V1.0.0"
-EVALUATOR_VERSION: str = "W06-CORE-EVALUATOR-01C-V1.0.0"
+EVALUATOR_VERSION_01C: str = "W06-CORE-EVALUATOR-01C-V1.0.0"
+EVALUATOR_VERSION_01D: str = "W06-CORE-EVALUATOR-01D-V1.0.0"
+EVALUATOR_VERSION: str = EVALUATOR_VERSION_01D
 INSTRUMENT_01A_RECEIPT_VERSION: str = "1.1.0"
 INSTRUMENT_01B_RECEIPT_VERSION: str = "1.0.0"
+INSTRUMENT_01C_RECEIPT_VERSION: str = "1.0.0"
+INSTRUMENT_01D_RECEIPT_VERSION: str = "1.0.0"
 OPENING_HOURS_STATUS_01B: str = "NOT_EVALUATED_IN_01B"
 FINAL_CORE_PASS_STATUS_01B: str = "NOT_COMPUTED_IN_01B_REQUIRES_01C_OPENING_HOURS"
 OPENING_HOURS_STATUS_01C: str = "EVALUATED"
 FINAL_CORE_PASS_STATUS_01C: str = "COMPUTED_IN_01C"
+
+MIN_POI_VISITS_PER_DAY: int = 2
+MINIMUM_POI_VISITS_PER_DAY_METHOD_STATUS: str = (
+    "FORMALLY_FROZEN_BY_W06_SCENARIO_METHOD_LOCK_01"
+)
+MINIMUM_POI_VISITS_PER_DAY_RULE_SOURCE: str = (
+    "data/evaluation/w06/w06_scenario_method_lock_v1.json "
+    "(W06-SCENARIO-METHOD-LOCK-01 v1.0.0 formally freezes min_poi_visits_per_day = 2 "
+    "counting only activity_kind == 'POI_VISIT' and excluding TRANSIT_ONLY; "
+    "the historical W06-MEASUREMENT-CONTRACT-01 v1.1.0 did not originally freeze 2)"
+)
 
 MINIMUM_ITEMS_PER_DAY_CONTRACT_STATUS: str = "NOT_FORMALLY_FROZEN"
 MINIMUM_ITEMS_PER_DAY_RULE_SOURCE: str = (
@@ -109,6 +128,14 @@ class ScenarioEvaluationResult(BaseModel):
     day_count_expected: int
     day_count_actual: int
     day_count_pass: bool
+    minimum_poi_visits_per_day_required: int = MIN_POI_VISITS_PER_DAY
+    minimum_poi_visits_per_day_method_status: str = (
+        MINIMUM_POI_VISITS_PER_DAY_METHOD_STATUS
+    )
+    minimum_poi_visits_per_day_rule_source: str = MINIMUM_POI_VISITS_PER_DAY_RULE_SOURCE
+    poi_visit_count_by_day: List[int] = Field(default_factory=list)
+    min_poi_visits_observed_per_day: int = 0
+    minimum_poi_visits_per_day_pass: bool = False
     minimum_items_per_day_contract_status: str = MINIMUM_ITEMS_PER_DAY_CONTRACT_STATUS
     minimum_items_per_day_rule_source: str = MINIMUM_ITEMS_PER_DAY_RULE_SOURCE
     min_items_observed_per_day: int
@@ -320,6 +347,12 @@ def _build_non_evaluated_result(
         day_count_expected=scenario.days,
         day_count_actual=0,
         day_count_pass=False,
+        minimum_poi_visits_per_day_required=MIN_POI_VISITS_PER_DAY,
+        minimum_poi_visits_per_day_method_status=MINIMUM_POI_VISITS_PER_DAY_METHOD_STATUS,
+        minimum_poi_visits_per_day_rule_source=MINIMUM_POI_VISITS_PER_DAY_RULE_SOURCE,
+        poi_visit_count_by_day=[],
+        min_poi_visits_observed_per_day=0,
+        minimum_poi_visits_per_day_pass=False,
         min_items_observed_per_day=0,
         day_structure_pass=False,
         scenario_date_alignment_pass=False,
@@ -576,7 +609,7 @@ def evaluate_benchmark_scenario(
     if not transit_only_pass:
         failure_reasons.append("TRANSIT_ONLY_NAMED_POI_VIOLATION")
 
-    # Day Structure
+    # Day Structure & Minimum POI Visits Per Day (Sections 7-12 of W06-INSTRUMENT-01D)
     day_count_expected = scenario.days
     day_count_actual = len(plan_response.days)
     expected_day_numbers = list(range(1, day_count_expected + 1))
@@ -586,11 +619,22 @@ def evaluate_benchmark_scenario(
         and plan_response.total_days == day_count_expected
         and actual_day_numbers == expected_day_numbers
     )
+    poi_visit_count_by_day: List[int] = [
+        sum(1 for item in d.items if item.activity_kind == ActivityKind.POI_VISIT)
+        for d in plan_response.days
+    ]
+    min_poi_visits_observed_per_day = min(poi_visit_count_by_day, default=0)
+    minimum_poi_visits_per_day_pass = (
+        day_count_actual >= 1
+        and all(cnt >= MIN_POI_VISITS_PER_DAY for cnt in poi_visit_count_by_day)
+    )
+    # Descriptive legacy total-item count only (must NOT determine minimum_poi_visits_per_day_pass)
     min_items_observed_per_day = min((len(d.items) for d in plan_response.days), default=0)
-    non_empty_days_pass = min_items_observed_per_day >= 1 and day_count_actual >= 1
-    day_structure_pass = day_count_pass and non_empty_days_pass
-    if not day_structure_pass:
+    day_structure_pass = day_count_pass and minimum_poi_visits_per_day_pass
+    if not day_count_pass:
         failure_reasons.append("DAY_STRUCTURE_VIOLATION")
+    if not minimum_poi_visits_per_day_pass:
+        failure_reasons.append("MINIMUM_POI_VISITS_PER_DAY_VIOLATION")
 
     # Day / Date Alignment (Section 7 of W06-INSTRUMENT-01C)
     scenario_date_alignment_pass, per_day_date_trusted = validate_scenario_date_alignment(
@@ -783,7 +827,7 @@ def evaluate_benchmark_scenario(
     if opening_hours_known_violation_count > 0:
         failure_reasons.append("OPENING_HOURS_KNOWN_VIOLATION")
 
-    # Pre-opening-hours pass (01B contract) and final core_scenario_pass (01C contract)
+    # Pre-opening-hours pass (01B/01D contract) and final core_scenario_pass (01C/01D contract)
     core_scenario_pass_pre_opening_hours = all(
         [
             poi_visit_item_count >= 1,
@@ -830,6 +874,12 @@ def evaluate_benchmark_scenario(
         day_count_expected=day_count_expected,
         day_count_actual=day_count_actual,
         day_count_pass=day_count_pass,
+        minimum_poi_visits_per_day_required=MIN_POI_VISITS_PER_DAY,
+        minimum_poi_visits_per_day_method_status=MINIMUM_POI_VISITS_PER_DAY_METHOD_STATUS,
+        minimum_poi_visits_per_day_rule_source=MINIMUM_POI_VISITS_PER_DAY_RULE_SOURCE,
+        poi_visit_count_by_day=poi_visit_count_by_day,
+        min_poi_visits_observed_per_day=min_poi_visits_observed_per_day,
+        minimum_poi_visits_per_day_pass=minimum_poi_visits_per_day_pass,
         min_items_observed_per_day=min_items_observed_per_day,
         day_structure_pass=day_structure_pass,
         scenario_date_alignment_pass=scenario_date_alignment_pass,

@@ -21,7 +21,7 @@ from app.config import settings  # noqa: E402
 from app.prompts.planner_benchmark_prompt import (  # noqa: E402
     BENCHMARK_PROMPT_VERSION,
     DEFAULT_CATALOG_PATH,
-    TRAVEL_PLANNER_BENCHMARK_V1,
+    TRAVEL_PLANNER_BENCHMARK_V2,
     build_destination_catalog_context,
 )
 from app.schemas.planner_benchmark import (  # noqa: E402
@@ -70,8 +70,8 @@ def run_validate_environment(
 
     model_config_present = bool(settings.PLANNER_MODEL and str(settings.PLANNER_MODEL).strip())
     benchmark_prompt_available = bool(
-        BENCHMARK_PROMPT_VERSION == "TRAVEL_PLANNER_BENCHMARK_V1"
-        and TRAVEL_PLANNER_BENCHMARK_V1.strip()
+        BENCHMARK_PROMPT_VERSION == "TRAVEL_PLANNER_BENCHMARK_V2"
+        and TRAVEL_PLANNER_BENCHMARK_V2.strip()
     )
     live_execution_available = bool(settings.GEMINI_API_KEY and str(settings.GEMINI_API_KEY).strip())
 
