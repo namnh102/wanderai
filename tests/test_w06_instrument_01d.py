@@ -119,11 +119,14 @@ def test_w06_i01d_repo_frozen_artifacts_and_boundaries():
         assert receipt[flag] is False
         assert receipt["boundary_flags"][flag] is False
 
-    # Confirm no P11 or final scenario manifest files exist
+    # Confirm no unauthorized P11 or preregistration files exist
     w06_dir = REPO_ROOT / "data" / "evaluation" / "w06"
+    freeze_receipt = w06_dir / "w06_scenario_freeze_01_receipt_v1.json"
+    allowed_p11 = {"w06_p11_assignment_manifest_v1.json"} if freeze_receipt.exists() else set()
     for p in w06_dir.rglob("*"):
         name_lower = p.name.lower()
-        assert "p11" not in name_lower, f"Unexpected P11 file: {p}"
+        if p.name not in allowed_p11:
+            assert "p11" not in name_lower, f"Unexpected P11 file: {p}"
         assert "final_100" not in name_lower, f"Unexpected final 100 scenario file: {p}"
         assert "prereg" not in name_lower, f"Unexpected preregistration file: {p}"
 
