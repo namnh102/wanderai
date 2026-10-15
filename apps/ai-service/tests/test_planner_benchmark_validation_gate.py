@@ -53,6 +53,8 @@ from app.evaluation.planner_benchmark_aggregator import (  # noqa: E402
 )
 from app.evaluation.planner_benchmark_evaluator import (  # noqa: E402
     EVALUATOR_VERSION,
+    EVALUATOR_VERSION_01C,
+    EVALUATOR_VERSION_01D,
     ScenarioEvaluationResult,
     compute_catalog_sha256,
     evaluate_benchmark_scenario,
@@ -584,8 +586,11 @@ def _write_valid_run_dir(tmp_path: Path, subdir_name: str) -> Path:
             day_number=1,
             date="2026-07-07",
             title="Ngày 1",
-            items=[_make_poi_item(1, "09:00", "10:30", "poi_dn_247")],
-            day_cost=100000,
+            items=[
+                _make_poi_item(1, "09:00", "10:30", "poi_dn_247"),
+                _make_poi_item(2, "10:30", "12:00", "poi_dn_weekday"),
+            ],
+            day_cost=200000,
         )
     ]
     plan, manifest = _make_plan_and_manifest(scenario, days)
@@ -928,8 +933,11 @@ def test_w06_val_21_schedule_time_format_and_interval_direction_adversarial():
             day_number=1,
             date="2026-07-07",
             title="Ngày 1",
-            items=[_make_poi_item(1, "22:00", "23:59", "poi_dn_247")],
-            day_cost=100000,
+            items=[
+                _make_poi_item(1, "09:00", "10:30", "poi_da-nang_1"),
+                _make_poi_item(2, "22:00", "23:59", "poi_dn_247"),
+            ],
+            day_cost=200000,
         )
     ]
     plan_v, man_v = _make_plan_and_manifest(scenario, valid_days)
@@ -959,8 +967,11 @@ def test_w06_val_22_schedule_intra_day_overlap_vs_back_to_back_vs_cross_day():
             day_number=2,
             date="2026-07-08",
             title="Ngày 2",
-            items=[_make_poi_item(1, "09:00", "10:00", "poi_da-nang_1")],
-            day_cost=100000,
+            items=[
+                _make_poi_item(1, "09:00", "10:00", "poi_da-nang_1"),
+                _make_poi_item(2, "10:00", "11:00", "poi_da-nang_2"),
+            ],
+            day_cost=200000,
         ),
     ]
     plan_ok, man_ok = _make_plan_and_manifest(scen_2d, days_ok)
@@ -1617,7 +1628,8 @@ def test_w06_val_44_no_leakage_into_production_and_validation_gate_receipt_verif
     assert receipt["instrument_01a_status"] == "CLOSED"
     assert receipt["instrument_01b_status"] == "CLOSED"
     assert receipt["instrument_01c_status"] == "CLOSED"
-    assert receipt["evaluator_version"] == EVALUATOR_VERSION
+    assert receipt["evaluator_version"] == EVALUATOR_VERSION_01C == "W06-CORE-EVALUATOR-01C-V1.0.0"
+    assert EVALUATOR_VERSION == EVALUATOR_VERSION_01D == "W06-CORE-EVALUATOR-01D-V1.0.0"
     assert receipt["aggregator_version"] == AGGREGATOR_VERSION
     assert receipt["opening_hours_parser_version"] == OPENING_HOURS_PARSER_VERSION
 

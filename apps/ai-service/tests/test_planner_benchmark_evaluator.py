@@ -17,6 +17,8 @@ if str(REPO_ROOT) not in sys.path:
 from app.evaluation.planner_benchmark_evaluator import (  # noqa: E402
     EVALUATOR_VERSION,
     EVALUATOR_VERSION_01B,
+    EVALUATOR_VERSION_01C,
+    EVALUATOR_VERSION_01D,
     FINAL_CORE_PASS_STATUS_01B,
     FINAL_CORE_PASS_STATUS_01C,
     MINIMUM_ITEMS_PER_DAY_CONTRACT_STATUS,
@@ -195,7 +197,8 @@ def _make_default_valid_days(dn_pois):
         _make_poi_item(3, "10:00", "11:30", dn_pois[1].place_id, dn_pois[1].name, 150000),
     ]
     d2_items = [
-        _make_poi_item(1, "08:30", "10:30", dn_pois[2].place_id, dn_pois[2].name, 120000),
+        _make_poi_item(1, "08:30", "10:30", dn_pois[2].place_id, dn_pois[2].name, 60000),
+        _make_poi_item(2, "10:30", "12:00", dn_pois[3].place_id, dn_pois[3].name, 60000),
     ]
     return [
         BenchmarkItineraryDay(
@@ -222,8 +225,8 @@ def test_w06_i01b_01_valid_canonical_place_id_grounds_successfully():
     plan, manifest = _make_plan_and_manifest(scenario, _make_default_valid_days(dn_pois))
 
     res = evaluate_benchmark_scenario(scenario, plan, manifest)
-    assert res.poi_visit_item_count == 3
-    assert res.grounded_item_count == 3
+    assert res.poi_visit_item_count == 4
+    assert res.grounded_item_count == 4
     assert res.ungrounded_item_count == 0
     assert res.grounded_poi_rate == 1.0
     assert res.all_pois_grounded is True
@@ -236,15 +239,15 @@ def test_w06_i01b_02_unknown_place_id_fails_grounding():
     scenario = _make_scenario(destination_slug="da-nang")
     days = _make_default_valid_days(dn_pois)
     days[1].items[0] = _make_poi_item(
-        1, "08:30", "10:30", "non_existent_place_id_999", "Unknown Place", 120000
+        1, "08:30", "10:30", "non_existent_place_id_999", "Unknown Place", 60000
     )
     plan, manifest = _make_plan_and_manifest(scenario, days)
 
     res = evaluate_benchmark_scenario(scenario, plan, manifest)
-    assert res.poi_visit_item_count == 3
-    assert res.grounded_item_count == 2
+    assert res.poi_visit_item_count == 4
+    assert res.grounded_item_count == 3
     assert res.ungrounded_item_count == 1
-    assert res.grounded_poi_rate == round(2 / 3, 6)
+    assert res.grounded_poi_rate == round(3 / 4, 6)
     assert res.all_pois_grounded is False
     assert res.core_scenario_pass_pre_opening_hours is False
     assert "UNGROUNDED_POI_VISIT_ITEMS" in res.failure_reasons
@@ -257,7 +260,7 @@ def test_w06_i01b_03_free_text_name_cannot_rescue_invalid_place_id():
     days = _make_default_valid_days(dn_pois)
     # Exact valid catalog name, but bogus place_id
     days[1].items[0] = _make_poi_item(
-        1, "08:30", "10:30", "bogus_id_with_exact_real_name", dn_pois[2].name, 120000
+        1, "08:30", "10:30", "bogus_id_with_exact_real_name", dn_pois[2].name, 60000
     )
     plan, manifest = _make_plan_and_manifest(scenario, days)
 
@@ -303,15 +306,15 @@ def test_w06_i01b_05_destination_mismatch_detected():
     days = _make_default_valid_days(dn_pois)
     # Replace day 2 item with a valid grounded Hanoi POI in a Da Nang scenario
     days[1].items[0] = _make_poi_item(
-        1, "08:30", "10:30", hn_pois[0].place_id, hn_pois[0].name, 120000
+        1, "08:30", "10:30", hn_pois[0].place_id, hn_pois[0].name, 60000
     )
     plan, manifest = _make_plan_and_manifest(scenario, days)
 
     res = evaluate_benchmark_scenario(scenario, plan, manifest)
     assert res.all_pois_grounded is True
-    assert res.destination_correct_item_count == 2
+    assert res.destination_correct_item_count == 3
     assert res.destination_incorrect_item_count == 1
-    assert res.destination_correct_poi_rate == round(2 / 3, 6)
+    assert res.destination_correct_poi_rate == round(3 / 4, 6)
     assert res.scenario_destination_valid is False
     assert res.core_scenario_pass_pre_opening_hours is False
     assert "DESTINATION_MISMATCH" in res.failure_reasons
@@ -324,7 +327,7 @@ def test_w06_i01b_06_duplicate_place_id_detected_when_revisits_forbidden():
     days = _make_default_valid_days(dn_pois)
     # Repeat dn_pois[0].place_id on Day 2
     days[1].items[0] = _make_poi_item(
-        1, "08:30", "10:30", dn_pois[0].place_id, dn_pois[0].name, 120000
+        1, "08:30", "10:30", dn_pois[0].place_id, dn_pois[0].name, 60000
     )
     plan, manifest = _make_plan_and_manifest(scenario, days)
 
@@ -341,7 +344,7 @@ def test_w06_i01b_07_duplicate_allowed_when_scenario_allows_revisits():
     scenario = _make_scenario(destination_slug="da-nang", allow_revisit_place_ids=True)
     days = _make_default_valid_days(dn_pois)
     days[1].items[0] = _make_poi_item(
-        1, "08:30", "10:30", dn_pois[0].place_id, dn_pois[0].name, 120000
+        1, "08:30", "10:30", dn_pois[0].place_id, dn_pois[0].name, 60000
     )
     plan, manifest = _make_plan_and_manifest(scenario, days)
 
@@ -383,7 +386,7 @@ def test_w06_i01b_10_invalid_hhmm_rejected():
     scenario = _make_scenario(destination_slug="da-nang")
     days = _make_default_valid_days(dn_pois)
     days[1].items[0] = _make_poi_item(
-        1, "24:00", "25:00", dn_pois[2].place_id, dn_pois[2].name, 120000
+        1, "24:00", "25:00", dn_pois[2].place_id, dn_pois[2].name, 60000
     )
     plan, manifest = _make_plan_and_manifest(scenario, days)
 
@@ -400,7 +403,7 @@ def test_w06_i01b_11_start_greater_or_equal_end_detected():
     scenario = _make_scenario(destination_slug="da-nang")
     days = _make_default_valid_days(dn_pois)
     days[1].items[0] = _make_poi_item(
-        1, "11:00", "10:00", dn_pois[2].place_id, dn_pois[2].name, 120000
+        1, "11:00", "10:00", dn_pois[2].place_id, dn_pois[2].name, 60000
     )
     plan, manifest = _make_plan_and_manifest(scenario, days)
 
@@ -463,15 +466,21 @@ def test_w06_i01b_14_schedule_checked_separately_per_day():
             day_number=1,
             date="2026-07-01",
             title="Ngày 1",
-            items=[_make_poi_item(1, "09:00", "11:00", dn_pois[0].place_id, dn_pois[0].name, 100000)],
-            day_cost=100000,
+            items=[
+                _make_poi_item(1, "09:00", "11:00", dn_pois[0].place_id, dn_pois[0].name, 100000),
+                _make_poi_item(2, "11:00", "13:00", dn_pois[1].place_id, dn_pois[1].name, 100000),
+            ],
+            day_cost=200000,
         ),
         BenchmarkItineraryDay(
             day_number=2,
             date="2026-07-02",
             title="Ngày 2",
-            items=[_make_poi_item(1, "09:00", "11:00", dn_pois[1].place_id, dn_pois[1].name, 100000)],
-            day_cost=100000,
+            items=[
+                _make_poi_item(1, "09:00", "11:00", dn_pois[2].place_id, dn_pois[2].name, 100000),
+                _make_poi_item(2, "11:00", "13:00", dn_pois[3].place_id, dn_pois[3].name, 100000),
+            ],
+            day_cost=200000,
         ),
     ]
     plan, manifest = _make_plan_and_manifest(scenario, days)
@@ -551,17 +560,21 @@ def test_w06_i01b_19_geo_distance_proxy_deterministic():
     res1 = evaluate_benchmark_scenario(scenario, plan, manifest)
     res2 = evaluate_benchmark_scenario(scenario, plan, manifest)
 
-    # 3 grounded POI_VISIT items => 2 consecutive legs (TRANSIT_ONLY item skipped)
-    assert res1.geo_leg_count == 2
+    # 4 grounded POI_VISIT items => 3 consecutive legs (TRANSIT_ONLY item skipped)
+    assert res1.geo_leg_count == 3
     leg1 = compute_haversine_geo_distance_proxy_km(
         dn_pois[0].lat, dn_pois[0].lng, dn_pois[1].lat, dn_pois[1].lng
     )
     leg2 = compute_haversine_geo_distance_proxy_km(
         dn_pois[1].lat, dn_pois[1].lng, dn_pois[2].lat, dn_pois[2].lng
     )
-    assert res1.total_geo_distance_proxy_km == round(leg1 + leg2, 6) == res2.total_geo_distance_proxy_km
-    assert res1.mean_leg_geo_distance_proxy_km == round((leg1 + leg2) / 2.0, 6)
-    assert res1.max_leg_geo_distance_proxy_km == round(max(leg1, leg2), 6)
+    leg3 = compute_haversine_geo_distance_proxy_km(
+        dn_pois[2].lat, dn_pois[2].lng, dn_pois[3].lat, dn_pois[3].lng
+    )
+    total_legs = leg1 + leg2 + leg3
+    assert res1.total_geo_distance_proxy_km == round(total_legs, 6) == res2.total_geo_distance_proxy_km
+    assert res1.mean_leg_geo_distance_proxy_km == round(total_legs / 3.0, 6)
+    assert res1.max_leg_geo_distance_proxy_km == round(max(leg1, leg2, leg3), 6)
 
 
 def test_w06_i01b_20_geo_proxy_excluded_from_core_pass():
@@ -575,15 +588,16 @@ def test_w06_i01b_20_geo_proxy_excluded_from_core_pass():
     ]
     d2_items = [
         _make_poi_item(1, "08:00", "09:30", dn_pois[len(dn_pois) // 2].place_id, dn_pois[len(dn_pois) // 2].name, 50000),
+        _make_poi_item(2, "10:00", "11:30", dn_pois[1].place_id, dn_pois[1].name, 50000),
     ]
     days = [
         BenchmarkItineraryDay(day_number=1, date="2026-07-01", title="Ngày 1", items=d1_items, day_cost=100000),
-        BenchmarkItineraryDay(day_number=2, date="2026-07-02", title="Ngày 2", items=d2_items, day_cost=50000),
+        BenchmarkItineraryDay(day_number=2, date="2026-07-02", title="Ngày 2", items=d2_items, day_cost=100000),
     ]
     plan, manifest = _make_plan_and_manifest(scenario, days)
 
     res = evaluate_benchmark_scenario(scenario, plan, manifest)
-    assert res.geo_leg_count == 2
+    assert res.geo_leg_count == 3
     assert res.core_scenario_pass_pre_opening_hours is True
 
 
@@ -761,7 +775,8 @@ def test_w06_i01b_30_no_final_100_scenario_benchmark_produced_and_cli_verified(t
     assert bounds["measurement_contract_semantics_modified"] is False
 
     assert receipt["evaluator_version"] == EVALUATOR_VERSION_01B
-    assert EVALUATOR_VERSION == "W06-CORE-EVALUATOR-01C-V1.0.0"
+    assert EVALUATOR_VERSION_01C == "W06-CORE-EVALUATOR-01C-V1.0.0"
+    assert EVALUATOR_VERSION == EVALUATOR_VERSION_01D == "W06-CORE-EVALUATOR-01D-V1.0.0"
     assert receipt["minimum_items_per_day_contract_status"] == MINIMUM_ITEMS_PER_DAY_CONTRACT_STATUS
 
     contract_prereqs = {

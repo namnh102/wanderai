@@ -35,6 +35,8 @@ from app.evaluation.planner_benchmark_aggregator import (  # noqa: E402
 )
 from app.evaluation.planner_benchmark_evaluator import (  # noqa: E402
     EVALUATOR_VERSION,
+    EVALUATOR_VERSION_01C,
+    EVALUATOR_VERSION_01D,
     ScenarioEvaluationResult,
     evaluate_benchmark_scenario,
 )
@@ -395,8 +397,11 @@ def test_w06_i01c_07_known_violation_fails_final_core_scenario_pass():
             day_number=1,
             date="2026-07-06",
             title="Ngày 1",
-            items=[_make_poi_item(1, "09:00", "10:30", "poi_dn_weekday")],
-            day_cost=100000,
+            items=[
+                _make_poi_item(1, "09:00", "10:30", "poi_dn_weekday"),
+                _make_poi_item(2, "11:00", "12:00", "poi_dn_247"),
+            ],
+            day_cost=200000,
         )
     ]
     plan, manifest = _make_plan_and_manifest(scenario, days)
@@ -1073,7 +1078,8 @@ def test_w06_i01c_40_no_scientific_final_benchmark_result_generated():
 
     assert receipt["task_id"] == "W06-INSTRUMENT-01C"
     assert receipt["base_develop_sha"] == "98d01c1e2a83b6fe96699b802d1e0ff80cdd3758"
-    assert receipt["evaluator_version"] == EVALUATOR_VERSION
+    assert receipt["evaluator_version"] == EVALUATOR_VERSION_01C == "W06-CORE-EVALUATOR-01C-V1.0.0"
+    assert EVALUATOR_VERSION == EVALUATOR_VERSION_01D == "W06-CORE-EVALUATOR-01D-V1.0.0"
     assert receipt["aggregator_version"] == AGGREGATOR_VERSION
     assert receipt["opening_hours_parser_version"] == OPENING_HOURS_PARSER_VERSION
 

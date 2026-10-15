@@ -1,4 +1,4 @@
-"""Versioned scientific benchmark prompt and deterministic REC-A-CORE-V2 catalog builder (W06-INSTRUMENT-01A).
+"""Versioned scientific benchmark prompt and deterministic REC-A-CORE-V2 catalog builder (W06-INSTRUMENT-01A / 01D).
 
 Does NOT mutate TRAVEL_PLANNER_V1 in apps/ai-service/app/prompts/planner_prompt.py.
 """
@@ -17,7 +17,8 @@ from app.schemas.planner_benchmark import (
 REPO_ROOT = Path(__file__).resolve().parents[4]
 DEFAULT_CATALOG_PATH = REPO_ROOT / "data" / "curated" / "gomate_places_freeze_v2.json"
 
-BENCHMARK_PROMPT_VERSION = "TRAVEL_PLANNER_BENCHMARK_V1"
+BENCHMARK_PROMPT_VERSION_01A = "TRAVEL_PLANNER_BENCHMARK_V1"
+BENCHMARK_PROMPT_VERSION = "TRAVEL_PLANNER_BENCHMARK_V2"
 
 CANONICAL_INTEREST_LABELS_VI: Dict[str, str] = {
     "food_cuisine": "Ẩm thực & Đặc sản địa phương (food_cuisine)",
@@ -121,6 +122,113 @@ DANH MỤC ĐỊA ĐIỂM ĐƯỢC PHÉP CHO {destination_slug} (ALLOWED REC-A-C
 {catalog_json}
 """
 
+TRAVEL_PLANNER_BENCHMARK_V2 = """Bạn là hệ thống lập lịch trình du lịch của GoMate đang chạy ở chế độ kiểm định khoa học (BENCHMARK MODE — {prompt_version}).
+Nhiệm vụ của bạn là tạo lịch trình chi tiết từng ngày bằng JSON hợp lệ dựa trên ngữ cảnh kịch bản và DANH MỤC ĐỊA ĐIỂM ĐƯỢC PHÉP (REC-A-CORE-V2 CATALOG) dưới đây.
+
+THÔNG TIN KỊCH BẢN (SCENARIO CONTEXT):
+- Mã kịch bản (scenario_id): {scenario_id}
+- Điểm đến (destination): {destination} (destination_slug: {destination_slug})
+- Số ngày: {days} ngày (từ {start_date} đến {end_date})
+- Tổng ngân sách trần (budget ceiling): {budget_formatted} {currency}
+- Phong cách du lịch (travel_style): {travel_style}
+- Sở thích chuẩn hóa (canonical_interests): {canonical_interests_json} ({canonical_interests_vi})
+- Chính sách lặp lại địa điểm (allow_revisit_place_ids): {allow_revisit_policy}
+{additional_notes}
+
+QUY TẮC BẮT BUỘC (SCIENTIFIC BENCHMARK RULES):
+A. PHÂN LOẠI HOẠT ĐỘNG (activity_kind) — CHỈ ĐƯỢC DÙNG 1 TRONG 2 GIÁ TRỊ:
+   1. "POI_VISIT":
+      - Dùng cho mọi hoạt động tham quan, ăn uống, cà phê, mua sắm, vui chơi, nghỉ ngơi tại một địa điểm vật lý cụ thể.
+      - BẮT BUỘC có:
+        "activity_kind": "POI_VISIT"
+        "place_id": "<sao chép CHÍNH XÁC từng ký tự place_id từ DANH MỤC ĐƯỢC PHÉP bên dưới>"
+        "place_name": "<tên name tương ứng của địa điểm đó trong danh mục>"
+      - TUYỆT ĐỐI KHÔNG tự bịa ra place_id hoặc địa điểm nằm ngoài danh mục được cung cấp.
+   2. "TRANSIT_ONLY":
+      - CHỈ dùng cho hoạt động di chuyển thuần túy giữa các điểm tham quan.
+      - BẮT BUỘC có:
+        "activity_kind": "TRANSIT_ONLY"
+        "place_id": null
+        "place_name": null
+      - TUYỆT ĐỐI KHÔNG dùng "TRANSIT_ONLY" cho điểm tham quan, nhà hàng, quán cà phê, bảo tàng, công viên, hay bất kỳ địa điểm có tên cụ thể nào.
+
+B. KHÔNG LẶP LẠI ĐỊA ĐIỂM (NO DUPLICATE POI):
+   - Không được lặp lại cùng một "place_id" quá một lần trong toàn bộ lịch trình (trừ khi allow_revisit_place_ids = true).
+
+C. THỜI GIAN & CẤU TRÚC NGÀY (SCHEDULE & DAY STRUCTURE):
+   - Mảng "days" phải có đúng {days} ngày (day_number từ 1 đến {days}).
+   - YÊU CẦU TỐI THIỂU MỖI NGÀY (min_poi_visits_per_day = 2): Mỗi ngày trong lịch trình BẮT BUỘC có ít nhất 2 hoạt động có "activity_kind": "POI_VISIT".
+   - CHỈ các hoạt động có "activity_kind" == "POI_VISIT" mới được tính vào số lượng tối thiểu 2 địa điểm/ngày này; "TRANSIT_ONLY" KHÔNG được tính vào số lượng tối thiểu này.
+   - Một ngày chỉ có 1 "POI_VISIT" kèm theo bất kỳ số lượng "TRANSIT_ONLY" nào đều bị tính là VI PHẠM cấu trúc ngày (non-compliant). Quy tắc tối thiểu 2 "POI_VISIT"/ngày này áp dụng ĐỘC LẬP cho TỪNG ngày trong lịch trình.
+   - Mỗi hoạt động phải có "start_time" và "end_time" đúng định dạng 24 giờ "HH:MM" (ví dụ: "08:00", "10:30"), thỏa mãn start_time < end_time.
+   - Trong cùng một ngày, các khung giờ [start_time, end_time) không được chồng chéo nhau.
+
+D. NGÂN SÁCH ƯỚC LƯỢNG (ESTIMATED BUDGET):
+   - Mỗi hoạt động có "estimated_cost" (số nguyên >= 0, đơn vị {currency}).
+   - Tổng "estimated_cost" của toàn bộ các hoạt động trong lịch trình phải <= tổng ngân sách trần ({budget_formatted} {currency}).
+
+E. ĐỊNH DẠNG ĐẦU RA (JSON ONLY):
+   - Chỉ trả về DUY NHẤT một đối tượng JSON hợp lệ (không kèm markdown ```json hay văn bản giải thích ngoài JSON):
+{{
+  "destination": "{destination}",
+  "total_days": {days},
+  "overview": "Mô tả tổng quan ngắn gọn về lịch trình.",
+  "best_time_to_visit": "Thông tin thời điểm phù hợp.",
+  "general_tips": [
+    "Lưu ý thực tế 1",
+    "Lưu ý thực tế 2"
+  ],
+  "days": [
+    {{
+      "day_number": 1,
+      "date": "{start_date}",
+      "title": "Chủ đề ngày 1",
+      "items": [
+        {{
+          "order_index": 1,
+          "start_time": "08:00",
+          "end_time": "09:30",
+          "activity_kind": "POI_VISIT",
+          "activity": "Tham quan và trải nghiệm tại địa điểm thứ nhất",
+          "place_name": "<name địa điểm 1 từ danh mục>",
+          "place_id": "<place_id địa điểm 1 chính xác từ danh mục>",
+          "notes": "Ghi chú ngắn gọn cho địa điểm 1",
+          "estimated_cost": 50000,
+          "transport_mode": "motorbike"
+        }},
+        {{
+          "order_index": 2,
+          "start_time": "09:30",
+          "end_time": "10:00",
+          "activity_kind": "TRANSIT_ONLY",
+          "activity": "Di chuyển sang địa điểm tiếp theo",
+          "place_name": null,
+          "place_id": null,
+          "notes": "Di chuyển nội đô",
+          "estimated_cost": 30000,
+          "transport_mode": "taxi"
+        }},
+        {{
+          "order_index": 3,
+          "start_time": "10:00",
+          "end_time": "11:30",
+          "activity_kind": "POI_VISIT",
+          "activity": "Tham quan và trải nghiệm tại địa điểm thứ hai",
+          "place_name": "<name địa điểm 2 từ danh mục>",
+          "place_id": "<place_id địa điểm 2 chính xác từ danh mục>",
+          "notes": "Ghi chú ngắn gọn cho địa điểm 2",
+          "estimated_cost": 60000,
+          "transport_mode": "taxi"
+        }}
+      ]
+    }}
+  ]
+}}
+
+DANH MỤC ĐỊA ĐIỂM ĐƯỢC PHÉP CHO {destination_slug} (ALLOWED REC-A-CORE-V2 POI CATALOG — {catalog_count} POIs, SORTED BY place_id):
+{catalog_json}
+"""
+
 
 def build_destination_catalog_context(
     destination_slug: str,
@@ -191,7 +299,7 @@ def build_benchmark_planner_prompt(
     catalog_pois: Optional[List[BenchmarkCatalogPOI]] = None,
     catalog_path: Optional[Path] = None,
 ) -> str:
-    """Build the versioned TRAVEL_PLANNER_BENCHMARK_V1 prompt with deterministic catalog context."""
+    """Build the versioned TRAVEL_PLANNER_BENCHMARK_V2 prompt with deterministic catalog context."""
     validate_canonical_interests_list(scenario.interests)
 
     pois = (
@@ -215,7 +323,7 @@ def build_benchmark_planner_prompt(
     )
     additional_notes = f"- Ghi chú kịch bản (notes): {scenario.notes}" if scenario.notes else ""
 
-    return TRAVEL_PLANNER_BENCHMARK_V1.format(
+    return TRAVEL_PLANNER_BENCHMARK_V2.format(
         prompt_version=BENCHMARK_PROMPT_VERSION,
         scenario_id=scenario.scenario_id,
         destination=scenario.destination,
