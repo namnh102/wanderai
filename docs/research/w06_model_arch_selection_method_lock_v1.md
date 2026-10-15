@@ -1,7 +1,7 @@
 # W06-MODEL-ARCH-SELECTION-METHOD-LOCK-01: Model & Architecture Selection Method Lock (`v1.0.0`)
 
 ## 1. Purpose, Preconditions & Provenance
-This document records the frozen `W06-MODEL-ARCH-SELECTION-METHOD-LOCK-01` (`data/evaluation/w06/w06_model_arch_selection_method_lock_v1.json`, `v1.0.0`, status `FROZEN_BEFORE_DEV_MODEL_EXECUTION`) governing DEV fixture generation, technical capability preflight, shared prompt tuning on `DEV-TUNE`, candidate model/config comparison on `DEV-SELECT`, and final single-configuration freezing prior to W06 preregistration and final benchmark execution.
+This document records the frozen `W06-MODEL-ARCH-SELECTION-METHOD-LOCK-01` (`data/evaluation/w06/w06_model_arch_selection_method_lock_v1.json`, `v1.0.0`, status `FROZEN_BEFORE_DEV_MODEL_EXECUTION`) governing DEV fixture generation, technical capability preflight, shared prompt tuning on `DEV-TUNE`, candidate model/config comparison on `DEV-SELECT`, post-selection stochasticity diagnostics, and final single-configuration freezing prior to W06 preregistration and final benchmark execution.
 
 ### Preconditions
 - **Base `develop` SHA:** `6043402ab102a6bc116aabc0319932208184e102`
@@ -135,41 +135,79 @@ This methodology derives from:
 
 ---
 
-## 7. Shared Prompt Tuning, `DEV-SELECT` Execution & Lexicographic Selection Rule
+## 7. Shared Prompt Tuning Protocol on `DEV-TUNE`
+- **Maximum Shared Semantic Prompt Versions:** `max_shared_semantic_prompt_versions_on_dev_tune = 2`.
+- **Deterministic Prompt IDs:** `P1` and `P2` (or only `P1` if a second prompt is never created).
+- **Single-Prompt Rule:** If only `P1` exists, lock `P1` without a performance comparison (`LOCK_P1_WITHOUT_PERFORMANCE_COMPARISON`).
+- **Adapter Boundary:** No provider-specific semantic prompts (`provider_specific_semantic_prompts_allowed = false`); technical API/schema adapters are not separate semantic prompts (`API_SYNTAX`, `STRUCTURED_OUTPUT_WIRING`).
+- **Two-Prompt Comparison Protocol (`P1` vs. `P2`):**
+  - Evaluate on the exact same `20` `DEV-TUNE` fixtures across every candidate that **PASSED** technical preflight.
+  - For each `(prompt_version, candidate, dev_tune_fixture)` cell: `1` execution, `0` automatic retry, `0` repair, `0` best-of-$N$.
+  - Maximum prompt-tune executions: $2 \times 20 \times \text{number\_of\_preflight\_passed\_candidates} \le 120$.
+  - Compute pooled equal-weight rates across all `candidate × DEV-TUNE fixture` cells.
+  - Compare `P1` and `P2` using the **same best-relative 10pp survivor algorithm** across:
+    1. `VALID_RUN_AND_SCHEMA_RATE`
+    2. `EXACT_GROUNDING_PASS_RATE`
+    3. `FINAL_CORE_PASS_RATE`
+  - Do NOT use cost or latency to select the semantic prompt (`use_cost_or_latency_for_prompt_selection_allowed = false`).
+  - If `P1` and `P2` remain tied through all three criteria, deterministically select `P1` (`tie_after_criterion_3_winner = "P1"`).
+  - Do NOT create `P3` after viewing results (`create_p3_after_viewing_results_allowed = false`).
+- **Prompt Lock Before `DEV-SELECT`:** Record `selected_prompt_version_id`, `selected_prompt_hash`, `all_attempted_prompt_version_ids`, and `all_attempted_prompt_hashes` before `DEV-SELECT` begins. No semantic prompt edit is allowed after `DEV-SELECT` begins.
 
-### Shared Prompt Tuning (`DEV-TUNE`)
-- Maximum shared semantic prompt versions evaluated on `DEV-TUNE`: `2`.
-- No provider-specific semantic prompts (`provider_specific_semantic_prompts_allowed = false`); provider adapters may differ only in API syntax and structured-output wiring.
-- Every attempted prompt version must be recorded.
-- Once the final shared prompt is selected on `DEV-TUNE`, apply **PROMPT LOCK** (`prompt_lock_before_dev_select = true`). No semantic prompt edit is allowed after `DEV-SELECT` begins, and `DEV-SELECT` cannot be rerun because a result is disappointing.
+---
+
+## 8. `DEV-SELECT` Execution & Deterministic Set-Based Survivor Selection Rule
 
 ### `DEV-SELECT` Execution Policy
 - For every candidate config and every `DEV-SELECT` fixture: `executions = 1`, `automatic_retry = 0`, `repair = 0`.
 - Maximum model executions in one `DEV-SELECT`: $3 \times 60 = 180$.
-- Best-of-$N$ selection is forbidden (`best_of_n_selection_allowed = false`). Repeated stochasticity probes are permitted only on `DEV-TUNE` as diagnostics.
+- Best-of-$N$ selection is forbidden (`best_of_n_selection_allowed = false`).
 
-### Lexicographic Model/Config Selection Rule (No Weighted Composite)
-Candidates are compared on `DEV-SELECT` in strict lexicographic order:
-1. `VALID_RUN_AND_SCHEMA_RATE`
-2. `EXACT_GROUNDING_PASS_RATE`
-3. `FINAL_CORE_PASS_RATE`
-4. `MEDIAN_COST_PER_SCENARIO` (lower wins)
-5. `MEDIAN_LATENCY` (lower wins)
+### Step 1: Set-Based Best-Relative Survivor Algorithm (Criteria 1–3)
+- Initialize `current_survivors` = all candidates that **PASSED** technical preflight and entered `DEV-SELECT`.
+- Iterate through the three scientific rate criteria in exact order:
+  1. `VALID_RUN_AND_SCHEMA_RATE`
+  2. `EXACT_GROUNDING_PASS_RATE`
+  3. `FINAL_CORE_PASS_RATE`
+- At each criterion:
+  $$\text{best\_score} = \max_{c \in \text{current\_survivors}} \text{score}[c]$$
+  $$\text{next\_survivors} = \{ c \in \text{current\_survivors} \mid \text{best\_score} - \text{score}[c] \le 0.10 \}$$
+  where `0.10` equals exactly `10` percentage points. Replace `current_survivors` with `next_survivors`.
+- Tie comparison is **ALWAYS** relative to `best_score` among `current_survivors` (`pairwise_chaining_allowed = false`).
+- If `len(current_survivors) == 1` after any criterion, select that survivor immediately.
+- **Non-Transitive Reference Example:** If `C1 = 0.90`, `C2 = 0.82`, `C3 = 0.74`, then `best_score = 0.90`, `next_survivors = ["C1", "C2"]`, and `C3` is eliminated (`0.90 - 0.74 = 0.16 > 0.10`).
 
-- **Practical Tie Band (Criteria 1–3):** Absolute difference $\le 10.0$ percentage points is treated as a practical **TIE** and advances to the next criterion.
-- **Final Tie-Breaker:** If all 5 criteria tie, prefer the configuration with simpler and more directly pin-able provider configuration.
-- **Opening-Hours Violations:** Known opening-hours violation behavior is reported separately, but is not a separate lexicographic level because it is already included in `FINAL_CORE_PASS_RATE`.
-- Stop permanently after the single `DEV-SELECT` comparison, report every candidate's results (not only the winner), and freeze `final_primary_config_count = 1`.
+### Step 2: Cost & Latency Criteria (Criteria 4–5)
+- **Criterion 4 (`MEDIAN_COST_PER_SCENARIO`):**
+  - If >1 survivor remains after Criterion 3 and authoritative/comparable cost exists for **ALL** `current_survivors`, keep only candidate(s) with the minimum unrounded canonical median cost.
+  - If cost is unavailable or non-comparable for **ANY** current survivor, **SKIP** cost for **ALL** current survivors and record `COST_CRITERION_SKIPPED_NOT_COMPARABLE` (do NOT penalize only the provider lacking comparable price metadata).
+  - If `len(current_survivors) == 1`, select it immediately.
+- **Criterion 5 (`MEDIAN_LATENCY`):**
+  - If >1 survivor remains, keep candidate(s) with the minimum unrounded canonical median latency.
+  - If `len(current_survivors) == 1`, select it immediately.
+
+### Step 3: Deterministic Administrative Exact-Tie Order (`C1 > C2 > C3`)
+- Subjective pinability tie-breaking is removed (`subjective_pinability_tie_break_allowed = false`, `human_judgment_after_dev_select_allowed = false`).
+- If multiple candidates remain exactly tied after Criterion 5, select the first candidate according to the frozen administrative order:
+  $$\texttt{FINAL\_EXACT\_TIE\_CANDIDATE\_ORDER} = [\texttt{C1}, \texttt{C2}, \texttt{C3}] \quad (\texttt{C1} > \texttt{C2} > \texttt{C3})$$
+- This administrative tie-break does **NOT** constitute evidence that `C1` is scientifically superior; it exists solely to guarantee one deterministic final configuration (`final_primary_config_count = 1`).
+- Stop permanently after the single `DEV-SELECT` comparison and report every candidate's results.
 
 ---
 
-## 8. Opening-Hours Coverage Audit Authorization & Pre-Preregistration Freeze Fields
+## 9. Bounded Post-`DEV-SELECT` Stochasticity Diagnostic Policy
+- `stochasticity_diagnostic_may_affect_selection = false`
+- `stochasticity_diagnostic_timing = "AFTER_DEV_SELECT_WINNER_SELECTED"`
+- `stochasticity_diagnostic_dataset = "DEV_TUNE"`
+- `stochasticity_diagnostic_fixture_count = 5` (the five lexicographically smallest frozen `DEV-TUNE` scenario IDs)
+- `stochasticity_diagnostic_selected_config_only = true`
+- `diagnostic_executions_per_fixture = 3`, `automatic_retry = 0`, `best_of_n = false`
+- **Maximum diagnostic calls:** $5 \times 3 = 15$.
+- These diagnostic outputs may estimate observed output variability and be reported as a limitation/diagnostic, but **MUST NOT** alter the selected model, prompt, or sampling configuration, and **MUST NOT** trigger another `DEV-SELECT`.
+
+---
+
+## 10. Opening-Hours Coverage Audit, Pre-Preregistration Freeze Fields & Boundaries
 - Authorizes a later read-only audit over `data/curated/gomate_places_freeze_v2.json` computing `total_reca_core_pois`, `known_opening_hours_count`, `unknown_opening_hours_count`, `coverage_rate`, `per_destination_coverage`, `catalog_sha256`, and `parser_version` without inspecting final scenario model outputs or modifying frozen scenarios.
-- Before preregistration, the final configuration freeze must pin all 34 required configuration, environment, prompt, schema, sampling, retry, artifact-hash, taxonomy, ordering, logging, and commit fields specified in `required_pre_preregistration_config_freeze_fields`.
-
----
-
-## 9. Scientific Claim Boundaries & Task Non-Interference
-- **Preferred System Description:** `LLM-based itinerary planner with deterministic grounding and validation`
-- **W06 Does NOT Establish:** real-world price accuracy, travel-time optimization, true preference understanding, generalization to all Vietnam, universal bit-for-bit reproducibility, model superiority without preregistered comparison, infeasibility handling not evaluated, or factual travel knowledge merely from `place_id` grounding.
-- **Task Execution Boundaries:** `gemini_called = false`, `openai_called = false`, `claude_called = false`, `grok_called = false`, `dev_fixtures_generated = false`, `dev_model_outputs_generated = false`, `preregistration_created = false`, `final_benchmark_executed = false`.
+- Before preregistration, the final configuration freeze must pin all 37 required configuration, environment, prompt, schema, sampling, retry, artifact-hash, taxonomy, ordering, logging, and commit fields specified in `required_pre_preregistration_config_freeze_fields`.
+- **Task Execution Boundaries:** `gemini_called = false`, `openai_called = false`, `claude_called = false`, `grok_called = false`, `dev_fixtures_generated = false`, `dev_model_outputs_generated = false`, `winning_model_selected = false`, `preregistration_created = false`, `final_benchmark_executed = false`.

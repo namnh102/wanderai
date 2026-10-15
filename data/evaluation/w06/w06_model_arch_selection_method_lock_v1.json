@@ -98,7 +98,7 @@
     "max_dev_select_configs": 3,
     "max_model_executions_in_one_dev_select": 180,
     "repair": 0,
-    "stochasticity_probes_allowed_on": "DEV_TUNE_DIAGNOSTIC_ONLY_NEVER_BEST_OF_N"
+    "stochasticity_probes_allowed_on": "SELECTED_CONFIG_ONLY_AFTER_DEV_SELECT_ON_5_DETERMINISTIC_DEV_TUNE_FIXTURES"
   },
   "final_benchmark_design": {
     "automatic_retry": 0,
@@ -149,12 +149,63 @@
   "hash_basis": "SHA256_CANONICAL_JSON_UTF8_LF_BYTES",
   "model_config_selection_rule": {
     "add_candidate_or_config_after_inspecting_dev_select_allowed": false,
+    "administrative_tie_break_claims_scientific_superiority": false,
+    "cost_criterion_policy": {
+      "cost_skipped_status": "COST_CRITERION_SKIPPED_NOT_COMPARABLE",
+      "criterion_name": "MEDIAN_COST_PER_SCENARIO",
+      "if_authoritative_comparable_cost_exists_for_all_current_survivors": "KEEP_MINIMUM_UNROUNDED_CANONICAL_MEDIAN_COST",
+      "if_cost_unavailable_or_non_comparable_for_any_current_survivor": "SKIP_COST_FOR_ALL_CURRENT_SURVIVORS",
+      "penalize_single_provider_lacking_comparable_cost_allowed": false,
+      "select_immediately_when_single_survivor_remains": true
+    },
     "criteria_1_to_3_practical_tie_abs_diff_percentage_points": 10.0,
-    "criterion_4_tie_breaker": "LOWER_MEDIAN_COST_WINS",
-    "criterion_5_tie_breaker": "LOWER_MEDIAN_LATENCY_WINS",
-    "final_tie_breaker": "SIMPLER_AND_MORE_DIRECTLY_PINNABLE_PROVIDER_CONFIGURATION",
+    "criteria_1_to_3_practical_tie_abs_diff_ratio": 0.1,
+    "criteria_1_to_3_survivor_algorithm": {
+      "algorithm_id": "BEST_RELATIVE_SURVIVOR_SET_REDUCTION",
+      "best_score_formula": "max(score[c] for c in current_survivors)",
+      "initial_survivors": "ALL_CANDIDATES_THAT_PASSED_TECHNICAL_PREFLIGHT_AND_ENTERED_DEV_SELECT",
+      "next_survivors_formula": "[c for c in current_survivors if best_score - score[c] <= 0.10]",
+      "nontransitive_reference_example": {
+        "best_score": 0.9,
+        "eliminated": [
+          "C3"
+        ],
+        "input_scores": {
+          "C1": 0.9,
+          "C2": 0.82,
+          "C3": 0.74
+        },
+        "next_survivors": [
+          "C1",
+          "C2"
+        ]
+      },
+      "ordered_rate_criteria": [
+        "VALID_RUN_AND_SCHEMA_RATE",
+        "EXACT_GROUNDING_PASS_RATE",
+        "FINAL_CORE_PASS_RATE"
+      ],
+      "pairwise_chaining_allowed": false,
+      "select_immediately_when_single_survivor_remains": true,
+      "tie_comparison_reference": "BEST_SCORE_AMONG_CURRENT_SURVIVORS"
+    },
+    "criterion_4_tie_breaker": "LOWER_UNROUNDED_CANONICAL_MEDIAN_COST_IF_COMPARABLE_FOR_ALL_SURVIVORS_ELSE_SKIP_FOR_ALL",
+    "criterion_5_tie_breaker": "LOWER_UNROUNDED_CANONICAL_MEDIAN_LATENCY_WINS",
+    "final_exact_tie_candidate_order": [
+      "C1",
+      "C2",
+      "C3"
+    ],
+    "final_exact_tie_rule": "SELECT_FIRST_CANDIDATE_IN_FROZEN_ORDER_C1_GT_C2_GT_C3",
+    "final_tie_breaker": "FINAL_EXACT_TIE_CANDIDATE_ORDER",
+    "human_judgment_after_dev_select_allowed": false,
     "known_opening_hours_violation_reporting": "REPORTED_SEPARATELY_ALREADY_INCLUDED_IN_FINAL_CORE_PASS_NOT_A_SEPARATE_LEXICOGRAPHIC_LEVEL",
-    "on_tie_action": "ADVANCE_TO_NEXT_CRITERION",
+    "latency_criterion_policy": {
+      "criterion_name": "MEDIAN_LATENCY",
+      "rule": "KEEP_MINIMUM_UNROUNDED_CANONICAL_MEDIAN_LATENCY",
+      "select_immediately_when_single_survivor_remains": true
+    },
+    "on_tie_action": "REPLACE_CURRENT_SURVIVORS_WITH_NEXT_SURVIVORS_AND_ADVANCE_IF_MULTIPLE_REMAIN",
     "ordered_criteria": [
       "VALID_RUN_AND_SCHEMA_RATE",
       "EXACT_GROUNDING_PASS_RATE",
@@ -163,8 +214,9 @@
       "MEDIAN_LATENCY"
     ],
     "report_every_candidate_result_required": true,
-    "rule_type": "LEXICOGRAPHIC_WITH_PRACTICAL_TIE_BAND",
+    "rule_type": "LEXICOGRAPHIC_BEST_RELATIVE_SURVIVOR_SET_REDUCTION",
     "stop_permanently_after_one_dev_select_comparison": true,
+    "subjective_pinability_tie_break_allowed": false,
     "weighted_composite_allowed": false
   },
   "opening_hours_coverage_audit_authorization": {
@@ -236,16 +288,52 @@
     "raw_provider_artifact_preserved": true
   },
   "prompt_tuning_policy": {
+    "allowed_prompt_version_ids": [
+      "P1",
+      "P2"
+    ],
     "allowed_provider_adapter_differences": [
       "API_SYNTAX",
       "STRUCTURED_OUTPUT_WIRING"
     ],
     "dev_select_rerun_on_disappointing_result_allowed": false,
+    "if_only_p1_exists_action": "LOCK_P1_WITHOUT_PERFORMANCE_COMPARISON",
     "max_shared_semantic_prompt_versions_on_dev_tune": 2,
     "prompt_lock_before_dev_select": true,
     "provider_specific_semantic_prompts_allowed": false,
     "record_every_attempted_prompt_version": true,
-    "semantic_prompt_edit_after_dev_select_begins_allowed": false
+    "required_prompt_lock_fields_before_dev_select": [
+      "selected_prompt_version_id",
+      "selected_prompt_hash",
+      "all_attempted_prompt_version_ids",
+      "all_attempted_prompt_hashes"
+    ],
+    "semantic_prompt_edit_after_dev_select_begins_allowed": false,
+    "single_prompt_only_allowed_id": "P1",
+    "technical_api_or_schema_adapters_count_as_separate_semantic_prompts": false,
+    "two_prompt_comparison_protocol": {
+      "aggregation_method": "POOLED_EQUAL_WEIGHT_ACROSS_ALL_CANDIDATE_BY_DEV_TUNE_FIXTURE_CELLS",
+      "automatic_retry": 0,
+      "best_of_n_allowed": false,
+      "create_p3_after_viewing_results_allowed": false,
+      "dev_tune_fixture_count": 20,
+      "evaluated_candidates": "ALL_CANDIDATES_THAT_PASSED_TECHNICAL_PREFLIGHT",
+      "executions_per_prompt_candidate_fixture_cell": 1,
+      "max_prompt_tune_executions_formula": "2 * 20 * number_of_preflight_passed_candidates",
+      "max_prompt_tune_executions_hard_cap": 120,
+      "ordered_selection_criteria": [
+        "VALID_RUN_AND_SCHEMA_RATE",
+        "EXACT_GROUNDING_PASS_RATE",
+        "FINAL_CORE_PASS_RATE"
+      ],
+      "practical_tie_abs_diff_percentage_points": 10.0,
+      "practical_tie_abs_diff_ratio": 0.1,
+      "repair": 0,
+      "same_20_dev_tune_fixtures_required": true,
+      "survivor_algorithm": "BEST_RELATIVE_10PP_SURVIVOR_REDUCTION",
+      "tie_after_criterion_3_winner": "P1",
+      "use_cost_or_latency_for_prompt_selection_allowed": false
+    }
   },
   "required_pre_preregistration_config_freeze_fields": [
     "provider",
@@ -331,6 +419,26 @@
     ]
   },
   "status": "FROZEN_BEFORE_DEV_MODEL_EXECUTION",
+  "stochasticity_diagnostic_policy": {
+    "allowed_uses": [
+      "ESTIMATE_OBSERVED_OUTPUT_VARIABILITY",
+      "REPORT_AS_LIMITATION_OR_DIAGNOSTIC"
+    ],
+    "automatic_retry": 0,
+    "best_of_n": false,
+    "diagnostic_executions_per_fixture": 3,
+    "fixture_selection_rule": "FIVE_LEXICOGRAPHICALLY_SMALLEST_FROZEN_DEV_TUNE_SCENARIO_IDS",
+    "max_diagnostic_calls": 15,
+    "may_alter_prompt": false,
+    "may_alter_sampling_configuration": false,
+    "may_alter_selected_model": false,
+    "may_trigger_another_dev_select": false,
+    "stochasticity_diagnostic_dataset": "DEV_TUNE",
+    "stochasticity_diagnostic_fixture_count": 5,
+    "stochasticity_diagnostic_may_affect_selection": false,
+    "stochasticity_diagnostic_selected_config_only": true,
+    "stochasticity_diagnostic_timing": "AFTER_DEV_SELECT_WINNER_SELECTED"
+  },
   "structured_output_policy": {
     "candidate_without_semantic_schema_support_enters_dev_select": false,
     "encode_catalog_place_ids_as_provider_side_enum": false,

@@ -1,4 +1,4 @@
-"""Pytest suite for W06-MODEL-ARCH-SELECTION-METHOD-LOCK-01.
+"""Pytest suite for W06-MODEL-ARCH-SELECTION-METHOD-LOCK-01 (+ FIX-01).
 
 Verifies the frozen W06 Model & Architecture Selection Method Lock
 (`data/evaluation/w06/w06_model_arch_selection_method_lock_v1.json`),
@@ -12,7 +12,7 @@ from __future__ import annotations
 import hashlib
 import json
 from pathlib import Path
-from typing import Any, Dict, Tuple
+from typing import Any, Dict, List, Optional, Sequence, Tuple
 
 import pytest
 
@@ -73,6 +73,121 @@ def _lf_sha256(path: Path) -> str:
 
 def _canonical_json_lf_bytes(obj: Any) -> bytes:
     return (json.dumps(obj, indent=2, sort_keys=True, ensure_ascii=False) + "\n").encode("utf-8")
+
+
+def reduce_best_relative_survivors(
+    current_survivors: Sequence[str],
+    scores_by_candidate: Dict[str, float],
+    tie_band_ratio: float = 0.10,
+) -> List[str]:
+    """Deterministic set-based best-relative survivor reduction (`best_score - score[c] <= 0.10`)."""
+    best_score = max(scores_by_candidate[c] for c in current_survivors)
+    return [
+        c
+        for c in current_survivors
+        if round(best_score - scores_by_candidate[c], 12) <= tie_band_ratio
+    ]
+
+
+def evaluate_dev_select_survivor_rule(
+    preflight_passed_candidates: Sequence[str],
+    metrics_by_candidate: Dict[str, Dict[str, Optional[float]]],
+    final_exact_tie_order: Sequence[str] = ("C1", "C2", "C3"),
+) -> Dict[str, Any]:
+    """Reference implementation of the frozen W06 DEV-SELECT survivor selection algorithm."""
+    rate_criteria = (
+        "VALID_RUN_AND_SCHEMA_RATE",
+        "EXACT_GROUNDING_PASS_RATE",
+        "FINAL_CORE_PASS_RATE",
+    )
+    current_survivors = list(preflight_passed_candidates)
+    trace: List[Dict[str, Any]] = []
+
+    for crit in rate_criteria:
+        scores = {c: float(metrics_by_candidate[c][crit]) for c in current_survivors}  # type: ignore[arg-type]
+        next_survivors = reduce_best_relative_survivors(current_survivors, scores, 0.10)
+        trace.append({"criterion": crit, "survivors": list(next_survivors)})
+        current_survivors = next_survivors
+        if len(current_survivors) == 1:
+            return {
+                "winner": current_survivors[0],
+                "decided_at": crit,
+                "cost_status": "NOT_REACHED",
+                "trace": trace,
+            }
+
+    # Criterion 4: MEDIAN_COST_PER_SCENARIO
+    costs = {c: metrics_by_candidate[c].get("MEDIAN_COST_PER_SCENARIO") for c in current_survivors}
+    if all(costs[c] is not None for c in current_survivors):
+        min_cost = min(float(costs[c]) for c in current_survivors)  # type: ignore[arg-type]
+        current_survivors = [c for c in current_survivors if float(costs[c]) == min_cost]  # type: ignore[arg-type]
+        cost_status = "EVALUATED_COMPARABLE_FOR_ALL_SURVIVORS"
+        trace.append({"criterion": "MEDIAN_COST_PER_SCENARIO", "survivors": list(current_survivors)})
+        if len(current_survivors) == 1:
+            return {
+                "winner": current_survivors[0],
+                "decided_at": "MEDIAN_COST_PER_SCENARIO",
+                "cost_status": cost_status,
+                "trace": trace,
+            }
+    else:
+        cost_status = "COST_CRITERION_SKIPPED_NOT_COMPARABLE"
+        trace.append(
+            {
+                "criterion": "MEDIAN_COST_PER_SCENARIO",
+                "status": cost_status,
+                "survivors": list(current_survivors),
+            }
+        )
+
+    # Criterion 5: MEDIAN_LATENCY
+    latencies = {c: float(metrics_by_candidate[c]["MEDIAN_LATENCY"]) for c in current_survivors}  # type: ignore[arg-type]
+    min_latency = min(latencies.values())
+    current_survivors = [c for c in current_survivors if latencies[c] == min_latency]
+    trace.append({"criterion": "MEDIAN_LATENCY", "survivors": list(current_survivors)})
+    if len(current_survivors) == 1:
+        return {
+            "winner": current_survivors[0],
+            "decided_at": "MEDIAN_LATENCY",
+            "cost_status": cost_status,
+            "trace": trace,
+        }
+
+    # Final administrative exact-tie order: C1 > C2 > C3
+    for cand in final_exact_tie_order:
+        if cand in current_survivors:
+            return {
+                "winner": cand,
+                "decided_at": "FINAL_EXACT_TIE_CANDIDATE_ORDER",
+                "cost_status": cost_status,
+                "trace": trace,
+            }
+    raise ValueError("No valid survivor matched final_exact_tie_order")
+
+
+def evaluate_dev_tune_prompt_selection(
+    prompt_rates: Dict[str, Dict[str, float]],
+) -> Dict[str, Any]:
+    """Reference implementation of the frozen W06 DEV-TUNE prompt selection rule (P1 vs P2)."""
+    prompt_ids = list(prompt_rates.keys())
+    if prompt_ids == ["P1"]:
+        return {"selected_prompt_version_id": "P1", "decided_at": "LOCK_P1_WITHOUT_PERFORMANCE_COMPARISON"}
+    if prompt_ids != ["P1", "P2"]:
+        raise ValueError(f"Invalid prompt version IDs: {prompt_ids!r}")
+
+    rate_criteria = (
+        "VALID_RUN_AND_SCHEMA_RATE",
+        "EXACT_GROUNDING_PASS_RATE",
+        "FINAL_CORE_PASS_RATE",
+    )
+    current_survivors = ["P1", "P2"]
+    for crit in rate_criteria:
+        scores = {p: float(prompt_rates[p][crit]) for p in current_survivors}
+        current_survivors = reduce_best_relative_survivors(current_survivors, scores, 0.10)
+        if len(current_survivors) == 1:
+            return {"selected_prompt_version_id": current_survivors[0], "decided_at": crit}
+
+    return {"selected_prompt_version_id": "P1", "decided_at": "TIE_AFTER_CRITERION_3_SELECT_P1"}
 
 
 @pytest.fixture(scope="module")
@@ -332,7 +447,7 @@ def test_mas_13_lexicographic_selection_rule_and_final_config_count_locked(
     """MAS-13: lexicographic selection rule with 10pp tie band on criteria 1-3 and final_primary_config_count=1."""
     rule = lock_data["model_config_selection_rule"]
     assert rule["weighted_composite_allowed"] is False
-    assert rule["rule_type"] == "LEXICOGRAPHIC_WITH_PRACTICAL_TIE_BAND"
+    assert rule["rule_type"] == "LEXICOGRAPHIC_BEST_RELATIVE_SURVIVOR_SET_REDUCTION"
     assert rule["ordered_criteria"] == [
         "VALID_RUN_AND_SCHEMA_RATE",
         "EXACT_GROUNDING_PASS_RATE",
@@ -341,13 +456,18 @@ def test_mas_13_lexicographic_selection_rule_and_final_config_count_locked(
         "MEDIAN_LATENCY",
     ]
     assert rule["criteria_1_to_3_practical_tie_abs_diff_percentage_points"] == 10.0
-    assert rule["on_tie_action"] == "ADVANCE_TO_NEXT_CRITERION"
-    assert rule["criterion_4_tie_breaker"] == "LOWER_MEDIAN_COST_WINS"
-    assert rule["criterion_5_tie_breaker"] == "LOWER_MEDIAN_LATENCY_WINS"
+    assert rule["criteria_1_to_3_practical_tie_abs_diff_ratio"] == 0.10
     assert (
-        rule["final_tie_breaker"]
-        == "SIMPLER_AND_MORE_DIRECTLY_PINNABLE_PROVIDER_CONFIGURATION"
+        rule["on_tie_action"]
+        == "REPLACE_CURRENT_SURVIVORS_WITH_NEXT_SURVIVORS_AND_ADVANCE_IF_MULTIPLE_REMAIN"
     )
+    assert (
+        rule["criterion_4_tie_breaker"]
+        == "LOWER_UNROUNDED_CANONICAL_MEDIAN_COST_IF_COMPARABLE_FOR_ALL_SURVIVORS_ELSE_SKIP_FOR_ALL"
+    )
+    assert rule["criterion_5_tie_breaker"] == "LOWER_UNROUNDED_CANONICAL_MEDIAN_LATENCY_WINS"
+    assert rule["final_tie_breaker"] == "FINAL_EXACT_TIE_CANDIDATE_ORDER"
+    assert rule["final_exact_tie_candidate_order"] == ["C1", "C2", "C3"]
     assert rule["stop_permanently_after_one_dev_select_comparison"] is True
     assert rule["add_candidate_or_config_after_inspecting_dev_select_allowed"] is False
     assert rule["report_every_candidate_result_required"] is True
@@ -441,3 +561,265 @@ def test_mas_15_claim_boundaries_provenance_and_execution_boundaries(lock_data: 
     assert "gemini-3.8-flash" in doc_text
     assert "gpt-6.1-sol" in doc_text
     assert "claude-sonnet-5-5" in doc_text
+
+
+def test_mas_fix_01_three_candidate_practical_tie_rule_is_best_relative_not_pairwise(
+    lock_data: Dict[str, Any],
+):
+    """MAS-FIX-01: three-candidate practical tie rule is best-relative, not pairwise (C1=.90, C2=.82, C3=.74 -> C1,C2)."""
+    alg = lock_data["model_config_selection_rule"]["criteria_1_to_3_survivor_algorithm"]
+    assert alg["algorithm_id"] == "BEST_RELATIVE_SURVIVOR_SET_REDUCTION"
+    assert alg["pairwise_chaining_allowed"] is False
+    assert alg["tie_comparison_reference"] == "BEST_SCORE_AMONG_CURRENT_SURVIVORS"
+    assert alg["select_immediately_when_single_survivor_remains"] is True
+    assert alg["ordered_rate_criteria"] == [
+        "VALID_RUN_AND_SCHEMA_RATE",
+        "EXACT_GROUNDING_PASS_RATE",
+        "FINAL_CORE_PASS_RATE",
+    ]
+
+    ref_ex = alg["nontransitive_reference_example"]
+    assert ref_ex["input_scores"] == {"C1": 0.90, "C2": 0.82, "C3": 0.74}
+    assert ref_ex["best_score"] == 0.90
+    assert ref_ex["next_survivors"] == ["C1", "C2"]
+    assert ref_ex["eliminated"] == ["C3"]
+
+    survivors = reduce_best_relative_survivors(
+        ["C1", "C2", "C3"], {"C1": 0.90, "C2": 0.82, "C3": 0.74}, tie_band_ratio=0.10
+    )
+    assert survivors == ["C1", "C2"]
+
+
+def test_mas_fix_02_cost_unavailable_for_one_survivor_skips_cost_for_all_survivors(
+    lock_data: Dict[str, Any],
+):
+    """MAS-FIX-02: cost unavailable for one survivor causes cost criterion to be skipped for all survivors."""
+    cost_pol = lock_data["model_config_selection_rule"]["cost_criterion_policy"]
+    assert (
+        cost_pol["if_authoritative_comparable_cost_exists_for_all_current_survivors"]
+        == "KEEP_MINIMUM_UNROUNDED_CANONICAL_MEDIAN_COST"
+    )
+    assert (
+        cost_pol["if_cost_unavailable_or_non_comparable_for_any_current_survivor"]
+        == "SKIP_COST_FOR_ALL_CURRENT_SURVIVORS"
+    )
+    assert cost_pol["cost_skipped_status"] == "COST_CRITERION_SKIPPED_NOT_COMPARABLE"
+    assert cost_pol["penalize_single_provider_lacking_comparable_cost_allowed"] is False
+
+    # Case A: C1 and C2 survive criteria 1-3; C2 lacks comparable cost, but C2 has lower median latency -> C2 wins at latency
+    metrics_missing_cost = {
+        "C1": {
+            "VALID_RUN_AND_SCHEMA_RATE": 0.95,
+            "EXACT_GROUNDING_PASS_RATE": 0.90,
+            "FINAL_CORE_PASS_RATE": 0.85,
+            "MEDIAN_COST_PER_SCENARIO": 0.002,
+            "MEDIAN_LATENCY": 4.2,
+        },
+        "C2": {
+            "VALID_RUN_AND_SCHEMA_RATE": 0.93,
+            "EXACT_GROUNDING_PASS_RATE": 0.88,
+            "FINAL_CORE_PASS_RATE": 0.80,
+            "MEDIAN_COST_PER_SCENARIO": None,
+            "MEDIAN_LATENCY": 2.9,
+        },
+    }
+    res_skip = evaluate_dev_select_survivor_rule(["C1", "C2"], metrics_missing_cost)
+    assert res_skip["cost_status"] == "COST_CRITERION_SKIPPED_NOT_COMPARABLE"
+    assert res_skip["decided_at"] == "MEDIAN_LATENCY"
+    assert res_skip["winner"] == "C2"
+
+    # Case B: Both C1 and C2 have comparable cost -> lower median cost wins at Criterion 4
+    metrics_with_cost = {
+        "C1": {
+            "VALID_RUN_AND_SCHEMA_RATE": 0.95,
+            "EXACT_GROUNDING_PASS_RATE": 0.90,
+            "FINAL_CORE_PASS_RATE": 0.85,
+            "MEDIAN_COST_PER_SCENARIO": 0.0015,
+            "MEDIAN_LATENCY": 4.2,
+        },
+        "C2": {
+            "VALID_RUN_AND_SCHEMA_RATE": 0.93,
+            "EXACT_GROUNDING_PASS_RATE": 0.88,
+            "FINAL_CORE_PASS_RATE": 0.80,
+            "MEDIAN_COST_PER_SCENARIO": 0.0030,
+            "MEDIAN_LATENCY": 2.9,
+        },
+    }
+    res_cost = evaluate_dev_select_survivor_rule(["C1", "C2"], metrics_with_cost)
+    assert res_cost["cost_status"] == "EVALUATED_COMPARABLE_FOR_ALL_SURVIVORS"
+    assert res_cost["decided_at"] == "MEDIAN_COST_PER_SCENARIO"
+    assert res_cost["winner"] == "C1"
+
+
+def test_mas_fix_03_final_exact_tie_uses_fixed_candidate_order_c1_c2_c3_without_subjective_pinability(
+    lock_data: Dict[str, Any],
+):
+    """MAS-FIX-03: final exact tie uses fixed candidate order C1,C2,C3 and contains no subjective pinability decision."""
+    rule = lock_data["model_config_selection_rule"]
+    assert rule["final_tie_breaker"] == "FINAL_EXACT_TIE_CANDIDATE_ORDER"
+    assert rule["final_exact_tie_candidate_order"] == ["C1", "C2", "C3"]
+    assert rule["final_exact_tie_rule"] == "SELECT_FIRST_CANDIDATE_IN_FROZEN_ORDER_C1_GT_C2_GT_C3"
+    assert rule["administrative_tie_break_claims_scientific_superiority"] is False
+    assert rule["human_judgment_after_dev_select_allowed"] is False
+    assert rule["subjective_pinability_tie_break_allowed"] is False
+
+    raw_json = METHOD_LOCK_PATH.read_text(encoding="utf-8")
+    assert "SIMPLER_AND_MORE_DIRECTLY_PINNABLE_PROVIDER_CONFIGURATION" not in raw_json
+
+    tied_metrics = {
+        "C1": {
+            "VALID_RUN_AND_SCHEMA_RATE": 0.90,
+            "EXACT_GROUNDING_PASS_RATE": 0.85,
+            "FINAL_CORE_PASS_RATE": 0.80,
+            "MEDIAN_COST_PER_SCENARIO": None,
+            "MEDIAN_LATENCY": 3.5,
+        },
+        "C2": {
+            "VALID_RUN_AND_SCHEMA_RATE": 0.90,
+            "EXACT_GROUNDING_PASS_RATE": 0.85,
+            "FINAL_CORE_PASS_RATE": 0.80,
+            "MEDIAN_COST_PER_SCENARIO": None,
+            "MEDIAN_LATENCY": 3.5,
+        },
+        "C3": {
+            "VALID_RUN_AND_SCHEMA_RATE": 0.90,
+            "EXACT_GROUNDING_PASS_RATE": 0.85,
+            "FINAL_CORE_PASS_RATE": 0.80,
+            "MEDIAN_COST_PER_SCENARIO": None,
+            "MEDIAN_LATENCY": 3.5,
+        },
+    }
+    res_all = evaluate_dev_select_survivor_rule(["C1", "C2", "C3"], tied_metrics)
+    assert res_all["decided_at"] == "FINAL_EXACT_TIE_CANDIDATE_ORDER"
+    assert res_all["winner"] == "C1"
+
+    res_c2_c3 = evaluate_dev_select_survivor_rule(["C2", "C3"], tied_metrics)
+    assert res_c2_c3["decided_at"] == "FINAL_EXACT_TIE_CANDIDATE_ORDER"
+    assert res_c2_c3["winner"] == "C2"
+
+
+def test_mas_fix_04_dev_tune_prompt_selection_rule_fully_frozen(lock_data: Dict[str, Any]):
+    """MAS-FIX-04: DEV-TUNE prompt selection rule is fully frozen (max P1/P2, same 20 fixtures, 1 exec, 0 retry/repair, pooled, exact criteria)."""
+    ptp = lock_data["prompt_tuning_policy"]
+    assert ptp["max_shared_semantic_prompt_versions_on_dev_tune"] == 2
+    assert ptp["allowed_prompt_version_ids"] == ["P1", "P2"]
+    assert ptp["single_prompt_only_allowed_id"] == "P1"
+    assert ptp["if_only_p1_exists_action"] == "LOCK_P1_WITHOUT_PERFORMANCE_COMPARISON"
+    assert ptp["provider_specific_semantic_prompts_allowed"] is False
+    assert ptp["technical_api_or_schema_adapters_count_as_separate_semantic_prompts"] is False
+    assert ptp["required_prompt_lock_fields_before_dev_select"] == [
+        "selected_prompt_version_id",
+        "selected_prompt_hash",
+        "all_attempted_prompt_version_ids",
+        "all_attempted_prompt_hashes",
+    ]
+
+    proto = ptp["two_prompt_comparison_protocol"]
+    assert proto["dev_tune_fixture_count"] == 20
+    assert proto["same_20_dev_tune_fixtures_required"] is True
+    assert proto["evaluated_candidates"] == "ALL_CANDIDATES_THAT_PASSED_TECHNICAL_PREFLIGHT"
+    assert proto["executions_per_prompt_candidate_fixture_cell"] == 1
+    assert proto["automatic_retry"] == 0
+    assert proto["repair"] == 0
+    assert proto["best_of_n_allowed"] is False
+    assert (
+        proto["max_prompt_tune_executions_formula"]
+        == "2 * 20 * number_of_preflight_passed_candidates"
+    )
+    assert proto["max_prompt_tune_executions_hard_cap"] == 120
+    assert (
+        proto["aggregation_method"]
+        == "POOLED_EQUAL_WEIGHT_ACROSS_ALL_CANDIDATE_BY_DEV_TUNE_FIXTURE_CELLS"
+    )
+    assert proto["ordered_selection_criteria"] == [
+        "VALID_RUN_AND_SCHEMA_RATE",
+        "EXACT_GROUNDING_PASS_RATE",
+        "FINAL_CORE_PASS_RATE",
+    ]
+    assert proto["survivor_algorithm"] == "BEST_RELATIVE_10PP_SURVIVOR_REDUCTION"
+    assert proto["practical_tie_abs_diff_percentage_points"] == 10.0
+    assert proto["practical_tie_abs_diff_ratio"] == 0.10
+    assert proto["use_cost_or_latency_for_prompt_selection_allowed"] is False
+    assert proto["tie_after_criterion_3_winner"] == "P1"
+    assert proto["create_p3_after_viewing_results_allowed"] is False
+
+
+def test_mas_fix_05_prompt_tie_selects_p1_deterministically(lock_data: Dict[str, Any]):
+    """MAS-FIX-05: prompt tie selects P1 deterministically; P2 wins only if exceeding P1 by >10pp on a rate criterion."""
+    proto = lock_data["prompt_tuning_policy"]["two_prompt_comparison_protocol"]
+    assert proto["tie_after_criterion_3_winner"] == "P1"
+
+    # Case 1: Only P1 exists -> locked without comparison
+    res_single = evaluate_dev_tune_prompt_selection(
+        {
+            "P1": {
+                "VALID_RUN_AND_SCHEMA_RATE": 0.90,
+                "EXACT_GROUNDING_PASS_RATE": 0.85,
+                "FINAL_CORE_PASS_RATE": 0.80,
+            }
+        }
+    )
+    assert res_single["selected_prompt_version_id"] == "P1"
+    assert res_single["decided_at"] == "LOCK_P1_WITHOUT_PERFORMANCE_COMPARISON"
+
+    # Case 2: P1 and P2 within 10pp across all 3 criteria -> P1 wins deterministically
+    res_tie = evaluate_dev_tune_prompt_selection(
+        {
+            "P1": {
+                "VALID_RUN_AND_SCHEMA_RATE": 0.88,
+                "EXACT_GROUNDING_PASS_RATE": 0.82,
+                "FINAL_CORE_PASS_RATE": 0.78,
+            },
+            "P2": {
+                "VALID_RUN_AND_SCHEMA_RATE": 0.95,
+                "EXACT_GROUNDING_PASS_RATE": 0.90,
+                "FINAL_CORE_PASS_RATE": 0.86,
+            },
+        }
+    )
+    assert res_tie["selected_prompt_version_id"] == "P1"
+    assert res_tie["decided_at"] == "TIE_AFTER_CRITERION_3_SELECT_P1"
+
+    # Case 3: P2 beats P1 by >10pp on FINAL_CORE_PASS_RATE -> P2 wins
+    res_p2 = evaluate_dev_tune_prompt_selection(
+        {
+            "P1": {
+                "VALID_RUN_AND_SCHEMA_RATE": 0.92,
+                "EXACT_GROUNDING_PASS_RATE": 0.88,
+                "FINAL_CORE_PASS_RATE": 0.70,
+            },
+            "P2": {
+                "VALID_RUN_AND_SCHEMA_RATE": 0.95,
+                "EXACT_GROUNDING_PASS_RATE": 0.90,
+                "FINAL_CORE_PASS_RATE": 0.85,
+            },
+        }
+    )
+    assert res_p2["selected_prompt_version_id"] == "P2"
+    assert res_p2["decided_at"] == "FINAL_CORE_PASS_RATE"
+
+
+def test_mas_fix_06_stochasticity_diagnostic_policy_frozen_and_bounded(lock_data: Dict[str, Any]):
+    """MAS-FIX-06: stochasticity diagnostic is selected-config-only, after DEV-SELECT, 5 deterministic DEV-TUNE fixtures × 3 calls = max 15 calls, and cannot affect selection."""
+    sdp = lock_data["stochasticity_diagnostic_policy"]
+    assert sdp["stochasticity_diagnostic_may_affect_selection"] is False
+    assert sdp["stochasticity_diagnostic_timing"] == "AFTER_DEV_SELECT_WINNER_SELECTED"
+    assert sdp["stochasticity_diagnostic_dataset"] == "DEV_TUNE"
+    assert sdp["stochasticity_diagnostic_fixture_count"] == 5
+    assert (
+        sdp["fixture_selection_rule"]
+        == "FIVE_LEXICOGRAPHICALLY_SMALLEST_FROZEN_DEV_TUNE_SCENARIO_IDS"
+    )
+    assert sdp["stochasticity_diagnostic_selected_config_only"] is True
+    assert sdp["diagnostic_executions_per_fixture"] == 3
+    assert sdp["automatic_retry"] == 0
+    assert sdp["best_of_n"] is False
+    assert (
+        sdp["stochasticity_diagnostic_fixture_count"] * sdp["diagnostic_executions_per_fixture"]
+        == 15
+    )
+    assert sdp["max_diagnostic_calls"] == 15
+    assert sdp["may_alter_selected_model"] is False
+    assert sdp["may_alter_prompt"] is False
+    assert sdp["may_alter_sampling_configuration"] is False
+    assert sdp["may_trigger_another_dev_select"] is False
