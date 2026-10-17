@@ -1,0 +1,447 @@
+{
+  "architecture_invariants": {
+    "architecture_class": "DIRECT_ONE_CALL_PLUS_READ_ONLY_DETERMINISTIC_VALIDATION",
+    "architecture_id": "LLM_BASED_ITINERARY_PLANNER_WITH_DETERMINISTIC_GROUNDING_AND_VALIDATION_V1",
+    "fallback": false,
+    "llm_calls_per_execution": 1,
+    "llm_repair_calls": 0,
+    "model_initiated_tool_calls": 0,
+    "primary_json_repair": false,
+    "raw_provider_response_preserved": true,
+    "w06_preflight_live_allowed_default": false
+  },
+  "artifact_id": "W06-MODEL-PREFLIGHT-01A-OFFLINE",
+  "base_develop_sha": "ff40f42db163a21dfc85d467073e99f628e0154a",
+  "candidate_offline_records": {
+    "C1": {
+      "access_date": "2026-10-17",
+      "architecture_invariants": {
+        "architecture_class": "DIRECT_ONE_CALL_PLUS_READ_ONLY_DETERMINISTIC_VALIDATION",
+        "architecture_id": "LLM_BASED_ITINERARY_PLANNER_WITH_DETERMINISTIC_GROUNDING_AND_VALIDATION_V1",
+        "common_schema_sha256": "5f7331eb1ac137a42b75a0c307107e3305703d4782ddffdcfe98c1b5ae11c27c",
+        "fallback": false,
+        "llm_calls_per_execution": 1,
+        "llm_repair_calls": 0,
+        "max_output_tokens": 16384,
+        "model_initiated_tool_calls": 0,
+        "primary_json_repair": false,
+        "raw_provider_response_preserved": true,
+        "sampling_seed_policy": 2026101508,
+        "sampling_temperature_policy": 0.0,
+        "timeout_ms": 55000
+      },
+      "candidate_id": "C1",
+      "common_schema_sha256": "5f7331eb1ac137a42b75a0c307107e3305703d4782ddffdcfe98c1b5ae11c27c",
+      "endpoint_semantics": "google.genai.Client.models.generate_content (POST /v1beta/models/{model}:generateContent)",
+      "endpoint_verification_status": "VERIFIED_BY_SDK_SURFACE",
+      "live_model_id_status": "PENDING_LIVE_CONFIRMATION",
+      "model_metadata_check": {
+        "live_model_availability_status": "PENDING_LIVE_CONFIRMATION",
+        "mismatch_policy": "CONFIGURATION_INTEGRITY_FAILURE_STOP_BATCH_BEFORE_SCIENTIFIC_REPORTING",
+        "response_metadata_field": "GenerateContentResponse.model_version",
+        "verification_status": "VERIFIED_BY_SDK_SURFACE"
+      },
+      "place_id_encoded_as_catalog_enum": false,
+      "provider": "Google",
+      "provider_documentation_url": "https://ai.google.dev/gemini-api/docs/structured-output",
+      "requested_model_id": "gemini-3.8-flash",
+      "retry_configuration": {
+        "sdk_automatic_retry": 0,
+        "sdk_retry_mechanism": "HttpOptions(retry_options=HttpRetryOptions(attempts=1)) with httpx.Client(transport=...)",
+        "transport_retry": 0,
+        "verification_status": "OFFLINE_TEST_VERIFIED"
+      },
+      "role": "CANDIDATE_NOT_SELECTED_FINAL_MODEL",
+      "sampling_capabilities": {
+        "max_output_tokens": {
+          "configured_value": 16384,
+          "notes": "GenerateContentConfig exposes max_output_tokens: Optional[int]; fixed to 16384.",
+          "parameter_name": "max_output_tokens",
+          "sdk_parameter_name": "GenerateContentConfig.max_output_tokens",
+          "verification_status": "VERIFIED_BY_SDK_SURFACE"
+        },
+        "seed": {
+          "configured_value": 2026101508,
+          "notes": "GenerateContentConfig exposes seed: Optional[int]; fixed to 2026101508 per Method Lock.",
+          "parameter_name": "seed",
+          "sdk_parameter_name": "GenerateContentConfig.seed",
+          "verification_status": "VERIFIED_BY_SDK_SURFACE"
+        },
+        "temperature": {
+          "configured_value": 0.0,
+          "notes": "GenerateContentConfig exposes temperature: Optional[float]; fixed to 0.0 per Method Lock.",
+          "parameter_name": "temperature",
+          "sdk_parameter_name": "GenerateContentConfig.temperature",
+          "verification_status": "VERIFIED_BY_SDK_SURFACE"
+        },
+        "thinking_or_reasoning_setting": {
+          "configured_value": null,
+          "notes": "GenerateContentConfig exposes thinking_config: Optional[ThinkingConfig]; fixed to None (default provider mode, never tuned on DEV).",
+          "parameter_name": "thinking_or_reasoning_setting",
+          "sdk_parameter_name": "GenerateContentConfig.thinking_config",
+          "verification_status": "VERIFIED_BY_SDK_SURFACE"
+        },
+        "timeout": {
+          "configured_value": 55000,
+          "notes": "HttpOptions.timeout configured in milliseconds (55000 ms).",
+          "parameter_name": "timeout",
+          "sdk_parameter_name": "HttpOptions.timeout",
+          "verification_status": "VERIFIED_BY_SDK_SURFACE"
+        },
+        "top_k": {
+          "configured_value": null,
+          "notes": "GenerateContentConfig exposes top_k: Optional[float]; left None (not grid-searched or tuned).",
+          "parameter_name": "top_k",
+          "sdk_parameter_name": "GenerateContentConfig.top_k",
+          "verification_status": "VERIFIED_BY_SDK_SURFACE"
+        },
+        "top_p": {
+          "configured_value": null,
+          "notes": "GenerateContentConfig exposes top_p: Optional[float]; left None (not grid-searched or tuned).",
+          "parameter_name": "top_p",
+          "sdk_parameter_name": "GenerateContentConfig.top_p",
+          "verification_status": "VERIFIED_BY_SDK_SURFACE"
+        }
+      },
+      "sdk_package": "google-genai",
+      "sdk_version": "2.25.0",
+      "structured_output_capability_status": "VERIFIED_BY_SDK_SURFACE",
+      "structured_output_mode": "NATIVE_RESPONSE_JSON_SCHEMA",
+      "structured_output_wiring_summary": {
+        "common_schema_sha256": "5f7331eb1ac137a42b75a0c307107e3305703d4782ddffdcfe98c1b5ae11c27c",
+        "response_mime_type": "application/json",
+        "schema_parameter": "GenerateContentConfig.response_json_schema"
+      }
+    },
+    "C2": {
+      "access_date": "2026-10-17",
+      "architecture_invariants": {
+        "architecture_class": "DIRECT_ONE_CALL_PLUS_READ_ONLY_DETERMINISTIC_VALIDATION",
+        "architecture_id": "LLM_BASED_ITINERARY_PLANNER_WITH_DETERMINISTIC_GROUNDING_AND_VALIDATION_V1",
+        "common_schema_sha256": "5f7331eb1ac137a42b75a0c307107e3305703d4782ddffdcfe98c1b5ae11c27c",
+        "fallback": false,
+        "llm_calls_per_execution": 1,
+        "llm_repair_calls": 0,
+        "max_output_tokens": 16384,
+        "model_initiated_tool_calls": 0,
+        "primary_json_repair": false,
+        "raw_provider_response_preserved": true,
+        "sampling_seed_policy": 2026101508,
+        "sampling_temperature_policy": 0.0,
+        "timeout_ms": 55000
+      },
+      "candidate_id": "C2",
+      "common_schema_sha256": "5f7331eb1ac137a42b75a0c307107e3305703d4782ddffdcfe98c1b5ae11c27c",
+      "endpoint_semantics": "openai.OpenAI.chat.completions.create (POST /v1/chat/completions)",
+      "endpoint_verification_status": "VERIFIED_BY_SDK_SURFACE",
+      "live_model_id_status": "PENDING_LIVE_CONFIRMATION",
+      "model_metadata_check": {
+        "live_model_availability_status": "PENDING_LIVE_CONFIRMATION",
+        "mismatch_policy": "CONFIGURATION_INTEGRITY_FAILURE_STOP_BATCH_BEFORE_SCIENTIFIC_REPORTING",
+        "response_metadata_field": "ChatCompletion.model",
+        "verification_status": "VERIFIED_BY_SDK_SURFACE"
+      },
+      "place_id_encoded_as_catalog_enum": false,
+      "provider": "OpenAI",
+      "provider_documentation_url": "https://platform.openai.com/docs/guides/structured-outputs",
+      "requested_model_id": "gpt-6.1-sol",
+      "retry_configuration": {
+        "sdk_automatic_retry": 0,
+        "sdk_retry_mechanism": "openai.OpenAI(max_retries=0, timeout=55.0, http_client=httpx2.Client(transport=...))",
+        "transport_retry": 0,
+        "verification_status": "OFFLINE_TEST_VERIFIED"
+      },
+      "role": "CANDIDATE_NOT_SELECTED_FINAL_MODEL",
+      "sampling_capabilities": {
+        "max_output_tokens": {
+          "configured_value": 16384,
+          "notes": "chat.completions.create exposes max_completion_tokens: Optional[int]; fixed to 16384.",
+          "parameter_name": "max_output_tokens",
+          "sdk_parameter_name": "chat.completions.create(max_completion_tokens=...)",
+          "verification_status": "VERIFIED_BY_SDK_SURFACE"
+        },
+        "seed": {
+          "configured_value": 2026101508,
+          "notes": "chat.completions.create exposes seed: Optional[int]; fixed to 2026101508 per Method Lock.",
+          "parameter_name": "seed",
+          "sdk_parameter_name": "chat.completions.create(seed=...)",
+          "verification_status": "VERIFIED_BY_SDK_SURFACE"
+        },
+        "temperature": {
+          "configured_value": 0.0,
+          "notes": "chat.completions.create exposes temperature: Optional[float] (fixed to 0.0 on SDK surface; runtime acceptance by model gpt-6.1-sol is PENDING_LIVE_CONFIRMATION in Phase 01B).",
+          "parameter_name": "temperature",
+          "sdk_parameter_name": "chat.completions.create(temperature=...)",
+          "verification_status": "VERIFIED_BY_SDK_SURFACE"
+        },
+        "thinking_or_reasoning_setting": {
+          "configured_value": null,
+          "notes": "chat.completions.create exposes reasoning_effort; fixed to None (default provider mode, never tuned on DEV).",
+          "parameter_name": "thinking_or_reasoning_setting",
+          "sdk_parameter_name": "chat.completions.create(reasoning_effort=...)",
+          "verification_status": "VERIFIED_BY_SDK_SURFACE"
+        },
+        "timeout": {
+          "configured_value": 55000,
+          "notes": "OpenAI client timeout configured as 55.0 seconds (55000 ms).",
+          "parameter_name": "timeout",
+          "sdk_parameter_name": "OpenAI(timeout=...)",
+          "verification_status": "VERIFIED_BY_SDK_SURFACE"
+        },
+        "top_k": {
+          "configured_value": "UNSUPPORTED",
+          "notes": "OpenAI Chat Completions API/SDK does not support a top_k sampling parameter.",
+          "parameter_name": "top_k",
+          "sdk_parameter_name": null,
+          "verification_status": "UNSUPPORTED"
+        },
+        "top_p": {
+          "configured_value": null,
+          "notes": "chat.completions.create exposes top_p: Optional[float]; left None (not tuned).",
+          "parameter_name": "top_p",
+          "sdk_parameter_name": "chat.completions.create(top_p=...)",
+          "verification_status": "VERIFIED_BY_SDK_SURFACE"
+        }
+      },
+      "sdk_package": "openai",
+      "sdk_version": "3.17.0",
+      "structured_output_capability_status": "VERIFIED_BY_SDK_SURFACE",
+      "structured_output_mode": "NATIVE_JSON_SCHEMA_STRICT",
+      "structured_output_wiring_summary": {
+        "common_schema_sha256": "5f7331eb1ac137a42b75a0c307107e3305703d4782ddffdcfe98c1b5ae11c27c",
+        "response_format_type": "json_schema",
+        "schema_name": "BenchmarkPlanResponse",
+        "strict": true
+      }
+    },
+    "C3": {
+      "access_date": "2026-10-17",
+      "architecture_invariants": {
+        "architecture_class": "DIRECT_ONE_CALL_PLUS_READ_ONLY_DETERMINISTIC_VALIDATION",
+        "architecture_id": "LLM_BASED_ITINERARY_PLANNER_WITH_DETERMINISTIC_GROUNDING_AND_VALIDATION_V1",
+        "common_schema_sha256": "5f7331eb1ac137a42b75a0c307107e3305703d4782ddffdcfe98c1b5ae11c27c",
+        "fallback": false,
+        "llm_calls_per_execution": 1,
+        "llm_repair_calls": 0,
+        "max_output_tokens": 16384,
+        "model_initiated_tool_calls": 0,
+        "primary_json_repair": false,
+        "raw_provider_response_preserved": true,
+        "sampling_seed_policy": 2026101508,
+        "sampling_temperature_policy": 0.0,
+        "timeout_ms": 55000
+      },
+      "candidate_id": "C3",
+      "common_schema_sha256": "5f7331eb1ac137a42b75a0c307107e3305703d4782ddffdcfe98c1b5ae11c27c",
+      "endpoint_semantics": "anthropic.Anthropic.messages.create (POST /v1/messages)",
+      "endpoint_verification_status": "VERIFIED_BY_SDK_SURFACE",
+      "live_model_id_status": "PENDING_LIVE_CONFIRMATION",
+      "model_metadata_check": {
+        "live_model_availability_status": "PENDING_LIVE_CONFIRMATION",
+        "mismatch_policy": "CONFIGURATION_INTEGRITY_FAILURE_STOP_BATCH_BEFORE_SCIENTIFIC_REPORTING",
+        "response_metadata_field": "Message.model",
+        "verification_status": "VERIFIED_BY_SDK_SURFACE"
+      },
+      "place_id_encoded_as_catalog_enum": false,
+      "provider": "Anthropic",
+      "provider_documentation_url": "https://docs.anthropic.com/en/docs/build-with-claude/structured-outputs",
+      "requested_model_id": "claude-sonnet-5-5",
+      "retry_configuration": {
+        "sdk_automatic_retry": 0,
+        "sdk_retry_mechanism": "anthropic.Anthropic(max_retries=0, timeout=55.0, http_client=httpx2.Client(transport=...))",
+        "transport_retry": 0,
+        "verification_status": "OFFLINE_TEST_VERIFIED"
+      },
+      "role": "CANDIDATE_NOT_SELECTED_FINAL_MODEL",
+      "sampling_capabilities": {
+        "max_output_tokens": {
+          "configured_value": 16384,
+          "notes": "Messages.create exposes max_tokens: int; fixed to 16384.",
+          "parameter_name": "max_output_tokens",
+          "sdk_parameter_name": "messages.create(max_tokens=...)",
+          "verification_status": "VERIFIED_BY_SDK_SURFACE"
+        },
+        "seed": {
+          "configured_value": "UNSUPPORTED",
+          "notes": "Anthropic Messages API / anthropic==1.15.0 does not support a deterministic seed parameter.",
+          "parameter_name": "seed",
+          "sdk_parameter_name": null,
+          "verification_status": "UNSUPPORTED"
+        },
+        "temperature": {
+          "configured_value": "UNSUPPORTED",
+          "notes": "In anthropic==1.15.0, Messages.create does not expose a temperature parameter (fixed provider default sampling behavior used; documented per Method Lock Section 9).",
+          "parameter_name": "temperature",
+          "sdk_parameter_name": null,
+          "verification_status": "UNSUPPORTED"
+        },
+        "thinking_or_reasoning_setting": {
+          "configured_value": {
+            "type": "disabled"
+          },
+          "notes": "Messages.create exposes thinking: ThinkingConfigParam; fixed to {'type': 'disabled'} (never tuned on DEV).",
+          "parameter_name": "thinking_or_reasoning_setting",
+          "sdk_parameter_name": "messages.create(thinking=...)",
+          "verification_status": "VERIFIED_BY_SDK_SURFACE"
+        },
+        "timeout": {
+          "configured_value": 55000,
+          "notes": "Anthropic client timeout configured as 55.0 seconds (55000 ms).",
+          "parameter_name": "timeout",
+          "sdk_parameter_name": "Anthropic(timeout=...)",
+          "verification_status": "VERIFIED_BY_SDK_SURFACE"
+        },
+        "top_k": {
+          "configured_value": "UNSUPPORTED",
+          "notes": "In anthropic==1.15.0, Messages.create does not expose a top_k parameter.",
+          "parameter_name": "top_k",
+          "sdk_parameter_name": null,
+          "verification_status": "UNSUPPORTED"
+        },
+        "top_p": {
+          "configured_value": "UNSUPPORTED",
+          "notes": "In anthropic==1.15.0, Messages.create does not expose a top_p parameter.",
+          "parameter_name": "top_p",
+          "sdk_parameter_name": null,
+          "verification_status": "UNSUPPORTED"
+        }
+      },
+      "sdk_package": "anthropic",
+      "sdk_version": "1.15.0",
+      "structured_output_capability_status": "VERIFIED_BY_SDK_SURFACE",
+      "structured_output_mode": "NATIVE_OUTPUT_CONFIG_JSON_SCHEMA",
+      "structured_output_wiring_summary": {
+        "common_schema_sha256": "5f7331eb1ac137a42b75a0c307107e3305703d4782ddffdcfe98c1b5ae11c27c",
+        "output_config_format_type": "json_schema",
+        "schema_parameter": "messages.create(output_config={'format': {'type': 'json_schema', 'schema': ...}})"
+      }
+    }
+  },
+  "claude_called": false,
+  "common_schema_sha256": "5f7331eb1ac137a42b75a0c307107e3305703d4782ddffdcfe98c1b5ae11c27c",
+  "dependency_lock_path": "apps/ai-service/requirements-w06-provider-lock.txt",
+  "dependency_lock_sha256": "fd3d6364c3eeb3ae024c6b7248d7f9c8e497987e7cd3f8b06ad67d18e16d0085",
+  "dev_select_executed": false,
+  "dev_tune_executed": false,
+  "env_key_presence": {
+    "ANTHROPIC_API_KEY": "PRESENT",
+    "GEMINI_API_KEY": "PRESENT",
+    "OPENAI_API_KEY": "PRESENT"
+  },
+  "final_100_used": false,
+  "final_benchmark_executed": false,
+  "frozen_authority_preservation": {
+    "apps/ai-service/app/evaluation/planner_scenario_generator.py": "623c52cbdd98d181cd9cbbc1e68697a7299cb6c864628e97e743afd9e09ceae1",
+    "apps/ai-service/recommendation/reca/contract.py": "1a62c36a95092be35ab78dca43e20f646016e154746ee051a499bdebfc67538c",
+    "data/curated/gomate_places_freeze_v2.json": "f7517938598e3923906763f8f31334a500ee88bc06232f2992d38e2fcb28a444",
+    "data/evaluation/w06/w06_dev_final_overlap_receipt_v1.json": "285699ee1370b537a6579b88a7fb02781b51ac52e0ed14f469d77969261f04aa",
+    "data/evaluation/w06/w06_dev_fixture_freeze_01_receipt_v1.json": "437a296cf123d1469f303b97cb6665cd8217c2dfeabd12d1712ec2789d890026",
+    "data/evaluation/w06/w06_dev_fixture_manifest_v1.json": "15cf3af6c93d3de967703dbc52d7e082bfd4a1e657409c0678ff51bd081e3c98",
+    "data/evaluation/w06/w06_dev_fixtures_freeze_v1.json": "bb0f051446ea3da8229298f22f4ce92b4db20751695273c6d01b7766da044050",
+    "data/evaluation/w06/w06_measurement_contract_v1.json": "0ddc1f8d879493517cee25f247d2365a0bacb816dc33b129b0c6110d4bfb8298",
+    "data/evaluation/w06/w06_model_arch_selection_method_lock_v1.json": "6f30cdf90355dd720795de8e0b21beba45f527767892ca7eb88769141a64210c",
+    "data/evaluation/w06/w06_p11_assignment_manifest_v1.json": "0aa9ae923d0e7f29df49735fa41e87530b1caf62418fcbec09a1eff81d83af62",
+    "data/evaluation/w06/w06_scenario_method_lock_v1.json": "5e5359f9f10a0248a9cf031f8e8b26c0314c46aecfe0d9df479388bbe4fd1af9",
+    "data/evaluation/w06/w06_scenario_support_matrix_v1.json": "68c2bfc2164e664b3856c31b99a92d75a588f64465526b47c9104918a51cedb4",
+    "data/evaluation/w06/w06_scenarios_freeze_v1.json": "c03bc6dc300604ac395505d59b6413c1a47339b21408cfd637671e81d4b555a1",
+    "scripts/audit_w06_scenario_generator_dryrun.py": "2e5a218fc49d4af0052dffa49c14a8a7d5d9818847fd6d37f647422a9cadc6fc"
+  },
+  "gemini_called": false,
+  "grok_called": false,
+  "hash_basis": "SHA256_CANONICAL_JSON_UTF8_LF_BYTES",
+  "live_call_count": 0,
+  "live_calls_made": false,
+  "openai_called": false,
+  "opening_hours_catalog_audit": {
+    "catalog_sha256": "f7517938598e3923906763f8f31334a500ee88bc06232f2992d38e2fcb28a444",
+    "coverage_rate": 0.146302,
+    "known_opening_hours_count": 91,
+    "mode": "READ_ONLY_CATALOG_EVIDENCE_AUDIT",
+    "parser_supported_opening_hours_count": 91,
+    "parser_supported_ratio_among_present": 0.90099,
+    "parser_unsupported_opening_hours_count": 10,
+    "parser_version": "W06-OPENING-HOURS-PARSER-01C-V1.0.0",
+    "per_destination_coverage": {
+      "da-nang": {
+        "coverage_rate": 0.183391,
+        "known_opening_hours_count": 53,
+        "parser_unsupported_opening_hours_count": 6,
+        "raw_opening_hours_missing_count": 230,
+        "raw_opening_hours_present_count": 59,
+        "raw_presence_rate": 0.204152,
+        "total_reca_core_pois": 289,
+        "unknown_opening_hours_count": 236
+      },
+      "ha-long": {
+        "coverage_rate": 0.079787,
+        "known_opening_hours_count": 15,
+        "parser_unsupported_opening_hours_count": 0,
+        "raw_opening_hours_missing_count": 173,
+        "raw_opening_hours_present_count": 15,
+        "raw_presence_rate": 0.079787,
+        "total_reca_core_pois": 188,
+        "unknown_opening_hours_count": 173
+      },
+      "ha-noi": {
+        "coverage_rate": 0.158621,
+        "known_opening_hours_count": 23,
+        "parser_unsupported_opening_hours_count": 4,
+        "raw_opening_hours_missing_count": 118,
+        "raw_opening_hours_present_count": 27,
+        "raw_presence_rate": 0.186207,
+        "total_reca_core_pois": 145,
+        "unknown_opening_hours_count": 122
+      }
+    },
+    "raw_opening_hours_missing_count": 521,
+    "raw_opening_hours_present_count": 101,
+    "raw_presence_rate": 0.162379,
+    "reporting_role": "BENCHMARK_EVIDENCE_COVERAGE_ONLY",
+    "target_catalog_path": "data/curated/gomate_places_freeze_v2.json",
+    "total_reca_core_pois": 622,
+    "unknown_opening_hours_count": 531
+  },
+  "place_id_encoded_as_catalog_enum": false,
+  "preregistered": false,
+  "sdk_versions": {
+    "anthropic": "1.15.0",
+    "anyio": "4.13.0",
+    "google-genai": "2.25.0",
+    "httpcore": "1.0.9",
+    "httpcore2": "2.13.0",
+    "httpx": "0.28.1",
+    "httpx2": "2.13.0",
+    "openai": "3.17.0",
+    "pydantic": "2.13.4",
+    "pydantic-core": "2.46.4",
+    "python": "3.11.9"
+  },
+  "secret_leak_scan": {
+    "affected_file_paths": [],
+    "secret_leak_count": 0
+  },
+  "status": "OFFLINE_PREFLIGHT_COMPLETE_PENDING_PHASE_01B_LIVE_SMOKE",
+  "synthetic_smoke_fixtures": [
+    {
+      "common_schema_sha256": "5f7331eb1ac137a42b75a0c307107e3305703d4782ddffdcfe98c1b5ae11c27c",
+      "days": 2,
+      "destination_slug": "ha-noi",
+      "poi_count": 2,
+      "scenario_id": "W06-PREFLIGHT-SMOKE-001",
+      "shared_system_prompt_sha256": "4bcb84a8aca1fc89f65709ac9d91c88e42359c284850061bae85c3607c345b0e",
+      "shared_user_prompt_sha256": "d813cd76b4192f59e963ad9cd43ec8a32c5ec49999a8a61c1ece87614f7590b7"
+    },
+    {
+      "common_schema_sha256": "5f7331eb1ac137a42b75a0c307107e3305703d4782ddffdcfe98c1b5ae11c27c",
+      "days": 2,
+      "destination_slug": "da-nang",
+      "poi_count": 2,
+      "scenario_id": "W06-PREFLIGHT-SMOKE-002",
+      "shared_system_prompt_sha256": "4bcb84a8aca1fc89f65709ac9d91c88e42359c284850061bae85c3607c345b0e",
+      "shared_user_prompt_sha256": "0f21fcffe697063a516a946200f8a3ecbf9496b21d6b90d0898cb0b62dad5968"
+    }
+  ],
+  "task_id": "W06-MODEL-PREFLIGHT-01A-OFFLINE",
+  "version": "1.0.0",
+  "winning_model_selected": false
+}

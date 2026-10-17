@@ -4,3 +4,7 @@ asyncpg
 pandas
 pyarrow
 pydantic-settings
+google-genai
+openai
+anthropic
+httpx

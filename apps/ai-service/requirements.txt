@@ -6,6 +6,7 @@ google-genai
 pandas
 numpy
 openai
+anthropic
 asyncpg
 redis
 sentence-transformers
