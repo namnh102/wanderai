@@ -254,13 +254,32 @@ def _build_valid_plan_dict_for_scenario(scenario: BenchmarkScenarioInput) -> dic
                 ],
             }
         )
+    total_est = scenario.days * 100000
+    is_over = False if scenario.budget is None else (total_est > scenario.budget)
+    variance = 0 if scenario.budget is None else (scenario.budget - total_est)
     return {
+        "plan_id": f"plan-{scenario.scenario_id}",
+        "scenario_id": scenario.scenario_id,
         "destination": scenario.destination,
+        "destination_slug": scenario.destination_slug,
         "total_days": scenario.days,
         "overview": "Deterministic valid itinerary.",
         "best_time_to_visit": "All year",
         "general_tips": ["Tip 1"],
-        "days": days_list,
+        "days": [
+            {
+                **day_obj,
+                "day_cost": 100000,
+            }
+            for day_obj in days_list
+        ],
+        "budget_analysis": {
+            "total_budget": scenario.budget,
+            "estimated_cost": total_est,
+            "currency": scenario.currency,
+            "is_over_budget": is_over,
+            "variance": variance,
+        },
     }
 
 
@@ -1016,6 +1035,7 @@ def test_mock_transport_execution_and_immutability(
         cell_dir=cell_dir_pass,
         mock_response=MockProviderTransportResponse(
             raw_text=json.dumps(valid_plan_dict, ensure_ascii=False),
+            returned_model_id=cell_manifest.requested_model_id,
         ),
         cost_comparability=cost_rec,
         core_catalog_by_id=core_cat,
@@ -1032,6 +1052,7 @@ def test_mock_transport_execution_and_immutability(
             cell_dir=cell_dir_pass,
             mock_response=MockProviderTransportResponse(
                 raw_text=json.dumps(valid_plan_dict, ensure_ascii=False),
+                returned_model_id=cell_manifest.requested_model_id,
             ),
             cost_comparability=cost_rec,
             core_catalog_by_id=core_cat,
@@ -1042,7 +1063,10 @@ def test_mock_transport_execution_and_immutability(
         cell_manifest=cell_manifest,
         scenario=scenario,
         cell_dir=cell_dir_bad_json,
-        mock_response=MockProviderTransportResponse(raw_text="{not valid json"),
+        mock_response=MockProviderTransportResponse(
+            raw_text="{not valid json",
+            returned_model_id=cell_manifest.requested_model_id,
+        ),
         cost_comparability=cost_rec,
         core_catalog_by_id=core_cat,
     )
@@ -1061,6 +1085,7 @@ def test_mock_transport_execution_and_immutability(
         cell_dir=cell_dir_ungrounded,
         mock_response=MockProviderTransportResponse(
             raw_text=json.dumps(ungrounded_plan, ensure_ascii=False),
+            returned_model_id=cell_manifest.requested_model_id,
         ),
         cost_comparability=cost_rec,
         core_catalog_by_id=core_cat,
@@ -1081,6 +1106,7 @@ def test_mock_transport_execution_and_immutability(
         cell_dir=cell_dir_core_fail,
         mock_response=MockProviderTransportResponse(
             raw_text=json.dumps(core_fail_plan, ensure_ascii=False),
+            returned_model_id=cell_manifest.requested_model_id,
         ),
         cost_comparability=cost_rec,
         core_catalog_by_id=core_cat,

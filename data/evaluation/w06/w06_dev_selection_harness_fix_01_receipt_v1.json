@@ -1,0 +1,171 @@
+{
+  "artifact_id": "W06-DEV-SELECTION-HARNESS-FIX-01-RECEIPT-V1",
+  "base_develop_sha": "f81faa7de3988a20af1adc5b04601c49cf953d4a",
+  "dev_select_execution_started": false,
+  "dev_tune_execution_started": false,
+  "existing_harness_tests_passed": true,
+  "existing_harness_tests_total": 35,
+  "final100_used": false,
+  "fix_details_by_defect_id": {
+    "QA-05": {
+      "defect_code": "FINAL100_FIREWALL_ALIAS_AND_CROSS_PARTITION_GAP",
+      "fix_group": "Fix Group D",
+      "repaired": true,
+      "root_cause": "assert_not_final100_path previously checked only direct filenames/suffixes and missed copied or renamed files; assert_not_final100_scenario did not validate scenario_id prefix vs fixture_label.",
+      "severity": "MAJOR",
+      "solution": "assert_not_final100_path resolves symlinks and computes LF-normalized SHA256 on existing files to reject c03bc6dc300604ac395505d59b6413c1a47339b21408cfd637671e81d4b555a1 (final100) and 0aa9ae923d0e7f29df49735fa41e87530b1caf62418fcbec09a1eff81d83af62 (P11); assert_not_final100_scenario enforces W06-DEV-TUNE-* -> W06_DEV_TUNE and W06-DEV-SELECT-* -> W06_DEV_SELECT.",
+      "verification_tests": [
+        "FIX-16",
+        "FIX-17",
+        "FIX-18",
+        "FIX-19"
+      ]
+    },
+    "QA-14": {
+      "defect_code": "PRIMARY_SEMANTIC_RESCUE_DETECTED",
+      "fix_group": "Fix Group A",
+      "repaired": true,
+      "root_cause": "execute_dev_cell_with_mock_transport fell back to parse_strict_benchmark_plan_response when BenchmarkPlanResponse.model_validate failed, synthesizing missing plan_id, scenario_id, destination_slug, day_cost, and budget_analysis.",
+      "severity": "CRITICAL",
+      "solution": "Removed parse_strict_benchmark_plan_response import and fallback from dev_selection_harness.py; implemented parse_primary_dev_plan_response enforcing strict raw_text -> json.loads -> required keys check (including day_cost) -> BenchmarkPlanResponse.model_validate with zero field synthesis.",
+      "verification_tests": [
+        "FIX-01",
+        "FIX-02",
+        "FIX-03",
+        "FIX-04",
+        "FIX-05",
+        "FIX-06",
+        "FIX-07"
+      ]
+    },
+    "QA-15": {
+      "defect_code": "MODEL_ID_MISMATCH_FAILS_TO_STOP_BATCH",
+      "fix_group": "Fix Group B",
+      "repaired": true,
+      "root_cause": "execute_dev_cell_with_mock_transport substituted missing returned_model_id with requested_model_id, and aggregate_dev_cell_receipts, select_winning_prompt_dev_tune, and select_winning_candidate_dev_select did not halt on MODEL_INTEGRITY_MISMATCH.",
+      "severity": "CRITICAL",
+      "solution": "Removed returned_model_id fallback substitution; classified missing/empty or incompatible returned_model_id as MODEL_INTEGRITY_MISMATCH (counts_in_denominator=False, batch_stop_required=True); added assert_batch_receipts_integrity raising ModelIntegrityBatchStopError across batch execution, aggregation, and DEV-TUNE/DEV-SELECT selection.",
+      "verification_tests": [
+        "FIX-08",
+        "FIX-09",
+        "FIX-10",
+        "FIX-11",
+        "FIX-12",
+        "FIX-13"
+      ]
+    },
+    "QA-27": {
+      "defect_code": "C1_GEMINI_THOUGHT_TOKENS_OMITTED_FROM_COST",
+      "fix_group": "Fix Group E",
+      "repaired": true,
+      "root_cause": "MockProviderTransportResponse and DevCellExecutionReceipt lacked thought_tokens and cache token fields, and execute_dev_cell_with_mock_transport did not pass thought_tokens to compute_canonical_cell_cost_usd.",
+      "severity": "CRITICAL",
+      "solution": "Added thought_tokens, reasoning_tokens, thinking_tokens, cached_input_tokens, cache_read_input_tokens, cache_creation_input_tokens, raw_usage_metadata, and latency_ns to MockProviderTransportResponse and DevCellExecutionReceipt; for C1 (Google), compute_canonical_cell_cost_decimal bills output_tokens + thought_tokens once.",
+      "verification_tests": [
+        "FIX-20",
+        "FIX-23"
+      ]
+    },
+    "QA-28": {
+      "defect_code": "C2_C3_REASONING_THINKING_TOKENS_DOUBLE_COUNTED",
+      "fix_group": "Fix Group E",
+      "repaired": true,
+      "root_cause": "compute_canonical_cell_cost_usd blindly added thought_or_reasoning_tokens to output_tokens for all candidates, double-counting OpenAI reasoning_tokens (C2) and Anthropic thinking_tokens (C3) which are already included in output_tokens.",
+      "severity": "CRITICAL",
+      "solution": "Made compute_canonical_cell_cost_decimal and compute_canonical_cell_cost_usd candidate-aware: C1 bills output_tokens + thought_tokens; C2 and C3 bill output_tokens only while recording reasoning_tokens/thinking_tokens for observability; nonzero unsupported cache tokens return None (non-comparable).",
+      "verification_tests": [
+        "FIX-21",
+        "FIX-22",
+        "FIX-23"
+      ]
+    },
+    "QA-29": {
+      "defect_code": "COST_TIEBREAK_NOT_UNROUNDED",
+      "fix_group": "Fix Group F",
+      "repaired": true,
+      "root_cause": "_to_exact_decimal formatted floats via f'{value:.12f}', truncating/rounding differences beyond 12 decimal places during Criterion 4 cost tiebreaks.",
+      "severity": "CRITICAL",
+      "solution": "Replaced _to_exact_decimal with exact Decimal(str(value)) conversion without formatting precision caps, preserving full unrounded Decimal precision in compute_canonical_cell_cost_decimal, aggregate median cost, and Criterion 4 tiebreaks.",
+      "verification_tests": [
+        "FIX-24"
+      ]
+    },
+    "QA-30": {
+      "defect_code": "LATENCY_TIEBREAK_ROUNDING",
+      "fix_group": "Fix Group G",
+      "repaired": true,
+      "root_cause": "Criterion 5 median latency tiebreak used the 12-decimal-truncated _to_exact_decimal helper.",
+      "severity": "MAJOR",
+      "solution": "Criterion 5 latency tiebreak compares unrounded Decimal(str(value)) median latencies with zero rounding and zero epsilon.",
+      "verification_tests": [
+        "FIX-25"
+      ]
+    },
+    "QA-32": {
+      "defect_code": "PROMPT_FREEZE_GATE_AND_SINGLE_PROMPT_STATUS_MISMATCH",
+      "fix_group": "Fix Group H",
+      "repaired": true,
+      "root_cause": "Single-prompt DEV-TUNE returned SINGLE_PROMPT_P1_LOCKED_WITHOUT_COMPARISON instead of Method Lock's LOCK_P1_WITHOUT_PERFORMANCE_COMPARISON, and no fail-closed verifier existed for a separate frozen prompt artifact before live execution.",
+      "severity": "MAJOR",
+      "solution": "Set SINGLE_PROMPT_P1_LOCK_STATUS = 'LOCK_P1_WITHOUT_PERFORMANCE_COMPARISON' and added DevPromptFreezeArtifact, build_dev_prompt_freeze_artifact, verify_prompt_candidate_freeze_artifact, and assert_prompt_freeze_before_live.",
+      "verification_tests": [
+        "FIX-26",
+        "FIX-27"
+      ]
+    },
+    "QA-33": {
+      "defect_code": "MISSING_CODE_COMMIT_SHA_AND_PROVIDER_CONFIG_SHA256_ON_CELL_ARTIFACTS",
+      "fix_group": "Fix Group I",
+      "repaired": true,
+      "root_cause": "DevCellExecutionManifest and DevCellExecutionReceipt lacked code_commit_sha and provider_config_sha256, and execute_dev_cell_with_mock_transport hardcoded EXPECTED_BASE_DEVELOP_SHA_DEV_HARNESS into BenchmarkRunManifest.",
+      "severity": "MAJOR",
+      "solution": "Added validated 40-hex code_commit_sha and 64-hex provider_config_sha256 to DevCellExecutionManifest and DevCellExecutionReceipt, and propagated cell_manifest.code_commit_sha into BenchmarkRunManifest.",
+      "verification_tests": [
+        "FIX-28"
+      ]
+    },
+    "QA-39": {
+      "defect_code": "INCOMPLETE_FAILURE_TAXONOMY_AND_MISSING_BATCH_STOP_ENFORCEMENT",
+      "fix_group": "Fix Group C",
+      "repaired": true,
+      "root_cause": "DevCellFailureClassification lacked PARTIAL_TIMEOUT and HARNESS_INTERNAL_ERROR, and batch-stop failures were not separated from ordinary denominator-preserving failures.",
+      "severity": "MAJOR",
+      "solution": "Added PARTIAL_TIMEOUT (counts_in_denominator=True, batch_stop_required=False) and HARNESS_INTERNAL_ERROR (counts_in_denominator=False, batch_stop_required=True) to DevCellFailureClassification and enforced HarnessInternalBatchStopError and ModelIntegrityBatchStopError via assert_batch_receipts_integrity.",
+      "verification_tests": [
+        "FIX-14",
+        "FIX-15"
+      ]
+    }
+  },
+  "fix_status": "READY_FOR_RE_QA",
+  "fix_tests_failed": 0,
+  "fix_tests_passed": 35,
+  "fix_tests_total": 35,
+  "historical_qa_01_immutable_files_sha256": {
+    "apps/ai-service/tests/test_w06_dev_selection_harness_qa_01.py": "b97615b4279a669e0064213681442a3c7506a5fc048f77ca9b5814d6c882bc18",
+    "data/evaluation/w06/w06_dev_selection_harness_qa_01_receipt_v1.json": "51b7606ebca7b5a67b6e6514d2f0c4fa4c7933919be2a5c2ec8179b21b286c9f",
+    "docs/research/w06_dev_selection_harness_qa_01.md": "2620638d08d76dd619743f606e004c14fe5822635caafd130a258d5e052ff7d9",
+    "scripts/audit_w06_dev_selection_harness.py": "878f89ecd80e62a80c1ad23e9a48fa03ace4bb1b228c5ba1814c3cf632a3bd80"
+  },
+  "historical_qa_01_preserved": true,
+  "live_provider_calls": 0,
+  "next_gate": "W06-DEV-SELECTION-HARNESS-QA-02-OFFLINE-RERUN",
+  "provider_cost_usd": 0,
+  "repaired_defects": [
+    "QA-14",
+    "QA-15",
+    "QA-27",
+    "QA-28",
+    "QA-29",
+    "QA-05",
+    "QA-30",
+    "QA-32",
+    "QA-33",
+    "QA-39"
+  ],
+  "repaired_harness_file": "apps/ai-service/app/evaluation/dev_selection_harness.py",
+  "stochasticity_diagnostic_started": false,
+  "task_id": "W06-DEV-SELECTION-HARNESS-FIX-01",
+  "version": "1.0.0",
+  "winner_selected": false
+}
