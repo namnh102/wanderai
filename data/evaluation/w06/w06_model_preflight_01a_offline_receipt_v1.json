@@ -1,0 +1,683 @@
+{
+  "architecture_invariants": {
+    "architecture_class": "DIRECT_ONE_CALL_PLUS_READ_ONLY_DETERMINISTIC_VALIDATION",
+    "architecture_id": "LLM_BASED_ITINERARY_PLANNER_WITH_DETERMINISTIC_GROUNDING_AND_VALIDATION_V1",
+    "fallback": false,
+    "llm_calls_per_execution": 1,
+    "llm_repair_calls": 0,
+    "model_initiated_tool_calls": 0,
+    "primary_json_repair": false,
+    "raw_provider_response_preserved": true,
+    "w06_preflight_live_allowed_default": false
+  },
+  "artifact_id": "W06-MODEL-PREFLIGHT-01A-OFFLINE",
+  "base_develop_sha": "ff40f42db163a21dfc85d467073e99f628e0154a",
+  "candidate_offline_records": {
+    "C1": {
+      "access_date": "2026-10-17",
+      "architecture_invariants": {
+        "architecture_class": "DIRECT_ONE_CALL_PLUS_READ_ONLY_DETERMINISTIC_VALIDATION",
+        "architecture_id": "LLM_BASED_ITINERARY_PLANNER_WITH_DETERMINISTIC_GROUNDING_AND_VALIDATION_V1",
+        "common_generation_schema_sha256": "5f7331eb1ac137a42b75a0c307107e3305703d4782ddffdcfe98c1b5ae11c27c",
+        "common_schema_sha256": "5f7331eb1ac137a42b75a0c307107e3305703d4782ddffdcfe98c1b5ae11c27c",
+        "fallback": false,
+        "llm_calls_per_execution": 1,
+        "llm_repair_calls": 0,
+        "max_output_tokens": 16384,
+        "model_initiated_tool_calls": 0,
+        "primary_json_repair": false,
+        "raw_provider_response_preserved": true,
+        "sampling_seed_policy": 2026101508,
+        "sampling_temperature_policy": 0.0,
+        "semantic_schema_sha256": "e4169f7b890f77d13af65e9f2070b6071c535b206d88440f5e8f28c179977555",
+        "timeout_ms": 55000
+      },
+      "blockers": [],
+      "candidate_id": "C1",
+      "common_generation_schema_sha256": "5f7331eb1ac137a42b75a0c307107e3305703d4782ddffdcfe98c1b5ae11c27c",
+      "common_schema_sha256": "5f7331eb1ac137a42b75a0c307107e3305703d4782ddffdcfe98c1b5ae11c27c",
+      "documentation_provenance": [
+        {
+          "access_date": "2026-10-17",
+          "claim": "Gemini 3.8 Flash model family identifier and model overview",
+          "official_url": "https://ai.google.dev/gemini-api/docs/models",
+          "verification_scope": "MODEL_ID"
+        },
+        {
+          "access_date": "2026-10-17",
+          "claim": "Gemini 3.8 thinking_level configuration (low / medium / high; default medium) via ThinkingConfig(thinking_level='medium')",
+          "official_url": "https://ai.google.dev/gemini-api/docs/thinking",
+          "verification_scope": "THINKING_REASONING"
+        },
+        {
+          "access_date": "2026-10-17",
+          "claim": "Gemini 3.8 model-specific sampling behavior: custom temperature, top_p, and top_k settings are deprecated/ignored and omitted from request",
+          "official_url": "https://ai.google.dev/gemini-api/docs/thinking",
+          "verification_scope": "SAMPLING"
+        },
+        {
+          "access_date": "2026-10-17",
+          "claim": "Native JSON Schema structured output via response_mime_type='application/json' and response_json_schema",
+          "official_url": "https://ai.google.dev/gemini-api/docs/structured-output",
+          "verification_scope": "STRUCTURED_OUTPUT"
+        },
+        {
+          "access_date": "2026-10-17",
+          "claim": "GenerateContent max_output_tokens configuration in GenerateContentConfig",
+          "official_url": "https://ai.google.dev/api/generate-content#v1beta.GenerationConfig",
+          "verification_scope": "MAX_OUTPUT"
+        },
+        {
+          "access_date": "2026-10-17",
+          "claim": "GenerateContent endpoint semantics (POST /v1beta/models/{model}:generateContent)",
+          "official_url": "https://ai.google.dev/api/generate-content#method:-models.generatecontent",
+          "verification_scope": "ENDPOINT"
+        }
+      ],
+      "endpoint_semantics": "google.genai.Client.models.generate_content (POST /v1beta/models/{model}:generateContent)",
+      "endpoint_verification_status": "VERIFIED_BY_OFFICIAL_DOC_REFERENCE",
+      "live_model_id_status": "PENDING_LIVE_CONFIRMATION",
+      "model_metadata_check": {
+        "live_model_availability_status": "PENDING_LIVE_CONFIRMATION",
+        "mismatch_policy": "CONFIGURATION_INTEGRITY_FAILURE_STOP_BATCH_BEFORE_SCIENTIFIC_REPORTING",
+        "response_metadata_field": "GenerateContentResponse.model_version",
+        "verification_status": "VERIFIED_BY_SDK_SURFACE"
+      },
+      "offline_status": "READY_FOR_LIVE_PREFLIGHT",
+      "place_id_encoded_as_catalog_enum": false,
+      "provider": "Google",
+      "provider_documentation_url": "https://ai.google.dev/gemini-api/docs/models",
+      "requested_model_id": "gemini-3.8-flash",
+      "retry_configuration": {
+        "sdk_automatic_retry": 0,
+        "sdk_retry_mechanism": "HttpOptions(retry_options=HttpRetryOptions(attempts=1)) with httpx.Client(transport=...)",
+        "transport_retry": 0,
+        "verification_status": "OFFLINE_TEST_VERIFIED"
+      },
+      "role": "CANDIDATE_NOT_SELECTED_FINAL_MODEL",
+      "sampling_capabilities": {
+        "max_output_tokens": {
+          "configured_value": 16384,
+          "model_specific_status": "MODEL_SPECIFIC_PARAMETER_CONFIRMED",
+          "notes": "GenerateContentConfig.max_output_tokens fixed to 16384.",
+          "parameter_name": "max_output_tokens",
+          "sdk_parameter_name": "GenerateContentConfig.max_output_tokens",
+          "sdk_parameter_status": "SDK_PARAMETER_EXISTS",
+          "sent_in_request": true,
+          "verification_status": "VERIFIED_BY_OFFICIAL_DOC_REFERENCE"
+        },
+        "seed": {
+          "configured_value": 2026101508,
+          "model_specific_status": "PENDING_LIVE_CONFIRMATION",
+          "notes": "GenerateContentConfig exposes seed: Optional[int] (fixed to 2026101508); model-specific acceptance by gemini-3.8-flash is retained as PENDING_LIVE_CONFIRMATION for Phase 01B.",
+          "parameter_name": "seed",
+          "sdk_parameter_name": "GenerateContentConfig.seed",
+          "sdk_parameter_status": "SDK_PARAMETER_EXISTS",
+          "sent_in_request": true,
+          "verification_status": "PENDING_LIVE_CONFIRMATION"
+        },
+        "temperature": {
+          "configured_value": "OMITTED",
+          "model_specific_status": "DEPRECATED_IGNORED_OMITTED",
+          "notes": "Official Gemini 3.8 documentation states custom temperature is deprecated/ignored for Gemini 3.8 thinking models; omitted from C1 request.",
+          "parameter_name": "temperature",
+          "sdk_parameter_name": "GenerateContentConfig.temperature",
+          "sdk_parameter_status": "SDK_PARAMETER_EXISTS",
+          "sent_in_request": false,
+          "verification_status": "UNSUPPORTED"
+        },
+        "thinking_or_reasoning_setting": {
+          "configured_value": {
+            "thinking_level": "medium"
+          },
+          "model_specific_status": "MODEL_SPECIFIC_PARAMETER_CONFIRMED",
+          "notes": "Gemini 3.8 Flash supports thinking_level ('low' / 'medium' / 'high'; documented default 'medium'); explicitly frozen to types.ThinkingConfig(thinking_level='medium') and never tuned on DEV.",
+          "parameter_name": "thinking_or_reasoning_setting",
+          "sdk_parameter_name": "GenerateContentConfig.thinking_config",
+          "sdk_parameter_status": "SDK_PARAMETER_EXISTS",
+          "sent_in_request": true,
+          "verification_status": "VERIFIED_BY_OFFICIAL_DOC_REFERENCE"
+        },
+        "timeout": {
+          "configured_value": 55000,
+          "model_specific_status": "MODEL_SPECIFIC_PARAMETER_CONFIRMED",
+          "notes": "HttpOptions.timeout configured in milliseconds (55000 ms).",
+          "parameter_name": "timeout",
+          "sdk_parameter_name": "HttpOptions.timeout",
+          "sdk_parameter_status": "SDK_PARAMETER_EXISTS",
+          "sent_in_request": true,
+          "verification_status": "VERIFIED_BY_SDK_SURFACE"
+        },
+        "top_k": {
+          "configured_value": "OMITTED",
+          "model_specific_status": "DEPRECATED_IGNORED_OMITTED",
+          "notes": "Official Gemini 3.8 documentation states custom top_k is deprecated/ignored for Gemini 3.8 thinking models; omitted from C1 request.",
+          "parameter_name": "top_k",
+          "sdk_parameter_name": "GenerateContentConfig.top_k",
+          "sdk_parameter_status": "SDK_PARAMETER_EXISTS",
+          "sent_in_request": false,
+          "verification_status": "UNSUPPORTED"
+        },
+        "top_p": {
+          "configured_value": "OMITTED",
+          "model_specific_status": "DEPRECATED_IGNORED_OMITTED",
+          "notes": "Official Gemini 3.8 documentation states custom top_p is deprecated/ignored for Gemini 3.8 thinking models; omitted from C1 request.",
+          "parameter_name": "top_p",
+          "sdk_parameter_name": "GenerateContentConfig.top_p",
+          "sdk_parameter_status": "SDK_PARAMETER_EXISTS",
+          "sent_in_request": false,
+          "verification_status": "UNSUPPORTED"
+        }
+      },
+      "sdk_package": "google-genai",
+      "sdk_version": "2.25.0",
+      "semantic_schema_sha256": "e4169f7b890f77d13af65e9f2070b6071c535b206d88440f5e8f28c179977555",
+      "structured_output_capability_status": "VERIFIED_BY_OFFICIAL_DOC_REFERENCE",
+      "structured_output_mode": "NATIVE_RESPONSE_JSON_SCHEMA",
+      "structured_output_wiring_summary": {
+        "common_generation_schema_sha256": "5f7331eb1ac137a42b75a0c307107e3305703d4782ddffdcfe98c1b5ae11c27c",
+        "response_mime_type": "application/json",
+        "schema_parameter": "GenerateContentConfig.response_json_schema",
+        "semantic_schema_sha256": "e4169f7b890f77d13af65e9f2070b6071c535b206d88440f5e8f28c179977555"
+      }
+    },
+    "C2": {
+      "access_date": "2026-10-17",
+      "architecture_invariants": {
+        "architecture_class": "DIRECT_ONE_CALL_PLUS_READ_ONLY_DETERMINISTIC_VALIDATION",
+        "architecture_id": "LLM_BASED_ITINERARY_PLANNER_WITH_DETERMINISTIC_GROUNDING_AND_VALIDATION_V1",
+        "common_generation_schema_sha256": "5f7331eb1ac137a42b75a0c307107e3305703d4782ddffdcfe98c1b5ae11c27c",
+        "common_schema_sha256": "5f7331eb1ac137a42b75a0c307107e3305703d4782ddffdcfe98c1b5ae11c27c",
+        "fallback": false,
+        "llm_calls_per_execution": 1,
+        "llm_repair_calls": 0,
+        "max_output_tokens": 16384,
+        "model_initiated_tool_calls": 0,
+        "primary_json_repair": false,
+        "raw_provider_response_preserved": true,
+        "sampling_seed_policy": 2026101508,
+        "sampling_temperature_policy": 0.0,
+        "semantic_schema_sha256": "e4169f7b890f77d13af65e9f2070b6071c535b206d88440f5e8f28c179977555",
+        "timeout_ms": 55000
+      },
+      "blockers": [],
+      "candidate_id": "C2",
+      "common_generation_schema_sha256": "5f7331eb1ac137a42b75a0c307107e3305703d4782ddffdcfe98c1b5ae11c27c",
+      "common_schema_sha256": "5f7331eb1ac137a42b75a0c307107e3305703d4782ddffdcfe98c1b5ae11c27c",
+      "documentation_provenance": [
+        {
+          "access_date": "2026-10-17",
+          "claim": "OpenAI model catalog and candidate model ID gpt-6.1-sol availability check (requires Phase 01B live runtime confirmation)",
+          "official_url": "https://platform.openai.com/docs/models",
+          "verification_scope": "MODEL_ID"
+        },
+        {
+          "access_date": "2026-10-17",
+          "claim": "OpenAI Structured Outputs via response_format={'type': 'json_schema', 'json_schema': {'strict': True, ...}} (generic SDK surface verified; model-specific acceptance pending Phase 01B)",
+          "official_url": "https://platform.openai.com/docs/guides/structured-outputs",
+          "verification_scope": "STRUCTURED_OUTPUT"
+        },
+        {
+          "access_date": "2026-10-17",
+          "claim": "OpenAI Chat Completions sampling parameters (temperature, seed, top_p; top_k unsupported; model-specific acceptance for gpt-6.1-sol pending Phase 01B)",
+          "official_url": "https://platform.openai.com/docs/api-reference/chat/create",
+          "verification_scope": "SAMPLING"
+        },
+        {
+          "access_date": "2026-10-17",
+          "claim": "OpenAI reasoning_effort parameter on Chat Completions (generic SDK surface verified; model-specific acceptance pending Phase 01B)",
+          "official_url": "https://platform.openai.com/docs/guides/reasoning",
+          "verification_scope": "THINKING_REASONING"
+        },
+        {
+          "access_date": "2026-10-17",
+          "claim": "OpenAI max_completion_tokens parameter on Chat Completions",
+          "official_url": "https://platform.openai.com/docs/api-reference/chat/create#chat-create-max_completion_tokens",
+          "verification_scope": "MAX_OUTPUT"
+        },
+        {
+          "access_date": "2026-10-17",
+          "claim": "OpenAI Chat Completions endpoint semantics (POST /v1/chat/completions; model-specific endpoint compatibility for gpt-6.1-sol pending Phase 01B)",
+          "official_url": "https://platform.openai.com/docs/api-reference/chat/create",
+          "verification_scope": "ENDPOINT"
+        }
+      ],
+      "endpoint_semantics": "openai.OpenAI.chat.completions.create (POST /v1/chat/completions; generic SDK surface verified, model-specific endpoint compatibility for gpt-6.1-sol is PENDING_LIVE_CONFIRMATION)",
+      "endpoint_verification_status": "PENDING_LIVE_CONFIRMATION",
+      "live_model_id_status": "PENDING_LIVE_CONFIRMATION",
+      "model_metadata_check": {
+        "live_model_availability_status": "PENDING_LIVE_CONFIRMATION",
+        "mismatch_policy": "CONFIGURATION_INTEGRITY_FAILURE_STOP_BATCH_BEFORE_SCIENTIFIC_REPORTING",
+        "response_metadata_field": "ChatCompletion.model",
+        "verification_status": "VERIFIED_BY_SDK_SURFACE"
+      },
+      "offline_status": "READY_FOR_LIVE_PREFLIGHT",
+      "place_id_encoded_as_catalog_enum": false,
+      "provider": "OpenAI",
+      "provider_documentation_url": "https://platform.openai.com/docs/models",
+      "requested_model_id": "gpt-6.1-sol",
+      "retry_configuration": {
+        "sdk_automatic_retry": 0,
+        "sdk_retry_mechanism": "openai.OpenAI(max_retries=0, timeout=55.0, http_client=httpx2.Client(transport=...))",
+        "transport_retry": 0,
+        "verification_status": "OFFLINE_TEST_VERIFIED"
+      },
+      "role": "CANDIDATE_NOT_SELECTED_FINAL_MODEL",
+      "sampling_capabilities": {
+        "max_output_tokens": {
+          "configured_value": 16384,
+          "model_specific_status": "PENDING_LIVE_CONFIRMATION",
+          "notes": "Generic SDK surface exposes max_completion_tokens=16384; model-specific cap/acceptance for gpt-6.1-sol is PENDING_LIVE_CONFIRMATION.",
+          "parameter_name": "max_output_tokens",
+          "sdk_parameter_name": "chat.completions.create(max_completion_tokens=...)",
+          "sdk_parameter_status": "SDK_PARAMETER_EXISTS",
+          "sent_in_request": true,
+          "verification_status": "PENDING_LIVE_CONFIRMATION"
+        },
+        "seed": {
+          "configured_value": 2026101508,
+          "model_specific_status": "PENDING_LIVE_CONFIRMATION",
+          "notes": "Generic openai==3.17.0 SDK surface exposes seed: Optional[int] (configured to 2026101508); model-specific runtime acceptance for gpt-6.1-sol is PENDING_LIVE_CONFIRMATION in Phase 01B.",
+          "parameter_name": "seed",
+          "sdk_parameter_name": "chat.completions.create(seed=...)",
+          "sdk_parameter_status": "SDK_PARAMETER_EXISTS",
+          "sent_in_request": true,
+          "verification_status": "PENDING_LIVE_CONFIRMATION"
+        },
+        "temperature": {
+          "configured_value": 0.0,
+          "model_specific_status": "PENDING_LIVE_CONFIRMATION",
+          "notes": "Generic openai==3.17.0 SDK surface exposes temperature: Optional[float] (configured to 0.0); model-specific runtime acceptance for gpt-6.1-sol is PENDING_LIVE_CONFIRMATION in Phase 01B.",
+          "parameter_name": "temperature",
+          "sdk_parameter_name": "chat.completions.create(temperature=...)",
+          "sdk_parameter_status": "SDK_PARAMETER_EXISTS",
+          "sent_in_request": true,
+          "verification_status": "PENDING_LIVE_CONFIRMATION"
+        },
+        "thinking_or_reasoning_setting": {
+          "configured_value": null,
+          "model_specific_status": "PENDING_LIVE_CONFIRMATION",
+          "notes": "Generic openai==3.17.0 SDK surface exposes reasoning_effort; left None (provider default, never tuned on DEV). Model-specific behavior for gpt-6.1-sol is PENDING_LIVE_CONFIRMATION in Phase 01B.",
+          "parameter_name": "thinking_or_reasoning_setting",
+          "sdk_parameter_name": "chat.completions.create(reasoning_effort=...)",
+          "sdk_parameter_status": "SDK_PARAMETER_EXISTS",
+          "sent_in_request": false,
+          "verification_status": "PENDING_LIVE_CONFIRMATION"
+        },
+        "timeout": {
+          "configured_value": 55000,
+          "model_specific_status": "MODEL_SPECIFIC_PARAMETER_CONFIRMED",
+          "notes": "OpenAI client timeout configured as 55.0 seconds (55000 ms).",
+          "parameter_name": "timeout",
+          "sdk_parameter_name": "OpenAI(timeout=...)",
+          "sdk_parameter_status": "SDK_PARAMETER_EXISTS",
+          "sent_in_request": true,
+          "verification_status": "VERIFIED_BY_SDK_SURFACE"
+        },
+        "top_k": {
+          "configured_value": "UNSUPPORTED",
+          "model_specific_status": "UNSUPPORTED",
+          "notes": "OpenAI Chat Completions API/SDK does not support a top_k sampling parameter.",
+          "parameter_name": "top_k",
+          "sdk_parameter_name": null,
+          "sdk_parameter_status": "SDK_PARAMETER_ABSENT",
+          "sent_in_request": false,
+          "verification_status": "UNSUPPORTED"
+        },
+        "top_p": {
+          "configured_value": "OMITTED",
+          "model_specific_status": "OMITTED_NOT_SENT",
+          "notes": "Generic SDK surface exposes top_p; omitted/not tuned in W06 preflight.",
+          "parameter_name": "top_p",
+          "sdk_parameter_name": "chat.completions.create(top_p=...)",
+          "sdk_parameter_status": "SDK_PARAMETER_EXISTS",
+          "sent_in_request": false,
+          "verification_status": "PENDING_LIVE_CONFIRMATION"
+        }
+      },
+      "sdk_package": "openai",
+      "sdk_version": "3.17.0",
+      "semantic_schema_sha256": "e4169f7b890f77d13af65e9f2070b6071c535b206d88440f5e8f28c179977555",
+      "structured_output_capability_status": "PENDING_LIVE_CONFIRMATION",
+      "structured_output_mode": "NATIVE_JSON_SCHEMA_STRICT",
+      "structured_output_wiring_summary": {
+        "common_generation_schema_sha256": "5f7331eb1ac137a42b75a0c307107e3305703d4782ddffdcfe98c1b5ae11c27c",
+        "model_specific_status": "PENDING_LIVE_CONFIRMATION",
+        "response_format_type": "json_schema",
+        "schema_name": "BenchmarkPlanResponse",
+        "sdk_parameter_status": "SDK_PARAMETER_EXISTS",
+        "semantic_schema_sha256": "e4169f7b890f77d13af65e9f2070b6071c535b206d88440f5e8f28c179977555",
+        "strict": true
+      }
+    },
+    "C3": {
+      "access_date": "2026-10-17",
+      "architecture_invariants": {
+        "architecture_class": "DIRECT_ONE_CALL_PLUS_READ_ONLY_DETERMINISTIC_VALIDATION",
+        "architecture_id": "LLM_BASED_ITINERARY_PLANNER_WITH_DETERMINISTIC_GROUNDING_AND_VALIDATION_V1",
+        "common_generation_schema_sha256": "5f7331eb1ac137a42b75a0c307107e3305703d4782ddffdcfe98c1b5ae11c27c",
+        "common_schema_sha256": "5f7331eb1ac137a42b75a0c307107e3305703d4782ddffdcfe98c1b5ae11c27c",
+        "fallback": false,
+        "llm_calls_per_execution": 1,
+        "llm_repair_calls": 0,
+        "max_output_tokens": 16384,
+        "model_initiated_tool_calls": 0,
+        "primary_json_repair": false,
+        "raw_provider_response_preserved": true,
+        "sampling_seed_policy": 2026101508,
+        "sampling_temperature_policy": 0.0,
+        "semantic_schema_sha256": "e4169f7b890f77d13af65e9f2070b6071c535b206d88440f5e8f28c179977555",
+        "timeout_ms": 55000
+      },
+      "blockers": [],
+      "candidate_id": "C3",
+      "common_generation_schema_sha256": "5f7331eb1ac137a42b75a0c307107e3305703d4782ddffdcfe98c1b5ae11c27c",
+      "common_schema_sha256": "5f7331eb1ac137a42b75a0c307107e3305703d4782ddffdcfe98c1b5ae11c27c",
+      "documentation_provenance": [
+        {
+          "access_date": "2026-10-17",
+          "claim": "Claude Sonnet 5.5 model overview, capabilities, and canonical model identifier claude-sonnet-5-5",
+          "official_url": "https://docs.anthropic.com/en/docs/about-claude/models/overview",
+          "verification_scope": "MODEL_ID"
+        },
+        {
+          "access_date": "2026-10-17",
+          "claim": "Claude Sonnet 5.5 migration guide and model-specific parameter changes (adaptive thinking, output_config.effort='high', sampling parameter restrictions)",
+          "official_url": "https://docs.anthropic.com/en/docs/about-claude/models/migrating-to-claude-5",
+          "verification_scope": "THINKING_REASONING"
+        },
+        {
+          "access_date": "2026-10-17",
+          "claim": "Claude adaptive thinking (thinking={'type': 'adaptive'}) and effort parameter (output_config.effort='high')",
+          "official_url": "https://docs.anthropic.com/en/docs/build-with-claude/extended-thinking",
+          "verification_scope": "THINKING_REASONING"
+        },
+        {
+          "access_date": "2026-10-17",
+          "claim": "Claude Sonnet 5.5 sampling rules: temperature, top_p, and top_k are not sent with adaptive thinking; seed is unsupported",
+          "official_url": "https://docs.anthropic.com/en/docs/build-with-claude/extended-thinking",
+          "verification_scope": "SAMPLING"
+        },
+        {
+          "access_date": "2026-10-17",
+          "claim": "Anthropic native JSON Schema structured outputs via output_config.format={'type': 'json_schema', 'schema': ...}",
+          "official_url": "https://docs.anthropic.com/en/docs/build-with-claude/structured-outputs",
+          "verification_scope": "STRUCTURED_OUTPUT"
+        },
+        {
+          "access_date": "2026-10-17",
+          "claim": "Anthropic Messages API max_tokens parameter requirement",
+          "official_url": "https://docs.anthropic.com/en/api/messages",
+          "verification_scope": "MAX_OUTPUT"
+        },
+        {
+          "access_date": "2026-10-17",
+          "claim": "Anthropic Messages API endpoint semantics (POST /v1/messages)",
+          "official_url": "https://docs.anthropic.com/en/api/messages",
+          "verification_scope": "ENDPOINT"
+        }
+      ],
+      "endpoint_semantics": "anthropic.Anthropic.messages.create (POST /v1/messages)",
+      "endpoint_verification_status": "VERIFIED_BY_OFFICIAL_DOC_REFERENCE",
+      "live_model_id_status": "PENDING_LIVE_CONFIRMATION",
+      "model_metadata_check": {
+        "live_model_availability_status": "PENDING_LIVE_CONFIRMATION",
+        "mismatch_policy": "CONFIGURATION_INTEGRITY_FAILURE_STOP_BATCH_BEFORE_SCIENTIFIC_REPORTING",
+        "response_metadata_field": "Message.model",
+        "verification_status": "VERIFIED_BY_SDK_SURFACE"
+      },
+      "offline_status": "READY_FOR_LIVE_PREFLIGHT",
+      "place_id_encoded_as_catalog_enum": false,
+      "provider": "Anthropic",
+      "provider_documentation_url": "https://docs.anthropic.com/en/docs/about-claude/models/overview",
+      "requested_model_id": "claude-sonnet-5-5",
+      "retry_configuration": {
+        "sdk_automatic_retry": 0,
+        "sdk_retry_mechanism": "anthropic.Anthropic(max_retries=0, timeout=55.0, http_client=httpx2.Client(transport=...))",
+        "transport_retry": 0,
+        "verification_status": "OFFLINE_TEST_VERIFIED"
+      },
+      "role": "CANDIDATE_NOT_SELECTED_FINAL_MODEL",
+      "sampling_capabilities": {
+        "max_output_tokens": {
+          "configured_value": 16384,
+          "model_specific_status": "MODEL_SPECIFIC_PARAMETER_CONFIRMED",
+          "notes": "Messages.create max_tokens fixed to 16384.",
+          "parameter_name": "max_output_tokens",
+          "sdk_parameter_name": "messages.create(max_tokens=...)",
+          "sdk_parameter_status": "SDK_PARAMETER_EXISTS",
+          "sent_in_request": true,
+          "verification_status": "VERIFIED_BY_OFFICIAL_DOC_REFERENCE"
+        },
+        "seed": {
+          "configured_value": "UNSUPPORTED",
+          "model_specific_status": "UNSUPPORTED",
+          "notes": "Anthropic Messages API does not support a deterministic seed parameter; omitted from C3 request.",
+          "parameter_name": "seed",
+          "sdk_parameter_name": null,
+          "sdk_parameter_status": "SDK_PARAMETER_ABSENT",
+          "sent_in_request": false,
+          "verification_status": "UNSUPPORTED"
+        },
+        "temperature": {
+          "configured_value": "OMITTED",
+          "model_specific_status": "OMITTED_NOT_SENT",
+          "notes": "Claude Sonnet 5.5 with adaptive thinking does not accept custom temperature and anthropic==1.15.0 Messages.create omits temperature; not sent in C3 request.",
+          "parameter_name": "temperature",
+          "sdk_parameter_name": null,
+          "sdk_parameter_status": "SDK_PARAMETER_ABSENT",
+          "sent_in_request": false,
+          "verification_status": "UNSUPPORTED"
+        },
+        "thinking_or_reasoning_setting": {
+          "configured_value": {
+            "output_config_effort": "high",
+            "thinking": {
+              "type": "adaptive"
+            }
+          },
+          "model_specific_status": "MODEL_SPECIFIC_PARAMETER_CONFIRMED",
+          "notes": "Claude Sonnet 5.5 uses adaptive thinking (thinking={'type': 'adaptive'}) with documented provider-default effort explicitly pinned to output_config.effort='high' (never tuned on DEV).",
+          "parameter_name": "thinking_or_reasoning_setting",
+          "sdk_parameter_name": "messages.create(thinking=..., output_config={'effort': ...})",
+          "sdk_parameter_status": "SDK_PARAMETER_EXISTS",
+          "sent_in_request": true,
+          "verification_status": "VERIFIED_BY_OFFICIAL_DOC_REFERENCE"
+        },
+        "timeout": {
+          "configured_value": 55000,
+          "model_specific_status": "MODEL_SPECIFIC_PARAMETER_CONFIRMED",
+          "notes": "Anthropic client timeout configured as 55.0 seconds (55000 ms).",
+          "parameter_name": "timeout",
+          "sdk_parameter_name": "Anthropic(timeout=...)",
+          "sdk_parameter_status": "SDK_PARAMETER_EXISTS",
+          "sent_in_request": true,
+          "verification_status": "VERIFIED_BY_SDK_SURFACE"
+        },
+        "top_k": {
+          "configured_value": "OMITTED",
+          "model_specific_status": "OMITTED_NOT_SENT",
+          "notes": "Not sent for Claude Sonnet 5.5 adaptive thinking and absent on anthropic==1.15.0 Messages.create.",
+          "parameter_name": "top_k",
+          "sdk_parameter_name": null,
+          "sdk_parameter_status": "SDK_PARAMETER_ABSENT",
+          "sent_in_request": false,
+          "verification_status": "UNSUPPORTED"
+        },
+        "top_p": {
+          "configured_value": "OMITTED",
+          "model_specific_status": "OMITTED_NOT_SENT",
+          "notes": "Not sent for Claude Sonnet 5.5 adaptive thinking and absent on anthropic==1.15.0 Messages.create.",
+          "parameter_name": "top_p",
+          "sdk_parameter_name": null,
+          "sdk_parameter_status": "SDK_PARAMETER_ABSENT",
+          "sent_in_request": false,
+          "verification_status": "UNSUPPORTED"
+        }
+      },
+      "sdk_package": "anthropic",
+      "sdk_version": "1.15.0",
+      "semantic_schema_sha256": "e4169f7b890f77d13af65e9f2070b6071c535b206d88440f5e8f28c179977555",
+      "structured_output_capability_status": "VERIFIED_BY_OFFICIAL_DOC_REFERENCE",
+      "structured_output_mode": "NATIVE_OUTPUT_CONFIG_JSON_SCHEMA_WITH_HIGH_EFFORT",
+      "structured_output_wiring_summary": {
+        "common_generation_schema_sha256": "5f7331eb1ac137a42b75a0c307107e3305703d4782ddffdcfe98c1b5ae11c27c",
+        "output_config_effort": "high",
+        "output_config_format_type": "json_schema",
+        "schema_parameter": "messages.create(output_config={'effort': 'high', 'format': {'type': 'json_schema', 'schema': ...}})",
+        "semantic_schema_sha256": "e4169f7b890f77d13af65e9f2070b6071c535b206d88440f5e8f28c179977555"
+      }
+    }
+  },
+  "claude_called": false,
+  "common_generation_schema_sha256": "5f7331eb1ac137a42b75a0c307107e3305703d4782ddffdcfe98c1b5ae11c27c",
+  "common_schema_sha256": "5f7331eb1ac137a42b75a0c307107e3305703d4782ddffdcfe98c1b5ae11c27c",
+  "dependency_lock_path": "apps/ai-service/requirements-w06-provider-lock.txt",
+  "dependency_lock_sha256": "fd3d6364c3eeb3ae024c6b7248d7f9c8e497987e7cd3f8b06ad67d18e16d0085",
+  "dev_select_executed": false,
+  "dev_tune_executed": false,
+  "env_key_presence": {
+    "ANTHROPIC_API_KEY": "PRESENT",
+    "GEMINI_API_KEY": "PRESENT",
+    "OPENAI_API_KEY": "PRESENT"
+  },
+  "final_100_used": false,
+  "final_benchmark_executed": false,
+  "frozen_authority_preservation": {
+    "apps/ai-service/app/evaluation/planner_scenario_generator.py": "623c52cbdd98d181cd9cbbc1e68697a7299cb6c864628e97e743afd9e09ceae1",
+    "apps/ai-service/recommendation/reca/contract.py": "1a62c36a95092be35ab78dca43e20f646016e154746ee051a499bdebfc67538c",
+    "data/curated/gomate_places_freeze_v2.json": "f7517938598e3923906763f8f31334a500ee88bc06232f2992d38e2fcb28a444",
+    "data/evaluation/w06/w06_dev_final_overlap_receipt_v1.json": "285699ee1370b537a6579b88a7fb02781b51ac52e0ed14f469d77969261f04aa",
+    "data/evaluation/w06/w06_dev_fixture_freeze_01_receipt_v1.json": "437a296cf123d1469f303b97cb6665cd8217c2dfeabd12d1712ec2789d890026",
+    "data/evaluation/w06/w06_dev_fixture_manifest_v1.json": "15cf3af6c93d3de967703dbc52d7e082bfd4a1e657409c0678ff51bd081e3c98",
+    "data/evaluation/w06/w06_dev_fixtures_freeze_v1.json": "bb0f051446ea3da8229298f22f4ce92b4db20751695273c6d01b7766da044050",
+    "data/evaluation/w06/w06_measurement_contract_v1.json": "0ddc1f8d879493517cee25f247d2365a0bacb816dc33b129b0c6110d4bfb8298",
+    "data/evaluation/w06/w06_model_arch_selection_method_lock_v1.json": "6f30cdf90355dd720795de8e0b21beba45f527767892ca7eb88769141a64210c",
+    "data/evaluation/w06/w06_p11_assignment_manifest_v1.json": "0aa9ae923d0e7f29df49735fa41e87530b1caf62418fcbec09a1eff81d83af62",
+    "data/evaluation/w06/w06_scenario_method_lock_v1.json": "5e5359f9f10a0248a9cf031f8e8b26c0314c46aecfe0d9df479388bbe4fd1af9",
+    "data/evaluation/w06/w06_scenario_support_matrix_v1.json": "68c2bfc2164e664b3856c31b99a92d75a588f64465526b47c9104918a51cedb4",
+    "data/evaluation/w06/w06_scenarios_freeze_v1.json": "c03bc6dc300604ac395505d59b6413c1a47339b21408cfd637671e81d4b555a1",
+    "scripts/audit_w06_scenario_generator_dryrun.py": "2e5a218fc49d4af0052dffa49c14a8a7d5d9818847fd6d37f647422a9cadc6fc"
+  },
+  "gemini_called": false,
+  "grok_called": false,
+  "hash_basis": "SHA256_CANONICAL_JSON_UTF8_LF_BYTES",
+  "live_call_count": 0,
+  "live_calls_made": false,
+  "live_provider_calls_allowed": false,
+  "live_provider_calls_performed": false,
+  "openai_called": false,
+  "opening_hours_catalog_audit": {
+    "catalog_sha256": "f7517938598e3923906763f8f31334a500ee88bc06232f2992d38e2fcb28a444",
+    "coverage_rate": 0.146302,
+    "known_opening_hours_count": 91,
+    "mode": "READ_ONLY_CATALOG_EVIDENCE_AUDIT",
+    "parser_supported_opening_hours_count": 91,
+    "parser_supported_ratio_among_present": 0.90099,
+    "parser_unsupported_opening_hours_count": 10,
+    "parser_version": "W06-OPENING-HOURS-PARSER-01C-V1.0.0",
+    "per_destination_coverage": {
+      "da-nang": {
+        "coverage_rate": 0.183391,
+        "known_opening_hours_count": 53,
+        "parser_unsupported_opening_hours_count": 6,
+        "raw_opening_hours_missing_count": 230,
+        "raw_opening_hours_present_count": 59,
+        "raw_presence_rate": 0.204152,
+        "total_reca_core_pois": 289,
+        "unknown_opening_hours_count": 236
+      },
+      "ha-long": {
+        "coverage_rate": 0.079787,
+        "known_opening_hours_count": 15,
+        "parser_unsupported_opening_hours_count": 0,
+        "raw_opening_hours_missing_count": 173,
+        "raw_opening_hours_present_count": 15,
+        "raw_presence_rate": 0.079787,
+        "total_reca_core_pois": 188,
+        "unknown_opening_hours_count": 173
+      },
+      "ha-noi": {
+        "coverage_rate": 0.158621,
+        "known_opening_hours_count": 23,
+        "parser_unsupported_opening_hours_count": 4,
+        "raw_opening_hours_missing_count": 118,
+        "raw_opening_hours_present_count": 27,
+        "raw_presence_rate": 0.186207,
+        "total_reca_core_pois": 145,
+        "unknown_opening_hours_count": 122
+      }
+    },
+    "raw_opening_hours_missing_count": 521,
+    "raw_opening_hours_present_count": 101,
+    "raw_presence_rate": 0.162379,
+    "reporting_role": "BENCHMARK_EVIDENCE_COVERAGE_ONLY",
+    "target_catalog_path": "data/curated/gomate_places_freeze_v2.json",
+    "total_reca_core_pois": 622,
+    "unknown_opening_hours_count": 531
+  },
+  "place_id_encoded_as_catalog_enum": false,
+  "preregistered": false,
+  "provider_cost_usd": 0,
+  "schema_projection_equivalence_guard": {
+    "activity_kind_enum_preserved": true,
+    "additional_properties_closed_objects_count": 4,
+    "approved_mechanics_applied": [
+      "default_metadata_removal",
+      "required_field_materialization_sorted",
+      "additionalProperties_false_closure"
+    ],
+    "common_generation_schema_sha256": "5f7331eb1ac137a42b75a0c307107e3305703d4782ddffdcfe98c1b5ae11c27c",
+    "materialized_required_objects_count": 4,
+    "place_id_catalog_enum_present": false,
+    "removed_defaults_count": 8,
+    "semantic_schema_sha256": "e4169f7b890f77d13af65e9f2070b6071c535b206d88440f5e8f28c179977555",
+    "whitelist_guard_passed": true
+  },
+  "sdk_versions": {
+    "anthropic": "1.15.0",
+    "anyio": "4.13.0",
+    "google-genai": "2.25.0",
+    "httpcore": "1.0.9",
+    "httpcore2": "2.13.0",
+    "httpx": "0.28.1",
+    "httpx2": "2.13.0",
+    "openai": "3.17.0",
+    "pydantic": "2.13.4",
+    "pydantic-core": "2.46.4",
+    "python": "3.11.9"
+  },
+  "secret_leak_scan": {
+    "affected_file_paths": [],
+    "secret_leak_count": 0
+  },
+  "semantic_schema_sha256": "e4169f7b890f77d13af65e9f2070b6071c535b206d88440f5e8f28c179977555",
+  "status": "OFFLINE_PREFLIGHT_COMPLETE_PENDING_PHASE_01B_LIVE_SMOKE",
+  "synthetic_smoke_fixtures": [
+    {
+      "common_generation_schema_sha256": "5f7331eb1ac137a42b75a0c307107e3305703d4782ddffdcfe98c1b5ae11c27c",
+      "common_schema_sha256": "5f7331eb1ac137a42b75a0c307107e3305703d4782ddffdcfe98c1b5ae11c27c",
+      "days": 2,
+      "destination_slug": "ha-noi",
+      "poi_count": 2,
+      "scenario_id": "W06-PREFLIGHT-SMOKE-001",
+      "semantic_schema_sha256": "e4169f7b890f77d13af65e9f2070b6071c535b206d88440f5e8f28c179977555",
+      "shared_system_prompt_sha256": "4bcb84a8aca1fc89f65709ac9d91c88e42359c284850061bae85c3607c345b0e",
+      "shared_user_prompt_sha256": "d813cd76b4192f59e963ad9cd43ec8a32c5ec49999a8a61c1ece87614f7590b7"
+    },
+    {
+      "common_generation_schema_sha256": "5f7331eb1ac137a42b75a0c307107e3305703d4782ddffdcfe98c1b5ae11c27c",
+      "common_schema_sha256": "5f7331eb1ac137a42b75a0c307107e3305703d4782ddffdcfe98c1b5ae11c27c",
+      "days": 2,
+      "destination_slug": "da-nang",
+      "poi_count": 2,
+      "scenario_id": "W06-PREFLIGHT-SMOKE-002",
+      "semantic_schema_sha256": "e4169f7b890f77d13af65e9f2070b6071c535b206d88440f5e8f28c179977555",
+      "shared_system_prompt_sha256": "4bcb84a8aca1fc89f65709ac9d91c88e42359c284850061bae85c3607c345b0e",
+      "shared_user_prompt_sha256": "0f21fcffe697063a516a946200f8a3ecbf9496b21d6b90d0898cb0b62dad5968"
+    }
+  ],
+  "task_id": "W06-MODEL-PREFLIGHT-01A-OFFLINE",
+  "version": "1.1.0",
+  "winning_model_selected": false
+}
