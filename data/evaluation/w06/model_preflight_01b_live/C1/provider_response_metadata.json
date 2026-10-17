@@ -1,0 +1,25 @@
+{
+  "actual_http_request_count": 1,
+  "candidate_id": "C1",
+  "estimated_standard_api_cost_usd": 0.00632175,
+  "finish_or_stop_reason": "STOP",
+  "latency_ms": 16658.055,
+  "provider": "Google",
+  "requested_model_id": "gemini-3.8-flash",
+  "resolved_model_version": "gemini-3.8-flash",
+  "returned_model_id": "gemini-3.8-flash",
+  "seed_acceptance_status": "ACCEPTED_BY_LIVE_ENDPOINT",
+  "service_tier": null,
+  "system_fingerprint": null,
+  "usage_metadata": {
+    "authoritative_usage_available": true,
+    "cache_creation_input_tokens": null,
+    "cache_read_input_tokens": null,
+    "cached_content_token_count": null,
+    "input_tokens": 514,
+    "output_tokens": 436,
+    "reasoning_tokens": null,
+    "thought_tokens": 1147,
+    "total_tokens": 2097
+  }
+}

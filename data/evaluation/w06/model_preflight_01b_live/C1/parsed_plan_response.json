@@ -1,0 +1,62 @@
+{
+  "best_time_to_visit": "October to April",
+  "budget_analysis": {
+    "currency": "VND",
+    "estimated_cost": 300000,
+    "is_over_budget": false,
+    "total_budget": 4000000,
+    "variance": 3700000
+  },
+  "days": [
+    {
+      "date": "2026-11-02",
+      "day_cost": 150000,
+      "day_number": 1,
+      "items": [
+        {
+          "activity": "Visit Synthetic Hanoi Heritage Museum",
+          "activity_kind": "POI_VISIT",
+          "end_time": "11:30",
+          "estimated_cost": 150000,
+          "notes": "Guided exploration of cultural exhibits and historical displays.",
+          "order_index": 1,
+          "place_id": "smoke-hn-poi-001",
+          "place_name": "Synthetic Hanoi Heritage Museum",
+          "start_time": "09:00",
+          "transport_mode": null
+        }
+      ],
+      "title": "Exploring Hanoi Heritage Museum"
+    },
+    {
+      "date": "2026-11-03",
+      "day_cost": 150000,
+      "day_number": 2,
+      "items": [
+        {
+          "activity": "Explore Synthetic Hanoi Old Quarter Citadel",
+          "activity_kind": "POI_VISIT",
+          "end_time": "11:30",
+          "estimated_cost": 150000,
+          "notes": "Historical walking tour through the ancient citadel grounds.",
+          "order_index": 1,
+          "place_id": "smoke-hn-poi-002",
+          "place_name": "Synthetic Hanoi Old Quarter Citadel",
+          "start_time": "09:00",
+          "transport_mode": null
+        }
+      ],
+      "title": "Visiting Hanoi Old Quarter Citadel"
+    }
+  ],
+  "destination": "Hà Nội",
+  "destination_slug": "ha-noi",
+  "general_tips": [
+    "Wear comfortable shoes for walking tours",
+    "Carry Vietnamese Dong for small entry fees and local purchases"
+  ],
+  "overview": "A curated 2-day cultural and historical exploration of Hanoi focusing on key heritage sites.",
+  "plan_id": "w06-smoke-plan-001",
+  "scenario_id": "W06-PREFLIGHT-SMOKE-001",
+  "total_days": 2
+}
