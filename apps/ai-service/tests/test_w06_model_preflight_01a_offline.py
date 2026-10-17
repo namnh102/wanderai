@@ -441,6 +441,15 @@ def test_pf_a_11_primary_parse_path_succeeds_and_verifies_wire_payloads_for_c1_c
     assert o_res.request_attempt_count == 1
     assert len(o_bodies) == 1
     assert o_bodies[0]["model"] == "gpt-6.1-sol"
+    assert o_bodies[0].get("reasoning_effort") == "medium"
+    assert o_bodies[0].get("service_tier") == "default"
+    assert o_bodies[0].get("seed") == FROZEN_SAMPLING_SEED
+    assert "temperature" not in o_bodies[0]
+    assert "top_p" not in o_bodies[0]
+    assert "top_k" not in o_bodies[0]
+    assert "top_logprobs" not in o_bodies[0]
+    assert "logprobs" not in o_bodies[0]
+    assert "tools" not in o_bodies[0]
 
     # C3 Anthropic wire verification
     a_bodies: List[Dict[str, Any]] = []
@@ -551,8 +560,9 @@ def test_pf_a_13_c1_google_preflight_record_and_request_omissions() -> None:
 
 
 def test_pf_a_14_c2_openai_preflight_record_honesty_boundary() -> None:
-    """PF-A-14 (Part F, I, J): C2 (OpenAI / gpt-6.1-sol) differentiates SDK_PARAMETER_EXISTS from PENDING_LIVE_CONFIRMATION and does not overclaim model-specific support."""
-    rec = OpenAIPreflightAdapter().get_preflight_record()
+    """PF-A-14 (Part F, I, J & 01B Section 7): C2 (OpenAI / gpt-6.1-sol) sets reasoning_effort='medium', service_tier='default', seed=2026101508, and omits temperature/top_p/top_k."""
+    adapter = OpenAIPreflightAdapter()
+    rec = adapter.get_preflight_record()
     assert rec.candidate_id == "C2"
     assert rec.provider == "OpenAI"
     assert rec.requested_model_id == "gpt-6.1-sol"
@@ -562,13 +572,31 @@ def test_pf_a_14_c2_openai_preflight_record_honesty_boundary() -> None:
     assert rec.endpoint_verification_status == CapabilityVerificationStatus.PENDING_LIVE_CONFIRMATION
     assert rec.structured_output_capability_status == CapabilityVerificationStatus.PENDING_LIVE_CONFIRMATION
 
-    for param in ("temperature", "seed", "thinking_or_reasoning_setting", "max_output_tokens"):
+    for param in ("seed", "thinking_or_reasoning_setting", "max_output_tokens"):
         spec = rec.sampling_capabilities[param]
         assert spec.sdk_parameter_status == "SDK_PARAMETER_EXISTS"
         assert spec.model_specific_status == "PENDING_LIVE_CONFIRMATION"
         assert spec.verification_status == CapabilityVerificationStatus.PENDING_LIVE_CONFIRMATION
+        assert spec.sent_in_request is True
+
+    for omitted_param in ("temperature", "top_p"):
+        spec = rec.sampling_capabilities[omitted_param]
+        assert spec.sdk_parameter_status == "SDK_PARAMETER_EXISTS"
+        assert spec.model_specific_status == "OMITTED_FOR_REASONING_EFFORT"
+        assert spec.sent_in_request is False
+        assert spec.configured_value == "OMITTED"
+        assert spec.verification_status == CapabilityVerificationStatus.UNSUPPORTED
 
     assert rec.sampling_capabilities["top_k"].verification_status == CapabilityVerificationStatus.UNSUPPORTED
+    scenario, pois = build_synthetic_smoke_fixtures()[0]
+    req = adapter.serialize_smoke_request(scenario, pois)
+    assert req["config"]["reasoning_effort"] == "medium"
+    assert req["config"]["service_tier"] == "default"
+    assert req["config"]["seed"] == FROZEN_SAMPLING_SEED
+    assert "temperature" not in req["config"]
+    assert "top_p" not in req["config"]
+    assert "top_k" not in req["config"]
+
     scopes = {d.verification_scope for d in rec.documentation_provenance}
     assert {"MODEL_ID", "STRUCTURED_OUTPUT", "SAMPLING", "THINKING_REASONING", "MAX_OUTPUT", "ENDPOINT"}.issubset(scopes)
 

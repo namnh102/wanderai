@@ -1,13 +1,14 @@
-"""Offline Preflight Adapter for Candidate C2: OpenAI / gpt-6.1-sol (W06-MODEL-PREFLIGHT-01A-FIX-01).
+"""Preflight Adapter for Candidate C2: OpenAI / gpt-6.1-sol (W06-MODEL-PREFLIGHT-01A & 01B).
 
 SDK: openai==3.17.0
 Endpoint semantics: chat.completions.create (POST /v1/chat/completions)
 Structured output: response_format={'type': 'json_schema', 'json_schema': {'name': 'BenchmarkPlanResponse', 'strict': True, 'schema': <schema>}}
 Retry=0 mechanism: openai.OpenAI(max_retries=0, timeout=55.0, http_client=...)
-Honesty boundary (Part F):
-- Exact model availability for 'gpt-6.1-sol' is PENDING_LIVE_CONFIRMATION until Phase 01B live smoke test.
-- Differentiates SDK_PARAMETER_EXISTS (verified on openai==3.17.0 SDK surface) from model-specific runtime acceptance
-  (PENDING_LIVE_CONFIRMATION for temperature, seed, reasoning_effort, endpoint compatibility, and structured-output acceptance on gpt-6.1-sol).
+Pre-live compatibility configuration (W06-MODEL-PREFLIGHT-01B Section 7):
+- reasoning_effort = "medium" (GPT-6.1 Sol supports low/medium/high/xhigh/max; documented default is medium)
+- service_tier = "default" (standard-processing semantics, avoids automatic Fast/Flex routing)
+- seed = 2026101508 (retained for live technical capability verification)
+- OMITTED from request: temperature, top_p, top_k, top_logprobs, logprobs, tools
 """
 from importlib.metadata import version as pkg_version
 from typing import Any, Dict, List, Optional, Tuple
@@ -18,7 +19,6 @@ import openai
 from app.evaluation.model_preflight.base import (
     FROZEN_MAX_OUTPUT_TOKENS,
     FROZEN_SAMPLING_SEED,
-    FROZEN_SAMPLING_TEMPERATURE,
     FROZEN_TIMEOUT_MS,
     PREFLIGHT_SHARED_SYSTEM_PROMPT,
     BasePreflightProviderAdapter,
@@ -32,6 +32,8 @@ from app.evaluation.model_preflight.schema_adapter import (
     build_openai_structured_output_wiring,
 )
 from app.evaluation.model_preflight.types import (
+    FROZEN_OPENAI_REASONING_EFFORT,
+    FROZEN_OPENAI_SERVICE_TIER,
     CandidateModelMetadataCheckRecord,
     CandidateOfflineReadinessStatus,
     CandidatePreflightRecord,
@@ -87,13 +89,13 @@ class OpenAIPreflightAdapter(BasePreflightProviderAdapter):
                     verification_scope="STRUCTURED_OUTPUT",
                 ),
                 DocumentationProvenanceRecord(
-                    claim="OpenAI Chat Completions sampling parameters (temperature, seed, top_p; top_k unsupported; model-specific acceptance for gpt-6.1-sol pending Phase 01B)",
-                    official_url="https://platform.openai.com/docs/api-reference/chat/create",
+                    claim="OpenAI GPT-6 reasoning-model sampling rules: omit temperature, top_p, top_k, top_logprobs, logprobs when reasoning_effort is non-none; retain seed=2026101508 for live capability check",
+                    official_url="https://platform.openai.com/docs/guides/reasoning",
                     access_date="2026-10-17",
                     verification_scope="SAMPLING",
                 ),
                 DocumentationProvenanceRecord(
-                    claim="OpenAI reasoning_effort parameter on Chat Completions (generic SDK surface verified; model-specific acceptance pending Phase 01B)",
+                    claim="OpenAI GPT-6.1 Sol reasoning_effort='medium' (supports low/medium/high/xhigh/max; documented default medium) and service_tier='default'",
                     official_url="https://platform.openai.com/docs/guides/reasoning",
                     access_date="2026-10-17",
                     verification_scope="THINKING_REASONING",
@@ -137,13 +139,13 @@ class OpenAIPreflightAdapter(BasePreflightProviderAdapter):
                     parameter_name="temperature",
                     sdk_parameter_name="chat.completions.create(temperature=...)",
                     sdk_parameter_status="SDK_PARAMETER_EXISTS",
-                    model_specific_status="PENDING_LIVE_CONFIRMATION",
-                    sent_in_request=True,
-                    configured_value=FROZEN_SAMPLING_TEMPERATURE,
-                    verification_status=CapabilityVerificationStatus.PENDING_LIVE_CONFIRMATION,
+                    model_specific_status="OMITTED_FOR_REASONING_EFFORT",
+                    sent_in_request=False,
+                    configured_value="OMITTED",
+                    verification_status=CapabilityVerificationStatus.UNSUPPORTED,
                     notes=(
-                        "Generic openai==3.17.0 SDK surface exposes temperature: Optional[float] (configured to 0.0); "
-                        "model-specific runtime acceptance for gpt-6.1-sol is PENDING_LIVE_CONFIRMATION in Phase 01B."
+                        "Omitted from C2 request per GPT-6 reasoning-model compatibility guidance "
+                        "when reasoning_effort='medium' (non-none)."
                     ),
                 ),
                 "seed": SamplingCapabilitySpec(
@@ -163,11 +165,11 @@ class OpenAIPreflightAdapter(BasePreflightProviderAdapter):
                     parameter_name="top_p",
                     sdk_parameter_name="chat.completions.create(top_p=...)",
                     sdk_parameter_status="SDK_PARAMETER_EXISTS",
-                    model_specific_status="OMITTED_NOT_SENT",
+                    model_specific_status="OMITTED_FOR_REASONING_EFFORT",
                     sent_in_request=False,
                     configured_value="OMITTED",
-                    verification_status=CapabilityVerificationStatus.PENDING_LIVE_CONFIRMATION,
-                    notes="Generic SDK surface exposes top_p; omitted/not tuned in W06 preflight.",
+                    verification_status=CapabilityVerificationStatus.UNSUPPORTED,
+                    notes="Omitted from C2 request per GPT-6 reasoning-model compatibility guidance.",
                 ),
                 "top_k": SamplingCapabilitySpec(
                     parameter_name="top_k",
@@ -181,15 +183,18 @@ class OpenAIPreflightAdapter(BasePreflightProviderAdapter):
                 ),
                 "thinking_or_reasoning_setting": SamplingCapabilitySpec(
                     parameter_name="thinking_or_reasoning_setting",
-                    sdk_parameter_name="chat.completions.create(reasoning_effort=...)",
+                    sdk_parameter_name="chat.completions.create(reasoning_effort=..., service_tier=...)",
                     sdk_parameter_status="SDK_PARAMETER_EXISTS",
                     model_specific_status="PENDING_LIVE_CONFIRMATION",
-                    sent_in_request=False,
-                    configured_value=None,
+                    sent_in_request=True,
+                    configured_value={
+                        "reasoning_effort": FROZEN_OPENAI_REASONING_EFFORT,
+                        "service_tier": FROZEN_OPENAI_SERVICE_TIER,
+                    },
                     verification_status=CapabilityVerificationStatus.PENDING_LIVE_CONFIRMATION,
                     notes=(
-                        "Generic openai==3.17.0 SDK surface exposes reasoning_effort; left None (provider default, never tuned on DEV). "
-                        "Model-specific behavior for gpt-6.1-sol is PENDING_LIVE_CONFIRMATION in Phase 01B."
+                        "Explicitly configured to reasoning_effort='medium' (GPT-6.1 Sol documented default) "
+                        "and service_tier='default' (standard processing); runtime acceptance verified in Phase 01B."
                     ),
                 ),
                 "max_output_tokens": SamplingCapabilitySpec(
@@ -236,6 +241,7 @@ class OpenAIPreflightAdapter(BasePreflightProviderAdapter):
     ) -> Dict[str, Any]:
         user_prompt = build_shared_semantic_user_prompt(scenario, catalog_pois)
         wiring = build_openai_structured_output_wiring(COMMON_GENERATION_BENCHMARK_PLAN_JSON_SCHEMA)
+        # Note (Section 7): temperature, top_p, top_k, top_logprobs, logprobs are OMITTED from the C2 request config.
         return {
             "candidate_id": self.candidate_id,
             "provider": self.provider_name,
@@ -249,9 +255,9 @@ class OpenAIPreflightAdapter(BasePreflightProviderAdapter):
                     {"role": "system", "content": PREFLIGHT_SHARED_SYSTEM_PROMPT},
                     {"role": "user", "content": user_prompt},
                 ],
-                "temperature": FROZEN_SAMPLING_TEMPERATURE,
                 "seed": FROZEN_SAMPLING_SEED,
-                "reasoning_effort": None,
+                "reasoning_effort": FROZEN_OPENAI_REASONING_EFFORT,
+                "service_tier": FROZEN_OPENAI_SERVICE_TIER,
                 "max_completion_tokens": FROZEN_MAX_OUTPUT_TOKENS,
                 "response_format": wiring["response_format"],
                 "tools": None,
@@ -281,8 +287,9 @@ class OpenAIPreflightAdapter(BasePreflightProviderAdapter):
             resp = client.chat.completions.create(
                 model=request_payload["model"],
                 messages=cfg["messages"],
-                temperature=cfg["temperature"],
                 seed=cfg["seed"],
+                reasoning_effort=cfg["reasoning_effort"],
+                service_tier=cfg["service_tier"],
                 max_completion_tokens=cfg["max_completion_tokens"],
                 response_format=cfg["response_format"],
             )
