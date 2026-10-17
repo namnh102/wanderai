@@ -13,3 +13,4 @@ sentence-transformers
 httpx
 python-dotenv
 pytest
+-r requirements-w06-provider-lock.txt

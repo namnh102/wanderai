@@ -799,14 +799,36 @@ def test_pf_a_28_documentation_exists_and_covers_required_sections() -> None:
         assert token in text
 
 
+EXPECTED_BASE_DEVELOP_SHA = "ff40f42db163a21dfc85d467073e99f628e0154a"
+
+
+def _ensure_commit_present(commit_sha: str) -> None:
+    res = subprocess.run(
+        ["git", "cat-file", "-e", f"{commit_sha}^{{commit}}"],
+        cwd=REPO_ROOT,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+        check=False,
+    )
+    if res.returncode != 0:
+        subprocess.run(
+            ["git", "fetch", "origin", commit_sha, "--depth=1"],
+            cwd=REPO_ROOT,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            check=True,
+        )
+
+
 def test_pf_a_29_production_planner_and_llm_providers_unmodified() -> None:
-    """PF-A-29: Production /planner router and apps/ai-service/app/llm/* remain unmodified vs develop."""
+    """PF-A-29: Production /planner router and apps/ai-service/app/llm/* remain unmodified vs base develop."""
+    _ensure_commit_present(EXPECTED_BASE_DEVELOP_SHA)
     res = subprocess.run(
         [
             "git",
             "diff",
             "--name-only",
-            "develop",
+            EXPECTED_BASE_DEVELOP_SHA,
             "--",
             "apps/ai-service/app/routers/planner.py",
             "apps/ai-service/app/llm/",

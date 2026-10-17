@@ -4,7 +4,4 @@ asyncpg
 pandas
 pyarrow
 pydantic-settings
-google-genai
-openai
-anthropic
-httpx
+-r apps/ai-service/requirements-w06-provider-lock.txt
