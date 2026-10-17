@@ -1,0 +1,1495 @@
+{
+  "task_id": "W06-DEV-SELECTION-HARNESS-QA-01-OFFLINE-ADVERSARIAL",
+  "base_develop_sha": "68d05e72f25ea37c7da411d5dffcb65033ef8a95",
+  "live_provider_calls": 0,
+  "provider_cost_usd": 0,
+  "dev_tune_execution_started": false,
+  "dev_select_execution_started": false,
+  "winner_selected": false,
+  "final100_used": false,
+  "qa_checks_total": 40,
+  "qa_pass": 30,
+  "qa_fail": 10,
+  "critical_failures": [
+    "QA-14",
+    "QA-15",
+    "QA-27",
+    "QA-28",
+    "QA-29"
+  ],
+  "major_failures": [
+    "QA-05",
+    "QA-30",
+    "QA-32",
+    "QA-33",
+    "QA-39"
+  ],
+  "overall_qa": "FAIL",
+  "next_status": "NEEDS_FIX",
+  "next_gate": "W06-DEV-SELECTION-HARNESS-FIX-01",
+  "domain_rollup": {
+    "DEV_BUNDLE": "PASS",
+    "FINAL100_FIREWALL": "FAIL",
+    "RECA_CATALOG_CONTEXT": "PASS",
+    "PROVIDER_SERIALIZATION": "PASS",
+    "STRICT_PRIMARY_PARSER": "FAIL",
+    "MODEL_ID_INTEGRITY_STOP_BATCH": "FAIL",
+    "DENOMINATOR_PRESERVATION": "PASS",
+    "METRIC_MAPPING": "PASS",
+    "TEN_PP_SELECTION": "PASS",
+    "COST_COMPARABILITY": "PASS",
+    "PROVIDER_BILLING_TOKEN_SEMANTICS": "FAIL",
+    "UNROUNDED_COST_TIEBREAK": "FAIL",
+    "UNROUNDED_LATENCY_TIEBREAK": "FAIL",
+    "PROMPT_FREEZE_FIREWALL": "FAIL",
+    "CODE_COMMIT_PROVENANCE": "FAIL",
+    "CELL_IMMUTABILITY": "PASS",
+    "STOCHASTICITY_GATE": "PASS",
+    "FAILURE_TAXONOMY": "FAIL"
+  },
+  "blockers": [
+    "QA-14 (CRITICAL / PRIMARY_SEMANTIC_RESCUE_DETECTED): execute_dev_cell_with_mock_transport falls back to parse_strict_benchmark_plan_response when plan_id or budget_analysis is absent, synthesizing missing required semantic fields.",
+    "QA-15 (CRITICAL / MODEL_ID_MISMATCH_FAILS_TO_STOP_BATCH): execute_dev_cell_with_mock_transport defaults empty returned_model_id to requested_model_id and treats unrelated returned_model_id as an ordinary failed cell without stopping batch aggregation/selection.",
+    "QA-27 (CRITICAL): MockProviderTransportResponse, DevCellExecutionReceipt, and execute_dev_cell_with_mock_transport omit C1 disjoint thought_tokens (thoughts_token_count) and cache token fields.",
+    "QA-28 (CRITICAL): compute_canonical_cell_cost_usd unconditionally adds thought_or_reasoning_tokens to output_tokens for all candidates, double-counting reasoning/thinking tokens for C2 (OpenAI) and C3 (Anthropic).",
+    "QA-29 (CRITICAL / COST_TIEBREAK_NOT_UNROUNDED): _to_exact_decimal rounds float costs via Decimal(f'{value:.12f}'), collapsing unequal costs (0.0100000000001 vs 0.0100000000002) into a false tie.",
+    "QA-05 (MAJOR): assert_not_final100_path only checks filename/path without SHA256 verification on copied/renamed files, and assert_not_final100_scenario does not cross-check W06-DEV-TUNE-* vs W06-DEV-SELECT-* scenario ID prefixes against fixture_label.",
+    "QA-30 (MAJOR / LATENCY_TIEBREAK_ROUNDING): median_latency_ms is stored as float and rounded via Decimal(f'{value:.12f}') before comparison, collapsing unequal latencies (1000.000000000001 vs 1000.000000000002) into a false tie.",
+    "QA-32 (MAJOR): Harness lacks a pre-live prompt freeze gate verifying a separate frozen prompt artifact before DEV-TUNE execution, and single-prompt DEV-TUNE returns 'SINGLE_FROZEN_PROMPT_P1_LOCKED_WITHOUT_COMPARISON' instead of 'LOCK_P1_WITHOUT_PERFORMANCE_COMPARISON'.",
+    "QA-33 (MAJOR): DevCellExecutionManifest and DevCellExecutionReceipt omit code_commit_sha and provider_config_sha256, and execute_dev_cell_with_mock_transport hardcodes EXPECTED_BASE_DEVELOP_SHA_DEV_HARNESS.",
+    "QA-39 (MAJOR): DevCellFailureClassification lacks PARTIAL_TIMEOUT and HARNESS_INTERNAL_ERROR enum values, and aggregate_dev_cell_receipts does not stop the batch on MODEL_INTEGRITY_MISMATCH or harness error."
+  ],
+  "provider_billing_semantics_audit": {
+    "access_date": "2026-10-18",
+    "live_generation_api_calls": 0,
+    "candidates": {
+      "C1": {
+        "provider": "Google",
+        "model_id": "gemini-3.8-flash",
+        "official_docs_urls": [
+          "https://ai.google.dev/gemini-api/docs/thinking",
+          "https://ai.google.dev/gemini-api/docs/tokens",
+          "https://ai.google.dev/gemini-api/docs/caching"
+        ],
+        "billable_input_field": "usage_metadata.prompt_token_count",
+        "billable_output_field": "usage_metadata.candidates_token_count + usage_metadata.thoughts_token_count",
+        "reasoning_thinking_token_relationship": "DISJOINT_MUST_BE_ADDED: Gemini candidates_token_count excludes thoughts_token_count. Confirmed by official docs ('When thinking is turned on, response pricing is the sum of output tokens and thinking tokens') and 01D live receipt (514 + 599 + 3179 = 4292).",
+        "cache_token_treatment": "usage_metadata.cached_content_token_count is billed at reduced cached-input rate; if > 0, naive input_tokens * standard_rate is non-comparable unless cache tokens are 0 or priced separately.",
+        "harness_defect": "MockProviderTransportResponse, DevCellExecutionReceipt, and execute_dev_cell_with_mock_transport omit thought_tokens and cache token fields; execute_dev_cell_with_mock_transport calls compute_canonical_cell_cost_usd without thought_or_reasoning_tokens, undercounting C1 billable output tokens."
+      },
+      "C2": {
+        "provider": "OpenAI",
+        "model_id": "gpt-6.1-sol",
+        "official_docs_urls": [
+          "https://developers.openai.com/api/docs/guides/reasoning",
+          "https://platform.openai.com/docs/guides/reasoning"
+        ],
+        "billable_input_field": "usage.prompt_tokens (or usage.input_tokens)",
+        "billable_output_field": "usage.completion_tokens (or usage.output_tokens)",
+        "reasoning_thinking_token_relationship": "ALREADY_INCLUDED_IN_OUTPUT_TOKENS: completion_tokens_details.reasoning_tokens (or output_tokens_details.reasoning_tokens) is an observability subset already included in completion_tokens / output_tokens. Confirmed by official docs (75 + 1186 = 1261 with reasoning_tokens=1024) and 01D live receipt (577 + 1030 = 1607 with reasoning_tokens=435).",
+        "cache_token_treatment": "prompt_tokens_details.cached_tokens is billed at discounted cached input rate; must be 0 or explicitly priced for canonical cost comparability.",
+        "harness_defect": "compute_canonical_cell_cost_usd blindly adds thought_or_reasoning_tokens to output_tokens for all candidates, which double-counts reasoning_tokens for C2 whenever supplied."
+      },
+      "C3": {
+        "provider": "Anthropic",
+        "model_id": "claude-sonnet-5-5",
+        "official_docs_urls": [
+          "https://platform.claude.com/docs/en/build-with-claude/thinking",
+          "https://platform.claude.com/docs/en/build-with-claude/thinking-steering-and-cost"
+        ],
+        "billable_input_field": "usage.input_tokens (+ cache_creation_input_tokens / cache_read_input_tokens if caching used)",
+        "billable_output_field": "usage.output_tokens",
+        "reasoning_thinking_token_relationship": "ALREADY_INCLUDED_IN_OUTPUT_TOKENS: Official Anthropic docs state 'output_tokens remains the inclusive, authoritative total used for billing. output_tokens_details.thinking_tokens is a read-only breakdown for observability.' Confirmed in 01D live receipt (1062 + 1367 = 2429).",
+        "cache_token_treatment": "cache_creation_input_tokens and cache_read_input_tokens have distinct billing multipliers (1.25x/2x write, 0.1x read); must be verified as 0 or priced separately.",
+        "harness_defect": "compute_canonical_cell_cost_usd blindly adds thought_or_reasoning_tokens to output_tokens for all candidates, double-counting thinking_tokens for C3 if supplied, and does not verify cache token fields."
+      }
+    }
+  },
+  "failure_taxonomy_mapping_table": [
+    {
+      "method_lock_outcome": "HTTP_429_RATE_LIMIT",
+      "harness_classification": "HTTP_429",
+      "retry_allowed": false,
+      "preserves_denominator": true,
+      "expected_stop_batch": false,
+      "observed_stop_batch": false,
+      "mapping_valid": true
+    },
+    {
+      "method_lock_outcome": "HTTP_5XX_PROVIDER_ERROR",
+      "harness_classification": "HTTP_5XX",
+      "retry_allowed": false,
+      "preserves_denominator": true,
+      "expected_stop_batch": false,
+      "observed_stop_batch": false,
+      "mapping_valid": true
+    },
+    {
+      "method_lock_outcome": "TIMEOUT",
+      "harness_classification": "TIMEOUT",
+      "retry_allowed": false,
+      "preserves_denominator": true,
+      "expected_stop_batch": false,
+      "observed_stop_batch": false,
+      "mapping_valid": true
+    },
+    {
+      "method_lock_outcome": "PARTIAL_TIMEOUT_WHERE_DISTINGUISHABLE",
+      "harness_classification": "UNMAPPED_NO_PARTIAL_TIMEOUT_ENUM_VALUE",
+      "retry_allowed": false,
+      "preserves_denominator": true,
+      "expected_stop_batch": false,
+      "observed_stop_batch": false,
+      "mapping_valid": false
+    },
+    {
+      "method_lock_outcome": "MALFORMED_OUTPUT_NON_JSON",
+      "harness_classification": "MALFORMED_JSON",
+      "retry_allowed": false,
+      "preserves_denominator": true,
+      "expected_stop_batch": false,
+      "observed_stop_batch": false,
+      "mapping_valid": true
+    },
+    {
+      "method_lock_outcome": "SCHEMA_NONCOMPLIANCE",
+      "harness_classification": "SEMANTIC_VALIDATION_FAILURE (rescued when plan_id/budget_analysis omitted)",
+      "retry_allowed": false,
+      "preserves_denominator": true,
+      "expected_stop_batch": false,
+      "observed_stop_batch": false,
+      "mapping_valid": false
+    },
+    {
+      "method_lock_outcome": "PROVIDER_REFUSAL",
+      "harness_classification": "REFUSAL",
+      "retry_allowed": false,
+      "preserves_denominator": true,
+      "expected_stop_batch": false,
+      "observed_stop_batch": false,
+      "mapping_valid": true
+    },
+    {
+      "method_lock_outcome": "DOWNSTREAM_CONSTRAINT_FAILURE",
+      "harness_classification": "NONE (evaluated downstream via exact_grounding_pass / final_core_pass)",
+      "retry_allowed": false,
+      "preserves_denominator": true,
+      "expected_stop_batch": false,
+      "observed_stop_batch": false,
+      "mapping_valid": true
+    },
+    {
+      "method_lock_outcome": "MODEL_ID_OR_RESOLVED_VERSION_MISMATCH",
+      "harness_classification": "MODEL_INTEGRITY_MISMATCH",
+      "retry_allowed": false,
+      "preserves_denominator": false,
+      "expected_stop_batch": true,
+      "observed_stop_batch": false,
+      "mapping_valid": false
+    },
+    {
+      "method_lock_outcome": "HARNESS_OR_INFRASTRUCTURE_ERROR",
+      "harness_classification": "UNMAPPED_NO_HARNESS_ERROR_ENUM_OR_STOP_BATCH_GUARD",
+      "retry_allowed": false,
+      "preserves_denominator": false,
+      "expected_stop_batch": true,
+      "observed_stop_batch": false,
+      "mapping_valid": false
+    }
+  ],
+  "checks": [
+    {
+      "check_id": "QA-01",
+      "description": "source/base integrity",
+      "expected": {
+        "develop_sha": "68d05e72f25ea37c7da411d5dffcb65033ef8a95",
+        "missing_authorities": [],
+        "harness_unmodified": true
+      },
+      "observed": {
+        "develop_sha": "68d05e72f25ea37c7da411d5dffcb65033ef8a95",
+        "missing_authorities": [],
+        "harness_unmodified": true
+      },
+      "status": "PASS",
+      "severity": "CRITICAL",
+      "evidence": {
+        "authority_count": 11
+      }
+    },
+    {
+      "check_id": "QA-02",
+      "description": "DEV bundle integrity",
+      "expected": {
+        "bundle_sha256": "bb0f051446ea3da8229298f22f4ce92b4db20751695273c6d01b7766da044050",
+        "dev_total": 80,
+        "dev_tune": 20,
+        "dev_select": 60,
+        "exact_final_overlap": 0,
+        "dev_tune_near_overlap_final": 0
+      },
+      "observed": {
+        "bundle_sha256": "bb0f051446ea3da8229298f22f4ce92b4db20751695273c6d01b7766da044050",
+        "dev_total": 80,
+        "dev_tune": 20,
+        "dev_select": 60,
+        "exact_final_overlap": 0,
+        "dev_tune_near_overlap_final": 0
+      },
+      "status": "PASS",
+      "severity": "CRITICAL",
+      "evidence": {
+        "manifest_sha256": "15cf3af6c93d3de967703dbc52d7e082bfd4a1e657409c0678ff51bd081e3c98"
+      }
+    },
+    {
+      "check_id": "QA-03",
+      "description": "DEV marginals",
+      "expected": {
+        "dev_tune": {
+          "destination": {
+            "ha-noi": 7,
+            "da-nang": 7,
+            "ha-long": 6
+          },
+          "days": {
+            "2": 7,
+            "3": 7,
+            "4": 6
+          },
+          "interest_count": {
+            "1": 7,
+            "2": 7,
+            "3": 6
+          },
+          "budget": {
+            "B1": 5,
+            "B2": 5,
+            "B3": 5,
+            "null": 5
+          },
+          "travel_style": {
+            "BACKPACKER": 5,
+            "BUDGET": 5,
+            "COMFORT": 5,
+            "LUXURY": 5
+          },
+          "weekend": {
+            "true": 10,
+            "false": 10
+          }
+        },
+        "dev_select": {
+          "destination": {
+            "ha-noi": 20,
+            "da-nang": 20,
+            "ha-long": 20
+          },
+          "days": {
+            "2": 20,
+            "3": 20,
+            "4": 20
+          },
+          "interest_count": {
+            "1": 20,
+            "2": 20,
+            "3": 20
+          },
+          "budget": {
+            "B1": 15,
+            "B2": 15,
+            "B3": 15,
+            "null": 15
+          },
+          "travel_style": {
+            "BACKPACKER": 15,
+            "BUDGET": 15,
+            "COMFORT": 15,
+            "LUXURY": 15
+          },
+          "weekend": {
+            "true": 30,
+            "false": 30
+          }
+        }
+      },
+      "observed": {
+        "dev_tune": {
+          "destination": {
+            "ha-noi": 7,
+            "da-nang": 7,
+            "ha-long": 6
+          },
+          "days": {
+            "2": 7,
+            "3": 7,
+            "4": 6
+          },
+          "interest_count": {
+            "1": 7,
+            "2": 7,
+            "3": 6
+          },
+          "budget": {
+            "B1": 5,
+            "B2": 5,
+            "B3": 5,
+            "null": 5
+          },
+          "travel_style": {
+            "BACKPACKER": 5,
+            "BUDGET": 5,
+            "COMFORT": 5,
+            "LUXURY": 5
+          },
+          "weekend": {
+            "true": 10,
+            "false": 10
+          }
+        },
+        "dev_select": {
+          "destination": {
+            "ha-noi": 20,
+            "da-nang": 20,
+            "ha-long": 20
+          },
+          "days": {
+            "2": 20,
+            "3": 20,
+            "4": 20
+          },
+          "interest_count": {
+            "1": 20,
+            "2": 20,
+            "3": 20
+          },
+          "budget": {
+            "B1": 15,
+            "B2": 15,
+            "B3": 15,
+            "null": 15
+          },
+          "travel_style": {
+            "BACKPACKER": 15,
+            "BUDGET": 15,
+            "COMFORT": 15,
+            "LUXURY": 15
+          },
+          "weekend": {
+            "true": 30,
+            "false": 30
+          }
+        }
+      },
+      "status": "PASS",
+      "severity": "CRITICAL",
+      "evidence": {
+        "independent_oracle_matched": true
+      }
+    },
+    {
+      "check_id": "QA-04",
+      "description": "final100 direct firewall",
+      "expected": {
+        "direct_final100": true,
+        "direct_p11": true,
+        "relative_final100": true,
+        "absolute_final100": true,
+        "final_scenario_id": true,
+        "invalid_fixture_label": true,
+        "dev_id_with_final_label": true
+      },
+      "observed": {
+        "direct_final100": true,
+        "direct_p11": true,
+        "relative_final100": true,
+        "absolute_final100": true,
+        "final_scenario_id": true,
+        "invalid_fixture_label": true,
+        "dev_id_with_final_label": true
+      },
+      "status": "PASS",
+      "severity": "CRITICAL",
+      "evidence": {
+        "blocked_cases": {
+          "direct_final100": true,
+          "direct_p11": true,
+          "relative_final100": true,
+          "absolute_final100": true,
+          "final_scenario_id": true,
+          "invalid_fixture_label": true,
+          "dev_id_with_final_label": true
+        }
+      }
+    },
+    {
+      "check_id": "QA-05",
+      "description": "final100 alias/symlink firewall",
+      "expected": {
+        "copied_final100_different_filename_blocked_by_path_guard": true,
+        "copied_final100_raises_Final100FirewallViolationError_in_loader": true,
+        "cross_partition_scenario_label_mismatch_blocked": true
+      },
+      "observed": {
+        "copied_final100_different_filename_blocked_by_path_guard": false,
+        "copied_final100_raises_Final100FirewallViolationError_in_loader": false,
+        "cross_partition_scenario_label_mismatch_blocked": false
+      },
+      "status": "FAIL",
+      "severity": "MAJOR",
+      "evidence": {
+        "location": "apps/ai-service/app/evaluation/dev_selection_harness.py:L318-L365",
+        "defect": "assert_not_final100_path only checks filename and resolved path against FORBIDDEN_FINAL100_BUNDLE_PATH without checking file SHA256 against FORBIDDEN_FINAL100_SHA256 when a final100 file is copied to a different filename; assert_not_final100_scenario also allows W06-DEV-TUNE-* IDs with W06_DEV_SELECT fixture_label."
+      }
+    },
+    {
+      "check_id": "QA-06",
+      "description": "REC-A exact 622 catalog",
+      "expected": {
+        "counts_by_destination": {
+          "ha-noi": 145,
+          "da-nang": 289,
+          "ha-long": 188
+        },
+        "total_reca_core": 622,
+        "per_fixture_place_id_set_exact_match": true
+      },
+      "observed": {
+        "counts_by_destination": {
+          "ha-noi": 145,
+          "da-nang": 289,
+          "ha-long": 188
+        },
+        "total_reca_core": 622,
+        "per_fixture_place_id_set_exact_match": true
+      },
+      "status": "PASS",
+      "severity": "CRITICAL",
+      "evidence": {
+        "sample_fixtures_checked": [
+          "W06-DEV-TUNE-001",
+          "W06-DEV-TUNE-002",
+          "W06-DEV-TUNE-003",
+          "W06-DEV-TUNE-004",
+          "W06-DEV-TUNE-005",
+          "W06-DEV-TUNE-006",
+          "W06-DEV-SELECT-001",
+          "W06-DEV-SELECT-002",
+          "W06-DEV-SELECT-003",
+          "W06-DEV-SELECT-004",
+          "W06-DEV-SELECT-005",
+          "W06-DEV-SELECT-006"
+        ]
+      }
+    },
+    {
+      "check_id": "QA-07",
+      "description": "DN 289 not 293",
+      "expected": {
+        "danang_reca_core_count": 289,
+        "danang_map_discovery_count": 293,
+        "excluded_lodging_only_count": 4,
+        "lodging_only_leaked_into_harness": []
+      },
+      "observed": {
+        "danang_reca_core_count": 289,
+        "danang_map_discovery_count": 293,
+        "excluded_lodging_only_count": 4,
+        "lodging_only_leaked_into_harness": []
+      },
+      "status": "PASS",
+      "severity": "CRITICAL",
+      "evidence": {
+        "excluded_danang_lodging_place_ids": [
+          "4c4ca7e8-2586-57cb-af5d-5e2b72c7bd4d",
+          "5e1ca20e-b579-59b8-b243-9f13aa43c65f",
+          "6489aeb0-fb3d-584d-9ca9-d6172e9cc63f",
+          "db61c6ab-1fde-51fe-ac20-0deef2fc5981"
+        ]
+      }
+    },
+    {
+      "check_id": "QA-08",
+      "description": "no secondary leakage",
+      "expected": {
+        "secondary_leakage_count": 0,
+        "secondary_overlap_ids": []
+      },
+      "observed": {
+        "secondary_leakage_count": 0,
+        "secondary_overlap_ids": []
+      },
+      "status": "PASS",
+      "severity": "CRITICAL",
+      "evidence": {
+        "total_secondary_places_in_freeze": 133
+      }
+    },
+    {
+      "check_id": "QA-09",
+      "description": "provider semantic-input equality",
+      "expected": {
+        "c1_c2_c3_semantic_inputs_identical": true
+      },
+      "observed": {
+        "c1_c2_c3_semantic_inputs_identical": true,
+        "system_prompt_sha256": "4bcb84a8aca1fc89f65709ac9d91c88e42359c284850061bae85c3607c345b0e",
+        "user_prompt_sha256": "c632a1f607203a81c9422164a7910c5f82211437d74af9c91bb6b370c1da3c17",
+        "catalog_context_sha256": "527c68f1dcb8a353942721f52afd2f1955eb92effdbea2155030f5acd6e58770"
+      },
+      "status": "PASS",
+      "severity": "CRITICAL",
+      "evidence": {
+        "fixture_id": "W06-DEV-TUNE-001",
+        "prompt_id": "P1"
+      }
+    },
+    {
+      "check_id": "QA-10",
+      "description": "C1 config",
+      "expected": {
+        "model": "gemini-3.8-flash",
+        "thinking_level": "medium",
+        "seed": 2026101508,
+        "temperature_top_p_top_k_omitted": true,
+        "max_output_tokens": 16384,
+        "retry": 0,
+        "tools": false,
+        "schema_v2_sha256": "825a4ff912d851a95f7392cb564b7d7ca3588135508dc6eb3ac6304cdde3c490"
+      },
+      "observed": {
+        "model": "gemini-3.8-flash",
+        "thinking_level": "medium",
+        "seed": 2026101508,
+        "temperature_top_p_top_k_omitted": true,
+        "max_output_tokens": 16384,
+        "retry": 0,
+        "tools": false,
+        "schema_v2_sha256": "825a4ff912d851a95f7392cb564b7d7ca3588135508dc6eb3ac6304cdde3c490"
+      },
+      "status": "PASS",
+      "severity": "CRITICAL",
+      "evidence": {
+        "omitted_parameters": [
+          "temperature",
+          "top_p",
+          "top_k"
+        ]
+      }
+    },
+    {
+      "check_id": "QA-11",
+      "description": "C2 config",
+      "expected": {
+        "model": "gpt-6.1-sol",
+        "reasoning_effort": "medium",
+        "seed": 2026101508,
+        "service_tier": "default",
+        "temperature_top_p_top_k_omitted": true,
+        "max_completion_tokens": 16384,
+        "max_retries": 0,
+        "tools": false,
+        "schema_v2_sha256": "825a4ff912d851a95f7392cb564b7d7ca3588135508dc6eb3ac6304cdde3c490"
+      },
+      "observed": {
+        "model": "gpt-6.1-sol",
+        "reasoning_effort": "medium",
+        "seed": 2026101508,
+        "service_tier": "default",
+        "temperature_top_p_top_k_omitted": true,
+        "max_completion_tokens": 16384,
+        "max_retries": 0,
+        "tools": false,
+        "schema_v2_sha256": "825a4ff912d851a95f7392cb564b7d7ca3588135508dc6eb3ac6304cdde3c490"
+      },
+      "status": "PASS",
+      "severity": "CRITICAL",
+      "evidence": {
+        "omitted_parameters": [
+          "temperature",
+          "top_p",
+          "top_k",
+          "logprobs",
+          "top_logprobs"
+        ]
+      }
+    },
+    {
+      "check_id": "QA-12",
+      "description": "C3 config",
+      "expected": {
+        "model": "claude-sonnet-5-5",
+        "thinking": {
+          "type": "adaptive"
+        },
+        "effort": "high",
+        "seed_temperature_top_p_top_k_omitted": true,
+        "max_tokens": 16384,
+        "max_retries": 0,
+        "tools": false,
+        "schema_v2_sha256": "825a4ff912d851a95f7392cb564b7d7ca3588135508dc6eb3ac6304cdde3c490"
+      },
+      "observed": {
+        "model": "claude-sonnet-5-5",
+        "thinking": {
+          "type": "adaptive"
+        },
+        "effort": "high",
+        "seed_temperature_top_p_top_k_omitted": true,
+        "max_tokens": 16384,
+        "max_retries": 0,
+        "tools": false,
+        "schema_v2_sha256": "825a4ff912d851a95f7392cb564b7d7ca3588135508dc6eb3ac6304cdde3c490"
+      },
+      "status": "PASS",
+      "severity": "CRITICAL",
+      "evidence": {
+        "omitted_parameters": [
+          "temperature",
+          "top_p",
+          "top_k",
+          "seed"
+        ]
+      }
+    },
+    {
+      "check_id": "QA-13",
+      "description": "strict raw JSON only",
+      "expected": {
+        "valid_complete_response": true,
+        "markdown_code_fence": false,
+        "leading_prose": false,
+        "trailing_prose": false,
+        "trailing_comma": false,
+        "missing_required_day_field": false,
+        "wrong_primitive_type": false,
+        "semantic_minimum_violation": false
+      },
+      "observed": {
+        "valid_complete_response": true,
+        "markdown_code_fence": false,
+        "leading_prose": false,
+        "trailing_prose": false,
+        "trailing_comma": false,
+        "missing_required_day_field": false,
+        "wrong_primitive_type": false,
+        "semantic_minimum_violation": false
+      },
+      "status": "PASS",
+      "severity": "CRITICAL",
+      "evidence": {
+        "tested_cell_run_id": "W06-DEV-TUNE-P1-C1-W06-DEV-TUNE-001"
+      }
+    },
+    {
+      "check_id": "QA-14",
+      "description": "no semantic rescue",
+      "expected": {
+        "missing_required_plan_id_accepted": false,
+        "missing_required_budget_analysis_accepted": false,
+        "missing_plan_id_scenario_id_dest_slug_budget_analysis_accepted": false,
+        "extra_unsupported_field_without_plan_id_accepted": false,
+        "extra_unsupported_field_with_plan_id_accepted": false
+      },
+      "observed": {
+        "missing_required_plan_id_accepted": true,
+        "missing_required_budget_analysis_accepted": true,
+        "missing_plan_id_scenario_id_dest_slug_budget_analysis_accepted": true,
+        "extra_unsupported_field_without_plan_id_accepted": true,
+        "extra_unsupported_field_with_plan_id_accepted": false
+      },
+      "status": "FAIL",
+      "severity": "CRITICAL",
+      "evidence": {
+        "failure_code": "PRIMARY_SEMANTIC_RESCUE_DETECTED",
+        "location": "apps/ai-service/app/evaluation/dev_selection_harness.py:L1552-L1563",
+        "root_cause": "execute_dev_cell_with_mock_transport checks `if 'plan_id' in decoded_json and 'budget_analysis' in decoded_json:` and otherwise falls back to `parse_strict_benchmark_plan_response`, which synthesizes missing plan_id, scenario_id, destination_slug, day_cost, and budget_analysis, and ignores extra top-level fields."
+      }
+    },
+    {
+      "check_id": "QA-15",
+      "description": "model-ID mismatch stops batch",
+      "expected": {
+        "method_lock_policy": "CONFIGURATION_INTEGRITY_FAILURE_STOP_BATCH_BEFORE_SCIENTIFIC_REPORTING",
+        "batch_stopped_before_aggregation_and_selection": true,
+        "missing_returned_model_id_rejected": true
+      },
+      "observed": {
+        "method_lock_policy": "CONFIGURATION_INTEGRITY_FAILURE_STOP_BATCH_BEFORE_SCIENTIFIC_REPORTING",
+        "batch_stopped_before_aggregation_and_selection": false,
+        "missing_returned_model_id_rejected": false
+      },
+      "status": "FAIL",
+      "severity": "CRITICAL",
+      "evidence": {
+        "failure_code": "MODEL_ID_MISMATCH_FAILS_TO_STOP_BATCH",
+        "locations": [
+          "apps/ai-service/app/evaluation/dev_selection_harness.py:L1504",
+          "apps/ai-service/app/evaluation/dev_selection_harness.py:L1536-L1540",
+          "apps/ai-service/app/evaluation/dev_selection_harness.py:L1699-L1772"
+        ],
+        "root_cause": "1) Line 1504 substitutes cell_manifest.requested_model_id when mock_response.returned_model_id is None/empty. 2) Lines 1536-1540 record MODEL_INTEGRITY_MISMATCH as an ordinary failed denominator cell and aggregate_dev_cell_receipts / select_winning_candidate_dev_select allow batch scoring and winner selection to proceed instead of raising a configuration-integrity batch-stop error."
+      }
+    },
+    {
+      "check_id": "QA-16",
+      "description": "ordinary provider failures preserve denominator",
+      "expected": {
+        "n_assigned": 60,
+        "n_valid_schema": 59,
+        "valid_run_and_schema_rate": 0.9833333333333333
+      },
+      "observed": {
+        "n_assigned": 60,
+        "n_valid_schema": 59,
+        "valid_run_and_schema_rate": 0.9833333333333333
+      },
+      "status": "PASS",
+      "severity": "CRITICAL",
+      "evidence": {
+        "failure_counts": {
+          "NONE": 59,
+          "TIMEOUT": 1
+        }
+      }
+    },
+    {
+      "check_id": "QA-17",
+      "description": "missing receipt fails closed",
+      "expected": {
+        "missing_receipt_raises_DenominatorIntegrityError": true
+      },
+      "observed": {
+        "missing_receipt_raises_DenominatorIntegrityError": true
+      },
+      "status": "PASS",
+      "severity": "CRITICAL",
+      "evidence": {
+        "assigned": 60,
+        "provided": 59
+      }
+    },
+    {
+      "check_id": "QA-18",
+      "description": "duplicate receipt fails closed",
+      "expected": {
+        "duplicate_receipt_extra_blocked": true,
+        "duplicate_receipt_same_count_blocked": true,
+        "attempted_false_blocked": true
+      },
+      "observed": {
+        "duplicate_receipt_extra_blocked": true,
+        "duplicate_receipt_same_count_blocked": true,
+        "attempted_false_blocked": true
+      },
+      "status": "PASS",
+      "severity": "CRITICAL",
+      "evidence": {
+        "checks": {
+          "duplicate_receipt_extra_blocked": true,
+          "duplicate_receipt_same_count_blocked": true,
+          "attempted_false_blocked": true
+        }
+      }
+    },
+    {
+      "check_id": "QA-19",
+      "description": "exact grounding mapping",
+      "expected": {
+        "case_A": {
+          "valid_schema": true,
+          "exact_grounding": true
+        },
+        "case_B_invalid_poi": {
+          "valid_schema": true,
+          "exact_grounding": false
+        },
+        "case_C_destination_violation": {
+          "valid_schema": true,
+          "exact_grounding": false
+        }
+      },
+      "observed": {
+        "case_A": {
+          "valid_schema": true,
+          "exact_grounding": true
+        },
+        "case_B_invalid_poi": {
+          "valid_schema": true,
+          "exact_grounding": false
+        },
+        "case_C_destination_violation": {
+          "valid_schema": true,
+          "exact_grounding": false
+        }
+      },
+      "status": "PASS",
+      "severity": "CRITICAL",
+      "evidence": {
+        "contract_version": "1.1.0"
+      }
+    },
+    {
+      "check_id": "QA-20",
+      "description": "core mapping",
+      "expected": {
+        "case_A_core_pass": true,
+        "case_B_core_pass": false,
+        "case_H_travel_time_excluded_from_core_pass": true,
+        "case_I_budget_status": "VIOLATION",
+        "case_I_estimated_budget_compliant": false,
+        "case_I_estimated_budget_violation_fails_core_pass": false,
+        "case_J_preference_excluded_from_core_pass": true
+      },
+      "observed": {
+        "case_A_core_pass": true,
+        "case_B_core_pass": false,
+        "case_H_travel_time_excluded_from_core_pass": true,
+        "case_I_budget_status": "VIOLATION",
+        "case_I_estimated_budget_compliant": false,
+        "case_I_estimated_budget_violation_fails_core_pass": false,
+        "case_J_preference_excluded_from_core_pass": true
+      },
+      "status": "PASS",
+      "severity": "CRITICAL",
+      "evidence": {
+        "no_weighted_composite_score": true
+      }
+    },
+    {
+      "check_id": "QA-21",
+      "description": "opening-hours semantics",
+      "expected": {
+        "case_D_known_violation_core_pass": false,
+        "case_E_unknown_hours_neutral_core_pass": true
+      },
+      "observed": {
+        "case_D_known_violation_core_pass": false,
+        "case_E_unknown_hours_neutral_core_pass": true
+      },
+      "status": "PASS",
+      "severity": "CRITICAL",
+      "evidence": {
+        "hours_place_tested": "0938eb59-ee1c-5879-a798-58b5fdd07bce",
+        "opening_hours": "Mo-Su 08:00-17:00"
+      }
+    },
+    {
+      "check_id": "QA-22",
+      "description": "minimum 2 POI/day",
+      "expected": {
+        "case_F_one_poi_day_core_pass": false,
+        "case_G_one_poi_plus_transit_only_core_pass": false
+      },
+      "observed": {
+        "case_F_one_poi_day_core_pass": false,
+        "case_G_one_poi_plus_transit_only_core_pass": false
+      },
+      "status": "PASS",
+      "severity": "CRITICAL",
+      "evidence": {
+        "minimum_poi_per_day_contract": 2
+      }
+    },
+    {
+      "check_id": "QA-23",
+      "description": "10pp non-pairwise",
+      "expected": {
+        "direct_90_82_73_survivors": [
+          "C1",
+          "C2"
+        ],
+        "stage1_survivors": [
+          "C1",
+          "C2"
+        ],
+        "stage2_survivors": [
+          "C1",
+          "C2"
+        ],
+        "stage3_survivors": [
+          "C1",
+          "C2"
+        ]
+      },
+      "observed": {
+        "direct_90_82_73_survivors": [
+          "C1",
+          "C2"
+        ],
+        "stage1_survivors": [
+          "C1",
+          "C2"
+        ],
+        "stage2_survivors": [
+          "C1",
+          "C2"
+        ],
+        "stage3_survivors": [
+          "C1",
+          "C2"
+        ]
+      },
+      "status": "PASS",
+      "severity": "CRITICAL",
+      "evidence": {
+        "compared_against_best_current_survivor": true
+      }
+    },
+    {
+      "check_id": "QA-24",
+      "description": "exact 10pp boundary",
+      "expected": {
+        "at_0_80_survivors": [
+          "A",
+          "B"
+        ],
+        "at_0_799999999999_survivors": [
+          "A"
+        ]
+      },
+      "observed": {
+        "at_0_80_survivors": [
+          "A",
+          "B"
+        ],
+        "at_0_799999999999_survivors": [
+          "A"
+        ]
+      },
+      "status": "PASS",
+      "severity": "CRITICAL",
+      "evidence": {
+        "tolerance_decimal": "0.10"
+      }
+    },
+    {
+      "check_id": "QA-25",
+      "description": "early survivor stopping",
+      "expected": {
+        "stop_after_c1_traces_len": 1,
+        "stop_after_c2_traces_len": 2,
+        "stop_after_c3_traces_len": 3
+      },
+      "observed": {
+        "stop_after_c1_traces_len": 1,
+        "stop_after_c2_traces_len": 2,
+        "stop_after_c3_traces_len": 3
+      },
+      "status": "PASS",
+      "severity": "CRITICAL",
+      "evidence": {
+        "early1_stage": "VALID_RUN_AND_SCHEMA_RATE",
+        "early2_stage": "EXACT_GROUNDING_PASS_RATE",
+        "early3_stage": "FINAL_CORE_PASS_RATE"
+      }
+    },
+    {
+      "check_id": "QA-26",
+      "description": "cost comparability all-current-survivors",
+      "expected": {
+        "eliminated_c3_missing_cost_does_not_skip_c1_c2_cost": true,
+        "surviving_c2_missing_cost_skips_with_status": "COST_CRITERION_SKIPPED_NOT_COMPARABLE"
+      },
+      "observed": {
+        "eliminated_c3_missing_cost_does_not_skip_c1_c2_cost": true,
+        "surviving_c2_missing_cost_skips_with_status": "COST_CRITERION_SKIPPED_NOT_COMPARABLE"
+      },
+      "status": "PASS",
+      "severity": "CRITICAL",
+      "evidence": {
+        "c3_elim_stage": "MEDIAN_COST_PER_SCENARIO"
+      }
+    },
+    {
+      "check_id": "QA-27",
+      "description": "provider token billing semantics",
+      "expected": {
+        "c1_disjoint_thought_tokens_tracked_and_billed": true,
+        "cache_tokens_tracked_or_guarded_for_comparability": true
+      },
+      "observed": {
+        "c1_disjoint_thought_tokens_tracked_and_billed": false,
+        "cache_tokens_tracked_or_guarded_for_comparability": false,
+        "transport_fields": [
+          "authoritative_usage_available",
+          "finish_reason",
+          "input_tokens",
+          "latency_ms",
+          "output_tokens",
+          "raw_text",
+          "returned_model_id",
+          "simulated_failure",
+          "total_tokens"
+        ]
+      },
+      "status": "FAIL",
+      "severity": "CRITICAL",
+      "evidence": {
+        "access_date": "2026-10-18",
+        "live_generation_api_calls": 0,
+        "candidates": {
+          "C1": {
+            "provider": "Google",
+            "model_id": "gemini-3.8-flash",
+            "official_docs_urls": [
+              "https://ai.google.dev/gemini-api/docs/thinking",
+              "https://ai.google.dev/gemini-api/docs/tokens",
+              "https://ai.google.dev/gemini-api/docs/caching"
+            ],
+            "billable_input_field": "usage_metadata.prompt_token_count",
+            "billable_output_field": "usage_metadata.candidates_token_count + usage_metadata.thoughts_token_count",
+            "reasoning_thinking_token_relationship": "DISJOINT_MUST_BE_ADDED: Gemini candidates_token_count excludes thoughts_token_count. Confirmed by official docs ('When thinking is turned on, response pricing is the sum of output tokens and thinking tokens') and 01D live receipt (514 + 599 + 3179 = 4292).",
+            "cache_token_treatment": "usage_metadata.cached_content_token_count is billed at reduced cached-input rate; if > 0, naive input_tokens * standard_rate is non-comparable unless cache tokens are 0 or priced separately.",
+            "harness_defect": "MockProviderTransportResponse, DevCellExecutionReceipt, and execute_dev_cell_with_mock_transport omit thought_tokens and cache token fields; execute_dev_cell_with_mock_transport calls compute_canonical_cell_cost_usd without thought_or_reasoning_tokens, undercounting C1 billable output tokens."
+          },
+          "C2": {
+            "provider": "OpenAI",
+            "model_id": "gpt-6.1-sol",
+            "official_docs_urls": [
+              "https://developers.openai.com/api/docs/guides/reasoning",
+              "https://platform.openai.com/docs/guides/reasoning"
+            ],
+            "billable_input_field": "usage.prompt_tokens (or usage.input_tokens)",
+            "billable_output_field": "usage.completion_tokens (or usage.output_tokens)",
+            "reasoning_thinking_token_relationship": "ALREADY_INCLUDED_IN_OUTPUT_TOKENS: completion_tokens_details.reasoning_tokens (or output_tokens_details.reasoning_tokens) is an observability subset already included in completion_tokens / output_tokens. Confirmed by official docs (75 + 1186 = 1261 with reasoning_tokens=1024) and 01D live receipt (577 + 1030 = 1607 with reasoning_tokens=435).",
+            "cache_token_treatment": "prompt_tokens_details.cached_tokens is billed at discounted cached input rate; must be 0 or explicitly priced for canonical cost comparability.",
+            "harness_defect": "compute_canonical_cell_cost_usd blindly adds thought_or_reasoning_tokens to output_tokens for all candidates, which double-counts reasoning_tokens for C2 whenever supplied."
+          },
+          "C3": {
+            "provider": "Anthropic",
+            "model_id": "claude-sonnet-5-5",
+            "official_docs_urls": [
+              "https://platform.claude.com/docs/en/build-with-claude/thinking",
+              "https://platform.claude.com/docs/en/build-with-claude/thinking-steering-and-cost"
+            ],
+            "billable_input_field": "usage.input_tokens (+ cache_creation_input_tokens / cache_read_input_tokens if caching used)",
+            "billable_output_field": "usage.output_tokens",
+            "reasoning_thinking_token_relationship": "ALREADY_INCLUDED_IN_OUTPUT_TOKENS: Official Anthropic docs state 'output_tokens remains the inclusive, authoritative total used for billing. output_tokens_details.thinking_tokens is a read-only breakdown for observability.' Confirmed in 01D live receipt (1062 + 1367 = 2429).",
+            "cache_token_treatment": "cache_creation_input_tokens and cache_read_input_tokens have distinct billing multipliers (1.25x/2x write, 0.1x read); must be verified as 0 or priced separately.",
+            "harness_defect": "compute_canonical_cell_cost_usd blindly adds thought_or_reasoning_tokens to output_tokens for all candidates, double-counting thinking_tokens for C3 if supplied, and does not verify cache token fields."
+          }
+        }
+      }
+    },
+    {
+      "check_id": "QA-28",
+      "description": "no reasoning/thinking double count",
+      "expected": {
+        "c2_cost_usd_without_double_counting_reasoning": 0.011454,
+        "c3_cost_usd_without_double_counting_thinking": 0.023691
+      },
+      "observed": {
+        "c2_cost_usd_observed": 0.015804,
+        "c3_cost_usd_observed": 0.035691
+      },
+      "status": "FAIL",
+      "severity": "CRITICAL",
+      "evidence": {
+        "location": "apps/ai-service/app/evaluation/dev_selection_harness.py:L1355-L1373",
+        "root_cause": "compute_canonical_cell_cost_usd computes `billed_out = output_tokens + (thought_or_reasoning_tokens or 0)` unconditionally for all candidates, double-counting reasoning_tokens for C2 (OpenAI) and thinking_tokens for C3 (Anthropic), where output_tokens is already inclusive."
+      }
+    },
+    {
+      "check_id": "QA-29",
+      "description": "unrounded cost comparison",
+      "expected": {
+        "c1_cost": "0.0100000000001",
+        "c2_cost": "0.0100000000002",
+        "cost_stage_survivors": [
+          "C1"
+        ],
+        "selected_candidate_id": "C1",
+        "selected_at_stage": "MEDIAN_COST_PER_SCENARIO"
+      },
+      "observed": {
+        "c1_cost": "0.0100000000001",
+        "c2_cost": "0.0100000000002",
+        "cost_stage_survivors": [
+          "C1",
+          "C2"
+        ],
+        "selected_candidate_id": "C2",
+        "selected_at_stage": "MEDIAN_LATENCY"
+      },
+      "status": "FAIL",
+      "severity": "CRITICAL",
+      "evidence": {
+        "failure_code": "COST_TIEBREAK_NOT_UNROUNDED",
+        "location": "apps/ai-service/app/evaluation/dev_selection_harness.py:L1775-L1777,L2120-L2126",
+        "root_cause": "_to_exact_decimal(value) formats floats via Decimal(f'{value:.12f}'), which rounds 0.0100000000001 and 0.0100000000002 to Decimal('0.010000000000'), turning strictly unequal costs into a false tie and allowing C2 to win on latency."
+      }
+    },
+    {
+      "check_id": "QA-30",
+      "description": "unrounded latency comparison",
+      "expected": {
+        "case1_1000ms_winner": "C1",
+        "sub12_decimal_c1_1_0000000000002_vs_c2_1_0000000000001_winner": "C2",
+        "sub12_decimal_latency_stage_survivors": [
+          "C2"
+        ],
+        "sub12_decimal_selected_at_stage": "MEDIAN_LATENCY",
+        "sub12_decimal_is_administrative_tiebreak": false
+      },
+      "observed": {
+        "case1_1000ms_winner": "C1",
+        "sub12_decimal_c1_1_0000000000002_vs_c2_1_0000000000001_winner": "C1",
+        "sub12_decimal_latency_stage_survivors": [
+          "C1",
+          "C2"
+        ],
+        "sub12_decimal_selected_at_stage": "FINAL_ADMINISTRATIVE_TIEBREAK_C1_GT_C2_GT_C3",
+        "sub12_decimal_is_administrative_tiebreak": true
+      },
+      "status": "FAIL",
+      "severity": "MAJOR",
+      "evidence": {
+        "failure_code": "LATENCY_TIEBREAK_ROUNDING",
+        "location": "apps/ai-service/app/evaluation/dev_selection_harness.py:L1775-L1777,L2162-L2166",
+        "root_cause": "median_latency_ms is converted via _to_exact_decimal(value) = Decimal(f'{value:.12f}'), which rounds distinct IEEE-754 floats (e.g. C1=1.0000000000002 ms vs C2=1.0000000000001 ms) both to Decimal('1.000000000000'), collapsing strictly unequal latencies into a false tie and selecting C1 via FINAL_ADMINISTRATIVE_TIEBREAK_C1_GT_C2_GT_C3 instead of C2 at MEDIAN_LATENCY."
+      }
+    },
+    {
+      "check_id": "QA-31",
+      "description": "P1/P2 registry status",
+      "expected": {
+        "prompt_semantic_freeze_status": "INFRASTRUCTURE_ONLY_PENDING_LATER_PROMPT_FREEZE_GATE",
+        "p1_and_p2_capability": true,
+        "p3_blocked": true,
+        "post_hoc_blocked": true,
+        "provider_specific_blocked": true
+      },
+      "observed": {
+        "prompt_semantic_freeze_status": "INFRASTRUCTURE_ONLY_PENDING_LATER_PROMPT_FREEZE_GATE",
+        "p1_and_p2_capability": true,
+        "p3_blocked": true,
+        "post_hoc_blocked": true,
+        "provider_specific_blocked": true
+      },
+      "status": "PASS",
+      "severity": "CRITICAL",
+      "evidence": {
+        "p1_sha256": "096ff4c74dd8d1aed1c0abe501b97c8dfd0f6424dbca535f2b79a242637a1c11"
+      }
+    },
+    {
+      "check_id": "QA-32",
+      "description": "prompt freeze required before live",
+      "expected": {
+        "requires_separate_frozen_prompt_artifact_before_live_dev_tune": true,
+        "single_p1_selection_status": "LOCK_P1_WITHOUT_PERFORMANCE_COMPARISON"
+      },
+      "observed": {
+        "requires_separate_frozen_prompt_artifact_before_live_dev_tune": false,
+        "single_p1_selection_status": "SINGLE_FROZEN_PROMPT_P1_LOCKED_WITHOUT_COMPARISON"
+      },
+      "status": "FAIL",
+      "severity": "MAJOR",
+      "evidence": {
+        "location": "apps/ai-service/app/evaluation/dev_selection_harness.py:L1894-L1905",
+        "root_cause": "1) dev_selection_harness.py does not enforce a pre-live prompt freeze artifact gate (verifying prompt IDs, prompt hashes, system prompt, user template, created-before-live evidence, candidate list, DEV-TUNE plan hash, and call budget). 2) select_winning_prompt_dev_tune returns selected_at_stage='SINGLE_FROZEN_PROMPT_P1_LOCKED_WITHOUT_COMPARISON' instead of exact 'LOCK_P1_WITHOUT_PERFORMANCE_COMPARISON' required by Section 20."
+      }
+    },
+    {
+      "check_id": "QA-33",
+      "description": "scientific code commit provenance",
+      "expected": {
+        "manifest_has_code_commit_sha": true,
+        "receipt_has_code_commit_sha": true,
+        "manifest_has_provider_config_sha256": true,
+        "receipt_has_provider_config_sha256": true,
+        "manifest_has_scenario_sha256": true,
+        "manifest_has_catalog_context_sha256": true,
+        "receipt_has_returned_model_id": true,
+        "receipt_has_attempt_number": true
+      },
+      "observed": {
+        "manifest_has_code_commit_sha": false,
+        "receipt_has_code_commit_sha": false,
+        "manifest_has_provider_config_sha256": false,
+        "receipt_has_provider_config_sha256": false,
+        "manifest_has_scenario_sha256": true,
+        "manifest_has_catalog_context_sha256": true,
+        "receipt_has_returned_model_id": true,
+        "receipt_has_attempt_number": true
+      },
+      "status": "FAIL",
+      "severity": "MAJOR",
+      "evidence": {
+        "locations": [
+          "apps/ai-service/app/evaluation/dev_selection_harness.py:L1053-L1086",
+          "apps/ai-service/app/evaluation/dev_selection_harness.py:L1376-L1408",
+          "apps/ai-service/app/evaluation/dev_selection_harness.py:L1598"
+        ],
+        "root_cause": "DevCellExecutionManifest and DevCellExecutionReceipt omit code_commit_sha and provider_config_sha256; furthermore, execute_dev_cell_with_mock_transport line 1598 hardcodes EXPECTED_BASE_DEVELOP_SHA_DEV_HARNESS (50884c610cebf455255b9d05f737d9558cabf2e7) instead of recording the exact code commit SHA used for execution."
+      }
+    },
+    {
+      "check_id": "QA-34",
+      "description": "cell immutability",
+      "expected": {
+        "second_execution_same_cell_dir_blocked": true,
+        "reuse_run_id_dir_different_fixture_blocked": true,
+        "reuse_run_id_dir_different_candidate_blocked": true
+      },
+      "observed": {
+        "second_execution_same_cell_dir_blocked": true,
+        "reuse_run_id_dir_different_fixture_blocked": true,
+        "reuse_run_id_dir_different_candidate_blocked": true
+      },
+      "status": "PASS",
+      "severity": "CRITICAL",
+      "evidence": {
+        "tested_run_id": "W06-DEV-TUNE-P1-C1-W06-DEV-TUNE-001"
+      }
+    },
+    {
+      "check_id": "QA-35",
+      "description": "plan reproducibility",
+      "expected": {
+        "clean_process_runs_identical": true
+      },
+      "observed": {
+        "clean_process_runs_identical": true,
+        "dev_tune_plan_sha256": "cf6f3966069f5c86d9696a8d3992876a4b492238336eb278da76cf318e564c81",
+        "dev_select_plan_sha256": "f8538f7499ad3f19beda709697cc01bdf5bb5daef17cd2d985d0da6b79ddfe59"
+      },
+      "status": "PASS",
+      "severity": "CRITICAL",
+      "evidence": {
+        "tune_cells": 60,
+        "select_cells": 180
+      }
+    },
+    {
+      "check_id": "QA-36",
+      "description": "exact 60/120/180 cell budgets",
+      "expected": {
+        "dev_tune_p1": 60,
+        "dev_tune_p1_p2": 120,
+        "dev_select": 180
+      },
+      "observed": {
+        "dev_tune_p1": 60,
+        "dev_tune_p1_p2": 120,
+        "dev_select": 180
+      },
+      "status": "PASS",
+      "severity": "CRITICAL",
+      "evidence": {
+        "no_extra_cells": true,
+        "no_best_of": true
+      }
+    },
+    {
+      "check_id": "QA-37",
+      "description": "stochasticity pre-winner block",
+      "expected": {
+        "none_dev_select_result_blocked": true,
+        "winner_selected_false_blocked": true,
+        "mismatched_locked_prompt_blocked": true
+      },
+      "observed": {
+        "none_dev_select_result_blocked": true,
+        "winner_selected_false_blocked": true,
+        "mismatched_locked_prompt_blocked": true
+      },
+      "status": "PASS",
+      "severity": "CRITICAL",
+      "evidence": {
+        "pre_winner_blocks": {
+          "none_dev_select_result_blocked": true,
+          "winner_selected_false_blocked": true,
+          "mismatched_locked_prompt_blocked": true
+        }
+      }
+    },
+    {
+      "check_id": "QA-38",
+      "description": "stochasticity exact 15 design",
+      "expected": {
+        "fixture_ids": [
+          "W06-DEV-TUNE-001",
+          "W06-DEV-TUNE-002",
+          "W06-DEV-TUNE-003",
+          "W06-DEV-TUNE-004",
+          "W06-DEV-TUNE-005"
+        ],
+        "executions_per_fixture": 3,
+        "max_calls": 15,
+        "may_alter_selected_model": false,
+        "may_alter_selected_prompt": false,
+        "may_alter_sampling_config": false,
+        "may_alter_dev_select_results": false
+      },
+      "observed": {
+        "fixture_ids": [
+          "W06-DEV-TUNE-001",
+          "W06-DEV-TUNE-002",
+          "W06-DEV-TUNE-003",
+          "W06-DEV-TUNE-004",
+          "W06-DEV-TUNE-005"
+        ],
+        "executions_per_fixture": 3,
+        "max_calls": 15,
+        "may_alter_selected_model": false,
+        "may_alter_selected_prompt": false,
+        "may_alter_sampling_config": false,
+        "may_alter_dev_select_results": false
+      },
+      "status": "PASS",
+      "severity": "CRITICAL",
+      "evidence": {
+        "plan_sha256": "1bb99463dc6052fcba46a9234b8cb5187265b16038468de43959fd5bee44590c"
+      }
+    },
+    {
+      "check_id": "QA-39",
+      "description": "failure taxonomy mapping",
+      "expected": {
+        "all_10_outcomes_validly_mapped": true,
+        "has_partial_timeout_classification": true,
+        "has_harness_error_classification": true,
+        "model_id_mismatch_stops_batch": true
+      },
+      "observed": {
+        "all_10_outcomes_validly_mapped": false,
+        "has_partial_timeout_classification": false,
+        "has_harness_error_classification": false,
+        "model_id_mismatch_stops_batch": false,
+        "invalid_outcomes": [
+          "PARTIAL_TIMEOUT_WHERE_DISTINGUISHABLE",
+          "SCHEMA_NONCOMPLIANCE",
+          "MODEL_ID_OR_RESOLVED_VERSION_MISMATCH",
+          "HARNESS_OR_INFRASTRUCTURE_ERROR"
+        ]
+      },
+      "status": "FAIL",
+      "severity": "MAJOR",
+      "evidence": {
+        "taxonomy_mapping_table": [
+          {
+            "method_lock_outcome": "HTTP_429_RATE_LIMIT",
+            "harness_classification": "HTTP_429",
+            "retry_allowed": false,
+            "preserves_denominator": true,
+            "expected_stop_batch": false,
+            "observed_stop_batch": false,
+            "mapping_valid": true
+          },
+          {
+            "method_lock_outcome": "HTTP_5XX_PROVIDER_ERROR",
+            "harness_classification": "HTTP_5XX",
+            "retry_allowed": false,
+            "preserves_denominator": true,
+            "expected_stop_batch": false,
+            "observed_stop_batch": false,
+            "mapping_valid": true
+          },
+          {
+            "method_lock_outcome": "TIMEOUT",
+            "harness_classification": "TIMEOUT",
+            "retry_allowed": false,
+            "preserves_denominator": true,
+            "expected_stop_batch": false,
+            "observed_stop_batch": false,
+            "mapping_valid": true
+          },
+          {
+            "method_lock_outcome": "PARTIAL_TIMEOUT_WHERE_DISTINGUISHABLE",
+            "harness_classification": "UNMAPPED_NO_PARTIAL_TIMEOUT_ENUM_VALUE",
+            "retry_allowed": false,
+            "preserves_denominator": true,
+            "expected_stop_batch": false,
+            "observed_stop_batch": false,
+            "mapping_valid": false
+          },
+          {
+            "method_lock_outcome": "MALFORMED_OUTPUT_NON_JSON",
+            "harness_classification": "MALFORMED_JSON",
+            "retry_allowed": false,
+            "preserves_denominator": true,
+            "expected_stop_batch": false,
+            "observed_stop_batch": false,
+            "mapping_valid": true
+          },
+          {
+            "method_lock_outcome": "SCHEMA_NONCOMPLIANCE",
+            "harness_classification": "SEMANTIC_VALIDATION_FAILURE (rescued when plan_id/budget_analysis omitted)",
+            "retry_allowed": false,
+            "preserves_denominator": true,
+            "expected_stop_batch": false,
+            "observed_stop_batch": false,
+            "mapping_valid": false
+          },
+          {
+            "method_lock_outcome": "PROVIDER_REFUSAL",
+            "harness_classification": "REFUSAL",
+            "retry_allowed": false,
+            "preserves_denominator": true,
+            "expected_stop_batch": false,
+            "observed_stop_batch": false,
+            "mapping_valid": true
+          },
+          {
+            "method_lock_outcome": "DOWNSTREAM_CONSTRAINT_FAILURE",
+            "harness_classification": "NONE (evaluated downstream via exact_grounding_pass / final_core_pass)",
+            "retry_allowed": false,
+            "preserves_denominator": true,
+            "expected_stop_batch": false,
+            "observed_stop_batch": false,
+            "mapping_valid": true
+          },
+          {
+            "method_lock_outcome": "MODEL_ID_OR_RESOLVED_VERSION_MISMATCH",
+            "harness_classification": "MODEL_INTEGRITY_MISMATCH",
+            "retry_allowed": false,
+            "preserves_denominator": false,
+            "expected_stop_batch": true,
+            "observed_stop_batch": false,
+            "mapping_valid": false
+          },
+          {
+            "method_lock_outcome": "HARNESS_OR_INFRASTRUCTURE_ERROR",
+            "harness_classification": "UNMAPPED_NO_HARNESS_ERROR_ENUM_OR_STOP_BATCH_GUARD",
+            "retry_allowed": false,
+            "preserves_denominator": false,
+            "expected_stop_batch": true,
+            "observed_stop_batch": false,
+            "mapping_valid": false
+          }
+        ]
+      }
+    },
+    {
+      "check_id": "QA-40",
+      "description": "no live / no DEV / no final100 evidence",
+      "expected": {
+        "live_sdk_calls_in_harness": [],
+        "live_provider_calls": 0,
+        "provider_cost_usd": 0,
+        "dev_tune_model_execution_started": false,
+        "dev_select_model_execution_started": false,
+        "stochasticity_diagnostic_started": false,
+        "final100_used": false,
+        "winner_selected": false
+      },
+      "observed": {
+        "live_sdk_calls_in_harness": [],
+        "live_provider_calls": 0,
+        "provider_cost_usd": 0,
+        "dev_tune_model_execution_started": false,
+        "dev_select_model_execution_started": false,
+        "stochasticity_diagnostic_started": false,
+        "final100_used": false,
+        "winner_selected": false
+      },
+      "status": "PASS",
+      "severity": "CRITICAL",
+      "evidence": {
+        "receipt_path": "data/evaluation/w06/w06_dev_selection_harness_01_receipt_v1.json"
+      }
+    }
+  ]
+}
