@@ -1,0 +1,27 @@
+{
+  "candidate_id": "C1",
+  "common_generation_schema_sha256": "825a4ff912d851a95f7392cb564b7d7ca3588135508dc6eb3ac6304cdde3c490",
+  "config_summary": {
+    "automatic_function_calling_disabled": true,
+    "max_output_tokens": 16384,
+    "response_mime_type": "application/json",
+    "retry_attempts": 1,
+    "seed": 2026101508,
+    "thinking_config": {
+      "thinking_level": "medium"
+    },
+    "timeout_ms": 55000,
+    "tools": null
+  },
+  "endpoint": "POST /v1beta/models/{model}:generateContent",
+  "fixture_id": "W06-PREFLIGHT-SMOKE-001",
+  "fixture_sha256": "1a0d1d2c6de8e5c81748beafc09ed3b9c7fe6171ac19cc4edc705b9044cc2cb9",
+  "generation_schema_v1_sha256": "5f7331eb1ac137a42b75a0c307107e3305703d4782ddffdcfe98c1b5ae11c27c",
+  "portable_generation_schema_v2_sha256": "825a4ff912d851a95f7392cb564b7d7ca3588135508dc6eb3ac6304cdde3c490",
+  "provider": "Google",
+  "requested_model_id": "gemini-3.8-flash",
+  "semantic_schema_sha256": "e4169f7b890f77d13af65e9f2070b6071c535b206d88440f5e8f28c179977555",
+  "system_prompt_sha256": "4bcb84a8aca1fc89f65709ac9d91c88e42359c284850061bae85c3607c345b0e",
+  "task_id": "W06-MODEL-PREFLIGHT-01D-PORTABLE-SCHEMA-LIVE-REVALIDATION",
+  "user_prompt_sha256": "d813cd76b4192f59e963ad9cd43ec8a32c5ec49999a8a61c1ece87614f7590b7"
+}

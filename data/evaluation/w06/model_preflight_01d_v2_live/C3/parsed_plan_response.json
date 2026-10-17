@@ -1,0 +1,112 @@
+{
+  "best_time_to_visit": "October to December offers mild, dry weather in Hà Nội, which suits the planned November 2026 dates.",
+  "budget_analysis": {
+    "currency": "VND",
+    "estimated_cost": 500000,
+    "is_over_budget": false,
+    "total_budget": 4000000,
+    "variance": 3500000
+  },
+  "days": [
+    {
+      "date": "2026-11-02",
+      "day_cost": 250000,
+      "day_number": 1,
+      "items": [
+        {
+          "activity": "Taxi from hotel to Synthetic Hanoi Heritage Museum",
+          "activity_kind": "TRANSIT_ONLY",
+          "end_time": "09:00",
+          "estimated_cost": 50000,
+          "notes": "Short comfortable taxi ride to arrive at opening time.",
+          "order_index": 1,
+          "place_id": null,
+          "place_name": null,
+          "start_time": "08:30",
+          "transport_mode": "taxi"
+        },
+        {
+          "activity": "Visit Synthetic Hanoi Heritage Museum",
+          "activity_kind": "POI_VISIT",
+          "end_time": "11:30",
+          "estimated_cost": 150000,
+          "notes": "Explore the culture and history exhibits at a relaxed pace.",
+          "order_index": 2,
+          "place_id": "smoke-hn-poi-001",
+          "place_name": "Synthetic Hanoi Heritage Museum",
+          "start_time": "09:00",
+          "transport_mode": null
+        },
+        {
+          "activity": "Taxi from museum back to hotel",
+          "activity_kind": "TRANSIT_ONLY",
+          "end_time": "12:00",
+          "estimated_cost": 50000,
+          "notes": "Return to the hotel for a rest.",
+          "order_index": 3,
+          "place_id": null,
+          "place_name": null,
+          "start_time": "11:30",
+          "transport_mode": "taxi"
+        }
+      ],
+      "title": "Heritage Museum Exploration"
+    },
+    {
+      "date": "2026-11-03",
+      "day_cost": 250000,
+      "day_number": 2,
+      "items": [
+        {
+          "activity": "Taxi from hotel to Synthetic Hanoi Old Quarter Citadel",
+          "activity_kind": "TRANSIT_ONLY",
+          "end_time": "09:30",
+          "estimated_cost": 50000,
+          "notes": "Short taxi ride to the Old Quarter area.",
+          "order_index": 1,
+          "place_id": null,
+          "place_name": null,
+          "start_time": "09:00",
+          "transport_mode": "taxi"
+        },
+        {
+          "activity": "Visit Synthetic Hanoi Old Quarter Citadel",
+          "activity_kind": "POI_VISIT",
+          "end_time": "12:00",
+          "estimated_cost": 150000,
+          "notes": "Walk the citadel grounds and learn about the history of the area.",
+          "order_index": 2,
+          "place_id": "smoke-hn-poi-002",
+          "place_name": "Synthetic Hanoi Old Quarter Citadel",
+          "start_time": "09:30",
+          "transport_mode": null
+        },
+        {
+          "activity": "Taxi from citadel back to hotel",
+          "activity_kind": "TRANSIT_ONLY",
+          "end_time": "12:30",
+          "estimated_cost": 50000,
+          "notes": "Return to the hotel to conclude the sightseeing plan.",
+          "order_index": 3,
+          "place_id": null,
+          "place_name": null,
+          "start_time": "12:00",
+          "transport_mode": "taxi"
+        }
+      ],
+      "title": "Old Quarter Citadel Discovery"
+    }
+  ],
+  "destination": "Hà Nội",
+  "destination_slug": "ha-noi",
+  "general_tips": [
+    "Both sites are open daily from 08:00 to 17:00, so visits are scheduled within opening hours.",
+    "Use ride-hailing or taxis for comfortable, short transfers between the hotel and sites.",
+    "Carry light layers, as November mornings and evenings in Hà Nội can be cool.",
+    "Keep small cash in VND for incidental costs such as bottled water."
+  ],
+  "overview": "A relaxed two-day comfort-style cultural itinerary in Hà Nội, visiting one catalog heritage site per day: the Synthetic Hanoi Heritage Museum on day 1 and the Synthetic Hanoi Old Quarter Citadel on day 2. Each place is visited only once, with comfortable taxi transfers.",
+  "plan_id": "W06-PREFLIGHT-SMOKE-001-plan-001",
+  "scenario_id": "W06-PREFLIGHT-SMOKE-001",
+  "total_days": 2
+}

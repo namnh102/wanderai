@@ -1,0 +1,27 @@
+{
+  "actual_http_request_count": 1,
+  "candidate_id": "C2",
+  "estimated_standard_api_cost_usd": 0.014572,
+  "finish_or_stop_reason": "stop",
+  "latency_ms": 21535.27,
+  "portable_generation_schema_v2_sha256": "825a4ff912d851a95f7392cb564b7d7ca3588135508dc6eb3ac6304cdde3c490",
+  "provider": "OpenAI",
+  "requested_model_id": "gpt-6.1-sol",
+  "resolved_model_version": "gpt-6.1-sol",
+  "returned_model_id": "gpt-6.1-sol",
+  "seed_acceptance_status": "ACCEPTED_BY_LIVE_ENDPOINT",
+  "semantic_schema_sha256": "e4169f7b890f77d13af65e9f2070b6071c535b206d88440f5e8f28c179977555",
+  "service_tier": "default",
+  "system_fingerprint": null,
+  "usage_metadata": {
+    "authoritative_usage_available": true,
+    "cache_creation_input_tokens": null,
+    "cache_read_input_tokens": null,
+    "cached_content_token_count": 0,
+    "input_tokens": 1311,
+    "output_tokens": 1195,
+    "reasoning_tokens": 0,
+    "thought_tokens": null,
+    "total_tokens": 2506
+  }
+}

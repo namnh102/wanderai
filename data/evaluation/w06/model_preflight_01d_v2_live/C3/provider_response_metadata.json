@@ -1,0 +1,27 @@
+{
+  "actual_http_request_count": 1,
+  "candidate_id": "C3",
+  "estimated_standard_api_cost_usd": 0.025406,
+  "finish_or_stop_reason": "end_turn",
+  "latency_ms": 15070.173,
+  "portable_generation_schema_v2_sha256": "825a4ff912d851a95f7392cb564b7d7ca3588135508dc6eb3ac6304cdde3c490",
+  "provider": "Anthropic",
+  "requested_model_id": "claude-sonnet-5-5",
+  "resolved_model_version": "claude-sonnet-5-5",
+  "returned_model_id": "claude-sonnet-5-5",
+  "seed_acceptance_status": "UNSUPPORTED_OMITTED",
+  "semantic_schema_sha256": "e4169f7b890f77d13af65e9f2070b6071c535b206d88440f5e8f28c179977555",
+  "service_tier": "standard",
+  "system_fingerprint": null,
+  "usage_metadata": {
+    "authoritative_usage_available": true,
+    "cache_creation_input_tokens": 0,
+    "cache_read_input_tokens": 0,
+    "cached_content_token_count": null,
+    "input_tokens": 3333,
+    "output_tokens": 1874,
+    "reasoning_tokens": null,
+    "thought_tokens": null,
+    "total_tokens": 5207
+  }
+}
