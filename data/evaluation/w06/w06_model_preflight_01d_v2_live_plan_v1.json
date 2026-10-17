@@ -1,0 +1,186 @@
+{
+  "01B_historical_evidence_preserved": true,
+  "01C_amendment_preserved": true,
+  "architecture_class": "DIRECT_ONE_CALL_PLUS_READ_ONLY_DETERMINISTIC_VALIDATION",
+  "architecture_id": "LLM_BASED_ITINERARY_PLANNER_WITH_DETERMINISTIC_GROUNDING_AND_VALIDATION_V1",
+  "artifact_id": "W06-MODEL-PREFLIGHT-01D-V2-LIVE-PLAN",
+  "authorization_max_live_calls": 3,
+  "automatic_retry": 0,
+  "base_develop_sha": "a55d8802f958a909095b1bff39e665179c2c205e",
+  "candidate_configurations": {
+    "C1": {
+      "automatic_function_calling_disabled": true,
+      "candidate_id": "C1",
+      "endpoint": "POST /v1beta/models/{model}:generateContent",
+      "max_output_tokens": 16384,
+      "model": "gemini-3.8-flash",
+      "omitted_parameters": [
+        "temperature",
+        "top_p",
+        "top_k",
+        "candidate_count"
+      ],
+      "portable_generation_schema_v2_sha256": "825a4ff912d851a95f7392cb564b7d7ca3588135508dc6eb3ac6304cdde3c490",
+      "provider": "Google",
+      "response_json_schema_sha256": "825a4ff912d851a95f7392cb564b7d7ca3588135508dc6eb3ac6304cdde3c490",
+      "response_mime_type": "application/json",
+      "sdk_automatic_retry": 0,
+      "seed": 2026101508,
+      "thinking_config": {
+        "thinking_level": "medium"
+      },
+      "timeout_ms": 55000,
+      "tools": null,
+      "transport_retry": 0
+    },
+    "C2": {
+      "candidate_id": "C2",
+      "endpoint": "POST /v1/chat/completions",
+      "max_completion_tokens": 16384,
+      "model": "gpt-6.1-sol",
+      "omitted_parameters": [
+        "temperature",
+        "top_p",
+        "top_k",
+        "top_logprobs",
+        "logprobs",
+        "tools"
+      ],
+      "provider": "OpenAI",
+      "reasoning_effort": "medium",
+      "response_format": {
+        "name": "BenchmarkPlanResponse",
+        "portable_generation_schema_v2_sha256": "825a4ff912d851a95f7392cb564b7d7ca3588135508dc6eb3ac6304cdde3c490",
+        "schema_sha256": "825a4ff912d851a95f7392cb564b7d7ca3588135508dc6eb3ac6304cdde3c490",
+        "strict": true,
+        "type": "json_schema"
+      },
+      "sdk_automatic_retry": 0,
+      "seed": 2026101508,
+      "service_tier": "default",
+      "timeout_seconds": 55.0,
+      "tools": null,
+      "transport_retry": 0
+    },
+    "C3": {
+      "candidate_id": "C3",
+      "endpoint": "POST /v1/messages",
+      "fast_mode": false,
+      "max_tokens": 16384,
+      "model": "claude-sonnet-5-5",
+      "omitted_parameters": [
+        "temperature",
+        "top_p",
+        "top_k",
+        "seed",
+        "tools"
+      ],
+      "output_config": {
+        "effort": "high",
+        "format_type": "json_schema",
+        "portable_generation_schema_v2_sha256": "825a4ff912d851a95f7392cb564b7d7ca3588135508dc6eb3ac6304cdde3c490",
+        "schema_sha256": "825a4ff912d851a95f7392cb564b7d7ca3588135508dc6eb3ac6304cdde3c490"
+      },
+      "provider": "Anthropic",
+      "sdk_automatic_retry": 0,
+      "thinking": {
+        "type": "adaptive"
+      },
+      "timeout_seconds": 55.0,
+      "tools": null,
+      "transport_retry": 0
+    }
+  },
+  "candidate_execution_order": [
+    "C1",
+    "C2",
+    "C3"
+  ],
+  "candidate_ids": [
+    "C1",
+    "C2",
+    "C3"
+  ],
+  "common_generation_schema_sha256": "825a4ff912d851a95f7392cb564b7d7ca3588135508dc6eb3ac6304cdde3c490",
+  "dev_select_allowed": false,
+  "dev_tune_allowed": false,
+  "endpoints": {
+    "C1": "POST /v1beta/models/{model}:generateContent",
+    "C2": "POST /v1/chat/completions",
+    "C3": "POST /v1/messages"
+  },
+  "fallback": false,
+  "final100_allowed": false,
+  "final_100_allowed": false,
+  "fixture_id": "W06-PREFLIGHT-SMOKE-001",
+  "fixture_matches_01b": true,
+  "fixture_sha256": "1a0d1d2c6de8e5c81748beafc09ed3b9c7fe6171ac19cc4edc705b9044cc2cb9",
+  "generation_schema_v1_sha256": "5f7331eb1ac137a42b75a0c307107e3305703d4782ddffdcfe98c1b5ae11c27c",
+  "historical_01b_fixture_sha256": "1a0d1d2c6de8e5c81748beafc09ed3b9c7fe6171ac19cc4edc705b9044cc2cb9",
+  "historical_01b_plan_sha256": "3c59a1fba4faa7463c2a068a230ee492437713a78337b2e904980cf13c58f712",
+  "historical_01b_system_prompt_sha256": "4bcb84a8aca1fc89f65709ac9d91c88e42359c284850061bae85c3607c345b0e",
+  "historical_01b_user_prompt_sha256": "d813cd76b4192f59e963ad9cd43ec8a32c5ec49999a8a61c1ece87614f7590b7",
+  "llm_repair": 0,
+  "manual_retry": 0,
+  "max_cumulative_estimated_cost_usd": 1.0,
+  "max_live_generation_calls_per_candidate": 1,
+  "max_live_generation_calls_total": 3,
+  "portable_generation_schema_v2_sha256": "825a4ff912d851a95f7392cb564b7d7ca3588135508dc6eb3ac6304cdde3c490",
+  "pricing_evidence": {
+    "C1": {
+      "candidate_id": "C1",
+      "input_price_per_million": 0.75,
+      "model_id": "gemini-3.8-flash",
+      "notes": "Standard paid tier rate ($0.75/1M input, $3.75/1M output including thinking tokens).",
+      "output_price_per_million": 3.75,
+      "pricing_access_date": "2026-10-17",
+      "pricing_source_url": "https://ai.google.dev/gemini-api/docs/pricing",
+      "provider": "Google"
+    },
+    "C2": {
+      "candidate_id": "C2",
+      "input_price_per_million": 2.0,
+      "model_id": "gpt-6.1-sol",
+      "notes": "Standard API tier rate ($2.00/1M input, $10.00/1M output including reasoning tokens).",
+      "output_price_per_million": 10.0,
+      "pricing_access_date": "2026-10-17",
+      "pricing_source_url": "https://platform.openai.com/docs/pricing",
+      "provider": "OpenAI"
+    },
+    "C3": {
+      "candidate_id": "C3",
+      "input_price_per_million": 2.0,
+      "model_id": "claude-sonnet-5-5",
+      "notes": "Standard API tier rate ($2.00/1M input, $10.00/1M output).",
+      "output_price_per_million": 10.0,
+      "pricing_access_date": "2026-10-17",
+      "pricing_source_url": "https://docs.anthropic.com/en/docs/about-claude/pricing",
+      "provider": "Anthropic"
+    }
+  },
+  "provider_sdk_versions": {
+    "C1": "google-genai==2.25.0",
+    "C2": "openai==3.17.0",
+    "C3": "anthropic==1.15.0"
+  },
+  "python_version": "3.11",
+  "repair": false,
+  "requested_model_ids": {
+    "C1": "gemini-3.8-flash",
+    "C2": "gpt-6.1-sol",
+    "C3": "claude-sonnet-5-5"
+  },
+  "scientific_performance_scoring_allowed": false,
+  "scientific_quality_scoring_allowed": false,
+  "semantic_schema_sha256": "e4169f7b890f77d13af65e9f2070b6071c535b206d88440f5e8f28c179977555",
+  "smoke_002_used": false,
+  "system_prompt_matches_01b": true,
+  "system_prompt_sha256": "4bcb84a8aca1fc89f65709ac9d91c88e42359c284850061bae85c3607c345b0e",
+  "task_id": "W06-MODEL-PREFLIGHT-01D-PORTABLE-SCHEMA-LIVE-REVALIDATION",
+  "tools": false,
+  "transport_retry": 0,
+  "user_live_authorization": true,
+  "user_prompt_matches_01b": true,
+  "user_prompt_sha256": "d813cd76b4192f59e963ad9cd43ec8a32c5ec49999a8a61c1ece87614f7590b7",
+  "version": "1.0.0"
+}
