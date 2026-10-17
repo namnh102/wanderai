@@ -1,0 +1,495 @@
+{
+  "artifact_id": "W06-MODEL-PREFLIGHT-PORTABLE-SCHEMA-V2-MANIFEST",
+  "version": "1.0.0",
+  "base_develop_sha": "8b88ec05cec2697fc26049bad140d4117028f69e",
+  "semantic_schema_sha256": "e4169f7b890f77d13af65e9f2070b6071c535b206d88440f5e8f28c179977555",
+  "generation_schema_v1_sha256": "5f7331eb1ac137a42b75a0c307107e3305703d4782ddffdcfe98c1b5ae11c27c",
+  "portable_generation_schema_v2_sha256": "825a4ff912d851a95f7392cb564b7d7ca3588135508dc6eb3ac6304cdde3c490",
+  "transformation_algorithm_id": "W06_PORTABLE_GENERATION_SCHEMA_V1_TO_V2_DETERMINISTIC_PROJECTION",
+  "official_documentation_evidence": {
+    "access_date": "2026-10-17",
+    "anthropic": {
+      "source_url": "https://platform.claude.com/docs/en/build-with-claude/structured-outputs",
+      "section": "JSON Schema limitations",
+      "supported_constructs": [
+        "object",
+        "properties",
+        "required",
+        "additionalProperties=false",
+        "string",
+        "integer",
+        "number",
+        "boolean",
+        "null",
+        "enum (primitive values)",
+        "const",
+        "anyOf",
+        "$ref / $defs (internal non-recursive)",
+        "minItems (only values 0 or 1)"
+      ],
+      "unsupported_raw_schema_constructs": [
+        "minimum",
+        "maximum",
+        "exclusiveMinimum",
+        "exclusiveMaximum",
+        "multipleOf",
+        "minLength",
+        "maxLength",
+        "minItems (> 1)",
+        "maxItems",
+        "uniqueItems",
+        "contains",
+        "minContains",
+        "maxContains",
+        "external $ref",
+        "recursive schemas",
+        "additionalProperties != false"
+      ],
+      "sdk_note": "Anthropic SDK transform_schema() automatically strips unsupported constraints and appends them to description text when given a Pydantic model, whereas passing a raw dict to output_config.format.schema sends the schema directly and returns HTTP 400 on unsupported keywords."
+    },
+    "openai": {
+      "source_url": "https://platform.openai.com/docs/guides/structured-outputs",
+      "section": "Supported schemas (Strict mode)",
+      "compatibility_notes": "Requires additionalProperties=false and all properties listed in required on every object node; accepts standard JSON Schema types, enums, anyOf, internal $defs/$ref, and description strings."
+    },
+    "google": {
+      "source_url": "https://ai.google.dev/gemini-api/docs/structured-output",
+      "section": "Structured Outputs / JSON Schema",
+      "compatibility_notes": "Accepts standard JSON Schema via response_json_schema with response_mime_type='application/json', including object properties, required, additionalProperties=false, enums, anyOf, $defs/$ref, and descriptions."
+    }
+  },
+  "removed_constraint_keyword_counts": {
+    "maximum": 1,
+    "minLength": 10,
+    "minimum": 5
+  },
+  "removed_constraint_keywords": [
+    "maximum",
+    "minLength",
+    "minimum"
+  ],
+  "removed_constraint_total_count": 16,
+  "removed_constraint_paths": [
+    {
+      "schema_path": "$.properties.best_time_to_visit",
+      "keyword": "minLength",
+      "original_value": 1,
+      "reason": "Raw JSON Schema constraint keyword is not supported across all three candidate providers' native structured-output decoders (rejected by Anthropic HTTP 400).",
+      "official_provider_limitation": "Anthropic Structured Outputs JSON Schema limitations: String length constraints (minLength, maxLength) are not supported in raw output_config.format.schema.",
+      "semantic_enforcement_retained_by": "BenchmarkPlanResponse.model_validate"
+    },
+    {
+      "schema_path": "$.properties.destination",
+      "keyword": "minLength",
+      "original_value": 1,
+      "reason": "Raw JSON Schema constraint keyword is not supported across all three candidate providers' native structured-output decoders (rejected by Anthropic HTTP 400).",
+      "official_provider_limitation": "Anthropic Structured Outputs JSON Schema limitations: String length constraints (minLength, maxLength) are not supported in raw output_config.format.schema.",
+      "semantic_enforcement_retained_by": "BenchmarkPlanResponse.model_validate"
+    },
+    {
+      "schema_path": "$.properties.destination_slug",
+      "keyword": "minLength",
+      "original_value": 1,
+      "reason": "Raw JSON Schema constraint keyword is not supported across all three candidate providers' native structured-output decoders (rejected by Anthropic HTTP 400).",
+      "official_provider_limitation": "Anthropic Structured Outputs JSON Schema limitations: String length constraints (minLength, maxLength) are not supported in raw output_config.format.schema.",
+      "semantic_enforcement_retained_by": "BenchmarkPlanResponse.model_validate"
+    },
+    {
+      "schema_path": "$.properties.overview",
+      "keyword": "minLength",
+      "original_value": 1,
+      "reason": "Raw JSON Schema constraint keyword is not supported across all three candidate providers' native structured-output decoders (rejected by Anthropic HTTP 400).",
+      "official_provider_limitation": "Anthropic Structured Outputs JSON Schema limitations: String length constraints (minLength, maxLength) are not supported in raw output_config.format.schema.",
+      "semantic_enforcement_retained_by": "BenchmarkPlanResponse.model_validate"
+    },
+    {
+      "schema_path": "$.properties.plan_id",
+      "keyword": "minLength",
+      "original_value": 1,
+      "reason": "Raw JSON Schema constraint keyword is not supported across all three candidate providers' native structured-output decoders (rejected by Anthropic HTTP 400).",
+      "official_provider_limitation": "Anthropic Structured Outputs JSON Schema limitations: String length constraints (minLength, maxLength) are not supported in raw output_config.format.schema.",
+      "semantic_enforcement_retained_by": "BenchmarkPlanResponse.model_validate"
+    },
+    {
+      "schema_path": "$.properties.scenario_id",
+      "keyword": "minLength",
+      "original_value": 1,
+      "reason": "Raw JSON Schema constraint keyword is not supported across all three candidate providers' native structured-output decoders (rejected by Anthropic HTTP 400).",
+      "official_provider_limitation": "Anthropic Structured Outputs JSON Schema limitations: String length constraints (minLength, maxLength) are not supported in raw output_config.format.schema.",
+      "semantic_enforcement_retained_by": "BenchmarkPlanResponse.model_validate"
+    },
+    {
+      "schema_path": "$.properties.total_days",
+      "keyword": "maximum",
+      "original_value": 14,
+      "reason": "Raw JSON Schema constraint keyword is not supported across all three candidate providers' native structured-output decoders (rejected by Anthropic HTTP 400).",
+      "official_provider_limitation": "Anthropic Structured Outputs JSON Schema limitations: Numerical constraints (minimum, maximum, exclusiveMinimum, exclusiveMaximum, multipleOf) are not supported in raw output_config.format.schema.",
+      "semantic_enforcement_retained_by": "BenchmarkPlanResponse.model_validate"
+    },
+    {
+      "schema_path": "$.properties.total_days",
+      "keyword": "minimum",
+      "original_value": 1,
+      "reason": "Raw JSON Schema constraint keyword is not supported across all three candidate providers' native structured-output decoders (rejected by Anthropic HTTP 400).",
+      "official_provider_limitation": "Anthropic Structured Outputs JSON Schema limitations: Numerical constraints (minimum, maximum, exclusiveMinimum, exclusiveMaximum, multipleOf) are not supported in raw output_config.format.schema.",
+      "semantic_enforcement_retained_by": "BenchmarkPlanResponse.model_validate"
+    },
+    {
+      "schema_path": "$.$defs.BenchmarkItineraryDay.properties.day_cost",
+      "keyword": "minimum",
+      "original_value": 0,
+      "reason": "Raw JSON Schema constraint keyword is not supported across all three candidate providers' native structured-output decoders (rejected by Anthropic HTTP 400).",
+      "official_provider_limitation": "Anthropic Structured Outputs JSON Schema limitations: Numerical constraints (minimum, maximum, exclusiveMinimum, exclusiveMaximum, multipleOf) are not supported in raw output_config.format.schema.",
+      "semantic_enforcement_retained_by": "BenchmarkPlanResponse.model_validate"
+    },
+    {
+      "schema_path": "$.$defs.BenchmarkItineraryDay.properties.day_number",
+      "keyword": "minimum",
+      "original_value": 1,
+      "reason": "Raw JSON Schema constraint keyword is not supported across all three candidate providers' native structured-output decoders (rejected by Anthropic HTTP 400).",
+      "official_provider_limitation": "Anthropic Structured Outputs JSON Schema limitations: Numerical constraints (minimum, maximum, exclusiveMinimum, exclusiveMaximum, multipleOf) are not supported in raw output_config.format.schema.",
+      "semantic_enforcement_retained_by": "BenchmarkPlanResponse.model_validate"
+    },
+    {
+      "schema_path": "$.$defs.BenchmarkItineraryDay.properties.title",
+      "keyword": "minLength",
+      "original_value": 1,
+      "reason": "Raw JSON Schema constraint keyword is not supported across all three candidate providers' native structured-output decoders (rejected by Anthropic HTTP 400).",
+      "official_provider_limitation": "Anthropic Structured Outputs JSON Schema limitations: String length constraints (minLength, maxLength) are not supported in raw output_config.format.schema.",
+      "semantic_enforcement_retained_by": "BenchmarkPlanResponse.model_validate"
+    },
+    {
+      "schema_path": "$.$defs.BenchmarkItineraryItem.properties.activity",
+      "keyword": "minLength",
+      "original_value": 1,
+      "reason": "Raw JSON Schema constraint keyword is not supported across all three candidate providers' native structured-output decoders (rejected by Anthropic HTTP 400).",
+      "official_provider_limitation": "Anthropic Structured Outputs JSON Schema limitations: String length constraints (minLength, maxLength) are not supported in raw output_config.format.schema.",
+      "semantic_enforcement_retained_by": "BenchmarkPlanResponse.model_validate"
+    },
+    {
+      "schema_path": "$.$defs.BenchmarkItineraryItem.properties.end_time",
+      "keyword": "minLength",
+      "original_value": 1,
+      "reason": "Raw JSON Schema constraint keyword is not supported across all three candidate providers' native structured-output decoders (rejected by Anthropic HTTP 400).",
+      "official_provider_limitation": "Anthropic Structured Outputs JSON Schema limitations: String length constraints (minLength, maxLength) are not supported in raw output_config.format.schema.",
+      "semantic_enforcement_retained_by": "BenchmarkPlanResponse.model_validate"
+    },
+    {
+      "schema_path": "$.$defs.BenchmarkItineraryItem.properties.estimated_cost",
+      "keyword": "minimum",
+      "original_value": 0,
+      "reason": "Raw JSON Schema constraint keyword is not supported across all three candidate providers' native structured-output decoders (rejected by Anthropic HTTP 400).",
+      "official_provider_limitation": "Anthropic Structured Outputs JSON Schema limitations: Numerical constraints (minimum, maximum, exclusiveMinimum, exclusiveMaximum, multipleOf) are not supported in raw output_config.format.schema.",
+      "semantic_enforcement_retained_by": "BenchmarkPlanResponse.model_validate"
+    },
+    {
+      "schema_path": "$.$defs.BenchmarkItineraryItem.properties.order_index",
+      "keyword": "minimum",
+      "original_value": 1,
+      "reason": "Raw JSON Schema constraint keyword is not supported across all three candidate providers' native structured-output decoders (rejected by Anthropic HTTP 400).",
+      "official_provider_limitation": "Anthropic Structured Outputs JSON Schema limitations: Numerical constraints (minimum, maximum, exclusiveMinimum, exclusiveMaximum, multipleOf) are not supported in raw output_config.format.schema.",
+      "semantic_enforcement_retained_by": "BenchmarkPlanResponse.model_validate"
+    },
+    {
+      "schema_path": "$.$defs.BenchmarkItineraryItem.properties.start_time",
+      "keyword": "minLength",
+      "original_value": 1,
+      "reason": "Raw JSON Schema constraint keyword is not supported across all three candidate providers' native structured-output decoders (rejected by Anthropic HTTP 400).",
+      "official_provider_limitation": "Anthropic Structured Outputs JSON Schema limitations: String length constraints (minLength, maxLength) are not supported in raw output_config.format.schema.",
+      "semantic_enforcement_retained_by": "BenchmarkPlanResponse.model_validate"
+    }
+  ],
+  "preserved_constraint_keywords": [
+    "$defs",
+    "$ref",
+    "additionalProperties",
+    "anyOf",
+    "enum",
+    "minItems",
+    "properties",
+    "required",
+    "type"
+  ],
+  "place_id_catalog_enum_present": false,
+  "activity_kind_enum_preserved": true,
+  "required_materialization_preserved": true,
+  "additional_properties_false_preserved": true,
+  "semantic_validator": "BenchmarkPlanResponse.model_validate",
+  "semantic_schema_modified": false,
+  "generation_schema_v1_modified": false,
+  "provider_specific_schema": false,
+  "cross_provider_static_compatibility": {
+    "GOOGLE_V2_STATIC_COMPATIBILITY": "PASS",
+    "OPENAI_V2_STATIC_COMPATIBILITY": "PASS",
+    "ANTHROPIC_V2_STATIC_COMPATIBILITY": "PASS",
+    "unsupported_anthropic_keyword_count": 0,
+    "status": "OFFLINE_PORTABILITY_CHECK_PASS"
+  },
+  "portable_generation_schema_v2": {
+    "$defs": {
+      "ActivityKind": {
+        "description": "Controlled itinerary activity universe frozen by W06-MEASUREMENT-CONTRACT-01 FIX-01C.",
+        "enum": [
+          "POI_VISIT",
+          "TRANSIT_ONLY"
+        ],
+        "title": "ActivityKind",
+        "type": "string"
+      },
+      "BenchmarkBudgetAnalysis": {
+        "additionalProperties": false,
+        "description": "Deterministic budget summary for a benchmark itinerary response.",
+        "properties": {
+          "total_budget": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total Budget"
+          },
+          "estimated_cost": {
+            "title": "Estimated Cost",
+            "type": "integer"
+          },
+          "currency": {
+            "title": "Currency",
+            "type": "string"
+          },
+          "is_over_budget": {
+            "title": "Is Over Budget",
+            "type": "boolean"
+          },
+          "variance": {
+            "title": "Variance",
+            "type": "integer"
+          }
+        },
+        "title": "BenchmarkBudgetAnalysis",
+        "type": "object",
+        "required": [
+          "currency",
+          "estimated_cost",
+          "is_over_budget",
+          "total_budget",
+          "variance"
+        ]
+      },
+      "BenchmarkItineraryDay": {
+        "additionalProperties": false,
+        "description": "Strict benchmark itinerary day.",
+        "properties": {
+          "day_number": {
+            "title": "Day Number",
+            "type": "integer",
+            "description": "[SEMANTIC_CONSTRAINTS: minimum=1]"
+          },
+          "date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Date"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string",
+            "description": "[SEMANTIC_CONSTRAINTS: minLength=1]"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/$defs/BenchmarkItineraryItem"
+            },
+            "minItems": 1,
+            "title": "Items",
+            "type": "array"
+          },
+          "day_cost": {
+            "title": "Day Cost",
+            "type": "integer",
+            "description": "[SEMANTIC_CONSTRAINTS: minimum=0]"
+          }
+        },
+        "required": [
+          "date",
+          "day_cost",
+          "day_number",
+          "items",
+          "title"
+        ],
+        "title": "BenchmarkItineraryDay",
+        "type": "object"
+      },
+      "BenchmarkItineraryItem": {
+        "additionalProperties": false,
+        "description": "Strict benchmark itinerary item enforcing POI_VISIT vs TRANSIT_ONLY contract rules.",
+        "properties": {
+          "order_index": {
+            "title": "Order Index",
+            "type": "integer",
+            "description": "[SEMANTIC_CONSTRAINTS: minimum=1]"
+          },
+          "start_time": {
+            "title": "Start Time",
+            "type": "string",
+            "description": "[SEMANTIC_CONSTRAINTS: minLength=1]"
+          },
+          "end_time": {
+            "title": "End Time",
+            "type": "string",
+            "description": "[SEMANTIC_CONSTRAINTS: minLength=1]"
+          },
+          "activity_kind": {
+            "$ref": "#/$defs/ActivityKind"
+          },
+          "activity": {
+            "title": "Activity",
+            "type": "string",
+            "description": "[SEMANTIC_CONSTRAINTS: minLength=1]"
+          },
+          "place_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Place Name"
+          },
+          "place_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Place Id"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          },
+          "estimated_cost": {
+            "title": "Estimated Cost",
+            "type": "integer",
+            "description": "[SEMANTIC_CONSTRAINTS: minimum=0]"
+          },
+          "transport_mode": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Transport Mode"
+          }
+        },
+        "required": [
+          "activity",
+          "activity_kind",
+          "end_time",
+          "estimated_cost",
+          "notes",
+          "order_index",
+          "place_id",
+          "place_name",
+          "start_time",
+          "transport_mode"
+        ],
+        "title": "BenchmarkItineraryItem",
+        "type": "object"
+      }
+    },
+    "additionalProperties": false,
+    "description": "Strict parsed benchmark plan response persisted as parsed_plan_response.json.",
+    "properties": {
+      "plan_id": {
+        "title": "Plan Id",
+        "type": "string",
+        "description": "[SEMANTIC_CONSTRAINTS: minLength=1]"
+      },
+      "scenario_id": {
+        "title": "Scenario Id",
+        "type": "string",
+        "description": "[SEMANTIC_CONSTRAINTS: minLength=1]"
+      },
+      "destination_slug": {
+        "title": "Destination Slug",
+        "type": "string",
+        "description": "[SEMANTIC_CONSTRAINTS: minLength=1]"
+      },
+      "destination": {
+        "title": "Destination",
+        "type": "string",
+        "description": "[SEMANTIC_CONSTRAINTS: minLength=1]"
+      },
+      "total_days": {
+        "title": "Total Days",
+        "type": "integer",
+        "description": "[SEMANTIC_CONSTRAINTS: maximum=14; minimum=1]"
+      },
+      "overview": {
+        "title": "Overview",
+        "type": "string",
+        "description": "[SEMANTIC_CONSTRAINTS: minLength=1]"
+      },
+      "best_time_to_visit": {
+        "title": "Best Time To Visit",
+        "type": "string",
+        "description": "[SEMANTIC_CONSTRAINTS: minLength=1]"
+      },
+      "general_tips": {
+        "items": {
+          "type": "string"
+        },
+        "title": "General Tips",
+        "type": "array"
+      },
+      "budget_analysis": {
+        "$ref": "#/$defs/BenchmarkBudgetAnalysis"
+      },
+      "days": {
+        "items": {
+          "$ref": "#/$defs/BenchmarkItineraryDay"
+        },
+        "minItems": 1,
+        "title": "Days",
+        "type": "array"
+      }
+    },
+    "required": [
+      "best_time_to_visit",
+      "budget_analysis",
+      "days",
+      "destination",
+      "destination_slug",
+      "general_tips",
+      "overview",
+      "plan_id",
+      "scenario_id",
+      "total_days"
+    ],
+    "title": "BenchmarkPlanResponse",
+    "type": "object"
+  }
+}

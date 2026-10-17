@@ -1,0 +1,47 @@
+{
+  "amendment_id": "W06-MODEL-PREFLIGHT-SCHEMA-PORTABILITY-AMENDMENT-01",
+  "version": "1.0.0",
+  "base_develop_sha": "8b88ec05cec2697fc26049bad140d4117028f69e",
+  "trigger": "01B_C3_RAW_STRUCTURED_OUTPUT_SCHEMA_REJECTION",
+  "trigger_candidate": "C3",
+  "trigger_failure": "FAILED_STRUCTURED_OUTPUT_COMPATIBILITY",
+  "trigger_http_status": 400,
+  "trigger_provider_error": "output_config.format.schema: For 'integer' type, property 'minimum' is not supported",
+  "historical_01b_preserved": true,
+  "historical_01b_plan_sha256": "3c59a1fba4faa7463c2a068a230ee492437713a78337b2e904980cf13c58f712",
+  "historical_01b_candidate_outcomes": {
+    "C1": "PASSED_TECHNICAL_PREFLIGHT_SCHEMA_V1",
+    "C2": "PASSED_TECHNICAL_PREFLIGHT_SCHEMA_V1",
+    "C3": "FAILED_TECHNICAL_PREFLIGHT_SCHEMA_V1"
+  },
+  "dev_tune_started": false,
+  "dev_select_started": false,
+  "winner_selected": false,
+  "final_100_used": false,
+  "performance_evidence_used_to_design_amendment": false,
+  "candidate_list_changed": false,
+  "candidate_substitution": false,
+  "semantic_schema_changed": false,
+  "semantic_schema_sha256": "e4169f7b890f77d13af65e9f2070b6071c535b206d88440f5e8f28c179977555",
+  "common_generation_schema_v1_changed": false,
+  "generation_schema_v1_sha256": "5f7331eb1ac137a42b75a0c307107e3305703d4782ddffdcfe98c1b5ae11c27c",
+  "portable_generation_schema_v2_created": true,
+  "portable_generation_schema_v2_sha256": "825a4ff912d851a95f7392cb564b7d7ca3588135508dc6eb3ac6304cdde3c490",
+  "v2_applies_identically_to": [
+    "C1",
+    "C2",
+    "C3"
+  ],
+  "future_live_revalidation_required_for_all_candidates": true,
+  "reuse_v1_pass_without_v2_revalidation": false,
+  "max_future_01d_calls": 3,
+  "future_calls_per_candidate": 1,
+  "retry_future_01d": 0,
+  "current_candidate_technical_eligibility_for_dev": {
+    "C1": "PENDING_SCHEMA_V2_LIVE_REVALIDATION",
+    "C2": "PENDING_SCHEMA_V2_LIVE_REVALIDATION",
+    "C3": "PENDING_SCHEMA_V2_LIVE_REVALIDATION"
+  },
+  "DEV_MODEL_SELECTION_ALLOWED": false,
+  "NEXT_GATE": "W06-MODEL-PREFLIGHT-01D-PORTABLE-SCHEMA-LIVE-REVALIDATION"
+}
