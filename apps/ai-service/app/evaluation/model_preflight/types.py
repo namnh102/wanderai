@@ -1,4 +1,4 @@
-"""Evaluation-only types and strict invariants for W06 Model/Provider Technical Preflight (Phase 01A Offline).
+"""Evaluation-only types and strict invariants for W06 Model/Provider Technical Preflight (Phase 01A & 01B).
 
 Grounded in W06-MODEL-ARCH-SELECTION-METHOD-LOCK-01 v1.0.0:
 - Architecture: LLM_BASED_ITINERARY_PLANNER_WITH_DETERMINISTIC_GROUNDING_AND_VALIDATION_V1
@@ -22,8 +22,14 @@ FROZEN_SAMPLING_TEMPERATURE: float = 0.0
 FROZEN_MAX_OUTPUT_TOKENS: int = 16384
 FROZEN_TIMEOUT_MS: int = 55000
 FROZEN_GOOGLE_THINKING_LEVEL: str = "medium"
+FROZEN_OPENAI_REASONING_EFFORT: str = "medium"
+FROZEN_OPENAI_SERVICE_TIER: str = "default"
 FROZEN_CLAUDE_THINKING_MODE: str = "adaptive"
 FROZEN_CLAUDE_EFFORT: str = "high"
+FROZEN_LIVE_SMOKE_FIXTURE_ID: str = "W06-PREFLIGHT-SMOKE-001"
+FROZEN_MAX_LIVE_GENERATION_CALLS_TOTAL: int = 3
+FROZEN_MAX_LIVE_GENERATION_CALLS_PER_CANDIDATE: int = 1
+FROZEN_MAX_CUMULATIVE_COST_USD: float = 1.00
 LIVE_PROVIDER_CALL_FORBIDDEN_CODE: str = "LIVE_PROVIDER_CALL_FORBIDDEN"
 CONFIGURATION_INTEGRITY_FAILURE_CODE: str = (
     "CONFIGURATION_INTEGRITY_FAILURE_STOP_BATCH_BEFORE_SCIENTIFIC_REPORTING"
@@ -47,6 +53,35 @@ class CandidateOfflineReadinessStatus(str, Enum):
 
     READY_FOR_LIVE_PREFLIGHT = "READY_FOR_LIVE_PREFLIGHT"
     NOT_READY_FOR_LIVE_PREFLIGHT = "NOT_READY_FOR_LIVE_PREFLIGHT"
+
+
+class CandidateFinalPreflightStatus(str, Enum):
+    """Final technical preflight status per candidate at the end of Phase 01B (Section 20)."""
+
+    PASSED_TECHNICAL_PREFLIGHT = "PASSED_TECHNICAL_PREFLIGHT"
+    FAILED_TECHNICAL_PREFLIGHT = "FAILED_TECHNICAL_PREFLIGHT"
+
+
+class LiveFailureClassification(str, Enum):
+    """Deterministic failure classification for W06 Phase 01B live technical smoke preflight (Section 15)."""
+
+    NONE = "NONE"
+    PASS_LIVE_PREFLIGHT = "PASS_LIVE_PREFLIGHT"
+    FAILED_AUTHENTICATION = "FAILED_AUTHENTICATION"
+    FAILED_MODEL_ACCESS = "FAILED_MODEL_ACCESS"
+    FAILED_MODEL_ID_INTEGRITY = "FAILED_MODEL_ID_INTEGRITY"
+    FAILED_ENDPOINT_COMPATIBILITY = "FAILED_ENDPOINT_COMPATIBILITY"
+    FAILED_PARAMETER_COMPATIBILITY = "FAILED_PARAMETER_COMPATIBILITY"
+    FAILED_STRUCTURED_OUTPUT_COMPATIBILITY = "FAILED_STRUCTURED_OUTPUT_COMPATIBILITY"
+    FAILED_SCHEMA_OUTPUT = "FAILED_SCHEMA_OUTPUT"
+    FAILED_REFUSAL = "FAILED_REFUSAL"
+    FAILED_MAX_TOKENS = "FAILED_MAX_TOKENS"
+    FAILED_TIMEOUT = "FAILED_TIMEOUT"
+    FAILED_HTTP_429 = "FAILED_HTTP_429"
+    FAILED_HTTP_5XX = "FAILED_HTTP_5XX"
+    FAILED_USAGE_METADATA = "FAILED_USAGE_METADATA"
+    FAILED_SECRET_SAFETY = "FAILED_SECRET_SAFETY"
+    HARNESS_ERROR = "HARNESS_ERROR"
 
 
 class PreflightFailureClassification(str, Enum):
@@ -132,6 +167,7 @@ class SamplingCapabilitySpec(BaseModel):
         "MODEL_SPECIFIC_PARAMETER_CONFIRMED",
         "PENDING_LIVE_CONFIRMATION",
         "DEPRECATED_IGNORED_OMITTED",
+        "OMITTED_FOR_REASONING_EFFORT",
         "OMITTED_NOT_SENT",
         "UNSUPPORTED",
     ]
@@ -229,3 +265,73 @@ class PreflightExecutionResult(BaseModel):
     latency_ms: Optional[float] = None
     error_detail: Optional[str] = None
     legacy_recoverable_parse_diagnostic: Optional[bool] = None
+
+
+class CandidateStandardPricingRecord(BaseModel):
+    """Official standard pricing specification for Phase 01B live preflight cost accounting (Section 18)."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    candidate_id: str
+    provider: str
+    model_id: str
+    pricing_source_url: str
+    pricing_access_date: str
+    input_price_per_million: float
+    output_price_per_million: float
+    notes: str
+
+
+class LiveUsageMetadataRecord(BaseModel):
+    """Authoritative token usage metadata captured from live provider response (Section 17)."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    input_tokens: Optional[int] = None
+    output_tokens: Optional[int] = None
+    total_tokens: Optional[int] = None
+    reasoning_tokens: Optional[int] = None
+    thought_tokens: Optional[int] = None
+    cache_read_input_tokens: Optional[int] = None
+    cache_creation_input_tokens: Optional[int] = None
+    cached_content_token_count: Optional[int] = None
+    authoritative_usage_available: bool = False
+
+
+class LiveCandidateExecutionRecord(BaseModel):
+    """Machine-readable execution record for a single candidate in W06-MODEL-PREFLIGHT-01B-LIVE-SMOKE."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    candidate_id: str
+    attempted: bool
+    actual_http_request_count: int
+    provider: str
+    requested_model_id: str
+    returned_model_id: Optional[str] = None
+    resolved_model_version: Optional[str] = None
+    system_fingerprint: Optional[str] = None
+    service_tier: Optional[str] = None
+    reasoning_effort: Optional[str] = None
+    thinking_mode: Optional[str] = None
+    effort: Optional[str] = None
+    seed_acceptance_status: Optional[str] = None
+    status: CandidateFinalPreflightStatus
+    live_preflight_status: str
+    failure_classification: LiveFailureClassification
+    error_detail_sanitized: Optional[str] = None
+    schema_valid: bool
+    raw_artifact_preserved: bool
+    raw_response_sha256: Optional[str] = None
+    parsed_response_sha256: Optional[str] = None
+    sanitization_occurred_in_raw_response: bool = False
+    usage_metadata: LiveUsageMetadataRecord
+    latency_ms: Optional[float] = None
+    finish_or_stop_reason: Optional[str] = None
+    pricing_source_url: str
+    pricing_access_date: str
+    input_price_per_million: float
+    output_price_per_million: float
+    authoritative_usage_available: bool
+    estimated_standard_api_cost_usd: Optional[float] = None
+    blockers: List[str] = Field(default_factory=list)

@@ -1,0 +1,112 @@
+{
+  "plan_id": "W06-PREFLIGHT-SMOKE-001-plan",
+  "scenario_id": "W06-PREFLIGHT-SMOKE-001",
+  "destination_slug": "ha-noi",
+  "destination": "Hà Nội",
+  "total_days": 2,
+  "overview": "A relaxed, culture-and-history itinerary for 2–3 November 2026, with one catalog-listed attraction per day and private-car transfers for comfort. Each attraction is visited once, within its listed opening hours. The supplied attractions are synthetic benchmark entries, not verified real-world venues.",
+  "best_time_to_visit": "November generally offers comfortable sightseeing weather in Hà Nội. Both scheduled morning visits fall within the catalog opening hours of 08:00–17:00 daily.",
+  "general_tips": [
+    "Use the exact catalog place names and identifiers when referencing these synthetic attractions.",
+    "Transfer durations are planning allowances; the accommodation location and live traffic are unknown.",
+    "Admission and transport costs are estimates, not verified quotes.",
+    "The budget estimate covers the listed visits and transfers only; accommodation, meals, and travel to or from Hà Nội are excluded."
+  ],
+  "budget_analysis": {
+    "total_budget": 4000000,
+    "estimated_cost": 1000000,
+    "currency": "VND",
+    "is_over_budget": false,
+    "variance": 3000000
+  },
+  "days": [
+    {
+      "day_number": 1,
+      "date": "2026-11-02",
+      "title": "A relaxed heritage museum morning",
+      "items": [
+        {
+          "order_index": 1,
+          "start_time": "08:30",
+          "end_time": "09:00",
+          "activity_kind": "TRANSIT_ONLY",
+          "activity": "Private-car transfer to the museum",
+          "place_name": null,
+          "place_id": null,
+          "notes": "Allow 30 minutes from your accommodation; adjust once its location is known. Transfer only, with no sightseeing stops.",
+          "estimated_cost": 150000,
+          "transport_mode": "PRIVATE_CAR"
+        },
+        {
+          "order_index": 2,
+          "start_time": "09:00",
+          "end_time": "11:00",
+          "activity_kind": "POI_VISIT",
+          "activity": "Explore the heritage museum at a comfortable pace",
+          "place_name": "Synthetic Hanoi Heritage Museum",
+          "place_id": "smoke-hn-poi-001",
+          "notes": "Culture-and-history visit within the catalog's 08:00–17:00 opening window. Admission allowance is provisional because no ticket price was supplied.",
+          "estimated_cost": 200000,
+          "transport_mode": null
+        },
+        {
+          "order_index": 3,
+          "start_time": "11:00",
+          "end_time": "11:30",
+          "activity_kind": "TRANSIT_ONLY",
+          "activity": "Private-car return to accommodation",
+          "place_name": null,
+          "place_id": null,
+          "notes": "Return transfer only. Keep the afternoon unscheduled for rest and independent meals.",
+          "estimated_cost": 150000,
+          "transport_mode": "PRIVATE_CAR"
+        }
+      ],
+      "day_cost": 500000
+    },
+    {
+      "day_number": 2,
+      "date": "2026-11-03",
+      "title": "An unhurried citadel visit",
+      "items": [
+        {
+          "order_index": 1,
+          "start_time": "08:30",
+          "end_time": "09:00",
+          "activity_kind": "TRANSIT_ONLY",
+          "activity": "Private-car transfer to the citadel",
+          "place_name": null,
+          "place_id": null,
+          "notes": "Allow 30 minutes from your accommodation; adjust once its location is known. Transfer only, with no sightseeing stops.",
+          "estimated_cost": 150000,
+          "transport_mode": "PRIVATE_CAR"
+        },
+        {
+          "order_index": 2,
+          "start_time": "09:00",
+          "end_time": "11:00",
+          "activity_kind": "POI_VISIT",
+          "activity": "Explore the citadel at a comfortable pace",
+          "place_name": "Synthetic Hanoi Old Quarter Citadel",
+          "place_id": "smoke-hn-poi-002",
+          "notes": "Culture-and-history visit within the catalog's 08:00–17:00 opening window. Admission allowance is provisional because no ticket price was supplied.",
+          "estimated_cost": 200000,
+          "transport_mode": null
+        },
+        {
+          "order_index": 3,
+          "start_time": "11:00",
+          "end_time": "11:30",
+          "activity_kind": "TRANSIT_ONLY",
+          "activity": "Private-car return to accommodation",
+          "place_name": null,
+          "place_id": null,
+          "notes": "Return transfer only. Keep the afternoon unscheduled for rest and independent meals.",
+          "estimated_cost": 150000,
+          "transport_mode": "PRIVATE_CAR"
+        }
+      ],
+      "day_cost": 500000
+    }
+  ]
+}
