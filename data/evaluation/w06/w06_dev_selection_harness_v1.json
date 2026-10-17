@@ -1,0 +1,274 @@
+{
+  "architecture_class": "DIRECT_ONE_CALL_PLUS_READ_ONLY_DETERMINISTIC_VALIDATION",
+  "architecture_id": "LLM_BASED_ITINERARY_PLANNER_WITH_DETERMINISTIC_GROUNDING_AND_VALIDATION_V1",
+  "artifact_id": "W06-DEV-SELECTION-HARNESS-01",
+  "base_develop_sha": "50884c610cebf455255b9d05f737d9558cabf2e7",
+  "call_budget_limits": {
+    "dev_select_max_calls": 180,
+    "dev_tune_max_calls_one_prompt": 60,
+    "dev_tune_max_calls_two_prompts": 120,
+    "executions_per_cell": 1,
+    "fallback": false,
+    "repair": 0,
+    "retry": 0,
+    "stochasticity_diagnostic_max_calls": 15
+  },
+  "candidate_registry": {
+    "candidates": {
+      "C1": {
+        "automatic_retry": 0,
+        "candidate_id": "C1",
+        "deterministic_semantic_repair": false,
+        "fallback": false,
+        "llm_calls_per_execution": 1,
+        "llm_repair": 0,
+        "manual_retry": 0,
+        "max_output_tokens": 16384,
+        "omitted_parameters": [
+          "temperature",
+          "top_p",
+          "top_k"
+        ],
+        "portable_generation_schema_v2_sha256": "825a4ff912d851a95f7392cb564b7d7ca3588135508dc6eb3ac6304cdde3c490",
+        "provider": "Google",
+        "requested_model_id": "gemini-3.8-flash",
+        "sampling_reasoning_config": {
+          "seed": 2026101508,
+          "thinking_level": "medium"
+        },
+        "technical_preflight_v2_status": "PASSED_TECHNICAL_PREFLIGHT_SCHEMA_V2",
+        "timeout_ms": 55000,
+        "tools": false,
+        "transport_retry": 0
+      },
+      "C2": {
+        "automatic_retry": 0,
+        "candidate_id": "C2",
+        "deterministic_semantic_repair": false,
+        "fallback": false,
+        "llm_calls_per_execution": 1,
+        "llm_repair": 0,
+        "manual_retry": 0,
+        "max_output_tokens": 16384,
+        "omitted_parameters": [
+          "temperature",
+          "top_p",
+          "top_k",
+          "logprobs",
+          "top_logprobs"
+        ],
+        "portable_generation_schema_v2_sha256": "825a4ff912d851a95f7392cb564b7d7ca3588135508dc6eb3ac6304cdde3c490",
+        "provider": "OpenAI",
+        "requested_model_id": "gpt-6.1-sol",
+        "sampling_reasoning_config": {
+          "reasoning_effort": "medium",
+          "seed": 2026101508,
+          "service_tier": "default"
+        },
+        "technical_preflight_v2_status": "PASSED_TECHNICAL_PREFLIGHT_SCHEMA_V2",
+        "timeout_ms": 55000,
+        "tools": false,
+        "transport_retry": 0
+      },
+      "C3": {
+        "automatic_retry": 0,
+        "candidate_id": "C3",
+        "deterministic_semantic_repair": false,
+        "fallback": false,
+        "llm_calls_per_execution": 1,
+        "llm_repair": 0,
+        "manual_retry": 0,
+        "max_output_tokens": 16384,
+        "omitted_parameters": [
+          "temperature",
+          "top_p",
+          "top_k",
+          "seed"
+        ],
+        "portable_generation_schema_v2_sha256": "825a4ff912d851a95f7392cb564b7d7ca3588135508dc6eb3ac6304cdde3c490",
+        "provider": "Anthropic",
+        "requested_model_id": "claude-sonnet-5-5",
+        "sampling_reasoning_config": {
+          "effort": "high",
+          "thinking": {
+            "type": "adaptive"
+          }
+        },
+        "technical_preflight_v2_status": "PASSED_TECHNICAL_PREFLIGHT_SCHEMA_V2",
+        "timeout_ms": 55000,
+        "tools": false,
+        "transport_retry": 0
+      }
+    },
+    "ordered_candidate_ids": [
+      "C1",
+      "C2",
+      "C3"
+    ],
+    "registry_sha256": "4dd29164afdf7f364978420f41ab88ef07ec396062188169fcb859a9ef01e058"
+  },
+  "determinism_hashes": {
+    "aggregator_configuration_sha256": "808178b0190a7660586a0f8414272aed1aa28af58fd42c03134af23297d6d714",
+    "artifact_schema_sha256": "82235139e876ec905d0ed090c5137e5cc534fc24156d2bf861a9c46abca096ab",
+    "candidate_registry_sha256": "4dd29164afdf7f364978420f41ab88ef07ec396062188169fcb859a9ef01e058",
+    "dev_bundle_sha256": "bb0f051446ea3da8229298f22f4ce92b4db20751695273c6d01b7766da044050",
+    "dev_select_id_list_sha256": "ed6f9365fce6a41be1e0be2e9a46541b1bc73239a26d0210dadd0450c278abc3",
+    "dev_select_p1_plan_sha256": "f8538f7499ad3f19beda709697cc01bdf5bb5daef17cd2d985d0da6b79ddfe59",
+    "dev_tune_1_prompt_plan_sha256": "cf6f3966069f5c86d9696a8d3992876a4b492238336eb278da76cf318e564c81",
+    "dev_tune_id_list_sha256": "30430c3f70cc6d2f7b14f895fc59f960a414853f6e8ab3206343a961efbf0a7f",
+    "prompt_registry_sha256": "fae39946217dbff5543ec10f8cf3c2f54f9c09207417134454ea8e82f19c7fb6",
+    "provider_config_registry_sha256": "3dc05d29acc2f647cba58303865bd7406b8c1d9f7ccbe0f120e87ad471190938",
+    "selection_algorithm_sha256": "9cd3e2a1b8f6d326637551f49579fa236e8b81868443f574a94edd680d2c38dd"
+  },
+  "dev_dataset_summary": {
+    "dev_bundle_sha256": "bb0f051446ea3da8229298f22f4ce92b4db20751695273c6d01b7766da044050",
+    "dev_manifest_sha256": "15cf3af6c93d3de967703dbc52d7e082bfd4a1e657409c0678ff51bd081e3c98",
+    "dev_select_marginals": {
+      "budget": {
+        "B1": 15,
+        "B2": 15,
+        "B3": 15,
+        "null": 15
+      },
+      "days": {
+        "2": 20,
+        "3": 20,
+        "4": 20
+      },
+      "destination": {
+        "da-nang": 20,
+        "ha-long": 20,
+        "ha-noi": 20
+      },
+      "interest_count": {
+        "1": 20,
+        "2": 20,
+        "3": 20
+      },
+      "travel_style": {
+        "BACKPACKER": 15,
+        "BUDGET": 15,
+        "COMFORT": 15,
+        "LUXURY": 15
+      },
+      "weekend": {
+        "false": 30,
+        "true": 30
+      }
+    },
+    "dev_select_total": 60,
+    "dev_tune_marginals": {
+      "budget": {
+        "B1": 5,
+        "B2": 5,
+        "B3": 5,
+        "null": 5
+      },
+      "days": {
+        "2": 7,
+        "3": 7,
+        "4": 6
+      },
+      "destination": {
+        "da-nang": 7,
+        "ha-long": 6,
+        "ha-noi": 7
+      },
+      "interest_count": {
+        "1": 7,
+        "2": 7,
+        "3": 6
+      },
+      "travel_style": {
+        "BACKPACKER": 5,
+        "BUDGET": 5,
+        "COMFORT": 5,
+        "LUXURY": 5
+      },
+      "weekend": {
+        "false": 10,
+        "true": 10
+      }
+    },
+    "dev_tune_total": 20,
+    "overlap_receipt_sha256": "285699ee1370b537a6579b88a7fb02781b51ac52e0ed14f469d77969261f04aa",
+    "total_dev": 80
+  },
+  "final100_firewall": {
+    "allowed_dev_fixture_labels": [
+      "W06_DEV_TUNE",
+      "W06_DEV_SELECT"
+    ],
+    "enabled": true,
+    "final100_semantics_loaded": false,
+    "forbidden_paths": [
+      "data/evaluation/w06/w06_scenarios_freeze_v1.json",
+      "data/evaluation/w06/w06_p11_assignment_manifest_v1.json"
+    ]
+  },
+  "live_provider_calls": 0,
+  "offline_only": true,
+  "prompt_registry_infrastructure": {
+    "allowed_prompt_ids": [
+      "P1",
+      "P2"
+    ],
+    "default_infrastructure_p1_sha256": "096ff4c74dd8d1aed1c0abe501b97c8dfd0f6424dbca535f2b79a242637a1c11",
+    "max_registered_prompts": 2,
+    "p3_allowed": false,
+    "prompt_semantic_freeze_status": "INFRASTRUCTURE_ONLY_PENDING_LATER_PROMPT_FREEZE_GATE",
+    "provider_specific_semantic_prompts_allowed": false
+  },
+  "provider_cost_usd": 0,
+  "selection_algorithms": {
+    "dev_select_model_selection": {
+      "criterion_4_cost": {
+        "rule": "KEEP_MINIMUM_UNROUNDED_CANONICAL_MEDIAN_COST_IF_COMPARABLE_FOR_ALL_CURRENT_SURVIVORS",
+        "skip_status": "COST_CRITERION_SKIPPED_NOT_COMPARABLE"
+      },
+      "criterion_5_latency": {
+        "rule": "KEEP_MINIMUM_UNROUNDED_CANONICAL_MEDIAN_LATENCY"
+      },
+      "final_administrative_tie_order": [
+        "C1",
+        "C2",
+        "C3"
+      ],
+      "human_choice_allowed": false,
+      "pool": "60_DEV_SELECT_FIXTURES_ON_LOCKED_PROMPT"
+    },
+    "dev_tune_prompt_selection": {
+      "pool": "20_DEV_TUNE_FIXTURES_BY_3_ELIGIBLE_CANDIDATES",
+      "tie_after_criterion_3_winner": "P1",
+      "uses_cost_or_latency": false
+    },
+    "pairwise_chaining_allowed": false,
+    "practical_tie_abs_diff_ratio": 0.1,
+    "primary_rate_criteria_order": [
+      "VALID_RUN_AND_SCHEMA_RATE",
+      "EXACT_GROUNDING_PASS_RATE",
+      "FINAL_CORE_PASS_RATE"
+    ],
+    "rule_type": "LEXICOGRAPHIC_BEST_RELATIVE_SURVIVOR_SET_REDUCTION",
+    "weighted_composite_allowed": false
+  },
+  "stochasticity_diagnostic_contract": {
+    "best_of_n": false,
+    "diagnostic_only": true,
+    "executions_per_fixture": 3,
+    "fixture_ids": [
+      "W06-DEV-TUNE-001",
+      "W06-DEV-TUNE-002",
+      "W06-DEV-TUNE-003",
+      "W06-DEV-TUNE-004",
+      "W06-DEV-TUNE-005"
+    ],
+    "fixture_selection_rule": "FIVE_LEXICOGRAPHICALLY_SMALLEST_FROZEN_DEV_TUNE_SCENARIO_IDS",
+    "gated_after_dev_select_winner": true,
+    "max_calls": 15,
+    "may_alter_selected_model_or_prompt_or_sampling": false,
+    "retry": 0
+  },
+  "task_id": "W06-DEV-SELECTION-HARNESS-01-OFFLINE",
+  "version": "1.0.0"
+}
