@@ -1,5 +1,6 @@
 """Base offline provider preflight adapter, one-call invariant enforcement, synthetic smoke fixtures,
-secret hygiene checks, and read-only opening-hours catalog audit (W06-MODEL-PREFLIGHT-01A-OFFLINE).
+secret-safe error sanitization, secret hygiene checks, and read-only opening-hours catalog audit
+(W06-MODEL-PREFLIGHT-01A-OFFLINE / FIX-01).
 """
 from abc import ABC, abstractmethod
 import json
@@ -13,8 +14,10 @@ from typing import Any, Callable, Dict, List, Optional, Tuple
 from pydantic import ValidationError
 
 from app.evaluation.model_preflight.schema_adapter import (
-    COMMON_BENCHMARK_PLAN_JSON_SCHEMA,
+    COMMON_GENERATION_BENCHMARK_PLAN_JSON_SCHEMA,
+    COMMON_GENERATION_SCHEMA_SHA256,
     COMMON_SCHEMA_SHA256,
+    SEMANTIC_SCHEMA_SHA256,
     schema_encodes_place_id_as_catalog_enum,
 )
 from app.evaluation.model_preflight.types import (
@@ -80,11 +83,72 @@ REQUIRED_ENV_KEY_NAMES: Tuple[str, str, str] = (
 
 # Redacted secret-pattern detectors (matched values are NEVER logged or returned)
 _SECRET_LEAK_PATTERNS: Tuple[re.Pattern[str], ...] = (
-    re.compile(r"AIza[0-9A-Za-z\-_]{35}"),
-    re.compile(r"sk-ant-[0-9A-Za-z\-_]{20,}"),
-    re.compile(r"sk-proj-[0-9A-Za-z\-_]{20,}"),
-    re.compile(r"sk-[0-9A-Za-z]{32,}"),
+    re.compile(r"AIza[0-9A-Za-z\-_]{16,}"),
+    re.compile(r"sk-ant-[0-9A-Za-z\-_]{12,}"),
+    re.compile(r"sk-proj-[0-9A-Za-z\-_]{12,}"),
+    re.compile(r"sk-[0-9A-Za-z\-_]{16,}"),
+    re.compile(r"Bearer\s+[A-Za-z0-9\-._~+/]{12,}=*"),
 )
+
+_ENV_KEY_NAME_PATTERN: re.Pattern[str] = re.compile(
+    r"(?:GEMINI_API_KEY|OPENAI_API_KEY|ANTHROPIC_API_KEY)(?:\s*[:=]\s*[^\s,;'\")\]]+)?"
+)
+
+
+def _load_raw_dotenv_secret_values(dotenv_path: Optional[Path] = None) -> List[str]:
+    """Load non-empty secret values from environment and .env in-memory ONLY for redaction replacement."""
+    values: List[str] = []
+    for k in REQUIRED_ENV_KEY_NAMES:
+        env_v = os.environ.get(k, "").strip()
+        if len(env_v) >= 6:
+            values.append(env_v)
+
+    target_path = dotenv_path or (REPO_ROOT / "apps" / "ai-service" / ".env")
+    if target_path.exists():
+        try:
+            for raw_line in target_path.read_text(encoding="utf-8", errors="ignore").splitlines():
+                line = raw_line.strip()
+                if not line or line.startswith("#") or "=" not in line:
+                    continue
+                key_part, val_part = line.split("=", 1)
+                if key_part.strip() in REQUIRED_ENV_KEY_NAMES:
+                    val_clean = val_part.strip().strip("'").strip('"').strip()
+                    if len(val_clean) >= 6:
+                        values.append(val_clean)
+        except Exception:
+            pass
+    return sorted(set(values), key=len, reverse=True)
+
+
+def sanitize_secret_error_text(
+    text: Optional[str],
+    *,
+    dotenv_path: Optional[Path] = None,
+) -> Optional[str]:
+    """Deterministic sanitization function before any provider/SDK exception text is persisted (Part H).
+
+    Ensures no error_detail / receipt / log / artifact contains:
+    - GEMINI_API_KEY, OPENAI_API_KEY, ANTHROPIC_API_KEY
+    - actual configured secret values
+    - detected secret token patterns (AIza..., sk-ant-..., sk-proj-..., sk-..., Bearer ...)
+    """
+    if text is None:
+        return None
+    sanitized = str(text)
+
+    # 1. Strip any actual configured secret values first
+    for secret_val in _load_raw_dotenv_secret_values(dotenv_path=dotenv_path):
+        if secret_val and secret_val in sanitized:
+            sanitized = sanitized.replace(secret_val, "[REDACTED_SECRET]")
+
+    # 2. Strip detected secret token patterns
+    for pattern in _SECRET_LEAK_PATTERNS:
+        sanitized = pattern.sub("[REDACTED_SECRET]", sanitized)
+
+    # 3. Strip explicit env key names and any inline assignments
+    sanitized = _ENV_KEY_NAME_PATTERN.sub("[REDACTED_SECRET]", sanitized)
+
+    return sanitized
 
 
 def is_preflight_live_allowed(explicit_flag: Optional[bool] = None) -> bool:
@@ -352,6 +416,7 @@ class BasePreflightProviderAdapter(ABC):
     - One-call invariant (llm_calls_per_execution = 1, tool_calls = 0, repair = 0, fallback = False)
     - Retry = 0 (sdk_automatic_retry = 0, transport_retry = 0)
     - Strict primary JSON parsing without calling clean_benchmark_json_response
+    - Secret-safe error sanitization on all error_detail strings
     """
 
     candidate_id: str
@@ -362,7 +427,7 @@ class BasePreflightProviderAdapter(ABC):
 
     def __init__(self, *, live_allowed: Optional[bool] = None) -> None:
         self._live_allowed = live_allowed
-        if schema_encodes_place_id_as_catalog_enum(COMMON_BENCHMARK_PLAN_JSON_SCHEMA):
+        if schema_encodes_place_id_as_catalog_enum(COMMON_GENERATION_BENCHMARK_PLAN_JSON_SCHEMA):
             raise ValueError("Invariant violation: place_id must never be encoded as a catalog enum.")
 
     @abstractmethod
@@ -441,6 +506,7 @@ class BasePreflightProviderAdapter(ABC):
             latency_ms = round((t_end - t_start) * 1000.0, 3)
             attempts = request_counter()
             classification = self._classify_transport_or_sdk_exception(exc)
+            safe_err = sanitize_secret_error_text(f"{type(exc).__name__}: {exc}")
             return PreflightExecutionResult(
                 candidate_id=self.candidate_id,
                 provider=self.provider_name,
@@ -458,7 +524,7 @@ class BasePreflightProviderAdapter(ABC):
                 primary_json_repair_called=False,
                 raw_artifact_preserved=False,
                 latency_ms=latency_ms,
-                error_detail=f"{type(exc).__name__}: {exc}",
+                error_detail=safe_err,
             )
 
         t_end = time.perf_counter()
@@ -499,7 +565,7 @@ class BasePreflightProviderAdapter(ABC):
                 raw_response_sha256=raw_sha256,
                 usage_metadata=usage,
                 latency_ms=latency_ms,
-                error_detail=model_err,
+                error_detail=sanitize_secret_error_text(model_err),
             )
 
         # Refusal check (Section 10)
@@ -560,7 +626,7 @@ class BasePreflightProviderAdapter(ABC):
                 raw_response_sha256=raw_sha256,
                 usage_metadata=usage,
                 latency_ms=latency_ms,
-                error_detail=f"Primary strict JSON decode failed: {exc}",
+                error_detail=sanitize_secret_error_text(f"Primary strict JSON decode failed: {exc}"),
                 legacy_recoverable_parse_diagnostic=legacy_recoverable,
             )
 
@@ -593,7 +659,9 @@ class BasePreflightProviderAdapter(ABC):
                 raw_response_sha256=raw_sha256,
                 usage_metadata=usage,
                 latency_ms=latency_ms,
-                error_detail=f"Strict BenchmarkPlanResponse validation failed: {exc}",
+                error_detail=sanitize_secret_error_text(
+                    f"Strict BenchmarkPlanResponse validation failed: {exc}"
+                ),
             )
 
         parsed_sha256 = sha256_bytes(canonical_json_bytes(parsed_plan.model_dump()))
@@ -651,6 +719,8 @@ class BasePreflightProviderAdapter(ABC):
             "fallback": False,
             "primary_json_repair": False,
             "raw_provider_response_preserved": True,
+            "semantic_schema_sha256": SEMANTIC_SCHEMA_SHA256,
+            "common_generation_schema_sha256": COMMON_GENERATION_SCHEMA_SHA256,
             "common_schema_sha256": COMMON_SCHEMA_SHA256,
             "sampling_seed_policy": FROZEN_SAMPLING_SEED,
             "sampling_temperature_policy": FROZEN_SAMPLING_TEMPERATURE,
@@ -705,6 +775,14 @@ def scan_tracked_files_for_secret_leaks(repo_root: Optional[Path] = None) -> Dic
     affected_paths: List[str] = []
     leak_count = 0
 
+    # Strict high-confidence patterns for tracked repository files
+    repo_leak_patterns = (
+        re.compile(r"AIza[0-9A-Za-z\-_]{35}"),
+        re.compile(r"sk-ant-[0-9A-Za-z\-_]{20,}"),
+        re.compile(r"sk-proj-[0-9A-Za-z\-_]{20,}"),
+        re.compile(r"sk-[0-9A-Za-z]{32,}"),
+    )
+
     for rel_path in tracked_files:
         file_path = root / rel_path
         if not file_path.is_file():
@@ -714,7 +792,7 @@ def scan_tracked_files_for_secret_leaks(repo_root: Optional[Path] = None) -> Dic
         except Exception:
             continue
         file_matches = 0
-        for pattern in _SECRET_LEAK_PATTERNS:
+        for pattern in repo_leak_patterns:
             matches = pattern.findall(text)
             if matches:
                 file_matches += len(matches)
@@ -752,7 +830,6 @@ def run_readonly_opening_hours_catalog_audit(
     parser_unsupported = int(report["parser_unsupported_record_count"])
     missing_raw_oh = total_core - raw_with_oh
 
-    # Deterministically evaluable ('known' opening hours under conservative parser) vs 'unknown' (missing or unsupported syntax)
     known_count = parser_supported
     unknown_count = total_core - known_count
     coverage_rate = round(known_count / total_core, 6) if total_core > 0 else 0.0

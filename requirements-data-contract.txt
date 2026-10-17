@@ -4,4 +4,3 @@ asyncpg
 pandas
 pyarrow
 pydantic-settings
--r apps/ai-service/requirements-w06-provider-lock.txt

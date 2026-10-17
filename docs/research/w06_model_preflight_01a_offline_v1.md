@@ -1,9 +1,9 @@
 # W06-MODEL-PREFLIGHT-01A-OFFLINE — Offline Model/Provider Technical Preflight Specification & Evidence
 
 - **Artifact ID:** `W06-MODEL-PREFLIGHT-01A-OFFLINE`
-- **Task ID:** `W06-MODEL-PREFLIGHT-01A-OFFLINE`
-- **Version:** `1.0.0`
-- **Status:** `OFFLINE_PREFLIGHT_COMPLETE_PENDING_PHASE_01B_LIVE_SMOKE`
+- **Task ID:** `W06-MODEL-PREFLIGHT-01A-OFFLINE` (`W06-MODEL-PREFLIGHT-01A-FIX-01`)
+- **Version:** `1.1.0`
+- **Status:** `READY_FOR_LIVE_PREFLIGHT` (`OFFLINE_PREFLIGHT_COMPLETE_PENDING_PHASE_01B_LIVE_SMOKE`)
 - **Base `develop` SHA:** `ff40f42db163a21dfc85d467073e99f628e0154a`
 - **Method Lock Authority:** `data/evaluation/w06/w06_model_arch_selection_method_lock_v1.json` (`6f30cdf90355dd720795de8e0b21beba45f527767892ca7eb88769141a64210c`)
 - **Offline Receipt Path:** `data/evaluation/w06/w06_model_preflight_01a_offline_receipt_v1.json`
@@ -13,6 +13,9 @@
 ## 1. Execution Scope & Strict Offline Boundary
 
 This phase (`W06-MODEL-PREFLIGHT-01A-OFFLINE`) performs **offline technical preflight only**:
+- `live_provider_calls_allowed = false`
+- `live_provider_calls_performed = false`
+- `provider_cost_usd = 0`
 - `LIVE_CALLS_MADE = 0` (`gemini_called = false`, `openai_called = false`, `claude_called = false`, `grok_called = false`)
 - `FINAL_100_USED = false`
 - `DEV_TUNE_EXECUTED = false`
@@ -39,25 +42,22 @@ A runtime guard (`W06_PREFLIGHT_LIVE_ALLOWED = false` by default) is enforced in
 
 ---
 
-## 3. Environment & Dependency Lock Verification
+## 3. Environment, Secret Hygiene & Dependency Lock Verification
 
-### 3.1 Secret Hygiene & `.env` Presence Audit (Redacted)
+### 3.1 Secret Hygiene & Error Redaction (`sanitize_secret_error_text`)
 - `.gitignore` rule `.env` is active; `git check-ignore -v apps/ai-service/.env` confirms `apps/ai-service/.env` is git-ignored and untracked.
-- `apps/ai-service/app/config.py` `Settings` defines:
-  - `GEMINI_API_KEY: str = ""`
-  - `OPENAI_API_KEY: str = ""`
-  - `ANTHROPIC_API_KEY: str = ""`
-  - Production `PLANNER_MODEL: str = "gemini-3.5-flash"` is preserved unchanged.
-- Presence in `apps/ai-service/.env` (values, lengths, prefixes, suffixes, and hashes are never logged or persisted):
+- Production `apps/ai-service/app/config.py` and `apps/ai-service/requirements.txt` remain untouched at `develop` (`ff40f42db163a21dfc85d467073e99f628e0154a`).
+- Preflight-only key presence inspection (`inspect_preflight_env_key_presence` in `apps/ai-service/app/evaluation/model_preflight/base.py`) checks key presence without exposing secret values, lengths, prefixes, suffixes, or hashes:
   - `GEMINI_API_KEY`: `PRESENT`
   - `OPENAI_API_KEY`: `PRESENT`
   - `ANTHROPIC_API_KEY`: `PRESENT`
+- Before any exception or provider error text is stored in `error_detail` or receipt records, `sanitize_secret_error_text()` redacts any occurrence of active env secrets as well as secret-like token patterns (`sk-*`, `sk-proj-*`, `sk-ant-*`, `AIza*`, `Bearer *`, `x-api-key`, `x-goog-api-key`) to `[REDACTED_SECRET]`.
 - Tracked-file secret scan across all tracked repository files:
   - `secret_leak_count = 0`
   - `affected_file_paths = []`
 
 ### 3.2 Locked Provider & Transport Dependencies
-Locked in `apps/ai-service/requirements-w06-provider-lock.txt` (`SHA256 = fd3d6364c3eeb3ae024c6b7248d7f9c8e497987e7cd3f8b06ad67d18e16d0085`):
+Locked in `apps/ai-service/requirements-w06-provider-lock.txt` (`SHA256 = fd3d6364c3eeb3ae024c6b7248d7f9c8e497987e7cd3f8b06ad67d18e16d0085`) and referenced from `apps/ai-service/requirements-dev.txt`:
 - `python`: `3.11.9`
 - `google-genai==2.25.0`
 - `openai==3.17.0`
@@ -72,37 +72,46 @@ Locked in `apps/ai-service/requirements-w06-provider-lock.txt` (`SHA256 = fd3d63
 
 ---
 
-## 4. Common Semantic Schema & Technical Structured-Output Wiring
+## 4. Semantic Schema vs Strict Structured-Output Generation Schema
 
 - **Common Schema Source:** `BenchmarkPlanResponse` (`apps/ai-service/app/evaluation/model_preflight/schema_adapter.py`)
-- **`COMMON_SCHEMA_SHA256` (`SHA256_CANONICAL_JSON_UTF8_LF_BYTES`):**
+- **`SEMANTIC_SCHEMA_SHA256` (`SHA256_CANONICAL_JSON_UTF8_LF_BYTES` of raw `BenchmarkPlanResponse.model_json_schema()`):**
+  `e4169f7b890f77d13af65e9f2070b6071c535b206d88440f5e8f28c179977555`
+- **`COMMON_GENERATION_SCHEMA_SHA256` (`SHA256_CANONICAL_JSON_UTF8_LF_BYTES` of `build_strict_generation_json_schema()`):**
   `5f7331eb1ac137a42b75a0c307107e3305703d4782ddffdcfe98c1b5ae11c27c`
+- **Projection Whitelist Guard (`verify_strict_generation_schema_projection`):**
+  The strict generation schema transformation is verified to apply **only** the whitelisted technical projections:
+  - enforce `additionalProperties: false` on every object node (`$defs` and root)
+  - materialize an explicit sorted `required` array listing all object properties
+  - strip `default` metadata on required properties so strict JSON Schema validators accept nullable `anyOf` fields without default-value conflicts
+  - preserve every semantic field name, type, constraint (`minLength`, `minimum`, `maximum`, `pattern`, `enum`), `$defs` structure, and nullable `anyOf` union
 - **Grounding Integrity Guard:** `place_id` is verified **not** to be encoded as a provider-side enum of catalog IDs (`schema_encodes_place_id_as_catalog_enum == False`).
 - **Provider Technical Wiring:**
   - `C1` (`Google` / `gemini-3.8-flash`): `GenerateContentConfig(response_mime_type="application/json", response_json_schema=COMMON_BENCHMARK_PLAN_JSON_SCHEMA)`
   - `C2` (`OpenAI` / `gpt-6.1-sol`): `response_format={"type": "json_schema", "json_schema": {"name": "BenchmarkPlanResponse", "strict": True, "schema": COMMON_BENCHMARK_PLAN_JSON_SCHEMA}}`
-  - `C3` (`Anthropic` / `claude-sonnet-5-5`): `output_config={"format": {"type": "json_schema", "schema": COMMON_BENCHMARK_PLAN_JSON_SCHEMA}}`
+  - `C3` (`Anthropic` / `claude-sonnet-5-5`): `output_config={"effort": "high", "format": {"type": "json_schema", "schema": COMMON_BENCHMARK_PLAN_JSON_SCHEMA}}`
 
 ---
 
 ## 5. Candidate-by-Candidate Offline Capability Matrix
 
-| Field / Capability | `C1` (`Google`) | `C2` (`OpenAI`) | `C3` (`Anthropic`) |
+| Field / Capability | `C1` (`Google` — `READY_FOR_LIVE_PREFLIGHT`) | `C2` (`OpenAI` — `READY_FOR_LIVE_PREFLIGHT`) | `C3` (`Anthropic` — `READY_FOR_LIVE_PREFLIGHT`) |
 |---|---|---|---|
 | **Requested Model ID** | `gemini-3.8-flash` | `gpt-6.1-sol` | `claude-sonnet-5-5` |
 | **Live Model ID Status** | `PENDING_LIVE_CONFIRMATION` | `PENDING_LIVE_CONFIRMATION` | `PENDING_LIVE_CONFIRMATION` |
 | **SDK Package & Version** | `google-genai==2.25.0` | `openai==3.17.0` | `anthropic==1.15.0` |
-| **Endpoint Semantics** | `models.generate_content` (`VERIFIED_BY_SDK_SURFACE`) | `chat.completions.create` (`VERIFIED_BY_SDK_SURFACE`) | `messages.create` (`VERIFIED_BY_SDK_SURFACE`) |
-| **Structured Output Mode** | `NATIVE_RESPONSE_JSON_SCHEMA` (`VERIFIED_BY_SDK_SURFACE`) | `NATIVE_JSON_SCHEMA_STRICT` (`VERIFIED_BY_SDK_SURFACE`) | `NATIVE_OUTPUT_CONFIG_JSON_SCHEMA` (`VERIFIED_BY_SDK_SURFACE`) |
-| **`temperature`** | `0.0` (`VERIFIED_BY_SDK_SURFACE`) | `0.0` (`VERIFIED_BY_SDK_SURFACE`) | `UNSUPPORTED` on `anthropic==1.15.0` `messages.create` signature (fixed provider default behavior documented) |
-| **`seed`** | `2026101508` (`VERIFIED_BY_SDK_SURFACE`) | `2026101508` (`VERIFIED_BY_SDK_SURFACE`) | `UNSUPPORTED` |
-| **`top_p`** | `None` (`VERIFIED_BY_SDK_SURFACE`) | `None` (`VERIFIED_BY_SDK_SURFACE`) | `UNSUPPORTED` |
-| **`top_k`** | `None` (`VERIFIED_BY_SDK_SURFACE`) | `UNSUPPORTED` | `UNSUPPORTED` |
-| **Thinking / Reasoning** | `thinking_config=None` (`VERIFIED_BY_SDK_SURFACE`) | `reasoning_effort=None` (`VERIFIED_BY_SDK_SURFACE`) | `thinking={"type": "disabled"}` (`VERIFIED_BY_SDK_SURFACE`) |
+| **Endpoint Semantics** | `models.generate_content` (`VERIFIED_BY_SDK_SURFACE`) | `chat.completions.create` (`SDK_PARAMETER_EXISTS`, model compatibility `PENDING_LIVE_CONFIRMATION`) | `messages.create` (`VERIFIED_BY_SDK_SURFACE`) |
+| **Structured Output Mode** | `NATIVE_RESPONSE_JSON_SCHEMA` (`VERIFIED_BY_SDK_SURFACE`) | `NATIVE_JSON_SCHEMA_STRICT` (`SDK_PARAMETER_EXISTS`, runtime `PENDING_LIVE_CONFIRMATION`) | `NATIVE_OUTPUT_CONFIG_JSON_SCHEMA` (`VERIFIED_BY_SDK_SURFACE`) |
+| **`temperature`** | Omitted (`None`, provider default `1.0` per Gemini 3 thinking guidance) | `0.0` (`SDK_PARAMETER_EXISTS`, model-level `PENDING_LIVE_CONFIRMATION`) | Omitted (`None`, incompatible with adaptive thinking on Claude Sonnet 5.5) |
+| **`seed`** | `2026101508` (`SDK_PARAMETER_EXISTS`, model-level `PENDING_LIVE_CONFIRMATION`) | `2026101508` (`SDK_PARAMETER_EXISTS`, model-level `PENDING_LIVE_CONFIRMATION`) | Omitted (`None`, `UNSUPPORTED` by Anthropic Messages API) |
+| **`top_p`** | Omitted (`None`) | Omitted (`None`) | Omitted (`None`) |
+| **`top_k`** | Omitted (`None`) | Omitted (`None`, `UNSUPPORTED`) | Omitted (`None`, incompatible with adaptive thinking) |
+| **Thinking / Reasoning** | `ThinkingConfig(thinking_level="medium")` (`VERIFIED_BY_SDK_SURFACE`) | `reasoning_effort=None` (`SDK_PARAMETER_EXISTS`, model-level `PENDING_LIVE_CONFIRMATION`) | `thinking={"type": "adaptive"}`, `output_config.effort="high"` (`VERIFIED_BY_SDK_SURFACE`) |
 | **`max_output_tokens`** | `16384` (`max_output_tokens`) | `16384` (`max_completion_tokens`) | `16384` (`max_tokens`) |
 | **`timeout`** | `55000` ms (`HttpOptions.timeout`) | `55000` ms (`55.0` s) | `55000` ms (`55.0` s) |
 | **Retry = 0 Mechanism** | `HttpRetryOptions(attempts=1)` (`OFFLINE_TEST_VERIFIED`) | `OpenAI(max_retries=0)` (`OFFLINE_TEST_VERIFIED`) | `Anthropic(max_retries=0)` (`OFFLINE_TEST_VERIFIED`) |
 | **Returned Model Field** | `GenerateContentResponse.model_version` | `ChatCompletion.model` | `Message.model` |
+| **Offline Status & Blockers** | `READY_FOR_LIVE_PREFLIGHT`, `blockers = []` | `READY_FOR_LIVE_PREFLIGHT`, `blockers = []` | `READY_FOR_LIVE_PREFLIGHT`, `blockers = []` |
 
 ---
 
@@ -124,7 +133,7 @@ Two synthetic smoke fixtures are defined in `apps/ai-service/app/evaluation/mode
 - `W06-PREFLIGHT-SMOKE-001` (`ha-noi`, 2 days, `culture_history`, `COMFORT`, 2 synthetic POIs)
 - `W06-PREFLIGHT-SMOKE-002` (`da-nang`, 2 days, `food_cuisine`, `BUDGET`, 2 synthetic POIs)
 
-Both serialize with identical `system_prompt_sha256`, `user_prompt_sha256`, and `COMMON_SCHEMA_SHA256` across `C1`, `C2`, and `C3`.
+Both serialize with identical `system_prompt_sha256`, `user_prompt_sha256`, `SEMANTIC_SCHEMA_SHA256`, and `COMMON_GENERATION_SCHEMA_SHA256` across `C1`, `C2`, and `C3`.
 
 ---
 

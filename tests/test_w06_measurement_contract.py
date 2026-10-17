@@ -296,6 +296,7 @@ def test_w06_contract_19_production_behavior_unchanged(contract_doc: dict):
             "apps/ai-service/app/routers/planner.py",
             "apps/ai-service/app/schemas/planner.py",
             "apps/ai-service/app/prompts/planner_prompt.py",
+            "apps/ai-service/app/config.py",
             "apps/backend/src/modules/trips/trips.service.ts",
             "apps/backend/src/modules/ai-proxy/ai-proxy.service.ts",
             "data/curated/",
@@ -308,10 +309,6 @@ def test_w06_contract_19_production_behavior_unchanged(contract_doc: dict):
         check=True,
     )
     assert res.stdout.strip() == ""
-    config_text = (REPO_ROOT / "apps" / "ai-service" / "app" / "config.py").read_text(encoding="utf-8")
-    assert 'PLANNER_MODEL: str = "gemini-3.5-flash"' in config_text
-    assert "PLANNER_MAX_OUTPUT_TOKENS: int = 16384" in config_text
-    assert "PLANNER_TIMEOUT_MS: int = 55000" in config_text
 
 
 def test_w06_contract_20_legacy_evaluator_classified_insufficient(contract_doc: dict):

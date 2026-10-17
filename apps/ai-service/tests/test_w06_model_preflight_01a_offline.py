@@ -1,35 +1,46 @@
-"""Offline verification test suite for W06-MODEL-PREFLIGHT-01A-OFFLINE (PF-A-01 .. PF-A-30).
+"""Offline verification test suite for W06-MODEL-PREFLIGHT-01A-OFFLINE / FIX-01 (PF-A-01 .. PF-A-36).
+
+Located under AI-service test ownership (apps/ai-service/tests/test_w06_model_preflight_01a_offline.py)
+so mandatory CI executes it inside the ai-service job without polluting requirements-data-contract.txt.
 
 ABSOLUTELY NO LIVE MODEL/API REQUESTS ARE MADE IN THIS TEST SUITE.
 All SDK calls use offline fake transports (httpx.MockTransport / httpx2.MockTransport).
 """
+import copy
 import json
 from pathlib import Path
 import subprocess
 import sys
-from typing import Any, Callable, Tuple
+from typing import Any, Callable, Dict, List, Tuple
 
 import httpx
 import httpx2
 import pytest
 
-REPO_ROOT = Path(__file__).resolve().parent.parent
-AI_SERVICE_ROOT = REPO_ROOT / "apps" / "ai-service"
+AI_SERVICE_ROOT = Path(__file__).resolve().parent.parent
+REPO_ROOT = AI_SERVICE_ROOT.parent.parent
 if str(AI_SERVICE_ROOT) not in sys.path:
     sys.path.insert(0, str(AI_SERVICE_ROOT))
 
-from app.config import Settings, settings  # noqa: E402
+from app.config import settings  # noqa: E402
 from app.evaluation.model_preflight import (  # noqa: E402
-    COMMON_BENCHMARK_PLAN_JSON_SCHEMA,
+    COMMON_GENERATION_BENCHMARK_PLAN_JSON_SCHEMA,
+    COMMON_GENERATION_SCHEMA_SHA256,
     COMMON_SCHEMA_SHA256,
     FROZEN_ARCHITECTURE_ID,
+    FROZEN_CLAUDE_EFFORT,
+    FROZEN_CLAUDE_THINKING_MODE,
+    FROZEN_GOOGLE_THINKING_LEVEL,
     FROZEN_MAX_OUTPUT_TOKENS,
     FROZEN_SAMPLING_SEED,
     FROZEN_SAMPLING_TEMPERATURE,
     FROZEN_TIMEOUT_MS,
     LIVE_PROVIDER_CALL_FORBIDDEN_CODE,
+    SEMANTIC_BENCHMARK_PLAN_JSON_SCHEMA,
+    SEMANTIC_SCHEMA_SHA256,
     SYNTHETIC_SMOKE_SCENARIO_IDS,
     AnthropicPreflightAdapter,
+    CandidateOfflineReadinessStatus,
     CapabilityVerificationStatus,
     ConfigurationIntegrityError,
     GooglePreflightAdapter,
@@ -44,12 +55,18 @@ from app.evaluation.model_preflight import (  # noqa: E402
     build_synthetic_smoke_fixtures,
     build_synthetic_valid_plan_json,
     check_dotenv_key_presence,
-    compute_common_schema_sha256,
+    compute_common_generation_schema_sha256,
+    compute_semantic_schema_sha256,
     run_readonly_opening_hours_catalog_audit,
+    sanitize_secret_error_text,
     scan_tracked_files_for_secret_leaks,
     schema_encodes_place_id_as_catalog_enum,
+    verify_strict_generation_schema_projection,
 )
-from app.schemas.planner_benchmark import BenchmarkRunStatus  # noqa: E402
+from app.schemas.planner_benchmark import (  # noqa: E402
+    BenchmarkPlanResponse,
+    BenchmarkRunStatus,
+)
 from app.services.planner_benchmark_runner import (  # noqa: E402
     canonical_json_bytes,
     normalize_lf_bytes,
@@ -59,6 +76,8 @@ from app.services.planner_benchmark_runner import (  # noqa: E402
 RECEIPT_PATH = REPO_ROOT / "data" / "evaluation" / "w06" / "w06_model_preflight_01a_offline_receipt_v1.json"
 DOC_PATH = REPO_ROOT / "docs" / "research" / "w06_model_preflight_01a_offline_v1.md"
 LOCK_PATH = AI_SERVICE_ROOT / "requirements-w06-provider-lock.txt"
+REQ_DEV_PATH = AI_SERVICE_ROOT / "requirements-dev.txt"
+EXPECTED_BASE_DEVELOP_SHA = "ff40f42db163a21dfc85d467073e99f628e0154a"
 
 EXPECTED_FROZEN_AUTHORITY_SHAS = {
     "data/evaluation/w06/w06_scenarios_freeze_v1.json": "c03bc6dc300604ac395505d59b6413c1a47339b21408cfd637671e81d4b555a1",
@@ -78,16 +97,40 @@ EXPECTED_FROZEN_AUTHORITY_SHAS = {
 }
 
 
+def _ensure_commit_present(commit_sha: str) -> None:
+    res = subprocess.run(
+        ["git", "cat-file", "-e", f"{commit_sha}^{{commit}}"],
+        cwd=REPO_ROOT,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+        check=False,
+    )
+    if res.returncode != 0:
+        subprocess.run(
+            ["git", "fetch", "origin", commit_sha, "--depth=1"],
+            cwd=REPO_ROOT,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            check=True,
+        )
+
+
 def _make_google_transport(
     status_code: int = 200,
     body_json: dict[str, Any] | None = None,
     raise_timeout: bool = False,
+    custom_exception: Exception | None = None,
+    captured_bodies: List[Dict[str, Any]] | None = None,
 ) -> Tuple[httpx.MockTransport, Callable[[], int]]:
     calls = 0
 
     def handler(request: httpx.Request) -> httpx.Response:
         nonlocal calls
         calls += 1
+        if captured_bodies is not None and request.content:
+            captured_bodies.append(json.loads(request.content.decode("utf-8")))
+        if custom_exception is not None:
+            raise custom_exception
         if raise_timeout:
             raise httpx.ReadTimeout("Simulated Google transport timeout", request=request)
         return httpx.Response(status_code=status_code, json=body_json or {})
@@ -99,12 +142,18 @@ def _make_httpx2_transport(
     status_code: int = 200,
     body_json: dict[str, Any] | None = None,
     raise_timeout: bool = False,
+    custom_exception: Exception | None = None,
+    captured_bodies: List[Dict[str, Any]] | None = None,
 ) -> Tuple[httpx2.MockTransport, Callable[[], int]]:
     calls = 0
 
     def handler(request: httpx2.Request) -> httpx2.Response:
         nonlocal calls
         calls += 1
+        if captured_bodies is not None and request.content:
+            captured_bodies.append(json.loads(request.content.decode("utf-8")))
+        if custom_exception is not None:
+            raise custom_exception
         if raise_timeout:
             raise httpx2.ReadTimeout("Simulated httpx2 transport timeout", request=request)
         return httpx2.Response(status_code=status_code, json=body_json or {})
@@ -112,17 +161,42 @@ def _make_httpx2_transport(
     return httpx2.MockTransport(handler), lambda: calls
 
 
-def test_pf_a_01_config_has_anthropic_api_key_and_preserves_planner_model() -> None:
-    """PF-A-01: Settings defines ANTHROPIC_API_KEY: str = '' and preserves PLANNER_MODEL default."""
-    assert "ANTHROPIC_API_KEY" in Settings.model_fields
-    assert Settings.model_fields["ANTHROPIC_API_KEY"].default == ""
+def test_pf_a_01_production_config_and_historical_tests_byte_identical_to_develop() -> None:
+    """PF-A-01 (Part A & L1-L3): Historical measurement tests, production config.py, requirements.txt, and requirements-data-contract.txt remain byte-identical to develop."""
+    _ensure_commit_present(EXPECTED_BASE_DEVELOP_SHA)
+    res = subprocess.run(
+        [
+            "git",
+            "diff",
+            "--name-only",
+            EXPECTED_BASE_DEVELOP_SHA,
+            "--",
+            "apps/ai-service/app/config.py",
+            "apps/ai-service/requirements.txt",
+            "requirements-data-contract.txt",
+            "tests/test_w06_measurement_capability_audit.py",
+            "tests/test_w06_measurement_contract.py",
+            "apps/ai-service/app/routers/planner.py",
+            "apps/ai-service/app/llm/",
+        ],
+        cwd=REPO_ROOT,
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    assert res.stdout.strip() == ""
     assert settings.PLANNER_MODEL == "gemini-3.5-flash"
 
 
-def test_pf_a_02_dependency_lock_file_exists_and_pins_required_packages() -> None:
-    """PF-A-02: requirements-w06-provider-lock.txt exists and pins exact provider and transport packages."""
+def test_pf_a_02_dependency_lock_isolated_in_ai_service_dev() -> None:
+    """PF-A-02 (Part B & C & L4): requirements-w06-provider-lock.txt is imported by apps/ai-service/requirements-dev.txt and test resides under apps/ai-service/tests."""
     assert LOCK_PATH.is_file()
-    content = LOCK_PATH.read_text(encoding="utf-8")
+    assert REQ_DEV_PATH.is_file()
+    assert "-r requirements-w06-provider-lock.txt" in REQ_DEV_PATH.read_text(encoding="utf-8")
+    assert Path(__file__).resolve() == (AI_SERVICE_ROOT / "tests" / "test_w06_model_preflight_01a_offline.py").resolve()
+    assert not (REPO_ROOT / "tests" / "test_w06_model_preflight_01a_offline.py").exists()
+
+    lock_content = LOCK_PATH.read_text(encoding="utf-8")
     for required_pin in (
         "google-genai==2.25.0",
         "openai==3.17.0",
@@ -133,11 +207,11 @@ def test_pf_a_02_dependency_lock_file_exists_and_pins_required_packages() -> Non
         "pydantic-core==2.46.4",
         "anyio==4.13.0",
     ):
-        assert required_pin in content
+        assert required_pin in lock_content
 
 
-def test_pf_a_03_provider_sdks_are_importable() -> None:
-    """PF-A-03: google-genai, openai, and anthropic SDKs are importable."""
+def test_pf_a_03_provider_sdks_are_importable_and_match_lock() -> None:
+    """PF-A-03: google-genai, openai, and anthropic SDKs are importable and match locked versions."""
     from importlib.metadata import version
 
     import anthropic
@@ -168,7 +242,7 @@ def test_pf_a_04_model_preflight_package_structure() -> None:
 
 
 def test_pf_a_05_runtime_live_call_guard_blocks_live_execution_by_default(monkeypatch: pytest.MonkeyPatch) -> None:
-    """PF-A-05: Attempting execution without an offline mock_transport while W06_PREFLIGHT_LIVE_ALLOWED=false raises LIVE_PROVIDER_CALL_FORBIDDEN."""
+    """PF-A-05 (Part L17): Attempting execution without an offline mock_transport while W06_PREFLIGHT_LIVE_ALLOWED=false raises LIVE_PROVIDER_CALL_FORBIDDEN."""
     monkeypatch.delenv("W06_PREFLIGHT_LIVE_ALLOWED", raising=False)
     smoke_scenario, smoke_pois = build_synthetic_smoke_fixtures()[0]
     for adapter in build_all_candidate_preflight_adapters().values():
@@ -183,24 +257,53 @@ def test_pf_a_05_runtime_live_call_guard_blocks_live_execution_by_default(monkey
         assert LIVE_PROVIDER_CALL_FORBIDDEN_CODE in str(exc_info.value)
 
 
-def test_pf_a_06_common_schema_deterministic_hash() -> None:
-    """PF-A-06: Common BenchmarkPlanResponse JSON schema hash is deterministic under SHA256_CANONICAL_JSON_UTF8_LF_BYTES."""
-    assert len(COMMON_SCHEMA_SHA256) == 64
-    assert compute_common_schema_sha256() == COMMON_SCHEMA_SHA256
-    assert COMMON_BENCHMARK_PLAN_JSON_SCHEMA.get("type") == "object"
-    assert COMMON_BENCHMARK_PLAN_JSON_SCHEMA.get("additionalProperties") is False
+def test_pf_a_06_semantic_and_generation_schema_hashes_split_and_verified() -> None:
+    """PF-A-06 (Part G & L12-L14): SEMANTIC_SCHEMA_SHA256 and COMMON_GENERATION_SCHEMA_SHA256 both exist and pass the strict projection whitelist guard."""
+    assert len(SEMANTIC_SCHEMA_SHA256) == 64
+    assert len(COMMON_GENERATION_SCHEMA_SHA256) == 64
+    assert SEMANTIC_SCHEMA_SHA256 != COMMON_GENERATION_SCHEMA_SHA256
+    assert compute_semantic_schema_sha256() == SEMANTIC_SCHEMA_SHA256
+    assert compute_common_generation_schema_sha256() == COMMON_GENERATION_SCHEMA_SHA256
+    assert sha256_bytes(canonical_json_bytes(BenchmarkPlanResponse.model_json_schema())) == SEMANTIC_SCHEMA_SHA256
+
+    guard_report = verify_strict_generation_schema_projection()
+    assert guard_report["whitelist_guard_passed"] is True
+    assert guard_report["semantic_schema_sha256"] == SEMANTIC_SCHEMA_SHA256
+    assert guard_report["common_generation_schema_sha256"] == COMMON_GENERATION_SCHEMA_SHA256
+    assert guard_report["place_id_catalog_enum_present"] is False
+    assert guard_report["activity_kind_enum_preserved"] is True
 
 
-def test_pf_a_07_place_id_not_encoded_as_catalog_enum() -> None:
-    """PF-A-07: place_id is never constrained to an enum of catalog IDs in the schema."""
-    assert schema_encodes_place_id_as_catalog_enum(COMMON_BENCHMARK_PLAN_JSON_SCHEMA) is False
-    # Verify detector catches an artificial enum on place_id
-    mutated = {"properties": {"place_id": {"type": "string", "enum": ["p1", "p2"]}}}
-    assert schema_encodes_place_id_as_catalog_enum(mutated) is True
+def test_pf_a_07_schema_projection_guard_rejects_unapproved_semantic_mutations() -> None:
+    """PF-A-07 (Part G & L14): Structural-diff guard rejects property renames, type changes, enum changes, bound changes, or place_id catalog enums."""
+    assert schema_encodes_place_id_as_catalog_enum(SEMANTIC_BENCHMARK_PLAN_JSON_SCHEMA) is False
+    assert schema_encodes_place_id_as_catalog_enum(COMMON_GENERATION_BENCHMARK_PLAN_JSON_SCHEMA) is False
+
+    # 1. Mutate property name
+    bad_prop = copy.deepcopy(COMMON_GENERATION_BENCHMARK_PLAN_JSON_SCHEMA)
+    bad_prop["properties"]["extra_unapproved_field"] = {"type": "string"}
+    with pytest.raises(ValueError, match="Property names changed"):
+        verify_strict_generation_schema_projection(SEMANTIC_BENCHMARK_PLAN_JSON_SCHEMA, bad_prop)
+
+    # 2. Mutate numeric bound
+    bad_bound = copy.deepcopy(COMMON_GENERATION_BENCHMARK_PLAN_JSON_SCHEMA)
+    bad_bound["properties"]["total_days"]["maximum"] = 99
+    with pytest.raises(ValueError, match="Protected semantic constraint 'maximum' changed"):
+        verify_strict_generation_schema_projection(SEMANTIC_BENCHMARK_PLAN_JSON_SCHEMA, bad_bound)
+
+    # 3. Mutate ActivityKind enum domain
+    bad_enum = copy.deepcopy(COMMON_GENERATION_BENCHMARK_PLAN_JSON_SCHEMA)
+    bad_enum["$defs"]["ActivityKind"]["enum"] = ["POI_VISIT"]
+    with pytest.raises(ValueError, match="Protected semantic constraint 'enum' changed"):
+        verify_strict_generation_schema_projection(SEMANTIC_BENCHMARK_PLAN_JSON_SCHEMA, bad_enum)
+
+    # 4. Inject place_id enum
+    mutated_place_id = {"properties": {"place_id": {"type": "string", "enum": ["p1", "p2"]}}}
+    assert schema_encodes_place_id_as_catalog_enum(mutated_place_id) is True
 
 
-def test_pf_a_08_identical_semantic_prompts_and_schema_across_c1_c2_c3() -> None:
-    """PF-A-08: C1, C2, and C3 serialize identical semantic system/user prompts and share COMMON_SCHEMA_SHA256."""
+def test_pf_a_08_identical_semantic_prompts_and_dual_schema_hashes_across_c1_c2_c3() -> None:
+    """PF-A-08: C1, C2, and C3 serialize identical semantic system/user prompts and share SEMANTIC_SCHEMA_SHA256 & COMMON_GENERATION_SCHEMA_SHA256."""
     adapters = build_all_candidate_preflight_adapters()
     for scenario, pois in build_synthetic_smoke_fixtures():
         r1 = adapters["C1"].serialize_smoke_request(scenario, pois)
@@ -210,23 +313,31 @@ def test_pf_a_08_identical_semantic_prompts_and_schema_across_c1_c2_c3() -> None
         assert r1["user_prompt"] == r2["user_prompt"] == r3["user_prompt"]
         assert r1["system_prompt_sha256"] == r2["system_prompt_sha256"] == r3["system_prompt_sha256"]
         assert r1["user_prompt_sha256"] == r2["user_prompt_sha256"] == r3["user_prompt_sha256"]
-        assert r1["common_schema_sha256"] == r2["common_schema_sha256"] == r3["common_schema_sha256"] == COMMON_SCHEMA_SHA256
+        assert r1["semantic_schema_sha256"] == r2["semantic_schema_sha256"] == r3["semantic_schema_sha256"] == SEMANTIC_SCHEMA_SHA256
+        assert (
+            r1["common_generation_schema_sha256"]
+            == r2["common_generation_schema_sha256"]
+            == r3["common_generation_schema_sha256"]
+            == COMMON_GENERATION_SCHEMA_SHA256
+        )
 
 
 def test_pf_a_09_provider_structured_output_wiring() -> None:
-    """PF-A-09: Provider structured-output wiring builders translate only technical parameters."""
+    """PF-A-09: Provider structured-output wiring builders translate technical parameters accurately."""
     g_wire = build_google_structured_output_wiring()
     assert g_wire["response_mime_type"] == "application/json"
-    assert g_wire["common_schema_sha256"] == COMMON_SCHEMA_SHA256
+    assert g_wire["common_generation_schema_sha256"] == COMMON_GENERATION_SCHEMA_SHA256
+    assert g_wire["semantic_schema_sha256"] == SEMANTIC_SCHEMA_SHA256
 
     o_wire = build_openai_structured_output_wiring()
     assert o_wire["response_format"]["type"] == "json_schema"
     assert o_wire["response_format"]["json_schema"]["strict"] is True
-    assert o_wire["common_schema_sha256"] == COMMON_SCHEMA_SHA256
+    assert o_wire["common_generation_schema_sha256"] == COMMON_GENERATION_SCHEMA_SHA256
 
     a_wire = build_anthropic_structured_output_wiring()
+    assert a_wire["output_config"]["effort"] == "high"
     assert a_wire["output_config"]["format"]["type"] == "json_schema"
-    assert a_wire["common_schema_sha256"] == COMMON_SCHEMA_SHA256
+    assert a_wire["common_generation_schema_sha256"] == COMMON_GENERATION_SCHEMA_SHA256
 
 
 def test_pf_a_10_one_call_invariant_rejects_multi_call_tool_repair_or_fallback() -> None:
@@ -269,12 +380,13 @@ def test_pf_a_10_one_call_invariant_rejects_multi_call_tool_repair_or_fallback()
         )
 
 
-def test_pf_a_11_primary_parse_path_succeeds_on_strict_json_across_all_candidates(tmp_path: Path) -> None:
-    """PF-A-11: Valid strict JSON response parses into BenchmarkPlanResponse in 1 call with raw artifact preserved."""
+def test_pf_a_11_primary_parse_path_succeeds_and_verifies_wire_payloads_for_c1_c2_c3(tmp_path: Path) -> None:
+    """PF-A-11 (Part D, E, L5-L11): Valid strict JSON parses in 1 call AND actual HTTP wire payloads obey Gemini 3.8 and Claude Sonnet 5.5 parameter rules."""
     scenario, pois = build_synthetic_smoke_fixtures()[0]
     valid_json_str = build_synthetic_valid_plan_json(scenario, pois)
 
-    # C1 Google
+    # C1 Google wire verification
+    g_bodies: List[Dict[str, Any]] = []
     g_adapter = GooglePreflightAdapter()
     g_transport, g_counter = _make_google_transport(
         status_code=200,
@@ -283,6 +395,7 @@ def test_pf_a_11_primary_parse_path_succeeds_on_strict_json_across_all_candidate
             "candidates": [{"content": {"role": "model", "parts": [{"text": valid_json_str}]}, "finishReason": "STOP"}],
             "usageMetadata": {"promptTokenCount": 120, "candidatesTokenCount": 240, "totalTokenCount": 360},
         },
+        captured_bodies=g_bodies,
     )
     g_res = g_adapter.execute_offline_simulated_request(
         scenario=scenario,
@@ -293,11 +406,17 @@ def test_pf_a_11_primary_parse_path_succeeds_on_strict_json_across_all_candidate
     )
     assert g_res.run_status == BenchmarkRunStatus.VALID
     assert g_res.request_attempt_count == 1
-    assert g_res.primary_json_repair_called is False
-    assert g_res.raw_artifact_preserved is True
-    assert g_res.parsed_response is not None
+    assert len(g_bodies) == 1
+    g_gen_cfg = g_bodies[0].get("generationConfig", {})
+    # Part L5-L8: Gemini request omits temperature, top_p, top_k and sets thinkingLevel == MEDIUM
+    assert "temperature" not in g_gen_cfg
+    assert "topP" not in g_gen_cfg
+    assert "topK" not in g_gen_cfg
+    g_thinking_cfg = g_gen_cfg.get("thinkingConfig", {})
+    assert (g_thinking_cfg.get("thinkingLevel") or g_thinking_cfg.get("thinking_level")) in ("MEDIUM", "medium")
 
-    # C2 OpenAI
+    # C2 OpenAI wire verification
+    o_bodies: List[Dict[str, Any]] = []
     o_adapter = OpenAIPreflightAdapter()
     o_transport, o_counter = _make_httpx2_transport(
         status_code=200,
@@ -309,6 +428,7 @@ def test_pf_a_11_primary_parse_path_succeeds_on_strict_json_across_all_candidate
             "choices": [{"index": 0, "message": {"role": "assistant", "content": valid_json_str}, "finish_reason": "stop"}],
             "usage": {"prompt_tokens": 110, "completion_tokens": 230, "total_tokens": 340},
         },
+        captured_bodies=o_bodies,
     )
     o_res = o_adapter.execute_offline_simulated_request(
         scenario=scenario,
@@ -319,10 +439,11 @@ def test_pf_a_11_primary_parse_path_succeeds_on_strict_json_across_all_candidate
     )
     assert o_res.run_status == BenchmarkRunStatus.VALID
     assert o_res.request_attempt_count == 1
-    assert o_res.primary_json_repair_called is False
-    assert o_res.parsed_response is not None
+    assert len(o_bodies) == 1
+    assert o_bodies[0]["model"] == "gpt-6.1-sol"
 
-    # C3 Anthropic
+    # C3 Anthropic wire verification
+    a_bodies: List[Dict[str, Any]] = []
     a_adapter = AnthropicPreflightAdapter()
     a_transport, a_counter = _make_httpx2_transport(
         status_code=200,
@@ -336,6 +457,7 @@ def test_pf_a_11_primary_parse_path_succeeds_on_strict_json_across_all_candidate
             "stop_sequence": None,
             "usage": {"input_tokens": 115, "output_tokens": 235},
         },
+        captured_bodies=a_bodies,
     )
     a_res = a_adapter.execute_offline_simulated_request(
         scenario=scenario,
@@ -346,8 +468,15 @@ def test_pf_a_11_primary_parse_path_succeeds_on_strict_json_across_all_candidate
     )
     assert a_res.run_status == BenchmarkRunStatus.VALID
     assert a_res.request_attempt_count == 1
-    assert a_res.primary_json_repair_called is False
-    assert a_res.parsed_response is not None
+    assert len(a_bodies) == 1
+    # Part L9-L11: Claude thinking.type == adaptive, output_config.effort == high, omits temperature/top_p/top_k
+    assert a_bodies[0].get("thinking") == {"type": "adaptive"}
+    assert a_bodies[0].get("output_config", {}).get("effort") == "high"
+    assert a_bodies[0].get("output_config", {}).get("format", {}).get("type") == "json_schema"
+    assert "temperature" not in a_bodies[0]
+    assert "top_p" not in a_bodies[0]
+    assert "top_k" not in a_bodies[0]
+    assert "seed" not in a_bodies[0]
 
 
 def test_pf_a_12_primary_parse_path_does_not_call_legacy_cleaner_on_fenced_json() -> None:
@@ -377,54 +506,114 @@ def test_pf_a_12_primary_parse_path_does_not_call_legacy_cleaner_on_fenced_json(
     assert res.legacy_recoverable_parse_diagnostic is True
 
 
-def test_pf_a_13_c1_google_preflight_record() -> None:
-    """PF-A-13: C1 (Google / gemini-3.8-flash) preflight record satisfies Section 8 & 9 invariants."""
-    rec = GooglePreflightAdapter().get_preflight_record()
+def test_pf_a_13_c1_google_preflight_record_and_request_omissions() -> None:
+    """PF-A-13 (Part D, I, J, L5-L8): C1 (Google / gemini-3.8-flash) omits temperature/top_p/top_k, sets thinking_level='medium', marks seed PENDING_LIVE_CONFIRMATION, and has READY_FOR_LIVE_PREFLIGHT."""
+    adapter = GooglePreflightAdapter()
+    rec = adapter.get_preflight_record()
     assert rec.candidate_id == "C1"
     assert rec.provider == "Google"
     assert rec.requested_model_id == "gemini-3.8-flash"
+    assert rec.offline_status == CandidateOfflineReadinessStatus.READY_FOR_LIVE_PREFLIGHT
+    assert rec.blockers == []
     assert rec.live_model_id_status == CapabilityVerificationStatus.PENDING_LIVE_CONFIRMATION
-    assert rec.sampling_capabilities["temperature"].configured_value == FROZEN_SAMPLING_TEMPERATURE
-    assert rec.sampling_capabilities["seed"].configured_value == FROZEN_SAMPLING_SEED
-    assert rec.sampling_capabilities["max_output_tokens"].configured_value == FROZEN_MAX_OUTPUT_TOKENS
-    assert rec.sampling_capabilities["timeout"].configured_value == FROZEN_TIMEOUT_MS
-    assert rec.retry_configuration.sdk_automatic_retry == 0
-    assert rec.retry_configuration.transport_retry == 0
+
+    # Check temperature, top_p, top_k omitted
+    for param in ("temperature", "top_p", "top_k"):
+        spec = rec.sampling_capabilities[param]
+        assert spec.sdk_parameter_status == "SDK_PARAMETER_EXISTS"
+        assert spec.model_specific_status == "DEPRECATED_IGNORED_OMITTED"
+        assert spec.sent_in_request is False
+        assert spec.configured_value == "OMITTED"
+        assert spec.verification_status == CapabilityVerificationStatus.UNSUPPORTED
+
+    # Check seed is PENDING_LIVE_CONFIRMATION
+    seed_spec = rec.sampling_capabilities["seed"]
+    assert seed_spec.configured_value == FROZEN_SAMPLING_SEED
+    assert seed_spec.model_specific_status == "PENDING_LIVE_CONFIRMATION"
+    assert seed_spec.verification_status == CapabilityVerificationStatus.PENDING_LIVE_CONFIRMATION
+
+    # Check thinking_level == medium
+    think_spec = rec.sampling_capabilities["thinking_or_reasoning_setting"]
+    assert think_spec.configured_value == {"thinking_level": FROZEN_GOOGLE_THINKING_LEVEL}
+    assert think_spec.sent_in_request is True
+
+    # Check serialized request config omits temperature, top_p, top_k
+    scenario, pois = build_synthetic_smoke_fixtures()[0]
+    req = adapter.serialize_smoke_request(scenario, pois)
+    assert "temperature" not in req["config"]
+    assert "top_p" not in req["config"]
+    assert "top_k" not in req["config"]
+    assert req["config"]["thinking_config"] == {"thinking_level": "medium"}
+
+    # Check documentation provenance scopes
+    scopes = {d.verification_scope for d in rec.documentation_provenance}
+    assert {"MODEL_ID", "STRUCTURED_OUTPUT", "SAMPLING", "THINKING_REASONING", "MAX_OUTPUT", "ENDPOINT"}.issubset(scopes)
 
 
-def test_pf_a_14_c2_openai_preflight_record() -> None:
-    """PF-A-14: C2 (OpenAI / gpt-6.1-sol) preflight record satisfies Section 8 & 9 invariants."""
+def test_pf_a_14_c2_openai_preflight_record_honesty_boundary() -> None:
+    """PF-A-14 (Part F, I, J): C2 (OpenAI / gpt-6.1-sol) differentiates SDK_PARAMETER_EXISTS from PENDING_LIVE_CONFIRMATION and does not overclaim model-specific support."""
     rec = OpenAIPreflightAdapter().get_preflight_record()
     assert rec.candidate_id == "C2"
     assert rec.provider == "OpenAI"
     assert rec.requested_model_id == "gpt-6.1-sol"
+    assert rec.offline_status == CandidateOfflineReadinessStatus.READY_FOR_LIVE_PREFLIGHT
+    assert rec.blockers == []
     assert rec.live_model_id_status == CapabilityVerificationStatus.PENDING_LIVE_CONFIRMATION
-    assert rec.sampling_capabilities["temperature"].configured_value == FROZEN_SAMPLING_TEMPERATURE
-    assert rec.sampling_capabilities["seed"].configured_value == FROZEN_SAMPLING_SEED
+    assert rec.endpoint_verification_status == CapabilityVerificationStatus.PENDING_LIVE_CONFIRMATION
+    assert rec.structured_output_capability_status == CapabilityVerificationStatus.PENDING_LIVE_CONFIRMATION
+
+    for param in ("temperature", "seed", "thinking_or_reasoning_setting", "max_output_tokens"):
+        spec = rec.sampling_capabilities[param]
+        assert spec.sdk_parameter_status == "SDK_PARAMETER_EXISTS"
+        assert spec.model_specific_status == "PENDING_LIVE_CONFIRMATION"
+        assert spec.verification_status == CapabilityVerificationStatus.PENDING_LIVE_CONFIRMATION
+
     assert rec.sampling_capabilities["top_k"].verification_status == CapabilityVerificationStatus.UNSUPPORTED
-    assert rec.retry_configuration.sdk_automatic_retry == 0
-    assert rec.retry_configuration.transport_retry == 0
+    scopes = {d.verification_scope for d in rec.documentation_provenance}
+    assert {"MODEL_ID", "STRUCTURED_OUTPUT", "SAMPLING", "THINKING_REASONING", "MAX_OUTPUT", "ENDPOINT"}.issubset(scopes)
 
 
-def test_pf_a_15_c3_anthropic_preflight_record() -> None:
-    """PF-A-15: C3 (Anthropic / claude-sonnet-5-5) preflight record satisfies Section 8 & 9 invariants."""
-    rec = AnthropicPreflightAdapter().get_preflight_record()
+def test_pf_a_15_c3_anthropic_preflight_record_and_adaptive_thinking() -> None:
+    """PF-A-15 (Part E, I, J, L9-L11): C3 (Anthropic / claude-sonnet-5-5) uses thinking={'type': 'adaptive'}, output_config.effort='high', and omits temperature/top_p/top_k."""
+    adapter = AnthropicPreflightAdapter()
+    rec = adapter.get_preflight_record()
     assert rec.candidate_id == "C3"
     assert rec.provider == "Anthropic"
     assert rec.requested_model_id == "claude-sonnet-5-5"
+    assert rec.offline_status == CandidateOfflineReadinessStatus.READY_FOR_LIVE_PREFLIGHT
+    assert rec.blockers == []
     assert rec.live_model_id_status == CapabilityVerificationStatus.PENDING_LIVE_CONFIRMATION
-    assert rec.sampling_capabilities["temperature"].verification_status == CapabilityVerificationStatus.UNSUPPORTED
-    assert rec.sampling_capabilities["seed"].verification_status == CapabilityVerificationStatus.UNSUPPORTED
-    assert rec.sampling_capabilities["thinking_or_reasoning_setting"].configured_value == {"type": "disabled"}
-    assert rec.retry_configuration.sdk_automatic_retry == 0
-    assert rec.retry_configuration.transport_retry == 0
+
+    think_spec = rec.sampling_capabilities["thinking_or_reasoning_setting"]
+    assert think_spec.configured_value == {
+        "thinking": {"type": FROZEN_CLAUDE_THINKING_MODE},
+        "output_config_effort": FROZEN_CLAUDE_EFFORT,
+    }
+    assert rec.structured_output_wiring_summary["output_config_effort"] == "high"
+    assert rec.structured_output_wiring_summary["output_config_format_type"] == "json_schema"
+
+    for param in ("temperature", "top_p", "top_k", "seed"):
+        assert rec.sampling_capabilities[param].sent_in_request is False
+        assert rec.sampling_capabilities[param].verification_status == CapabilityVerificationStatus.UNSUPPORTED
+
+    scenario, pois = build_synthetic_smoke_fixtures()[0]
+    req = adapter.serialize_smoke_request(scenario, pois)
+    assert req["config"]["thinking"] == {"type": "adaptive"}
+    assert req["config"]["output_config"]["effort"] == "high"
+    assert req["config"]["output_config"]["format"]["type"] == "json_schema"
+    assert "temperature" not in req["config"]
+    assert "top_p" not in req["config"]
+    assert "top_k" not in req["config"]
+    assert "seed" not in req["config"]
+
+    scopes = {d.verification_scope for d in rec.documentation_provenance}
+    assert {"MODEL_ID", "STRUCTURED_OUTPUT", "SAMPLING", "THINKING_REASONING", "MAX_OUTPUT", "ENDPOINT"}.issubset(scopes)
 
 
 def test_pf_a_16_retry_zero_on_http_429_across_all_candidates() -> None:
     """PF-A-16: Simulated HTTP 429 makes exactly 1 request attempt across C1, C2, and C3."""
     scenario, pois = build_synthetic_smoke_fixtures()[0]
 
-    # C1 Google
     g_transport, g_counter = _make_google_transport(
         status_code=429,
         body_json={"error": {"code": 429, "message": "Rate limit exceeded", "status": "RESOURCE_EXHAUSTED"}},
@@ -437,7 +626,6 @@ def test_pf_a_16_retry_zero_on_http_429_across_all_candidates() -> None:
     assert g_res.fallback_called is False
     assert g_res.llm_repair_calls == 0
 
-    # C2 OpenAI
     o_transport, o_counter = _make_httpx2_transport(
         status_code=429,
         body_json={"error": {"message": "Rate limit exceeded", "type": "rate_limit_error"}},
@@ -449,7 +637,6 @@ def test_pf_a_16_retry_zero_on_http_429_across_all_candidates() -> None:
     assert o_res.failure_classification == PreflightFailureClassification.HTTP_429
     assert o_res.fallback_called is False
 
-    # C3 Anthropic
     a_transport, a_counter = _make_httpx2_transport(
         status_code=429,
         body_json={"type": "error", "error": {"type": "rate_limit_error", "message": "Rate limit exceeded"}},
@@ -655,7 +842,6 @@ def test_pf_a_21_wrong_returned_model_id_triggers_configuration_integrity_failur
     assert g_res.run_status == BenchmarkRunStatus.MODEL_ID_MISMATCH
     assert g_res.failure_classification == PreflightFailureClassification.CONFIGURATION_INTEGRITY_FAILURE
 
-    # Also verify raise_on_integrity_failure=True raises ConfigurationIntegrityError
     o_transport, o_counter = _make_httpx2_transport(
         status_code=200,
         body_json={
@@ -747,13 +933,16 @@ def test_pf_a_25_readonly_opening_hours_catalog_audit() -> None:
     assert set(audit["per_destination_coverage"].keys()) == {"ha-noi", "da-nang", "ha-long"}
 
 
-def test_pf_a_26_offline_receipt_exists_and_verifies_zero_live_calls() -> None:
-    """PF-A-26: w06_model_preflight_01a_offline_receipt_v1.json exists, is canonical JSON, and records 0 live calls."""
+def test_pf_a_26_offline_receipt_exists_and_verifies_zero_live_calls_and_readiness() -> None:
+    """PF-A-26 (Part I, L12, L13, L16, L18): Receipt verifies zero live calls, provider_cost_usd=0, dual schema hashes, and candidate offline readiness."""
     assert RECEIPT_PATH.is_file()
     raw_bytes = RECEIPT_PATH.read_bytes()
     data = json.loads(raw_bytes.decode("utf-8"))
     assert canonical_json_bytes(data) == raw_bytes
     assert data["artifact_id"] == "W06-MODEL-PREFLIGHT-01A-OFFLINE"
+    assert data["live_provider_calls_allowed"] is False
+    assert data["live_provider_calls_performed"] is False
+    assert data["provider_cost_usd"] == 0
     assert data["live_calls_made"] is False
     assert data["live_call_count"] == 0
     assert data["gemini_called"] is False
@@ -766,9 +955,18 @@ def test_pf_a_26_offline_receipt_exists_and_verifies_zero_live_calls() -> None:
     assert data["winning_model_selected"] is False
     assert data["preregistered"] is False
     assert data["final_benchmark_executed"] is False
+    assert data["semantic_schema_sha256"] == SEMANTIC_SCHEMA_SHA256
+    assert data["common_generation_schema_sha256"] == COMMON_GENERATION_SCHEMA_SHA256
     assert data["common_schema_sha256"] == COMMON_SCHEMA_SHA256
+    assert data["schema_projection_equivalence_guard"]["whitelist_guard_passed"] is True
     assert data["architecture_invariants"]["architecture_id"] == FROZEN_ARCHITECTURE_ID
     assert data["frozen_authority_preservation"] == EXPECTED_FROZEN_AUTHORITY_SHAS
+
+    for cid in ("C1", "C2", "C3"):
+        c_rec = data["candidate_offline_records"][cid]
+        assert c_rec["offline_status"] == "READY_FOR_LIVE_PREFLIGHT"
+        assert c_rec["blockers"] == []
+        assert len(c_rec["documentation_provenance"]) >= 6
 
 
 def test_pf_a_27_receipt_contains_no_secret_values() -> None:
@@ -791,7 +989,9 @@ def test_pf_a_28_documentation_exists_and_covers_required_sections() -> None:
         "gemini-3.8-flash",
         "gpt-6.1-sol",
         "claude-sonnet-5-5",
-        COMMON_SCHEMA_SHA256,
+        SEMANTIC_SCHEMA_SHA256,
+        COMMON_GENERATION_SCHEMA_SHA256,
+        "READY_FOR_LIVE_PREFLIGHT",
         "PENDING_LIVE_CONFIRMATION",
         "W06-PREFLIGHT-SMOKE-001",
         "W06-PREFLIGHT-SMOKE-002",
@@ -799,46 +999,47 @@ def test_pf_a_28_documentation_exists_and_covers_required_sections() -> None:
         assert token in text
 
 
-EXPECTED_BASE_DEVELOP_SHA = "ff40f42db163a21dfc85d467073e99f628e0154a"
-
-
-def _ensure_commit_present(commit_sha: str) -> None:
-    res = subprocess.run(
-        ["git", "cat-file", "-e", f"{commit_sha}^{{commit}}"],
-        cwd=REPO_ROOT,
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL,
-        check=False,
+def test_pf_a_29_secret_safe_error_handling_redacts_secrets_and_env_names() -> None:
+    """PF-A-29 (Part H & L15): Fake exception containing synthetic secret-like strings is deterministically redacted in error_detail."""
+    scenario, pois = build_synthetic_smoke_fixtures()[0]
+    # Construct synthetic tokens dynamically so no static secret-scanner pattern triggers on test source
+    syn_g = "AIza" + ("X" * 35)
+    syn_o = "sk-proj-" + ("Y" * 28)
+    syn_a = "sk-ant-" + ("Z" * 28)
+    raw_err_msg = (
+        f"Auth failed with GEMINI_API_KEY={syn_g}, OPENAI_API_KEY={syn_o}, "
+        f"ANTHROPIC_API_KEY={syn_a}, header Bearer {syn_o}"
     )
-    if res.returncode != 0:
-        subprocess.run(
-            ["git", "fetch", "origin", commit_sha, "--depth=1"],
-            cwd=REPO_ROOT,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            check=True,
-        )
 
-
-def test_pf_a_29_production_planner_and_llm_providers_unmodified() -> None:
-    """PF-A-29: Production /planner router and apps/ai-service/app/llm/* remain unmodified vs base develop."""
-    _ensure_commit_present(EXPECTED_BASE_DEVELOP_SHA)
-    res = subprocess.run(
-        [
-            "git",
-            "diff",
-            "--name-only",
-            EXPECTED_BASE_DEVELOP_SHA,
-            "--",
-            "apps/ai-service/app/routers/planner.py",
-            "apps/ai-service/app/llm/",
-        ],
-        cwd=REPO_ROOT,
-        capture_output=True,
-        text=True,
-        check=True,
+    g_transport, g_counter = _make_google_transport(
+        custom_exception=RuntimeError(raw_err_msg),
     )
-    assert res.stdout.strip() == ""
+    res = GooglePreflightAdapter().execute_offline_simulated_request(
+        scenario=scenario,
+        catalog_pois=pois,
+        mock_transport=g_transport,
+        request_counter=g_counter,
+    )
+    assert res.run_status == BenchmarkRunStatus.API_ERROR
+    assert res.error_detail is not None
+    serialized = res.model_dump_json()
+    assert "[REDACTED_SECRET]" in res.error_detail
+    for forbidden in (
+        syn_g,
+        syn_o,
+        syn_a,
+        "GEMINI_API_KEY",
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY",
+    ):
+        assert forbidden not in res.error_detail
+        assert forbidden not in serialized
+
+    # Direct unit check on sanitize_secret_error_text
+    direct_sanitized = sanitize_secret_error_text(raw_err_msg)
+    assert direct_sanitized is not None
+    assert "[REDACTED_SECRET]" in direct_sanitized
+    assert syn_g not in direct_sanitized
 
 
 def test_pf_a_30_all_14_frozen_authorities_preserved_byte_identical() -> None:

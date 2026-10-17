@@ -6,11 +6,9 @@ google-genai
 pandas
 numpy
 openai
-anthropic
 asyncpg
 redis
 sentence-transformers
 httpx
 python-dotenv
 pytest
--r requirements-w06-provider-lock.txt

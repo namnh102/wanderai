@@ -8,7 +8,7 @@ Grounded in W06-MODEL-ARCH-SELECTION-METHOD-LOCK-01 v1.0.0:
 - Offline runtime guard: W06_PREFLIGHT_LIVE_ALLOWED = False by default.
 """
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Literal, Optional
 from pydantic import BaseModel, ConfigDict, Field
 
 from app.schemas.planner_benchmark import BenchmarkPlanResponse, BenchmarkRunStatus, BenchmarkUsageMetadata
@@ -21,6 +21,9 @@ FROZEN_SAMPLING_SEED: int = 2026101508
 FROZEN_SAMPLING_TEMPERATURE: float = 0.0
 FROZEN_MAX_OUTPUT_TOKENS: int = 16384
 FROZEN_TIMEOUT_MS: int = 55000
+FROZEN_GOOGLE_THINKING_LEVEL: str = "medium"
+FROZEN_CLAUDE_THINKING_MODE: str = "adaptive"
+FROZEN_CLAUDE_EFFORT: str = "high"
 LIVE_PROVIDER_CALL_FORBIDDEN_CODE: str = "LIVE_PROVIDER_CALL_FORBIDDEN"
 CONFIGURATION_INTEGRITY_FAILURE_CODE: str = (
     "CONFIGURATION_INTEGRITY_FAILURE_STOP_BATCH_BEFORE_SCIENTIFIC_REPORTING"
@@ -37,6 +40,13 @@ class CapabilityVerificationStatus(str, Enum):
     PENDING_LIVE_CONFIRMATION = "PENDING_LIVE_CONFIRMATION"
     UNSUPPORTED = "UNSUPPORTED"
     UNKNOWN = "UNKNOWN"
+
+
+class CandidateOfflineReadinessStatus(str, Enum):
+    """Explicit offline readiness status per candidate before Phase 01B live preflight (Part I)."""
+
+    READY_FOR_LIVE_PREFLIGHT = "READY_FOR_LIVE_PREFLIGHT"
+    NOT_READY_FOR_LIVE_PREFLIGHT = "NOT_READY_FOR_LIVE_PREFLIGHT"
 
 
 class PreflightFailureClassification(str, Enum):
@@ -92,13 +102,40 @@ class OneCallInvariantViolationError(RuntimeError):
         super().__init__(f"{self.code}: {detail}")
 
 
+class DocumentationProvenanceRecord(BaseModel):
+    """Claim-specific official provider documentation provenance record (Part J)."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    claim: str
+    official_url: str
+    access_date: str
+    verification_scope: Literal[
+        "MODEL_ID",
+        "STRUCTURED_OUTPUT",
+        "SAMPLING",
+        "THINKING_REASONING",
+        "MAX_OUTPUT",
+        "ENDPOINT",
+    ]
+
+
 class SamplingCapabilitySpec(BaseModel):
-    """Explicit per-parameter capability record for a candidate adapter (Sections 8 & 9)."""
+    """Explicit per-parameter capability record differentiating SDK surface from model-specific support."""
 
     model_config = ConfigDict(extra="forbid")
 
     parameter_name: str
     sdk_parameter_name: Optional[str] = None
+    sdk_parameter_status: Literal["SDK_PARAMETER_EXISTS", "SDK_PARAMETER_ABSENT"]
+    model_specific_status: Literal[
+        "MODEL_SPECIFIC_PARAMETER_CONFIRMED",
+        "PENDING_LIVE_CONFIRMATION",
+        "DEPRECATED_IGNORED_OMITTED",
+        "OMITTED_NOT_SENT",
+        "UNSUPPORTED",
+    ]
+    sent_in_request: bool
     configured_value: Any = None
     verification_status: CapabilityVerificationStatus
     notes: str
@@ -131,7 +168,7 @@ class CandidateModelMetadataCheckRecord(BaseModel):
 
 
 class CandidatePreflightRecord(BaseModel):
-    """Machine-readable offline preflight record for a candidate model/provider (Section 8)."""
+    """Machine-readable offline preflight record for a candidate model/provider (Sections 8–11, Parts D–J)."""
 
     model_config = ConfigDict(extra="forbid")
 
@@ -139,10 +176,13 @@ class CandidatePreflightRecord(BaseModel):
     provider: str
     requested_model_id: str
     role: str = "CANDIDATE_NOT_SELECTED_FINAL_MODEL"
+    offline_status: CandidateOfflineReadinessStatus
+    blockers: List[str] = Field(default_factory=list)
     sdk_package: str
     sdk_version: str
     provider_documentation_url: str
     access_date: str
+    documentation_provenance: List[DocumentationProvenanceRecord]
     endpoint_semantics: str
     endpoint_verification_status: CapabilityVerificationStatus
     live_model_id_status: CapabilityVerificationStatus = (
@@ -151,6 +191,8 @@ class CandidatePreflightRecord(BaseModel):
     structured_output_mode: str
     structured_output_wiring_summary: Dict[str, Any]
     structured_output_capability_status: CapabilityVerificationStatus
+    semantic_schema_sha256: str
+    common_generation_schema_sha256: str
     common_schema_sha256: str
     place_id_encoded_as_catalog_enum: bool = False
     sampling_capabilities: Dict[str, SamplingCapabilitySpec]
