@@ -1,0 +1,113 @@
+{
+  "plan_id": "W06-PREFLIGHT-SMOKE-001-plan",
+  "scenario_id": "W06-PREFLIGHT-SMOKE-001",
+  "destination_slug": "ha-noi",
+  "destination": "Hà Nội",
+  "total_days": 2,
+  "overview": "A relaxed, comfort-oriented culture and history itinerary using only the two supplied synthetic catalog POIs. Each location is visited once, with morning visits entirely within its listed opening hours. Costs are planning allowances, not verified prices; accommodation, meals, and travel to or from Hà Nội are excluded.",
+  "best_time_to_visit": "The requested dates, 2–3 November 2026, fall within a generally pleasant season for exploring Hà Nội. Check the weather forecast before departure.",
+  "general_tips": [
+    "These are synthetic benchmark locations; use the supplied catalog as the itinerary's grounding rather than treating them as verified real-world attractions.",
+    "Both catalog locations list daily opening hours of 08:00–17:00.",
+    "Use a private car or taxi for comfort; transfer times and fares are allowances because accommodation and traffic conditions are unspecified.",
+    "Keep afternoons unallocated for rest and meals; no additional attractions or repeat visits are scheduled.",
+    "Confirm any admission charges before travel. The budget estimate covers only the scheduled visits and local transfers."
+  ],
+  "budget_analysis": {
+    "total_budget": 4000000,
+    "estimated_cost": 800000,
+    "currency": "VND",
+    "is_over_budget": false,
+    "variance": 3200000
+  },
+  "days": [
+    {
+      "day_number": 1,
+      "date": "2026-11-02",
+      "title": "Unhurried heritage museum morning",
+      "items": [
+        {
+          "order_index": 1,
+          "start_time": "08:30",
+          "end_time": "09:00",
+          "activity_kind": "TRANSIT_ONLY",
+          "activity": "Private car or taxi transfer to the museum",
+          "place_name": null,
+          "place_id": null,
+          "notes": "Provisional 30-minute transfer from your accommodation; adjust to the actual starting point and traffic.",
+          "estimated_cost": 150000,
+          "transport_mode": "PRIVATE_CAR_OR_TAXI"
+        },
+        {
+          "order_index": 2,
+          "start_time": "09:00",
+          "end_time": "11:00",
+          "activity_kind": "POI_VISIT",
+          "activity": "Explore the catalog-listed heritage museum at a relaxed pace",
+          "place_name": "Synthetic Hanoi Heritage Museum",
+          "place_id": "smoke-hn-poi-001",
+          "notes": "Culture and history visit within the listed 08:00–17:00 opening hours. Admission allowance only; no ticket price or exhibition details were provided.",
+          "estimated_cost": 100000,
+          "transport_mode": null
+        },
+        {
+          "order_index": 3,
+          "start_time": "11:00",
+          "end_time": "11:30",
+          "activity_kind": "TRANSIT_ONLY",
+          "activity": "Private car or taxi return transfer",
+          "place_name": null,
+          "place_id": null,
+          "notes": "Return to your accommodation, leaving the afternoon free. Duration and fare are provisional.",
+          "estimated_cost": 150000,
+          "transport_mode": "PRIVATE_CAR_OR_TAXI"
+        }
+      ],
+      "day_cost": 400000
+    },
+    {
+      "day_number": 2,
+      "date": "2026-11-03",
+      "title": "Relaxed Old Quarter citadel visit",
+      "items": [
+        {
+          "order_index": 1,
+          "start_time": "08:30",
+          "end_time": "09:00",
+          "activity_kind": "TRANSIT_ONLY",
+          "activity": "Private car or taxi transfer to the citadel",
+          "place_name": null,
+          "place_id": null,
+          "notes": "Provisional 30-minute transfer from your accommodation; adjust to the actual starting point and traffic.",
+          "estimated_cost": 150000,
+          "transport_mode": "PRIVATE_CAR_OR_TAXI"
+        },
+        {
+          "order_index": 2,
+          "start_time": "09:00",
+          "end_time": "11:00",
+          "activity_kind": "POI_VISIT",
+          "activity": "Explore the catalog-listed citadel at a relaxed pace",
+          "place_name": "Synthetic Hanoi Old Quarter Citadel",
+          "place_id": "smoke-hn-poi-002",
+          "notes": "Culture and history visit within the listed 08:00–17:00 opening hours. Admission allowance only; no ticket price or site interpretation details were provided.",
+          "estimated_cost": 100000,
+          "transport_mode": null
+        },
+        {
+          "order_index": 3,
+          "start_time": "11:00",
+          "end_time": "11:30",
+          "activity_kind": "TRANSIT_ONLY",
+          "activity": "Private car or taxi return transfer",
+          "place_name": null,
+          "place_id": null,
+          "notes": "Return to your accommodation, leaving the afternoon free. Duration and fare are provisional.",
+          "estimated_cost": 150000,
+          "transport_mode": "PRIVATE_CAR_OR_TAXI"
+        }
+      ],
+      "day_cost": 400000
+    }
+  ]
+}

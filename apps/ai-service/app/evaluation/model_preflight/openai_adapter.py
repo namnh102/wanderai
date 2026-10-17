@@ -27,9 +27,12 @@ from app.evaluation.model_preflight.base import (
 from app.evaluation.model_preflight.schema_adapter import (
     COMMON_GENERATION_BENCHMARK_PLAN_JSON_SCHEMA,
     COMMON_GENERATION_SCHEMA_SHA256,
+    COMMON_GENERATION_SCHEMA_SHA256_V1,
+    COMMON_PORTABLE_GENERATION_SCHEMA_SHA256_V2,
     COMMON_SCHEMA_SHA256,
     SEMANTIC_SCHEMA_SHA256,
     build_openai_structured_output_wiring,
+    build_openai_structured_output_wiring_v2,
 )
 from app.evaluation.model_preflight.types import (
     FROZEN_OPENAI_REASONING_EFFORT,
@@ -267,6 +270,43 @@ class OpenAIPreflightAdapter(BasePreflightProviderAdapter):
             "semantic_schema_sha256": SEMANTIC_SCHEMA_SHA256,
             "common_generation_schema_sha256": COMMON_GENERATION_SCHEMA_SHA256,
             "common_schema_sha256": COMMON_SCHEMA_SHA256,
+        }
+
+    def serialize_smoke_request_v2(
+        self,
+        scenario: BenchmarkScenarioInput,
+        catalog_pois: List[BenchmarkCatalogPOI],
+    ) -> Dict[str, Any]:
+        """Serialize Phase 01D smoke request using Portable Generation Schema V2."""
+        user_prompt = build_shared_semantic_user_prompt(scenario, catalog_pois)
+        wiring = build_openai_structured_output_wiring_v2()
+        return {
+            "candidate_id": self.candidate_id,
+            "provider": self.provider_name,
+            "model": self.requested_model_id,
+            "system_prompt": PREFLIGHT_SHARED_SYSTEM_PROMPT,
+            "system_prompt_sha256": sha256_bytes(PREFLIGHT_SHARED_SYSTEM_PROMPT.encode("utf-8")),
+            "user_prompt": user_prompt,
+            "user_prompt_sha256": sha256_bytes(user_prompt.encode("utf-8")),
+            "config": {
+                "messages": [
+                    {"role": "system", "content": PREFLIGHT_SHARED_SYSTEM_PROMPT},
+                    {"role": "user", "content": user_prompt},
+                ],
+                "seed": FROZEN_SAMPLING_SEED,
+                "reasoning_effort": FROZEN_OPENAI_REASONING_EFFORT,
+                "service_tier": FROZEN_OPENAI_SERVICE_TIER,
+                "max_completion_tokens": FROZEN_MAX_OUTPUT_TOKENS,
+                "response_format": wiring["response_format"],
+                "tools": None,
+                "timeout_seconds": FROZEN_TIMEOUT_MS / 1000.0,
+                "max_retries": 0,
+            },
+            "semantic_schema_sha256": SEMANTIC_SCHEMA_SHA256,
+            "generation_schema_v1_sha256": COMMON_GENERATION_SCHEMA_SHA256_V1,
+            "portable_generation_schema_v2_sha256": COMMON_PORTABLE_GENERATION_SCHEMA_SHA256_V2,
+            "common_generation_schema_sha256": COMMON_PORTABLE_GENERATION_SCHEMA_SHA256_V2,
+            "common_schema_sha256": COMMON_PORTABLE_GENERATION_SCHEMA_SHA256_V2,
         }
 
     def _invoke_single_sdk_call_with_transport(

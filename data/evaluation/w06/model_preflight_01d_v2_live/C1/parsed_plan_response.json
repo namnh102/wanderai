@@ -1,0 +1,86 @@
+{
+  "best_time_to_visit": "October to April",
+  "budget_analysis": {
+    "currency": "VND",
+    "estimated_cost": 4000000,
+    "is_over_budget": false,
+    "total_budget": 4000000,
+    "variance": 0
+  },
+  "days": [
+    {
+      "date": "2026-11-02",
+      "day_cost": 2000000,
+      "day_number": 1,
+      "items": [
+        {
+          "activity": "Private comfort transfer to Synthetic Hanoi Heritage Museum",
+          "activity_kind": "TRANSIT_ONLY",
+          "end_time": "09:00",
+          "estimated_cost": 200000,
+          "notes": "Private car ride across the city",
+          "order_index": 1,
+          "place_id": null,
+          "place_name": null,
+          "start_time": "08:30",
+          "transport_mode": "private car"
+        },
+        {
+          "activity": "Visit Synthetic Hanoi Heritage Museum",
+          "activity_kind": "POI_VISIT",
+          "end_time": "17:00",
+          "estimated_cost": 1800000,
+          "notes": "Guided tour and heritage exhibition access",
+          "order_index": 2,
+          "place_id": "smoke-hn-poi-001",
+          "place_name": "Synthetic Hanoi Heritage Museum",
+          "start_time": "09:00",
+          "transport_mode": null
+        }
+      ],
+      "title": "Day 1: Synthetic Hanoi Heritage Museum"
+    },
+    {
+      "date": "2026-11-03",
+      "day_cost": 2000000,
+      "day_number": 2,
+      "items": [
+        {
+          "activity": "Private comfort transfer to Synthetic Hanoi Old Quarter Citadel",
+          "activity_kind": "TRANSIT_ONLY",
+          "end_time": "09:00",
+          "estimated_cost": 200000,
+          "notes": "Private car ride to the citadel grounds",
+          "order_index": 1,
+          "place_id": null,
+          "place_name": null,
+          "start_time": "08:30",
+          "transport_mode": "private car"
+        },
+        {
+          "activity": "Visit Synthetic Hanoi Old Quarter Citadel",
+          "activity_kind": "POI_VISIT",
+          "end_time": "17:00",
+          "estimated_cost": 1800000,
+          "notes": "Exploring historical citadel architecture and gardens",
+          "order_index": 2,
+          "place_id": "smoke-hn-poi-002",
+          "place_name": "Synthetic Hanoi Old Quarter Citadel",
+          "start_time": "09:00",
+          "transport_mode": null
+        }
+      ],
+      "title": "Day 2: Synthetic Hanoi Old Quarter Citadel"
+    }
+  ],
+  "destination": "Hà Nội",
+  "destination_slug": "ha-noi",
+  "general_tips": [
+    "Wear comfortable walking shoes.",
+    "Carry cash for local vendors."
+  ],
+  "overview": "A curated 2-day comfort itinerary exploring Hanoi's cultural heritage.",
+  "plan_id": "plan-hn-smoke-001",
+  "scenario_id": "W06-PREFLIGHT-SMOKE-001",
+  "total_days": 2
+}
