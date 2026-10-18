@@ -109,8 +109,14 @@ TASK_ID_DEV_HARNESS_FIX_01_AUDIT_CORRECTION_01: str = (
 TASK_ID_DEV_HARNESS_FIX_01_AUDIT_CORRECTION_02: str = (
     "W06-DEV-SELECTION-HARNESS-FIX-01-AUDIT-CORRECTION-02"
 )
+TASK_ID_DEV_HARNESS_FIX_01_AUDIT_CORRECTION_03: str = (
+    "W06-DEV-SELECTION-HARNESS-FIX-01-AUDIT-CORRECTION-03"
+)
 PROVENANCE_LIFECYCLE_MODEL: str = (
     "CODE_BASIS_PLUS_SCIENTIFIC_CODE_BUNDLE_PLUS_RUNTIME_HEAD"
+)
+LEGACY_ARTIFACT_ELIGIBILITY_STATUS: str = (
+    "LEGACY_ARTIFACT_NOT_ELIGIBLE_FOR_NEW_LIVE_EXECUTION"
 )
 HARNESS_ARTIFACT_ID: str = "W06-DEV-SELECTION-HARNESS-01"
 HARNESS_RECEIPT_ARTIFACT_ID: str = "W06-DEV-SELECTION-HARNESS-01-RECEIPT"
@@ -361,7 +367,7 @@ class CodeCommitProvenanceError(ValueError, RuntimeError):
     """Raised when git HEAD cannot be resolved or when supplied code_commit_sha does not match active git HEAD."""
 
 
-class ScientificCodeBundleIntegrityError(BatchExecutionFatalStopError, ValueError):
+class ScientificCodeBundleIntegrityError(BatchExecutionFatalStopError):
     """Raised when current scientific_code_bundle_sha256 does not match the frozen execution plan or prompt freeze."""
 
 
@@ -435,7 +441,7 @@ def validate_sha256_hex64(sha: str, field_name: str = "sha256") -> str:
 
 
 class ScientificCodeBundleManifest(BaseModel):
-    """Deterministic manifest of the frozen scientific source-code bundle (Audit Correction 02 / Section 4)."""
+    """Deterministic manifest of the frozen scientific source-code bundle (Audit Correction 02 & 03)."""
 
     model_config = ConfigDict(extra="forbid")
 
@@ -447,17 +453,27 @@ class ScientificCodeBundleManifest(BaseModel):
         validate_sha256_hex64(
             self.scientific_code_bundle_sha256, "scientific_code_bundle_sha256"
         )
-        paths = [entry.get("path", "") for entry in self.scientific_code_bundle_file_hashes]
-        if paths != sorted(paths) or len(set(paths)) != len(paths):
+        if not self.scientific_code_bundle_file_hashes:
             raise ScientificCodeBundleIntegrityError(
-                "scientific_code_bundle_file_hashes must be deterministically ordered with unique paths."
+                "SCIENTIFIC_CODE_BUNDLE_FILE_HASHES_EMPTY: scientific_code_bundle_file_hashes is required and must not be empty."
             )
         for entry in self.scientific_code_bundle_file_hashes:
-            if set(entry.keys()) != {"path", "sha256"}:
+            if not isinstance(entry, dict) or set(entry.keys()) != {"path", "sha256"}:
                 raise ScientificCodeBundleIntegrityError(
                     f"Invalid entry in scientific_code_bundle_file_hashes: {entry!r}"
                 )
             validate_sha256_hex64(entry["sha256"], f"file_hash[{entry['path']}]")
+        paths = [entry["path"] for entry in self.scientific_code_bundle_file_hashes]
+        if paths != sorted(paths) or len(set(paths)) != len(paths):
+            raise ScientificCodeBundleIntegrityError(
+                "scientific_code_bundle_file_hashes must be deterministically ordered with unique paths."
+            )
+        expected_paths = list(SCIENTIFIC_CODE_BUNDLE_RELATIVE_PATHS)
+        if paths != expected_paths:
+            raise ScientificCodeBundleIntegrityError(
+                f"SCIENTIFIC_CODE_BUNDLE_PATH_SET_MISMATCH: scientific_code_bundle_file_hashes paths "
+                f"{paths!r} != exact frozen SCIENTIFIC_CODE_BUNDLE_RELATIVE_PATHS {expected_paths!r}"
+            )
         expected_bundle_sha = sha256_bytes(
             canonical_json_bytes(self.scientific_code_bundle_file_hashes)
         )
@@ -469,19 +485,17 @@ class ScientificCodeBundleManifest(BaseModel):
         return self
 
 
-_SCIENTIFIC_CODE_BUNDLE_CACHE: Dict[
-    Tuple[str, Tuple[Tuple[str, int, int], ...]], ScientificCodeBundleManifest
-] = {}
-
-
 def compute_scientific_code_bundle(
     repo_root: Optional[Path] = None,
+    *,
+    authoritative: bool = True,
 ) -> ScientificCodeBundleManifest:
-    """Compute the deterministic LF-normalized SHA256 bundle over SCIENTIFIC_CODE_BUNDLE_RELATIVE_PATHS (Section 4).
+    """Compute the deterministic LF-normalized SHA256 bundle over SCIENTIFIC_CODE_BUNDLE_RELATIVE_PATHS (Audit Correction 03 / Sections 9–11).
 
-    Excludes docs, receipts, reports, CI metadata, and frozen result artifacts so that
-    metadata/evidence commits do not invalidate frozen plans or prompt-freeze artifacts.
+    Always reads actual file bytes and computes SHA256 over all 13 covered scientific source files.
+    Never uses an mtime/size stat cache that could mask same-size + same-mtime file edits.
     """
+    _ = authoritative
     root = repo_root if repo_root is not None else REPO_ROOT
     if not isinstance(root, Path):
         root = Path(root)
@@ -496,53 +510,48 @@ def compute_scientific_code_bundle(
             "SCIENTIFIC_CODE_BUNDLE_RELATIVE_PATHS must be strictly sorted with unique paths."
         )
 
-    stat_sig: List[Tuple[str, int, int]] = []
+    file_hashes: List[Dict[str, str]] = []
     for rel_path in ordered_paths:
         fpath = root / rel_path
         if not fpath.exists() or not fpath.is_file():
             raise ScientificCodeBundleIntegrityError(
                 f"SCIENTIFIC_CODE_BUNDLE_FILE_MISSING: Required scientific source file missing: {rel_path}"
             )
-        st = fpath.stat()
-        stat_sig.append((rel_path, st.st_mtime_ns, st.st_size))
-
-    cache_key = (str(root.resolve()), tuple(stat_sig))
-    if repo_root is None and cache_key in _SCIENTIFIC_CODE_BUNDLE_CACHE:
-        return _SCIENTIFIC_CODE_BUNDLE_CACHE[cache_key]
-
-    file_hashes: List[Dict[str, str]] = []
-    for rel_path in ordered_paths:
-        fpath = root / rel_path
         file_sha = sha256_bytes(normalize_lf_bytes(fpath.read_bytes()))
         file_hashes.append({"path": rel_path, "sha256": file_sha})
 
     bundle_sha = sha256_bytes(canonical_json_bytes(file_hashes))
-    manifest = ScientificCodeBundleManifest(
+    return ScientificCodeBundleManifest(
         scientific_code_bundle_sha256=bundle_sha,
         scientific_code_bundle_file_hashes=file_hashes,
     )
-    if repo_root is None:
-        _SCIENTIFIC_CODE_BUNDLE_CACHE[cache_key] = manifest
-    return manifest
 
 
 def compute_scientific_code_bundle_file_hashes(
     repo_root: Optional[Path] = None,
+    *,
+    authoritative: bool = True,
 ) -> List[Dict[str, str]]:
     """Return the canonical ordered list of {'path': ..., 'sha256': ...} for the scientific code bundle."""
     return [
         dict(entry)
         for entry in compute_scientific_code_bundle(
-            repo_root=repo_root
+            repo_root=repo_root,
+            authoritative=authoritative,
         ).scientific_code_bundle_file_hashes
     ]
 
 
 def compute_scientific_code_bundle_sha256(
     repo_root: Optional[Path] = None,
+    *,
+    authoritative: bool = True,
 ) -> str:
     """Return the deterministic 64-hex SHA256 of the scientific code bundle."""
-    return compute_scientific_code_bundle(repo_root=repo_root).scientific_code_bundle_sha256
+    return compute_scientific_code_bundle(
+        repo_root=repo_root,
+        authoritative=authoritative,
+    ).scientific_code_bundle_sha256
 
 
 _ORIG_SUBPROCESS_RUN = subprocess.run
@@ -1540,51 +1549,56 @@ def compute_provider_config_registry_sha256(
     return sha256_bytes(canonical_json_bytes(provider_config_payload))
 
 
-def _normalize_code_basis_provenance_fields(
+def _validate_code_basis_provenance_fields(
     d: Dict[str, Any],
     *,
     error_cls: type[Exception] = CodeCommitProvenanceError,
 ) -> None:
-    """Synchronize code_basis_commit_sha and backward-compatible code_commit_sha on a raw payload dict."""
+    """Strictly validate that both code_basis_commit_sha and code_commit_sha are explicitly provided and identical (Audit Correction 03).
+
+    Persisted models verify provenance and NEVER hydrate missing commit SHAs from runtime HEAD or synthesize one field from the other.
+    """
     has_basis = "code_basis_commit_sha" in d
     has_legacy = "code_commit_sha" in d
-    if not has_basis and not has_legacy:
-        resolved = resolve_active_git_commit_sha()
-        d["code_basis_commit_sha"] = resolved
-        d["code_commit_sha"] = resolved
-        return
-    if has_basis and not has_legacy:
-        val = d["code_basis_commit_sha"]
-        if val is None or not isinstance(val, str):
-            raise error_cls(
-                "code_basis_commit_sha is required and must be a 40-character lowercase hex git SHA."
-            )
-        d["code_commit_sha"] = val
-        return
-    if has_legacy and not has_basis:
-        val = d["code_commit_sha"]
-        if val is None or not isinstance(val, str):
-            raise error_cls(
-                "code_commit_sha is required and must be a 40-character lowercase hex git SHA."
-            )
-        d["code_basis_commit_sha"] = val
-        return
+    if not has_basis or d["code_basis_commit_sha"] is None or not isinstance(d["code_basis_commit_sha"], str):
+        raise error_cls(
+            "MISSING_CODE_BASIS_COMMIT_SHA: code_basis_commit_sha is required on persisted scientific artifacts and is never hydrated from runtime HEAD."
+        )
+    if not has_legacy or d["code_commit_sha"] is None or not isinstance(d["code_commit_sha"], str):
+        raise error_cls(
+            "MISSING_CODE_COMMIT_SHA: code_commit_sha is required on persisted scientific artifacts and is never hydrated from runtime HEAD."
+        )
     basis_val = d["code_basis_commit_sha"]
     legacy_val = d["code_commit_sha"]
-    if (
-        basis_val is None
-        or not isinstance(basis_val, str)
-        or legacy_val is None
-        or not isinstance(legacy_val, str)
-    ):
-        raise error_cls(
-            "code_basis_commit_sha and code_commit_sha must be 40-character lowercase hex git SHAs."
-        )
+    try:
+        validate_git_commit_sha40(basis_val)
+        validate_git_commit_sha40(legacy_val)
+    except CodeCommitProvenanceError as exc:
+        if error_cls is CodeCommitProvenanceError:
+            raise
+        raise error_cls(str(exc)) from exc
     if basis_val != legacy_val:
         raise error_cls(
             f"CODE_COMMIT_SHA_MISMATCH: Conflicting code_basis_commit_sha {basis_val!r} "
             f"and code_commit_sha {legacy_val!r}."
         )
+
+
+def inspect_legacy_pre_fix_artifact(raw_data: Dict[str, Any]) -> Dict[str, Any]:
+    """Explicit non-execution inspection helper for legacy pre-FIX artifacts (Audit Correction 03 / Section 5).
+
+    Clearly marks returned inspection metadata as LEGACY_ARTIFACT_NOT_ELIGIBLE_FOR_NEW_LIVE_EXECUTION
+    and is never used by normal model_validate paths.
+    """
+    if not isinstance(raw_data, dict):
+        raise TypeError("inspect_legacy_pre_fix_artifact requires a dict payload.")
+    inspected = dict(raw_data)
+    inspected["legacy_eligibility_status"] = LEGACY_ARTIFACT_ELIGIBILITY_STATUS
+    inspected["eligible_for_new_live_execution"] = False
+    return inspected
+
+
+inspect_legacy_pre_fix_artifact_dict = inspect_legacy_pre_fix_artifact
 
 
 def _resolve_plan_creation_code_basis_sha(
@@ -1608,7 +1622,7 @@ def _resolve_plan_creation_code_basis_sha(
 
 
 class DevCellExecutionManifest(BaseModel):
-    """Machine-readable execution manifest for a single cell (Section 9 & Fix Group I / Audit Correction 02)."""
+    """Machine-readable execution manifest for a single cell (Section 9 & Fix Group I / Audit Correction 02 & 03)."""
 
     model_config = ConfigDict(extra="forbid")
 
@@ -1647,28 +1661,26 @@ class DevCellExecutionManifest(BaseModel):
 
     @model_validator(mode="before")
     @classmethod
-    def _populate_manifest_provenance(cls, data: Any) -> Any:
+    def _validate_manifest_provenance_present(cls, data: Any) -> Any:
         if not isinstance(data, dict):
             return data
         d = dict(data)
-        _normalize_code_basis_provenance_fields(d, error_cls=CodeCommitProvenanceError)
-        if "scientific_code_bundle_sha256" not in d:
-            d["scientific_code_bundle_sha256"] = compute_scientific_code_bundle_sha256()
-        elif d["scientific_code_bundle_sha256"] is None or not isinstance(
-            d["scientific_code_bundle_sha256"], str
+        _validate_code_basis_provenance_fields(d, error_cls=CodeCommitProvenanceError)
+        if (
+            "scientific_code_bundle_sha256" not in d
+            or d["scientific_code_bundle_sha256"] is None
+            or not isinstance(d["scientific_code_bundle_sha256"], str)
         ):
-            raise ValueError(
-                "scientific_code_bundle_sha256 is required and must be a 64-character lowercase hex SHA256."
+            raise ScientificCodeBundleIntegrityError(
+                "MISSING_SCIENTIFIC_CODE_BUNDLE_SHA256: scientific_code_bundle_sha256 is required on DevCellExecutionManifest and is never hydrated on load."
             )
-        if "provider_config_sha256" not in d:
-            cid = d.get("candidate_id")
-            if cid in ORDERED_CANDIDATE_IDS:
-                d["provider_config_sha256"] = get_cached_provider_config_sha256(str(cid))
-        elif d["provider_config_sha256"] is None or not isinstance(
-            d["provider_config_sha256"], str
+        if (
+            "provider_config_sha256" not in d
+            or d["provider_config_sha256"] is None
+            or not isinstance(d["provider_config_sha256"], str)
         ):
-            raise ValueError(
-                "provider_config_sha256 is required and must be a 64-character lowercase hex SHA256."
+            raise CandidateRegistryIntegrityError(
+                "MISSING_PROVIDER_CONFIG_SHA256: provider_config_sha256 is required on DevCellExecutionManifest and is never hydrated on load."
             )
         return d
 
@@ -1686,16 +1698,16 @@ class DevCellExecutionManifest(BaseModel):
                 f"CODE_COMMIT_SHA_MISMATCH: code_basis_commit_sha {self.code_basis_commit_sha!r} "
                 f"!= code_commit_sha {self.code_commit_sha!r}"
             )
-        validate_sha256_hex64(
-            self.scientific_code_bundle_sha256, "scientific_code_bundle_sha256"
-        )
-        validate_sha256_hex64(self.provider_config_sha256, "provider_config_sha256")
-        expected_pconf_sha = get_cached_provider_config_sha256(self.candidate_id)
-        if self.provider_config_sha256 != expected_pconf_sha:
-            raise ValueError(
-                f"provider_config_sha256 mismatch for {self.candidate_id}: "
-                f"expected={expected_pconf_sha}, got={self.provider_config_sha256}"
+        try:
+            validate_sha256_hex64(
+                self.scientific_code_bundle_sha256, "scientific_code_bundle_sha256"
             )
+        except ValueError as exc:
+            raise ScientificCodeBundleIntegrityError(str(exc)) from exc
+        try:
+            validate_sha256_hex64(self.provider_config_sha256, "provider_config_sha256")
+        except ValueError as exc:
+            raise CandidateRegistryIntegrityError(str(exc)) from exc
         if (
             self.retry != 0
             or self.automatic_retry != 0
@@ -1724,13 +1736,25 @@ class DevCellExecutionManifest(BaseModel):
 
 
 def create_synthetic_test_only_cell_manifest(**kwargs: Any) -> DevCellExecutionManifest:
-    """Explicit test-only constructor for synthetic unit tests (Audit Correction 02 / Section 11).
+    """Explicit test-only builder for synthetic unit tests (Audit Correction 02 & 03).
 
-    Does not use any hidden ContextVar bypass; DevCellExecutionManifest is natively historical-safe.
+    Builders explicitly create provenance fields before constructing the persisted model.
     """
     d = dict(kwargs)
     if "code_commit_sha" in d and "code_basis_commit_sha" in d:
         d["code_basis_commit_sha"] = d["code_commit_sha"]
+    elif "code_commit_sha" in d and "code_basis_commit_sha" not in d:
+        d["code_basis_commit_sha"] = d["code_commit_sha"]
+    elif "code_basis_commit_sha" in d and "code_commit_sha" not in d:
+        d["code_commit_sha"] = d["code_basis_commit_sha"]
+    else:
+        active_sha = resolve_active_git_commit_sha()
+        d["code_basis_commit_sha"] = active_sha
+        d["code_commit_sha"] = active_sha
+    if "scientific_code_bundle_sha256" not in d:
+        d["scientific_code_bundle_sha256"] = compute_scientific_code_bundle_sha256()
+    if "provider_config_sha256" not in d and d.get("candidate_id") in ORDERED_CANDIDATE_IDS:
+        d["provider_config_sha256"] = get_cached_provider_config_sha256(str(d["candidate_id"]))
     return DevCellExecutionManifest(**d)
 
 
@@ -1780,7 +1804,7 @@ def calculate_expected_dev_select_cell_count(
 
 
 class DevExecutionPlan(BaseModel):
-    """Deterministic offline execution plan for DEV-TUNE or DEV-SELECT (Audit Correction 02 / Section 8)."""
+    """Deterministic offline execution plan for DEV-TUNE or DEV-SELECT (Audit Correction 02 & 03 / Section 8)."""
 
     model_config = ConfigDict(extra="forbid")
 
@@ -1792,52 +1816,33 @@ class DevExecutionPlan(BaseModel):
     code_basis_commit_sha: str
     code_commit_sha: str
     scientific_code_bundle_sha256: str
-    scientific_code_bundle_file_hashes: List[Dict[str, str]] = Field(default_factory=list)
+    scientific_code_bundle_file_hashes: List[Dict[str, str]]
     cells: List[DevCellExecutionManifest]
     plan_sha256: str
 
     @model_validator(mode="before")
     @classmethod
-    def _populate_plan_provenance(cls, data: Any) -> Any:
+    def _validate_plan_provenance_present(cls, data: Any) -> Any:
         if not isinstance(data, dict):
             return data
         d = dict(data)
-        cells_raw = d.get("cells") or []
-        first_cell = cells_raw[0] if cells_raw else None
-        if "code_basis_commit_sha" not in d and "code_commit_sha" not in d and first_cell is not None:
-            if isinstance(first_cell, dict):
-                c_sha = first_cell.get("code_basis_commit_sha") or first_cell.get("code_commit_sha")
-            else:
-                c_sha = getattr(first_cell, "code_basis_commit_sha", None) or getattr(
-                    first_cell, "code_commit_sha", None
-                )
-            if c_sha is not None:
-                d["code_basis_commit_sha"] = c_sha
-                d["code_commit_sha"] = c_sha
-        _normalize_code_basis_provenance_fields(d, error_cls=CodeCommitProvenanceError)
-        if "scientific_code_bundle_sha256" not in d:
-            if first_cell is not None:
-                c_bsha = (
-                    first_cell.get("scientific_code_bundle_sha256")
-                    if isinstance(first_cell, dict)
-                    else getattr(first_cell, "scientific_code_bundle_sha256", None)
-                )
-                d["scientific_code_bundle_sha256"] = (
-                    c_bsha if c_bsha is not None else compute_scientific_code_bundle_sha256()
-                )
-            else:
-                d["scientific_code_bundle_sha256"] = compute_scientific_code_bundle_sha256()
-        if "scientific_code_bundle_file_hashes" not in d:
-            current_bundle = compute_scientific_code_bundle()
-            if (
-                d.get("scientific_code_bundle_sha256")
-                == current_bundle.scientific_code_bundle_sha256
-            ):
-                d["scientific_code_bundle_file_hashes"] = [
-                    dict(entry) for entry in current_bundle.scientific_code_bundle_file_hashes
-                ]
-            else:
-                d["scientific_code_bundle_file_hashes"] = []
+        _validate_code_basis_provenance_fields(d, error_cls=CodeCommitProvenanceError)
+        if (
+            "scientific_code_bundle_sha256" not in d
+            or d["scientific_code_bundle_sha256"] is None
+            or not isinstance(d["scientific_code_bundle_sha256"], str)
+        ):
+            raise ScientificCodeBundleIntegrityError(
+                "MISSING_SCIENTIFIC_CODE_BUNDLE_SHA256: scientific_code_bundle_sha256 is required on DevExecutionPlan and is never hydrated on load."
+            )
+        if (
+            "scientific_code_bundle_file_hashes" not in d
+            or d["scientific_code_bundle_file_hashes"] is None
+            or not isinstance(d["scientific_code_bundle_file_hashes"], list)
+        ):
+            raise ScientificCodeBundleIntegrityError(
+                "MISSING_SCIENTIFIC_CODE_BUNDLE_FILE_HASHES: scientific_code_bundle_file_hashes is required on DevExecutionPlan and is never hydrated on load."
+            )
         return d
 
     @model_validator(mode="after")
@@ -1849,14 +1854,16 @@ class DevExecutionPlan(BaseModel):
                 f"CODE_COMMIT_SHA_MISMATCH: Plan code_basis_commit_sha {self.code_basis_commit_sha!r} "
                 f"!= code_commit_sha {self.code_commit_sha!r}"
             )
-        validate_sha256_hex64(
-            self.scientific_code_bundle_sha256, "scientific_code_bundle_sha256"
-        )
-        if self.scientific_code_bundle_file_hashes:
-            ScientificCodeBundleManifest(
-                scientific_code_bundle_sha256=self.scientific_code_bundle_sha256,
-                scientific_code_bundle_file_hashes=self.scientific_code_bundle_file_hashes,
+        try:
+            validate_sha256_hex64(
+                self.scientific_code_bundle_sha256, "scientific_code_bundle_sha256"
             )
+        except ValueError as exc:
+            raise ScientificCodeBundleIntegrityError(str(exc)) from exc
+        ScientificCodeBundleManifest(
+            scientific_code_bundle_sha256=self.scientific_code_bundle_sha256,
+            scientific_code_bundle_file_hashes=self.scientific_code_bundle_file_hashes,
+        )
         if len(self.cells) != self.expected_total_cells:
             raise ValueError(
                 f"Execution plan cell count {len(self.cells)} != expected {self.expected_total_cells}"
@@ -1872,11 +1879,24 @@ class DevExecutionPlan(BaseModel):
                     f"CODE_COMMIT_SHA_MISMATCH: Cell {cell.run_id} code_basis_commit_sha "
                     f"{cell.code_basis_commit_sha!r} != plan {self.code_basis_commit_sha!r}"
                 )
+            if cell.code_commit_sha != self.code_commit_sha:
+                raise CodeCommitProvenanceError(
+                    f"CODE_COMMIT_SHA_MISMATCH: Cell {cell.run_id} code_commit_sha "
+                    f"{cell.code_commit_sha!r} != plan {self.code_commit_sha!r}"
+                )
             if cell.scientific_code_bundle_sha256 != self.scientific_code_bundle_sha256:
                 raise ScientificCodeBundleIntegrityError(
                     f"SCIENTIFIC_CODE_BUNDLE_MISMATCH: Cell {cell.run_id} bundle sha256 "
                     f"{cell.scientific_code_bundle_sha256!r} != plan {self.scientific_code_bundle_sha256!r}"
                 )
+        computed_plan_sha = sha256_bytes(
+            canonical_json_bytes([c.model_dump() for c in self.cells])
+        )
+        if self.plan_sha256 != computed_plan_sha:
+            raise CandidateRegistryIntegrityError(
+                f"EXECUTION_PLAN_SHA256_MISMATCH: plan_sha256={self.plan_sha256} "
+                f"!= computed={computed_plan_sha}"
+            )
         return self
 
 
@@ -1958,7 +1978,6 @@ def verify_dev_execution_plan_for_execution(
         )
     if (
         execution_plan.scientific_code_bundle_file_hashes
-        and execution_plan.scientific_code_bundle_file_hashes
         != current_bundle.scientific_code_bundle_file_hashes
     ):
         raise ScientificCodeBundleIntegrityError(
@@ -2152,7 +2171,7 @@ def build_dev_select_execution_plan(
 
 
 class DevPromptFreezeArtifact(BaseModel):
-    """Contract for the separate future frozen prompt artifact required before any live DEV-TUNE execution (Section 11 / Fix Group H / Audit Correction 02)."""
+    """Contract for the separate future frozen prompt artifact required before any live DEV-TUNE execution (Section 11 / Fix Group H / Audit Correction 02 & 03)."""
 
     model_config = ConfigDict(extra="forbid")
 
@@ -2175,30 +2194,41 @@ class DevPromptFreezeArtifact(BaseModel):
     code_basis_commit_sha: str
     code_commit_sha: str
     scientific_code_bundle_sha256: str
-    scientific_code_bundle_file_hashes: List[Dict[str, str]] = Field(default_factory=list)
+    scientific_code_bundle_file_hashes: List[Dict[str, str]]
     provider_config_registry_sha256: str
     freeze_status: str
 
     @model_validator(mode="before")
     @classmethod
-    def _populate_freeze_provenance(cls, data: Any) -> Any:
+    def _validate_freeze_provenance_present(cls, data: Any) -> Any:
         if not isinstance(data, dict):
             return data
         d = dict(data)
-        _normalize_code_basis_provenance_fields(d, error_cls=PromptFreezeFirewallError)
-        if "scientific_code_bundle_sha256" not in d:
-            d["scientific_code_bundle_sha256"] = compute_scientific_code_bundle_sha256()
-        if "scientific_code_bundle_file_hashes" not in d:
-            current_bundle = compute_scientific_code_bundle()
-            if (
-                d.get("scientific_code_bundle_sha256")
-                == current_bundle.scientific_code_bundle_sha256
-            ):
-                d["scientific_code_bundle_file_hashes"] = [
-                    dict(entry) for entry in current_bundle.scientific_code_bundle_file_hashes
-                ]
-            else:
-                d["scientific_code_bundle_file_hashes"] = []
+        _validate_code_basis_provenance_fields(d, error_cls=PromptFreezeFirewallError)
+        if (
+            "scientific_code_bundle_sha256" not in d
+            or d["scientific_code_bundle_sha256"] is None
+            or not isinstance(d["scientific_code_bundle_sha256"], str)
+        ):
+            raise PromptFreezeFirewallError(
+                "MISSING_SCIENTIFIC_CODE_BUNDLE_SHA256: scientific_code_bundle_sha256 is required on DevPromptFreezeArtifact and is never hydrated on load."
+            )
+        if (
+            "scientific_code_bundle_file_hashes" not in d
+            or d["scientific_code_bundle_file_hashes"] is None
+            or not isinstance(d["scientific_code_bundle_file_hashes"], list)
+        ):
+            raise PromptFreezeFirewallError(
+                "MISSING_SCIENTIFIC_CODE_BUNDLE_FILE_HASHES: scientific_code_bundle_file_hashes is required on DevPromptFreezeArtifact and is never hydrated on load."
+            )
+        if (
+            "provider_config_registry_sha256" not in d
+            or d["provider_config_registry_sha256"] is None
+            or not isinstance(d["provider_config_registry_sha256"], str)
+        ):
+            raise PromptFreezeFirewallError(
+                "MISSING_PROVIDER_CONFIG_REGISTRY_SHA256: provider_config_registry_sha256 is required on DevPromptFreezeArtifact and is never hydrated on load."
+            )
         return d
 
     @model_validator(mode="after")
@@ -2229,11 +2259,10 @@ class DevPromptFreezeArtifact(BaseModel):
             validate_sha256_hex64(
                 self.provider_config_registry_sha256, "provider_config_registry_sha256"
             )
-            if self.scientific_code_bundle_file_hashes:
-                ScientificCodeBundleManifest(
-                    scientific_code_bundle_sha256=self.scientific_code_bundle_sha256,
-                    scientific_code_bundle_file_hashes=self.scientific_code_bundle_file_hashes,
-                )
+            ScientificCodeBundleManifest(
+                scientific_code_bundle_sha256=self.scientific_code_bundle_sha256,
+                scientific_code_bundle_file_hashes=self.scientific_code_bundle_file_hashes,
+            )
         except PromptFreezeFirewallError:
             raise
         except Exception as exc:
@@ -2624,7 +2653,7 @@ def compute_canonical_cell_cost_usd(
 
 
 class DevCellExecutionReceipt(BaseModel):
-    """Immutable per-cell execution receipt preserving primary scientific indicators, provenance, and usage/cost (Sections 8, 10-12; Corrections A, B, C; Audit Correction 02)."""
+    """Immutable per-cell execution receipt preserving primary scientific indicators, provenance, and usage/cost (Sections 8, 10-12; Corrections A, B, C; Audit Correction 02 & 03)."""
 
     model_config = ConfigDict(extra="forbid")
 
@@ -2676,35 +2705,34 @@ class DevCellExecutionReceipt(BaseModel):
 
     @model_validator(mode="before")
     @classmethod
-    def _populate_receipt_provenance(cls, data: Any) -> Any:
+    def _validate_receipt_provenance_present(cls, data: Any) -> Any:
         if not isinstance(data, dict):
             return data
         d = dict(data)
-        _normalize_code_basis_provenance_fields(d, error_cls=CodeCommitProvenanceError)
-        if "runtime_head_sha" not in d:
-            # Never synthesize runtime_head_sha from code_basis_commit_sha; resolve active git HEAD
-            d["runtime_head_sha"] = resolve_active_git_commit_sha()
-        elif d["runtime_head_sha"] is None or not isinstance(d["runtime_head_sha"], str):
+        _validate_code_basis_provenance_fields(d, error_cls=CodeCommitProvenanceError)
+        if (
+            "runtime_head_sha" not in d
+            or d["runtime_head_sha"] is None
+            or not isinstance(d["runtime_head_sha"], str)
+        ):
             raise CodeCommitProvenanceError(
-                "runtime_head_sha is required and must be a 40-character lowercase hex git SHA."
+                "MISSING_RUNTIME_HEAD_SHA: runtime_head_sha is required on DevCellExecutionReceipt and is never hydrated from runtime HEAD on load."
             )
-        if "scientific_code_bundle_sha256" not in d:
-            d["scientific_code_bundle_sha256"] = compute_scientific_code_bundle_sha256()
-        elif d["scientific_code_bundle_sha256"] is None or not isinstance(
-            d["scientific_code_bundle_sha256"], str
+        if (
+            "scientific_code_bundle_sha256" not in d
+            or d["scientific_code_bundle_sha256"] is None
+            or not isinstance(d["scientific_code_bundle_sha256"], str)
         ):
-            raise ValueError(
-                "scientific_code_bundle_sha256 is required and must be a 64-character lowercase hex SHA256."
+            raise ScientificCodeBundleIntegrityError(
+                "MISSING_SCIENTIFIC_CODE_BUNDLE_SHA256: scientific_code_bundle_sha256 is required on DevCellExecutionReceipt and is never hydrated on load."
             )
-        if "provider_config_sha256" not in d:
-            cid = d.get("candidate_id")
-            if cid in ORDERED_CANDIDATE_IDS:
-                d["provider_config_sha256"] = get_cached_provider_config_sha256(str(cid))
-        elif d["provider_config_sha256"] is None or not isinstance(
-            d["provider_config_sha256"], str
+        if (
+            "provider_config_sha256" not in d
+            or d["provider_config_sha256"] is None
+            or not isinstance(d["provider_config_sha256"], str)
         ):
-            raise ValueError(
-                "provider_config_sha256 is required and must be a 64-character lowercase hex SHA256."
+            raise CandidateRegistryIntegrityError(
+                "MISSING_PROVIDER_CONFIG_SHA256: provider_config_sha256 is required on DevCellExecutionReceipt and is never hydrated on load."
             )
         fclass = d.get("failure_classification")
         if fclass in (
@@ -2773,16 +2801,16 @@ class DevCellExecutionReceipt(BaseModel):
                 f"!= code_commit_sha {self.code_commit_sha!r}"
             )
         validate_git_commit_sha40(self.runtime_head_sha)
-        validate_sha256_hex64(
-            self.scientific_code_bundle_sha256, "scientific_code_bundle_sha256"
-        )
-        validate_sha256_hex64(self.provider_config_sha256, "provider_config_sha256")
-        expected_pconf_sha = get_cached_provider_config_sha256(self.candidate_id)
-        if self.provider_config_sha256 != expected_pconf_sha:
-            raise ValueError(
-                f"Receipt provider_config_sha256 mismatch for {self.candidate_id}: "
-                f"expected={expected_pconf_sha}, got={self.provider_config_sha256}"
+        try:
+            validate_sha256_hex64(
+                self.scientific_code_bundle_sha256, "scientific_code_bundle_sha256"
             )
+        except ValueError as exc:
+            raise ScientificCodeBundleIntegrityError(str(exc)) from exc
+        try:
+            validate_sha256_hex64(self.provider_config_sha256, "provider_config_sha256")
+        except ValueError as exc:
+            raise CandidateRegistryIntegrityError(str(exc)) from exc
         if self.latency_ns is not None:
             if isinstance(self.latency_ns, bool) or not isinstance(self.latency_ns, int) or self.latency_ns < 0:
                 raise ValueError(
@@ -2819,27 +2847,43 @@ class DevCellExecutionReceipt(BaseModel):
 
 
 def create_synthetic_test_only_cell_receipt(**kwargs: Any) -> DevCellExecutionReceipt:
-    """Explicit test-only constructor for purely synthetic unit tests (Correction C / Audit Correction 02).
+    """Explicit test-only builder for purely synthetic unit tests (Correction C / Audit Correction 02 & 03).
 
-    Does not use any hidden ContextVar bypass. Historical receipts and synthetic test receipts
-    validate 40-hex commit syntax and 64-hex bundle/provider hash syntax without binding model_validate
-    to the current git HEAD.
+    Builders explicitly create provenance fields before constructing the persisted model.
     """
-    return DevCellExecutionReceipt(**kwargs)
+    d = dict(kwargs)
+    if "code_commit_sha" in d and "code_basis_commit_sha" in d:
+        d["code_basis_commit_sha"] = d["code_commit_sha"]
+    elif "code_commit_sha" in d and "code_basis_commit_sha" not in d:
+        d["code_basis_commit_sha"] = d["code_commit_sha"]
+    elif "code_basis_commit_sha" in d and "code_commit_sha" not in d:
+        d["code_commit_sha"] = d["code_basis_commit_sha"]
+    else:
+        active_sha = resolve_active_git_commit_sha()
+        d["code_basis_commit_sha"] = active_sha
+        d["code_commit_sha"] = active_sha
+    if "runtime_head_sha" not in d:
+        d["runtime_head_sha"] = resolve_active_git_commit_sha()
+    if "scientific_code_bundle_sha256" not in d:
+        d["scientific_code_bundle_sha256"] = compute_scientific_code_bundle_sha256()
+    if "provider_config_sha256" not in d and d.get("candidate_id") in ORDERED_CANDIDATE_IDS:
+        d["provider_config_sha256"] = get_cached_provider_config_sha256(str(d["candidate_id"]))
+    return DevCellExecutionReceipt(**d)
 
 
 def assert_batch_receipts_integrity(
     cell_receipts: Sequence[DevCellExecutionReceipt],
 ) -> None:
-    """Unified batch integrity gate (Section 13 / Fix Group B & C / Audit Correction 02).
+    """Unified batch integrity gate (Section 13 / Fix Group B & C / Audit Correction 02 & 03).
 
     Scans all receipts BEFORE any scientific aggregation, metric calculation, or selection.
-    Fails closed and raises ModelIntegrityBatchStopError, HarnessInternalBatchStopError, or
-    ScientificCodeBundleIntegrityError if any cell:
+    Fails closed and raises ModelIntegrityBatchStopError, HarnessInternalBatchStopError,
+    ScientificCodeBundleIntegrityError, or CandidateRegistryIntegrityError if any cell:
     - has failure_classification == MODEL_INTEGRITY_MISMATCH
     - has failure_classification == HARNESS_INTERNAL_ERROR
     - has failure_classification == SCIENTIFIC_CODE_BUNDLE_MISMATCH
     - has batch_stop_required == True or counts_in_denominator == False
+    - has provider_config_sha256 != active candidate registry hash
     - has missing/empty or incompatible returned_model_id when not an ordinary transport failure
     """
     for r in cell_receipts:
@@ -2867,6 +2911,17 @@ def assert_batch_receipts_integrity(
                 f"BATCH_STOP_FATAL_STATE on cell {r.run_id} "
                 f"(classification={r.failure_classification.value}): "
                 "Entire scientific batch must stop immediately."
+            )
+        if r.candidate_id not in ORDERED_CANDIDATE_IDS:
+            raise CandidateRegistryIntegrityError(
+                f"Unknown candidate_id {r.candidate_id!r} on receipt {r.run_id}"
+            )
+        expected_pconf_sha = get_cached_provider_config_sha256(r.candidate_id)
+        if r.provider_config_sha256 != expected_pconf_sha:
+            raise CandidateRegistryIntegrityError(
+                f"PROVIDER_CONFIG_SHA256_MISMATCH on receipt {r.run_id} "
+                f"(candidate={r.candidate_id}): "
+                f"expected={expected_pconf_sha}, got={r.provider_config_sha256}"
             )
         if r.failure_classification == DevCellFailureClassification.NONE and not is_returned_model_id_compatible(
             r.requested_model_id, r.returned_model_id
@@ -4004,7 +4059,7 @@ def select_winning_candidate_dev_select(
 
 
 class StochasticityDiagnosticPlan(BaseModel):
-    """Post-winner stochasticity diagnostic plan (5 lexicographically smallest DEV-TUNE IDs × 3 runs = 15 calls; Section 18; Audit Correction 02)."""
+    """Post-winner stochasticity diagnostic plan (5 lexicographically smallest DEV-TUNE IDs × 3 runs = 15 calls; Section 18; Audit Correction 02 & 03)."""
 
     model_config = ConfigDict(extra="forbid")
 
@@ -4024,30 +4079,33 @@ class StochasticityDiagnosticPlan(BaseModel):
     code_basis_commit_sha: str
     code_commit_sha: str
     scientific_code_bundle_sha256: str
-    scientific_code_bundle_file_hashes: List[Dict[str, str]] = Field(default_factory=list)
+    scientific_code_bundle_file_hashes: List[Dict[str, str]]
     cells: List[DevCellExecutionManifest]
     plan_sha256: str
 
     @model_validator(mode="before")
     @classmethod
-    def _populate_stochasticity_plan_provenance(cls, data: Any) -> Any:
+    def _validate_stochasticity_plan_provenance_present(cls, data: Any) -> Any:
         if not isinstance(data, dict):
             return data
         d = dict(data)
-        _normalize_code_basis_provenance_fields(d, error_cls=CodeCommitProvenanceError)
-        if "scientific_code_bundle_sha256" not in d:
-            d["scientific_code_bundle_sha256"] = compute_scientific_code_bundle_sha256()
-        if "scientific_code_bundle_file_hashes" not in d:
-            current_bundle = compute_scientific_code_bundle()
-            if (
-                d.get("scientific_code_bundle_sha256")
-                == current_bundle.scientific_code_bundle_sha256
-            ):
-                d["scientific_code_bundle_file_hashes"] = [
-                    dict(entry) for entry in current_bundle.scientific_code_bundle_file_hashes
-                ]
-            else:
-                d["scientific_code_bundle_file_hashes"] = []
+        _validate_code_basis_provenance_fields(d, error_cls=CodeCommitProvenanceError)
+        if (
+            "scientific_code_bundle_sha256" not in d
+            or d["scientific_code_bundle_sha256"] is None
+            or not isinstance(d["scientific_code_bundle_sha256"], str)
+        ):
+            raise ScientificCodeBundleIntegrityError(
+                "MISSING_SCIENTIFIC_CODE_BUNDLE_SHA256: scientific_code_bundle_sha256 is required on StochasticityDiagnosticPlan and is never hydrated on load."
+            )
+        if (
+            "scientific_code_bundle_file_hashes" not in d
+            or d["scientific_code_bundle_file_hashes"] is None
+            or not isinstance(d["scientific_code_bundle_file_hashes"], list)
+        ):
+            raise ScientificCodeBundleIntegrityError(
+                "MISSING_SCIENTIFIC_CODE_BUNDLE_FILE_HASHES: scientific_code_bundle_file_hashes is required on StochasticityDiagnosticPlan and is never hydrated on load."
+            )
         return d
 
     @model_validator(mode="after")
@@ -4059,25 +4117,40 @@ class StochasticityDiagnosticPlan(BaseModel):
                 f"CODE_COMMIT_SHA_MISMATCH: code_basis_commit_sha {self.code_basis_commit_sha!r} "
                 f"!= code_commit_sha {self.code_commit_sha!r}"
             )
-        validate_sha256_hex64(
-            self.scientific_code_bundle_sha256, "scientific_code_bundle_sha256"
-        )
-        if self.scientific_code_bundle_file_hashes:
-            ScientificCodeBundleManifest(
-                scientific_code_bundle_sha256=self.scientific_code_bundle_sha256,
-                scientific_code_bundle_file_hashes=self.scientific_code_bundle_file_hashes,
+        try:
+            validate_sha256_hex64(
+                self.scientific_code_bundle_sha256, "scientific_code_bundle_sha256"
             )
+        except ValueError as exc:
+            raise ScientificCodeBundleIntegrityError(str(exc)) from exc
+        ScientificCodeBundleManifest(
+            scientific_code_bundle_sha256=self.scientific_code_bundle_sha256,
+            scientific_code_bundle_file_hashes=self.scientific_code_bundle_file_hashes,
+        )
         for cell in self.cells:
             if cell.code_basis_commit_sha != self.code_basis_commit_sha:
                 raise CodeCommitProvenanceError(
                     f"CODE_COMMIT_SHA_MISMATCH: Cell {cell.run_id} code_basis_commit_sha "
                     f"{cell.code_basis_commit_sha!r} != plan {self.code_basis_commit_sha!r}"
                 )
+            if cell.code_commit_sha != self.code_commit_sha:
+                raise CodeCommitProvenanceError(
+                    f"CODE_COMMIT_SHA_MISMATCH: Cell {cell.run_id} code_commit_sha "
+                    f"{cell.code_commit_sha!r} != plan {self.code_commit_sha!r}"
+                )
             if cell.scientific_code_bundle_sha256 != self.scientific_code_bundle_sha256:
                 raise ScientificCodeBundleIntegrityError(
                     f"SCIENTIFIC_CODE_BUNDLE_MISMATCH: Cell {cell.run_id} bundle "
                     f"{cell.scientific_code_bundle_sha256!r} != plan {self.scientific_code_bundle_sha256!r}"
                 )
+        computed_plan_sha = sha256_bytes(
+            canonical_json_bytes([c.model_dump() for c in self.cells])
+        )
+        if self.plan_sha256 != computed_plan_sha:
+            raise CandidateRegistryIntegrityError(
+                f"STOCHASTICITY_PLAN_SHA256_MISMATCH: plan_sha256={self.plan_sha256} "
+                f"!= computed={computed_plan_sha}"
+            )
         return self
 
 

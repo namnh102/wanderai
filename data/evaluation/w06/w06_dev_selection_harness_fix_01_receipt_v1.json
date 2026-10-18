@@ -5,11 +5,18 @@
   "audit_correction_02_tests_failed": 0,
   "audit_correction_02_tests_passed": 18,
   "audit_correction_02_tests_total": 18,
+  "audit_correction_03_id": "W06-DEV-SELECTION-HARNESS-FIX-01-AUDIT-CORRECTION-03",
+  "audit_correction_03_required": true,
+  "audit_correction_03_tests_failed": 0,
+  "audit_correction_03_tests_passed": 24,
+  "audit_correction_03_tests_total": 24,
   "audit_correction_id": "W06-DEV-SELECTION-HARNESS-FIX-01-AUDIT-CORRECTION-01",
   "audit_correction_tests_failed": 0,
   "audit_correction_tests_passed": 18,
   "audit_correction_tests_total": 18,
   "base_develop_sha": "f81faa7de3988a20af1adc5b04601c49cf953d4a",
+  "bundle_file_hashes_required": "PASS",
+  "bundle_hash_authoritative_byte_read": "PASS",
   "chatgpt_audit_correction_required": true,
   "code_sha_fail_closed": "PASS",
   "dev_select_execution_started": false,
@@ -132,16 +139,19 @@
         "FIX-26",
         "FIX-27",
         "PC-08",
-        "PC-09"
+        "PC-09",
+        "PH-04",
+        "PH-15",
+        "PH-16"
       ]
     },
     "QA-33": {
       "defect_code": "MISSING_CODE_COMMIT_SHA_AND_PROVIDER_CONFIG_SHA256_ON_CELL_ARTIFACTS",
-      "fix_group": "Fix Group I / Audit Correction C",
+      "fix_group": "Fix Group I / Audit Correction C / Audit Correction 02 / Audit Correction 03",
       "repaired": true,
-      "root_cause": "DevCellExecutionManifest and DevCellExecutionReceipt lacked code_commit_sha and provider_config_sha256, and resolve_active_git_commit_sha initially had a static fallback SHA.",
+      "root_cause": "DevCellExecutionManifest and DevCellExecutionReceipt lacked code_commit_sha and provider_config_sha256; resolve_active_git_commit_sha initially had a static fallback SHA; persisted models hydrated missing provenance from the active runtime environment during model_validate; scientific_code_bundle_file_hashes defaulted to [] and was skipped when empty; and _SCIENTIFIC_CODE_BUNDLE_CACHE keyed by (st_mtime_ns, st_size) risked serving stale hashes on same-size/same-mtime edits.",
       "severity": "MAJOR",
-      "solution": "Removed static fallback SHA EXPECTED_BASE_DEVELOP_SHA_FIX_01; implemented fail-closed resolve_active_git_commit_sha and resolve_and_verify_code_commit_sha raising CodeCommitProvenanceError if git rev-parse HEAD fails or if a supplied SHA mismatches active HEAD.",
+      "solution": "Enforced BUILDERS CREATE PROVENANCE, MODELS VERIFY PROVENANCE: persisted models require all provenance fields and never read active git HEAD, source bundle, or provider config to fill missing fields; made scientific_code_bundle_file_hashes required and verified against the exact 13-file SCIENTIFIC_CODE_BUNDLE_RELATIVE_PATHS; removed _SCIENTIFIC_CODE_BUNDLE_CACHE so compute_scientific_code_bundle always reads file bytes and computes LF-normalized SHA256; and enforced provider_config_sha256 against active registry at action boundaries.",
       "verification_tests": [
         "FIX-28",
         "AC-09",
@@ -160,7 +170,31 @@
         "PC-12",
         "PC-13",
         "PC-14",
-        "PC-15"
+        "PC-15",
+        "PH-01",
+        "PH-02",
+        "PH-03",
+        "PH-04",
+        "PH-05",
+        "PH-06",
+        "PH-07",
+        "PH-08",
+        "PH-09",
+        "PH-10",
+        "PH-11",
+        "PH-12",
+        "PH-13",
+        "PH-14",
+        "PH-15",
+        "PH-16",
+        "PH-17",
+        "PH-18",
+        "PH-19",
+        "PH-20",
+        "PH-21",
+        "PH-22",
+        "PH-23",
+        "PH-24"
       ]
     },
     "QA-39": {
@@ -178,8 +212,8 @@
   },
   "fix_status": "READY_FOR_RE_QA",
   "fix_tests_failed": 0,
-  "fix_tests_passed": 71,
-  "fix_tests_total": 71,
+  "fix_tests_passed": 95,
+  "fix_tests_total": 95,
   "historical_artifact_reload_safe": "PASS",
   "historical_qa_01_baseline": {
     "overall_qa": "FAIL",
@@ -199,6 +233,7 @@
   "live_calls": 0,
   "live_provider_calls": 0,
   "next_gate": "W06-DEV-SELECTION-HARNESS-QA-02-OFFLINE-RERUN",
+  "persisted_provenance_fail_closed": "PASS",
   "prompt_freeze_self_reference_resolved": "PASS",
   "provenance_lifecycle_model": "CODE_BASIS_PLUS_SCIENTIFIC_CODE_BUNDLE_PLUS_RUNTIME_HEAD",
   "provider_cost_usd": 0,
@@ -216,10 +251,11 @@
   ],
   "repaired_harness_file": "apps/ai-service/app/evaluation/dev_selection_harness.py",
   "runtime_head_recording": "PASS",
+  "same_mtime_same_size_cache_bypass_closed": "PASS",
   "scientific_code_bundle_file_hashes": [
     {
       "path": "apps/ai-service/app/evaluation/dev_selection_harness.py",
-      "sha256": "5ee493632511edbaba6c580e2290b4c7ea959165a770d87f7753c108b1e1ec5f"
+      "sha256": "cc87e8c40f924f7d006097055fbf3374c9b2199d895cf8246593fae03f7dbf67"
     },
     {
       "path": "apps/ai-service/app/evaluation/model_preflight/__init__.py",
@@ -286,9 +322,9 @@
     "apps/ai-service/recommendation/reca/contract.py"
   ],
   "scientific_code_bundle_gate": "PASS",
-  "scientific_code_bundle_sha256": "22e400db25283cef7a4aa78d1a15f67597bc22dba8efc4706c1e275a43ad2997",
+  "scientific_code_bundle_sha256": "fe82a932a4cb768efd0e80eeb120d773f4937dae67e1b9f2fb77ec00f516f1be",
   "stochasticity_diagnostic_started": false,
   "task_id": "W06-DEV-SELECTION-HARNESS-FIX-01",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "winner_selected": false
 }

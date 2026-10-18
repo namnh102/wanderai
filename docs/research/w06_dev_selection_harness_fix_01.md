@@ -1,12 +1,18 @@
-# W06 DEV Selection Harness Fix 01 Report (`W06-DEV-SELECTION-HARNESS-FIX-01` & `AUDIT-CORRECTION-01`)
+# W06 DEV Selection Harness Fix 01 Report (`W06-DEV-SELECTION-HARNESS-FIX-01`, `AUDIT-CORRECTION-01`, `AUDIT-CORRECTION-02`, & `AUDIT-CORRECTION-03`)
 
 ## 1. Executive Summary
 
 - **Task ID:** `W06-DEV-SELECTION-HARNESS-FIX-01`
-- **Audit Correction ID:** `W06-DEV-SELECTION-HARNESS-FIX-01-AUDIT-CORRECTION-01` (`chatgpt_audit_correction_required = true`)
+- **Audit Correction IDs:**
+  - `W06-DEV-SELECTION-HARNESS-FIX-01-AUDIT-CORRECTION-01` (`chatgpt_audit_correction_required = true`)
+  - `W06-DEV-SELECTION-HARNESS-FIX-01-AUDIT-CORRECTION-02` (`audit_correction_02_required = true`)
+  - `W06-DEV-SELECTION-HARNESS-FIX-01-AUDIT-CORRECTION-03` (`audit_correction_03_required = true`)
 - **Source Branch / Base SHA:** `develop` (`f81faa7de3988a20af1adc5b04601c49cf953d4a`)
 - **Working Branch / PR:** `research/w06-dev-selection-harness-fix-01` (PR #49)
-- **Previous Audited Commit on PR #49:** `a35859764b1475d33e5e0dd752557a1876e38adb`
+- **Previous Audited Commits on PR #49:**
+  - `a35859764b1475d33e5e0dd752557a1876e38adb` (`FIX-01`)
+  - `1b5fe2d08403a2f3fe25fb93ef9258dd047524d5` (`AUDIT-CORRECTION-01`)
+  - `923c07d64919afd7fb706e67e4c2c229ef2cb368` (`AUDIT-CORRECTION-02`)
 - **Historical QA Baseline:** `W06-DEV-SELECTION-HARNESS-QA-01-OFFLINE-ADVERSARIAL` (`QA_CHECKS_TOTAL = 40`, `QA_PASS = 30`, `QA_FAIL = 10`; 5 CRITICAL, 5 MAJOR)
 - **Historical QA-01 Evidence Preserved:** `true` (0 bytes modified across all 4 historical QA-01 files)
 - **Live Provider Calls:** `0` (`PROVIDER_COST_USD = $0`)
@@ -15,7 +21,11 @@
   - `latency_ns_selection_authority`: `PASS`
   - `code_sha_fail_closed`: `PASS`
   - `historical_qa_runtime_monkeypatch_removed`: `PASS`
-- **Fix & Audit Correction Regression Tests (`FIX-01` .. `FIX-35` + `AC-01` .. `AC-18`):** `53 / 53 PASSED`
+  - `persisted_provenance_fail_closed`: `PASS`
+  - `bundle_file_hashes_required`: `PASS`
+  - `bundle_hash_authoritative_byte_read`: `PASS`
+  - `same_mtime_same_size_cache_bypass_closed`: `PASS`
+- **Fix & Audit Correction Regression Tests (`FIX-01` .. `FIX-35` + `AC-01` .. `AC-18` + `PC-01` .. `PC-18` + `PH-01` .. `PH-24`):** `95 / 95 PASSED`
 - **Existing Harness Tests (`test_w06_dev_selection_harness_01.py`):** `35 / 35 PASSED`
 - **Fix Status:** `READY_FOR_RE_QA`
 - **Next Gate:** `W06-DEV-SELECTION-HARNESS-QA-02-OFFLINE-RERUN`
@@ -106,21 +116,25 @@ In strict compliance with Sections 1 and 17, the historical adversarial QA-01 ev
 - **Exact Code Change:**
   - Set `SINGLE_PROMPT_P1_LOCK_STATUS = "LOCK_P1_WITHOUT_PERFORMANCE_COMPARISON"`.
   - Added `PromptFreezeFirewallError`, `DevPromptFreezeArtifact`, `build_dev_prompt_freeze_artifact`, `verify_prompt_candidate_freeze_artifact`, and `assert_prompt_freeze_before_live`.
-- **Verification Tests:** `FIX-26`, `FIX-27`.
+- **Verification Tests:** `FIX-26`, `FIX-27`, `PC-08`, `PC-09`, `PH-04`, `PH-15`, `PH-16`.
 
-### 3.8 `QA-33` (MAJOR) — Fix Group I, Audit Correction C & Audit Correction 02: Artifact-Lifecycle-Safe Provenance (`code_basis_commit_sha`, `scientific_code_bundle_sha256`, `runtime_head_sha`)
+### 3.8 `QA-33` (MAJOR) — Fix Group I, Audit Correction C, Audit Correction 02, & Audit Correction 03: Fail-Closed Persisted Provenance & Authoritative Byte-Read Code Bundle Hashing
 
-- **Root Cause:** `DevCellExecutionManifest` and `DevCellExecutionReceipt` originally lacked `code_commit_sha` and `provider_config_sha256`. Audit Correction C removed the static fallback SHA `EXPECTED_BASE_DEVELOP_SHA_FIX_01`, and Audit Correction 02 (`W06-DEV-SELECTION-HARNESS-FIX-01-AUDIT-CORRECTION-02`) resolved the provenance self-reference defect where binding persisted artifacts directly to current `git rev-parse HEAD` during `model_validate` caused historical artifacts created at commit `A` to fail validation after being committed at commit `B` (or after receipts were committed at commit `C`).
-- **Exact Code Change (Audit Correction 02 — `CODE_BASIS_PLUS_SCIENTIFIC_CODE_BUNDLE_PLUS_RUNTIME_HEAD`):**
-  1. **Three-Part Provenance Model:**
-     - `code_basis_commit_sha` (synchronized with backward-compatible `code_commit_sha`): 40-char lowercase hex git commit SHA used as the frozen implementation basis when a plan or prompt freeze artifact was created.
-     - `scientific_code_bundle_sha256` (`22e400db25283cef7a4aa78d1a15f67597bc22dba8efc4706c1e275a43ad2997`): deterministic canonical JSON SHA256 over the LF-normalized SHA256 hashes of all 13 W06 DEV scientific source files (`SCIENTIFIC_CODE_BUNDLE_RELATIVE_PATHS`).
-     - `runtime_head_sha`: actual 40-char lowercase hex `git rev-parse HEAD` present at cell/batch execution time, recorded on `DevCellExecutionReceipt` and `provider_response_metadata.json` (never synthesized from `code_basis_commit_sha`).
-  2. **Historical Artifact Loading vs. Action-Boundary Verification:**
-     - Loading historical manifests, execution plans, prompt freeze artifacts, or receipts via `model_validate` validates 40-hex/64-hex syntax and internal consistency without comparing `code_basis_commit_sha` or `runtime_head_sha` to the current git `HEAD`.
-     - Action boundaries (`verify_prompt_candidate_freeze_artifact`, `verify_dev_execution_plan_for_execution`, `verify_cell_manifest_for_execution`, `execute_dev_cell_with_mock_transport`, `execute_dev_batch_with_mock_transport`) survive metadata/artifact commits (`A -> B`) when `compute_scientific_code_bundle_sha256() == artifact.scientific_code_bundle_sha256`, and fail closed with `ScientificCodeBundleIntegrityError` / `PromptFreezeFirewallError` before any provider call if any of the 13 scientific source files changed.
-  3. **Removed `_ALLOW_SYNTHETIC_TEST_ONLY_CODE_SHA` `ContextVar`:** Historical artifacts load naturally without any hidden `ContextVar` bypass.
-- **Verification Tests:** `FIX-28`, `AC-09`, `AC-10`, `AC-11`, `AC-12`, `PC-01` .. `PC-18`.
+- **Root Cause:**
+  1. `DevCellExecutionManifest` and `DevCellExecutionReceipt` originally lacked `code_commit_sha` and `provider_config_sha256`, and `resolve_active_git_commit_sha` initially had a static fallback SHA (`EXPECTED_BASE_DEVELOP_SHA_FIX_01`).
+  2. Audit Correction 02 introduced the three-part provenance model (`code_basis_commit_sha`, `scientific_code_bundle_sha256`, `runtime_head_sha`), but persisted models (`DevCellExecutionManifest`, `DevExecutionPlan`, `DevPromptFreezeArtifact`, `DevCellExecutionReceipt`, `StochasticityDiagnosticPlan`) still hydrated missing provenance fields from the active runtime environment during `model_validate`, `scientific_code_bundle_file_hashes` defaulted to `[]` and skipped bundle hash recomputation when empty, and `_SCIENTIFIC_CODE_BUNDLE_CACHE` cached bundle hashes by `(st_mtime_ns, st_size)`.
+- **Exact Code Change (Audit Correction 03 — `BUILDERS CREATE PROVENANCE. MODELS VERIFY PROVENANCE.`):**
+  1. **No Provenance Hydration on Load:**
+     - Removed all calls to `resolve_active_git_commit_sha`, `compute_scientific_code_bundle_sha256`, `compute_scientific_code_bundle_file_hashes`, `compute_provider_config_sha256_for_candidate`, and `compute_provider_config_registry_sha256` from persisted model validators (`DevCellExecutionManifest`, `DevExecutionPlan`, `DevPromptFreezeArtifact`, `DevCellExecutionReceipt`, `StochasticityDiagnosticPlan`).
+     - Required explicit `code_basis_commit_sha`, `code_commit_sha`, `scientific_code_bundle_sha256`, `provider_config_sha256` (on manifests/receipts), `runtime_head_sha` (on receipts), `provider_config_registry_sha256` (on prompt freeze artifacts), and `scientific_code_bundle_file_hashes` (on execution plans, prompt freeze artifacts, and stochasticity plans). Missing or mismatched fields fail closed during `model_validate`.
+     - Added explicit `inspect_legacy_pre_fix_artifact` returning `LEGACY_ARTIFACT_NOT_ELIGIBLE_FOR_NEW_LIVE_EXECUTION` without fabricating provenance.
+  2. **Required 13-File `scientific_code_bundle_file_hashes`:**
+     - Removed `default_factory=list` from `scientific_code_bundle_file_hashes` and enforced in `ScientificCodeBundleManifest` that `scientific_code_bundle_file_hashes` is non-empty and its ordered `"path"` sequence equals `list(SCIENTIFIC_CODE_BUNDLE_RELATIVE_PATHS)` (exact 13-file path set) and recomputes to `scientific_code_bundle_sha256` (`fe82a932a4cb768efd0e80eeb120d773f4937dae67e1b9f2fb77ec00f516f1be`).
+  3. **Authoritative Byte-Read Bundle Hashing (Zero Cache Bypass):**
+     - Deleted `_SCIENTIFIC_CODE_BUNDLE_CACHE` completely so `compute_scientific_code_bundle(repo_root=..., authoritative=True)` always reads actual file bytes and computes LF-normalized SHA256, catching even same-size + restored-`st_mtime_ns` edits (`PH-20`, `PH-21`).
+  4. **Historical Reload vs. Active Action-Boundary Provider Config Verification:**
+     - Persisted model loading validates `provider_config_sha256` as 64-hex syntax and internal plan consistency, while `verify_cell_manifest_for_execution`, `verify_dev_execution_plan_for_execution`, `verify_prompt_candidate_freeze_artifact`, `execute_dev_cell_with_mock_transport`, `execute_dev_batch_with_mock_transport`, and `assert_batch_receipts_integrity` verify against active `compute_provider_config_sha256_for_candidate(candidate_id)`.
+- **Verification Tests:** `FIX-28`, `AC-09` .. `AC-12`, `PC-01` .. `PC-15`, `PH-01` .. `PH-24`.
 
 ### 3.9 Audit Correction D — Removal of Runtime Monkeypatching in `conftest.py`
 
@@ -160,7 +174,7 @@ In strict compliance with Sections 1 and 17, the historical adversarial QA-01 ev
 
 ---
 
-## 6. Verification & Regression Test Matrix (`FIX-01` .. `FIX-35`, `AC-01` .. `AC-18`, & `PC-01` .. `PC-18`)
+## 6. Verification & Regression Test Matrix (`FIX-01` .. `FIX-35`, `AC-01` .. `AC-18`, `PC-01` .. `PC-18`, & `PH-01` .. `PH-24`)
 
 | Test ID | Defect / Invariant Verified | Status |
 |---|---|---|
@@ -170,7 +184,7 @@ In strict compliance with Sections 1 and 17, the historical adversarial QA-01 ev
 | `FIX-20` .. `FIX-23` | `QA-27` & `QA-28`: Provider-aware token billing (`C1`, `C2`, `C3`) & cache guard | `PASS` |
 | `FIX-24` & `AC-01` .. `AC-04` | `QA-29` / Correction A: Exact `Decimal` cost end-to-end (`canonical_cost_usd_decimal`, `median_canonical_cost_usd_decimal`) | `PASS` |
 | `FIX-25` & `AC-05` .. `AC-08` | `QA-30` / Correction B: Authoritative integer `latency_ns` & exact `Decimal` median (`median_latency_ns_decimal`) | `PASS` |
-| `FIX-26` .. `FIX-27` & `PC-08` .. `PC-09` | `QA-32` / Correction 02: `LOCK_P1_WITHOUT_PERFORMANCE_COMPARISON` & artifact-lifecycle-safe prompt freeze verifier | `PASS` |
-| `FIX-28`, `AC-09` .. `AC-12`, & `PC-01` .. `PC-15` | `QA-33` / Correction C & Correction 02: `code_basis_commit_sha`, `scientific_code_bundle_sha256`, `runtime_head_sha`, and removal of `_ALLOW_SYNTHETIC_TEST_ONLY_CODE_SHA` | `PASS` |
+| `FIX-26` .. `FIX-27`, `PC-08` .. `PC-09`, `PH-04`, `PH-15` .. `PH-16` | `QA-32` / Correction 02 / Correction 03: `LOCK_P1_WITHOUT_PERFORMANCE_COMPARISON`, artifact-lifecycle-safe prompt freeze verifier, & required 13-file `scientific_code_bundle_file_hashes` | `PASS` |
+| `FIX-28`, `AC-09` .. `AC-12`, `PC-01` .. `PC-15`, & `PH-01` .. `PH-21` | `QA-33` / Correction C / Correction 02 / Correction 03: Fail-closed persisted provenance (no hydration on load), required 13-file `scientific_code_bundle_file_hashes`, authoritative byte-read bundle hash (same-size + same-mtime cache bypass closed), and action-boundary `provider_config_sha256` verification | `PASS` |
 | `AC-13` .. `AC-15` | Correction D: No runtime monkeypatching in `conftest.py` & QA-01 files byte-identical | `PASS` |
-| `FIX-29` .. `FIX-35`, `AC-16` .. `AC-18`, & `PC-16` .. `PC-18` | All preserved scientific contracts, `DH-01`..`DH-35`, `FIX-01`..`FIX-35`, `AC-01`..`AC-18`, `PC-01`..`PC-18`, and 0 live calls | `PASS` |
+| `FIX-29` .. `FIX-35`, `AC-16` .. `AC-18`, `PC-16` .. `PC-18`, & `PH-22` .. `PH-24` | All preserved scientific contracts, `DH-01`..`DH-35`, `FIX-01`..`FIX-35`, `AC-01`..`AC-18`, `PC-01`..`PC-18`, `PH-01`..`PH-24`, and 0 live calls | `PASS` |

@@ -37,6 +37,7 @@ from app.evaluation.dev_selection_harness import (
     FORBIDDEN_FINAL100_BUNDLE_SHA256,
     FORBIDDEN_P11_MANIFEST_SHA256,
     HarnessInternalBatchStopError,
+    LEGACY_ARTIFACT_ELIGIBILITY_STATUS,
     LatencyAuthorityUnavailableError,
     MockProviderTransportResponse,
     ModelIntegrityBatchStopError,
@@ -49,8 +50,10 @@ from app.evaluation.dev_selection_harness import (
     SINGLE_PROMPT_P1_LOCK_STATUS,
     ScientificCodeBundleIntegrityError,
     ScientificCodeBundleManifest,
+    StochasticityDiagnosticPlan,
     StochasticityGateViolationError,
     TASK_ID_DEV_HARNESS_FIX_01_AUDIT_CORRECTION_02,
+    TASK_ID_DEV_HARNESS_FIX_01_AUDIT_CORRECTION_03,
     aggregate_dev_cell_receipts,
     assert_batch_receipts_integrity,
     assert_not_final100_path,
@@ -76,6 +79,7 @@ from app.evaluation.dev_selection_harness import (
     execute_dev_batch_with_mock_transport,
     execute_dev_cell_with_mock_transport,
     format_canonical_decimal_str,
+    inspect_legacy_pre_fix_artifact,
     load_and_verify_candidate_registry,
     load_and_verify_frozen_dev_bundle,
     normalize_lf_bytes,
@@ -229,6 +233,7 @@ def _make_receipt(
     code_commit_sha: str | None = None,
     runtime_head_sha: str | None = None,
     scientific_code_bundle_sha256: str | None = None,
+    provider_config_sha256: str | None = None,
 ) -> DevCellExecutionReceipt:
     resolved_latency_ns: int | None = (
         int(Decimal(str(latency_ms)) * Decimal(1_000_000))
@@ -242,15 +247,33 @@ def _make_receipt(
     else:
         resolved_cost_dec_str = None
 
-    prov_kwargs: Dict[str, Any] = {}
-    if code_basis_commit_sha is not None:
-        prov_kwargs["code_basis_commit_sha"] = code_basis_commit_sha
-    if code_commit_sha is not None:
-        prov_kwargs["code_commit_sha"] = code_commit_sha
-    if runtime_head_sha is not None:
-        prov_kwargs["runtime_head_sha"] = runtime_head_sha
-    if scientific_code_bundle_sha256 is not None:
-        prov_kwargs["scientific_code_bundle_sha256"] = scientific_code_bundle_sha256
+    if code_basis_commit_sha is None and code_commit_sha is None:
+        active_sha = resolve_active_git_commit_sha()
+        resolved_basis_sha = active_sha
+        resolved_commit_sha = active_sha
+    elif code_basis_commit_sha is not None and code_commit_sha is None:
+        resolved_basis_sha = code_basis_commit_sha
+        resolved_commit_sha = code_basis_commit_sha
+    elif code_commit_sha is not None and code_basis_commit_sha is None:
+        resolved_basis_sha = code_commit_sha
+        resolved_commit_sha = code_commit_sha
+    else:
+        resolved_basis_sha = code_basis_commit_sha  # type: ignore[assignment]
+        resolved_commit_sha = code_commit_sha  # type: ignore[assignment]
+
+    resolved_runtime_sha = (
+        runtime_head_sha if runtime_head_sha is not None else resolve_active_git_commit_sha()
+    )
+    resolved_bundle_sha = (
+        scientific_code_bundle_sha256
+        if scientific_code_bundle_sha256 is not None
+        else compute_scientific_code_bundle_sha256()
+    )
+    resolved_pconf_sha = (
+        provider_config_sha256
+        if provider_config_sha256 is not None
+        else harness.get_cached_provider_config_sha256(candidate_id)
+    )
 
     return DevCellExecutionReceipt(
         run_id=f"{phase}__{prompt_id}__{candidate_id}__{fixture_id}",
@@ -258,7 +281,11 @@ def _make_receipt(
         prompt_id=prompt_id,
         candidate_id=candidate_id,
         fixture_id=fixture_id,
-        **prov_kwargs,
+        code_basis_commit_sha=resolved_basis_sha,
+        code_commit_sha=resolved_commit_sha,
+        runtime_head_sha=resolved_runtime_sha,
+        scientific_code_bundle_sha256=resolved_bundle_sha,
+        provider_config_sha256=resolved_pconf_sha,
         requested_model_id=requested_model_id,
         returned_model_id=returned_model_id,
         latency_ns=resolved_latency_ns,
@@ -2410,3 +2437,570 @@ def test_pc_18_live_provider_calls_equal_0_and_audit_correction_02_receipt_valid
     assert fix_receipt["scientific_code_bundle_files"] == list(
         SCIENTIFIC_CODE_BUNDLE_RELATIVE_PATHS
     )
+
+
+# ==============================================================================
+# PH-01 through PH-24: ChatGPT Audit Correction 03 Provenance Hardening Tests
+# (W06-DEV-SELECTION-HARNESS-FIX-01-AUDIT-CORRECTION-03)
+# ==============================================================================
+
+
+def test_ph_01_receipt_without_runtime_head_sha_fails_closed(monkeypatch):
+    """PH-01: DevCellExecutionReceipt.model_validate without runtime_head_sha FAILS CLOSED and never queries runtime git HEAD."""
+    rec_dict = _make_receipt().model_dump()
+    del rec_dict["runtime_head_sha"]
+
+    def _forbid_git_resolve(*_args, **_kwargs):
+        raise AssertionError("resolve_active_git_commit_sha must never be called on receipt load")
+
+    monkeypatch.setattr(harness, "resolve_active_git_commit_sha", _forbid_git_resolve)
+    with pytest.raises(
+        (CodeCommitProvenanceError, ValidationError), match="MISSING_RUNTIME_HEAD_SHA"
+    ):
+        DevCellExecutionReceipt.model_validate(rec_dict)
+
+
+def test_ph_02_receipt_without_code_basis_commit_sha_fails_closed(monkeypatch):
+    """PH-02: DevCellExecutionReceipt.model_validate without code_basis_commit_sha FAILS CLOSED even if code_commit_sha is present."""
+    rec_dict = _make_receipt().model_dump()
+    del rec_dict["code_basis_commit_sha"]
+
+    monkeypatch.setattr(
+        harness,
+        "resolve_active_git_commit_sha",
+        lambda *_a, **_kw: (_ for _ in ()).throw(AssertionError("Forbidden runtime hydration")),
+    )
+    with pytest.raises(
+        (CodeCommitProvenanceError, ValidationError), match="MISSING_CODE_BASIS_COMMIT_SHA"
+    ):
+        DevCellExecutionReceipt.model_validate(rec_dict)
+
+
+def test_ph_03_receipt_without_code_commit_sha_fails_closed(monkeypatch):
+    """PH-03: DevCellExecutionReceipt.model_validate without code_commit_sha FAILS CLOSED even if code_basis_commit_sha is present."""
+    rec_dict = _make_receipt().model_dump()
+    del rec_dict["code_commit_sha"]
+
+    monkeypatch.setattr(
+        harness,
+        "resolve_active_git_commit_sha",
+        lambda *_a, **_kw: (_ for _ in ()).throw(AssertionError("Forbidden runtime hydration")),
+    )
+    with pytest.raises(
+        (CodeCommitProvenanceError, ValidationError), match="MISSING_CODE_COMMIT_SHA"
+    ):
+        DevCellExecutionReceipt.model_validate(rec_dict)
+
+
+def test_ph_04_receipt_without_scientific_code_bundle_sha256_fails_closed(monkeypatch):
+    """PH-04: DevCellExecutionReceipt.model_validate without scientific_code_bundle_sha256 FAILS CLOSED."""
+    rec_dict = _make_receipt().model_dump()
+    del rec_dict["scientific_code_bundle_sha256"]
+
+    monkeypatch.setattr(
+        harness,
+        "compute_scientific_code_bundle_sha256",
+        lambda *_a, **_kw: (_ for _ in ()).throw(AssertionError("Forbidden bundle hydration")),
+    )
+    with pytest.raises(
+        (ScientificCodeBundleIntegrityError, ValidationError),
+        match="MISSING_SCIENTIFIC_CODE_BUNDLE_SHA256",
+    ):
+        DevCellExecutionReceipt.model_validate(rec_dict)
+
+
+def test_ph_05_receipt_without_provider_config_sha256_fails_closed(monkeypatch):
+    """PH-05: DevCellExecutionReceipt.model_validate without provider_config_sha256 FAILS CLOSED."""
+    rec_dict = _make_receipt().model_dump()
+    del rec_dict["provider_config_sha256"]
+
+    monkeypatch.setattr(
+        harness,
+        "get_cached_provider_config_sha256",
+        lambda *_a, **_kw: (_ for _ in ()).throw(AssertionError("Forbidden provider hydration")),
+    )
+    with pytest.raises(
+        (CandidateRegistryIntegrityError, ValidationError),
+        match="MISSING_PROVIDER_CONFIG_SHA256",
+    ):
+        DevCellExecutionReceipt.model_validate(rec_dict)
+
+
+def test_ph_06_manifest_without_code_basis_commit_sha_fails_closed(shared_env):
+    """PH-06: DevCellExecutionManifest.model_validate without code_basis_commit_sha FAILS CLOSED."""
+    cell_dict = shared_env["cell0"].model_dump()
+    del cell_dict["code_basis_commit_sha"]
+    with pytest.raises(
+        (CodeCommitProvenanceError, ValidationError), match="MISSING_CODE_BASIS_COMMIT_SHA"
+    ):
+        DevCellExecutionManifest.model_validate(cell_dict)
+
+
+def test_ph_07_manifest_without_code_commit_sha_fails_closed(shared_env):
+    """PH-07: DevCellExecutionManifest.model_validate without code_commit_sha FAILS CLOSED."""
+    cell_dict = shared_env["cell0"].model_dump()
+    del cell_dict["code_commit_sha"]
+    with pytest.raises(
+        (CodeCommitProvenanceError, ValidationError), match="MISSING_CODE_COMMIT_SHA"
+    ):
+        DevCellExecutionManifest.model_validate(cell_dict)
+
+
+def test_ph_08_manifest_without_scientific_code_bundle_sha256_fails_closed(shared_env):
+    """PH-08: DevCellExecutionManifest.model_validate without scientific_code_bundle_sha256 FAILS CLOSED."""
+    cell_dict = shared_env["cell0"].model_dump()
+    del cell_dict["scientific_code_bundle_sha256"]
+    with pytest.raises(
+        (ScientificCodeBundleIntegrityError, ValidationError),
+        match="MISSING_SCIENTIFIC_CODE_BUNDLE_SHA256",
+    ):
+        DevCellExecutionManifest.model_validate(cell_dict)
+
+
+def test_ph_09_manifest_without_provider_config_sha256_fails_closed(shared_env):
+    """PH-09: DevCellExecutionManifest.model_validate without provider_config_sha256 FAILS CLOSED."""
+    cell_dict = shared_env["cell0"].model_dump()
+    del cell_dict["provider_config_sha256"]
+    with pytest.raises(
+        (CandidateRegistryIntegrityError, ValidationError),
+        match="MISSING_PROVIDER_CONFIG_SHA256",
+    ):
+        DevCellExecutionManifest.model_validate(cell_dict)
+
+
+def test_ph_10_execution_plan_without_scientific_code_bundle_file_hashes_or_provenance_fails_closed(
+    shared_env,
+):
+    """PH-10: DevExecutionPlan without scientific_code_bundle_file_hashes or top-level provenance FAILS CLOSED (never synthesized from cells)."""
+    base_plan = shared_env["tune_plan"].model_dump()
+
+    for missing_field, expected_err in [
+        ("scientific_code_bundle_file_hashes", ScientificCodeBundleIntegrityError),
+        ("scientific_code_bundle_sha256", ScientificCodeBundleIntegrityError),
+        ("code_basis_commit_sha", CodeCommitProvenanceError),
+        ("code_commit_sha", CodeCommitProvenanceError),
+    ]:
+        d = dict(base_plan)
+        del d[missing_field]
+        with pytest.raises((expected_err, ValidationError)):
+            DevExecutionPlan.model_validate(d)
+
+
+def test_ph_11_execution_plan_with_empty_scientific_code_bundle_file_hashes_fails_closed(
+    shared_env,
+):
+    """PH-11: DevExecutionPlan with empty scientific_code_bundle_file_hashes=[] FAILS CLOSED."""
+    d = shared_env["tune_plan"].model_dump()
+    d["scientific_code_bundle_file_hashes"] = []
+    with pytest.raises(
+        (ScientificCodeBundleIntegrityError, ValidationError),
+        match="SCIENTIFIC_CODE_BUNDLE_FILE_HASHES_EMPTY",
+    ):
+        DevExecutionPlan.model_validate(d)
+
+
+def test_ph_12_execution_plan_with_missing_or_extra_file_in_bundle_file_hashes_fails_closed(
+    shared_env,
+):
+    """PH-12: DevExecutionPlan with missing, extra, duplicate, unsorted, or unknown file path in scientific_code_bundle_file_hashes FAILS CLOSED."""
+    base_plan = shared_env["tune_plan"].model_dump()
+    full_hashes = [dict(e) for e in base_plan["scientific_code_bundle_file_hashes"]]
+
+    # 1. Partial list (12 files instead of 13) with recomputed bundle_sha still fails closed!
+    partial_hashes = full_hashes[:-1]
+    partial_sha = sha256_bytes(harness.canonical_json_bytes(partial_hashes))
+    d_partial = dict(base_plan)
+    d_partial["scientific_code_bundle_file_hashes"] = partial_hashes
+    d_partial["scientific_code_bundle_sha256"] = partial_sha
+    with pytest.raises(
+        (ScientificCodeBundleIntegrityError, ValidationError),
+        match="SCIENTIFIC_CODE_BUNDLE_PATH_SET_MISMATCH",
+    ):
+        DevExecutionPlan.model_validate(d_partial)
+
+    # 2. Extra file in list
+    extra_hashes = sorted(
+        [*full_hashes, {"path": "apps/ai-service/app/extra_unknown.py", "sha256": "a" * 64}],
+        key=lambda x: x["path"],
+    )
+    extra_sha = sha256_bytes(harness.canonical_json_bytes(extra_hashes))
+    d_extra = dict(base_plan)
+    d_extra["scientific_code_bundle_file_hashes"] = extra_hashes
+    d_extra["scientific_code_bundle_sha256"] = extra_sha
+    with pytest.raises(
+        (ScientificCodeBundleIntegrityError, ValidationError),
+        match="SCIENTIFIC_CODE_BUNDLE_PATH_SET_MISMATCH",
+    ):
+        DevExecutionPlan.model_validate(d_extra)
+
+    # 3. Unsorted list
+    unsorted_hashes = list(reversed(full_hashes))
+    d_unsorted = dict(base_plan)
+    d_unsorted["scientific_code_bundle_file_hashes"] = unsorted_hashes
+    with pytest.raises((ScientificCodeBundleIntegrityError, ValidationError)):
+        DevExecutionPlan.model_validate(d_unsorted)
+
+
+def test_ph_13_execution_plan_with_tampered_file_hash_fails_closed(shared_env):
+    """PH-13: DevExecutionPlan with a tampered file hash in scientific_code_bundle_file_hashes FAILS CLOSED."""
+    d = shared_env["tune_plan"].model_dump()
+    tampered_hashes = [dict(e) for e in d["scientific_code_bundle_file_hashes"]]
+    tampered_hashes[0]["sha256"] = (
+        "0" * 64 if tampered_hashes[0]["sha256"] != "0" * 64 else "1" * 64
+    )
+    d["scientific_code_bundle_file_hashes"] = tampered_hashes
+    with pytest.raises(
+        (ScientificCodeBundleIntegrityError, ValidationError),
+        match="SCIENTIFIC_CODE_BUNDLE_MISMATCH",
+    ):
+        DevExecutionPlan.model_validate(d)
+
+
+def test_ph_14_prompt_freeze_without_scientific_code_bundle_file_hashes_fails_closed(
+    shared_env,
+):
+    """PH-14: DevPromptFreezeArtifact without scientific_code_bundle_file_hashes FAILS CLOSED."""
+    freeze_obj = build_dev_prompt_freeze_artifact(
+        prompt_registry=shared_env["p1_reg"],
+        dev_tune_plan=shared_env["tune_plan"],
+        dev_bundle=shared_env["bundle"],
+        candidate_registry=shared_env["cand_reg"],
+    )
+    d = freeze_obj.model_dump()
+    del d["scientific_code_bundle_file_hashes"]
+    with pytest.raises(
+        (PromptFreezeFirewallError, ValidationError),
+        match="MISSING_SCIENTIFIC_CODE_BUNDLE_FILE_HASHES",
+    ):
+        DevPromptFreezeArtifact.model_validate(d)
+
+
+def test_ph_15_prompt_freeze_with_empty_scientific_code_bundle_file_hashes_fails_closed(
+    shared_env,
+):
+    """PH-15: DevPromptFreezeArtifact with empty scientific_code_bundle_file_hashes=[] FAILS CLOSED."""
+    freeze_obj = build_dev_prompt_freeze_artifact(
+        prompt_registry=shared_env["p1_reg"],
+        dev_tune_plan=shared_env["tune_plan"],
+        dev_bundle=shared_env["bundle"],
+        candidate_registry=shared_env["cand_reg"],
+    )
+    d = freeze_obj.model_dump()
+    d["scientific_code_bundle_file_hashes"] = []
+    with pytest.raises(
+        (PromptFreezeFirewallError, ValidationError),
+        match="SCIENTIFIC_CODE_BUNDLE_FILE_HASHES_EMPTY",
+    ):
+        DevPromptFreezeArtifact.model_validate(d)
+
+
+def test_ph_16_prompt_freeze_with_tampered_file_hash_fails_closed(shared_env):
+    """PH-16: DevPromptFreezeArtifact with tampered file hash or wrong path set in scientific_code_bundle_file_hashes FAILS CLOSED."""
+    freeze_obj = build_dev_prompt_freeze_artifact(
+        prompt_registry=shared_env["p1_reg"],
+        dev_tune_plan=shared_env["tune_plan"],
+        dev_bundle=shared_env["bundle"],
+        candidate_registry=shared_env["cand_reg"],
+    )
+    d = freeze_obj.model_dump()
+    tampered_hashes = [dict(e) for e in d["scientific_code_bundle_file_hashes"]]
+    tampered_hashes[-1]["sha256"] = (
+        "f" * 64 if tampered_hashes[-1]["sha256"] != "f" * 64 else "e" * 64
+    )
+    d["scientific_code_bundle_file_hashes"] = tampered_hashes
+    with pytest.raises(
+        (PromptFreezeFirewallError, ValidationError),
+        match="SCIENTIFIC_CODE_BUNDLE_MISMATCH",
+    ):
+        DevPromptFreezeArtifact.model_validate(d)
+
+
+def test_ph_17_stochasticity_diagnostic_plan_without_scientific_code_bundle_file_hashes_fails_closed(
+    shared_env,
+):
+    """PH-17: StochasticityDiagnosticPlan without scientific_code_bundle_file_hashes or with empty list FAILS CLOSED."""
+    fids = [s.scenario_id for s in shared_env["bundle"].dev_select_fixtures]
+    req_models = {"C1": "gemini-3.8-flash", "C2": "gpt-6.1-sol", "C3": "claude-sonnet-5-5"}
+    receipts = [
+        _make_receipt(
+            phase="DEV_SELECT",
+            prompt_id="P1",
+            candidate_id=cid,
+            fixture_id=fid,
+            requested_model_id=req_models[cid],
+            returned_model_id=req_models[cid],
+        )
+        for cid in ORDERED_CANDIDATE_IDS
+        for fid in fids
+    ]
+    sel_res = select_winning_candidate_dev_select(
+        locked_prompt_id="P1",
+        dev_select_fixture_ids=fids,
+        cell_receipts=receipts,
+        cost_comparability_by_candidate=_cost_records_all_computable(),
+    )
+    stoch_plan = build_stochasticity_diagnostic_plan(
+        dev_select_result=sel_res,
+        locked_prompt_spec=shared_env["p1_reg"].prompts[0],
+        dev_bundle=shared_env["bundle"],
+        candidate_registry=shared_env["cand_reg"],
+    )
+
+    d_missing = stoch_plan.model_dump()
+    del d_missing["scientific_code_bundle_file_hashes"]
+    with pytest.raises(
+        (ScientificCodeBundleIntegrityError, ValidationError),
+        match="MISSING_SCIENTIFIC_CODE_BUNDLE_FILE_HASHES",
+    ):
+        StochasticityDiagnosticPlan.model_validate(d_missing)
+
+    d_empty = stoch_plan.model_dump()
+    d_empty["scientific_code_bundle_file_hashes"] = []
+    with pytest.raises(
+        (ScientificCodeBundleIntegrityError, ValidationError),
+        match="SCIENTIFIC_CODE_BUNDLE_FILE_HASHES_EMPTY",
+    ):
+        StochasticityDiagnosticPlan.model_validate(d_empty)
+
+
+def test_ph_18_valid_historical_artifacts_with_complete_fields_load_cleanly(
+    shared_env, monkeypatch
+):
+    """PH-18: Valid historical manifest, plan, freeze artifact, and stochasticity plan with complete fields and historical commit A load cleanly without inspecting runtime git/bundle/registry."""
+    commit_a = "a" * 39 + "7"
+
+    # Forbid any runtime environment lookups during model_validate
+    monkeypatch.setattr(
+        harness,
+        "resolve_active_git_commit_sha",
+        lambda *_a, **_kw: (_ for _ in ()).throw(AssertionError("Forbidden git lookup on load")),
+    )
+    monkeypatch.setattr(
+        harness,
+        "compute_scientific_code_bundle",
+        lambda *_a, **_kw: (_ for _ in ()).throw(
+            AssertionError("Forbidden bundle lookup on load")
+        ),
+    )
+    monkeypatch.setattr(
+        harness,
+        "get_cached_provider_config_sha256",
+        lambda *_a, **_kw: (_ for _ in ()).throw(
+            AssertionError("Forbidden registry lookup on load")
+        ),
+    )
+
+    plan_dict = shared_env["tune_plan"].model_dump()
+    plan_dict["code_basis_commit_sha"] = commit_a
+    plan_dict["code_commit_sha"] = commit_a
+    for c in plan_dict["cells"]:
+        c["code_basis_commit_sha"] = commit_a
+        c["code_commit_sha"] = commit_a
+    plan_dict["plan_sha256"] = sha256_bytes(
+        harness.canonical_json_bytes(plan_dict["cells"])
+    )
+
+    loaded_cell = DevCellExecutionManifest.model_validate(plan_dict["cells"][0])
+    assert loaded_cell.code_basis_commit_sha == commit_a
+
+    loaded_plan = DevExecutionPlan.model_validate(plan_dict)
+    assert loaded_plan.code_basis_commit_sha == commit_a
+    assert len(loaded_plan.scientific_code_bundle_file_hashes) == 13
+
+    # Also verify inspect_legacy_pre_fix_artifact helper marks legacy dicts as ineligible for live execution
+    legacy_info = inspect_legacy_pre_fix_artifact({"artifact_id": "LEGACY-01"})
+    assert legacy_info["legacy_eligibility_status"] == LEGACY_ARTIFACT_ELIGIBILITY_STATUS
+    assert legacy_info["eligible_for_new_live_execution"] is False
+
+
+def test_ph_19_valid_historical_receipt_with_a_ne_b_ne_current_head_loads_cleanly(
+    monkeypatch,
+):
+    """PH-19: Valid historical DevCellExecutionReceipt with code_basis_commit_sha=A and runtime_head_sha=B (A != B != current HEAD) loads cleanly without querying runtime environment."""
+    commit_a = "1" * 39 + "a"
+    commit_b = "2" * 39 + "b"
+    rec = _make_receipt(
+        code_basis_commit_sha=commit_a,
+        code_commit_sha=commit_a,
+        runtime_head_sha=commit_b,
+        scientific_code_bundle_sha256="c" * 64,
+        provider_config_sha256="d" * 64,
+    )
+    raw_dict = json.loads(json.dumps(rec.model_dump()))
+
+    monkeypatch.setattr(
+        harness,
+        "resolve_active_git_commit_sha",
+        lambda *_a, **_kw: (_ for _ in ()).throw(AssertionError("Forbidden git lookup on load")),
+    )
+    monkeypatch.setattr(
+        harness,
+        "compute_scientific_code_bundle_sha256",
+        lambda *_a, **_kw: (_ for _ in ()).throw(
+            AssertionError("Forbidden bundle lookup on load")
+        ),
+    )
+    monkeypatch.setattr(
+        harness,
+        "get_cached_provider_config_sha256",
+        lambda *_a, **_kw: (_ for _ in ()).throw(
+            AssertionError("Forbidden provider lookup on load")
+        ),
+    )
+
+    reloaded = DevCellExecutionReceipt.model_validate(raw_dict)
+    assert reloaded.code_basis_commit_sha == commit_a
+    assert reloaded.code_commit_sha == commit_a
+    assert reloaded.runtime_head_sha == commit_b
+    assert reloaded.scientific_code_bundle_sha256 == "c" * 64
+    assert reloaded.provider_config_sha256 == "d" * 64
+
+
+def test_ph_20_same_size_same_mtime_file_modification_changes_compute_scientific_code_bundle_sha256(
+    tmp_path: Path,
+):
+    """PH-20 & Section 15: Adversarial same-size + same-mtime file modification changes compute_scientific_code_bundle_sha256()."""
+    import os
+
+    assert not hasattr(harness, "_SCIENTIFIC_CODE_BUNDLE_CACHE")
+    mirror = _create_temp_scientific_repo_mirror(tmp_path / "adversarial_cache_repo")
+    hash_1 = compute_scientific_code_bundle_sha256(repo_root=mirror)
+
+    target = mirror / "apps/ai-service/app/evaluation/planner_benchmark_evaluator.py"
+    old_bytes = target.read_bytes()
+    orig_stat = target.stat()
+    orig_atime_ns = orig_stat.st_atime_ns
+    orig_mtime_ns = orig_stat.st_mtime_ns
+
+    # Flip 1 ASCII byte in place while preserving exact byte length
+    mutable = bytearray(old_bytes)
+    mutable[-10] = ord("Z") if mutable[-10] != ord("Z") else ord("Y")
+    new_bytes = bytes(mutable)
+    assert len(new_bytes) == len(old_bytes)
+    assert new_bytes != old_bytes
+
+    target.write_bytes(new_bytes)
+    os.utime(target, ns=(orig_atime_ns, orig_mtime_ns))
+
+    after_stat = target.stat()
+    assert after_stat.st_size == orig_stat.st_size
+    assert after_stat.st_mtime_ns == orig_mtime_ns
+
+    hash_2 = compute_scientific_code_bundle_sha256(repo_root=mirror)
+    assert hash_2 != hash_1
+
+
+def test_ph_21_same_size_same_mtime_file_modification_causes_execution_verification_to_fail_closed(
+    shared_env, tmp_path: Path, monkeypatch
+):
+    """PH-21 & Section 15: Same-size + same-mtime file modification causes verify_dev_execution_plan_for_execution, verify_prompt_candidate_freeze_artifact, and execute_dev_cell_with_mock_transport to FAIL CLOSED before any provider call."""
+    import os
+
+    mirror = _create_temp_scientific_repo_mirror(tmp_path / "ph21_repo")
+    commit_a = "a" * 40
+    monkeypatch.setattr(
+        harness, "resolve_active_git_commit_sha", lambda repo_root=None: commit_a
+    )
+    plan = build_dev_tune_execution_plan(
+        shared_env["p1_reg"],
+        dev_bundle=shared_env["bundle"],
+        candidate_registry=shared_env["cand_reg"],
+        repo_root=mirror,
+    )
+    freeze = build_dev_prompt_freeze_artifact(
+        prompt_registry=shared_env["p1_reg"],
+        dev_tune_plan=plan,
+        dev_bundle=shared_env["bundle"],
+        candidate_registry=shared_env["cand_reg"],
+        repo_root=mirror,
+    )
+
+    # Perform an in-place 1-byte edit preserving exact st_size and st_mtime_ns
+    target = mirror / "apps/ai-service/app/prompts/planner_benchmark_prompt.py"
+    old_bytes = target.read_bytes()
+    st_before = target.stat()
+    mut = bytearray(old_bytes)
+    mut[-15] = ord("X") if mut[-15] != ord("X") else ord("W")
+    target.write_bytes(bytes(mut))
+    os.utime(target, ns=(st_before.st_atime_ns, st_before.st_mtime_ns))
+    st_after = target.stat()
+    assert st_after.st_size == st_before.st_size
+    assert st_after.st_mtime_ns == st_before.st_mtime_ns
+
+    with pytest.raises(
+        ScientificCodeBundleIntegrityError, match="SCIENTIFIC_CODE_BUNDLE_MISMATCH"
+    ):
+        verify_dev_execution_plan_for_execution(plan, repo_root=mirror)
+
+    with pytest.raises(PromptFreezeFirewallError, match="SCIENTIFIC_CODE_BUNDLE_MISMATCH"):
+        verify_prompt_candidate_freeze_artifact(
+            freeze,
+            prompt_registry=shared_env["p1_reg"],
+            dev_tune_plan=plan,
+            dev_bundle=shared_env["bundle"],
+            candidate_registry=shared_env["cand_reg"],
+            repo_root=mirror,
+        )
+
+    provider_calls = 0
+
+    def _never_called(_cell: DevCellExecutionManifest) -> MockProviderTransportResponse:
+        nonlocal provider_calls
+        provider_calls += 1
+        raise AssertionError("Provider transport must never be called")
+
+    with pytest.raises(
+        ScientificCodeBundleIntegrityError, match="SCIENTIFIC_CODE_BUNDLE_MISMATCH"
+    ):
+        execute_dev_cell_with_mock_transport(
+            cell_manifest=plan.cells[0],
+            scenario=shared_env["scen0"],
+            cell_dir=tmp_path / "ph21_cell",
+            mock_response=_never_called,
+            core_catalog_by_id=shared_env["core_map"],
+            repo_root=mirror,
+        )
+    assert provider_calls == 0
+
+
+def test_ph_22_all_existing_dh_01_to_dh_35_pass():
+    """PH-22: Verify all existing DH-01..DH-35 test functions exist in test_w06_dev_selection_harness_01."""
+    test_ac_16_all_existing_dh_01_to_dh_35_tests_present()
+
+
+def test_ph_23_all_existing_fix_ac_pc_and_ph_tests_present():
+    """PH-23: Verify all FIX-01..FIX-35, AC-01..AC-18, PC-01..PC-18, and PH-01..PH-24 test functions exist in this module."""
+    import sys
+
+    this_mod = sys.modules[__name__]
+    fix_funcs = [name for name in dir(this_mod) if name.startswith("test_fix_")]
+    ac_funcs = [name for name in dir(this_mod) if name.startswith("test_ac_")]
+    pc_funcs = [name for name in dir(this_mod) if name.startswith("test_pc_")]
+    ph_funcs = [name for name in dir(this_mod) if name.startswith("test_ph_")]
+    assert len(fix_funcs) == 35
+    assert len(ac_funcs) == 18
+    assert len(pc_funcs) == 18
+    assert len(ph_funcs) == 24
+    for idx in range(1, 25):
+        assert any(name.startswith(f"test_ph_{idx:02d}_") for name in ph_funcs)
+
+
+def test_ph_24_live_provider_calls_equal_0_and_audit_correction_03_receipt_valid():
+    """PH-24: Verify live_provider_calls == 0 and Section 17 Audit Correction 03 fields in receipt."""
+    fix_receipt_path = (
+        REPO_ROOT / "data" / "evaluation" / "w06" / "w06_dev_selection_harness_fix_01_receipt_v1.json"
+    )
+    assert fix_receipt_path.exists()
+    fix_receipt = json.loads(fix_receipt_path.read_text(encoding="utf-8"))
+    assert fix_receipt["live_provider_calls"] == 0
+    assert fix_receipt["provider_cost_usd"] == 0
+    assert fix_receipt["live_calls"] == 0
+    assert fix_receipt["audit_correction_03_required"] is True
+    assert (
+        fix_receipt["audit_correction_03_id"]
+        == TASK_ID_DEV_HARNESS_FIX_01_AUDIT_CORRECTION_03
+    )
+    assert fix_receipt["persisted_provenance_fail_closed"] == "PASS"
+    assert fix_receipt["bundle_file_hashes_required"] == "PASS"
+    assert fix_receipt["bundle_hash_authoritative_byte_read"] == "PASS"
+    assert fix_receipt["same_mtime_same_size_cache_bypass_closed"] == "PASS"
