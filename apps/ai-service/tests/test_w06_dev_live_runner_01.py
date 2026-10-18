@@ -1,18 +1,20 @@
-"""Offline Test Suite for W06 DEV Live Runner Infrastructure (W06-DEV-LIVE-RUNNER-01-OFFLINE & AUDIT-CORRECTION-01).
+"""Offline Test Suite for W06 DEV Live Runner Infrastructure (W06-DEV-LIVE-RUNNER-01-OFFLINE, AUDIT-CORRECTION-01 & AUDIT-CORRECTION-02).
 
-Covers LR-01 through LR-50 and LRC-01 through LRC-30 verifying:
+Covers LR-01 through LR-50, LRC-01 through LRC-30, and LRC2-01 through LRC2-19 verifying:
 - Scientific code bundle inclusion and content-hash sensitivity (LR-01, LR-02)
 - Explicit live authorization gate and fail-closed verification (LR-03..LR-09, LRC-25)
 - Final100 phase, path, scenario ID, and content firewall (LR-10, LR-11, LR-44)
-- Two-stage Plan-Before-Live protocol, Stage A freeze receipt, and plan membership enforcement (LR-12, LR-13, LRC-20..LRC-22)
+- Two-stage Plan-Before-Live protocol, Stage A freeze receipt, and plan membership enforcement (LR-12, LR-13, LRC-20..LRC-22, LRC2-01..LRC2-08)
 - Frozen provider wire request payloads for C1, C2, C3 + Portable Schema V2 + RECA context (LR-14..LR-18)
 - Actual production provider transports for C1 Google, C2 OpenAI, C3 Anthropic + HTTP boundary counting (LRC-04..LRC-08)
 - Transport-start journal, raw-evidence-before-interpretation, and immutable atomic artifacts (LR-19..LR-21, LR-34, LR-37..LR-39)
+- Single authoritative execution-start UTC timestamp and separate completion timestamp (LRC2-09..LRC2-12)
+- Action-boundary Stage-A re-attestation and post-capability repo drift blocking (LRC2-13..LRC2-18)
 - Strict primary parser only (zero markdown fence or prose rescue) (LR-22, LR-23)
 - Failure taxonomy, provider exception mapping, denominator retention vs batch-fatal stops (LR-24..LR-29, LRC-09..LRC-14)
 - Usage metadata normalization, raw usage preservation, and exact Decimal costing (LR-30..LR-33, LR-48)
 - Deterministic call-budget ledger & retry=0 enforcement (LR-35, LR-36)
-- Programmatic live-gate capability token & transport type-safety (LRC-15..LRC-19)
+- Programmatic live-gate capability token & transport type-safety (LRC-15..LRC-19, LRC2-19)
 - Git commit ancestor & committed blob attestation (LRC-23, LRC-24)
 - Truthful BenchmarkRunManifest provenance (LRC-26..LRC-28)
 - Full mock batch execution for DEV-TUNE (60 & 120), DEV-SELECT (180), and STOCHASTICITY (15) (LR-40..LR-43)
@@ -27,9 +29,11 @@ from __future__ import annotations
 
 import datetime as dt
 from decimal import Decimal
+import inspect
 import json
 import os
 from pathlib import Path
+import shutil
 import socket
 import subprocess
 from typing import Any, Dict, List
@@ -37,6 +41,7 @@ import urllib.request
 
 import httpx
 import httpx2
+from pydantic import ValidationError
 import pytest
 
 from app.evaluation import dev_live_runner as runner_mod
@@ -47,6 +52,7 @@ from app.evaluation.dev_live_runner import (
     DEFAULT_COST_COMPARABILITY_BY_CANDIDATE,
     DEFAULT_RUNNER_RECEIPT_PATH,
     EXPECTED_BASE_DEVELOP_SHA_RUNNER_01,
+    LIVE_CAPABILITY_ROLE_ORCHESTRATION_GUARD,
     NEXT_GATE_RUNNER_QA_01,
     PROMPT_FREEZE_STATUS_NOT_YET_FROZEN,
     REDACTED_SECRET_PLACEHOLDER,
@@ -54,6 +60,7 @@ from app.evaluation.dev_live_runner import (
     RUNNER_EXECUTION_MODE_OFFLINE_MOCK_TEST,
     RUNNER_RECEIPT_ARTIFACT_ID,
     TASK_ID_DEV_LIVE_RUNNER_01,
+    TASK_ID_DEV_LIVE_RUNNER_01_CORRECTION_02,
     TRANSPORT_STATUS_COMPLETED,
     TRANSPORT_STATUS_NOT_INVOKED,
     TRANSPORT_STATUS_STARTING,
@@ -65,9 +72,11 @@ from app.evaluation.dev_live_runner import (
     DevCountingHttpx2Transport,
     DevCountingHttpxTransport,
     DevLiveAuthorizationError,
+    DevLiveStageAFreezeReceipt,
     DuplicateDevCellAttemptError,
     GoogleGeminiProductionTransport,
     LiveExecutionCapability,
+    LiveExecutionContext,
     LiveExecutionNotAuthorizedError,
     MockDevProviderTransport,
     OpenAIChatCompletionsProductionTransport,
@@ -81,13 +90,16 @@ from app.evaluation.dev_live_runner import (
     build_frozen_provider_wire_request,
     build_stage_a_freeze_receipt,
     build_test_only_authorization_artifact,
+    build_test_only_stage_a_freeze_receipt,
     classify_provider_transport_exception,
     compute_prompt_freeze_sha256,
     create_live_provider_transport_factory,
+    default_utc_now_clock,
     execute_live_dev_batch,
     execute_live_dev_cell,
     issue_live_execution_capability,
     normalize_candidate_usage_metadata,
+    reattest_stage_a_at_live_action_boundary,
     run_cli,
     run_dev_live_runner_dry_run,
     sanitize_runner_structure,
@@ -355,7 +367,7 @@ def _setup_committed_git_repo_for_live_capability(
     _git("commit", "-m", "chore: freeze Stage A artifacts")
 
     stage_a_sha = resolve_active_git_commit_sha(repo_root=repo_dir)
-    stage_a_rec = build_stage_a_freeze_receipt(
+    stage_a_rec = build_test_only_stage_a_freeze_receipt(
         execution_plan=plan,
         prompt_freeze=pf,
         authorization=auth,
@@ -411,7 +423,7 @@ def _write_stage_a_bundle_to_disk(
     write_canonical_json(plan_path, plan.model_dump())
     write_canonical_json(pf_path, prompt_freeze.model_dump())
     write_canonical_json(auth_path, authorization.model_dump())
-    stage_a_rec = build_stage_a_freeze_receipt(
+    stage_a_rec = build_test_only_stage_a_freeze_receipt(
         execution_plan=plan,
         prompt_freeze=prompt_freeze,
         authorization=authorization,
@@ -2111,11 +2123,19 @@ def test_lr_50_dev_live_execution_remains_unauthorized_by_default_and_receipt_ma
     assert persisted["programmatic_live_gate_bypass_closed"] == "PASS"
     assert persisted["stage_a_freeze_receipt"] == "PASS"
     assert persisted["stage_a_commit_attestation"] == "PASS"
+    assert persisted["stage_a_process_token_required_non_empty"] == "PASS"
+    assert persisted["stage_a_process_token_auto_stamped_by_production_builder"] == "PASS"
+    assert persisted["same_process_stage_a_to_stage_b_blocked"] == "PASS"
+    assert persisted["execution_timestamp_dynamic_not_hardcoded"] == "PASS"
+    assert persisted["execution_timestamp_matches_transport_start_journal"] == "PASS"
+    assert persisted["action_boundary_stage_a_reattestation"] == "PASS"
+    assert persisted["post_capability_repo_drift_blocked"] == "PASS"
+    assert persisted["live_capability_role"] == LIVE_CAPABILITY_ROLE_ORCHESTRATION_GUARD
     assert persisted["benchmark_manifest_provenance_truthful"] == "PASS"
     assert persisted["benchmark_manifest_config_truthful"] == "PASS"
     assert persisted["execution_mode_truthful"] == "PASS"
     assert persisted["next_gate"] == NEXT_GATE_RUNNER_QA_01
-    assert persisted["status"] == "READY_FOR_CHATGPT_REAUDIT"
+    assert persisted["status"] == "READY_FOR_CHATGPT_FINAL_REAUDIT"
 
 
 # ==============================================================================
@@ -3477,3 +3497,841 @@ def test_lrc_30_zero_live_provider_calls_and_zero_secret_leaks_across_repo() -> 
         "secret_leak_count": 0,
         "affected_file_paths": [],
     }
+
+
+# ==============================================================================
+# LRC2-01 THROUGH LRC2-08: DEFECT A — STAGE-A PROCESS TOKEN HARDENING
+# ==============================================================================
+
+
+def test_lrc2_01_missing_stage_a_process_token_rejected(
+    runner_env: Dict[str, Any], tmp_path: Path
+) -> None:
+    """LRC2-01: Missing stage_a_process_token is rejected by DevLiveStageAFreezeReceipt and verify_stage_a_freeze_receipt."""
+    c_env = runner_env["committed_env"]
+    raw_rec = c_env["stage_a_rec"].model_dump()
+    raw_rec.pop("stage_a_process_token", None)
+
+    with pytest.raises(
+        (ValidationError, PlanBeforeLiveProtocolError),
+        match="STAGE_A_PROCESS_TOKEN_MISSING|stage_a_process_token",
+    ):
+        DevLiveStageAFreezeReceipt.model_validate(raw_rec)
+
+    bad_path = tmp_path / "missing_token_stage_a.json"
+    write_canonical_json(bad_path, raw_rec)
+    with pytest.raises(
+        PlanBeforeLiveProtocolError,
+        match="STAGE_A_RECEIPT_INVALID|STAGE_A_PROCESS_TOKEN_MISSING",
+    ):
+        verify_stage_a_freeze_receipt(
+            bad_path,
+            execution_plan=c_env["plan"],
+            prompt_freeze=c_env["pf"],
+            authorization=c_env["auth"],
+            require_git_committed=False,
+        )
+
+
+def test_lrc2_02_null_stage_a_process_token_rejected(
+    runner_env: Dict[str, Any], tmp_path: Path
+) -> None:
+    """LRC2-02: Null (None) stage_a_process_token is rejected by DevLiveStageAFreezeReceipt and verify_stage_a_freeze_receipt."""
+    c_env = runner_env["committed_env"]
+    raw_rec = c_env["stage_a_rec"].model_dump()
+    raw_rec["stage_a_process_token"] = None
+
+    with pytest.raises(
+        (ValidationError, PlanBeforeLiveProtocolError),
+        match="STAGE_A_PROCESS_TOKEN_NULL|stage_a_process_token",
+    ):
+        DevLiveStageAFreezeReceipt.model_validate(raw_rec)
+
+    bad_path = tmp_path / "null_token_stage_a.json"
+    write_canonical_json(bad_path, raw_rec)
+    with pytest.raises(
+        PlanBeforeLiveProtocolError,
+        match="STAGE_A_RECEIPT_INVALID|STAGE_A_PROCESS_TOKEN_NULL",
+    ):
+        verify_stage_a_freeze_receipt(
+            bad_path,
+            execution_plan=c_env["plan"],
+            prompt_freeze=c_env["pf"],
+            authorization=c_env["auth"],
+            require_git_committed=False,
+        )
+
+
+def test_lrc2_03_empty_or_whitespace_stage_a_process_token_rejected(
+    runner_env: Dict[str, Any], tmp_path: Path
+) -> None:
+    """LRC2-03: Empty string and whitespace-only stage_a_process_token values are rejected."""
+    c_env = runner_env["committed_env"]
+    for bad_token in ("", "   ", "\t\n"):
+        raw_rec = c_env["stage_a_rec"].model_dump()
+        raw_rec["stage_a_process_token"] = bad_token
+        with pytest.raises(
+            (ValidationError, PlanBeforeLiveProtocolError),
+            match="STAGE_A_PROCESS_TOKEN_EMPTY|stage_a_process_token",
+        ):
+            DevLiveStageAFreezeReceipt.model_validate(raw_rec)
+
+        bad_path = tmp_path / f"empty_token_{len(bad_token)}_stage_a.json"
+        write_canonical_json(bad_path, raw_rec)
+        with pytest.raises(
+            PlanBeforeLiveProtocolError,
+            match="STAGE_A_RECEIPT_INVALID|STAGE_A_PROCESS_TOKEN_EMPTY",
+        ):
+            verify_stage_a_freeze_receipt(
+                bad_path,
+                execution_plan=c_env["plan"],
+                prompt_freeze=c_env["pf"],
+                authorization=c_env["auth"],
+                require_git_committed=False,
+            )
+
+
+def test_lrc2_04_production_stage_a_builder_auto_stamps_current_invocation_token(
+    runner_env: Dict[str, Any],
+) -> None:
+    """LRC2-04: Production build_stage_a_freeze_receipt auto-stamps _CURRENT_PROCESS_INVOCATION_TOKEN internally."""
+    rec = build_stage_a_freeze_receipt(
+        execution_plan=runner_env["tune_plan_1p"],
+        prompt_freeze=runner_env["pf_1p"],
+        authorization=runner_env["auth_tune_1p"],
+        stage_a_commit_sha=runner_env["tune_plan_1p"].code_basis_commit_sha,
+        freeze_created_at_utc="2026-10-18T10:00:00Z",
+        candidate_registry=runner_env["cand_reg"],
+    )
+    assert isinstance(rec.stage_a_process_token, str)
+    assert len(rec.stage_a_process_token.strip()) > 0
+    assert rec.stage_a_process_token == runner_mod._CURRENT_PROCESS_INVOCATION_TOKEN
+
+
+def test_lrc2_05_production_stage_a_builder_does_not_expose_caller_controlled_token() -> None:
+    """LRC2-05: Production build_stage_a_freeze_receipt signature does not expose stage_a_process_token."""
+    sig = inspect.signature(build_stage_a_freeze_receipt)
+    assert "stage_a_process_token" not in sig.parameters
+    for param in sig.parameters.values():
+        assert param.kind != inspect.Parameter.VAR_KEYWORD
+
+
+def test_lrc2_06_same_process_production_stage_a_to_stage_b_rejected(
+    runner_env: Dict[str, Any], tmp_path: Path
+) -> None:
+    """LRC2-06: Creating a Stage-A receipt with production build_stage_a_freeze_receipt and running Stage-B in the same process is rejected."""
+    plan = runner_env["tune_plan_1p"]
+    pf = runner_env["pf_1p"]
+    auth = runner_env["auth_tune_1p"]
+
+    prod_stage_a = build_stage_a_freeze_receipt(
+        execution_plan=plan,
+        prompt_freeze=pf,
+        authorization=auth,
+        stage_a_commit_sha=plan.code_basis_commit_sha,
+        freeze_created_at_utc="2026-10-18T10:00:00Z",
+        candidate_registry=runner_env["cand_reg"],
+    )
+    plan_path = tmp_path / "same_proc_plan.json"
+    pf_path = tmp_path / "same_proc_pf.json"
+    auth_path = tmp_path / "same_proc_auth.json"
+    rec_path = tmp_path / "same_proc_stage_a.json"
+    write_canonical_json(plan_path, plan.model_dump())
+    write_canonical_json(pf_path, pf.model_dump())
+    write_canonical_json(auth_path, auth.model_dump())
+    write_canonical_json(rec_path, prod_stage_a.model_dump())
+
+    with pytest.raises(
+        PlanBeforeLiveProtocolError, match="STAGE_A_AND_STAGE_B_SAME_PROCESS_FORBIDDEN"
+    ):
+        verify_stage_a_freeze_receipt(
+            rec_path,
+            execution_plan=plan,
+            prompt_freeze=pf,
+            authorization=auth,
+            execution_plan_path=plan_path,
+            prompt_freeze_path=pf_path,
+            authorization_path=auth_path,
+            require_git_committed=False,
+        )
+
+    with pytest.raises(
+        PlanBeforeLiveProtocolError, match="STAGE_A_AND_STAGE_B_SAME_PROCESS_FORBIDDEN"
+    ):
+        issue_live_execution_capability(
+            execute_live=True,
+            execution_plan_path=plan_path,
+            prompt_freeze_path=pf_path,
+            authorization_path=auth_path,
+            stage_a_freeze_receipt_path=rec_path,
+            prompt_registry=runner_env["p1_reg"],
+            dev_bundle=runner_env["bundle"],
+            candidate_registry=runner_env["cand_reg"],
+        )
+
+
+def test_lrc2_07_arbitrary_different_caller_token_cannot_be_supplied_through_production_builder(
+    runner_env: Dict[str, Any], tmp_path: Path
+) -> None:
+    """LRC2-07: Caller cannot pass arbitrary stage_a_process_token to build_stage_a_freeze_receipt, and post-build token tampering breaks receipt hash."""
+    with pytest.raises(TypeError, match="stage_a_process_token"):
+        build_stage_a_freeze_receipt(  # type: ignore[call-arg]
+            execution_plan=runner_env["tune_plan_1p"],
+            prompt_freeze=runner_env["pf_1p"],
+            authorization=runner_env["auth_tune_1p"],
+            stage_a_commit_sha=runner_env["tune_plan_1p"].code_basis_commit_sha,
+            freeze_created_at_utc="2026-10-18T10:00:00Z",
+            stage_a_process_token="caller-forged-different-token",
+        )
+
+    rec = build_stage_a_freeze_receipt(
+        execution_plan=runner_env["tune_plan_1p"],
+        prompt_freeze=runner_env["pf_1p"],
+        authorization=runner_env["auth_tune_1p"],
+        stage_a_commit_sha=runner_env["tune_plan_1p"].code_basis_commit_sha,
+        freeze_created_at_utc="2026-10-18T10:00:00Z",
+    )
+    tampered_payload = rec.model_dump()
+    tampered_payload["stage_a_process_token"] = "caller-tampered-different-token"
+    tampered_path = tmp_path / "tampered_token_stage_a.json"
+    write_canonical_json(tampered_path, tampered_payload)
+
+    with pytest.raises(
+        PlanBeforeLiveProtocolError,
+        match="STAGE_A_RECEIPT_HASH_MISMATCH|STAGE_A_RECEIPT_SHA256_MISMATCH",
+    ):
+        verify_stage_a_freeze_receipt(
+            tampered_path,
+            execution_plan=runner_env["tune_plan_1p"],
+            prompt_freeze=runner_env["pf_1p"],
+            authorization=runner_env["auth_tune_1p"],
+            require_git_committed=False,
+        )
+
+
+def test_lrc2_08_test_only_historical_different_process_receipt_created_only_via_test_only_helper(
+    runner_env: Dict[str, Any],
+) -> None:
+    """LRC2-08: Explicit build_test_only_stage_a_freeze_receipt creates synthetic different-process receipts for offline tests while still rejecting empty tokens."""
+    with pytest.raises(
+        PlanBeforeLiveProtocolError,
+        match="STAGE_A_PROCESS_TOKEN_MISSING_OR_EMPTY|STAGE_A_PROCESS_TOKEN_EMPTY",
+    ):
+        build_test_only_stage_a_freeze_receipt(
+            execution_plan=runner_env["tune_plan_1p"],
+            prompt_freeze=runner_env["pf_1p"],
+            authorization=runner_env["auth_tune_1p"],
+            stage_a_commit_sha=runner_env["tune_plan_1p"].code_basis_commit_sha,
+            freeze_created_at_utc="2026-10-18T10:00:00Z",
+            stage_a_process_token="   ",
+        )
+
+    synthetic_rec = build_test_only_stage_a_freeze_receipt(
+        execution_plan=runner_env["tune_plan_1p"],
+        prompt_freeze=runner_env["pf_1p"],
+        authorization=runner_env["auth_tune_1p"],
+        stage_a_commit_sha=runner_env["tune_plan_1p"].code_basis_commit_sha,
+        freeze_created_at_utc="2026-10-18T10:00:00Z",
+        stage_a_process_token="historical-stage-a-process-token-001",
+    )
+    assert (
+        synthetic_rec.stage_a_process_token
+        == "historical-stage-a-process-token-001"
+    )
+    verified = verify_stage_a_freeze_receipt(
+        synthetic_rec,
+        execution_plan=runner_env["tune_plan_1p"],
+        prompt_freeze=runner_env["pf_1p"],
+        authorization=runner_env["auth_tune_1p"],
+        require_git_committed=False,
+    )
+    assert verified.stage_a_receipt_sha256 == synthetic_rec.stage_a_receipt_sha256
+
+
+# ==============================================================================
+# LRC2-09 THROUGH LRC2-12: DEFECT B — DYNAMIC EXECUTION-START & COMPLETION TIMESTAMPS
+# ==============================================================================
+
+
+def test_lrc2_09_benchmark_run_manifest_uses_injected_or_actual_utc_timestamp(
+    runner_env: Dict[str, Any], tmp_path: Path
+) -> None:
+    """LRC2-09: BenchmarkRunManifest.execution_timestamp_utc uses the injected utc_now_clock or real UTC clock."""
+    plan = runner_env["tune_plan_1p"]
+    cell0 = plan.cells[0]
+    scen0 = runner_env["scenarios_by_id"][cell0.fixture_id]
+    valid_json = runner_env["valid_json_by_scenario_id"][cell0.fixture_id]
+    injected_ts = "2026-10-18T14:22:33.123456+00:00"
+
+    cell_dir = tmp_path / cell0.run_id
+    execute_live_dev_cell(
+        cell_manifest=cell0,
+        scenario=scen0,
+        execution_plan=plan,
+        prompt_freeze=runner_env["pf_1p"],
+        prompt_registry=runner_env["p1_reg"],
+        authorization=runner_env["auth_tune_1p"],
+        call_budget_ledger=DevCallBudgetLedger.from_execution_plan(plan),
+        cell_dir=cell_dir,
+        transport=MockDevProviderTransport(_make_valid_mock_response(cell0, valid_json)),
+        execution_mode=RUNNER_EXECUTION_MODE_OFFLINE_MOCK_TEST,
+        utc_now_clock=lambda: injected_ts,
+    )
+    run_manifest_json = json.loads(
+        (cell_dir / "run_manifest.json").read_text(encoding="utf-8")
+    )
+    assert run_manifest_json["execution_timestamp_utc"] == injected_ts
+
+
+def test_lrc2_10_benchmark_run_manifest_never_uses_hardcoded_constant(
+    runner_env: Dict[str, Any], tmp_path: Path
+) -> None:
+    """LRC2-10: dev_live_runner.py contains no hardcoded 2026-10-18T00:00:00Z constant and default clock produces live UTC ISO-8601."""
+    runner_source = (
+        REPO_ROOT / "apps/ai-service/app/evaluation/dev_live_runner.py"
+    ).read_text(encoding="utf-8")
+    assert "2026-10-18T00:00:00Z" not in runner_source
+
+    plan = runner_env["tune_plan_1p"]
+    cell0 = plan.cells[0]
+    scen0 = runner_env["scenarios_by_id"][cell0.fixture_id]
+    valid_json = runner_env["valid_json_by_scenario_id"][cell0.fixture_id]
+
+    cell_dir = tmp_path / cell0.run_id
+    execute_live_dev_cell(
+        cell_manifest=cell0,
+        scenario=scen0,
+        execution_plan=plan,
+        prompt_freeze=runner_env["pf_1p"],
+        prompt_registry=runner_env["p1_reg"],
+        authorization=runner_env["auth_tune_1p"],
+        call_budget_ledger=DevCallBudgetLedger.from_execution_plan(plan),
+        cell_dir=cell_dir,
+        transport=MockDevProviderTransport(_make_valid_mock_response(cell0, valid_json)),
+        execution_mode=RUNNER_EXECUTION_MODE_OFFLINE_MOCK_TEST,
+    )
+    run_manifest_json = json.loads(
+        (cell_dir / "run_manifest.json").read_text(encoding="utf-8")
+    )
+    ts_str = run_manifest_json["execution_timestamp_utc"]
+    assert ts_str != "2026-10-18T00:00:00Z"
+    parsed_dt = dt.datetime.fromisoformat(ts_str.replace("Z", "+00:00"))
+    assert parsed_dt.tzinfo is not None
+
+
+def test_lrc2_11_transport_journal_starting_and_run_manifest_share_exact_execution_started_at_utc(
+    runner_env: Dict[str, Any], tmp_path: Path
+) -> None:
+    """LRC2-11: transport_journal_starting, BenchmarkRunManifest, request_manifest, and provider_response_metadata share the exact single captured execution_started_at_utc."""
+    plan = runner_env["tune_plan_1p"]
+    cell0 = plan.cells[0]
+    scen0 = runner_env["scenarios_by_id"][cell0.fixture_id]
+    valid_json = runner_env["valid_json_by_scenario_id"][cell0.fixture_id]
+
+    clock_ticks = iter(
+        [
+            "2026-10-18T15:00:01.000001+00:00",
+            "2026-10-18T15:00:02.500002+00:00",
+            "2026-10-18T15:00:09.999999+00:00",
+        ]
+    )
+    cell_dir = tmp_path / cell0.run_id
+    execute_live_dev_cell(
+        cell_manifest=cell0,
+        scenario=scen0,
+        execution_plan=plan,
+        prompt_freeze=runner_env["pf_1p"],
+        prompt_registry=runner_env["p1_reg"],
+        authorization=runner_env["auth_tune_1p"],
+        call_budget_ledger=DevCallBudgetLedger.from_execution_plan(plan),
+        cell_dir=cell_dir,
+        transport=MockDevProviderTransport(_make_valid_mock_response(cell0, valid_json)),
+        execution_mode=RUNNER_EXECUTION_MODE_OFFLINE_MOCK_TEST,
+        utc_now_clock=lambda: next(clock_ticks),
+    )
+
+    j_start = json.loads(
+        (cell_dir / "transport_journal_starting.json").read_text(encoding="utf-8")
+    )
+    run_manifest = json.loads(
+        (cell_dir / "run_manifest.json").read_text(encoding="utf-8")
+    )
+    req_manifest = json.loads(
+        (cell_dir / "request_manifest.json").read_text(encoding="utf-8")
+    )
+    resp_meta = json.loads(
+        (cell_dir / "provider_response_metadata.json").read_text(encoding="utf-8")
+    )
+
+    expected_start = "2026-10-18T15:00:01.000001+00:00"
+    assert j_start["timestamp_utc"] == expected_start
+    assert j_start["execution_started_at_utc"] == expected_start
+    assert run_manifest["execution_timestamp_utc"] == expected_start
+    assert req_manifest["execution_started_at_utc"] == expected_start
+    assert resp_meta["execution_started_at_utc"] == expected_start
+
+
+def test_lrc2_12_transport_completion_timestamp_recorded_separately_without_mutating_start_timestamp(
+    runner_env: Dict[str, Any], tmp_path: Path
+) -> None:
+    """LRC2-12: transport_journal_completed records transport_completed_at_utc separately while preserving execution_started_at_utc."""
+    plan = runner_env["tune_plan_1p"]
+    cell0 = plan.cells[0]
+    scen0 = runner_env["scenarios_by_id"][cell0.fixture_id]
+    valid_json = runner_env["valid_json_by_scenario_id"][cell0.fixture_id]
+
+    t_start = "2026-10-18T16:10:00.000000+00:00"
+    t_complete = "2026-10-18T16:10:04.250000+00:00"
+    clock_ticks = iter([t_start, t_complete])
+
+    cell_dir = tmp_path / cell0.run_id
+    execute_live_dev_cell(
+        cell_manifest=cell0,
+        scenario=scen0,
+        execution_plan=plan,
+        prompt_freeze=runner_env["pf_1p"],
+        prompt_registry=runner_env["p1_reg"],
+        authorization=runner_env["auth_tune_1p"],
+        call_budget_ledger=DevCallBudgetLedger.from_execution_plan(plan),
+        cell_dir=cell_dir,
+        transport=MockDevProviderTransport(_make_valid_mock_response(cell0, valid_json)),
+        execution_mode=RUNNER_EXECUTION_MODE_OFFLINE_MOCK_TEST,
+        utc_now_clock=lambda: next(clock_ticks),
+    )
+
+    j_comp = json.loads(
+        (cell_dir / "transport_journal_completed.json").read_text(encoding="utf-8")
+    )
+    run_manifest = json.loads(
+        (cell_dir / "run_manifest.json").read_text(encoding="utf-8")
+    )
+    resp_meta = json.loads(
+        (cell_dir / "provider_response_metadata.json").read_text(encoding="utf-8")
+    )
+
+    assert j_comp["execution_started_at_utc"] == t_start
+    assert j_comp["transport_completed_at_utc"] == t_complete
+    assert j_comp["timestamp_utc"] == t_complete
+    assert resp_meta["execution_started_at_utc"] == t_start
+    assert resp_meta["transport_completed_at_utc"] == t_complete
+    assert run_manifest["execution_timestamp_utc"] == t_start
+
+
+# ==============================================================================
+# LRC2-13 THROUGH LRC2-19: DEFECT C — ACTION-BOUNDARY STAGE-A RE-ATTESTATION
+# ==============================================================================
+
+
+def _clone_committed_env_to_tmp(
+    runner_env: Dict[str, Any], tmp_path: Path, name: str
+) -> Dict[str, Any]:
+    """Copy the pre-committed git repository to an isolated tmp directory and issue a fresh LiveExecutionCapability."""
+    src_repo = runner_env["committed_env"]["repo_dir"]
+    dst_repo = tmp_path / name
+    shutil.copytree(src_repo, dst_repo)
+
+    plan_path = dst_repo / "stage_a" / "plan.json"
+    pf_path = dst_repo / "stage_a" / "pf.json"
+    auth_path = dst_repo / "stage_a" / "auth.json"
+    receipt_path = dst_repo / "stage_a" / "stage_a_receipt.json"
+
+    capability, plan_obj, pf_obj, auth_obj, stage_a_rec = issue_live_execution_capability(
+        execute_live=True,
+        execution_plan_path=plan_path,
+        prompt_freeze_path=pf_path,
+        authorization_path=auth_path,
+        stage_a_freeze_receipt_path=receipt_path,
+        prompt_registry=runner_env["p1_reg"],
+        dev_bundle=runner_env["bundle"],
+        candidate_registry=runner_env["cand_reg"],
+        repo_root=dst_repo,
+    )
+    return {
+        "repo_dir": dst_repo,
+        "plan": plan_obj,
+        "pf": pf_obj,
+        "auth": auth_obj,
+        "stage_a_rec": stage_a_rec,
+        "plan_path": plan_path,
+        "pf_path": pf_path,
+        "auth_path": auth_path,
+        "receipt_path": receipt_path,
+        "capability": capability,
+    }
+
+
+def test_lrc2_13_repo_dirty_after_issue_live_execution_capability_rejected_by_execute_live_dev_cell(
+    runner_env: Dict[str, Any], tmp_path: Path
+) -> None:
+    """LRC2-13: Dirtying a tracked Stage-A or scientific bundle file after issue_live_execution_capability is rejected by execute_live_dev_cell BEFORE transport."""
+    isolated = _clone_committed_env_to_tmp(runner_env, tmp_path, "repo_lrc2_13")
+    cap = isolated["capability"]
+    plan = isolated["plan"]
+    c1_cell = [c for c in plan.cells if c.candidate_id == "C1"][0]
+    scen = runner_env["scenarios_by_id"][c1_cell.fixture_id]
+
+    prod_transport = create_live_provider_transport_factory(
+        execute_live=True,
+        authorization=isolated["auth"],
+        live_capability=cap,
+        api_key_overrides={"C1": "AIza" + ("G" * 35)},
+        inner_transport_overrides={
+            "C1": httpx.MockTransport(
+                lambda req: httpx.Response(200, json={"unexpected": True})
+            )
+        },
+    )
+
+    # Dirty a Stage-A tracked file (append trailing space/newline or comment) after capability was already minted
+    isolated["plan_path"].write_text(
+        isolated["plan_path"].read_text(encoding="utf-8") + "\n",
+        encoding="utf-8",
+    )
+
+    ledger = DevCallBudgetLedger.from_execution_plan(plan)
+    with pytest.raises(
+        PlanBeforeLiveProtocolError,
+        match="STAGE_A_FILE_DIRTY_OR_UNCOMMITTED|STAGE_A_DISK_BLOB_MISMATCH",
+    ):
+        execute_live_dev_cell(
+            cell_manifest=c1_cell,
+            scenario=scen,
+            execution_plan=plan,
+            prompt_freeze=isolated["pf"],
+            prompt_registry=runner_env["p1_reg"],
+            authorization=isolated["auth"],
+            call_budget_ledger=ledger,
+            cell_dir=tmp_path / "cell_lrc2_13",
+            transport=prod_transport,
+            execution_mode=RUNNER_EXECUTION_MODE_LIVE_EXECUTION,
+            live_capability=cap,
+            repo_root=isolated["repo_dir"],
+        )
+
+    assert prod_transport.http_counter.total_http_requests == 0
+    assert ledger.reserved_calls == 0
+
+
+def test_lrc2_14_head_changed_to_non_matching_bundle_after_capability_issue_rejected(
+    runner_env: Dict[str, Any], tmp_path: Path
+) -> None:
+    """LRC2-14: Moving git HEAD to a commit after capability issuance is rejected at the action boundary before transport."""
+    isolated = _clone_committed_env_to_tmp(runner_env, tmp_path, "repo_lrc2_14")
+    cap = isolated["capability"]
+    plan = isolated["plan"]
+    c1_cell = [c for c in plan.cells if c.candidate_id == "C1"][0]
+    scen = runner_env["scenarios_by_id"][c1_cell.fixture_id]
+
+    prod_transport = create_live_provider_transport_factory(
+        execute_live=True,
+        authorization=isolated["auth"],
+        live_capability=cap,
+        api_key_overrides={"C1": "AIza" + ("G" * 35)},
+        inner_transport_overrides={
+            "C1": httpx.MockTransport(
+                lambda req: httpx.Response(200, json={"unexpected": True})
+            )
+        },
+    )
+
+    # Modify a scientific bundle file and commit it so git status is clean but HEAD & bundle drifted
+    target_bundle_file = (
+        isolated["repo_dir"]
+        / "apps/ai-service/app/evaluation/planner_benchmark_evaluator.py"
+    )
+    target_bundle_file.write_text(
+        target_bundle_file.read_text(encoding="utf-8") + "\n# drifted commit\n",
+        encoding="utf-8",
+    )
+    subprocess.run(
+        ["git", "add", "."],
+        cwd=str(isolated["repo_dir"]),
+        check=True,
+        capture_output=True,
+    )
+    subprocess.run(
+        ["git", "commit", "-m", "chore: post-capability drift commit"],
+        cwd=str(isolated["repo_dir"]),
+        check=True,
+        capture_output=True,
+    )
+
+    ledger = DevCallBudgetLedger.from_execution_plan(plan)
+    with pytest.raises(
+        (ScientificCodeBundleIntegrityError, PlanBeforeLiveProtocolError),
+        match="SCIENTIFIC_CODE_BUNDLE_MISMATCH|ACTION_BOUNDARY_RUNTIME_HEAD_DRIFT|STAGE_A_COMMITTED_BLOB_MISMATCH",
+    ):
+        execute_live_dev_cell(
+            cell_manifest=c1_cell,
+            scenario=scen,
+            execution_plan=plan,
+            prompt_freeze=isolated["pf"],
+            prompt_registry=runner_env["p1_reg"],
+            authorization=isolated["auth"],
+            call_budget_ledger=ledger,
+            cell_dir=tmp_path / "cell_lrc2_14",
+            transport=prod_transport,
+            execution_mode=RUNNER_EXECUTION_MODE_LIVE_EXECUTION,
+            live_capability=cap,
+            repo_root=isolated["repo_dir"],
+        )
+
+    assert prod_transport.http_counter.total_http_requests == 0
+    assert ledger.reserved_calls == 0
+
+
+def test_lrc2_15_stage_a_file_tampered_after_capability_issue_rejected_before_transport(
+    runner_env: Dict[str, Any], tmp_path: Path
+) -> None:
+    """LRC2-15: Tampering with stage_a_receipt.json on disk after capability issuance is rejected before transport."""
+    isolated = _clone_committed_env_to_tmp(runner_env, tmp_path, "repo_lrc2_15")
+    cap = isolated["capability"]
+    plan = isolated["plan"]
+    c1_cell = [c for c in plan.cells if c.candidate_id == "C1"][0]
+    scen = runner_env["scenarios_by_id"][c1_cell.fixture_id]
+
+    prod_transport = create_live_provider_transport_factory(
+        execute_live=True,
+        authorization=isolated["auth"],
+        live_capability=cap,
+        api_key_overrides={"C1": "AIza" + ("G" * 35)},
+        inner_transport_overrides={
+            "C1": httpx.MockTransport(
+                lambda req: httpx.Response(200, json={"unexpected": True})
+            )
+        },
+    )
+
+    # Tamper with stage_a_receipt.json on disk after capability minting
+    raw_rec = json.loads(isolated["receipt_path"].read_text(encoding="utf-8"))
+    raw_rec["stage_a_process_token"] = "tampered-after-capability-mint"
+    write_canonical_json(isolated["receipt_path"], raw_rec)
+
+    ledger = DevCallBudgetLedger.from_execution_plan(plan)
+    with pytest.raises(
+        PlanBeforeLiveProtocolError,
+        match="STAGE_A_RECEIPT_SHA256_MISMATCH|STAGE_A_RECEIPT_HASH_MISMATCH|STAGE_A_FILE_DIRTY_OR_UNCOMMITTED|STAGE_A_DISK_BLOB_MISMATCH",
+    ):
+        execute_live_dev_cell(
+            cell_manifest=c1_cell,
+            scenario=scen,
+            execution_plan=plan,
+            prompt_freeze=isolated["pf"],
+            prompt_registry=runner_env["p1_reg"],
+            authorization=isolated["auth"],
+            call_budget_ledger=ledger,
+            cell_dir=tmp_path / "cell_lrc2_15",
+            transport=prod_transport,
+            execution_mode=RUNNER_EXECUTION_MODE_LIVE_EXECUTION,
+            live_capability=cap,
+            repo_root=isolated["repo_dir"],
+        )
+
+    assert prod_transport.http_counter.total_http_requests == 0
+    assert ledger.reserved_calls == 0
+
+
+def test_lrc2_16_scientific_bundle_file_modified_after_capability_issue_rejected_before_transport(
+    runner_env: Dict[str, Any], tmp_path: Path
+) -> None:
+    """LRC2-16: Modifying any of the 14 scientific bundle files on disk after issue_live_execution_capability is rejected before transport."""
+    isolated = _clone_committed_env_to_tmp(runner_env, tmp_path, "repo_lrc2_16")
+    cap = isolated["capability"]
+    plan = isolated["plan"]
+    c1_cell = [c for c in plan.cells if c.candidate_id == "C1"][0]
+    scen = runner_env["scenarios_by_id"][c1_cell.fixture_id]
+
+    prod_transport = create_live_provider_transport_factory(
+        execute_live=True,
+        authorization=isolated["auth"],
+        live_capability=cap,
+        api_key_overrides={"C1": "AIza" + ("G" * 35)},
+        inner_transport_overrides={
+            "C1": httpx.MockTransport(
+                lambda req: httpx.Response(200, json={"unexpected": True})
+            )
+        },
+    )
+
+    # Modify dev_live_runner.py in the isolated repo after capability issuance
+    runner_file = (
+        isolated["repo_dir"] / "apps/ai-service/app/evaluation/dev_live_runner.py"
+    )
+    runner_file.write_text(
+        runner_file.read_text(encoding="utf-8") + "\n# post-capability edit\n",
+        encoding="utf-8",
+    )
+
+    ledger = DevCallBudgetLedger.from_execution_plan(plan)
+    with pytest.raises(
+        (ScientificCodeBundleIntegrityError, PlanBeforeLiveProtocolError),
+        match="SCIENTIFIC_CODE_BUNDLE_MISMATCH|STAGE_A_FILE_DIRTY_OR_UNCOMMITTED|STAGE_A_DISK_BLOB_MISMATCH",
+    ):
+        execute_live_dev_cell(
+            cell_manifest=c1_cell,
+            scenario=scen,
+            execution_plan=plan,
+            prompt_freeze=isolated["pf"],
+            prompt_registry=runner_env["p1_reg"],
+            authorization=isolated["auth"],
+            call_budget_ledger=ledger,
+            cell_dir=tmp_path / "cell_lrc2_16",
+            transport=prod_transport,
+            execution_mode=RUNNER_EXECUTION_MODE_LIVE_EXECUTION,
+            live_capability=cap,
+            repo_root=isolated["repo_dir"],
+        )
+
+    assert prod_transport.http_counter.total_http_requests == 0
+    assert ledger.reserved_calls == 0
+
+
+def test_lrc2_17_provider_config_registry_drift_after_capability_issue_rejected_before_transport(
+    runner_env: Dict[str, Any], tmp_path: Path
+) -> None:
+    """LRC2-17: Provider config registry drift after capability issuance is rejected at the action boundary before transport."""
+    c_env = runner_env["committed_env"]
+    cap = c_env["capability"]
+    plan = c_env["plan"]
+    c1_cell = [c for c in plan.cells if c.candidate_id == "C1"][0]
+    scen = runner_env["scenarios_by_id"][c1_cell.fixture_id]
+
+    prod_transport = create_live_provider_transport_factory(
+        execute_live=True,
+        authorization=c_env["auth"],
+        live_capability=cap,
+        api_key_overrides={"C1": "AIza" + ("G" * 35)},
+        inner_transport_overrides={
+            "C1": httpx.MockTransport(
+                lambda req: httpx.Response(200, json={"unexpected": True})
+            )
+        },
+    )
+
+    # Construct a drifted candidate registry (mutated timeout_ms on C1)
+    drifted_reg = runner_env["cand_reg"].model_copy(deep=True)
+    drifted_reg.candidates["C1"] = drifted_reg.candidates["C1"].model_copy(
+        update={"timeout_ms": 120000}
+    )
+
+    ledger = DevCallBudgetLedger.from_execution_plan(plan)
+    with pytest.raises(
+        (CandidateRegistryIntegrityError, PlanBeforeLiveProtocolError, PromptFreezeFirewallError),
+    ):
+        execute_live_dev_cell(
+            cell_manifest=c1_cell,
+            scenario=scen,
+            execution_plan=plan,
+            prompt_freeze=c_env["pf"],
+            prompt_registry=runner_env["p1_reg"],
+            authorization=c_env["auth"],
+            call_budget_ledger=ledger,
+            cell_dir=tmp_path / "cell_lrc2_17",
+            transport=prod_transport,
+            execution_mode=RUNNER_EXECUTION_MODE_LIVE_EXECUTION,
+            live_capability=cap,
+            candidate_registry=drifted_reg,
+            repo_root=c_env["repo_dir"],
+        )
+
+    assert prod_transport.http_counter.total_http_requests == 0
+    assert ledger.reserved_calls == 0
+
+
+def test_lrc2_18_execute_live_dev_batch_re_verifies_stage_a_before_first_cell_and_locks_context(
+    runner_env: Dict[str, Any], tmp_path: Path
+) -> None:
+    """LRC2-18: execute_live_dev_batch re-attests Stage-A before the first cell and fails closed if repo drift occurs before or during the batch."""
+    isolated = _clone_committed_env_to_tmp(runner_env, tmp_path, "repo_lrc2_18")
+    cap = isolated["capability"]
+
+    prod_transport = create_live_provider_transport_factory(
+        execute_live=True,
+        authorization=isolated["auth"],
+        live_capability=cap,
+        api_key_overrides={
+            "C1": "AIza" + ("G" * 35),
+            "C2": "sk-proj-" + ("O" * 32),
+            "C3": "sk-ant-" + ("A" * 32),
+        },
+        inner_transport_overrides={
+            "C1": httpx.MockTransport(
+                lambda req: httpx.Response(200, json={"unexpected": True})
+            )
+        },
+    )
+
+    # Dirty a scientific bundle file after capability issuance, before execute_live_dev_batch
+    eval_file = (
+        isolated["repo_dir"]
+        / "apps/ai-service/app/evaluation/planner_benchmark_evaluator.py"
+    )
+    eval_file.write_text(
+        eval_file.read_text(encoding="utf-8") + "\n# batch pre-cell drift\n",
+        encoding="utf-8",
+    )
+
+    with pytest.raises(
+        (ScientificCodeBundleIntegrityError, PlanBeforeLiveProtocolError),
+        match="SCIENTIFIC_CODE_BUNDLE_MISMATCH|STAGE_A_FILE_DIRTY_OR_UNCOMMITTED|STAGE_A_DISK_BLOB_MISMATCH",
+    ):
+        execute_live_dev_batch(
+            execution_plan_path=isolated["plan_path"],
+            prompt_freeze_path=isolated["pf_path"],
+            authorization_path=isolated["auth_path"],
+            stage_a_freeze_receipt_path=isolated["receipt_path"],
+            batch_root_dir=tmp_path / "batch_lrc2_18",
+            prompt_registry=runner_env["p1_reg"],
+            transport=prod_transport,
+            execution_mode=RUNNER_EXECUTION_MODE_LIVE_EXECUTION,
+            live_capability=cap,
+            dev_bundle=runner_env["bundle"],
+            candidate_registry=runner_env["cand_reg"],
+            repo_root=isolated["repo_dir"],
+        )
+
+    assert prod_transport.http_counter.total_http_requests == 0
+
+
+def test_lrc2_19_all_existing_lr_01_50_and_lrc_01_30_invariants_remain_green(
+    runner_env: Dict[str, Any],
+) -> None:
+    """LRC2-19: Verify Correction-02 receipt fields, LiveExecutionCapability role terminology, and 14-file bundle integrity."""
+    c_env = runner_env["committed_env"]
+    cap = c_env["capability"]
+    assert cap.live_capability_role == LIVE_CAPABILITY_ROLE_ORCHESTRATION_GUARD
+
+    locked_ctx = reattest_stage_a_at_live_action_boundary(
+        live_capability=cap,
+        execution_plan=c_env["plan"],
+        prompt_freeze=c_env["pf"],
+        authorization=c_env["auth"],
+        prompt_registry=runner_env["p1_reg"],
+        stage_a_freeze_receipt_path=c_env["receipt_path"],
+        execution_plan_path=c_env["plan_path"],
+        prompt_freeze_path=c_env["pf_path"],
+        authorization_path=c_env["auth_path"],
+        dev_bundle=runner_env["bundle"],
+        candidate_registry=runner_env["cand_reg"],
+        repo_root=c_env["repo_dir"],
+    )
+    assert isinstance(locked_ctx, LiveExecutionContext)
+    assert locked_ctx.runtime_head_sha == c_env["head_sha"]
+
+    runner_source = (
+        REPO_ROOT / "apps/ai-service/app/evaluation/dev_live_runner.py"
+    ).read_text(encoding="utf-8")
+    assert "unforgeable" not in runner_source.lower()
+
+    receipt = build_dev_live_runner_01_receipt_payload()
+    assert receipt["audit_correction_task_id"] == TASK_ID_DEV_LIVE_RUNNER_01_CORRECTION_02
+    assert receipt["stage_a_process_token_required_non_empty"] == "PASS"
+    assert receipt["stage_a_process_token_auto_stamped_by_production_builder"] == "PASS"
+    assert receipt["same_process_stage_a_to_stage_b_blocked"] == "PASS"
+    assert receipt["execution_timestamp_dynamic_not_hardcoded"] == "PASS"
+    assert receipt["execution_timestamp_matches_transport_start_journal"] == "PASS"
+    assert receipt["action_boundary_stage_a_reattestation"] == "PASS"
+    assert receipt["post_capability_repo_drift_blocked"] == "PASS"
+    assert receipt["live_capability_role"] == "FAIL_CLOSED_ORCHESTRATION_GUARD"
+    assert receipt["live_provider_calls"] == 0
+    assert receipt["provider_cost_usd"] == 0

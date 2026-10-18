@@ -1,4 +1,4 @@
-"""Production-grade W06 DEV Live Runner Infrastructure (W06-DEV-LIVE-RUNNER-01-OFFLINE & AUDIT-CORRECTION-01).
+"""Production-grade W06 DEV Live Runner Infrastructure (W06-DEV-LIVE-RUNNER-01-OFFLINE & AUDIT-CORRECTION-02).
 
 Grounded in:
 - data/evaluation/w06/w06_model_arch_selection_method_lock_v1.json (W06-MODEL-ARCH-SELECTION-METHOD-LOCK-01 v1.0.0)
@@ -10,7 +10,9 @@ Grounded in:
 STRICT SCIENTIFIC & OPERATIONAL INVARIANTS:
 - Offline by default: zero live provider calls unless explicit `--execute-live` CLI/action flag,
   a verified phase-scoped `DevLiveAuthorizationArtifact`, a verified `DevLiveStageAFreezeReceipt`
-  with git commit ancestor + blob attestation, AND an unforgeable `LiveExecutionCapability` are supplied.
+  with git commit ancestor + blob attestation, AND an internally minted `LiveExecutionCapability`
+  (fail-closed orchestration capability) are supplied, followed by fresh Stage-A re-attestation
+  at the live action boundary before transport.
 - In W06-DEV-LIVE-RUNNER-01-OFFLINE: LIVE_PROVIDER_CALLS = 0, PROVIDER_COST_USD = 0,
   LIVE_AUTHORIZATION_PRESENT = false, PROMPT_FREEZE_STATUS = NOT_YET_FROZEN.
 - Secret-independent offline execution: never reads API key values or requires `.env` in offline/dry-run/test modes;
@@ -25,19 +27,22 @@ STRICT SCIENTIFIC & OPERATIONAL INVARIANTS:
   `AnthropicMessagesProductionTransport` (C3), and `ProductionDevProviderTransport` backed by
   `DevCountingHttpxTransport` / `DevCountingHttpx2Transport` enforcing at most 1 outbound HTTP
   generation request per cell (`retry = 0`).
-- Transport Type Safety & Programmatic Live-Gate Closure:
+- Transport Type Safety, Action-Boundary Re-Attestation & Programmatic Live-Gate Closure:
   `execute_live_dev_cell()` and `execute_live_dev_batch()` require an explicit `execution_mode`:
-  - `LIVE_EXECUTION`: requires an unforgeable `LiveExecutionCapability` (issued only after verifying
-    `execute_live=True`, `DevExecutionPlan`, `DevPromptFreezeArtifact`, `DevLiveAuthorizationArtifact`,
-    and committed `DevLiveStageAFreezeReceipt` ancestor/blob attestation) and a `ProductionDevProviderTransport`.
-    Arbitrary callables or mock transports are strictly rejected.
+  - `LIVE_EXECUTION`: requires an internally minted `LiveExecutionCapability` (fail-closed orchestration
+    capability), a `ProductionDevProviderTransport`, AND fresh action-boundary Stage-A re-attestation
+    (`LiveExecutionContext`) against current git HEAD, committed blobs, clean Stage-A files, scientific code
+    bundle, and provider config registry immediately before transport.
   - `OFFLINE_MOCK_TEST`: accepts only `MockDevProviderTransport` or `MockProviderTransportResponse`
     and rejects `ProductionDevProviderTransport` or `LiveExecutionCapability`.
-- Truthful BenchmarkRunManifest Provenance:
-  `generation_parameters` truthfully records `temperature_status = "OMITTED"` and exact candidate
-  seed/reasoning/thinking parameters (never claiming `temperature = 0.0`).
-  `execution_mode` truthfully records `OFFLINE_MOCK_VERIFICATION`, `LIVE_DEV_TUNE`, `LIVE_DEV_SELECT`,
-  or `STOCHASTICITY_DIAGNOSTIC`.
+- Truthful BenchmarkRunManifest Provenance & Single Execution-Start Timestamp Authority:
+  - Captures `execution_started_at_utc` once via `utc_now_clock()` immediately before `TRANSPORT_STARTING`
+    and uses that exact timestamp for both `transport_journal_starting.timestamp_utc` and
+    `BenchmarkRunManifest.execution_timestamp_utc`.
+  - `generation_parameters` truthfully records `temperature_status = "OMITTED"` and exact candidate
+    seed/reasoning/thinking parameters (never claiming `temperature = 0.0`).
+  - `execution_mode` truthfully records `OFFLINE_MOCK_VERIFICATION`, `LIVE_DEV_TUNE`, `LIVE_DEV_SELECT`,
+    or `STOCHASTICITY_DIAGNOSTIC`.
 """
 
 from __future__ import annotations
@@ -172,11 +177,21 @@ from app.services.planner_benchmark_runner import (
 # ==============================================================================
 
 TASK_ID_DEV_LIVE_RUNNER_01: str = "W06-DEV-LIVE-RUNNER-01-OFFLINE"
+TASK_ID_DEV_LIVE_RUNNER_01_CORRECTION_02: str = (
+    "W06-DEV-LIVE-RUNNER-01-AUDIT-CORRECTION-02"
+)
 RUNNER_RECEIPT_ARTIFACT_ID: str = "W06-DEV-LIVE-RUNNER-01-RECEIPT-V1"
 STAGE_A_FREEZE_RECEIPT_ARTIFACT_ID: str = "W06-DEV-LIVE-STAGE-A-FREEZE-RECEIPT-V1"
-RUNNER_VERSION: str = "1.1.0"
+RUNNER_VERSION: str = "1.2.0"
 EXPECTED_BASE_DEVELOP_SHA_RUNNER_01: str = "b2dfd8afb8db2e2bc4dfbb2d0ca4e6a9d22e3a50"
 NEXT_GATE_RUNNER_QA_01: str = "W06-DEV-LIVE-RUNNER-QA-01-OFFLINE-ADVERSARIAL"
+LIVE_CAPABILITY_ROLE_ORCHESTRATION_GUARD: str = "FAIL_CLOSED_ORCHESTRATION_GUARD"
+
+
+def default_utc_now_clock() -> str:
+    """Return current UTC timestamp in ISO-8601 format (Section 7)."""
+    return dt.datetime.now(dt.timezone.utc).isoformat()
+
 
 PROMPT_FREEZE_STATUS_NOT_YET_FROZEN: str = "NOT_YET_FROZEN"
 PROMPT_FREEZE_INFRASTRUCTURE_STATUS: str = (
@@ -788,7 +803,7 @@ def build_test_only_authorization_artifact(
     prompt_freeze: DevPromptFreezeArtifact,
     allowed_candidate_ids: Optional[Sequence[str]] = None,
     maximum_live_generation_calls: Optional[int] = None,
-    authorized_at_utc: str = "2026-10-18T00:00:00Z",
+    authorized_at_utc: str = "2026-10-15T00:00:00Z",
     authorized_by_role: str = AUTHORIZED_BY_ROLE_PROJECT_OWNER,
     authorization_status: str = AUTHORIZATION_STATUS_AUTHORIZED,
     scientific_code_bundle_sha256: Optional[str] = None,
@@ -967,7 +982,7 @@ _CURRENT_PROCESS_INVOCATION_TOKEN: str = f"pid-{os.getpid()}-ns-{time.monotonic_
 
 
 class DevLiveStageAFreezeReceipt(BaseModel):
-    """Stage-A pre-execution freeze attestation receipt required before live execution (Sections 9, 10, 11)."""
+    """Stage-A pre-execution freeze attestation receipt required before live execution (Sections 2, 3, 4, 9, 10, 11)."""
 
     model_config = ConfigDict(extra="forbid")
 
@@ -983,7 +998,7 @@ class DevLiveStageAFreezeReceipt(BaseModel):
     code_basis_commit_sha: str
     stage_a_commit_sha: str
     freeze_created_at_utc: str = Field(..., min_length=1)
-    stage_a_process_token: Optional[str] = None
+    stage_a_process_token: str = Field(..., min_length=1)
     stage_a_status: str = STAGE_A_STATUS_FROZEN_BEFORE_LIVE
     stage_a_receipt_sha256: str
 
@@ -996,10 +1011,27 @@ class DevLiveStageAFreezeReceipt(BaseModel):
             )
         d = dict(data)
         assert_no_secrets_in_payload(d, context="STAGE_A_FREEZE_RECEIPT")
+        if "stage_a_process_token" not in d:
+            raise PlanBeforeLiveProtocolError(
+                "STAGE_A_PROCESS_TOKEN_MISSING: stage_a_process_token is required on DevLiveStageAFreezeReceipt."
+            )
+        raw_tok = d["stage_a_process_token"]
+        if raw_tok is None:
+            raise PlanBeforeLiveProtocolError(
+                "STAGE_A_PROCESS_TOKEN_NULL: stage_a_process_token must not be null."
+            )
+        if not isinstance(raw_tok, str) or not raw_tok.strip():
+            raise PlanBeforeLiveProtocolError(
+                "STAGE_A_PROCESS_TOKEN_EMPTY: stage_a_process_token must be a non-empty non-whitespace string."
+            )
         return d
 
     @model_validator(mode="after")
     def _validate_stage_a_after(self) -> "DevLiveStageAFreezeReceipt":
+        if not self.stage_a_process_token or not self.stage_a_process_token.strip():
+            raise PlanBeforeLiveProtocolError(
+                "STAGE_A_PROCESS_TOKEN_EMPTY: stage_a_process_token must be non-empty."
+            )
         if self.phase not in ALLOWED_RUNNER_PHASES:
             raise PlanBeforeLiveProtocolError(
                 f"STAGE_A_RECEIPT_INVALID_PHASE: {self.phase!r} not in {list(ALLOWED_RUNNER_PHASES)}"
@@ -1046,17 +1078,25 @@ class DevLiveStageAFreezeReceipt(BaseModel):
         return self
 
 
-def build_stage_a_freeze_receipt(
+def _build_stage_a_freeze_receipt_with_token(
     *,
     execution_plan: Union[DevExecutionPlan, StochasticityDiagnosticPlan],
     prompt_freeze: DevPromptFreezeArtifact,
     authorization: DevLiveAuthorizationArtifact,
     stage_a_commit_sha: str,
     freeze_created_at_utc: str,
-    stage_a_process_token: Optional[str] = None,
+    stage_a_process_token: str,
     candidate_registry: Optional[DevCandidateRegistry] = None,
 ) -> DevLiveStageAFreezeReceipt:
-    """Build a canonical `DevLiveStageAFreezeReceipt` binding all Stage-A artifacts and commit provenance."""
+    """Internal helper to construct a `DevLiveStageAFreezeReceipt` with a validated process token."""
+    if (
+        stage_a_process_token is None
+        or not isinstance(stage_a_process_token, str)
+        or not stage_a_process_token.strip()
+    ):
+        raise PlanBeforeLiveProtocolError(
+            "STAGE_A_PROCESS_TOKEN_EMPTY: stage_a_process_token must be a non-empty string."
+        )
     cand_reg = candidate_registry or load_and_verify_candidate_registry()
     plan_phase = (
         "STOCHASTICITY"
@@ -1089,6 +1129,56 @@ def build_stage_a_freeze_receipt(
     )
 
 
+def build_stage_a_freeze_receipt(
+    *,
+    execution_plan: Union[DevExecutionPlan, StochasticityDiagnosticPlan],
+    prompt_freeze: DevPromptFreezeArtifact,
+    authorization: DevLiveAuthorizationArtifact,
+    stage_a_commit_sha: str,
+    freeze_created_at_utc: str,
+    candidate_registry: Optional[DevCandidateRegistry] = None,
+) -> DevLiveStageAFreezeReceipt:
+    """Build a canonical production `DevLiveStageAFreezeReceipt` (Section 2).
+
+    Auto-stamps `stage_a_process_token = _CURRENT_PROCESS_INVOCATION_TOKEN` internally.
+    Callers CANNOT supply or override `stage_a_process_token`.
+    """
+    return _build_stage_a_freeze_receipt_with_token(
+        execution_plan=execution_plan,
+        prompt_freeze=prompt_freeze,
+        authorization=authorization,
+        stage_a_commit_sha=stage_a_commit_sha,
+        freeze_created_at_utc=freeze_created_at_utc,
+        stage_a_process_token=_CURRENT_PROCESS_INVOCATION_TOKEN,
+        candidate_registry=candidate_registry,
+    )
+
+
+def build_test_only_stage_a_freeze_receipt(
+    *,
+    execution_plan: Union[DevExecutionPlan, StochasticityDiagnosticPlan],
+    prompt_freeze: DevPromptFreezeArtifact,
+    authorization: DevLiveAuthorizationArtifact,
+    stage_a_commit_sha: str,
+    freeze_created_at_utc: str = "2026-10-15T00:00:00Z",
+    stage_a_process_token: str = "test-only-historical-process-token-v1",
+    candidate_registry: Optional[DevCandidateRegistry] = None,
+) -> DevLiveStageAFreezeReceipt:
+    """TEST-ONLY helper for offline unit tests simulating a prior-process Stage-A freeze receipt (Section 3).
+
+    NEVER used in production CLI or live execution flows.
+    """
+    return _build_stage_a_freeze_receipt_with_token(
+        execution_plan=execution_plan,
+        prompt_freeze=prompt_freeze,
+        authorization=authorization,
+        stage_a_commit_sha=stage_a_commit_sha,
+        freeze_created_at_utc=freeze_created_at_utc,
+        stage_a_process_token=stage_a_process_token,
+        candidate_registry=candidate_registry,
+    )
+
+
 def _verify_git_commit_ancestor_and_blobs(
     *,
     repo_root: Path,
@@ -1096,6 +1186,7 @@ def _verify_git_commit_ancestor_and_blobs(
     runtime_head_sha: str,
     tracked_artifact_paths: Sequence[Path],
     blob_verified_paths_and_hashes: Sequence[Tuple[Path, str]],
+    head_only_blob_verified_paths_and_hashes: Optional[Sequence[Tuple[Path, str]]] = None,
     code_basis_commit_sha: Optional[str] = None,
 ) -> None:
     """Verify Stage-A and code-basis commits are ancestors of runtime HEAD, files are tracked & clean, and git blobs match (Section 10)."""
@@ -1171,7 +1262,7 @@ def _verify_git_commit_ancestor_and_blobs(
         )
         if st_proc.returncode != 0 or st_proc.stdout.strip():
             raise PlanBeforeLiveProtocolError(
-                f"STAGE_A_ARTIFACT_DIRTY_IN_WORKTREE: Stage-A file {rel_posix} has uncommitted changes: "
+                f"STAGE_A_FILE_DIRTY_OR_UNCOMMITTED: Stage-A file {rel_posix} has uncommitted changes: "
                 f"{st_proc.stdout.strip()!r}."
             )
 
@@ -1202,6 +1293,31 @@ def _verify_git_commit_ancestor_and_blobs(
                     f"committed={committed_sha} != expected={expected_file_sha256}."
                 )
 
+    for fpath, expected_file_sha256 in (head_only_blob_verified_paths_and_hashes or ()):
+        rel_posix = fpath.resolve().relative_to(root_resolved).as_posix()
+        disk_bytes = normalize_lf_bytes(fpath.read_bytes())
+        disk_sha = sha256_bytes(disk_bytes)
+        if disk_sha != expected_file_sha256:
+            raise PlanBeforeLiveProtocolError(
+                f"STAGE_A_DISK_BLOB_MISMATCH for {rel_posix}: disk={disk_sha} != expected={expected_file_sha256}"
+            )
+        show_proc = subprocess.run(
+            ["git", "show", f"{runtime_head_sha}:{rel_posix}"],
+            cwd=str(repo_root),
+            capture_output=True,
+            check=False,
+        )
+        if show_proc.returncode != 0:
+            raise PlanBeforeLiveProtocolError(
+                f"STAGE_A_BLOB_MISSING_IN_COMMIT: {rel_posix} not found in commit {runtime_head_sha}."
+            )
+        committed_sha = sha256_bytes(normalize_lf_bytes(show_proc.stdout))
+        if committed_sha != expected_file_sha256:
+            raise PlanBeforeLiveProtocolError(
+                f"STAGE_A_COMMITTED_BLOB_MISMATCH for {rel_posix} at {runtime_head_sha}: "
+                f"committed={committed_sha} != expected={expected_file_sha256}."
+            )
+
 
 def verify_stage_a_freeze_receipt(
     stage_a_receipt_or_path: Union[DevLiveStageAFreezeReceipt, Mapping[str, Any], Path, str],
@@ -1216,7 +1332,7 @@ def verify_stage_a_freeze_receipt(
     repo_root: Optional[Path] = None,
     require_git_committed: bool = True,
 ) -> DevLiveStageAFreezeReceipt:
-    """Verify `DevLiveStageAFreezeReceipt` against Stage-A artifacts, active code bundle, and git commit history (Sections 9, 10, 11)."""
+    """Verify `DevLiveStageAFreezeReceipt` against Stage-A artifacts, active code bundle, and git commit history (Sections 2, 4, 9, 10, 11)."""
     if stage_a_receipt_or_path is None:
         raise PlanBeforeLiveProtocolError(
             "STAGE_A_RECEIPT_MISSING: Live execution requires a frozen DevLiveStageAFreezeReceipt."
@@ -1236,22 +1352,38 @@ def verify_stage_a_freeze_receipt(
             raise PlanBeforeLiveProtocolError(
                 f"STAGE_A_RECEIPT_JSON_INVALID: {exc}"
             ) from exc
-        receipt = DevLiveStageAFreezeReceipt.model_validate(raw_dict)
+        try:
+            receipt = DevLiveStageAFreezeReceipt.model_validate(raw_dict)
+        except Exception as exc:
+            raise PlanBeforeLiveProtocolError(
+                f"STAGE_A_RECEIPT_INVALID: {exc}"
+            ) from exc
     elif isinstance(stage_a_receipt_or_path, DevLiveStageAFreezeReceipt):
-        receipt = DevLiveStageAFreezeReceipt.model_validate(
-            stage_a_receipt_or_path.model_dump()
-        )
+        try:
+            receipt = DevLiveStageAFreezeReceipt.model_validate(
+                stage_a_receipt_or_path.model_dump()
+            )
+        except Exception as exc:
+            raise PlanBeforeLiveProtocolError(
+                f"STAGE_A_RECEIPT_INVALID: {exc}"
+            ) from exc
     elif isinstance(stage_a_receipt_or_path, Mapping):
-        receipt = DevLiveStageAFreezeReceipt.model_validate(dict(stage_a_receipt_or_path))
+        try:
+            receipt = DevLiveStageAFreezeReceipt.model_validate(dict(stage_a_receipt_or_path))
+        except Exception as exc:
+            raise PlanBeforeLiveProtocolError(
+                f"STAGE_A_RECEIPT_INVALID: {exc}"
+            ) from exc
     else:
         raise PlanBeforeLiveProtocolError(
             f"Unsupported stage_a_receipt type: {type(stage_a_receipt_or_path)}"
         )
 
-    if (
-        receipt.stage_a_process_token is not None
-        and receipt.stage_a_process_token == _CURRENT_PROCESS_INVOCATION_TOKEN
-    ):
+    if not receipt.stage_a_process_token or not receipt.stage_a_process_token.strip():
+        raise PlanBeforeLiveProtocolError(
+            "STAGE_A_PROCESS_TOKEN_EMPTY: Stage-A freeze receipt requires a non-empty stage_a_process_token."
+        )
+    if receipt.stage_a_process_token == _CURRENT_PROCESS_INVOCATION_TOKEN:
         raise PlanBeforeLiveProtocolError(
             "STAGE_A_AND_STAGE_B_SAME_PROCESS_FORBIDDEN: Stage-A freeze and Stage-B execution "
             "cannot run in the same process invocation token."
@@ -1324,6 +1456,7 @@ def verify_stage_a_freeze_receipt(
         plan_file_sha = sha256_bytes(normalize_lf_bytes(execution_plan_path.read_bytes()))
         pf_file_sha = sha256_bytes(normalize_lf_bytes(prompt_freeze_path.read_bytes()))
         auth_file_sha = sha256_bytes(normalize_lf_bytes(authorization_path.read_bytes()))
+        receipt_file_sha = sha256_bytes(normalize_lf_bytes(receipt_path.read_bytes()))
 
         bundle_tracked_paths = [
             root / entry["path"]
@@ -1352,24 +1485,32 @@ def verify_stage_a_freeze_receipt(
                 (authorization_path, auth_file_sha),
                 *bundle_blobs,
             ],
+            head_only_blob_verified_paths_and_hashes=[
+                (receipt_path, receipt_file_sha),
+            ],
         )
 
     return receipt
 
 
 # ==============================================================================
-# 4C. UNFORGEABLE LIVE EXECUTION CAPABILITY (SECTIONS 7, 8, 11)
+# 4C. INTERNALLY MINTED LIVE EXECUTION CAPABILITY & ACTION-BOUNDARY RE-ATTESTATION (SECTIONS 10, 11, 12, 14)
 # ==============================================================================
+
+_LIVE_CONTEXT_MINT_GUARD = object()
 
 
 class LiveExecutionCapability:
-    """Unforgeable capability token required for any real/production transport execution (Section 7).
+    """Internally minted fail-closed orchestration capability required for production transport execution (Sections 7, 10, 14).
 
+    Serves as a fail-closed orchestration guard (`FAIL_CLOSED_ORCHESTRATION_GUARD`);
+    Stage-A commit/blob re-attestation at the live action boundary (`LiveExecutionContext`)
+    remains the scientific authority.
     Cannot be instantiated directly without `_CAPABILITY_MINT_GUARD`; only issued by
-    `issue_live_execution_capability()` after verifying `execute_live is True`,
-    `DevExecutionPlan`, `DevPromptFreezeArtifact`, `DevLiveAuthorizationArtifact`,
-    and committed `DevLiveStageAFreezeReceipt` git ancestor & blob attestation.
+    `issue_live_execution_capability()`.
     """
+
+    live_capability_role: str = LIVE_CAPABILITY_ROLE_ORCHESTRATION_GUARD
 
     def __init__(
         self,
@@ -1389,6 +1530,11 @@ class LiveExecutionCapability:
         provider_config_registry_sha256: str,
         allowed_candidate_ids: Tuple[str, ...],
         maximum_live_generation_calls: int,
+        execution_plan_path: Optional[Path] = None,
+        prompt_freeze_path: Optional[Path] = None,
+        authorization_path: Optional[Path] = None,
+        stage_a_freeze_receipt_path: Optional[Path] = None,
+        repo_root: Optional[Path] = None,
     ) -> None:
         if _mint_guard is not _CAPABILITY_MINT_GUARD:
             raise LiveExecutionNotAuthorizedError(
@@ -1410,12 +1556,264 @@ class LiveExecutionCapability:
         self.provider_config_registry_sha256 = provider_config_registry_sha256
         self.allowed_candidate_ids = tuple(allowed_candidate_ids)
         self.maximum_live_generation_calls = int(maximum_live_generation_calls)
+        self.execution_plan_path = execution_plan_path
+        self.prompt_freeze_path = prompt_freeze_path
+        self.authorization_path = authorization_path
+        self.stage_a_freeze_receipt_path = stage_a_freeze_receipt_path
+        self.repo_root = repo_root
 
     def verify_mint_token(self) -> None:
         if getattr(self, "_mint_guard", None) is not _CAPABILITY_MINT_GUARD:
             raise LiveExecutionNotAuthorizedError(
                 "INVALID_LIVE_EXECUTION_CAPABILITY: Capability token failed authenticity check."
             )
+
+
+class LiveExecutionContext:
+    """Locked runtime Stage-A execution context produced by fresh action-boundary re-attestation (Sections 10, 11, 12)."""
+
+    def __init__(
+        self,
+        *,
+        _mint_guard: Any = None,
+        phase: str,
+        manifest_execution_mode: str,
+        runtime_head_sha: str,
+        code_basis_commit_sha: str,
+        stage_a_commit_sha: str,
+        stage_a_receipt_sha256: str,
+        scientific_code_bundle_sha256: str,
+        provider_config_registry_sha256: str,
+        execution_plan_sha256: str,
+        prompt_freeze_sha256: str,
+        authorization_id: str,
+        authorization_artifact_sha256: str,
+        execution_plan_path: Path,
+        prompt_freeze_path: Path,
+        authorization_path: Path,
+        stage_a_freeze_receipt_path: Path,
+        repo_root: Path,
+    ) -> None:
+        if _mint_guard is not _LIVE_CONTEXT_MINT_GUARD:
+            raise LiveExecutionNotAuthorizedError(
+                "LIVE_CONTEXT_FORGERY_FORBIDDEN: LiveExecutionContext must be produced by reattest_stage_a_at_live_action_boundary()."
+            )
+        self._mint_guard = _mint_guard
+        self.phase = phase
+        self.manifest_execution_mode = manifest_execution_mode
+        self.runtime_head_sha = runtime_head_sha
+        self.code_basis_commit_sha = code_basis_commit_sha
+        self.stage_a_commit_sha = stage_a_commit_sha
+        self.stage_a_receipt_sha256 = stage_a_receipt_sha256
+        self.scientific_code_bundle_sha256 = scientific_code_bundle_sha256
+        self.provider_config_registry_sha256 = provider_config_registry_sha256
+        self.execution_plan_sha256 = execution_plan_sha256
+        self.prompt_freeze_sha256 = prompt_freeze_sha256
+        self.authorization_id = authorization_id
+        self.authorization_artifact_sha256 = authorization_artifact_sha256
+        self.execution_plan_path = execution_plan_path
+        self.prompt_freeze_path = prompt_freeze_path
+        self.authorization_path = authorization_path
+        self.stage_a_freeze_receipt_path = stage_a_freeze_receipt_path
+        self.repo_root = repo_root
+
+    def verify_context_token(self) -> None:
+        if getattr(self, "_mint_guard", None) is not _LIVE_CONTEXT_MINT_GUARD:
+            raise LiveExecutionNotAuthorizedError(
+                "INVALID_LIVE_EXECUTION_CONTEXT: LiveExecutionContext failed authenticity check."
+            )
+
+
+def reattest_stage_a_at_live_action_boundary(
+    *,
+    live_capability: LiveExecutionCapability,
+    execution_plan: Union[DevExecutionPlan, StochasticityDiagnosticPlan],
+    prompt_freeze: DevPromptFreezeArtifact,
+    authorization: DevLiveAuthorizationArtifact,
+    prompt_registry: PromptRegistry,
+    execution_plan_path: Optional[Path] = None,
+    prompt_freeze_path: Optional[Path] = None,
+    authorization_path: Optional[Path] = None,
+    stage_a_freeze_receipt_path: Optional[Path] = None,
+    dev_bundle: Optional[VerifiedDevBundle] = None,
+    candidate_registry: Optional[DevCandidateRegistry] = None,
+    dev_select_result: Optional[DevSelectModelSelectionResult] = None,
+    repo_root: Optional[Path] = None,
+    expected_locked_context: Optional[LiveExecutionContext] = None,
+) -> LiveExecutionContext:
+    """Re-run full Stage-A verification against CURRENT runtime state immediately before live transport (Sections 10, 11, 12)."""
+    if live_capability is None or not isinstance(live_capability, LiveExecutionCapability):
+        raise LiveExecutionNotAuthorizedError(
+            "LIVE_CAPABILITY_REQUIRED: Live action boundary requires an internally minted LiveExecutionCapability."
+        )
+    live_capability.verify_mint_token()
+    if expected_locked_context is not None:
+        expected_locked_context.verify_context_token()
+
+    plan_path = execution_plan_path or (
+        expected_locked_context.execution_plan_path
+        if expected_locked_context is not None
+        else live_capability.execution_plan_path
+    )
+    pf_path = prompt_freeze_path or (
+        expected_locked_context.prompt_freeze_path
+        if expected_locked_context is not None
+        else live_capability.prompt_freeze_path
+    )
+    auth_path = authorization_path or (
+        expected_locked_context.authorization_path
+        if expected_locked_context is not None
+        else live_capability.authorization_path
+    )
+    stage_a_path = stage_a_freeze_receipt_path or (
+        expected_locked_context.stage_a_freeze_receipt_path
+        if expected_locked_context is not None
+        else live_capability.stage_a_freeze_receipt_path
+    )
+    root = (
+        repo_root
+        or (
+            expected_locked_context.repo_root
+            if expected_locked_context is not None
+            else live_capability.repo_root
+        )
+        or REPO_ROOT
+    )
+
+    if (
+        plan_path is None
+        or pf_path is None
+        or auth_path is None
+        or stage_a_path is None
+    ):
+        raise PlanBeforeLiveProtocolError(
+            "STAGE_A_ACTION_BOUNDARY_EVIDENCE_MISSING: Live execution requires on-disk Stage-A paths "
+            "(execution_plan_path, prompt_freeze_path, authorization_path, stage_a_freeze_receipt_path) "
+            "for action-boundary re-attestation."
+        )
+
+    plan_path = _assert_runner_not_final100_path(Path(plan_path))
+    pf_path = _assert_runner_not_final100_path(Path(pf_path))
+    auth_path = _assert_runner_not_final100_path(Path(auth_path))
+    stage_a_path = _assert_runner_not_final100_path(Path(stage_a_path))
+
+    bundle = dev_bundle or load_and_verify_frozen_dev_bundle()
+    cand_reg = candidate_registry or load_and_verify_candidate_registry()
+
+    if isinstance(execution_plan, DevExecutionPlan):
+        runtime_head_sha = verify_dev_execution_plan_for_execution(
+            execution_plan, candidate_registry=cand_reg, repo_root=root
+        )
+    else:
+        runtime_head_sha = resolve_active_git_commit_sha(repo_root=root)
+
+    disk_pf = verify_runner_prompt_freeze_artifact(
+        pf_path,
+        prompt_registry=prompt_registry,
+        execution_plan=execution_plan,
+        dev_bundle=bundle,
+        candidate_registry=cand_reg,
+        repo_root=root,
+    )
+    disk_auth = verify_dev_live_authorization_artifact(
+        auth_path,
+        execution_plan=execution_plan,
+        prompt_freeze=disk_pf,
+        dev_select_result=dev_select_result,
+        repo_root=root,
+    )
+    verified_stage_a = verify_stage_a_freeze_receipt(
+        stage_a_path,
+        execution_plan=execution_plan,
+        prompt_freeze=disk_pf,
+        authorization=disk_auth,
+        execution_plan_path=plan_path,
+        prompt_freeze_path=pf_path,
+        authorization_path=auth_path,
+        candidate_registry=cand_reg,
+        repo_root=root,
+        require_git_committed=True,
+    )
+
+    active_bundle_sha = compute_scientific_code_bundle_sha256(repo_root=root)
+    active_pconf_sha = compute_provider_config_registry_sha256(cand_reg)
+    pf_sha = compute_prompt_freeze_sha256(prompt_freeze)
+
+    if verified_stage_a.stage_a_receipt_sha256 != live_capability.stage_a_receipt_sha256:
+        raise PlanBeforeLiveProtocolError(
+            f"STAGE_A_RECEIPT_DRIFT_AT_ACTION_BOUNDARY: disk stage_a_receipt_sha256="
+            f"{verified_stage_a.stage_a_receipt_sha256} != capability={live_capability.stage_a_receipt_sha256}."
+        )
+    if active_bundle_sha != live_capability.scientific_code_bundle_sha256:
+        raise ScientificCodeBundleIntegrityError(
+            f"SCIENTIFIC_CODE_BUNDLE_DRIFT_AT_ACTION_BOUNDARY: active={active_bundle_sha} "
+            f"!= capability={live_capability.scientific_code_bundle_sha256}."
+        )
+    if active_pconf_sha != live_capability.provider_config_registry_sha256:
+        raise CandidateRegistryIntegrityError(
+            f"PROVIDER_CONFIG_DRIFT_AT_ACTION_BOUNDARY: active={active_pconf_sha} "
+            f"!= capability={live_capability.provider_config_registry_sha256}."
+        )
+    if disk_auth.authorization_artifact_sha256 != authorization.authorization_artifact_sha256:
+        raise DevLiveAuthorizationError(
+            "AUTHORIZATION_DRIFT_AT_ACTION_BOUNDARY: On-disk authorization does not match supplied authorization."
+        )
+    if compute_prompt_freeze_sha256(disk_pf) != pf_sha:
+        raise PromptFreezeFirewallError(
+            "PROMPT_FREEZE_DRIFT_AT_ACTION_BOUNDARY: On-disk prompt freeze does not match supplied prompt freeze."
+        )
+
+    if expected_locked_context is not None:
+        if runtime_head_sha != expected_locked_context.runtime_head_sha:
+            raise PlanBeforeLiveProtocolError(
+                f"BATCH_RUNTIME_HEAD_DRIFT_FORBIDDEN: runtime_head_sha drifted during batch from "
+                f"{expected_locked_context.runtime_head_sha} to {runtime_head_sha}."
+            )
+        if active_bundle_sha != expected_locked_context.scientific_code_bundle_sha256:
+            raise ScientificCodeBundleIntegrityError(
+                f"BATCH_CODE_BUNDLE_DRIFT_FORBIDDEN: scientific_code_bundle_sha256 drifted during batch from "
+                f"{expected_locked_context.scientific_code_bundle_sha256} to {active_bundle_sha}."
+            )
+        if active_pconf_sha != expected_locked_context.provider_config_registry_sha256:
+            raise CandidateRegistryIntegrityError(
+                f"BATCH_PROVIDER_CONFIG_DRIFT_FORBIDDEN: provider_config_registry_sha256 drifted during batch from "
+                f"{expected_locked_context.provider_config_registry_sha256} to {active_pconf_sha}."
+            )
+        if verified_stage_a.stage_a_receipt_sha256 != expected_locked_context.stage_a_receipt_sha256:
+            raise PlanBeforeLiveProtocolError(
+                "BATCH_STAGE_A_RECEIPT_DRIFT_FORBIDDEN: stage_a_receipt_sha256 drifted during batch."
+            )
+        return expected_locked_context
+
+    plan_phase = (
+        "STOCHASTICITY"
+        if isinstance(execution_plan, StochasticityDiagnosticPlan)
+        else execution_plan.phase
+    )
+    manifest_mode = resolve_truthful_manifest_execution_mode(
+        runner_mode=RUNNER_EXECUTION_MODE_LIVE_EXECUTION,
+        cell_phase=plan_phase,
+    )
+    return LiveExecutionContext(
+        _mint_guard=_LIVE_CONTEXT_MINT_GUARD,
+        phase=plan_phase,
+        manifest_execution_mode=manifest_mode,
+        runtime_head_sha=runtime_head_sha,
+        code_basis_commit_sha=execution_plan.code_basis_commit_sha,
+        stage_a_commit_sha=verified_stage_a.stage_a_commit_sha,
+        stage_a_receipt_sha256=verified_stage_a.stage_a_receipt_sha256,
+        scientific_code_bundle_sha256=active_bundle_sha,
+        provider_config_registry_sha256=active_pconf_sha,
+        execution_plan_sha256=execution_plan.plan_sha256,
+        prompt_freeze_sha256=verified_stage_a.prompt_freeze_sha256,
+        authorization_id=disk_auth.authorization_id,
+        authorization_artifact_sha256=disk_auth.authorization_artifact_sha256,
+        execution_plan_path=plan_path,
+        prompt_freeze_path=pf_path,
+        authorization_path=auth_path,
+        stage_a_freeze_receipt_path=stage_a_path,
+        repo_root=root,
+    )
 
 
 def resolve_truthful_manifest_execution_mode(
@@ -1456,7 +1854,7 @@ def issue_live_execution_capability(
     DevLiveAuthorizationArtifact,
     DevLiveStageAFreezeReceipt,
 ]:
-    """Verify all Stage-A pre-frozen committed artifacts and mint a `LiveExecutionCapability` (Sections 7, 9, 10, 11)."""
+    """Verify all Stage-A pre-frozen committed artifacts and mint an internally minted `LiveExecutionCapability` (Sections 7, 9, 10, 11, 14)."""
     if execute_live is not True:
         raise LiveExecutionNotAuthorizedError(
             "LIVE_EXECUTION_DISABLED: execute_live=True is required to issue a LiveExecutionCapability."
@@ -1581,6 +1979,11 @@ def issue_live_execution_capability(
         provider_config_registry_sha256=verified_stage_a.provider_config_registry_sha256,
         allowed_candidate_ids=tuple(verified_auth.allowed_candidate_ids),
         maximum_live_generation_calls=verified_auth.maximum_live_generation_calls,
+        execution_plan_path=plan_path,
+        prompt_freeze_path=pf_path,
+        authorization_path=auth_path,
+        stage_a_freeze_receipt_path=stage_a_path,
+        repo_root=root,
     )
     return capability, execution_plan, verified_pf, verified_auth, verified_stage_a
 
@@ -1824,9 +2227,15 @@ def write_transport_journal_starting(
     runtime_head_sha: str,
     authorization_id: str,
     timestamp_utc: Optional[str] = None,
+    execution_started_at_utc: Optional[str] = None,
 ) -> Path:
-    """Persist immutable `transport_journal_starting.json` immediately before network/mock transport (Section 30)."""
+    """Persist immutable `transport_journal_starting.json` immediately before network/mock transport (Sections 7, 30)."""
     target = cell_dir / "transport_journal_starting.json"
+    start_ts = (
+        execution_started_at_utc
+        if execution_started_at_utc is not None
+        else (timestamp_utc if timestamp_utc is not None else default_utc_now_clock())
+    )
     payload = {
         "run_id": cell_manifest.run_id,
         "cell_identity": {
@@ -1841,7 +2250,8 @@ def write_transport_journal_starting(
         "code_basis_commit_sha": cell_manifest.code_basis_commit_sha,
         "scientific_code_bundle_sha256": cell_manifest.scientific_code_bundle_sha256,
         "authorization_id": authorization_id,
-        "timestamp_utc": timestamp_utc or dt.datetime.now(dt.timezone.utc).isoformat(),
+        "execution_started_at_utc": start_ts,
+        "timestamp_utc": start_ts,
         "status": TRANSPORT_STATUS_STARTING,
     }
     write_immutable_canonical_json(target, payload)
@@ -1856,10 +2266,17 @@ def write_transport_journal_completed(
     authorization_id: str,
     latency_ns: int,
     timestamp_utc: Optional[str] = None,
+    execution_started_at_utc: Optional[str] = None,
+    transport_completed_at_utc: Optional[str] = None,
 ) -> Path:
-    """Persist append-only `transport_journal_completed.json` immediately after transport returns (Section 30)."""
+    """Persist append-only `transport_journal_completed.json` immediately after transport returns (Sections 7, 8, 30)."""
     target = cell_dir / "transport_journal_completed.json"
-    payload = {
+    completed_ts = (
+        transport_completed_at_utc
+        if transport_completed_at_utc is not None
+        else (timestamp_utc if timestamp_utc is not None else default_utc_now_clock())
+    )
+    payload: Dict[str, Any] = {
         "run_id": cell_manifest.run_id,
         "cell_identity": {
             "phase": cell_manifest.phase,
@@ -1874,9 +2291,12 @@ def write_transport_journal_completed(
         "scientific_code_bundle_sha256": cell_manifest.scientific_code_bundle_sha256,
         "authorization_id": authorization_id,
         "latency_ns": int(latency_ns),
-        "timestamp_utc": timestamp_utc or dt.datetime.now(dt.timezone.utc).isoformat(),
+        "transport_completed_at_utc": completed_ts,
+        "timestamp_utc": completed_ts,
         "status": TRANSPORT_STATUS_COMPLETED,
     }
+    if execution_started_at_utc is not None:
+        payload["execution_started_at_utc"] = execution_started_at_utc
     write_immutable_canonical_json(target, payload)
     return target
 
@@ -3346,11 +3766,11 @@ class AnthropicMessagesProductionTransport(BaseCandidateProductionTransport):
 
 
 class ProductionDevProviderTransport:
-    """Type-safe production provider transport router for C1, C2, and C3 (Sections 3, 7, 8, 16).
+    """Type-safe production provider transport router for C1, C2, and C3 (Sections 3, 7, 8, 14, 16).
 
-    Strictly distinct from `MockDevProviderTransport`. Requires an unforgeable
-    `LiveExecutionCapability` and routes each cell to its candidate-specific
-    production SDK transport with HTTP-boundary request counting (`<= 1` HTTP request/cell).
+    Strictly distinct from `MockDevProviderTransport`. Requires an internally minted
+    `LiveExecutionCapability` (fail-closed orchestration capability) and routes each cell to its
+    candidate-specific production SDK transport with HTTP-boundary request counting (`<= 1` HTTP request/cell).
     """
 
     is_production_transport: bool = True
@@ -3510,7 +3930,7 @@ def create_live_provider_transport_factory(
     api_key_overrides: Optional[Mapping[str, str]] = None,
     inner_transport_overrides: Optional[Mapping[str, Any]] = None,
 ) -> ProductionDevProviderTransport:
-    """Production transport factory: requires `execute_live=True`, verified `authorization`, and unforgeable `LiveExecutionCapability` (Sections 3, 7, 8)."""
+    """Production transport factory: requires `execute_live=True`, verified `authorization`, and internally minted `LiveExecutionCapability` (Sections 3, 7, 8, 14)."""
     if execute_live is not True:
         raise LiveExecutionNotAuthorizedError(
             "LIVE_EXECUTION_DISABLED: --execute-live is False; live provider transport factory cannot be constructed."
@@ -3546,7 +3966,7 @@ def create_live_provider_transport_factory(
 
 
 # ==============================================================================
-# 9. SINGLE-CELL EXECUTION CORE (SECTIONS 7, 8, 13, 14, 15, 16)
+# 9. SINGLE-CELL EXECUTION CORE (SECTIONS 6-16)
 # ==============================================================================
 
 
@@ -3588,12 +4008,13 @@ def _validate_and_resolve_transport_and_mode(
     verified_prompt_freeze: DevPromptFreezeArtifact,
     verified_auth: DevLiveAuthorizationArtifact,
 ) -> Tuple[str, Callable[[DevCellExecutionManifest, Dict[str, Any]], Union[MockProviderTransportResponse, ProviderNormalizedTransportResponse]]]:
-    """Enforce strict separation between `OFFLINE_MOCK_TEST` and `LIVE_EXECUTION` modes (Sections 7, 8).
+    """Enforce strict separation between `OFFLINE_MOCK_TEST` and `LIVE_EXECUTION` modes (Sections 7, 8, 14).
 
     - Rejects missing `execution_mode`.
     - Rejects arbitrary raw callables (`lambda` / `def`) unless wrapped in `MockDevProviderTransport` under `OFFLINE_MOCK_TEST`.
-    - In `LIVE_EXECUTION` mode: requires an unforgeable `LiveExecutionCapability` matching the plan, prompt freeze,
-      and authorization, AND requires `transport` to be a `ProductionDevProviderTransport` (never a mock or arbitrary callable).
+    - In `LIVE_EXECUTION` mode: requires an internally minted `LiveExecutionCapability` (fail-closed orchestration capability)
+      matching the plan, prompt freeze, and authorization, AND requires `transport` to be a `ProductionDevProviderTransport`
+      (never a mock or arbitrary callable).
     - In `OFFLINE_MOCK_TEST` mode: forbids `LiveExecutionCapability` and forbids `ProductionDevProviderTransport`.
     """
     if execution_mode is None:
@@ -3620,7 +4041,7 @@ def _validate_and_resolve_transport_and_mode(
             live_capability, LiveExecutionCapability
         ):
             raise LiveExecutionNotAuthorizedError(
-                "LIVE_CAPABILITY_REQUIRED: execution_mode='LIVE_EXECUTION' requires an unforgeable "
+                "LIVE_CAPABILITY_REQUIRED: execution_mode='LIVE_EXECUTION' requires an internally minted "
                 "LiveExecutionCapability issued by issue_live_execution_capability()."
             )
         live_capability.verify_mint_token()
@@ -3694,6 +4115,11 @@ def execute_live_dev_cell(
     ],
     execution_mode: Optional[Union[RunnerExecutionMode, str]] = None,
     live_capability: Optional[LiveExecutionCapability] = None,
+    stage_a_freeze_receipt_path: Optional[Path] = None,
+    execution_plan_path: Optional[Path] = None,
+    prompt_freeze_path: Optional[Path] = None,
+    authorization_path: Optional[Path] = None,
+    live_execution_context: Optional[LiveExecutionContext] = None,
     cost_comparability_by_candidate: Optional[
         Dict[str, CandidateCostComparabilityRecord]
     ] = None,
@@ -3704,9 +4130,10 @@ def execute_live_dev_cell(
     core_catalog_by_id: Optional[Dict[str, BenchmarkCatalogPOI]] = None,
     repo_root: Optional[Path] = None,
     monotonic_ns_clock: Callable[[], int] = time.monotonic_ns,
+    utc_now_clock: Callable[[], str] = default_utc_now_clock,
     extra_secrets: Optional[Sequence[str]] = None,
 ) -> Tuple[DevCellExecutionReceipt, ScenarioEvaluationResult]:
-    """Execute a single frozen DEV cell through all fail-closed scientific steps."""
+    """Execute a single frozen DEV cell through all fail-closed scientific steps (Sections 6-16)."""
     # Step 1: Final100 firewall
     _assert_runner_not_final100_path(cell_dir)
     assert_not_final100_scenario_id(cell_manifest.fixture_id)
@@ -3719,11 +4146,16 @@ def execute_live_dev_cell(
     bundle = dev_bundle or load_and_verify_frozen_dev_bundle()
     cand_reg = candidate_registry or load_and_verify_candidate_registry()
     cost_map = cost_comparability_by_candidate or DEFAULT_COST_COMPARABILITY_BY_CANDIDATE
+    effective_repo_root = (
+        repo_root
+        or (live_execution_context.repo_root if live_execution_context is not None else None)
+        or (live_capability.repo_root if live_capability is not None else None)
+    )
 
     # Step 2: Execution plan verification & cell membership
     if isinstance(execution_plan, DevExecutionPlan):
         runtime_head_sha = verify_dev_execution_plan_for_execution(
-            execution_plan, candidate_registry=cand_reg, repo_root=repo_root
+            execution_plan, candidate_registry=cand_reg, repo_root=effective_repo_root
         )
     elif isinstance(execution_plan, StochasticityDiagnosticPlan):
         if (
@@ -3734,8 +4166,10 @@ def execute_live_dev_cell(
             raise StochasticityGateViolationError(
                 "STOCHASTICITY_BLOCKED_BEFORE_WINNER_FROZEN: Stochasticity cell execution requires a frozen DEV-SELECT winner."
             )
-        runtime_head_sha = resolve_active_git_commit_sha(repo_root=repo_root)
-        active_bundle_sha = compute_scientific_code_bundle_sha256(repo_root=repo_root)
+        runtime_head_sha = resolve_active_git_commit_sha(repo_root=effective_repo_root)
+        active_bundle_sha = compute_scientific_code_bundle_sha256(
+            repo_root=effective_repo_root
+        )
         if execution_plan.scientific_code_bundle_sha256 != active_bundle_sha:
             raise ScientificCodeBundleIntegrityError(
                 f"SCIENTIFIC_CODE_BUNDLE_MISMATCH: Stochasticity plan bundle {execution_plan.scientific_code_bundle_sha256} "
@@ -3764,7 +4198,7 @@ def execute_live_dev_cell(
         execution_plan=execution_plan,
         dev_bundle=bundle,
         candidate_registry=cand_reg,
-        repo_root=repo_root,
+        repo_root=effective_repo_root,
     )
     prompt_by_id = {p.prompt_id: p for p in prompt_registry.prompts}
     if cell_manifest.prompt_id not in prompt_by_id:
@@ -3786,10 +4220,10 @@ def execute_live_dev_cell(
         execution_plan=execution_plan,
         prompt_freeze=verified_prompt_freeze,
         dev_select_result=dev_select_result,
-        repo_root=repo_root,
+        repo_root=effective_repo_root,
     )
 
-    # Step 4B: Validate execution_mode, LiveExecutionCapability, and transport type safety (Sections 7, 8)
+    # Step 4B: Validate execution_mode, LiveExecutionCapability, and transport type safety (Sections 7, 8, 14)
     validated_runner_mode, transport_callable = _validate_and_resolve_transport_and_mode(
         execution_mode=execution_mode,
         transport=transport,
@@ -3803,6 +4237,65 @@ def execute_live_dev_cell(
         cell_phase=cell_manifest.phase,
     )
 
+    # Step 4C: Action-boundary Stage-A re-attestation in LIVE_EXECUTION mode BEFORE any transport/budget reservation (Sections 10-13)
+    if validated_runner_mode == RUNNER_EXECUTION_MODE_LIVE_EXECUTION:
+        assert live_capability is not None
+        resolved_plan_path = (
+            execution_plan_path
+            or (
+                live_execution_context.execution_plan_path
+                if live_execution_context is not None
+                else None
+            )
+            or live_capability.execution_plan_path
+        )
+        resolved_pf_path = (
+            prompt_freeze_path
+            or (prompt_freeze if isinstance(prompt_freeze, Path) else None)
+            or (
+                live_execution_context.prompt_freeze_path
+                if live_execution_context is not None
+                else None
+            )
+            or live_capability.prompt_freeze_path
+        )
+        resolved_auth_path = (
+            authorization_path
+            or (authorization if isinstance(authorization, Path) else None)
+            or (
+                live_execution_context.authorization_path
+                if live_execution_context is not None
+                else None
+            )
+            or live_capability.authorization_path
+        )
+        resolved_stage_a_path = (
+            stage_a_freeze_receipt_path
+            or (
+                live_execution_context.stage_a_freeze_receipt_path
+                if live_execution_context is not None
+                else None
+            )
+            or live_capability.stage_a_freeze_receipt_path
+        )
+        reattested_ctx = reattest_stage_a_at_live_action_boundary(
+            live_capability=live_capability,
+            execution_plan=execution_plan,
+            prompt_freeze=verified_prompt_freeze,
+            authorization=verified_auth,
+            prompt_registry=prompt_registry,
+            stage_a_freeze_receipt_path=resolved_stage_a_path,
+            execution_plan_path=resolved_plan_path,
+            prompt_freeze_path=resolved_pf_path,
+            authorization_path=resolved_auth_path,
+            dev_bundle=bundle,
+            candidate_registry=cand_reg,
+            dev_select_result=dev_select_result,
+            repo_root=effective_repo_root,
+            expected_locked_context=live_execution_context,
+        )
+        runtime_head_sha = reattested_ctx.runtime_head_sha
+
     # Step 5: Crash ambiguity & immutable artifact check before transport
     inspect_and_guard_cell_directory_before_transport(
         cell_dir, cell_manifest=cell_manifest
@@ -3810,7 +4303,7 @@ def execute_live_dev_cell(
 
     # Step 6 & 7: Code bundle & provider config attestation on cell manifest
     runtime_head_sha = verify_cell_manifest_for_execution(
-        cell_manifest, candidate_registry=cand_reg, repo_root=repo_root
+        cell_manifest, candidate_registry=cand_reg, repo_root=effective_repo_root
     )
     active_reg_sha = compute_provider_config_registry_sha256(cand_reg)
     if verified_prompt_freeze.provider_config_registry_sha256 != active_reg_sha:
@@ -3833,12 +4326,17 @@ def execute_live_dev_cell(
         raise DevLiveAuthorizationError("CALL_BUDGET_LEDGER_MISSING: Ledger is required.")
     reservation_idx = call_budget_ledger.reserve_call(cell_manifest)
 
-    # Step 10: Write request_manifest.json and transport_journal_starting.json BEFORE transport
+    # Step 10: Capture single authoritative execution_started_at_utc ONCE immediately before transport journal STARTING (Sections 6-9)
+    execution_started_at_utc = str(utc_now_clock()).strip()
+    if not execution_started_at_utc:
+        raise ValueError("EXECUTION_START_TIMESTAMP_EMPTY: utc_now_clock returned empty string.")
+
     req_manifest_path = cell_dir / "request_manifest.json"
     req_manifest_payload = {
         **cell_manifest.model_dump(),
         "runner_execution_mode": validated_runner_mode,
         "execution_mode": manifest_execution_mode,
+        "execution_started_at_utc": execution_started_at_utc,
         "runtime_head_sha": runtime_head_sha,
         "authorization_id": verified_auth.authorization_id,
         "authorization_artifact_sha256": verified_auth.authorization_artifact_sha256,
@@ -3859,6 +4357,7 @@ def execute_live_dev_cell(
         cell_manifest=cell_manifest,
         runtime_head_sha=runtime_head_sha,
         authorization_id=verified_auth.authorization_id,
+        execution_started_at_utc=execution_started_at_utc,
     )
 
     # Step 11: Invoke transport AT MOST ONCE with monotonic_ns timing
@@ -3911,14 +4410,20 @@ def execute_live_dev_cell(
         float(Decimal(authoritative_latency_ns) / Decimal(1_000_000)), 6
     )
 
-    # Step 12: IMMEDIATELY persist transport_journal_completed.json, raw_provider_response.txt,
-    # raw_usage_metadata.json, and provider_response_metadata.json BEFORE any validation/parsing!
+    # Step 12: Capture completion timestamp separately and IMMEDIATELY persist transport_journal_completed.json,
+    # raw_provider_response.txt, raw_usage_metadata.json, and provider_response_metadata.json BEFORE any validation/parsing!
+    transport_completed_at_utc = str(utc_now_clock()).strip()
+    if not transport_completed_at_utc:
+        raise ValueError("TRANSPORT_COMPLETED_TIMESTAMP_EMPTY: utc_now_clock returned empty string.")
+
     write_transport_journal_completed(
         cell_dir,
         cell_manifest=cell_manifest,
         runtime_head_sha=runtime_head_sha,
         authorization_id=verified_auth.authorization_id,
         latency_ns=authoritative_latency_ns,
+        execution_started_at_utc=execution_started_at_utc,
+        transport_completed_at_utc=transport_completed_at_utc,
     )
 
     raw_resp_path = cell_dir / "raw_provider_response.txt"
@@ -3983,6 +4488,8 @@ def execute_live_dev_cell(
         "returned_model_id": returned_model,
         "runner_execution_mode": validated_runner_mode,
         "execution_mode": manifest_execution_mode,
+        "execution_started_at_utc": execution_started_at_utc,
+        "transport_completed_at_utc": transport_completed_at_utc,
         "code_basis_commit_sha": cell_manifest.code_basis_commit_sha,
         "code_commit_sha": cell_manifest.code_commit_sha,
         "runtime_head_sha": runtime_head_sha,
@@ -4073,7 +4580,7 @@ def execute_live_dev_cell(
                 extra_secrets=extra_secrets,
             )
 
-    # Step 16: Frozen evaluator authority with truthful generation_parameters, execution_mode, and runtime_head_sha
+    # Step 16: Frozen evaluator authority with truthful generation_parameters, execution_mode, execution_started_at_utc, and runtime_head_sha
     manifest_model_id = (
         returned_model
         if (returned_model is not None and str(returned_model).strip())
@@ -4082,7 +4589,7 @@ def execute_live_dev_cell(
     run_manifest = BenchmarkRunManifest(
         run_id=cell_manifest.run_id,
         scenario_id=scenario.scenario_id,
-        execution_timestamp_utc="2026-10-18T00:00:00Z",
+        execution_timestamp_utc=execution_started_at_utc,
         provider=cell_manifest.candidate_id,
         model_id=manifest_model_id,
         expected_model_id=cell_manifest.requested_model_id,
@@ -4242,7 +4749,7 @@ def execute_live_dev_cell(
 
 
 # ==============================================================================
-# 10. BATCH EXECUTION & TWO-STAGE PLAN-BEFORE-LIVE PROTOCOL (SECTIONS 7-11)
+# 10. BATCH EXECUTION & TWO-STAGE PLAN-BEFORE-LIVE PROTOCOL (SECTIONS 7-14)
 # ==============================================================================
 
 
@@ -4272,6 +4779,7 @@ def execute_live_dev_batch(
     core_catalog_by_id: Optional[Dict[str, BenchmarkCatalogPOI]] = None,
     repo_root: Optional[Path] = None,
     monotonic_ns_clock: Callable[[], int] = time.monotonic_ns,
+    utc_now_clock: Callable[[], str] = default_utc_now_clock,
     extra_secrets: Optional[Sequence[str]] = None,
 ) -> Tuple[List[DevCellExecutionReceipt], DevCallBudgetLedger]:
     """Execute a full DEV-TUNE, DEV-SELECT, or STOCHASTICITY batch in deterministic cell order.
@@ -4280,7 +4788,8 @@ def execute_live_dev_batch(
     - Explicit `execution_mode` (`LIVE_EXECUTION` vs `OFFLINE_MOCK_TEST`)
     - In `LIVE_EXECUTION` mode: requires `stage_a_freeze_receipt_path` (committed in git with
       ancestor + blob attestation), `live_capability` (`LiveExecutionCapability`), and
-      `ProductionDevProviderTransport`.
+      `ProductionDevProviderTransport`, and locks `LiveExecutionContext` at the batch action boundary
+      immediately before the first cell.
     - Pre-validates all cells, authorization, prompt freeze, code bundle, and provider configs
       BEFORE the first call.
     """
@@ -4303,6 +4812,10 @@ def execute_live_dev_batch(
         raise DevLiveAuthorizationError(
             f"STAGE_A_AUTHORIZATION_MISSING: Authorization file must be frozen on disk before batch execution: {authorization_path}"
         )
+
+    effective_repo_root = repo_root or (
+        live_capability.repo_root if live_capability is not None else None
+    )
 
     raw_plan = json.loads(execution_plan_path.read_text(encoding="utf-8"))
     raw_phase = raw_plan.get("phase")
@@ -4329,7 +4842,7 @@ def execute_live_dev_batch(
 
     if isinstance(execution_plan, DevExecutionPlan):
         verify_dev_execution_plan_for_execution(
-            execution_plan, candidate_registry=cand_reg, repo_root=repo_root
+            execution_plan, candidate_registry=cand_reg, repo_root=effective_repo_root
         )
 
     verified_pf = verify_runner_prompt_freeze_artifact(
@@ -4338,14 +4851,14 @@ def execute_live_dev_batch(
         execution_plan=execution_plan,
         dev_bundle=bundle,
         candidate_registry=cand_reg,
-        repo_root=repo_root,
+        repo_root=effective_repo_root,
     )
     verified_auth = verify_dev_live_authorization_artifact(
         authorization_path,
         execution_plan=execution_plan,
         prompt_freeze=verified_pf,
         dev_select_result=dev_select_result,
-        repo_root=repo_root,
+        repo_root=effective_repo_root,
     )
 
     validated_runner_mode, _ = _validate_and_resolve_transport_and_mode(
@@ -4357,35 +4870,28 @@ def execute_live_dev_batch(
         verified_auth=verified_auth,
     )
 
+    locked_live_context: Optional[LiveExecutionContext] = None
     if validated_runner_mode == RUNNER_EXECUTION_MODE_LIVE_EXECUTION:
-        if (
-            stage_a_freeze_receipt_path is None
-            or not isinstance(stage_a_freeze_receipt_path, Path)
-            or not stage_a_freeze_receipt_path.exists()
-        ):
-            raise PlanBeforeLiveProtocolError(
-                "STAGE_A_FREEZE_RECEIPT_REQUIRED: LIVE_EXECUTION batch requires a pre-frozen committed stage_a_freeze_receipt_path."
-            )
-        verified_stage_a = verify_stage_a_freeze_receipt(
-            stage_a_freeze_receipt_path,
+        assert live_capability is not None
+        resolved_stage_a_path = (
+            stage_a_freeze_receipt_path or live_capability.stage_a_freeze_receipt_path
+        )
+        locked_live_context = reattest_stage_a_at_live_action_boundary(
+            live_capability=live_capability,
             execution_plan=execution_plan,
             prompt_freeze=verified_pf,
             authorization=verified_auth,
+            prompt_registry=prompt_registry,
+            stage_a_freeze_receipt_path=resolved_stage_a_path,
             execution_plan_path=execution_plan_path,
             prompt_freeze_path=prompt_freeze_path,
             authorization_path=authorization_path,
+            dev_bundle=bundle,
             candidate_registry=cand_reg,
-            repo_root=repo_root,
-            require_git_committed=True,
+            dev_select_result=dev_select_result,
+            repo_root=effective_repo_root,
+            expected_locked_context=None,
         )
-        assert live_capability is not None
-        if (
-            live_capability.stage_a_receipt_sha256
-            != verified_stage_a.stage_a_receipt_sha256
-        ):
-            raise PlanBeforeLiveProtocolError(
-                "LIVE_CAPABILITY_STAGE_A_MISMATCH: live_capability.stage_a_receipt_sha256 does not match stage_a_freeze_receipt_path."
-            )
     elif stage_a_freeze_receipt_path is not None:
         verify_stage_a_freeze_receipt(
             stage_a_freeze_receipt_path,
@@ -4396,7 +4902,7 @@ def execute_live_dev_batch(
             prompt_freeze_path=prompt_freeze_path,
             authorization_path=authorization_path,
             candidate_registry=cand_reg,
-            repo_root=repo_root,
+            repo_root=effective_repo_root,
             require_git_committed=False,
         )
 
@@ -4413,7 +4919,7 @@ def execute_live_dev_batch(
             )
         assert_not_final100_scenario(scenarios_by_id[cell.fixture_id])
         verify_cell_manifest_for_execution(
-            cell, candidate_registry=cand_reg, repo_root=repo_root
+            cell, candidate_registry=cand_reg, repo_root=effective_repo_root
         )
         inspect_and_guard_cell_directory_before_transport(
             batch_root_dir / cell.run_id, cell_manifest=cell
@@ -4438,14 +4944,24 @@ def execute_live_dev_batch(
             transport=transport,
             execution_mode=validated_runner_mode,
             live_capability=live_capability,
+            stage_a_freeze_receipt_path=(
+                locked_live_context.stage_a_freeze_receipt_path
+                if locked_live_context is not None
+                else stage_a_freeze_receipt_path
+            ),
+            execution_plan_path=execution_plan_path,
+            prompt_freeze_path=prompt_freeze_path,
+            authorization_path=authorization_path,
+            live_execution_context=locked_live_context,
             cost_comparability_by_candidate=cost_comparability_by_candidate,
             dev_bundle=bundle,
             candidate_registry=cand_reg,
             dev_select_result=dev_select_result,
             catalog_path=catalog_path,
             core_catalog_by_id=core_map,
-            repo_root=repo_root,
+            repo_root=effective_repo_root,
             monotonic_ns_clock=monotonic_ns_clock,
+            utc_now_clock=utc_now_clock,
             extra_secrets=extra_secrets,
         )
         receipts.append(rec)
@@ -4603,12 +5119,12 @@ def run_dev_live_runner_dry_run(
 
 
 # ==============================================================================
-# 12. RUNNER RECEIPT & CLI ENTRYPOINT (SECTION 20)
+# 12. RUNNER RECEIPT & CLI ENTRYPOINT (SECTION 17 & 20)
 # ==============================================================================
 
 
 def build_dev_live_runner_01_receipt_payload() -> Dict[str, Any]:
-    """Build the canonical receipt payload for `data/evaluation/w06/w06_dev_live_runner_01_receipt_v1.json` (Section 20)."""
+    """Build the canonical receipt payload for `data/evaluation/w06/w06_dev_live_runner_01_receipt_v1.json` (Section 17)."""
     verified_authorities = verify_frozen_authorities_dev_harness()
     code_bundle = compute_scientific_code_bundle()
     cand_reg = load_and_verify_candidate_registry()
@@ -4618,7 +5134,7 @@ def build_dev_live_runner_01_receipt_payload() -> Dict[str, Any]:
     return {
         "artifact_id": RUNNER_RECEIPT_ARTIFACT_ID,
         "task_id": TASK_ID_DEV_LIVE_RUNNER_01,
-        "audit_correction_task_id": "W06-DEV-LIVE-RUNNER-01-AUDIT-CORRECTION-01",
+        "audit_correction_task_id": TASK_ID_DEV_LIVE_RUNNER_01_CORRECTION_02,
         "version": RUNNER_VERSION,
         "base_develop_sha": EXPECTED_BASE_DEVELOP_SHA_RUNNER_01,
         "live_provider_calls": 0,
@@ -4634,6 +5150,14 @@ def build_dev_live_runner_01_receipt_payload() -> Dict[str, Any]:
         "arbitrary_callable_live_transport_forbidden": "PASS",
         "stage_a_freeze_receipt": "PASS",
         "stage_a_commit_attestation": "PASS",
+        "stage_a_process_token_required_non_empty": "PASS",
+        "stage_a_process_token_auto_stamped_by_production_builder": "PASS",
+        "same_process_stage_a_to_stage_b_blocked": "PASS",
+        "execution_timestamp_dynamic_not_hardcoded": "PASS",
+        "execution_timestamp_matches_transport_start_journal": "PASS",
+        "action_boundary_stage_a_reattestation": "PASS",
+        "post_capability_repo_drift_blocked": "PASS",
+        "live_capability_role": LIVE_CAPABILITY_ROLE_ORCHESTRATION_GUARD,
         "provider_exception_mapping": "PASS",
         "http_request_counting": "PASS",
         "benchmark_manifest_provenance_truthful": "PASS",
@@ -4680,7 +5204,7 @@ def build_dev_live_runner_01_receipt_payload() -> Dict[str, Any]:
         },
         "frozen_authority_preservation": verified_authorities,
         "next_gate": NEXT_GATE_RUNNER_QA_01,
-        "status": "READY_FOR_CHATGPT_REAUDIT",
+        "status": "READY_FOR_CHATGPT_FINAL_REAUDIT",
     }
 
 

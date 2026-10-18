@@ -1,8 +1,9 @@
 {
+  "action_boundary_stage_a_reattestation": "PASS",
   "actual_production_provider_transports_implemented": true,
   "arbitrary_callable_live_transport_forbidden": "PASS",
   "artifact_id": "W06-DEV-LIVE-RUNNER-01-RECEIPT-V1",
-  "audit_correction_task_id": "W06-DEV-LIVE-RUNNER-01-AUDIT-CORRECTION-01",
+  "audit_correction_task_id": "W06-DEV-LIVE-RUNNER-01-AUDIT-CORRECTION-02",
   "authorization_gate": "PASS",
   "base_develop_sha": "b2dfd8afb8db2e2bc4dfbb2d0ca4e6a9d22e3a50",
   "benchmark_manifest_config_truthful": "PASS",
@@ -23,6 +24,8 @@
   "dev_tune_execution_started": false,
   "dry_run_supported": true,
   "execution_mode_truthful": "PASS",
+  "execution_timestamp_dynamic_not_hardcoded": "PASS",
+  "execution_timestamp_matches_transport_start_journal": "PASS",
   "final100_separation": "PASS",
   "final100_used": false,
   "frozen_authority_preservation": {
@@ -48,12 +51,14 @@
   "historical_qa02_unchanged": true,
   "http_request_counting": "PASS",
   "live_authorization_present": false,
+  "live_capability_role": "FAIL_CLOSED_ORCHESTRATION_GUARD",
   "live_provider_calls": 0,
   "model_id_integrity": "PASS",
   "network_kill_switch_test": "PASS",
   "next_gate": "W06-DEV-LIVE-RUNNER-QA-01-OFFLINE-ADVERSARIAL",
   "plan_before_live_protocol": "PASS",
   "portable_generation_schema_v2_sha256": "825a4ff912d851a95f7392cb564b7d7ca3588135508dc6eb3ac6304cdde3c490",
+  "post_capability_repo_drift_blocked": "PASS",
   "production_anthropic_transport": "PASS",
   "production_google_transport": "PASS",
   "production_openai_transport": "PASS",
@@ -68,10 +73,11 @@
   "runner_implemented": true,
   "runner_in_scientific_code_bundle": true,
   "runner_module_path": "apps/ai-service/app/evaluation/dev_live_runner.py",
+  "same_process_stage_a_to_stage_b_blocked": "PASS",
   "scientific_code_bundle_file_hashes": [
     {
       "path": "apps/ai-service/app/evaluation/dev_live_runner.py",
-      "sha256": "6f7aeaa3dea243be6e8d0969a372777aa75d4d4894e7b1b8fa010d69f4bb6a8c"
+      "sha256": "9f3441c2ca290e9a33b4daa78eaaa58063978364d8375145fc7483b04ed8b817"
     },
     {
       "path": "apps/ai-service/app/evaluation/dev_selection_harness.py",
@@ -142,12 +148,14 @@
     "apps/ai-service/app/services/planner_benchmark_runner.py",
     "apps/ai-service/recommendation/reca/contract.py"
   ],
-  "scientific_code_bundle_sha256": "f8e10a0c98e234d9eaa42b93bbb0eee11842c403b25a9d97debac1df93d80f27",
+  "scientific_code_bundle_sha256": "0638f2fcb100b0000e3a2a4e08137a9d468449001f258de7354df21e185ca2e3",
   "secret_sanitization": "PASS",
   "semantic_schema_sha256": "e4169f7b890f77d13af65e9f2070b6071c535b206d88440f5e8f28c179977555",
   "stage_a_commit_attestation": "PASS",
   "stage_a_freeze_receipt": "PASS",
-  "status": "READY_FOR_CHATGPT_REAUDIT",
+  "stage_a_process_token_auto_stamped_by_production_builder": "PASS",
+  "stage_a_process_token_required_non_empty": "PASS",
+  "status": "READY_FOR_CHATGPT_FINAL_REAUDIT",
   "stochasticity_execution_started": false,
   "strict_primary_parser": "PASS",
   "supported_candidates": [
@@ -157,6 +165,6 @@
   ],
   "task_id": "W06-DEV-LIVE-RUNNER-01-OFFLINE",
   "transport_start_journal": "PASS",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "winner_selected": false
 }
