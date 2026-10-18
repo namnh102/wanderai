@@ -1302,12 +1302,18 @@
       "description": "Verify execution plan generation in fresh subprocesses yields identical plan_sha256 and ordered run_ids.",
       "evidence": {},
       "expected": {
-        "s180_sha": "ed199c48e0ac09caed0faef05952c066392833d0670458a814fc440d41fff6a3",
-        "t60_sha": "0f5930b7b75dde1e63404240f205b6491a1d761021d7614a114318c7fd688401"
+        "s180_matches_in_process": true,
+        "s180_run_count": 180,
+        "subprocess_runs_identical": true,
+        "t60_matches_in_process": true,
+        "t60_run_count": 60
       },
       "observed": {
-        "run_1_t60_sha": "0f5930b7b75dde1e63404240f205b6491a1d761021d7614a114318c7fd688401",
-        "run_2_t60_sha": "0f5930b7b75dde1e63404240f205b6491a1d761021d7614a114318c7fd688401"
+        "s180_matches_in_process": true,
+        "s180_run_count": 180,
+        "subprocess_runs_identical": true,
+        "t60_matches_in_process": true,
+        "t60_run_count": 60
       },
       "severity": "INFO",
       "status": "PASS"

@@ -3514,14 +3514,29 @@ def run_all_qa_02_checks() -> Dict[str, Any]:
         p_run_1 == p_run_2
         and p_run_1["t60_sha"] == tune_plan_60.plan_sha256
         and p_run_1["s180_sha"] == select_plan_180.plan_sha256
+        and len(p_run_1["t60_runs"]) == 60
+        and len(p_run_1["s180_runs"]) == 180
     )
     checks.append(
         _make_check(
             "Q2-59",
             "PLAN_DETERMINISM",
             "Verify execution plan generation in fresh subprocesses yields identical plan_sha256 and ordered run_ids.",
-            {"t60_sha": tune_plan_60.plan_sha256, "s180_sha": select_plan_180.plan_sha256},
-            {"run_1_t60_sha": p_run_1["t60_sha"], "run_2_t60_sha": p_run_2["t60_sha"]},
+            {
+                "subprocess_runs_identical": True,
+                "t60_matches_in_process": True,
+                "s180_matches_in_process": True,
+                "t60_run_count": 60,
+                "s180_run_count": 180,
+            },
+            {
+                "subprocess_runs_identical": p_run_1 == p_run_2,
+                "t60_matches_in_process": p_run_1["t60_sha"] == tune_plan_60.plan_sha256,
+                "s180_matches_in_process": p_run_1["s180_sha"]
+                == select_plan_180.plan_sha256,
+                "t60_run_count": len(p_run_1["t60_runs"]),
+                "s180_run_count": len(p_run_1["s180_runs"]),
+            },
             q2_59_pass,
             "CRITICAL",
         )
