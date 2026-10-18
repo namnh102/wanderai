@@ -128,6 +128,7 @@ NEXT_GATE_ID_FIX_01: str = "W06-DEV-SELECTION-HARNESS-QA-02"
 DECIMAL_SCIENTIFIC_PRECISION: int = 100
 
 SCIENTIFIC_CODE_BUNDLE_RELATIVE_PATHS: Tuple[str, ...] = (
+    "apps/ai-service/app/evaluation/dev_live_runner.py",
     "apps/ai-service/app/evaluation/dev_selection_harness.py",
     "apps/ai-service/app/evaluation/model_preflight/__init__.py",
     "apps/ai-service/app/evaluation/model_preflight/anthropic_adapter.py",

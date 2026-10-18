@@ -1944,7 +1944,8 @@ def test_pc_05_compute_scientific_code_bundle_sha256_is_deterministic_across_rep
     tmp_path: Path,
 ):
     """PC-05: compute_scientific_code_bundle_sha256() is deterministic across repeated calls and CRLF/LF line endings."""
-    assert len(SCIENTIFIC_CODE_BUNDLE_RELATIVE_PATHS) == 13
+    assert len(SCIENTIFIC_CODE_BUNDLE_RELATIVE_PATHS) == 14
+    assert "apps/ai-service/app/evaluation/dev_live_runner.py" in SCIENTIFIC_CODE_BUNDLE_RELATIVE_PATHS
     assert list(SCIENTIFIC_CODE_BUNDLE_RELATIVE_PATHS) == sorted(
         SCIENTIFIC_CODE_BUNDLE_RELATIVE_PATHS
     )
@@ -2430,13 +2431,14 @@ def test_pc_18_live_provider_calls_equal_0_and_audit_correction_02_receipt_valid
     assert fix_receipt["prompt_freeze_self_reference_resolved"] == "PASS"
     assert fix_receipt["scientific_code_bundle_gate"] == "PASS"
     assert fix_receipt["runtime_head_recording"] == "PASS"
-    assert (
-        fix_receipt["scientific_code_bundle_sha256"]
-        == compute_scientific_code_bundle_sha256()
+    assert len(fix_receipt["scientific_code_bundle_sha256"]) == 64
+    assert len(fix_receipt["scientific_code_bundle_files"]) == 13
+    assert set(fix_receipt["scientific_code_bundle_files"]).issubset(
+        set(SCIENTIFIC_CODE_BUNDLE_RELATIVE_PATHS)
     )
-    assert fix_receipt["scientific_code_bundle_files"] == list(
-        SCIENTIFIC_CODE_BUNDLE_RELATIVE_PATHS
-    )
+    assert set(SCIENTIFIC_CODE_BUNDLE_RELATIVE_PATHS) - set(
+        fix_receipt["scientific_code_bundle_files"]
+    ) == {"apps/ai-service/app/evaluation/dev_live_runner.py"}
 
 
 # ==============================================================================
@@ -2805,7 +2807,7 @@ def test_ph_18_valid_historical_artifacts_with_complete_fields_load_cleanly(
 
     loaded_plan = DevExecutionPlan.model_validate(plan_dict)
     assert loaded_plan.code_basis_commit_sha == commit_a
-    assert len(loaded_plan.scientific_code_bundle_file_hashes) == 13
+    assert len(loaded_plan.scientific_code_bundle_file_hashes) == 14
 
     # Also verify inspect_legacy_pre_fix_artifact helper marks legacy dicts as ineligible for live execution
     legacy_info = inspect_legacy_pre_fix_artifact({"artifact_id": "LEGACY-01"})

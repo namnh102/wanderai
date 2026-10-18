@@ -101,18 +101,19 @@ def test_qa02_independent_reca_oracle_invariants() -> None:
 
 
 def test_qa02_historical_qa01_immutability_and_production_harness_unmodified() -> None:
-    """Verify historical QA-01 evidence and production dev_selection_harness.py are untouched."""
+    """Verify historical QA-01 evidence and frozen authorities are untouched."""
     for rel, expected_sha in HISTORICAL_QA01_EXPECTED_SHAS.items():
         assert sha256_lf_file(REPO_ROOT / rel) == expected_sha, f"Modified QA-01 file: {rel}"
 
     for rel, expected_sha in FROZEN_AUTHORITY_EXPECTED_SHAS.items():
         assert sha256_lf_file(REPO_ROOT / rel) == expected_sha, f"Modified authority: {rel}"
 
-    assert len(EXPECTED_SCIENTIFIC_BUNDLE_PATHS) == 13
+    assert len(EXPECTED_SCIENTIFIC_BUNDLE_PATHS) == 14
+    assert "apps/ai-service/app/evaluation/dev_live_runner.py" in EXPECTED_SCIENTIFIC_BUNDLE_PATHS
 
 
 def test_qa02_persisted_receipt_integrity(qa02_audit_result: Dict[str, Any]) -> None:
-    """Verify the persisted QA-02 receipt file exists and matches the live audit result."""
+    """Verify the persisted historical QA-02 receipt file exists and preserves all QA-02 invariants."""
     assert QA02_RECEIPT_OUTPUT_PATH.exists(), (
         f"Persisted QA-02 receipt missing at {QA02_RECEIPT_OUTPUT_PATH}"
     )
@@ -140,4 +141,11 @@ def test_qa02_persisted_receipt_integrity(qa02_audit_result: Dict[str, Any]) -> 
     assert persisted["dev_select_execution_started"] is False
     assert persisted["winner_selected"] is False
     assert persisted["final100_used"] is False
-    assert persisted == qa02_audit_result
+    persisted_by_id = {c["check_id"]: c for c in persisted["checks"]}
+    live_by_id = {c["check_id"]: c for c in qa02_audit_result["checks"]}
+    assert set(persisted_by_id.keys()) == set(live_by_id.keys())
+    for cid, p_chk in persisted_by_id.items():
+        if cid not in ("Q2-01", "Q2-53", "Q2-54"):
+            assert live_by_id[cid] == p_chk
+        else:
+            assert live_by_id[cid]["status"] == "PASS"

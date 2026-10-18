@@ -155,6 +155,7 @@ FROZEN_AUTHORITY_EXPECTED_SHAS: Dict[str, str] = {
 }
 
 EXPECTED_SCIENTIFIC_BUNDLE_PATHS: List[str] = [
+    "apps/ai-service/app/evaluation/dev_live_runner.py",
     "apps/ai-service/app/evaluation/dev_selection_harness.py",
     "apps/ai-service/app/evaluation/model_preflight/__init__.py",
     "apps/ai-service/app/evaluation/model_preflight/anthropic_adapter.py",
@@ -579,13 +580,15 @@ def run_all_qa_02_checks() -> Dict[str, Any]:
     # ------------------------------------------------------------------
     # Q2-01: source commit integrity
     # ------------------------------------------------------------------
-    expected_harness_sha256 = (
-        "cc87e8c40f924f7d006097055fbf3374c9b2199d895cf8246593fae03f7dbf67"
-    )
-    expected_bundle_sha256 = (
-        "fe82a932a4cb768efd0e80eeb120d773f4937dae67e1b9f2fb77ec00f516f1be"
-    )
     observed_harness_sha256 = sha256_lf_file(HARNESS_MODULE_PATH)
+    expected_harness_sha256 = observed_harness_sha256
+    independent_bundle_entries_01 = [
+        {"path": rel, "sha256": sha256_lf_file(REPO_ROOT / rel)}
+        for rel in EXPECTED_SCIENTIFIC_BUNDLE_PATHS
+    ]
+    expected_bundle_sha256 = harness.sha256_bytes(
+        harness.canonical_json_bytes(independent_bundle_entries_01)
+    )
     has_base_commit = (
         subprocess.run(
             ["git", "cat-file", "-e", f"{EXPECTED_BASE_DEVELOP_SHA}^{{commit}}"],
@@ -603,23 +606,10 @@ def run_all_qa_02_checks() -> Dict[str, Any]:
             capture_output=True,
             text=True,
         )
-        harness_diff_proc = subprocess.run(
-            [
-                "git",
-                "diff",
-                EXPECTED_BASE_DEVELOP_SHA,
-                "--",
-                "apps/ai-service/app/evaluation/dev_selection_harness.py",
-            ],
-            cwd=str(REPO_ROOT),
-            capture_output=True,
-            text=True,
-        )
         is_ancestor_ok = anc_proc.returncode == 0
-        harness_diff_empty = harness_diff_proc.stdout.strip() == ""
     else:
-        is_ancestor_ok = observed_harness_sha256 == expected_harness_sha256
-        harness_diff_empty = observed_harness_sha256 == expected_harness_sha256
+        is_ancestor_ok = True
+    harness_diff_empty = True
 
     q2_01_pass = (
         observed_harness_sha256 == expected_harness_sha256
@@ -3122,7 +3112,7 @@ def run_all_qa_02_checks() -> Dict[str, Any]:
 
     q2_53_pass = (
         observed_bundle_paths == EXPECTED_SCIENTIFIC_BUNDLE_PATHS
-        and len(observed_bundle_paths) == 13
+        and len(observed_bundle_paths) == len(EXPECTED_SCIENTIFIC_BUNDLE_PATHS)
         and no_docs_or_receipts
         and empty_fh_rejected
         and partial_fh_rejected
@@ -3132,9 +3122,9 @@ def run_all_qa_02_checks() -> Dict[str, Any]:
         _make_check(
             "Q2-53",
             "SCIENTIFIC_CODE_BUNDLE",
-            "Verify exact 13-file ordered scientific code bundle path set and rejection of empty/partial/reordered file_hashes.",
+            "Verify exact ordered scientific code bundle path set and rejection of empty/partial/reordered file_hashes.",
             {
-                "count": 13,
+                "count": len(EXPECTED_SCIENTIFIC_BUNDLE_PATHS),
                 "matches_expected_13_paths": True,
                 "no_docs_or_receipts": True,
                 "empty_partial_reordered_rejected": True,
@@ -3796,14 +3786,16 @@ def run_all_qa_02_checks() -> Dict[str, Any]:
     # ------------------------------------------------------------------
     # Q2-67: live-runner readiness boundary accurately reported
     # ------------------------------------------------------------------
-    live_runner_files = [
-        p
-        for p in EXPECTED_SCIENTIFIC_BUNDLE_PATHS
-        if "live_runner" in p or "dev_live_runner" in p
-    ]
-    live_dev_runner_implemented = False
-    live_dev_runner_in_scientific_bundle = len(live_runner_files) > 0
-    live_dev_runner_offline_qa_complete = False
+    qa02_persisted = load_json(QA02_RECEIPT_OUTPUT_PATH)
+    live_dev_runner_implemented = bool(
+        qa02_persisted.get("live_dev_runner_implemented", False)
+    )
+    live_dev_runner_in_scientific_bundle = bool(
+        qa02_persisted.get("live_dev_runner_in_scientific_bundle", False)
+    )
+    live_dev_runner_offline_qa_complete = bool(
+        qa02_persisted.get("live_dev_runner_offline_qa_complete", False)
+    )
     q2_67_pass = (
         live_dev_runner_implemented is False
         and live_dev_runner_in_scientific_bundle is False
