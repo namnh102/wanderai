@@ -1,0 +1,1656 @@
+{
+  "action_boundary_reattestation": "PASS",
+  "artifact_id": "W06-DEV-LIVE-RUNNER-QA-01-RECEIPT-V1",
+  "artifact_immutability": "PASS",
+  "authorization_replay": "PASS",
+  "base_develop_sha": "b393b94c8f7263d1548973b08f39e7b15b7d256e",
+  "blockers": [],
+  "call_budget": "PASS",
+  "checks": [
+    {
+      "check_id": "RQA-01",
+      "description": "Verify base develop SHA ancestry, unmodified dev_live_runner.py and dev_selection_harness.py, and all 18 frozen authorities intact.",
+      "domain": "SOURCE_STATE",
+      "evidence": {
+        "frozen_count": 18,
+        "prod_hashes": {
+          "apps/ai-service/app/evaluation/dev_live_runner.py": "9f3441c2ca290e9a33b4daa78eaaa58063978364d8375145fc7483b04ed8b817",
+          "apps/ai-service/app/evaluation/dev_selection_harness.py": "85b17c2daa1ea59e26c3118d5cafb38cb3c73a5d57288e2fb4e5fc0e0a732c97"
+        }
+      },
+      "expected": {
+        "base_develop_sha": "b393b94c8f7263d1548973b08f39e7b15b7d256e",
+        "base_is_ancestor": true,
+        "frozen_authority_mismatches": [],
+        "production_module_shas": {
+          "apps/ai-service/app/evaluation/dev_live_runner.py": "9f3441c2ca290e9a33b4daa78eaaa58063978364d8375145fc7483b04ed8b817",
+          "apps/ai-service/app/evaluation/dev_selection_harness.py": "85b17c2daa1ea59e26c3118d5cafb38cb3c73a5d57288e2fb4e5fc0e0a732c97"
+        }
+      },
+      "observed": {
+        "base_develop_sha": "b393b94c8f7263d1548973b08f39e7b15b7d256e",
+        "base_is_ancestor": true,
+        "frozen_authority_mismatches": [],
+        "production_module_shas": {
+          "apps/ai-service/app/evaluation/dev_live_runner.py": "9f3441c2ca290e9a33b4daa78eaaa58063978364d8375145fc7483b04ed8b817",
+          "apps/ai-service/app/evaluation/dev_selection_harness.py": "85b17c2daa1ea59e26c3118d5cafb38cb3c73a5d57288e2fb4e5fc0e0a732c97"
+        }
+      },
+      "severity": "CRITICAL",
+      "status": "PASS"
+    },
+    {
+      "check_id": "RQA-02",
+      "description": "Independently reconstruct 14-file scientific code bundle including dev_live_runner.py and verify exact SHA256.",
+      "domain": "SCIENTIFIC_CODE_BUNDLE",
+      "evidence": {
+        "files": [
+          {
+            "path": "apps/ai-service/app/evaluation/dev_live_runner.py",
+            "sha256": "9f3441c2ca290e9a33b4daa78eaaa58063978364d8375145fc7483b04ed8b817"
+          },
+          {
+            "path": "apps/ai-service/app/evaluation/dev_selection_harness.py",
+            "sha256": "85b17c2daa1ea59e26c3118d5cafb38cb3c73a5d57288e2fb4e5fc0e0a732c97"
+          },
+          {
+            "path": "apps/ai-service/app/evaluation/model_preflight/__init__.py",
+            "sha256": "178aede4930a6b848714fa6d84e14e415df35d1bf7641312ff6f311e3de477dd"
+          },
+          {
+            "path": "apps/ai-service/app/evaluation/model_preflight/anthropic_adapter.py",
+            "sha256": "ef2570126f6db736a4ef056ac27fcfc77db97fa6ed6526c901e299c71b1b1d42"
+          },
+          {
+            "path": "apps/ai-service/app/evaluation/model_preflight/base.py",
+            "sha256": "55bd026f224eaf15f5fb68e98d9cd9467bf85f0f90305acac397caef0970454d"
+          },
+          {
+            "path": "apps/ai-service/app/evaluation/model_preflight/google_adapter.py",
+            "sha256": "184887b19826094326e5fea47efd7aec71308b36af404225f5ef8d0d40882f1c"
+          },
+          {
+            "path": "apps/ai-service/app/evaluation/model_preflight/openai_adapter.py",
+            "sha256": "62b72237402808ab88d71627ce05d948d4b7d251ba87af51208876c784ee9346"
+          },
+          {
+            "path": "apps/ai-service/app/evaluation/model_preflight/schema_adapter.py",
+            "sha256": "19513c8735ba4acb2b88587915d6458de2c28d622499c05314d4f9030eb3c589"
+          },
+          {
+            "path": "apps/ai-service/app/evaluation/model_preflight/types.py",
+            "sha256": "1fdb31f200a71df4193f1fe4844b49dc1e9750c51c7388e6642dac44ae349371"
+          },
+          {
+            "path": "apps/ai-service/app/evaluation/planner_benchmark_evaluator.py",
+            "sha256": "1b299f75a3a51d01b63b1b004df3d8b9d92224591ccde5d537b83735ca268f66"
+          },
+          {
+            "path": "apps/ai-service/app/prompts/planner_benchmark_prompt.py",
+            "sha256": "22aa9cd172548fe51a8699704e5832ad44e1d8e946a1ad79437aed99d46c98cb"
+          },
+          {
+            "path": "apps/ai-service/app/schemas/planner_benchmark.py",
+            "sha256": "3f27ed7e12b2492d722937d4f36476e8dbf97635c281a6e270fd0621cc18e712"
+          },
+          {
+            "path": "apps/ai-service/app/services/planner_benchmark_runner.py",
+            "sha256": "2831f5aadd80959a86f388508c73679215830ca8854f2a4fbd474328fa7288b7"
+          },
+          {
+            "path": "apps/ai-service/recommendation/reca/contract.py",
+            "sha256": "1a62c36a95092be35ab78dca43e20f646016e154746ee051a499bdebfc67538c"
+          }
+        ]
+      },
+      "expected": {
+        "bundle_sha256": "0638f2fcb100b0000e3a2a4e08137a9d468449001f258de7354df21e185ca2e3",
+        "file_count": 14,
+        "runner_in_bundle": true
+      },
+      "observed": {
+        "bundle_sha256": "0638f2fcb100b0000e3a2a4e08137a9d468449001f258de7354df21e185ca2e3",
+        "file_count": 14,
+        "runner_in_bundle": true
+      },
+      "severity": "CRITICAL",
+      "status": "PASS"
+    },
+    {
+      "check_id": "RQA-03",
+      "description": "Verify independent QA network kill switch blocks socket, urllib, httpx, and httpx2 outbound connections.",
+      "domain": "NETWORK_ISOLATION",
+      "evidence": {
+        "probe_blocked_count": 5
+      },
+      "expected": {
+        "blocked_layers": [
+          "socket.connect",
+          "socket.create_connection",
+          "urllib.request.urlopen",
+          "httpx.HTTPTransport",
+          "httpx2.HTTPTransport"
+        ],
+        "external_connections_established": 0
+      },
+      "observed": {
+        "blocked_layers": [
+          "socket.connect",
+          "socket.create_connection",
+          "urllib.request.urlopen",
+          "httpx.HTTPTransport",
+          "httpx2.HTTPTransport"
+        ],
+        "external_connections_established": 0
+      },
+      "severity": "CRITICAL",
+      "status": "PASS"
+    },
+    {
+      "check_id": "RQA-04",
+      "description": "Independently verify C1 (Google gemini-3.8-flash) request payload, omitted temperature/top_p/top_k, seed=2026101508, thinking=medium, max_output_tokens=16384, timeout=55s, retry=0, and Portable Schema V2.",
+      "domain": "PROVIDER_REQUESTS",
+      "evidence": {
+        "gen_config_keys": [
+          "maxOutputTokens",
+          "responseJsonSchema",
+          "responseMimeType",
+          "seed",
+          "thinkingConfig"
+        ],
+        "http_url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent"
+      },
+      "expected": {
+        "c4_rejected": true,
+        "max_output_tokens": 16384,
+        "model": "gemini-3.8-flash",
+        "portable_schema_v2_match": true,
+        "retry": 0,
+        "seed": 2026101508,
+        "temperature_omitted_on_wire": true,
+        "thinking_level": "medium",
+        "timeout_s": 55.0
+      },
+      "observed": {
+        "c4_rejected": true,
+        "max_output_tokens": 16384,
+        "model": "gemini-3.8-flash",
+        "portable_schema_v2_match": true,
+        "retry": 0,
+        "seed": 2026101508,
+        "temperature_omitted_on_wire": true,
+        "thinking_level": "medium",
+        "timeout_s": 55.0
+      },
+      "severity": "CRITICAL",
+      "status": "PASS"
+    },
+    {
+      "check_id": "RQA-05",
+      "description": "Independently verify C2 (OpenAI gpt-6.1-sol) Chat Completions payload, reasoning_effort=medium, seed=2026101508, service_tier=default, omitted sampling/logprobs, max_completion_tokens=16384, timeout=55s, max_retries=0, Portable Schema V2.",
+      "domain": "PROVIDER_REQUESTS",
+      "evidence": {
+        "http_body_keys": [
+          "max_completion_tokens",
+          "messages",
+          "model",
+          "reasoning_effort",
+          "response_format",
+          "seed",
+          "service_tier"
+        ]
+      },
+      "expected": {
+        "endpoint": "/chat/completions",
+        "max_completion_tokens": 16384,
+        "model": "gpt-6.1-sol",
+        "omitted_absent_from_http_body": true,
+        "portable_schema_v2_match": true,
+        "reasoning_effort": "medium",
+        "seed": 2026101508,
+        "service_tier": "default"
+      },
+      "observed": {
+        "endpoint": "/chat/completions",
+        "max_completion_tokens": 16384,
+        "model": "gpt-6.1-sol",
+        "omitted_absent_from_http_body": true,
+        "portable_schema_v2_match": true,
+        "reasoning_effort": "medium",
+        "seed": 2026101508,
+        "service_tier": "default"
+      },
+      "severity": "CRITICAL",
+      "status": "PASS"
+    },
+    {
+      "check_id": "RQA-06",
+      "description": "Independently verify C3 (Anthropic claude-sonnet-5-5) Messages payload, thinking=adaptive, effort=high, omitted seed/temperature/top_p/top_k, max_tokens=16384, timeout=55s, max_retries=0, Portable Schema V2.",
+      "domain": "PROVIDER_REQUESTS",
+      "evidence": {
+        "http_body_keys": [
+          "max_tokens",
+          "messages",
+          "model",
+          "output_config",
+          "system",
+          "thinking"
+        ]
+      },
+      "expected": {
+        "effort": "high",
+        "max_tokens": 16384,
+        "model": "claude-sonnet-5-5",
+        "omitted_absent_from_http_body": true,
+        "portable_schema_v2_match": true,
+        "thinking": {
+          "type": "adaptive"
+        }
+      },
+      "observed": {
+        "effort": "high",
+        "max_tokens": 16384,
+        "model": "claude-sonnet-5-5",
+        "omitted_absent_from_http_body": true,
+        "portable_schema_v2_match": true,
+        "thinking": {
+          "type": "adaptive"
+        }
+      },
+      "severity": "CRITICAL",
+      "status": "PASS"
+    },
+    {
+      "check_id": "RQA-07",
+      "description": "Verify retry=0, sdk_retry=0, transport_retry=0, manual_retry=0, fallback=false, repair=0, and tools=false across all candidate specs and plan cells.",
+      "domain": "RETRY_ZERO",
+      "evidence": {
+        "checked_cells": 60
+      },
+      "expected": {
+        "retry_violations": []
+      },
+      "observed": {
+        "retry_violations": []
+      },
+      "severity": "CRITICAL",
+      "status": "PASS"
+    },
+    {
+      "check_id": "RQA-08",
+      "description": "Verify lowest HTTP transport boundary enforces maximum 1 generation HTTP request per cell and blocks any 2nd retry attempt on 429, 5xx, timeout, or connection error.",
+      "domain": "ONE_HTTP_REQUEST_PER_CELL",
+      "evidence": {
+        "retry_after_429": {
+          "first_status": 429,
+          "outbound_wire_hits": 1,
+          "second_blocked": true
+        },
+        "retry_after_503": {
+          "first_status": 503,
+          "outbound_wire_hits": 1,
+          "second_blocked": true
+        },
+        "retry_after_connect": {
+          "first_status": 502,
+          "outbound_wire_hits": 1,
+          "second_blocked": true
+        },
+        "retry_after_timeout": {
+          "first_status": 504,
+          "outbound_wire_hits": 1,
+          "second_blocked": true
+        }
+      },
+      "expected": {
+        "retry_after_429": {
+          "outbound_wire_hits": 1,
+          "second_blocked": true
+        },
+        "retry_after_503": {
+          "outbound_wire_hits": 1,
+          "second_blocked": true
+        },
+        "retry_after_connect": {
+          "outbound_wire_hits": 1,
+          "second_blocked": true
+        },
+        "retry_after_timeout": {
+          "outbound_wire_hits": 1,
+          "second_blocked": true
+        }
+      },
+      "observed": {
+        "retry_after_429": {
+          "outbound_wire_hits": 1,
+          "second_blocked": true
+        },
+        "retry_after_503": {
+          "outbound_wire_hits": 1,
+          "second_blocked": true
+        },
+        "retry_after_connect": {
+          "outbound_wire_hits": 1,
+          "second_blocked": true
+        },
+        "retry_after_timeout": {
+          "outbound_wire_hits": 1,
+          "second_blocked": true
+        }
+      },
+      "severity": "CRITICAL",
+      "status": "PASS"
+    },
+    {
+      "check_id": "RQA-09",
+      "description": "Verify missing execution_mode, OFFLINE_MOCK_TEST + ProductionDevProviderTransport, and LIVE_EXECUTION + MockDevProviderTransport all fail closed before transport.",
+      "domain": "LIVE_GATE",
+      "evidence": {
+        "http_requests": 0
+      },
+      "expected": {
+        "invalid_execution_mode": true,
+        "live_mode_with_mock_transport": true,
+        "missing_execution_mode": true,
+        "offline_mode_with_live_capability": true,
+        "offline_mode_with_prod_transport": true
+      },
+      "observed": {
+        "invalid_execution_mode": true,
+        "live_mode_with_mock_transport": true,
+        "missing_execution_mode": true,
+        "offline_mode_with_live_capability": true,
+        "offline_mode_with_prod_transport": true
+      },
+      "severity": "CRITICAL",
+      "status": "PASS"
+    },
+    {
+      "check_id": "RQA-10",
+      "description": "Verify arbitrary Python function, lambda, and static response objects are rejected in LIVE_EXECUTION mode before transport.",
+      "domain": "LIVE_GATE",
+      "evidence": {
+        "lambda_callable": true,
+        "raw_function": true,
+        "static_mock_response": true
+      },
+      "expected": {
+        "lambda_callable": true,
+        "raw_function": true,
+        "static_mock_response": true
+      },
+      "observed": {
+        "lambda_callable": true,
+        "raw_function": true,
+        "static_mock_response": true
+      },
+      "severity": "CRITICAL",
+      "status": "PASS"
+    },
+    {
+      "check_id": "RQA-11",
+      "description": "Verify forged capability constructor, missing capability, and capabilities with wrong phase/plan/prompt/auth SHA are rejected before transport.",
+      "domain": "LIVE_GATE",
+      "evidence": {
+        "direct_constructor_forged_guard": true,
+        "missing_capability": true,
+        "wrong_authorization_artifact_sha256": true,
+        "wrong_execution_plan_sha256": true,
+        "wrong_phase_capability": true,
+        "wrong_prompt_freeze_sha256": true
+      },
+      "expected": {
+        "direct_constructor_forged_guard": true,
+        "missing_capability": true,
+        "wrong_authorization_artifact_sha256": true,
+        "wrong_execution_plan_sha256": true,
+        "wrong_phase_capability": true,
+        "wrong_prompt_freeze_sha256": true
+      },
+      "observed": {
+        "direct_constructor_forged_guard": true,
+        "missing_capability": true,
+        "wrong_authorization_artifact_sha256": true,
+        "wrong_execution_plan_sha256": true,
+        "wrong_phase_capability": true,
+        "wrong_prompt_freeze_sha256": true
+      },
+      "severity": "CRITICAL",
+      "status": "PASS"
+    },
+    {
+      "check_id": "RQA-12",
+      "description": "Verify DEV_TUNE authorization cannot be replayed for DEV_SELECT, FINAL100, wrong authorized_by_role, or expired/non-AUTHORIZED status.",
+      "domain": "AUTHORIZATION_REPLAY",
+      "evidence": {
+        "dev_tune_auth_on_dev_select": true,
+        "expired_authorization_status": true,
+        "final100_phase_rejected": true,
+        "wrong_authorized_by_role": true
+      },
+      "expected": {
+        "dev_tune_auth_on_dev_select": true,
+        "expired_authorization_status": true,
+        "final100_phase_rejected": true,
+        "wrong_authorized_by_role": true
+      },
+      "observed": {
+        "dev_tune_auth_on_dev_select": true,
+        "expired_authorization_status": true,
+        "final100_phase_rejected": true,
+        "wrong_authorized_by_role": true
+      },
+      "severity": "CRITICAL",
+      "status": "PASS"
+    },
+    {
+      "check_id": "RQA-13",
+      "description": "Verify authorization rejects mismatched execution_plan_sha256, wrong candidate list, and wrong maximum_live_generation_calls.",
+      "domain": "AUTHORIZATION_REPLAY",
+      "evidence": {
+        "wrong_call_budget_rejected": true,
+        "wrong_candidate_list_rejected": true,
+        "wrong_plan_sha_rejected": true
+      },
+      "expected": {
+        "wrong_call_budget_rejected": true,
+        "wrong_candidate_list_rejected": true,
+        "wrong_plan_sha_rejected": true
+      },
+      "observed": {
+        "wrong_call_budget_rejected": true,
+        "wrong_candidate_list_rejected": true,
+        "wrong_plan_sha_rejected": true
+      },
+      "severity": "CRITICAL",
+      "status": "PASS"
+    },
+    {
+      "check_id": "RQA-14",
+      "description": "Verify authorization rejects mismatched allowed_prompt_freeze_sha256.",
+      "domain": "AUTHORIZATION_REPLAY",
+      "evidence": {
+        "auth_pf_sha": "34d6d4346065e813f9e80bf5e463caa8c5ac9b88ea2f5d0af56b009d3f64060b"
+      },
+      "expected": {
+        "prompt_freeze_mismatch_rejected": true
+      },
+      "observed": {
+        "prompt_freeze_mismatch_rejected": true
+      },
+      "severity": "CRITICAL",
+      "status": "PASS"
+    },
+    {
+      "check_id": "RQA-15",
+      "description": "Verify call-budget ledger permits calls 1..N according to frozen plan and rejects call N+1 before transport.",
+      "domain": "CALL_BUDGET",
+      "evidence": {
+        "attempted_cells_count": 60,
+        "attempted_run_ids_count": 60,
+        "consumed_calls": 60,
+        "maximum_live_generation_calls": 60,
+        "phase": "DEV_TUNE",
+        "remaining_calls": 0,
+        "reserved_calls": 60
+      },
+      "expected": {
+        "call_n_plus_1_rejected": true,
+        "calls_1_to_60_consumed": 60
+      },
+      "observed": {
+        "call_n_plus_1_rejected": true,
+        "calls_1_to_60_consumed": 60
+      },
+      "severity": "CRITICAL",
+      "status": "PASS"
+    },
+    {
+      "check_id": "RQA-16",
+      "description": "Verify ordinary provider failures (429, timeout, 5xx, malformed response) permanently consume call budget with zero refunds.",
+      "domain": "CALL_BUDGET",
+      "evidence": {
+        "HTTP_429": {
+          "consumed": 1,
+          "remaining": 59,
+          "reserved": 1
+        },
+        "HTTP_5XX": {
+          "consumed": 1,
+          "remaining": 59,
+          "reserved": 1
+        },
+        "MALFORMED_JSON": {
+          "consumed": 1,
+          "remaining": 59,
+          "reserved": 1
+        },
+        "TIMEOUT": {
+          "consumed": 1,
+          "remaining": 59,
+          "reserved": 1
+        }
+      },
+      "expected": {
+        "HTTP_429": {
+          "consumed": 1,
+          "remaining": 59,
+          "reserved": 1
+        },
+        "HTTP_5XX": {
+          "consumed": 1,
+          "remaining": 59,
+          "reserved": 1
+        },
+        "MALFORMED_JSON": {
+          "consumed": 1,
+          "remaining": 59,
+          "reserved": 1
+        },
+        "TIMEOUT": {
+          "consumed": 1,
+          "remaining": 59,
+          "reserved": 1
+        }
+      },
+      "observed": {
+        "HTTP_429": {
+          "consumed": 1,
+          "remaining": 59,
+          "reserved": 1
+        },
+        "HTTP_5XX": {
+          "consumed": 1,
+          "remaining": 59,
+          "reserved": 1
+        },
+        "MALFORMED_JSON": {
+          "consumed": 1,
+          "remaining": 59,
+          "reserved": 1
+        },
+        "TIMEOUT": {
+          "consumed": 1,
+          "remaining": 59,
+          "reserved": 1
+        }
+      },
+      "severity": "CRITICAL",
+      "status": "PASS"
+    },
+    {
+      "check_id": "RQA-17",
+      "description": "Verify duplicate cell attempt and reuse of run_id with different fixture, candidate, or prompt fail closed before transport.",
+      "domain": "DUPLICATE_CELL",
+      "evidence": {
+        "ledger_reserved": 1
+      },
+      "expected": {
+        "different_candidate": true,
+        "different_fixture": true,
+        "different_prompt": true,
+        "duplicate_blocked": true
+      },
+      "observed": {
+        "different_candidate": true,
+        "different_fixture": true,
+        "different_prompt": true,
+        "duplicate_blocked": true
+      },
+      "severity": "CRITICAL",
+      "status": "PASS"
+    },
+    {
+      "check_id": "RQA-18",
+      "description": "Verify production build_stage_a_freeze_receipt does not expose stage_a_process_token, auto-stamps _CURRENT_PROCESS_INVOCATION_TOKEN, blocks same-process Stage-A -> Stage-B, and never calls test-only helper in production flow.",
+      "domain": "STAGE_A_PROCESS_BOUNDARY",
+      "evidence": {
+        "prod_params": [
+          "execution_plan",
+          "prompt_freeze",
+          "authorization",
+          "stage_a_commit_sha",
+          "freeze_created_at_utc",
+          "candidate_registry"
+        ]
+      },
+      "expected": {
+        "auto_stamped_match": true,
+        "no_caller_token_param": true,
+        "same_process_blocked": true,
+        "test_helper_calls_in_runner": 0
+      },
+      "observed": {
+        "auto_stamped_match": true,
+        "no_caller_token_param": true,
+        "same_process_blocked": true,
+        "test_helper_calls_in_runner": 0
+      },
+      "severity": "CRITICAL",
+      "status": "PASS"
+    },
+    {
+      "check_id": "RQA-19",
+      "description": "Verify DevLiveStageAFreezeReceipt rejects missing, null, empty, and whitespace stage_a_process_token.",
+      "domain": "STAGE_A_PROCESS_BOUNDARY",
+      "evidence": {
+        "empty": true,
+        "missing": true,
+        "null": true,
+        "whitespace": true
+      },
+      "expected": {
+        "empty": true,
+        "missing": true,
+        "null": true,
+        "whitespace": true
+      },
+      "observed": {
+        "empty": true,
+        "missing": true,
+        "null": true,
+        "whitespace": true
+      },
+      "severity": "CRITICAL",
+      "status": "PASS"
+    },
+    {
+      "check_id": "RQA-20",
+      "description": "Verify uncommitted/untracked Stage-A artifact is rejected before capability issuance or transport.",
+      "domain": "STAGE_A_COMMIT_ATTESTATION",
+      "evidence": {
+        "untracked_path": "untracked_plan.json"
+      },
+      "expected": {
+        "uncommitted_stage_a_rejected": true
+      },
+      "observed": {
+        "uncommitted_stage_a_rejected": true
+      },
+      "severity": "CRITICAL",
+      "status": "PASS"
+    },
+    {
+      "check_id": "RQA-21",
+      "description": "Verify dirty working-tree Stage-A artifact is rejected before transport.",
+      "domain": "STAGE_A_COMMIT_ATTESTATION",
+      "evidence": {
+        "modified_file": "stage_a/execution_plan.json"
+      },
+      "expected": {
+        "dirty_stage_a_rejected": true
+      },
+      "observed": {
+        "dirty_stage_a_rejected": true
+      },
+      "severity": "CRITICAL",
+      "status": "PASS"
+    },
+    {
+      "check_id": "RQA-22",
+      "description": "Verify non-ancestor stage_a_commit_sha is rejected via git merge-base --is-ancestor.",
+      "domain": "STAGE_A_COMMIT_ATTESTATION",
+      "evidence": {
+        "head_sha": "98edfa8558bc3c9f32b579daf45bae35c8f9d29b",
+        "orphan_sha": "a5050e713bc49cac589446097d3c064be803394a"
+      },
+      "expected": {
+        "non_ancestor_rejected": true
+      },
+      "observed": {
+        "non_ancestor_rejected": true
+      },
+      "severity": "CRITICAL",
+      "status": "PASS"
+    },
+    {
+      "check_id": "RQA-23",
+      "description": "Verify committed blob tampering on execution_plan, prompt_freeze, authorization, or stage_a_receipt is rejected before transport.",
+      "domain": "STAGE_A_COMMIT_ATTESTATION",
+      "evidence": {
+        "authorization_blob": true,
+        "execution_plan_blob": true,
+        "prompt_freeze_blob": true,
+        "stage_a_receipt_blob": true
+      },
+      "expected": {
+        "authorization_blob": true,
+        "execution_plan_blob": true,
+        "prompt_freeze_blob": true,
+        "stage_a_receipt_blob": true
+      },
+      "observed": {
+        "authorization_blob": true,
+        "execution_plan_blob": true,
+        "prompt_freeze_blob": true,
+        "stage_a_receipt_blob": true
+      },
+      "severity": "CRITICAL",
+      "status": "PASS"
+    },
+    {
+      "check_id": "RQA-24",
+      "description": "Verify commit lifecycle A->B->C works when capability is minted at C, and moving HEAD after capability issuance is rejected at the action boundary before transport.",
+      "domain": "ACTION_BOUNDARY_REATTESTATION",
+      "evidence": {
+        "http_requests": 0
+      },
+      "expected": {
+        "head_drift_after_mint_rejected": true,
+        "lifecycle_abc_valid": true
+      },
+      "observed": {
+        "head_drift_after_mint_rejected": true,
+        "lifecycle_abc_valid": true
+      },
+      "severity": "CRITICAL",
+      "status": "PASS"
+    },
+    {
+      "check_id": "RQA-25",
+      "description": "Verify modifying any scientific code bundle file after capability issuance is rejected before transport.",
+      "domain": "ACTION_BOUNDARY_REATTESTATION",
+      "evidence": {
+        "mutated_file": "apps/ai-service/app/evaluation/planner_benchmark_evaluator.py"
+      },
+      "expected": {
+        "code_drift_rejected": true,
+        "http_requests": 0,
+        "reserved_calls": 0
+      },
+      "observed": {
+        "code_drift_rejected": true,
+        "http_requests": 0,
+        "reserved_calls": 0
+      },
+      "severity": "CRITICAL",
+      "status": "PASS"
+    },
+    {
+      "check_id": "RQA-26",
+      "description": "Verify provider-config registry drift after capability issuance is rejected before transport.",
+      "domain": "ACTION_BOUNDARY_REATTESTATION",
+      "evidence": {
+        "mutated_field": "C1.timeout_ms=99000"
+      },
+      "expected": {
+        "http_requests": 0,
+        "pconf_drift_rejected": true,
+        "reserved_calls": 0
+      },
+      "observed": {
+        "http_requests": 0,
+        "pconf_drift_rejected": true,
+        "reserved_calls": 0
+      },
+      "severity": "CRITICAL",
+      "status": "PASS"
+    },
+    {
+      "check_id": "RQA-27",
+      "description": "Verify tampering with Stage-A receipt on disk after capability issuance is rejected before transport.",
+      "domain": "ACTION_BOUNDARY_REATTESTATION",
+      "evidence": {
+        "tampered_file": "stage_a/stage_a_receipt.json"
+      },
+      "expected": {
+        "http_requests": 0,
+        "reserved_calls": 0,
+        "stage_a_drift_rejected": true
+      },
+      "observed": {
+        "http_requests": 0,
+        "reserved_calls": 0,
+        "stage_a_drift_rejected": true
+      },
+      "severity": "CRITICAL",
+      "status": "PASS"
+    },
+    {
+      "check_id": "RQA-28",
+      "description": "Verify TOCTOU mutation between initial capability verification and actual cell execution is caught before HTTP transport.",
+      "domain": "TOCTOU",
+      "evidence": {
+        "reserved_calls": 0
+      },
+      "expected": {
+        "http_requests": 0,
+        "toctou_caught_before_http": true
+      },
+      "observed": {
+        "http_requests": 0,
+        "toctou_caught_before_http": true
+      },
+      "severity": "CRITICAL",
+      "status": "PASS"
+    },
+    {
+      "check_id": "RQA-29",
+      "description": "Verify mid-batch drift after cell 1 stops batch execution before cell 2 transport (cell 2 HTTP count == 0).",
+      "domain": "MID_BATCH_DRIFT",
+      "evidence": {
+        "total_http_requests": 1
+      },
+      "expected": {
+        "cell1_http_calls": 1,
+        "cell2_http_calls": 0,
+        "mid_batch_stopped": true
+      },
+      "observed": {
+        "cell1_http_calls": 1,
+        "cell2_http_calls": 0,
+        "mid_batch_stopped": true
+      },
+      "severity": "CRITICAL",
+      "status": "PASS"
+    },
+    {
+      "check_id": "RQA-30",
+      "description": "Verify direct Final100 file and final100 path tokens are rejected before budget reservation or transport.",
+      "domain": "FINAL100_FIREWALL",
+      "evidence": {
+        "final100_cell_dir": true,
+        "load_dev_bundle_direct": true
+      },
+      "expected": {
+        "final100_cell_dir": true,
+        "load_dev_bundle_direct": true
+      },
+      "observed": {
+        "final100_cell_dir": true,
+        "load_dev_bundle_direct": true
+      },
+      "severity": "CRITICAL",
+      "status": "PASS"
+    },
+    {
+      "check_id": "RQA-31",
+      "description": "Verify copied/renamed Final100 bytes under an innocent DEV filename are rejected by SHA256/content firewall.",
+      "domain": "FINAL100_FIREWALL",
+      "evidence": {
+        "disguised_path": "innocent_dev_fixtures_v1.json"
+      },
+      "expected": {
+        "renamed_final100_rejected": true
+      },
+      "observed": {
+        "renamed_final100_rejected": true
+      },
+      "severity": "CRITICAL",
+      "status": "PASS"
+    },
+    {
+      "check_id": "RQA-32",
+      "description": "Verify direct and renamed P11 assignment manifest files are rejected.",
+      "domain": "FINAL100_FIREWALL",
+      "evidence": {
+        "direct_p11": true,
+        "renamed_p11": true
+      },
+      "expected": {
+        "direct_p11": true,
+        "renamed_p11": true
+      },
+      "observed": {
+        "direct_p11": true,
+        "renamed_p11": true
+      },
+      "severity": "CRITICAL",
+      "status": "PASS"
+    },
+    {
+      "check_id": "RQA-33",
+      "description": "Verify W06-SCENARIO-* IDs, DEV-TUNE ID with FINAL label, and DEV-SELECT ID with invalid partition label are rejected.",
+      "domain": "FINAL100_FIREWALL",
+      "evidence": {
+        "dev_select_id_with_invalid_label": true,
+        "dev_tune_id_with_final_label": true,
+        "w06_scenario_id": true
+      },
+      "expected": {
+        "dev_select_id_with_invalid_label": true,
+        "dev_tune_id_with_final_label": true,
+        "w06_scenario_id": true
+      },
+      "observed": {
+        "dev_select_id_with_invalid_label": true,
+        "dev_tune_id_with_final_label": true,
+        "w06_scenario_id": true
+      },
+      "severity": "CRITICAL",
+      "status": "PASS"
+    },
+    {
+      "check_id": "RQA-34",
+      "description": "Verify crash after request_manifest.json (before TRANSPORT_STARTING) blocks automatic cell re-execution without consuming budget.",
+      "domain": "CRASH_AMBIGUITY",
+      "evidence": {
+        "existing_artifact": "request_manifest.json"
+      },
+      "expected": {
+        "reserved_calls_on_restart": 0,
+        "restart_blocked": true
+      },
+      "observed": {
+        "reserved_calls_on_restart": 0,
+        "restart_blocked": true
+      },
+      "severity": "CRITICAL",
+      "status": "PASS"
+    },
+    {
+      "check_id": "RQA-35",
+      "description": "Verify crash after TRANSPORT_STARTING writes transport_journal_unknown_after_transport.json and raises CrashAmbiguityBatchStopError with zero retries.",
+      "domain": "CRASH_AMBIGUITY",
+      "evidence": {
+        "journal": "transport_journal_unknown_after_transport.json"
+      },
+      "expected": {
+        "ambiguity_blocked": true,
+        "rerun_permitted": false,
+        "reserved_calls": 0
+      },
+      "observed": {
+        "ambiguity_blocked": true,
+        "rerun_permitted": false,
+        "reserved_calls": 0
+      },
+      "severity": "CRITICAL",
+      "status": "PASS"
+    },
+    {
+      "check_id": "RQA-36",
+      "description": "Verify crash after HTTP completion (before execution_receipt.json) blocks any second provider HTTP request on restart.",
+      "domain": "CRASH_AMBIGUITY",
+      "evidence": {
+        "reserved_calls": 0
+      },
+      "expected": {
+        "restart_http_requests": 0,
+        "second_request_blocked": true
+      },
+      "observed": {
+        "restart_http_requests": 0,
+        "second_request_blocked": true
+      },
+      "severity": "CRITICAL",
+      "status": "PASS"
+    },
+    {
+      "check_id": "RQA-37",
+      "description": "Verify exact chronological ordering: raw response, raw usage, and provider metadata are persisted on disk BEFORE strict_parse and BEFORE evaluate.",
+      "domain": "RAW_EVIDENCE_ORDER",
+      "evidence": {
+        "events": [
+          "WRITE:request_manifest.json",
+          "WRITE:transport_journal_starting.json",
+          "WRITE:transport_journal_completed.json",
+          "WRITE:raw_provider_response.txt",
+          "WRITE:raw_usage_metadata.json",
+          "WRITE:provider_response_metadata.json",
+          "CALL:strict_parse",
+          "WRITE:parsed_plan_response.json",
+          "WRITE:run_manifest.json",
+          "CALL:evaluate",
+          "WRITE:evaluation_result.json",
+          "WRITE:execution_receipt.json"
+        ]
+      },
+      "expected": [
+        "WRITE:request_manifest.json",
+        "WRITE:transport_journal_starting.json",
+        "WRITE:transport_journal_completed.json",
+        "WRITE:raw_provider_response.txt",
+        "WRITE:raw_usage_metadata.json",
+        "WRITE:provider_response_metadata.json",
+        "CALL:strict_parse",
+        "WRITE:parsed_plan_response.json",
+        "WRITE:run_manifest.json",
+        "CALL:evaluate",
+        "WRITE:evaluation_result.json",
+        "WRITE:execution_receipt.json"
+      ],
+      "observed": [
+        "WRITE:request_manifest.json",
+        "WRITE:transport_journal_starting.json",
+        "WRITE:transport_journal_completed.json",
+        "WRITE:raw_provider_response.txt",
+        "WRITE:raw_usage_metadata.json",
+        "WRITE:provider_response_metadata.json",
+        "CALL:strict_parse",
+        "WRITE:parsed_plan_response.json",
+        "WRITE:run_manifest.json",
+        "CALL:evaluate",
+        "WRITE:evaluation_result.json",
+        "WRITE:execution_receipt.json"
+      ],
+      "severity": "CRITICAL",
+      "status": "PASS"
+    },
+    {
+      "check_id": "RQA-38",
+      "description": "Verify raw response, raw usage, and provider metadata survive both parser failure and evaluator exception.",
+      "domain": "RAW_EVIDENCE_ORDER",
+      "evidence": {
+        "parse_failure_class": "MALFORMED_JSON"
+      },
+      "expected": {
+        "eval_boom_raw_preserved": true,
+        "parse_fail_raw_preserved": true
+      },
+      "observed": {
+        "eval_boom_raw_preserved": true,
+        "parse_fail_raw_preserved": true
+      },
+      "severity": "CRITICAL",
+      "status": "PASS"
+    },
+    {
+      "check_id": "RQA-39",
+      "description": "Verify all 10 per-cell artifacts reject overwrite attempts with ImmutableCellExecutionError and preserve original bytes.",
+      "domain": "ARTIFACT_IMMUTABILITY",
+      "evidence": {
+        "checked_files_count": 10
+      },
+      "expected": {
+        "evaluation_result.json": true,
+        "execution_receipt.json": true,
+        "parsed_plan_response.json": true,
+        "provider_response_metadata.json": true,
+        "raw_provider_response.txt": true,
+        "raw_usage_metadata.json": true,
+        "request_manifest.json": true,
+        "run_manifest.json": true,
+        "transport_journal_completed.json": true,
+        "transport_journal_starting.json": true
+      },
+      "observed": {
+        "evaluation_result.json": true,
+        "execution_receipt.json": true,
+        "parsed_plan_response.json": true,
+        "provider_response_metadata.json": true,
+        "raw_provider_response.txt": true,
+        "raw_usage_metadata.json": true,
+        "request_manifest.json": true,
+        "run_manifest.json": true,
+        "transport_journal_completed.json": true,
+        "transport_journal_starting.json": true
+      },
+      "severity": "CRITICAL",
+      "status": "PASS"
+    },
+    {
+      "check_id": "RQA-40",
+      "description": "Verify strict primary parser accepts exact JSON and rejects markdown fences, leading/trailing prose, trailing comma, substring JSON, and whitespace without rescue.",
+      "domain": "STRICT_PRIMARY_PARSER",
+      "evidence": {
+        "empty_string": true,
+        "leading_prose": true,
+        "markdown_fence": true,
+        "substring_json": true,
+        "trailing_comma": true,
+        "trailing_prose": true
+      },
+      "expected": {
+        "empty_string": true,
+        "leading_prose": true,
+        "markdown_fence": true,
+        "substring_json": true,
+        "trailing_comma": true,
+        "trailing_prose": true,
+        "valid_accepted": true
+      },
+      "observed": {
+        "empty_string": true,
+        "leading_prose": true,
+        "markdown_fence": true,
+        "substring_json": true,
+        "trailing_comma": true,
+        "trailing_prose": true,
+        "valid_accepted": true
+      },
+      "severity": "CRITICAL",
+      "status": "PASS"
+    },
+    {
+      "check_id": "RQA-41",
+      "description": "Verify missing required field, wrong primitive type, extra forbidden field, and invalid enum slot are rejected as SCHEMA_VALIDATION_FAILURE with zero semantic rescue.",
+      "domain": "STRICT_PRIMARY_PARSER",
+      "evidence": {
+        "extra_forbidden_field": true,
+        "invalid_slot_enum": true,
+        "missing_required_days": true,
+        "wrong_primitive_type": true
+      },
+      "expected": {
+        "extra_forbidden_field": true,
+        "invalid_slot_enum": true,
+        "missing_required_days": true,
+        "wrong_primitive_type": true
+      },
+      "observed": {
+        "extra_forbidden_field": true,
+        "invalid_slot_enum": true,
+        "missing_required_days": true,
+        "wrong_primitive_type": true
+      },
+      "severity": "CRITICAL",
+      "status": "PASS"
+    },
+    {
+      "check_id": "RQA-42",
+      "description": "Verify mismatched returned_model_id on C1, C2, or C3 persists raw evidence and raises ModelIntegrityBatchStopError.",
+      "domain": "MODEL_ID_INTEGRITY",
+      "evidence": {
+        "C1": true,
+        "C2": true,
+        "C3": true
+      },
+      "expected": {
+        "C1": true,
+        "C2": true,
+        "C3": true
+      },
+      "observed": {
+        "C1": true,
+        "C2": true,
+        "C3": true
+      },
+      "severity": "CRITICAL",
+      "status": "PASS"
+    },
+    {
+      "check_id": "RQA-43",
+      "description": "Verify missing returned_model_id on a completed response is never substituted with requested_model_id and halts batch with MODEL_INTEGRITY_MISMATCH.",
+      "domain": "MODEL_ID_INTEGRITY",
+      "evidence": {
+        "cell_dir": "rqa43_missing_model"
+      },
+      "expected": {
+        "missing_model_stopped": true,
+        "returned_model_id": null
+      },
+      "observed": {
+        "missing_model_stopped": true,
+        "returned_model_id": null
+      },
+      "severity": "CRITICAL",
+      "status": "PASS"
+    },
+    {
+      "check_id": "RQA-44",
+      "description": "Verify HTTP 429 / RESOURCE_EXHAUSTED maps to HTTP_429 with counts_in_denominator=True and batch_stop_required=False.",
+      "domain": "FAILURE_TAXONOMY",
+      "evidence": {
+        "finish_reason": null
+      },
+      "expected": {
+        "batch_stop_required": false,
+        "classification": "HTTP_429",
+        "counts_in_denominator": true
+      },
+      "observed": {
+        "batch_stop_required": false,
+        "classification": "HTTP_429",
+        "counts_in_denominator": true
+      },
+      "severity": "CRITICAL",
+      "status": "PASS"
+    },
+    {
+      "check_id": "RQA-45",
+      "description": "Verify HTTP 5xx (500/502/503/529) maps to HTTP_5XX with counts_in_denominator=True and batch_stop_required=False.",
+      "domain": "FAILURE_TAXONOMY",
+      "evidence": {
+        "classification": "HTTP_5XX"
+      },
+      "expected": {
+        "batch_stop_required": false,
+        "classification": "HTTP_5XX",
+        "counts_in_denominator": true
+      },
+      "observed": {
+        "batch_stop_required": false,
+        "classification": "HTTP_5XX",
+        "counts_in_denominator": true
+      },
+      "severity": "CRITICAL",
+      "status": "PASS"
+    },
+    {
+      "check_id": "RQA-46",
+      "description": "Verify timeout and partial timeout map to TIMEOUT and PARTIAL_TIMEOUT with counts_in_denominator=True and batch_stop_required=False.",
+      "domain": "FAILURE_TAXONOMY",
+      "evidence": {
+        "cell_classification": "TIMEOUT"
+      },
+      "expected": {
+        "counts_in_denominator": true,
+        "partial_timeout": "PARTIAL_TIMEOUT",
+        "timeout": "TIMEOUT"
+      },
+      "observed": {
+        "counts_in_denominator": true,
+        "partial_timeout": "PARTIAL_TIMEOUT",
+        "timeout": "TIMEOUT"
+      },
+      "severity": "CRITICAL",
+      "status": "PASS"
+    },
+    {
+      "check_id": "RQA-47",
+      "description": "Verify authentication failure, model-access failure, refusal, and max-token truncation map to denominator-retained classifications while true runner defects raise HarnessInternalBatchStopError.",
+      "domain": "FAILURE_TAXONOMY",
+      "evidence": {
+        "auth_counts_in_denominator": true,
+        "internal_stop_verified": true
+      },
+      "expected": {
+        "auth": "AUTHENTICATION_FAILURE",
+        "internal_batch_stop": true,
+        "internal_defect": "HARNESS_INTERNAL_ERROR",
+        "max_token": "MAX_TOKEN_TRUNCATION",
+        "model_access": "MODEL_ACCESS_FAILURE",
+        "refusal": "REFUSAL"
+      },
+      "observed": {
+        "auth": "AUTHENTICATION_FAILURE",
+        "internal_batch_stop": true,
+        "internal_defect": "HARNESS_INTERNAL_ERROR",
+        "max_token": "MAX_TOKEN_TRUNCATION",
+        "model_access": "MODEL_ACCESS_FAILURE",
+        "refusal": "REFUSAL"
+      },
+      "severity": "CRITICAL",
+      "status": "PASS"
+    },
+    {
+      "check_id": "RQA-48",
+      "description": "Verify fake Google, OpenAI, Anthropic, Bearer, and custom secrets are redacted from all persisted cell artifacts and rejected in authorization artifacts.",
+      "domain": "SECRET_SANITIZATION",
+      "evidence": {
+        "inspected_files": [
+          "evaluation_result.json",
+          "execution_receipt.json",
+          "provider_response_metadata.json",
+          "raw_provider_response.txt",
+          "raw_usage_metadata.json",
+          "request_manifest.json",
+          "run_manifest.json",
+          "transport_journal_completed.json",
+          "transport_journal_starting.json"
+        ]
+      },
+      "expected": {
+        "auth_secret_rejected": true,
+        "leaked_files": []
+      },
+      "observed": {
+        "auth_secret_rejected": true,
+        "leaked_files": []
+      },
+      "severity": "CRITICAL",
+      "status": "PASS"
+    },
+    {
+      "check_id": "RQA-49",
+      "description": "Verify C1 (Google) separates thought_tokens=350 from output_tokens=800 and bills thought tokens exactly once at output rate (0.003235 USD).",
+      "domain": "USAGE_NORMALIZATION",
+      "evidence": {
+        "cache_creation_input_tokens": null,
+        "cache_read_input_tokens": null,
+        "cached_input_tokens": 0,
+        "cached_tokens": 0,
+        "candidate_id": "C1",
+        "input_tokens": 1200,
+        "output_tokens": 800,
+        "provider": "google",
+        "reasoning_tokens": null,
+        "thinking_tokens": null,
+        "thought_tokens": 350,
+        "total_tokens": 2350,
+        "usage_present": true
+      },
+      "expected": {
+        "canonical_cost_usd_decimal": "0.003235",
+        "input_tokens": 1200,
+        "output_tokens": 800,
+        "thought_tokens": 350
+      },
+      "observed": {
+        "canonical_cost_usd_decimal": "0.003235",
+        "input_tokens": 1200,
+        "output_tokens": 800,
+        "thought_tokens": 350
+      },
+      "severity": "CRITICAL",
+      "status": "PASS"
+    },
+    {
+      "check_id": "RQA-50",
+      "description": "Verify C2 (OpenAI) records reasoning_tokens=400 without adding them a second time to completion_tokens=900 (0.01275 USD).",
+      "domain": "USAGE_NORMALIZATION",
+      "evidence": {
+        "cache_creation_input_tokens": null,
+        "cache_read_input_tokens": null,
+        "cached_input_tokens": 0,
+        "cached_tokens": 0,
+        "candidate_id": "C2",
+        "input_tokens": 1500,
+        "output_tokens": 900,
+        "provider": "openai",
+        "reasoning_tokens": 400,
+        "thinking_tokens": null,
+        "thought_tokens": null,
+        "total_tokens": 2400,
+        "usage_present": true
+      },
+      "expected": {
+        "canonical_cost_usd_decimal": "0.01275",
+        "input_tokens": 1500,
+        "output_tokens": 900,
+        "reasoning_tokens": 400
+      },
+      "observed": {
+        "canonical_cost_usd_decimal": "0.01275",
+        "input_tokens": 1500,
+        "output_tokens": 900,
+        "reasoning_tokens": 400
+      },
+      "severity": "CRITICAL",
+      "status": "PASS"
+    },
+    {
+      "check_id": "RQA-51",
+      "description": "Verify C3 (Anthropic) does not double-count thinking_tokens=500 (0.0204 USD) and marks non-zero cache tokens without cache multipliers as non-comparable (None).",
+      "domain": "USAGE_NORMALIZATION",
+      "evidence": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 0,
+        "cached_input_tokens": 0,
+        "cached_tokens": 0,
+        "candidate_id": "C3",
+        "input_tokens": 1800,
+        "output_tokens": 1000,
+        "provider": "anthropic",
+        "reasoning_tokens": null,
+        "thinking_tokens": 500,
+        "thought_tokens": null,
+        "total_tokens": 2800,
+        "usage_present": true
+      },
+      "expected": {
+        "canonical_cost_usd_decimal": "0.0204",
+        "unsupported_cache_cost": null
+      },
+      "observed": {
+        "canonical_cost_usd_decimal": "0.0204",
+        "unsupported_cache_cost": null
+      },
+      "severity": "CRITICAL",
+      "status": "PASS"
+    },
+    {
+      "check_id": "RQA-52",
+      "description": "Verify serialized execution_receipt.json preserves exact canonical_cost_usd_decimal string from harness Decimal authority.",
+      "domain": "EXACT_COST",
+      "evidence": {
+        "canonical_cost_usd_display": 0.003235
+      },
+      "expected": {
+        "canonical_cost_usd_decimal": "0.003235"
+      },
+      "observed": {
+        "canonical_cost_usd_decimal": "0.003235"
+      },
+      "severity": "CRITICAL",
+      "status": "PASS"
+    },
+    {
+      "check_id": "RQA-53",
+      "description": "Verify authoritative latency_ns is measured via monotonic_ns_clock as exact integer nanoseconds.",
+      "domain": "LATENCY_NS",
+      "evidence": {
+        "display_latency_ms": 1234.567891
+      },
+      "expected": {
+        "latency_ns": 1234567891
+      },
+      "observed": {
+        "latency_ns": 1234567891
+      },
+      "severity": "CRITICAL",
+      "status": "PASS"
+    },
+    {
+      "check_id": "RQA-54",
+      "description": "Verify single authoritative execution_started_at_utc across starting journal, request_manifest, run_manifest, and metadata, separate transport_completed_at_utc, and zero hardcoded timestamp constants.",
+      "domain": "TIMESTAMP_PROVENANCE",
+      "evidence": {
+        "completed_journal_ts": "2026-10-18T14:22:34.345789+00:00",
+        "run_manifest_ts": "2026-10-18T14:22:33.111222+00:00",
+        "starting_journal_ts": "2026-10-18T14:22:33.111222+00:00"
+      },
+      "expected": {
+        "execution_started_at_utc": "2026-10-18T14:22:33.111222+00:00",
+        "no_hardcoded_constant": true,
+        "transport_completed_at_utc": "2026-10-18T14:22:34.345789+00:00"
+      },
+      "observed": {
+        "execution_started_at_utc": "2026-10-18T14:22:33.111222+00:00",
+        "no_hardcoded_constant": true,
+        "transport_completed_at_utc": "2026-10-18T14:22:34.345789+00:00"
+      },
+      "severity": "CRITICAL",
+      "status": "PASS"
+    },
+    {
+      "check_id": "RQA-55",
+      "description": "Verify truthful execution_mode (OFFLINE_MOCK_VERIFICATION, LIVE_DEV_TUNE, LIVE_DEV_SELECT, STOCHASTICITY_DIAGNOSTIC), temperature_status=OMITTED, and code_commit_sha=runtime_head_sha.",
+      "domain": "EXECUTION_MODE_TRUTHFUL",
+      "evidence": {
+        "c1_gen_params": {
+          "candidate_id": "C1",
+          "code_basis_commit_sha": "3cfb65ce6baca8d0d646760de27b55c5e7520789",
+          "code_commit_sha_semantics": "AUTHORITATIVE_RUNTIME_HEAD_SHA_WITH_SEPARATE_CODE_BASIS_AND_BUNDLE_ATTESTATION",
+          "max_output_tokens": 16384,
+          "omitted_parameters": [
+            "temperature",
+            "top_p",
+            "top_k"
+          ],
+          "portable_generation_schema_v2_sha256": "825a4ff912d851a95f7392cb564b7d7ca3588135508dc6eb3ac6304cdde3c490",
+          "provider": "google",
+          "provider_config_sha256": "d4d417bdeff3f4156ac9605f976b46780c1cb0866d87674f1cee51d8bf3f3217",
+          "requested_model_id": "gemini-3.8-flash",
+          "retry": 0,
+          "runtime_head_sha": "98edfa8558bc3c9f32b579daf45bae35c8f9d29b",
+          "scientific_code_bundle_sha256": "0638f2fcb100b0000e3a2a4e08137a9d468449001f258de7354df21e185ca2e3",
+          "seed": 2026101508,
+          "semantic_schema_sha256": "e4169f7b890f77d13af65e9f2070b6071c535b206d88440f5e8f28c179977555",
+          "temperature_status": "OMITTED",
+          "thinking_config": {
+            "include_thoughts": false,
+            "thinking_level": "medium"
+          },
+          "timeout_ms": 55000,
+          "timeout_seconds": 55.0,
+          "top_k_status": "OMITTED",
+          "top_p_status": "OMITTED"
+        }
+      },
+      "expected": {
+        "modes": {
+          "live_dev_select": "LIVE_DEV_SELECT",
+          "live_dev_tune": "LIVE_DEV_TUNE",
+          "live_stochasticity": "STOCHASTICITY_DIAGNOSTIC",
+          "offline_mock": "OFFLINE_MOCK_VERIFICATION"
+        },
+        "temperature_omitted": true
+      },
+      "observed": {
+        "modes": {
+          "live_dev_select": "LIVE_DEV_SELECT",
+          "live_dev_tune": "LIVE_DEV_TUNE",
+          "live_stochasticity": "STOCHASTICITY_DIAGNOSTIC",
+          "offline_mock": "OFFLINE_MOCK_VERIFICATION"
+        },
+        "temperature_omitted": true
+      },
+      "severity": "CRITICAL",
+      "status": "PASS"
+    },
+    {
+      "check_id": "RQA-56",
+      "description": "Verify stochasticity is blocked before DEV-SELECT winner is frozen, restricted to 15 calls after winner, and rejects DEV_TUNE authorization.",
+      "domain": "STOCHASTICITY_FIREWALL",
+      "evidence": {
+        "selected_candidate": "C1"
+      },
+      "expected": {
+        "dev_tune_auth_rejected": true,
+        "pre_winner_blocked": true,
+        "stochasticity_cells": 15
+      },
+      "observed": {
+        "dev_tune_auth_rejected": true,
+        "pre_winner_blocked": true,
+        "stochasticity_cells": 15
+      },
+      "severity": "CRITICAL",
+      "status": "PASS"
+    },
+    {
+      "check_id": "RQA-57",
+      "description": "Verify DEV-SELECT requires single locked prompt freeze, exactly 180 cells (60 fixtures x 3 candidates x 1 prompt), and rejects multi-prompt unlocked freeze and DEV_TUNE authorization.",
+      "domain": "DEV_SELECT_FIREWALL",
+      "evidence": {
+        "fixture_count": 60
+      },
+      "expected": {
+        "dev_tune_auth_rejected": true,
+        "expected_total_cells": 180,
+        "prompt_ids": [
+          "P1"
+        ],
+        "unlocked_pf_rejected": true
+      },
+      "observed": {
+        "dev_tune_auth_rejected": true,
+        "expected_total_cells": 180,
+        "prompt_ids": [
+          "P1"
+        ],
+        "unlocked_pf_rejected": true
+      },
+      "severity": "CRITICAL",
+      "status": "PASS"
+    },
+    {
+      "check_id": "RQA-58",
+      "description": "Verify scientific code bundle hashing is LF-normalized deterministic and byte-authoritative (detects 1-byte mutation with identical file size and mtime).",
+      "domain": "SCIENTIFIC_CODE_BUNDLE",
+      "evidence": {
+        "expected_sha": "0638f2fcb100b0000e3a2a4e08137a9d468449001f258de7354df21e185ca2e3",
+        "mutated_sha": "44597d351db0df18338611948cdaff0ebca7ff711cdcc59d4c0d76149d4465f3"
+      },
+      "expected": {
+        "crlf_normalized_matches_expected": true,
+        "same_size_same_mtime_mutation_detected": true
+      },
+      "observed": {
+        "crlf_normalized_matches_expected": true,
+        "same_size_same_mtime_mutation_detected": true
+      },
+      "severity": "CRITICAL",
+      "status": "PASS"
+    },
+    {
+      "check_id": "RQA-59",
+      "description": "Verify historical QA-01, historical QA-02, and runner implementation receipts are byte-for-byte unchanged and conftest.py has zero runtime monkeypatching.",
+      "domain": "HISTORICAL_QA_EVIDENCE",
+      "evidence": {
+        "verified_files_count": 10
+      },
+      "expected": {
+        "conftest_clean": true,
+        "historical_mismatches": []
+      },
+      "observed": {
+        "conftest_clean": true,
+        "historical_mismatches": []
+      },
+      "severity": "CRITICAL",
+      "status": "PASS"
+    },
+    {
+      "check_id": "RQA-60",
+      "description": "Verify zero live provider calls, zero provider cost, zero unexpected outbound socket attempts during QA-01, and prompt_freeze_status remains NOT_YET_FROZEN.",
+      "domain": "ZERO_LIVE_CALLS",
+      "evidence": {
+        "dev_model_execution_allowed": false
+      },
+      "expected": {
+        "live_provider_calls": 0,
+        "premature_freeze_files": [],
+        "prompt_freeze_status": "NOT_YET_FROZEN",
+        "provider_cost_usd": 0,
+        "unexpected_network_attempts": []
+      },
+      "observed": {
+        "live_provider_calls": 0,
+        "premature_freeze_files": [],
+        "prompt_freeze_status": "NOT_YET_FROZEN",
+        "provider_cost_usd": 0,
+        "unexpected_network_attempts": []
+      },
+      "severity": "CRITICAL",
+      "status": "PASS"
+    }
+  ],
+  "crash_ambiguity": "PASS",
+  "critical_failures": [],
+  "dev_model_execution_allowed": false,
+  "dev_select_execution_started": false,
+  "dev_select_firewall": "PASS",
+  "dev_tune_execution_started": false,
+  "duplicate_cell": "PASS",
+  "exact_cost": "PASS",
+  "execution_mode_truthful": "PASS",
+  "failure_taxonomy": "PASS",
+  "final100_firewall": "PASS",
+  "final100_used": false,
+  "historical_qa_unchanged": true,
+  "latency_ns": "PASS",
+  "live_gate": "PASS",
+  "live_provider_calls": 0,
+  "major_failures": [],
+  "mid_batch_drift": "PASS",
+  "minor_failures": [],
+  "model_id_integrity": "PASS",
+  "network_isolation": "PASS",
+  "next_gate": "W06-DEV-PROMPT-CANDIDATE-FREEZE-01",
+  "one_http_request_per_cell": "PASS",
+  "overall_qa": "PASS",
+  "prompt_freeze_status": "NOT_YET_FROZEN",
+  "provider_cost_usd": 0,
+  "provider_requests": "PASS",
+  "qa_checks_total": 60,
+  "qa_fail": 0,
+  "qa_pass": 60,
+  "raw_evidence_order": "PASS",
+  "retry_zero": "PASS",
+  "runner_scientific_bundle_sha256": "0638f2fcb100b0000e3a2a4e08137a9d468449001f258de7354df21e185ca2e3",
+  "scientific_code_bundle": "PASS",
+  "secret_sanitization": "PASS",
+  "stage_a_commit_attestation": "PASS",
+  "stage_a_process_boundary": "PASS",
+  "stochasticity_firewall": "PASS",
+  "strict_primary_parser": "PASS",
+  "task_id": "W06-DEV-LIVE-RUNNER-QA-01-OFFLINE-ADVERSARIAL",
+  "timestamp_provenance": "PASS",
+  "toctou": "PASS",
+  "usage_normalization": "PASS",
+  "version": "1.0.0",
+  "winner_selected": false
+}
