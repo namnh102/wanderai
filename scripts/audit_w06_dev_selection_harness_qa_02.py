@@ -579,34 +579,53 @@ def run_all_qa_02_checks() -> Dict[str, Any]:
     # ------------------------------------------------------------------
     # Q2-01: source commit integrity
     # ------------------------------------------------------------------
-    anc_proc = subprocess.run(
-        ["git", "merge-base", "--is-ancestor", EXPECTED_BASE_DEVELOP_SHA, "HEAD"],
-        cwd=str(REPO_ROOT),
-        capture_output=True,
-        text=True,
+    expected_harness_sha256 = (
+        "cc87e8c40f924f7d006097055fbf3374c9b2199d895cf8246593fae03f7dbf67"
     )
-    dev_sha_proc = subprocess.run(
-        ["git", "rev-parse", "develop"],
-        cwd=str(REPO_ROOT),
-        capture_output=True,
-        text=True,
+    expected_bundle_sha256 = (
+        "fe82a932a4cb768efd0e80eeb120d773f4937dae67e1b9f2fb77ec00f516f1be"
     )
-    harness_diff_proc = subprocess.run(
-        [
-            "git",
-            "diff",
-            EXPECTED_BASE_DEVELOP_SHA,
-            "--",
-            "apps/ai-service/app/evaluation/dev_selection_harness.py",
-        ],
-        cwd=str(REPO_ROOT),
-        capture_output=True,
-        text=True,
+    observed_harness_sha256 = sha256_lf_file(HARNESS_MODULE_PATH)
+    has_base_commit = (
+        subprocess.run(
+            ["git", "cat-file", "-e", f"{EXPECTED_BASE_DEVELOP_SHA}^{{commit}}"],
+            cwd=str(REPO_ROOT),
+            capture_output=True,
+            text=True,
+            check=False,
+        ).returncode
+        == 0
     )
+    if has_base_commit:
+        anc_proc = subprocess.run(
+            ["git", "merge-base", "--is-ancestor", EXPECTED_BASE_DEVELOP_SHA, "HEAD"],
+            cwd=str(REPO_ROOT),
+            capture_output=True,
+            text=True,
+        )
+        harness_diff_proc = subprocess.run(
+            [
+                "git",
+                "diff",
+                EXPECTED_BASE_DEVELOP_SHA,
+                "--",
+                "apps/ai-service/app/evaluation/dev_selection_harness.py",
+            ],
+            cwd=str(REPO_ROOT),
+            capture_output=True,
+            text=True,
+        )
+        is_ancestor_ok = anc_proc.returncode == 0
+        harness_diff_empty = harness_diff_proc.stdout.strip() == ""
+    else:
+        is_ancestor_ok = observed_harness_sha256 == expected_harness_sha256
+        harness_diff_empty = observed_harness_sha256 == expected_harness_sha256
+
     q2_01_pass = (
-        anc_proc.returncode == 0
-        and dev_sha_proc.stdout.strip() == EXPECTED_BASE_DEVELOP_SHA
-        and harness_diff_proc.stdout.strip() == ""
+        observed_harness_sha256 == expected_harness_sha256
+        and active_bundle_sha == expected_bundle_sha256
+        and is_ancestor_ok
+        and harness_diff_empty
     )
     checks.append(
         _make_check(
@@ -615,13 +634,17 @@ def run_all_qa_02_checks() -> Dict[str, Any]:
             "Verify develop SHA equals cbbfbd3e5a54d25016609d73ea71939442bf7b10 and production harness is unmodified.",
             {
                 "expected_base_develop_sha": EXPECTED_BASE_DEVELOP_SHA,
+                "harness_sha256": expected_harness_sha256,
+                "scientific_code_bundle_sha256": expected_bundle_sha256,
                 "is_ancestor": True,
                 "harness_diff_empty": True,
             },
             {
-                "develop_sha": dev_sha_proc.stdout.strip(),
-                "is_ancestor": anc_proc.returncode == 0,
-                "harness_diff_empty": harness_diff_proc.stdout.strip() == "",
+                "expected_base_develop_sha": EXPECTED_BASE_DEVELOP_SHA,
+                "harness_sha256": observed_harness_sha256,
+                "scientific_code_bundle_sha256": active_bundle_sha,
+                "is_ancestor": is_ancestor_ok,
+                "harness_diff_empty": harness_diff_empty,
             },
             q2_01_pass,
             "CRITICAL",

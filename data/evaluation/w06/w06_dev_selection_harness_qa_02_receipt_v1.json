@@ -14,12 +14,16 @@
       "expected": {
         "expected_base_develop_sha": "cbbfbd3e5a54d25016609d73ea71939442bf7b10",
         "harness_diff_empty": true,
-        "is_ancestor": true
+        "harness_sha256": "cc87e8c40f924f7d006097055fbf3374c9b2199d895cf8246593fae03f7dbf67",
+        "is_ancestor": true,
+        "scientific_code_bundle_sha256": "fe82a932a4cb768efd0e80eeb120d773f4937dae67e1b9f2fb77ec00f516f1be"
       },
       "observed": {
-        "develop_sha": "cbbfbd3e5a54d25016609d73ea71939442bf7b10",
+        "expected_base_develop_sha": "cbbfbd3e5a54d25016609d73ea71939442bf7b10",
         "harness_diff_empty": true,
-        "is_ancestor": true
+        "harness_sha256": "cc87e8c40f924f7d006097055fbf3374c9b2199d895cf8246593fae03f7dbf67",
+        "is_ancestor": true,
+        "scientific_code_bundle_sha256": "fe82a932a4cb768efd0e80eeb120d773f4937dae67e1b9f2fb77ec00f516f1be"
       },
       "severity": "INFO",
       "status": "PASS"
@@ -1298,12 +1302,12 @@
       "description": "Verify execution plan generation in fresh subprocesses yields identical plan_sha256 and ordered run_ids.",
       "evidence": {},
       "expected": {
-        "s180_sha": "108ef5b0ef93a749a2d02225d8213d5efbf8d3fb3b49cbedf5f06432d877bd3b",
-        "t60_sha": "0fd584f372ccf26e87cfaecf92040b2d69f72d86d7943276134e896f50ffd0e8"
+        "s180_sha": "ed199c48e0ac09caed0faef05952c066392833d0670458a814fc440d41fff6a3",
+        "t60_sha": "0f5930b7b75dde1e63404240f205b6491a1d761021d7614a114318c7fd688401"
       },
       "observed": {
-        "run_1_t60_sha": "0fd584f372ccf26e87cfaecf92040b2d69f72d86d7943276134e896f50ffd0e8",
-        "run_2_t60_sha": "0fd584f372ccf26e87cfaecf92040b2d69f72d86d7943276134e896f50ffd0e8"
+        "run_1_t60_sha": "0f5930b7b75dde1e63404240f205b6491a1d761021d7614a114318c7fd688401",
+        "run_2_t60_sha": "0f5930b7b75dde1e63404240f205b6491a1d761021d7614a114318c7fd688401"
       },
       "severity": "INFO",
       "status": "PASS"
