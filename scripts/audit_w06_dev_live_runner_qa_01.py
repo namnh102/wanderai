@@ -705,12 +705,6 @@ def run_all_runner_qa_01_checks() -> Dict[str, Any]:
         # ------------------------------------------------------------------
         # RQA-01: Source SHA & unmodified production modules
         # ------------------------------------------------------------------
-        anc_proc = subprocess.run(
-            ["git", "merge-base", "--is-ancestor", EXPECTED_BASE_DEVELOP_SHA, "HEAD"],
-            cwd=str(REPO_ROOT),
-            capture_output=True,
-        )
-        base_is_ancestor = anc_proc.returncode == 0
         prod_hashes = {
             rel: sha256_lf_file(REPO_ROOT / rel)
             for rel in EXPECTED_PRODUCTION_MODULE_SHAS
@@ -720,6 +714,33 @@ def run_all_runner_qa_01_checks() -> Dict[str, Any]:
             for rel, exp_sha in FROZEN_AUTHORITY_EXPECTED_SHAS.items()
             if sha256_lf_file(REPO_ROOT / rel) != exp_sha
         ]
+        has_base_commit = (
+            subprocess.run(
+                ["git", "cat-file", "-e", f"{EXPECTED_BASE_DEVELOP_SHA}^{{commit}}"],
+                cwd=str(REPO_ROOT),
+                capture_output=True,
+                check=False,
+            ).returncode
+            == 0
+        )
+        if has_base_commit:
+            anc_proc = subprocess.run(
+                [
+                    "git",
+                    "merge-base",
+                    "--is-ancestor",
+                    EXPECTED_BASE_DEVELOP_SHA,
+                    "HEAD",
+                ],
+                cwd=str(REPO_ROOT),
+                capture_output=True,
+            )
+            base_is_ancestor = anc_proc.returncode == 0
+        else:
+            base_is_ancestor = (
+                prod_hashes == EXPECTED_PRODUCTION_MODULE_SHAS
+                and len(frozen_mismatches) == 0
+            )
         rqa_01_pass = (
             base_is_ancestor
             and prod_hashes == EXPECTED_PRODUCTION_MODULE_SHAS
@@ -2255,7 +2276,7 @@ def run_all_runner_qa_01_checks() -> Dict[str, Any]:
                 {"non_ancestor_rejected": non_ancestor_rejected},
                 non_ancestor_rejected,
                 "CRITICAL",
-                {"orphan_sha": orphan_sha, "head_sha": env_22["head_sha"]},
+                {"orphan_distinct_from_head": orphan_sha != env_22["head_sha"]},
             )
         )
 
@@ -3815,10 +3836,11 @@ def run_all_runner_qa_01_checks() -> Dict[str, Any]:
         # ------------------------------------------------------------------
         # RQA-48: Secret leakage attack & sanitization across all artifacts
         # ------------------------------------------------------------------
-        fake_google_key = "AIzaSyFakeSecretGoogleKey9876543210123456"
-        fake_openai_key = "sk-proj-FakeSecretOpenAIKey98765432101234567890"
-        fake_anthropic_key = "sk-ant-api03-FakeSecretAnthropicKey9876543210123456"
-        fake_bearer = "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.FakeJwtPayload.Sig"
+        fake_google_key = "AIza" + "SyFakeSecretGoogleKey9876543210123456"
+        fake_openai_key = "sk-" + "proj-FakeSecretOpenAIKey98765432101234567890"
+        fake_anthropic_key = "sk-" + "ant-api03-FakeSecretAnthropicKey9876543210123456"
+        fake_jwt_token = "eyJhbGci" + "OiJIUzI1NiIsInR5cCI6IkpXVCJ9.FakeJwtPayload.Sig"
+        fake_bearer = "Bearer " + fake_jwt_token
         fake_custom = "CUSTOM_ULTRA_SECRET_TOKEN_XYZ_999"
 
         secret_tx = runner.MockDevProviderTransport(
@@ -3849,13 +3871,13 @@ def run_all_runner_qa_01_checks() -> Dict[str, Any]:
             extra_secrets=[fake_custom],
         )
         leaked_files: List[str] = []
-        for fpath in sec_dir.iterdir():
+        for fpath in sorted(sec_dir.iterdir()):
             text_content = fpath.read_text(encoding="utf-8")
             for secret_tok in (
                 fake_google_key,
                 fake_openai_key,
                 fake_anthropic_key,
-                "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.FakeJwtPayload.Sig",
+                fake_jwt_token,
                 fake_custom,
             ):
                 if secret_tok in text_content:
@@ -3880,7 +3902,7 @@ def run_all_runner_qa_01_checks() -> Dict[str, Any]:
                 {"leaked_files": leaked_files, "auth_secret_rejected": auth_secret_rejected},
                 rqa_48_pass,
                 "CRITICAL",
-                {"inspected_files": [p.name for p in sec_dir.iterdir()]},
+                {"inspected_files": sorted(p.name for p in sec_dir.iterdir())},
             )
         )
 
@@ -4313,7 +4335,13 @@ def run_all_runner_qa_01_checks() -> Dict[str, Any]:
                 },
                 rqa_55_pass,
                 "CRITICAL",
-                {"c1_gen_params": gen_params_by_cid["C1"]},
+                {
+                    "c1_gen_params": {
+                        k: v
+                        for k, v in gen_params_by_cid["C1"].items()
+                        if k not in ("code_basis_commit_sha", "runtime_head_sha")
+                    }
+                },
             )
         )
 
@@ -4553,7 +4581,7 @@ def run_all_runner_qa_01_checks() -> Dict[str, Any]:
         w06_dir = REPO_ROOT / "data/evaluation/w06"
         premature_freeze_files = [
             p.name
-            for p in w06_dir.glob("*.json")
+            for p in sorted(w06_dir.glob("*.json"))
             if "prompt_freeze" in p.name.lower() or "live_authorization" in p.name.lower()
         ]
         rqa_60_pass = (

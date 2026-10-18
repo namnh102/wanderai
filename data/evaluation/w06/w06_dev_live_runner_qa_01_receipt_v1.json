@@ -691,8 +691,7 @@
       "description": "Verify non-ancestor stage_a_commit_sha is rejected via git merge-base --is-ancestor.",
       "domain": "STAGE_A_COMMIT_ATTESTATION",
       "evidence": {
-        "head_sha": "98edfa8558bc3c9f32b579daf45bae35c8f9d29b",
-        "orphan_sha": "a5050e713bc49cac589446097d3c064be803394a"
+        "orphan_distinct_from_head": true
       },
       "expected": {
         "non_ancestor_rejected": true
@@ -1451,7 +1450,6 @@
       "evidence": {
         "c1_gen_params": {
           "candidate_id": "C1",
-          "code_basis_commit_sha": "3cfb65ce6baca8d0d646760de27b55c5e7520789",
           "code_commit_sha_semantics": "AUTHORITATIVE_RUNTIME_HEAD_SHA_WITH_SEPARATE_CODE_BASIS_AND_BUNDLE_ATTESTATION",
           "max_output_tokens": 16384,
           "omitted_parameters": [
@@ -1464,7 +1462,6 @@
           "provider_config_sha256": "d4d417bdeff3f4156ac9605f976b46780c1cb0866d87674f1cee51d8bf3f3217",
           "requested_model_id": "gemini-3.8-flash",
           "retry": 0,
-          "runtime_head_sha": "98edfa8558bc3c9f32b579daf45bae35c8f9d29b",
           "scientific_code_bundle_sha256": "0638f2fcb100b0000e3a2a4e08137a9d468449001f258de7354df21e185ca2e3",
           "seed": 2026101508,
           "semantic_schema_sha256": "e4169f7b890f77d13af65e9f2070b6071c535b206d88440f5e8f28c179977555",
