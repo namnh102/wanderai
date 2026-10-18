@@ -136,14 +136,42 @@ def _make_synthetic_receipt(
     final_core_pass: bool = True,
     failure_classification: DevCellFailureClassification = DevCellFailureClassification.NONE,
     latency_ms: float = 1000.0,
+    latency_ns: int | None = None,
     authoritative_usage_available: bool = True,
     canonical_cost_usd: float | None = 0.01,
+    canonical_cost_usd_decimal: str | None = None,
 ) -> DevCellExecutionReceipt:
+    from decimal import Decimal
+    from app.evaluation.dev_selection_harness import format_canonical_decimal_str
+
     model_map = {
         "C1": "gemini-3.8-flash",
         "C2": "gpt-6.1-sol",
         "C3": "claude-sonnet-5-5",
     }
+    resolved_latency_ns = (
+        latency_ns
+        if latency_ns is not None
+        else int(Decimal(str(latency_ms)) * Decimal(1_000_000))
+    )
+    resolved_cost_dec_str = (
+        canonical_cost_usd_decimal
+        if canonical_cost_usd_decimal is not None
+        else (
+            format_canonical_decimal_str(Decimal(str(canonical_cost_usd)))
+            if (authoritative_usage_available and canonical_cost_usd is not None)
+            else None
+        )
+    )
+    from app.evaluation.dev_selection_harness import (
+        compute_scientific_code_bundle_sha256,
+        get_cached_provider_config_sha256,
+        resolve_active_git_commit_sha,
+    )
+
+    active_sha = resolve_active_git_commit_sha()
+    bundle_sha = compute_scientific_code_bundle_sha256()
+    pconf_sha = get_cached_provider_config_sha256(candidate_id)
     return DevCellExecutionReceipt(
         run_id=f"SYNTH-{phase}-{prompt_id}-{candidate_id}-{fixture_id}",
         phase=phase,  # type: ignore[arg-type]
@@ -152,6 +180,11 @@ def _make_synthetic_receipt(
         prompt_id=prompt_id,
         requested_model_id=model_map[candidate_id],
         returned_model_id=model_map[candidate_id],
+        code_basis_commit_sha=active_sha,
+        code_commit_sha=active_sha,
+        runtime_head_sha=active_sha,
+        scientific_code_bundle_sha256=bundle_sha,
+        provider_config_sha256=pconf_sha,
         attempt_number=1,
         attempted=True,
         failure_classification=failure_classification,
@@ -160,11 +193,15 @@ def _make_synthetic_receipt(
         final_core_pass=(
             final_core_pass if (valid_run_and_schema and exact_grounding_pass) else False
         ),
+        latency_ns=resolved_latency_ns,
+        latency_ms_display=latency_ms,
         latency_ms=latency_ms,
         authoritative_usage_available=authoritative_usage_available,
         input_tokens=1000 if authoritative_usage_available else None,
         output_tokens=500 if authoritative_usage_available else None,
         total_tokens=1500 if authoritative_usage_available else None,
+        canonical_cost_usd_decimal=resolved_cost_dec_str,
+        canonical_cost_usd_display=canonical_cost_usd if authoritative_usage_available else None,
         canonical_cost_usd=canonical_cost_usd if authoritative_usage_available else None,
         request_manifest_sha256="a" * 64,
         raw_response_sha256="b" * 64,
@@ -254,13 +291,32 @@ def _build_valid_plan_dict_for_scenario(scenario: BenchmarkScenarioInput) -> dic
                 ],
             }
         )
+    total_est = scenario.days * 100000
+    is_over = False if scenario.budget is None else (total_est > scenario.budget)
+    variance = 0 if scenario.budget is None else (scenario.budget - total_est)
     return {
+        "plan_id": f"plan-{scenario.scenario_id}",
+        "scenario_id": scenario.scenario_id,
         "destination": scenario.destination,
+        "destination_slug": scenario.destination_slug,
         "total_days": scenario.days,
         "overview": "Deterministic valid itinerary.",
         "best_time_to_visit": "All year",
         "general_tips": ["Tip 1"],
-        "days": days_list,
+        "days": [
+            {
+                **day_obj,
+                "day_cost": 100000,
+            }
+            for day_obj in days_list
+        ],
+        "budget_analysis": {
+            "total_budget": scenario.budget,
+            "estimated_cost": total_est,
+            "currency": scenario.currency,
+            "is_over_budget": is_over,
+            "variance": variance,
+        },
     }
 
 
@@ -445,6 +501,10 @@ def test_dh_13_retry_0(candidate_registry):
             candidate_id="C1",
             prompt_id="P1",
             requested_model_id="gemini-3.8-flash",
+            code_basis_commit_sha="a" * 40,
+            code_commit_sha="a" * 40,
+            scientific_code_bundle_sha256="b" * 64,
+            provider_config_sha256="c" * 64,
             scenario_sha256="0" * 64,
             catalog_context_sha256="0" * 64,
             system_prompt_sha256="0" * 64,
@@ -469,6 +529,10 @@ def test_dh_14_fallback_false(candidate_registry):
             candidate_id="C1",
             prompt_id="P1",
             requested_model_id="gemini-3.8-flash",
+            code_basis_commit_sha="a" * 40,
+            code_commit_sha="a" * 40,
+            scientific_code_bundle_sha256="b" * 64,
+            provider_config_sha256="c" * 64,
             scenario_sha256="0" * 64,
             catalog_context_sha256="0" * 64,
             system_prompt_sha256="0" * 64,
@@ -494,6 +558,10 @@ def test_dh_15_repair_0(candidate_registry):
             candidate_id="C1",
             prompt_id="P1",
             requested_model_id="gemini-3.8-flash",
+            code_basis_commit_sha="a" * 40,
+            code_commit_sha="a" * 40,
+            scientific_code_bundle_sha256="b" * 64,
+            provider_config_sha256="c" * 64,
             scenario_sha256="0" * 64,
             catalog_context_sha256="0" * 64,
             system_prompt_sha256="0" * 64,
@@ -518,6 +586,10 @@ def test_dh_16_one_execution_per_cell(candidate_registry):
             candidate_id="C1",
             prompt_id="P1",
             requested_model_id="gemini-3.8-flash",
+            code_basis_commit_sha="a" * 40,
+            code_commit_sha="a" * 40,
+            scientific_code_bundle_sha256="b" * 64,
+            provider_config_sha256="c" * 64,
             scenario_sha256="0" * 64,
             catalog_context_sha256="0" * 64,
             system_prompt_sha256="0" * 64,
@@ -992,6 +1064,13 @@ def test_mock_transport_execution_and_immutability(
     core_cat = load_core_catalog_by_place_id()
     cost_rec = _make_all_comparable_cost_records()["C1"]
 
+    from app.evaluation.dev_selection_harness import (
+        compute_candidate_provider_config_sha256,
+        compute_scientific_code_bundle_sha256,
+        resolve_active_git_commit_sha,
+    )
+
+    active_sha = resolve_active_git_commit_sha()
     cell_manifest = DevCellExecutionManifest(
         run_id="MOCK-CELL-001",
         phase="DEV_TUNE",
@@ -999,6 +1078,10 @@ def test_mock_transport_execution_and_immutability(
         candidate_id="C1",
         prompt_id="P1",
         requested_model_id=cspec.requested_model_id,
+        code_basis_commit_sha=active_sha,
+        code_commit_sha=active_sha,
+        scientific_code_bundle_sha256=compute_scientific_code_bundle_sha256(),
+        provider_config_sha256=compute_candidate_provider_config_sha256(cspec),
         scenario_sha256=ctx.scenario_sha256,
         catalog_context_sha256=ctx.catalog_context_sha256,
         system_prompt_sha256=ctx.system_prompt_sha256,
@@ -1016,6 +1099,7 @@ def test_mock_transport_execution_and_immutability(
         cell_dir=cell_dir_pass,
         mock_response=MockProviderTransportResponse(
             raw_text=json.dumps(valid_plan_dict, ensure_ascii=False),
+            returned_model_id=cell_manifest.requested_model_id,
         ),
         cost_comparability=cost_rec,
         core_catalog_by_id=core_cat,
@@ -1032,6 +1116,7 @@ def test_mock_transport_execution_and_immutability(
             cell_dir=cell_dir_pass,
             mock_response=MockProviderTransportResponse(
                 raw_text=json.dumps(valid_plan_dict, ensure_ascii=False),
+                returned_model_id=cell_manifest.requested_model_id,
             ),
             cost_comparability=cost_rec,
             core_catalog_by_id=core_cat,
@@ -1042,7 +1127,10 @@ def test_mock_transport_execution_and_immutability(
         cell_manifest=cell_manifest,
         scenario=scenario,
         cell_dir=cell_dir_bad_json,
-        mock_response=MockProviderTransportResponse(raw_text="{not valid json"),
+        mock_response=MockProviderTransportResponse(
+            raw_text="{not valid json",
+            returned_model_id=cell_manifest.requested_model_id,
+        ),
         cost_comparability=cost_rec,
         core_catalog_by_id=core_cat,
     )
@@ -1061,6 +1149,7 @@ def test_mock_transport_execution_and_immutability(
         cell_dir=cell_dir_ungrounded,
         mock_response=MockProviderTransportResponse(
             raw_text=json.dumps(ungrounded_plan, ensure_ascii=False),
+            returned_model_id=cell_manifest.requested_model_id,
         ),
         cost_comparability=cost_rec,
         core_catalog_by_id=core_cat,
@@ -1081,6 +1170,7 @@ def test_mock_transport_execution_and_immutability(
         cell_dir=cell_dir_core_fail,
         mock_response=MockProviderTransportResponse(
             raw_text=json.dumps(core_fail_plan, ensure_ascii=False),
+            returned_model_id=cell_manifest.requested_model_id,
         ),
         cost_comparability=cost_rec,
         core_catalog_by_id=core_cat,

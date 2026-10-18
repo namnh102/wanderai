@@ -1,0 +1,330 @@
+{
+  "artifact_id": "W06-DEV-SELECTION-HARNESS-FIX-01-RECEIPT-V1",
+  "audit_correction_02_id": "W06-DEV-SELECTION-HARNESS-FIX-01-AUDIT-CORRECTION-02",
+  "audit_correction_02_required": true,
+  "audit_correction_02_tests_failed": 0,
+  "audit_correction_02_tests_passed": 18,
+  "audit_correction_02_tests_total": 18,
+  "audit_correction_03_id": "W06-DEV-SELECTION-HARNESS-FIX-01-AUDIT-CORRECTION-03",
+  "audit_correction_03_required": true,
+  "audit_correction_03_tests_failed": 0,
+  "audit_correction_03_tests_passed": 24,
+  "audit_correction_03_tests_total": 24,
+  "audit_correction_id": "W06-DEV-SELECTION-HARNESS-FIX-01-AUDIT-CORRECTION-01",
+  "audit_correction_tests_failed": 0,
+  "audit_correction_tests_passed": 18,
+  "audit_correction_tests_total": 18,
+  "base_develop_sha": "f81faa7de3988a20af1adc5b04601c49cf953d4a",
+  "bundle_file_hashes_required": "PASS",
+  "bundle_hash_authoritative_byte_read": "PASS",
+  "chatgpt_audit_correction_required": true,
+  "code_sha_fail_closed": "PASS",
+  "dev_select_execution_started": false,
+  "dev_tune_execution_started": false,
+  "exact_cost_end_to_end": "PASS",
+  "existing_harness_tests_passed": true,
+  "existing_harness_tests_total": 35,
+  "final100_used": false,
+  "fix_details_by_defect_id": {
+    "QA-05": {
+      "defect_code": "FINAL100_FIREWALL_ALIAS_AND_CROSS_PARTITION_GAP",
+      "fix_group": "Fix Group D",
+      "repaired": true,
+      "root_cause": "assert_not_final100_path previously checked only direct filenames/suffixes and missed copied or renamed files; assert_not_final100_scenario did not validate scenario_id prefix vs fixture_label.",
+      "severity": "MAJOR",
+      "solution": "assert_not_final100_path resolves symlinks and computes LF-normalized SHA256 on existing files to reject c03bc6dc300604ac395505d59b6413c1a47339b21408cfd637671e81d4b555a1 (final100) and 0aa9ae923d0e7f29df49735fa41e87530b1caf62418fcbec09a1eff81d83af62 (P11); assert_not_final100_scenario enforces W06-DEV-TUNE-* -> W06_DEV_TUNE and W06-DEV-SELECT-* -> W06_DEV_SELECT.",
+      "verification_tests": [
+        "FIX-16",
+        "FIX-17",
+        "FIX-18",
+        "FIX-19"
+      ]
+    },
+    "QA-14": {
+      "defect_code": "PRIMARY_SEMANTIC_RESCUE_DETECTED",
+      "fix_group": "Fix Group A",
+      "repaired": true,
+      "root_cause": "execute_dev_cell_with_mock_transport fell back to parse_strict_benchmark_plan_response when BenchmarkPlanResponse.model_validate failed, synthesizing missing plan_id, scenario_id, destination_slug, day_cost, and budget_analysis.",
+      "severity": "CRITICAL",
+      "solution": "Removed parse_strict_benchmark_plan_response import and fallback from dev_selection_harness.py; implemented parse_primary_dev_plan_response enforcing strict raw_text -> json.loads -> required keys check (including day_cost) -> BenchmarkPlanResponse.model_validate with zero field synthesis.",
+      "verification_tests": [
+        "FIX-01",
+        "FIX-02",
+        "FIX-03",
+        "FIX-04",
+        "FIX-05",
+        "FIX-06",
+        "FIX-07"
+      ]
+    },
+    "QA-15": {
+      "defect_code": "MODEL_ID_MISMATCH_FAILS_TO_STOP_BATCH",
+      "fix_group": "Fix Group B",
+      "repaired": true,
+      "root_cause": "execute_dev_cell_with_mock_transport substituted missing returned_model_id with requested_model_id, and aggregate_dev_cell_receipts, select_winning_prompt_dev_tune, and select_winning_candidate_dev_select did not halt on MODEL_INTEGRITY_MISMATCH.",
+      "severity": "CRITICAL",
+      "solution": "Removed returned_model_id fallback substitution; classified missing/empty or incompatible returned_model_id as MODEL_INTEGRITY_MISMATCH (counts_in_denominator=False, batch_stop_required=True); added assert_batch_receipts_integrity raising ModelIntegrityBatchStopError across batch execution, aggregation, and DEV-TUNE/DEV-SELECT selection.",
+      "verification_tests": [
+        "FIX-08",
+        "FIX-09",
+        "FIX-10",
+        "FIX-11",
+        "FIX-12",
+        "FIX-13"
+      ]
+    },
+    "QA-27": {
+      "defect_code": "C1_GEMINI_THOUGHT_TOKENS_OMITTED_FROM_COST",
+      "fix_group": "Fix Group E",
+      "repaired": true,
+      "root_cause": "MockProviderTransportResponse and DevCellExecutionReceipt lacked thought_tokens and cache token fields, and execute_dev_cell_with_mock_transport did not pass thought_tokens to compute_canonical_cell_cost_decimal.",
+      "severity": "CRITICAL",
+      "solution": "Added thought_tokens, reasoning_tokens, thinking_tokens, cached_input_tokens, cache_read_input_tokens, cache_creation_input_tokens, raw_usage_metadata, and latency_ns to MockProviderTransportResponse and DevCellExecutionReceipt; for C1 (Google), compute_canonical_cell_cost_decimal bills output_tokens + thought_tokens once.",
+      "verification_tests": [
+        "FIX-20",
+        "FIX-23"
+      ]
+    },
+    "QA-28": {
+      "defect_code": "C2_C3_REASONING_THINKING_TOKENS_DOUBLE_COUNTED",
+      "fix_group": "Fix Group E",
+      "repaired": true,
+      "root_cause": "compute_canonical_cell_cost_usd blindly added thought_or_reasoning_tokens to output_tokens for all candidates, double-counting OpenAI reasoning_tokens (C2) and Anthropic thinking_tokens (C3) which are already included in output_tokens.",
+      "severity": "CRITICAL",
+      "solution": "Made compute_canonical_cell_cost_decimal candidate-aware: C1 bills output_tokens + thought_tokens; C2 and C3 bill output_tokens only while recording reasoning_tokens/thinking_tokens for observability; nonzero unsupported cache tokens return None (non-comparable).",
+      "verification_tests": [
+        "FIX-21",
+        "FIX-22",
+        "FIX-23"
+      ]
+    },
+    "QA-29": {
+      "defect_code": "COST_TIEBREAK_NOT_UNROUNDED",
+      "fix_group": "Fix Group F / Audit Correction A",
+      "repaired": true,
+      "root_cause": "_to_exact_decimal formatted floats via f'{value:.12f}', and DevCellExecutionReceipt.canonical_cost_usd and DevGroupAggregateMetrics.median_canonical_cost_usd passed through float.",
+      "severity": "CRITICAL",
+      "solution": "Persisted authoritative exact non-exponent decimal text canonical_cost_usd_decimal on DevCellExecutionReceipt directly from compute_canonical_cell_cost_decimal (prec=100), computed exact Decimal median median_canonical_cost_usd_decimal via compute_exact_decimal_median, and made DEV-SELECT Criterion 4 compare only median_canonical_cost_usd_decimal without consulting any float display field.",
+      "verification_tests": [
+        "FIX-24",
+        "AC-01",
+        "AC-02",
+        "AC-03",
+        "AC-04"
+      ]
+    },
+    "QA-30": {
+      "defect_code": "LATENCY_TIEBREAK_ROUNDING",
+      "fix_group": "Fix Group G / Audit Correction B",
+      "repaired": true,
+      "root_cause": "Criterion 5 median latency tiebreak previously relied on float latency_ms and 12-decimal formatting.",
+      "severity": "MAJOR",
+      "solution": "Made integer nanoseconds latency_ns the authoritative per-cell latency field, computed exact non-exponent decimal string median_latency_ns_decimal via compute_exact_decimal_median, and made DEV-SELECT Criterion 5 compare only median_latency_ns_decimal while failing closed with LatencyAuthorityUnavailableError if latency_ns is missing for any survivor.",
+      "verification_tests": [
+        "FIX-25",
+        "AC-05",
+        "AC-06",
+        "AC-07",
+        "AC-08"
+      ]
+    },
+    "QA-32": {
+      "defect_code": "PROMPT_FREEZE_GATE_AND_SINGLE_PROMPT_STATUS_MISMATCH",
+      "fix_group": "Fix Group H",
+      "repaired": true,
+      "root_cause": "Single-prompt DEV-TUNE returned SINGLE_PROMPT_P1_LOCKED_WITHOUT_COMPARISON instead of Method Lock's LOCK_P1_WITHOUT_PERFORMANCE_COMPARISON, and no fail-closed verifier existed for a separate frozen prompt artifact before live execution.",
+      "severity": "MAJOR",
+      "solution": "Set SINGLE_PROMPT_P1_LOCK_STATUS = 'LOCK_P1_WITHOUT_PERFORMANCE_COMPARISON' and added DevPromptFreezeArtifact, build_dev_prompt_freeze_artifact, verify_prompt_candidate_freeze_artifact, and assert_prompt_freeze_before_live.",
+      "verification_tests": [
+        "FIX-26",
+        "FIX-27",
+        "PC-08",
+        "PC-09",
+        "PH-04",
+        "PH-15",
+        "PH-16"
+      ]
+    },
+    "QA-33": {
+      "defect_code": "MISSING_CODE_COMMIT_SHA_AND_PROVIDER_CONFIG_SHA256_ON_CELL_ARTIFACTS",
+      "fix_group": "Fix Group I / Audit Correction C / Audit Correction 02 / Audit Correction 03",
+      "repaired": true,
+      "root_cause": "DevCellExecutionManifest and DevCellExecutionReceipt lacked code_commit_sha and provider_config_sha256; resolve_active_git_commit_sha initially had a static fallback SHA; persisted models hydrated missing provenance from the active runtime environment during model_validate; scientific_code_bundle_file_hashes defaulted to [] and was skipped when empty; and _SCIENTIFIC_CODE_BUNDLE_CACHE keyed by (st_mtime_ns, st_size) risked serving stale hashes on same-size/same-mtime edits.",
+      "severity": "MAJOR",
+      "solution": "Enforced BUILDERS CREATE PROVENANCE, MODELS VERIFY PROVENANCE: persisted models require all provenance fields and never read active git HEAD, source bundle, or provider config to fill missing fields; made scientific_code_bundle_file_hashes required and verified against the exact 13-file SCIENTIFIC_CODE_BUNDLE_RELATIVE_PATHS; removed _SCIENTIFIC_CODE_BUNDLE_CACHE so compute_scientific_code_bundle always reads file bytes and computes LF-normalized SHA256; and enforced provider_config_sha256 against active registry at action boundaries.",
+      "verification_tests": [
+        "FIX-28",
+        "AC-09",
+        "AC-10",
+        "AC-11",
+        "AC-12",
+        "PC-01",
+        "PC-02",
+        "PC-03",
+        "PC-04",
+        "PC-05",
+        "PC-06",
+        "PC-07",
+        "PC-10",
+        "PC-11",
+        "PC-12",
+        "PC-13",
+        "PC-14",
+        "PC-15",
+        "PH-01",
+        "PH-02",
+        "PH-03",
+        "PH-04",
+        "PH-05",
+        "PH-06",
+        "PH-07",
+        "PH-08",
+        "PH-09",
+        "PH-10",
+        "PH-11",
+        "PH-12",
+        "PH-13",
+        "PH-14",
+        "PH-15",
+        "PH-16",
+        "PH-17",
+        "PH-18",
+        "PH-19",
+        "PH-20",
+        "PH-21",
+        "PH-22",
+        "PH-23",
+        "PH-24"
+      ]
+    },
+    "QA-39": {
+      "defect_code": "INCOMPLETE_FAILURE_TAXONOMY_AND_MISSING_BATCH_STOP_ENFORCEMENT",
+      "fix_group": "Fix Group C",
+      "repaired": true,
+      "root_cause": "DevCellFailureClassification lacked PARTIAL_TIMEOUT and HARNESS_INTERNAL_ERROR, and batch-stop failures were not separated from ordinary denominator-preserving failures.",
+      "severity": "MAJOR",
+      "solution": "Added PARTIAL_TIMEOUT (counts_in_denominator=True, batch_stop_required=False) and HARNESS_INTERNAL_ERROR (counts_in_denominator=False, batch_stop_required=True) to DevCellFailureClassification and enforced HarnessInternalBatchStopError and ModelIntegrityBatchStopError via assert_batch_receipts_integrity.",
+      "verification_tests": [
+        "FIX-14",
+        "FIX-15"
+      ]
+    }
+  },
+  "fix_status": "READY_FOR_RE_QA",
+  "fix_tests_failed": 0,
+  "fix_tests_passed": 95,
+  "fix_tests_total": 95,
+  "historical_artifact_reload_safe": "PASS",
+  "historical_qa_01_baseline": {
+    "overall_qa": "FAIL",
+    "qa_checks_total": 40,
+    "qa_fail": 10,
+    "qa_pass": 30
+  },
+  "historical_qa_01_immutable_files_sha256": {
+    "apps/ai-service/tests/test_w06_dev_selection_harness_qa_01.py": "b97615b4279a669e0064213681442a3c7506a5fc048f77ca9b5814d6c882bc18",
+    "data/evaluation/w06/w06_dev_selection_harness_qa_01_receipt_v1.json": "51b7606ebca7b5a67b6e6514d2f0c4fa4c7933919be2a5c2ec8179b21b286c9f",
+    "docs/research/w06_dev_selection_harness_qa_01.md": "2620638d08d76dd619743f606e004c14fe5822635caafd130a258d5e052ff7d9",
+    "scripts/audit_w06_dev_selection_harness.py": "878f89ecd80e62a80c1ad23e9a48fa03ace4bb1b228c5ba1814c3cf632a3bd80"
+  },
+  "historical_qa_01_preserved": true,
+  "historical_qa_runtime_monkeypatch_removed": "PASS",
+  "latency_ns_selection_authority": "PASS",
+  "live_calls": 0,
+  "live_provider_calls": 0,
+  "next_gate": "W06-DEV-SELECTION-HARNESS-QA-02-OFFLINE-RERUN",
+  "persisted_provenance_fail_closed": "PASS",
+  "prompt_freeze_self_reference_resolved": "PASS",
+  "provenance_lifecycle_model": "CODE_BASIS_PLUS_SCIENTIFIC_CODE_BUNDLE_PLUS_RUNTIME_HEAD",
+  "provider_cost_usd": 0,
+  "repaired_defects": [
+    "QA-14",
+    "QA-15",
+    "QA-27",
+    "QA-28",
+    "QA-29",
+    "QA-05",
+    "QA-30",
+    "QA-32",
+    "QA-33",
+    "QA-39"
+  ],
+  "repaired_harness_file": "apps/ai-service/app/evaluation/dev_selection_harness.py",
+  "runtime_head_recording": "PASS",
+  "same_mtime_same_size_cache_bypass_closed": "PASS",
+  "scientific_code_bundle_file_hashes": [
+    {
+      "path": "apps/ai-service/app/evaluation/dev_selection_harness.py",
+      "sha256": "cc87e8c40f924f7d006097055fbf3374c9b2199d895cf8246593fae03f7dbf67"
+    },
+    {
+      "path": "apps/ai-service/app/evaluation/model_preflight/__init__.py",
+      "sha256": "178aede4930a6b848714fa6d84e14e415df35d1bf7641312ff6f311e3de477dd"
+    },
+    {
+      "path": "apps/ai-service/app/evaluation/model_preflight/anthropic_adapter.py",
+      "sha256": "ef2570126f6db736a4ef056ac27fcfc77db97fa6ed6526c901e299c71b1b1d42"
+    },
+    {
+      "path": "apps/ai-service/app/evaluation/model_preflight/base.py",
+      "sha256": "55bd026f224eaf15f5fb68e98d9cd9467bf85f0f90305acac397caef0970454d"
+    },
+    {
+      "path": "apps/ai-service/app/evaluation/model_preflight/google_adapter.py",
+      "sha256": "184887b19826094326e5fea47efd7aec71308b36af404225f5ef8d0d40882f1c"
+    },
+    {
+      "path": "apps/ai-service/app/evaluation/model_preflight/openai_adapter.py",
+      "sha256": "62b72237402808ab88d71627ce05d948d4b7d251ba87af51208876c784ee9346"
+    },
+    {
+      "path": "apps/ai-service/app/evaluation/model_preflight/schema_adapter.py",
+      "sha256": "19513c8735ba4acb2b88587915d6458de2c28d622499c05314d4f9030eb3c589"
+    },
+    {
+      "path": "apps/ai-service/app/evaluation/model_preflight/types.py",
+      "sha256": "1fdb31f200a71df4193f1fe4844b49dc1e9750c51c7388e6642dac44ae349371"
+    },
+    {
+      "path": "apps/ai-service/app/evaluation/planner_benchmark_evaluator.py",
+      "sha256": "1b299f75a3a51d01b63b1b004df3d8b9d92224591ccde5d537b83735ca268f66"
+    },
+    {
+      "path": "apps/ai-service/app/prompts/planner_benchmark_prompt.py",
+      "sha256": "22aa9cd172548fe51a8699704e5832ad44e1d8e946a1ad79437aed99d46c98cb"
+    },
+    {
+      "path": "apps/ai-service/app/schemas/planner_benchmark.py",
+      "sha256": "3f27ed7e12b2492d722937d4f36476e8dbf97635c281a6e270fd0621cc18e712"
+    },
+    {
+      "path": "apps/ai-service/app/services/planner_benchmark_runner.py",
+      "sha256": "2831f5aadd80959a86f388508c73679215830ca8854f2a4fbd474328fa7288b7"
+    },
+    {
+      "path": "apps/ai-service/recommendation/reca/contract.py",
+      "sha256": "1a62c36a95092be35ab78dca43e20f646016e154746ee051a499bdebfc67538c"
+    }
+  ],
+  "scientific_code_bundle_files": [
+    "apps/ai-service/app/evaluation/dev_selection_harness.py",
+    "apps/ai-service/app/evaluation/model_preflight/__init__.py",
+    "apps/ai-service/app/evaluation/model_preflight/anthropic_adapter.py",
+    "apps/ai-service/app/evaluation/model_preflight/base.py",
+    "apps/ai-service/app/evaluation/model_preflight/google_adapter.py",
+    "apps/ai-service/app/evaluation/model_preflight/openai_adapter.py",
+    "apps/ai-service/app/evaluation/model_preflight/schema_adapter.py",
+    "apps/ai-service/app/evaluation/model_preflight/types.py",
+    "apps/ai-service/app/evaluation/planner_benchmark_evaluator.py",
+    "apps/ai-service/app/prompts/planner_benchmark_prompt.py",
+    "apps/ai-service/app/schemas/planner_benchmark.py",
+    "apps/ai-service/app/services/planner_benchmark_runner.py",
+    "apps/ai-service/recommendation/reca/contract.py"
+  ],
+  "scientific_code_bundle_gate": "PASS",
+  "scientific_code_bundle_sha256": "fe82a932a4cb768efd0e80eeb120d773f4937dae67e1b9f2fb77ec00f516f1be",
+  "stochasticity_diagnostic_started": false,
+  "task_id": "W06-DEV-SELECTION-HARNESS-FIX-01",
+  "version": "1.3.0",
+  "winner_selected": false
+}
