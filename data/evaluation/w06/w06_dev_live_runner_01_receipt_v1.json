@@ -1,0 +1,170 @@
+{
+  "action_boundary_stage_a_reattestation": "PASS",
+  "actual_production_provider_transports_implemented": true,
+  "arbitrary_callable_live_transport_forbidden": "PASS",
+  "artifact_id": "W06-DEV-LIVE-RUNNER-01-RECEIPT-V1",
+  "audit_correction_task_id": "W06-DEV-LIVE-RUNNER-01-AUDIT-CORRECTION-02",
+  "authorization_gate": "PASS",
+  "base_develop_sha": "b2dfd8afb8db2e2bc4dfbb2d0ca4e6a9d22e3a50",
+  "benchmark_manifest_config_truthful": "PASS",
+  "benchmark_manifest_provenance_truthful": "PASS",
+  "call_budget_ledger": "PASS",
+  "call_budgets": {
+    "dev_select": 180,
+    "dev_tune_1_prompt": 60,
+    "dev_tune_2_prompts": 120,
+    "retry": 0,
+    "stochasticity_post_winner": 15
+  },
+  "candidate_registry_sha256": "4dd29164afdf7f364978420f41ab88ef07ec396062188169fcb859a9ef01e058",
+  "code_bundle_attestation": "PASS",
+  "crash_ambiguity_fail_closed": "PASS",
+  "dev_model_execution_allowed": false,
+  "dev_select_execution_started": false,
+  "dev_tune_execution_started": false,
+  "dry_run_supported": true,
+  "execution_mode_truthful": "PASS",
+  "execution_timestamp_dynamic_not_hardcoded": "PASS",
+  "execution_timestamp_matches_transport_start_journal": "PASS",
+  "final100_separation": "PASS",
+  "final100_used": false,
+  "frozen_authority_preservation": {
+    "apps/ai-service/app/schemas/planner_benchmark.py": "3f27ed7e12b2492d722937d4f36476e8dbf97635c281a6e270fd0621cc18e712",
+    "apps/ai-service/recommendation/reca/contract.py": "1a62c36a95092be35ab78dca43e20f646016e154746ee051a499bdebfc67538c",
+    "data/curated/gomate_places_freeze_v2.json": "f7517938598e3923906763f8f31334a500ee88bc06232f2992d38e2fcb28a444",
+    "data/evaluation/w06/w06_dev_final_overlap_receipt_v1.json": "285699ee1370b537a6579b88a7fb02781b51ac52e0ed14f469d77969261f04aa",
+    "data/evaluation/w06/w06_dev_fixture_freeze_01_receipt_v1.json": "437a296cf123d1469f303b97cb6665cd8217c2dfeabd12d1712ec2789d890026",
+    "data/evaluation/w06/w06_dev_fixture_manifest_v1.json": "15cf3af6c93d3de967703dbc52d7e082bfd4a1e657409c0678ff51bd081e3c98",
+    "data/evaluation/w06/w06_dev_fixtures_freeze_v1.json": "bb0f051446ea3da8229298f22f4ce92b4db20751695273c6d01b7766da044050",
+    "data/evaluation/w06/w06_measurement_contract_v1.json": "0ddc1f8d879493517cee25f247d2365a0bacb816dc33b129b0c6110d4bfb8298",
+    "data/evaluation/w06/w06_model_arch_selection_method_lock_v1.json": "6f30cdf90355dd720795de8e0b21beba45f527767892ca7eb88769141a64210c",
+    "data/evaluation/w06/w06_model_preflight_01c_portable_schema_receipt_v1.json": "524fcdefdf92de8783a39662c7514eb26612f4228545ad4cd687e700684eceb0",
+    "data/evaluation/w06/w06_model_preflight_01d_v2_live_plan_v1.json": "121b3918fdcae02a93b76a0855f7ce019bb1396f47e85a59978ce9bcde8934c2",
+    "data/evaluation/w06/w06_model_preflight_01d_v2_live_receipt_v1.json": "2c8c3384e1977816aeff559cddc8010ad9b57fdfa62b618090b7f3911e732e65",
+    "data/evaluation/w06/w06_model_preflight_portable_schema_v2_manifest.json": "b11974a5119dc49de80d96e2a9ed11ad5c7aca93aff25fec2cb54049a27c6b28",
+    "data/evaluation/w06/w06_model_preflight_schema_portability_amendment_v1.json": "7b33fc2568e942db751649a7b2908dba50d2155e311582717e4f753bd608d350",
+    "data/evaluation/w06/w06_p11_assignment_manifest_v1.json": "0aa9ae923d0e7f29df49735fa41e87530b1caf62418fcbec09a1eff81d83af62",
+    "data/evaluation/w06/w06_scenario_method_lock_v1.json": "5e5359f9f10a0248a9cf031f8e8b26c0314c46aecfe0d9df479388bbe4fd1af9",
+    "data/evaluation/w06/w06_scenario_support_matrix_v1.json": "68c2bfc2164e664b3856c31b99a92d75a588f64465526b47c9104918a51cedb4",
+    "data/evaluation/w06/w06_scenarios_freeze_v1.json": "c03bc6dc300604ac395505d59b6413c1a47339b21408cfd637671e81d4b555a1"
+  },
+  "historical_qa02_unchanged": true,
+  "http_request_counting": "PASS",
+  "live_authorization_present": false,
+  "live_capability_role": "FAIL_CLOSED_ORCHESTRATION_GUARD",
+  "live_provider_calls": 0,
+  "model_id_integrity": "PASS",
+  "network_kill_switch_test": "PASS",
+  "next_gate": "W06-DEV-LIVE-RUNNER-QA-01-OFFLINE-ADVERSARIAL",
+  "plan_before_live_protocol": "PASS",
+  "portable_generation_schema_v2_sha256": "825a4ff912d851a95f7392cb564b7d7ca3588135508dc6eb3ac6304cdde3c490",
+  "post_capability_repo_drift_blocked": "PASS",
+  "production_anthropic_transport": "PASS",
+  "production_google_transport": "PASS",
+  "production_openai_transport": "PASS",
+  "programmatic_live_gate_bypass_closed": "PASS",
+  "prompt_freeze_status": "NOT_YET_FROZEN",
+  "prompt_semantic_freeze_gate_status": "INFRASTRUCTURE_ONLY_PENDING_LATER_PROMPT_FREEZE_GATE",
+  "provider_config_attestation": "PASS",
+  "provider_config_registry_sha256": "3dc05d29acc2f647cba58303865bd7406b8c1d9f7ccbe0f120e87ad471190938",
+  "provider_cost_usd": 0,
+  "provider_exception_mapping": "PASS",
+  "raw_evidence_immutability": "PASS",
+  "runner_implemented": true,
+  "runner_in_scientific_code_bundle": true,
+  "runner_module_path": "apps/ai-service/app/evaluation/dev_live_runner.py",
+  "same_process_stage_a_to_stage_b_blocked": "PASS",
+  "scientific_code_bundle_file_hashes": [
+    {
+      "path": "apps/ai-service/app/evaluation/dev_live_runner.py",
+      "sha256": "9f3441c2ca290e9a33b4daa78eaaa58063978364d8375145fc7483b04ed8b817"
+    },
+    {
+      "path": "apps/ai-service/app/evaluation/dev_selection_harness.py",
+      "sha256": "85b17c2daa1ea59e26c3118d5cafb38cb3c73a5d57288e2fb4e5fc0e0a732c97"
+    },
+    {
+      "path": "apps/ai-service/app/evaluation/model_preflight/__init__.py",
+      "sha256": "178aede4930a6b848714fa6d84e14e415df35d1bf7641312ff6f311e3de477dd"
+    },
+    {
+      "path": "apps/ai-service/app/evaluation/model_preflight/anthropic_adapter.py",
+      "sha256": "ef2570126f6db736a4ef056ac27fcfc77db97fa6ed6526c901e299c71b1b1d42"
+    },
+    {
+      "path": "apps/ai-service/app/evaluation/model_preflight/base.py",
+      "sha256": "55bd026f224eaf15f5fb68e98d9cd9467bf85f0f90305acac397caef0970454d"
+    },
+    {
+      "path": "apps/ai-service/app/evaluation/model_preflight/google_adapter.py",
+      "sha256": "184887b19826094326e5fea47efd7aec71308b36af404225f5ef8d0d40882f1c"
+    },
+    {
+      "path": "apps/ai-service/app/evaluation/model_preflight/openai_adapter.py",
+      "sha256": "62b72237402808ab88d71627ce05d948d4b7d251ba87af51208876c784ee9346"
+    },
+    {
+      "path": "apps/ai-service/app/evaluation/model_preflight/schema_adapter.py",
+      "sha256": "19513c8735ba4acb2b88587915d6458de2c28d622499c05314d4f9030eb3c589"
+    },
+    {
+      "path": "apps/ai-service/app/evaluation/model_preflight/types.py",
+      "sha256": "1fdb31f200a71df4193f1fe4844b49dc1e9750c51c7388e6642dac44ae349371"
+    },
+    {
+      "path": "apps/ai-service/app/evaluation/planner_benchmark_evaluator.py",
+      "sha256": "1b299f75a3a51d01b63b1b004df3d8b9d92224591ccde5d537b83735ca268f66"
+    },
+    {
+      "path": "apps/ai-service/app/prompts/planner_benchmark_prompt.py",
+      "sha256": "22aa9cd172548fe51a8699704e5832ad44e1d8e946a1ad79437aed99d46c98cb"
+    },
+    {
+      "path": "apps/ai-service/app/schemas/planner_benchmark.py",
+      "sha256": "3f27ed7e12b2492d722937d4f36476e8dbf97635c281a6e270fd0621cc18e712"
+    },
+    {
+      "path": "apps/ai-service/app/services/planner_benchmark_runner.py",
+      "sha256": "2831f5aadd80959a86f388508c73679215830ca8854f2a4fbd474328fa7288b7"
+    },
+    {
+      "path": "apps/ai-service/recommendation/reca/contract.py",
+      "sha256": "1a62c36a95092be35ab78dca43e20f646016e154746ee051a499bdebfc67538c"
+    }
+  ],
+  "scientific_code_bundle_files": [
+    "apps/ai-service/app/evaluation/dev_live_runner.py",
+    "apps/ai-service/app/evaluation/dev_selection_harness.py",
+    "apps/ai-service/app/evaluation/model_preflight/__init__.py",
+    "apps/ai-service/app/evaluation/model_preflight/anthropic_adapter.py",
+    "apps/ai-service/app/evaluation/model_preflight/base.py",
+    "apps/ai-service/app/evaluation/model_preflight/google_adapter.py",
+    "apps/ai-service/app/evaluation/model_preflight/openai_adapter.py",
+    "apps/ai-service/app/evaluation/model_preflight/schema_adapter.py",
+    "apps/ai-service/app/evaluation/model_preflight/types.py",
+    "apps/ai-service/app/evaluation/planner_benchmark_evaluator.py",
+    "apps/ai-service/app/prompts/planner_benchmark_prompt.py",
+    "apps/ai-service/app/schemas/planner_benchmark.py",
+    "apps/ai-service/app/services/planner_benchmark_runner.py",
+    "apps/ai-service/recommendation/reca/contract.py"
+  ],
+  "scientific_code_bundle_sha256": "0638f2fcb100b0000e3a2a4e08137a9d468449001f258de7354df21e185ca2e3",
+  "secret_sanitization": "PASS",
+  "semantic_schema_sha256": "e4169f7b890f77d13af65e9f2070b6071c535b206d88440f5e8f28c179977555",
+  "stage_a_commit_attestation": "PASS",
+  "stage_a_freeze_receipt": "PASS",
+  "stage_a_process_token_auto_stamped_by_production_builder": "PASS",
+  "stage_a_process_token_required_non_empty": "PASS",
+  "status": "READY_FOR_CHATGPT_FINAL_REAUDIT",
+  "stochasticity_execution_started": false,
+  "strict_primary_parser": "PASS",
+  "supported_candidates": [
+    "C1",
+    "C2",
+    "C3"
+  ],
+  "task_id": "W06-DEV-LIVE-RUNNER-01-OFFLINE",
+  "transport_start_journal": "PASS",
+  "version": "1.2.0",
+  "winner_selected": false
+}
