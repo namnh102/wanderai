@@ -34,13 +34,20 @@ _HISTORICAL_QA01_TEST_BASENAME = "test_w06_dev_selection_harness_qa_01.py"
 HISTORICAL_QA01_SKIP_REASON = (
     "HISTORICAL_QA01_EVIDENCE_ONLY_CURRENT_HARNESS_REAUDITED_BY_QA02"
 )
+_HISTORICAL_QA02_TEST_BASENAME = "test_w06_dev_selection_harness_qa_02.py"
+HISTORICAL_QA02_SKIP_REASON = "HISTORICAL_EVIDENCE_ONLY"
 
 
 def pytest_collection_modifyitems(
     config: pytest.Config, items: List[pytest.Item]
 ) -> None:
-    skip_marker = pytest.mark.skip(reason=HISTORICAL_QA01_SKIP_REASON)
+    skip_qa01 = pytest.mark.skip(reason=HISTORICAL_QA01_SKIP_REASON)
+    skip_qa02 = pytest.mark.skip(reason=HISTORICAL_QA02_SKIP_REASON)
     for item in items:
         item_path = getattr(item, "path", None) or getattr(item, "fspath", None)
-        if item_path is not None and Path(str(item_path)).name == _HISTORICAL_QA01_TEST_BASENAME:
-            item.add_marker(skip_marker)
+        if item_path is not None:
+            name = Path(str(item_path)).name
+            if name == _HISTORICAL_QA01_TEST_BASENAME:
+                item.add_marker(skip_qa01)
+            elif name == _HISTORICAL_QA02_TEST_BASENAME:
+                item.add_marker(skip_qa02)

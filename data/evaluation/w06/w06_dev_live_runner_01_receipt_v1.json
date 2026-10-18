@@ -1,7 +1,12 @@
 {
+  "actual_production_provider_transports_implemented": true,
+  "arbitrary_callable_live_transport_forbidden": "PASS",
   "artifact_id": "W06-DEV-LIVE-RUNNER-01-RECEIPT-V1",
+  "audit_correction_task_id": "W06-DEV-LIVE-RUNNER-01-AUDIT-CORRECTION-01",
   "authorization_gate": "PASS",
   "base_develop_sha": "b2dfd8afb8db2e2bc4dfbb2d0ca4e6a9d22e3a50",
+  "benchmark_manifest_config_truthful": "PASS",
+  "benchmark_manifest_provenance_truthful": "PASS",
   "call_budget_ledger": "PASS",
   "call_budgets": {
     "dev_select": 180,
@@ -17,6 +22,7 @@
   "dev_select_execution_started": false,
   "dev_tune_execution_started": false,
   "dry_run_supported": true,
+  "execution_mode_truthful": "PASS",
   "final100_separation": "PASS",
   "final100_used": false,
   "frozen_authority_preservation": {
@@ -39,6 +45,8 @@
     "data/evaluation/w06/w06_scenario_support_matrix_v1.json": "68c2bfc2164e664b3856c31b99a92d75a588f64465526b47c9104918a51cedb4",
     "data/evaluation/w06/w06_scenarios_freeze_v1.json": "c03bc6dc300604ac395505d59b6413c1a47339b21408cfd637671e81d4b555a1"
   },
+  "historical_qa02_unchanged": true,
+  "http_request_counting": "PASS",
   "live_authorization_present": false,
   "live_provider_calls": 0,
   "model_id_integrity": "PASS",
@@ -46,11 +54,16 @@
   "next_gate": "W06-DEV-LIVE-RUNNER-QA-01-OFFLINE-ADVERSARIAL",
   "plan_before_live_protocol": "PASS",
   "portable_generation_schema_v2_sha256": "825a4ff912d851a95f7392cb564b7d7ca3588135508dc6eb3ac6304cdde3c490",
+  "production_anthropic_transport": "PASS",
+  "production_google_transport": "PASS",
+  "production_openai_transport": "PASS",
+  "programmatic_live_gate_bypass_closed": "PASS",
   "prompt_freeze_status": "NOT_YET_FROZEN",
   "prompt_semantic_freeze_gate_status": "INFRASTRUCTURE_ONLY_PENDING_LATER_PROMPT_FREEZE_GATE",
   "provider_config_attestation": "PASS",
   "provider_config_registry_sha256": "3dc05d29acc2f647cba58303865bd7406b8c1d9f7ccbe0f120e87ad471190938",
   "provider_cost_usd": 0,
+  "provider_exception_mapping": "PASS",
   "raw_evidence_immutability": "PASS",
   "runner_implemented": true,
   "runner_in_scientific_code_bundle": true,
@@ -58,7 +71,7 @@
   "scientific_code_bundle_file_hashes": [
     {
       "path": "apps/ai-service/app/evaluation/dev_live_runner.py",
-      "sha256": "55fe4ce22255dceb0dc4167fb9e2ab80b83a984fd4b262ae9281e5527895a5e8"
+      "sha256": "6f7aeaa3dea243be6e8d0969a372777aa75d4d4894e7b1b8fa010d69f4bb6a8c"
     },
     {
       "path": "apps/ai-service/app/evaluation/dev_selection_harness.py",
@@ -129,10 +142,12 @@
     "apps/ai-service/app/services/planner_benchmark_runner.py",
     "apps/ai-service/recommendation/reca/contract.py"
   ],
-  "scientific_code_bundle_sha256": "a67a48b18aac9c527e38f531984c49bc741e126b366a2095f765a1825f2af2be",
+  "scientific_code_bundle_sha256": "f8e10a0c98e234d9eaa42b93bbb0eee11842c403b25a9d97debac1df93d80f27",
   "secret_sanitization": "PASS",
   "semantic_schema_sha256": "e4169f7b890f77d13af65e9f2070b6071c535b206d88440f5e8f28c179977555",
-  "status": "READY_FOR_CHATGPT_AUDIT",
+  "stage_a_commit_attestation": "PASS",
+  "stage_a_freeze_receipt": "PASS",
+  "status": "READY_FOR_CHATGPT_REAUDIT",
   "stochasticity_execution_started": false,
   "strict_primary_parser": "PASS",
   "supported_candidates": [
@@ -142,6 +157,6 @@
   ],
   "task_id": "W06-DEV-LIVE-RUNNER-01-OFFLINE",
   "transport_start_journal": "PASS",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "winner_selected": false
 }

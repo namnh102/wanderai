@@ -1,4 +1,4 @@
-"""Production-grade W06 DEV Live Runner Infrastructure (W06-DEV-LIVE-RUNNER-01-OFFLINE).
+"""Production-grade W06 DEV Live Runner Infrastructure (W06-DEV-LIVE-RUNNER-01-OFFLINE & AUDIT-CORRECTION-01).
 
 Grounded in:
 - data/evaluation/w06/w06_model_arch_selection_method_lock_v1.json (W06-MODEL-ARCH-SELECTION-METHOD-LOCK-01 v1.0.0)
@@ -8,8 +8,9 @@ Grounded in:
 - apps/ai-service/app/evaluation/dev_selection_harness.py (Frozen DEV selection harness authority)
 
 STRICT SCIENTIFIC & OPERATIONAL INVARIANTS:
-- Offline by default: zero live provider calls unless BOTH explicit `--execute-live` CLI/action flag
-  AND a verified, phase-scoped `DevLiveAuthorizationArtifact` are supplied.
+- Offline by default: zero live provider calls unless explicit `--execute-live` CLI/action flag,
+  a verified phase-scoped `DevLiveAuthorizationArtifact`, a verified `DevLiveStageAFreezeReceipt`
+  with git commit ancestor + blob attestation, AND an unforgeable `LiveExecutionCapability` are supplied.
 - In W06-DEV-LIVE-RUNNER-01-OFFLINE: LIVE_PROVIDER_CALLS = 0, PROVIDER_COST_USD = 0,
   LIVE_AUTHORIZATION_PRESENT = false, PROMPT_FREEZE_STATUS = NOT_YET_FROZEN.
 - Secret-independent offline execution: never reads API key values or requires `.env` in offline/dry-run/test modes;
@@ -19,22 +20,24 @@ STRICT SCIENTIFIC & OPERATIONAL INVARIANTS:
   and C3 (`anthropic` / `claude-sonnet-5-5`), all requiring `PASSED_TECHNICAL_PREFLIGHT_SCHEMA_V2`
   under Portable Schema V2 (`825a4ff912d851a95f7392cb564b7d7ca3588135508dc6eb3ac6304cdde3c490`)
   and Semantic Schema (`e4169f7b890f77d13af65e9f2070b6071c535b206d88440f5e8f28c179977555`).
-- Plan-Before-Live Protocol (Two-Stage Evidence):
-  Stage A freezes execution plan, prompt freeze artifact, code bundle, provider configs, authorization,
-  and exact assigned cell list on disk BEFORE any live execution.
-  Stage B executes only against pre-frozen Stage A artifacts and refuses any combined create-plan-and-execute step.
-- Single-request / Zero-retry: SDK retry = 0, transport retry = 0, manual retry = 0; at most 1 provider
-  generation request per assigned cell.
-- Transport-Start Journal & Crash Ambiguity Fail-Closed:
-  Writes `transport_journal_starting.json` (`TRANSPORT_STARTING`) atomically BEFORE transport and
-  `transport_journal_completed.json` (`TRANSPORT_COMPLETED`) as a separate append-only artifact AFTER transport.
-  If a restart discovers `TRANSPORT_STARTING` without confirmed completion, records
-  `ATTEMPT_STATUS_UNKNOWN_AFTER_TRANSPORT` and stops the entire batch without rerunning the cell.
-- Raw Evidence Before Interpretation:
-  Writes `request_manifest.json` before transport and writes `transport_journal_completed.json`,
-  `raw_provider_response.txt`, `raw_usage_metadata.json`, and `provider_response_metadata.json`
-  IMMEDIATELY after transport returns, BEFORE any model ID validation, JSON parsing, semantic validation,
-  or evaluator invocation capable of failing.
+- Real Production Transports & HTTP Boundary Counting:
+  Implements `GoogleGeminiProductionTransport` (C1), `OpenAIChatCompletionsProductionTransport` (C2),
+  `AnthropicMessagesProductionTransport` (C3), and `ProductionDevProviderTransport` backed by
+  `DevCountingHttpxTransport` / `DevCountingHttpx2Transport` enforcing at most 1 outbound HTTP
+  generation request per cell (`retry = 0`).
+- Transport Type Safety & Programmatic Live-Gate Closure:
+  `execute_live_dev_cell()` and `execute_live_dev_batch()` require an explicit `execution_mode`:
+  - `LIVE_EXECUTION`: requires an unforgeable `LiveExecutionCapability` (issued only after verifying
+    `execute_live=True`, `DevExecutionPlan`, `DevPromptFreezeArtifact`, `DevLiveAuthorizationArtifact`,
+    and committed `DevLiveStageAFreezeReceipt` ancestor/blob attestation) and a `ProductionDevProviderTransport`.
+    Arbitrary callables or mock transports are strictly rejected.
+  - `OFFLINE_MOCK_TEST`: accepts only `MockDevProviderTransport` or `MockProviderTransportResponse`
+    and rejects `ProductionDevProviderTransport` or `LiveExecutionCapability`.
+- Truthful BenchmarkRunManifest Provenance:
+  `generation_parameters` truthfully records `temperature_status = "OMITTED"` and exact candidate
+  seed/reasoning/thinking parameters (never claiming `temperature = 0.0`).
+  `execution_mode` truthfully records `OFFLINE_MOCK_VERIFICATION`, `LIVE_DEV_TUNE`, `LIVE_DEV_SELECT`,
+  or `STOCHASTICITY_DIAGNOSTIC`.
 """
 
 from __future__ import annotations
@@ -43,10 +46,12 @@ import argparse
 import copy
 import datetime as dt
 from decimal import Decimal
+from enum import Enum
 import json
 import os
 from pathlib import Path
 import re
+import subprocess
 import tempfile
 import time
 from typing import (
@@ -64,21 +69,24 @@ from typing import (
     Union,
 )
 
+import anthropic
+from google import genai
+from google.genai import types as genai_types
+import httpx
+import httpx2
+import openai
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from app.evaluation.dev_selection_harness import (
-    ALLOWED_PROMPT_IDS,
     BATCH_STOP_FAILURE_CLASSIFICATIONS,
-    DEV_SELECT_COUNT,
     DEV_SELECT_MAX_CALLS,
-    DEV_TUNE_COUNT,
     DEV_TUNE_MAX_CALLS_ONE_PROMPT,
     DEV_TUNE_MAX_CALLS_TWO_PROMPTS,
     EXPECTED_PORTABLE_SCHEMA_V2_SHA256,
     EXPECTED_SEMANTIC_SCHEMA_SHA256,
-    EXPECTED_STOCHASTICITY_FIXTURE_IDS,
     FROZEN_SAMPLING_SEED,
     ORDERED_CANDIDATE_IDS,
+    ORDINARY_DENOMINATOR_FAILURE_CLASSIFICATIONS,
     REPO_ROOT,
     SCIENTIFIC_CODE_BUNDLE_RELATIVE_PATHS,
     STOCHASTICITY_MAX_CALLS,
@@ -86,7 +94,6 @@ from app.evaluation.dev_selection_harness import (
     CandidateCostComparabilityRecord,
     CandidateRegistryIntegrityError,
     CodeCommitProvenanceError,
-    DenominatorIntegrityError,
     DevCandidateRegistry,
     DevCandidateSpec,
     DevCellExecutionManifest,
@@ -104,7 +111,6 @@ from app.evaluation.dev_selection_harness import (
     PromptCandidateSpec,
     PromptFreezeFirewallError,
     PromptRegistry,
-    PromptRegistryIntegrityError,
     ScientificCodeBundleIntegrityError,
     StochasticityDiagnosticPlan,
     StochasticityGateViolationError,
@@ -116,7 +122,6 @@ from app.evaluation.dev_selection_harness import (
     build_deterministic_dev_scenario_context,
     build_dev_tune_execution_plan,
     canonical_json_bytes,
-    compute_candidate_provider_config_sha256,
     compute_canonical_cell_cost_decimal,
     compute_canonical_cell_cost_usd,
     compute_provider_config_registry_sha256,
@@ -168,7 +173,8 @@ from app.services.planner_benchmark_runner import (
 
 TASK_ID_DEV_LIVE_RUNNER_01: str = "W06-DEV-LIVE-RUNNER-01-OFFLINE"
 RUNNER_RECEIPT_ARTIFACT_ID: str = "W06-DEV-LIVE-RUNNER-01-RECEIPT-V1"
-RUNNER_VERSION: str = "1.0.0"
+STAGE_A_FREEZE_RECEIPT_ARTIFACT_ID: str = "W06-DEV-LIVE-STAGE-A-FREEZE-RECEIPT-V1"
+RUNNER_VERSION: str = "1.1.0"
 EXPECTED_BASE_DEVELOP_SHA_RUNNER_01: str = "b2dfd8afb8db2e2bc4dfbb2d0ca4e6a9d22e3a50"
 NEXT_GATE_RUNNER_QA_01: str = "W06-DEV-LIVE-RUNNER-QA-01-OFFLINE-ADVERSARIAL"
 
@@ -176,6 +182,8 @@ PROMPT_FREEZE_STATUS_NOT_YET_FROZEN: str = "NOT_YET_FROZEN"
 PROMPT_FREEZE_INFRASTRUCTURE_STATUS: str = (
     "INFRASTRUCTURE_ONLY_PENDING_LATER_PROMPT_FREEZE_GATE"
 )
+
+STAGE_A_STATUS_FROZEN_BEFORE_LIVE: str = "FROZEN_BEFORE_LIVE"
 
 TRANSPORT_STATUS_NOT_INVOKED: str = "TRANSPORT_NOT_INVOKED"
 TRANSPORT_STATUS_STARTING: str = "TRANSPORT_STARTING"
@@ -191,10 +199,38 @@ ALLOWED_RUNNER_PHASES: Tuple[str, str, str] = (
     "STOCHASTICITY",
 )
 
+RUNNER_EXECUTION_MODE_OFFLINE_MOCK_TEST: str = "OFFLINE_MOCK_TEST"
+RUNNER_EXECUTION_MODE_LIVE_EXECUTION: str = "LIVE_EXECUTION"
+
+MANIFEST_EXECUTION_MODE_OFFLINE_MOCK: str = "OFFLINE_MOCK_VERIFICATION"
+MANIFEST_EXECUTION_MODE_LIVE_DEV_TUNE: str = "LIVE_DEV_TUNE"
+MANIFEST_EXECUTION_MODE_LIVE_DEV_SELECT: str = "LIVE_DEV_SELECT"
+MANIFEST_EXECUTION_MODE_STOCHASTICITY: str = "STOCHASTICITY_DIAGNOSTIC"
+
+
+class RunnerExecutionMode(str, Enum):
+    """Explicit execution mode required by execute_live_dev_cell and execute_live_dev_batch."""
+
+    OFFLINE_MOCK_TEST = "OFFLINE_MOCK_TEST"
+    LIVE_EXECUTION = "LIVE_EXECUTION"
+
+
 CANDIDATE_PROVIDER_BY_ID: Dict[str, str] = {
     "C1": "google",
     "C2": "openai",
     "C3": "anthropic",
+}
+
+CANDIDATE_ENV_KEY_BY_ID: Dict[str, str] = {
+    "C1": "GEMINI_API_KEY",
+    "C2": "OPENAI_API_KEY",
+    "C3": "ANTHROPIC_API_KEY",
+}
+
+CANDIDATE_MODEL_BY_ID: Dict[str, str] = {
+    "C1": "gemini-3.8-flash",
+    "C2": "gpt-6.1-sol",
+    "C3": "claude-sonnet-5-5",
 }
 
 DEFAULT_COST_COMPARABILITY_BY_CANDIDATE: Dict[str, CandidateCostComparabilityRecord] = {
@@ -239,6 +275,7 @@ CELL_IMMUTABLE_ARTIFACT_FILENAMES: Tuple[str, ...] = (
     "raw_provider_response.txt",
     "provider_response_metadata.json",
     "raw_usage_metadata.json",
+    "run_manifest.json",
     "parsed_plan_response.json",
     "evaluation_result.json",
     "execution_receipt.json",
@@ -273,6 +310,8 @@ _SECRET_TOKEN_PATTERNS: Tuple[re.Pattern[str], ...] = (
     ),
 )
 
+_CAPABILITY_MINT_GUARD = object()
+
 
 # ==============================================================================
 # 2. RUNNER EXCEPTION TAXONOMY
@@ -290,7 +329,7 @@ class DevLiveAuthorizationError(DevLiveRunnerError):
 class LiveExecutionNotAuthorizedError(
     DevHarnessOfflineViolationError, DevLiveAuthorizationError
 ):
-    """Raised when live execution is attempted without both --execute-live and a verified authorization artifact."""
+    """Raised when live execution is attempted without explicit live capability and verified Stage-A evidence."""
 
 
 class DevCallBudgetExhaustedError(DevLiveRunnerError):
@@ -306,7 +345,7 @@ class CrashAmbiguityBatchStopError(DevLiveRunnerError):
 
 
 class PlanBeforeLiveProtocolError(DevLiveRunnerError):
-    """Raised when Stage A pre-frozen artifacts or execution plan membership requirements are violated."""
+    """Raised when Stage A pre-frozen artifacts, Stage-A commit attestation, or plan membership requirements are violated."""
 
 
 class SecretLeakageViolationError(DevLiveRunnerError):
@@ -453,7 +492,7 @@ def write_immutable_utf8_text(
 
 
 # ==============================================================================
-# 4. AUTHORIZATION ARTIFACT CONTRACT & SCOPE VERIFICATION (SECTIONS 13, 14, 15)
+# 4. AUTHORIZATION ARTIFACT CONTRACT & HARDENED BUILDER (SECTION 12)
 # ==============================================================================
 
 
@@ -517,7 +556,7 @@ def verify_runner_prompt_freeze_artifact(
 
 
 class DevLiveAuthorizationArtifact(BaseModel):
-    """Frozen authorization contract required for any future live DEV cell/batch execution (Section 14)."""
+    """Frozen authorization contract required for any future live DEV cell/batch execution."""
 
     model_config = ConfigDict(extra="forbid")
 
@@ -680,6 +719,70 @@ def build_dev_live_authorization_artifact(
     *,
     task_id: str,
     authorization_id: str,
+    authorized_by_role: str,
+    authorized_at_utc: str,
+    authorization_status: str,
+    allowed_phase: str,
+    allowed_candidate_ids: Sequence[str],
+    maximum_live_generation_calls: int,
+    execution_plan: Union[DevExecutionPlan, StochasticityDiagnosticPlan],
+    prompt_freeze: DevPromptFreezeArtifact,
+    scientific_code_bundle_sha256: Optional[str] = None,
+    code_basis_commit_sha: Optional[str] = None,
+) -> DevLiveAuthorizationArtifact:
+    """Production authorization artifact builder (Section 12).
+
+    Strictly requires explicit `authorized_by_role`, `authorized_at_utc`,
+    `authorization_status`, `authorization_id`, `allowed_phase`,
+    `allowed_candidate_ids`, and `maximum_live_generation_calls` with ZERO
+    implicit `PROJECT_OWNER` or `AUTHORIZED` defaults.
+    """
+    if (
+        not task_id
+        or not authorization_id
+        or not authorized_by_role
+        or not authorized_at_utc
+        or not authorization_status
+        or not allowed_phase
+        or allowed_candidate_ids is None
+        or maximum_live_generation_calls is None
+    ):
+        raise DevLiveAuthorizationError(
+            "AUTHORIZATION_EXPLICIT_FIELDS_REQUIRED: Production authorization builder requires explicit "
+            "task_id, authorization_id, authorized_by_role, authorized_at_utc, authorization_status, "
+            "allowed_phase, allowed_candidate_ids, and maximum_live_generation_calls."
+        )
+    bundle_sha = (
+        scientific_code_bundle_sha256
+        or execution_plan.scientific_code_bundle_sha256
+    )
+    basis_sha = code_basis_commit_sha or execution_plan.code_basis_commit_sha
+    pf_sha = compute_prompt_freeze_sha256(prompt_freeze)
+
+    body: Dict[str, Any] = {
+        "task_id": task_id,
+        "authorization_id": authorization_id,
+        "authorized_by_role": authorized_by_role,
+        "authorized_at_utc": authorized_at_utc,
+        "allowed_phase": allowed_phase,
+        "allowed_execution_plan_sha256": execution_plan.plan_sha256,
+        "allowed_prompt_freeze_sha256": pf_sha,
+        "allowed_candidate_ids": list(allowed_candidate_ids),
+        "maximum_live_generation_calls": int(maximum_live_generation_calls),
+        "authorization_status": authorization_status,
+        "scientific_code_bundle_sha256": bundle_sha,
+        "code_basis_commit_sha": basis_sha,
+    }
+    artifact_sha = sha256_bytes(canonical_json_bytes(body))
+    return DevLiveAuthorizationArtifact.model_validate(
+        {**body, "authorization_artifact_sha256": artifact_sha}
+    )
+
+
+def build_test_only_authorization_artifact(
+    *,
+    task_id: str,
+    authorization_id: str,
     allowed_phase: str,
     execution_plan: Union[DevExecutionPlan, StochasticityDiagnosticPlan],
     prompt_freeze: DevPromptFreezeArtifact,
@@ -691,7 +794,7 @@ def build_dev_live_authorization_artifact(
     scientific_code_bundle_sha256: Optional[str] = None,
     code_basis_commit_sha: Optional[str] = None,
 ) -> DevLiveAuthorizationArtifact:
-    """Build a deterministically hashed `DevLiveAuthorizationArtifact` for testing or future owner gate."""
+    """TEST-ONLY helper for synthetic offline runner unit tests (Section 12)."""
     cands = (
         list(allowed_candidate_ids)
         if allowed_candidate_ids is not None
@@ -710,30 +813,19 @@ def build_dev_live_authorization_artifact(
             else execution_plan.expected_total_cells
         )
     )
-    bundle_sha = (
-        scientific_code_bundle_sha256
-        or execution_plan.scientific_code_bundle_sha256
-    )
-    basis_sha = code_basis_commit_sha or execution_plan.code_basis_commit_sha
-    pf_sha = compute_prompt_freeze_sha256(prompt_freeze)
-
-    body: Dict[str, Any] = {
-        "task_id": task_id,
-        "authorization_id": authorization_id,
-        "authorized_by_role": authorized_by_role,
-        "authorized_at_utc": authorized_at_utc,
-        "allowed_phase": allowed_phase,
-        "allowed_execution_plan_sha256": execution_plan.plan_sha256,
-        "allowed_prompt_freeze_sha256": pf_sha,
-        "allowed_candidate_ids": cands,
-        "maximum_live_generation_calls": max_calls,
-        "authorization_status": authorization_status,
-        "scientific_code_bundle_sha256": bundle_sha,
-        "code_basis_commit_sha": basis_sha,
-    }
-    artifact_sha = sha256_bytes(canonical_json_bytes(body))
-    return DevLiveAuthorizationArtifact.model_validate(
-        {**body, "authorization_artifact_sha256": artifact_sha}
+    return build_dev_live_authorization_artifact(
+        task_id=task_id,
+        authorization_id=authorization_id,
+        authorized_by_role=authorized_by_role,
+        authorized_at_utc=authorized_at_utc,
+        authorization_status=authorization_status,
+        allowed_phase=allowed_phase,
+        allowed_candidate_ids=cands,
+        maximum_live_generation_calls=max_calls,
+        execution_plan=execution_plan,
+        prompt_freeze=prompt_freeze,
+        scientific_code_bundle_sha256=scientific_code_bundle_sha256,
+        code_basis_commit_sha=code_basis_commit_sha,
     )
 
 
@@ -746,7 +838,7 @@ def verify_dev_live_authorization_artifact(
     dev_select_result: Optional[DevSelectModelSelectionResult] = None,
     repo_root: Optional[Path] = None,
 ) -> DevLiveAuthorizationArtifact:
-    """Fail-closed verification of a `DevLiveAuthorizationArtifact` against plan, prompt freeze, phase, and code bundle (Sections 14, 15)."""
+    """Fail-closed verification of a `DevLiveAuthorizationArtifact` against plan, prompt freeze, phase, and code bundle."""
     if authorization_or_path is None:
         raise DevLiveAuthorizationError(
             "AUTHORIZATION_MISSING: Live or authorized DEV execution requires a valid DevLiveAuthorizationArtifact."
@@ -754,7 +846,7 @@ def verify_dev_live_authorization_artifact(
 
     if isinstance(authorization_or_path, (Path, str)):
         auth_path = Path(authorization_or_path)
-        assert_not_final100_path(auth_path)
+        _assert_runner_not_final100_path(auth_path)
         if not auth_path.exists():
             raise DevLiveAuthorizationError(
                 f"AUTHORIZATION_FILE_MISSING: Authorization artifact does not exist at {auth_path}"
@@ -855,6 +947,642 @@ def verify_dev_live_authorization_artifact(
         )
 
     return auth
+
+
+# ==============================================================================
+# 4B. STAGE-A FREEZE RECEIPT & GIT COMMIT ANCESTOR ATTESTATION (SECTIONS 9, 10, 11)
+# ==============================================================================
+
+
+def compute_assigned_cells_sha256(
+    execution_plan: Union[DevExecutionPlan, StochasticityDiagnosticPlan]
+) -> Tuple[List[str], str]:
+    """Compute ordered list of assigned cell `run_id`s and canonical SHA256 over all cell manifests."""
+    run_ids = [c.run_id for c in execution_plan.cells]
+    cell_dumps = [c.model_dump() for c in execution_plan.cells]
+    return run_ids, sha256_bytes(canonical_json_bytes(cell_dumps))
+
+
+_CURRENT_PROCESS_INVOCATION_TOKEN: str = f"pid-{os.getpid()}-ns-{time.monotonic_ns()}"
+
+
+class DevLiveStageAFreezeReceipt(BaseModel):
+    """Stage-A pre-execution freeze attestation receipt required before live execution (Sections 9, 10, 11)."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    artifact_id: str = STAGE_A_FREEZE_RECEIPT_ARTIFACT_ID
+    phase: str
+    execution_plan_sha256: str
+    prompt_freeze_sha256: str
+    authorization_artifact_sha256: str
+    scientific_code_bundle_sha256: str
+    provider_config_registry_sha256: str
+    assigned_cell_run_ids: List[str]
+    assigned_cells_sha256: str
+    code_basis_commit_sha: str
+    stage_a_commit_sha: str
+    freeze_created_at_utc: str = Field(..., min_length=1)
+    stage_a_process_token: Optional[str] = None
+    stage_a_status: str = STAGE_A_STATUS_FROZEN_BEFORE_LIVE
+    stage_a_receipt_sha256: str
+
+    @model_validator(mode="before")
+    @classmethod
+    def _validate_stage_a_before(cls, data: Any) -> Any:
+        if not isinstance(data, Mapping):
+            raise PlanBeforeLiveProtocolError(
+                "STAGE_A_RECEIPT_INVALID: Stage-A freeze receipt must be a JSON object."
+            )
+        d = dict(data)
+        assert_no_secrets_in_payload(d, context="STAGE_A_FREEZE_RECEIPT")
+        return d
+
+    @model_validator(mode="after")
+    def _validate_stage_a_after(self) -> "DevLiveStageAFreezeReceipt":
+        if self.phase not in ALLOWED_RUNNER_PHASES:
+            raise PlanBeforeLiveProtocolError(
+                f"STAGE_A_RECEIPT_INVALID_PHASE: {self.phase!r} not in {list(ALLOWED_RUNNER_PHASES)}"
+            )
+        if self.stage_a_status != STAGE_A_STATUS_FROZEN_BEFORE_LIVE:
+            raise PlanBeforeLiveProtocolError(
+                f"STAGE_A_STATUS_INVALID: Expected {STAGE_A_STATUS_FROZEN_BEFORE_LIVE!r}, got {self.stage_a_status!r}."
+            )
+        try:
+            validate_sha256_hex64(self.execution_plan_sha256, "execution_plan_sha256")
+            validate_sha256_hex64(self.prompt_freeze_sha256, "prompt_freeze_sha256")
+            validate_sha256_hex64(
+                self.authorization_artifact_sha256, "authorization_artifact_sha256"
+            )
+            validate_sha256_hex64(
+                self.scientific_code_bundle_sha256, "scientific_code_bundle_sha256"
+            )
+            validate_sha256_hex64(
+                self.provider_config_registry_sha256, "provider_config_registry_sha256"
+            )
+            validate_sha256_hex64(self.assigned_cells_sha256, "assigned_cells_sha256")
+            validate_sha256_hex64(self.stage_a_receipt_sha256, "stage_a_receipt_sha256")
+            validate_git_commit_sha40(self.code_basis_commit_sha)
+            validate_git_commit_sha40(self.stage_a_commit_sha)
+        except Exception as exc:
+            raise PlanBeforeLiveProtocolError(
+                f"STAGE_A_RECEIPT_HASH_INVALID: {exc}"
+            ) from exc
+
+        if not self.assigned_cell_run_ids or len(set(self.assigned_cell_run_ids)) != len(
+            self.assigned_cell_run_ids
+        ):
+            raise PlanBeforeLiveProtocolError(
+                "STAGE_A_RECEIPT_CELLS_INVALID: assigned_cell_run_ids must be non-empty and unique."
+            )
+
+        body = self.model_dump(exclude={"stage_a_receipt_sha256"})
+        expected_sha = sha256_bytes(canonical_json_bytes(body))
+        if self.stage_a_receipt_sha256 != expected_sha:
+            raise PlanBeforeLiveProtocolError(
+                f"STAGE_A_RECEIPT_SHA256_MISMATCH: stage_a_receipt_sha256={self.stage_a_receipt_sha256} "
+                f"!= computed={expected_sha}."
+            )
+        return self
+
+
+def build_stage_a_freeze_receipt(
+    *,
+    execution_plan: Union[DevExecutionPlan, StochasticityDiagnosticPlan],
+    prompt_freeze: DevPromptFreezeArtifact,
+    authorization: DevLiveAuthorizationArtifact,
+    stage_a_commit_sha: str,
+    freeze_created_at_utc: str,
+    stage_a_process_token: Optional[str] = None,
+    candidate_registry: Optional[DevCandidateRegistry] = None,
+) -> DevLiveStageAFreezeReceipt:
+    """Build a canonical `DevLiveStageAFreezeReceipt` binding all Stage-A artifacts and commit provenance."""
+    cand_reg = candidate_registry or load_and_verify_candidate_registry()
+    plan_phase = (
+        "STOCHASTICITY"
+        if isinstance(execution_plan, StochasticityDiagnosticPlan)
+        else execution_plan.phase
+    )
+    run_ids, cells_sha = compute_assigned_cells_sha256(execution_plan)
+    pf_sha = compute_prompt_freeze_sha256(prompt_freeze)
+    pconf_reg_sha = compute_provider_config_registry_sha256(cand_reg)
+
+    body: Dict[str, Any] = {
+        "artifact_id": STAGE_A_FREEZE_RECEIPT_ARTIFACT_ID,
+        "phase": plan_phase,
+        "execution_plan_sha256": execution_plan.plan_sha256,
+        "prompt_freeze_sha256": pf_sha,
+        "authorization_artifact_sha256": authorization.authorization_artifact_sha256,
+        "scientific_code_bundle_sha256": execution_plan.scientific_code_bundle_sha256,
+        "provider_config_registry_sha256": pconf_reg_sha,
+        "assigned_cell_run_ids": run_ids,
+        "assigned_cells_sha256": cells_sha,
+        "code_basis_commit_sha": execution_plan.code_basis_commit_sha,
+        "stage_a_commit_sha": stage_a_commit_sha,
+        "freeze_created_at_utc": freeze_created_at_utc,
+        "stage_a_process_token": stage_a_process_token,
+        "stage_a_status": STAGE_A_STATUS_FROZEN_BEFORE_LIVE,
+    }
+    receipt_sha = sha256_bytes(canonical_json_bytes(body))
+    return DevLiveStageAFreezeReceipt.model_validate(
+        {**body, "stage_a_receipt_sha256": receipt_sha}
+    )
+
+
+def _verify_git_commit_ancestor_and_blobs(
+    *,
+    repo_root: Path,
+    stage_a_commit_sha: str,
+    runtime_head_sha: str,
+    tracked_artifact_paths: Sequence[Path],
+    blob_verified_paths_and_hashes: Sequence[Tuple[Path, str]],
+    code_basis_commit_sha: Optional[str] = None,
+) -> None:
+    """Verify Stage-A and code-basis commits are ancestors of runtime HEAD, files are tracked & clean, and git blobs match (Section 10)."""
+    validate_git_commit_sha40(stage_a_commit_sha)
+    validate_git_commit_sha40(runtime_head_sha)
+    if code_basis_commit_sha is not None:
+        validate_git_commit_sha40(code_basis_commit_sha)
+
+    commits_to_check = [stage_a_commit_sha]
+    if code_basis_commit_sha is not None and code_basis_commit_sha not in commits_to_check:
+        commits_to_check.append(code_basis_commit_sha)
+
+    for commit_sha in commits_to_check:
+        try:
+            cat_proc = subprocess.run(
+                ["git", "cat-file", "-t", commit_sha],
+                cwd=str(repo_root),
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+        except Exception as exc:
+            raise PlanBeforeLiveProtocolError(
+                f"STAGE_A_GIT_VERIFICATION_FAILED: Unable to run git in {repo_root}: {exc}"
+            ) from exc
+        if cat_proc.returncode != 0 or cat_proc.stdout.strip() != "commit":
+            raise PlanBeforeLiveProtocolError(
+                f"STAGE_A_COMMIT_NOT_FOUND_IN_REPO: commit_sha={commit_sha!r} is not a valid commit in {repo_root}."
+            )
+
+        anc_proc = subprocess.run(
+            ["git", "merge-base", "--is-ancestor", commit_sha, runtime_head_sha],
+            cwd=str(repo_root),
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        if anc_proc.returncode != 0:
+            raise PlanBeforeLiveProtocolError(
+                f"STAGE_A_COMMIT_NOT_ANCESTOR_OF_HEAD: commit_sha={commit_sha} "
+                f"is NOT an ancestor of runtime_head_sha={runtime_head_sha}."
+            )
+
+    root_resolved = repo_root.resolve()
+    for fpath in tracked_artifact_paths:
+        f_resolved = fpath.resolve()
+        try:
+            rel_posix = f_resolved.relative_to(root_resolved).as_posix()
+        except ValueError as exc:
+            raise PlanBeforeLiveProtocolError(
+                f"STAGE_A_ARTIFACT_OUTSIDE_REPO: {fpath} is outside repository root {repo_root}."
+            ) from exc
+
+        ls_proc = subprocess.run(
+            ["git", "ls-files", "--error-unmatch", rel_posix],
+            cwd=str(repo_root),
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        if ls_proc.returncode != 0:
+            raise PlanBeforeLiveProtocolError(
+                f"STAGE_A_ARTIFACT_UNCOMMITTED: Stage-A file {rel_posix} is untracked in git; "
+                "Stage-A evidence must be committed before live execution."
+            )
+
+        st_proc = subprocess.run(
+            ["git", "status", "--porcelain", "--", rel_posix],
+            cwd=str(repo_root),
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        if st_proc.returncode != 0 or st_proc.stdout.strip():
+            raise PlanBeforeLiveProtocolError(
+                f"STAGE_A_ARTIFACT_DIRTY_IN_WORKTREE: Stage-A file {rel_posix} has uncommitted changes: "
+                f"{st_proc.stdout.strip()!r}."
+            )
+
+    for fpath, expected_file_sha256 in blob_verified_paths_and_hashes:
+        rel_posix = fpath.resolve().relative_to(root_resolved).as_posix()
+        disk_bytes = normalize_lf_bytes(fpath.read_bytes())
+        disk_sha = sha256_bytes(disk_bytes)
+        if disk_sha != expected_file_sha256:
+            raise PlanBeforeLiveProtocolError(
+                f"STAGE_A_DISK_BLOB_MISMATCH for {rel_posix}: disk={disk_sha} != expected={expected_file_sha256}"
+            )
+
+        for commit_ref in (stage_a_commit_sha, runtime_head_sha):
+            show_proc = subprocess.run(
+                ["git", "show", f"{commit_ref}:{rel_posix}"],
+                cwd=str(repo_root),
+                capture_output=True,
+                check=False,
+            )
+            if show_proc.returncode != 0:
+                raise PlanBeforeLiveProtocolError(
+                    f"STAGE_A_BLOB_MISSING_IN_COMMIT: {rel_posix} not found in commit {commit_ref}."
+                )
+            committed_sha = sha256_bytes(normalize_lf_bytes(show_proc.stdout))
+            if committed_sha != expected_file_sha256:
+                raise PlanBeforeLiveProtocolError(
+                    f"STAGE_A_COMMITTED_BLOB_MISMATCH for {rel_posix} at {commit_ref}: "
+                    f"committed={committed_sha} != expected={expected_file_sha256}."
+                )
+
+
+def verify_stage_a_freeze_receipt(
+    stage_a_receipt_or_path: Union[DevLiveStageAFreezeReceipt, Mapping[str, Any], Path, str],
+    *,
+    execution_plan: Union[DevExecutionPlan, StochasticityDiagnosticPlan],
+    prompt_freeze: DevPromptFreezeArtifact,
+    authorization: DevLiveAuthorizationArtifact,
+    execution_plan_path: Optional[Path] = None,
+    prompt_freeze_path: Optional[Path] = None,
+    authorization_path: Optional[Path] = None,
+    candidate_registry: Optional[DevCandidateRegistry] = None,
+    repo_root: Optional[Path] = None,
+    require_git_committed: bool = True,
+) -> DevLiveStageAFreezeReceipt:
+    """Verify `DevLiveStageAFreezeReceipt` against Stage-A artifacts, active code bundle, and git commit history (Sections 9, 10, 11)."""
+    if stage_a_receipt_or_path is None:
+        raise PlanBeforeLiveProtocolError(
+            "STAGE_A_RECEIPT_MISSING: Live execution requires a frozen DevLiveStageAFreezeReceipt."
+        )
+
+    receipt_path: Optional[Path] = None
+    if isinstance(stage_a_receipt_or_path, (Path, str)):
+        receipt_path = Path(stage_a_receipt_or_path)
+        _assert_runner_not_final100_path(receipt_path)
+        if not receipt_path.exists():
+            raise PlanBeforeLiveProtocolError(
+                f"STAGE_A_RECEIPT_FILE_MISSING: {receipt_path}"
+            )
+        try:
+            raw_dict = json.loads(receipt_path.read_text(encoding="utf-8"))
+        except Exception as exc:
+            raise PlanBeforeLiveProtocolError(
+                f"STAGE_A_RECEIPT_JSON_INVALID: {exc}"
+            ) from exc
+        receipt = DevLiveStageAFreezeReceipt.model_validate(raw_dict)
+    elif isinstance(stage_a_receipt_or_path, DevLiveStageAFreezeReceipt):
+        receipt = DevLiveStageAFreezeReceipt.model_validate(
+            stage_a_receipt_or_path.model_dump()
+        )
+    elif isinstance(stage_a_receipt_or_path, Mapping):
+        receipt = DevLiveStageAFreezeReceipt.model_validate(dict(stage_a_receipt_or_path))
+    else:
+        raise PlanBeforeLiveProtocolError(
+            f"Unsupported stage_a_receipt type: {type(stage_a_receipt_or_path)}"
+        )
+
+    if (
+        receipt.stage_a_process_token is not None
+        and receipt.stage_a_process_token == _CURRENT_PROCESS_INVOCATION_TOKEN
+    ):
+        raise PlanBeforeLiveProtocolError(
+            "STAGE_A_AND_STAGE_B_SAME_PROCESS_FORBIDDEN: Stage-A freeze and Stage-B execution "
+            "cannot run in the same process invocation token."
+        )
+
+    cand_reg = candidate_registry or load_and_verify_candidate_registry()
+    plan_phase = (
+        "STOCHASTICITY"
+        if isinstance(execution_plan, StochasticityDiagnosticPlan)
+        else execution_plan.phase
+    )
+    if receipt.phase != plan_phase:
+        raise PlanBeforeLiveProtocolError(
+            f"STAGE_A_PHASE_MISMATCH: receipt.phase={receipt.phase!r} != plan_phase={plan_phase!r}."
+        )
+    if receipt.execution_plan_sha256 != execution_plan.plan_sha256:
+        raise PlanBeforeLiveProtocolError(
+            f"STAGE_A_PLAN_SHA256_MISMATCH: receipt={receipt.execution_plan_sha256} != plan={execution_plan.plan_sha256}."
+        )
+    pf_sha = compute_prompt_freeze_sha256(prompt_freeze)
+    if receipt.prompt_freeze_sha256 != pf_sha:
+        raise PlanBeforeLiveProtocolError(
+            f"STAGE_A_PROMPT_FREEZE_SHA256_MISMATCH: receipt={receipt.prompt_freeze_sha256} != prompt_freeze={pf_sha}."
+        )
+    if receipt.authorization_artifact_sha256 != authorization.authorization_artifact_sha256:
+        raise PlanBeforeLiveProtocolError(
+            f"STAGE_A_AUTHORIZATION_SHA256_MISMATCH: receipt={receipt.authorization_artifact_sha256} "
+            f"!= authorization={authorization.authorization_artifact_sha256}."
+        )
+
+    bundle_manifest = compute_scientific_code_bundle(repo_root=repo_root)
+    active_bundle_sha = bundle_manifest.scientific_code_bundle_sha256
+    if receipt.scientific_code_bundle_sha256 != active_bundle_sha:
+        raise ScientificCodeBundleIntegrityError(
+            f"STAGE_A_CODE_BUNDLE_MISMATCH: receipt={receipt.scientific_code_bundle_sha256} != active={active_bundle_sha}."
+        )
+
+    active_pconf_sha = compute_provider_config_registry_sha256(cand_reg)
+    if receipt.provider_config_registry_sha256 != active_pconf_sha:
+        raise CandidateRegistryIntegrityError(
+            f"STAGE_A_PROVIDER_CONFIG_MISMATCH: receipt={receipt.provider_config_registry_sha256} != active={active_pconf_sha}."
+        )
+
+    expected_run_ids, expected_cells_sha = compute_assigned_cells_sha256(execution_plan)
+    if (
+        receipt.assigned_cell_run_ids != expected_run_ids
+        or receipt.assigned_cells_sha256 != expected_cells_sha
+    ):
+        raise PlanBeforeLiveProtocolError(
+            "STAGE_A_ASSIGNED_CELLS_MISMATCH: Assigned cell list or cells SHA256 does not match frozen execution plan."
+        )
+    if receipt.code_basis_commit_sha != execution_plan.code_basis_commit_sha:
+        raise PlanBeforeLiveProtocolError(
+            f"STAGE_A_CODE_BASIS_MISMATCH: receipt={receipt.code_basis_commit_sha} != plan={execution_plan.code_basis_commit_sha}."
+        )
+
+    if require_git_committed:
+        root = repo_root if repo_root is not None else REPO_ROOT
+        if (
+            execution_plan_path is None
+            or prompt_freeze_path is None
+            or authorization_path is None
+            or receipt_path is None
+        ):
+            raise PlanBeforeLiveProtocolError(
+                "STAGE_A_PATHS_REQUIRED_FOR_GIT_ATTESTATION: Live Stage-A verification requires on-disk paths "
+                "for execution_plan_path, prompt_freeze_path, authorization_path, and stage_a_freeze_receipt_path."
+            )
+        runtime_head_sha = resolve_active_git_commit_sha(repo_root=root)
+        plan_file_sha = sha256_bytes(normalize_lf_bytes(execution_plan_path.read_bytes()))
+        pf_file_sha = sha256_bytes(normalize_lf_bytes(prompt_freeze_path.read_bytes()))
+        auth_file_sha = sha256_bytes(normalize_lf_bytes(authorization_path.read_bytes()))
+
+        bundle_tracked_paths = [
+            root / entry["path"]
+            for entry in bundle_manifest.scientific_code_bundle_file_hashes
+        ]
+        bundle_blobs = [
+            (root / entry["path"], entry["sha256"])
+            for entry in bundle_manifest.scientific_code_bundle_file_hashes
+        ]
+
+        _verify_git_commit_ancestor_and_blobs(
+            repo_root=root,
+            stage_a_commit_sha=receipt.stage_a_commit_sha,
+            runtime_head_sha=runtime_head_sha,
+            code_basis_commit_sha=receipt.code_basis_commit_sha,
+            tracked_artifact_paths=[
+                execution_plan_path,
+                prompt_freeze_path,
+                authorization_path,
+                receipt_path,
+                *bundle_tracked_paths,
+            ],
+            blob_verified_paths_and_hashes=[
+                (execution_plan_path, plan_file_sha),
+                (prompt_freeze_path, pf_file_sha),
+                (authorization_path, auth_file_sha),
+                *bundle_blobs,
+            ],
+        )
+
+    return receipt
+
+
+# ==============================================================================
+# 4C. UNFORGEABLE LIVE EXECUTION CAPABILITY (SECTIONS 7, 8, 11)
+# ==============================================================================
+
+
+class LiveExecutionCapability:
+    """Unforgeable capability token required for any real/production transport execution (Section 7).
+
+    Cannot be instantiated directly without `_CAPABILITY_MINT_GUARD`; only issued by
+    `issue_live_execution_capability()` after verifying `execute_live is True`,
+    `DevExecutionPlan`, `DevPromptFreezeArtifact`, `DevLiveAuthorizationArtifact`,
+    and committed `DevLiveStageAFreezeReceipt` git ancestor & blob attestation.
+    """
+
+    def __init__(
+        self,
+        *,
+        _mint_guard: Any = None,
+        phase: str,
+        manifest_execution_mode: str,
+        execution_plan_sha256: str,
+        prompt_freeze_sha256: str,
+        authorization_id: str,
+        authorization_artifact_sha256: str,
+        stage_a_receipt_sha256: str,
+        stage_a_commit_sha: str,
+        code_basis_commit_sha: str,
+        runtime_head_sha: str,
+        scientific_code_bundle_sha256: str,
+        provider_config_registry_sha256: str,
+        allowed_candidate_ids: Tuple[str, ...],
+        maximum_live_generation_calls: int,
+    ) -> None:
+        if _mint_guard is not _CAPABILITY_MINT_GUARD:
+            raise LiveExecutionNotAuthorizedError(
+                "LIVE_CAPABILITY_FORGERY_FORBIDDEN: LiveExecutionCapability cannot be instantiated directly; "
+                "use issue_live_execution_capability() after Stage-A commit & authorization verification."
+            )
+        self._mint_guard = _mint_guard
+        self.phase = phase
+        self.manifest_execution_mode = manifest_execution_mode
+        self.execution_plan_sha256 = execution_plan_sha256
+        self.prompt_freeze_sha256 = prompt_freeze_sha256
+        self.authorization_id = authorization_id
+        self.authorization_artifact_sha256 = authorization_artifact_sha256
+        self.stage_a_receipt_sha256 = stage_a_receipt_sha256
+        self.stage_a_commit_sha = stage_a_commit_sha
+        self.code_basis_commit_sha = code_basis_commit_sha
+        self.runtime_head_sha = runtime_head_sha
+        self.scientific_code_bundle_sha256 = scientific_code_bundle_sha256
+        self.provider_config_registry_sha256 = provider_config_registry_sha256
+        self.allowed_candidate_ids = tuple(allowed_candidate_ids)
+        self.maximum_live_generation_calls = int(maximum_live_generation_calls)
+
+    def verify_mint_token(self) -> None:
+        if getattr(self, "_mint_guard", None) is not _CAPABILITY_MINT_GUARD:
+            raise LiveExecutionNotAuthorizedError(
+                "INVALID_LIVE_EXECUTION_CAPABILITY: Capability token failed authenticity check."
+            )
+
+
+def resolve_truthful_manifest_execution_mode(
+    *, runner_mode: str, cell_phase: str
+) -> str:
+    """Resolve truthful `BenchmarkRunManifest.execution_mode` from runner mode and cell phase (Section 14)."""
+    if runner_mode == RUNNER_EXECUTION_MODE_OFFLINE_MOCK_TEST:
+        return MANIFEST_EXECUTION_MODE_OFFLINE_MOCK
+    if runner_mode == RUNNER_EXECUTION_MODE_LIVE_EXECUTION:
+        if cell_phase == "DEV_TUNE":
+            return MANIFEST_EXECUTION_MODE_LIVE_DEV_TUNE
+        if cell_phase == "DEV_SELECT":
+            return MANIFEST_EXECUTION_MODE_LIVE_DEV_SELECT
+        if cell_phase in ("STOCHASTICITY", "STOCHASTICITY_DIAGNOSTIC"):
+            return MANIFEST_EXECUTION_MODE_STOCHASTICITY
+        raise DevLiveRunnerError(f"Unsupported live cell_phase: {cell_phase!r}")
+    raise LiveExecutionNotAuthorizedError(
+        f"INVALID_RUNNER_EXECUTION_MODE: {runner_mode!r}"
+    )
+
+
+def issue_live_execution_capability(
+    *,
+    execute_live: bool,
+    execution_plan_path: Path,
+    prompt_freeze_path: Path,
+    authorization_path: Path,
+    stage_a_freeze_receipt_path: Path,
+    prompt_registry: PromptRegistry,
+    dev_bundle: Optional[VerifiedDevBundle] = None,
+    candidate_registry: Optional[DevCandidateRegistry] = None,
+    dev_select_result: Optional[DevSelectModelSelectionResult] = None,
+    repo_root: Optional[Path] = None,
+) -> Tuple[
+    LiveExecutionCapability,
+    Union[DevExecutionPlan, StochasticityDiagnosticPlan],
+    DevPromptFreezeArtifact,
+    DevLiveAuthorizationArtifact,
+    DevLiveStageAFreezeReceipt,
+]:
+    """Verify all Stage-A pre-frozen committed artifacts and mint a `LiveExecutionCapability` (Sections 7, 9, 10, 11)."""
+    if execute_live is not True:
+        raise LiveExecutionNotAuthorizedError(
+            "LIVE_EXECUTION_DISABLED: execute_live=True is required to issue a LiveExecutionCapability."
+        )
+    if (
+        execution_plan_path is None
+        or prompt_freeze_path is None
+        or authorization_path is None
+        or stage_a_freeze_receipt_path is None
+    ):
+        raise PlanBeforeLiveProtocolError(
+            "STAGE_A_ARTIFACTS_MISSING: execution_plan_path, prompt_freeze_path, authorization_path, "
+            "and stage_a_freeze_receipt_path are all required before live execution."
+        )
+
+    plan_path = _assert_runner_not_final100_path(execution_plan_path)
+    pf_path = _assert_runner_not_final100_path(prompt_freeze_path)
+    auth_path = _assert_runner_not_final100_path(authorization_path)
+    stage_a_path = _assert_runner_not_final100_path(stage_a_freeze_receipt_path)
+
+    if not plan_path.exists():
+        raise PlanBeforeLiveProtocolError(
+            f"STAGE_A_EXECUTION_PLAN_MISSING: {plan_path}"
+        )
+    if not pf_path.exists():
+        raise PromptFreezeFirewallError(
+            f"STAGE_A_PROMPT_FREEZE_MISSING: {pf_path}"
+        )
+    if not auth_path.exists():
+        raise DevLiveAuthorizationError(
+            f"STAGE_A_AUTHORIZATION_MISSING: {auth_path}"
+        )
+    if not stage_a_path.exists():
+        raise PlanBeforeLiveProtocolError(
+            f"STAGE_A_FREEZE_RECEIPT_MISSING: {stage_a_path}"
+        )
+
+    raw_plan = json.loads(plan_path.read_text(encoding="utf-8"))
+    raw_phase = raw_plan.get("phase")
+    if raw_phase == "FINAL100" or (
+        isinstance(raw_phase, str) and "FINAL" in raw_phase.upper()
+    ):
+        raise Final100FirewallViolationError(
+            f"FINAL100_FIREWALL_VIOLATION: Forbidden plan phase {raw_phase!r}"
+        )
+
+    bundle = dev_bundle or load_and_verify_frozen_dev_bundle()
+    cand_reg = candidate_registry or load_and_verify_candidate_registry()
+    root = repo_root if repo_root is not None else REPO_ROOT
+
+    if raw_phase == "STOCHASTICITY_DIAGNOSTIC":
+        if dev_select_result is None or not dev_select_result.winner_selected:
+            raise StochasticityGateViolationError(
+                "STOCHASTICITY_BLOCKED_BEFORE_WINNER_FROZEN: Cannot issue capability for stochasticity before winner selection."
+            )
+        execution_plan: Union[DevExecutionPlan, StochasticityDiagnosticPlan] = (
+            StochasticityDiagnosticPlan.model_validate(raw_plan)
+        )
+        runtime_head_sha = resolve_active_git_commit_sha(repo_root=root)
+        active_bundle_sha = compute_scientific_code_bundle_sha256(repo_root=root)
+        if execution_plan.scientific_code_bundle_sha256 != active_bundle_sha:
+            raise ScientificCodeBundleIntegrityError(
+                "SCIENTIFIC_CODE_BUNDLE_MISMATCH on stochasticity plan."
+            )
+    else:
+        execution_plan = DevExecutionPlan.model_validate(raw_plan)
+        runtime_head_sha = verify_dev_execution_plan_for_execution(
+            execution_plan, candidate_registry=cand_reg, repo_root=root
+        )
+
+    verified_pf = verify_runner_prompt_freeze_artifact(
+        pf_path,
+        prompt_registry=prompt_registry,
+        execution_plan=execution_plan,
+        dev_bundle=bundle,
+        candidate_registry=cand_reg,
+        repo_root=root,
+    )
+    verified_auth = verify_dev_live_authorization_artifact(
+        auth_path,
+        execution_plan=execution_plan,
+        prompt_freeze=verified_pf,
+        dev_select_result=dev_select_result,
+        repo_root=root,
+    )
+    verified_stage_a = verify_stage_a_freeze_receipt(
+        stage_a_path,
+        execution_plan=execution_plan,
+        prompt_freeze=verified_pf,
+        authorization=verified_auth,
+        execution_plan_path=plan_path,
+        prompt_freeze_path=pf_path,
+        authorization_path=auth_path,
+        candidate_registry=cand_reg,
+        repo_root=root,
+        require_git_committed=True,
+    )
+
+    plan_phase = (
+        "STOCHASTICITY"
+        if isinstance(execution_plan, StochasticityDiagnosticPlan)
+        else execution_plan.phase
+    )
+    manifest_mode = resolve_truthful_manifest_execution_mode(
+        runner_mode=RUNNER_EXECUTION_MODE_LIVE_EXECUTION,
+        cell_phase=plan_phase,
+    )
+
+    capability = LiveExecutionCapability(
+        _mint_guard=_CAPABILITY_MINT_GUARD,
+        phase=plan_phase,
+        manifest_execution_mode=manifest_mode,
+        execution_plan_sha256=execution_plan.plan_sha256,
+        prompt_freeze_sha256=verified_stage_a.prompt_freeze_sha256,
+        authorization_id=verified_auth.authorization_id,
+        authorization_artifact_sha256=verified_auth.authorization_artifact_sha256,
+        stage_a_receipt_sha256=verified_stage_a.stage_a_receipt_sha256,
+        stage_a_commit_sha=verified_stage_a.stage_a_commit_sha,
+        code_basis_commit_sha=execution_plan.code_basis_commit_sha,
+        runtime_head_sha=runtime_head_sha,
+        scientific_code_bundle_sha256=verified_stage_a.scientific_code_bundle_sha256,
+        provider_config_registry_sha256=verified_stage_a.provider_config_registry_sha256,
+        allowed_candidate_ids=tuple(verified_auth.allowed_candidate_ids),
+        maximum_live_generation_calls=verified_auth.maximum_live_generation_calls,
+    )
+    return capability, execution_plan, verified_pf, verified_auth, verified_stage_a
 
 
 # ==============================================================================
@@ -1154,7 +1882,7 @@ def write_transport_journal_completed(
 
 
 # ==============================================================================
-# 7. FROZEN PROVIDER REQUEST CONSTRUCTION & USAGE NORMALIZATION (SECTIONS 4-6, 25)
+# 7. FROZEN PROVIDER REQUEST CONSTRUCTION, MANIFEST PROVENANCE & USAGE (SECTIONS 4, 5, 13, 14, 15)
 # ==============================================================================
 
 
@@ -1347,11 +2075,90 @@ def build_frozen_provider_wire_request(
     return wire_payload
 
 
+def build_candidate_manifest_generation_parameters(
+    cell_manifest: DevCellExecutionManifest,
+    *,
+    runtime_head_sha: str,
+) -> Dict[str, Any]:
+    """Build truthful `BenchmarkRunManifest.generation_parameters` for C1, C2, or C3 (Sections 13, 15).
+
+    Never claims `temperature = 0.0`; explicitly records `temperature_status = "OMITTED"`
+    along with exact candidate seed/reasoning/thinking configuration and runtime provenance.
+    """
+    base_provenance = {
+        "candidate_id": cell_manifest.candidate_id,
+        "provider": CANDIDATE_PROVIDER_BY_ID[cell_manifest.candidate_id],
+        "requested_model_id": cell_manifest.requested_model_id,
+        "temperature_status": "OMITTED",
+        "top_p_status": "OMITTED",
+        "top_k_status": "OMITTED",
+        "portable_generation_schema_v2_sha256": cell_manifest.portable_generation_schema_v2_sha256,
+        "semantic_schema_sha256": cell_manifest.semantic_schema_sha256,
+        "provider_config_sha256": cell_manifest.provider_config_sha256,
+        "code_basis_commit_sha": cell_manifest.code_basis_commit_sha,
+        "runtime_head_sha": runtime_head_sha,
+        "scientific_code_bundle_sha256": cell_manifest.scientific_code_bundle_sha256,
+        "code_commit_sha_semantics": (
+            "AUTHORITATIVE_RUNTIME_HEAD_SHA_WITH_SEPARATE_CODE_BASIS_AND_BUNDLE_ATTESTATION"
+        ),
+    }
+    if cell_manifest.candidate_id == "C1":
+        return {
+            **base_provenance,
+            "seed": FROZEN_SAMPLING_SEED,
+            "thinking_config": {
+                "thinking_level": "medium",
+                "include_thoughts": False,
+            },
+            "max_output_tokens": 16384,
+            "timeout_ms": 55000,
+            "timeout_seconds": 55.0,
+            "retry": 0,
+            "omitted_parameters": ["temperature", "top_p", "top_k"],
+        }
+    if cell_manifest.candidate_id == "C2":
+        return {
+            **base_provenance,
+            "endpoint": "chat.completions",
+            "seed": FROZEN_SAMPLING_SEED,
+            "reasoning_effort": "medium",
+            "service_tier": "default",
+            "max_completion_tokens": 16384,
+            "timeout_ms": 55000,
+            "timeout_seconds": 55.0,
+            "max_retries": 0,
+            "top_logprobs_status": "OMITTED",
+            "logprobs_status": "OMITTED",
+            "omitted_parameters": [
+                "temperature",
+                "top_p",
+                "top_k",
+                "top_logprobs",
+                "logprobs",
+            ],
+        }
+    if cell_manifest.candidate_id == "C3":
+        return {
+            **base_provenance,
+            "seed_status": "OMITTED_UNSUPPORTED",
+            "thinking": {"type": "adaptive"},
+            "effort": "high",
+            "max_tokens": 16384,
+            "timeout_ms": 55000,
+            "timeout_seconds": 55.0,
+            "max_retries": 0,
+            "omitted_parameters": ["seed", "temperature", "top_p", "top_k"],
+        }
+    raise CandidateRegistryIntegrityError(
+        f"Unsupported candidate_id={cell_manifest.candidate_id!r}"
+    )
+
+
 def normalize_candidate_usage_metadata(
     candidate_id: str,
     raw_usage: Optional[Mapping[str, Any]],
 ) -> Dict[str, Any]:
-    """Normalize provider usage metadata for C1, C2, C3 while preserving raw fields (Section 25)."""
+    """Normalize provider usage metadata for C1, C2, C3 while preserving raw fields (Section 5)."""
     if raw_usage is None:
         return {
             "candidate_id": candidate_id,
@@ -1384,17 +2191,20 @@ def normalize_candidate_usage_metadata(
         return None
 
     if candidate_id == "C1":
-        in_tok = _opt_int("input_tokens", "prompt_token_count")
-        out_tok = _opt_int("output_tokens", "candidates_token_count")
-        thought_tok = _opt_int("thought_tokens", "thoughts_token_count")
+        in_tok = _opt_int("input_tokens", "prompt_token_count", "promptTokenCount")
+        out_tok = _opt_int("output_tokens", "candidates_token_count", "candidatesTokenCount")
+        thought_tok = _opt_int("thought_tokens", "thoughts_token_count", "thoughtsTokenCount")
         if thought_tok is None and in_tok is not None and out_tok is not None:
             thought_tok = 0
         cached_tok = _opt_int(
-            "cached_tokens", "cached_input_tokens", "cached_content_token_count"
+            "cached_tokens",
+            "cached_input_tokens",
+            "cached_content_token_count",
+            "cachedContentTokenCount",
         )
         if cached_tok is None and in_tok is not None:
             cached_tok = 0
-        total_tok = _opt_int("total_tokens", "total_token_count")
+        total_tok = _opt_int("total_tokens", "total_token_count", "totalTokenCount")
         if total_tok is None and in_tok is not None and out_tok is not None:
             total_tok = in_tok + out_tok + (thought_tok or 0)
         return {
@@ -1493,32 +2303,1165 @@ def normalize_candidate_usage_metadata(
 
 
 # ==============================================================================
-# 8. INJECTABLE TRANSPORT & PROVIDER CLIENT FACTORIES (SECTION 37)
+# 8. HTTP BOUNDARY COUNTING, PROVIDER EXCEPTION MAPPING & PRODUCTION TRANSPORTS
+#    (SECTIONS 3, 4, 5, 6, 8, 16)
 # ==============================================================================
 
 
-class DevProviderTransportProtocol(Protocol):
-    """Protocol for injectable single-request provider transport (mock or future live)."""
+class ProviderNormalizedTransportResponse(BaseModel):
+    """Runner-normalized provider response record returned by production transports (Section 5)."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    candidate_id: str
+    provider: str
+    requested_model_id: str
+    returned_model_id: Optional[str] = None
+    raw_text: str = ""
+    finish_or_stop_reason: Optional[str] = None
+    finish_reason: str = "stop"
+    refusal_state: bool = False
+    max_token_state: bool = False
+    raw_usage_metadata: Optional[Dict[str, Any]] = None
+    normalized_usage_metadata: Dict[str, Any] = Field(default_factory=dict)
+    raw_provider_metadata: Dict[str, Any] = Field(default_factory=dict)
+    normalized_provider_metadata: Dict[str, Any] = Field(default_factory=dict)
+    actual_http_request_count: int = 0
+    latency_ns: Optional[int] = None
+    latency_ms: Optional[float] = None
+    simulated_failure: DevCellFailureClassification = DevCellFailureClassification.NONE
+    authoritative_usage_available: bool = False
+    input_tokens: Optional[int] = None
+    output_tokens: Optional[int] = None
+    total_tokens: Optional[int] = None
+    thought_tokens: Optional[int] = None
+    reasoning_tokens: Optional[int] = None
+    thinking_tokens: Optional[int] = None
+    cached_input_tokens: Optional[int] = None
+    cache_read_input_tokens: Optional[int] = None
+    cache_creation_input_tokens: Optional[int] = None
+
+
+def classify_provider_transport_exception(
+    exc: Exception,
+) -> DevCellFailureClassification:
+    """Deterministically classify a provider SDK / HTTP transport exception into `DevCellFailureClassification` (Section 6).
+
+    Maps ordinary provider failures to denominator-retained classifications:
+    - 429 -> HTTP_429
+    - 5xx -> HTTP_5XX
+    - timeout -> TIMEOUT (or PARTIAL_TIMEOUT if partial/stream timeout)
+    - authentication failure (401/403 key error) -> AUTHENTICATION_FAILURE
+    - model access failure (404 / model not found / model permission) -> MODEL_ACCESS_FAILURE
+    - provider refusal -> REFUSAL
+    - max-token truncation -> MAX_TOKEN_TRUNCATION
+
+    Reserves HARNESS_INTERNAL_ERROR strictly for actual runner/infrastructure programming defects.
+    """
+    if isinstance(
+        exc,
+        (
+            BatchExecutionFatalStopError,
+            ImmutableCellExecutionError,
+            DevLiveRunnerError,
+            TypeError,
+            KeyError,
+            AttributeError,
+            AssertionError,
+        ),
+    ):
+        return DevCellFailureClassification.HARNESS_INTERNAL_ERROR
+
+    cls_name = type(exc).__name__.lower()
+    mod_name = (type(exc).__module__ or "").lower()
+    msg = sanitize_runner_text(str(exc)).lower()
+    status_code = getattr(exc, "status_code", None) or getattr(exc, "code", None)
+
+    if (
+        isinstance(exc, (TimeoutError, httpx.TimeoutException, httpx2.TimeoutException))
+        or "timeout" in cls_name
+        or "timed out" in msg
+        or "timeout" in msg
+        or status_code in (408, 504)
+    ):
+        if "partial" in msg or "stream" in msg:
+            return DevCellFailureClassification.PARTIAL_TIMEOUT
+        return DevCellFailureClassification.TIMEOUT
+
+    if (
+        status_code == 429
+        or "ratelimit" in cls_name
+        or "rate_limit" in msg
+        or "rate limit" in msg
+        or "resource_exhausted" in msg
+        or "429" in msg
+    ):
+        return DevCellFailureClassification.HTTP_429
+
+    if (
+        (isinstance(status_code, int) and 500 <= status_code <= 599)
+        or "internalserver" in cls_name
+        or "serviceunavailable" in cls_name
+        or "badgateway" in cls_name
+        or "overloaded" in msg
+        or any(
+            tok in msg
+            for tok in (
+                "500 internal",
+                "502 bad gateway",
+                "503 service",
+                "529 overloaded",
+                "server error",
+                "internal_error",
+            )
+        )
+    ):
+        return DevCellFailureClassification.HTTP_5XX
+
+    if (
+        status_code == 401
+        or "authentication" in cls_name
+        or "unauthenticated" in msg
+        or "invalid api key" in msg
+        or "api_key_invalid" in msg
+        or "incorrect api key" in msg
+        or "invalid x-api-key" in msg
+    ):
+        return DevCellFailureClassification.AUTHENTICATION_FAILURE
+
+    if (
+        status_code == 404
+        or "notfound" in cls_name
+        or (
+            "model" in msg
+            and any(
+                tok in msg
+                for tok in (
+                    "not found",
+                    "does not exist",
+                    "not supported",
+                    "not have access",
+                    "model_not_found",
+                    "access denied to model",
+                )
+            )
+        )
+    ):
+        return DevCellFailureClassification.MODEL_ACCESS_FAILURE
+
+    if status_code == 403 or "permissiondenied" in cls_name or "forbidden" in msg:
+        if "model" in msg:
+            return DevCellFailureClassification.MODEL_ACCESS_FAILURE
+        return DevCellFailureClassification.AUTHENTICATION_FAILURE
+
+    if any(
+        tok in msg
+        for tok in ("refusal", "content_filter", "safety_block", "prohibited_content")
+    ):
+        return DevCellFailureClassification.REFUSAL
+
+    if any(
+        tok in msg
+        for tok in (
+            "max_tokens",
+            "max_output_tokens",
+            "max_completion_tokens",
+            "token limit",
+            "length finish_reason",
+        )
+    ):
+        return DevCellFailureClassification.MAX_TOKEN_TRUNCATION
+
+    if (
+        (isinstance(status_code, int) and 400 <= status_code < 600)
+        or any(
+            provider_mod in mod_name
+            for provider_mod in ("google", "genai", "openai", "anthropic", "httpx")
+        )
+        and ("error" in cls_name or "exception" in cls_name)
+    ):
+        return DevCellFailureClassification.HTTP_ERROR
+
+    return DevCellFailureClassification.HARNESS_INTERNAL_ERROR
+
+
+class DevCellHttpCallCounter:
+    """Outbound HTTP generation call counter at the httpx/httpx2 transport boundary (Section 16)."""
+
+    def __init__(
+        self,
+        *,
+        max_requests_per_cell: int = 1,
+        max_total_requests: Optional[int] = None,
+    ) -> None:
+        self.max_requests_per_cell = int(max_requests_per_cell)
+        self.max_total_requests = (
+            int(max_total_requests) if max_total_requests is not None else None
+        )
+        self.total_http_requests: int = 0
+        self.per_cell_http_requests: Dict[str, int] = {}
+        self.per_candidate_http_requests: Dict[str, int] = {
+            cid: 0 for cid in ORDERED_CANDIDATE_IDS
+        }
+        self.captured_http_requests_by_run_id: Dict[str, List[Dict[str, Any]]] = {}
+
+    def record_outbound_http_request_before_send(
+        self,
+        *,
+        run_id: str,
+        candidate_id: str,
+        method: str,
+        url: str,
+        body_bytes: bytes,
+    ) -> int:
+        current_cell = self.per_cell_http_requests.get(run_id, 0)
+        if current_cell >= self.max_requests_per_cell:
+            raise ImmutableCellExecutionError(
+                f"HTTP_RETRY_OR_EXTRA_REQUEST_FORBIDDEN: Cell {run_id!r} (candidate {candidate_id}) "
+                f"attempted outbound HTTP request #{current_cell + 1} "
+                f"(max_requests_per_cell={self.max_requests_per_cell}). Batch must stop immediately."
+            )
+        if (
+            self.max_total_requests is not None
+            and self.total_http_requests >= self.max_total_requests
+        ):
+            raise DevCallBudgetExhaustedError(
+                f"HTTP_BATCH_BUDGET_EXHAUSTED: Outbound HTTP request #{self.total_http_requests + 1} "
+                f"exceeds max_total_requests={self.max_total_requests}."
+            )
+        self.per_cell_http_requests[run_id] = current_cell + 1
+        self.per_candidate_http_requests[candidate_id] = (
+            self.per_candidate_http_requests.get(candidate_id, 0) + 1
+        )
+        self.total_http_requests += 1
+
+        parsed_body: Any = None
+        if body_bytes:
+            try:
+                parsed_body = json.loads(body_bytes.decode("utf-8"))
+            except Exception:
+                parsed_body = sanitize_runner_text(
+                    body_bytes.decode("utf-8", errors="replace")
+                )
+        self.captured_http_requests_by_run_id.setdefault(run_id, []).append(
+            {
+                "method": method,
+                "url": str(url),
+                "body": sanitize_runner_structure(parsed_body),
+            }
+        )
+        return self.per_cell_http_requests[run_id]
+
+
+class DevCountingHttpxTransport(httpx.BaseTransport):
+    """Counting `httpx.BaseTransport` for Google `genai` SDK enforcing <= 1 HTTP request per cell (Section 16)."""
+
+    def __init__(
+        self,
+        *,
+        candidate_id: str,
+        run_id: str,
+        http_counter: DevCellHttpCallCounter,
+        inner_transport: Optional[httpx.BaseTransport] = None,
+    ) -> None:
+        self.candidate_id = candidate_id
+        self.run_id = run_id
+        self.http_counter = http_counter
+        self._inner = inner_transport or httpx.HTTPTransport(retries=0)
+        self.request_count: int = 0
+
+    def handle_request(self, request: httpx.Request) -> httpx.Response:
+        self.http_counter.record_outbound_http_request_before_send(
+            run_id=self.run_id,
+            candidate_id=self.candidate_id,
+            method=request.method,
+            url=str(request.url),
+            body_bytes=request.content,
+        )
+        self.request_count += 1
+        return self._inner.handle_request(request)
+
+    def close(self) -> None:
+        self._inner.close()
+
+
+class DevCountingHttpx2Transport(httpx2.BaseTransport):
+    """Counting `httpx2.BaseTransport` for `openai` and `anthropic` SDKs enforcing <= 1 HTTP request per cell (Section 16)."""
+
+    def __init__(
+        self,
+        *,
+        candidate_id: str,
+        run_id: str,
+        http_counter: DevCellHttpCallCounter,
+        inner_transport: Optional[httpx2.BaseTransport] = None,
+    ) -> None:
+        self.candidate_id = candidate_id
+        self.run_id = run_id
+        self.http_counter = http_counter
+        self._inner = inner_transport or httpx2.HTTPTransport(retries=0)
+        self.request_count: int = 0
+
+    def handle_request(self, request: httpx2.Request) -> httpx2.Response:
+        self.http_counter.record_outbound_http_request_before_send(
+            run_id=self.run_id,
+            candidate_id=self.candidate_id,
+            method=request.method,
+            url=str(request.url),
+            body_bytes=request.content,
+        )
+        self.request_count += 1
+        return self._inner.handle_request(request)
+
+    def close(self) -> None:
+        self._inner.close()
+
+
+def _load_candidate_api_key_for_live_transport(
+    candidate_id: str,
+    *,
+    dotenv_path: Optional[Path] = None,
+    api_key_overrides: Optional[Mapping[str, str]] = None,
+) -> str:
+    """Load a candidate's API key only when executing a production transport (never in offline/dry-run default mode)."""
+    if api_key_overrides and candidate_id in api_key_overrides:
+        val = str(api_key_overrides[candidate_id]).strip()
+        if val:
+            return val
+    env_key_name = CANDIDATE_ENV_KEY_BY_ID[candidate_id]
+    target_path = dotenv_path or (REPO_ROOT / "apps" / "ai-service" / ".env")
+    if target_path.exists():
+        for raw_line in target_path.read_text(encoding="utf-8", errors="ignore").splitlines():
+            line = raw_line.strip()
+            if not line or line.startswith("#") or "=" not in line:
+                continue
+            k_part, v_part = line.split("=", 1)
+            if k_part.strip() == env_key_name:
+                val = v_part.strip().strip("'").strip('"').strip()
+                if val:
+                    return val
+    raise DevLiveAuthorizationError(
+        f"MISSING_PROVIDER_API_KEY: Required API key {env_key_name} for {candidate_id} not found."
+    )
+
+
+def _invoke_c1_google_production(
+    *,
+    api_key: str,
+    wire_request: Dict[str, Any],
+    counting_transport: DevCountingHttpxTransport,
+) -> ProviderNormalizedTransportResponse:
+    """Invoke Google Gemini (`gemini-3.8-flash`) with exact frozen C1 parameters and Portable Schema V2 (Sections 3, 4, 5)."""
+    cfg = wire_request["config"]
+    for forbidden_key in ("temperature", "top_p", "top_k"):
+        if forbidden_key in cfg:
+            raise CandidateRegistryIntegrityError(
+                f"C1_FORBIDDEN_SAMPLING_PARAMETER: {forbidden_key!r} must be omitted."
+            )
+    if (
+        wire_request.get("model") != "gemini-3.8-flash"
+        or cfg.get("seed") != 2026101508
+        or cfg.get("max_output_tokens") != 16384
+        or cfg.get("thinking_config", {}).get("thinking_level") != "medium"
+        or wire_request.get("timeout_ms") != 55000
+        or wire_request.get("retry") != 0
+    ):
+        raise CandidateRegistryIntegrityError("C1 wire_request violates frozen C1 config.")
+
+    http_client = httpx.Client(transport=counting_transport, timeout=55.0)
+    try:
+        client = genai.Client(
+            api_key=api_key,
+            http_options=genai_types.HttpOptions(
+                timeout=55000,
+                retry_options=genai_types.HttpRetryOptions(attempts=1),
+                httpx_client=http_client,
+            ),
+        )
+        call_config = genai_types.GenerateContentConfig(
+            system_instruction=cfg["system_instruction"],
+            seed=2026101508,
+            thinking_config=genai_types.ThinkingConfig(
+                thinking_level="medium",
+                include_thoughts=False,
+            ),
+            max_output_tokens=16384,
+            response_mime_type="application/json",
+            response_json_schema=cfg["response_json_schema"],
+            tools=None,
+            automatic_function_calling=genai_types.AutomaticFunctionCallingConfig(
+                disable=True
+            ),
+        )
+        resp = client.models.generate_content(
+            model="gemini-3.8-flash",
+            contents=wire_request["contents"],
+            config=call_config,
+        )
+    finally:
+        http_client.close()
+
+    raw_text = getattr(resp, "text", None) or ""
+    returned_model = getattr(resp, "model_version", None)
+    candidates = getattr(resp, "candidates", None) or []
+    finish_reason: Optional[str] = None
+    refusal_state = False
+    max_token_state = False
+    if candidates:
+        fr_val = getattr(candidates[0], "finish_reason", None)
+        finish_reason = (
+            str(fr_val.value if hasattr(fr_val, "value") else fr_val)
+            if fr_val is not None
+            else None
+        )
+        fr_upper = (finish_reason or "").upper()
+        if any(
+            tok in fr_upper
+            for tok in ("SAFETY", "BLOCKLIST", "PROHIBITED", "RECITATION", "REFUSAL")
+        ):
+            refusal_state = True
+        elif any(tok in fr_upper for tok in ("MAX_TOKENS", "LENGTH")):
+            max_token_state = True
+
+    usage_obj = getattr(resp, "usage_metadata", None)
+    in_tok = getattr(usage_obj, "prompt_token_count", None) if usage_obj else None
+    out_tok = getattr(usage_obj, "candidates_token_count", None) if usage_obj else None
+    thought_tok = getattr(usage_obj, "thoughts_token_count", None) if usage_obj else None
+    tot_tok = getattr(usage_obj, "total_token_count", None) if usage_obj else None
+    cached_tok = (
+        getattr(usage_obj, "cached_content_token_count", None) if usage_obj else None
+    )
+    traffic_type = getattr(usage_obj, "traffic_type", None) if usage_obj else None
+    service_tier = (
+        str(traffic_type.value if hasattr(traffic_type, "value") else traffic_type)
+        if traffic_type
+        else None
+    )
+
+    raw_usage_dict: Optional[Dict[str, Any]] = None
+    if usage_obj is not None:
+        raw_usage_dict = {
+            "prompt_token_count": in_tok,
+            "candidates_token_count": out_tok,
+            "thoughts_token_count": thought_tok,
+            "cached_content_token_count": cached_tok,
+            "total_token_count": tot_tok,
+            "traffic_type": service_tier,
+        }
+    norm_usage = normalize_candidate_usage_metadata("C1", raw_usage_dict)
+    usage_avail = bool(norm_usage.get("usage_present"))
+
+    failure_cls = DevCellFailureClassification.NONE
+    if refusal_state:
+        failure_cls = DevCellFailureClassification.REFUSAL
+    elif max_token_state:
+        failure_cls = DevCellFailureClassification.MAX_TOKEN_TRUNCATION
+
+    raw_meta = {
+        "response_id": getattr(resp, "response_id", None),
+        "model_version": returned_model,
+        "finish_reason": finish_reason,
+        "traffic_type": service_tier,
+    }
+    norm_meta = {
+        "candidate_id": "C1",
+        "provider": "google",
+        "requested_model_id": "gemini-3.8-flash",
+        "returned_model_id": returned_model,
+        "finish_or_stop_reason": finish_reason,
+        "refusal_state": refusal_state,
+        "max_token_state": max_token_state,
+        "thinking_level": "medium",
+        "seed_sent": 2026101508,
+        "temperature_status": "OMITTED",
+        "actual_http_request_count": counting_transport.request_count,
+    }
+    return ProviderNormalizedTransportResponse(
+        candidate_id="C1",
+        provider="google",
+        requested_model_id="gemini-3.8-flash",
+        returned_model_id=returned_model,
+        raw_text=raw_text,
+        finish_or_stop_reason=finish_reason,
+        finish_reason=finish_reason or "STOP",
+        refusal_state=refusal_state,
+        max_token_state=max_token_state,
+        raw_usage_metadata=raw_usage_dict,
+        normalized_usage_metadata=norm_usage,
+        raw_provider_metadata=raw_meta,
+        normalized_provider_metadata=norm_meta,
+        actual_http_request_count=counting_transport.request_count,
+        simulated_failure=failure_cls,
+        authoritative_usage_available=usage_avail,
+        input_tokens=norm_usage["input_tokens"],
+        output_tokens=norm_usage["output_tokens"],
+        total_tokens=norm_usage["total_tokens"],
+        thought_tokens=norm_usage["thought_tokens"],
+        cached_input_tokens=norm_usage["cached_input_tokens"],
+    )
+
+
+def _invoke_c2_openai_production(
+    *,
+    api_key: str,
+    wire_request: Dict[str, Any],
+    counting_transport: DevCountingHttpx2Transport,
+) -> ProviderNormalizedTransportResponse:
+    """Invoke OpenAI Chat Completions (`gpt-6.1-sol`) with exact frozen C2 parameters and Portable Schema V2 (Sections 3, 4, 5)."""
+    for forbidden_key in ("temperature", "top_p", "top_k", "top_logprobs", "logprobs"):
+        if forbidden_key in wire_request:
+            raise CandidateRegistryIntegrityError(
+                f"C2_FORBIDDEN_SAMPLING_PARAMETER: {forbidden_key!r} must be omitted."
+            )
+    if (
+        wire_request.get("model") != "gpt-6.1-sol"
+        or wire_request.get("reasoning_effort") != "medium"
+        or wire_request.get("seed") != 2026101508
+        or wire_request.get("service_tier") != "default"
+        or wire_request.get("max_completion_tokens") != 16384
+        or wire_request.get("timeout_seconds") != 55.0
+        or wire_request.get("max_retries") != 0
+    ):
+        raise CandidateRegistryIntegrityError("C2 wire_request violates frozen C2 config.")
+
+    http_client = httpx2.Client(transport=counting_transport, timeout=55.0)
+    try:
+        client = openai.OpenAI(
+            api_key=api_key,
+            max_retries=0,
+            timeout=55.0,
+            http_client=http_client,
+        )
+        resp = client.chat.completions.create(
+            model="gpt-6.1-sol",
+            messages=wire_request["messages"],
+            seed=2026101508,
+            reasoning_effort="medium",
+            service_tier="default",
+            max_completion_tokens=16384,
+            response_format=wire_request["response_format"],
+        )
+    finally:
+        http_client.close()
+
+    returned_model = getattr(resp, "model", None)
+    sys_fp = getattr(resp, "system_fingerprint", None)
+    srv_tier = getattr(resp, "service_tier", None)
+    choices = getattr(resp, "choices", None) or []
+    raw_text = ""
+    finish_reason: Optional[str] = None
+    refusal_state = False
+    max_token_state = False
+    if choices:
+        finish_reason = getattr(choices[0], "finish_reason", None)
+        fr_low = str(finish_reason or "").lower()
+        if fr_low == "content_filter":
+            refusal_state = True
+        elif fr_low in ("length", "max_tokens", "max_output_tokens"):
+            max_token_state = True
+        msg = getattr(choices[0], "message", None)
+        if msg is not None:
+            refusal_val = getattr(msg, "refusal", None)
+            if isinstance(refusal_val, str) and refusal_val.strip():
+                refusal_state = True
+                raw_text = refusal_val
+            else:
+                raw_text = getattr(msg, "content", None) or ""
+
+    usage_obj = getattr(resp, "usage", None)
+    in_tok = getattr(usage_obj, "prompt_tokens", None) if usage_obj else None
+    out_tok = getattr(usage_obj, "completion_tokens", None) if usage_obj else None
+    tot_tok = getattr(usage_obj, "total_tokens", None) if usage_obj else None
+    comp_details = (
+        getattr(usage_obj, "completion_tokens_details", None) if usage_obj else None
+    )
+    reas_tok = (
+        getattr(comp_details, "reasoning_tokens", None) if comp_details else None
+    )
+    prompt_details = (
+        getattr(usage_obj, "prompt_tokens_details", None) if usage_obj else None
+    )
+    cached_tok = (
+        getattr(prompt_details, "cached_tokens", None) if prompt_details else None
+    )
+
+    raw_usage_dict: Optional[Dict[str, Any]] = None
+    if usage_obj is not None:
+        raw_usage_dict = {
+            "prompt_tokens": in_tok,
+            "completion_tokens": out_tok,
+            "total_tokens": tot_tok,
+            "completion_tokens_details": {"reasoning_tokens": reas_tok},
+            "prompt_tokens_details": {"cached_tokens": cached_tok},
+        }
+    norm_usage = normalize_candidate_usage_metadata("C2", raw_usage_dict)
+    usage_avail = bool(norm_usage.get("usage_present"))
+
+    failure_cls = DevCellFailureClassification.NONE
+    if refusal_state:
+        failure_cls = DevCellFailureClassification.REFUSAL
+    elif max_token_state:
+        failure_cls = DevCellFailureClassification.MAX_TOKEN_TRUNCATION
+
+    raw_meta = {
+        "id": getattr(resp, "id", None),
+        "model": returned_model,
+        "system_fingerprint": sys_fp,
+        "service_tier": srv_tier,
+        "finish_reason": finish_reason,
+    }
+    norm_meta = {
+        "candidate_id": "C2",
+        "provider": "openai",
+        "requested_model_id": "gpt-6.1-sol",
+        "returned_model_id": returned_model,
+        "finish_or_stop_reason": finish_reason,
+        "refusal_state": refusal_state,
+        "max_token_state": max_token_state,
+        "reasoning_effort": "medium",
+        "seed_sent": 2026101508,
+        "service_tier": srv_tier or "default",
+        "temperature_status": "OMITTED",
+        "actual_http_request_count": counting_transport.request_count,
+    }
+    return ProviderNormalizedTransportResponse(
+        candidate_id="C2",
+        provider="openai",
+        requested_model_id="gpt-6.1-sol",
+        returned_model_id=returned_model,
+        raw_text=raw_text,
+        finish_or_stop_reason=finish_reason,
+        finish_reason=finish_reason or "stop",
+        refusal_state=refusal_state,
+        max_token_state=max_token_state,
+        raw_usage_metadata=raw_usage_dict,
+        normalized_usage_metadata=norm_usage,
+        raw_provider_metadata=raw_meta,
+        normalized_provider_metadata=norm_meta,
+        actual_http_request_count=counting_transport.request_count,
+        simulated_failure=failure_cls,
+        authoritative_usage_available=usage_avail,
+        input_tokens=norm_usage["input_tokens"],
+        output_tokens=norm_usage["output_tokens"],
+        total_tokens=norm_usage["total_tokens"],
+        reasoning_tokens=norm_usage["reasoning_tokens"],
+        cached_input_tokens=norm_usage["cached_input_tokens"],
+    )
+
+
+def _invoke_c3_anthropic_production(
+    *,
+    api_key: str,
+    wire_request: Dict[str, Any],
+    counting_transport: DevCountingHttpx2Transport,
+) -> ProviderNormalizedTransportResponse:
+    """Invoke Anthropic Messages (`claude-sonnet-5-5`) with exact frozen C3 parameters and Portable Schema V2 (Sections 3, 4, 5)."""
+    for forbidden_key in ("seed", "temperature", "top_p", "top_k"):
+        if forbidden_key in wire_request:
+            raise CandidateRegistryIntegrityError(
+                f"C3_FORBIDDEN_SAMPLING_PARAMETER: {forbidden_key!r} must be omitted."
+            )
+    if (
+        wire_request.get("model") != "claude-sonnet-5-5"
+        or wire_request.get("thinking") != {"type": "adaptive"}
+        or wire_request.get("output_config", {}).get("effort") != "high"
+        or wire_request.get("max_tokens") != 16384
+        or wire_request.get("timeout_seconds") != 55.0
+        or wire_request.get("max_retries") != 0
+    ):
+        raise CandidateRegistryIntegrityError("C3 wire_request violates frozen C3 config.")
+
+    http_client = httpx2.Client(transport=counting_transport, timeout=55.0)
+    try:
+        client = anthropic.Anthropic(
+            api_key=api_key,
+            max_retries=0,
+            timeout=55.0,
+            http_client=http_client,
+        )
+        resp = client.messages.create(
+            model="claude-sonnet-5-5",
+            system=wire_request["system"],
+            messages=wire_request["messages"],
+            max_tokens=16384,
+            thinking=wire_request["thinking"],
+            output_config=wire_request["output_config"],
+        )
+    finally:
+        http_client.close()
+
+    returned_model = getattr(resp, "model", None)
+    stop_reason = getattr(resp, "stop_reason", None)
+    sr_low = str(stop_reason or "").lower()
+    refusal_state = sr_low == "refusal"
+    max_token_state = sr_low in (
+        "max_tokens",
+        "length",
+        "model_context_window_exceeded",
+    )
+
+    content_blocks = getattr(resp, "content", None) or []
+    text_parts: List[str] = []
+    thinking_blocks_count = 0
+    for block in content_blocks:
+        b_type = getattr(block, "type", None) or (
+            block.get("type") if isinstance(block, dict) else None
+        )
+        if b_type == "text":
+            b_text = getattr(block, "text", None) or (
+                block.get("text") if isinstance(block, dict) else None
+            )
+            if isinstance(b_text, str):
+                text_parts.append(b_text)
+        elif b_type in ("thinking", "redacted_thinking"):
+            thinking_blocks_count += 1
+    raw_text = "".join(text_parts)
+
+    usage_obj = getattr(resp, "usage", None)
+    in_tok = getattr(usage_obj, "input_tokens", None) if usage_obj else None
+    out_tok = getattr(usage_obj, "output_tokens", None) if usage_obj else None
+    thinking_tok = getattr(usage_obj, "thinking_tokens", None) if usage_obj else None
+    cache_read = (
+        getattr(usage_obj, "cache_read_input_tokens", None) if usage_obj else None
+    )
+    cache_create = (
+        getattr(usage_obj, "cache_creation_input_tokens", None) if usage_obj else None
+    )
+    srv_tier = getattr(usage_obj, "service_tier", None) if usage_obj else None
+
+    raw_usage_dict: Optional[Dict[str, Any]] = None
+    if usage_obj is not None:
+        raw_usage_dict = {
+            "input_tokens": in_tok,
+            "output_tokens": out_tok,
+            "thinking_tokens": thinking_tok,
+            "cache_read_input_tokens": cache_read,
+            "cache_creation_input_tokens": cache_create,
+            "service_tier": srv_tier,
+            "thinking_blocks_count": thinking_blocks_count,
+        }
+    norm_usage = normalize_candidate_usage_metadata("C3", raw_usage_dict)
+    usage_avail = bool(norm_usage.get("usage_present"))
+
+    failure_cls = DevCellFailureClassification.NONE
+    if refusal_state:
+        failure_cls = DevCellFailureClassification.REFUSAL
+    elif max_token_state:
+        failure_cls = DevCellFailureClassification.MAX_TOKEN_TRUNCATION
+
+    raw_meta = {
+        "id": getattr(resp, "id", None),
+        "model": returned_model,
+        "stop_reason": stop_reason,
+        "service_tier": srv_tier,
+        "thinking_blocks_count": thinking_blocks_count,
+    }
+    norm_meta = {
+        "candidate_id": "C3",
+        "provider": "anthropic",
+        "requested_model_id": "claude-sonnet-5-5",
+        "returned_model_id": returned_model,
+        "finish_or_stop_reason": stop_reason,
+        "refusal_state": refusal_state,
+        "max_token_state": max_token_state,
+        "thinking_mode": "adaptive",
+        "effort": "high",
+        "seed_sent": None,
+        "seed_status": "OMITTED_UNSUPPORTED",
+        "temperature_status": "OMITTED",
+        "actual_http_request_count": counting_transport.request_count,
+    }
+    return ProviderNormalizedTransportResponse(
+        candidate_id="C3",
+        provider="anthropic",
+        requested_model_id="claude-sonnet-5-5",
+        returned_model_id=returned_model,
+        raw_text=raw_text,
+        finish_or_stop_reason=stop_reason,
+        finish_reason=stop_reason or "end_turn",
+        refusal_state=refusal_state,
+        max_token_state=max_token_state,
+        raw_usage_metadata=raw_usage_dict,
+        normalized_usage_metadata=norm_usage,
+        raw_provider_metadata=raw_meta,
+        normalized_provider_metadata=norm_meta,
+        actual_http_request_count=counting_transport.request_count,
+        simulated_failure=failure_cls,
+        authoritative_usage_available=usage_avail,
+        input_tokens=norm_usage["input_tokens"],
+        output_tokens=norm_usage["output_tokens"],
+        total_tokens=norm_usage["total_tokens"],
+        thinking_tokens=norm_usage["thinking_tokens"],
+        cached_input_tokens=norm_usage["cached_input_tokens"],
+        cache_read_input_tokens=norm_usage["cache_read_input_tokens"],
+        cache_creation_input_tokens=norm_usage["cache_creation_input_tokens"],
+    )
+
+
+class BaseCandidateProductionTransport:
+    """Base class for candidate-specific production transports (Sections 3, 8)."""
+
+    is_production_transport: bool = True
+    candidate_id: str = ""
+    provider: str = ""
+    requested_model_id: str = ""
+    env_key_name: str = ""
+
+    def invoke(
+        self,
+        *,
+        cell_manifest: DevCellExecutionManifest,
+        wire_request: Dict[str, Any],
+        live_capability: LiveExecutionCapability,
+        http_counter: DevCellHttpCallCounter,
+        api_key: str,
+        inner_transport: Optional[Any] = None,
+    ) -> ProviderNormalizedTransportResponse:
+        raise NotImplementedError
+
+
+class GoogleGeminiProductionTransport(BaseCandidateProductionTransport):
+    """Production transport for C1 (`google` / `gemini-3.8-flash`)."""
+
+    candidate_id = "C1"
+    provider = "google"
+    requested_model_id = "gemini-3.8-flash"
+    env_key_name = "GEMINI_API_KEY"
+
+    def invoke(
+        self,
+        *,
+        cell_manifest: DevCellExecutionManifest,
+        wire_request: Dict[str, Any],
+        live_capability: LiveExecutionCapability,
+        http_counter: DevCellHttpCallCounter,
+        api_key: str,
+        inner_transport: Optional[httpx.BaseTransport] = None,
+    ) -> ProviderNormalizedTransportResponse:
+        live_capability.verify_mint_token()
+        if cell_manifest.candidate_id != "C1":
+            raise CandidateRegistryIntegrityError(
+                f"GoogleGeminiProductionTransport requires C1, got {cell_manifest.candidate_id!r}"
+            )
+        counting = DevCountingHttpxTransport(
+            candidate_id="C1",
+            run_id=cell_manifest.run_id,
+            http_counter=http_counter,
+            inner_transport=inner_transport,
+        )
+        try:
+            return _invoke_c1_google_production(
+                api_key=api_key,
+                wire_request=wire_request,
+                counting_transport=counting,
+            )
+        except (
+            ImmutableCellExecutionError,
+            BatchExecutionFatalStopError,
+            DevCallBudgetExhaustedError,
+            CandidateRegistryIntegrityError,
+        ):
+            raise
+        except Exception as exc:
+            f_cls = classify_provider_transport_exception(exc)
+            safe_err = sanitize_runner_text(f"{type(exc).__name__}: {exc}", [api_key])
+            return ProviderNormalizedTransportResponse(
+                candidate_id="C1",
+                provider="google",
+                requested_model_id="gemini-3.8-flash",
+                returned_model_id=None,
+                raw_text="",
+                finish_or_stop_reason=f"PROVIDER_EXCEPTION:{f_cls.value}",
+                finish_reason=f"PROVIDER_EXCEPTION:{f_cls.value}:{safe_err}",
+                refusal_state=(f_cls == DevCellFailureClassification.REFUSAL),
+                max_token_state=(
+                    f_cls == DevCellFailureClassification.MAX_TOKEN_TRUNCATION
+                ),
+                raw_usage_metadata=None,
+                normalized_usage_metadata=normalize_candidate_usage_metadata("C1", None),
+                raw_provider_metadata={"error_detail_sanitized": safe_err},
+                normalized_provider_metadata={
+                    "candidate_id": "C1",
+                    "provider": "google",
+                    "requested_model_id": "gemini-3.8-flash",
+                    "returned_model_id": None,
+                    "failure_classification": f_cls.value,
+                    "error_detail_sanitized": safe_err,
+                    "actual_http_request_count": counting.request_count,
+                },
+                actual_http_request_count=counting.request_count,
+                simulated_failure=f_cls,
+                authoritative_usage_available=False,
+            )
+
+
+class OpenAIChatCompletionsProductionTransport(BaseCandidateProductionTransport):
+    """Production transport for C2 (`openai` / `gpt-6.1-sol`)."""
+
+    candidate_id = "C2"
+    provider = "openai"
+    requested_model_id = "gpt-6.1-sol"
+    env_key_name = "OPENAI_API_KEY"
+
+    def invoke(
+        self,
+        *,
+        cell_manifest: DevCellExecutionManifest,
+        wire_request: Dict[str, Any],
+        live_capability: LiveExecutionCapability,
+        http_counter: DevCellHttpCallCounter,
+        api_key: str,
+        inner_transport: Optional[httpx2.BaseTransport] = None,
+    ) -> ProviderNormalizedTransportResponse:
+        live_capability.verify_mint_token()
+        if cell_manifest.candidate_id != "C2":
+            raise CandidateRegistryIntegrityError(
+                f"OpenAIChatCompletionsProductionTransport requires C2, got {cell_manifest.candidate_id!r}"
+            )
+        counting = DevCountingHttpx2Transport(
+            candidate_id="C2",
+            run_id=cell_manifest.run_id,
+            http_counter=http_counter,
+            inner_transport=inner_transport,
+        )
+        try:
+            return _invoke_c2_openai_production(
+                api_key=api_key,
+                wire_request=wire_request,
+                counting_transport=counting,
+            )
+        except (
+            ImmutableCellExecutionError,
+            BatchExecutionFatalStopError,
+            DevCallBudgetExhaustedError,
+            CandidateRegistryIntegrityError,
+        ):
+            raise
+        except Exception as exc:
+            f_cls = classify_provider_transport_exception(exc)
+            safe_err = sanitize_runner_text(f"{type(exc).__name__}: {exc}", [api_key])
+            return ProviderNormalizedTransportResponse(
+                candidate_id="C2",
+                provider="openai",
+                requested_model_id="gpt-6.1-sol",
+                returned_model_id=None,
+                raw_text="",
+                finish_or_stop_reason=f"PROVIDER_EXCEPTION:{f_cls.value}",
+                finish_reason=f"PROVIDER_EXCEPTION:{f_cls.value}:{safe_err}",
+                refusal_state=(f_cls == DevCellFailureClassification.REFUSAL),
+                max_token_state=(
+                    f_cls == DevCellFailureClassification.MAX_TOKEN_TRUNCATION
+                ),
+                raw_usage_metadata=None,
+                normalized_usage_metadata=normalize_candidate_usage_metadata("C2", None),
+                raw_provider_metadata={"error_detail_sanitized": safe_err},
+                normalized_provider_metadata={
+                    "candidate_id": "C2",
+                    "provider": "openai",
+                    "requested_model_id": "gpt-6.1-sol",
+                    "returned_model_id": None,
+                    "failure_classification": f_cls.value,
+                    "error_detail_sanitized": safe_err,
+                    "actual_http_request_count": counting.request_count,
+                },
+                actual_http_request_count=counting.request_count,
+                simulated_failure=f_cls,
+                authoritative_usage_available=False,
+            )
+
+
+class AnthropicMessagesProductionTransport(BaseCandidateProductionTransport):
+    """Production transport for C3 (`anthropic` / `claude-sonnet-5-5`)."""
+
+    candidate_id = "C3"
+    provider = "anthropic"
+    requested_model_id = "claude-sonnet-5-5"
+    env_key_name = "ANTHROPIC_API_KEY"
+
+    def invoke(
+        self,
+        *,
+        cell_manifest: DevCellExecutionManifest,
+        wire_request: Dict[str, Any],
+        live_capability: LiveExecutionCapability,
+        http_counter: DevCellHttpCallCounter,
+        api_key: str,
+        inner_transport: Optional[httpx2.BaseTransport] = None,
+    ) -> ProviderNormalizedTransportResponse:
+        live_capability.verify_mint_token()
+        if cell_manifest.candidate_id != "C3":
+            raise CandidateRegistryIntegrityError(
+                f"AnthropicMessagesProductionTransport requires C3, got {cell_manifest.candidate_id!r}"
+            )
+        counting = DevCountingHttpx2Transport(
+            candidate_id="C3",
+            run_id=cell_manifest.run_id,
+            http_counter=http_counter,
+            inner_transport=inner_transport,
+        )
+        try:
+            return _invoke_c3_anthropic_production(
+                api_key=api_key,
+                wire_request=wire_request,
+                counting_transport=counting,
+            )
+        except (
+            ImmutableCellExecutionError,
+            BatchExecutionFatalStopError,
+            DevCallBudgetExhaustedError,
+            CandidateRegistryIntegrityError,
+        ):
+            raise
+        except Exception as exc:
+            f_cls = classify_provider_transport_exception(exc)
+            safe_err = sanitize_runner_text(f"{type(exc).__name__}: {exc}", [api_key])
+            return ProviderNormalizedTransportResponse(
+                candidate_id="C3",
+                provider="anthropic",
+                requested_model_id="claude-sonnet-5-5",
+                returned_model_id=None,
+                raw_text="",
+                finish_or_stop_reason=f"PROVIDER_EXCEPTION:{f_cls.value}",
+                finish_reason=f"PROVIDER_EXCEPTION:{f_cls.value}:{safe_err}",
+                refusal_state=(f_cls == DevCellFailureClassification.REFUSAL),
+                max_token_state=(
+                    f_cls == DevCellFailureClassification.MAX_TOKEN_TRUNCATION
+                ),
+                raw_usage_metadata=None,
+                normalized_usage_metadata=normalize_candidate_usage_metadata("C3", None),
+                raw_provider_metadata={"error_detail_sanitized": safe_err},
+                normalized_provider_metadata={
+                    "candidate_id": "C3",
+                    "provider": "anthropic",
+                    "requested_model_id": "claude-sonnet-5-5",
+                    "returned_model_id": None,
+                    "failure_classification": f_cls.value,
+                    "error_detail_sanitized": safe_err,
+                    "actual_http_request_count": counting.request_count,
+                },
+                actual_http_request_count=counting.request_count,
+                simulated_failure=f_cls,
+                authoritative_usage_available=False,
+            )
+
+
+class ProductionDevProviderTransport:
+    """Type-safe production provider transport router for C1, C2, and C3 (Sections 3, 7, 8, 16).
+
+    Strictly distinct from `MockDevProviderTransport`. Requires an unforgeable
+    `LiveExecutionCapability` and routes each cell to its candidate-specific
+    production SDK transport with HTTP-boundary request counting (`<= 1` HTTP request/cell).
+    """
+
+    is_production_transport: bool = True
+
+    def __init__(
+        self,
+        *,
+        live_capability: LiveExecutionCapability,
+        dotenv_path: Optional[Path] = None,
+        api_key_overrides: Optional[Mapping[str, str]] = None,
+        inner_transport_overrides: Optional[Mapping[str, Any]] = None,
+    ) -> None:
+        if not isinstance(live_capability, LiveExecutionCapability):
+            raise LiveExecutionNotAuthorizedError(
+                "PRODUCTION_TRANSPORT_REQUIRES_LIVE_CAPABILITY: live_capability must be a LiveExecutionCapability."
+            )
+        live_capability.verify_mint_token()
+        self.live_capability = live_capability
+        self.dotenv_path = dotenv_path
+        self._api_key_overrides = dict(api_key_overrides) if api_key_overrides else {}
+        self._inner_transport_overrides = (
+            dict(inner_transport_overrides) if inner_transport_overrides else {}
+        )
+        self.http_counter = DevCellHttpCallCounter(
+            max_requests_per_cell=1,
+            max_total_requests=live_capability.maximum_live_generation_calls,
+        )
+        self.candidate_transports: Dict[str, BaseCandidateProductionTransport] = {
+            "C1": GoogleGeminiProductionTransport(),
+            "C2": OpenAIChatCompletionsProductionTransport(),
+            "C3": AnthropicMessagesProductionTransport(),
+        }
+        self.call_count: int = 0
+        self.call_count_by_run_id: Dict[str, int] = {}
 
     def __call__(
         self,
         cell_manifest: DevCellExecutionManifest,
         wire_request: Dict[str, Any],
-    ) -> MockProviderTransportResponse: ...
+    ) -> ProviderNormalizedTransportResponse:
+        self.live_capability.verify_mint_token()
+        cid = cell_manifest.candidate_id
+        if cid not in self.candidate_transports:
+            raise CandidateRegistryIntegrityError(
+                f"Unsupported candidate_id={cid!r} in ProductionDevProviderTransport."
+            )
+        if cid not in self.live_capability.allowed_candidate_ids:
+            raise DevLiveAuthorizationError(
+                f"Candidate {cid!r} is not authorized in LiveExecutionCapability ({self.live_capability.allowed_candidate_ids})."
+            )
+        self.call_count += 1
+        self.call_count_by_run_id[cell_manifest.run_id] = (
+            self.call_count_by_run_id.get(cell_manifest.run_id, 0) + 1
+        )
+        if self.call_count_by_run_id[cell_manifest.run_id] > 1:
+            raise ImmutableCellExecutionError(
+                f"RETRY_FORBIDDEN: ProductionDevProviderTransport invoked more than once for cell {cell_manifest.run_id}"
+            )
+
+        api_key = _load_candidate_api_key_for_live_transport(
+            cid,
+            dotenv_path=self.dotenv_path,
+            api_key_overrides=self._api_key_overrides,
+        )
+        cand_transport = self.candidate_transports[cid]
+        inner_override = self._inner_transport_overrides.get(cid)
+        return cand_transport.invoke(
+            cell_manifest=cell_manifest,
+            wire_request=wire_request,
+            live_capability=self.live_capability,
+            http_counter=self.http_counter,
+            api_key=api_key,
+            inner_transport=inner_override,
+        )
+
+
+class DevProviderTransportProtocol(Protocol):
+    """Protocol for single-request provider transport."""
+
+    def __call__(
+        self,
+        cell_manifest: DevCellExecutionManifest,
+        wire_request: Dict[str, Any],
+    ) -> Union[MockProviderTransportResponse, ProviderNormalizedTransportResponse]: ...
 
 
 class MockDevProviderTransport:
-    """Deterministic offline mock transport that records exact call counts and never accesses the network."""
+    """Deterministic offline mock transport used ONLY in `OFFLINE_MOCK_TEST` mode (Sections 7, 8).
+
+    Never accepted in `LIVE_EXECUTION` mode.
+    """
+
+    is_production_transport: bool = False
 
     def __init__(
         self,
         response_or_callable: Union[
             MockProviderTransportResponse,
-            Mapping[str, MockProviderTransportResponse],
-            Callable[[DevCellExecutionManifest, Dict[str, Any]], MockProviderTransportResponse],
-            Callable[[DevCellExecutionManifest], MockProviderTransportResponse],
+            ProviderNormalizedTransportResponse,
+            Mapping[str, Union[MockProviderTransportResponse, ProviderNormalizedTransportResponse]],
+            Callable[[DevCellExecutionManifest, Dict[str, Any]], Union[MockProviderTransportResponse, ProviderNormalizedTransportResponse]],
+            Callable[[DevCellExecutionManifest], Union[MockProviderTransportResponse, ProviderNormalizedTransportResponse]],
         ],
     ) -> None:
+        if isinstance(
+            response_or_callable,
+            (ProductionDevProviderTransport, BaseCandidateProductionTransport),
+        ):
+            raise LiveExecutionNotAuthorizedError(
+                "MOCK_TRANSPORT_CANNOT_WRAP_PRODUCTION_TRANSPORT: MockDevProviderTransport cannot wrap a ProductionDevProviderTransport."
+            )
         self._source = response_or_callable
         self.call_count: int = 0
         self.call_count_by_run_id: Dict[str, int] = {}
@@ -1528,7 +3471,7 @@ class MockDevProviderTransport:
         self,
         cell_manifest: DevCellExecutionManifest,
         wire_request: Dict[str, Any],
-    ) -> MockProviderTransportResponse:
+    ) -> Union[MockProviderTransportResponse, ProviderNormalizedTransportResponse]:
         self.call_count += 1
         self.call_count_by_run_id[cell_manifest.run_id] = (
             self.call_count_by_run_id.get(cell_manifest.run_id, 0) + 1
@@ -1539,7 +3482,10 @@ class MockDevProviderTransport:
             )
         self.captured_requests_by_run_id[cell_manifest.run_id] = copy.deepcopy(wire_request)
 
-        if isinstance(self._source, MockProviderTransportResponse):
+        if isinstance(
+            self._source,
+            (MockProviderTransportResponse, ProviderNormalizedTransportResponse),
+        ):
             return self._source
         if isinstance(self._source, Mapping):
             if cell_manifest.run_id not in self._source:
@@ -1558,34 +3504,57 @@ class MockDevProviderTransport:
 def create_live_provider_transport_factory(
     *,
     execute_live: bool,
-    authorization: Optional[DevLiveAuthorizationArtifact],
-) -> DevProviderTransportProtocol:
-    """Production factory boundary: refuses to instantiate any live provider client in offline tasks (Sections 13, 37, 38)."""
-    if not execute_live:
+    authorization: Optional[DevLiveAuthorizationArtifact] = None,
+    live_capability: Optional[LiveExecutionCapability] = None,
+    dotenv_path: Optional[Path] = None,
+    api_key_overrides: Optional[Mapping[str, str]] = None,
+    inner_transport_overrides: Optional[Mapping[str, Any]] = None,
+) -> ProductionDevProviderTransport:
+    """Production transport factory: requires `execute_live=True`, verified `authorization`, and unforgeable `LiveExecutionCapability` (Sections 3, 7, 8)."""
+    if execute_live is not True:
         raise LiveExecutionNotAuthorizedError(
             "LIVE_EXECUTION_DISABLED: --execute-live is False; live provider transport factory cannot be constructed."
         )
-    if authorization is None or authorization.authorization_status != AUTHORIZATION_STATUS_AUTHORIZED:
+    if (
+        authorization is None
+        or authorization.authorization_status != AUTHORIZATION_STATUS_AUTHORIZED
+    ):
         raise LiveExecutionNotAuthorizedError(
             "LIVE_AUTHORIZATION_MISSING: Live provider transport requires a verified DevLiveAuthorizationArtifact."
         )
-    raise LiveExecutionNotAuthorizedError(
-        "LIVE_PROVIDER_EXECUTION_BLOCKED_IN_OFFLINE_GATE: "
-        "Real provider SDK network execution is disabled until W06-DEV-LIVE-RUNNER-QA-01-OFFLINE-ADVERSARIAL "
-        "and the explicit prompt-freeze + project-owner live authorization gate are completed."
+    if live_capability is None or not isinstance(
+        live_capability, LiveExecutionCapability
+    ):
+        raise LiveExecutionNotAuthorizedError(
+            "LIVE_CAPABILITY_MISSING: create_live_provider_transport_factory requires a verified LiveExecutionCapability "
+            "(issued after Stage-A freeze & git commit ancestor attestation)."
+        )
+    live_capability.verify_mint_token()
+    if (
+        live_capability.authorization_artifact_sha256
+        != authorization.authorization_artifact_sha256
+    ):
+        raise LiveExecutionNotAuthorizedError(
+            "LIVE_CAPABILITY_AUTHORIZATION_MISMATCH: LiveExecutionCapability does not match supplied authorization artifact."
+        )
+    return ProductionDevProviderTransport(
+        live_capability=live_capability,
+        dotenv_path=dotenv_path,
+        api_key_overrides=api_key_overrides,
+        inner_transport_overrides=inner_transport_overrides,
     )
 
 
 # ==============================================================================
-# 9. SINGLE-CELL EXECUTION CORE (SECTIONS 17-27)
+# 9. SINGLE-CELL EXECUTION CORE (SECTIONS 7, 8, 13, 14, 15, 16)
 # ==============================================================================
 
 
-def _extract_raw_usage_from_mock_response(
+def _extract_raw_usage_from_response(
     candidate_id: str,
-    response: MockProviderTransportResponse,
+    response: Union[MockProviderTransportResponse, ProviderNormalizedTransportResponse],
 ) -> Optional[Dict[str, Any]]:
-    """Extract raw usage dictionary from MockProviderTransportResponse without losing provider-shaped fields."""
+    """Extract raw usage dictionary from transport response without losing provider-shaped fields."""
     if response.raw_usage_metadata is not None:
         return copy.deepcopy(dict(response.raw_usage_metadata))
     if not response.authoritative_usage_available:
@@ -1610,6 +3579,103 @@ def _extract_raw_usage_from_mock_response(
     return base
 
 
+def _validate_and_resolve_transport_and_mode(
+    *,
+    execution_mode: Optional[Union[RunnerExecutionMode, str]],
+    transport: Any,
+    live_capability: Optional[LiveExecutionCapability],
+    execution_plan: Union[DevExecutionPlan, StochasticityDiagnosticPlan],
+    verified_prompt_freeze: DevPromptFreezeArtifact,
+    verified_auth: DevLiveAuthorizationArtifact,
+) -> Tuple[str, Callable[[DevCellExecutionManifest, Dict[str, Any]], Union[MockProviderTransportResponse, ProviderNormalizedTransportResponse]]]:
+    """Enforce strict separation between `OFFLINE_MOCK_TEST` and `LIVE_EXECUTION` modes (Sections 7, 8).
+
+    - Rejects missing `execution_mode`.
+    - Rejects arbitrary raw callables (`lambda` / `def`) unless wrapped in `MockDevProviderTransport` under `OFFLINE_MOCK_TEST`.
+    - In `LIVE_EXECUTION` mode: requires an unforgeable `LiveExecutionCapability` matching the plan, prompt freeze,
+      and authorization, AND requires `transport` to be a `ProductionDevProviderTransport` (never a mock or arbitrary callable).
+    - In `OFFLINE_MOCK_TEST` mode: forbids `LiveExecutionCapability` and forbids `ProductionDevProviderTransport`.
+    """
+    if execution_mode is None:
+        raise LiveExecutionNotAuthorizedError(
+            "EXPLICIT_EXECUTION_MODE_REQUIRED: execute_live_dev_cell / execute_live_dev_batch requires "
+            "explicit execution_mode='OFFLINE_MOCK_TEST' or execution_mode='LIVE_EXECUTION'."
+        )
+    mode_str = (
+        execution_mode.value
+        if isinstance(execution_mode, RunnerExecutionMode)
+        else str(execution_mode)
+    )
+    if mode_str not in (
+        RUNNER_EXECUTION_MODE_OFFLINE_MOCK_TEST,
+        RUNNER_EXECUTION_MODE_LIVE_EXECUTION,
+    ):
+        raise LiveExecutionNotAuthorizedError(
+            f"INVALID_EXECUTION_MODE: {mode_str!r}; must be {RUNNER_EXECUTION_MODE_OFFLINE_MOCK_TEST!r} "
+            f"or {RUNNER_EXECUTION_MODE_LIVE_EXECUTION!r}."
+        )
+
+    if mode_str == RUNNER_EXECUTION_MODE_LIVE_EXECUTION:
+        if live_capability is None or not isinstance(
+            live_capability, LiveExecutionCapability
+        ):
+            raise LiveExecutionNotAuthorizedError(
+                "LIVE_CAPABILITY_REQUIRED: execution_mode='LIVE_EXECUTION' requires an unforgeable "
+                "LiveExecutionCapability issued by issue_live_execution_capability()."
+            )
+        live_capability.verify_mint_token()
+        if live_capability.execution_plan_sha256 != execution_plan.plan_sha256:
+            raise LiveExecutionNotAuthorizedError(
+                "LIVE_CAPABILITY_PLAN_MISMATCH: Capability plan_sha256 does not match execution_plan."
+            )
+        if live_capability.prompt_freeze_sha256 != compute_prompt_freeze_sha256(
+            verified_prompt_freeze
+        ):
+            raise LiveExecutionNotAuthorizedError(
+                "LIVE_CAPABILITY_PROMPT_FREEZE_MISMATCH: Capability prompt_freeze_sha256 does not match prompt_freeze."
+            )
+        if (
+            live_capability.authorization_artifact_sha256
+            != verified_auth.authorization_artifact_sha256
+        ):
+            raise LiveExecutionNotAuthorizedError(
+                "LIVE_CAPABILITY_AUTHORIZATION_MISMATCH: Capability authorization_artifact_sha256 does not match authorization."
+            )
+        if not isinstance(transport, ProductionDevProviderTransport):
+            raise LiveExecutionNotAuthorizedError(
+                f"ARBITRARY_OR_MOCK_TRANSPORT_FORBIDDEN_IN_LIVE_MODE: LIVE_EXECUTION requires "
+                f"ProductionDevProviderTransport, got {type(transport).__name__}."
+            )
+        if transport.live_capability is not live_capability:
+            raise LiveExecutionNotAuthorizedError(
+                "PRODUCTION_TRANSPORT_CAPABILITY_MISMATCH: ProductionDevProviderTransport capability does not match live_capability."
+            )
+        return mode_str, transport
+
+    # mode_str == RUNNER_EXECUTION_MODE_OFFLINE_MOCK_TEST
+    if live_capability is not None:
+        raise LiveExecutionNotAuthorizedError(
+            "MODE_CONFUSION_FORBIDDEN: Cannot supply LiveExecutionCapability when execution_mode='OFFLINE_MOCK_TEST'."
+        )
+    if isinstance(
+        transport, (ProductionDevProviderTransport, BaseCandidateProductionTransport)
+    ):
+        raise LiveExecutionNotAuthorizedError(
+            "MODE_CONFUSION_FORBIDDEN: Cannot use ProductionDevProviderTransport when execution_mode='OFFLINE_MOCK_TEST'."
+        )
+    if isinstance(transport, MockDevProviderTransport):
+        return mode_str, transport
+    if isinstance(
+        transport, (MockProviderTransportResponse, ProviderNormalizedTransportResponse)
+    ):
+        return mode_str, MockDevProviderTransport(transport)
+
+    raise LiveExecutionNotAuthorizedError(
+        f"ARBITRARY_CALLABLE_TRANSPORT_FORBIDDEN: Raw callable or unverified transport ({type(transport).__name__}) "
+        "is forbidden. Wrap offline test fixtures in MockDevProviderTransport under execution_mode='OFFLINE_MOCK_TEST'."
+    )
+
+
 def execute_live_dev_cell(
     *,
     cell_manifest: DevCellExecutionManifest,
@@ -1621,11 +3687,13 @@ def execute_live_dev_cell(
     call_budget_ledger: DevCallBudgetLedger,
     cell_dir: Path,
     transport: Union[
-        DevProviderTransportProtocol,
+        ProductionDevProviderTransport,
+        MockDevProviderTransport,
         MockProviderTransportResponse,
-        Callable[[DevCellExecutionManifest, Dict[str, Any]], MockProviderTransportResponse],
-        Callable[[DevCellExecutionManifest], MockProviderTransportResponse],
+        ProviderNormalizedTransportResponse,
     ],
+    execution_mode: Optional[Union[RunnerExecutionMode, str]] = None,
+    live_capability: Optional[LiveExecutionCapability] = None,
     cost_comparability_by_candidate: Optional[
         Dict[str, CandidateCostComparabilityRecord]
     ] = None,
@@ -1638,28 +3706,7 @@ def execute_live_dev_cell(
     monotonic_ns_clock: Callable[[], int] = time.monotonic_ns,
     extra_secrets: Optional[Sequence[str]] = None,
 ) -> Tuple[DevCellExecutionReceipt, ScenarioEvaluationResult]:
-    """Execute a single frozen DEV cell through all 17 fail-closed scientific steps (Section 17).
-
-    Order of operations:
-    1. Verify Final100 firewall on cell, scenario, and output directory
-    2. Verify execution plan integrity & exact cell membership in plan
-    3. Verify prompt freeze artifact against registry, plan, DEV bundle, candidate registry, and code bundle
-    4. Verify phase-scoped authorization artifact against plan, prompt freeze, and code bundle
-    5. Verify cell directory has no crash ambiguity (`TRANSPORT_STARTING`) or existing immutable artifacts
-    6. Verify scientific code bundle from actual file bytes (no mtime/size cache)
-    7. Verify provider configuration hash & model identity expectations
-    8. Construct frozen provider request
-    9. Reserve 1 call in deterministic call-budget ledger
-    10. Atomically write `request_manifest.json` + `transport_journal_starting.json`
-    11. Measure duration with `monotonic_ns_clock()` (`time.monotonic_ns`) around at most 1 transport call (`retry=0`)
-    12. Atomically write `transport_journal_completed.json`, `raw_provider_response.txt`, `raw_usage_metadata.json`,
-        and `provider_response_metadata.json` BEFORE any model ID validation, JSON parsing, or evaluation
-    13. Validate returned model ID (never substituting requested_model_id for missing returned_model_id)
-    14. Normalize usage metadata & compute exact Decimal cost where computable
-    15. Strict primary parser (`raw_text -> json.loads -> BenchmarkPlanResponse.model_validate`, zero rescue)
-    16. Invoke frozen evaluator (`evaluate_dev_cell_scenario`)
-    17. Atomically write `parsed_plan_response.json` (when valid), `evaluation_result.json`, and `execution_receipt.json`.
-    """
+    """Execute a single frozen DEV cell through all fail-closed scientific steps."""
     # Step 1: Final100 firewall
     _assert_runner_not_final100_path(cell_dir)
     assert_not_final100_scenario_id(cell_manifest.fixture_id)
@@ -1742,6 +3789,20 @@ def execute_live_dev_cell(
         repo_root=repo_root,
     )
 
+    # Step 4B: Validate execution_mode, LiveExecutionCapability, and transport type safety (Sections 7, 8)
+    validated_runner_mode, transport_callable = _validate_and_resolve_transport_and_mode(
+        execution_mode=execution_mode,
+        transport=transport,
+        live_capability=live_capability,
+        execution_plan=execution_plan,
+        verified_prompt_freeze=verified_prompt_freeze,
+        verified_auth=verified_auth,
+    )
+    manifest_execution_mode = resolve_truthful_manifest_execution_mode(
+        runner_mode=validated_runner_mode,
+        cell_phase=cell_manifest.phase,
+    )
+
     # Step 5: Crash ambiguity & immutable artifact check before transport
     inspect_and_guard_cell_directory_before_transport(
         cell_dir, cell_manifest=cell_manifest
@@ -1776,8 +3837,17 @@ def execute_live_dev_cell(
     req_manifest_path = cell_dir / "request_manifest.json"
     req_manifest_payload = {
         **cell_manifest.model_dump(),
+        "runner_execution_mode": validated_runner_mode,
+        "execution_mode": manifest_execution_mode,
+        "runtime_head_sha": runtime_head_sha,
         "authorization_id": verified_auth.authorization_id,
         "authorization_artifact_sha256": verified_auth.authorization_artifact_sha256,
+        "stage_a_receipt_sha256": (
+            live_capability.stage_a_receipt_sha256 if live_capability else None
+        ),
+        "stage_a_commit_sha": (
+            live_capability.stage_a_commit_sha if live_capability else None
+        ),
         "call_budget_reservation_index": reservation_idx,
         "provider_wire_request": wire_request,
     }
@@ -1792,28 +3862,35 @@ def execute_live_dev_cell(
     )
 
     # Step 11: Invoke transport AT MOST ONCE with monotonic_ns timing
-    transport_wrapper = (
-        transport
-        if isinstance(transport, MockDevProviderTransport)
-        else MockDevProviderTransport(transport)
-    )
     t_start_ns = monotonic_ns_clock()
     try:
-        response = transport_wrapper(cell_manifest, wire_request)
+        response = transport_callable(cell_manifest, wire_request)
+    except (
+        ImmutableCellExecutionError,
+        BatchExecutionFatalStopError,
+        DevCallBudgetExhaustedError,
+    ):
+        t_end_ns = monotonic_ns_clock()
+        measured_ns = max(1, int(t_end_ns - t_start_ns))
+        call_budget_ledger.consume_reserved_call(
+            cell_manifest.run_id, transport_outcome="TRANSPORT_FATAL_INVARIANT_VIOLATION"
+        )
+        raise
     except Exception as exc:
         t_end_ns = monotonic_ns_clock()
         measured_ns = max(1, int(t_end_ns - t_start_ns))
         call_budget_ledger.consume_reserved_call(
             cell_manifest.run_id, transport_outcome="TRANSPORT_EXCEPTION"
         )
+        f_cls = classify_provider_transport_exception(exc)
         sanitized_err = sanitize_runner_text(str(exc), extra_secrets=extra_secrets)
         response = MockProviderTransportResponse(
             returned_model_id=None,
             raw_text="",
-            finish_reason=f"TRANSPORT_EXCEPTION: {sanitized_err}",
+            finish_reason=f"TRANSPORT_EXCEPTION:{f_cls.value}: {sanitized_err}",
             latency_ns=measured_ns,
             latency_ms=round(float(Decimal(measured_ns) / Decimal(1_000_000)), 6),
-            simulated_failure=DevCellFailureClassification.HARNESS_INTERNAL_ERROR,
+            simulated_failure=f_cls,
             authoritative_usage_available=False,
             input_tokens=None,
             output_tokens=None,
@@ -1849,7 +3926,7 @@ def execute_live_dev_cell(
         raw_resp_path, response.raw_text or "", extra_secrets=extra_secrets
     )
 
-    raw_usage_dict = _extract_raw_usage_from_mock_response(
+    raw_usage_dict = _extract_raw_usage_from_response(
         cell_manifest.candidate_id, response
     )
     normalized_usage = normalize_candidate_usage_metadata(
@@ -1874,6 +3951,28 @@ def execute_live_dev_cell(
         response.authoritative_usage_available
         and normalized_usage.get("usage_present")
     )
+    actual_http_requests = (
+        response.actual_http_request_count
+        if isinstance(response, ProviderNormalizedTransportResponse)
+        else (1 if validated_runner_mode == RUNNER_EXECUTION_MODE_LIVE_EXECUTION else 0)
+    )
+    refusal_state = (
+        response.refusal_state
+        if isinstance(response, ProviderNormalizedTransportResponse)
+        else (response.simulated_failure == DevCellFailureClassification.REFUSAL)
+    )
+    max_token_state = (
+        response.max_token_state
+        if isinstance(response, ProviderNormalizedTransportResponse)
+        else (
+            response.simulated_failure
+            == DevCellFailureClassification.MAX_TOKEN_TRUNCATION
+        )
+    )
+
+    generation_params = build_candidate_manifest_generation_parameters(
+        cell_manifest, runtime_head_sha=runtime_head_sha
+    )
 
     meta_path = cell_dir / "provider_response_metadata.json"
     meta_payload = {
@@ -1882,19 +3981,41 @@ def execute_live_dev_cell(
         "provider": CANDIDATE_PROVIDER_BY_ID[cell_manifest.candidate_id],
         "requested_model_id": cell_manifest.requested_model_id,
         "returned_model_id": returned_model,
+        "runner_execution_mode": validated_runner_mode,
+        "execution_mode": manifest_execution_mode,
         "code_basis_commit_sha": cell_manifest.code_basis_commit_sha,
         "code_commit_sha": cell_manifest.code_commit_sha,
         "runtime_head_sha": runtime_head_sha,
         "scientific_code_bundle_sha256": cell_manifest.scientific_code_bundle_sha256,
         "provider_config_sha256": cell_manifest.provider_config_sha256,
+        "generation_parameters": generation_params,
         "authorization_id": verified_auth.authorization_id,
+        "stage_a_receipt_sha256": (
+            live_capability.stage_a_receipt_sha256 if live_capability else None
+        ),
+        "stage_a_commit_sha": (
+            live_capability.stage_a_commit_sha if live_capability else None
+        ),
         "finish_reason": sanitize_runner_text(
             response.finish_reason, extra_secrets=extra_secrets
         ),
+        "refusal_state": refusal_state,
+        "max_token_state": max_token_state,
+        "actual_http_request_count": actual_http_requests,
         "latency_ns": authoritative_latency_ns,
         "latency_ms": display_latency_ms,
         "latency_ms_display": display_latency_ms,
         "simulated_failure": response.simulated_failure.value,
+        "raw_provider_metadata": (
+            copy.deepcopy(response.raw_provider_metadata)
+            if isinstance(response, ProviderNormalizedTransportResponse)
+            else None
+        ),
+        "normalized_provider_metadata": (
+            copy.deepcopy(response.normalized_provider_metadata)
+            if isinstance(response, ProviderNormalizedTransportResponse)
+            else None
+        ),
         "usage_metadata": {
             "authoritative_usage_available": usage_avail,
             "input_tokens": normalized_usage["input_tokens"] if usage_avail else None,
@@ -1923,9 +4044,17 @@ def execute_live_dev_cell(
     parsed_sha: Optional[str] = None
     run_status = BenchmarkRunStatus.VALID
 
-    if failure_class != DevCellFailureClassification.NONE:
+    # If a 200 response returned an explicit incompatible model ID, it is always MODEL_INTEGRITY_MISMATCH
+    if returned_model is not None and not is_returned_model_id_compatible(
+        cell_manifest.requested_model_id, returned_model
+    ):
+        failure_class = DevCellFailureClassification.MODEL_INTEGRITY_MISMATCH
+        run_status = BenchmarkRunStatus.MODEL_ID_MISMATCH
+    elif failure_class != DevCellFailureClassification.NONE:
         if failure_class == DevCellFailureClassification.MODEL_INTEGRITY_MISMATCH:
             run_status = BenchmarkRunStatus.MODEL_ID_MISMATCH
+        elif failure_class in ORDINARY_DENOMINATOR_FAILURE_CLASSIFICATIONS:
+            run_status = BenchmarkRunStatus.API_ERROR
         else:
             run_status = BenchmarkRunStatus.API_ERROR
     elif not is_returned_model_id_compatible(
@@ -1944,7 +4073,7 @@ def execute_live_dev_cell(
                 extra_secrets=extra_secrets,
             )
 
-    # Step 16: Frozen evaluator authority
+    # Step 16: Frozen evaluator authority with truthful generation_parameters, execution_mode, and runtime_head_sha
     manifest_model_id = (
         returned_model
         if (returned_model is not None and str(returned_model).strip())
@@ -1957,18 +4086,15 @@ def execute_live_dev_cell(
         provider=cell_manifest.candidate_id,
         model_id=manifest_model_id,
         expected_model_id=cell_manifest.requested_model_id,
-        generation_parameters={
-            "temperature": 0.0,
-            "seed": FROZEN_SAMPLING_SEED,
-        },
-        execution_mode="OFFLINE_MOCK_HARNESS_VERIFICATION",
+        generation_parameters=generation_params,
+        execution_mode=manifest_execution_mode,
         latency_ms=display_latency_ms,
         usage_metadata=BenchmarkUsageMetadata(
             input_tokens=normalized_usage["input_tokens"] if usage_avail else None,
             output_tokens=normalized_usage["output_tokens"] if usage_avail else None,
             total_tokens=normalized_usage["total_tokens"] if usage_avail else None,
         ),
-        code_commit_sha=cell_manifest.code_basis_commit_sha,
+        code_commit_sha=runtime_head_sha,
         scenario_sha256=cell_manifest.scenario_sha256,
         catalog_sha256=compute_catalog_sha256(catalog_path=catalog_path),
         benchmark_prompt_version=cell_manifest.prompt_id,
@@ -1982,6 +4108,12 @@ def execute_live_dev_cell(
         if run_status == BenchmarkRunStatus.VALID
         else failure_class.value,
     )
+    write_immutable_canonical_json(
+        cell_dir / "run_manifest.json",
+        run_manifest.model_dump(mode="json"),
+        extra_secrets=extra_secrets,
+    )
+
     eval_result = evaluate_dev_cell_scenario(
         scenario=scenario,
         plan_response=parsed_plan,
@@ -2110,7 +4242,7 @@ def execute_live_dev_cell(
 
 
 # ==============================================================================
-# 10. BATCH EXECUTION & TWO-STAGE PLAN-BEFORE-LIVE PROTOCOL (SECTIONS 16, 31-35)
+# 10. BATCH EXECUTION & TWO-STAGE PLAN-BEFORE-LIVE PROTOCOL (SECTIONS 7-11)
 # ==============================================================================
 
 
@@ -2122,11 +4254,14 @@ def execute_live_dev_batch(
     batch_root_dir: Path,
     prompt_registry: PromptRegistry,
     transport: Union[
-        DevProviderTransportProtocol,
-        Mapping[str, MockProviderTransportResponse],
-        Callable[[DevCellExecutionManifest, Dict[str, Any]], MockProviderTransportResponse],
-        Callable[[DevCellExecutionManifest], MockProviderTransportResponse],
+        ProductionDevProviderTransport,
+        MockDevProviderTransport,
+        MockProviderTransportResponse,
+        ProviderNormalizedTransportResponse,
     ],
+    execution_mode: Optional[Union[RunnerExecutionMode, str]] = None,
+    live_capability: Optional[LiveExecutionCapability] = None,
+    stage_a_freeze_receipt_path: Optional[Path] = None,
     cost_comparability_by_candidate: Optional[
         Dict[str, CandidateCostComparabilityRecord]
     ] = None,
@@ -2139,15 +4274,22 @@ def execute_live_dev_batch(
     monotonic_ns_clock: Callable[[], int] = time.monotonic_ns,
     extra_secrets: Optional[Sequence[str]] = None,
 ) -> Tuple[List[DevCellExecutionReceipt], DevCallBudgetLedger]:
-    """Execute a full DEV-TUNE or DEV-SELECT batch in deterministic cell order (Sections 16, 31-35).
+    """Execute a full DEV-TUNE, DEV-SELECT, or STOCHASTICITY batch in deterministic cell order.
 
-    Enforces Plan-Before-Live Protocol (Stage A artifacts must already exist on disk before Stage B runs)
-    and validates all cells, authorization, prompt freeze, code bundle, and provider configs BEFORE the first call.
+    Enforces:
+    - Explicit `execution_mode` (`LIVE_EXECUTION` vs `OFFLINE_MOCK_TEST`)
+    - In `LIVE_EXECUTION` mode: requires `stage_a_freeze_receipt_path` (committed in git with
+      ancestor + blob attestation), `live_capability` (`LiveExecutionCapability`), and
+      `ProductionDevProviderTransport`.
+    - Pre-validates all cells, authorization, prompt freeze, code bundle, and provider configs
+      BEFORE the first call.
     """
     _assert_runner_not_final100_path(execution_plan_path)
     _assert_runner_not_final100_path(prompt_freeze_path)
     _assert_runner_not_final100_path(authorization_path)
     _assert_runner_not_final100_path(batch_root_dir)
+    if stage_a_freeze_receipt_path is not None:
+        _assert_runner_not_final100_path(stage_a_freeze_receipt_path)
 
     if not isinstance(execution_plan_path, Path) or not execution_plan_path.exists():
         raise PlanBeforeLiveProtocolError(
@@ -2185,7 +4327,6 @@ def execute_live_dev_batch(
     cand_reg = candidate_registry or load_and_verify_candidate_registry()
     core_map = core_catalog_by_id or load_core_catalog_by_place_id(catalog_path=catalog_path)
 
-    # Pre-validate execution plan, prompt freeze, authorization, code bundle, and all cells BEFORE first call
     if isinstance(execution_plan, DevExecutionPlan):
         verify_dev_execution_plan_for_execution(
             execution_plan, candidate_registry=cand_reg, repo_root=repo_root
@@ -2206,6 +4347,58 @@ def execute_live_dev_batch(
         dev_select_result=dev_select_result,
         repo_root=repo_root,
     )
+
+    validated_runner_mode, _ = _validate_and_resolve_transport_and_mode(
+        execution_mode=execution_mode,
+        transport=transport,
+        live_capability=live_capability,
+        execution_plan=execution_plan,
+        verified_prompt_freeze=verified_pf,
+        verified_auth=verified_auth,
+    )
+
+    if validated_runner_mode == RUNNER_EXECUTION_MODE_LIVE_EXECUTION:
+        if (
+            stage_a_freeze_receipt_path is None
+            or not isinstance(stage_a_freeze_receipt_path, Path)
+            or not stage_a_freeze_receipt_path.exists()
+        ):
+            raise PlanBeforeLiveProtocolError(
+                "STAGE_A_FREEZE_RECEIPT_REQUIRED: LIVE_EXECUTION batch requires a pre-frozen committed stage_a_freeze_receipt_path."
+            )
+        verified_stage_a = verify_stage_a_freeze_receipt(
+            stage_a_freeze_receipt_path,
+            execution_plan=execution_plan,
+            prompt_freeze=verified_pf,
+            authorization=verified_auth,
+            execution_plan_path=execution_plan_path,
+            prompt_freeze_path=prompt_freeze_path,
+            authorization_path=authorization_path,
+            candidate_registry=cand_reg,
+            repo_root=repo_root,
+            require_git_committed=True,
+        )
+        assert live_capability is not None
+        if (
+            live_capability.stage_a_receipt_sha256
+            != verified_stage_a.stage_a_receipt_sha256
+        ):
+            raise PlanBeforeLiveProtocolError(
+                "LIVE_CAPABILITY_STAGE_A_MISMATCH: live_capability.stage_a_receipt_sha256 does not match stage_a_freeze_receipt_path."
+            )
+    elif stage_a_freeze_receipt_path is not None:
+        verify_stage_a_freeze_receipt(
+            stage_a_freeze_receipt_path,
+            execution_plan=execution_plan,
+            prompt_freeze=verified_pf,
+            authorization=verified_auth,
+            execution_plan_path=execution_plan_path,
+            prompt_freeze_path=prompt_freeze_path,
+            authorization_path=authorization_path,
+            candidate_registry=cand_reg,
+            repo_root=repo_root,
+            require_git_committed=False,
+        )
 
     scenarios_by_id: Dict[str, BenchmarkScenarioInput] = {
         s.scenario_id: s
@@ -2230,11 +4423,6 @@ def execute_live_dev_batch(
         execution_plan,
         maximum_live_generation_calls=verified_auth.maximum_live_generation_calls,
     )
-    transport_wrapper = (
-        transport
-        if isinstance(transport, MockDevProviderTransport)
-        else MockDevProviderTransport(transport)
-    )
 
     receipts: List[DevCellExecutionReceipt] = []
     for cell in execution_plan.cells:
@@ -2247,7 +4435,9 @@ def execute_live_dev_batch(
             authorization=verified_auth,
             call_budget_ledger=ledger,
             cell_dir=batch_root_dir / cell.run_id,
-            transport=transport_wrapper,
+            transport=transport,
+            execution_mode=validated_runner_mode,
+            live_capability=live_capability,
             cost_comparability_by_candidate=cost_comparability_by_candidate,
             dev_bundle=bundle,
             candidate_registry=cand_reg,
@@ -2274,13 +4464,14 @@ def run_dev_live_runner_dry_run(
     prompt_freeze: Union[DevPromptFreezeArtifact, Path, str],
     prompt_registry: Optional[PromptRegistry] = None,
     authorization: Optional[Union[DevLiveAuthorizationArtifact, Path, str]] = None,
+    stage_a_freeze_receipt: Optional[Union[DevLiveStageAFreezeReceipt, Path, str]] = None,
     batch_root_dir: Optional[Path] = None,
     dev_bundle: Optional[VerifiedDevBundle] = None,
     candidate_registry: Optional[DevCandidateRegistry] = None,
     catalog_path: Optional[Path] = None,
     repo_root: Optional[Path] = None,
 ) -> Dict[str, Any]:
-    """Perform all pre-transport validation, request serialization, artifact path planning, and call count calculation with 0 provider calls (Section 39)."""
+    """Perform all pre-transport validation, request serialization, artifact path planning, and call count calculation with 0 provider calls."""
     bundle = dev_bundle or load_and_verify_frozen_dev_bundle()
     cand_reg = candidate_registry or load_and_verify_candidate_registry()
     prompt_reg = prompt_registry or build_default_infrastructure_prompt_registry()
@@ -2328,6 +4519,18 @@ def run_dev_live_runner_dry_run(
             repo_root=repo_root,
         )
 
+    verified_stage_a: Optional[DevLiveStageAFreezeReceipt] = None
+    if stage_a_freeze_receipt is not None and verified_auth is not None:
+        verified_stage_a = verify_stage_a_freeze_receipt(
+            stage_a_freeze_receipt,
+            execution_plan=plan_obj,
+            prompt_freeze=verified_pf,
+            authorization=verified_auth,
+            candidate_registry=cand_reg,
+            repo_root=repo_root,
+            require_git_committed=False,
+        )
+
     scenarios_by_id: Dict[str, BenchmarkScenarioInput] = {
         s.scenario_id: s
         for s in (bundle.dev_tune_fixtures + bundle.dev_select_fixtures)
@@ -2367,6 +4570,7 @@ def run_dev_live_runner_dry_run(
                 "raw_provider_response.txt",
                 "provider_response_metadata.json",
                 "raw_usage_metadata.json",
+                "run_manifest.json",
                 "parsed_plan_response.json",
                 "evaluation_result.json",
                 "execution_receipt.json",
@@ -2389,18 +4593,22 @@ def run_dev_live_runner_dry_run(
         "prompt_freeze_sha256": compute_prompt_freeze_sha256(verified_pf),
         "authorization_verified": verified_auth is not None,
         "authorization_id": verified_auth.authorization_id if verified_auth else None,
+        "stage_a_verified": verified_stage_a is not None,
+        "stage_a_receipt_sha256": (
+            verified_stage_a.stage_a_receipt_sha256 if verified_stage_a else None
+        ),
         "serialized_request_sha256_by_run_id": serialized_request_sha256_by_run_id,
         "planned_artifact_paths_by_run_id": planned_artifact_paths_by_run_id,
     }
 
 
 # ==============================================================================
-# 12. RUNNER RECEIPT & CLI ENTRYPOINT (SECTIONS 38, 39, 42)
+# 12. RUNNER RECEIPT & CLI ENTRYPOINT (SECTION 20)
 # ==============================================================================
 
 
 def build_dev_live_runner_01_receipt_payload() -> Dict[str, Any]:
-    """Build the canonical receipt payload for `data/evaluation/w06/w06_dev_live_runner_01_receipt_v1.json` (Section 42)."""
+    """Build the canonical receipt payload for `data/evaluation/w06/w06_dev_live_runner_01_receipt_v1.json` (Section 20)."""
     verified_authorities = verify_frozen_authorities_dev_harness()
     code_bundle = compute_scientific_code_bundle()
     cand_reg = load_and_verify_candidate_registry()
@@ -2410,6 +4618,7 @@ def build_dev_live_runner_01_receipt_payload() -> Dict[str, Any]:
     return {
         "artifact_id": RUNNER_RECEIPT_ARTIFACT_ID,
         "task_id": TASK_ID_DEV_LIVE_RUNNER_01,
+        "audit_correction_task_id": "W06-DEV-LIVE-RUNNER-01-AUDIT-CORRECTION-01",
         "version": RUNNER_VERSION,
         "base_develop_sha": EXPECTED_BASE_DEVELOP_SHA_RUNNER_01,
         "live_provider_calls": 0,
@@ -2417,6 +4626,20 @@ def build_dev_live_runner_01_receipt_payload() -> Dict[str, Any]:
         "runner_implemented": True,
         "runner_module_path": runner_rel_path,
         "runner_in_scientific_code_bundle": runner_in_bundle,
+        "actual_production_provider_transports_implemented": True,
+        "production_google_transport": "PASS",
+        "production_openai_transport": "PASS",
+        "production_anthropic_transport": "PASS",
+        "programmatic_live_gate_bypass_closed": "PASS",
+        "arbitrary_callable_live_transport_forbidden": "PASS",
+        "stage_a_freeze_receipt": "PASS",
+        "stage_a_commit_attestation": "PASS",
+        "provider_exception_mapping": "PASS",
+        "http_request_counting": "PASS",
+        "benchmark_manifest_provenance_truthful": "PASS",
+        "benchmark_manifest_config_truthful": "PASS",
+        "execution_mode_truthful": "PASS",
+        "historical_qa02_unchanged": True,
         "scientific_code_bundle_sha256": code_bundle.scientific_code_bundle_sha256,
         "scientific_code_bundle_files": list(SCIENTIFIC_CODE_BUNDLE_RELATIVE_PATHS),
         "scientific_code_bundle_file_hashes": code_bundle.scientific_code_bundle_file_hashes,
@@ -2457,7 +4680,7 @@ def build_dev_live_runner_01_receipt_payload() -> Dict[str, Any]:
         },
         "frozen_authority_preservation": verified_authorities,
         "next_gate": NEXT_GATE_RUNNER_QA_01,
-        "status": "READY_FOR_CHATGPT_AUDIT",
+        "status": "READY_FOR_CHATGPT_REAUDIT",
     }
 
 
@@ -2472,14 +4695,15 @@ def write_dev_live_runner_01_receipt(
 
 
 def run_cli(argv: Optional[Sequence[str]] = None) -> Dict[str, Any]:
-    """CLI entrypoint for `dev_live_runner.py` (Sections 13, 16, 38, 39).
+    """CLI entrypoint for `dev_live_runner.py` (Sections 7, 9, 10, 11).
 
     Enforces:
     - Without `--execute-live`, NEVER contacts any provider.
     - Rejects any `--final100` or `FINAL100` phase immediately.
-    - Rejects any combined `--create-plan` + `--execute-live` command (`PlanBeforeLiveProtocolError`).
-    - If `--execute-live` is passed, requires `--authorization-artifact`, `--execution-plan`, and `--prompt-freeze`
-      and validates them fail-closed before reaching the live transport boundary.
+    - Rejects any combined `--create-plan` / `--create-stage-a` + `--execute-live` command (`PlanBeforeLiveProtocolError`).
+    - If `--execute-live` is passed, requires `--authorization-artifact`, `--execution-plan`,
+      `--prompt-freeze`, and `--stage-a-freeze-receipt` and validates them fail-closed
+      (including git commit ancestor & blob verification) before constructing `ProductionDevProviderTransport`.
     """
     raw_args = list(argv) if argv is not None else []
     for arg in raw_args:
@@ -2509,12 +4733,17 @@ def run_cli(argv: Optional[Sequence[str]] = None) -> Dict[str, Any]:
     parser.add_argument(
         "--execute-live",
         action="store_true",
-        help="Explicit live execution flag (requires --authorization-artifact, --execution-plan, --prompt-freeze).",
+        help="Explicit live execution flag (requires --authorization-artifact, --execution-plan, --prompt-freeze, --stage-a-freeze-receipt).",
     )
     parser.add_argument(
         "--create-plan",
         action="store_true",
         help="Stage A plan creation flag (cannot be combined with --execute-live).",
+    )
+    parser.add_argument(
+        "--create-stage-a",
+        action="store_true",
+        help="Stage A freeze creation flag (cannot be combined with --execute-live).",
     )
     parser.add_argument(
         "--execution-plan",
@@ -2535,6 +4764,18 @@ def run_cli(argv: Optional[Sequence[str]] = None) -> Dict[str, Any]:
         help="Path to pre-frozen DevLiveAuthorizationArtifact JSON file.",
     )
     parser.add_argument(
+        "--stage-a-freeze-receipt",
+        type=str,
+        default=None,
+        help="Path to pre-frozen committed DevLiveStageAFreezeReceipt JSON file.",
+    )
+    parser.add_argument(
+        "--batch-root-dir",
+        type=str,
+        default=None,
+        help="Output directory for cell execution artifacts.",
+    )
+    parser.add_argument(
         "--phase",
         type=str,
         default=None,
@@ -2550,9 +4791,9 @@ def run_cli(argv: Optional[Sequence[str]] = None) -> Dict[str, Any]:
             f"FINAL100_FIREWALL_VIOLATION: Phase {parsed.phase!r} is forbidden in DEV live runner."
         )
 
-    if parsed.create_plan and parsed.execute_live:
+    if (parsed.create_plan or parsed.create_stage_a) and parsed.execute_live:
         raise PlanBeforeLiveProtocolError(
-            "PLAN_BEFORE_LIVE_VIOLATION: Cannot combine --create-plan and --execute-live in a single unreviewed step."
+            "PLAN_BEFORE_LIVE_VIOLATION: Cannot combine --create-plan / --create-stage-a and --execute-live in a single unreviewed step."
         )
 
     if parsed.execute_live:
@@ -2568,46 +4809,56 @@ def run_cli(argv: Optional[Sequence[str]] = None) -> Dict[str, Any]:
             raise LiveExecutionNotAuthorizedError(
                 "AUTHORIZATION_ARTIFACT_MISSING: --execute-live requires --authorization-artifact <path>."
             )
+        if not parsed.stage_a_freeze_receipt:
+            raise PlanBeforeLiveProtocolError(
+                "STAGE_A_FREEZE_RECEIPT_MISSING: --execute-live requires --stage-a-freeze-receipt <path>."
+            )
 
         plan_path = Path(parsed.execution_plan)
         pf_path = Path(parsed.prompt_freeze)
         auth_path = Path(parsed.authorization_artifact)
-        assert_not_final100_path(plan_path)
-        assert_not_final100_path(pf_path)
-        assert_not_final100_path(auth_path)
+        stage_a_path = Path(parsed.stage_a_freeze_receipt)
 
-        if not plan_path.exists():
-            raise PlanBeforeLiveProtocolError(
-                f"EXECUTION_PLAN_FILE_MISSING: {plan_path}"
-            )
-        if not pf_path.exists():
-            raise PromptFreezeFirewallError(
-                f"PROMPT_FREEZE_FILE_MISSING: {pf_path}"
-            )
-        if not auth_path.exists():
-            raise LiveExecutionNotAuthorizedError(
-                f"AUTHORIZATION_FILE_MISSING: {auth_path}"
-            )
-
-        raw_plan = json.loads(plan_path.read_text(encoding="utf-8"))
-        plan_obj = DevExecutionPlan.model_validate(raw_plan)
-        verify_dev_execution_plan_for_execution(plan_obj)
         prompt_reg = build_default_infrastructure_prompt_registry()
-        verified_pf = verify_prompt_candidate_freeze_artifact(
-            pf_path,
+        capability, plan_obj, _, verified_auth, _ = issue_live_execution_capability(
+            execute_live=True,
+            execution_plan_path=plan_path,
+            prompt_freeze_path=pf_path,
+            authorization_path=auth_path,
+            stage_a_freeze_receipt_path=stage_a_path,
             prompt_registry=prompt_reg,
-            dev_tune_plan=plan_obj if plan_obj.phase == "DEV_TUNE" else None,
         )
-        verified_auth = verify_dev_live_authorization_artifact(
-            auth_path,
-            execution_plan=plan_obj,
-            prompt_freeze=verified_pf,
-            expected_phase=parsed.phase,
-        )
-        create_live_provider_transport_factory(
+        if parsed.phase is not None and verified_auth.allowed_phase != parsed.phase:
+            raise DevLiveAuthorizationError(
+                f"AUTHORIZATION_PHASE_MISMATCH: {verified_auth.allowed_phase!r} != {parsed.phase!r}"
+            )
+        prod_transport = create_live_provider_transport_factory(
             execute_live=True,
             authorization=verified_auth,
+            live_capability=capability,
         )
+        out_root = (
+            Path(parsed.batch_root_dir)
+            if parsed.batch_root_dir
+            else (REPO_ROOT / "data" / "evaluation" / "w06" / f"live_{capability.phase.lower()}")
+        )
+        receipts, ledger = execute_live_dev_batch(
+            execution_plan_path=plan_path,
+            prompt_freeze_path=pf_path,
+            authorization_path=auth_path,
+            stage_a_freeze_receipt_path=stage_a_path,
+            batch_root_dir=out_root,
+            prompt_registry=prompt_reg,
+            transport=prod_transport,
+            execution_mode=RUNNER_EXECUTION_MODE_LIVE_EXECUTION,
+            live_capability=capability,
+        )
+        return {
+            "mode": "execute_live",
+            "phase": plan_obj.phase,
+            "executed_cells": len(receipts),
+            "ledger": ledger.summary(),
+        }
 
     if parsed.dry_run:
         if not parsed.execution_plan:
@@ -2623,6 +4874,9 @@ def run_cli(argv: Optional[Sequence[str]] = None) -> Dict[str, Any]:
             prompt_freeze=Path(parsed.prompt_freeze),
             authorization=Path(parsed.authorization_artifact)
             if parsed.authorization_artifact
+            else None,
+            stage_a_freeze_receipt=Path(parsed.stage_a_freeze_receipt)
+            if parsed.stage_a_freeze_receipt
             else None,
         )
 

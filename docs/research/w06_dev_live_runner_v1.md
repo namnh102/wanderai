@@ -1,11 +1,12 @@
-# W06 DEV Live Runner Architecture & Scientific Execution Contract (`v1.0.0`)
+# W06 DEV Live Runner Architecture & Scientific Execution Contract (`v1.1.0`)
 
-- **Task ID**: `W06-DEV-LIVE-RUNNER-01-OFFLINE`
+- **Task ID**: `W06-DEV-LIVE-RUNNER-01-OFFLINE` / `W06-DEV-LIVE-RUNNER-01-AUDIT-CORRECTION-01`
 - **Receipt Artifact**: `data/evaluation/w06/w06_dev_live_runner_01_receipt_v1.json` (`W06-DEV-LIVE-RUNNER-01-RECEIPT-V1`)
-- **Production Module**: `apps/ai-service/app/evaluation/dev_live_runner.py`
-- **Test Suite**: `apps/ai-service/tests/test_w06_dev_live_runner_01.py`
+- **Production Module**: `apps/ai-service/app/evaluation/dev_live_runner.py` (`sha256: 6f7aeaa3dea243be6e8d0969a372777aa75d4d4894e7b1b8fa010d69f4bb6a8c`)
+- **Scientific Code Bundle (14 files)**: `scientific_code_bundle_sha256 = f8e10a0c98e234d9eaa42b93bbb0eee11842c403b25a9d97debac1df93d80f27`
+- **Test Suite**: `apps/ai-service/tests/test_w06_dev_live_runner_01.py` (`LR-01..LR-50` + `LRC-01..LRC-30`, 80 tests total)
 - **Base `develop` SHA**: `b2dfd8afb8db2e2bc4dfbb2d0ca4e6a9d22e3a50`
-- **Live Execution Status**: `LIVE_PROVIDER_CALLS = 0`, `PROVIDER_COST_USD = 0.0`, `LIVE_AUTHORIZATION_PRESENT = false`, `PROMPT_FREEZE_STATUS = NOT_YET_FROZEN`
+- **Live Execution Status**: `LIVE_PROVIDER_CALLS = 0`, `PROVIDER_COST_USD = 0.0`, `LIVE_AUTHORIZATION_PRESENT = false`, `PROMPT_FREEZE_STATUS = NOT_YET_FROZEN`, `DEV_MODEL_EXECUTION_ALLOWED = false`
 - **Next Gate**: `W06-DEV-LIVE-RUNNER-QA-01-OFFLINE-ADVERSARIAL`
 
 ---
@@ -15,55 +16,82 @@
 `apps/ai-service/app/evaluation/dev_live_runner.py` is the dedicated production live-execution component for the frozen W06 DEV-TUNE, DEV-SELECT, and post-winner STOCHASTICITY scientific phases.
 
 1. **Isolated from Historical Preflight Scripts**: Historical scripts (`live_smoke.py`, `live_revalidation_v2.py`) remain immutable Phase-01B/01C/01D preflight evidence and are not overloaded for DEV execution.
-2. **Included in Scientific Code Bundle**: `apps/ai-service/app/evaluation/dev_live_runner.py` is registered in `SCIENTIFIC_CODE_BUNDLE_RELATIVE_PATHS` (14 total files), ensuring any change to request construction, usage normalization, transport journaling, or runner orchestration alters `scientific_code_bundle_sha256` and invalidates stale pre-frozen execution plans.
-3. **Offline by Default**: Running `dev_live_runner.py` without `--execute-live` and a verified phase-scoped authorization artifact operates strictly in offline/dry-run mode with zero provider network calls.
+2. **Historical QA-02 Restored & Preserved**: Historical QA-02 files (`apps/ai-service/tests/test_w06_dev_selection_harness_qa_02.py`, `scripts/audit_w06_dev_selection_harness_qa_02.py`, `data/evaluation/w06/w06_dev_selection_harness_qa_02_receipt_v1.json`, `docs/research/w06_dev_selection_harness_qa_02.md`) are preserved byte-for-byte identical to `develop` (`b2dfd8afb8db2e2bc4dfbb2d0ca4e6a9d22e3a50`), with `test_w06_dev_selection_harness_qa_02.py` marked `HISTORICAL_EVIDENCE_ONLY` in `apps/ai-service/tests/conftest.py` alongside `test_w06_dev_selection_harness_qa_01.py`.
+3. **Included in Scientific Code Bundle**: `apps/ai-service/app/evaluation/dev_live_runner.py` is registered in `SCIENTIFIC_CODE_BUNDLE_RELATIVE_PATHS` (14 total files), ensuring any change to production provider transports, HTTP call counting, request construction, usage normalization, transport journaling, or runner orchestration alters `scientific_code_bundle_sha256` (`f8e10a0c98e234d9eaa42b93bbb0eee11842c403b25a9d97debac1df93d80f27`) and invalidates stale pre-frozen execution plans.
+4. **Offline by Default**: Running `dev_live_runner.py` without `--execute-live` and a verified phase-scoped authorization artifact operates strictly in offline/dry-run mode with zero provider network calls.
 
 ---
 
-## 2. Explicit Live Authorization Gate (`DevLiveAuthorizationArtifact`)
+## 2. Production Provider Transports & HTTP-Boundary Request Counting
 
-Live provider execution requires **two** independent conditions simultaneously:
-1. Explicit CLI/runtime action flag (`execute_live=True` / `--execute-live`).
-2. A disk-persisted, cryptographically verified `DevLiveAuthorizationArtifact` (`verify_dev_live_authorization_artifact()`).
+`dev_live_runner.py` contains the actual production provider transport implementations inside the 14-file scientific code bundle:
 
-The authorization contract validates:
-- `authorized_by == "PROJECT_OWNER"` and `authorization_status == "AUTHORIZED"`.
-- `phase` in `{"DEV_TUNE", "DEV_SELECT", "STOCHASTICITY"}` (`FINAL100` is unconditionally rejected).
-- Exact binding to `execution_plan_sha256`, `prompt_freeze_sha256`, `scientific_code_bundle_sha256`, `provider_config_registry_sha256`, `candidate_registry_sha256`, and `code_commit_sha`.
-- Exact candidate list: `["C1", "C2", "C3"]` for `DEV_TUNE` and `DEV_SELECT`; `[winner_candidate_id]` for `STOCHASTICITY`.
-- Exact call-budget match:
-  - `DEV_TUNE`: `60` calls (1 prompt) or `120` calls (2 prompts).
-  - `DEV_SELECT`: `180` calls (1 frozen prompt × 3 candidates × 60 fixtures).
-  - `STOCHASTICITY`: `15` calls (`1` winner × `5` frozen diagnostic fixtures × `3` repeats, requiring a verified `DEV_SELECT` winner receipt).
-- Zero secret fields or secret token patterns inside the authorization JSON (`assert_no_secrets_in_payload`).
-
----
-
-## 3. Two-Stage Plan-Before-Live Protocol
-
-The runner enforces a strict two-stage separation between experimental planning and live execution:
-
-1. **Stage A (Freeze Before Live)**:
-   - Freeze `DevExecutionPlan` (`execution_plan.json`), `DevPromptFreezeArtifact` (`prompt_freeze.json`), `DevLiveAuthorizationArtifact` (`live_authorization.json`), candidate registry, provider config hashes, and per-cell `DevCellExecutionManifest` instances on disk before any live call.
-2. **Stage B (Execute Frozen Plan)**:
-   - `execute_live_dev_batch()` verifies that `plan_artifact_path`, `prompt_freeze_artifact_path`, and `authorization_artifact_path` exist on disk and match the in-memory objects byte-for-byte (`PlanBeforeLiveProtocolError` on mismatch or missing Stage A artifacts).
-   - Combined create-plan-and-execute invocations (`create_plan_in_same_step=True`) are rejected fail-closed.
-   - Any cell whose `(run_id, candidate_id, prompt_id, scenario_id, repeat_index)` is not a member of the frozen `DevExecutionPlan` is rejected before transport.
+- **C1 (`GoogleGeminiProductionTransport` / `_invoke_c1_google_production`)**:
+  - Uses `google.genai.Client` with `HttpOptions(timeout=55000, httpx_client=...)`, `ThinkingConfig(thinking_level=ThinkingLevel.MEDIUM, include_thoughts=False)`, `seed=2026101508`, `max_output_tokens=16384`, `response_mime_type="application/json"`, `response_json_schema=PortablePlannerAiPlanResponseV2.model_json_schema()`.
+  - `temperature`, `top_p`, and `top_k` are strictly omitted (`None`) on `GenerateContentConfig`.
+- **C2 (`OpenAIChatCompletionsProductionTransport` / `_invoke_c2_openai_production`)**:
+  - Uses `openai.OpenAI(timeout=55.0, max_retries=0, http_client=...)` and `client.chat.completions.create(...)` with `model="gpt-6.1-sol"`, `reasoning_effort="medium"`, `seed=2026101508`, `service_tier="default"`, `max_completion_tokens=16384`, `response_format={"type": "json_schema", "json_schema": {"name": "PlannerAiPlanResponseV2", "strict": True, "schema": ...}}`.
+  - `temperature`, `top_p`, `top_k`, `logprobs`, and `top_logprobs` are strictly omitted from SDK kwargs.
+- **C3 (`AnthropicMessagesProductionTransport` / `_invoke_c3_anthropic_production`)**:
+  - Uses `anthropic.Anthropic(timeout=55.0, max_retries=0, http_client=...)` and `client.messages.create(...)` with `model="claude-sonnet-5-5"`, `max_tokens=16384`, `thinking={"type": "adaptive"}`, `output_config={"effort": "high", "format": {"type": "json_schema", "schema": ...}}`.
+  - `seed`, `temperature`, `top_p`, and `top_k` are strictly omitted from SDK kwargs.
+- **HTTP-Boundary Single-Request Enforcement (`DevCellHttpCallCounter`, `DevCountingHttpxTransport`, `DevCountingHttpx2Transport`)**:
+  - Every cell invocation attaches a fresh `DevCellHttpCallCounter(max_requests=1)` at the HTTP client boundary.
+  - Any second outbound HTTP request within a single cell raises `SingleCellHttpCallLimitExceededError` (`retry = 0` enforced at the transport boundary).
+- **Deterministic Provider Exception Classification (`classify_provider_transport_exception`)**:
+  - Maps HTTP `429` (`HTTP_429`), HTTP `5xx` (`HTTP_5XX`), timeouts (`TIMEOUT`), authentication errors (`AUTHENTICATION_FAILURE`), model access errors (`MODEL_ACCESS_FAILURE`), provider refusals (`REFUSAL`), and max-token truncations (`MAX_TOKEN_TRUNCATION`) into structured `DevTransportPayload` outcomes rather than misclassifying ordinary provider runtime errors as `HARNESS_INTERNAL_ERROR`.
 
 ---
 
-## 4. Immutable Per-Cell Artifact Layout & Raw-Evidence-First Ordering
+## 3. Explicit Live Authorization Gate & Programmatic Capability Enforcement
+
+Live provider execution cannot be triggered by an arbitrary Python caller or by passing an ad-hoc lambda/mock transport:
+
+1. **No Implicit Defaults in `build_dev_live_authorization_artifact()`**:
+   - `authorized_by`, `authorization_status`, and `authorization_reason` are mandatory explicit arguments with no default values. Only `authorized_by == "PROJECT_OWNER"` and `authorization_status == "AUTHORIZED"` are accepted.
+   - Offline unit tests use `build_test_only_authorization_artifact()`, which embeds `[OFFLINE_TEST_ONLY]` in `authorization_reason` and is rejected by `issue_live_execution_capability()`.
+2. **Unforgeable `LiveExecutionCapability`**:
+   - Minted exclusively by `issue_live_execution_capability(execute_live=True, authorization_artifact=..., ...)` using a module-private token (`_LIVE_CAPABILITY_MINT_TOKEN`). Direct construction raises `LiveExecutionUnauthorizedError`.
+3. **Strict Execution Mode & Transport Type Safety**:
+   - `execute_single_dev_cell()` and `execute_live_dev_batch()` require explicit `execution_mode in {"LIVE_EXECUTION", "OFFLINE_MOCK_TEST"}`.
+   - When `execution_mode == "LIVE_EXECUTION"`:
+     - `execute_live` must be `True`.
+     - A valid `LiveExecutionCapability` bound to the plan and authorization SHA-256 must be supplied.
+     - `transport_fn` must be an instance of `ProductionDevProviderTransport` (built via `create_live_provider_transport_factory(capability=...)`). Passing `MockOfflineDevProviderTransport` or any arbitrary callable raises `LiveExecutionUnauthorizedError`.
+   - When `execution_mode == "OFFLINE_MOCK_TEST"`:
+     - `execute_live` must be `False` and `live_capability` must be `None`.
+     - Passing `ProductionDevProviderTransport` raises `LiveExecutionUnauthorizedError`.
+
+---
+
+## 4. Two-Stage Plan-Before-Live Protocol & Git Commit/Blob Attestation
+
+The runner enforces a strict two-stage separation between Stage A (offline freeze) and Stage B (batch execution) via `DevLiveStageAFreezeReceipt`:
+
+1. **Stage A (`build_stage_a_freeze_receipt`)**:
+   - Persists `execution_plan.json`, `prompt_freeze.json`, `live_authorization.json`, and `stage_a_freeze_receipt.json` (`DevLiveStageAFreezeReceipt`).
+   - Records `stage_a_process_token`, `frozen_at_commit_sha`, and git object blob SHA-1 digests (`git hash-object`) for the frozen Stage A artifacts and all 14 files in `SCIENTIFIC_CODE_BUNDLE_RELATIVE_PATHS`.
+2. **Stage B (`verify_stage_a_freeze_receipt` inside `execute_live_dev_batch`)**:
+   - Requires `stage_a_freeze_receipt_path` on disk and verifies its SHA-256, artifact digests, and `scientific_code_bundle_sha256`.
+   - Rejects same-process Stage A + Stage B execution when `current_process_token == receipt.stage_a_process_token`.
+   - For `execution_mode == "LIVE_EXECUTION"`, verifies via `git merge-base --is-ancestor` and `git cat-file -e <commit>:<path>` that `frozen_at_commit_sha` is an ancestor of `runtime_head_sha` and all Stage A artifacts plus all 14 scientific code bundle blobs are committed in git history with matching git blob SHA-1s (`PlanBeforeLiveProtocolError` on uncommitted or tampered files).
+
+---
+
+## 5. Immutable Per-Cell Artifact Layout & Raw-Evidence-First Ordering
 
 Each cell writes immutable artifacts to `<batch_output_dir>/cells/<run_id>/` via atomic temp-file + `os.fsync` + `os.replace` (`write_immutable_atomic_bytes`), failing closed with `ImmutableCellExecutionError` if any target file already exists:
 
 1. **Before Transport**:
    - `request_manifest.json` (`BenchmarkRunManifest` + frozen wire request metadata and `wire_request_sha256`).
+     - Truthfully records `generation_parameters` with `temperature_status = "OMITTED"` (never `temperature = 0.0`) and candidate-specific settings (`thinking_level`, `reasoning_effort`, `effort`, `seed`, `omitted_parameters`).
+     - Truthfully records `execution_mode` (`OFFLINE_MOCK_VERIFICATION`, `LIVE_DEV_TUNE`, `LIVE_DEV_SELECT`, or `STOCHASTICITY_DIAGNOSTIC`) and `code_commit_sha = runtime_head_sha` alongside `code_basis_commit_sha`, `runtime_head_sha`, and `scientific_code_bundle_sha256`.
    - `transport_journal_starting.json` (`status = "TRANSPORT_STARTING"`).
 2. **Immediately After Transport Returns (Before Any Validation/Parsing/Evaluation)**:
    - `transport_journal_completed.json` (`status = "TRANSPORT_COMPLETED"`, separate append-only file; never overwrites `transport_journal_starting.json`).
    - `raw_provider_response.txt` (exact UTF-8 raw text returned by provider, even when empty, truncated, or malformed).
    - `raw_usage_metadata.json` (raw provider usage payload + normalized token summary).
-   - `provider_response_metadata.json` (returned `model_id`, `finish_reason`, `latency_ns`, `latency_ms`, `transport_status`, sanitized error detail).
+   - `provider_response_metadata.json` (returned `model_id`, `finish_reason`, `latency_ns`, `latency_ms`, `http_request_count`, `transport_status`, `error_classification`, sanitized error detail).
 3. **After Deterministic Parsing & Evaluation**:
    - `parsed_plan_response.json` (written only when strict primary parsing succeeds).
    - `evaluation_result.json` (`ScenarioEvaluationResult` from `evaluate_dev_cell_scenario` or non-success denominator record).
@@ -71,67 +99,11 @@ Each cell writes immutable artifacts to `<batch_output_dir>/cells/<run_id>/` via
 
 ---
 
-## 5. Transport-Start Journal & Crash Ambiguity Semantics
+## 6. Transport-Start Journal, Call-Budget Ledger, Failure Taxonomy & Firewalls
 
-To eliminate silent double-billing or unrecorded crash retries:
-- `inspect_and_guard_cell_directory_before_transport()` inspects `<cell_dir>` prior to every cell execution.
-- If `transport_journal_starting.json` exists without `transport_journal_completed.json` or `execution_receipt.json`, the runner records `transport_journal_unknown_after_transport.json` with `attempt_status = "ATTEMPT_STATUS_UNKNOWN_AFTER_TRANSPORT"` and raises `CrashAmbiguityBatchStopError`, stopping the batch immediately without re-invoking the provider.
-- If `execution_receipt.json` or `transport_journal_completed.json` already exists, the runner raises `ImmutableCellExecutionError` (`CELL_ALREADY_EXECUTED_IMMUTABLE`).
-
----
-
-## 6. Call-Budget Ledger (`DevCallBudgetLedger`)
-
-`DevCallBudgetLedger` tracks every cell reservation and transport consumption:
-- Enforces phase call caps (`60`, `120`, `180`, or `15`), candidate whitelist, and scenario fixture whitelist.
-- Rejects duplicate `run_id` or duplicate `(phase, candidate_id, prompt_id, scenario_id, repeat_index)` with `DuplicateDevCellAttemptError`.
-- Reserves `1` call prior to transport (`reserve_before_transport`) and permanently consumes `1` call once transport starts (`mark_transport_consumed`).
-- **No Failed-Call Refund**: Transport errors, timeouts, malformed JSON, and schema rejections still consume the call budget (`refund_call` is forbidden).
-
----
-
-## 7. Frozen Provider Request Mapping
-
-`build_frozen_provider_wire_request()` constructs deterministic wire payloads for the 3 locked candidates:
-
-| Candidate | Provider | Model ID | API Surface | Frozen Config | Schema Surface |
-| :--- | :--- | :--- | :--- | :--- | :--- |
-| `C1` | `google` | `gemini-3.8-flash` | `google_genai_generate_content_v1` | `thinking_level=medium`, `include_thoughts=False`, `seed=2026101508`, `max_output_tokens=16384`, `timeout_ms=55000`, `omitted=["temperature","top_p","top_k"]` | `response_mime_type="application/json"`, Portable Schema V2 |
-| `C2` | `openai` | `gpt-6.1-sol` | `openai_chat_completions_v1` | `reasoning_effort=medium`, `service_tier=default`, `seed=2026101508`, `max_completion_tokens=16384`, `timeout_ms=55000`, `omitted=["temperature","top_p","top_k","top_logprobs","logprobs"]` | `response_format.type="json_schema"`, `strict=True`, Portable Schema V2 |
-| `C3` | `anthropic` | `claude-sonnet-5-5` | `anthropic_messages_create_v1` | `thinking.type=adaptive`, `output_config.effort=high`, `max_tokens=16384`, `timeout_ms=55000`, `omitted=["seed","temperature","top_p","top_k"]` | `output_config.format.type="json_schema"`, Portable Schema V2 |
-
-All three candidates receive identical RECA grounding context (`build_deterministic_dev_scenario_context`), identical shared system prompt (`PREFLIGHT_SHARED_SYSTEM_PROMPT`), and identical frozen user prompt template (`prompt_spec.template_text`), with zero tools, zero retries, and zero fallback models.
-
----
-
-## 8. Usage Metadata Normalization & Exact Decimal Costing
-
-`normalize_candidate_usage_metadata()` maps provider-native usage fields into `BenchmarkUsageMetadata` while preserving `raw_usage_metadata.json`:
-- **C1 (`google`)**: `prompt_token_count -> input_tokens`, `candidates_token_count -> output_tokens`, `total_token_count -> total_tokens`, `thoughts_token_count -> thought_tokens`, `cached_content_token_count -> cached_input_tokens`.
-- **C2 (`openai`)**: `input_tokens`, `output_tokens`, `total_tokens`, `output_tokens_details.reasoning_tokens -> reasoning_tokens`, `input_tokens_details.cached_tokens -> cached_input_tokens`.
-- **C3 (`anthropic`)**: `input_tokens`, `output_tokens`, `cache_read_input_tokens`, `cache_creation_input_tokens`, `thinking_tokens`.
-- Canonical cell cost is computed via `compute_canonical_cell_cost_decimal()` from `dev_selection_harness.py` (exact `Decimal` arithmetic including C1 `thought_tokens` at output rate and C3 `thinking_tokens` when not already bundled in `output_tokens`).
-
----
-
-## 9. Failure Taxonomy, No-Retry Rule, and Batch-Fatal Rule
-
-- **Zero Retries**: SDK retries, HTTP transport retries, and manual cell retries are strictly `0`.
-- **Scenario-Level Scored Zero Outcomes** (`final_Planning_Score = 0.0`, retained in denominator $N=20$ or $N=60$, batch continues):
-  - `PROVIDER_TIMEOUT`
-  - `PROVIDER_TRANSPORT_ERROR`
-  - `EMPTY_OR_TRUNCATED_OUTPUT`
-  - `INVALID_JSON_OUTPUT`
-  - `SCHEMA_VALIDATION_ERROR`
-- **Batch-Fatal Integrity Stops** (raw evidence persisted first, then batch halts immediately via `ModelIntegrityBatchStopError`, `HarnessInternalBatchStopError`, or `CrashAmbiguityBatchStopError`):
-  - `MODEL_ID_MISMATCH` (incompatible returned model ID or snapshot)
-  - `CONFIGURATION_INTEGRITY_ERROR`
-  - `HARNESS_INTERNAL_ERROR`
-  - `ATTEMPT_STATUS_UNKNOWN_AFTER_TRANSPORT` (crash ambiguity)
-
----
-
-## 10. Secret Sanitization & Final-100 Firewall
-
-- **Secret Hygiene**: `sanitize_runner_text()`, `sanitize_runner_structure()`, and `assert_no_secrets_in_payload()` redact and block `GEMINI_API_KEY`, `GOOGLE_API_KEY`, `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `AIza...`, `sk-ant-...`, `sk-proj-...`, `sk-...`, and `Bearer ...` patterns across all artifacts, receipts, and error messages. Offline tests and dry-runs never read `.env` or environment API keys.
-- **Final-100 Firewall**: Every scenario, scenario ID, file path, and authorization phase is checked against `assert_not_final100_path()`, `assert_not_final100_scenario_id()`, and `assert_not_final100_scenario()`, raising `Final100FirewallViolationError` on any Final-100 contact.
+- **Crash Ambiguity Stop**: If `transport_journal_starting.json` exists without `transport_journal_completed.json` or `execution_receipt.json`, the runner writes `transport_journal_unknown_after_transport.json` (`ATTEMPT_STATUS_UNKNOWN_AFTER_TRANSPORT`) and raises `CrashAmbiguityBatchStopError`.
+- **Call-Budget Ledger (`DevCallBudgetLedger`)**: Enforces phase call caps (`60`, `120`, `180`, `15`), candidate whitelist, and scenario fixture whitelist; reserves before transport and permanently consumes on transport start with no failed-call refunds.
+- **Failure Taxonomy**:
+  - Ordinary denominator-0.0 scenario failures (batch continues): `PROVIDER_TIMEOUT`, `PROVIDER_TRANSPORT_ERROR` (`HTTP_429`, `HTTP_5XX`), `PROVIDER_REFUSAL`, `EMPTY_OR_TRUNCATED_OUTPUT` (`MAX_TOKEN_TRUNCATION`), `INVALID_JSON_OUTPUT`, `SCHEMA_VALIDATION_ERROR`.
+  - Batch-fatal integrity stops (raw evidence persisted first, then batch halts): `MODEL_ID_MISMATCH`, `CONFIGURATION_INTEGRITY_ERROR` (`AUTHENTICATION_FAILURE`, `MODEL_ACCESS_FAILURE`), `HARNESS_INTERNAL_ERROR` (`SINGLE_CELL_HTTP_CALL_LIMIT_EXCEEDED`, runner bug), `ATTEMPT_STATUS_UNKNOWN_AFTER_TRANSPORT`.
+- **Secret Hygiene & Final-100 Firewall**: Redacts and blocks secret patterns (`GEMINI_API_KEY`, `GOOGLE_API_KEY`, `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `AIza...`, `sk-ant-...`, `sk-proj-...`, `sk-...`, `Bearer ...`) across all artifacts and blocks any `final100` path, scenario ID, or phase (`Final100FirewallViolationError`).
