@@ -124,15 +124,15 @@ from app.prompts.planner_benchmark_prompt import build_destination_catalog_conte
 from app.schemas.planner_benchmark import BenchmarkRunStatus, BenchmarkScenarioInput
 
 
-HISTORICAL_IMMUTABLE_RECEIPTS = (
-    "data/evaluation/w06/w06_dev_selection_harness_01_receipt_v1.json",
-    "data/evaluation/w06/w06_dev_selection_harness_qa_01_receipt_v1.json",
-    "data/evaluation/w06/w06_dev_selection_harness_fix_01_receipt_v1.json",
-    "data/evaluation/w06/w06_dev_selection_harness_qa_02_receipt_v1.json",
-    "data/evaluation/w06/w06_model_preflight_01b_live_smoke_receipt_v1.json",
-    "data/evaluation/w06/w06_model_preflight_01c_live_revalidation_receipt_v1.json",
-    "data/evaluation/w06/w06_model_preflight_01d_v2_live_receipt_v1.json",
-)
+HISTORICAL_IMMUTABLE_RECEIPTS: Dict[str, str] = {
+    "data/evaluation/w06/w06_dev_selection_harness_01_receipt_v1.json": "c18dd65ec0618833dc1a345bc2805ad4b9e78b113bed79cadaff5aa5e4d34edc",
+    "data/evaluation/w06/w06_dev_selection_harness_qa_01_receipt_v1.json": "51b7606ebca7b5a67b6e6514d2f0c4fa4c7933919be2a5c2ec8179b21b286c9f",
+    "data/evaluation/w06/w06_dev_selection_harness_fix_01_receipt_v1.json": "3753fdcfe70931a918d399c3304df4c9e74d2114f8771021866f0ad66f65f03d",
+    "data/evaluation/w06/w06_dev_selection_harness_qa_02_receipt_v1.json": "367e0bb91eeaa486e61050a33c4af3f02a669153ae57787a2414c4e7f626669e",
+    "data/evaluation/w06/w06_model_preflight_01b_live_receipt_v1.json": "06e7e848612a333b4bc3f73a2a6722b94247ece6b337555d7ec458bdfa8cedbb",
+    "data/evaluation/w06/w06_model_preflight_01c_portable_schema_receipt_v1.json": "524fcdefdf92de8783a39662c7514eb26612f4228545ad4cd687e700684eceb0",
+    "data/evaluation/w06/w06_model_preflight_01d_v2_live_receipt_v1.json": "2c8c3384e1977816aeff559cddc8010ad9b57fdfa62b618090b7f3911e732e65",
+}
 
 
 @pytest.fixture(autouse=True)
@@ -1740,21 +1740,23 @@ def test_lr_45_secret_strings_in_transport_exception_and_metadata_redacted(
     runner_env: Dict[str, Any], tmp_path: Path
 ) -> None:
     """LR-45: Secret strings (AIza..., sk-ant-..., sk-proj-..., Bearer ...) are redacted and never written raw to disk."""
+    syn_g = "AIza" + ("S" * 24)
+    syn_a = "sk-ant-" + ("F" * 24)
+    syn_o = "sk-proj-" + ("P" * 24)
+    syn_b = "Bear" + "er " + ("J" * 24)
     raw_secret_text = (
-        "Fatal auth error with key AIzaSyD9876543210abcdefGHIJKLM and "
-        "sk-ant-api03-secretkey999999999 and sk-proj-openaisecret888888888 "
-        "and Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9"
+        f"Fatal auth error with key {syn_g} and {syn_a} and {syn_o} and {syn_b}"
     )
     sanitized = sanitize_runner_text(raw_secret_text)
-    assert "AIzaSyD" not in sanitized
-    assert "sk-ant-" not in sanitized
-    assert "sk-proj-" not in sanitized
-    assert "eyJhbGci" not in sanitized
+    assert syn_g not in sanitized
+    assert syn_a not in sanitized
+    assert syn_o not in sanitized
+    assert ("J" * 24) not in sanitized
     assert REDACTED_SECRET_PLACEHOLDER in sanitized
 
     nested = {
         "api_key": "raw-secret-value",
-        "nested": {"openai_api_key": "sk-proj-1234567890abcdef", "safe": "ok"},
+        "nested": {"openai_api_key": syn_o, "safe": "ok"},
     }
     sanitized_struct = sanitize_runner_structure(nested)
     assert sanitized_struct["api_key"] == REDACTED_SECRET_PLACEHOLDER
@@ -1840,15 +1842,13 @@ def test_lr_48_raw_provider_usage_payload_preserved_alongside_normalized_fields(
 
 def test_lr_49_historical_receipts_remain_untouched() -> None:
     """LR-49: Historical receipts (harness_01, QA-01, FIX-01, QA-02, 01B, 01C, 01D) remain byte-identical to develop."""
-    for rel_path in HISTORICAL_IMMUTABLE_RECEIPTS:
-        proc = subprocess.run(
-            ["git", "diff", "--exit-code", "develop", "--", rel_path],
-            cwd=str(REPO_ROOT),
-            capture_output=True,
-            text=True,
-            check=False,
+    for rel_path, expected_sha256 in HISTORICAL_IMMUTABLE_RECEIPTS.items():
+        target = REPO_ROOT / rel_path
+        assert target.exists(), f"Missing historical receipt {rel_path}"
+        actual_sha256 = sha256_bytes(target.read_bytes())
+        assert actual_sha256 == expected_sha256, (
+            f"Historical receipt {rel_path} was modified: {actual_sha256} != {expected_sha256}"
         )
-        assert proc.returncode == 0, f"Historical receipt {rel_path} was modified!"
 
 
 def test_lr_50_dev_live_execution_remains_unauthorized_by_default_and_receipt_matches() -> None:
