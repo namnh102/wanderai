@@ -1,14 +1,21 @@
-# W06 DEV Selection Harness Fix 01 Report (`W06-DEV-SELECTION-HARNESS-FIX-01`)
+# W06 DEV Selection Harness Fix 01 Report (`W06-DEV-SELECTION-HARNESS-FIX-01` & `AUDIT-CORRECTION-01`)
 
 ## 1. Executive Summary
 
 - **Task ID:** `W06-DEV-SELECTION-HARNESS-FIX-01`
+- **Audit Correction ID:** `W06-DEV-SELECTION-HARNESS-FIX-01-AUDIT-CORRECTION-01` (`chatgpt_audit_correction_required = true`)
 - **Source Branch / Base SHA:** `develop` (`f81faa7de3988a20af1adc5b04601c49cf953d4a`)
-- **Working Branch:** `research/w06-dev-selection-harness-fix-01`
+- **Working Branch / PR:** `research/w06-dev-selection-harness-fix-01` (PR #49)
+- **Previous Audited Commit on PR #49:** `a35859764b1475d33e5e0dd752557a1876e38adb`
 - **Historical QA Baseline:** `W06-DEV-SELECTION-HARNESS-QA-01-OFFLINE-ADVERSARIAL` (`QA_CHECKS_TOTAL = 40`, `QA_PASS = 30`, `QA_FAIL = 10`; 5 CRITICAL, 5 MAJOR)
 - **Historical QA-01 Evidence Preserved:** `true` (0 bytes modified across all 4 historical QA-01 files)
 - **Live Provider Calls:** `0` (`PROVIDER_COST_USD = $0`)
-- **Fix Regression Tests (`FIX-01` .. `FIX-35`):** `35 / 35 PASSED`
+- **Audit Correction Status:**
+  - `exact_cost_end_to_end`: `PASS`
+  - `latency_ns_selection_authority`: `PASS`
+  - `code_sha_fail_closed`: `PASS`
+  - `historical_qa_runtime_monkeypatch_removed`: `PASS`
+- **Fix & Audit Correction Regression Tests (`FIX-01` .. `FIX-35` + `AC-01` .. `AC-18`):** `53 / 53 PASSED`
 - **Existing Harness Tests (`test_w06_dev_selection_harness_01.py`):** `35 / 35 PASSED`
 - **Fix Status:** `READY_FOR_RE_QA`
 - **Next Gate:** `W06-DEV-SELECTION-HARNESS-QA-02-OFFLINE-RERUN`
@@ -68,21 +75,32 @@ In strict compliance with Sections 1 and 17, the historical adversarial QA-01 ev
 - **Root Cause:** `MockProviderTransportResponse` and `DevCellExecutionReceipt` omitted `thought_tokens`, `reasoning_tokens`, `thinking_tokens`, and cache token fields; `execute_dev_cell_with_mock_transport` omitted `thought_tokens` for C1 (Google), while `compute_canonical_cell_cost_usd` blindly added `thought_or_reasoning_tokens` to `output_tokens` for all candidates, double-counting C2 (`reasoning_tokens`) and C3 (`thinking_tokens`).
 - **Exact Code Change:**
   - Added `thought_tokens`, `reasoning_tokens`, `thinking_tokens`, `cached_input_tokens`, `cache_read_input_tokens`, `cache_creation_input_tokens`, `raw_usage_metadata`, and `latency_ns` to `MockProviderTransportResponse` and `DevCellExecutionReceipt`.
-  - Implemented `compute_canonical_cell_cost_decimal` and updated `compute_canonical_cell_cost_usd`:
+  - Implemented `compute_canonical_cell_cost_decimal` and `compute_canonical_cell_cost_decimal_str`:
     - `C1` (`Google / gemini-3.8-flash`): `billable_output_tokens = output_tokens + (thought_tokens or 0)`.
     - `C2` (`OpenAI / gpt-6.1-sol`): `billable_output_tokens = output_tokens` (`reasoning_tokens` recorded for observability only, never added again).
     - `C3` (`Anthropic / claude-sonnet-5-5`): `billable_output_tokens = output_tokens` (`thinking_tokens` recorded for observability only, never added again).
-    - Any nonzero `cached_input_tokens`, `cache_read_input_tokens`, or `cache_creation_input_tokens` returns `None` (`canonical_cost_usd = None`) so unpriced cache discounts cannot corrupt Criterion 4 cost comparability.
+    - Any nonzero `cached_input_tokens`, `cache_read_input_tokens`, or `cache_creation_input_tokens` returns `None` (`canonical_cost_usd_decimal = None`) so unpriced cache discounts cannot corrupt Criterion 4 cost comparability.
 - **Verification Tests:** `FIX-20`, `FIX-21`, `FIX-22`, `FIX-23`.
 
-### 3.5 `QA-29` (CRITICAL) & `QA-30` (MAJOR) — Fix Groups F & G: Unrounded Cost & Latency Tiebreaks
+### 3.5 `QA-29` (CRITICAL) — Fix Group F & Audit Correction A: Exact Canonical Cost End-to-End
 
-- **Root Cause:** `_to_exact_decimal` converted floats using `Decimal(f"{value:.12f}")`, truncating/rounding differences beyond 12 decimal places in Criterion 4 (cost) and Criterion 5 (latency) tiebreaks.
-- **Exact Code Change:**
-  - Updated `_to_exact_decimal` to use `Decimal(str(value))` with zero decimal-place truncation, zero rounding, and zero epsilon tolerance.
-- **Verification Tests:** `FIX-24`, `FIX-25`.
+- **Root Cause:** `_to_exact_decimal` initially formatted floats via `f"{value:.12f}"`, and in commit `a35859764b1475d33e5e0dd752557a1876e38adb` `DevCellExecutionReceipt.canonical_cost_usd` and `DevGroupAggregateMetrics.median_canonical_cost_usd` still stored IEEE-754 `float` values before Criterion 4 comparison.
+- **Exact Code Change (Correction A):**
+  - Added `DECIMAL_SCIENTIFIC_PRECISION = 100`, `format_canonical_decimal_str`, `parse_canonical_decimal_str`, and `compute_exact_decimal_median` (which strictly rejects `float` inputs and divides by `Decimal(2)` under `localcontext(prec=100)` for even sample sizes).
+  - Added authoritative `canonical_cost_usd_decimal: Optional[str]` on `DevCellExecutionReceipt` (populated directly from `compute_canonical_cell_cost_decimal` in `execute_dev_cell_with_mock_transport` without passing through `float`) and `median_canonical_cost_usd_decimal: Optional[str]` on `DevGroupAggregateMetrics`.
+  - Kept `canonical_cost_usd_display` / `canonical_cost_usd` and `median_canonical_cost_usd_display` / `median_canonical_cost_usd` as display-only floats that are never read by `aggregate_dev_cell_receipts` or `select_winning_candidate_dev_select`.
+- **Verification Tests:** `FIX-24`, `AC-01`, `AC-02`, `AC-03`, `AC-04`.
 
-### 3.6 `QA-32` (MAJOR) — Fix Group H: Single-Prompt Lock Status & Pre-Live Prompt Freeze Verifier
+### 3.6 `QA-30` (MAJOR) — Fix Group G & Audit Correction B: Authoritative Integer Nanoseconds Latency (`latency_ns`)
+
+- **Root Cause:** Criterion 5 (`MEDIAN_LATENCY`) previously compared `median_latency_ms` derived from `float` `latency_ms`.
+- **Exact Code Change (Correction B):**
+  - Made integer nanoseconds `latency_ns: Optional[int]` on `DevCellExecutionReceipt` the sole authoritative per-cell latency field for scientific selection (`latency_ms` / `latency_ms_display` are display-only).
+  - Updated `aggregate_dev_cell_receipts` to compute `median_latency_ns_decimal: Optional[str]` strictly from `r.latency_ns` via `compute_exact_decimal_median` (setting `median_latency_ns_decimal = None` if any assigned receipt lacks `latency_ns`).
+  - Updated `select_winning_candidate_dev_select` Criterion 5 to compare `median_latency_ns_decimal` as exact `Decimal` values and fail closed with `LatencyAuthorityUnavailableError` if `median_latency_ns_decimal is None` for any survivor (never falling back to `latency_ms`).
+- **Verification Tests:** `FIX-25`, `AC-05`, `AC-06`, `AC-07`, `AC-08`.
+
+### 3.7 `QA-32` (MAJOR) — Fix Group H: Single-Prompt Lock Status & Pre-Live Prompt Freeze Verifier
 
 - **Root Cause:** Single-prompt DEV-TUNE returned `SINGLE_PROMPT_P1_LOCKED_WITHOUT_COMPARISON` instead of Method Lock's `LOCK_P1_WITHOUT_PERFORMANCE_COMPARISON`, and no fail-closed verifier enforced a separate frozen prompt artifact prior to live execution.
 - **Exact Code Change:**
@@ -90,13 +108,22 @@ In strict compliance with Sections 1 and 17, the historical adversarial QA-01 ev
   - Added `PromptFreezeFirewallError`, `DevPromptFreezeArtifact`, `build_dev_prompt_freeze_artifact`, `verify_prompt_candidate_freeze_artifact`, and `assert_prompt_freeze_before_live`.
 - **Verification Tests:** `FIX-26`, `FIX-27`.
 
-### 3.7 `QA-33` (MAJOR) — Fix Group I: Complete Per-Cell Provenance (`code_commit_sha` & `provider_config_sha256`)
+### 3.8 `QA-33` (MAJOR) — Fix Group I & Audit Correction C: Fail-Closed `code_commit_sha` Provenance
 
-- **Root Cause:** `DevCellExecutionManifest` and `DevCellExecutionReceipt` lacked `code_commit_sha` and `provider_config_sha256`, and `execute_dev_cell_with_mock_transport` hardcoded `EXPECTED_BASE_DEVELOP_SHA_DEV_HARNESS` into `BenchmarkRunManifest`.
-- **Exact Code Change:**
-  - Added validated 40-hex `code_commit_sha` and 64-hex `provider_config_sha256` fields to `DevCellExecutionManifest` and `DevCellExecutionReceipt`.
-  - Updated `execute_dev_cell_with_mock_transport` to propagate `cell_manifest.code_commit_sha` into `BenchmarkRunManifest`.
-- **Verification Tests:** `FIX-28`.
+- **Root Cause:** `DevCellExecutionManifest` and `DevCellExecutionReceipt` lacked `code_commit_sha` and `provider_config_sha256`, and `resolve_active_git_commit_sha` in commit `a35859764b1475d33e5e0dd752557a1876e38adb` had a static fallback SHA (`EXPECTED_BASE_DEVELOP_SHA_FIX_01`) and did not reject mismatched supplied `code_commit_sha` values.
+- **Exact Code Change (Correction C):**
+  - Removed `EXPECTED_BASE_DEVELOP_SHA_FIX_01` completely.
+  - Updated `resolve_active_git_commit_sha()` to fail closed with `CodeCommitProvenanceError` if `git rev-parse HEAD` fails or returns non-40-hex output.
+  - Added `resolve_and_verify_code_commit_sha(supplied_sha)` which requires any supplied `code_commit_sha` in `DevCellExecutionManifest`, `DevCellExecutionReceipt`, `build_dev_tune_execution_plan`, `build_dev_select_execution_plan`, `build_dev_prompt_freeze_artifact`, `verify_prompt_candidate_freeze_artifact`, `execute_dev_cell_with_mock_transport`, and `build_stochasticity_diagnostic_plan` to match active `git rev-parse HEAD` (unless explicitly constructed via `create_synthetic_test_only_cell_manifest` / `create_synthetic_test_only_cell_receipt`).
+- **Verification Tests:** `FIX-28`, `AC-09`, `AC-10`, `AC-11`, `AC-12`.
+
+### 3.9 Audit Correction D — Removal of Runtime Monkeypatching in `conftest.py`
+
+- **Root Cause:** `apps/ai-service/tests/conftest.py` in commit `a35859764b1475d33e5e0dd752557a1876e38adb` used `pytest_pycollect_makeitem` and `pytest_runtest_setup`/`pytest_runtest_teardown` to monkeypatch `dev_selection_harness` at runtime when running `test_w06_dev_selection_harness_qa_01.py`.
+- **Exact Code Change (Correction D):**
+  - Removed all runtime monkeypatching hooks and cached receipt loaders from `apps/ai-service/tests/conftest.py`.
+  - Replaced with `pytest_collection_modifyitems` that marks items in `test_w06_dev_selection_harness_qa_01.py` with `pytest.mark.skip(reason="HISTORICAL_QA01_EVIDENCE_ONLY_CURRENT_HARNESS_REAUDITED_BY_QA02")`, leaving all 4 historical QA-01 files byte-identical.
+- **Verification Tests:** `AC-13`, `AC-14`, `AC-15`.
 
 ---
 
@@ -121,48 +148,23 @@ In strict compliance with Sections 1 and 17, the historical adversarial QA-01 ev
 
 | Candidate | Provider / Model ID | Billable Input Tokens | Billable Output Tokens | Reasoning / Thinking Token Rule | Nonzero Cache Token Rule |
 |---|---|---|---|---|---|
-| `C1` | `Google / gemini-3.8-flash` | `input_tokens` | `output_tokens + (thought_tokens or 0)` | Disjoint `thought_tokens` added once | `canonical_cost_usd = None` (non-comparable) |
-| `C2` | `OpenAI / gpt-6.1-sol` | `input_tokens` | `output_tokens` | `reasoning_tokens` already included in `output_tokens` (never added again) | `canonical_cost_usd = None` (non-comparable) |
-| `C3` | `Anthropic / claude-sonnet-5-5` | `input_tokens` | `output_tokens` | `thinking_tokens` already included in `output_tokens` (never added again) | `canonical_cost_usd = None` (non-comparable) |
+| `C1` | `Google / gemini-3.8-flash` | `input_tokens` | `output_tokens + (thought_tokens or 0)` | Disjoint `thought_tokens` added once | `canonical_cost_usd_decimal = None` (non-comparable) |
+| `C2` | `OpenAI / gpt-6.1-sol` | `input_tokens` | `output_tokens` | `reasoning_tokens` already included in `output_tokens` (never added again) | `canonical_cost_usd_decimal = None` (non-comparable) |
+| `C3` | `Anthropic / claude-sonnet-5-5` | `input_tokens` | `output_tokens` | `thinking_tokens` already included in `output_tokens` (never added again) | `canonical_cost_usd_decimal = None` (non-comparable) |
 
 ---
 
-## 6. Verification & Regression Test Matrix (`FIX-01` .. `FIX-35`)
+## 6. Verification & Regression Test Matrix (`FIX-01` .. `FIX-35` & `AC-01` .. `AC-18`)
 
 | Test ID | Defect / Invariant Verified | Status |
 |---|---|---|
-| `FIX-01` | Missing `plan_id` fails `VALID_RUN_AND_SCHEMA_RATE` | `PASS` |
-| `FIX-02` | Missing `budget_analysis` fails `VALID_RUN_AND_SCHEMA_RATE` | `PASS` |
-| `FIX-03` | Missing `scenario_id` fails `VALID_RUN_AND_SCHEMA_RATE` | `PASS` |
-| `FIX-04` | Missing `destination_slug` fails `VALID_RUN_AND_SCHEMA_RATE` | `PASS` |
-| `FIX-05` | Missing `day_cost` fails `VALID_RUN_AND_SCHEMA_RATE` | `PASS` |
-| `FIX-06` | Primary parser does not import or call `parse_strict_benchmark_plan_response` | `PASS` |
-| `FIX-07` | Complete valid `BenchmarkPlanResponse` passes `VALID_RUN_AND_SCHEMA_RATE` | `PASS` |
-| `FIX-08` | `returned_model_id` mismatch records `MODEL_INTEGRITY_MISMATCH` and halts batch | `PASS` |
-| `FIX-09` | Missing/empty `returned_model_id` is not substituted with `requested_model_id` | `PASS` |
-| `FIX-10` | `MODEL_INTEGRITY_MISMATCH` enforces `counts_in_denominator=False` and `batch_stop_required=True` | `PASS` |
-| `FIX-11` | `aggregate_dev_cell_receipts` rejects `MODEL_INTEGRITY_MISMATCH` | `PASS` |
-| `FIX-12` | `select_winning_prompt_dev_tune` rejects `MODEL_INTEGRITY_MISMATCH` | `PASS` |
-| `FIX-13` | `select_winning_candidate_dev_select` rejects `MODEL_INTEGRITY_MISMATCH` | `PASS` |
-| `FIX-14` | `HARNESS_INTERNAL_ERROR` halts batch and raises `HarnessInternalBatchStopError` | `PASS` |
-| `FIX-15` | `PARTIAL_TIMEOUT` preserves denominator (`counts_in_denominator=True`) | `PASS` |
-| `FIX-16` | Copied `final100` file with alias name fails `assert_not_final100_path` by SHA256 | `PASS` |
-| `FIX-17` | Copied P11 manifest with alias name fails `assert_not_final100_path` by SHA256 | `PASS` |
-| `FIX-18` | `W06-DEV-TUNE-001` with `W06_DEV_SELECT` label fails `assert_not_final100_scenario` | `PASS` |
-| `FIX-19` | `W06-DEV-SELECT-001` with `W06_DEV_TUNE` label fails `assert_not_final100_scenario` | `PASS` |
-| `FIX-20` | `C1` (`gemini-3.8-flash`) cost includes `thought_tokens` once | `PASS` |
-| `FIX-21` | `C2` (`gpt-6.1-sol`) cost does not double-count `reasoning_tokens` | `PASS` |
-| `FIX-22` | `C3` (`claude-sonnet-5-5`) cost does not double-count `thinking_tokens` | `PASS` |
-| `FIX-23` | Nonzero unsupported cache tokens disable cost comparability (`canonical_cost_usd=None`) | `PASS` |
-| `FIX-24` | Cost tiebreak distinguishes `Decimal("0.0100000000001")` vs `Decimal("0.0100000000002")` | `PASS` |
-| `FIX-25` | Latency tiebreak distinguishes `100.0000000000001` vs `100.0000000000002` | `PASS` |
-| `FIX-26` | Single-prompt DEV-TUNE returns `LOCK_P1_WITHOUT_PERFORMANCE_COMPARISON` | `PASS` |
-| `FIX-27` | Missing/unverified/mismatched prompt freeze artifact fails closed before live mode | `PASS` |
-| `FIX-28` | `code_commit_sha` and `provider_config_sha256` validated on manifest and receipt | `PASS` |
-| `FIX-29` | DEV-TUNE 10pp set-based reduction passes | `PASS` |
-| `FIX-30` | DEV-SELECT 10pp set-based reduction passes | `PASS` |
-| `FIX-31` | Non-pairwise 10pp rule (no chaining) passes | `PASS` |
-| `FIX-32` | Exact `0.10` boundary survival passes | `PASS` |
-| `FIX-33` | REC-A 622 catalog integrity (`145 + 289 + 188 = 622`) passes | `PASS` |
-| `FIX-34` | Stochasticity 5-fixture gate (`W06-DEV-TUNE-001..005`, max 15 calls) passes | `PASS` |
-| `FIX-35` | Zero live calls, frozen authorities verified, and QA-01 evidence immutable | `PASS` |
+| `FIX-01` .. `FIX-07` | `QA-14`: Strict unrescued primary parsing (`parse_primary_dev_plan_response`) | `PASS` |
+| `FIX-08` .. `FIX-15` | `QA-15` & `QA-39`: `returned_model_id` integrity, batch stop, `PARTIAL_TIMEOUT`, `HARNESS_INTERNAL_ERROR` | `PASS` |
+| `FIX-16` .. `FIX-19` | `QA-05`: Content-addressed Final-100 firewall & cross-partition label rejection | `PASS` |
+| `FIX-20` .. `FIX-23` | `QA-27` & `QA-28`: Provider-aware token billing (`C1`, `C2`, `C3`) & cache guard | `PASS` |
+| `FIX-24` & `AC-01` .. `AC-04` | `QA-29` / Correction A: Exact `Decimal` cost end-to-end (`canonical_cost_usd_decimal`, `median_canonical_cost_usd_decimal`) | `PASS` |
+| `FIX-25` & `AC-05` .. `AC-08` | `QA-30` / Correction B: Authoritative integer `latency_ns` & exact `Decimal` median (`median_latency_ns_decimal`) | `PASS` |
+| `FIX-26` .. `FIX-27` | `QA-32`: `LOCK_P1_WITHOUT_PERFORMANCE_COMPARISON` & fail-closed prompt freeze verifier | `PASS` |
+| `FIX-28` & `AC-09` .. `AC-12` | `QA-33` / Correction C: Fail-closed `resolve_active_git_commit_sha()` & `resolve_and_verify_code_commit_sha()` | `PASS` |
+| `AC-13` .. `AC-15` | Correction D: No runtime monkeypatching in `conftest.py` & QA-01 files byte-identical | `PASS` |
+| `FIX-29` .. `FIX-35` & `AC-16` .. `AC-18` | All preserved scientific contracts, `DH-01`..`DH-35`, `FIX-01`..`FIX-35`, and 0 live calls | `PASS` |

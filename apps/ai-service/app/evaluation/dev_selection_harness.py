@@ -29,8 +29,9 @@ from __future__ import annotations
 
 import argparse
 from collections import Counter
+from contextvars import ContextVar
 import datetime
-from decimal import Decimal
+from decimal import Decimal, localcontext
 from enum import Enum
 import json
 from pathlib import Path
@@ -103,14 +104,21 @@ from app.services.planner_benchmark_runner import (
 
 TASK_ID_DEV_HARNESS: str = "W06-DEV-SELECTION-HARNESS-01-OFFLINE"
 TASK_ID_DEV_HARNESS_FIX_01: str = "W06-DEV-SELECTION-HARNESS-FIX-01"
+TASK_ID_DEV_HARNESS_FIX_01_AUDIT_CORRECTION_01: str = (
+    "W06-DEV-SELECTION-HARNESS-FIX-01-AUDIT-CORRECTION-01"
+)
 HARNESS_ARTIFACT_ID: str = "W06-DEV-SELECTION-HARNESS-01"
 HARNESS_RECEIPT_ARTIFACT_ID: str = "W06-DEV-SELECTION-HARNESS-01-RECEIPT"
 HARNESS_FIX_01_RECEIPT_ARTIFACT_ID: str = "W06-DEV-SELECTION-HARNESS-FIX-01-RECEIPT"
 HARNESS_VERSION: str = "1.0.0"
 EXPECTED_BASE_DEVELOP_SHA_DEV_HARNESS: str = "50884c610cebf455255b9d05f737d9558cabf2e7"
-EXPECTED_BASE_DEVELOP_SHA_FIX_01: str = "f81faa7de3988a20af1adc5b04601c49cf953d4a"
 NEXT_GATE_ID: str = "W06-DEV-SELECTION-HARNESS-QA-01"
 NEXT_GATE_ID_FIX_01: str = "W06-DEV-SELECTION-HARNESS-QA-02"
+DECIMAL_SCIENTIFIC_PRECISION: int = 100
+
+_ALLOW_SYNTHETIC_TEST_ONLY_CODE_SHA: ContextVar[bool] = ContextVar(
+    "_ALLOW_SYNTHETIC_TEST_ONLY_CODE_SHA", default=False
+)
 
 _GIT_SHA40_RE = re.compile(r"^[0-9a-f]{40}$")
 _SHA256_HEX64_RE = re.compile(r"^[0-9a-f]{64}$")
@@ -332,6 +340,14 @@ class HarnessInternalBatchStopError(BatchExecutionFatalStopError):
     """Raised when a HARNESS_INTERNAL_ERROR stops the entire scientific batch."""
 
 
+class CodeCommitProvenanceError(ValueError, RuntimeError):
+    """Raised when git HEAD cannot be resolved or when supplied code_commit_sha does not match active git HEAD."""
+
+
+class LatencyAuthorityUnavailableError(ValueError, RuntimeError):
+    """Raised when authoritative integer latency_ns / median_latency_ns_decimal is missing during latency tiebreak."""
+
+
 class DevCellFailureClassification(str, Enum):
     """Locked failure taxonomy for DEV-TUNE and DEV-SELECT cell executions (Section 11 & Fix Group C)."""
 
@@ -380,7 +396,7 @@ BATCH_STOP_FAILURE_CLASSIFICATIONS: frozenset[DevCellFailureClassification] = fr
 def validate_git_commit_sha40(sha: str) -> str:
     """Validate that a string is an exact 40-character lowercase hexadecimal git commit SHA."""
     if not isinstance(sha, str) or not _GIT_SHA40_RE.match(sha):
-        raise ValueError(
+        raise CodeCommitProvenanceError(
             f"INVALID_CODE_COMMIT_SHA: Expected 40-character lowercase hex git SHA, got {sha!r}"
         )
     return sha
@@ -395,9 +411,53 @@ def validate_sha256_hex64(sha: str, field_name: str = "sha256") -> str:
     return sha
 
 
+_ORIG_SUBPROCESS_RUN = subprocess.run
+_GIT_HEAD_SHA_CACHE: Dict[Tuple[str, str], str] = {}
+
+
+def _compute_git_head_state_token(root: Path) -> Optional[str]:
+    """Return a state token from .git/HEAD (and its target ref if symbolic) so cache invalidates on any commit."""
+    git_dir = root / ".git"
+    head_file = git_dir / "HEAD"
+    if not head_file.is_file():
+        return None
+    try:
+        head_text = head_file.read_text(encoding="utf-8", errors="replace").strip()
+        if head_text.startswith("ref:"):
+            ref_rel = head_text.split(":", 1)[1].strip()
+            ref_file = git_dir / ref_rel
+            if ref_file.is_file():
+                return f"{head_text}:{ref_file.read_text(encoding='utf-8', errors='replace').strip()}"
+            packed_refs = git_dir / "packed-refs"
+            if packed_refs.is_file():
+                return f"{head_text}:packed:{packed_refs.stat().st_mtime_ns}"
+        return head_text
+    except OSError:
+        return None
+
+
 def resolve_active_git_commit_sha(repo_root: Optional[Path] = None) -> str:
-    """Resolve the active 40-hex git commit SHA of the repository (fallback to EXPECTED_BASE_DEVELOP_SHA_FIX_01)."""
-    root = repo_root or REPO_ROOT
+    """Resolve the active 40-hex git commit SHA of the repository (Correction C).
+
+    Strictly fail-closed: raises CodeCommitProvenanceError if git HEAD cannot be determined.
+    Never falls back to any hard-coded SHA.
+    """
+    root = repo_root if repo_root is not None else REPO_ROOT
+    if not isinstance(root, Path):
+        root = Path(root)
+    if not root.exists() or not root.is_dir():
+        raise CodeCommitProvenanceError(
+            f"CODE_COMMIT_PROVENANCE_ERROR: Repository root does not exist: {root}"
+        )
+
+    state_token: Optional[str] = None
+    if subprocess.run is _ORIG_SUBPROCESS_RUN:
+        state_token = _compute_git_head_state_token(root)
+        if state_token is not None:
+            cached_sha = _GIT_HEAD_SHA_CACHE.get((str(root.resolve()), state_token))
+            if cached_sha is not None:
+                return cached_sha
+
     try:
         proc = subprocess.run(
             ["git", "rev-parse", "--verify", "HEAD"],
@@ -406,13 +466,107 @@ def resolve_active_git_commit_sha(repo_root: Optional[Path] = None) -> str:
             text=True,
             check=False,
         )
-        if proc.returncode == 0:
-            candidate = proc.stdout.strip().lower()
-            if _GIT_SHA40_RE.match(candidate):
-                return candidate
-    except Exception:
-        pass
-    return EXPECTED_BASE_DEVELOP_SHA_FIX_01
+    except Exception as exc:
+        raise CodeCommitProvenanceError(
+            f"CODE_COMMIT_PROVENANCE_ERROR: Failed to execute git rev-parse HEAD in {root}: {exc}"
+        ) from exc
+
+    if proc.returncode != 0:
+        stderr_msg = (proc.stderr or "").strip()
+        raise CodeCommitProvenanceError(
+            f"CODE_COMMIT_PROVENANCE_ERROR: git rev-parse HEAD exited with code {proc.returncode} in {root}: {stderr_msg}"
+        )
+
+    candidate = (proc.stdout or "").strip().lower()
+    if not _GIT_SHA40_RE.match(candidate):
+        raise CodeCommitProvenanceError(
+            f"CODE_COMMIT_PROVENANCE_ERROR: git rev-parse HEAD returned invalid 40-hex SHA {candidate!r}"
+        )
+    if subprocess.run is _ORIG_SUBPROCESS_RUN and state_token is not None:
+        _GIT_HEAD_SHA_CACHE[(str(root.resolve()), state_token)] = candidate
+    return candidate
+
+
+def resolve_and_verify_code_commit_sha(
+    supplied_sha: Optional[str] = None,
+    *,
+    repo_root: Optional[Path] = None,
+) -> str:
+    """Resolve current git HEAD and, if supplied_sha is provided, verify exact match with HEAD (Correction C).
+
+    Fails closed with CodeCommitProvenanceError if git HEAD cannot be determined or if
+    supplied_sha != current HEAD. Never substitutes a fallback SHA.
+    """
+    head_sha = resolve_active_git_commit_sha(repo_root=repo_root)
+    if supplied_sha is None:
+        return head_sha
+    validated_supplied = validate_git_commit_sha40(supplied_sha)
+    if validated_supplied != head_sha:
+        raise CodeCommitProvenanceError(
+            f"CODE_COMMIT_SHA_MISMATCH: Supplied code_commit_sha {validated_supplied!r} "
+            f"does not match active git HEAD {head_sha!r}."
+        )
+    return head_sha
+
+
+def format_canonical_decimal_str(value: Decimal | str | int) -> str:
+    """Format an exact Decimal, integer, or decimal string as canonical non-exponent decimal text (Correction A & B).
+
+    Strictly rejects float inputs to prevent binary floating-point contamination.
+    """
+    if isinstance(value, bool) or isinstance(value, float):
+        raise TypeError(
+            f"FLOAT_FORBIDDEN_IN_CANONICAL_DECIMAL: Exact Decimal, int, or str required, got {type(value).__name__}"
+        )
+    with localcontext() as ctx:
+        ctx.prec = DECIMAL_SCIENTIFIC_PRECISION
+        dec = value if isinstance(value, Decimal) else Decimal(str(value).strip())
+        if not dec.is_finite():
+            raise ValueError(f"Non-finite Decimal is forbidden in scientific artifacts: {dec!r}")
+        fixed = f"{dec:f}"
+    if "." in fixed:
+        fixed = fixed.rstrip("0").rstrip(".")
+    if fixed in ("-0", ""):
+        fixed = "0"
+    return fixed
+
+
+def parse_canonical_decimal_str(value: str | Decimal | int) -> Decimal:
+    """Parse canonical non-exponent decimal text (or Decimal/int) into an exact Decimal (Correction A & B).
+
+    Strictly rejects float inputs to prevent binary floating-point round-trips.
+    """
+    if isinstance(value, bool) or isinstance(value, float):
+        raise TypeError(
+            f"FLOAT_FORBIDDEN_IN_CANONICAL_DECIMAL: Exact str, Decimal, or int required, got {type(value).__name__}"
+        )
+    with localcontext() as ctx:
+        ctx.prec = DECIMAL_SCIENTIFIC_PRECISION
+        dec = value if isinstance(value, Decimal) else Decimal(str(value).strip())
+        if not dec.is_finite():
+            raise ValueError(f"Non-finite Decimal is forbidden: {dec!r}")
+        return dec
+
+
+def compute_exact_decimal_median(values: Sequence[Decimal | int | str]) -> Decimal:
+    """Compute the exact mathematical median of a non-empty sequence of Decimals/ints without float conversion (Correction A & B)."""
+    if not values:
+        raise ValueError("Cannot compute exact decimal median of empty sequence.")
+    dec_values: List[Decimal] = []
+    for v in values:
+        if isinstance(v, bool) or isinstance(v, float) or not isinstance(v, (Decimal, int, str)):
+            raise TypeError(
+                f"compute_exact_decimal_median forbids float/bool and requires Decimal, int, or canonical str elements, got {type(v).__name__}"
+            )
+        dec_values.append(parse_canonical_decimal_str(v))
+    with localcontext() as ctx:
+        ctx.prec = DECIMAL_SCIENTIFIC_PRECISION
+        sorted_vals = sorted(dec_values)
+        n = len(sorted_vals)
+        mid = n // 2
+        if n % 2 == 1:
+            return +sorted_vals[mid]
+        return (sorted_vals[mid - 1] + sorted_vals[mid]) / Decimal(2)
 
 
 def is_returned_model_id_compatible(
@@ -1253,7 +1407,7 @@ def compute_provider_config_registry_sha256(
 
 
 class DevCellExecutionManifest(BaseModel):
-    """Machine-readable execution manifest for a single cell (Section 9 & Fix Group I)."""
+    """Machine-readable execution manifest for a single cell (Section 9 & Fix Group I / Correction C)."""
 
     model_config = ConfigDict(extra="forbid")
 
@@ -1297,7 +1451,7 @@ class DevCellExecutionManifest(BaseModel):
         if "code_commit_sha" not in d:
             d["code_commit_sha"] = resolve_active_git_commit_sha()
         elif d["code_commit_sha"] is None or not isinstance(d["code_commit_sha"], str):
-            raise ValueError(
+            raise CodeCommitProvenanceError(
                 "code_commit_sha is required and must be a 40-character lowercase hex git SHA."
             )
         if "provider_config_sha256" not in d:
@@ -1320,6 +1474,8 @@ class DevCellExecutionManifest(BaseModel):
         if self.prompt_id not in ALLOWED_PROMPT_IDS:
             raise PromptRegistryIntegrityError(f"Invalid prompt_id: {self.prompt_id}")
         validate_git_commit_sha40(self.code_commit_sha)
+        if not _ALLOW_SYNTHETIC_TEST_ONLY_CODE_SHA.get():
+            resolve_and_verify_code_commit_sha(self.code_commit_sha)
         validate_sha256_hex64(self.provider_config_sha256, "provider_config_sha256")
         expected_pconf_sha = get_cached_provider_config_sha256(self.candidate_id)
         if self.provider_config_sha256 != expected_pconf_sha:
@@ -1352,6 +1508,18 @@ class DevCellExecutionManifest(BaseModel):
         if self.portable_generation_schema_v2_sha256 != EXPECTED_PORTABLE_SCHEMA_V2_SHA256:
             raise ValueError("Manifest portable_generation_schema_v2_sha256 mismatch.")
         return self
+
+
+def create_synthetic_test_only_cell_manifest(**kwargs: Any) -> DevCellExecutionManifest:
+    """Explicit test-only constructor for purely synthetic unit tests requiring an arbitrary 40-hex code_commit_sha (Correction C).
+
+    Never used by production plan builders or execution functions.
+    """
+    token = _ALLOW_SYNTHETIC_TEST_ONLY_CODE_SHA.set(True)
+    try:
+        return DevCellExecutionManifest(**kwargs)
+    finally:
+        _ALLOW_SYNTHETIC_TEST_ONLY_CODE_SHA.reset(token)
 
 
 def calculate_expected_dev_tune_cell_count(
@@ -1434,13 +1602,12 @@ def build_dev_tune_execution_plan(
     candidate_registry: Optional[DevCandidateRegistry] = None,
     catalog_path: Optional[Path] = None,
     code_commit_sha: Optional[str] = None,
+    repo_root: Optional[Path] = None,
 ) -> DevExecutionPlan:
     """Build deterministic DEV-TUNE execution plan (60 cells for 1 prompt, 120 cells for 2 prompts)."""
     bundle = dev_bundle or load_and_verify_frozen_dev_bundle()
     cand_reg = candidate_registry or load_and_verify_candidate_registry()
-    active_sha = validate_git_commit_sha40(
-        code_commit_sha if code_commit_sha is not None else resolve_active_git_commit_sha()
-    )
+    active_sha = resolve_and_verify_code_commit_sha(code_commit_sha, repo_root=repo_root)
     expected_cells = calculate_expected_dev_tune_cell_count(
         len(prompt_registry.prompts),
         candidate_count=len(cand_reg.ordered_candidate_ids),
@@ -1507,13 +1674,12 @@ def build_dev_select_execution_plan(
     candidate_registry: Optional[DevCandidateRegistry] = None,
     catalog_path: Optional[Path] = None,
     code_commit_sha: Optional[str] = None,
+    repo_root: Optional[Path] = None,
 ) -> DevExecutionPlan:
     """Build deterministic DEV-SELECT execution plan (60 fixtures × 3 candidates = 180 cells)."""
     bundle = dev_bundle or load_and_verify_frozen_dev_bundle()
     cand_reg = candidate_registry or load_and_verify_candidate_registry()
-    active_sha = validate_git_commit_sha40(
-        code_commit_sha if code_commit_sha is not None else resolve_active_git_commit_sha()
-    )
+    active_sha = resolve_and_verify_code_commit_sha(code_commit_sha, repo_root=repo_root)
     expected_cells = calculate_expected_dev_select_cell_count(
         locked_prompt_count=1,
         candidate_count=len(cand_reg.ordered_candidate_ids),
@@ -1629,20 +1795,18 @@ def build_dev_prompt_freeze_artifact(
     dev_bundle: Optional[VerifiedDevBundle] = None,
     candidate_registry: Optional[DevCandidateRegistry] = None,
     code_commit_sha: Optional[str] = None,
+    repo_root: Optional[Path] = None,
     artifact_id: str = "W06-DEV-PROMPT-FREEZE-V1",
     version: str = "1.0.0",
 ) -> DevPromptFreezeArtifact:
     """Build a valid DevPromptFreezeArtifact for offline verification or a future prompt-freeze gate."""
     bundle = dev_bundle or load_and_verify_frozen_dev_bundle()
     cand_reg = candidate_registry or load_and_verify_candidate_registry()
-    active_sha = validate_git_commit_sha40(
+    active_sha = resolve_and_verify_code_commit_sha(
         code_commit_sha
         if code_commit_sha is not None
-        else (
-            dev_tune_plan.cells[0].code_commit_sha
-            if dev_tune_plan.cells
-            else resolve_active_git_commit_sha()
-        )
+        else (dev_tune_plan.cells[0].code_commit_sha if dev_tune_plan.cells else None),
+        repo_root=repo_root,
     )
     pids = [p.prompt_id for p in prompt_registry.prompts]
     return DevPromptFreezeArtifact(
@@ -1686,6 +1850,7 @@ def verify_prompt_candidate_freeze_artifact(
     dev_bundle: Optional[VerifiedDevBundle] = None,
     candidate_registry: Optional[DevCandidateRegistry] = None,
     active_code_commit_sha: Optional[str] = None,
+    repo_root: Optional[Path] = None,
 ) -> DevPromptFreezeArtifact:
     """Fail-closed verifier requiring a separate frozen prompt artifact before any live DEV-TUNE execution (Fix Group H / QA-32)."""
     if freeze_artifact is None:
@@ -1773,9 +1938,15 @@ def verify_prompt_candidate_freeze_artifact(
         raise PromptFreezeFirewallError(
             "provider_config_registry_sha256 mismatch in prompt freeze artifact."
         )
-    if active_code_commit_sha is not None and artifact.code_commit_sha != active_code_commit_sha:
+    try:
+        expected_head_sha = resolve_and_verify_code_commit_sha(
+            active_code_commit_sha, repo_root=repo_root
+        )
+    except CodeCommitProvenanceError as exc:
+        raise PromptFreezeFirewallError(str(exc)) from exc
+    if artifact.code_commit_sha != expected_head_sha:
         raise PromptFreezeFirewallError(
-            f"code_commit_sha mismatch in prompt freeze artifact: {artifact.code_commit_sha} != {active_code_commit_sha}"
+            f"code_commit_sha mismatch in prompt freeze artifact: {artifact.code_commit_sha} != {expected_head_sha}"
         )
     return artifact
 
@@ -1826,7 +1997,7 @@ def compute_canonical_cell_cost_decimal(
     cache_creation_input_tokens: Optional[int] = None,
     cost_record: CandidateCostComparabilityRecord,
 ) -> Optional[Decimal]:
-    """Compute exact unrounded canonical USD cost as Decimal using provider-specific token billing semantics (Fix Group E / QA-27 & QA-28).
+    """Compute exact unrounded canonical USD cost as Decimal using provider-specific token billing semantics (Fix Group E / QA-27 & QA-28 / Correction A).
 
     Provider billing rules:
     - C1 (Google gemini-3.8-flash): candidates_token_count (output_tokens) is disjoint from
@@ -1869,11 +2040,42 @@ def compute_canonical_cell_cost_decimal(
             f"Unknown candidate_id in compute_canonical_cell_cost_decimal: {cid!r}"
         )
 
-    in_price = Decimal(str(cost_record.input_price_per_million_usd))
-    out_price = Decimal(str(cost_record.output_price_per_million_usd))
-    return (
-        (Decimal(input_tokens) * in_price) + (Decimal(billed_out) * out_price)
-    ) / Decimal(1_000_000)
+    with localcontext() as ctx:
+        ctx.prec = DECIMAL_SCIENTIFIC_PRECISION
+        in_price = Decimal(str(cost_record.input_price_per_million_usd))
+        out_price = Decimal(str(cost_record.output_price_per_million_usd))
+        return (
+            (Decimal(input_tokens) * in_price) + (Decimal(billed_out) * out_price)
+        ) / Decimal(1_000_000)
+
+
+def compute_canonical_cell_cost_decimal_str(
+    *,
+    input_tokens: Optional[int],
+    output_tokens: Optional[int],
+    thought_or_reasoning_tokens: Optional[int] = None,
+    thought_tokens: Optional[int] = None,
+    reasoning_tokens: Optional[int] = None,
+    thinking_tokens: Optional[int] = None,
+    cached_input_tokens: Optional[int] = None,
+    cache_read_input_tokens: Optional[int] = None,
+    cache_creation_input_tokens: Optional[int] = None,
+    cost_record: CandidateCostComparabilityRecord,
+) -> Optional[str]:
+    """Compute exact canonical USD cost formatted as a non-exponent decimal string (Correction A)."""
+    cost_dec = compute_canonical_cell_cost_decimal(
+        input_tokens=input_tokens,
+        output_tokens=output_tokens,
+        thought_or_reasoning_tokens=thought_or_reasoning_tokens,
+        thought_tokens=thought_tokens,
+        reasoning_tokens=reasoning_tokens,
+        thinking_tokens=thinking_tokens,
+        cached_input_tokens=cached_input_tokens,
+        cache_read_input_tokens=cache_read_input_tokens,
+        cache_creation_input_tokens=cache_creation_input_tokens,
+        cost_record=cost_record,
+    )
+    return format_canonical_decimal_str(cost_dec) if cost_dec is not None else None
 
 
 def compute_canonical_cell_cost_usd(
@@ -1889,7 +2091,10 @@ def compute_canonical_cell_cost_usd(
     cache_creation_input_tokens: Optional[int] = None,
     cost_record: CandidateCostComparabilityRecord,
 ) -> Optional[float]:
-    """Compute unrounded canonical USD cost for a single cell using provider-aware token semantics."""
+    """Display-only float conversion of compute_canonical_cell_cost_decimal.
+
+    NEVER used for scientific cell receipts, median aggregation, or Criterion 4 model selection.
+    """
     cost_dec = compute_canonical_cell_cost_decimal(
         input_tokens=input_tokens,
         output_tokens=output_tokens,
@@ -1906,7 +2111,7 @@ def compute_canonical_cell_cost_usd(
 
 
 class DevCellExecutionReceipt(BaseModel):
-    """Immutable per-cell execution receipt preserving primary scientific indicators, provenance, and usage/cost (Sections 8, 10-12)."""
+    """Immutable per-cell execution receipt preserving primary scientific indicators, provenance, and usage/cost (Sections 8, 10-12; Corrections A, B, C)."""
 
     model_config = ConfigDict(extra="forbid")
 
@@ -1929,8 +2134,9 @@ class DevCellExecutionReceipt(BaseModel):
     exact_grounding_pass: bool
     final_core_pass: bool
 
-    latency_ms: Optional[float] = None
     latency_ns: Optional[int] = None
+    latency_ms_display: Optional[float] = None
+    latency_ms: Optional[float] = None
     authoritative_usage_available: bool = False
     input_tokens: Optional[int] = None
     output_tokens: Optional[int] = None
@@ -1942,6 +2148,8 @@ class DevCellExecutionReceipt(BaseModel):
     cache_read_input_tokens: Optional[int] = None
     cache_creation_input_tokens: Optional[int] = None
     raw_usage_metadata: Optional[Dict[str, Any]] = None
+    canonical_cost_usd_decimal: Optional[str] = None
+    canonical_cost_usd_display: Optional[float] = None
     canonical_cost_usd: Optional[float] = None
 
     request_manifest_sha256: str
@@ -1959,7 +2167,7 @@ class DevCellExecutionReceipt(BaseModel):
         if "code_commit_sha" not in d:
             d["code_commit_sha"] = resolve_active_git_commit_sha()
         elif d["code_commit_sha"] is None or not isinstance(d["code_commit_sha"], str):
-            raise ValueError(
+            raise CodeCommitProvenanceError(
                 "code_commit_sha is required and must be a 40-character lowercase hex git SHA."
             )
         if "provider_config_sha256" not in d:
@@ -1981,12 +2189,57 @@ class DevCellExecutionReceipt(BaseModel):
         ):
             d.setdefault("counts_in_denominator", False)
             d.setdefault("batch_stop_required", True)
+
+        # Correction B: Validate integer latency_ns; never synthesize latency_ns from float latency_ms
+        raw_lat_ns = d.get("latency_ns")
+        if raw_lat_ns is not None:
+            if isinstance(raw_lat_ns, bool) or not isinstance(raw_lat_ns, int) or raw_lat_ns < 0:
+                raise ValueError(
+                    f"latency_ns must be a non-negative integer, got {raw_lat_ns!r}"
+                )
+            if d.get("latency_ms_display") is None:
+                d["latency_ms_display"] = (
+                    float(d["latency_ms"])
+                    if d.get("latency_ms") is not None
+                    else float(Decimal(raw_lat_ns) / Decimal(1_000_000))
+                )
+            if d.get("latency_ms") is None:
+                d["latency_ms"] = d["latency_ms_display"]
+        else:
+            if d.get("latency_ms_display") is None and d.get("latency_ms") is not None:
+                d["latency_ms_display"] = float(d["latency_ms"])
+            elif d.get("latency_ms") is None and d.get("latency_ms_display") is not None:
+                d["latency_ms"] = float(d["latency_ms_display"])
+
+        # Correction A: Validate exact canonical_cost_usd_decimal; NEVER derive it from float canonical_cost_usd
+        raw_cost_dec = d.get("canonical_cost_usd_decimal")
+        if raw_cost_dec is not None:
+            norm_cost_str = format_canonical_decimal_str(raw_cost_dec)
+            d["canonical_cost_usd_decimal"] = norm_cost_str
+            cost_disp = float(parse_canonical_decimal_str(norm_cost_str))
+            if d.get("canonical_cost_usd_display") is None:
+                d["canonical_cost_usd_display"] = cost_disp
+            if d.get("canonical_cost_usd") is None:
+                d["canonical_cost_usd"] = d["canonical_cost_usd_display"]
+        else:
+            if (
+                d.get("canonical_cost_usd_display") is None
+                and d.get("canonical_cost_usd") is not None
+            ):
+                d["canonical_cost_usd_display"] = float(d["canonical_cost_usd"])
+            elif (
+                d.get("canonical_cost_usd") is None
+                and d.get("canonical_cost_usd_display") is not None
+            ):
+                d["canonical_cost_usd"] = float(d["canonical_cost_usd_display"])
         return d
 
     @model_validator(mode="after")
     def _validate_receipt_consistency(self) -> "DevCellExecutionReceipt":
         assert_not_final100_scenario_id(self.fixture_id)
         validate_git_commit_sha40(self.code_commit_sha)
+        if not _ALLOW_SYNTHETIC_TEST_ONLY_CODE_SHA.get():
+            resolve_and_verify_code_commit_sha(self.code_commit_sha)
         validate_sha256_hex64(self.provider_config_sha256, "provider_config_sha256")
         expected_pconf_sha = get_cached_provider_config_sha256(self.candidate_id)
         if self.provider_config_sha256 != expected_pconf_sha:
@@ -1994,6 +2247,23 @@ class DevCellExecutionReceipt(BaseModel):
                 f"Receipt provider_config_sha256 mismatch for {self.candidate_id}: "
                 f"expected={expected_pconf_sha}, got={self.provider_config_sha256}"
             )
+        if self.latency_ns is not None:
+            if isinstance(self.latency_ns, bool) or not isinstance(self.latency_ns, int) or self.latency_ns < 0:
+                raise ValueError(
+                    f"Receipt latency_ns must be a non-negative integer, got {self.latency_ns!r}"
+                )
+        if self.canonical_cost_usd_decimal is not None:
+            if "e" in self.canonical_cost_usd_decimal.lower():
+                raise ValueError(
+                    f"canonical_cost_usd_decimal must be non-exponent decimal text, got {self.canonical_cost_usd_decimal!r}"
+                )
+            normalized = format_canonical_decimal_str(
+                parse_canonical_decimal_str(self.canonical_cost_usd_decimal)
+            )
+            if normalized != self.canonical_cost_usd_decimal:
+                raise ValueError(
+                    f"canonical_cost_usd_decimal is not in canonical non-exponent form: {self.canonical_cost_usd_decimal!r} != {normalized!r}"
+                )
         if self.failure_classification in BATCH_STOP_FAILURE_CLASSIFICATIONS:
             if self.counts_in_denominator or not self.batch_stop_required:
                 raise ValueError(
@@ -2010,6 +2280,18 @@ class DevCellExecutionReceipt(BaseModel):
                 "Cell failing exact_grounding_pass cannot have final_core_pass=True."
             )
         return self
+
+
+def create_synthetic_test_only_cell_receipt(**kwargs: Any) -> DevCellExecutionReceipt:
+    """Explicit test-only constructor for purely synthetic unit tests requiring an arbitrary 40-hex code_commit_sha (Correction C).
+
+    Never used by production execution, aggregation, or selection functions.
+    """
+    token = _ALLOW_SYNTHETIC_TEST_ONLY_CODE_SHA.set(True)
+    try:
+        return DevCellExecutionReceipt(**kwargs)
+    finally:
+        _ALLOW_SYNTHETIC_TEST_ONLY_CODE_SHA.reset(token)
 
 
 def assert_batch_receipts_integrity(
@@ -2082,7 +2364,7 @@ class MockProviderTransportResponse(BaseModel):
     returned_model_id: Optional[str] = None
     finish_reason: str = "stop"
     latency_ms: float = 1200.0
-    latency_ns: Optional[int] = None
+    latency_ns: Optional[int] = 1_200_000_000
     simulated_failure: DevCellFailureClassification = DevCellFailureClassification.NONE
     authoritative_usage_available: bool = True
     input_tokens: Optional[int] = 1000
@@ -2220,6 +2502,7 @@ def execute_dev_cell_with_mock_transport(
     catalog_path: Optional[Path] = None,
     core_catalog_by_id: Optional[Dict[str, BenchmarkCatalogPOI]] = None,
     enforce_batch_stop: bool = False,
+    allow_synthetic_test_only_code_sha: bool = False,
 ) -> Tuple[DevCellExecutionReceipt, ScenarioEvaluationResult]:
     """Execute a single DEV cell against a strictly offline mock transport and persist the 6 raw evidence contract files.
 
@@ -2228,12 +2511,20 @@ def execute_dev_cell_with_mock_transport(
     - Cell immutability (raises ImmutableCellExecutionError if cell_dir already has persisted artifacts)
     - Exact returned_model_id preservation (NEVER substitutes requested_model_id when returned_model_id is None/empty)
     - Strict JSON + BenchmarkPlanResponse.model_validate without rescue/repair (Fix Group A)
-    - Provider-aware token usage & canonical cost calculation (Fix Group E)
-    - Exact code_commit_sha and provider_config_sha256 provenance propagation (Fix Group I)
+    - Provider-aware token usage & exact Decimal canonical cost calculation (Correction A / Fix Group E)
+    - Authoritative integer nanoseconds latency_ns propagation (Correction B)
+    - Fail-closed code_commit_sha and provider_config_sha256 provenance propagation (Correction C / Fix Group I)
     """
     assert_not_final100_scenario(scenario)
     if cell_manifest.fixture_id != scenario.scenario_id:
         raise ValueError("cell_manifest.fixture_id does not match scenario.scenario_id")
+    if (
+        not allow_synthetic_test_only_code_sha
+        and not _ALLOW_SYNTHETIC_TEST_ONLY_CODE_SHA.get()
+    ):
+        resolve_and_verify_code_commit_sha(cell_manifest.code_commit_sha)
+    else:
+        validate_git_commit_sha40(cell_manifest.code_commit_sha)
 
     required_files = (
         "request_manifest.json",
@@ -2267,8 +2558,9 @@ def execute_dev_cell_with_mock_transport(
         "code_commit_sha": cell_manifest.code_commit_sha,
         "provider_config_sha256": cell_manifest.provider_config_sha256,
         "finish_reason": mock_response.finish_reason,
-        "latency_ms": mock_response.latency_ms,
         "latency_ns": mock_response.latency_ns,
+        "latency_ms_display": mock_response.latency_ms,
+        "latency_ms": mock_response.latency_ms,
         "simulated_failure": mock_response.simulated_failure.value,
         "usage_metadata": {
             "authoritative_usage_available": usage_avail,
@@ -2362,9 +2654,11 @@ def execute_dev_cell_with_mock_transport(
         cell_dir / "evaluation_result.json", eval_result.model_dump()
     )
 
-    canonical_cost: Optional[float] = None
+    canonical_cost_dec: Optional[Decimal] = None
+    canonical_cost_dec_str: Optional[str] = None
+    canonical_cost_disp: Optional[float] = None
     if cost_comparability is not None and usage_avail:
-        canonical_cost = compute_canonical_cell_cost_usd(
+        canonical_cost_dec = compute_canonical_cell_cost_decimal(
             input_tokens=mock_response.input_tokens,
             output_tokens=mock_response.output_tokens,
             thought_tokens=mock_response.thought_tokens,
@@ -2375,6 +2669,9 @@ def execute_dev_cell_with_mock_transport(
             cache_creation_input_tokens=mock_response.cache_creation_input_tokens,
             cost_record=cost_comparability,
         )
+        if canonical_cost_dec is not None:
+            canonical_cost_dec_str = format_canonical_decimal_str(canonical_cost_dec)
+            canonical_cost_disp = float(canonical_cost_dec)
 
     is_batch_stop = failure_class in BATCH_STOP_FAILURE_CLASSIFICATIONS
     valid_run_and_schema = bool(eval_result.run_valid) and not is_batch_stop
@@ -2385,48 +2682,60 @@ def execute_dev_cell_with_mock_transport(
     )
     final_core_pass = bool(valid_run_and_schema and eval_result.core_scenario_pass)
 
-    receipt = DevCellExecutionReceipt(
-        run_id=cell_manifest.run_id,
-        phase=cell_manifest.phase,
-        fixture_id=cell_manifest.fixture_id,
-        candidate_id=cell_manifest.candidate_id,
-        prompt_id=cell_manifest.prompt_id,
-        requested_model_id=cell_manifest.requested_model_id,
-        returned_model_id=returned_model,
-        code_commit_sha=cell_manifest.code_commit_sha,
-        provider_config_sha256=cell_manifest.provider_config_sha256,
-        attempt_number=cell_manifest.attempt_number,
-        attempted=True,
-        failure_classification=failure_class,
-        counts_in_denominator=not is_batch_stop,
-        batch_stop_required=is_batch_stop,
-        valid_run_and_schema=valid_run_and_schema,
-        exact_grounding_pass=exact_grounding_pass,
-        final_core_pass=final_core_pass,
-        latency_ms=mock_response.latency_ms,
-        latency_ns=mock_response.latency_ns,
-        authoritative_usage_available=usage_avail,
-        input_tokens=mock_response.input_tokens if usage_avail else None,
-        output_tokens=mock_response.output_tokens if usage_avail else None,
-        total_tokens=mock_response.total_tokens if usage_avail else None,
-        thought_tokens=mock_response.thought_tokens if usage_avail else None,
-        reasoning_tokens=mock_response.reasoning_tokens if usage_avail else None,
-        thinking_tokens=mock_response.thinking_tokens if usage_avail else None,
-        cached_input_tokens=mock_response.cached_input_tokens if usage_avail else None,
-        cache_read_input_tokens=(
-            mock_response.cache_read_input_tokens if usage_avail else None
-        ),
-        cache_creation_input_tokens=(
-            mock_response.cache_creation_input_tokens if usage_avail else None
-        ),
-        raw_usage_metadata=mock_response.raw_usage_metadata if usage_avail else None,
-        canonical_cost_usd=canonical_cost,
-        request_manifest_sha256=req_sha,
-        raw_response_sha256=raw_sha,
-        provider_metadata_sha256=meta_sha,
-        parsed_response_sha256=parsed_sha,
-        evaluation_result_sha256=eval_sha,
+    token_ctx = (
+        _ALLOW_SYNTHETIC_TEST_ONLY_CODE_SHA.set(True)
+        if allow_synthetic_test_only_code_sha
+        else None
     )
+    try:
+        receipt = DevCellExecutionReceipt(
+            run_id=cell_manifest.run_id,
+            phase=cell_manifest.phase,
+            fixture_id=cell_manifest.fixture_id,
+            candidate_id=cell_manifest.candidate_id,
+            prompt_id=cell_manifest.prompt_id,
+            requested_model_id=cell_manifest.requested_model_id,
+            returned_model_id=returned_model,
+            code_commit_sha=cell_manifest.code_commit_sha,
+            provider_config_sha256=cell_manifest.provider_config_sha256,
+            attempt_number=cell_manifest.attempt_number,
+            attempted=True,
+            failure_classification=failure_class,
+            counts_in_denominator=not is_batch_stop,
+            batch_stop_required=is_batch_stop,
+            valid_run_and_schema=valid_run_and_schema,
+            exact_grounding_pass=exact_grounding_pass,
+            final_core_pass=final_core_pass,
+            latency_ns=mock_response.latency_ns,
+            latency_ms_display=mock_response.latency_ms,
+            latency_ms=mock_response.latency_ms,
+            authoritative_usage_available=usage_avail,
+            input_tokens=mock_response.input_tokens if usage_avail else None,
+            output_tokens=mock_response.output_tokens if usage_avail else None,
+            total_tokens=mock_response.total_tokens if usage_avail else None,
+            thought_tokens=mock_response.thought_tokens if usage_avail else None,
+            reasoning_tokens=mock_response.reasoning_tokens if usage_avail else None,
+            thinking_tokens=mock_response.thinking_tokens if usage_avail else None,
+            cached_input_tokens=mock_response.cached_input_tokens if usage_avail else None,
+            cache_read_input_tokens=(
+                mock_response.cache_read_input_tokens if usage_avail else None
+            ),
+            cache_creation_input_tokens=(
+                mock_response.cache_creation_input_tokens if usage_avail else None
+            ),
+            raw_usage_metadata=mock_response.raw_usage_metadata if usage_avail else None,
+            canonical_cost_usd_decimal=canonical_cost_dec_str,
+            canonical_cost_usd_display=canonical_cost_disp,
+            canonical_cost_usd=canonical_cost_disp,
+            request_manifest_sha256=req_sha,
+            raw_response_sha256=raw_sha,
+            provider_metadata_sha256=meta_sha,
+            parsed_response_sha256=parsed_sha,
+            evaluation_result_sha256=eval_sha,
+        )
+    finally:
+        if token_ctx is not None:
+            _ALLOW_SYNTHETIC_TEST_ONLY_CODE_SHA.reset(token_ctx)
     write_canonical_json(cell_dir / "execution_receipt.json", receipt.model_dump())
     if enforce_batch_stop:
         assert_batch_receipts_integrity([receipt])
@@ -2476,6 +2785,11 @@ class DevGroupAggregateMetrics(BaseModel):
     """Deterministic aggregate metrics for a prompt or candidate across its assigned denominator (Sections 12 & 19).
 
     Strictly reports the three locked scientific rates separately without any weighted composite score.
+    Authoritative cost and latency comparisons use exact non-exponent decimal strings:
+    - median_canonical_cost_usd_decimal (derived strictly from DevCellExecutionReceipt.canonical_cost_usd_decimal)
+    - median_latency_ns_decimal (derived strictly from integer DevCellExecutionReceipt.latency_ns)
+    Float fields (median_canonical_cost_usd, median_canonical_cost_usd_display, median_latency_ms,
+    median_latency_ms_display) are display-only and MUST NEVER be used for scientific selection.
     """
 
     model_config = ConfigDict(extra="forbid")
@@ -2491,8 +2805,13 @@ class DevGroupAggregateMetrics(BaseModel):
     exact_grounding_pass_rate: float
     final_core_pass_rate: float
 
+    median_latency_ns_decimal: Optional[str] = None
+    median_latency_ms_display: Optional[float] = None
     median_latency_ms: Optional[float] = None
+
     canonical_cost_comparable: bool = False
+    median_canonical_cost_usd_decimal: Optional[str] = None
+    median_canonical_cost_usd_display: Optional[float] = None
     median_canonical_cost_usd: Optional[float] = None
     failure_classification_counts: Dict[str, int]
 
@@ -2546,12 +2865,39 @@ def aggregate_dev_cell_receipts(
     grounding_rate = n_exact_grounding / n_assigned
     core_rate = n_core_pass / n_assigned
 
-    latencies_dec = [
-        _to_exact_decimal(r.latency_ms) for r in cell_receipts if r.latency_ms is not None
-    ]
-    median_latency = (
-        float(statistics.median(latencies_dec)) if len(latencies_dec) == n_assigned else None
+    # Correction B: Authoritative latency median is computed strictly from integer latency_ns
+    latencies_ns: List[int] = []
+    for r in cell_receipts:
+        if r.latency_ns is not None:
+            if isinstance(r.latency_ns, bool) or not isinstance(r.latency_ns, int) or r.latency_ns < 0:
+                raise ValueError(f"Invalid latency_ns {r.latency_ns!r} in receipt {r.run_id}")
+            latencies_ns.append(r.latency_ns)
+
+    median_latency_ns_dec: Optional[Decimal] = (
+        compute_exact_decimal_median(latencies_ns)
+        if len(latencies_ns) == n_assigned
+        else None
     )
+    median_latency_ns_str: Optional[str] = (
+        format_canonical_decimal_str(median_latency_ns_dec)
+        if median_latency_ns_dec is not None
+        else None
+    )
+    if median_latency_ns_dec is not None:
+        with localcontext() as ctx:
+            ctx.prec = DECIMAL_SCIENTIFIC_PRECISION
+            median_latency_ms_disp: Optional[float] = float(
+                median_latency_ns_dec / Decimal(1_000_000)
+            )
+    else:
+        latencies_ms_disp = [
+            r.latency_ms for r in cell_receipts if r.latency_ms is not None
+        ]
+        median_latency_ms_disp = (
+            float(statistics.median(latencies_ms_disp))
+            if len(latencies_ms_disp) == n_assigned
+            else None
+        )
 
     has_unsupported_cache_usage = any(
         (r.cached_input_tokens is not None and r.cached_input_tokens > 0)
@@ -2559,10 +2905,11 @@ def aggregate_dev_cell_receipts(
         or (r.cache_creation_input_tokens is not None and r.cache_creation_input_tokens > 0)
         for r in cell_receipts
     )
-    costs_dec = [
-        _to_exact_decimal(r.canonical_cost_usd)
+    # Correction A: Authoritative cost median is computed strictly from canonical_cost_usd_decimal
+    costs_dec: List[Decimal] = [
+        parse_canonical_decimal_str(r.canonical_cost_usd_decimal)
         for r in cell_receipts
-        if r.canonical_cost_usd is not None
+        if r.canonical_cost_usd_decimal is not None
     ]
     cost_comparable = bool(
         cost_comparability_all_computable
@@ -2570,7 +2917,17 @@ def aggregate_dev_cell_receipts(
         and len(costs_dec) == n_assigned
         and all(r.authoritative_usage_available for r in cell_receipts)
     )
-    median_cost = float(statistics.median(costs_dec)) if cost_comparable else None
+    median_cost_dec: Optional[Decimal] = (
+        compute_exact_decimal_median(costs_dec) if cost_comparable else None
+    )
+    median_cost_dec_str: Optional[str] = (
+        format_canonical_decimal_str(median_cost_dec)
+        if median_cost_dec is not None
+        else None
+    )
+    median_cost_disp: Optional[float] = (
+        float(median_cost_dec) if median_cost_dec is not None else None
+    )
 
     failure_counts: Counter[str] = Counter(r.failure_classification.value for r in cell_receipts)
 
@@ -2584,9 +2941,13 @@ def aggregate_dev_cell_receipts(
         valid_run_and_schema_rate=valid_rate,
         exact_grounding_pass_rate=grounding_rate,
         final_core_pass_rate=core_rate,
-        median_latency_ms=median_latency,
+        median_latency_ns_decimal=median_latency_ns_str,
+        median_latency_ms_display=median_latency_ms_disp,
+        median_latency_ms=median_latency_ms_disp,
         canonical_cost_comparable=cost_comparable,
-        median_canonical_cost_usd=median_cost,
+        median_canonical_cost_usd_decimal=median_cost_dec_str,
+        median_canonical_cost_usd_display=median_cost_disp,
+        median_canonical_cost_usd=median_cost_disp,
         failure_classification_counts=dict(sorted(failure_counts.items())),
     )
 
@@ -2632,7 +2993,9 @@ class CriterionReductionStepTrace(BaseModel):
     criterion_name: str
     survivors_entering: List[str]
     scores_of_entering_survivors: Dict[str, float]
+    scores_of_entering_survivors_decimal: Dict[str, str] = Field(default_factory=dict)
     best_or_reference_value: Optional[float] = None
+    best_or_reference_value_decimal: Optional[str] = None
     survivors_remaining: List[str]
     eliminated: List[str]
     step_status: str
@@ -2830,9 +3193,13 @@ def select_winning_candidate_dev_select(
     1. VALID_RUN_AND_SCHEMA_RATE (10pp relative-to-best survivor reduction)
     2. EXACT_GROUNDING_PASS_RATE (10pp relative-to-best survivor reduction)
     3. FINAL_CORE_PASS_RATE (10pp relative-to-best survivor reduction)
-    4. MEDIAN_COST_PER_SCENARIO (minimum unrounded canonical median cost if comparable for ALL
-       current survivors; otherwise skip cost for ALL survivors with COST_CRITERION_SKIPPED_NOT_COMPARABLE)
-    5. MEDIAN_LATENCY (minimum unrounded canonical median latency without epsilon or rounding)
+    4. MEDIAN_COST_PER_SCENARIO (minimum unrounded canonical Decimal median cost from
+       median_canonical_cost_usd_decimal if comparable for ALL current survivors;
+       otherwise skip cost for ALL survivors with COST_CRITERION_SKIPPED_NOT_COMPARABLE;
+       NEVER uses float cost fields)
+    5. MEDIAN_LATENCY (minimum unrounded canonical Decimal median latency from
+       median_latency_ns_decimal without epsilon or rounding; fails closed if
+       median_latency_ns_decimal is unavailable for any survivor; NEVER falls back to float latency_ms)
     6. Final administrative order: C1 > C2 > C3
     """
     assert_batch_receipts_integrity(cell_receipts)
@@ -2919,12 +3286,12 @@ def select_winning_candidate_dev_select(
                 reduction_trace=trace,
             )
 
-    # Criterion 4: Cost tiebreak (only if ALL current survivors have comparable canonical cost)
+    # Criterion 4: Cost tiebreak (Correction A: strictly compares exact Decimal median_canonical_cost_usd_decimal)
     entering_cost = list(survivors)
     all_survivors_cost_comparable = all(
         cost_comparability_by_candidate[cid].canonical_cost_computable
         and candidate_aggregates[cid].canonical_cost_comparable
-        and candidate_aggregates[cid].median_canonical_cost_usd is not None
+        and candidate_aggregates[cid].median_canonical_cost_usd_decimal is not None
         for cid in entering_cost
     )
 
@@ -2935,7 +3302,9 @@ def select_winning_candidate_dev_select(
                 criterion_name="MEDIAN_COST_PER_SCENARIO",
                 survivors_entering=entering_cost,
                 scores_of_entering_survivors={},
+                scores_of_entering_survivors_decimal={},
                 best_or_reference_value=None,
+                best_or_reference_value_decimal=None,
                 survivors_remaining=entering_cost,
                 eliminated=[],
                 step_status=COST_CRITERION_SKIPPED_NOT_COMPARABLE,
@@ -2943,25 +3312,32 @@ def select_winning_candidate_dev_select(
         )
     else:
         cost_status = COST_CRITERION_APPLIED
-        cost_scores: Dict[str, float] = {
-            cid: float(candidate_aggregates[cid].median_canonical_cost_usd)  # type: ignore[arg-type]
+        cost_decimals: Dict[str, Decimal] = {
+            cid: parse_canonical_decimal_str(
+                candidate_aggregates[cid].median_canonical_cost_usd_decimal  # type: ignore[arg-type]
+            )
             for cid in entering_cost
         }
-        cost_decimals: Dict[str, Decimal] = {
-            cid: _to_exact_decimal(cost_scores[cid]) for cid in entering_cost
+        cost_decimal_strs: Dict[str, str] = {
+            cid: format_canonical_decimal_str(cost_decimals[cid]) for cid in entering_cost
         }
         min_cost_dec = min(cost_decimals.values())
-        min_cost = float(min_cost_dec)
+        min_cost_dec_str = format_canonical_decimal_str(min_cost_dec)
         next_surv_cost = [
             cid for cid in entering_cost if cost_decimals[cid] == min_cost_dec
         ]
         eliminated_cost = [cid for cid in entering_cost if cid not in next_surv_cost]
+        cost_display_scores: Dict[str, float] = {
+            cid: float(cost_decimals[cid]) for cid in entering_cost
+        }
         trace.append(
             CriterionReductionStepTrace(
                 criterion_name="MEDIAN_COST_PER_SCENARIO",
                 survivors_entering=entering_cost,
-                scores_of_entering_survivors=cost_scores,
-                best_or_reference_value=min_cost,
+                scores_of_entering_survivors=cost_display_scores,
+                scores_of_entering_survivors_decimal=cost_decimal_strs,
+                best_or_reference_value=float(min_cost_dec),
+                best_or_reference_value_decimal=min_cost_dec_str,
                 survivors_remaining=next_surv_cost,
                 eliminated=eliminated_cost,
                 step_status="SINGLE_SURVIVOR_SELECTED"
@@ -2982,29 +3358,43 @@ def select_winning_candidate_dev_select(
                 reduction_trace=trace,
             )
 
-    # Criterion 5: Latency tiebreak (minimum unrounded canonical median latency without epsilon or rounding)
+    # Criterion 5: Latency tiebreak (Correction B: strictly compares exact Decimal median_latency_ns_decimal)
     entering_lat = list(survivors)
-    if any(candidate_aggregates[cid].median_latency_ms is None for cid in entering_lat):
-        raise ValueError("Missing median_latency_ms for survivor during latency tiebreak.")
-    lat_scores: Dict[str, float] = {
-        cid: float(candidate_aggregates[cid].median_latency_ms)  # type: ignore[arg-type]
+    if any(
+        candidate_aggregates[cid].median_latency_ns_decimal is None
+        for cid in entering_lat
+    ):
+        raise LatencyAuthorityUnavailableError(
+            "LATENCY_AUTHORITY_UNAVAILABLE: Missing authoritative median_latency_ns_decimal "
+            "(derived from integer latency_ns) for one or more survivors during DEV-SELECT "
+            "Criterion 5 tiebreak. Fallback to float latency_ms is strictly forbidden."
+        )
+    lat_ns_decimals: Dict[str, Decimal] = {
+        cid: parse_canonical_decimal_str(
+            candidate_aggregates[cid].median_latency_ns_decimal  # type: ignore[arg-type]
+        )
         for cid in entering_lat
     }
-    lat_decimals: Dict[str, Decimal] = {
-        cid: _to_exact_decimal(lat_scores[cid]) for cid in entering_lat
+    lat_ns_decimal_strs: Dict[str, str] = {
+        cid: format_canonical_decimal_str(lat_ns_decimals[cid]) for cid in entering_lat
     }
-    min_lat_dec = min(lat_decimals.values())
-    min_lat = float(min_lat_dec)
+    min_lat_ns_dec = min(lat_ns_decimals.values())
+    min_lat_ns_dec_str = format_canonical_decimal_str(min_lat_ns_dec)
     next_surv_lat = [
-        cid for cid in entering_lat if lat_decimals[cid] == min_lat_dec
+        cid for cid in entering_lat if lat_ns_decimals[cid] == min_lat_ns_dec
     ]
     eliminated_lat = [cid for cid in entering_lat if cid not in next_surv_lat]
+    lat_display_scores: Dict[str, float] = {
+        cid: float(lat_ns_decimals[cid]) for cid in entering_lat
+    }
     trace.append(
         CriterionReductionStepTrace(
             criterion_name="MEDIAN_LATENCY",
             survivors_entering=entering_lat,
-            scores_of_entering_survivors=lat_scores,
-            best_or_reference_value=min_lat,
+            scores_of_entering_survivors=lat_display_scores,
+            scores_of_entering_survivors_decimal=lat_ns_decimal_strs,
+            best_or_reference_value=float(min_lat_ns_dec),
+            best_or_reference_value_decimal=min_lat_ns_dec_str,
             survivors_remaining=next_surv_lat,
             eliminated=eliminated_lat,
             step_status="SINGLE_SURVIVOR_SELECTED"
@@ -3032,7 +3422,9 @@ def select_winning_candidate_dev_select(
             criterion_name="FINAL_ADMINISTRATIVE_TIEBREAK_C1_GT_C2_GT_C3",
             survivors_entering=list(survivors),
             scores_of_entering_survivors={},
+            scores_of_entering_survivors_decimal={},
             best_or_reference_value=None,
+            best_or_reference_value_decimal=None,
             survivors_remaining=[winner],
             eliminated=[cid for cid in survivors if cid != winner],
             step_status="FINAL_ADMINISTRATIVE_TIEBREAK_APPLIED",
@@ -3081,6 +3473,7 @@ def build_stochasticity_diagnostic_plan(
     candidate_registry: Optional[DevCandidateRegistry] = None,
     catalog_path: Optional[Path] = None,
     code_commit_sha: Optional[str] = None,
+    repo_root: Optional[Path] = None,
 ) -> StochasticityDiagnosticPlan:
     """Build the post-DEV-SELECT stochasticity diagnostic plan (strictly gated AFTER winner selection; Section 18)."""
     if (
@@ -3099,9 +3492,7 @@ def build_stochasticity_diagnostic_plan(
 
     bundle = dev_bundle or load_and_verify_frozen_dev_bundle()
     cand_reg = candidate_registry or load_and_verify_candidate_registry()
-    active_sha = validate_git_commit_sha40(
-        code_commit_sha if code_commit_sha is not None else resolve_active_git_commit_sha()
-    )
+    active_sha = resolve_and_verify_code_commit_sha(code_commit_sha, repo_root=repo_root)
     winner_cid = dev_select_result.selected_candidate_id
     cspec = cand_reg.candidates[winner_cid]
     pconf_sha = compute_candidate_provider_config_sha256(cspec)

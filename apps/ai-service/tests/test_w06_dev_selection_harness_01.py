@@ -136,14 +136,33 @@ def _make_synthetic_receipt(
     final_core_pass: bool = True,
     failure_classification: DevCellFailureClassification = DevCellFailureClassification.NONE,
     latency_ms: float = 1000.0,
+    latency_ns: int | None = None,
     authoritative_usage_available: bool = True,
     canonical_cost_usd: float | None = 0.01,
+    canonical_cost_usd_decimal: str | None = None,
 ) -> DevCellExecutionReceipt:
+    from decimal import Decimal
+    from app.evaluation.dev_selection_harness import format_canonical_decimal_str
+
     model_map = {
         "C1": "gemini-3.8-flash",
         "C2": "gpt-6.1-sol",
         "C3": "claude-sonnet-5-5",
     }
+    resolved_latency_ns = (
+        latency_ns
+        if latency_ns is not None
+        else int(Decimal(str(latency_ms)) * Decimal(1_000_000))
+    )
+    resolved_cost_dec_str = (
+        canonical_cost_usd_decimal
+        if canonical_cost_usd_decimal is not None
+        else (
+            format_canonical_decimal_str(Decimal(str(canonical_cost_usd)))
+            if (authoritative_usage_available and canonical_cost_usd is not None)
+            else None
+        )
+    )
     return DevCellExecutionReceipt(
         run_id=f"SYNTH-{phase}-{prompt_id}-{candidate_id}-{fixture_id}",
         phase=phase,  # type: ignore[arg-type]
@@ -160,11 +179,15 @@ def _make_synthetic_receipt(
         final_core_pass=(
             final_core_pass if (valid_run_and_schema and exact_grounding_pass) else False
         ),
+        latency_ns=resolved_latency_ns,
+        latency_ms_display=latency_ms,
         latency_ms=latency_ms,
         authoritative_usage_available=authoritative_usage_available,
         input_tokens=1000 if authoritative_usage_available else None,
         output_tokens=500 if authoritative_usage_available else None,
         total_tokens=1500 if authoritative_usage_available else None,
+        canonical_cost_usd_decimal=resolved_cost_dec_str,
+        canonical_cost_usd_display=canonical_cost_usd if authoritative_usage_available else None,
         canonical_cost_usd=canonical_cost_usd if authoritative_usage_available else None,
         request_manifest_sha256="a" * 64,
         raw_response_sha256="b" * 64,

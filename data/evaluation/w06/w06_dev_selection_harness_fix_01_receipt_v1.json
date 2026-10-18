@@ -1,8 +1,15 @@
 {
   "artifact_id": "W06-DEV-SELECTION-HARNESS-FIX-01-RECEIPT-V1",
+  "audit_correction_id": "W06-DEV-SELECTION-HARNESS-FIX-01-AUDIT-CORRECTION-01",
+  "audit_correction_tests_failed": 0,
+  "audit_correction_tests_passed": 18,
+  "audit_correction_tests_total": 18,
   "base_develop_sha": "f81faa7de3988a20af1adc5b04601c49cf953d4a",
+  "chatgpt_audit_correction_required": true,
+  "code_sha_fail_closed": "PASS",
   "dev_select_execution_started": false,
   "dev_tune_execution_started": false,
+  "exact_cost_end_to_end": "PASS",
   "existing_harness_tests_passed": true,
   "existing_harness_tests_total": 35,
   "final100_used": false,
@@ -58,7 +65,7 @@
       "defect_code": "C1_GEMINI_THOUGHT_TOKENS_OMITTED_FROM_COST",
       "fix_group": "Fix Group E",
       "repaired": true,
-      "root_cause": "MockProviderTransportResponse and DevCellExecutionReceipt lacked thought_tokens and cache token fields, and execute_dev_cell_with_mock_transport did not pass thought_tokens to compute_canonical_cell_cost_usd.",
+      "root_cause": "MockProviderTransportResponse and DevCellExecutionReceipt lacked thought_tokens and cache token fields, and execute_dev_cell_with_mock_transport did not pass thought_tokens to compute_canonical_cell_cost_decimal.",
       "severity": "CRITICAL",
       "solution": "Added thought_tokens, reasoning_tokens, thinking_tokens, cached_input_tokens, cache_read_input_tokens, cache_creation_input_tokens, raw_usage_metadata, and latency_ns to MockProviderTransportResponse and DevCellExecutionReceipt; for C1 (Google), compute_canonical_cell_cost_decimal bills output_tokens + thought_tokens once.",
       "verification_tests": [
@@ -72,7 +79,7 @@
       "repaired": true,
       "root_cause": "compute_canonical_cell_cost_usd blindly added thought_or_reasoning_tokens to output_tokens for all candidates, double-counting OpenAI reasoning_tokens (C2) and Anthropic thinking_tokens (C3) which are already included in output_tokens.",
       "severity": "CRITICAL",
-      "solution": "Made compute_canonical_cell_cost_decimal and compute_canonical_cell_cost_usd candidate-aware: C1 bills output_tokens + thought_tokens; C2 and C3 bill output_tokens only while recording reasoning_tokens/thinking_tokens for observability; nonzero unsupported cache tokens return None (non-comparable).",
+      "solution": "Made compute_canonical_cell_cost_decimal candidate-aware: C1 bills output_tokens + thought_tokens; C2 and C3 bill output_tokens only while recording reasoning_tokens/thinking_tokens for observability; nonzero unsupported cache tokens return None (non-comparable).",
       "verification_tests": [
         "FIX-21",
         "FIX-22",
@@ -81,24 +88,32 @@
     },
     "QA-29": {
       "defect_code": "COST_TIEBREAK_NOT_UNROUNDED",
-      "fix_group": "Fix Group F",
+      "fix_group": "Fix Group F / Audit Correction A",
       "repaired": true,
-      "root_cause": "_to_exact_decimal formatted floats via f'{value:.12f}', truncating/rounding differences beyond 12 decimal places during Criterion 4 cost tiebreaks.",
+      "root_cause": "_to_exact_decimal formatted floats via f'{value:.12f}', and DevCellExecutionReceipt.canonical_cost_usd and DevGroupAggregateMetrics.median_canonical_cost_usd passed through float.",
       "severity": "CRITICAL",
-      "solution": "Replaced _to_exact_decimal with exact Decimal(str(value)) conversion without formatting precision caps, preserving full unrounded Decimal precision in compute_canonical_cell_cost_decimal, aggregate median cost, and Criterion 4 tiebreaks.",
+      "solution": "Persisted authoritative exact non-exponent decimal text canonical_cost_usd_decimal on DevCellExecutionReceipt directly from compute_canonical_cell_cost_decimal (prec=100), computed exact Decimal median median_canonical_cost_usd_decimal via compute_exact_decimal_median, and made DEV-SELECT Criterion 4 compare only median_canonical_cost_usd_decimal without consulting any float display field.",
       "verification_tests": [
-        "FIX-24"
+        "FIX-24",
+        "AC-01",
+        "AC-02",
+        "AC-03",
+        "AC-04"
       ]
     },
     "QA-30": {
       "defect_code": "LATENCY_TIEBREAK_ROUNDING",
-      "fix_group": "Fix Group G",
+      "fix_group": "Fix Group G / Audit Correction B",
       "repaired": true,
-      "root_cause": "Criterion 5 median latency tiebreak used the 12-decimal-truncated _to_exact_decimal helper.",
+      "root_cause": "Criterion 5 median latency tiebreak previously relied on float latency_ms and 12-decimal formatting.",
       "severity": "MAJOR",
-      "solution": "Criterion 5 latency tiebreak compares unrounded Decimal(str(value)) median latencies with zero rounding and zero epsilon.",
+      "solution": "Made integer nanoseconds latency_ns the authoritative per-cell latency field, computed exact non-exponent decimal string median_latency_ns_decimal via compute_exact_decimal_median, and made DEV-SELECT Criterion 5 compare only median_latency_ns_decimal while failing closed with LatencyAuthorityUnavailableError if latency_ns is missing for any survivor.",
       "verification_tests": [
-        "FIX-25"
+        "FIX-25",
+        "AC-05",
+        "AC-06",
+        "AC-07",
+        "AC-08"
       ]
     },
     "QA-32": {
@@ -115,13 +130,17 @@
     },
     "QA-33": {
       "defect_code": "MISSING_CODE_COMMIT_SHA_AND_PROVIDER_CONFIG_SHA256_ON_CELL_ARTIFACTS",
-      "fix_group": "Fix Group I",
+      "fix_group": "Fix Group I / Audit Correction C",
       "repaired": true,
-      "root_cause": "DevCellExecutionManifest and DevCellExecutionReceipt lacked code_commit_sha and provider_config_sha256, and execute_dev_cell_with_mock_transport hardcoded EXPECTED_BASE_DEVELOP_SHA_DEV_HARNESS into BenchmarkRunManifest.",
+      "root_cause": "DevCellExecutionManifest and DevCellExecutionReceipt lacked code_commit_sha and provider_config_sha256, and resolve_active_git_commit_sha initially had a static fallback SHA.",
       "severity": "MAJOR",
-      "solution": "Added validated 40-hex code_commit_sha and 64-hex provider_config_sha256 to DevCellExecutionManifest and DevCellExecutionReceipt, and propagated cell_manifest.code_commit_sha into BenchmarkRunManifest.",
+      "solution": "Removed static fallback SHA EXPECTED_BASE_DEVELOP_SHA_FIX_01; implemented fail-closed resolve_active_git_commit_sha and resolve_and_verify_code_commit_sha raising CodeCommitProvenanceError if git rev-parse HEAD fails or if a supplied SHA mismatches active HEAD.",
       "verification_tests": [
-        "FIX-28"
+        "FIX-28",
+        "AC-09",
+        "AC-10",
+        "AC-11",
+        "AC-12"
       ]
     },
     "QA-39": {
@@ -139,8 +158,14 @@
   },
   "fix_status": "READY_FOR_RE_QA",
   "fix_tests_failed": 0,
-  "fix_tests_passed": 35,
-  "fix_tests_total": 35,
+  "fix_tests_passed": 53,
+  "fix_tests_total": 53,
+  "historical_qa_01_baseline": {
+    "overall_qa": "FAIL",
+    "qa_checks_total": 40,
+    "qa_fail": 10,
+    "qa_pass": 30
+  },
   "historical_qa_01_immutable_files_sha256": {
     "apps/ai-service/tests/test_w06_dev_selection_harness_qa_01.py": "b97615b4279a669e0064213681442a3c7506a5fc048f77ca9b5814d6c882bc18",
     "data/evaluation/w06/w06_dev_selection_harness_qa_01_receipt_v1.json": "51b7606ebca7b5a67b6e6514d2f0c4fa4c7933919be2a5c2ec8179b21b286c9f",
@@ -148,6 +173,8 @@
     "scripts/audit_w06_dev_selection_harness.py": "878f89ecd80e62a80c1ad23e9a48fa03ace4bb1b228c5ba1814c3cf632a3bd80"
   },
   "historical_qa_01_preserved": true,
+  "historical_qa_runtime_monkeypatch_removed": "PASS",
+  "latency_ns_selection_authority": "PASS",
   "live_provider_calls": 0,
   "next_gate": "W06-DEV-SELECTION-HARNESS-QA-02-OFFLINE-RERUN",
   "provider_cost_usd": 0,
@@ -166,6 +193,6 @@
   "repaired_harness_file": "apps/ai-service/app/evaluation/dev_selection_harness.py",
   "stochasticity_diagnostic_started": false,
   "task_id": "W06-DEV-SELECTION-HARNESS-FIX-01",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "winner_selected": false
 }

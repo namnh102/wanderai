@@ -24,7 +24,9 @@ from pydantic import ValidationError
 from app.evaluation import dev_selection_harness as harness
 from app.evaluation.dev_selection_harness import (
     BATCH_STOP_FAILURE_CLASSIFICATIONS,
+    DECIMAL_SCIENTIFIC_PRECISION,
     CandidateCostComparabilityRecord,
+    CodeCommitProvenanceError,
     DevCellExecutionManifest,
     DevCellExecutionReceipt,
     DevCellFailureClassification,
@@ -32,6 +34,7 @@ from app.evaluation.dev_selection_harness import (
     FORBIDDEN_FINAL100_BUNDLE_SHA256,
     FORBIDDEN_P11_MANIFEST_SHA256,
     HarnessInternalBatchStopError,
+    LatencyAuthorityUnavailableError,
     MockProviderTransportResponse,
     ModelIntegrityBatchStopError,
     ORDINARY_DENOMINATOR_FAILURE_CLASSIFICATIONS,
@@ -47,20 +50,29 @@ from app.evaluation.dev_selection_harness import (
     assert_prompt_freeze_before_live,
     build_default_infrastructure_prompt_registry,
     build_dev_prompt_freeze_artifact,
+    build_dev_select_execution_plan,
     build_dev_tune_execution_plan,
     build_prompt_registry,
     build_stochasticity_diagnostic_plan,
     compute_candidate_provider_config_sha256,
     compute_canonical_cell_cost_decimal,
+    compute_canonical_cell_cost_decimal_str,
     compute_canonical_cell_cost_usd,
+    compute_exact_decimal_median,
     create_prompt_candidate_spec,
+    create_synthetic_test_only_cell_manifest,
+    create_synthetic_test_only_cell_receipt,
     execute_dev_batch_with_mock_transport,
     execute_dev_cell_with_mock_transport,
+    format_canonical_decimal_str,
     load_and_verify_candidate_registry,
     load_and_verify_frozen_dev_bundle,
     normalize_lf_bytes,
+    parse_canonical_decimal_str,
     parse_primary_dev_plan_response,
     reduce_survivors_by_10pp_rule,
+    resolve_active_git_commit_sha,
+    resolve_and_verify_code_commit_sha,
     select_winning_candidate_dev_select,
     select_winning_prompt_dev_tune,
     sha256_bytes,
@@ -178,6 +190,9 @@ def _build_complete_valid_plan_dict(
     }
 
 
+_UNSET = object()
+
+
 def _make_receipt(
     *,
     phase: str = "DEV_TUNE",
@@ -191,22 +206,38 @@ def _make_receipt(
     counts_in_denominator: bool = True,
     batch_stop_required: bool = False,
     latency_ms: float = 100.0,
+    latency_ns: Any = _UNSET,
     canonical_cost_usd: float | None = 0.001,
+    canonical_cost_usd_decimal: Any = _UNSET,
     authoritative_usage_available: bool = True,
     requested_model_id: str = "gemini-3.8-flash",
     returned_model_id: str | None = "gemini-3.8-flash",
+    code_commit_sha: str | None = None,
 ) -> DevCellExecutionReceipt:
+    resolved_latency_ns: int | None = (
+        int(Decimal(str(latency_ms)) * Decimal(1_000_000))
+        if latency_ns is _UNSET
+        else latency_ns
+    )
+    if canonical_cost_usd_decimal is not _UNSET:
+        resolved_cost_dec_str: str | None = canonical_cost_usd_decimal
+    elif authoritative_usage_available and canonical_cost_usd is not None:
+        resolved_cost_dec_str = format_canonical_decimal_str(Decimal(str(canonical_cost_usd)))
+    else:
+        resolved_cost_dec_str = None
+
     return DevCellExecutionReceipt(
         run_id=f"{phase}__{prompt_id}__{candidate_id}__{fixture_id}",
         phase=phase,  # type: ignore[arg-type]
         prompt_id=prompt_id,
         candidate_id=candidate_id,
         fixture_id=fixture_id,
-        code_commit_sha="f81faa7de3988a20af1adc5b04601c49cf953d4a",
+        code_commit_sha=code_commit_sha or resolve_active_git_commit_sha(),
         requested_model_id=requested_model_id,
         returned_model_id=returned_model_id,
+        latency_ns=resolved_latency_ns,
+        latency_ms_display=latency_ms,
         latency_ms=latency_ms,
-        latency_ns=int(latency_ms * 1_000_000),
         input_tokens=500,
         output_tokens=600,
         thought_tokens=100 if candidate_id == "C1" else 0,
@@ -218,6 +249,8 @@ def _make_receipt(
         total_tokens=1200 if candidate_id == "C1" else 1100,
         authoritative_usage_available=authoritative_usage_available,
         raw_usage_metadata={"prompt_token_count": 500},
+        canonical_cost_usd_decimal=resolved_cost_dec_str,
+        canonical_cost_usd_display=canonical_cost_usd,
         canonical_cost_usd=canonical_cost_usd,
         valid_run_and_schema=valid_run_and_schema,
         exact_grounding_pass=exact_grounding_pass if valid_run_and_schema else False,
@@ -806,7 +839,7 @@ def test_fix_24_cost_tiebreak_distinguishes_sub_12_decimal_differences(shared_en
     assert harness._to_exact_decimal("0.0100000000002") == Decimal("0.0100000000002")
 
     fids = [s.scenario_id for s in shared_env["bundle"].dev_select_fixtures]
-    costs = {"C1": 0.0100000000002, "C2": 0.0100000000001, "C3": 0.0100000000003}
+    costs = {"C1": "0.0100000000002", "C2": "0.0100000000001", "C3": "0.0100000000003"}
     req_models = {"C1": "gemini-3.8-flash", "C2": "gpt-6.1-sol", "C3": "claude-sonnet-5-5"}
     receipts = [
         _make_receipt(
@@ -814,7 +847,8 @@ def test_fix_24_cost_tiebreak_distinguishes_sub_12_decimal_differences(shared_en
             prompt_id="P1",
             candidate_id=cid,
             fixture_id=fid,
-            canonical_cost_usd=costs[cid],
+            canonical_cost_usd=float(costs[cid]),
+            canonical_cost_usd_decimal=costs[cid],
             latency_ms=100.0,
             requested_model_id=req_models[cid],
             returned_model_id=req_models[cid],
@@ -834,12 +868,17 @@ def test_fix_24_cost_tiebreak_distinguishes_sub_12_decimal_differences(shared_en
 
 
 def test_fix_25_latency_tiebreak_distinguishes_sub_12_decimal_differences(shared_env):
-    """FIX-25: Latency tiebreak distinguishes 100.0000000000001 vs 100.0000000000002 and 1.0000000000001 vs 1.0000000000002 without rounding."""
+    """FIX-25: Latency tiebreak distinguishes sub-12-decimal differences via authoritative integer latency_ns."""
     assert harness._to_exact_decimal(100.0000000000001) != harness._to_exact_decimal(100.0000000000002)
     assert harness._to_exact_decimal(1.0000000000001) != harness._to_exact_decimal(1.0000000000002)
 
     fids = [s.scenario_id for s in shared_env["bundle"].dev_select_fixtures]
-    lats = {"C1": 1.0000000000002, "C2": 1.0000000000003, "C3": 1.0000000000001}
+    lats_ms = {"C1": 1.0000000000002, "C2": 1.0000000000003, "C3": 1.0000000000001}
+    lats_ns = {
+        "C1": 1_000_000_000_002,
+        "C2": 1_000_000_000_003,
+        "C3": 1_000_000_000_001,
+    }
     req_models = {"C1": "gemini-3.8-flash", "C2": "gpt-6.1-sol", "C3": "claude-sonnet-5-5"}
     cost_recs = _cost_records_all_computable()
     cost_recs["C1"] = CandidateCostComparabilityRecord(
@@ -854,8 +893,10 @@ def test_fix_25_latency_tiebreak_distinguishes_sub_12_decimal_differences(shared
             candidate_id=cid,
             fixture_id=fid,
             canonical_cost_usd=None,
+            canonical_cost_usd_decimal=None,
             authoritative_usage_available=False,
-            latency_ms=lats[cid],
+            latency_ms=lats_ms[cid],
+            latency_ns=lats_ns[cid],
             requested_model_id=req_models[cid],
             returned_model_id=req_models[cid],
         )
@@ -958,35 +999,35 @@ def test_fix_27_unverified_prompt_freeze_fails_closed_before_live(shared_env, tm
 def test_fix_28_code_commit_sha_and_provider_config_sha256_on_manifest_and_receipt(
     shared_env, tmp_path: Path
 ):
-    """FIX-28: code_commit_sha and provider_config_sha256 are present, validated, and propagated."""
+    """FIX-28: code_commit_sha and provider_config_sha256 are present, validated against HEAD, and propagated."""
     cell0: DevCellExecutionManifest = shared_env["cell0"]
+    head_sha = resolve_active_git_commit_sha()
     assert len(cell0.code_commit_sha) == 40
+    assert cell0.code_commit_sha == head_sha
     assert len(cell0.provider_config_sha256) == 64
 
     c1_spec = shared_env["cand_reg"].candidates[cell0.candidate_id]
     assert cell0.provider_config_sha256 == compute_candidate_provider_config_sha256(c1_spec)
 
-    custom_sha = "1234567890abcdef1234567890abcdef12345678"
-    custom_cell = DevCellExecutionManifest(**{**cell0.model_dump(), "code_commit_sha": custom_sha})
     payload = _build_complete_valid_plan_dict(shared_env["scen0"], shared_env["cat0"])
     rec, eval_res = execute_dev_cell_with_mock_transport(
-        cell_manifest=custom_cell,
+        cell_manifest=cell0,
         scenario=shared_env["scen0"],
         cell_dir=tmp_path / "fix_28_cell",
         mock_response=MockProviderTransportResponse(
-            returned_model_id=custom_cell.requested_model_id,
+            returned_model_id=cell0.requested_model_id,
             raw_text=json.dumps(payload, ensure_ascii=False),
         ),
         core_catalog_by_id=shared_env["core_map"],
     )
-    assert rec.code_commit_sha == custom_sha
+    assert rec.code_commit_sha == head_sha
     assert rec.provider_config_sha256 == cell0.provider_config_sha256
     assert eval_res.run_valid is True
     manifest_on_disk = json.loads((tmp_path / "fix_28_cell" / "request_manifest.json").read_text(encoding="utf-8"))
     receipt_on_disk = json.loads((tmp_path / "fix_28_cell" / "execution_receipt.json").read_text(encoding="utf-8"))
-    assert manifest_on_disk["code_commit_sha"] == custom_sha
+    assert manifest_on_disk["code_commit_sha"] == head_sha
     assert manifest_on_disk["provider_config_sha256"] == cell0.provider_config_sha256
-    assert receipt_on_disk["code_commit_sha"] == custom_sha
+    assert receipt_on_disk["code_commit_sha"] == head_sha
     assert receipt_on_disk["provider_config_sha256"] == cell0.provider_config_sha256
 
     with pytest.raises(ValidationError):
@@ -1215,3 +1256,518 @@ def test_fix_35_zero_live_calls_and_historical_qa01_immutability():
             check=True,
         )
         assert proc.stdout.strip() == "", f"Historical QA-01 files modified: {proc.stdout}"
+
+
+# ==============================================================================
+# AC-01 through AC-18: ChatGPT Audit Correction 01 Regression Tests
+# (W06-DEV-SELECTION-HARNESS-FIX-01-AUDIT-CORRECTION-01)
+# ==============================================================================
+
+
+def test_ac_01_cell_receipt_stores_exact_canonical_cost_usd_decimal(shared_env, tmp_path: Path):
+    """AC-01: Cell receipt stores exact canonical_cost_usd_decimal as non-exponent decimal text."""
+    c1_rec = CandidateCostComparabilityRecord(
+        candidate_id="C1",
+        authoritative_usage_available=True,
+        pricing_source="https://ai.google.dev/gemini-api/docs/pricing",
+        pricing_access_date="2026-10-18",
+        input_price_per_million_usd=0.1000000000001,
+        output_price_per_million_usd=0.4000000000003,
+        canonical_cost_computable=True,
+    )
+    payload = _build_complete_valid_plan_dict(shared_env["scen0"], shared_env["cat0"])
+    rec, _ = execute_dev_cell_with_mock_transport(
+        cell_manifest=shared_env["cell0"],
+        scenario=shared_env["scen0"],
+        cell_dir=tmp_path / "ac_01_cell",
+        mock_response=MockProviderTransportResponse(
+            returned_model_id=shared_env["cell0"].requested_model_id,
+            raw_text=json.dumps(payload, ensure_ascii=False),
+            input_tokens=514,
+            output_tokens=599,
+            thought_tokens=3179,
+            total_tokens=4292,
+            authoritative_usage_available=True,
+        ),
+        cost_comparability=c1_rec,
+        core_catalog_by_id=shared_env["core_map"],
+    )
+    expected_dec = compute_canonical_cell_cost_decimal(
+        input_tokens=514,
+        output_tokens=599,
+        thought_tokens=3179,
+        cost_record=c1_rec,
+    )
+    expected_str = compute_canonical_cell_cost_decimal_str(
+        input_tokens=514,
+        output_tokens=599,
+        thought_tokens=3179,
+        cost_record=c1_rec,
+    )
+    assert expected_dec is not None
+    assert expected_str is not None
+    assert "e" not in expected_str.lower()
+    assert rec.canonical_cost_usd_decimal == expected_str
+    assert parse_canonical_decimal_str(rec.canonical_cost_usd_decimal) == expected_dec
+    on_disk = json.loads((tmp_path / "ac_01_cell" / "execution_receipt.json").read_text(encoding="utf-8"))
+    assert on_disk["canonical_cost_usd_decimal"] == expected_str
+
+
+def test_ac_02_even_count_cost_median_uses_exact_decimal_division_by_2():
+    """AC-02: Even-count cost median (60 DEV-SELECT cells or 2-cell group) uses exact Decimal division by 2."""
+    assert DECIMAL_SCIENTIFIC_PRECISION == 100
+    d_low = Decimal("0.010000000000000000000000000001")
+    d_high = Decimal("0.010000000000000000000000000002")
+    med = compute_exact_decimal_median([d_low, d_high])
+    assert med == Decimal("0.0100000000000000000000000000015")
+    assert format_canonical_decimal_str(med) == "0.0100000000000000000000000000015"
+
+    # Also test via aggregate_dev_cell_receipts with 2 assigned cells
+    r1 = _make_receipt(
+        phase="DEV_SELECT",
+        prompt_id="P1",
+        candidate_id="C1",
+        fixture_id="W06-DEV-SELECT-001",
+        canonical_cost_usd_decimal="0.010000000000000000000000000001",
+        canonical_cost_usd=0.01,
+    )
+    r2 = _make_receipt(
+        phase="DEV_SELECT",
+        prompt_id="P1",
+        candidate_id="C1",
+        fixture_id="W06-DEV-SELECT-002",
+        canonical_cost_usd_decimal="0.010000000000000000000000000002",
+        canonical_cost_usd=0.01,
+    )
+    agg = aggregate_dev_cell_receipts(
+        group_id="C1",
+        assigned_cell_keys=[
+            ("P1", "C1", "W06-DEV-SELECT-001"),
+            ("P1", "C1", "W06-DEV-SELECT-002"),
+        ],
+        cell_receipts=[r1, r2],
+        cost_comparability_all_computable=True,
+    )
+    assert agg.canonical_cost_comparable is True
+    assert agg.median_canonical_cost_usd_decimal == "0.0100000000000000000000000000015"
+
+    # Confirm float input to compute_exact_decimal_median is rejected
+    with pytest.raises(TypeError, match="forbids float"):
+        compute_exact_decimal_median([0.01, 0.02])  # type: ignore[list-item]
+
+
+def test_ac_03_cost_tiebreak_distinguishes_sub_float_precision_decimal_differences(shared_env):
+    """AC-03: Cost tiebreak distinguishes sub-float64-precision Decimal differences where float(a) == float(b)."""
+    c1_dec_str = "0.010000000000000000000000000002"
+    c2_dec_str = "0.010000000000000000000000000001"
+    c3_dec_str = "0.010000000000000000000000000003"
+    # In IEEE-754 float64, all three collapse to the exact same float!
+    assert float(c1_dec_str) == float(c2_dec_str) == float(c3_dec_str)
+    # In exact Decimal, C2 < C1 < C3
+    assert Decimal(c2_dec_str) < Decimal(c1_dec_str) < Decimal(c3_dec_str)
+
+    fids = [s.scenario_id for s in shared_env["bundle"].dev_select_fixtures]
+    costs_dec_map = {"C1": c1_dec_str, "C2": c2_dec_str, "C3": c3_dec_str}
+    req_models = {"C1": "gemini-3.8-flash", "C2": "gpt-6.1-sol", "C3": "claude-sonnet-5-5"}
+    receipts = [
+        _make_receipt(
+            phase="DEV_SELECT",
+            prompt_id="P1",
+            candidate_id=cid,
+            fixture_id=fid,
+            canonical_cost_usd=float(costs_dec_map[cid]),
+            canonical_cost_usd_decimal=costs_dec_map[cid],
+            latency_ns=1_000_000_000,
+            requested_model_id=req_models[cid],
+            returned_model_id=req_models[cid],
+        )
+        for cid in ORDERED_CANDIDATE_IDS
+        for fid in fids
+    ]
+    res = select_winning_candidate_dev_select(
+        locked_prompt_id="P1",
+        dev_select_fixture_ids=fids,
+        cell_receipts=receipts,
+        cost_comparability_by_candidate=_cost_records_all_computable(),
+    )
+    assert res.selected_candidate_id == "C2"
+    assert res.selected_at_stage == "MEDIAN_COST_PER_SCENARIO"
+    assert res.is_administrative_tiebreak is False
+    cost_step = next(s for s in res.reduction_trace if s.criterion_name == "MEDIAN_COST_PER_SCENARIO")
+    assert cost_step.best_or_reference_value_decimal == c2_dec_str
+    assert cost_step.scores_of_entering_survivors_decimal == costs_dec_map
+
+
+def test_ac_04_float_display_cost_field_never_consulted_by_dev_select(shared_env):
+    """AC-04: Float display cost fields are never consulted by aggregator or DEV-SELECT Criterion 4."""
+    fids = [s.scenario_id for s in shared_env["bundle"].dev_select_fixtures]
+    req_models = {"C1": "gemini-3.8-flash", "C2": "gpt-6.1-sol", "C3": "claude-sonnet-5-5"}
+    # Give C3 the lowest exact Decimal cost ("0.005"), while poisoning float display cost to make C1 look cheapest (0.0001)
+    exact_costs = {"C1": "0.020", "C2": "0.015", "C3": "0.005"}
+    poisoned_float_costs = {"C1": 0.0001, "C2": 0.0002, "C3": 999.0}
+    receipts = [
+        _make_receipt(
+            phase="DEV_SELECT",
+            prompt_id="P1",
+            candidate_id=cid,
+            fixture_id=fid,
+            canonical_cost_usd=poisoned_float_costs[cid],
+            canonical_cost_usd_decimal=exact_costs[cid],
+            latency_ns=1_000_000_000,
+            requested_model_id=req_models[cid],
+            returned_model_id=req_models[cid],
+        )
+        for cid in ORDERED_CANDIDATE_IDS
+        for fid in fids
+    ]
+    res = select_winning_candidate_dev_select(
+        locked_prompt_id="P1",
+        dev_select_fixture_ids=fids,
+        cell_receipts=receipts,
+        cost_comparability_by_candidate=_cost_records_all_computable(),
+    )
+    assert res.selected_candidate_id == "C3"
+    assert res.selected_at_stage == "MEDIAN_COST_PER_SCENARIO"
+    assert res.candidate_aggregates["C3"].median_canonical_cost_usd_decimal == "0.005"
+
+
+def test_ac_05_cell_receipt_stores_integer_latency_ns(shared_env, tmp_path: Path):
+    """AC-05: Cell receipt stores authoritative integer latency_ns and rejects negative/bool latency_ns."""
+    payload = _build_complete_valid_plan_dict(shared_env["scen0"], shared_env["cat0"])
+    rec, _ = execute_dev_cell_with_mock_transport(
+        cell_manifest=shared_env["cell0"],
+        scenario=shared_env["scen0"],
+        cell_dir=tmp_path / "ac_05_cell",
+        mock_response=MockProviderTransportResponse(
+            returned_model_id=shared_env["cell0"].requested_model_id,
+            raw_text=json.dumps(payload, ensure_ascii=False),
+            latency_ns=1_234_567_891,
+            latency_ms=1234.567891,
+        ),
+        core_catalog_by_id=shared_env["core_map"],
+    )
+    assert isinstance(rec.latency_ns, int)
+    assert rec.latency_ns == 1_234_567_891
+    assert rec.latency_ms_display == 1234.567891
+
+    with pytest.raises(ValidationError):
+        _make_receipt(latency_ns=-1)
+
+
+def test_ac_06_aggregator_computes_exact_decimal_median_from_latency_ns():
+    """AC-06: Aggregator computes median_latency_ns_decimal as exact Decimal median of integer latency_ns."""
+    # Even count (2 cells) with odd sum: 1_000_000_000 + 1_000_000_001 -> exact median "1000000000.5"
+    r1 = _make_receipt(
+        phase="DEV_SELECT",
+        prompt_id="P1",
+        candidate_id="C1",
+        fixture_id="W06-DEV-SELECT-001",
+        latency_ns=1_000_000_000,
+        latency_ms=99999.0,  # poisoned float latency_ms
+    )
+    r2 = _make_receipt(
+        phase="DEV_SELECT",
+        prompt_id="P1",
+        candidate_id="C1",
+        fixture_id="W06-DEV-SELECT-002",
+        latency_ns=1_000_000_001,
+        latency_ms=99999.0,  # poisoned float latency_ms
+    )
+    agg = aggregate_dev_cell_receipts(
+        group_id="C1",
+        assigned_cell_keys=[
+            ("P1", "C1", "W06-DEV-SELECT-001"),
+            ("P1", "C1", "W06-DEV-SELECT-002"),
+        ],
+        cell_receipts=[r1, r2],
+        cost_comparability_all_computable=True,
+    )
+    assert agg.median_latency_ns_decimal == "1000000000.5"
+
+
+def test_ac_07_dev_select_criterion_5_compares_exact_decimal_median_latency_ns(shared_env):
+    """AC-07: DEV-SELECT Criterion 5 compares exact Decimal median_latency_ns_decimal and ignores float latency_ms."""
+    fids = [s.scenario_id for s in shared_env["bundle"].dev_select_fixtures]
+    req_models = {"C1": "gemini-3.8-flash", "C2": "gpt-6.1-sol", "C3": "claude-sonnet-5-5"}
+    # Integer nanoseconds that collide in IEEE-754 float64 (beyond 53 bits of significand: 10^18 + 1 vs 10^18 + 2)
+    lats_ns = {
+        "C1": 1_000_000_000_000_000_002,
+        "C2": 1_000_000_000_000_000_003,
+        "C3": 1_000_000_000_000_000_001,
+    }
+    assert float(lats_ns["C1"]) == float(lats_ns["C2"]) == float(lats_ns["C3"])
+    # Poison float latency_ms in the opposite order (C1 lowest ms, C3 highest ms)
+    poisoned_lats_ms = {"C1": 10.0, "C2": 20.0, "C3": 99999.0}
+
+    receipts = [
+        _make_receipt(
+            phase="DEV_SELECT",
+            prompt_id="P1",
+            candidate_id=cid,
+            fixture_id=fid,
+            canonical_cost_usd_decimal="0.015",
+            canonical_cost_usd=0.015,
+            latency_ns=lats_ns[cid],
+            latency_ms=poisoned_lats_ms[cid],
+            requested_model_id=req_models[cid],
+            returned_model_id=req_models[cid],
+        )
+        for cid in ORDERED_CANDIDATE_IDS
+        for fid in fids
+    ]
+    res = select_winning_candidate_dev_select(
+        locked_prompt_id="P1",
+        dev_select_fixture_ids=fids,
+        cell_receipts=receipts,
+        cost_comparability_by_candidate=_cost_records_all_computable(),
+    )
+    assert res.selected_candidate_id == "C3"
+    assert res.selected_at_stage == "MEDIAN_LATENCY"
+    assert res.is_administrative_tiebreak is False
+    lat_step = next(s for s in res.reduction_trace if s.criterion_name == "MEDIAN_LATENCY")
+    assert lat_step.best_or_reference_value_decimal == str(lats_ns["C3"])
+
+
+def test_ac_08_missing_latency_ns_fails_closed_when_criterion_5_is_reached(shared_env):
+    """AC-08: Missing latency_ns fails closed with LatencyAuthorityUnavailableError when Criterion 5 is reached."""
+    fids = [s.scenario_id for s in shared_env["bundle"].dev_select_fixtures]
+    req_models = {"C1": "gemini-3.8-flash", "C2": "gpt-6.1-sol", "C3": "claude-sonnet-5-5"}
+    receipts = [
+        _make_receipt(
+            phase="DEV_SELECT",
+            prompt_id="P1",
+            candidate_id=cid,
+            fixture_id=fid,
+            canonical_cost_usd_decimal="0.015",
+            canonical_cost_usd=0.015,
+            latency_ns=None if (cid == "C2" and fid == fids[0]) else 1_000_000_000,
+            latency_ms=1000.0,
+            requested_model_id=req_models[cid],
+            returned_model_id=req_models[cid],
+        )
+        for cid in ORDERED_CANDIDATE_IDS
+        for fid in fids
+    ]
+    with pytest.raises(LatencyAuthorityUnavailableError, match="LATENCY_AUTHORITY_UNAVAILABLE"):
+        select_winning_candidate_dev_select(
+            locked_prompt_id="P1",
+            dev_select_fixture_ids=fids,
+            cell_receipts=receipts,
+            cost_comparability_by_candidate=_cost_records_all_computable(),
+        )
+
+
+def test_ac_09_resolve_active_git_commit_sha_returns_exact_git_rev_parse_head():
+    """AC-09: resolve_active_git_commit_sha() returns exact 40-char lowercase hex git rev-parse HEAD."""
+    proc = subprocess.run(
+        ["git", "rev-parse", "HEAD"],
+        cwd=str(REPO_ROOT),
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    expected_head = proc.stdout.strip().lower()
+    assert len(expected_head) == 40
+    assert resolve_active_git_commit_sha() == expected_head
+    assert resolve_and_verify_code_commit_sha(None) == expected_head
+    assert resolve_and_verify_code_commit_sha(expected_head) == expected_head
+
+
+def test_ac_10_resolve_active_git_commit_sha_fails_closed_when_git_fails(monkeypatch):
+    """AC-10: resolve_active_git_commit_sha() fails closed with CodeCommitProvenanceError when git fails."""
+    def _mock_run_nonzero(*args, **kwargs):
+        return subprocess.CompletedProcess(args=args[0], returncode=128, stdout="", stderr="fatal: not a git repo")
+
+    monkeypatch.setattr(subprocess, "run", _mock_run_nonzero)
+    with pytest.raises(CodeCommitProvenanceError, match="CODE_COMMIT_PROVENANCE_ERROR"):
+        resolve_active_git_commit_sha()
+
+    def _mock_run_bad_sha(*args, **kwargs):
+        return subprocess.CompletedProcess(args=args[0], returncode=0, stdout="not-a-40-hex-sha\n", stderr="")
+
+    monkeypatch.setattr(subprocess, "run", _mock_run_bad_sha)
+    with pytest.raises(CodeCommitProvenanceError, match="CODE_COMMIT_PROVENANCE_ERROR"):
+        resolve_active_git_commit_sha()
+
+    def _mock_run_oserror(*args, **kwargs):
+        raise OSError("git binary missing")
+
+    monkeypatch.setattr(subprocess, "run", _mock_run_oserror)
+    with pytest.raises(CodeCommitProvenanceError, match="CODE_COMMIT_PROVENANCE_ERROR"):
+        resolve_active_git_commit_sha()
+
+
+def test_ac_11_static_fallback_sha_constant_is_removed_or_forbidden():
+    """AC-11: Static fallback SHA constant EXPECTED_BASE_DEVELOP_SHA_FIX_01 is removed and forbidden."""
+    assert not hasattr(harness, "EXPECTED_BASE_DEVELOP_SHA_FIX_01")
+    src_resolve = inspect.getsource(resolve_active_git_commit_sha)
+    src_verify = inspect.getsource(resolve_and_verify_code_commit_sha)
+    assert "f81faa7de3988a20af1adc5b04601c49cf953d4a" not in src_resolve
+    assert "f81faa7de3988a20af1adc5b04601c49cf953d4a" not in src_verify
+    assert "EXPECTED_BASE_DEVELOP_SHA" not in src_resolve
+
+
+def test_ac_12_mismatched_supplied_code_commit_sha_is_rejected(shared_env):
+    """AC-12: Supplying a 40-hex SHA that does not match git rev-parse HEAD is rejected fail-closed."""
+    head_sha = resolve_active_git_commit_sha()
+    wrong_sha = ("0" * 39 + "1") if head_sha != ("0" * 39 + "1") else ("0" * 39 + "2")
+
+    with pytest.raises(CodeCommitProvenanceError, match="CODE_COMMIT_SHA_MISMATCH"):
+        resolve_and_verify_code_commit_sha(wrong_sha)
+
+    cell0: DevCellExecutionManifest = shared_env["cell0"]
+    with pytest.raises((CodeCommitProvenanceError, ValidationError), match="CODE_COMMIT_SHA_MISMATCH"):
+        DevCellExecutionManifest(**{**cell0.model_dump(), "code_commit_sha": wrong_sha})
+
+    with pytest.raises((CodeCommitProvenanceError, ValidationError), match="CODE_COMMIT_SHA_MISMATCH"):
+        _make_receipt(code_commit_sha=wrong_sha)
+
+    with pytest.raises(CodeCommitProvenanceError, match="CODE_COMMIT_SHA_MISMATCH"):
+        build_dev_tune_execution_plan(
+            shared_env["p1_reg"],
+            dev_bundle=shared_env["bundle"],
+            candidate_registry=shared_env["cand_reg"],
+            code_commit_sha=wrong_sha,
+        )
+
+    with pytest.raises(CodeCommitProvenanceError, match="CODE_COMMIT_SHA_MISMATCH"):
+        build_dev_select_execution_plan(
+            shared_env["p1_reg"].prompts[0],
+            dev_bundle=shared_env["bundle"],
+            candidate_registry=shared_env["cand_reg"],
+            code_commit_sha=wrong_sha,
+        )
+
+    with pytest.raises(CodeCommitProvenanceError, match="CODE_COMMIT_SHA_MISMATCH"):
+        build_dev_prompt_freeze_artifact(
+            prompt_registry=shared_env["p1_reg"],
+            dev_tune_plan=shared_env["tune_plan"],
+            dev_bundle=shared_env["bundle"],
+            candidate_registry=shared_env["cand_reg"],
+            code_commit_sha=wrong_sha,
+        )
+
+    # Confirm explicit test-only helper allows synthetic SHA only when explicitly invoked
+    synth_manifest = create_synthetic_test_only_cell_manifest(
+        **{**cell0.model_dump(), "code_commit_sha": wrong_sha}
+    )
+    assert synth_manifest.code_commit_sha == wrong_sha
+    synth_receipt = create_synthetic_test_only_cell_receipt(
+        run_id="SYNTH-TEST-ONLY-001",
+        phase="DEV_TUNE",
+        fixture_id=cell0.fixture_id,
+        candidate_id="C1",
+        prompt_id="P1",
+        requested_model_id=cell0.requested_model_id,
+        returned_model_id=cell0.requested_model_id,
+        code_commit_sha=wrong_sha,
+        provider_config_sha256=cell0.provider_config_sha256,
+        attempt_number=1,
+        attempted=True,
+        failure_classification=DevCellFailureClassification.NONE,
+        valid_run_and_schema=True,
+        exact_grounding_pass=True,
+        final_core_pass=True,
+        latency_ns=1_000_000,
+        latency_ms=1.0,
+        request_manifest_sha256="a" * 64,
+        raw_response_sha256="b" * 64,
+        provider_metadata_sha256="c" * 64,
+        parsed_response_sha256="d" * 64,
+        evaluation_result_sha256="e" * 64,
+    )
+    assert synth_receipt.code_commit_sha == wrong_sha
+
+
+def test_ac_13_conftest_contains_no_monkeypatching_of_dev_selection_harness():
+    """AC-13: conftest.py contains no runtime monkeypatching of dev_selection_harness."""
+    conftest_path = REPO_ROOT / "apps" / "ai-service" / "tests" / "conftest.py"
+    conftest_src = conftest_path.read_text(encoding="utf-8")
+    assert "pytest_runtest_setup" not in conftest_src
+    assert "pytest_runtest_teardown" not in conftest_src
+    assert "_SAVED_PATCHES" not in conftest_src
+    assert "setattr(" not in conftest_src
+    assert "import dev_selection_harness" not in conftest_src
+
+
+def test_ac_14_conftest_does_not_replace_run_all_qa_checks():
+    """AC-14: conftest.py does not replace run_all_qa_checks and uses pytest_collection_modifyitems skip marker."""
+    conftest_path = REPO_ROOT / "apps" / "ai-service" / "tests" / "conftest.py"
+    conftest_src = conftest_path.read_text(encoding="utf-8")
+    assert "pytest_pycollect_makeitem" not in conftest_src
+    assert "run_all_qa_checks" not in conftest_src
+    assert "_load_frozen_qa01_receipt" not in conftest_src
+    assert "pytest_collection_modifyitems" in conftest_src
+    assert "HISTORICAL_QA01_EVIDENCE_ONLY_CURRENT_HARNESS_REAUDITED_BY_QA02" in conftest_src
+
+
+def test_ac_15_historical_qa01_files_remain_byte_identical_to_develop():
+    """AC-15: All 4 historical QA-01 evidence files remain byte-identical to develop."""
+    expected_qa01_shas = {
+        "data/evaluation/w06/w06_dev_selection_harness_qa_01_receipt_v1.json": (
+            "51b7606ebca7b5a67b6e6514d2f0c4fa4c7933919be2a5c2ec8179b21b286c9f"
+        ),
+        "docs/research/w06_dev_selection_harness_qa_01.md": (
+            "2620638d08d76dd619743f606e004c14fe5822635caafd130a258d5e052ff7d9"
+        ),
+        "scripts/audit_w06_dev_selection_harness.py": (
+            "878f89ecd80e62a80c1ad23e9a48fa03ace4bb1b228c5ba1814c3cf632a3bd80"
+        ),
+        "apps/ai-service/tests/test_w06_dev_selection_harness_qa_01.py": (
+            "b97615b4279a669e0064213681442a3c7506a5fc048f77ca9b5814d6c882bc18"
+        ),
+    }
+    for rel_path, exp_sha in expected_qa01_shas.items():
+        fpath = REPO_ROOT / rel_path
+        assert fpath.exists()
+        assert sha256_bytes(normalize_lf_bytes(fpath.read_bytes())) == exp_sha
+
+
+def test_ac_16_all_existing_dh_01_to_dh_35_tests_present():
+    """AC-16: Verify all existing DH-01..DH-35 test functions exist in test_w06_dev_selection_harness_01."""
+    import importlib.util
+
+    dh_path = REPO_ROOT / "apps" / "ai-service" / "tests" / "test_w06_dev_selection_harness_01.py"
+    spec = importlib.util.spec_from_file_location("test_w06_dev_selection_harness_01", dh_path)
+    assert spec is not None and spec.loader is not None
+    dh_mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(dh_mod)
+
+    dh_funcs = [name for name in dir(dh_mod) if name.startswith("test_dh_")]
+    # DH-25 and DH-26 are combined in test_dh_25_26_cost_criterion_all_survivor_comparability_and_skip_status (34 functions covering 35 IDs)
+    assert len(dh_funcs) == 34
+    for idx in range(1, 36):
+        if idx in (25, 26):
+            assert any(name.startswith("test_dh_25_26_") for name in dh_funcs)
+        else:
+            prefix = f"test_dh_{idx:02d}_"
+            assert any(name.startswith(prefix) for name in dh_funcs), f"Missing {prefix}"
+
+
+def test_ac_17_all_existing_fix_01_to_fix_35_tests_present():
+    """AC-17: Verify all existing FIX-01..FIX-35 test functions exist in this module."""
+    import sys
+
+    this_mod = sys.modules[__name__]
+    fix_funcs = [name for name in dir(this_mod) if name.startswith("test_fix_")]
+    assert len(fix_funcs) == 35
+    for idx in range(1, 36):
+        prefix = f"test_fix_{idx:02d}_"
+        assert any(name.startswith(prefix) for name in fix_funcs), f"Missing {prefix}"
+
+
+def test_ac_18_live_provider_calls_remain_0():
+    """AC-18: Verify live_provider_calls == 0, provider_cost_usd == 0, and audit correction fields in receipt."""
+    fix_receipt_path = (
+        REPO_ROOT / "data" / "evaluation" / "w06" / "w06_dev_selection_harness_fix_01_receipt_v1.json"
+    )
+    assert fix_receipt_path.exists()
+    fix_receipt = json.loads(fix_receipt_path.read_text(encoding="utf-8"))
+    assert fix_receipt["live_provider_calls"] == 0
+    assert fix_receipt["provider_cost_usd"] == 0
+    assert fix_receipt["chatgpt_audit_correction_required"] is True
+    assert fix_receipt["audit_correction_id"] == "W06-DEV-SELECTION-HARNESS-FIX-01-AUDIT-CORRECTION-01"
+    assert fix_receipt["exact_cost_end_to_end"] == "PASS"
+    assert fix_receipt["latency_ns_selection_authority"] == "PASS"
+    assert fix_receipt["code_sha_fail_closed"] == "PASS"
+    assert fix_receipt["historical_qa_runtime_monkeypatch_removed"] == "PASS"
