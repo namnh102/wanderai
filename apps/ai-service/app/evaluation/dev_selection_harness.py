@@ -29,7 +29,6 @@ from __future__ import annotations
 
 import argparse
 from collections import Counter
-from contextvars import ContextVar
 import datetime
 from decimal import Decimal, localcontext
 from enum import Enum
@@ -107,6 +106,12 @@ TASK_ID_DEV_HARNESS_FIX_01: str = "W06-DEV-SELECTION-HARNESS-FIX-01"
 TASK_ID_DEV_HARNESS_FIX_01_AUDIT_CORRECTION_01: str = (
     "W06-DEV-SELECTION-HARNESS-FIX-01-AUDIT-CORRECTION-01"
 )
+TASK_ID_DEV_HARNESS_FIX_01_AUDIT_CORRECTION_02: str = (
+    "W06-DEV-SELECTION-HARNESS-FIX-01-AUDIT-CORRECTION-02"
+)
+PROVENANCE_LIFECYCLE_MODEL: str = (
+    "CODE_BASIS_PLUS_SCIENTIFIC_CODE_BUNDLE_PLUS_RUNTIME_HEAD"
+)
 HARNESS_ARTIFACT_ID: str = "W06-DEV-SELECTION-HARNESS-01"
 HARNESS_RECEIPT_ARTIFACT_ID: str = "W06-DEV-SELECTION-HARNESS-01-RECEIPT"
 HARNESS_FIX_01_RECEIPT_ARTIFACT_ID: str = "W06-DEV-SELECTION-HARNESS-FIX-01-RECEIPT"
@@ -116,8 +121,20 @@ NEXT_GATE_ID: str = "W06-DEV-SELECTION-HARNESS-QA-01"
 NEXT_GATE_ID_FIX_01: str = "W06-DEV-SELECTION-HARNESS-QA-02"
 DECIMAL_SCIENTIFIC_PRECISION: int = 100
 
-_ALLOW_SYNTHETIC_TEST_ONLY_CODE_SHA: ContextVar[bool] = ContextVar(
-    "_ALLOW_SYNTHETIC_TEST_ONLY_CODE_SHA", default=False
+SCIENTIFIC_CODE_BUNDLE_RELATIVE_PATHS: Tuple[str, ...] = (
+    "apps/ai-service/app/evaluation/dev_selection_harness.py",
+    "apps/ai-service/app/evaluation/model_preflight/__init__.py",
+    "apps/ai-service/app/evaluation/model_preflight/anthropic_adapter.py",
+    "apps/ai-service/app/evaluation/model_preflight/base.py",
+    "apps/ai-service/app/evaluation/model_preflight/google_adapter.py",
+    "apps/ai-service/app/evaluation/model_preflight/openai_adapter.py",
+    "apps/ai-service/app/evaluation/model_preflight/schema_adapter.py",
+    "apps/ai-service/app/evaluation/model_preflight/types.py",
+    "apps/ai-service/app/evaluation/planner_benchmark_evaluator.py",
+    "apps/ai-service/app/prompts/planner_benchmark_prompt.py",
+    "apps/ai-service/app/schemas/planner_benchmark.py",
+    "apps/ai-service/app/services/planner_benchmark_runner.py",
+    "apps/ai-service/recommendation/reca/contract.py",
 )
 
 _GIT_SHA40_RE = re.compile(r"^[0-9a-f]{40}$")
@@ -344,6 +361,10 @@ class CodeCommitProvenanceError(ValueError, RuntimeError):
     """Raised when git HEAD cannot be resolved or when supplied code_commit_sha does not match active git HEAD."""
 
 
+class ScientificCodeBundleIntegrityError(BatchExecutionFatalStopError, ValueError):
+    """Raised when current scientific_code_bundle_sha256 does not match the frozen execution plan or prompt freeze."""
+
+
 class LatencyAuthorityUnavailableError(ValueError, RuntimeError):
     """Raised when authoritative integer latency_ns / median_latency_ns_decimal is missing during latency tiebreak."""
 
@@ -366,6 +387,7 @@ class DevCellFailureClassification(str, Enum):
     MAX_TOKEN_TRUNCATION = "MAX_TOKEN_TRUNCATION"
     MODEL_INTEGRITY_MISMATCH = "MODEL_INTEGRITY_MISMATCH"
     HARNESS_INTERNAL_ERROR = "HARNESS_INTERNAL_ERROR"
+    SCIENTIFIC_CODE_BUNDLE_MISMATCH = "SCIENTIFIC_CODE_BUNDLE_MISMATCH"
 
 
 ORDINARY_DENOMINATOR_FAILURE_CLASSIFICATIONS: frozenset[DevCellFailureClassification] = frozenset(
@@ -389,6 +411,7 @@ BATCH_STOP_FAILURE_CLASSIFICATIONS: frozenset[DevCellFailureClassification] = fr
     {
         DevCellFailureClassification.MODEL_INTEGRITY_MISMATCH,
         DevCellFailureClassification.HARNESS_INTERNAL_ERROR,
+        DevCellFailureClassification.SCIENTIFIC_CODE_BUNDLE_MISMATCH,
     }
 )
 
@@ -409,6 +432,117 @@ def validate_sha256_hex64(sha: str, field_name: str = "sha256") -> str:
             f"INVALID_SHA256_DIGEST for {field_name}: Expected 64-character lowercase hex SHA256, got {sha!r}"
         )
     return sha
+
+
+class ScientificCodeBundleManifest(BaseModel):
+    """Deterministic manifest of the frozen scientific source-code bundle (Audit Correction 02 / Section 4)."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    scientific_code_bundle_sha256: str
+    scientific_code_bundle_file_hashes: List[Dict[str, str]]
+
+    @model_validator(mode="after")
+    def _validate_bundle_manifest(self) -> "ScientificCodeBundleManifest":
+        validate_sha256_hex64(
+            self.scientific_code_bundle_sha256, "scientific_code_bundle_sha256"
+        )
+        paths = [entry.get("path", "") for entry in self.scientific_code_bundle_file_hashes]
+        if paths != sorted(paths) or len(set(paths)) != len(paths):
+            raise ScientificCodeBundleIntegrityError(
+                "scientific_code_bundle_file_hashes must be deterministically ordered with unique paths."
+            )
+        for entry in self.scientific_code_bundle_file_hashes:
+            if set(entry.keys()) != {"path", "sha256"}:
+                raise ScientificCodeBundleIntegrityError(
+                    f"Invalid entry in scientific_code_bundle_file_hashes: {entry!r}"
+                )
+            validate_sha256_hex64(entry["sha256"], f"file_hash[{entry['path']}]")
+        expected_bundle_sha = sha256_bytes(
+            canonical_json_bytes(self.scientific_code_bundle_file_hashes)
+        )
+        if self.scientific_code_bundle_sha256 != expected_bundle_sha:
+            raise ScientificCodeBundleIntegrityError(
+                f"SCIENTIFIC_CODE_BUNDLE_MISMATCH: bundle sha256 {self.scientific_code_bundle_sha256} "
+                f"!= computed {expected_bundle_sha}"
+            )
+        return self
+
+
+_SCIENTIFIC_CODE_BUNDLE_CACHE: Dict[
+    Tuple[str, Tuple[Tuple[str, int, int], ...]], ScientificCodeBundleManifest
+] = {}
+
+
+def compute_scientific_code_bundle(
+    repo_root: Optional[Path] = None,
+) -> ScientificCodeBundleManifest:
+    """Compute the deterministic LF-normalized SHA256 bundle over SCIENTIFIC_CODE_BUNDLE_RELATIVE_PATHS (Section 4).
+
+    Excludes docs, receipts, reports, CI metadata, and frozen result artifacts so that
+    metadata/evidence commits do not invalidate frozen plans or prompt-freeze artifacts.
+    """
+    root = repo_root if repo_root is not None else REPO_ROOT
+    if not isinstance(root, Path):
+        root = Path(root)
+    if not root.exists() or not root.is_dir():
+        raise ScientificCodeBundleIntegrityError(
+            f"SCIENTIFIC_CODE_BUNDLE_ERROR: Repository root does not exist: {root}"
+        )
+
+    ordered_paths = list(SCIENTIFIC_CODE_BUNDLE_RELATIVE_PATHS)
+    if ordered_paths != sorted(ordered_paths) or len(set(ordered_paths)) != len(ordered_paths):
+        raise ScientificCodeBundleIntegrityError(
+            "SCIENTIFIC_CODE_BUNDLE_RELATIVE_PATHS must be strictly sorted with unique paths."
+        )
+
+    stat_sig: List[Tuple[str, int, int]] = []
+    for rel_path in ordered_paths:
+        fpath = root / rel_path
+        if not fpath.exists() or not fpath.is_file():
+            raise ScientificCodeBundleIntegrityError(
+                f"SCIENTIFIC_CODE_BUNDLE_FILE_MISSING: Required scientific source file missing: {rel_path}"
+            )
+        st = fpath.stat()
+        stat_sig.append((rel_path, st.st_mtime_ns, st.st_size))
+
+    cache_key = (str(root.resolve()), tuple(stat_sig))
+    if repo_root is None and cache_key in _SCIENTIFIC_CODE_BUNDLE_CACHE:
+        return _SCIENTIFIC_CODE_BUNDLE_CACHE[cache_key]
+
+    file_hashes: List[Dict[str, str]] = []
+    for rel_path in ordered_paths:
+        fpath = root / rel_path
+        file_sha = sha256_bytes(normalize_lf_bytes(fpath.read_bytes()))
+        file_hashes.append({"path": rel_path, "sha256": file_sha})
+
+    bundle_sha = sha256_bytes(canonical_json_bytes(file_hashes))
+    manifest = ScientificCodeBundleManifest(
+        scientific_code_bundle_sha256=bundle_sha,
+        scientific_code_bundle_file_hashes=file_hashes,
+    )
+    if repo_root is None:
+        _SCIENTIFIC_CODE_BUNDLE_CACHE[cache_key] = manifest
+    return manifest
+
+
+def compute_scientific_code_bundle_file_hashes(
+    repo_root: Optional[Path] = None,
+) -> List[Dict[str, str]]:
+    """Return the canonical ordered list of {'path': ..., 'sha256': ...} for the scientific code bundle."""
+    return [
+        dict(entry)
+        for entry in compute_scientific_code_bundle(
+            repo_root=repo_root
+        ).scientific_code_bundle_file_hashes
+    ]
+
+
+def compute_scientific_code_bundle_sha256(
+    repo_root: Optional[Path] = None,
+) -> str:
+    """Return the deterministic 64-hex SHA256 of the scientific code bundle."""
+    return compute_scientific_code_bundle(repo_root=repo_root).scientific_code_bundle_sha256
 
 
 _ORIG_SUBPROCESS_RUN = subprocess.run
@@ -1406,8 +1540,75 @@ def compute_provider_config_registry_sha256(
     return sha256_bytes(canonical_json_bytes(provider_config_payload))
 
 
+def _normalize_code_basis_provenance_fields(
+    d: Dict[str, Any],
+    *,
+    error_cls: type[Exception] = CodeCommitProvenanceError,
+) -> None:
+    """Synchronize code_basis_commit_sha and backward-compatible code_commit_sha on a raw payload dict."""
+    has_basis = "code_basis_commit_sha" in d
+    has_legacy = "code_commit_sha" in d
+    if not has_basis and not has_legacy:
+        resolved = resolve_active_git_commit_sha()
+        d["code_basis_commit_sha"] = resolved
+        d["code_commit_sha"] = resolved
+        return
+    if has_basis and not has_legacy:
+        val = d["code_basis_commit_sha"]
+        if val is None or not isinstance(val, str):
+            raise error_cls(
+                "code_basis_commit_sha is required and must be a 40-character lowercase hex git SHA."
+            )
+        d["code_commit_sha"] = val
+        return
+    if has_legacy and not has_basis:
+        val = d["code_commit_sha"]
+        if val is None or not isinstance(val, str):
+            raise error_cls(
+                "code_commit_sha is required and must be a 40-character lowercase hex git SHA."
+            )
+        d["code_basis_commit_sha"] = val
+        return
+    basis_val = d["code_basis_commit_sha"]
+    legacy_val = d["code_commit_sha"]
+    if (
+        basis_val is None
+        or not isinstance(basis_val, str)
+        or legacy_val is None
+        or not isinstance(legacy_val, str)
+    ):
+        raise error_cls(
+            "code_basis_commit_sha and code_commit_sha must be 40-character lowercase hex git SHAs."
+        )
+    if basis_val != legacy_val:
+        raise error_cls(
+            f"CODE_COMMIT_SHA_MISMATCH: Conflicting code_basis_commit_sha {basis_val!r} "
+            f"and code_commit_sha {legacy_val!r}."
+        )
+
+
+def _resolve_plan_creation_code_basis_sha(
+    *,
+    code_basis_commit_sha: Optional[str] = None,
+    code_commit_sha: Optional[str] = None,
+    repo_root: Optional[Path] = None,
+) -> str:
+    """Resolve and verify active git HEAD at plan creation boundary."""
+    if (
+        code_basis_commit_sha is not None
+        and code_commit_sha is not None
+        and code_basis_commit_sha != code_commit_sha
+    ):
+        raise CodeCommitProvenanceError(
+            f"CODE_COMMIT_SHA_MISMATCH: Conflicting code_basis_commit_sha {code_basis_commit_sha!r} "
+            f"and code_commit_sha {code_commit_sha!r}."
+        )
+    supplied = code_basis_commit_sha if code_basis_commit_sha is not None else code_commit_sha
+    return resolve_and_verify_code_commit_sha(supplied, repo_root=repo_root)
+
+
 class DevCellExecutionManifest(BaseModel):
-    """Machine-readable execution manifest for a single cell (Section 9 & Fix Group I / Correction C)."""
+    """Machine-readable execution manifest for a single cell (Section 9 & Fix Group I / Audit Correction 02)."""
 
     model_config = ConfigDict(extra="forbid")
 
@@ -1418,7 +1619,9 @@ class DevCellExecutionManifest(BaseModel):
     prompt_id: str
     requested_model_id: str
 
+    code_basis_commit_sha: str
     code_commit_sha: str
+    scientific_code_bundle_sha256: str
     provider_config_sha256: str
     scenario_sha256: str
     catalog_context_sha256: str
@@ -1448,11 +1651,14 @@ class DevCellExecutionManifest(BaseModel):
         if not isinstance(data, dict):
             return data
         d = dict(data)
-        if "code_commit_sha" not in d:
-            d["code_commit_sha"] = resolve_active_git_commit_sha()
-        elif d["code_commit_sha"] is None or not isinstance(d["code_commit_sha"], str):
-            raise CodeCommitProvenanceError(
-                "code_commit_sha is required and must be a 40-character lowercase hex git SHA."
+        _normalize_code_basis_provenance_fields(d, error_cls=CodeCommitProvenanceError)
+        if "scientific_code_bundle_sha256" not in d:
+            d["scientific_code_bundle_sha256"] = compute_scientific_code_bundle_sha256()
+        elif d["scientific_code_bundle_sha256"] is None or not isinstance(
+            d["scientific_code_bundle_sha256"], str
+        ):
+            raise ValueError(
+                "scientific_code_bundle_sha256 is required and must be a 64-character lowercase hex SHA256."
             )
         if "provider_config_sha256" not in d:
             cid = d.get("candidate_id")
@@ -1473,9 +1679,16 @@ class DevCellExecutionManifest(BaseModel):
             raise CandidateRegistryIntegrityError(f"Invalid candidate_id: {self.candidate_id}")
         if self.prompt_id not in ALLOWED_PROMPT_IDS:
             raise PromptRegistryIntegrityError(f"Invalid prompt_id: {self.prompt_id}")
+        validate_git_commit_sha40(self.code_basis_commit_sha)
         validate_git_commit_sha40(self.code_commit_sha)
-        if not _ALLOW_SYNTHETIC_TEST_ONLY_CODE_SHA.get():
-            resolve_and_verify_code_commit_sha(self.code_commit_sha)
+        if self.code_basis_commit_sha != self.code_commit_sha:
+            raise CodeCommitProvenanceError(
+                f"CODE_COMMIT_SHA_MISMATCH: code_basis_commit_sha {self.code_basis_commit_sha!r} "
+                f"!= code_commit_sha {self.code_commit_sha!r}"
+            )
+        validate_sha256_hex64(
+            self.scientific_code_bundle_sha256, "scientific_code_bundle_sha256"
+        )
         validate_sha256_hex64(self.provider_config_sha256, "provider_config_sha256")
         expected_pconf_sha = get_cached_provider_config_sha256(self.candidate_id)
         if self.provider_config_sha256 != expected_pconf_sha:
@@ -1511,15 +1724,14 @@ class DevCellExecutionManifest(BaseModel):
 
 
 def create_synthetic_test_only_cell_manifest(**kwargs: Any) -> DevCellExecutionManifest:
-    """Explicit test-only constructor for purely synthetic unit tests requiring an arbitrary 40-hex code_commit_sha (Correction C).
+    """Explicit test-only constructor for synthetic unit tests (Audit Correction 02 / Section 11).
 
-    Never used by production plan builders or execution functions.
+    Does not use any hidden ContextVar bypass; DevCellExecutionManifest is natively historical-safe.
     """
-    token = _ALLOW_SYNTHETIC_TEST_ONLY_CODE_SHA.set(True)
-    try:
-        return DevCellExecutionManifest(**kwargs)
-    finally:
-        _ALLOW_SYNTHETIC_TEST_ONLY_CODE_SHA.reset(token)
+    d = dict(kwargs)
+    if "code_commit_sha" in d and "code_basis_commit_sha" in d:
+        d["code_basis_commit_sha"] = d["code_commit_sha"]
+    return DevCellExecutionManifest(**d)
 
 
 def calculate_expected_dev_tune_cell_count(
@@ -1568,7 +1780,7 @@ def calculate_expected_dev_select_cell_count(
 
 
 class DevExecutionPlan(BaseModel):
-    """Deterministic offline execution plan for DEV-TUNE or DEV-SELECT."""
+    """Deterministic offline execution plan for DEV-TUNE or DEV-SELECT (Audit Correction 02 / Section 8)."""
 
     model_config = ConfigDict(extra="forbid")
 
@@ -1577,11 +1789,74 @@ class DevExecutionPlan(BaseModel):
     candidate_ids: List[str]
     fixture_count: int
     expected_total_cells: int
+    code_basis_commit_sha: str
+    code_commit_sha: str
+    scientific_code_bundle_sha256: str
+    scientific_code_bundle_file_hashes: List[Dict[str, str]] = Field(default_factory=list)
     cells: List[DevCellExecutionManifest]
     plan_sha256: str
 
+    @model_validator(mode="before")
+    @classmethod
+    def _populate_plan_provenance(cls, data: Any) -> Any:
+        if not isinstance(data, dict):
+            return data
+        d = dict(data)
+        cells_raw = d.get("cells") or []
+        first_cell = cells_raw[0] if cells_raw else None
+        if "code_basis_commit_sha" not in d and "code_commit_sha" not in d and first_cell is not None:
+            if isinstance(first_cell, dict):
+                c_sha = first_cell.get("code_basis_commit_sha") or first_cell.get("code_commit_sha")
+            else:
+                c_sha = getattr(first_cell, "code_basis_commit_sha", None) or getattr(
+                    first_cell, "code_commit_sha", None
+                )
+            if c_sha is not None:
+                d["code_basis_commit_sha"] = c_sha
+                d["code_commit_sha"] = c_sha
+        _normalize_code_basis_provenance_fields(d, error_cls=CodeCommitProvenanceError)
+        if "scientific_code_bundle_sha256" not in d:
+            if first_cell is not None:
+                c_bsha = (
+                    first_cell.get("scientific_code_bundle_sha256")
+                    if isinstance(first_cell, dict)
+                    else getattr(first_cell, "scientific_code_bundle_sha256", None)
+                )
+                d["scientific_code_bundle_sha256"] = (
+                    c_bsha if c_bsha is not None else compute_scientific_code_bundle_sha256()
+                )
+            else:
+                d["scientific_code_bundle_sha256"] = compute_scientific_code_bundle_sha256()
+        if "scientific_code_bundle_file_hashes" not in d:
+            current_bundle = compute_scientific_code_bundle()
+            if (
+                d.get("scientific_code_bundle_sha256")
+                == current_bundle.scientific_code_bundle_sha256
+            ):
+                d["scientific_code_bundle_file_hashes"] = [
+                    dict(entry) for entry in current_bundle.scientific_code_bundle_file_hashes
+                ]
+            else:
+                d["scientific_code_bundle_file_hashes"] = []
+        return d
+
     @model_validator(mode="after")
-    def _validate_plan_size(self) -> "DevExecutionPlan":
+    def _validate_plan_size_and_provenance(self) -> "DevExecutionPlan":
+        validate_git_commit_sha40(self.code_basis_commit_sha)
+        validate_git_commit_sha40(self.code_commit_sha)
+        if self.code_basis_commit_sha != self.code_commit_sha:
+            raise CodeCommitProvenanceError(
+                f"CODE_COMMIT_SHA_MISMATCH: Plan code_basis_commit_sha {self.code_basis_commit_sha!r} "
+                f"!= code_commit_sha {self.code_commit_sha!r}"
+            )
+        validate_sha256_hex64(
+            self.scientific_code_bundle_sha256, "scientific_code_bundle_sha256"
+        )
+        if self.scientific_code_bundle_file_hashes:
+            ScientificCodeBundleManifest(
+                scientific_code_bundle_sha256=self.scientific_code_bundle_sha256,
+                scientific_code_bundle_file_hashes=self.scientific_code_bundle_file_hashes,
+            )
         if len(self.cells) != self.expected_total_cells:
             raise ValueError(
                 f"Execution plan cell count {len(self.cells)} != expected {self.expected_total_cells}"
@@ -1592,7 +1867,121 @@ class DevExecutionPlan(BaseModel):
             if key in seen_keys:
                 raise ValueError(f"Duplicate cell in execution plan: {key}")
             seen_keys.add(key)
+            if cell.code_basis_commit_sha != self.code_basis_commit_sha:
+                raise CodeCommitProvenanceError(
+                    f"CODE_COMMIT_SHA_MISMATCH: Cell {cell.run_id} code_basis_commit_sha "
+                    f"{cell.code_basis_commit_sha!r} != plan {self.code_basis_commit_sha!r}"
+                )
+            if cell.scientific_code_bundle_sha256 != self.scientific_code_bundle_sha256:
+                raise ScientificCodeBundleIntegrityError(
+                    f"SCIENTIFIC_CODE_BUNDLE_MISMATCH: Cell {cell.run_id} bundle sha256 "
+                    f"{cell.scientific_code_bundle_sha256!r} != plan {self.scientific_code_bundle_sha256!r}"
+                )
         return self
+
+
+def verify_cell_manifest_for_execution(
+    cell_manifest: DevCellExecutionManifest,
+    *,
+    repo_root: Optional[Path] = None,
+    candidate_registry: Optional[DevCandidateRegistry] = None,
+) -> str:
+    """Verify a frozen cell manifest at the execution action boundary (Sections 6, 8, 10).
+
+    Allows cell_manifest.code_basis_commit_sha to be a historical commit A while active git HEAD is B,
+    ONLY IF the current scientific code bundle SHA256 and provider config SHA256 match the frozen manifest.
+    Returns the active runtime_head_sha (B).
+    """
+    runtime_head_sha = resolve_active_git_commit_sha(repo_root=repo_root)
+    validate_git_commit_sha40(cell_manifest.code_basis_commit_sha)
+    validate_git_commit_sha40(cell_manifest.code_commit_sha)
+    if cell_manifest.code_basis_commit_sha != cell_manifest.code_commit_sha:
+        raise CodeCommitProvenanceError(
+            f"CODE_COMMIT_SHA_MISMATCH: Manifest {cell_manifest.run_id} has conflicting "
+            f"code_basis_commit_sha {cell_manifest.code_basis_commit_sha!r} and code_commit_sha {cell_manifest.code_commit_sha!r}"
+        )
+
+    current_bundle_sha = compute_scientific_code_bundle_sha256(repo_root=repo_root)
+    if cell_manifest.scientific_code_bundle_sha256 != current_bundle_sha:
+        raise ScientificCodeBundleIntegrityError(
+            f"SCIENTIFIC_CODE_BUNDLE_MISMATCH on cell {cell_manifest.run_id}: "
+            f"frozen scientific_code_bundle_sha256={cell_manifest.scientific_code_bundle_sha256} "
+            f"(code_basis_commit_sha={cell_manifest.code_basis_commit_sha}) does not match "
+            f"current runtime scientific_code_bundle_sha256={current_bundle_sha} "
+            f"(runtime_head_sha={runtime_head_sha}). Batch must stop before any provider call."
+        )
+
+    if candidate_registry is not None:
+        if cell_manifest.candidate_id not in candidate_registry.candidates:
+            raise CandidateRegistryIntegrityError(
+                f"Unknown candidate_id {cell_manifest.candidate_id!r} in cell {cell_manifest.run_id}"
+            )
+        expected_pconf_sha = compute_candidate_provider_config_sha256(
+            candidate_registry.candidates[cell_manifest.candidate_id]
+        )
+    else:
+        expected_pconf_sha = get_cached_provider_config_sha256(cell_manifest.candidate_id)
+
+    if cell_manifest.provider_config_sha256 != expected_pconf_sha:
+        raise CandidateRegistryIntegrityError(
+            f"PROVIDER_CONFIG_SHA256_MISMATCH on cell {cell_manifest.run_id} "
+            f"(candidate={cell_manifest.candidate_id}): "
+            f"expected={expected_pconf_sha}, got={cell_manifest.provider_config_sha256}"
+        )
+    return runtime_head_sha
+
+
+def verify_dev_execution_plan_for_execution(
+    execution_plan: DevExecutionPlan,
+    *,
+    repo_root: Optional[Path] = None,
+    candidate_registry: Optional[DevCandidateRegistry] = None,
+) -> str:
+    """Verify an entire DevExecutionPlan at the execution action boundary (Sections 6, 8, 10).
+
+    Succeeds when plan was created at commit A and is verified/executed at commit B if and only if
+    the scientific code bundle and provider configurations are unchanged.
+    Returns the active runtime_head_sha (B).
+    """
+    runtime_head_sha = resolve_active_git_commit_sha(repo_root=repo_root)
+    validate_git_commit_sha40(execution_plan.code_basis_commit_sha)
+    current_bundle = compute_scientific_code_bundle(repo_root=repo_root)
+    if (
+        execution_plan.scientific_code_bundle_sha256
+        != current_bundle.scientific_code_bundle_sha256
+    ):
+        raise ScientificCodeBundleIntegrityError(
+            f"SCIENTIFIC_CODE_BUNDLE_MISMATCH: Plan frozen scientific_code_bundle_sha256="
+            f"{execution_plan.scientific_code_bundle_sha256} (code_basis_commit_sha="
+            f"{execution_plan.code_basis_commit_sha}) does not match current runtime bundle "
+            f"{current_bundle.scientific_code_bundle_sha256} (runtime_head_sha={runtime_head_sha})."
+        )
+    if (
+        execution_plan.scientific_code_bundle_file_hashes
+        and execution_plan.scientific_code_bundle_file_hashes
+        != current_bundle.scientific_code_bundle_file_hashes
+    ):
+        raise ScientificCodeBundleIntegrityError(
+            "SCIENTIFIC_CODE_BUNDLE_MISMATCH: Plan scientific_code_bundle_file_hashes "
+            "do not match current runtime scientific source files."
+        )
+
+    for cell in execution_plan.cells:
+        verify_cell_manifest_for_execution(
+            cell,
+            repo_root=repo_root,
+            candidate_registry=candidate_registry,
+        )
+
+    computed_plan_sha = sha256_bytes(
+        canonical_json_bytes([c.model_dump() for c in execution_plan.cells])
+    )
+    if execution_plan.plan_sha256 != computed_plan_sha:
+        raise CandidateRegistryIntegrityError(
+            f"EXECUTION_PLAN_SHA256_MISMATCH: plan_sha256={execution_plan.plan_sha256} "
+            f"!= computed={computed_plan_sha}"
+        )
+    return runtime_head_sha
 
 
 def build_dev_tune_execution_plan(
@@ -1601,13 +1990,19 @@ def build_dev_tune_execution_plan(
     dev_bundle: Optional[VerifiedDevBundle] = None,
     candidate_registry: Optional[DevCandidateRegistry] = None,
     catalog_path: Optional[Path] = None,
+    code_basis_commit_sha: Optional[str] = None,
     code_commit_sha: Optional[str] = None,
     repo_root: Optional[Path] = None,
 ) -> DevExecutionPlan:
     """Build deterministic DEV-TUNE execution plan (60 cells for 1 prompt, 120 cells for 2 prompts)."""
     bundle = dev_bundle or load_and_verify_frozen_dev_bundle()
     cand_reg = candidate_registry or load_and_verify_candidate_registry()
-    active_sha = resolve_and_verify_code_commit_sha(code_commit_sha, repo_root=repo_root)
+    active_sha = _resolve_plan_creation_code_basis_sha(
+        code_basis_commit_sha=code_basis_commit_sha,
+        code_commit_sha=code_commit_sha,
+        repo_root=repo_root,
+    )
+    code_bundle = compute_scientific_code_bundle(repo_root=repo_root)
     expected_cells = calculate_expected_dev_tune_cell_count(
         len(prompt_registry.prompts),
         candidate_count=len(cand_reg.ordered_candidate_ids),
@@ -1640,7 +2035,9 @@ def build_dev_tune_execution_plan(
                         candidate_id=cid,
                         prompt_id=prompt_spec.prompt_id,
                         requested_model_id=cspec.requested_model_id,
+                        code_basis_commit_sha=active_sha,
                         code_commit_sha=active_sha,
+                        scientific_code_bundle_sha256=code_bundle.scientific_code_bundle_sha256,
                         provider_config_sha256=pconf_sha,
                         scenario_sha256=ctx.scenario_sha256,
                         catalog_context_sha256=ctx.catalog_context_sha256,
@@ -1662,6 +2059,10 @@ def build_dev_tune_execution_plan(
         candidate_ids=list(cand_reg.ordered_candidate_ids),
         fixture_count=len(bundle.dev_tune_fixtures),
         expected_total_cells=expected_cells,
+        code_basis_commit_sha=active_sha,
+        code_commit_sha=active_sha,
+        scientific_code_bundle_sha256=code_bundle.scientific_code_bundle_sha256,
+        scientific_code_bundle_file_hashes=code_bundle.scientific_code_bundle_file_hashes,
         cells=cells,
         plan_sha256=plan_sha,
     )
@@ -1673,13 +2074,19 @@ def build_dev_select_execution_plan(
     dev_bundle: Optional[VerifiedDevBundle] = None,
     candidate_registry: Optional[DevCandidateRegistry] = None,
     catalog_path: Optional[Path] = None,
+    code_basis_commit_sha: Optional[str] = None,
     code_commit_sha: Optional[str] = None,
     repo_root: Optional[Path] = None,
 ) -> DevExecutionPlan:
     """Build deterministic DEV-SELECT execution plan (60 fixtures × 3 candidates = 180 cells)."""
     bundle = dev_bundle or load_and_verify_frozen_dev_bundle()
     cand_reg = candidate_registry or load_and_verify_candidate_registry()
-    active_sha = resolve_and_verify_code_commit_sha(code_commit_sha, repo_root=repo_root)
+    active_sha = _resolve_plan_creation_code_basis_sha(
+        code_basis_commit_sha=code_basis_commit_sha,
+        code_commit_sha=code_commit_sha,
+        repo_root=repo_root,
+    )
+    code_bundle = compute_scientific_code_bundle(repo_root=repo_root)
     expected_cells = calculate_expected_dev_select_cell_count(
         locked_prompt_count=1,
         candidate_count=len(cand_reg.ordered_candidate_ids),
@@ -1711,7 +2118,9 @@ def build_dev_select_execution_plan(
                     candidate_id=cid,
                     prompt_id=locked_prompt_spec.prompt_id,
                     requested_model_id=cspec.requested_model_id,
+                    code_basis_commit_sha=active_sha,
                     code_commit_sha=active_sha,
+                    scientific_code_bundle_sha256=code_bundle.scientific_code_bundle_sha256,
                     provider_config_sha256=pconf_sha,
                     scenario_sha256=ctx.scenario_sha256,
                     catalog_context_sha256=ctx.catalog_context_sha256,
@@ -1733,13 +2142,17 @@ def build_dev_select_execution_plan(
         candidate_ids=list(cand_reg.ordered_candidate_ids),
         fixture_count=len(bundle.dev_select_fixtures),
         expected_total_cells=expected_cells,
+        code_basis_commit_sha=active_sha,
+        code_commit_sha=active_sha,
+        scientific_code_bundle_sha256=code_bundle.scientific_code_bundle_sha256,
+        scientific_code_bundle_file_hashes=code_bundle.scientific_code_bundle_file_hashes,
         cells=cells,
         plan_sha256=plan_sha,
     )
 
 
 class DevPromptFreezeArtifact(BaseModel):
-    """Contract for the separate future frozen prompt artifact required before any live DEV-TUNE execution (Section 11 / Fix Group H)."""
+    """Contract for the separate future frozen prompt artifact required before any live DEV-TUNE execution (Section 11 / Fix Group H / Audit Correction 02)."""
 
     model_config = ConfigDict(extra="forbid")
 
@@ -1759,9 +2172,34 @@ class DevPromptFreezeArtifact(BaseModel):
     dev_tune_bundle_sha256: str
     dev_tune_execution_plan_sha256: str
     max_call_budget: int
+    code_basis_commit_sha: str
     code_commit_sha: str
+    scientific_code_bundle_sha256: str
+    scientific_code_bundle_file_hashes: List[Dict[str, str]] = Field(default_factory=list)
     provider_config_registry_sha256: str
     freeze_status: str
+
+    @model_validator(mode="before")
+    @classmethod
+    def _populate_freeze_provenance(cls, data: Any) -> Any:
+        if not isinstance(data, dict):
+            return data
+        d = dict(data)
+        _normalize_code_basis_provenance_fields(d, error_cls=PromptFreezeFirewallError)
+        if "scientific_code_bundle_sha256" not in d:
+            d["scientific_code_bundle_sha256"] = compute_scientific_code_bundle_sha256()
+        if "scientific_code_bundle_file_hashes" not in d:
+            current_bundle = compute_scientific_code_bundle()
+            if (
+                d.get("scientific_code_bundle_sha256")
+                == current_bundle.scientific_code_bundle_sha256
+            ):
+                d["scientific_code_bundle_file_hashes"] = [
+                    dict(entry) for entry in current_bundle.scientific_code_bundle_file_hashes
+                ]
+            else:
+                d["scientific_code_bundle_file_hashes"] = []
+        return d
 
     @model_validator(mode="after")
     def _validate_freeze_contract(self) -> "DevPromptFreezeArtifact":
@@ -1778,8 +2216,27 @@ class DevPromptFreezeArtifact(BaseModel):
                 f"prompt_candidate_ids must have length 1 or 2, got {self.prompt_candidate_ids!r}."
             )
         try:
+            validate_git_commit_sha40(self.code_basis_commit_sha)
             validate_git_commit_sha40(self.code_commit_sha)
-        except ValueError as exc:
+            if self.code_basis_commit_sha != self.code_commit_sha:
+                raise PromptFreezeFirewallError(
+                    f"CODE_COMMIT_SHA_MISMATCH: code_basis_commit_sha {self.code_basis_commit_sha!r} "
+                    f"!= code_commit_sha {self.code_commit_sha!r}"
+                )
+            validate_sha256_hex64(
+                self.scientific_code_bundle_sha256, "scientific_code_bundle_sha256"
+            )
+            validate_sha256_hex64(
+                self.provider_config_registry_sha256, "provider_config_registry_sha256"
+            )
+            if self.scientific_code_bundle_file_hashes:
+                ScientificCodeBundleManifest(
+                    scientific_code_bundle_sha256=self.scientific_code_bundle_sha256,
+                    scientific_code_bundle_file_hashes=self.scientific_code_bundle_file_hashes,
+                )
+        except PromptFreezeFirewallError:
+            raise
+        except Exception as exc:
             raise PromptFreezeFirewallError(str(exc)) from exc
         if self.portable_generation_schema_v2_sha256 != EXPECTED_PORTABLE_SCHEMA_V2_SHA256:
             raise PromptFreezeFirewallError(
@@ -1794,6 +2251,7 @@ def build_dev_prompt_freeze_artifact(
     dev_tune_plan: DevExecutionPlan,
     dev_bundle: Optional[VerifiedDevBundle] = None,
     candidate_registry: Optional[DevCandidateRegistry] = None,
+    code_basis_commit_sha: Optional[str] = None,
     code_commit_sha: Optional[str] = None,
     repo_root: Optional[Path] = None,
     artifact_id: str = "W06-DEV-PROMPT-FREEZE-V1",
@@ -1802,12 +2260,29 @@ def build_dev_prompt_freeze_artifact(
     """Build a valid DevPromptFreezeArtifact for offline verification or a future prompt-freeze gate."""
     bundle = dev_bundle or load_and_verify_frozen_dev_bundle()
     cand_reg = candidate_registry or load_and_verify_candidate_registry()
-    active_sha = resolve_and_verify_code_commit_sha(
-        code_commit_sha
-        if code_commit_sha is not None
-        else (dev_tune_plan.cells[0].code_commit_sha if dev_tune_plan.cells else None),
-        repo_root=repo_root,
-    )
+    if code_basis_commit_sha is not None or code_commit_sha is not None:
+        basis_sha = _resolve_plan_creation_code_basis_sha(
+            code_basis_commit_sha=code_basis_commit_sha,
+            code_commit_sha=code_commit_sha,
+            repo_root=repo_root,
+        )
+    else:
+        verify_dev_execution_plan_for_execution(
+            dev_tune_plan, repo_root=repo_root, candidate_registry=cand_reg
+        )
+        basis_sha = dev_tune_plan.code_basis_commit_sha
+
+    code_bundle = compute_scientific_code_bundle(repo_root=repo_root)
+    if (
+        dev_tune_plan.scientific_code_bundle_sha256
+        != code_bundle.scientific_code_bundle_sha256
+    ):
+        raise ScientificCodeBundleIntegrityError(
+            f"SCIENTIFIC_CODE_BUNDLE_MISMATCH: dev_tune_plan bundle "
+            f"{dev_tune_plan.scientific_code_bundle_sha256} != current bundle "
+            f"{code_bundle.scientific_code_bundle_sha256}"
+        )
+
     pids = [p.prompt_id for p in prompt_registry.prompts]
     return DevPromptFreezeArtifact(
         artifact_id=artifact_id,
@@ -1836,7 +2311,10 @@ def build_dev_prompt_freeze_artifact(
         dev_tune_bundle_sha256=bundle.dev_bundle_sha256,
         dev_tune_execution_plan_sha256=dev_tune_plan.plan_sha256,
         max_call_budget=dev_tune_plan.expected_total_cells,
-        code_commit_sha=active_sha,
+        code_basis_commit_sha=basis_sha,
+        code_commit_sha=basis_sha,
+        scientific_code_bundle_sha256=code_bundle.scientific_code_bundle_sha256,
+        scientific_code_bundle_file_hashes=code_bundle.scientific_code_bundle_file_hashes,
         provider_config_registry_sha256=compute_provider_config_registry_sha256(cand_reg),
         freeze_status="FROZEN_FOR_LIVE_DEV_TUNE",
     )
@@ -1852,7 +2330,12 @@ def verify_prompt_candidate_freeze_artifact(
     active_code_commit_sha: Optional[str] = None,
     repo_root: Optional[Path] = None,
 ) -> DevPromptFreezeArtifact:
-    """Fail-closed verifier requiring a separate frozen prompt artifact before any live DEV-TUNE execution (Fix Group H / QA-32)."""
+    """Fail-closed verifier requiring a separate frozen prompt artifact before any live DEV-TUNE execution (Fix Group H / QA-32 / Audit Correction 02).
+
+    Survives metadata/artifact commits (where HEAD advances from A to B) if and only if
+    scientific_code_bundle_sha256(B) == artifact.scientific_code_bundle_sha256 and all
+    frozen prompt, candidate, provider config, DEV bundle, and execution plan hashes match.
+    """
     if freeze_artifact is None:
         raise PromptFreezeFirewallError(
             "PROMPT_FREEZE_ARTIFACT_MISSING: Live DEV execution is forbidden without a frozen prompt artifact."
@@ -1938,16 +2421,46 @@ def verify_prompt_candidate_freeze_artifact(
         raise PromptFreezeFirewallError(
             "provider_config_registry_sha256 mismatch in prompt freeze artifact."
         )
+
     try:
-        expected_head_sha = resolve_and_verify_code_commit_sha(
+        runtime_head_sha = resolve_and_verify_code_commit_sha(
             active_code_commit_sha, repo_root=repo_root
         )
     except CodeCommitProvenanceError as exc:
         raise PromptFreezeFirewallError(str(exc)) from exc
-    if artifact.code_commit_sha != expected_head_sha:
+
+    if artifact.code_basis_commit_sha != dev_tune_plan.code_basis_commit_sha:
         raise PromptFreezeFirewallError(
-            f"code_commit_sha mismatch in prompt freeze artifact: {artifact.code_commit_sha} != {expected_head_sha}"
+            f"CODE_BASIS_COMMIT_SHA_MISMATCH: freeze artifact code_basis_commit_sha "
+            f"{artifact.code_basis_commit_sha!r} != dev_tune_plan {dev_tune_plan.code_basis_commit_sha!r}"
         )
+
+    try:
+        current_bundle = compute_scientific_code_bundle(repo_root=repo_root)
+    except ScientificCodeBundleIntegrityError as exc:
+        raise PromptFreezeFirewallError(str(exc)) from exc
+
+    if artifact.scientific_code_bundle_sha256 != current_bundle.scientific_code_bundle_sha256:
+        raise PromptFreezeFirewallError(
+            f"SCIENTIFIC_CODE_BUNDLE_MISMATCH in prompt freeze artifact: "
+            f"frozen={artifact.scientific_code_bundle_sha256} (code_basis_commit_sha={artifact.code_basis_commit_sha}) "
+            f"!= current={current_bundle.scientific_code_bundle_sha256} (runtime_head_sha={runtime_head_sha})."
+        )
+    if (
+        artifact.scientific_code_bundle_file_hashes
+        and artifact.scientific_code_bundle_file_hashes
+        != current_bundle.scientific_code_bundle_file_hashes
+    ):
+        raise PromptFreezeFirewallError(
+            "SCIENTIFIC_CODE_BUNDLE_MISMATCH: Prompt freeze scientific_code_bundle_file_hashes "
+            "do not match current runtime scientific source files."
+        )
+    try:
+        verify_dev_execution_plan_for_execution(
+            dev_tune_plan, repo_root=repo_root, candidate_registry=cand_reg
+        )
+    except (ScientificCodeBundleIntegrityError, CandidateRegistryIntegrityError) as exc:
+        raise PromptFreezeFirewallError(str(exc)) from exc
     return artifact
 
 
@@ -2111,7 +2624,7 @@ def compute_canonical_cell_cost_usd(
 
 
 class DevCellExecutionReceipt(BaseModel):
-    """Immutable per-cell execution receipt preserving primary scientific indicators, provenance, and usage/cost (Sections 8, 10-12; Corrections A, B, C)."""
+    """Immutable per-cell execution receipt preserving primary scientific indicators, provenance, and usage/cost (Sections 8, 10-12; Corrections A, B, C; Audit Correction 02)."""
 
     model_config = ConfigDict(extra="forbid")
 
@@ -2122,7 +2635,10 @@ class DevCellExecutionReceipt(BaseModel):
     prompt_id: str
     requested_model_id: str
     returned_model_id: Optional[str] = None
+    code_basis_commit_sha: str
     code_commit_sha: str
+    runtime_head_sha: str
+    scientific_code_bundle_sha256: str
     provider_config_sha256: str
     attempt_number: int = 1
     attempted: bool = True
@@ -2164,11 +2680,21 @@ class DevCellExecutionReceipt(BaseModel):
         if not isinstance(data, dict):
             return data
         d = dict(data)
-        if "code_commit_sha" not in d:
-            d["code_commit_sha"] = resolve_active_git_commit_sha()
-        elif d["code_commit_sha"] is None or not isinstance(d["code_commit_sha"], str):
+        _normalize_code_basis_provenance_fields(d, error_cls=CodeCommitProvenanceError)
+        if "runtime_head_sha" not in d:
+            # Never synthesize runtime_head_sha from code_basis_commit_sha; resolve active git HEAD
+            d["runtime_head_sha"] = resolve_active_git_commit_sha()
+        elif d["runtime_head_sha"] is None or not isinstance(d["runtime_head_sha"], str):
             raise CodeCommitProvenanceError(
-                "code_commit_sha is required and must be a 40-character lowercase hex git SHA."
+                "runtime_head_sha is required and must be a 40-character lowercase hex git SHA."
+            )
+        if "scientific_code_bundle_sha256" not in d:
+            d["scientific_code_bundle_sha256"] = compute_scientific_code_bundle_sha256()
+        elif d["scientific_code_bundle_sha256"] is None or not isinstance(
+            d["scientific_code_bundle_sha256"], str
+        ):
+            raise ValueError(
+                "scientific_code_bundle_sha256 is required and must be a 64-character lowercase hex SHA256."
             )
         if "provider_config_sha256" not in d:
             cid = d.get("candidate_id")
@@ -2184,8 +2710,10 @@ class DevCellExecutionReceipt(BaseModel):
         if fclass in (
             DevCellFailureClassification.MODEL_INTEGRITY_MISMATCH,
             DevCellFailureClassification.HARNESS_INTERNAL_ERROR,
+            DevCellFailureClassification.SCIENTIFIC_CODE_BUNDLE_MISMATCH,
             "MODEL_INTEGRITY_MISMATCH",
             "HARNESS_INTERNAL_ERROR",
+            "SCIENTIFIC_CODE_BUNDLE_MISMATCH",
         ):
             d.setdefault("counts_in_denominator", False)
             d.setdefault("batch_stop_required", True)
@@ -2237,9 +2765,17 @@ class DevCellExecutionReceipt(BaseModel):
     @model_validator(mode="after")
     def _validate_receipt_consistency(self) -> "DevCellExecutionReceipt":
         assert_not_final100_scenario_id(self.fixture_id)
+        validate_git_commit_sha40(self.code_basis_commit_sha)
         validate_git_commit_sha40(self.code_commit_sha)
-        if not _ALLOW_SYNTHETIC_TEST_ONLY_CODE_SHA.get():
-            resolve_and_verify_code_commit_sha(self.code_commit_sha)
+        if self.code_basis_commit_sha != self.code_commit_sha:
+            raise CodeCommitProvenanceError(
+                f"CODE_COMMIT_SHA_MISMATCH: code_basis_commit_sha {self.code_basis_commit_sha!r} "
+                f"!= code_commit_sha {self.code_commit_sha!r}"
+            )
+        validate_git_commit_sha40(self.runtime_head_sha)
+        validate_sha256_hex64(
+            self.scientific_code_bundle_sha256, "scientific_code_bundle_sha256"
+        )
         validate_sha256_hex64(self.provider_config_sha256, "provider_config_sha256")
         expected_pconf_sha = get_cached_provider_config_sha256(self.candidate_id)
         if self.provider_config_sha256 != expected_pconf_sha:
@@ -2283,26 +2819,26 @@ class DevCellExecutionReceipt(BaseModel):
 
 
 def create_synthetic_test_only_cell_receipt(**kwargs: Any) -> DevCellExecutionReceipt:
-    """Explicit test-only constructor for purely synthetic unit tests requiring an arbitrary 40-hex code_commit_sha (Correction C).
+    """Explicit test-only constructor for purely synthetic unit tests (Correction C / Audit Correction 02).
 
-    Never used by production execution, aggregation, or selection functions.
+    Does not use any hidden ContextVar bypass. Historical receipts and synthetic test receipts
+    validate 40-hex commit syntax and 64-hex bundle/provider hash syntax without binding model_validate
+    to the current git HEAD.
     """
-    token = _ALLOW_SYNTHETIC_TEST_ONLY_CODE_SHA.set(True)
-    try:
-        return DevCellExecutionReceipt(**kwargs)
-    finally:
-        _ALLOW_SYNTHETIC_TEST_ONLY_CODE_SHA.reset(token)
+    return DevCellExecutionReceipt(**kwargs)
 
 
 def assert_batch_receipts_integrity(
     cell_receipts: Sequence[DevCellExecutionReceipt],
 ) -> None:
-    """Unified batch integrity gate (Section 13 / Fix Group B & C).
+    """Unified batch integrity gate (Section 13 / Fix Group B & C / Audit Correction 02).
 
     Scans all receipts BEFORE any scientific aggregation, metric calculation, or selection.
-    Fails closed and raises ModelIntegrityBatchStopError or HarnessInternalBatchStopError if any cell:
+    Fails closed and raises ModelIntegrityBatchStopError, HarnessInternalBatchStopError, or
+    ScientificCodeBundleIntegrityError if any cell:
     - has failure_classification == MODEL_INTEGRITY_MISMATCH
     - has failure_classification == HARNESS_INTERNAL_ERROR
+    - has failure_classification == SCIENTIFIC_CODE_BUNDLE_MISMATCH
     - has batch_stop_required == True or counts_in_denominator == False
     - has missing/empty or incompatible returned_model_id when not an ordinary transport failure
     """
@@ -2318,6 +2854,12 @@ def assert_batch_receipts_integrity(
                 f"BATCH_STOP_MODEL_INTEGRITY_MISMATCH on cell {r.run_id} "
                 f"(candidate={r.candidate_id}, requested={r.requested_model_id!r}, "
                 f"returned={r.returned_model_id!r}): "
+                "Entire scientific batch must stop immediately with no winner or aggregate."
+            )
+        if r.failure_classification == DevCellFailureClassification.SCIENTIFIC_CODE_BUNDLE_MISMATCH:
+            raise ScientificCodeBundleIntegrityError(
+                f"BATCH_STOP_SCIENTIFIC_CODE_BUNDLE_MISMATCH on cell {r.run_id} "
+                f"(candidate={r.candidate_id}, fixture={r.fixture_id}): "
                 "Entire scientific batch must stop immediately with no winner or aggregate."
             )
         if r.batch_stop_required or not r.counts_in_denominator:
@@ -2497,34 +3039,44 @@ def execute_dev_cell_with_mock_transport(
     cell_manifest: DevCellExecutionManifest,
     scenario: BenchmarkScenarioInput,
     cell_dir: Path,
-    mock_response: MockProviderTransportResponse,
+    mock_response: MockProviderTransportResponse
+    | Callable[[DevCellExecutionManifest], MockProviderTransportResponse]
+    | Callable[[], MockProviderTransportResponse],
     cost_comparability: Optional[CandidateCostComparabilityRecord] = None,
     catalog_path: Optional[Path] = None,
     core_catalog_by_id: Optional[Dict[str, BenchmarkCatalogPOI]] = None,
     enforce_batch_stop: bool = False,
     allow_synthetic_test_only_code_sha: bool = False,
+    repo_root: Optional[Path] = None,
 ) -> Tuple[DevCellExecutionReceipt, ScenarioEvaluationResult]:
     """Execute a single DEV cell against a strictly offline mock transport and persist the 6 raw evidence contract files.
 
     Enforces:
     - Final-100 firewall
+    - Action-boundary scientific code bundle verification BEFORE any cell directory or mock transport execution (Audit Correction 02)
     - Cell immutability (raises ImmutableCellExecutionError if cell_dir already has persisted artifacts)
     - Exact returned_model_id preservation (NEVER substitutes requested_model_id when returned_model_id is None/empty)
     - Strict JSON + BenchmarkPlanResponse.model_validate without rescue/repair (Fix Group A)
     - Provider-aware token usage & exact Decimal canonical cost calculation (Correction A / Fix Group E)
     - Authoritative integer nanoseconds latency_ns propagation (Correction B)
-    - Fail-closed code_commit_sha and provider_config_sha256 provenance propagation (Correction C / Fix Group I)
+    - Fail-closed code_basis_commit_sha, runtime_head_sha, scientific_code_bundle_sha256, and provider_config_sha256 provenance propagation (Audit Correction 02)
     """
     assert_not_final100_scenario(scenario)
     if cell_manifest.fixture_id != scenario.scenario_id:
         raise ValueError("cell_manifest.fixture_id does not match scenario.scenario_id")
-    if (
-        not allow_synthetic_test_only_code_sha
-        and not _ALLOW_SYNTHETIC_TEST_ONLY_CODE_SHA.get()
-    ):
-        resolve_and_verify_code_commit_sha(cell_manifest.code_commit_sha)
+    if not allow_synthetic_test_only_code_sha:
+        runtime_head_sha = verify_cell_manifest_for_execution(
+            cell_manifest, repo_root=repo_root
+        )
     else:
+        validate_git_commit_sha40(cell_manifest.code_basis_commit_sha)
         validate_git_commit_sha40(cell_manifest.code_commit_sha)
+        if cell_manifest.code_basis_commit_sha != cell_manifest.code_commit_sha:
+            raise CodeCommitProvenanceError(
+                f"CODE_COMMIT_SHA_MISMATCH: code_basis_commit_sha {cell_manifest.code_basis_commit_sha!r} "
+                f"!= code_commit_sha {cell_manifest.code_commit_sha!r}"
+            )
+        runtime_head_sha = resolve_active_git_commit_sha(repo_root=repo_root)
 
     required_files = (
         "request_manifest.json",
@@ -2539,52 +3091,63 @@ def execute_dev_cell_with_mock_transport(
             f"CELL_ALREADY_ATTEMPTED_OVERWRITE_FORBIDDEN: {cell_dir}"
         )
 
+    if callable(mock_response):
+        try:
+            resolved_mock_response = mock_response(cell_manifest)  # type: ignore[arg-type]
+        except TypeError:
+            resolved_mock_response = mock_response()  # type: ignore[call-arg]
+    else:
+        resolved_mock_response = mock_response
+
     cell_dir.mkdir(parents=True, exist_ok=True)
 
     req_sha = write_canonical_json(
         cell_dir / "request_manifest.json", cell_manifest.model_dump()
     )
     raw_sha = write_exact_utf8_text(
-        cell_dir / "raw_provider_response.txt", mock_response.raw_text
+        cell_dir / "raw_provider_response.txt", resolved_mock_response.raw_text
     )
 
     # Fix Group B (QA-15): NEVER substitute requested_model_id when returned_model_id is None or empty
-    returned_model = mock_response.returned_model_id
-    usage_avail = mock_response.authoritative_usage_available
+    returned_model = resolved_mock_response.returned_model_id
+    usage_avail = resolved_mock_response.authoritative_usage_available
     provider_meta = {
         "candidate_id": cell_manifest.candidate_id,
         "requested_model_id": cell_manifest.requested_model_id,
         "returned_model_id": returned_model,
-        "code_commit_sha": cell_manifest.code_commit_sha,
+        "code_basis_commit_sha": cell_manifest.code_basis_commit_sha,
+        "code_commit_sha": cell_manifest.code_basis_commit_sha,
+        "runtime_head_sha": runtime_head_sha,
+        "scientific_code_bundle_sha256": cell_manifest.scientific_code_bundle_sha256,
         "provider_config_sha256": cell_manifest.provider_config_sha256,
-        "finish_reason": mock_response.finish_reason,
-        "latency_ns": mock_response.latency_ns,
-        "latency_ms_display": mock_response.latency_ms,
-        "latency_ms": mock_response.latency_ms,
-        "simulated_failure": mock_response.simulated_failure.value,
+        "finish_reason": resolved_mock_response.finish_reason,
+        "latency_ns": resolved_mock_response.latency_ns,
+        "latency_ms_display": resolved_mock_response.latency_ms,
+        "latency_ms": resolved_mock_response.latency_ms,
+        "simulated_failure": resolved_mock_response.simulated_failure.value,
         "usage_metadata": {
             "authoritative_usage_available": usage_avail,
-            "input_tokens": mock_response.input_tokens if usage_avail else None,
-            "output_tokens": mock_response.output_tokens if usage_avail else None,
-            "total_tokens": mock_response.total_tokens if usage_avail else None,
-            "thought_tokens": mock_response.thought_tokens if usage_avail else None,
-            "reasoning_tokens": mock_response.reasoning_tokens if usage_avail else None,
-            "thinking_tokens": mock_response.thinking_tokens if usage_avail else None,
-            "cached_input_tokens": mock_response.cached_input_tokens if usage_avail else None,
+            "input_tokens": resolved_mock_response.input_tokens if usage_avail else None,
+            "output_tokens": resolved_mock_response.output_tokens if usage_avail else None,
+            "total_tokens": resolved_mock_response.total_tokens if usage_avail else None,
+            "thought_tokens": resolved_mock_response.thought_tokens if usage_avail else None,
+            "reasoning_tokens": resolved_mock_response.reasoning_tokens if usage_avail else None,
+            "thinking_tokens": resolved_mock_response.thinking_tokens if usage_avail else None,
+            "cached_input_tokens": resolved_mock_response.cached_input_tokens if usage_avail else None,
             "cache_read_input_tokens": (
-                mock_response.cache_read_input_tokens if usage_avail else None
+                resolved_mock_response.cache_read_input_tokens if usage_avail else None
             ),
             "cache_creation_input_tokens": (
-                mock_response.cache_creation_input_tokens if usage_avail else None
+                resolved_mock_response.cache_creation_input_tokens if usage_avail else None
             ),
-            "raw_usage_metadata": mock_response.raw_usage_metadata if usage_avail else None,
+            "raw_usage_metadata": resolved_mock_response.raw_usage_metadata if usage_avail else None,
         },
     }
     meta_sha = write_canonical_json(
         cell_dir / "provider_response_metadata.json", provider_meta
     )
 
-    failure_class = mock_response.simulated_failure
+    failure_class = resolved_mock_response.simulated_failure
     parsed_plan: Optional[BenchmarkPlanResponse] = None
     parsed_sha: Optional[str] = None
     run_status = BenchmarkRunStatus.VALID
@@ -2599,7 +3162,7 @@ def execute_dev_cell_with_mock_transport(
         run_status = BenchmarkRunStatus.MODEL_ID_MISMATCH
     else:
         parsed_plan, failure_class, run_status = parse_primary_dev_plan_response(
-            mock_response.raw_text
+            resolved_mock_response.raw_text
         )
         if parsed_plan is not None:
             parsed_sha = write_canonical_json(
@@ -2624,13 +3187,13 @@ def execute_dev_cell_with_mock_transport(
             "seed": FROZEN_SAMPLING_SEED,
         },
         execution_mode="OFFLINE_MOCK_HARNESS_VERIFICATION",
-        latency_ms=mock_response.latency_ms,
+        latency_ms=resolved_mock_response.latency_ms,
         usage_metadata=BenchmarkUsageMetadata(
-            input_tokens=mock_response.input_tokens if usage_avail else None,
-            output_tokens=mock_response.output_tokens if usage_avail else None,
-            total_tokens=mock_response.total_tokens if usage_avail else None,
+            input_tokens=resolved_mock_response.input_tokens if usage_avail else None,
+            output_tokens=resolved_mock_response.output_tokens if usage_avail else None,
+            total_tokens=resolved_mock_response.total_tokens if usage_avail else None,
         ),
-        code_commit_sha=cell_manifest.code_commit_sha,
+        code_commit_sha=cell_manifest.code_basis_commit_sha,
         scenario_sha256=cell_manifest.scenario_sha256,
         catalog_sha256=compute_catalog_sha256(catalog_path=catalog_path),
         benchmark_prompt_version=cell_manifest.prompt_id,
@@ -2659,14 +3222,14 @@ def execute_dev_cell_with_mock_transport(
     canonical_cost_disp: Optional[float] = None
     if cost_comparability is not None and usage_avail:
         canonical_cost_dec = compute_canonical_cell_cost_decimal(
-            input_tokens=mock_response.input_tokens,
-            output_tokens=mock_response.output_tokens,
-            thought_tokens=mock_response.thought_tokens,
-            reasoning_tokens=mock_response.reasoning_tokens,
-            thinking_tokens=mock_response.thinking_tokens,
-            cached_input_tokens=mock_response.cached_input_tokens,
-            cache_read_input_tokens=mock_response.cache_read_input_tokens,
-            cache_creation_input_tokens=mock_response.cache_creation_input_tokens,
+            input_tokens=resolved_mock_response.input_tokens,
+            output_tokens=resolved_mock_response.output_tokens,
+            thought_tokens=resolved_mock_response.thought_tokens,
+            reasoning_tokens=resolved_mock_response.reasoning_tokens,
+            thinking_tokens=resolved_mock_response.thinking_tokens,
+            cached_input_tokens=resolved_mock_response.cached_input_tokens,
+            cache_read_input_tokens=resolved_mock_response.cache_read_input_tokens,
+            cache_creation_input_tokens=resolved_mock_response.cache_creation_input_tokens,
             cost_record=cost_comparability,
         )
         if canonical_cost_dec is not None:
@@ -2682,60 +3245,54 @@ def execute_dev_cell_with_mock_transport(
     )
     final_core_pass = bool(valid_run_and_schema and eval_result.core_scenario_pass)
 
-    token_ctx = (
-        _ALLOW_SYNTHETIC_TEST_ONLY_CODE_SHA.set(True)
-        if allow_synthetic_test_only_code_sha
-        else None
+    receipt = DevCellExecutionReceipt(
+        run_id=cell_manifest.run_id,
+        phase=cell_manifest.phase,
+        fixture_id=cell_manifest.fixture_id,
+        candidate_id=cell_manifest.candidate_id,
+        prompt_id=cell_manifest.prompt_id,
+        requested_model_id=cell_manifest.requested_model_id,
+        returned_model_id=returned_model,
+        code_basis_commit_sha=cell_manifest.code_basis_commit_sha,
+        code_commit_sha=cell_manifest.code_basis_commit_sha,
+        runtime_head_sha=runtime_head_sha,
+        scientific_code_bundle_sha256=cell_manifest.scientific_code_bundle_sha256,
+        provider_config_sha256=cell_manifest.provider_config_sha256,
+        attempt_number=cell_manifest.attempt_number,
+        attempted=True,
+        failure_classification=failure_class,
+        counts_in_denominator=not is_batch_stop,
+        batch_stop_required=is_batch_stop,
+        valid_run_and_schema=valid_run_and_schema,
+        exact_grounding_pass=exact_grounding_pass,
+        final_core_pass=final_core_pass,
+        latency_ns=resolved_mock_response.latency_ns,
+        latency_ms_display=resolved_mock_response.latency_ms,
+        latency_ms=resolved_mock_response.latency_ms,
+        authoritative_usage_available=usage_avail,
+        input_tokens=resolved_mock_response.input_tokens if usage_avail else None,
+        output_tokens=resolved_mock_response.output_tokens if usage_avail else None,
+        total_tokens=resolved_mock_response.total_tokens if usage_avail else None,
+        thought_tokens=resolved_mock_response.thought_tokens if usage_avail else None,
+        reasoning_tokens=resolved_mock_response.reasoning_tokens if usage_avail else None,
+        thinking_tokens=resolved_mock_response.thinking_tokens if usage_avail else None,
+        cached_input_tokens=resolved_mock_response.cached_input_tokens if usage_avail else None,
+        cache_read_input_tokens=(
+            resolved_mock_response.cache_read_input_tokens if usage_avail else None
+        ),
+        cache_creation_input_tokens=(
+            resolved_mock_response.cache_creation_input_tokens if usage_avail else None
+        ),
+        raw_usage_metadata=resolved_mock_response.raw_usage_metadata if usage_avail else None,
+        canonical_cost_usd_decimal=canonical_cost_dec_str,
+        canonical_cost_usd_display=canonical_cost_disp,
+        canonical_cost_usd=canonical_cost_disp,
+        request_manifest_sha256=req_sha,
+        raw_response_sha256=raw_sha,
+        provider_metadata_sha256=meta_sha,
+        parsed_response_sha256=parsed_sha,
+        evaluation_result_sha256=eval_sha,
     )
-    try:
-        receipt = DevCellExecutionReceipt(
-            run_id=cell_manifest.run_id,
-            phase=cell_manifest.phase,
-            fixture_id=cell_manifest.fixture_id,
-            candidate_id=cell_manifest.candidate_id,
-            prompt_id=cell_manifest.prompt_id,
-            requested_model_id=cell_manifest.requested_model_id,
-            returned_model_id=returned_model,
-            code_commit_sha=cell_manifest.code_commit_sha,
-            provider_config_sha256=cell_manifest.provider_config_sha256,
-            attempt_number=cell_manifest.attempt_number,
-            attempted=True,
-            failure_classification=failure_class,
-            counts_in_denominator=not is_batch_stop,
-            batch_stop_required=is_batch_stop,
-            valid_run_and_schema=valid_run_and_schema,
-            exact_grounding_pass=exact_grounding_pass,
-            final_core_pass=final_core_pass,
-            latency_ns=mock_response.latency_ns,
-            latency_ms_display=mock_response.latency_ms,
-            latency_ms=mock_response.latency_ms,
-            authoritative_usage_available=usage_avail,
-            input_tokens=mock_response.input_tokens if usage_avail else None,
-            output_tokens=mock_response.output_tokens if usage_avail else None,
-            total_tokens=mock_response.total_tokens if usage_avail else None,
-            thought_tokens=mock_response.thought_tokens if usage_avail else None,
-            reasoning_tokens=mock_response.reasoning_tokens if usage_avail else None,
-            thinking_tokens=mock_response.thinking_tokens if usage_avail else None,
-            cached_input_tokens=mock_response.cached_input_tokens if usage_avail else None,
-            cache_read_input_tokens=(
-                mock_response.cache_read_input_tokens if usage_avail else None
-            ),
-            cache_creation_input_tokens=(
-                mock_response.cache_creation_input_tokens if usage_avail else None
-            ),
-            raw_usage_metadata=mock_response.raw_usage_metadata if usage_avail else None,
-            canonical_cost_usd_decimal=canonical_cost_dec_str,
-            canonical_cost_usd_display=canonical_cost_disp,
-            canonical_cost_usd=canonical_cost_disp,
-            request_manifest_sha256=req_sha,
-            raw_response_sha256=raw_sha,
-            provider_metadata_sha256=meta_sha,
-            parsed_response_sha256=parsed_sha,
-            evaluation_result_sha256=eval_sha,
-        )
-    finally:
-        if token_ctx is not None:
-            _ALLOW_SYNTHETIC_TEST_ONLY_CODE_SHA.reset(token_ctx)
     write_canonical_json(cell_dir / "execution_receipt.json", receipt.model_dump())
     if enforce_batch_stop:
         assert_batch_receipts_integrity([receipt])
@@ -2752,8 +3309,10 @@ def execute_dev_batch_with_mock_transport(
     cost_comparability_by_candidate: Optional[Dict[str, CandidateCostComparabilityRecord]] = None,
     catalog_path: Optional[Path] = None,
     core_catalog_by_id: Optional[Dict[str, BenchmarkCatalogPOI]] = None,
+    repo_root: Optional[Path] = None,
 ) -> List[DevCellExecutionReceipt]:
-    """Execute a planned batch of DEV cells with immediate fail-closed batch stop on MODEL_INTEGRITY_MISMATCH or HARNESS_INTERNAL_ERROR."""
+    """Execute a planned batch of DEV cells with immediate fail-closed batch stop on MODEL_INTEGRITY_MISMATCH, HARNESS_INTERNAL_ERROR, or SCIENTIFIC_CODE_BUNDLE_MISMATCH."""
+    verify_dev_execution_plan_for_execution(execution_plan, repo_root=repo_root)
     receipts: List[DevCellExecutionReceipt] = []
     for cell_manifest in execution_plan.cells:
         scenario = scenarios_by_id[cell_manifest.fixture_id]
@@ -2775,6 +3334,7 @@ def execute_dev_batch_with_mock_transport(
             catalog_path=catalog_path,
             core_catalog_by_id=core_catalog_by_id,
             enforce_batch_stop=True,
+            repo_root=repo_root,
         )
         receipts.append(rec)
     assert_batch_receipts_integrity(receipts)
@@ -3444,7 +4004,7 @@ def select_winning_candidate_dev_select(
 
 
 class StochasticityDiagnosticPlan(BaseModel):
-    """Post-winner stochasticity diagnostic plan (5 lexicographically smallest DEV-TUNE IDs × 3 runs = 15 calls; Section 18)."""
+    """Post-winner stochasticity diagnostic plan (5 lexicographically smallest DEV-TUNE IDs × 3 runs = 15 calls; Section 18; Audit Correction 02)."""
 
     model_config = ConfigDict(extra="forbid")
 
@@ -3461,8 +4021,64 @@ class StochasticityDiagnosticPlan(BaseModel):
     may_alter_selected_prompt: bool = False
     may_alter_sampling_config: bool = False
     may_alter_dev_select_results: bool = False
+    code_basis_commit_sha: str
+    code_commit_sha: str
+    scientific_code_bundle_sha256: str
+    scientific_code_bundle_file_hashes: List[Dict[str, str]] = Field(default_factory=list)
     cells: List[DevCellExecutionManifest]
     plan_sha256: str
+
+    @model_validator(mode="before")
+    @classmethod
+    def _populate_stochasticity_plan_provenance(cls, data: Any) -> Any:
+        if not isinstance(data, dict):
+            return data
+        d = dict(data)
+        _normalize_code_basis_provenance_fields(d, error_cls=CodeCommitProvenanceError)
+        if "scientific_code_bundle_sha256" not in d:
+            d["scientific_code_bundle_sha256"] = compute_scientific_code_bundle_sha256()
+        if "scientific_code_bundle_file_hashes" not in d:
+            current_bundle = compute_scientific_code_bundle()
+            if (
+                d.get("scientific_code_bundle_sha256")
+                == current_bundle.scientific_code_bundle_sha256
+            ):
+                d["scientific_code_bundle_file_hashes"] = [
+                    dict(entry) for entry in current_bundle.scientific_code_bundle_file_hashes
+                ]
+            else:
+                d["scientific_code_bundle_file_hashes"] = []
+        return d
+
+    @model_validator(mode="after")
+    def _validate_stochasticity_plan_provenance(self) -> "StochasticityDiagnosticPlan":
+        validate_git_commit_sha40(self.code_basis_commit_sha)
+        validate_git_commit_sha40(self.code_commit_sha)
+        if self.code_basis_commit_sha != self.code_commit_sha:
+            raise CodeCommitProvenanceError(
+                f"CODE_COMMIT_SHA_MISMATCH: code_basis_commit_sha {self.code_basis_commit_sha!r} "
+                f"!= code_commit_sha {self.code_commit_sha!r}"
+            )
+        validate_sha256_hex64(
+            self.scientific_code_bundle_sha256, "scientific_code_bundle_sha256"
+        )
+        if self.scientific_code_bundle_file_hashes:
+            ScientificCodeBundleManifest(
+                scientific_code_bundle_sha256=self.scientific_code_bundle_sha256,
+                scientific_code_bundle_file_hashes=self.scientific_code_bundle_file_hashes,
+            )
+        for cell in self.cells:
+            if cell.code_basis_commit_sha != self.code_basis_commit_sha:
+                raise CodeCommitProvenanceError(
+                    f"CODE_COMMIT_SHA_MISMATCH: Cell {cell.run_id} code_basis_commit_sha "
+                    f"{cell.code_basis_commit_sha!r} != plan {self.code_basis_commit_sha!r}"
+                )
+            if cell.scientific_code_bundle_sha256 != self.scientific_code_bundle_sha256:
+                raise ScientificCodeBundleIntegrityError(
+                    f"SCIENTIFIC_CODE_BUNDLE_MISMATCH: Cell {cell.run_id} bundle "
+                    f"{cell.scientific_code_bundle_sha256!r} != plan {self.scientific_code_bundle_sha256!r}"
+                )
+        return self
 
 
 def build_stochasticity_diagnostic_plan(
@@ -3472,6 +4088,7 @@ def build_stochasticity_diagnostic_plan(
     dev_bundle: Optional[VerifiedDevBundle] = None,
     candidate_registry: Optional[DevCandidateRegistry] = None,
     catalog_path: Optional[Path] = None,
+    code_basis_commit_sha: Optional[str] = None,
     code_commit_sha: Optional[str] = None,
     repo_root: Optional[Path] = None,
 ) -> StochasticityDiagnosticPlan:
@@ -3492,7 +4109,12 @@ def build_stochasticity_diagnostic_plan(
 
     bundle = dev_bundle or load_and_verify_frozen_dev_bundle()
     cand_reg = candidate_registry or load_and_verify_candidate_registry()
-    active_sha = resolve_and_verify_code_commit_sha(code_commit_sha, repo_root=repo_root)
+    active_sha = _resolve_plan_creation_code_basis_sha(
+        code_basis_commit_sha=code_basis_commit_sha,
+        code_commit_sha=code_commit_sha,
+        repo_root=repo_root,
+    )
+    code_bundle = compute_scientific_code_bundle(repo_root=repo_root)
     winner_cid = dev_select_result.selected_candidate_id
     cspec = cand_reg.candidates[winner_cid]
     pconf_sha = compute_candidate_provider_config_sha256(cspec)
@@ -3530,7 +4152,9 @@ def build_stochasticity_diagnostic_plan(
                     candidate_id=winner_cid,
                     prompt_id=locked_prompt_spec.prompt_id,
                     requested_model_id=cspec.requested_model_id,
+                    code_basis_commit_sha=active_sha,
                     code_commit_sha=active_sha,
+                    scientific_code_bundle_sha256=code_bundle.scientific_code_bundle_sha256,
                     provider_config_sha256=pconf_sha,
                     scenario_sha256=ctx.scenario_sha256,
                     catalog_context_sha256=ctx.catalog_context_sha256,
@@ -3553,6 +4177,10 @@ def build_stochasticity_diagnostic_plan(
         selected_candidate_id=winner_cid,
         locked_prompt_id=locked_prompt_spec.prompt_id,
         fixture_ids=fixture_ids,
+        code_basis_commit_sha=active_sha,
+        code_commit_sha=active_sha,
+        scientific_code_bundle_sha256=code_bundle.scientific_code_bundle_sha256,
+        scientific_code_bundle_file_hashes=code_bundle.scientific_code_bundle_file_hashes,
         cells=cells,
         plan_sha256=plan_sha,
     )

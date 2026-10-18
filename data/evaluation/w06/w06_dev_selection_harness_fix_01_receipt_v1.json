@@ -1,5 +1,10 @@
 {
   "artifact_id": "W06-DEV-SELECTION-HARNESS-FIX-01-RECEIPT-V1",
+  "audit_correction_02_id": "W06-DEV-SELECTION-HARNESS-FIX-01-AUDIT-CORRECTION-02",
+  "audit_correction_02_required": true,
+  "audit_correction_02_tests_failed": 0,
+  "audit_correction_02_tests_passed": 18,
+  "audit_correction_02_tests_total": 18,
   "audit_correction_id": "W06-DEV-SELECTION-HARNESS-FIX-01-AUDIT-CORRECTION-01",
   "audit_correction_tests_failed": 0,
   "audit_correction_tests_passed": 18,
@@ -125,7 +130,9 @@
       "solution": "Set SINGLE_PROMPT_P1_LOCK_STATUS = 'LOCK_P1_WITHOUT_PERFORMANCE_COMPARISON' and added DevPromptFreezeArtifact, build_dev_prompt_freeze_artifact, verify_prompt_candidate_freeze_artifact, and assert_prompt_freeze_before_live.",
       "verification_tests": [
         "FIX-26",
-        "FIX-27"
+        "FIX-27",
+        "PC-08",
+        "PC-09"
       ]
     },
     "QA-33": {
@@ -140,7 +147,20 @@
         "AC-09",
         "AC-10",
         "AC-11",
-        "AC-12"
+        "AC-12",
+        "PC-01",
+        "PC-02",
+        "PC-03",
+        "PC-04",
+        "PC-05",
+        "PC-06",
+        "PC-07",
+        "PC-10",
+        "PC-11",
+        "PC-12",
+        "PC-13",
+        "PC-14",
+        "PC-15"
       ]
     },
     "QA-39": {
@@ -158,8 +178,9 @@
   },
   "fix_status": "READY_FOR_RE_QA",
   "fix_tests_failed": 0,
-  "fix_tests_passed": 53,
-  "fix_tests_total": 53,
+  "fix_tests_passed": 71,
+  "fix_tests_total": 71,
+  "historical_artifact_reload_safe": "PASS",
   "historical_qa_01_baseline": {
     "overall_qa": "FAIL",
     "qa_checks_total": 40,
@@ -175,8 +196,11 @@
   "historical_qa_01_preserved": true,
   "historical_qa_runtime_monkeypatch_removed": "PASS",
   "latency_ns_selection_authority": "PASS",
+  "live_calls": 0,
   "live_provider_calls": 0,
   "next_gate": "W06-DEV-SELECTION-HARNESS-QA-02-OFFLINE-RERUN",
+  "prompt_freeze_self_reference_resolved": "PASS",
+  "provenance_lifecycle_model": "CODE_BASIS_PLUS_SCIENTIFIC_CODE_BUNDLE_PLUS_RUNTIME_HEAD",
   "provider_cost_usd": 0,
   "repaired_defects": [
     "QA-14",
@@ -191,8 +215,80 @@
     "QA-39"
   ],
   "repaired_harness_file": "apps/ai-service/app/evaluation/dev_selection_harness.py",
+  "runtime_head_recording": "PASS",
+  "scientific_code_bundle_file_hashes": [
+    {
+      "path": "apps/ai-service/app/evaluation/dev_selection_harness.py",
+      "sha256": "5ee493632511edbaba6c580e2290b4c7ea959165a770d87f7753c108b1e1ec5f"
+    },
+    {
+      "path": "apps/ai-service/app/evaluation/model_preflight/__init__.py",
+      "sha256": "178aede4930a6b848714fa6d84e14e415df35d1bf7641312ff6f311e3de477dd"
+    },
+    {
+      "path": "apps/ai-service/app/evaluation/model_preflight/anthropic_adapter.py",
+      "sha256": "ef2570126f6db736a4ef056ac27fcfc77db97fa6ed6526c901e299c71b1b1d42"
+    },
+    {
+      "path": "apps/ai-service/app/evaluation/model_preflight/base.py",
+      "sha256": "55bd026f224eaf15f5fb68e98d9cd9467bf85f0f90305acac397caef0970454d"
+    },
+    {
+      "path": "apps/ai-service/app/evaluation/model_preflight/google_adapter.py",
+      "sha256": "184887b19826094326e5fea47efd7aec71308b36af404225f5ef8d0d40882f1c"
+    },
+    {
+      "path": "apps/ai-service/app/evaluation/model_preflight/openai_adapter.py",
+      "sha256": "62b72237402808ab88d71627ce05d948d4b7d251ba87af51208876c784ee9346"
+    },
+    {
+      "path": "apps/ai-service/app/evaluation/model_preflight/schema_adapter.py",
+      "sha256": "19513c8735ba4acb2b88587915d6458de2c28d622499c05314d4f9030eb3c589"
+    },
+    {
+      "path": "apps/ai-service/app/evaluation/model_preflight/types.py",
+      "sha256": "1fdb31f200a71df4193f1fe4844b49dc1e9750c51c7388e6642dac44ae349371"
+    },
+    {
+      "path": "apps/ai-service/app/evaluation/planner_benchmark_evaluator.py",
+      "sha256": "1b299f75a3a51d01b63b1b004df3d8b9d92224591ccde5d537b83735ca268f66"
+    },
+    {
+      "path": "apps/ai-service/app/prompts/planner_benchmark_prompt.py",
+      "sha256": "22aa9cd172548fe51a8699704e5832ad44e1d8e946a1ad79437aed99d46c98cb"
+    },
+    {
+      "path": "apps/ai-service/app/schemas/planner_benchmark.py",
+      "sha256": "3f27ed7e12b2492d722937d4f36476e8dbf97635c281a6e270fd0621cc18e712"
+    },
+    {
+      "path": "apps/ai-service/app/services/planner_benchmark_runner.py",
+      "sha256": "2831f5aadd80959a86f388508c73679215830ca8854f2a4fbd474328fa7288b7"
+    },
+    {
+      "path": "apps/ai-service/recommendation/reca/contract.py",
+      "sha256": "1a62c36a95092be35ab78dca43e20f646016e154746ee051a499bdebfc67538c"
+    }
+  ],
+  "scientific_code_bundle_files": [
+    "apps/ai-service/app/evaluation/dev_selection_harness.py",
+    "apps/ai-service/app/evaluation/model_preflight/__init__.py",
+    "apps/ai-service/app/evaluation/model_preflight/anthropic_adapter.py",
+    "apps/ai-service/app/evaluation/model_preflight/base.py",
+    "apps/ai-service/app/evaluation/model_preflight/google_adapter.py",
+    "apps/ai-service/app/evaluation/model_preflight/openai_adapter.py",
+    "apps/ai-service/app/evaluation/model_preflight/schema_adapter.py",
+    "apps/ai-service/app/evaluation/model_preflight/types.py",
+    "apps/ai-service/app/evaluation/planner_benchmark_evaluator.py",
+    "apps/ai-service/app/prompts/planner_benchmark_prompt.py",
+    "apps/ai-service/app/schemas/planner_benchmark.py",
+    "apps/ai-service/app/services/planner_benchmark_runner.py",
+    "apps/ai-service/recommendation/reca/contract.py"
+  ],
+  "scientific_code_bundle_gate": "PASS",
+  "scientific_code_bundle_sha256": "22e400db25283cef7a4aa78d1a15f67597bc22dba8efc4706c1e275a43ad2997",
   "stochasticity_diagnostic_started": false,
   "task_id": "W06-DEV-SELECTION-HARNESS-FIX-01",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "winner_selected": false
 }

@@ -108,14 +108,19 @@ In strict compliance with Sections 1 and 17, the historical adversarial QA-01 ev
   - Added `PromptFreezeFirewallError`, `DevPromptFreezeArtifact`, `build_dev_prompt_freeze_artifact`, `verify_prompt_candidate_freeze_artifact`, and `assert_prompt_freeze_before_live`.
 - **Verification Tests:** `FIX-26`, `FIX-27`.
 
-### 3.8 `QA-33` (MAJOR) — Fix Group I & Audit Correction C: Fail-Closed `code_commit_sha` Provenance
+### 3.8 `QA-33` (MAJOR) — Fix Group I, Audit Correction C & Audit Correction 02: Artifact-Lifecycle-Safe Provenance (`code_basis_commit_sha`, `scientific_code_bundle_sha256`, `runtime_head_sha`)
 
-- **Root Cause:** `DevCellExecutionManifest` and `DevCellExecutionReceipt` lacked `code_commit_sha` and `provider_config_sha256`, and `resolve_active_git_commit_sha` in commit `a35859764b1475d33e5e0dd752557a1876e38adb` had a static fallback SHA (`EXPECTED_BASE_DEVELOP_SHA_FIX_01`) and did not reject mismatched supplied `code_commit_sha` values.
-- **Exact Code Change (Correction C):**
-  - Removed `EXPECTED_BASE_DEVELOP_SHA_FIX_01` completely.
-  - Updated `resolve_active_git_commit_sha()` to fail closed with `CodeCommitProvenanceError` if `git rev-parse HEAD` fails or returns non-40-hex output.
-  - Added `resolve_and_verify_code_commit_sha(supplied_sha)` which requires any supplied `code_commit_sha` in `DevCellExecutionManifest`, `DevCellExecutionReceipt`, `build_dev_tune_execution_plan`, `build_dev_select_execution_plan`, `build_dev_prompt_freeze_artifact`, `verify_prompt_candidate_freeze_artifact`, `execute_dev_cell_with_mock_transport`, and `build_stochasticity_diagnostic_plan` to match active `git rev-parse HEAD` (unless explicitly constructed via `create_synthetic_test_only_cell_manifest` / `create_synthetic_test_only_cell_receipt`).
-- **Verification Tests:** `FIX-28`, `AC-09`, `AC-10`, `AC-11`, `AC-12`.
+- **Root Cause:** `DevCellExecutionManifest` and `DevCellExecutionReceipt` originally lacked `code_commit_sha` and `provider_config_sha256`. Audit Correction C removed the static fallback SHA `EXPECTED_BASE_DEVELOP_SHA_FIX_01`, and Audit Correction 02 (`W06-DEV-SELECTION-HARNESS-FIX-01-AUDIT-CORRECTION-02`) resolved the provenance self-reference defect where binding persisted artifacts directly to current `git rev-parse HEAD` during `model_validate` caused historical artifacts created at commit `A` to fail validation after being committed at commit `B` (or after receipts were committed at commit `C`).
+- **Exact Code Change (Audit Correction 02 — `CODE_BASIS_PLUS_SCIENTIFIC_CODE_BUNDLE_PLUS_RUNTIME_HEAD`):**
+  1. **Three-Part Provenance Model:**
+     - `code_basis_commit_sha` (synchronized with backward-compatible `code_commit_sha`): 40-char lowercase hex git commit SHA used as the frozen implementation basis when a plan or prompt freeze artifact was created.
+     - `scientific_code_bundle_sha256` (`22e400db25283cef7a4aa78d1a15f67597bc22dba8efc4706c1e275a43ad2997`): deterministic canonical JSON SHA256 over the LF-normalized SHA256 hashes of all 13 W06 DEV scientific source files (`SCIENTIFIC_CODE_BUNDLE_RELATIVE_PATHS`).
+     - `runtime_head_sha`: actual 40-char lowercase hex `git rev-parse HEAD` present at cell/batch execution time, recorded on `DevCellExecutionReceipt` and `provider_response_metadata.json` (never synthesized from `code_basis_commit_sha`).
+  2. **Historical Artifact Loading vs. Action-Boundary Verification:**
+     - Loading historical manifests, execution plans, prompt freeze artifacts, or receipts via `model_validate` validates 40-hex/64-hex syntax and internal consistency without comparing `code_basis_commit_sha` or `runtime_head_sha` to the current git `HEAD`.
+     - Action boundaries (`verify_prompt_candidate_freeze_artifact`, `verify_dev_execution_plan_for_execution`, `verify_cell_manifest_for_execution`, `execute_dev_cell_with_mock_transport`, `execute_dev_batch_with_mock_transport`) survive metadata/artifact commits (`A -> B`) when `compute_scientific_code_bundle_sha256() == artifact.scientific_code_bundle_sha256`, and fail closed with `ScientificCodeBundleIntegrityError` / `PromptFreezeFirewallError` before any provider call if any of the 13 scientific source files changed.
+  3. **Removed `_ALLOW_SYNTHETIC_TEST_ONLY_CODE_SHA` `ContextVar`:** Historical artifacts load naturally without any hidden `ContextVar` bypass.
+- **Verification Tests:** `FIX-28`, `AC-09`, `AC-10`, `AC-11`, `AC-12`, `PC-01` .. `PC-18`.
 
 ### 3.9 Audit Correction D — Removal of Runtime Monkeypatching in `conftest.py`
 
@@ -127,7 +132,7 @@ In strict compliance with Sections 1 and 17, the historical adversarial QA-01 ev
 
 ---
 
-## 4. Updated Failure Taxonomy Table (10 Method Lock Outcomes)
+## 4. Updated Failure Taxonomy Table (Method Lock + Code Bundle Integrity Outcomes)
 
 | # | Method Lock Outcome | Harness Enum (`DevCellFailureClassification`) | Retry Allowed | Counts in Denominator | Batch Stop Required | Exception Raised by Batch Gate |
 |---|---|---|---|---|---|---|
@@ -141,6 +146,7 @@ In strict compliance with Sections 1 and 17, the historical adversarial QA-01 ev
 | 8 | `DOWNSTREAM_CONSTRAINT_FAILURE` | `NONE` (scored via `exact_grounding_pass` / `final_core_pass`) | `False` | `True` | `False` | None (valid schema cell) |
 | 9 | `MODEL_ID_OR_RESOLVED_VERSION_MISMATCH` | `MODEL_INTEGRITY_MISMATCH` | `False` | `False` | `True` | `ModelIntegrityBatchStopError` |
 | 10 | `HARNESS_OR_INFRASTRUCTURE_ERROR` | `HARNESS_INTERNAL_ERROR` | `False` | `False` | `True` | `HarnessInternalBatchStopError` |
+| 11 | `SCIENTIFIC_CODE_BUNDLE_MISMATCH` | `SCIENTIFIC_CODE_BUNDLE_MISMATCH` | `False` | `False` | `True` | `ScientificCodeBundleIntegrityError` |
 
 ---
 
@@ -154,7 +160,7 @@ In strict compliance with Sections 1 and 17, the historical adversarial QA-01 ev
 
 ---
 
-## 6. Verification & Regression Test Matrix (`FIX-01` .. `FIX-35` & `AC-01` .. `AC-18`)
+## 6. Verification & Regression Test Matrix (`FIX-01` .. `FIX-35`, `AC-01` .. `AC-18`, & `PC-01` .. `PC-18`)
 
 | Test ID | Defect / Invariant Verified | Status |
 |---|---|---|
@@ -164,7 +170,7 @@ In strict compliance with Sections 1 and 17, the historical adversarial QA-01 ev
 | `FIX-20` .. `FIX-23` | `QA-27` & `QA-28`: Provider-aware token billing (`C1`, `C2`, `C3`) & cache guard | `PASS` |
 | `FIX-24` & `AC-01` .. `AC-04` | `QA-29` / Correction A: Exact `Decimal` cost end-to-end (`canonical_cost_usd_decimal`, `median_canonical_cost_usd_decimal`) | `PASS` |
 | `FIX-25` & `AC-05` .. `AC-08` | `QA-30` / Correction B: Authoritative integer `latency_ns` & exact `Decimal` median (`median_latency_ns_decimal`) | `PASS` |
-| `FIX-26` .. `FIX-27` | `QA-32`: `LOCK_P1_WITHOUT_PERFORMANCE_COMPARISON` & fail-closed prompt freeze verifier | `PASS` |
-| `FIX-28` & `AC-09` .. `AC-12` | `QA-33` / Correction C: Fail-closed `resolve_active_git_commit_sha()` & `resolve_and_verify_code_commit_sha()` | `PASS` |
+| `FIX-26` .. `FIX-27` & `PC-08` .. `PC-09` | `QA-32` / Correction 02: `LOCK_P1_WITHOUT_PERFORMANCE_COMPARISON` & artifact-lifecycle-safe prompt freeze verifier | `PASS` |
+| `FIX-28`, `AC-09` .. `AC-12`, & `PC-01` .. `PC-15` | `QA-33` / Correction C & Correction 02: `code_basis_commit_sha`, `scientific_code_bundle_sha256`, `runtime_head_sha`, and removal of `_ALLOW_SYNTHETIC_TEST_ONLY_CODE_SHA` | `PASS` |
 | `AC-13` .. `AC-15` | Correction D: No runtime monkeypatching in `conftest.py` & QA-01 files byte-identical | `PASS` |
-| `FIX-29` .. `FIX-35` & `AC-16` .. `AC-18` | All preserved scientific contracts, `DH-01`..`DH-35`, `FIX-01`..`FIX-35`, and 0 live calls | `PASS` |
+| `FIX-29` .. `FIX-35`, `AC-16` .. `AC-18`, & `PC-16` .. `PC-18` | All preserved scientific contracts, `DH-01`..`DH-35`, `FIX-01`..`FIX-35`, `AC-01`..`AC-18`, `PC-01`..`PC-18`, and 0 live calls | `PASS` |

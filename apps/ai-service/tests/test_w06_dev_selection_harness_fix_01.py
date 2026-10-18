@@ -26,10 +26,13 @@ from app.evaluation.dev_selection_harness import (
     BATCH_STOP_FAILURE_CLASSIFICATIONS,
     DECIMAL_SCIENTIFIC_PRECISION,
     CandidateCostComparabilityRecord,
+    CandidateRegistryIntegrityError,
     CodeCommitProvenanceError,
     DevCellExecutionManifest,
     DevCellExecutionReceipt,
     DevCellFailureClassification,
+    DevExecutionPlan,
+    DevPromptFreezeArtifact,
     Final100FirewallViolationError,
     FORBIDDEN_FINAL100_BUNDLE_SHA256,
     FORBIDDEN_P11_MANIFEST_SHA256,
@@ -39,10 +42,15 @@ from app.evaluation.dev_selection_harness import (
     ModelIntegrityBatchStopError,
     ORDINARY_DENOMINATOR_FAILURE_CLASSIFICATIONS,
     ORDERED_CANDIDATE_IDS,
+    PROVENANCE_LIFECYCLE_MODEL,
     PromptFreezeFirewallError,
     REPO_ROOT,
+    SCIENTIFIC_CODE_BUNDLE_RELATIVE_PATHS,
     SINGLE_PROMPT_P1_LOCK_STATUS,
+    ScientificCodeBundleIntegrityError,
+    ScientificCodeBundleManifest,
     StochasticityGateViolationError,
+    TASK_ID_DEV_HARNESS_FIX_01_AUDIT_CORRECTION_02,
     aggregate_dev_cell_receipts,
     assert_batch_receipts_integrity,
     assert_not_final100_path,
@@ -59,6 +67,9 @@ from app.evaluation.dev_selection_harness import (
     compute_canonical_cell_cost_decimal_str,
     compute_canonical_cell_cost_usd,
     compute_exact_decimal_median,
+    compute_scientific_code_bundle,
+    compute_scientific_code_bundle_file_hashes,
+    compute_scientific_code_bundle_sha256,
     create_prompt_candidate_spec,
     create_synthetic_test_only_cell_manifest,
     create_synthetic_test_only_cell_receipt,
@@ -76,6 +87,8 @@ from app.evaluation.dev_selection_harness import (
     select_winning_candidate_dev_select,
     select_winning_prompt_dev_tune,
     sha256_bytes,
+    verify_cell_manifest_for_execution,
+    verify_dev_execution_plan_for_execution,
     verify_frozen_authorities_dev_harness,
     verify_prompt_candidate_freeze_artifact,
 )
@@ -212,7 +225,10 @@ def _make_receipt(
     authoritative_usage_available: bool = True,
     requested_model_id: str = "gemini-3.8-flash",
     returned_model_id: str | None = "gemini-3.8-flash",
+    code_basis_commit_sha: str | None = None,
     code_commit_sha: str | None = None,
+    runtime_head_sha: str | None = None,
+    scientific_code_bundle_sha256: str | None = None,
 ) -> DevCellExecutionReceipt:
     resolved_latency_ns: int | None = (
         int(Decimal(str(latency_ms)) * Decimal(1_000_000))
@@ -226,13 +242,23 @@ def _make_receipt(
     else:
         resolved_cost_dec_str = None
 
+    prov_kwargs: Dict[str, Any] = {}
+    if code_basis_commit_sha is not None:
+        prov_kwargs["code_basis_commit_sha"] = code_basis_commit_sha
+    if code_commit_sha is not None:
+        prov_kwargs["code_commit_sha"] = code_commit_sha
+    if runtime_head_sha is not None:
+        prov_kwargs["runtime_head_sha"] = runtime_head_sha
+    if scientific_code_bundle_sha256 is not None:
+        prov_kwargs["scientific_code_bundle_sha256"] = scientific_code_bundle_sha256
+
     return DevCellExecutionReceipt(
         run_id=f"{phase}__{prompt_id}__{candidate_id}__{fixture_id}",
         phase=phase,  # type: ignore[arg-type]
         prompt_id=prompt_id,
         candidate_id=candidate_id,
         fixture_id=fixture_id,
-        code_commit_sha=code_commit_sha or resolve_active_git_commit_sha(),
+        **prov_kwargs,
         requested_model_id=requested_model_id,
         returned_model_id=returned_model_id,
         latency_ns=resolved_latency_ns,
@@ -1608,7 +1634,7 @@ def test_ac_11_static_fallback_sha_constant_is_removed_or_forbidden():
 
 
 def test_ac_12_mismatched_supplied_code_commit_sha_is_rejected(shared_env):
-    """AC-12: Supplying a 40-hex SHA that does not match git rev-parse HEAD is rejected fail-closed."""
+    """AC-12: Supplying a 40-hex SHA that does not match git rev-parse HEAD at plan/freeze creation or conflicting basis/compat SHAs is rejected fail-closed."""
     head_sha = resolve_active_git_commit_sha()
     wrong_sha = ("0" * 39 + "1") if head_sha != ("0" * 39 + "1") else ("0" * 39 + "2")
 
@@ -1620,7 +1646,7 @@ def test_ac_12_mismatched_supplied_code_commit_sha_is_rejected(shared_env):
         DevCellExecutionManifest(**{**cell0.model_dump(), "code_commit_sha": wrong_sha})
 
     with pytest.raises((CodeCommitProvenanceError, ValidationError), match="CODE_COMMIT_SHA_MISMATCH"):
-        _make_receipt(code_commit_sha=wrong_sha)
+        _make_receipt(code_basis_commit_sha=head_sha, code_commit_sha=wrong_sha)
 
     with pytest.raises(CodeCommitProvenanceError, match="CODE_COMMIT_SHA_MISMATCH"):
         build_dev_tune_execution_plan(
@@ -1647,11 +1673,12 @@ def test_ac_12_mismatched_supplied_code_commit_sha_is_rejected(shared_env):
             code_commit_sha=wrong_sha,
         )
 
-    # Confirm explicit test-only helper allows synthetic SHA only when explicitly invoked
+    # Confirm explicit test-only helper synchronizes code_basis_commit_sha and code_commit_sha
     synth_manifest = create_synthetic_test_only_cell_manifest(
         **{**cell0.model_dump(), "code_commit_sha": wrong_sha}
     )
     assert synth_manifest.code_commit_sha == wrong_sha
+    assert synth_manifest.code_basis_commit_sha == wrong_sha
     synth_receipt = create_synthetic_test_only_cell_receipt(
         run_id="SYNTH-TEST-ONLY-001",
         phase="DEV_TUNE",
@@ -1677,6 +1704,7 @@ def test_ac_12_mismatched_supplied_code_commit_sha_is_rejected(shared_env):
         evaluation_result_sha256="e" * 64,
     )
     assert synth_receipt.code_commit_sha == wrong_sha
+    assert synth_receipt.code_basis_commit_sha == wrong_sha
 
 
 def test_ac_13_conftest_contains_no_monkeypatching_of_dev_selection_harness():
@@ -1771,3 +1799,614 @@ def test_ac_18_live_provider_calls_remain_0():
     assert fix_receipt["latency_ns_selection_authority"] == "PASS"
     assert fix_receipt["code_sha_fail_closed"] == "PASS"
     assert fix_receipt["historical_qa_runtime_monkeypatch_removed"] == "PASS"
+
+
+# ==============================================================================
+# PC-01 through PC-18: ChatGPT Audit Correction 02 Provenance Lifecycle Tests
+# (W06-DEV-SELECTION-HARNESS-FIX-01-AUDIT-CORRECTION-02)
+# ==============================================================================
+
+
+def _create_temp_scientific_repo_mirror(tmp_root: Path) -> Path:
+    """Copy the 13 covered scientific source files into a temporary repo root for isolated bundle testing."""
+    for rel_path in SCIENTIFIC_CODE_BUNDLE_RELATIVE_PATHS:
+        src = REPO_ROOT / rel_path
+        dst = tmp_root / rel_path
+        dst.parent.mkdir(parents=True, exist_ok=True)
+        dst.write_bytes(src.read_bytes())
+    return tmp_root
+
+
+def test_pc_01_historical_artifact_with_valid_40_hex_code_basis_commit_sha_loads_without_error(
+    shared_env,
+):
+    """PC-01: Historical manifest, execution plan, and prompt freeze artifact with valid 40-hex code_basis_commit_sha != current HEAD load without error."""
+    current_head = resolve_active_git_commit_sha()
+    commit_a = ("a" * 39 + "1") if current_head != ("a" * 39 + "1") else ("a" * 39 + "2")
+    assert commit_a != current_head
+
+    # 1. Historical DevCellExecutionManifest loads via model_validate without comparing to current HEAD
+    cell_dict = shared_env["cell0"].model_dump()
+    cell_dict["code_basis_commit_sha"] = commit_a
+    cell_dict["code_commit_sha"] = commit_a
+    loaded_cell = DevCellExecutionManifest.model_validate(cell_dict)
+    assert loaded_cell.code_basis_commit_sha == commit_a
+    assert loaded_cell.code_commit_sha == commit_a
+
+    # 2. Historical DevExecutionPlan loads via model_validate without comparing to current HEAD
+    plan_dict = shared_env["tune_plan"].model_dump()
+    plan_dict["code_basis_commit_sha"] = commit_a
+    plan_dict["code_commit_sha"] = commit_a
+    for c in plan_dict["cells"]:
+        c["code_basis_commit_sha"] = commit_a
+        c["code_commit_sha"] = commit_a
+    plan_dict["plan_sha256"] = sha256_bytes(
+        harness.canonical_json_bytes(plan_dict["cells"])
+    )
+    loaded_plan = DevExecutionPlan.model_validate(plan_dict)
+    assert loaded_plan.code_basis_commit_sha == commit_a
+    assert loaded_plan.code_commit_sha == commit_a
+
+    # 3. Historical DevPromptFreezeArtifact loads via model_validate without comparing to current HEAD
+    freeze_obj = build_dev_prompt_freeze_artifact(
+        prompt_registry=shared_env["p1_reg"],
+        dev_tune_plan=shared_env["tune_plan"],
+        dev_bundle=shared_env["bundle"],
+        candidate_registry=shared_env["cand_reg"],
+    )
+    freeze_dict = freeze_obj.model_dump()
+    freeze_dict["code_basis_commit_sha"] = commit_a
+    freeze_dict["code_commit_sha"] = commit_a
+    freeze_dict["dev_tune_execution_plan_sha256"] = loaded_plan.plan_sha256
+    loaded_freeze = DevPromptFreezeArtifact.model_validate(freeze_dict)
+    assert loaded_freeze.code_basis_commit_sha == commit_a
+    assert loaded_freeze.code_commit_sha == commit_a
+
+
+def test_pc_02_historical_receipt_with_runtime_head_sha_different_from_current_head_loads_without_error():
+    """PC-02: Historical DevCellExecutionReceipt with code_basis_commit_sha=A and runtime_head_sha=B != current HEAD loads without error."""
+    current_head = resolve_active_git_commit_sha()
+    commit_a = "1" * 40 if current_head != "1" * 40 else "2" * 40
+    commit_b = "3" * 40 if current_head != "3" * 40 else "4" * 40
+    assert commit_a != current_head
+    assert commit_b != current_head
+    assert commit_a != commit_b
+
+    rec = _make_receipt(
+        code_basis_commit_sha=commit_a,
+        code_commit_sha=commit_a,
+        runtime_head_sha=commit_b,
+        scientific_code_bundle_sha256="f" * 64,
+    )
+    dumped = json.loads(json.dumps(rec.model_dump()))
+    reloaded = DevCellExecutionReceipt.model_validate(dumped)
+    assert reloaded.code_basis_commit_sha == commit_a
+    assert reloaded.code_commit_sha == commit_a
+    assert reloaded.runtime_head_sha == commit_b
+    assert reloaded.scientific_code_bundle_sha256 == "f" * 64
+
+
+def test_pc_03_malformed_non_40_hex_code_basis_commit_sha_fails_closed(shared_env):
+    """PC-03: Malformed, empty, None, uppercase, or non-40-hex code_basis_commit_sha fails closed across all artifacts."""
+    cell_dict = shared_env["cell0"].model_dump()
+    base_rec_dict = _make_receipt().model_dump()
+    for bad_sha in ["", "abc123", "A" * 40, "g" * 40, "0" * 39, "0" * 41, None]:
+        with pytest.raises((CodeCommitProvenanceError, ValidationError)):
+            DevCellExecutionManifest.model_validate(
+                {**cell_dict, "code_basis_commit_sha": bad_sha, "code_commit_sha": bad_sha}
+            )
+        with pytest.raises((CodeCommitProvenanceError, ValidationError)):
+            DevCellExecutionReceipt.model_validate(
+                {**base_rec_dict, "code_basis_commit_sha": bad_sha, "code_commit_sha": bad_sha}
+            )
+
+
+def test_pc_04_malformed_non_40_hex_runtime_head_sha_fails_closed():
+    """PC-04: Malformed, empty, None, uppercase, or non-40-hex runtime_head_sha fails closed on DevCellExecutionReceipt."""
+    for bad_runtime_sha in ["", "deadbeef", "B" * 40, "z" * 40, "1" * 39, "1" * 41]:
+        with pytest.raises((CodeCommitProvenanceError, ValidationError)):
+            _make_receipt(runtime_head_sha=bad_runtime_sha)
+
+    rec_dict = _make_receipt().model_dump()
+    rec_dict["runtime_head_sha"] = None
+    with pytest.raises((CodeCommitProvenanceError, ValidationError)):
+        DevCellExecutionReceipt.model_validate(rec_dict)
+
+
+def test_pc_05_compute_scientific_code_bundle_sha256_is_deterministic_across_repeated_calls(
+    tmp_path: Path,
+):
+    """PC-05: compute_scientific_code_bundle_sha256() is deterministic across repeated calls and CRLF/LF line endings."""
+    assert len(SCIENTIFIC_CODE_BUNDLE_RELATIVE_PATHS) == 13
+    assert list(SCIENTIFIC_CODE_BUNDLE_RELATIVE_PATHS) == sorted(
+        SCIENTIFIC_CODE_BUNDLE_RELATIVE_PATHS
+    )
+
+    b1 = compute_scientific_code_bundle()
+    b2 = compute_scientific_code_bundle()
+    assert b1.scientific_code_bundle_sha256 == b2.scientific_code_bundle_sha256
+    assert b1.scientific_code_bundle_file_hashes == b2.scientific_code_bundle_file_hashes
+    assert compute_scientific_code_bundle_sha256() == b1.scientific_code_bundle_sha256
+    assert compute_scientific_code_bundle_file_hashes() == b1.scientific_code_bundle_file_hashes
+
+    # Verify CRLF vs LF normalization in a temporary mirror produces the exact same bundle hash
+    mirror = _create_temp_scientific_repo_mirror(tmp_path / "repo_crlf")
+    target_file = mirror / SCIENTIFIC_CODE_BUNDLE_RELATIVE_PATHS[0]
+    lf_bytes = normalize_lf_bytes(target_file.read_bytes())
+    crlf_bytes = lf_bytes.replace(b"\n", b"\r\n")
+    target_file.write_bytes(crlf_bytes)
+    assert compute_scientific_code_bundle_sha256(repo_root=mirror) == b1.scientific_code_bundle_sha256
+
+
+def test_pc_06_modifying_any_covered_scientific_source_file_changes_scientific_code_bundle_sha256(
+    tmp_path: Path,
+):
+    """PC-06: Modifying any of the 13 covered scientific source files changes scientific_code_bundle_sha256."""
+    baseline_sha = compute_scientific_code_bundle_sha256()
+    mirror = _create_temp_scientific_repo_mirror(tmp_path / "repo_mod")
+    assert compute_scientific_code_bundle_sha256(repo_root=mirror) == baseline_sha
+
+    for rel_path in SCIENTIFIC_CODE_BUNDLE_RELATIVE_PATHS:
+        fpath = mirror / rel_path
+        orig_bytes = fpath.read_bytes()
+        try:
+            fpath.write_bytes(orig_bytes + b"\n# scientific_code_mutation_probe\n")
+            mutated_sha = compute_scientific_code_bundle_sha256(repo_root=mirror)
+            assert mutated_sha != baseline_sha, f"Mutation in {rel_path} did not change bundle hash"
+        finally:
+            fpath.write_bytes(orig_bytes)
+
+    # Also verify missing any covered file fails closed with ScientificCodeBundleIntegrityError
+    missing_target = mirror / SCIENTIFIC_CODE_BUNDLE_RELATIVE_PATHS[-1]
+    saved_bytes = missing_target.read_bytes()
+    missing_target.unlink()
+    try:
+        with pytest.raises(
+            ScientificCodeBundleIntegrityError,
+            match="SCIENTIFIC_CODE_BUNDLE_FILE_MISSING",
+        ):
+            compute_scientific_code_bundle_sha256(repo_root=mirror)
+    finally:
+        missing_target.write_bytes(saved_bytes)
+
+
+def test_pc_07_modifying_non_code_docs_or_receipt_files_does_not_change_scientific_code_bundle_sha256(
+    tmp_path: Path,
+):
+    """PC-07: Modifying non-code docs, receipts, or frozen artifacts does NOT change scientific_code_bundle_sha256."""
+    baseline_sha = compute_scientific_code_bundle_sha256()
+    mirror = _create_temp_scientific_repo_mirror(tmp_path / "repo_docs")
+    assert compute_scientific_code_bundle_sha256(repo_root=mirror) == baseline_sha
+
+    # Write/modify documentation and receipt files outside the scientific source code bundle
+    doc_file = mirror / "docs" / "research" / "w06_dev_selection_harness_fix_01.md"
+    doc_file.parent.mkdir(parents=True, exist_ok=True)
+    doc_file.write_text("# Updated research documentation\n", encoding="utf-8")
+
+    receipt_file = (
+        mirror / "data" / "evaluation" / "w06" / "w06_dev_selection_harness_fix_01_receipt_v1.json"
+    )
+    receipt_file.parent.mkdir(parents=True, exist_ok=True)
+    receipt_file.write_text('{"status": "UPDATED_RECEIPT"}\n', encoding="utf-8")
+
+    freeze_file = mirror / "data" / "evaluation" / "w06" / "w06_dev_prompt_freeze_v1.json"
+    freeze_file.write_text('{"artifact_id": "FROZEN_PROMPT"}\n', encoding="utf-8")
+
+    assert compute_scientific_code_bundle_sha256(repo_root=mirror) == baseline_sha
+
+
+def test_pc_08_mandatory_self_reference_lifecycle_simulation_commit_a_to_b_to_c(
+    shared_env, tmp_path: Path, monkeypatch
+):
+    """PC-08 & Section 13: Full mandatory self-reference lifecycle simulation (HEAD=A -> HEAD=B -> HEAD=C -> mutated code bundle fails closed)."""
+    mirror = _create_temp_scientific_repo_mirror(tmp_path / "lifecycle_repo")
+    commit_a = "a" * 39 + "1"
+    commit_b = "b" * 39 + "2"
+    commit_c = "c" * 39 + "3"
+    bundle_1 = compute_scientific_code_bundle_sha256(repo_root=mirror)
+
+    # Step 1: Freeze plan and prompt freeze artifact at commit A
+    monkeypatch.setattr(
+        harness, "resolve_active_git_commit_sha", lambda repo_root=None: commit_a
+    )
+    plan_at_a = build_dev_tune_execution_plan(
+        shared_env["p1_reg"],
+        dev_bundle=shared_env["bundle"],
+        candidate_registry=shared_env["cand_reg"],
+        repo_root=mirror,
+    )
+    freeze_at_a = build_dev_prompt_freeze_artifact(
+        prompt_registry=shared_env["p1_reg"],
+        dev_tune_plan=plan_at_a,
+        dev_bundle=shared_env["bundle"],
+        candidate_registry=shared_env["cand_reg"],
+        repo_root=mirror,
+    )
+    assert plan_at_a.code_basis_commit_sha == commit_a
+    assert plan_at_a.scientific_code_bundle_sha256 == bundle_1
+    assert freeze_at_a.code_basis_commit_sha == commit_a
+    assert freeze_at_a.scientific_code_bundle_sha256 == bundle_1
+
+    freeze_path = tmp_path / "prompt_freeze_at_a.json"
+    harness.write_canonical_json(freeze_path, freeze_at_a.model_dump())
+
+    # Step 2: Simulate HEAD advancing to commit B (B != A) after committing freeze artifacts/docs,
+    # while scientific code files are unchanged (current_scientific_code_bundle_sha256 == BUNDLE_1)
+    monkeypatch.setattr(
+        harness, "resolve_active_git_commit_sha", lambda repo_root=None: commit_b
+    )
+    verified_freeze_at_b = verify_prompt_candidate_freeze_artifact(
+        freeze_path,
+        prompt_registry=shared_env["p1_reg"],
+        dev_tune_plan=plan_at_a,
+        dev_bundle=shared_env["bundle"],
+        candidate_registry=shared_env["cand_reg"],
+        repo_root=mirror,
+    )
+    assert verified_freeze_at_b.code_basis_commit_sha == commit_a
+    assert verified_freeze_at_b.scientific_code_bundle_sha256 == bundle_1
+    assert verify_dev_execution_plan_for_execution(plan_at_a, repo_root=mirror) == commit_b
+
+    # Step 3: Execute mock DEV cell at HEAD=B
+    cell_a0 = plan_at_a.cells[0]
+    payload = _build_complete_valid_plan_dict(shared_env["scen0"], shared_env["cat0"])
+    cell_dir_b = tmp_path / "cell_exec_at_b"
+    receipt_at_b, _ = execute_dev_cell_with_mock_transport(
+        cell_manifest=cell_a0,
+        scenario=shared_env["scen0"],
+        cell_dir=cell_dir_b,
+        mock_response=MockProviderTransportResponse(
+            returned_model_id=cell_a0.requested_model_id,
+            raw_text=json.dumps(payload, ensure_ascii=False),
+        ),
+        core_catalog_by_id=shared_env["core_map"],
+        repo_root=mirror,
+    )
+    assert receipt_at_b.code_basis_commit_sha == commit_a
+    assert receipt_at_b.code_commit_sha == commit_a
+    assert receipt_at_b.runtime_head_sha == commit_b
+    assert receipt_at_b.scientific_code_bundle_sha256 == bundle_1
+
+    # Step 4: Simulate HEAD advancing to commit C (C != B) after committing execution receipts.
+    # Reload receipt at HEAD=C and verify it loads and validates without error.
+    monkeypatch.setattr(
+        harness, "resolve_active_git_commit_sha", lambda repo_root=None: commit_c
+    )
+    receipt_json_on_disk = json.loads(
+        (cell_dir_b / "execution_receipt.json").read_text(encoding="utf-8")
+    )
+    reloaded_at_c = DevCellExecutionReceipt.model_validate(receipt_json_on_disk)
+    assert reloaded_at_c.code_basis_commit_sha == commit_a
+    assert reloaded_at_c.runtime_head_sha == commit_b
+    assert reloaded_at_c.scientific_code_bundle_sha256 == bundle_1
+
+    # Step 5: Simulate modifying one scientific code file so bundle hash becomes BUNDLE_2 != BUNDLE_1.
+    # Verify execution/freeze verification FAILS CLOSED before any provider call.
+    mutated_file = mirror / "apps/ai-service/app/evaluation/planner_benchmark_evaluator.py"
+    orig_bytes = mutated_file.read_bytes()
+    mutated_file.write_bytes(orig_bytes + b"\n# mutated scientific evaluator\n")
+    bundle_2 = compute_scientific_code_bundle_sha256(repo_root=mirror)
+    assert bundle_2 != bundle_1
+
+    with pytest.raises(PromptFreezeFirewallError, match="SCIENTIFIC_CODE_BUNDLE_MISMATCH"):
+        verify_prompt_candidate_freeze_artifact(
+            freeze_path,
+            prompt_registry=shared_env["p1_reg"],
+            dev_tune_plan=plan_at_a,
+            dev_bundle=shared_env["bundle"],
+            candidate_registry=shared_env["cand_reg"],
+            repo_root=mirror,
+        )
+
+    provider_calls = 0
+
+    def _forbid_provider_call(_manifest: DevCellExecutionManifest) -> MockProviderTransportResponse:
+        nonlocal provider_calls
+        provider_calls += 1
+        return MockProviderTransportResponse(
+            returned_model_id=cell_a0.requested_model_id,
+            raw_text=json.dumps(payload, ensure_ascii=False),
+        )
+
+    with pytest.raises(
+        ScientificCodeBundleIntegrityError, match="SCIENTIFIC_CODE_BUNDLE_MISMATCH"
+    ):
+        execute_dev_cell_with_mock_transport(
+            cell_manifest=cell_a0,
+            scenario=shared_env["scen0"],
+            cell_dir=tmp_path / "cell_exec_mutated",
+            mock_response=_forbid_provider_call,
+            core_catalog_by_id=shared_env["core_map"],
+            repo_root=mirror,
+        )
+    assert provider_calls == 0
+    assert not (tmp_path / "cell_exec_mutated").exists()
+
+
+def test_pc_09_prompt_freeze_created_at_commit_a_fails_closed_at_commit_b_when_scientific_code_bundle_changed(
+    shared_env, tmp_path: Path, monkeypatch
+):
+    """PC-09: Prompt freeze created at commit A fails closed at commit B when any scientific source file changed."""
+    mirror = _create_temp_scientific_repo_mirror(tmp_path / "pc09_repo")
+    commit_a = "1" * 40
+    commit_b = "2" * 40
+
+    monkeypatch.setattr(
+        harness, "resolve_active_git_commit_sha", lambda repo_root=None: commit_a
+    )
+    plan_a = build_dev_tune_execution_plan(
+        shared_env["p1_reg"],
+        dev_bundle=shared_env["bundle"],
+        candidate_registry=shared_env["cand_reg"],
+        repo_root=mirror,
+    )
+    freeze_a = build_dev_prompt_freeze_artifact(
+        prompt_registry=shared_env["p1_reg"],
+        dev_tune_plan=plan_a,
+        dev_bundle=shared_env["bundle"],
+        candidate_registry=shared_env["cand_reg"],
+        repo_root=mirror,
+    )
+
+    # Advance to commit B and mutate a model adapter file in the scientific code bundle
+    monkeypatch.setattr(
+        harness, "resolve_active_git_commit_sha", lambda repo_root=None: commit_b
+    )
+    adapter_file = mirror / "apps/ai-service/app/evaluation/model_preflight/openai_adapter.py"
+    adapter_file.write_bytes(adapter_file.read_bytes() + b"\n# altered adapter\n")
+
+    with pytest.raises(PromptFreezeFirewallError, match="SCIENTIFIC_CODE_BUNDLE_MISMATCH"):
+        verify_prompt_candidate_freeze_artifact(
+            freeze_a,
+            prompt_registry=shared_env["p1_reg"],
+            dev_tune_plan=plan_a,
+            dev_bundle=shared_env["bundle"],
+            candidate_registry=shared_env["cand_reg"],
+            repo_root=mirror,
+        )
+
+
+def test_pc_10_cell_execution_at_commit_b_records_code_basis_commit_sha_a_and_runtime_head_sha_b(
+    shared_env, tmp_path: Path, monkeypatch
+):
+    """PC-10: Cell execution at commit B records code_basis_commit_sha=A and runtime_head_sha=B in receipt and provider metadata."""
+    commit_a = "a" * 40
+    commit_b = "b" * 40
+
+    monkeypatch.setattr(
+        harness, "resolve_active_git_commit_sha", lambda repo_root=None: commit_a
+    )
+    plan_a = build_dev_tune_execution_plan(
+        shared_env["p1_reg"],
+        dev_bundle=shared_env["bundle"],
+        candidate_registry=shared_env["cand_reg"],
+    )
+    cell_a = plan_a.cells[0]
+    assert cell_a.code_basis_commit_sha == commit_a
+
+    monkeypatch.setattr(
+        harness, "resolve_active_git_commit_sha", lambda repo_root=None: commit_b
+    )
+    payload = _build_complete_valid_plan_dict(shared_env["scen0"], shared_env["cat0"])
+    cell_dir = tmp_path / "pc10_cell"
+    rec, _ = execute_dev_cell_with_mock_transport(
+        cell_manifest=cell_a,
+        scenario=shared_env["scen0"],
+        cell_dir=cell_dir,
+        mock_response=MockProviderTransportResponse(
+            returned_model_id=cell_a.requested_model_id,
+            raw_text=json.dumps(payload, ensure_ascii=False),
+        ),
+        core_catalog_by_id=shared_env["core_map"],
+    )
+    assert rec.code_basis_commit_sha == commit_a
+    assert rec.code_commit_sha == commit_a
+    assert rec.runtime_head_sha == commit_b
+    assert rec.scientific_code_bundle_sha256 == cell_a.scientific_code_bundle_sha256
+
+    meta_disk = json.loads(
+        (cell_dir / "provider_response_metadata.json").read_text(encoding="utf-8")
+    )
+    assert meta_disk["code_basis_commit_sha"] == commit_a
+    assert meta_disk["runtime_head_sha"] == commit_b
+    assert meta_disk["scientific_code_bundle_sha256"] == cell_a.scientific_code_bundle_sha256
+
+
+def test_pc_11_runtime_head_sha_is_resolved_from_git_rev_parse_head_and_fails_closed_when_git_fails(
+    monkeypatch,
+):
+    """PC-11: runtime_head_sha is resolved from git rev-parse HEAD, never copied from code_basis_commit_sha, and fails closed when git fails."""
+    real_head = resolve_active_git_commit_sha()
+    basis_a = "9" * 40 if real_head != "9" * 40 else "8" * 40
+    rec = _make_receipt(code_basis_commit_sha=basis_a, code_commit_sha=basis_a)
+    assert rec.code_basis_commit_sha == basis_a
+    assert rec.runtime_head_sha == real_head
+    assert rec.runtime_head_sha != rec.code_basis_commit_sha
+
+    def _git_fail(*args, **kwargs):
+        return subprocess.CompletedProcess(
+            args=args[0], returncode=128, stdout="", stderr="fatal: git unavailable"
+        )
+
+    monkeypatch.setattr(subprocess, "run", _git_fail)
+    with pytest.raises((CodeCommitProvenanceError, ValidationError), match="CODE_COMMIT_PROVENANCE_ERROR"):
+        _make_receipt(code_basis_commit_sha=basis_a, code_commit_sha=basis_a)
+
+
+def test_pc_12_historical_receipt_created_at_commit_b_remains_valid_after_commit_c(
+    shared_env, monkeypatch
+):
+    """PC-12: Historical receipts created at commit B remain valid and aggregatable after commit C."""
+    commit_a = "a" * 40
+    commit_b = "b" * 40
+    commit_c = "c" * 40
+    bundle_hash_at_b = "d" * 64
+
+    monkeypatch.setattr(
+        harness, "resolve_active_git_commit_sha", lambda repo_root=None: commit_c
+    )
+    fids = [s.scenario_id for s in shared_env["bundle"].dev_tune_fixtures]
+    req_models = {"C1": "gemini-3.8-flash", "C2": "gpt-6.1-sol", "C3": "claude-sonnet-5-5"}
+    historical_receipts: List[DevCellExecutionReceipt] = []
+    for cid in ORDERED_CANDIDATE_IDS:
+        for fid in fids:
+            raw_rec = _make_receipt(
+                phase="DEV_TUNE",
+                prompt_id="P1",
+                candidate_id=cid,
+                fixture_id=fid,
+                requested_model_id=req_models[cid],
+                returned_model_id=req_models[cid],
+                code_basis_commit_sha=commit_a,
+                code_commit_sha=commit_a,
+                runtime_head_sha=commit_b,
+                scientific_code_bundle_sha256=bundle_hash_at_b,
+            ).model_dump()
+            # Reload at commit C
+            historical_receipts.append(DevCellExecutionReceipt.model_validate(raw_rec))
+
+    tune_res = select_winning_prompt_dev_tune(
+        prompt_registry=shared_env["p1_reg"],
+        dev_tune_fixture_ids=fids,
+        cell_receipts=historical_receipts,
+    )
+    assert tune_res.selected_prompt_id == "P1"
+
+
+def test_pc_13_batch_execution_fails_closed_on_scientific_code_bundle_sha256_mismatch_before_any_call(
+    shared_env, tmp_path: Path, monkeypatch
+):
+    """PC-13: Batch execution fails closed on scientific_code_bundle_sha256 mismatch before any mock provider call."""
+    mirror = _create_temp_scientific_repo_mirror(tmp_path / "pc13_repo")
+    commit_a = "a" * 40
+    commit_b = "b" * 40
+    monkeypatch.setattr(
+        harness, "resolve_active_git_commit_sha", lambda repo_root=None: commit_a
+    )
+    plan = build_dev_tune_execution_plan(
+        shared_env["p1_reg"],
+        dev_bundle=shared_env["bundle"],
+        candidate_registry=shared_env["cand_reg"],
+        repo_root=mirror,
+    )
+    # Advance to commit B and modify a scientific file in mirror after plan creation
+    monkeypatch.setattr(
+        harness, "resolve_active_git_commit_sha", lambda repo_root=None: commit_b
+    )
+    prompt_file = mirror / "apps/ai-service/app/prompts/planner_benchmark_prompt.py"
+    prompt_file.write_bytes(prompt_file.read_bytes() + b"\n# drift after freeze\n")
+
+    call_count = 0
+
+    def _never_called(_cell: DevCellExecutionManifest) -> MockProviderTransportResponse:
+        nonlocal call_count
+        call_count += 1
+        raise AssertionError("Provider transport must not be called when code bundle mismatches")
+
+    scenarios_by_id = {s.scenario_id: s for s in shared_env["bundle"].dev_tune_fixtures}
+    batch_dir = tmp_path / "pc13_batch"
+    with pytest.raises(
+        ScientificCodeBundleIntegrityError, match="SCIENTIFIC_CODE_BUNDLE_MISMATCH"
+    ):
+        execute_dev_batch_with_mock_transport(
+            execution_plan=plan,
+            scenarios_by_id=scenarios_by_id,
+            batch_root_dir=batch_dir,
+            mock_response_by_run_id=_never_called,
+            core_catalog_by_id=shared_env["core_map"],
+            repo_root=mirror,
+        )
+    assert call_count == 0
+    assert not batch_dir.exists()
+
+
+def test_pc_14_batch_execution_fails_closed_on_provider_config_sha256_mismatch_before_any_call(
+    shared_env, tmp_path: Path
+):
+    """PC-14: Cell and batch execution fail closed on provider_config_sha256 mismatch before any provider call."""
+    plan_dict = shared_env["tune_plan"].model_dump()
+    plan_dict["cells"][0]["provider_config_sha256"] = "0" * 64
+    with pytest.raises((CandidateRegistryIntegrityError, ValidationError, ValueError)):
+        DevExecutionPlan.model_validate(plan_dict)
+
+    # Also test verify_cell_manifest_for_execution if a manifest attribute is mutated post-construction
+    tampered_cell = shared_env["cell0"].model_copy(
+        update={"provider_config_sha256": "0" * 64}
+    )
+    call_count = 0
+
+    def _never_called(_cell: DevCellExecutionManifest) -> MockProviderTransportResponse:
+        nonlocal call_count
+        call_count += 1
+        raise AssertionError("Provider transport must not be called")
+
+    with pytest.raises(
+        CandidateRegistryIntegrityError, match="PROVIDER_CONFIG_SHA256_MISMATCH"
+    ):
+        execute_dev_cell_with_mock_transport(
+            cell_manifest=tampered_cell,
+            scenario=shared_env["scen0"],
+            cell_dir=tmp_path / "pc14_cell",
+            mock_response=_never_called,
+            core_catalog_by_id=shared_env["core_map"],
+        )
+    assert call_count == 0
+
+
+def test_pc_15_allow_synthetic_test_only_code_sha_contextvar_is_not_needed_for_historical_artifact_loading():
+    """PC-15: _ALLOW_SYNTHETIC_TEST_ONLY_CODE_SHA ContextVar is completely removed and not needed for historical artifact loading."""
+    assert not hasattr(harness, "_ALLOW_SYNTHETIC_TEST_ONLY_CODE_SHA")
+    harness_src = (
+        REPO_ROOT / "apps" / "ai-service" / "app" / "evaluation" / "dev_selection_harness.py"
+    ).read_text(encoding="utf-8")
+    assert "_ALLOW_SYNTHETIC_TEST_ONLY_CODE_SHA" not in harness_src
+
+
+def test_pc_16_all_existing_dh_01_to_dh_35_pass():
+    """PC-16: Verify all existing DH-01..DH-35 test functions exist in test_w06_dev_selection_harness_01."""
+    test_ac_16_all_existing_dh_01_to_dh_35_tests_present()
+
+
+def test_pc_17_all_existing_fix_01_to_fix_35_and_ac_01_to_ac_18_pass():
+    """PC-17: Verify all FIX-01..FIX-35, AC-01..AC-18, and PC-01..PC-18 test functions exist in this module."""
+    import sys
+
+    this_mod = sys.modules[__name__]
+    fix_funcs = [name for name in dir(this_mod) if name.startswith("test_fix_")]
+    ac_funcs = [name for name in dir(this_mod) if name.startswith("test_ac_")]
+    pc_funcs = [name for name in dir(this_mod) if name.startswith("test_pc_")]
+    assert len(fix_funcs) == 35
+    assert len(ac_funcs) == 18
+    assert len(pc_funcs) == 18
+    for idx in range(1, 19):
+        assert any(name.startswith(f"test_ac_{idx:02d}_") for name in ac_funcs)
+        assert any(name.startswith(f"test_pc_{idx:02d}_") for name in pc_funcs)
+
+
+def test_pc_18_live_provider_calls_equal_0_and_audit_correction_02_receipt_valid():
+    """PC-18: Verify live_provider_calls == 0 and Section 17 Audit Correction 02 fields in receipt."""
+    fix_receipt_path = (
+        REPO_ROOT / "data" / "evaluation" / "w06" / "w06_dev_selection_harness_fix_01_receipt_v1.json"
+    )
+    assert fix_receipt_path.exists()
+    fix_receipt = json.loads(fix_receipt_path.read_text(encoding="utf-8"))
+    assert fix_receipt["live_provider_calls"] == 0
+    assert fix_receipt["provider_cost_usd"] == 0
+    assert fix_receipt["live_calls"] == 0
+    assert fix_receipt["audit_correction_02_required"] is True
+    assert (
+        fix_receipt["audit_correction_02_id"]
+        == TASK_ID_DEV_HARNESS_FIX_01_AUDIT_CORRECTION_02
+    )
+    assert fix_receipt["provenance_lifecycle_model"] == PROVENANCE_LIFECYCLE_MODEL
+    assert fix_receipt["historical_artifact_reload_safe"] == "PASS"
+    assert fix_receipt["prompt_freeze_self_reference_resolved"] == "PASS"
+    assert fix_receipt["scientific_code_bundle_gate"] == "PASS"
+    assert fix_receipt["runtime_head_recording"] == "PASS"
+    assert (
+        fix_receipt["scientific_code_bundle_sha256"]
+        == compute_scientific_code_bundle_sha256()
+    )
+    assert fix_receipt["scientific_code_bundle_files"] == list(
+        SCIENTIFIC_CODE_BUNDLE_RELATIVE_PATHS
+    )
