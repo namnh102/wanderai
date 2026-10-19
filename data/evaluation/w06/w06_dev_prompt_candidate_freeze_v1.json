@@ -1,0 +1,106 @@
+{
+  "artifact_id": "W06-DEV-PROMPT-CANDIDATE-FREEZE-01-V1",
+  "candidate_registry_sha256": "4dd29164afdf7f364978420f41ab88ef07ec396062188169fcb859a9ef01e058",
+  "code_basis_commit_sha": "60d52d720e66f5af8e82fabf9cebe2ea0e8a9e26",
+  "code_commit_sha": "60d52d720e66f5af8e82fabf9cebe2ea0e8a9e26",
+  "created_before_live_dev_execution": true,
+  "dev_tune_bundle_sha256": "bb0f051446ea3da8229298f22f4ce92b4db20751695273c6d01b7766da044050",
+  "dev_tune_execution_plan_sha256": "582d9964b4fffbac91f83373d080f1fef120f0ddca4edab2d63e02796d0b20ae",
+  "freeze_status": "FROZEN_FOR_LIVE_DEV_TUNE",
+  "max_call_budget": 120,
+  "ordered_candidate_ids": [
+    "C1",
+    "C2",
+    "C3"
+  ],
+  "portable_generation_schema_v2_sha256": "825a4ff912d851a95f7392cb564b7d7ca3588135508dc6eb3ac6304cdde3c490",
+  "prompt_candidate_ids": [
+    "P1",
+    "P2"
+  ],
+  "prompt_versions": {
+    "P1": "TRAVEL_PLANNER_BENCHMARK_V2",
+    "P2": "TRAVEL_PLANNER_BENCHMARK_V2"
+  },
+  "provider_config_registry_sha256": "3dc05d29acc2f647cba58303865bd7406b8c1d9f7ccbe0f120e87ad471190938",
+  "scientific_code_bundle_file_hashes": [
+    {
+      "path": "apps/ai-service/app/evaluation/dev_live_runner.py",
+      "sha256": "9f3441c2ca290e9a33b4daa78eaaa58063978364d8375145fc7483b04ed8b817"
+    },
+    {
+      "path": "apps/ai-service/app/evaluation/dev_selection_harness.py",
+      "sha256": "85b17c2daa1ea59e26c3118d5cafb38cb3c73a5d57288e2fb4e5fc0e0a732c97"
+    },
+    {
+      "path": "apps/ai-service/app/evaluation/model_preflight/__init__.py",
+      "sha256": "178aede4930a6b848714fa6d84e14e415df35d1bf7641312ff6f311e3de477dd"
+    },
+    {
+      "path": "apps/ai-service/app/evaluation/model_preflight/anthropic_adapter.py",
+      "sha256": "ef2570126f6db736a4ef056ac27fcfc77db97fa6ed6526c901e299c71b1b1d42"
+    },
+    {
+      "path": "apps/ai-service/app/evaluation/model_preflight/base.py",
+      "sha256": "55bd026f224eaf15f5fb68e98d9cd9467bf85f0f90305acac397caef0970454d"
+    },
+    {
+      "path": "apps/ai-service/app/evaluation/model_preflight/google_adapter.py",
+      "sha256": "184887b19826094326e5fea47efd7aec71308b36af404225f5ef8d0d40882f1c"
+    },
+    {
+      "path": "apps/ai-service/app/evaluation/model_preflight/openai_adapter.py",
+      "sha256": "62b72237402808ab88d71627ce05d948d4b7d251ba87af51208876c784ee9346"
+    },
+    {
+      "path": "apps/ai-service/app/evaluation/model_preflight/schema_adapter.py",
+      "sha256": "19513c8735ba4acb2b88587915d6458de2c28d622499c05314d4f9030eb3c589"
+    },
+    {
+      "path": "apps/ai-service/app/evaluation/model_preflight/types.py",
+      "sha256": "1fdb31f200a71df4193f1fe4844b49dc1e9750c51c7388e6642dac44ae349371"
+    },
+    {
+      "path": "apps/ai-service/app/evaluation/planner_benchmark_evaluator.py",
+      "sha256": "1b299f75a3a51d01b63b1b004df3d8b9d92224591ccde5d537b83735ca268f66"
+    },
+    {
+      "path": "apps/ai-service/app/prompts/planner_benchmark_prompt.py",
+      "sha256": "22aa9cd172548fe51a8699704e5832ad44e1d8e946a1ad79437aed99d46c98cb"
+    },
+    {
+      "path": "apps/ai-service/app/schemas/planner_benchmark.py",
+      "sha256": "3f27ed7e12b2492d722937d4f36476e8dbf97635c281a6e270fd0621cc18e712"
+    },
+    {
+      "path": "apps/ai-service/app/services/planner_benchmark_runner.py",
+      "sha256": "2831f5aadd80959a86f388508c73679215830ca8854f2a4fbd474328fa7288b7"
+    },
+    {
+      "path": "apps/ai-service/recommendation/reca/contract.py",
+      "sha256": "1a62c36a95092be35ab78dca43e20f646016e154746ee051a499bdebfc67538c"
+    }
+  ],
+  "scientific_code_bundle_sha256": "0638f2fcb100b0000e3a2a4e08137a9d468449001f258de7354df21e185ca2e3",
+  "semantic_prompt_sha256_by_id": {
+    "P1": "096ff4c74dd8d1aed1c0abe501b97c8dfd0f6424dbca535f2b79a242637a1c11",
+    "P2": "0679dd9463d6cebf04ccb5571a403331eea3ab6819bd6a0e8b2ee1fc08c99fdf"
+  },
+  "system_prompt_by_id": {
+    "P1": "You are the W06 Benchmark Itinerary Planner operating under architecture LLM_BASED_ITINERARY_PLANNER_WITH_DETERMINISTIC_GROUNDING_AND_VALIDATION_V1. Return strictly one JSON object conforming to BenchmarkPlanResponse with zero markdown fences and zero tool calls.",
+    "P2": "You are the W06 Benchmark Itinerary Planner operating under architecture LLM_BASED_ITINERARY_PLANNER_WITH_DETERMINISTIC_GROUNDING_AND_VALIDATION_V1. Return strictly one JSON object conforming to BenchmarkPlanResponse with zero markdown fences and zero tool calls.\nBefore returning the JSON, perform a silent constraint check and correct the draft if needed:\n(1) every POI_VISIT must copy an exact place_id and matching place_name from the provided REC-A-CORE-V2 catalog;\n(2) each day must contain at least two POI_VISIT items;\n(3) do not repeat a place_id unless allow_revisit_place_ids=true;\n(4) use valid non-overlapping HH:MM intervals with start_time < end_time;\n(5) when opening_hours is known and parseable, schedule the POI visit within it, while missing or unknown opening_hours must not be invented;\nand (6) respect the scenario budget when a budget ceiling is provided.\nDo not reveal this checking process; output only the final JSON object."
+  },
+  "system_prompt_sha256_by_id": {
+    "P1": "4bcb84a8aca1fc89f65709ac9d91c88e42359c284850061bae85c3607c345b0e",
+    "P2": "ab8ec41b7099c1c207217a55e1afd7e075d5de6be9b2fc14863329b5535e6c68"
+  },
+  "user_prompt_template_by_id": {
+    "P1": "Bạn là hệ thống lập lịch trình du lịch của GoMate đang chạy ở chế độ kiểm định khoa học (BENCHMARK MODE — {prompt_version}).\nNhiệm vụ của bạn là tạo lịch trình chi tiết từng ngày bằng JSON hợp lệ dựa trên ngữ cảnh kịch bản và DANH MỤC ĐỊA ĐIỂM ĐƯỢC PHÉP (REC-A-CORE-V2 CATALOG) dưới đây.\n\nTHÔNG TIN KỊCH BẢN (SCENARIO CONTEXT):\n- Mã kịch bản (scenario_id): {scenario_id}\n- Điểm đến (destination): {destination} (destination_slug: {destination_slug})\n- Số ngày: {days} ngày (từ {start_date} đến {end_date})\n- Tổng ngân sách trần (budget ceiling): {budget_formatted} {currency}\n- Phong cách du lịch (travel_style): {travel_style}\n- Sở thích chuẩn hóa (canonical_interests): {canonical_interests_json} ({canonical_interests_vi})\n- Chính sách lặp lại địa điểm (allow_revisit_place_ids): {allow_revisit_policy}\n{additional_notes}\n\nQUY TẮC BẮT BUỘC (SCIENTIFIC BENCHMARK RULES):\nA. PHÂN LOẠI HOẠT ĐỘNG (activity_kind) — CHỈ ĐƯỢC DÙNG 1 TRONG 2 GIÁ TRỊ:\n   1. \"POI_VISIT\":\n      - Dùng cho mọi hoạt động tham quan, ăn uống, cà phê, mua sắm, vui chơi, nghỉ ngơi tại một địa điểm vật lý cụ thể.\n      - BẮT BUỘC có:\n        \"activity_kind\": \"POI_VISIT\"\n        \"place_id\": \"<sao chép CHÍNH XÁC từng ký tự place_id từ DANH MỤC ĐƯỢC PHÉP bên dưới>\"\n        \"place_name\": \"<tên name tương ứng của địa điểm đó trong danh mục>\"\n      - TUYỆT ĐỐI KHÔNG tự bịa ra place_id hoặc địa điểm nằm ngoài danh mục được cung cấp.\n   2. \"TRANSIT_ONLY\":\n      - CHỈ dùng cho hoạt động di chuyển thuần túy giữa các điểm tham quan.\n      - BẮT BUỘC có:\n        \"activity_kind\": \"TRANSIT_ONLY\"\n        \"place_id\": null\n        \"place_name\": null\n      - TUYỆT ĐỐI KHÔNG dùng \"TRANSIT_ONLY\" cho điểm tham quan, nhà hàng, quán cà phê, bảo tàng, công viên, hay bất kỳ địa điểm có tên cụ thể nào.\n\nB. KHÔNG LẶP LẠI ĐỊA ĐIỂM (NO DUPLICATE POI):\n   - Không được lặp lại cùng một \"place_id\" quá một lần trong toàn bộ lịch trình (trừ khi allow_revisit_place_ids = true).\n\nC. THỜI GIAN & CẤU TRÚC NGÀY (SCHEDULE & DAY STRUCTURE):\n   - Mảng \"days\" phải có đúng {days} ngày (day_number từ 1 đến {days}).\n   - YÊU CẦU TỐI THIỂU MỖI NGÀY (min_poi_visits_per_day = 2): Mỗi ngày trong lịch trình BẮT BUỘC có ít nhất 2 hoạt động có \"activity_kind\": \"POI_VISIT\".\n   - CHỈ các hoạt động có \"activity_kind\" == \"POI_VISIT\" mới được tính vào số lượng tối thiểu 2 địa điểm/ngày này; \"TRANSIT_ONLY\" KHÔNG được tính vào số lượng tối thiểu này.\n   - Một ngày chỉ có 1 \"POI_VISIT\" kèm theo bất kỳ số lượng \"TRANSIT_ONLY\" nào đều bị tính là VI PHẠM cấu trúc ngày (non-compliant). Quy tắc tối thiểu 2 \"POI_VISIT\"/ngày này áp dụng ĐỘC LẬP cho TỪNG ngày trong lịch trình.\n   - Mỗi hoạt động phải có \"start_time\" và \"end_time\" đúng định dạng 24 giờ \"HH:MM\" (ví dụ: \"08:00\", \"10:30\"), thỏa mãn start_time < end_time.\n   - Trong cùng một ngày, các khung giờ [start_time, end_time) không được chồng chéo nhau.\n\nD. NGÂN SÁCH ƯỚC LƯỢNG (ESTIMATED BUDGET):\n   - Mỗi hoạt động có \"estimated_cost\" (số nguyên >= 0, đơn vị {currency}).\n   - Tổng \"estimated_cost\" của toàn bộ các hoạt động trong lịch trình phải <= tổng ngân sách trần ({budget_formatted} {currency}).\n\nE. ĐỊNH DẠNG ĐẦU RA (JSON ONLY):\n   - Chỉ trả về DUY NHẤT một đối tượng JSON hợp lệ (không kèm markdown ```json hay văn bản giải thích ngoài JSON):\n{{\n  \"destination\": \"{destination}\",\n  \"total_days\": {days},\n  \"overview\": \"Mô tả tổng quan ngắn gọn về lịch trình.\",\n  \"best_time_to_visit\": \"Thông tin thời điểm phù hợp.\",\n  \"general_tips\": [\n    \"Lưu ý thực tế 1\",\n    \"Lưu ý thực tế 2\"\n  ],\n  \"days\": [\n    {{\n      \"day_number\": 1,\n      \"date\": \"{start_date}\",\n      \"title\": \"Chủ đề ngày 1\",\n      \"items\": [\n        {{\n          \"order_index\": 1,\n          \"start_time\": \"08:00\",\n          \"end_time\": \"09:30\",\n          \"activity_kind\": \"POI_VISIT\",\n          \"activity\": \"Tham quan và trải nghiệm tại địa điểm thứ nhất\",\n          \"place_name\": \"<name địa điểm 1 từ danh mục>\",\n          \"place_id\": \"<place_id địa điểm 1 chính xác từ danh mục>\",\n          \"notes\": \"Ghi chú ngắn gọn cho địa điểm 1\",\n          \"estimated_cost\": 50000,\n          \"transport_mode\": \"motorbike\"\n        }},\n        {{\n          \"order_index\": 2,\n          \"start_time\": \"09:30\",\n          \"end_time\": \"10:00\",\n          \"activity_kind\": \"TRANSIT_ONLY\",\n          \"activity\": \"Di chuyển sang địa điểm tiếp theo\",\n          \"place_name\": null,\n          \"place_id\": null,\n          \"notes\": \"Di chuyển nội đô\",\n          \"estimated_cost\": 30000,\n          \"transport_mode\": \"taxi\"\n        }},\n        {{\n          \"order_index\": 3,\n          \"start_time\": \"10:00\",\n          \"end_time\": \"11:30\",\n          \"activity_kind\": \"POI_VISIT\",\n          \"activity\": \"Tham quan và trải nghiệm tại địa điểm thứ hai\",\n          \"place_name\": \"<name địa điểm 2 từ danh mục>\",\n          \"place_id\": \"<place_id địa điểm 2 chính xác từ danh mục>\",\n          \"notes\": \"Ghi chú ngắn gọn cho địa điểm 2\",\n          \"estimated_cost\": 60000,\n          \"transport_mode\": \"taxi\"\n        }}\n      ]\n    }}\n  ]\n}}\n\nDANH MỤC ĐỊA ĐIỂM ĐƯỢC PHÉP CHO {destination_slug} (ALLOWED REC-A-CORE-V2 POI CATALOG — {catalog_count} POIs, SORTED BY place_id):\n{catalog_json}\n",
+    "P2": "Bạn là hệ thống lập lịch trình du lịch của GoMate đang chạy ở chế độ kiểm định khoa học (BENCHMARK MODE — {prompt_version}).\nNhiệm vụ của bạn là tạo lịch trình chi tiết từng ngày bằng JSON hợp lệ dựa trên ngữ cảnh kịch bản và DANH MỤC ĐỊA ĐIỂM ĐƯỢC PHÉP (REC-A-CORE-V2 CATALOG) dưới đây.\n\nTHÔNG TIN KỊCH BẢN (SCENARIO CONTEXT):\n- Mã kịch bản (scenario_id): {scenario_id}\n- Điểm đến (destination): {destination} (destination_slug: {destination_slug})\n- Số ngày: {days} ngày (từ {start_date} đến {end_date})\n- Tổng ngân sách trần (budget ceiling): {budget_formatted} {currency}\n- Phong cách du lịch (travel_style): {travel_style}\n- Sở thích chuẩn hóa (canonical_interests): {canonical_interests_json} ({canonical_interests_vi})\n- Chính sách lặp lại địa điểm (allow_revisit_place_ids): {allow_revisit_policy}\n{additional_notes}\n\nQUY TẮC BẮT BUỘC (SCIENTIFIC BENCHMARK RULES):\nA. PHÂN LOẠI HOẠT ĐỘNG (activity_kind) — CHỈ ĐƯỢC DÙNG 1 TRONG 2 GIÁ TRỊ:\n   1. \"POI_VISIT\":\n      - Dùng cho mọi hoạt động tham quan, ăn uống, cà phê, mua sắm, vui chơi, nghỉ ngơi tại một địa điểm vật lý cụ thể.\n      - BẮT BUỘC có:\n        \"activity_kind\": \"POI_VISIT\"\n        \"place_id\": \"<sao chép CHÍNH XÁC từng ký tự place_id từ DANH MỤC ĐƯỢC PHÉP bên dưới>\"\n        \"place_name\": \"<tên name tương ứng của địa điểm đó trong danh mục>\"\n      - TUYỆT ĐỐI KHÔNG tự bịa ra place_id hoặc địa điểm nằm ngoài danh mục được cung cấp.\n   2. \"TRANSIT_ONLY\":\n      - CHỈ dùng cho hoạt động di chuyển thuần túy giữa các điểm tham quan.\n      - BẮT BUỘC có:\n        \"activity_kind\": \"TRANSIT_ONLY\"\n        \"place_id\": null\n        \"place_name\": null\n      - TUYỆT ĐỐI KHÔNG dùng \"TRANSIT_ONLY\" cho điểm tham quan, nhà hàng, quán cà phê, bảo tàng, công viên, hay bất kỳ địa điểm có tên cụ thể nào.\n\nB. KHÔNG LẶP LẠI ĐỊA ĐIỂM (NO DUPLICATE POI):\n   - Không được lặp lại cùng một \"place_id\" quá một lần trong toàn bộ lịch trình (trừ khi allow_revisit_place_ids = true).\n\nC. THỜI GIAN & CẤU TRÚC NGÀY (SCHEDULE & DAY STRUCTURE):\n   - Mảng \"days\" phải có đúng {days} ngày (day_number từ 1 đến {days}).\n   - YÊU CẦU TỐI THIỂU MỖI NGÀY (min_poi_visits_per_day = 2): Mỗi ngày trong lịch trình BẮT BUỘC có ít nhất 2 hoạt động có \"activity_kind\": \"POI_VISIT\".\n   - CHỈ các hoạt động có \"activity_kind\" == \"POI_VISIT\" mới được tính vào số lượng tối thiểu 2 địa điểm/ngày này; \"TRANSIT_ONLY\" KHÔNG được tính vào số lượng tối thiểu này.\n   - Một ngày chỉ có 1 \"POI_VISIT\" kèm theo bất kỳ số lượng \"TRANSIT_ONLY\" nào đều bị tính là VI PHẠM cấu trúc ngày (non-compliant). Quy tắc tối thiểu 2 \"POI_VISIT\"/ngày này áp dụng ĐỘC LẬP cho TỪNG ngày trong lịch trình.\n   - Mỗi hoạt động phải có \"start_time\" và \"end_time\" đúng định dạng 24 giờ \"HH:MM\" (ví dụ: \"08:00\", \"10:30\"), thỏa mãn start_time < end_time.\n   - Trong cùng một ngày, các khung giờ [start_time, end_time) không được chồng chéo nhau.\n\nD. NGÂN SÁCH ƯỚC LƯỢNG (ESTIMATED BUDGET):\n   - Mỗi hoạt động có \"estimated_cost\" (số nguyên >= 0, đơn vị {currency}).\n   - Tổng \"estimated_cost\" của toàn bộ các hoạt động trong lịch trình phải <= tổng ngân sách trần ({budget_formatted} {currency}).\n\nE. ĐỊNH DẠNG ĐẦU RA (JSON ONLY):\n   - Chỉ trả về DUY NHẤT một đối tượng JSON hợp lệ (không kèm markdown ```json hay văn bản giải thích ngoài JSON):\n{{\n  \"destination\": \"{destination}\",\n  \"total_days\": {days},\n  \"overview\": \"Mô tả tổng quan ngắn gọn về lịch trình.\",\n  \"best_time_to_visit\": \"Thông tin thời điểm phù hợp.\",\n  \"general_tips\": [\n    \"Lưu ý thực tế 1\",\n    \"Lưu ý thực tế 2\"\n  ],\n  \"days\": [\n    {{\n      \"day_number\": 1,\n      \"date\": \"{start_date}\",\n      \"title\": \"Chủ đề ngày 1\",\n      \"items\": [\n        {{\n          \"order_index\": 1,\n          \"start_time\": \"08:00\",\n          \"end_time\": \"09:30\",\n          \"activity_kind\": \"POI_VISIT\",\n          \"activity\": \"Tham quan và trải nghiệm tại địa điểm thứ nhất\",\n          \"place_name\": \"<name địa điểm 1 từ danh mục>\",\n          \"place_id\": \"<place_id địa điểm 1 chính xác từ danh mục>\",\n          \"notes\": \"Ghi chú ngắn gọn cho địa điểm 1\",\n          \"estimated_cost\": 50000,\n          \"transport_mode\": \"motorbike\"\n        }},\n        {{\n          \"order_index\": 2,\n          \"start_time\": \"09:30\",\n          \"end_time\": \"10:00\",\n          \"activity_kind\": \"TRANSIT_ONLY\",\n          \"activity\": \"Di chuyển sang địa điểm tiếp theo\",\n          \"place_name\": null,\n          \"place_id\": null,\n          \"notes\": \"Di chuyển nội đô\",\n          \"estimated_cost\": 30000,\n          \"transport_mode\": \"taxi\"\n        }},\n        {{\n          \"order_index\": 3,\n          \"start_time\": \"10:00\",\n          \"end_time\": \"11:30\",\n          \"activity_kind\": \"POI_VISIT\",\n          \"activity\": \"Tham quan và trải nghiệm tại địa điểm thứ hai\",\n          \"place_name\": \"<name địa điểm 2 từ danh mục>\",\n          \"place_id\": \"<place_id địa điểm 2 chính xác từ danh mục>\",\n          \"notes\": \"Ghi chú ngắn gọn cho địa điểm 2\",\n          \"estimated_cost\": 60000,\n          \"transport_mode\": \"taxi\"\n        }}\n      ]\n    }}\n  ]\n}}\n\nDANH MỤC ĐỊA ĐIỂM ĐƯỢC PHÉP CHO {destination_slug} (ALLOWED REC-A-CORE-V2 POI CATALOG — {catalog_count} POIs, SORTED BY place_id):\n{catalog_json}\n"
+  },
+  "user_prompt_template_sha256_by_id": {
+    "P1": "19762f7c72b4dd19b57c29e160d9195b8f2c72e836188823e9949f271a22f5de",
+    "P2": "19762f7c72b4dd19b57c29e160d9195b8f2c72e836188823e9949f271a22f5de"
+  },
+  "version": "1.0.0"
+}
