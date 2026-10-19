@@ -1,0 +1,690 @@
+{
+  "artifacts": {
+    "dev_tune_plan_file_sha256": "15c93d3abcc27e4eff8b26984a9575d59e3541725cad815521d83c164bd9d29a",
+    "dev_tune_plan_relative_path": "data/evaluation/w06/w06_dev_tune_execution_plan_v1.json",
+    "dev_tune_plan_sha256": "30695d74b19e950d065f612ce069cfc325ad7f79338b3be314624fefc514aad0",
+    "prompt_freeze_artifact_id": "W06-DEV-PROMPT-CANDIDATE-FREEZE-01-V1",
+    "prompt_freeze_artifact_version": "1.0.0",
+    "prompt_freeze_relative_path": "data/evaluation/w06/w06_dev_prompt_candidate_freeze_v1.json",
+    "prompt_freeze_sha256": "c1662592615c4821d6840065938c66578c49755f6657fc592cf5c795afd95bb3",
+    "receipt_relative_path": "data/evaluation/w06/w06_dev_prompt_candidate_freeze_01_receipt_v1.json"
+  },
+  "base_develop_sha": "60d52d720e66f5af8e82fabf9cebe2ea0e8a9e26",
+  "checks": [
+    {
+      "check_id": "PF-01",
+      "description": "Source develop SHA exists and is ancestor of HEAD",
+      "domain": "SOURCE_STATE",
+      "expected": {
+        "base_develop_sha": "60d52d720e66f5af8e82fabf9cebe2ea0e8a9e26",
+        "is_ancestor": true
+      },
+      "observed": {
+        "base_develop_sha": "60d52d720e66f5af8e82fabf9cebe2ea0e8a9e26",
+        "commit_exists": true,
+        "is_ancestor": true
+      },
+      "status": "PASS"
+    },
+    {
+      "check_id": "PF-02",
+      "description": "14-file scientific code bundle SHA256 is unchanged",
+      "domain": "SCIENTIFIC_CODE_BUNDLE",
+      "expected": {
+        "file_count": 14,
+        "scientific_code_bundle_sha256": "0638f2fcb100b0000e3a2a4e08137a9d468449001f258de7354df21e185ca2e3"
+      },
+      "observed": {
+        "file_count": 14,
+        "scientific_code_bundle_sha256": "0638f2fcb100b0000e3a2a4e08137a9d468449001f258de7354df21e185ca2e3"
+      },
+      "status": "PASS"
+    },
+    {
+      "check_id": "PF-03",
+      "description": "P1 reconstructed exclusively from frozen authorities without character edits",
+      "domain": "P1_BASELINE",
+      "expected": {
+        "prompt_id": "P1",
+        "prompt_version": "TRAVEL_PLANNER_BENCHMARK_V2",
+        "system_prompt_sha256": "4bcb84a8aca1fc89f65709ac9d91c88e42359c284850061bae85c3607c345b0e",
+        "user_prompt_template_sha256": "19762f7c72b4dd19b57c29e160d9195b8f2c72e836188823e9949f271a22f5de"
+      },
+      "observed": {
+        "prompt_id": "P1",
+        "prompt_version": "TRAVEL_PLANNER_BENCHMARK_V2",
+        "system_prompt_sha256": "4bcb84a8aca1fc89f65709ac9d91c88e42359c284850061bae85c3607c345b0e",
+        "user_prompt_template_sha256": "19762f7c72b4dd19b57c29e160d9195b8f2c72e836188823e9949f271a22f5de"
+      },
+      "status": "PASS"
+    },
+    {
+      "check_id": "PF-04",
+      "description": "P1 semantic prompt SHA256 matches authoritative repository artifact w06_dev_selection_harness_v1.json",
+      "domain": "P1_SEMANTIC_HASH",
+      "expected": "096ff4c74dd8d1aed1c0abe501b97c8dfd0f6424dbca535f2b79a242637a1c11",
+      "observed": "096ff4c74dd8d1aed1c0abe501b97c8dfd0f6424dbca535f2b79a242637a1c11",
+      "status": "PASS"
+    },
+    {
+      "check_id": "PF-05",
+      "description": "P2 system prompt equals PREFLIGHT_SHARED_SYSTEM_PROMPT + one newline + exact pre-results suffix",
+      "domain": "P2_CANDIDATE",
+      "expected": {
+        "prompt_id": "P2",
+        "prompt_version": "W06_DEV_TUNE_CANDIDATE_P2_V1",
+        "semantic_prompt_sha256": "fa59900481275200f0d50bdfdc4a2b3d5177b2be0e34d00402a459366adf2c34",
+        "system_prompt_sha256": "ab8ec41b7099c1c207217a55e1afd7e075d5de6be9b2fc14863329b5535e6c68"
+      },
+      "observed": {
+        "prompt_id": "P2",
+        "prompt_version": "W06_DEV_TUNE_CANDIDATE_P2_V1",
+        "semantic_prompt_sha256": "fa59900481275200f0d50bdfdc4a2b3d5177b2be0e34d00402a459366adf2c34",
+        "system_prompt_sha256": "ab8ec41b7099c1c207217a55e1afd7e075d5de6be9b2fc14863329b5535e6c68"
+      },
+      "status": "PASS"
+    },
+    {
+      "check_id": "PF-06",
+      "description": "P2 user_prompt_template and SHA256 are identical to P1",
+      "domain": "CONTROLLED_EXPERIMENT",
+      "expected": "19762f7c72b4dd19b57c29e160d9195b8f2c72e836188823e9949f271a22f5de",
+      "observed": "19762f7c72b4dd19b57c29e160d9195b8f2c72e836188823e9949f271a22f5de",
+      "status": "PASS"
+    },
+    {
+      "check_id": "PF-07",
+      "description": "P2 is provider-neutral and created before live DEV execution",
+      "domain": "PROVIDER_NEUTRALITY",
+      "expected": {
+        "created_before_live_dev_execution": true,
+        "forbidden_provider_tokens": [],
+        "provider_specific_semantic_prompt": false
+      },
+      "observed": {
+        "created_before_live_dev_execution": true,
+        "forbidden_provider_tokens": [],
+        "provider_specific_semantic_prompt": false
+      },
+      "status": "PASS"
+    },
+    {
+      "check_id": "PF-08",
+      "description": "PromptRegistry contains ordered ['P1', 'P2'] with max_allowed_prompts=2 and expected SHA256",
+      "domain": "PROMPT_REGISTRY",
+      "expected": {
+        "max_allowed_prompts": 2,
+        "prompt_ids": [
+          "P1",
+          "P2"
+        ],
+        "registry_sha256": "87a60d601de7d427febec60d1b3d6ccd18240c18b1fa8778d3b4954eb7318a99"
+      },
+      "observed": {
+        "max_allowed_prompts": 2,
+        "prompt_ids": [
+          "P1",
+          "P2"
+        ],
+        "registry_sha256": "87a60d601de7d427febec60d1b3d6ccd18240c18b1fa8778d3b4954eb7318a99"
+      },
+      "status": "PASS"
+    },
+    {
+      "check_id": "PF-09",
+      "description": "P3 and >2 prompt candidates are rejected fail-closed",
+      "domain": "PROMPT_REGISTRY",
+      "expected": {
+        "p3_spec_rejected": true,
+        "three_prompts_rejected": true
+      },
+      "observed": {
+        "p3_spec_rejected": true,
+        "three_prompts_rejected": true
+      },
+      "status": "PASS"
+    },
+    {
+      "check_id": "PF-10",
+      "description": "Frozen DEV bundle SHA256 and 80/20/60 split counts match exactly",
+      "domain": "DEV_BUNDLE",
+      "expected": {
+        "dev_bundle_sha256": "bb0f051446ea3da8229298f22f4ce92b4db20751695273c6d01b7766da044050",
+        "dev_select": 60,
+        "dev_total": 80
+      },
+      "observed": {
+        "dev_bundle_sha256": "bb0f051446ea3da8229298f22f4ce92b4db20751695273c6d01b7766da044050",
+        "dev_select": 60,
+        "dev_total": 80
+      },
+      "status": "PASS"
+    },
+    {
+      "check_id": "PF-11",
+      "description": "DEV-TUNE contains exactly 20 fixtures and uses only DEV_TUNE split",
+      "domain": "DEV_TUNE_SPLIT",
+      "expected": {
+        "all_dev_tune_prefix": true,
+        "dev_tune_count": 20
+      },
+      "observed": {
+        "all_dev_tune_prefix": true,
+        "dev_tune_count": 20
+      },
+      "status": "PASS"
+    },
+    {
+      "check_id": "PF-12",
+      "description": "DEV-TUNE execution plan contains 20 x 2 x 3 x 1 = 120 cells exactly",
+      "domain": "DEV_TUNE_PLAN",
+      "expected": 120,
+      "observed": 120,
+      "status": "PASS"
+    },
+    {
+      "check_id": "PF-13",
+      "description": "Each prompt candidate (P1, P2) has exactly 60 cells in DEV-TUNE plan",
+      "domain": "DEV_TUNE_PLAN",
+      "expected": {
+        "P1": 60,
+        "P2": 60
+      },
+      "observed": {
+        "P1": 60,
+        "P2": 60
+      },
+      "status": "PASS"
+    },
+    {
+      "check_id": "PF-14",
+      "description": "Each model candidate (C1, C2, C3) has exactly 40 cells in DEV-TUNE plan",
+      "domain": "DEV_TUNE_PLAN",
+      "expected": {
+        "C1": 40,
+        "C2": 40,
+        "C3": 40
+      },
+      "observed": {
+        "C1": 40,
+        "C2": 40,
+        "C3": 40
+      },
+      "status": "PASS"
+    },
+    {
+      "check_id": "PF-15",
+      "description": "Each of the 20 DEV-TUNE fixtures has exactly 6 cells (2 prompts x 3 candidates)",
+      "domain": "DEV_TUNE_PLAN",
+      "expected": {
+        "cells_per_fixture": 6,
+        "distinct_fixtures": 20
+      },
+      "observed": {
+        "distinct_fixtures": 20,
+        "max_cells": 6,
+        "min_cells": 6
+      },
+      "status": "PASS"
+    },
+    {
+      "check_id": "PF-16",
+      "description": "All 120 run_id values in DEV-TUNE plan are unique",
+      "domain": "PLAN_DETERMINISM",
+      "expected": 120,
+      "observed": 120,
+      "status": "PASS"
+    },
+    {
+      "check_id": "PF-17",
+      "description": "All 120 (phase, prompt_id, candidate_id, fixture_id, attempt_number) keys are unique",
+      "domain": "PLAN_DETERMINISM",
+      "expected": 120,
+      "observed": 120,
+      "status": "PASS"
+    },
+    {
+      "check_id": "PF-18",
+      "description": "All 120 cells enforce attempt_number=1, retry=0, automatic_retry=0, transport_retry=0, manual_retry=0, fallback=false",
+      "domain": "EXECUTION_CONTROLS",
+      "expected": {
+        "attempt_number": 1,
+        "automatic_retry": 0,
+        "fallback": false,
+        "manual_retry": 0,
+        "retry": 0,
+        "transport_retry": 0
+      },
+      "observed": {
+        "attempt_number": 1,
+        "automatic_retry": 0,
+        "fallback": false,
+        "manual_retry": 0,
+        "retry": 0,
+        "transport_retry": 0
+      },
+      "status": "PASS"
+    },
+    {
+      "check_id": "PF-19",
+      "description": "tools is False across all 120 cells",
+      "domain": "EXECUTION_CONTROLS",
+      "expected": false,
+      "observed": false,
+      "status": "PASS"
+    },
+    {
+      "check_id": "PF-20",
+      "description": "repair=0, llm_repair=0, and deterministic_semantic_repair=False across all 120 cells",
+      "domain": "EXECUTION_CONTROLS",
+      "expected": {
+        "deterministic_semantic_repair": false,
+        "llm_repair": 0,
+        "repair": 0
+      },
+      "observed": {
+        "deterministic_semantic_repair": false,
+        "llm_repair": 0,
+        "repair": 0
+      },
+      "status": "PASS"
+    },
+    {
+      "check_id": "PF-21",
+      "description": "Portable Schema V2 SHA256 matches frozen authority across freeze artifact and all 120 cells",
+      "domain": "SCHEMA_PARITY",
+      "expected": "825a4ff912d851a95f7392cb564b7d7ca3588135508dc6eb3ac6304cdde3c490",
+      "observed": "825a4ff912d851a95f7392cb564b7d7ca3588135508dc6eb3ac6304cdde3c490",
+      "status": "PASS"
+    },
+    {
+      "check_id": "PF-22",
+      "description": "Semantic Schema SHA256 matches frozen authority across all 120 cells",
+      "domain": "SCHEMA_PARITY",
+      "expected": "e4169f7b890f77d13af65e9f2070b6071c535b206d88440f5e8f28c179977555",
+      "observed": "e4169f7b890f77d13af65e9f2070b6071c535b206d88440f5e8f28c179977555",
+      "status": "PASS"
+    },
+    {
+      "check_id": "PF-23",
+      "description": "Provider configuration registry and C1/C2/C3 preflight eligibility match frozen contract",
+      "domain": "PROVIDER_CONFIG",
+      "expected": {
+        "candidates": {
+          "C1": "gemini-3.8-flash",
+          "C2": "gpt-6.1-sol",
+          "C3": "claude-sonnet-5-5"
+        },
+        "provider_config_registry_sha256": "3dc05d29acc2f647cba58303865bd7406b8c1d9f7ccbe0f120e87ad471190938"
+      },
+      "observed": {
+        "candidates": {
+          "C1": "gemini-3.8-flash",
+          "C2": "gpt-6.1-sol",
+          "C3": "claude-sonnet-5-5"
+        },
+        "provider_config_registry_sha256": "3dc05d29acc2f647cba58303865bd7406b8c1d9f7ccbe0f120e87ad471190938"
+      },
+      "status": "PASS"
+    },
+    {
+      "check_id": "PF-24",
+      "description": "DevPromptFreezeArtifact passes both harness and live-runner fail-closed verifiers",
+      "domain": "PROMPT_FREEZE_VERIFICATION",
+      "expected": {
+        "artifact_id": "W06-DEV-PROMPT-CANDIDATE-FREEZE-01-V1",
+        "freeze_status": "FROZEN_FOR_LIVE_DEV_TUNE",
+        "verified": true,
+        "version": "1.0.0"
+      },
+      "observed": {
+        "artifact_id": "W06-DEV-PROMPT-CANDIDATE-FREEZE-01-V1",
+        "freeze_status": "FROZEN_FOR_LIVE_DEV_TUNE",
+        "verified": true,
+        "version": "1.0.0"
+      },
+      "status": "PASS"
+    },
+    {
+      "check_id": "PF-25",
+      "description": "Repeated generation of DEV-TUNE execution plan produces identical content and SHA256",
+      "domain": "PLAN_DETERMINISM",
+      "expected": "30695d74b19e950d065f612ce069cfc325ad7f79338b3be314624fefc514aad0",
+      "observed": "30695d74b19e950d065f612ce069cfc325ad7f79338b3be314624fefc514aad0",
+      "status": "PASS"
+    },
+    {
+      "check_id": "PF-26",
+      "description": "Repeated generation of DevPromptFreezeArtifact produces identical canonical JSON SHA256",
+      "domain": "FREEZE_DETERMINISM",
+      "expected": "c1662592615c4821d6840065938c66578c49755f6657fc592cf5c795afd95bb3",
+      "observed": "c1662592615c4821d6840065938c66578c49755f6657fc592cf5c795afd95bb3",
+      "status": "PASS"
+    },
+    {
+      "check_id": "PF-27",
+      "description": "Direct access to w06_scenarios_freeze_v1.json is blocked fail-closed",
+      "domain": "FINAL100_FIREWALL",
+      "expected": true,
+      "observed": true,
+      "status": "PASS"
+    },
+    {
+      "check_id": "PF-28",
+      "description": "Renamed copy of Final100 artifact is blocked by forbidden SHA256 firewall",
+      "domain": "FINAL100_FIREWALL",
+      "expected": true,
+      "observed": true,
+      "status": "PASS"
+    },
+    {
+      "check_id": "PF-29",
+      "description": "Direct and renamed copies of w06_p11_assignment_manifest_v1.json are blocked fail-closed",
+      "domain": "FINAL100_FIREWALL",
+      "expected": {
+        "direct_blocked": true,
+        "renamed_blocked": true
+      },
+      "observed": {
+        "direct_blocked": true,
+        "renamed_blocked": true
+      },
+      "status": "PASS"
+    },
+    {
+      "check_id": "PF-30",
+      "description": "Zero outbound provider or socket calls occurred during prompt freeze and verification",
+      "domain": "NETWORK_ISOLATION",
+      "expected": {
+        "blocked_network_attempts": [],
+        "live_provider_calls": 0
+      },
+      "observed": {
+        "blocked_network_attempts": [],
+        "live_provider_calls": 0
+      },
+      "status": "PASS"
+    },
+    {
+      "check_id": "PF-31",
+      "description": "Freeze generation and verification succeed with zero provider API keys in environment",
+      "domain": "OFFLINE_ENVIRONMENT",
+      "expected": [],
+      "observed": [],
+      "status": "PASS"
+    },
+    {
+      "check_id": "PF-32",
+      "description": "Zero files in SCIENTIFIC_CODE_BUNDLE_RELATIVE_PATHS modified relative to base develop",
+      "domain": "SCIENTIFIC_CODE_IMMUTABILITY",
+      "expected": [],
+      "observed": [],
+      "status": "PASS"
+    },
+    {
+      "check_id": "PF-33",
+      "description": "No live_authorization.json or stage_a_freeze_receipt.json artifacts created",
+      "domain": "LIVE_GATE_FIREWALL",
+      "expected": [],
+      "observed": [],
+      "status": "PASS"
+    },
+    {
+      "check_id": "PF-34",
+      "description": "No winning prompt or winning model selected during prompt freeze task",
+      "domain": "PRE_RESULTS_BOUNDARY",
+      "expected": {
+        "winner_files": [],
+        "winner_model_selected": false,
+        "winning_prompt_selected": false
+      },
+      "observed": {
+        "winner_files": [],
+        "winner_model_selected": false,
+        "winning_prompt_selected": false
+      },
+      "status": "PASS"
+    },
+    {
+      "check_id": "PF-35",
+      "description": "Future DEV-TUNE prompt selection rule enforces 60 cells/prompt, ordered criteria (VALID_RUN_AND_SCHEMA_RATE -> EXACT_GROUNDING_PASS_RATE -> FINAL_CORE_PASS_RATE), 10pp set-based survival, and P1 administrative tie-break",
+      "domain": "FUTURE_SELECTION_RULE",
+      "expected": {
+        "administrative_tie_winner": "P1",
+        "ordered_criteria": [
+          "VALID_RUN_AND_SCHEMA_RATE",
+          "EXACT_GROUNDING_PASS_RATE",
+          "FINAL_CORE_PASS_RATE",
+          "ADMINISTRATIVE_TIEBREAK_P1"
+        ],
+        "relative_threshold": "0.10",
+        "used_cost_or_latency": false,
+        "used_final100": false
+      },
+      "observed": {
+        "administrative_tie_winner": "P1",
+        "ordered_criteria": [
+          "VALID_RUN_AND_SCHEMA_RATE",
+          "EXACT_GROUNDING_PASS_RATE",
+          "FINAL_CORE_PASS_RATE",
+          "ADMINISTRATIVE_TIEBREAK_P1"
+        ],
+        "relative_threshold": "0.10",
+        "used_cost_or_latency": false,
+        "used_final100": false
+      },
+      "status": "PASS"
+    }
+  ],
+  "code_and_schema_provenance": {
+    "candidate_registry_sha256": "4dd29164afdf7f364978420f41ab88ef07ec396062188169fcb859a9ef01e058",
+    "code_basis_commit_sha": "60d52d720e66f5af8e82fabf9cebe2ea0e8a9e26",
+    "forbidden_final100_sha256s": [
+      "0aa9ae923d0e7f29df49735fa41e87530b1caf62418fcbec09a1eff81d83af62",
+      "c03bc6dc300604ac395505d59b6413c1a47339b21408cfd637671e81d4b555a1"
+    ],
+    "portable_schema_v2_sha256": "825a4ff912d851a95f7392cb564b7d7ca3588135508dc6eb3ac6304cdde3c490",
+    "provider_config_registry_sha256": "3dc05d29acc2f647cba58303865bd7406b8c1d9f7ccbe0f120e87ad471190938",
+    "provider_config_sha256_by_candidate": {
+      "C1": "d4d417bdeff3f4156ac9605f976b46780c1cb0866d87674f1cee51d8bf3f3217",
+      "C2": "6201244268383e85106b4d6e6ad0f503e066de9def361cbafa685227e8ba332e",
+      "C3": "5ecff5a4e2899245d1cd113285d1193dad17b6ed4e7521bd10be3937650d2a29"
+    },
+    "scientific_code_bundle_file_count": 14,
+    "scientific_code_bundle_file_hashes": [
+      {
+        "path": "apps/ai-service/app/evaluation/dev_live_runner.py",
+        "sha256": "9f3441c2ca290e9a33b4daa78eaaa58063978364d8375145fc7483b04ed8b817"
+      },
+      {
+        "path": "apps/ai-service/app/evaluation/dev_selection_harness.py",
+        "sha256": "85b17c2daa1ea59e26c3118d5cafb38cb3c73a5d57288e2fb4e5fc0e0a732c97"
+      },
+      {
+        "path": "apps/ai-service/app/evaluation/model_preflight/__init__.py",
+        "sha256": "178aede4930a6b848714fa6d84e14e415df35d1bf7641312ff6f311e3de477dd"
+      },
+      {
+        "path": "apps/ai-service/app/evaluation/model_preflight/anthropic_adapter.py",
+        "sha256": "ef2570126f6db736a4ef056ac27fcfc77db97fa6ed6526c901e299c71b1b1d42"
+      },
+      {
+        "path": "apps/ai-service/app/evaluation/model_preflight/base.py",
+        "sha256": "55bd026f224eaf15f5fb68e98d9cd9467bf85f0f90305acac397caef0970454d"
+      },
+      {
+        "path": "apps/ai-service/app/evaluation/model_preflight/google_adapter.py",
+        "sha256": "184887b19826094326e5fea47efd7aec71308b36af404225f5ef8d0d40882f1c"
+      },
+      {
+        "path": "apps/ai-service/app/evaluation/model_preflight/openai_adapter.py",
+        "sha256": "62b72237402808ab88d71627ce05d948d4b7d251ba87af51208876c784ee9346"
+      },
+      {
+        "path": "apps/ai-service/app/evaluation/model_preflight/schema_adapter.py",
+        "sha256": "19513c8735ba4acb2b88587915d6458de2c28d622499c05314d4f9030eb3c589"
+      },
+      {
+        "path": "apps/ai-service/app/evaluation/model_preflight/types.py",
+        "sha256": "1fdb31f200a71df4193f1fe4844b49dc1e9750c51c7388e6642dac44ae349371"
+      },
+      {
+        "path": "apps/ai-service/app/evaluation/planner_benchmark_evaluator.py",
+        "sha256": "1b299f75a3a51d01b63b1b004df3d8b9d92224591ccde5d537b83735ca268f66"
+      },
+      {
+        "path": "apps/ai-service/app/prompts/planner_benchmark_prompt.py",
+        "sha256": "22aa9cd172548fe51a8699704e5832ad44e1d8e946a1ad79437aed99d46c98cb"
+      },
+      {
+        "path": "apps/ai-service/app/schemas/planner_benchmark.py",
+        "sha256": "3f27ed7e12b2492d722937d4f36476e8dbf97635c281a6e270fd0621cc18e712"
+      },
+      {
+        "path": "apps/ai-service/app/services/planner_benchmark_runner.py",
+        "sha256": "2831f5aadd80959a86f388508c73679215830ca8854f2a4fbd474328fa7288b7"
+      },
+      {
+        "path": "apps/ai-service/recommendation/reca/contract.py",
+        "sha256": "1a62c36a95092be35ab78dca43e20f646016e154746ee051a499bdebfc67538c"
+      }
+    ],
+    "scientific_code_bundle_sha256": "0638f2fcb100b0000e3a2a4e08137a9d468449001f258de7354df21e185ca2e3",
+    "scientific_code_bundle_unchanged": true,
+    "semantic_schema_sha256": "e4169f7b890f77d13af65e9f2070b6071c535b206d88440f5e8f28c179977555"
+  },
+  "code_basis_commit_sha": "60d52d720e66f5af8e82fabf9cebe2ea0e8a9e26",
+  "dev_tune_execution_plan": {
+    "actual_dev_tune_cells": 120,
+    "candidates": 3,
+    "cells_per_candidate": {
+      "C1": 40,
+      "C2": 40,
+      "C3": 40
+    },
+    "cells_per_fixture": 6,
+    "cells_per_prompt": {
+      "P1": 60,
+      "P2": 60
+    },
+    "dev_bundle_relative_path": "data/evaluation/w06/w06_dev_fixtures_freeze_v1.json",
+    "dev_bundle_sha256": "bb0f051446ea3da8229298f22f4ce92b4db20751695273c6d01b7766da044050",
+    "dev_select_fixtures": 60,
+    "dev_total_fixtures": 80,
+    "dev_tune_fixtures": 20,
+    "dev_tune_plan_file_sha256": "15c93d3abcc27e4eff8b26984a9575d59e3541725cad815521d83c164bd9d29a",
+    "dev_tune_plan_sha256": "30695d74b19e950d065f612ce069cfc325ad7f79338b3be314624fefc514aad0",
+    "executions_per_cell": 1,
+    "expected_dev_tune_cells": 120,
+    "phase": "DEV_TUNE",
+    "prompts": 2
+  },
+  "future_prompt_selection_rule": {
+    "administrative_tie_breaker": "P1",
+    "aggregation_scope": "20 DEV-TUNE fixtures x 3 candidates = 60 cells per prompt (120 cells total, 0 retries)",
+    "cost_criterion_used": false,
+    "final100_used": false,
+    "latency_criterion_used": false,
+    "ordered_criteria": [
+      "VALID_RUN_AND_SCHEMA_RATE",
+      "EXACT_GROUNDING_PASS_RATE",
+      "FINAL_CORE_PASS_RATE"
+    ],
+    "survival_band_relative_to_best": 0.1,
+    "survival_mode": "SET_BASED_RELATIVE_TO_BEST_NO_PAIRWISE_CHAINING",
+    "weighted_composite_used": false,
+    "winning_prompt_selected_now": false
+  },
+  "prompt_registry": {
+    "max_allowed_prompts": 2,
+    "prompt_candidate_ids": [
+      "P1",
+      "P2"
+    ],
+    "prompt_registry_sha256": "87a60d601de7d427febec60d1b3d6ccd18240c18b1fa8778d3b4954eb7318a99"
+  },
+  "prompts": {
+    "P1": {
+      "created_before_live_dev_execution": true,
+      "prompt_id": "P1",
+      "prompt_version": "TRAVEL_PLANNER_BENCHMARK_V2",
+      "provider_specific_semantic_prompt": false,
+      "semantic_prompt_sha256": "096ff4c74dd8d1aed1c0abe501b97c8dfd0f6424dbca535f2b79a242637a1c11",
+      "system_prompt_sha256": "4bcb84a8aca1fc89f65709ac9d91c88e42359c284850061bae85c3607c345b0e",
+      "user_prompt_template_sha256": "19762f7c72b4dd19b57c29e160d9195b8f2c72e836188823e9949f271a22f5de"
+    },
+    "P2": {
+      "created_before_live_dev_execution": true,
+      "prompt_id": "P2",
+      "prompt_version": "W06_DEV_TUNE_CANDIDATE_P2_V1",
+      "provider_specific_semantic_prompt": false,
+      "semantic_prompt_sha256": "fa59900481275200f0d50bdfdc4a2b3d5177b2be0e34d00402a459366adf2c34",
+      "system_prompt_sha256": "ab8ec41b7099c1c207217a55e1afd7e075d5de6be9b2fc14863329b5535e6c68",
+      "system_prompt_suffix": "Before returning the JSON, perform a silent constraint check and correct the draft if needed:\n(1) every POI_VISIT must copy an exact place_id and matching place_name from the provided REC-A-CORE-V2 catalog;\n(2) each day must contain at least two POI_VISIT items;\n(3) do not repeat a place_id unless allow_revisit_place_ids=true;\n(4) use valid non-overlapping HH:MM intervals with start_time < end_time;\n(5) when opening_hours is known and parseable, schedule the POI visit within it, while missing or unknown opening_hours must not be invented;\nand (6) respect the scenario budget when a budget ceiling is provided.\nDo not reveal this checking process; output only the final JSON object.",
+      "user_prompt_template_sha256": "19762f7c72b4dd19b57c29e160d9195b8f2c72e836188823e9949f271a22f5de"
+    },
+    "p1_historical_hash_verification": {
+      "authoritative_harness_qa_01_p1_semantic_prompt_sha256": "096ff4c74dd8d1aed1c0abe501b97c8dfd0f6424dbca535f2b79a242637a1c11",
+      "authoritative_repository_p1_semantic_prompt_sha256": "096ff4c74dd8d1aed1c0abe501b97c8dfd0f6424dbca535f2b79a242637a1c11",
+      "computed_p1_semantic_prompt_sha256": "096ff4c74dd8d1aed1c0abe501b97c8dfd0f6424dbca535f2b79a242637a1c11",
+      "explanation": "Section 3 instructed: 'Expected historical semantic prompt hash, if still authoritative: 49399ca4ab45e98dd7da05c94609d5bf5c03667ca79a96f52c7f330f357ac5e9. Verify rather than blindly trust this value.' Independent verification confirms that 49399ca4... was a stale prose value from the PR #47 summary message (explicitly flagged in W06-DEV-SELECTION-HARNESS-01-MERGE-CLOSE as non-authoritative prose), whereas the authoritative repository artifact data/evaluation/w06/w06_dev_selection_harness_v1.json (line 216) and data/evaluation/w06/w06_dev_selection_harness_qa_01_receipt_v1.json (line 1173) recorded 096ff4c74dd8d1aed1c0abe501b97c8dfd0f6424dbca535f2b79a242637a1c11. Both planner_benchmark_prompt.py (22aa9cd172548fe51a8699704e5832ad44e1d8e946a1ad79437aed99d46c98cb) and model_preflight/base.py (55bd026f224eaf15f5fb68e98d9cd9467bf85f0f90305acac397caef0970454d) are 100% unchanged.",
+      "historical_section3_candidate_value": "49399ca4ab45e98dd7da05c94609d5bf5c03667ca79a96f52c7f330f357ac5e9",
+      "historical_section3_value_was_authoritative": false,
+      "zero_code_or_prompt_drift_since_harness_freeze": true
+    },
+    "p1_p2_user_template_identical": true,
+    "provider_specific_prompts": false
+  },
+  "schema_version": "1.0.0",
+  "scientific_decision": {
+    "claim_boundary": {
+      "p1_claimed_inferior": false,
+      "p2_claimed_superior": false,
+      "scope": [
+        "candidate_definitions",
+        "experimental_comparison",
+        "execution_plan",
+        "selection_rule"
+      ]
+    },
+    "frozen_before": [
+      "DEV_TUNE_EXECUTION",
+      "DEV_SELECT_EXECUTION",
+      "MODEL_WINNER_SELECTION",
+      "FINAL100_EXECUTION"
+    ],
+    "no_prompt_result_shopping": true,
+    "pre_results_declaration": {
+      "experimental_question": "Tests whether explicit pre-output constraint checking improves primary scientific rates without changing catalog, schema, model configuration, or evaluator.",
+      "no_live_provider_call_occurred": true,
+      "no_prompt_candidate_added_removed_rewritten_or_selected_based_on_performance": true,
+      "no_provider_output_inspected": true,
+      "p2_is_provider_neutral_constraint_reinforcement_variant": true,
+      "prompt_choice_frozen_before_any_dev_tune_result": true
+    },
+    "prompt_candidate_count": 2,
+    "prompt_candidate_decision": "P1_PLUS_P2_PRE_RESULTS",
+    "prompt_candidate_ids": [
+      "P1",
+      "P2"
+    ]
+  },
+  "status": "PASS",
+  "task_id": "W06-DEV-PROMPT-CANDIDATE-FREEZE-01",
+  "verification_summary": {
+    "failed_checks": 0,
+    "overall_status": "PASS",
+    "passed_checks": 35,
+    "total_checks": 35
+  },
+  "zero_live_execution_boundary": {
+    "dev_select_execution_started": false,
+    "dev_tune_execution_started": false,
+    "final100_used": false,
+    "live_authorization_created": false,
+    "live_provider_calls": 0,
+    "provider_cost_usd": 0.0,
+    "winner_model_selected": false,
+    "winning_prompt_selected": false
+  }
+}
