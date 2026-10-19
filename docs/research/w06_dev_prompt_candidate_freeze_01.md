@@ -1,8 +1,9 @@
-# W06-DEV-PROMPT-CANDIDATE-FREEZE-01 — Scientific Prompt Candidate Freeze & DEV-TUNE Execution Plan
+# W06-DEV-PROMPT-CANDIDATE-FREEZE-01 — Scientific Prompt Candidate Freeze & DEV-TUNE Execution Plan (Audit Correction 01)
 
 ## 1. Executive Summary & Pre-Results Declaration
 
 - **Task ID:** `W06-DEV-PROMPT-CANDIDATE-FREEZE-01`
+- **Audit Correction Task ID:** `W06-DEV-PROMPT-CANDIDATE-FREEZE-01-AUDIT-CORRECTION-01`
 - **Base `develop` Commit:** `60d52d720e66f5af8e82fabf9cebe2ea0e8a9e26`
 - **Code Basis Commit (`code_basis_commit_sha`):** `60d52d720e66f5af8e82fabf9cebe2ea0e8a9e26`
 - **Prompt Candidate Decision:** `P1_PLUS_P2_PRE_RESULTS`
@@ -20,6 +21,15 @@
 4. **No prompt candidate was added, removed, rewritten, or selected based on model performance.**
 5. **`P2` is a provider-neutral constraint-reinforcement variant.**
 6. **The experiment tests whether explicit pre-output constraint checking improves primary scientific rates without changing catalog, schema, model configuration, or evaluator.**
+
+### Audit Correction 01 Declaration (Section 17)
+
+1. **`P1` and `P2` now use the exact same template `prompt_version` (`TRAVEL_PLANNER_BENCHMARK_V2`).**
+2. **`P2` candidate definition ID remains `W06_DEV_TUNE_CANDIDATE_P2_V1` as experiment metadata outside model prompt semantics (`P2_CANDIDATE_DEFINITION_ID`).**
+3. **Rendered user prompts are byte-identical between `P1` and `P2` across all 20 `DEV-TUNE` fixtures.**
+4. **The ONLY semantic prompt difference sent to models is the `P2` system-prompt constraint-check suffix.**
+5. **No live provider calls were executed (`LIVE_PROVIDER_CALLS = 0`, `PROVIDER_COST_USD = 0`).**
+6. **No `DEV-TUNE` results existed before this correction.**
 
 ---
 
@@ -64,21 +74,24 @@ Independent provenance verification confirms:
 - Both `apps/ai-service/app/prompts/planner_benchmark_prompt.py` (`22aa9cd172548fe51a8699704e5832ad44e1d8e946a1ad79437aed99d46c98cb`) and `apps/ai-service/app/evaluation/model_preflight/base.py` (`55bd026f224eaf15f5fb68e98d9cd9467bf85f0f90305acac397caef0970454d`) have **zero drift**.
 - The string `49399ca4ab45e98dd7da05c94609d5bf5c03667ca79a96f52c7f330f357ac5e9` was a non-authoritative prose summary typo from PR `#47` that was explicitly noted as non-authoritative in `W06-DEV-SELECTION-HARNESS-01-MERGE-CLOSE` (*"THE REPOSITORY ARTIFACTS ARE AUTHORITATIVE. Do not modify code to match the incorrect prose report."*).
 
-### 3.2 `P2` — Exact Pre-Results Constraint-Reinforcement Candidate
+### 3.2 `P2` — Exact Pre-Results Constraint-Reinforcement Candidate (Audit Correction 01)
+
+Because `TRAVEL_PLANNER_BENCHMARK_V2` interpolates `BENCHMARK MODE — {prompt_version}` into the rendered user prompt, Audit Correction 01 sets `P2.prompt_version = "TRAVEL_PLANNER_BENCHMARK_V2"` (identical to `P1`) so that the rendered user prompt is byte-identical between `P1` and `P2` across all 20 `DEV-TUNE` fixtures. The candidate definition label `W06_DEV_TUNE_CANDIDATE_P2_V1` is preserved strictly as experiment metadata (`P2_CANDIDATE_DEFINITION_ID`) outside model prompt semantics.
 
 | Field | Value |
 |---|---|
 | `prompt_id` | `P2` |
-| `prompt_version` | `W06_DEV_TUNE_CANDIDATE_P2_V1` |
+| `prompt_version` (`PromptCandidateSpec.prompt_version`) | `TRAVEL_PLANNER_BENCHMARK_V2` |
+| `P2_CANDIDATE_DEFINITION_ID` (experiment metadata only) | `W06_DEV_TUNE_CANDIDATE_P2_V1` |
 | `system_prompt` | `PREFLIGHT_SHARED_SYSTEM_PROMPT + "\n" + P2_EXACT_SYSTEM_PROMPT_SUFFIX` |
 | `user_prompt_template` | Exact `TRAVEL_PLANNER_BENCHMARK_V2` (identical to `P1`) |
 | `P2_SYSTEM_PROMPT_SHA256` | `ab8ec41b7099c1c207217a55e1afd7e075d5de6be9b2fc14863329b5535e6c68` |
 | `P2_USER_PROMPT_TEMPLATE_SHA256` | `19762f7c72b4dd19b57c29e160d9195b8f2c72e836188823e9949f271a22f5de` |
-| `P2_SEMANTIC_PROMPT_SHA256` | `fa59900481275200f0d50bdfdc4a2b3d5177b2be0e34d00402a459366adf2c34` |
+| `P2_SEMANTIC_PROMPT_SHA256` | `0679dd9463d6cebf04ccb5571a403331eea3ab6819bd6a0e8b2ee1fc08c99fdf` |
 | `created_before_live_dev_execution` | `true` |
 | `provider_specific_semantic_prompt` | `false` |
 
-Exact `P2` system-prompt suffix (appended after a single `\n` following `PREFLIGHT_SHARED_SYSTEM_PROMPT`):
+Exact `P2` system-prompt suffix (appended after a single `\n` following `PREFLIGHT_SHARED_SYSTEM_PROMPT`, byte-identical):
 
 ```text
 Before returning the JSON, perform a silent constraint check and correct the draft if needed:
@@ -93,11 +106,18 @@ Do not reveal this checking process; output only the final JSON object.
 
 ---
 
-## 4. Controlled Experiment Invariants & Prompt Registry
+## 4. Controlled Experiment Invariants & Per-Fixture Paired-Cell Parity
 
-- **Only Semantic Experimental Difference:** The `P2` system-prompt suffix above.
+- **Only Semantic Experimental Difference Sent to Models:** The `P2` system-prompt constraint-check suffix above (`system_prompt_sha256` differs: `P1 = 4bcb84a8aca1fc89f65709ac9d91c88e42359c284850061bae85c3607c345b0e` vs `P2 = ab8ec41b7099c1c207217a55e1afd7e075d5de6be9b2fc14863329b5535e6c68`).
+- **Per-Fixture Rendered User Prompt Equality (Section 6):**
+  - Across all 20 `DEV-TUNE` fixtures (`W06-DEV-TUNE-001` .. `W06-DEV-TUNE-020`), `rendered_user_prompt(P1, fixture) == rendered_user_prompt(P2, fixture)` is byte-identical (`20/20` fixtures).
+  - For `W06-DEV-TUNE-001`, both `P1` and `P2` rendered `user_prompt_sha256` equal `c632a1f607203a81c9422164a7910c5f82211437d74af9c91bb6b370c1da3c17`.
+- **60 Paired `P1`/`P2` Cell Manifests (Section 7):**
+  - Across all 60 `(fixture_id, candidate_id)` pairs in the 120-cell `DEV-TUNE` execution plan, `P1` and `P2` cell manifests have identical `scenario_sha256`, `catalog_context_sha256`, `user_prompt_sha256`, `provider_config_sha256`, `semantic_schema_sha256`, `portable_generation_schema_v2_sha256`, `sampling_reasoning_configuration`, `max_output_tokens`, `timeout_ms`, `retry = 0`, `tools = false`, and `repair = 0`, and differ **only** in `{"prompt_id", "run_id", "system_prompt_sha256"}`.
 - **Identical Across `P1` and `P2`:**
+  - `prompt_version` (`TRAVEL_PLANNER_BENCHMARK_V2`)
   - `user_prompt_template` (`19762f7c72b4dd19b57c29e160d9195b8f2c72e836188823e9949f271a22f5de`)
+  - Rendered `user_prompt` and `user_prompt_sha256` for every fixture (`W06-DEV-TUNE-001` .. `W06-DEV-TUNE-020`)
   - Portable Generation Schema V2 (`825a4ff912d851a95f7392cb564b7d7ca3588135508dc6eb3ac6304cdde3c490`)
   - Semantic Schema (`e4169f7b890f77d13af65e9f2070b6071c535b206d88440f5e8f28c179977555`)
   - `REC-A-CORE-V2` catalog (`f7517938598e3923906763f8f31334a500ee88bc06232f2992d38e2fcb28a444`)
@@ -107,8 +127,9 @@ Do not reveal this checking process; output only the final JSON object.
   - Sampling configs, tool policy (`tools = false`), retry policy (`retry = 0`), repair policy (`repair = 0`), evaluator, and measurement contract.
 - **Prompt Registry (`[P1, P2]`):**
   - `prompt_candidate_ids`: `["P1", "P2"]`
+  - `prompt_versions`: `{"P1": "TRAVEL_PLANNER_BENCHMARK_V2", "P2": "TRAVEL_PLANNER_BENCHMARK_V2"}`
   - `max_allowed_prompts`: `2` (`P3` is fail-closed forbidden)
-  - `PROMPT_REGISTRY_SHA256`: `87a60d601de7d427febec60d1b3d6ccd18240c18b1fa8778d3b4954eb7318a99`
+  - `PROMPT_REGISTRY_SHA256`: `846dc4c14ec2a87537b7b3e07bf492de51dc534d24b21e469094b7e3d34d32b6`
 
 ---
 
@@ -124,10 +145,10 @@ Do not reveal this checking process; output only the final JSON object.
 | Model Candidates | `3` (`C1`, `C2`, `C3`) |
 | Executions per Cell | `1` (`attempt_number = 1`) |
 | Total `DEV-TUNE` Plan Cells | `120` (`60` per prompt, `40` per candidate, `6` per fixture) |
-| `DEV_TUNE_PLAN_SHA256` (`plan.plan_sha256`) | `30695d74b19e950d065f612ce069cfc325ad7f79338b3be314624fefc514aad0` |
-| Persisted `w06_dev_tune_execution_plan_v1.json` SHA256 | `15c93d3abcc27e4eff8b26984a9575d59e3541725cad815521d83c164bd9d29a` |
+| `DEV_TUNE_PLAN_SHA256` (`plan.plan_sha256`) | `582d9964b4fffbac91f83373d080f1fef120f0ddca4edab2d63e02796d0b20ae` |
+| Persisted `w06_dev_tune_execution_plan_v1.json` SHA256 | `652e3beb08771c3125e613172b1aaa396fc1b60aaaf3b98cc238e91a14e0dc74` |
 | Freeze Artifact ID / Version | `W06-DEV-PROMPT-CANDIDATE-FREEZE-01-V1` / `1.0.0` |
-| `PROMPT_FREEZE_SHA256` (`w06_dev_prompt_candidate_freeze_v1.json`) | `c1662592615c4821d6840065938c66578c49755f6657fc592cf5c795afd95bb3` |
+| `PROMPT_FREEZE_SHA256` (`w06_dev_prompt_candidate_freeze_v1.json`) | `2f345363f580ea882b2e5b3562c587ef5309bc7f994440257a54d18994ab6956` |
 
 ---
 
@@ -170,6 +191,6 @@ No winning prompt is selected in this task (`WINNING_PROMPT_SELECTED = false`). 
 
 ---
 
-## 8. Offline Verification Summary (`PF-01` .. `PF-35`)
+## 8. Offline Verification Summary (`PF-01` .. `PF-35` and `PFC-01` .. `PFC-16`)
 
-All 35 offline checks (`PF-01` through `PF-35`) passed (`35/35 PASS`) under an independent outbound-network kill switch (`socket`, `urllib`, `httpx`, `httpx2`) with provider API keys scrubbed (`GEMINI_API_KEY`, `OPENAI_API_KEY`, `ANTHROPIC_API_KEY` absent). Full check evidence is recorded in `data/evaluation/w06/w06_dev_prompt_candidate_freeze_01_receipt_v1.json`.
+All 35 original offline checks (`PF-01` through `PF-35`, `35/35 PASS`) and all 16 Audit Correction 01 checks (`PFC-01` through `PFC-16`, `16/16 PASS`) passed (`51/51 PASS` total) under an independent outbound-network kill switch (`socket`, `urllib`, `httpx`, `httpx2`) with provider API keys scrubbed (`GEMINI_API_KEY`, `OPENAI_API_KEY`, `ANTHROPIC_API_KEY` absent). Full check evidence and the 20-fixture paired-cell parity table are recorded in `data/evaluation/w06/w06_dev_prompt_candidate_freeze_01_receipt_v1.json`.

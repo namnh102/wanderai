@@ -1,9 +1,11 @@
-"""Offline pytest suite for W06-DEV-PROMPT-CANDIDATE-FREEZE-01 (PF-01 through PF-35).
+"""Offline pytest suite for W06-DEV-PROMPT-CANDIDATE-FREEZE-01 & Audit Correction 01.
 
 Strictly offline:
 - Installs independent outbound-network kill switch across all tests
 - Scrubs provider API keys (GEMINI_API_KEY, OPENAI_API_KEY, ANTHROPIC_API_KEY)
-- Verifies PF-01 through PF-35 plus persisted artifact round-trip integrity
+- Verifies PF-01 through PF-35 (35/35 PASS) and PFC-01 through PFC-16 (16/16 PASS)
+- Verifies byte-identical rendered user prompts across all 20 DEV-TUNE fixtures
+- Verifies persisted artifact round-trip integrity
 """
 
 from __future__ import annotations
@@ -49,6 +51,13 @@ def pf_checks_by_id() -> dict[str, dict[str, Any]]:
     return {c["check_id"]: c for c in checks}
 
 
+@pytest.fixture(scope="module")
+def pfc_checks_by_id() -> dict[str, dict[str, Any]]:
+    """Run all PFC-01..PFC-16 Audit Correction 01 checks once under network kill switch."""
+    checks = pf.run_all_pfc_checks()
+    return {c["check_id"]: c for c in checks}
+
+
 @pytest.mark.parametrize(
     "check_id",
     [f"PF-{i:02d}" for i in range(1, 36)],
@@ -58,6 +67,21 @@ def test_pf_check_passes(
 ) -> None:
     assert check_id in pf_checks_by_id, f"Missing check {check_id}"
     entry = pf_checks_by_id[check_id]
+    assert entry["status"] == "PASS", (
+        f"{check_id} ({entry['domain']}) failed: expected={entry['expected']!r}, "
+        f"observed={entry['observed']!r}"
+    )
+
+
+@pytest.mark.parametrize(
+    "check_id",
+    [f"PFC-{i:02d}" for i in range(1, 17)],
+)
+def test_pfc_check_passes(
+    check_id: str, pfc_checks_by_id: dict[str, dict[str, Any]]
+) -> None:
+    assert check_id in pfc_checks_by_id, f"Missing check {check_id}"
+    entry = pfc_checks_by_id[check_id]
     assert entry["status"] == "PASS", (
         f"{check_id} ({entry['domain']}) failed: expected={entry['expected']!r}, "
         f"observed={entry['observed']!r}"
@@ -92,7 +116,9 @@ def test_persisted_prompt_freeze_and_plan_and_receipt_artifacts() -> None:
     receipt_data = json.loads(receipt_path.read_text(encoding="utf-8"))
 
     freeze_sha = hashlib.sha256(freeze_bytes).hexdigest()
+    plan_file_sha = hashlib.sha256(plan_bytes).hexdigest()
     assert freeze_sha == pf.EXPECTED_PROMPT_FREEZE_SHA256
+    assert plan_file_sha == pf.EXPECTED_DEV_TUNE_PLAN_FILE_SHA256
 
     freeze_model = DevPromptFreezeArtifact.model_validate_json(freeze_bytes)
     plan_model = DevExecutionPlan.model_validate_json(plan_bytes)
@@ -102,6 +128,18 @@ def test_persisted_prompt_freeze_and_plan_and_receipt_artifacts() -> None:
     assert freeze_model.freeze_status == "FROZEN_FOR_LIVE_DEV_TUNE"
     assert freeze_model.created_before_live_dev_execution is True
     assert freeze_model.prompt_candidate_ids == ["P1", "P2"]
+    assert freeze_model.prompt_versions == {
+        "P1": "TRAVEL_PLANNER_BENCHMARK_V2",
+        "P2": "TRAVEL_PLANNER_BENCHMARK_V2",
+    }
+    assert freeze_model.semantic_prompt_sha256_by_id == {
+        "P1": pf.P1_AUTHORITATIVE_SEMANTIC_PROMPT_SHA256,
+        "P2": pf.P2_EXPECTED_SEMANTIC_PROMPT_SHA256,
+    }
+    assert (
+        freeze_model.dev_tune_execution_plan_sha256
+        == pf.EXPECTED_DEV_TUNE_PLAN_SHA256
+    )
     assert freeze_model.max_call_budget == DEV_TUNE_MAX_CALLS_TWO_PROMPTS == 120
     assert freeze_model.code_basis_commit_sha == pf.CODE_BASIS_COMMIT_SHA
     assert (
@@ -109,9 +147,11 @@ def test_persisted_prompt_freeze_and_plan_and_receipt_artifacts() -> None:
         == pf.EXPECTED_SCIENTIFIC_CODE_BUNDLE_SHA256
         == compute_scientific_code_bundle_sha256(repo_root=REPO_ROOT)
     )
-    assert len(freeze_model.scientific_code_bundle_file_hashes) == len(
-        SCIENTIFIC_CODE_BUNDLE_RELATIVE_PATHS
-    ) == 14
+    assert (
+        len(freeze_model.scientific_code_bundle_file_hashes)
+        == len(SCIENTIFIC_CODE_BUNDLE_RELATIVE_PATHS)
+        == 14
+    )
     assert (
         freeze_model.portable_generation_schema_v2_sha256
         == EXPECTED_PORTABLE_SCHEMA_V2_SHA256
@@ -130,6 +170,33 @@ def test_persisted_prompt_freeze_and_plan_and_receipt_artifacts() -> None:
     dev_bundle = load_and_verify_frozen_dev_bundle()
     cand_reg = load_and_verify_candidate_registry()
     registry = pf.build_frozen_p1_p2_registry()
+
+    assert registry.registry_sha256 == pf.EXPECTED_PROMPT_REGISTRY_SHA256
+    assert registry.prompts[0].prompt_version == "TRAVEL_PLANNER_BENCHMARK_V2"
+    assert registry.prompts[1].prompt_version == "TRAVEL_PLANNER_BENCHMARK_V2"
+    assert pf.P2_CANDIDATE_DEFINITION_ID == "W06_DEV_TUNE_CANDIDATE_P2_V1"
+
+    pair_audit = pf.build_per_fixture_pair_audit(dev_bundle, registry, plan_model)
+    assert pair_audit["fixture_count"] == 20
+    assert pair_audit["all_20_rendered_user_prompts_byte_identical"] is True
+    assert (
+        pair_audit[
+            "all_60_p1_p2_cell_pairs_identical_except_prompt_identity_and_system_prompt"
+        ]
+        is True
+    )
+    assert pair_audit["differing_manifest_fields_across_all_60_pairs"] == [
+        "prompt_id",
+        "run_id",
+        "system_prompt_sha256",
+    ]
+    assert (
+        pair_audit["fixtures"][0]["fixture_id"] == "W06-DEV-TUNE-001"
+        and pair_audit["fixtures"][0]["p1_rendered_user_prompt_sha256"]
+        == pf.EXPECTED_FIXTURE_001_RENDERED_USER_PROMPT_SHA256
+        and pair_audit["fixtures"][0]["p2_rendered_user_prompt_sha256"]
+        == pf.EXPECTED_FIXTURE_001_RENDERED_USER_PROMPT_SHA256
+    )
 
     verify_dev_execution_plan_for_execution(
         plan_model, repo_root=REPO_ROOT, candidate_registry=cand_reg
@@ -152,10 +219,28 @@ def test_persisted_prompt_freeze_and_plan_and_receipt_artifacts() -> None:
     )
 
     assert receipt_data["task_id"] == "W06-DEV-PROMPT-CANDIDATE-FREEZE-01"
+    assert (
+        receipt_data["audit_correction_task_id"]
+        == "W06-DEV-PROMPT-CANDIDATE-FREEZE-01-AUDIT-CORRECTION-01"
+    )
     assert receipt_data["status"] == "PASS"
-    assert receipt_data["verification_summary"]["total_checks"] == 35
-    assert receipt_data["verification_summary"]["passed_checks"] == 35
+    assert receipt_data["verification_summary"]["pf_total_checks"] == 35
+    assert receipt_data["verification_summary"]["pf_passed_checks"] == 35
+    assert receipt_data["verification_summary"]["pf_failed_checks"] == 0
+    assert receipt_data["verification_summary"]["pfc_total_checks"] == 16
+    assert receipt_data["verification_summary"]["pfc_passed_checks"] == 16
+    assert receipt_data["verification_summary"]["pfc_failed_checks"] == 0
+    assert receipt_data["verification_summary"]["total_checks"] == 51
+    assert receipt_data["verification_summary"]["passed_checks"] == 51
     assert receipt_data["verification_summary"]["failed_checks"] == 0
+    assert receipt_data["prompts"]["P2"]["p2_candidate_definition_id"] == (
+        "W06_DEV_TUNE_CANDIDATE_P2_V1"
+    )
+    assert receipt_data["prompts"]["P2"]["prompt_version"] == (
+        "TRAVEL_PLANNER_BENCHMARK_V2"
+    )
+    assert receipt_data["prompts"]["p1_p2_rendered_user_prompts_identical_all_20"] is True
+    assert receipt_data["prompts"]["only_system_prompt_suffix_differs"] is True
     assert receipt_data["scientific_decision"]["prompt_candidate_decision"] == (
         "P1_PLUS_P2_PRE_RESULTS"
     )
@@ -203,6 +288,9 @@ def test_shallow_ci_checkout_compatibility(monkeypatch: pytest.MonkeyPatch) -> N
         return orig_run(cmd, *args, **kwargs)
 
     monkeypatch.setattr(pf.subprocess, "run", _mock_shallow_run)
-    checks = pf.run_all_pf_checks()
-    assert len(checks) == 35
-    assert all(c["status"] == "PASS" for c in checks)
+    pf_checks = pf.run_all_pf_checks()
+    pfc_checks = pf.run_all_pfc_checks()
+    assert len(pf_checks) == 35
+    assert len(pfc_checks) == 16
+    assert all(c["status"] == "PASS" for c in pf_checks)
+    assert all(c["status"] == "PASS" for c in pfc_checks)

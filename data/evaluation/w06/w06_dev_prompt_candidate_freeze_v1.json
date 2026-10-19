@@ -5,7 +5,7 @@
   "code_commit_sha": "60d52d720e66f5af8e82fabf9cebe2ea0e8a9e26",
   "created_before_live_dev_execution": true,
   "dev_tune_bundle_sha256": "bb0f051446ea3da8229298f22f4ce92b4db20751695273c6d01b7766da044050",
-  "dev_tune_execution_plan_sha256": "30695d74b19e950d065f612ce069cfc325ad7f79338b3be314624fefc514aad0",
+  "dev_tune_execution_plan_sha256": "582d9964b4fffbac91f83373d080f1fef120f0ddca4edab2d63e02796d0b20ae",
   "freeze_status": "FROZEN_FOR_LIVE_DEV_TUNE",
   "max_call_budget": 120,
   "ordered_candidate_ids": [
@@ -20,7 +20,7 @@
   ],
   "prompt_versions": {
     "P1": "TRAVEL_PLANNER_BENCHMARK_V2",
-    "P2": "W06_DEV_TUNE_CANDIDATE_P2_V1"
+    "P2": "TRAVEL_PLANNER_BENCHMARK_V2"
   },
   "provider_config_registry_sha256": "3dc05d29acc2f647cba58303865bd7406b8c1d9f7ccbe0f120e87ad471190938",
   "scientific_code_bundle_file_hashes": [
@@ -84,7 +84,7 @@
   "scientific_code_bundle_sha256": "0638f2fcb100b0000e3a2a4e08137a9d468449001f258de7354df21e185ca2e3",
   "semantic_prompt_sha256_by_id": {
     "P1": "096ff4c74dd8d1aed1c0abe501b97c8dfd0f6424dbca535f2b79a242637a1c11",
-    "P2": "fa59900481275200f0d50bdfdc4a2b3d5177b2be0e34d00402a459366adf2c34"
+    "P2": "0679dd9463d6cebf04ccb5571a403331eea3ab6819bd6a0e8b2ee1fc08c99fdf"
   },
   "system_prompt_by_id": {
     "P1": "You are the W06 Benchmark Itinerary Planner operating under architecture LLM_BASED_ITINERARY_PLANNER_WITH_DETERMINISTIC_GROUNDING_AND_VALIDATION_V1. Return strictly one JSON object conforming to BenchmarkPlanResponse with zero markdown fences and zero tool calls.",

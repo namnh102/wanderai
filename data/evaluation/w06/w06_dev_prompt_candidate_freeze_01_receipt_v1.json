@@ -1,14 +1,195 @@
 {
   "artifacts": {
-    "dev_tune_plan_file_sha256": "15c93d3abcc27e4eff8b26984a9575d59e3541725cad815521d83c164bd9d29a",
+    "dev_tune_plan_file_sha256": "652e3beb08771c3125e613172b1aaa396fc1b60aaaf3b98cc238e91a14e0dc74",
     "dev_tune_plan_relative_path": "data/evaluation/w06/w06_dev_tune_execution_plan_v1.json",
-    "dev_tune_plan_sha256": "30695d74b19e950d065f612ce069cfc325ad7f79338b3be314624fefc514aad0",
+    "dev_tune_plan_sha256": "582d9964b4fffbac91f83373d080f1fef120f0ddca4edab2d63e02796d0b20ae",
     "prompt_freeze_artifact_id": "W06-DEV-PROMPT-CANDIDATE-FREEZE-01-V1",
     "prompt_freeze_artifact_version": "1.0.0",
     "prompt_freeze_relative_path": "data/evaluation/w06/w06_dev_prompt_candidate_freeze_v1.json",
-    "prompt_freeze_sha256": "c1662592615c4821d6840065938c66578c49755f6657fc592cf5c795afd95bb3",
+    "prompt_freeze_sha256": "2f345363f580ea882b2e5b3562c587ef5309bc7f994440257a54d18994ab6956",
     "receipt_relative_path": "data/evaluation/w06/w06_dev_prompt_candidate_freeze_01_receipt_v1.json"
   },
+  "audit_correction_01_checks": [
+    {
+      "check_id": "PFC-01",
+      "description": "P1 prompt_version remains TRAVEL_PLANNER_BENCHMARK_V2",
+      "domain": "PROMPT_VERSION_SEMANTICS",
+      "expected": "TRAVEL_PLANNER_BENCHMARK_V2",
+      "observed": "TRAVEL_PLANNER_BENCHMARK_V2",
+      "status": "PASS"
+    },
+    {
+      "check_id": "PFC-02",
+      "description": "P2 prompt_version equals TRAVEL_PLANNER_BENCHMARK_V2 (matching P1 template interpolation)",
+      "domain": "PROMPT_VERSION_SEMANTICS",
+      "expected": "TRAVEL_PLANNER_BENCHMARK_V2",
+      "observed": "TRAVEL_PLANNER_BENCHMARK_V2",
+      "status": "PASS"
+    },
+    {
+      "check_id": "PFC-03",
+      "description": "P2_CANDIDATE_DEFINITION_ID remains W06_DEV_TUNE_CANDIDATE_P2_V1 strictly outside model prompt semantics",
+      "domain": "CANDIDATE_DEFINITION_METADATA",
+      "expected": {
+        "interpolated_into_prompts": false,
+        "p2_candidate_definition_id": "W06_DEV_TUNE_CANDIDATE_P2_V1"
+      },
+      "observed": {
+        "interpolated_into_prompts": false,
+        "p2_candidate_definition_id": "W06_DEV_TUNE_CANDIDATE_P2_V1"
+      },
+      "status": "PASS"
+    },
+    {
+      "check_id": "PFC-04",
+      "description": "P2 system prompt suffix is byte-identical to the frozen constraint-check suffix",
+      "domain": "P2_SYSTEM_SUFFIX",
+      "expected": "ab8ec41b7099c1c207217a55e1afd7e075d5de6be9b2fc14863329b5535e6c68",
+      "observed": "ab8ec41b7099c1c207217a55e1afd7e075d5de6be9b2fc14863329b5535e6c68",
+      "status": "PASS"
+    },
+    {
+      "check_id": "PFC-05",
+      "description": "P1 semantic prompt SHA256 remains authoritative 096ff4c74dd8d1aed1c0abe501b97c8dfd0f6424dbca535f2b79a242637a1c11",
+      "domain": "P1_AUTHORITATIVE_HASH",
+      "expected": "096ff4c74dd8d1aed1c0abe501b97c8dfd0f6424dbca535f2b79a242637a1c11",
+      "observed": "096ff4c74dd8d1aed1c0abe501b97c8dfd0f6424dbca535f2b79a242637a1c11",
+      "status": "PASS"
+    },
+    {
+      "check_id": "PFC-06",
+      "description": "All 20 DEV-TUNE fixture pairs have byte-identical P1/P2 rendered user prompts and user_prompt_sha256",
+      "domain": "CONTROLLED_EXPERIMENT_PARITY",
+      "expected": {
+        "all_20_identical": true,
+        "fixture_count": 20
+      },
+      "observed": {
+        "all_20_identical": true,
+        "fixture_count": 20
+      },
+      "status": "PASS"
+    },
+    {
+      "check_id": "PFC-07",
+      "description": "W06-DEV-TUNE-001 P1 and P2 rendered user_prompt_sha256 both equal c632a1f607203a81c9422164a7910c5f82211437d74af9c91bb6b370c1da3c17",
+      "domain": "FIXTURE_001_PARITY",
+      "expected": "c632a1f607203a81c9422164a7910c5f82211437d74af9c91bb6b370c1da3c17",
+      "observed": {
+        "P1": "c632a1f607203a81c9422164a7910c5f82211437d74af9c91bb6b370c1da3c17",
+        "P2": "c632a1f607203a81c9422164a7910c5f82211437d74af9c91bb6b370c1da3c17"
+      },
+      "status": "PASS"
+    },
+    {
+      "check_id": "PFC-08",
+      "description": "Provider configuration SHA256 and sampling/reasoning config are identical between paired P1/P2 cells for every candidate",
+      "domain": "PROVIDER_CONFIG_PARITY",
+      "expected": true,
+      "observed": true,
+      "status": "PASS"
+    },
+    {
+      "check_id": "PFC-09",
+      "description": "scenario_sha256 and catalog_context_sha256 are identical between paired P1/P2 cells across all 60 pairs",
+      "domain": "SCENARIO_CATALOG_PARITY",
+      "expected": true,
+      "observed": true,
+      "status": "PASS"
+    },
+    {
+      "check_id": "PFC-10",
+      "description": "System prompt suffix is the sole semantic prompt-text difference between P1 and P2 across all 60 cell pairs",
+      "domain": "SOLE_SEMANTIC_DIFFERENCE",
+      "expected": {
+        "differing_manifest_fields": [
+          "prompt_id",
+          "run_id",
+          "system_prompt_sha256"
+        ],
+        "only_system_prompt_suffix_differs": true
+      },
+      "observed": {
+        "differing_manifest_fields": [
+          "prompt_id",
+          "run_id",
+          "system_prompt_sha256"
+        ],
+        "only_system_prompt_suffix_differs": true
+      },
+      "status": "PASS"
+    },
+    {
+      "check_id": "PFC-11",
+      "description": "DEV-TUNE execution plan contains 120 cells",
+      "domain": "PLAN_CARDINALITY",
+      "expected": 120,
+      "observed": 120,
+      "status": "PASS"
+    },
+    {
+      "check_id": "PFC-12",
+      "description": "Each prompt candidate (P1, P2) has 60 cells",
+      "domain": "PLAN_CARDINALITY",
+      "expected": {
+        "P1": 60,
+        "P2": 60
+      },
+      "observed": {
+        "P1": 60,
+        "P2": 60
+      },
+      "status": "PASS"
+    },
+    {
+      "check_id": "PFC-13",
+      "description": "Each model candidate (C1, C2, C3) has 40 cells",
+      "domain": "PLAN_CARDINALITY",
+      "expected": {
+        "C1": 40,
+        "C2": 40,
+        "C3": 40
+      },
+      "observed": {
+        "C1": 40,
+        "C2": 40,
+        "C3": 40
+      },
+      "status": "PASS"
+    },
+    {
+      "check_id": "PFC-14",
+      "description": "Each of the 20 DEV-TUNE fixtures has 6 cells",
+      "domain": "PLAN_CARDINALITY",
+      "expected": {
+        "cells_per_fixture": 6,
+        "fixtures": 20
+      },
+      "observed": {
+        "fixtures": 20,
+        "max_cells": 6,
+        "min_cells": 6
+      },
+      "status": "PASS"
+    },
+    {
+      "check_id": "PFC-15",
+      "description": "Scientific code bundle SHA256 remains 0638f2fcb100b0000e3a2a4e08137a9d468449001f258de7354df21e185ca2e3",
+      "domain": "SCIENTIFIC_CODE_BUNDLE",
+      "expected": "0638f2fcb100b0000e3a2a4e08137a9d468449001f258de7354df21e185ca2e3",
+      "observed": "0638f2fcb100b0000e3a2a4e08137a9d468449001f258de7354df21e185ca2e3",
+      "status": "PASS"
+    },
+    {
+      "check_id": "PFC-16",
+      "description": "Zero live provider calls occurred during Audit Correction 01 verification",
+      "domain": "NETWORK_ISOLATION",
+      "expected": 0,
+      "observed": 0,
+      "status": "PASS"
+    }
+  ],
+  "audit_correction_task_id": "W06-DEV-PROMPT-CANDIDATE-FREEZE-01-AUDIT-CORRECTION-01",
   "base_develop_sha": "60d52d720e66f5af8e82fabf9cebe2ea0e8a9e26",
   "checks": [
     {
@@ -68,28 +249,34 @@
     },
     {
       "check_id": "PF-05",
-      "description": "P2 system prompt equals PREFLIGHT_SHARED_SYSTEM_PROMPT + one newline + exact pre-results suffix",
+      "description": "P2 system prompt equals PREFLIGHT_SHARED_SYSTEM_PROMPT + one newline + exact pre-results suffix with shared template prompt_version",
       "domain": "P2_CANDIDATE",
       "expected": {
         "prompt_id": "P2",
-        "prompt_version": "W06_DEV_TUNE_CANDIDATE_P2_V1",
-        "semantic_prompt_sha256": "fa59900481275200f0d50bdfdc4a2b3d5177b2be0e34d00402a459366adf2c34",
+        "prompt_version": "TRAVEL_PLANNER_BENCHMARK_V2",
+        "semantic_prompt_sha256": "0679dd9463d6cebf04ccb5571a403331eea3ab6819bd6a0e8b2ee1fc08c99fdf",
         "system_prompt_sha256": "ab8ec41b7099c1c207217a55e1afd7e075d5de6be9b2fc14863329b5535e6c68"
       },
       "observed": {
         "prompt_id": "P2",
-        "prompt_version": "W06_DEV_TUNE_CANDIDATE_P2_V1",
-        "semantic_prompt_sha256": "fa59900481275200f0d50bdfdc4a2b3d5177b2be0e34d00402a459366adf2c34",
+        "prompt_version": "TRAVEL_PLANNER_BENCHMARK_V2",
+        "semantic_prompt_sha256": "0679dd9463d6cebf04ccb5571a403331eea3ab6819bd6a0e8b2ee1fc08c99fdf",
         "system_prompt_sha256": "ab8ec41b7099c1c207217a55e1afd7e075d5de6be9b2fc14863329b5535e6c68"
       },
       "status": "PASS"
     },
     {
       "check_id": "PF-06",
-      "description": "P2 user_prompt_template and SHA256 are identical to P1",
+      "description": "P1 and P2 have identical user_prompt_template and byte-identical rendered user prompts across all 20 DEV-TUNE fixtures",
       "domain": "CONTROLLED_EXPERIMENT",
-      "expected": "19762f7c72b4dd19b57c29e160d9195b8f2c72e836188823e9949f271a22f5de",
-      "observed": "19762f7c72b4dd19b57c29e160d9195b8f2c72e836188823e9949f271a22f5de",
+      "expected": {
+        "all_20_rendered_user_prompts_byte_identical": true,
+        "user_prompt_template_sha256": "19762f7c72b4dd19b57c29e160d9195b8f2c72e836188823e9949f271a22f5de"
+      },
+      "observed": {
+        "all_20_rendered_user_prompts_byte_identical": true,
+        "user_prompt_template_sha256": "19762f7c72b4dd19b57c29e160d9195b8f2c72e836188823e9949f271a22f5de"
+      },
       "status": "PASS"
     },
     {
@@ -110,7 +297,7 @@
     },
     {
       "check_id": "PF-08",
-      "description": "PromptRegistry contains ordered ['P1', 'P2'] with max_allowed_prompts=2 and expected SHA256",
+      "description": "PromptRegistry contains ordered ['P1', 'P2'] with max_allowed_prompts=2 and recomputed SHA256",
       "domain": "PROMPT_REGISTRY",
       "expected": {
         "max_allowed_prompts": 2,
@@ -118,7 +305,7 @@
           "P1",
           "P2"
         ],
-        "registry_sha256": "87a60d601de7d427febec60d1b3d6ccd18240c18b1fa8778d3b4954eb7318a99"
+        "registry_sha256": "846dc4c14ec2a87537b7b3e07bf492de51dc534d24b21e469094b7e3d34d32b6"
       },
       "observed": {
         "max_allowed_prompts": 2,
@@ -126,7 +313,7 @@
           "P1",
           "P2"
         ],
-        "registry_sha256": "87a60d601de7d427febec60d1b3d6ccd18240c18b1fa8778d3b4954eb7318a99"
+        "registry_sha256": "846dc4c14ec2a87537b7b3e07bf492de51dc534d24b21e469094b7e3d34d32b6"
       },
       "status": "PASS"
     },
@@ -334,12 +521,20 @@
       "expected": {
         "artifact_id": "W06-DEV-PROMPT-CANDIDATE-FREEZE-01-V1",
         "freeze_status": "FROZEN_FOR_LIVE_DEV_TUNE",
+        "prompt_versions": {
+          "P1": "TRAVEL_PLANNER_BENCHMARK_V2",
+          "P2": "TRAVEL_PLANNER_BENCHMARK_V2"
+        },
         "verified": true,
         "version": "1.0.0"
       },
       "observed": {
         "artifact_id": "W06-DEV-PROMPT-CANDIDATE-FREEZE-01-V1",
         "freeze_status": "FROZEN_FOR_LIVE_DEV_TUNE",
+        "prompt_versions": {
+          "P1": "TRAVEL_PLANNER_BENCHMARK_V2",
+          "P2": "TRAVEL_PLANNER_BENCHMARK_V2"
+        },
         "verified": true,
         "version": "1.0.0"
       },
@@ -349,16 +544,16 @@
       "check_id": "PF-25",
       "description": "Repeated generation of DEV-TUNE execution plan produces identical content and SHA256",
       "domain": "PLAN_DETERMINISM",
-      "expected": "30695d74b19e950d065f612ce069cfc325ad7f79338b3be314624fefc514aad0",
-      "observed": "30695d74b19e950d065f612ce069cfc325ad7f79338b3be314624fefc514aad0",
+      "expected": "582d9964b4fffbac91f83373d080f1fef120f0ddca4edab2d63e02796d0b20ae",
+      "observed": "582d9964b4fffbac91f83373d080f1fef120f0ddca4edab2d63e02796d0b20ae",
       "status": "PASS"
     },
     {
       "check_id": "PF-26",
       "description": "Repeated generation of DevPromptFreezeArtifact produces identical canonical JSON SHA256",
       "domain": "FREEZE_DETERMINISM",
-      "expected": "c1662592615c4821d6840065938c66578c49755f6657fc592cf5c795afd95bb3",
-      "observed": "c1662592615c4821d6840065938c66578c49755f6657fc592cf5c795afd95bb3",
+      "expected": "2f345363f580ea882b2e5b3562c587ef5309bc7f994440257a54d18994ab6956",
+      "observed": "2f345363f580ea882b2e5b3562c587ef5309bc7f994440257a54d18994ab6956",
       "status": "PASS"
     },
     {
@@ -572,8 +767,8 @@
     "dev_select_fixtures": 60,
     "dev_total_fixtures": 80,
     "dev_tune_fixtures": 20,
-    "dev_tune_plan_file_sha256": "15c93d3abcc27e4eff8b26984a9575d59e3541725cad815521d83c164bd9d29a",
-    "dev_tune_plan_sha256": "30695d74b19e950d065f612ce069cfc325ad7f79338b3be314624fefc514aad0",
+    "dev_tune_plan_file_sha256": "652e3beb08771c3125e613172b1aaa396fc1b60aaaf3b98cc238e91a14e0dc74",
+    "dev_tune_plan_sha256": "582d9964b4fffbac91f83373d080f1fef120f0ddca4edab2d63e02796d0b20ae",
     "executions_per_cell": 1,
     "expected_dev_tune_cells": 120,
     "phase": "DEV_TUNE",
@@ -595,13 +790,1070 @@
     "weighted_composite_used": false,
     "winning_prompt_selected_now": false
   },
+  "per_fixture_pair_audit": {
+    "all_20_rendered_user_prompts_byte_identical": true,
+    "all_60_p1_p2_cell_pairs_identical_except_prompt_identity_and_system_prompt": true,
+    "all_candidates_share_identical_user_prompt_sha_per_fixture": true,
+    "differing_manifest_fields_across_all_60_pairs": [
+      "prompt_id",
+      "run_id",
+      "system_prompt_sha256"
+    ],
+    "fixture_001_p1_user_prompt_sha256": "c632a1f607203a81c9422164a7910c5f82211437d74af9c91bb6b370c1da3c17",
+    "fixture_001_p2_user_prompt_sha256": "c632a1f607203a81c9422164a7910c5f82211437d74af9c91bb6b370c1da3c17",
+    "fixture_count": 20,
+    "fixtures": [
+      {
+        "c1_c2_c3_share_identical_user_prompt_sha256": true,
+        "candidate_pairs": {
+          "C1": {
+            "catalog_context_sha256_equal": true,
+            "differing_manifest_fields": [
+              "prompt_id",
+              "run_id",
+              "system_prompt_sha256"
+            ],
+            "p1_run_id": "W06-DEV-TUNE-P1-C1-W06-DEV-TUNE-001",
+            "p2_run_id": "W06-DEV-TUNE-P2-C1-W06-DEV-TUNE-001",
+            "pair_verified": true,
+            "provider_config_sha256_equal": true,
+            "scenario_sha256_equal": true,
+            "user_prompt_sha256_equal": true
+          },
+          "C2": {
+            "catalog_context_sha256_equal": true,
+            "differing_manifest_fields": [
+              "prompt_id",
+              "run_id",
+              "system_prompt_sha256"
+            ],
+            "p1_run_id": "W06-DEV-TUNE-P1-C2-W06-DEV-TUNE-001",
+            "p2_run_id": "W06-DEV-TUNE-P2-C2-W06-DEV-TUNE-001",
+            "pair_verified": true,
+            "provider_config_sha256_equal": true,
+            "scenario_sha256_equal": true,
+            "user_prompt_sha256_equal": true
+          },
+          "C3": {
+            "catalog_context_sha256_equal": true,
+            "differing_manifest_fields": [
+              "prompt_id",
+              "run_id",
+              "system_prompt_sha256"
+            ],
+            "p1_run_id": "W06-DEV-TUNE-P1-C3-W06-DEV-TUNE-001",
+            "p2_run_id": "W06-DEV-TUNE-P2-C3-W06-DEV-TUNE-001",
+            "pair_verified": true,
+            "provider_config_sha256_equal": true,
+            "scenario_sha256_equal": true,
+            "user_prompt_sha256_equal": true
+          }
+        },
+        "destination_slug": "ha-noi",
+        "fixture_id": "W06-DEV-TUNE-001",
+        "p1_rendered_user_prompt_sha256": "c632a1f607203a81c9422164a7910c5f82211437d74af9c91bb6b370c1da3c17",
+        "p2_rendered_user_prompt_sha256": "c632a1f607203a81c9422164a7910c5f82211437d74af9c91bb6b370c1da3c17",
+        "rendered_user_prompt_byte_identical": true
+      },
+      {
+        "c1_c2_c3_share_identical_user_prompt_sha256": true,
+        "candidate_pairs": {
+          "C1": {
+            "catalog_context_sha256_equal": true,
+            "differing_manifest_fields": [
+              "prompt_id",
+              "run_id",
+              "system_prompt_sha256"
+            ],
+            "p1_run_id": "W06-DEV-TUNE-P1-C1-W06-DEV-TUNE-002",
+            "p2_run_id": "W06-DEV-TUNE-P2-C1-W06-DEV-TUNE-002",
+            "pair_verified": true,
+            "provider_config_sha256_equal": true,
+            "scenario_sha256_equal": true,
+            "user_prompt_sha256_equal": true
+          },
+          "C2": {
+            "catalog_context_sha256_equal": true,
+            "differing_manifest_fields": [
+              "prompt_id",
+              "run_id",
+              "system_prompt_sha256"
+            ],
+            "p1_run_id": "W06-DEV-TUNE-P1-C2-W06-DEV-TUNE-002",
+            "p2_run_id": "W06-DEV-TUNE-P2-C2-W06-DEV-TUNE-002",
+            "pair_verified": true,
+            "provider_config_sha256_equal": true,
+            "scenario_sha256_equal": true,
+            "user_prompt_sha256_equal": true
+          },
+          "C3": {
+            "catalog_context_sha256_equal": true,
+            "differing_manifest_fields": [
+              "prompt_id",
+              "run_id",
+              "system_prompt_sha256"
+            ],
+            "p1_run_id": "W06-DEV-TUNE-P1-C3-W06-DEV-TUNE-002",
+            "p2_run_id": "W06-DEV-TUNE-P2-C3-W06-DEV-TUNE-002",
+            "pair_verified": true,
+            "provider_config_sha256_equal": true,
+            "scenario_sha256_equal": true,
+            "user_prompt_sha256_equal": true
+          }
+        },
+        "destination_slug": "ha-noi",
+        "fixture_id": "W06-DEV-TUNE-002",
+        "p1_rendered_user_prompt_sha256": "d15ccc8abcccb453921ad70bd879f9f63b3963f1a6db32284c9aea3d9a0758a9",
+        "p2_rendered_user_prompt_sha256": "d15ccc8abcccb453921ad70bd879f9f63b3963f1a6db32284c9aea3d9a0758a9",
+        "rendered_user_prompt_byte_identical": true
+      },
+      {
+        "c1_c2_c3_share_identical_user_prompt_sha256": true,
+        "candidate_pairs": {
+          "C1": {
+            "catalog_context_sha256_equal": true,
+            "differing_manifest_fields": [
+              "prompt_id",
+              "run_id",
+              "system_prompt_sha256"
+            ],
+            "p1_run_id": "W06-DEV-TUNE-P1-C1-W06-DEV-TUNE-003",
+            "p2_run_id": "W06-DEV-TUNE-P2-C1-W06-DEV-TUNE-003",
+            "pair_verified": true,
+            "provider_config_sha256_equal": true,
+            "scenario_sha256_equal": true,
+            "user_prompt_sha256_equal": true
+          },
+          "C2": {
+            "catalog_context_sha256_equal": true,
+            "differing_manifest_fields": [
+              "prompt_id",
+              "run_id",
+              "system_prompt_sha256"
+            ],
+            "p1_run_id": "W06-DEV-TUNE-P1-C2-W06-DEV-TUNE-003",
+            "p2_run_id": "W06-DEV-TUNE-P2-C2-W06-DEV-TUNE-003",
+            "pair_verified": true,
+            "provider_config_sha256_equal": true,
+            "scenario_sha256_equal": true,
+            "user_prompt_sha256_equal": true
+          },
+          "C3": {
+            "catalog_context_sha256_equal": true,
+            "differing_manifest_fields": [
+              "prompt_id",
+              "run_id",
+              "system_prompt_sha256"
+            ],
+            "p1_run_id": "W06-DEV-TUNE-P1-C3-W06-DEV-TUNE-003",
+            "p2_run_id": "W06-DEV-TUNE-P2-C3-W06-DEV-TUNE-003",
+            "pair_verified": true,
+            "provider_config_sha256_equal": true,
+            "scenario_sha256_equal": true,
+            "user_prompt_sha256_equal": true
+          }
+        },
+        "destination_slug": "ha-noi",
+        "fixture_id": "W06-DEV-TUNE-003",
+        "p1_rendered_user_prompt_sha256": "33938cfb53108228f77619a9a1ccbaabc51fe8d7229eb00b721d50f2cdc39fa4",
+        "p2_rendered_user_prompt_sha256": "33938cfb53108228f77619a9a1ccbaabc51fe8d7229eb00b721d50f2cdc39fa4",
+        "rendered_user_prompt_byte_identical": true
+      },
+      {
+        "c1_c2_c3_share_identical_user_prompt_sha256": true,
+        "candidate_pairs": {
+          "C1": {
+            "catalog_context_sha256_equal": true,
+            "differing_manifest_fields": [
+              "prompt_id",
+              "run_id",
+              "system_prompt_sha256"
+            ],
+            "p1_run_id": "W06-DEV-TUNE-P1-C1-W06-DEV-TUNE-004",
+            "p2_run_id": "W06-DEV-TUNE-P2-C1-W06-DEV-TUNE-004",
+            "pair_verified": true,
+            "provider_config_sha256_equal": true,
+            "scenario_sha256_equal": true,
+            "user_prompt_sha256_equal": true
+          },
+          "C2": {
+            "catalog_context_sha256_equal": true,
+            "differing_manifest_fields": [
+              "prompt_id",
+              "run_id",
+              "system_prompt_sha256"
+            ],
+            "p1_run_id": "W06-DEV-TUNE-P1-C2-W06-DEV-TUNE-004",
+            "p2_run_id": "W06-DEV-TUNE-P2-C2-W06-DEV-TUNE-004",
+            "pair_verified": true,
+            "provider_config_sha256_equal": true,
+            "scenario_sha256_equal": true,
+            "user_prompt_sha256_equal": true
+          },
+          "C3": {
+            "catalog_context_sha256_equal": true,
+            "differing_manifest_fields": [
+              "prompt_id",
+              "run_id",
+              "system_prompt_sha256"
+            ],
+            "p1_run_id": "W06-DEV-TUNE-P1-C3-W06-DEV-TUNE-004",
+            "p2_run_id": "W06-DEV-TUNE-P2-C3-W06-DEV-TUNE-004",
+            "pair_verified": true,
+            "provider_config_sha256_equal": true,
+            "scenario_sha256_equal": true,
+            "user_prompt_sha256_equal": true
+          }
+        },
+        "destination_slug": "ha-noi",
+        "fixture_id": "W06-DEV-TUNE-004",
+        "p1_rendered_user_prompt_sha256": "97f5cf1d8eb32625b51433f5e23bcec1da2ac163c4ffaa26319995b9636ba0d1",
+        "p2_rendered_user_prompt_sha256": "97f5cf1d8eb32625b51433f5e23bcec1da2ac163c4ffaa26319995b9636ba0d1",
+        "rendered_user_prompt_byte_identical": true
+      },
+      {
+        "c1_c2_c3_share_identical_user_prompt_sha256": true,
+        "candidate_pairs": {
+          "C1": {
+            "catalog_context_sha256_equal": true,
+            "differing_manifest_fields": [
+              "prompt_id",
+              "run_id",
+              "system_prompt_sha256"
+            ],
+            "p1_run_id": "W06-DEV-TUNE-P1-C1-W06-DEV-TUNE-005",
+            "p2_run_id": "W06-DEV-TUNE-P2-C1-W06-DEV-TUNE-005",
+            "pair_verified": true,
+            "provider_config_sha256_equal": true,
+            "scenario_sha256_equal": true,
+            "user_prompt_sha256_equal": true
+          },
+          "C2": {
+            "catalog_context_sha256_equal": true,
+            "differing_manifest_fields": [
+              "prompt_id",
+              "run_id",
+              "system_prompt_sha256"
+            ],
+            "p1_run_id": "W06-DEV-TUNE-P1-C2-W06-DEV-TUNE-005",
+            "p2_run_id": "W06-DEV-TUNE-P2-C2-W06-DEV-TUNE-005",
+            "pair_verified": true,
+            "provider_config_sha256_equal": true,
+            "scenario_sha256_equal": true,
+            "user_prompt_sha256_equal": true
+          },
+          "C3": {
+            "catalog_context_sha256_equal": true,
+            "differing_manifest_fields": [
+              "prompt_id",
+              "run_id",
+              "system_prompt_sha256"
+            ],
+            "p1_run_id": "W06-DEV-TUNE-P1-C3-W06-DEV-TUNE-005",
+            "p2_run_id": "W06-DEV-TUNE-P2-C3-W06-DEV-TUNE-005",
+            "pair_verified": true,
+            "provider_config_sha256_equal": true,
+            "scenario_sha256_equal": true,
+            "user_prompt_sha256_equal": true
+          }
+        },
+        "destination_slug": "ha-noi",
+        "fixture_id": "W06-DEV-TUNE-005",
+        "p1_rendered_user_prompt_sha256": "87ffb95e541fe5e17042adf5abb1d21bc8dbd886e576afdae9c5170a3a50aa35",
+        "p2_rendered_user_prompt_sha256": "87ffb95e541fe5e17042adf5abb1d21bc8dbd886e576afdae9c5170a3a50aa35",
+        "rendered_user_prompt_byte_identical": true
+      },
+      {
+        "c1_c2_c3_share_identical_user_prompt_sha256": true,
+        "candidate_pairs": {
+          "C1": {
+            "catalog_context_sha256_equal": true,
+            "differing_manifest_fields": [
+              "prompt_id",
+              "run_id",
+              "system_prompt_sha256"
+            ],
+            "p1_run_id": "W06-DEV-TUNE-P1-C1-W06-DEV-TUNE-006",
+            "p2_run_id": "W06-DEV-TUNE-P2-C1-W06-DEV-TUNE-006",
+            "pair_verified": true,
+            "provider_config_sha256_equal": true,
+            "scenario_sha256_equal": true,
+            "user_prompt_sha256_equal": true
+          },
+          "C2": {
+            "catalog_context_sha256_equal": true,
+            "differing_manifest_fields": [
+              "prompt_id",
+              "run_id",
+              "system_prompt_sha256"
+            ],
+            "p1_run_id": "W06-DEV-TUNE-P1-C2-W06-DEV-TUNE-006",
+            "p2_run_id": "W06-DEV-TUNE-P2-C2-W06-DEV-TUNE-006",
+            "pair_verified": true,
+            "provider_config_sha256_equal": true,
+            "scenario_sha256_equal": true,
+            "user_prompt_sha256_equal": true
+          },
+          "C3": {
+            "catalog_context_sha256_equal": true,
+            "differing_manifest_fields": [
+              "prompt_id",
+              "run_id",
+              "system_prompt_sha256"
+            ],
+            "p1_run_id": "W06-DEV-TUNE-P1-C3-W06-DEV-TUNE-006",
+            "p2_run_id": "W06-DEV-TUNE-P2-C3-W06-DEV-TUNE-006",
+            "pair_verified": true,
+            "provider_config_sha256_equal": true,
+            "scenario_sha256_equal": true,
+            "user_prompt_sha256_equal": true
+          }
+        },
+        "destination_slug": "ha-noi",
+        "fixture_id": "W06-DEV-TUNE-006",
+        "p1_rendered_user_prompt_sha256": "351f14ba4bf9063a774ea3a891fef161942eb5b8cc970bbe2f53f5ca4213fe80",
+        "p2_rendered_user_prompt_sha256": "351f14ba4bf9063a774ea3a891fef161942eb5b8cc970bbe2f53f5ca4213fe80",
+        "rendered_user_prompt_byte_identical": true
+      },
+      {
+        "c1_c2_c3_share_identical_user_prompt_sha256": true,
+        "candidate_pairs": {
+          "C1": {
+            "catalog_context_sha256_equal": true,
+            "differing_manifest_fields": [
+              "prompt_id",
+              "run_id",
+              "system_prompt_sha256"
+            ],
+            "p1_run_id": "W06-DEV-TUNE-P1-C1-W06-DEV-TUNE-007",
+            "p2_run_id": "W06-DEV-TUNE-P2-C1-W06-DEV-TUNE-007",
+            "pair_verified": true,
+            "provider_config_sha256_equal": true,
+            "scenario_sha256_equal": true,
+            "user_prompt_sha256_equal": true
+          },
+          "C2": {
+            "catalog_context_sha256_equal": true,
+            "differing_manifest_fields": [
+              "prompt_id",
+              "run_id",
+              "system_prompt_sha256"
+            ],
+            "p1_run_id": "W06-DEV-TUNE-P1-C2-W06-DEV-TUNE-007",
+            "p2_run_id": "W06-DEV-TUNE-P2-C2-W06-DEV-TUNE-007",
+            "pair_verified": true,
+            "provider_config_sha256_equal": true,
+            "scenario_sha256_equal": true,
+            "user_prompt_sha256_equal": true
+          },
+          "C3": {
+            "catalog_context_sha256_equal": true,
+            "differing_manifest_fields": [
+              "prompt_id",
+              "run_id",
+              "system_prompt_sha256"
+            ],
+            "p1_run_id": "W06-DEV-TUNE-P1-C3-W06-DEV-TUNE-007",
+            "p2_run_id": "W06-DEV-TUNE-P2-C3-W06-DEV-TUNE-007",
+            "pair_verified": true,
+            "provider_config_sha256_equal": true,
+            "scenario_sha256_equal": true,
+            "user_prompt_sha256_equal": true
+          }
+        },
+        "destination_slug": "ha-noi",
+        "fixture_id": "W06-DEV-TUNE-007",
+        "p1_rendered_user_prompt_sha256": "a448e9ca85d1aca526ca54c38f7bc59ecce70ba692cbdbcb4311a07b9c6037b9",
+        "p2_rendered_user_prompt_sha256": "a448e9ca85d1aca526ca54c38f7bc59ecce70ba692cbdbcb4311a07b9c6037b9",
+        "rendered_user_prompt_byte_identical": true
+      },
+      {
+        "c1_c2_c3_share_identical_user_prompt_sha256": true,
+        "candidate_pairs": {
+          "C1": {
+            "catalog_context_sha256_equal": true,
+            "differing_manifest_fields": [
+              "prompt_id",
+              "run_id",
+              "system_prompt_sha256"
+            ],
+            "p1_run_id": "W06-DEV-TUNE-P1-C1-W06-DEV-TUNE-008",
+            "p2_run_id": "W06-DEV-TUNE-P2-C1-W06-DEV-TUNE-008",
+            "pair_verified": true,
+            "provider_config_sha256_equal": true,
+            "scenario_sha256_equal": true,
+            "user_prompt_sha256_equal": true
+          },
+          "C2": {
+            "catalog_context_sha256_equal": true,
+            "differing_manifest_fields": [
+              "prompt_id",
+              "run_id",
+              "system_prompt_sha256"
+            ],
+            "p1_run_id": "W06-DEV-TUNE-P1-C2-W06-DEV-TUNE-008",
+            "p2_run_id": "W06-DEV-TUNE-P2-C2-W06-DEV-TUNE-008",
+            "pair_verified": true,
+            "provider_config_sha256_equal": true,
+            "scenario_sha256_equal": true,
+            "user_prompt_sha256_equal": true
+          },
+          "C3": {
+            "catalog_context_sha256_equal": true,
+            "differing_manifest_fields": [
+              "prompt_id",
+              "run_id",
+              "system_prompt_sha256"
+            ],
+            "p1_run_id": "W06-DEV-TUNE-P1-C3-W06-DEV-TUNE-008",
+            "p2_run_id": "W06-DEV-TUNE-P2-C3-W06-DEV-TUNE-008",
+            "pair_verified": true,
+            "provider_config_sha256_equal": true,
+            "scenario_sha256_equal": true,
+            "user_prompt_sha256_equal": true
+          }
+        },
+        "destination_slug": "da-nang",
+        "fixture_id": "W06-DEV-TUNE-008",
+        "p1_rendered_user_prompt_sha256": "e5aa014601bc70959abe17e423c2a3c86494e911b9121d105e3bbb5f6b8aa2dd",
+        "p2_rendered_user_prompt_sha256": "e5aa014601bc70959abe17e423c2a3c86494e911b9121d105e3bbb5f6b8aa2dd",
+        "rendered_user_prompt_byte_identical": true
+      },
+      {
+        "c1_c2_c3_share_identical_user_prompt_sha256": true,
+        "candidate_pairs": {
+          "C1": {
+            "catalog_context_sha256_equal": true,
+            "differing_manifest_fields": [
+              "prompt_id",
+              "run_id",
+              "system_prompt_sha256"
+            ],
+            "p1_run_id": "W06-DEV-TUNE-P1-C1-W06-DEV-TUNE-009",
+            "p2_run_id": "W06-DEV-TUNE-P2-C1-W06-DEV-TUNE-009",
+            "pair_verified": true,
+            "provider_config_sha256_equal": true,
+            "scenario_sha256_equal": true,
+            "user_prompt_sha256_equal": true
+          },
+          "C2": {
+            "catalog_context_sha256_equal": true,
+            "differing_manifest_fields": [
+              "prompt_id",
+              "run_id",
+              "system_prompt_sha256"
+            ],
+            "p1_run_id": "W06-DEV-TUNE-P1-C2-W06-DEV-TUNE-009",
+            "p2_run_id": "W06-DEV-TUNE-P2-C2-W06-DEV-TUNE-009",
+            "pair_verified": true,
+            "provider_config_sha256_equal": true,
+            "scenario_sha256_equal": true,
+            "user_prompt_sha256_equal": true
+          },
+          "C3": {
+            "catalog_context_sha256_equal": true,
+            "differing_manifest_fields": [
+              "prompt_id",
+              "run_id",
+              "system_prompt_sha256"
+            ],
+            "p1_run_id": "W06-DEV-TUNE-P1-C3-W06-DEV-TUNE-009",
+            "p2_run_id": "W06-DEV-TUNE-P2-C3-W06-DEV-TUNE-009",
+            "pair_verified": true,
+            "provider_config_sha256_equal": true,
+            "scenario_sha256_equal": true,
+            "user_prompt_sha256_equal": true
+          }
+        },
+        "destination_slug": "da-nang",
+        "fixture_id": "W06-DEV-TUNE-009",
+        "p1_rendered_user_prompt_sha256": "b091dddfef626352d6d4a46e12b0713274bd7b196b97bdbc35de9d35a96fa935",
+        "p2_rendered_user_prompt_sha256": "b091dddfef626352d6d4a46e12b0713274bd7b196b97bdbc35de9d35a96fa935",
+        "rendered_user_prompt_byte_identical": true
+      },
+      {
+        "c1_c2_c3_share_identical_user_prompt_sha256": true,
+        "candidate_pairs": {
+          "C1": {
+            "catalog_context_sha256_equal": true,
+            "differing_manifest_fields": [
+              "prompt_id",
+              "run_id",
+              "system_prompt_sha256"
+            ],
+            "p1_run_id": "W06-DEV-TUNE-P1-C1-W06-DEV-TUNE-010",
+            "p2_run_id": "W06-DEV-TUNE-P2-C1-W06-DEV-TUNE-010",
+            "pair_verified": true,
+            "provider_config_sha256_equal": true,
+            "scenario_sha256_equal": true,
+            "user_prompt_sha256_equal": true
+          },
+          "C2": {
+            "catalog_context_sha256_equal": true,
+            "differing_manifest_fields": [
+              "prompt_id",
+              "run_id",
+              "system_prompt_sha256"
+            ],
+            "p1_run_id": "W06-DEV-TUNE-P1-C2-W06-DEV-TUNE-010",
+            "p2_run_id": "W06-DEV-TUNE-P2-C2-W06-DEV-TUNE-010",
+            "pair_verified": true,
+            "provider_config_sha256_equal": true,
+            "scenario_sha256_equal": true,
+            "user_prompt_sha256_equal": true
+          },
+          "C3": {
+            "catalog_context_sha256_equal": true,
+            "differing_manifest_fields": [
+              "prompt_id",
+              "run_id",
+              "system_prompt_sha256"
+            ],
+            "p1_run_id": "W06-DEV-TUNE-P1-C3-W06-DEV-TUNE-010",
+            "p2_run_id": "W06-DEV-TUNE-P2-C3-W06-DEV-TUNE-010",
+            "pair_verified": true,
+            "provider_config_sha256_equal": true,
+            "scenario_sha256_equal": true,
+            "user_prompt_sha256_equal": true
+          }
+        },
+        "destination_slug": "da-nang",
+        "fixture_id": "W06-DEV-TUNE-010",
+        "p1_rendered_user_prompt_sha256": "3d6bb58337570ad92d4b4c627b9d99a5b3a9fc4657d0911fa6a58d84be73ab7b",
+        "p2_rendered_user_prompt_sha256": "3d6bb58337570ad92d4b4c627b9d99a5b3a9fc4657d0911fa6a58d84be73ab7b",
+        "rendered_user_prompt_byte_identical": true
+      },
+      {
+        "c1_c2_c3_share_identical_user_prompt_sha256": true,
+        "candidate_pairs": {
+          "C1": {
+            "catalog_context_sha256_equal": true,
+            "differing_manifest_fields": [
+              "prompt_id",
+              "run_id",
+              "system_prompt_sha256"
+            ],
+            "p1_run_id": "W06-DEV-TUNE-P1-C1-W06-DEV-TUNE-011",
+            "p2_run_id": "W06-DEV-TUNE-P2-C1-W06-DEV-TUNE-011",
+            "pair_verified": true,
+            "provider_config_sha256_equal": true,
+            "scenario_sha256_equal": true,
+            "user_prompt_sha256_equal": true
+          },
+          "C2": {
+            "catalog_context_sha256_equal": true,
+            "differing_manifest_fields": [
+              "prompt_id",
+              "run_id",
+              "system_prompt_sha256"
+            ],
+            "p1_run_id": "W06-DEV-TUNE-P1-C2-W06-DEV-TUNE-011",
+            "p2_run_id": "W06-DEV-TUNE-P2-C2-W06-DEV-TUNE-011",
+            "pair_verified": true,
+            "provider_config_sha256_equal": true,
+            "scenario_sha256_equal": true,
+            "user_prompt_sha256_equal": true
+          },
+          "C3": {
+            "catalog_context_sha256_equal": true,
+            "differing_manifest_fields": [
+              "prompt_id",
+              "run_id",
+              "system_prompt_sha256"
+            ],
+            "p1_run_id": "W06-DEV-TUNE-P1-C3-W06-DEV-TUNE-011",
+            "p2_run_id": "W06-DEV-TUNE-P2-C3-W06-DEV-TUNE-011",
+            "pair_verified": true,
+            "provider_config_sha256_equal": true,
+            "scenario_sha256_equal": true,
+            "user_prompt_sha256_equal": true
+          }
+        },
+        "destination_slug": "da-nang",
+        "fixture_id": "W06-DEV-TUNE-011",
+        "p1_rendered_user_prompt_sha256": "94eebc53131d18b8e08dbbb4fb0e295ec41518c02a6cd06492a9504b44507bd1",
+        "p2_rendered_user_prompt_sha256": "94eebc53131d18b8e08dbbb4fb0e295ec41518c02a6cd06492a9504b44507bd1",
+        "rendered_user_prompt_byte_identical": true
+      },
+      {
+        "c1_c2_c3_share_identical_user_prompt_sha256": true,
+        "candidate_pairs": {
+          "C1": {
+            "catalog_context_sha256_equal": true,
+            "differing_manifest_fields": [
+              "prompt_id",
+              "run_id",
+              "system_prompt_sha256"
+            ],
+            "p1_run_id": "W06-DEV-TUNE-P1-C1-W06-DEV-TUNE-012",
+            "p2_run_id": "W06-DEV-TUNE-P2-C1-W06-DEV-TUNE-012",
+            "pair_verified": true,
+            "provider_config_sha256_equal": true,
+            "scenario_sha256_equal": true,
+            "user_prompt_sha256_equal": true
+          },
+          "C2": {
+            "catalog_context_sha256_equal": true,
+            "differing_manifest_fields": [
+              "prompt_id",
+              "run_id",
+              "system_prompt_sha256"
+            ],
+            "p1_run_id": "W06-DEV-TUNE-P1-C2-W06-DEV-TUNE-012",
+            "p2_run_id": "W06-DEV-TUNE-P2-C2-W06-DEV-TUNE-012",
+            "pair_verified": true,
+            "provider_config_sha256_equal": true,
+            "scenario_sha256_equal": true,
+            "user_prompt_sha256_equal": true
+          },
+          "C3": {
+            "catalog_context_sha256_equal": true,
+            "differing_manifest_fields": [
+              "prompt_id",
+              "run_id",
+              "system_prompt_sha256"
+            ],
+            "p1_run_id": "W06-DEV-TUNE-P1-C3-W06-DEV-TUNE-012",
+            "p2_run_id": "W06-DEV-TUNE-P2-C3-W06-DEV-TUNE-012",
+            "pair_verified": true,
+            "provider_config_sha256_equal": true,
+            "scenario_sha256_equal": true,
+            "user_prompt_sha256_equal": true
+          }
+        },
+        "destination_slug": "da-nang",
+        "fixture_id": "W06-DEV-TUNE-012",
+        "p1_rendered_user_prompt_sha256": "7ec609f0d4d7b038e8f3189f72165d3b6fe6e87d94b5d5f5eede9a6752ad0fa2",
+        "p2_rendered_user_prompt_sha256": "7ec609f0d4d7b038e8f3189f72165d3b6fe6e87d94b5d5f5eede9a6752ad0fa2",
+        "rendered_user_prompt_byte_identical": true
+      },
+      {
+        "c1_c2_c3_share_identical_user_prompt_sha256": true,
+        "candidate_pairs": {
+          "C1": {
+            "catalog_context_sha256_equal": true,
+            "differing_manifest_fields": [
+              "prompt_id",
+              "run_id",
+              "system_prompt_sha256"
+            ],
+            "p1_run_id": "W06-DEV-TUNE-P1-C1-W06-DEV-TUNE-013",
+            "p2_run_id": "W06-DEV-TUNE-P2-C1-W06-DEV-TUNE-013",
+            "pair_verified": true,
+            "provider_config_sha256_equal": true,
+            "scenario_sha256_equal": true,
+            "user_prompt_sha256_equal": true
+          },
+          "C2": {
+            "catalog_context_sha256_equal": true,
+            "differing_manifest_fields": [
+              "prompt_id",
+              "run_id",
+              "system_prompt_sha256"
+            ],
+            "p1_run_id": "W06-DEV-TUNE-P1-C2-W06-DEV-TUNE-013",
+            "p2_run_id": "W06-DEV-TUNE-P2-C2-W06-DEV-TUNE-013",
+            "pair_verified": true,
+            "provider_config_sha256_equal": true,
+            "scenario_sha256_equal": true,
+            "user_prompt_sha256_equal": true
+          },
+          "C3": {
+            "catalog_context_sha256_equal": true,
+            "differing_manifest_fields": [
+              "prompt_id",
+              "run_id",
+              "system_prompt_sha256"
+            ],
+            "p1_run_id": "W06-DEV-TUNE-P1-C3-W06-DEV-TUNE-013",
+            "p2_run_id": "W06-DEV-TUNE-P2-C3-W06-DEV-TUNE-013",
+            "pair_verified": true,
+            "provider_config_sha256_equal": true,
+            "scenario_sha256_equal": true,
+            "user_prompt_sha256_equal": true
+          }
+        },
+        "destination_slug": "da-nang",
+        "fixture_id": "W06-DEV-TUNE-013",
+        "p1_rendered_user_prompt_sha256": "e44240ea21261727d4c418d00733f9761495aa47c2ee56659e00a948d2a00671",
+        "p2_rendered_user_prompt_sha256": "e44240ea21261727d4c418d00733f9761495aa47c2ee56659e00a948d2a00671",
+        "rendered_user_prompt_byte_identical": true
+      },
+      {
+        "c1_c2_c3_share_identical_user_prompt_sha256": true,
+        "candidate_pairs": {
+          "C1": {
+            "catalog_context_sha256_equal": true,
+            "differing_manifest_fields": [
+              "prompt_id",
+              "run_id",
+              "system_prompt_sha256"
+            ],
+            "p1_run_id": "W06-DEV-TUNE-P1-C1-W06-DEV-TUNE-014",
+            "p2_run_id": "W06-DEV-TUNE-P2-C1-W06-DEV-TUNE-014",
+            "pair_verified": true,
+            "provider_config_sha256_equal": true,
+            "scenario_sha256_equal": true,
+            "user_prompt_sha256_equal": true
+          },
+          "C2": {
+            "catalog_context_sha256_equal": true,
+            "differing_manifest_fields": [
+              "prompt_id",
+              "run_id",
+              "system_prompt_sha256"
+            ],
+            "p1_run_id": "W06-DEV-TUNE-P1-C2-W06-DEV-TUNE-014",
+            "p2_run_id": "W06-DEV-TUNE-P2-C2-W06-DEV-TUNE-014",
+            "pair_verified": true,
+            "provider_config_sha256_equal": true,
+            "scenario_sha256_equal": true,
+            "user_prompt_sha256_equal": true
+          },
+          "C3": {
+            "catalog_context_sha256_equal": true,
+            "differing_manifest_fields": [
+              "prompt_id",
+              "run_id",
+              "system_prompt_sha256"
+            ],
+            "p1_run_id": "W06-DEV-TUNE-P1-C3-W06-DEV-TUNE-014",
+            "p2_run_id": "W06-DEV-TUNE-P2-C3-W06-DEV-TUNE-014",
+            "pair_verified": true,
+            "provider_config_sha256_equal": true,
+            "scenario_sha256_equal": true,
+            "user_prompt_sha256_equal": true
+          }
+        },
+        "destination_slug": "da-nang",
+        "fixture_id": "W06-DEV-TUNE-014",
+        "p1_rendered_user_prompt_sha256": "7a06a2500d1a9b9c30666a01f2fa0b0b6aabe7a2361baebd2445bbb9f6626249",
+        "p2_rendered_user_prompt_sha256": "7a06a2500d1a9b9c30666a01f2fa0b0b6aabe7a2361baebd2445bbb9f6626249",
+        "rendered_user_prompt_byte_identical": true
+      },
+      {
+        "c1_c2_c3_share_identical_user_prompt_sha256": true,
+        "candidate_pairs": {
+          "C1": {
+            "catalog_context_sha256_equal": true,
+            "differing_manifest_fields": [
+              "prompt_id",
+              "run_id",
+              "system_prompt_sha256"
+            ],
+            "p1_run_id": "W06-DEV-TUNE-P1-C1-W06-DEV-TUNE-015",
+            "p2_run_id": "W06-DEV-TUNE-P2-C1-W06-DEV-TUNE-015",
+            "pair_verified": true,
+            "provider_config_sha256_equal": true,
+            "scenario_sha256_equal": true,
+            "user_prompt_sha256_equal": true
+          },
+          "C2": {
+            "catalog_context_sha256_equal": true,
+            "differing_manifest_fields": [
+              "prompt_id",
+              "run_id",
+              "system_prompt_sha256"
+            ],
+            "p1_run_id": "W06-DEV-TUNE-P1-C2-W06-DEV-TUNE-015",
+            "p2_run_id": "W06-DEV-TUNE-P2-C2-W06-DEV-TUNE-015",
+            "pair_verified": true,
+            "provider_config_sha256_equal": true,
+            "scenario_sha256_equal": true,
+            "user_prompt_sha256_equal": true
+          },
+          "C3": {
+            "catalog_context_sha256_equal": true,
+            "differing_manifest_fields": [
+              "prompt_id",
+              "run_id",
+              "system_prompt_sha256"
+            ],
+            "p1_run_id": "W06-DEV-TUNE-P1-C3-W06-DEV-TUNE-015",
+            "p2_run_id": "W06-DEV-TUNE-P2-C3-W06-DEV-TUNE-015",
+            "pair_verified": true,
+            "provider_config_sha256_equal": true,
+            "scenario_sha256_equal": true,
+            "user_prompt_sha256_equal": true
+          }
+        },
+        "destination_slug": "ha-long",
+        "fixture_id": "W06-DEV-TUNE-015",
+        "p1_rendered_user_prompt_sha256": "60ee37d0c765c34e793d8d86469c2e128994c7bdb3ab54611f87abe0fd231d4a",
+        "p2_rendered_user_prompt_sha256": "60ee37d0c765c34e793d8d86469c2e128994c7bdb3ab54611f87abe0fd231d4a",
+        "rendered_user_prompt_byte_identical": true
+      },
+      {
+        "c1_c2_c3_share_identical_user_prompt_sha256": true,
+        "candidate_pairs": {
+          "C1": {
+            "catalog_context_sha256_equal": true,
+            "differing_manifest_fields": [
+              "prompt_id",
+              "run_id",
+              "system_prompt_sha256"
+            ],
+            "p1_run_id": "W06-DEV-TUNE-P1-C1-W06-DEV-TUNE-016",
+            "p2_run_id": "W06-DEV-TUNE-P2-C1-W06-DEV-TUNE-016",
+            "pair_verified": true,
+            "provider_config_sha256_equal": true,
+            "scenario_sha256_equal": true,
+            "user_prompt_sha256_equal": true
+          },
+          "C2": {
+            "catalog_context_sha256_equal": true,
+            "differing_manifest_fields": [
+              "prompt_id",
+              "run_id",
+              "system_prompt_sha256"
+            ],
+            "p1_run_id": "W06-DEV-TUNE-P1-C2-W06-DEV-TUNE-016",
+            "p2_run_id": "W06-DEV-TUNE-P2-C2-W06-DEV-TUNE-016",
+            "pair_verified": true,
+            "provider_config_sha256_equal": true,
+            "scenario_sha256_equal": true,
+            "user_prompt_sha256_equal": true
+          },
+          "C3": {
+            "catalog_context_sha256_equal": true,
+            "differing_manifest_fields": [
+              "prompt_id",
+              "run_id",
+              "system_prompt_sha256"
+            ],
+            "p1_run_id": "W06-DEV-TUNE-P1-C3-W06-DEV-TUNE-016",
+            "p2_run_id": "W06-DEV-TUNE-P2-C3-W06-DEV-TUNE-016",
+            "pair_verified": true,
+            "provider_config_sha256_equal": true,
+            "scenario_sha256_equal": true,
+            "user_prompt_sha256_equal": true
+          }
+        },
+        "destination_slug": "ha-long",
+        "fixture_id": "W06-DEV-TUNE-016",
+        "p1_rendered_user_prompt_sha256": "f9d2d3a6cc45f9526398327b35588e6e009c3e9f49f1f976b61dae1e3a4d8a4f",
+        "p2_rendered_user_prompt_sha256": "f9d2d3a6cc45f9526398327b35588e6e009c3e9f49f1f976b61dae1e3a4d8a4f",
+        "rendered_user_prompt_byte_identical": true
+      },
+      {
+        "c1_c2_c3_share_identical_user_prompt_sha256": true,
+        "candidate_pairs": {
+          "C1": {
+            "catalog_context_sha256_equal": true,
+            "differing_manifest_fields": [
+              "prompt_id",
+              "run_id",
+              "system_prompt_sha256"
+            ],
+            "p1_run_id": "W06-DEV-TUNE-P1-C1-W06-DEV-TUNE-017",
+            "p2_run_id": "W06-DEV-TUNE-P2-C1-W06-DEV-TUNE-017",
+            "pair_verified": true,
+            "provider_config_sha256_equal": true,
+            "scenario_sha256_equal": true,
+            "user_prompt_sha256_equal": true
+          },
+          "C2": {
+            "catalog_context_sha256_equal": true,
+            "differing_manifest_fields": [
+              "prompt_id",
+              "run_id",
+              "system_prompt_sha256"
+            ],
+            "p1_run_id": "W06-DEV-TUNE-P1-C2-W06-DEV-TUNE-017",
+            "p2_run_id": "W06-DEV-TUNE-P2-C2-W06-DEV-TUNE-017",
+            "pair_verified": true,
+            "provider_config_sha256_equal": true,
+            "scenario_sha256_equal": true,
+            "user_prompt_sha256_equal": true
+          },
+          "C3": {
+            "catalog_context_sha256_equal": true,
+            "differing_manifest_fields": [
+              "prompt_id",
+              "run_id",
+              "system_prompt_sha256"
+            ],
+            "p1_run_id": "W06-DEV-TUNE-P1-C3-W06-DEV-TUNE-017",
+            "p2_run_id": "W06-DEV-TUNE-P2-C3-W06-DEV-TUNE-017",
+            "pair_verified": true,
+            "provider_config_sha256_equal": true,
+            "scenario_sha256_equal": true,
+            "user_prompt_sha256_equal": true
+          }
+        },
+        "destination_slug": "ha-long",
+        "fixture_id": "W06-DEV-TUNE-017",
+        "p1_rendered_user_prompt_sha256": "b77470eec3b7fdf176b5718c0201b3a6fa67260b128b42cf73d644122ad7db44",
+        "p2_rendered_user_prompt_sha256": "b77470eec3b7fdf176b5718c0201b3a6fa67260b128b42cf73d644122ad7db44",
+        "rendered_user_prompt_byte_identical": true
+      },
+      {
+        "c1_c2_c3_share_identical_user_prompt_sha256": true,
+        "candidate_pairs": {
+          "C1": {
+            "catalog_context_sha256_equal": true,
+            "differing_manifest_fields": [
+              "prompt_id",
+              "run_id",
+              "system_prompt_sha256"
+            ],
+            "p1_run_id": "W06-DEV-TUNE-P1-C1-W06-DEV-TUNE-018",
+            "p2_run_id": "W06-DEV-TUNE-P2-C1-W06-DEV-TUNE-018",
+            "pair_verified": true,
+            "provider_config_sha256_equal": true,
+            "scenario_sha256_equal": true,
+            "user_prompt_sha256_equal": true
+          },
+          "C2": {
+            "catalog_context_sha256_equal": true,
+            "differing_manifest_fields": [
+              "prompt_id",
+              "run_id",
+              "system_prompt_sha256"
+            ],
+            "p1_run_id": "W06-DEV-TUNE-P1-C2-W06-DEV-TUNE-018",
+            "p2_run_id": "W06-DEV-TUNE-P2-C2-W06-DEV-TUNE-018",
+            "pair_verified": true,
+            "provider_config_sha256_equal": true,
+            "scenario_sha256_equal": true,
+            "user_prompt_sha256_equal": true
+          },
+          "C3": {
+            "catalog_context_sha256_equal": true,
+            "differing_manifest_fields": [
+              "prompt_id",
+              "run_id",
+              "system_prompt_sha256"
+            ],
+            "p1_run_id": "W06-DEV-TUNE-P1-C3-W06-DEV-TUNE-018",
+            "p2_run_id": "W06-DEV-TUNE-P2-C3-W06-DEV-TUNE-018",
+            "pair_verified": true,
+            "provider_config_sha256_equal": true,
+            "scenario_sha256_equal": true,
+            "user_prompt_sha256_equal": true
+          }
+        },
+        "destination_slug": "ha-long",
+        "fixture_id": "W06-DEV-TUNE-018",
+        "p1_rendered_user_prompt_sha256": "98e15ac1d88068910efe0c0fb8c120d02d5852a70d4508a9e3328d75fb644180",
+        "p2_rendered_user_prompt_sha256": "98e15ac1d88068910efe0c0fb8c120d02d5852a70d4508a9e3328d75fb644180",
+        "rendered_user_prompt_byte_identical": true
+      },
+      {
+        "c1_c2_c3_share_identical_user_prompt_sha256": true,
+        "candidate_pairs": {
+          "C1": {
+            "catalog_context_sha256_equal": true,
+            "differing_manifest_fields": [
+              "prompt_id",
+              "run_id",
+              "system_prompt_sha256"
+            ],
+            "p1_run_id": "W06-DEV-TUNE-P1-C1-W06-DEV-TUNE-019",
+            "p2_run_id": "W06-DEV-TUNE-P2-C1-W06-DEV-TUNE-019",
+            "pair_verified": true,
+            "provider_config_sha256_equal": true,
+            "scenario_sha256_equal": true,
+            "user_prompt_sha256_equal": true
+          },
+          "C2": {
+            "catalog_context_sha256_equal": true,
+            "differing_manifest_fields": [
+              "prompt_id",
+              "run_id",
+              "system_prompt_sha256"
+            ],
+            "p1_run_id": "W06-DEV-TUNE-P1-C2-W06-DEV-TUNE-019",
+            "p2_run_id": "W06-DEV-TUNE-P2-C2-W06-DEV-TUNE-019",
+            "pair_verified": true,
+            "provider_config_sha256_equal": true,
+            "scenario_sha256_equal": true,
+            "user_prompt_sha256_equal": true
+          },
+          "C3": {
+            "catalog_context_sha256_equal": true,
+            "differing_manifest_fields": [
+              "prompt_id",
+              "run_id",
+              "system_prompt_sha256"
+            ],
+            "p1_run_id": "W06-DEV-TUNE-P1-C3-W06-DEV-TUNE-019",
+            "p2_run_id": "W06-DEV-TUNE-P2-C3-W06-DEV-TUNE-019",
+            "pair_verified": true,
+            "provider_config_sha256_equal": true,
+            "scenario_sha256_equal": true,
+            "user_prompt_sha256_equal": true
+          }
+        },
+        "destination_slug": "ha-long",
+        "fixture_id": "W06-DEV-TUNE-019",
+        "p1_rendered_user_prompt_sha256": "d2d08c2bca310b05dfbb430bbd3b9796360ceb15f2a882ca1f5500273f1396dc",
+        "p2_rendered_user_prompt_sha256": "d2d08c2bca310b05dfbb430bbd3b9796360ceb15f2a882ca1f5500273f1396dc",
+        "rendered_user_prompt_byte_identical": true
+      },
+      {
+        "c1_c2_c3_share_identical_user_prompt_sha256": true,
+        "candidate_pairs": {
+          "C1": {
+            "catalog_context_sha256_equal": true,
+            "differing_manifest_fields": [
+              "prompt_id",
+              "run_id",
+              "system_prompt_sha256"
+            ],
+            "p1_run_id": "W06-DEV-TUNE-P1-C1-W06-DEV-TUNE-020",
+            "p2_run_id": "W06-DEV-TUNE-P2-C1-W06-DEV-TUNE-020",
+            "pair_verified": true,
+            "provider_config_sha256_equal": true,
+            "scenario_sha256_equal": true,
+            "user_prompt_sha256_equal": true
+          },
+          "C2": {
+            "catalog_context_sha256_equal": true,
+            "differing_manifest_fields": [
+              "prompt_id",
+              "run_id",
+              "system_prompt_sha256"
+            ],
+            "p1_run_id": "W06-DEV-TUNE-P1-C2-W06-DEV-TUNE-020",
+            "p2_run_id": "W06-DEV-TUNE-P2-C2-W06-DEV-TUNE-020",
+            "pair_verified": true,
+            "provider_config_sha256_equal": true,
+            "scenario_sha256_equal": true,
+            "user_prompt_sha256_equal": true
+          },
+          "C3": {
+            "catalog_context_sha256_equal": true,
+            "differing_manifest_fields": [
+              "prompt_id",
+              "run_id",
+              "system_prompt_sha256"
+            ],
+            "p1_run_id": "W06-DEV-TUNE-P1-C3-W06-DEV-TUNE-020",
+            "p2_run_id": "W06-DEV-TUNE-P2-C3-W06-DEV-TUNE-020",
+            "pair_verified": true,
+            "provider_config_sha256_equal": true,
+            "scenario_sha256_equal": true,
+            "user_prompt_sha256_equal": true
+          }
+        },
+        "destination_slug": "ha-long",
+        "fixture_id": "W06-DEV-TUNE-020",
+        "p1_rendered_user_prompt_sha256": "24b04b48da044fd3080b3f6605bd8693d6333236480273f5ea56dd23ec3d3732",
+        "p2_rendered_user_prompt_sha256": "24b04b48da044fd3080b3f6605bd8693d6333236480273f5ea56dd23ec3d3732",
+        "rendered_user_prompt_byte_identical": true
+      }
+    ],
+    "only_system_prompt_suffix_differs_in_prompt_texts": true
+  },
+  "predecessor_draft_head_sha": "0299fcd5d8d3426867df5298641c894ea8692263",
   "prompt_registry": {
     "max_allowed_prompts": 2,
     "prompt_candidate_ids": [
       "P1",
       "P2"
     ],
-    "prompt_registry_sha256": "87a60d601de7d427febec60d1b3d6ccd18240c18b1fa8778d3b4954eb7318a99"
+    "prompt_registry_sha256": "846dc4c14ec2a87537b7b3e07bf492de51dc534d24b21e469094b7e3d34d32b6"
   },
   "prompts": {
     "P1": {
@@ -615,14 +1867,16 @@
     },
     "P2": {
       "created_before_live_dev_execution": true,
+      "p2_candidate_definition_id": "W06_DEV_TUNE_CANDIDATE_P2_V1",
       "prompt_id": "P2",
-      "prompt_version": "W06_DEV_TUNE_CANDIDATE_P2_V1",
+      "prompt_version": "TRAVEL_PLANNER_BENCHMARK_V2",
       "provider_specific_semantic_prompt": false,
-      "semantic_prompt_sha256": "fa59900481275200f0d50bdfdc4a2b3d5177b2be0e34d00402a459366adf2c34",
+      "semantic_prompt_sha256": "0679dd9463d6cebf04ccb5571a403331eea3ab6819bd6a0e8b2ee1fc08c99fdf",
       "system_prompt_sha256": "ab8ec41b7099c1c207217a55e1afd7e075d5de6be9b2fc14863329b5535e6c68",
       "system_prompt_suffix": "Before returning the JSON, perform a silent constraint check and correct the draft if needed:\n(1) every POI_VISIT must copy an exact place_id and matching place_name from the provided REC-A-CORE-V2 catalog;\n(2) each day must contain at least two POI_VISIT items;\n(3) do not repeat a place_id unless allow_revisit_place_ids=true;\n(4) use valid non-overlapping HH:MM intervals with start_time < end_time;\n(5) when opening_hours is known and parseable, schedule the POI visit within it, while missing or unknown opening_hours must not be invented;\nand (6) respect the scenario budget when a budget ceiling is provided.\nDo not reveal this checking process; output only the final JSON object.",
       "user_prompt_template_sha256": "19762f7c72b4dd19b57c29e160d9195b8f2c72e836188823e9949f271a22f5de"
     },
+    "only_system_prompt_suffix_differs": true,
     "p1_historical_hash_verification": {
       "authoritative_harness_qa_01_p1_semantic_prompt_sha256": "096ff4c74dd8d1aed1c0abe501b97c8dfd0f6424dbca535f2b79a242637a1c11",
       "authoritative_repository_p1_semantic_prompt_sha256": "096ff4c74dd8d1aed1c0abe501b97c8dfd0f6424dbca535f2b79a242637a1c11",
@@ -632,11 +1886,18 @@
       "historical_section3_value_was_authoritative": false,
       "zero_code_or_prompt_drift_since_harness_freeze": true
     },
+    "p1_p2_rendered_user_prompts_identical_all_20": true,
     "p1_p2_user_template_identical": true,
     "provider_specific_prompts": false
   },
-  "schema_version": "1.0.0",
+  "schema_version": "1.1.0",
   "scientific_decision": {
+    "audit_correction_01_declaration": {
+      "correction_applied": "The corrected freeze uses the exact same template prompt_version (TRAVEL_PLANNER_BENCHMARK_V2) for both P1 and P2, preserving P2_CANDIDATE_DEFINITION_ID = W06_DEV_TUNE_CANDIDATE_P2_V1 strictly as experiment metadata outside model prompt semantics and leaving the system-prompt constraint suffix as the sole intended semantic difference.",
+      "detected_by": "ChatGPT independent audit before any DEV-TUNE execution or live provider call.",
+      "pre_merge_draft_defect": "The first pre-merge freeze draft used a P2 prompt_version label (W06_DEV_TUNE_CANDIDATE_P2_V1) that was interpolated into the rendered user prompt via 'BENCHMARK MODE — {prompt_version}'.",
+      "result_contamination_occurred": false
+    },
     "claim_boundary": {
       "p1_claimed_inferior": false,
       "p2_claimed_superior": false,
@@ -674,8 +1935,14 @@
   "verification_summary": {
     "failed_checks": 0,
     "overall_status": "PASS",
-    "passed_checks": 35,
-    "total_checks": 35
+    "passed_checks": 51,
+    "pf_failed_checks": 0,
+    "pf_passed_checks": 35,
+    "pf_total_checks": 35,
+    "pfc_failed_checks": 0,
+    "pfc_passed_checks": 16,
+    "pfc_total_checks": 16,
+    "total_checks": 51
   },
   "zero_live_execution_boundary": {
     "dev_select_execution_started": false,
