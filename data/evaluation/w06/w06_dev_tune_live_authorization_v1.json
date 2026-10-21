@@ -1,0 +1,19 @@
+{
+  "allowed_candidate_ids": [
+    "C1",
+    "C2",
+    "C3"
+  ],
+  "allowed_execution_plan_sha256": "582d9964b4fffbac91f83373d080f1fef120f0ddca4edab2d63e02796d0b20ae",
+  "allowed_phase": "DEV_TUNE",
+  "allowed_prompt_freeze_sha256": "2f345363f580ea882b2e5b3562c587ef5309bc7f994440257a54d18994ab6956",
+  "authorization_artifact_sha256": "fb2c181e14b0b122100f7b3b386bdaeaffe467c913d384db16717149374a1c83",
+  "authorization_id": "W06-DEV-TUNE-LIVE-AUTHORIZATION-01-V1",
+  "authorization_status": "AUTHORIZED",
+  "authorized_at_utc": "2026-10-21T06:25:00Z",
+  "authorized_by_role": "PROJECT_OWNER",
+  "code_basis_commit_sha": "60d52d720e66f5af8e82fabf9cebe2ea0e8a9e26",
+  "maximum_live_generation_calls": 120,
+  "scientific_code_bundle_sha256": "0638f2fcb100b0000e3a2a4e08137a9d468449001f258de7354df21e185ca2e3",
+  "task_id": "W06-DEV-TUNE-LIVE-AUTHORIZATION-01"
+}

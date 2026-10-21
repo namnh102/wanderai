@@ -1,0 +1,522 @@
+{
+  "allowed_candidate_ids": [
+    "C1",
+    "C2",
+    "C3"
+  ],
+  "allowed_execution_plan_sha256": "582d9964b4fffbac91f83373d080f1fef120f0ddca4edab2d63e02796d0b20ae",
+  "allowed_phase": "DEV_TUNE",
+  "allowed_prompt_freeze_sha256": "2f345363f580ea882b2e5b3562c587ef5309bc7f994440257a54d18994ab6956",
+  "artifact_id": "W06-DEV-TUNE-LIVE-AUTHORIZATION-01-RECEIPT-V1",
+  "audit_correction_checks": [
+    {
+      "check_id": "AUC-01",
+      "description": "Full repository where SOURCE_DEVELOP_SHA exists but is NOT ancestor of HEAD fails closed (verified=false) even when prep artifact matches",
+      "domain": "SOURCE_PROVENANCE_FAIL_CLOSED",
+      "expected": {
+        "shallow_repository_fallback_used": false,
+        "verified": false
+      },
+      "observed": {
+        "shallow_repository_fallback_used": false,
+        "verified": false
+      },
+      "status": "PASS"
+    },
+    {
+      "check_id": "AUC-02",
+      "description": "Full repository with valid ancestry succeeds (verified=true, shallow_repository_fallback_used=false)",
+      "domain": "SOURCE_PROVENANCE_FAIL_CLOSED",
+      "expected": {
+        "shallow_repository_fallback_used": false,
+        "verified": true
+      },
+      "observed": {
+        "shallow_repository_fallback_used": false,
+        "verified": true
+      },
+      "status": "PASS"
+    },
+    {
+      "check_id": "AUC-03",
+      "description": "Shallow repository where source commit is unavailable and all 4 frozen fallback authorities match succeeds (verified=true)",
+      "domain": "SOURCE_PROVENANCE_FAIL_CLOSED",
+      "expected": {
+        "shallow_repository_fallback_used": true,
+        "verified": true
+      },
+      "observed": {
+        "shallow_repository_fallback_used": true,
+        "verified": true
+      },
+      "status": "PASS"
+    },
+    {
+      "check_id": "AUC-04",
+      "description": "Shallow repository with any stale fallback authority fails closed (verified=false)",
+      "domain": "SOURCE_PROVENANCE_FAIL_CLOSED",
+      "expected": {
+        "shallow_repository_fallback_used": true,
+        "verified": false
+      },
+      "observed": {
+        "shallow_repository_fallback_used": true,
+        "verified": false
+      },
+      "status": "PASS"
+    },
+    {
+      "check_id": "AUC-05",
+      "description": "Non-shallow repository with missing source commit fails closed (verified=false) without fallback",
+      "domain": "SOURCE_PROVENANCE_FAIL_CLOSED",
+      "expected": {
+        "shallow_repository_fallback_used": false,
+        "verified": false
+      },
+      "observed": {
+        "shallow_repository_fallback_used": false,
+        "verified": false
+      },
+      "status": "PASS"
+    },
+    {
+      "check_id": "AUC-06",
+      "description": "Exact legitimate downstream authorization artifact (SHA256 b2c068d216e6a71ad5c193137207cc8f7a74526f9a549eccfaefa9a7bd5eeba4) is recognized",
+      "domain": "DOWNSTREAM_AUTHORIZATION_RECOGNITION",
+      "expected": true,
+      "observed": true,
+      "status": "PASS"
+    },
+    {
+      "check_id": "AUC-07",
+      "description": "Same filename + correct task_id but wrong artifact file SHA256 is rejected (not exempted)",
+      "domain": "DOWNSTREAM_AUTHORIZATION_RECOGNITION",
+      "expected": false,
+      "observed": false,
+      "status": "PASS"
+    },
+    {
+      "check_id": "AUC-08",
+      "description": "Same filename + correct task_id but wrong allowed_execution_plan_sha256 is rejected (not exempted)",
+      "domain": "DOWNSTREAM_AUTHORIZATION_RECOGNITION",
+      "expected": false,
+      "observed": false,
+      "status": "PASS"
+    },
+    {
+      "check_id": "AUC-09",
+      "description": "Same filename + correct task_id but 121-call scope is rejected (not exempted)",
+      "domain": "DOWNSTREAM_AUTHORIZATION_RECOGNITION",
+      "expected": false,
+      "observed": false,
+      "status": "PASS"
+    },
+    {
+      "check_id": "AUC-10",
+      "description": "Same filename + correct task_id but DEV_SELECT phase is rejected (not exempted)",
+      "domain": "DOWNSTREAM_AUTHORIZATION_RECOGNITION",
+      "expected": false,
+      "observed": false,
+      "status": "PASS"
+    },
+    {
+      "check_id": "AUC-11",
+      "description": "Malformed downstream authorization JSON is rejected (not exempted)",
+      "domain": "DOWNSTREAM_AUTHORIZATION_RECOGNITION",
+      "expected": false,
+      "observed": false,
+      "status": "PASS"
+    },
+    {
+      "check_id": "AUC-12",
+      "description": "Fake receipt pointing to wrong authorization_artifact_file_sha256 is rejected (not exempted)",
+      "domain": "DOWNSTREAM_RECEIPT_RECOGNITION",
+      "expected": false,
+      "observed": false,
+      "status": "PASS"
+    }
+  ],
+  "audit_correction_task_id": "W06-DEV-TUNE-LIVE-AUTHORIZATION-01-AUDIT-CORRECTION-01",
+  "authorization_artifact_file_sha256": "b2c068d216e6a71ad5c193137207cc8f7a74526f9a549eccfaefa9a7bd5eeba4",
+  "authorization_artifact_relative_path": "data/evaluation/w06/w06_dev_tune_live_authorization_v1.json",
+  "authorization_artifact_sha256": "fb2c181e14b0b122100f7b3b386bdaeaffe467c913d384db16717149374a1c83",
+  "authorization_id": "W06-DEV-TUNE-LIVE-AUTHORIZATION-01-V1",
+  "authorization_source": "PROJECT_OWNER_EXPLICIT_CHAT_AUTHORIZATION",
+  "authorization_status": "AUTHORIZED",
+  "authorization_text_sha256": "90fca01f1b7ecacb2b5ee4405df2a52af6aff02f21dce8bd7c579c4d659327fe",
+  "authorized_at_utc": "2026-10-21T06:25:00Z",
+  "authorized_at_utc_semantics": "authorized_at_utc represents formal artifact issuance in UTC immediately following explicit Project Owner chat authorization; it is not a fabricated historical chat timestamp.",
+  "authorized_by_role": "PROJECT_OWNER",
+  "candidate_registry_sha256": "4dd29164afdf7f364978420f41ab88ef07ec396062188169fcb859a9ef01e058",
+  "checks": [
+    {
+      "check_id": "AU-01",
+      "description": "Source develop SHA cd9d4e6ae072e737083c9069123f00a5a04107a5 exists and is ancestor of HEAD",
+      "domain": "SOURCE_STATE",
+      "expected": {
+        "source_develop_sha": "cd9d4e6ae072e737083c9069123f00a5a04107a5",
+        "verified": true
+      },
+      "observed": {
+        "source_develop_sha": "cd9d4e6ae072e737083c9069123f00a5a04107a5",
+        "verified": true
+      },
+      "status": "PASS"
+    },
+    {
+      "check_id": "AU-02",
+      "description": "Exact Project Owner authorization text matches frozen authorization-prep sentence character-for-character",
+      "domain": "AUTHORIZATION_EVIDENCE",
+      "expected": "I authorize W06 DEV-TUNE live execution for exactly the frozen 120-cell plan 582d9964b4fffbac91f83373d080f1fef120f0ddca4edab2d63e02796d0b20ae, using frozen prompt artifact 2f345363f580ea882b2e5b3562c587ef5309bc7f994440257a54d18994ab6956, candidates C1/C2/C3, maximum 120 generation calls, zero retry, no DEV-SELECT, no stochasticity, and no Final100.",
+      "observed": "I authorize W06 DEV-TUNE live execution for exactly the frozen 120-cell plan 582d9964b4fffbac91f83373d080f1fef120f0ddca4edab2d63e02796d0b20ae, using frozen prompt artifact 2f345363f580ea882b2e5b3562c587ef5309bc7f994440257a54d18994ab6956, candidates C1/C2/C3, maximum 120 generation calls, zero retry, no DEV-SELECT, no stochasticity, and no Final100.",
+      "status": "PASS"
+    },
+    {
+      "check_id": "AU-03",
+      "description": "authorization_text_sha256 is deterministic UTF-8 SHA256 of exact Project Owner sentence",
+      "domain": "AUTHORIZATION_EVIDENCE",
+      "expected": "90fca01f1b7ecacb2b5ee4405df2a52af6aff02f21dce8bd7c579c4d659327fe",
+      "observed": "90fca01f1b7ecacb2b5ee4405df2a52af6aff02f21dce8bd7c579c4d659327fe",
+      "status": "PASS"
+    },
+    {
+      "check_id": "AU-04",
+      "description": "authorized_by_role is strictly PROJECT_OWNER",
+      "domain": "AUTHORIZATION_SCOPE",
+      "expected": "PROJECT_OWNER",
+      "observed": "PROJECT_OWNER",
+      "status": "PASS"
+    },
+    {
+      "check_id": "AU-05",
+      "description": "authorization_status is strictly AUTHORIZED",
+      "domain": "AUTHORIZATION_SCOPE",
+      "expected": "AUTHORIZED",
+      "observed": "AUTHORIZED",
+      "status": "PASS"
+    },
+    {
+      "check_id": "AU-06",
+      "description": "allowed_phase is strictly DEV_TUNE",
+      "domain": "AUTHORIZATION_SCOPE",
+      "expected": "DEV_TUNE",
+      "observed": "DEV_TUNE",
+      "status": "PASS"
+    },
+    {
+      "check_id": "AU-07",
+      "description": "allowed_execution_plan_sha256 matches frozen DEV-TUNE plan 582d9964b4fffbac91f83373d080f1fef120f0ddca4edab2d63e02796d0b20ae",
+      "domain": "AUTHORIZATION_SCOPE",
+      "expected": "582d9964b4fffbac91f83373d080f1fef120f0ddca4edab2d63e02796d0b20ae",
+      "observed": "582d9964b4fffbac91f83373d080f1fef120f0ddca4edab2d63e02796d0b20ae",
+      "status": "PASS"
+    },
+    {
+      "check_id": "AU-08",
+      "description": "allowed_prompt_freeze_sha256 matches frozen prompt artifact 2f345363f580ea882b2e5b3562c587ef5309bc7f994440257a54d18994ab6956",
+      "domain": "AUTHORIZATION_SCOPE",
+      "expected": "2f345363f580ea882b2e5b3562c587ef5309bc7f994440257a54d18994ab6956",
+      "observed": "2f345363f580ea882b2e5b3562c587ef5309bc7f994440257a54d18994ab6956",
+      "status": "PASS"
+    },
+    {
+      "check_id": "AU-09",
+      "description": "allowed_candidate_ids is strictly ['C1', 'C2', 'C3']",
+      "domain": "AUTHORIZATION_SCOPE",
+      "expected": [
+        "C1",
+        "C2",
+        "C3"
+      ],
+      "observed": [
+        "C1",
+        "C2",
+        "C3"
+      ],
+      "status": "PASS"
+    },
+    {
+      "check_id": "AU-10",
+      "description": "maximum_live_generation_calls is strictly 120 matching 120 unique run_ids and cell keys",
+      "domain": "CALL_BUDGET",
+      "expected": {
+        "max_calls": 120,
+        "unique_cell_keys": 120,
+        "unique_run_ids": 120
+      },
+      "observed": {
+        "max_calls": 120,
+        "unique_cell_keys": 120,
+        "unique_run_ids": 120
+      },
+      "status": "PASS"
+    },
+    {
+      "check_id": "AU-11",
+      "description": "attempts_per_cell is strictly 1 across all 120 assigned cells",
+      "domain": "EXECUTION_POLICY",
+      "expected": 1,
+      "observed": 1,
+      "status": "PASS"
+    },
+    {
+      "check_id": "AU-12",
+      "description": "All retry counters (sdk, transport, manual, automatic), fallback, repair, and tools are zero/false across all 120 cells",
+      "domain": "EXECUTION_POLICY",
+      "expected": 0,
+      "observed": 0,
+      "status": "PASS"
+    },
+    {
+      "check_id": "AU-13",
+      "description": "DEV_TUNE authorization artifact is rejected by verify_dev_live_authorization_artifact when requested phase is DEV_SELECT",
+      "domain": "SCOPE_EXCLUSION",
+      "expected": true,
+      "observed": true,
+      "status": "PASS"
+    },
+    {
+      "check_id": "AU-14",
+      "description": "DEV_TUNE authorization artifact is rejected by verify_dev_live_authorization_artifact when requested phase is STOCHASTICITY",
+      "domain": "SCOPE_EXCLUSION",
+      "expected": true,
+      "observed": true,
+      "status": "PASS"
+    },
+    {
+      "check_id": "AU-15",
+      "description": "Final100 is strictly rejected with Final100FirewallViolationError",
+      "domain": "FINAL100_FIREWALL",
+      "expected": true,
+      "observed": true,
+      "status": "PASS"
+    },
+    {
+      "check_id": "AU-16",
+      "description": "maximum_live_generation_calls=121 is rejected by DevLiveAuthorizationArtifact contract",
+      "domain": "ADVERSARIAL_REJECTION",
+      "expected": true,
+      "observed": true,
+      "status": "PASS"
+    },
+    {
+      "check_id": "AU-17",
+      "description": "Candidate C4 is rejected by DevLiveAuthorizationArtifact contract",
+      "domain": "ADVERSARIAL_REJECTION",
+      "expected": true,
+      "observed": true,
+      "status": "PASS"
+    },
+    {
+      "check_id": "AU-18",
+      "description": "Mismatched allowed_execution_plan_sha256 is rejected by verify_dev_live_authorization_artifact",
+      "domain": "ADVERSARIAL_REJECTION",
+      "expected": true,
+      "observed": true,
+      "status": "PASS"
+    },
+    {
+      "check_id": "AU-19",
+      "description": "Mismatched allowed_prompt_freeze_sha256 is rejected by verify_dev_live_authorization_artifact",
+      "domain": "ADVERSARIAL_REJECTION",
+      "expected": true,
+      "observed": true,
+      "status": "PASS"
+    },
+    {
+      "check_id": "AU-20",
+      "description": "Wrong allowed_phase is rejected by verify_dev_live_authorization_artifact",
+      "domain": "ADVERSARIAL_REJECTION",
+      "expected": true,
+      "observed": true,
+      "status": "PASS"
+    },
+    {
+      "check_id": "AU-21",
+      "description": "Non-PROJECT_OWNER authorized_by_role is rejected by DevLiveAuthorizationArtifact",
+      "domain": "ADVERSARIAL_REJECTION",
+      "expected": true,
+      "observed": true,
+      "status": "PASS"
+    },
+    {
+      "check_id": "AU-22",
+      "description": "Non-AUTHORIZED authorization_status is rejected by DevLiveAuthorizationArtifact",
+      "domain": "ADVERSARIAL_REJECTION",
+      "expected": true,
+      "observed": true,
+      "status": "PASS"
+    },
+    {
+      "check_id": "AU-23",
+      "description": "Artifact validates cleanly through production verify_dev_live_authorization_artifact",
+      "domain": "PRODUCTION_CONTRACT_VALIDATION",
+      "expected": "W06-DEV-TUNE-LIVE-AUTHORIZATION-01-V1",
+      "observed": "W06-DEV-TUNE-LIVE-AUTHORIZATION-01-V1",
+      "status": "PASS"
+    },
+    {
+      "check_id": "AU-24",
+      "description": "All 14 scientific code bundle files remain byte-for-byte unchanged with SHA256 0638f2fcb100b0000e3a2a4e08137a9d468449001f258de7354df21e185ca2e3",
+      "domain": "SCIENTIFIC_CODE_BUNDLE",
+      "expected": "0638f2fcb100b0000e3a2a4e08137a9d468449001f258de7354df21e185ca2e3",
+      "observed": "0638f2fcb100b0000e3a2a4e08137a9d468449001f258de7354df21e185ca2e3",
+      "status": "PASS"
+    },
+    {
+      "check_id": "AU-25",
+      "description": "Authorization artifact contains zero secret fields or token patterns",
+      "domain": "SECRET_HYGIENE",
+      "expected": true,
+      "observed": true,
+      "status": "PASS"
+    },
+    {
+      "check_id": "AU-26",
+      "description": "Authorization issuance does not read or require .env or provider API keys",
+      "domain": "SECRET_HYGIENE",
+      "expected": true,
+      "observed": true,
+      "status": "PASS"
+    },
+    {
+      "check_id": "AU-27",
+      "description": "No Stage-A freeze receipt created during authorization issuance",
+      "domain": "PRE_STAGE_A_FIREWALL",
+      "expected": false,
+      "observed": false,
+      "status": "PASS"
+    },
+    {
+      "check_id": "AU-28",
+      "description": "No LiveExecutionCapability minted during authorization issuance",
+      "domain": "PRE_STAGE_A_FIREWALL",
+      "expected": false,
+      "observed": false,
+      "status": "PASS"
+    },
+    {
+      "check_id": "AU-29",
+      "description": "No transport journal or provider result directory created",
+      "domain": "PRE_STAGE_A_FIREWALL",
+      "expected": {
+        "provider_result_directory_created": false,
+        "transport_journal_created": false
+      },
+      "observed": {
+        "provider_result_directory_created": false,
+        "transport_journal_created": false
+      },
+      "status": "PASS"
+    },
+    {
+      "check_id": "AU-30",
+      "description": "Zero outbound network calls and zero provider cost during authorization issuance",
+      "domain": "NETWORK_ISOLATION",
+      "expected": {
+        "blocked_attempts": 0,
+        "live_provider_calls": 0,
+        "provider_cost_usd": 0.0
+      },
+      "observed": {
+        "blocked_attempts": 0,
+        "live_provider_calls": 0,
+        "provider_cost_usd": 0.0
+      },
+      "status": "PASS"
+    }
+  ],
+  "code_basis_commit_sha": "60d52d720e66f5af8e82fabf9cebe2ea0e8a9e26",
+  "cost_acknowledgement": {
+    "authorization_prep_artifact_sha256": "168d29741fd75884a9b3f066822a843bcc6fd56ed06d4c16b40b8129d4d62f33",
+    "cells_skipped_based_on_spend": false,
+    "conditional_16384_billable_output_cap_reference_usd": "$23.34 USD",
+    "conservative_planning_range_usd": "$4.88 - $9.82 USD",
+    "cost_stop_rules_introduced": false,
+    "creates_scientific_cost_criterion": false,
+    "hard_max_cost_usd": "NOT_DEFENSIBLY_COMPUTABLE",
+    "planning_metadata_only": true,
+    "provider_changed_based_on_spend": false
+  },
+  "dev_select_execution_started": false,
+  "dev_tune_execution_started": false,
+  "exact_authorization_text": "I authorize W06 DEV-TUNE live execution for exactly the frozen 120-cell plan 582d9964b4fffbac91f83373d080f1fef120f0ddca4edab2d63e02796d0b20ae, using frozen prompt artifact 2f345363f580ea882b2e5b3562c587ef5309bc7f994440257a54d18994ab6956, candidates C1/C2/C3, maximum 120 generation calls, zero retry, no DEV-SELECT, no stochasticity, and no Final100.",
+  "execution_plan_file_sha256": "652e3beb08771c3125e613172b1aaa396fc1b60aaaf3b98cc238e91a14e0dc74",
+  "experiment_matrix": {
+    "attempts_per_cell": 1,
+    "candidates": [
+      "C1",
+      "C2",
+      "C3"
+    ],
+    "fixture_count": 20,
+    "phase": "DEV_TUNE",
+    "prompts": [
+      "P1",
+      "P2"
+    ],
+    "total_scientific_cells": 120,
+    "unique_run_ids": 120,
+    "unique_scientific_cell_keys": 120
+  },
+  "final100_used": false,
+  "historical_evidence_boundary": {
+    "historical_frozen_receipt_shas": {
+      "data/evaluation/w06/w06_dev_live_runner_qa_01_receipt_v1.json": "e400d319ca957acb8e3ef7e8fcb468b7406a837b51b6127ed95327ac6cf72ad2",
+      "data/evaluation/w06/w06_dev_prompt_candidate_freeze_01_receipt_v1.json": "20b95381f9f06809ca37e3b806e639fbe788a9370a55a8e85a9f2d94aae0b6e5",
+      "data/evaluation/w06/w06_dev_tune_authorization_prep_v1.json": "168d29741fd75884a9b3f066822a843bcc6fd56ed06d4c16b40b8129d4d62f33"
+    },
+    "historical_receipts_unmodified": true,
+    "policy_statement": "Historical checks refer to the repository state at their original gate. A later, separately verified downstream authorization (cryptographically bound to file SHA256 b2c068d216e6a71ad5c193137207cc8f7a74526f9a549eccfaefa9a7bd5eeba4 and internal SHA256 fb2c181e14b0b122100f7b3b386bdaeaffe467c913d384db16717149374a1c83) does not invalidate the original historical evidence. Any unknown, tampered, or unverified authorization artifact invalidates current regression verification and fails closed."
+  },
+  "live_execution_capability_minted": false,
+  "live_provider_calls": 0,
+  "maximum_live_generation_calls": 120,
+  "portable_schema_v2_sha256": "825a4ff912d851a95f7392cb564b7d7ca3588135508dc6eb3ac6304cdde3c490",
+  "previous_head_sha": "2e1befc5883e1ca1e5b6d8212338a7b22acae1e2",
+  "prompt_registry_sha256": "846dc4c14ec2a87537b7b3e07bf492de51dc534d24b21e469094b7e3d34d32b6",
+  "provider_config_registry_sha256": "3dc05d29acc2f647cba58303865bd7406b8c1d9f7ccbe0f120e87ad471190938",
+  "provider_cost_usd": 0.0,
+  "provider_result_directory_created": false,
+  "retry_policy": {
+    "attempts_per_cell": 1,
+    "automatic_retry": 0,
+    "best_of": false,
+    "deterministic_semantic_repair": false,
+    "fallback": false,
+    "llm_repair": 0,
+    "manual_retry": 0,
+    "max_outbound_generation_http_requests_per_cell": 1,
+    "retry": 0,
+    "sdk_retry": 0,
+    "tools": false,
+    "transport_retry": 0
+  },
+  "scientific_code_bundle_sha256": "0638f2fcb100b0000e3a2a4e08137a9d468449001f258de7354df21e185ca2e3",
+  "scope_exclusions": {
+    "calls_above_120_authorized": false,
+    "candidate_c4_or_others_authorized": false,
+    "dev_select_authorized": false,
+    "fallback_or_best_of_authorized": false,
+    "final100_authorized": false,
+    "multiple_attempts_per_cell_authorized": false,
+    "repair_or_diagnostic_calls_authorized": false,
+    "retry_above_zero_authorized": false,
+    "stochasticity_authorized": false
+  },
+  "semantic_schema_sha256": "e4169f7b890f77d13af65e9f2070b6071c535b206d88440f5e8f28c179977555",
+  "source_develop_sha": "cd9d4e6ae072e737083c9069123f00a5a04107a5",
+  "stage_a_created": false,
+  "stochasticity_execution_started": false,
+  "task_id": "W06-DEV-TUNE-LIVE-AUTHORIZATION-01",
+  "transport_journal_created": false,
+  "verification_summary": {
+    "auc_failed_checks": 0,
+    "auc_passed_checks": 12,
+    "auc_total_checks": 12,
+    "failed_checks": 0,
+    "overall_status": "PASS",
+    "passed_checks": 30,
+    "total_checks": 30
+  }
+}

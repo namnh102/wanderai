@@ -722,10 +722,19 @@ def verify_pre_authorization_firewall(repo_root: Path = REPO_ROOT) -> dict[str, 
     forbidden_live_cell_dirs: list[str] = []
 
     if w06_dir.is_dir():
+        from issue_w06_dev_tune_live_authorization import (
+            is_verified_downstream_w06_dev_tune_authorization_file,
+        )
+
         for path in sorted(w06_dir.rglob("*")):
             rel = path.relative_to(repo_root).as_posix()
             name_lower = path.name.lower()
             if path.is_file():
+                is_verified_downstream_auth01 = (
+                    is_verified_downstream_w06_dev_tune_authorization_file(
+                        path, repo_root=repo_root
+                    )
+                )
                 if (
                     "stage_a" in name_lower
                     or "stage-a" in name_lower
@@ -737,6 +746,7 @@ def verify_pre_authorization_firewall(repo_root: Path = REPO_ROOT) -> dict[str, 
                 if (
                     "live_authorization" in name_lower
                     and name_lower != "w06_dev_tune_authorization_prep_v1.json"
+                    and not is_verified_downstream_auth01
                 ):
                     forbidden_auth_files.append(rel)
                 # Also inspect JSON files in w06_dir root for DevLiveAuthorizationArtifact or DevLiveStageAFreezeReceipt signatures
@@ -745,8 +755,11 @@ def verify_pre_authorization_firewall(repo_root: Path = REPO_ROOT) -> dict[str, 
                         data = json.loads(path.read_text(encoding="utf-8"))
                         if isinstance(data, dict):
                             if (
-                                "authorization_id" in data
-                                or data.get("authorization_status") == "AUTHORIZED"
+                                (
+                                    "authorization_id" in data
+                                    or data.get("authorization_status") == "AUTHORIZED"
+                                )
+                                and not is_verified_downstream_auth01
                             ):
                                 forbidden_auth_files.append(rel)
                             if (
