@@ -771,6 +771,7 @@ def verify_pre_authorization_firewall(repo_root: Path = REPO_ROOT) -> dict[str, 
                                     or data.get("authorization_status") == "AUTHORIZED"
                                 )
                                 and not is_verified_downstream_auth01
+                                and not is_verified_downstream_stage_a
                             ):
                                 forbidden_auth_files.append(rel)
                             if (

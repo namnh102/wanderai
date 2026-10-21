@@ -114,7 +114,7 @@ def test_persisted_stage_a_receipt_and_task_audit_receipt_integrity() -> None:
     assert_no_secrets_in_payload(audit_dict, context="TEST_PERSISTED_STAGE_A_AUDIT")
 
     auths = sa_mod.load_verified_stage_a_authorities(REPO_ROOT)
-    validated_stage_a = verify_stage_a_freeze_receipt(
+    validated_stage_a = sa_mod.verify_committed_stage_a_or_shallow_ci_fallback(
         stage_a_path,
         execution_plan=auths["execution_plan"],
         prompt_freeze=auths["prompt_freeze"],
@@ -124,7 +124,6 @@ def test_persisted_stage_a_receipt_and_task_audit_receipt_integrity() -> None:
         authorization_path=REPO_ROOT / sa_mod.AUTHORIZATION_REL_PATH,
         candidate_registry=auths["candidate_registry"],
         repo_root=REPO_ROOT,
-        require_git_committed=True,
     )
     assert isinstance(validated_stage_a, DevLiveStageAFreezeReceipt)
     assert validated_stage_a.artifact_id == STAGE_A_FREEZE_RECEIPT_ARTIFACT_ID
@@ -494,3 +493,68 @@ def test_report_markdown_contains_all_required_hashes() -> None:
     ]
     for sub in required_substrings:
         assert sub in text, f"Missing required substring in report: {sub!r}"
+
+
+def test_source_develop_provenance_fail_closed_and_shallow_ci_fallback(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Verify fail-closed git provenance and shallow CI fallback behavior."""
+
+    def _cp(returncode: int, stdout: str = "") -> subprocess.CompletedProcess[str]:
+        return subprocess.CompletedProcess(
+            args=["git"], returncode=returncode, stdout=stdout, stderr=""
+        )
+
+    # 1. Commit exists and is ancestor -> verified=True, fallback=False
+    res_a = sa_mod.verify_source_develop_commit_or_shallow_fallback(
+        REPO_ROOT,
+        git_runner=lambda args: _cp(0) if "cat-file" in args or "merge-base" in args else _cp(1),
+    )
+    assert res_a["verified"] is True
+    assert res_a["shallow_repository_fallback_used"] is False
+
+    # 2. Commit exists and is NOT ancestor -> fails closed even if shallow=true
+    res_b = sa_mod.verify_source_develop_commit_or_shallow_fallback(
+        REPO_ROOT,
+        git_runner=lambda args: (
+            _cp(0)
+            if "cat-file" in args
+            else (_cp(1) if "merge-base" in args else _cp(0, "true\n"))
+        ),
+    )
+    assert res_b["verified"] is False
+
+    # 3. Commit missing in non-shallow repo -> fails closed
+    res_c = sa_mod.verify_source_develop_commit_or_shallow_fallback(
+        REPO_ROOT,
+        git_runner=lambda args: _cp(0, "false\n") if "--is-shallow-repository" in args else _cp(1),
+    )
+    assert res_c["verified"] is False
+
+    # 4. Commit missing in shallow repo with all 4 upstream hashes intact -> verified=True
+    res_d = sa_mod.verify_source_develop_commit_or_shallow_fallback(
+        REPO_ROOT,
+        git_runner=lambda args: _cp(0, "true\n") if "--is-shallow-repository" in args else _cp(1),
+    )
+    assert res_d["verified"] is True
+    assert res_d["shallow_repository_fallback_used"] is True
+
+    # 5. Simulate shallow CI clone in run_all_sa_checks & run_all_saa_adversarial_checks
+    monkeypatch.setattr(sa_mod, "has_full_stage_a_git_history", lambda _root=REPO_ROOT: False)
+    monkeypatch.setattr(
+        sa_mod,
+        "verify_source_develop_commit_or_shallow_fallback",
+        lambda _root=REPO_ROOT, **_kw: {
+            "source_develop_sha": sa_mod.SOURCE_DEVELOP_SHA,
+            "commit_exists_in_local_git": False,
+            "is_ancestor_of_head": False,
+            "is_shallow_repository": True,
+            "shallow_repository_fallback_used": True,
+            "verified": True,
+        },
+    )
+    sa_shallow = sa_mod.run_all_sa_checks(REPO_ROOT, require_committed_in_head=True)
+    assert all(c["status"] == "PASS" for c in sa_shallow)
+    saa_shallow = sa_mod.run_all_saa_adversarial_checks(REPO_ROOT)
+    assert all(c["status"] == "PASS" for c in saa_shallow)
+

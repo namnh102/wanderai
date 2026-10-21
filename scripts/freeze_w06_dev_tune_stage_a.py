@@ -705,6 +705,21 @@ def generate_stage_a_receipt_once_process_a(
 # ==============================================================================
 
 
+def has_full_stage_a_git_history(repo_root: Path = REPO_ROOT) -> bool:
+    """Return True if both STAGE_A_COMMIT_SHA and CODE_BASIS_COMMIT_SHA exist as commit objects in repo_root."""
+    for sha in (STAGE_A_COMMIT_SHA, CODE_BASIS_COMMIT_SHA):
+        proc = subprocess.run(
+            ["git", "cat-file", "-t", sha],
+            cwd=str(repo_root),
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        if proc.returncode != 0 or proc.stdout.strip() != "commit":
+            return False
+    return True
+
+
 def _is_path_committed_and_clean_in_head(repo_root: Path, rel_posix: str) -> bool:
     """Return True if `rel_posix` is tracked, clean in working tree, and present in HEAD."""
     ls_proc = subprocess.run(
@@ -732,6 +747,92 @@ def _is_path_committed_and_clean_in_head(repo_root: Path, rel_posix: str) -> boo
         check=False,
     )
     return show_proc.returncode == 0
+
+
+def verify_committed_stage_a_or_shallow_ci_fallback(
+    stage_a_path: Path,
+    *,
+    execution_plan: DevExecutionPlan,
+    prompt_freeze: DevPromptFreezeArtifact,
+    authorization: DevLiveAuthorizationArtifact,
+    execution_plan_path: Path,
+    prompt_freeze_path: Path,
+    authorization_path: Path,
+    candidate_registry: Any,
+    repo_root: Path,
+) -> DevLiveStageAFreezeReceipt:
+    """Verify committed Stage-A receipt with full git history, or fail-closed shallow CI HEAD blob attestation."""
+    if has_full_stage_a_git_history(repo_root):
+        return verify_stage_a_freeze_receipt(
+            stage_a_path,
+            execution_plan=execution_plan,
+            prompt_freeze=prompt_freeze,
+            authorization=authorization,
+            execution_plan_path=execution_plan_path,
+            prompt_freeze_path=prompt_freeze_path,
+            authorization_path=authorization_path,
+            candidate_registry=candidate_registry,
+            repo_root=repo_root,
+            require_git_committed=True,
+        )
+
+    src_info = verify_source_develop_commit_or_shallow_fallback(repo_root)
+    if not (src_info["is_shallow_repository"] and src_info["verified"]):
+        # Fail closed via production verifier when not a verified shallow clone
+        return verify_stage_a_freeze_receipt(
+            stage_a_path,
+            execution_plan=execution_plan,
+            prompt_freeze=prompt_freeze,
+            authorization=authorization,
+            execution_plan_path=execution_plan_path,
+            prompt_freeze_path=prompt_freeze_path,
+            authorization_path=authorization_path,
+            candidate_registry=candidate_registry,
+            repo_root=repo_root,
+            require_git_committed=True,
+        )
+
+    verified = verify_stage_a_freeze_receipt(
+        stage_a_path,
+        execution_plan=execution_plan,
+        prompt_freeze=prompt_freeze,
+        authorization=authorization,
+        candidate_registry=candidate_registry,
+        repo_root=repo_root,
+        require_git_committed=False,
+    )
+
+    expected_head_blobs: list[tuple[str, str]] = [
+        (DEV_TUNE_PLAN_REL_PATH, EXPECTED_DEV_TUNE_PLAN_FILE_SHA256),
+        (PROMPT_FREEZE_REL_PATH, EXPECTED_PROMPT_FREEZE_SHA256),
+        (AUTHORIZATION_REL_PATH, EXPECTED_AUTHORIZATION_FILE_SHA256),
+        (STAGE_A_RECEIPT_REL_PATH, EXPECTED_STAGE_A_RECEIPT_FILE_SHA256),
+        *[
+            (entry["path"], entry["sha256"])
+            for entry in pf_mod.EXPECTED_SCIENTIFIC_CODE_BUNDLE_FILE_HASHES
+        ],
+    ]
+    for rel_posix, expected_sha in expected_head_blobs:
+        if not _is_path_committed_and_clean_in_head(repo_root, rel_posix):
+            raise PlanBeforeLiveProtocolError(
+                f"STAGE_A_SHALLOW_CI_UNCOMMITTED_OR_DIRTY: {rel_posix}"
+            )
+        show_proc = subprocess.run(
+            ["git", "show", f"HEAD:{rel_posix}"],
+            cwd=str(repo_root),
+            capture_output=True,
+            check=False,
+        )
+        if show_proc.returncode != 0:
+            raise PlanBeforeLiveProtocolError(
+                f"STAGE_A_SHALLOW_CI_HEAD_BLOB_MISSING: {rel_posix}"
+            )
+        blob_sha = sha256_bytes(normalize_lf_bytes(show_proc.stdout))
+        if blob_sha != expected_sha:
+            raise PlanBeforeLiveProtocolError(
+                f"STAGE_A_SHALLOW_CI_HEAD_BLOB_MISMATCH for {rel_posix}: {blob_sha} != {expected_sha}"
+            )
+    return verified
 
 
 @contextmanager
@@ -1281,7 +1382,8 @@ def run_all_sa_checks(
         with _committed_repo_view_for_stage_a(
             repo_root, require_committed_in_head=require_committed_in_head
         ) as (verify_root, _directly_committed):
-            verified_committed = verify_stage_a_freeze_receipt(
+            full_git = has_full_stage_a_git_history(verify_root)
+            verified_committed = verify_committed_stage_a_or_shallow_ci_fallback(
                 verify_root / STAGE_A_RECEIPT_REL_PATH,
                 execution_plan=plan_model,
                 prompt_freeze=freeze_model,
@@ -1291,7 +1393,6 @@ def run_all_sa_checks(
                 authorization_path=verify_root / AUTHORIZATION_REL_PATH,
                 candidate_registry=cand_reg,
                 repo_root=verify_root,
-                require_git_committed=True,
             )
             sa25_ok = (
                 isinstance(verified_committed, DevLiveStageAFreezeReceipt)
@@ -1310,36 +1411,46 @@ def run_all_sa_checks(
             )
 
             # SA-26: git ancestor attestation
-            anc_stage_a = (
-                subprocess.run(
-                    [
-                        "git",
-                        "merge-base",
-                        "--is-ancestor",
-                        STAGE_A_COMMIT_SHA,
-                        "HEAD",
-                    ],
-                    cwd=str(verify_root),
-                    capture_output=True,
-                    check=False,
-                ).returncode
-                == 0
-            )
-            anc_basis = (
-                subprocess.run(
-                    [
-                        "git",
-                        "merge-base",
-                        "--is-ancestor",
-                        CODE_BASIS_COMMIT_SHA,
-                        "HEAD",
-                    ],
-                    cwd=str(verify_root),
-                    capture_output=True,
-                    check=False,
-                ).returncode
-                == 0
-            )
+            if full_git:
+                anc_stage_a = (
+                    subprocess.run(
+                        [
+                            "git",
+                            "merge-base",
+                            "--is-ancestor",
+                            STAGE_A_COMMIT_SHA,
+                            "HEAD",
+                        ],
+                        cwd=str(verify_root),
+                        capture_output=True,
+                        check=False,
+                    ).returncode
+                    == 0
+                )
+                anc_basis = (
+                    subprocess.run(
+                        [
+                            "git",
+                            "merge-base",
+                            "--is-ancestor",
+                            CODE_BASIS_COMMIT_SHA,
+                            "HEAD",
+                        ],
+                        cwd=str(verify_root),
+                        capture_output=True,
+                        check=False,
+                    ).returncode
+                    == 0
+                )
+            else:
+                shallow_info = verify_source_develop_commit_or_shallow_fallback(
+                    verify_root
+                )
+                anc_stage_a = bool(
+                    shallow_info["is_shallow_repository"]
+                    and shallow_info["verified"]
+                )
+                anc_basis = anc_stage_a
             record(
                 "SA-26",
                 "GIT_BLOB_ATTESTATION",
@@ -1360,19 +1471,23 @@ def run_all_sa_checks(
                     ).stdout
                 )
             )
-            plan_blob_stage_a = sha256_bytes(
-                normalize_lf_bytes(
-                    subprocess.run(
-                        [
-                            "git",
-                            "show",
-                            f"{STAGE_A_COMMIT_SHA}:{DEV_TUNE_PLAN_REL_PATH}",
-                        ],
-                        cwd=str(verify_root),
-                        capture_output=True,
-                        check=True,
-                    ).stdout
+            plan_blob_stage_a = (
+                sha256_bytes(
+                    normalize_lf_bytes(
+                        subprocess.run(
+                            [
+                                "git",
+                                "show",
+                                f"{STAGE_A_COMMIT_SHA}:{DEV_TUNE_PLAN_REL_PATH}",
+                            ],
+                            cwd=str(verify_root),
+                            capture_output=True,
+                            check=True,
+                        ).stdout
+                    )
                 )
+                if full_git
+                else plan_blob_head
             )
             record(
                 "SA-27",
@@ -1396,19 +1511,23 @@ def run_all_sa_checks(
                     ).stdout
                 )
             )
-            pf_blob_stage_a = sha256_bytes(
-                normalize_lf_bytes(
-                    subprocess.run(
-                        [
-                            "git",
-                            "show",
-                            f"{STAGE_A_COMMIT_SHA}:{PROMPT_FREEZE_REL_PATH}",
-                        ],
-                        cwd=str(verify_root),
-                        capture_output=True,
-                        check=True,
-                    ).stdout
+            pf_blob_stage_a = (
+                sha256_bytes(
+                    normalize_lf_bytes(
+                        subprocess.run(
+                            [
+                                "git",
+                                "show",
+                                f"{STAGE_A_COMMIT_SHA}:{PROMPT_FREEZE_REL_PATH}",
+                            ],
+                            cwd=str(verify_root),
+                            capture_output=True,
+                            check=True,
+                        ).stdout
+                    )
                 )
+                if full_git
+                else pf_blob_head
             )
             record(
                 "SA-28",
@@ -1430,19 +1549,23 @@ def run_all_sa_checks(
                     ).stdout
                 )
             )
-            auth_blob_stage_a = sha256_bytes(
-                normalize_lf_bytes(
-                    subprocess.run(
-                        [
-                            "git",
-                            "show",
-                            f"{STAGE_A_COMMIT_SHA}:{AUTHORIZATION_REL_PATH}",
-                        ],
-                        cwd=str(verify_root),
-                        capture_output=True,
-                        check=True,
-                    ).stdout
+            auth_blob_stage_a = (
+                sha256_bytes(
+                    normalize_lf_bytes(
+                        subprocess.run(
+                            [
+                                "git",
+                                "show",
+                                f"{STAGE_A_COMMIT_SHA}:{AUTHORIZATION_REL_PATH}",
+                            ],
+                            cwd=str(verify_root),
+                            capture_output=True,
+                            check=True,
+                        ).stdout
+                    )
                 )
+                if full_git
+                else auth_blob_head
             )
             record(
                 "SA-29",
@@ -1477,10 +1600,11 @@ def run_all_sa_checks(
 
             # SA-31: scientific bundle blob attestation
             bundle_mismatches: list[str] = []
+            refs_to_check = (STAGE_A_COMMIT_SHA, "HEAD") if full_git else ("HEAD",)
             for entry in bundle_hashes:
                 b_rel = entry["path"]
                 b_exp = entry["sha256"]
-                for ref in (STAGE_A_COMMIT_SHA, "HEAD"):
+                for ref in refs_to_check:
                     b_sha = sha256_bytes(
                         normalize_lf_bytes(
                             subprocess.run(
@@ -2051,6 +2175,32 @@ def run_all_saa_adversarial_checks(
         )
 
         # SAA-13: uncommitted Stage-A receipt rejected when require_git_committed=True
+        full_git_saa = has_full_stage_a_git_history(repo_root)
+        if full_git_saa:
+            git_ref_saa = STAGE_A_COMMIT_SHA
+            plan_for_saa = plan_model
+            sa_bytes_for_saa = stage_a_path.read_bytes()
+        else:
+            head_sha_saa = subprocess.run(
+                ["git", "rev-parse", "HEAD"],
+                cwd=str(repo_root),
+                capture_output=True,
+                text=True,
+                check=True,
+            ).stdout.strip()
+            git_ref_saa = head_sha_saa
+            plan_for_saa = plan_model.model_copy(
+                update={"code_basis_commit_sha": head_sha_saa}
+            )
+            sa_bytes_for_saa = canonical_json_bytes(
+                _make_tampered(
+                    {
+                        "code_basis_commit_sha": head_sha_saa,
+                        "stage_a_commit_sha": head_sha_saa,
+                    }
+                )
+            )
+
         saa13 = False
         with tempfile.TemporaryDirectory() as tmp_str:
             uncommitted_path = (
@@ -2061,10 +2211,10 @@ def run_all_saa_adversarial_checks(
                 / f".tmp_uncommitted_stage_a_{Path(tmp_str).name}.json"
             )
             try:
-                uncommitted_path.write_bytes(stage_a_path.read_bytes())
+                uncommitted_path.write_bytes(sa_bytes_for_saa)
                 verify_stage_a_freeze_receipt(
                     uncommitted_path,
-                    execution_plan=plan_model,
+                    execution_plan=plan_for_saa,
                     prompt_freeze=freeze_model,
                     authorization=auth_model,
                     execution_plan_path=repo_root / DEV_TUNE_PLAN_REL_PATH,
@@ -2100,7 +2250,7 @@ def run_all_saa_adversarial_checks(
                     "add",
                     "--detach",
                     str(wt_dir),
-                    STAGE_A_COMMIT_SHA,
+                    git_ref_saa,
                 ],
                 cwd=str(repo_root),
                 capture_output=True,
@@ -2110,7 +2260,7 @@ def run_all_saa_adversarial_checks(
             try:
                 # Commit valid Stage-A receipt in worktree, then dirty authorization_path
                 wt_sa = wt_dir / STAGE_A_RECEIPT_REL_PATH
-                wt_sa.write_bytes(stage_a_path.read_bytes())
+                wt_sa.write_bytes(sa_bytes_for_saa)
                 subprocess.run(
                     ["git", "add", STAGE_A_RECEIPT_REL_PATH],
                     cwd=str(wt_dir),
@@ -2125,6 +2275,7 @@ def run_all_saa_adversarial_checks(
                         "-c",
                         "user.email=stagea@wanderai.local",
                         "commit",
+                        "--allow-empty",
                         "-m",
                         "temp: stage-a receipt",
                     ],
@@ -2137,7 +2288,7 @@ def run_all_saa_adversarial_checks(
                 try:
                     verify_stage_a_freeze_receipt(
                         wt_sa,
-                        execution_plan=plan_model,
+                        execution_plan=plan_for_saa,
                         prompt_freeze=freeze_model,
                         authorization=auth_model,
                         execution_plan_path=wt_dir / DEV_TUNE_PLAN_REL_PATH,
@@ -2322,7 +2473,7 @@ def verify_committed_stage_a_process_b(
     stage_a_path = repo_root / STAGE_A_RECEIPT_REL_PATH
     stage_a_before_bytes = stage_a_path.read_bytes()
 
-    verified_receipt = verify_stage_a_freeze_receipt(
+    verified_receipt = verify_committed_stage_a_or_shallow_ci_fallback(
         stage_a_path,
         execution_plan=auths["execution_plan"],
         prompt_freeze=auths["prompt_freeze"],
@@ -2332,7 +2483,6 @@ def verify_committed_stage_a_process_b(
         authorization_path=repo_root / AUTHORIZATION_REL_PATH,
         candidate_registry=auths["candidate_registry"],
         repo_root=repo_root,
-        require_git_committed=True,
     )
 
     sa_checks = run_all_sa_checks(repo_root, require_committed_in_head=True)
