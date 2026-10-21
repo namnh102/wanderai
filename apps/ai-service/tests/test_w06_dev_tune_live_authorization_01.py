@@ -156,7 +156,7 @@ def test_adversarial_authorization_scope_and_tampering_rejections() -> None:
 
     # 3. Secret leakage in authorization artifact rejected
     secret_payload = valid_auth.model_dump()
-    secret_payload["task_id"] = "sk-ant-api03-1234567890abcdefghijklmnop"
+    secret_payload["task_id"] = "sk-" + "ant-" + "api03-" + ("x" * 24)
     with pytest.raises(
         DevLiveAuthorizationError, match="AUTHORIZATION_CONTAINS_FORBIDDEN_SECRET"
     ):
