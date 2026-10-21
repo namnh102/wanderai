@@ -1,0 +1,972 @@
+{
+  "artifact_id": "W06-DEV-TUNE-AUTHORIZATION-PREP-01-V1",
+  "attempts_per_cell": 1,
+  "call_budget_policy": {
+    "dev_select_calls": 0,
+    "diagnostic_calls": 0,
+    "final100_calls": 0,
+    "future_owner_authorization_contract_requirements": {
+      "allowed_candidate_ids": [
+        "C1",
+        "C2",
+        "C3"
+      ],
+      "allowed_execution_plan_sha256": "582d9964b4fffbac91f83373d080f1fef120f0ddca4edab2d63e02796d0b20ae",
+      "allowed_phase": "DEV_TUNE",
+      "allowed_prompt_freeze_sha256": "2f345363f580ea882b2e5b3562c587ef5309bc7f994440257a54d18994ab6956",
+      "maximum_live_generation_calls": 120
+    },
+    "max_outbound_http_requests_per_cell": 1,
+    "maximum_live_generation_calls": 120,
+    "no_hidden_calls": true,
+    "reserve_calls_beyond_120": 0,
+    "retry_calls": 0,
+    "stochasticity_calls": 0
+  },
+  "candidate_count": 3,
+  "candidate_list": [
+    {
+      "candidate_id": "C1",
+      "cells_in_dev_tune": 40,
+      "env_key_name": "GEMINI_API_KEY",
+      "max_output_tokens": 16384,
+      "omitted_parameters": [
+        "temperature",
+        "top_p",
+        "top_k"
+      ],
+      "provider": "google",
+      "provider_config_sha256": "d4d417bdeff3f4156ac9605f976b46780c1cb0866d87674f1cee51d8bf3f3217",
+      "requested_model_id": "gemini-3.8-flash",
+      "sampling_reasoning_config": {
+        "seed": 2026101508,
+        "thinking_level": "medium"
+      },
+      "technical_preflight_v2_status": "PASSED_TECHNICAL_PREFLIGHT_SCHEMA_V2",
+      "timeout_ms": 55000
+    },
+    {
+      "candidate_id": "C2",
+      "cells_in_dev_tune": 40,
+      "env_key_name": "OPENAI_API_KEY",
+      "max_output_tokens": 16384,
+      "omitted_parameters": [
+        "temperature",
+        "top_p",
+        "top_k",
+        "logprobs",
+        "top_logprobs"
+      ],
+      "provider": "openai",
+      "provider_config_sha256": "6201244268383e85106b4d6e6ad0f503e066de9def361cbafa685227e8ba332e",
+      "requested_model_id": "gpt-6.1-sol",
+      "sampling_reasoning_config": {
+        "reasoning_effort": "medium",
+        "seed": 2026101508,
+        "service_tier": "default"
+      },
+      "technical_preflight_v2_status": "PASSED_TECHNICAL_PREFLIGHT_SCHEMA_V2",
+      "timeout_ms": 55000
+    },
+    {
+      "candidate_id": "C3",
+      "cells_in_dev_tune": 40,
+      "env_key_name": "ANTHROPIC_API_KEY",
+      "max_output_tokens": 16384,
+      "omitted_parameters": [
+        "temperature",
+        "top_p",
+        "top_k",
+        "seed"
+      ],
+      "provider": "anthropic",
+      "provider_config_sha256": "5ecff5a4e2899245d1cd113285d1193dad17b6ed4e7521bd10be3937650d2a29",
+      "requested_model_id": "claude-sonnet-5-5",
+      "sampling_reasoning_config": {
+        "effort": "high",
+        "thinking": {
+          "type": "adaptive"
+        }
+      },
+      "technical_preflight_v2_status": "PASSED_TECHNICAL_PREFLIGHT_SCHEMA_V2",
+      "timeout_ms": 55000
+    }
+  ],
+  "candidate_registry_sha256": "4dd29164afdf7f364978420f41ab88ef07ec396062188169fcb859a9ef01e058",
+  "cell_count": 120,
+  "cells_per_candidate": {
+    "C1": 40,
+    "C2": 40,
+    "C3": 40
+  },
+  "cells_per_fixture": 6,
+  "cells_per_prompt": {
+    "P1": 60,
+    "P2": 60
+  },
+  "checks": [
+    {
+      "check_id": "AP-01",
+      "description": "Source develop SHA 443634e1f7583f334dec0315bb3816d249feb124 exists and is ancestor of HEAD",
+      "domain": "SOURCE_STATE",
+      "expected": {
+        "source_develop_sha": "443634e1f7583f334dec0315bb3816d249feb124",
+        "verified": true
+      },
+      "observed": {
+        "source_develop_sha": "443634e1f7583f334dec0315bb3816d249feb124",
+        "verified": true
+      },
+      "status": "PASS"
+    },
+    {
+      "check_id": "AP-02",
+      "description": "Prompt freeze artifact SHA256 matches 2f345363f580ea882b2e5b3562c587ef5309bc7f994440257a54d18994ab6956 and passes runner/harness validation",
+      "domain": "FROZEN_AUTHORITIES",
+      "expected": "2f345363f580ea882b2e5b3562c587ef5309bc7f994440257a54d18994ab6956",
+      "observed": "2f345363f580ea882b2e5b3562c587ef5309bc7f994440257a54d18994ab6956",
+      "status": "PASS"
+    },
+    {
+      "check_id": "AP-03",
+      "description": "DEV-TUNE execution plan SHA256 matches 582d9964b4fffbac91f83373d080f1fef120f0ddca4edab2d63e02796d0b20ae",
+      "domain": "FROZEN_AUTHORITIES",
+      "expected": "582d9964b4fffbac91f83373d080f1fef120f0ddca4edab2d63e02796d0b20ae",
+      "observed": "582d9964b4fffbac91f83373d080f1fef120f0ddca4edab2d63e02796d0b20ae",
+      "status": "PASS"
+    },
+    {
+      "check_id": "AP-04",
+      "description": "Persisted DEV-TUNE execution plan file SHA256 matches 652e3beb08771c3125e613172b1aaa396fc1b60aaaf3b98cc238e91a14e0dc74",
+      "domain": "FROZEN_AUTHORITIES",
+      "expected": "652e3beb08771c3125e613172b1aaa396fc1b60aaaf3b98cc238e91a14e0dc74",
+      "observed": "652e3beb08771c3125e613172b1aaa396fc1b60aaaf3b98cc238e91a14e0dc74",
+      "status": "PASS"
+    },
+    {
+      "check_id": "AP-05",
+      "description": "14-file scientific code bundle SHA256 matches 0638f2fcb100b0000e3a2a4e08137a9d468449001f258de7354df21e185ca2e3",
+      "domain": "SCIENTIFIC_CODE_BUNDLE",
+      "expected": {
+        "file_count": 14,
+        "scientific_code_bundle_sha256": "0638f2fcb100b0000e3a2a4e08137a9d468449001f258de7354df21e185ca2e3"
+      },
+      "observed": {
+        "file_count": 14,
+        "scientific_code_bundle_sha256": "0638f2fcb100b0000e3a2a4e08137a9d468449001f258de7354df21e185ca2e3"
+      },
+      "status": "PASS"
+    },
+    {
+      "check_id": "AP-06",
+      "description": "Prepared phase is strictly DEV_TUNE across prep artifact and all 120 plan cells",
+      "domain": "PHASE_SCOPE",
+      "expected": "DEV_TUNE",
+      "observed": "DEV_TUNE",
+      "status": "PASS"
+    },
+    {
+      "check_id": "AP-07",
+      "description": "Candidate models are exactly C1 (google/gemini-3.8-flash), C2 (openai/gpt-6.1-sol), C3 (anthropic/claude-sonnet-5-5)",
+      "domain": "CANDIDATE_MODELS",
+      "expected": [
+        [
+          "C1",
+          "google",
+          "gemini-3.8-flash",
+          "PASSED_TECHNICAL_PREFLIGHT_SCHEMA_V2"
+        ],
+        [
+          "C2",
+          "openai",
+          "gpt-6.1-sol",
+          "PASSED_TECHNICAL_PREFLIGHT_SCHEMA_V2"
+        ],
+        [
+          "C3",
+          "anthropic",
+          "claude-sonnet-5-5",
+          "PASSED_TECHNICAL_PREFLIGHT_SCHEMA_V2"
+        ]
+      ],
+      "observed": [
+        [
+          "C1",
+          "google",
+          "gemini-3.8-flash",
+          "PASSED_TECHNICAL_PREFLIGHT_SCHEMA_V2"
+        ],
+        [
+          "C2",
+          "openai",
+          "gpt-6.1-sol",
+          "PASSED_TECHNICAL_PREFLIGHT_SCHEMA_V2"
+        ],
+        [
+          "C3",
+          "anthropic",
+          "claude-sonnet-5-5",
+          "PASSED_TECHNICAL_PREFLIGHT_SCHEMA_V2"
+        ]
+      ],
+      "status": "PASS"
+    },
+    {
+      "check_id": "AP-08",
+      "description": "Prompts are exactly P1 and P2 with frozen semantic SHA256s, registry SHA256, and rendered user prompt parity across all 20 fixtures",
+      "domain": "PROMPT_AUTHORITIES",
+      "expected": {
+        "P1": "096ff4c74dd8d1aed1c0abe501b97c8dfd0f6424dbca535f2b79a242637a1c11",
+        "P2": "0679dd9463d6cebf04ccb5571a403331eea3ab6819bd6a0e8b2ee1fc08c99fdf",
+        "registry_sha256": "846dc4c14ec2a87537b7b3e07bf492de51dc534d24b21e469094b7e3d34d32b6",
+        "rendered_user_prompts_identical_all_20": true
+      },
+      "observed": {
+        "P1": "096ff4c74dd8d1aed1c0abe501b97c8dfd0f6424dbca535f2b79a242637a1c11",
+        "P2": "0679dd9463d6cebf04ccb5571a403331eea3ab6819bd6a0e8b2ee1fc08c99fdf",
+        "registry_sha256": "846dc4c14ec2a87537b7b3e07bf492de51dc534d24b21e469094b7e3d34d32b6",
+        "rendered_user_prompts_identical_all_20": true
+      },
+      "status": "PASS"
+    },
+    {
+      "check_id": "AP-09",
+      "description": "DEV-TUNE fixture list is exactly the 20 frozen W06-DEV-TUNE-001..020 scenarios",
+      "domain": "EXPERIMENT_MATRIX",
+      "expected": {
+        "first": "W06-DEV-TUNE-001",
+        "fixture_count": 20,
+        "last": "W06-DEV-TUNE-020"
+      },
+      "observed": {
+        "first": "W06-DEV-TUNE-001",
+        "fixture_count": 20,
+        "last": "W06-DEV-TUNE-020"
+      },
+      "status": "PASS"
+    },
+    {
+      "check_id": "AP-10",
+      "description": "Experiment matrix is 20 fixtures x 2 prompts x 3 candidates x 1 attempt = 120 unique assigned cells",
+      "domain": "EXPERIMENT_MATRIX",
+      "expected": 120,
+      "observed": 120,
+      "status": "PASS"
+    },
+    {
+      "check_id": "AP-11",
+      "description": "Maximum live generation calls is 120 with zero reserve/retry/diagnostic calls and at most 1 HTTP request per cell",
+      "domain": "CALL_BUDGET_POLICY",
+      "expected": {
+        "max_calls": 120,
+        "max_http_per_cell": 1,
+        "reserve_calls": 0
+      },
+      "observed": {
+        "max_calls": 120,
+        "max_http_per_cell": 1,
+        "reserve_calls": 0
+      },
+      "status": "PASS"
+    },
+    {
+      "check_id": "AP-12",
+      "description": "attempt_number=1 and all retry counters (sdk, transport, manual, automatic) equal 0 across policy and all 120 cells",
+      "domain": "EXECUTION_POLICY",
+      "expected": 0,
+      "observed": {
+        "automatic_retry": 0,
+        "manual_retry": 0,
+        "sdk_retry": 0,
+        "transport_retry": 0
+      },
+      "status": "PASS"
+    },
+    {
+      "check_id": "AP-13",
+      "description": "fallback=false and best_of=false across policy and all 120 cells",
+      "domain": "EXECUTION_POLICY",
+      "expected": {
+        "best_of": false,
+        "fallback": false
+      },
+      "observed": {
+        "best_of": false,
+        "fallback": false
+      },
+      "status": "PASS"
+    },
+    {
+      "check_id": "AP-14",
+      "description": "llm_repair=0 and deterministic_semantic_repair=false across policy and all 120 cells",
+      "domain": "EXECUTION_POLICY",
+      "expected": {
+        "deterministic_semantic_repair": false,
+        "llm_repair": 0
+      },
+      "observed": {
+        "deterministic_semantic_repair": false,
+        "llm_repair": 0
+      },
+      "status": "PASS"
+    },
+    {
+      "check_id": "AP-15",
+      "description": "tools=false across policy and all 120 cells",
+      "domain": "EXECUTION_POLICY",
+      "expected": false,
+      "observed": false,
+      "status": "PASS"
+    },
+    {
+      "check_id": "AP-16",
+      "description": "All 10 ordinary provider/validation failures remain denominator-preserving with zero retry",
+      "domain": "FAILURE_POLICY",
+      "expected": [
+        "HTTP_429",
+        "HTTP_5XX",
+        "TIMEOUT",
+        "PARTIAL_TIMEOUT",
+        "AUTHENTICATION_FAILURE",
+        "MODEL_ACCESS_FAILURE",
+        "MALFORMED_JSON",
+        "SEMANTIC_VALIDATION_FAILURE",
+        "REFUSAL",
+        "MAX_TOKEN_TRUNCATION"
+      ],
+      "observed": [
+        "HTTP_429",
+        "HTTP_5XX",
+        "TIMEOUT",
+        "PARTIAL_TIMEOUT",
+        "AUTHENTICATION_FAILURE",
+        "MODEL_ACCESS_FAILURE",
+        "MALFORMED_JSON",
+        "SEMANTIC_VALIDATION_FAILURE",
+        "REFUSAL",
+        "MAX_TOKEN_TRUNCATION"
+      ],
+      "status": "PASS"
+    },
+    {
+      "check_id": "AP-17",
+      "description": "All 8 batch-fatal integrity failures trigger immediate fail-closed batch stop",
+      "domain": "FAILURE_POLICY",
+      "expected": [
+        "MODEL_INTEGRITY_MISMATCH",
+        "HARNESS_INTERNAL_ERROR",
+        "SCIENTIFIC_CODE_BUNDLE_MISMATCH",
+        "PROVIDER_CONFIG_MISMATCH",
+        "PROMPT_FREEZE_INTEGRITY_FAILURE",
+        "EXECUTION_PLAN_INTEGRITY_FAILURE",
+        "AUTHORIZATION_INTEGRITY_FAILURE",
+        "STAGE_A_INTEGRITY_FAILURE"
+      ],
+      "observed": [
+        "MODEL_INTEGRITY_MISMATCH",
+        "HARNESS_INTERNAL_ERROR",
+        "SCIENTIFIC_CODE_BUNDLE_MISMATCH",
+        "PROVIDER_CONFIG_MISMATCH",
+        "PROMPT_FREEZE_INTEGRITY_FAILURE",
+        "EXECUTION_PLAN_INTEGRITY_FAILURE",
+        "AUTHORIZATION_INTEGRITY_FAILURE",
+        "STAGE_A_INTEGRITY_FAILURE"
+      ],
+      "status": "PASS"
+    },
+    {
+      "check_id": "AP-18",
+      "description": "Preparation does NOT authorize or start DEV_SELECT",
+      "domain": "PHASE_FIREWALL",
+      "expected": {
+        "dev_select_authorized": false,
+        "dev_select_execution_started": false
+      },
+      "observed": {
+        "dev_select_authorized": false,
+        "dev_select_execution_started": false
+      },
+      "status": "PASS"
+    },
+    {
+      "check_id": "AP-19",
+      "description": "Preparation does NOT authorize or start STOCHASTICITY",
+      "domain": "PHASE_FIREWALL",
+      "expected": {
+        "stochasticity_authorized": false,
+        "stochasticity_execution_started": false
+      },
+      "observed": {
+        "stochasticity_authorized": false,
+        "stochasticity_execution_started": false
+      },
+      "status": "PASS"
+    },
+    {
+      "check_id": "AP-20",
+      "description": "Preparation does NOT authorize or use Final100",
+      "domain": "FINAL100_FIREWALL",
+      "expected": {
+        "final100_authorized": false,
+        "final100_used": false
+      },
+      "observed": {
+        "final100_authorized": false,
+        "final100_used": false
+      },
+      "status": "PASS"
+    },
+    {
+      "check_id": "AP-21",
+      "description": "No DevLiveAuthorizationArtifact, authorization_id, or AUTHORIZED status exists",
+      "domain": "PRE_AUTHORIZATION_FIREWALL",
+      "expected": {
+        "has_authorization_id": false,
+        "live_authorization_artifact_created": false
+      },
+      "observed": {
+        "has_authorization_id": false,
+        "live_authorization_artifact_created": false
+      },
+      "status": "PASS"
+    },
+    {
+      "check_id": "AP-22",
+      "description": "No Stage-A freeze receipt, transport journal, or live cell result directory exists",
+      "domain": "PRE_AUTHORIZATION_FIREWALL",
+      "expected": {
+        "provider_result_directories_created": false,
+        "stage_a_receipt_created": false,
+        "transport_journal_created": false
+      },
+      "observed": {
+        "provider_result_directories_created": false,
+        "stage_a_receipt_created": false,
+        "transport_journal_created": false
+      },
+      "status": "PASS"
+    },
+    {
+      "check_id": "AP-23",
+      "description": "project_owner_authorization_status is NOT_GRANTED, scientific prereqs are READY, authorization is NOT_YET_GRANTED, Stage-A is NOT_YET_CREATED",
+      "domain": "AUTHORIZATION_STATUS",
+      "expected": {
+        "all_scientific_prereqs": "READY",
+        "authorization_state": "NOT_YET_GRANTED",
+        "project_owner_authorization_status": "NOT_GRANTED",
+        "stage_a_state": "NOT_YET_CREATED"
+      },
+      "observed": {
+        "all_scientific_prereqs": "READY",
+        "authorization_state": "NOT_YET_GRANTED",
+        "project_owner_authorization_status": "NOT_GRANTED",
+        "stage_a_state": "NOT_YET_CREATED"
+      },
+      "status": "PASS"
+    },
+    {
+      "check_id": "AP-24",
+      "description": "Proposed Project Owner authorization sentence contains exact plan and prompt freeze SHA256s and all scope constraints",
+      "domain": "OWNER_AUTHORIZATION_TEXT",
+      "expected": "I authorize W06 DEV-TUNE live execution for exactly the frozen 120-cell plan 582d9964b4fffbac91f83373d080f1fef120f0ddca4edab2d63e02796d0b20ae, using frozen prompt artifact 2f345363f580ea882b2e5b3562c587ef5309bc7f994440257a54d18994ab6956, candidates C1/C2/C3, maximum 120 generation calls, zero retry, no DEV-SELECT, no stochasticity, and no Final100.",
+      "observed": "I authorize W06 DEV-TUNE live execution for exactly the frozen 120-cell plan 582d9964b4fffbac91f83373d080f1fef120f0ddca4edab2d63e02796d0b20ae, using frozen prompt artifact 2f345363f580ea882b2e5b3562c587ef5309bc7f994440257a54d18994ab6956, candidates C1/C2/C3, maximum 120 generation calls, zero retry, no DEV-SELECT, no stochasticity, and no Final100.",
+      "status": "PASS"
+    },
+    {
+      "check_id": "AP-25",
+      "description": "Key presence records strictly PRESENT/MISSING without any secret values or hashes",
+      "domain": "SECRET_HYGIENE",
+      "expected": {
+        "allowed_values": [
+          "PRESENT",
+          "MISSING"
+        ],
+        "secret_free": true
+      },
+      "observed": {
+        "observed_keys": [
+          "ANTHROPIC_API_KEY",
+          "GEMINI_API_KEY",
+          "OPENAI_API_KEY"
+        ],
+        "secret_free": true
+      },
+      "status": "PASS"
+    },
+    {
+      "check_id": "AP-26",
+      "description": "Zero outbound network calls and zero live provider calls occurred",
+      "domain": "NETWORK_ISOLATION",
+      "expected": {
+        "blocked_attempts": 0,
+        "live_provider_calls": 0,
+        "provider_cost_usd": 0.0
+      },
+      "observed": {
+        "blocked_attempts": 0,
+        "live_provider_calls": 0,
+        "provider_cost_usd": 0.0
+      },
+      "status": "PASS"
+    },
+    {
+      "check_id": "AP-27",
+      "description": "Explicit provider pricing evidence and candidate-aware billing treatment recorded for C1, C2, and C3",
+      "domain": "PRICING_EVIDENCE",
+      "expected": [
+        "cache_billing_treatment",
+        "input_price_basis",
+        "output_price_basis",
+        "pricing_checked_at_utc",
+        "pricing_source",
+        "reasoning_thought_billing_treatment"
+      ],
+      "observed": [
+        "cache_billing_treatment",
+        "input_price_basis",
+        "output_price_basis",
+        "pricing_checked_at_utc",
+        "pricing_source",
+        "reasoning_thought_billing_treatment"
+      ],
+      "status": "PASS"
+    },
+    {
+      "check_id": "AP-28",
+      "description": "Cost envelope distinguishes ESTIMATED_EXPECTED_COST range from HARD_MAX_COST = NOT_DEFENSIBLY_COMPUTABLE without false precision",
+      "domain": "COST_ENVELOPE",
+      "expected": {
+        "hard_max_cost_usd": "NOT_DEFENSIBLY_COMPUTABLE",
+        "has_expected_range": true
+      },
+      "observed": {
+        "hard_max_cost_usd": "NOT_DEFENSIBLY_COMPUTABLE",
+        "has_expected_range": true
+      },
+      "status": "PASS"
+    },
+    {
+      "check_id": "AP-29",
+      "description": "All 14 production scientific files are 100% byte-for-byte unchanged",
+      "domain": "SCIENTIFIC_CODE_BUNDLE",
+      "expected": {
+        "unchanged_files": 14
+      },
+      "observed": {
+        "unchanged_files": 14
+      },
+      "status": "PASS"
+    },
+    {
+      "check_id": "AP-30",
+      "description": "Final100 scenarios freeze and P11 assignment manifest are untouched and unused",
+      "domain": "FINAL100_FIREWALL",
+      "expected": {
+        "final100_sha256": "c03bc6dc300604ac395505d59b6413c1a47339b21408cfd637671e81d4b555a1",
+        "final100_used": false,
+        "p11_manifest_sha256": "0aa9ae923d0e7f29df49735fa41e87530b1caf62418fcbec09a1eff81d83af62"
+      },
+      "observed": {
+        "final100_sha256": "c03bc6dc300604ac395505d59b6413c1a47339b21408cfd637671e81d4b555a1",
+        "final100_used": false,
+        "p11_manifest_sha256": "0aa9ae923d0e7f29df49735fa41e87530b1caf62418fcbec09a1eff81d83af62"
+      },
+      "status": "PASS"
+    }
+  ],
+  "code_basis_commit_sha": "60d52d720e66f5af8e82fabf9cebe2ea0e8a9e26",
+  "controlled_experiment_parity": {
+    "differing_cell_manifest_fields": [
+      "prompt_id",
+      "run_id",
+      "system_prompt_sha256"
+    ],
+    "fixture_001_rendered_user_prompt_sha256": "c632a1f607203a81c9422164a7910c5f82211437d74af9c91bb6b370c1da3c17",
+    "only_system_prompt_suffix_differs": true,
+    "p1_p2_rendered_user_prompts_identical_all_20": true
+  },
+  "cost_envelope": {
+    "conditional_16384_billable_output_cap_reference_120_cells_usd": 23.34,
+    "cost_estimation_policy": "CONSERVATIVE_PLANNING_RANGE_NO_FALSE_PRECISION",
+    "dev_tune_uses_cost_for_prompt_selection": false,
+    "estimated_expected_cost_usd": {
+      "assumptions": "40 cells per candidate (120 cells total, retry=0), using the elementwise maximum of Phase 01D live receipt pricing (2026-10-17) and Runner DEFAULT_COST_COMPARABILITY_BY_CANDIDATE (2026-10-16), with 8,000-14,000 input tokens and 2,500-5,500 billable output+thinking tokens per cell.",
+      "high_expected_usd": 9.82,
+      "low_expected_usd": 4.88,
+      "range_usd": "$4.88 - $9.82 USD",
+      "status": "CONSERVATIVE_AUTHORIZATION_PLANNING_RANGE"
+    },
+    "hard_max_cost_explanation": "Exact pre-execution token counts require provider-proprietary tokenizers (which cannot be called offline) and provider-internal structured-output grammar injection into input_tokens; furthermore, in C1 (Google gemini-3.8-flash) thoughts_token_count is billed disjointly from candidates_token_count (billable_output_tokens = output_tokens + thought_tokens). Therefore an unconditional deterministic HARD_MAX_COST is marked NOT_DEFENSIBLY_COMPUTABLE to prevent false precision.",
+    "hard_max_cost_usd": "NOT_DEFENSIBLY_COMPUTABLE",
+    "per_candidate_conservative_envelope": {
+      "C1": {
+        "cells_in_dev_tune": 40,
+        "conditional_16384_billable_output_cap_reference_40_cells_usd": 2.9976,
+        "conservative_input_price_per_1m_usd": 0.75,
+        "conservative_output_price_per_1m_usd": 3.75,
+        "estimated_expected_range_40_cells_usd": {
+          "high_usd": 1.245,
+          "low_usd": 0.615
+        }
+      },
+      "C2": {
+        "cells_in_dev_tune": 40,
+        "conditional_16384_billable_output_cap_reference_40_cells_usd": 8.3536,
+        "conservative_input_price_per_1m_usd": 2.5,
+        "conservative_output_price_per_1m_usd": 10.0,
+        "estimated_expected_range_40_cells_usd": {
+          "high_usd": 3.6,
+          "low_usd": 1.8
+        }
+      },
+      "C3": {
+        "cells_in_dev_tune": 40,
+        "conditional_16384_billable_output_cap_reference_40_cells_usd": 11.9904,
+        "conservative_input_price_per_1m_usd": 3.0,
+        "conservative_output_price_per_1m_usd": 15.0,
+        "estimated_expected_range_40_cells_usd": {
+          "high_usd": 4.98,
+          "low_usd": 2.46
+        }
+      }
+    },
+    "rendered_prompt_utf8_byte_statistics_across_20_fixtures": {
+      "fixture_count": 20,
+      "max_rendered_user_prompt_utf8_bytes": 74586,
+      "min_rendered_user_prompt_utf8_bytes": 40417,
+      "p1_system_prompt_utf8_bytes": 263,
+      "p2_system_prompt_utf8_bytes": 951,
+      "sum_rendered_user_prompt_utf8_bytes_20_fixtures": 1106286,
+      "total_cells": 120
+    }
+  },
+  "dev_select_execution_started": false,
+  "dev_tune_execution_started": false,
+  "execution_plan_file_sha256": "652e3beb08771c3125e613172b1aaa396fc1b60aaaf3b98cc238e91a14e0dc74",
+  "execution_plan_relative_path": "data/evaluation/w06/w06_dev_tune_execution_plan_v1.json",
+  "execution_plan_sha256": "582d9964b4fffbac91f83373d080f1fef120f0ddca4edab2d63e02796d0b20ae",
+  "failure_policy": {
+    "batch_fatal_integrity_failures": [
+      "MODEL_INTEGRITY_MISMATCH",
+      "HARNESS_INTERNAL_ERROR",
+      "SCIENTIFIC_CODE_BUNDLE_MISMATCH",
+      "PROVIDER_CONFIG_MISMATCH",
+      "PROMPT_FREEZE_INTEGRITY_FAILURE",
+      "EXECUTION_PLAN_INTEGRITY_FAILURE",
+      "AUTHORIZATION_INTEGRITY_FAILURE",
+      "STAGE_A_INTEGRITY_FAILURE"
+    ],
+    "batch_fatal_treatment": {
+      "action": "STOP_BATCH_IMMEDIATELY_FAIL_CLOSED",
+      "batch_stop_required": true,
+      "counts_in_denominator": false
+    },
+    "ordinary_denominator_preserving_failures": [
+      "HTTP_429",
+      "HTTP_5XX",
+      "TIMEOUT",
+      "PARTIAL_TIMEOUT",
+      "AUTHENTICATION_FAILURE",
+      "MODEL_ACCESS_FAILURE",
+      "MALFORMED_JSON",
+      "SEMANTIC_VALIDATION_FAILURE",
+      "REFUSAL",
+      "MAX_TOKEN_TRUNCATION"
+    ],
+    "ordinary_failure_treatment": {
+      "batch_stop_required": false,
+      "counts_in_denominator": true,
+      "exact_grounding_pass": false,
+      "final_core_pass": false,
+      "retry": 0,
+      "valid_run_and_schema": false
+    }
+  },
+  "final100_used": false,
+  "fixture_count": 20,
+  "fixture_ids": [
+    "W06-DEV-TUNE-001",
+    "W06-DEV-TUNE-002",
+    "W06-DEV-TUNE-003",
+    "W06-DEV-TUNE-004",
+    "W06-DEV-TUNE-005",
+    "W06-DEV-TUNE-006",
+    "W06-DEV-TUNE-007",
+    "W06-DEV-TUNE-008",
+    "W06-DEV-TUNE-009",
+    "W06-DEV-TUNE-010",
+    "W06-DEV-TUNE-011",
+    "W06-DEV-TUNE-012",
+    "W06-DEV-TUNE-013",
+    "W06-DEV-TUNE-014",
+    "W06-DEV-TUNE-015",
+    "W06-DEV-TUNE-016",
+    "W06-DEV-TUNE-017",
+    "W06-DEV-TUNE-018",
+    "W06-DEV-TUNE-019",
+    "W06-DEV-TUNE-020"
+  ],
+  "key_presence_status": {
+    "ANTHROPIC_API_KEY": "PRESENT",
+    "GEMINI_API_KEY": "PRESENT",
+    "OPENAI_API_KEY": "PRESENT"
+  },
+  "live_authorization_artifact_created": false,
+  "live_provider_calls": 0,
+  "maximum_generation_calls": 120,
+  "phase": "DEV_TUNE",
+  "phase_scope_restrictions": {
+    "allowed_phase": "DEV_TUNE",
+    "dev_select_authorized": false,
+    "final100_authorized": false,
+    "stochasticity_authorized": false
+  },
+  "portable_schema_v2_sha256": "825a4ff912d851a95f7392cb564b7d7ca3588135508dc6eb3ac6304cdde3c490",
+  "pre_authorization_firewall": {
+    "forbidden_auth_files": [],
+    "forbidden_live_cell_dirs": [],
+    "forbidden_stage_a_files": [],
+    "forbidden_transport_journals": [],
+    "live_authorization_artifact_created": false,
+    "live_execution_capability_minted": false,
+    "model_output_artifacts_created": false,
+    "pre_authorization_firewall_intact": true,
+    "provider_result_directories_created": false,
+    "stage_a_receipt_created": false,
+    "transport_journal_created": false
+  },
+  "pricing_evidence": {
+    "C1": {
+      "cache_billing_treatment": "FAIL_SAFE_NON_COMPARABLE_IF_NONZERO: Context caching is not enabled or requested. If cached_input_tokens > 0 is returned, compute_canonical_cell_cost_decimal returns None rather than mixing discounted cache pricing.",
+      "candidate_id": "C1",
+      "input_price_basis": {
+        "conservative_envelope_usd_per_1m_tokens": 0.75,
+        "preflight_01d_receipt_usd_per_1m_tokens": 0.75,
+        "runner_default_comparability_usd_per_1m_tokens": 0.3,
+        "unit": "USD per 1,000,000 input tokens"
+      },
+      "output_price_basis": {
+        "conservative_envelope_usd_per_1m_tokens": 3.75,
+        "preflight_01d_receipt_usd_per_1m_tokens": 3.75,
+        "runner_default_comparability_usd_per_1m_tokens": 2.5,
+        "unit": "USD per 1,000,000 billable output tokens (candidates_token_count + thoughts_token_count)"
+      },
+      "preflight_01d_observed_smoke_call": {
+        "input_tokens": 514,
+        "observed_cost_usd_01d_basis": 0.014553,
+        "output_tokens": 599,
+        "thought_tokens": 3179,
+        "total_tokens": 4292
+      },
+      "pricing_checked_at_utc": "2026-10-17T00:00:00Z",
+      "pricing_source": "https://ai.google.dev/gemini-api/docs/pricing",
+      "provider": "google",
+      "reasoning_thought_billing_treatment": "DISJOINT_ADDED_TO_OUTPUT: In Google Gemini (C1), candidates_token_count (output_tokens) is disjoint from thoughts_token_count (thought_tokens). Canonical formula bills billable_output_tokens = output_tokens + thought_tokens.",
+      "repository_authority_artifacts": [
+        "data/evaluation/w06/w06_model_preflight_01d_v2_live_receipt_v1.json",
+        "apps/ai-service/app/evaluation/dev_live_runner.py::DEFAULT_COST_COMPARABILITY_BY_CANDIDATE['C1']"
+      ],
+      "requested_model_id": "gemini-3.8-flash"
+    },
+    "C2": {
+      "cache_billing_treatment": "FAIL_SAFE_NON_COMPARABLE_IF_NONZERO: Explicit prompt caching is not requested. If cached_input_tokens > 0 is returned by automatic caching, compute_canonical_cell_cost_decimal returns None (fail-safe non-comparable cost).",
+      "candidate_id": "C2",
+      "input_price_basis": {
+        "conservative_envelope_usd_per_1m_tokens": 2.5,
+        "preflight_01d_receipt_usd_per_1m_tokens": 2.0,
+        "runner_default_comparability_usd_per_1m_tokens": 2.5,
+        "unit": "USD per 1,000,000 input tokens (service_tier='default')"
+      },
+      "output_price_basis": {
+        "conservative_envelope_usd_per_1m_tokens": 10.0,
+        "preflight_01d_receipt_usd_per_1m_tokens": 10.0,
+        "runner_default_comparability_usd_per_1m_tokens": 10.0,
+        "unit": "USD per 1,000,000 completion tokens (inclusive of reasoning_tokens, service_tier='default')"
+      },
+      "preflight_01d_observed_smoke_call": {
+        "input_tokens": 1311,
+        "observed_cost_usd_01d_basis": 0.014572,
+        "output_tokens": 1195,
+        "reasoning_tokens": 0,
+        "total_tokens": 2506
+      },
+      "pricing_checked_at_utc": "2026-10-17T00:00:00Z",
+      "pricing_source": "https://platform.openai.com/docs/pricing",
+      "provider": "openai",
+      "reasoning_thought_billing_treatment": "INCLUSIVE_IN_OUTPUT_TOKENS: In OpenAI Chat Completions (C2), completion_tokens (output_tokens) is already inclusive of reasoning_tokens. Canonical formula bills billable_output_tokens = output_tokens (never double-counted).",
+      "repository_authority_artifacts": [
+        "data/evaluation/w06/w06_model_preflight_01d_v2_live_receipt_v1.json",
+        "apps/ai-service/app/evaluation/dev_live_runner.py::DEFAULT_COST_COMPARABILITY_BY_CANDIDATE['C2']"
+      ],
+      "requested_model_id": "gpt-6.1-sol"
+    },
+    "C3": {
+      "cache_billing_treatment": "FAIL_SAFE_NON_COMPARABLE_IF_NONZERO: No cache_control breakpoints are sent. If cache_read_input_tokens > 0 or cache_creation_input_tokens > 0 is returned, compute_canonical_cell_cost_decimal returns None.",
+      "candidate_id": "C3",
+      "input_price_basis": {
+        "conservative_envelope_usd_per_1m_tokens": 3.0,
+        "preflight_01d_receipt_usd_per_1m_tokens": 2.0,
+        "runner_default_comparability_usd_per_1m_tokens": 3.0,
+        "unit": "USD per 1,000,000 input tokens"
+      },
+      "output_price_basis": {
+        "conservative_envelope_usd_per_1m_tokens": 15.0,
+        "preflight_01d_receipt_usd_per_1m_tokens": 10.0,
+        "runner_default_comparability_usd_per_1m_tokens": 15.0,
+        "unit": "USD per 1,000,000 output tokens (inclusive of adaptive thinking tokens)"
+      },
+      "preflight_01d_observed_smoke_call": {
+        "input_tokens": 3333,
+        "observed_cost_usd_01d_basis": 0.025406,
+        "output_tokens": 1874,
+        "total_tokens": 5207
+      },
+      "pricing_checked_at_utc": "2026-10-17T00:00:00Z",
+      "pricing_source": "https://docs.anthropic.com/en/docs/about-claude/pricing",
+      "provider": "anthropic",
+      "reasoning_thought_billing_treatment": "INCLUSIVE_IN_OUTPUT_TOKENS: In Anthropic Messages API (C3), usage.output_tokens is already inclusive of adaptive thinking tokens. Canonical formula bills billable_output_tokens = output_tokens (never double-counted).",
+      "repository_authority_artifacts": [
+        "data/evaluation/w06/w06_model_preflight_01d_v2_live_receipt_v1.json",
+        "apps/ai-service/app/evaluation/dev_live_runner.py::DEFAULT_COST_COMPARABILITY_BY_CANDIDATE['C3']"
+      ],
+      "requested_model_id": "claude-sonnet-5-5"
+    }
+  },
+  "project_owner_authorization_status": "NOT_GRANTED",
+  "prompt_count": 2,
+  "prompt_freeze_artifact_id": "W06-DEV-PROMPT-CANDIDATE-FREEZE-01-V1",
+  "prompt_freeze_relative_path": "data/evaluation/w06/w06_dev_prompt_candidate_freeze_v1.json",
+  "prompt_freeze_sha256": "2f345363f580ea882b2e5b3562c587ef5309bc7f994440257a54d18994ab6956",
+  "prompt_list": [
+    {
+      "cells_in_dev_tune": 60,
+      "prompt_id": "P1",
+      "prompt_version": "TRAVEL_PLANNER_BENCHMARK_V2",
+      "semantic_prompt_sha256": "096ff4c74dd8d1aed1c0abe501b97c8dfd0f6424dbca535f2b79a242637a1c11",
+      "system_prompt_sha256": "4bcb84a8aca1fc89f65709ac9d91c88e42359c284850061bae85c3607c345b0e",
+      "user_prompt_template_sha256": "19762f7c72b4dd19b57c29e160d9195b8f2c72e836188823e9949f271a22f5de"
+    },
+    {
+      "cells_in_dev_tune": 60,
+      "p2_candidate_definition_id": "W06_DEV_TUNE_CANDIDATE_P2_V1",
+      "prompt_id": "P2",
+      "prompt_version": "TRAVEL_PLANNER_BENCHMARK_V2",
+      "semantic_prompt_sha256": "0679dd9463d6cebf04ccb5571a403331eea3ab6819bd6a0e8b2ee1fc08c99fdf",
+      "system_prompt_sha256": "ab8ec41b7099c1c207217a55e1afd7e075d5de6be9b2fc14863329b5535e6c68",
+      "user_prompt_template_sha256": "19762f7c72b4dd19b57c29e160d9195b8f2c72e836188823e9949f271a22f5de"
+    }
+  ],
+  "prompt_registry_sha256": "846dc4c14ec2a87537b7b3e07bf492de51dc534d24b21e469094b7e3d34d32b6",
+  "proposed_owner_authorization_text": "I authorize W06 DEV-TUNE live execution for exactly the frozen 120-cell plan 582d9964b4fffbac91f83373d080f1fef120f0ddca4edab2d63e02796d0b20ae, using frozen prompt artifact 2f345363f580ea882b2e5b3562c587ef5309bc7f994440257a54d18994ab6956, candidates C1/C2/C3, maximum 120 generation calls, zero retry, no DEV-SELECT, no stochasticity, and no Final100.",
+  "provider_config_registry_sha256": "3dc05d29acc2f647cba58303865bd7406b8c1d9f7ccbe0f120e87ad471190938",
+  "provider_cost_usd": 0.0,
+  "retry_policy": {
+    "attempt_number": 1,
+    "automatic_retry": 0,
+    "best_of": false,
+    "deterministic_semantic_repair": false,
+    "fallback": false,
+    "llm_repair": 0,
+    "manual_retry": 0,
+    "max_outbound_generation_http_requests_per_cell": 1,
+    "no_retry_until_success": true,
+    "sdk_retry": 0,
+    "tools": false,
+    "transport_retry": 0
+  },
+  "scientific_code_bundle_file_count": 14,
+  "scientific_code_bundle_file_hashes": [
+    {
+      "path": "apps/ai-service/app/evaluation/dev_live_runner.py",
+      "sha256": "9f3441c2ca290e9a33b4daa78eaaa58063978364d8375145fc7483b04ed8b817"
+    },
+    {
+      "path": "apps/ai-service/app/evaluation/dev_selection_harness.py",
+      "sha256": "85b17c2daa1ea59e26c3118d5cafb38cb3c73a5d57288e2fb4e5fc0e0a732c97"
+    },
+    {
+      "path": "apps/ai-service/app/evaluation/model_preflight/__init__.py",
+      "sha256": "178aede4930a6b848714fa6d84e14e415df35d1bf7641312ff6f311e3de477dd"
+    },
+    {
+      "path": "apps/ai-service/app/evaluation/model_preflight/anthropic_adapter.py",
+      "sha256": "ef2570126f6db736a4ef056ac27fcfc77db97fa6ed6526c901e299c71b1b1d42"
+    },
+    {
+      "path": "apps/ai-service/app/evaluation/model_preflight/base.py",
+      "sha256": "55bd026f224eaf15f5fb68e98d9cd9467bf85f0f90305acac397caef0970454d"
+    },
+    {
+      "path": "apps/ai-service/app/evaluation/model_preflight/google_adapter.py",
+      "sha256": "184887b19826094326e5fea47efd7aec71308b36af404225f5ef8d0d40882f1c"
+    },
+    {
+      "path": "apps/ai-service/app/evaluation/model_preflight/openai_adapter.py",
+      "sha256": "62b72237402808ab88d71627ce05d948d4b7d251ba87af51208876c784ee9346"
+    },
+    {
+      "path": "apps/ai-service/app/evaluation/model_preflight/schema_adapter.py",
+      "sha256": "19513c8735ba4acb2b88587915d6458de2c28d622499c05314d4f9030eb3c589"
+    },
+    {
+      "path": "apps/ai-service/app/evaluation/model_preflight/types.py",
+      "sha256": "1fdb31f200a71df4193f1fe4844b49dc1e9750c51c7388e6642dac44ae349371"
+    },
+    {
+      "path": "apps/ai-service/app/evaluation/planner_benchmark_evaluator.py",
+      "sha256": "1b299f75a3a51d01b63b1b004df3d8b9d92224591ccde5d537b83735ca268f66"
+    },
+    {
+      "path": "apps/ai-service/app/prompts/planner_benchmark_prompt.py",
+      "sha256": "22aa9cd172548fe51a8699704e5832ad44e1d8e946a1ad79437aed99d46c98cb"
+    },
+    {
+      "path": "apps/ai-service/app/schemas/planner_benchmark.py",
+      "sha256": "3f27ed7e12b2492d722937d4f36476e8dbf97635c281a6e270fd0621cc18e712"
+    },
+    {
+      "path": "apps/ai-service/app/services/planner_benchmark_runner.py",
+      "sha256": "2831f5aadd80959a86f388508c73679215830ca8854f2a4fbd474328fa7288b7"
+    },
+    {
+      "path": "apps/ai-service/recommendation/reca/contract.py",
+      "sha256": "1a62c36a95092be35ab78dca43e20f646016e154746ee051a499bdebfc67538c"
+    }
+  ],
+  "scientific_code_bundle_sha256": "0638f2fcb100b0000e3a2a4e08137a9d468449001f258de7354df21e185ca2e3",
+  "scientific_readiness_matrix": {
+    "all_scientific_prereqs": "READY",
+    "authorization_state": "NOT_YET_GRANTED",
+    "candidate_registry": "READY",
+    "dev_tune_plan": "READY",
+    "final100_firewall": "READY",
+    "key_presence": {
+      "all_three_keys_present_locally": true,
+      "operational_only_not_scientific_blocker": true,
+      "status_by_env_var": {
+        "ANTHROPIC_API_KEY": "PRESENT",
+        "GEMINI_API_KEY": "PRESENT",
+        "OPENAI_API_KEY": "PRESENT"
+      }
+    },
+    "prompt_freeze": "READY",
+    "provider_configs": "READY",
+    "runner": "READY",
+    "runner_qa": "READY",
+    "schema_v2": "READY",
+    "scientific_bundle": "READY",
+    "stage_a_state": "NOT_YET_CREATED"
+  },
+  "semantic_schema_sha256": "e4169f7b890f77d13af65e9f2070b6071c535b206d88440f5e8f28c179977555",
+  "source_develop_sha": "443634e1f7583f334dec0315bb3816d249feb124",
+  "stage_a_created": false,
+  "stochasticity_execution_started": false,
+  "task_id": "W06-DEV-TUNE-LIVE-AUTHORIZATION-PREP-01",
+  "verification_summary": {
+    "failed_checks": 0,
+    "overall_status": "PASS",
+    "passed_checks": 30,
+    "total_checks": 30
+  },
+  "version": "1.0.0"
+}
