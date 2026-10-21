@@ -4578,21 +4578,18 @@ def run_all_runner_qa_01_checks() -> Dict[str, Any]:
         # ------------------------------------------------------------------
         # RQA-60: Zero live provider calls, zero cost, prompt freeze NOT_YET_FROZEN
         # ------------------------------------------------------------------
+        from issue_w06_dev_tune_live_authorization import (
+            is_verified_downstream_w06_dev_tune_authorization_file,
+        )
+
         w06_dir = REPO_ROOT / "data/evaluation/w06"
-        downstream_auth_filenames = {
-            "w06_dev_tune_live_authorization_v1.json",
-            "w06_dev_tune_live_authorization_01_receipt_v1.json",
-        }
         premature_freeze_files: List[str] = []
         for p in sorted(w06_dir.glob("*.json")):
             if "prompt_freeze" in p.name.lower() or "live_authorization" in p.name.lower():
-                if p.name in downstream_auth_filenames:
-                    try:
-                        obj = json.loads(p.read_text(encoding="utf-8"))
-                        if isinstance(obj, dict) and obj.get("task_id") == "W06-DEV-TUNE-LIVE-AUTHORIZATION-01":
-                            continue
-                    except Exception:
-                        pass
+                if is_verified_downstream_w06_dev_tune_authorization_file(
+                    p, repo_root=REPO_ROOT
+                ):
+                    continue
                 premature_freeze_files.append(p.name)
         rqa_60_pass = (
             len(kill_switch.blocked_attempts) == 0

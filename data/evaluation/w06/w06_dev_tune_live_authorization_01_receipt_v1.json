@@ -8,6 +8,135 @@
   "allowed_phase": "DEV_TUNE",
   "allowed_prompt_freeze_sha256": "2f345363f580ea882b2e5b3562c587ef5309bc7f994440257a54d18994ab6956",
   "artifact_id": "W06-DEV-TUNE-LIVE-AUTHORIZATION-01-RECEIPT-V1",
+  "audit_correction_checks": [
+    {
+      "check_id": "AUC-01",
+      "description": "Full repository where SOURCE_DEVELOP_SHA exists but is NOT ancestor of HEAD fails closed (verified=false) even when prep artifact matches",
+      "domain": "SOURCE_PROVENANCE_FAIL_CLOSED",
+      "expected": {
+        "shallow_repository_fallback_used": false,
+        "verified": false
+      },
+      "observed": {
+        "shallow_repository_fallback_used": false,
+        "verified": false
+      },
+      "status": "PASS"
+    },
+    {
+      "check_id": "AUC-02",
+      "description": "Full repository with valid ancestry succeeds (verified=true, shallow_repository_fallback_used=false)",
+      "domain": "SOURCE_PROVENANCE_FAIL_CLOSED",
+      "expected": {
+        "shallow_repository_fallback_used": false,
+        "verified": true
+      },
+      "observed": {
+        "shallow_repository_fallback_used": false,
+        "verified": true
+      },
+      "status": "PASS"
+    },
+    {
+      "check_id": "AUC-03",
+      "description": "Shallow repository where source commit is unavailable and all 4 frozen fallback authorities match succeeds (verified=true)",
+      "domain": "SOURCE_PROVENANCE_FAIL_CLOSED",
+      "expected": {
+        "shallow_repository_fallback_used": true,
+        "verified": true
+      },
+      "observed": {
+        "shallow_repository_fallback_used": true,
+        "verified": true
+      },
+      "status": "PASS"
+    },
+    {
+      "check_id": "AUC-04",
+      "description": "Shallow repository with any stale fallback authority fails closed (verified=false)",
+      "domain": "SOURCE_PROVENANCE_FAIL_CLOSED",
+      "expected": {
+        "shallow_repository_fallback_used": true,
+        "verified": false
+      },
+      "observed": {
+        "shallow_repository_fallback_used": true,
+        "verified": false
+      },
+      "status": "PASS"
+    },
+    {
+      "check_id": "AUC-05",
+      "description": "Non-shallow repository with missing source commit fails closed (verified=false) without fallback",
+      "domain": "SOURCE_PROVENANCE_FAIL_CLOSED",
+      "expected": {
+        "shallow_repository_fallback_used": false,
+        "verified": false
+      },
+      "observed": {
+        "shallow_repository_fallback_used": false,
+        "verified": false
+      },
+      "status": "PASS"
+    },
+    {
+      "check_id": "AUC-06",
+      "description": "Exact legitimate downstream authorization artifact (SHA256 b2c068d216e6a71ad5c193137207cc8f7a74526f9a549eccfaefa9a7bd5eeba4) is recognized",
+      "domain": "DOWNSTREAM_AUTHORIZATION_RECOGNITION",
+      "expected": true,
+      "observed": true,
+      "status": "PASS"
+    },
+    {
+      "check_id": "AUC-07",
+      "description": "Same filename + correct task_id but wrong artifact file SHA256 is rejected (not exempted)",
+      "domain": "DOWNSTREAM_AUTHORIZATION_RECOGNITION",
+      "expected": false,
+      "observed": false,
+      "status": "PASS"
+    },
+    {
+      "check_id": "AUC-08",
+      "description": "Same filename + correct task_id but wrong allowed_execution_plan_sha256 is rejected (not exempted)",
+      "domain": "DOWNSTREAM_AUTHORIZATION_RECOGNITION",
+      "expected": false,
+      "observed": false,
+      "status": "PASS"
+    },
+    {
+      "check_id": "AUC-09",
+      "description": "Same filename + correct task_id but 121-call scope is rejected (not exempted)",
+      "domain": "DOWNSTREAM_AUTHORIZATION_RECOGNITION",
+      "expected": false,
+      "observed": false,
+      "status": "PASS"
+    },
+    {
+      "check_id": "AUC-10",
+      "description": "Same filename + correct task_id but DEV_SELECT phase is rejected (not exempted)",
+      "domain": "DOWNSTREAM_AUTHORIZATION_RECOGNITION",
+      "expected": false,
+      "observed": false,
+      "status": "PASS"
+    },
+    {
+      "check_id": "AUC-11",
+      "description": "Malformed downstream authorization JSON is rejected (not exempted)",
+      "domain": "DOWNSTREAM_AUTHORIZATION_RECOGNITION",
+      "expected": false,
+      "observed": false,
+      "status": "PASS"
+    },
+    {
+      "check_id": "AUC-12",
+      "description": "Fake receipt pointing to wrong authorization_artifact_file_sha256 is rejected (not exempted)",
+      "domain": "DOWNSTREAM_RECEIPT_RECOGNITION",
+      "expected": false,
+      "observed": false,
+      "status": "PASS"
+    }
+  ],
+  "audit_correction_task_id": "W06-DEV-TUNE-LIVE-AUTHORIZATION-01-AUDIT-CORRECTION-01",
   "authorization_artifact_file_sha256": "b2c068d216e6a71ad5c193137207cc8f7a74526f9a549eccfaefa9a7bd5eeba4",
   "authorization_artifact_relative_path": "data/evaluation/w06/w06_dev_tune_live_authorization_v1.json",
   "authorization_artifact_sha256": "fb2c181e14b0b122100f7b3b386bdaeaffe467c913d384db16717149374a1c83",
@@ -331,10 +460,20 @@
     "unique_scientific_cell_keys": 120
   },
   "final100_used": false,
+  "historical_evidence_boundary": {
+    "historical_frozen_receipt_shas": {
+      "data/evaluation/w06/w06_dev_live_runner_qa_01_receipt_v1.json": "e400d319ca957acb8e3ef7e8fcb468b7406a837b51b6127ed95327ac6cf72ad2",
+      "data/evaluation/w06/w06_dev_prompt_candidate_freeze_01_receipt_v1.json": "20b95381f9f06809ca37e3b806e639fbe788a9370a55a8e85a9f2d94aae0b6e5",
+      "data/evaluation/w06/w06_dev_tune_authorization_prep_v1.json": "168d29741fd75884a9b3f066822a843bcc6fd56ed06d4c16b40b8129d4d62f33"
+    },
+    "historical_receipts_unmodified": true,
+    "policy_statement": "Historical checks refer to the repository state at their original gate. A later, separately verified downstream authorization (cryptographically bound to file SHA256 b2c068d216e6a71ad5c193137207cc8f7a74526f9a549eccfaefa9a7bd5eeba4 and internal SHA256 fb2c181e14b0b122100f7b3b386bdaeaffe467c913d384db16717149374a1c83) does not invalidate the original historical evidence. Any unknown, tampered, or unverified authorization artifact invalidates current regression verification and fails closed."
+  },
   "live_execution_capability_minted": false,
   "live_provider_calls": 0,
   "maximum_live_generation_calls": 120,
   "portable_schema_v2_sha256": "825a4ff912d851a95f7392cb564b7d7ca3588135508dc6eb3ac6304cdde3c490",
+  "previous_head_sha": "2e1befc5883e1ca1e5b6d8212338a7b22acae1e2",
   "prompt_registry_sha256": "846dc4c14ec2a87537b7b3e07bf492de51dc534d24b21e469094b7e3d34d32b6",
   "provider_config_registry_sha256": "3dc05d29acc2f647cba58303865bd7406b8c1d9f7ccbe0f120e87ad471190938",
   "provider_cost_usd": 0.0,
@@ -372,6 +511,9 @@
   "task_id": "W06-DEV-TUNE-LIVE-AUTHORIZATION-01",
   "transport_journal_created": false,
   "verification_summary": {
+    "auc_failed_checks": 0,
+    "auc_passed_checks": 12,
+    "auc_total_checks": 12,
     "failed_checks": 0,
     "overall_status": "PASS",
     "passed_checks": 30,

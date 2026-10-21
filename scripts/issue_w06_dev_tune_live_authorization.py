@@ -1,15 +1,19 @@
 """Issue W06 DEV-TUNE live authorization artifact and receipt (W06-DEV-TUNE-LIVE-AUTHORIZATION-01).
 
-Strictly offline formalization of explicit Project Owner authorization:
-- LIVE_PROVIDER_CALLS = 0
-- PROVIDER_COST_USD = 0
-- STAGE_A_CREATED = false
-- LIVE_EXECUTION_CAPABILITY_MINTED = false
-- DEV_TUNE_EXECUTION_STARTED = false
+Includes W06-DEV-TUNE-LIVE-AUTHORIZATION-01-AUDIT-CORRECTION-01:
+- Fail-closed source-develop provenance verification (AUC-01..AUC-05)
+- Cryptographically bound downstream authorization & receipt recognition for historical gates (AUC-06..AUC-12)
+- Strictly offline formalization of explicit Project Owner authorization:
+  - LIVE_PROVIDER_CALLS = 0
+  - PROVIDER_COST_USD = 0
+  - STAGE_A_CREATED = false
+  - LIVE_EXECUTION_CAPABILITY_MINTED = false
+  - DEV_TUNE_EXECUTION_STARTED = false
 """
 
 from __future__ import annotations
 
+from collections.abc import Callable
 import contextlib
 import hashlib
 import json
@@ -17,6 +21,7 @@ from pathlib import Path
 import socket
 import subprocess
 import sys
+import tempfile
 from typing import Any, Iterator
 import urllib.request
 
@@ -46,13 +51,10 @@ from app.evaluation.dev_selection_harness import (  # noqa: E402
     DEV_TUNE_MAX_CALLS_TWO_PROMPTS,
     EXPECTED_PORTABLE_SCHEMA_V2_SHA256,
     EXPECTED_SEMANTIC_SCHEMA_SHA256,
-    FORBIDDEN_FINAL100_BUNDLE_SHA256,
-    FORBIDDEN_P11_MANIFEST_SHA256,
-    ORDERED_CANDIDATE_IDS,
+    Final100FirewallViolationError,
     SCIENTIFIC_CODE_BUNDLE_RELATIVE_PATHS,
     DevExecutionPlan,
     DevPromptFreezeArtifact,
-    Final100FirewallViolationError,
     canonical_json_bytes,
     compute_provider_config_registry_sha256,
     compute_scientific_code_bundle_file_hashes,
@@ -71,6 +73,10 @@ import freeze_w06_dev_prompt_candidates as pf_mod  # noqa: E402
 # ==============================================================================
 
 TASK_ID = "W06-DEV-TUNE-LIVE-AUTHORIZATION-01"
+AUDIT_CORRECTION_TASK_ID = (
+    "W06-DEV-TUNE-LIVE-AUTHORIZATION-01-AUDIT-CORRECTION-01"
+)
+PREVIOUS_HEAD_SHA = "2e1befc5883e1ca1e5b6d8212338a7b22acae1e2"
 AUTHORIZATION_ID = "W06-DEV-TUNE-LIVE-AUTHORIZATION-01-V1"
 RECEIPT_ARTIFACT_ID = "W06-DEV-TUNE-LIVE-AUTHORIZATION-01-RECEIPT-V1"
 SOURCE_DEVELOP_SHA = "cd9d4e6ae072e737083c9069123f00a5a04107a5"
@@ -121,6 +127,24 @@ EXPECTED_SCIENTIFIC_CODE_BUNDLE_SHA256 = (
 EXPECTED_PREP_ARTIFACT_SHA256 = (
     "168d29741fd75884a9b3f066822a843bcc6fd56ed06d4c16b40b8129d4d62f33"
 )
+EXPECTED_AUTHORIZATION_ARTIFACT_FILE_SHA256 = (
+    "b2c068d216e6a71ad5c193137207cc8f7a74526f9a549eccfaefa9a7bd5eeba4"
+)
+EXPECTED_AUTHORIZATION_INTERNAL_SHA256 = (
+    "fb2c181e14b0b122100f7b3b386bdaeaffe467c913d384db16717149374a1c83"
+)
+
+HISTORICAL_FROZEN_RECEIPT_SHAS: dict[str, str] = {
+    "data/evaluation/w06/w06_dev_live_runner_qa_01_receipt_v1.json": (
+        "e400d319ca957acb8e3ef7e8fcb468b7406a837b51b6127ed95327ac6cf72ad2"
+    ),
+    "data/evaluation/w06/w06_dev_prompt_candidate_freeze_01_receipt_v1.json": (
+        "20b95381f9f06809ca37e3b806e639fbe788a9370a55a8e85a9f2d94aae0b6e5"
+    ),
+    "data/evaluation/w06/w06_dev_tune_authorization_prep_v1.json": (
+        EXPECTED_PREP_ARTIFACT_SHA256
+    ),
+}
 
 PROMPT_FREEZE_REL_PATH = (
     "data/evaluation/w06/w06_dev_prompt_candidate_freeze_v1.json"
@@ -202,50 +226,249 @@ class NetworkKillSwitchGuard:
 
 
 # ==============================================================================
-# 3. SOURCE DEVELOP & PRE-STAGE-A FIREWALL VERIFICATION
+# 3. FAIL-CLOSED SOURCE DEVELOP PROVENANCE & PRE-STAGE-A FIREWALL
 # ==============================================================================
 
 
 def verify_source_develop_commit_or_shallow_fallback(
     repo_root: Path = REPO_ROOT,
+    *,
+    git_runner: Callable[[list[str]], subprocess.CompletedProcess[str]] | None = None,
 ) -> dict[str, Any]:
-    """Verify source develop SHA cd9d4e6ae072e737083c9069123f00a5a04107a5 or shallow-clone equivalent."""
-    cat_proc = subprocess.run(
-        ["git", "cat-file", "-t", SOURCE_DEVELOP_SHA],
-        cwd=str(repo_root),
-        capture_output=True,
-        text=True,
-        check=False,
-    )
-    commit_present = (
-        cat_proc.returncode == 0 and cat_proc.stdout.strip() == "commit"
-    )
-    is_ancestor = False
-    if commit_present:
-        anc_proc = subprocess.run(
-            ["git", "merge-base", "--is-ancestor", SOURCE_DEVELOP_SHA, "HEAD"],
+    """Fail-closed verification of source develop SHA cd9d4e6ae072e737083c9069123f00a5a04107a5 (Section 2).
+
+    CASE A — SOURCE_DEVELOP_SHA exists in local git:
+      Require `git merge-base --is-ancestor SOURCE_DEVELOP_SHA HEAD` to succeed.
+      If commit exists but is NOT ancestor, verified = False (NO artifact hash fallback may override).
+
+    CASE B — SOURCE_DEVELOP_SHA does NOT exist in local git:
+      Only permit fallback when `git rev-parse --is-shallow-repository == true`.
+      Then require ALL 4 frozen fallback authorities to match their exact SHA256s.
+      If non-shallow and source commit is unavailable, verified = False (fail closed).
+    """
+
+    def _run_git(args: list[str]) -> subprocess.CompletedProcess[str]:
+        if git_runner is not None:
+            return git_runner(args)
+        return subprocess.run(
+            args,
             cwd=str(repo_root),
             capture_output=True,
             text=True,
             check=False,
         )
+
+    exists_proc = _run_git(
+        ["git", "cat-file", "-e", f"{SOURCE_DEVELOP_SHA}^{{commit}}"]
+    )
+    commit_exists = exists_proc.returncode == 0
+    if commit_exists:
+        anc_proc = _run_git(
+            ["git", "merge-base", "--is-ancestor", SOURCE_DEVELOP_SHA, "HEAD"]
+        )
         is_ancestor = anc_proc.returncode == 0
+        return {
+            "source_develop_sha": SOURCE_DEVELOP_SHA,
+            "commit_exists_in_local_git": True,
+            "is_ancestor_of_head": is_ancestor,
+            "is_shallow_repository": False,
+            "shallow_repository_fallback_used": False,
+            "verified": is_ancestor,
+        }
+
+    shallow_proc = _run_git(["git", "rev-parse", "--is-shallow-repository"])
+    is_shallow = shallow_proc.returncode == 0 and (
+        shallow_proc.stdout.strip().lower() == "true"
+    )
+    if not is_shallow:
+        return {
+            "source_develop_sha": SOURCE_DEVELOP_SHA,
+            "commit_exists_in_local_git": False,
+            "is_ancestor_of_head": False,
+            "is_shallow_repository": False,
+            "shallow_repository_fallback_used": False,
+            "verified": False,
+        }
 
     prep_path = repo_root / AUTHORIZATION_PREP_REL_PATH
+    pf_path = repo_root / PROMPT_FREEZE_REL_PATH
+    plan_path = repo_root / DEV_TUNE_PLAN_REL_PATH
+
     prep_sha = (
         sha256_bytes(normalize_lf_bytes(prep_path.read_bytes()))
         if prep_path.is_file()
         else ""
     )
-    prep_matches = prep_sha == EXPECTED_PREP_ARTIFACT_SHA256
-    verified = (commit_present and is_ancestor) or prep_matches
+    pf_sha = (
+        sha256_bytes(normalize_lf_bytes(pf_path.read_bytes()))
+        if pf_path.is_file()
+        else ""
+    )
+    plan_file_sha = (
+        sha256_bytes(normalize_lf_bytes(plan_path.read_bytes()))
+        if plan_path.is_file()
+        else ""
+    )
+    try:
+        bundle_sha = compute_scientific_code_bundle_sha256(repo_root=repo_root)
+    except Exception:
+        bundle_sha = ""
+
+    fallback_checks = {
+        "authorization_prep_sha256": prep_sha == EXPECTED_PREP_ARTIFACT_SHA256,
+        "scientific_code_bundle_sha256": (
+            bundle_sha == EXPECTED_SCIENTIFIC_CODE_BUNDLE_SHA256
+        ),
+        "prompt_freeze_sha256": pf_sha == EXPECTED_PROMPT_FREEZE_SHA256,
+        "dev_tune_plan_file_sha256": (
+            plan_file_sha == EXPECTED_DEV_TUNE_PLAN_FILE_SHA256
+        ),
+    }
+    fallback_ok = is_shallow and all(fallback_checks.values())
     return {
         "source_develop_sha": SOURCE_DEVELOP_SHA,
-        "commit_object_present": commit_present,
-        "is_ancestor_of_head": is_ancestor,
-        "prep_artifact_matches_develop_merge": prep_matches,
-        "verified": verified,
+        "commit_exists_in_local_git": False,
+        "is_ancestor_of_head": fallback_ok,
+        "is_shallow_repository": True,
+        "shallow_repository_fallback_used": True,
+        "fallback_authorities_matched": fallback_checks,
+        "verified": fallback_ok,
     }
+
+
+# ==============================================================================
+# 3B. STRONG CRYPTOGRAPHIC DOWNSTREAM AUTHORIZATION & RECEIPT RECOGNITION
+# ==============================================================================
+
+_CACHED_FROZEN_PLAN_AND_PROMPT: tuple[DevExecutionPlan, DevPromptFreezeArtifact] | None = None
+
+
+def _get_canonical_frozen_plan_and_prompt() -> tuple[DevExecutionPlan, DevPromptFreezeArtifact]:
+    """Load the frozen DEV-TUNE execution plan and prompt freeze from REPO_ROOT for production contract verification."""
+    global _CACHED_FROZEN_PLAN_AND_PROMPT
+    if _CACHED_FROZEN_PLAN_AND_PROMPT is None:
+        pf_bytes = normalize_lf_bytes((REPO_ROOT / PROMPT_FREEZE_REL_PATH).read_bytes())
+        plan_bytes = normalize_lf_bytes((REPO_ROOT / DEV_TUNE_PLAN_REL_PATH).read_bytes())
+        _CACHED_FROZEN_PLAN_AND_PROMPT = (
+            DevExecutionPlan.model_validate_json(plan_bytes),
+            DevPromptFreezeArtifact.model_validate_json(pf_bytes),
+        )
+    return _CACHED_FROZEN_PLAN_AND_PROMPT
+
+
+def is_verified_downstream_w06_authorization_artifact(
+    path: Path,
+    *,
+    repo_root: Path = REPO_ROOT,
+) -> bool:
+    """Return True ONLY if `path` is the exact, cryptographically verified W06-DEV-TUNE-LIVE-AUTHORIZATION-01 artifact (Section 5)."""
+    if not path.is_file() or path.name != "w06_dev_tune_live_authorization_v1.json":
+        return False
+    try:
+        raw_bytes = normalize_lf_bytes(path.read_bytes())
+        file_sha = sha256_bytes(raw_bytes)
+        if file_sha != EXPECTED_AUTHORIZATION_ARTIFACT_FILE_SHA256:
+            return False
+
+        plan_model, freeze_model = _get_canonical_frozen_plan_and_prompt()
+        effective_root = (
+            repo_root
+            if (repo_root / "apps" / "ai-service" / "app" / "evaluation" / "dev_live_runner.py").is_file()
+            else REPO_ROOT
+        )
+        auth = verify_dev_live_authorization_artifact(
+            path,
+            execution_plan=plan_model,
+            prompt_freeze=freeze_model,
+            expected_phase="DEV_TUNE",
+            repo_root=effective_root,
+        )
+    except Exception:
+        return False
+
+    return (
+        auth.task_id == TASK_ID
+        and auth.authorization_id == AUTHORIZATION_ID
+        and auth.authorization_status == "AUTHORIZED"
+        and auth.authorized_by_role == "PROJECT_OWNER"
+        and auth.allowed_phase == "DEV_TUNE"
+        and auth.allowed_execution_plan_sha256 == EXPECTED_DEV_TUNE_PLAN_SHA256
+        and auth.allowed_prompt_freeze_sha256 == EXPECTED_PROMPT_FREEZE_SHA256
+        and auth.allowed_candidate_ids == ["C1", "C2", "C3"]
+        and auth.maximum_live_generation_calls == 120
+        and auth.scientific_code_bundle_sha256 == EXPECTED_SCIENTIFIC_CODE_BUNDLE_SHA256
+        and auth.authorization_artifact_sha256 == EXPECTED_AUTHORIZATION_INTERNAL_SHA256
+    )
+
+
+def is_verified_downstream_w06_authorization_receipt(
+    path: Path,
+    *,
+    repo_root: Path = REPO_ROOT,
+) -> bool:
+    """Return True ONLY if `path` is a valid W06-DEV-TUNE-LIVE-AUTHORIZATION-01 receipt bound to the verified sibling authorization artifact (Section 6)."""
+    if (
+        not path.is_file()
+        or path.name != "w06_dev_tune_live_authorization_01_receipt_v1.json"
+    ):
+        return False
+
+    sibling_auth = path.parent / "w06_dev_tune_live_authorization_v1.json"
+    if not is_verified_downstream_w06_authorization_artifact(
+        sibling_auth, repo_root=repo_root
+    ):
+        return False
+
+    try:
+        obj = json.loads(path.read_text(encoding="utf-8"))
+        if not isinstance(obj, dict):
+            return False
+        assert_no_secrets_in_payload(obj, context="DOWNSTREAM_RECEIPT_VERIFICATION")
+    except Exception:
+        return False
+
+    return (
+        obj.get("task_id") == TASK_ID
+        and obj.get("authorization_id") == AUTHORIZATION_ID
+        and obj.get("authorization_status") == "AUTHORIZED"
+        and obj.get("authorized_by_role") == "PROJECT_OWNER"
+        and obj.get("authorization_artifact_file_sha256")
+        == EXPECTED_AUTHORIZATION_ARTIFACT_FILE_SHA256
+        and obj.get("authorization_artifact_sha256")
+        == EXPECTED_AUTHORIZATION_INTERNAL_SHA256
+        and obj.get("authorization_text_sha256") == AUTHORIZATION_TEXT_SHA256
+        and obj.get("allowed_phase") == "DEV_TUNE"
+        and obj.get("allowed_execution_plan_sha256") == EXPECTED_DEV_TUNE_PLAN_SHA256
+        and obj.get("allowed_prompt_freeze_sha256") == EXPECTED_PROMPT_FREEZE_SHA256
+        and obj.get("allowed_candidate_ids") == ["C1", "C2", "C3"]
+        and obj.get("maximum_live_generation_calls") == 120
+        and obj.get("scientific_code_bundle_sha256")
+        == EXPECTED_SCIENTIFIC_CODE_BUNDLE_SHA256
+        and obj.get("live_provider_calls") == 0
+        and obj.get("stage_a_created") is False
+        and obj.get("live_execution_capability_minted") is False
+        and obj.get("dev_tune_execution_started") is False
+        and obj.get("dev_select_execution_started") is False
+        and obj.get("stochasticity_execution_started") is False
+        and obj.get("final100_used") is False
+    )
+
+
+def is_verified_downstream_w06_dev_tune_authorization_file(
+    path: Path,
+    *,
+    repo_root: Path = REPO_ROOT,
+) -> bool:
+    """Return True ONLY if `path` is the cryptographically verified downstream authorization artifact or receipt."""
+    if path.name == "w06_dev_tune_live_authorization_v1.json":
+        return is_verified_downstream_w06_authorization_artifact(
+            path, repo_root=repo_root
+        )
+    if path.name == "w06_dev_tune_live_authorization_01_receipt_v1.json":
+        return is_verified_downstream_w06_authorization_receipt(
+            path, repo_root=repo_root
+        )
+    return False
 
 
 def verify_pre_stage_a_firewall(repo_root: Path = REPO_ROOT) -> dict[str, Any]:
@@ -357,7 +580,10 @@ def load_verified_authorities(
     bundle_sha = compute_scientific_code_bundle_sha256(repo_root=repo_root)
     pf_canonical_sha = compute_prompt_freeze_sha256(freeze_model)
 
-    if pf_file_sha != EXPECTED_PROMPT_FREEZE_SHA256 or pf_canonical_sha != EXPECTED_PROMPT_FREEZE_SHA256:
+    if (
+        pf_file_sha != EXPECTED_PROMPT_FREEZE_SHA256
+        or pf_canonical_sha != EXPECTED_PROMPT_FREEZE_SHA256
+    ):
         raise RuntimeError(
             f"PROMPT_FREEZE_SHA256 mismatch: file={pf_file_sha}, canonical={pf_canonical_sha}"
         )
@@ -409,7 +635,6 @@ def build_scoped_dev_tune_authorization_artifact(
         scientific_code_bundle_sha256=auths["scientific_code_bundle_sha256"],
         code_basis_commit_sha=CODE_BASIS_COMMIT_SHA,
     )
-    # Verify through production runner verifier
     verified = verify_dev_live_authorization_artifact(
         artifact,
         execution_plan=auths["execution_plan"],
@@ -428,7 +653,7 @@ def run_all_au_checks(
     *,
     auth_artifact_path: Path | None = None,
 ) -> list[dict[str, Any]]:
-    """Run all 30+ authorization checks AU-01 through AU-30 under the outbound-network kill switch."""
+    """Run all 30 authorization checks AU-01 through AU-30 under the outbound-network kill switch."""
     results: list[dict[str, Any]] = []
 
     def record(
@@ -996,7 +1221,9 @@ def run_all_au_checks(
 
         # AU-27: no Stage-A artifact created
         fw = verify_pre_stage_a_firewall(repo_root)
-        au27_ok = fw["stage_a_created"] is False and len(fw["forbidden_stage_a_files"]) == 0
+        au27_ok = (
+            fw["stage_a_created"] is False and len(fw["forbidden_stage_a_files"]) == 0
+        )
         record(
             "AU-27",
             "PRE_STAGE_A_FIREWALL",
@@ -1062,6 +1289,342 @@ def run_all_au_checks(
     return results
 
 
+# ==============================================================================
+# 5. AUDIT CORRECTION ADVERSARIAL CHECKS (AUC-01 .. AUC-12)
+# ==============================================================================
+
+
+def run_all_auc_checks(repo_root: Path = REPO_ROOT) -> list[dict[str, Any]]:
+    """Run all 12 audit-correction checks AUC-01 through AUC-12 under the outbound-network kill switch."""
+    results: list[dict[str, Any]] = []
+
+    def record(
+        check_id: str,
+        domain: str,
+        description: str,
+        expected: Any,
+        observed: Any,
+        passed: bool,
+    ) -> None:
+        results.append(
+            {
+                "check_id": check_id,
+                "domain": domain,
+                "description": description,
+                "expected": expected,
+                "observed": observed,
+                "status": "PASS" if passed else "FAIL",
+            }
+        )
+
+    guard = NetworkKillSwitchGuard()
+    with guard.activate():
+        # AUC-01: FULL repository, SOURCE_DEVELOP_SHA exists, but is NOT ancestor of HEAD -> verified MUST be false
+        def _git_auc01(args: list[str]) -> subprocess.CompletedProcess[str]:
+            if "cat-file" in args:
+                return subprocess.CompletedProcess(args, 0, stdout="", stderr="")
+            if "merge-base" in args:
+                return subprocess.CompletedProcess(args, 1, stdout="", stderr="")
+            return subprocess.CompletedProcess(args, 0, stdout="false\n", stderr="")
+
+        res_auc01 = verify_source_develop_commit_or_shallow_fallback(
+            repo_root, git_runner=_git_auc01
+        )
+        auc01_ok = (
+            res_auc01["commit_exists_in_local_git"] is True
+            and res_auc01["is_ancestor_of_head"] is False
+            and res_auc01["shallow_repository_fallback_used"] is False
+            and res_auc01["verified"] is False
+        )
+        record(
+            "AUC-01",
+            "SOURCE_PROVENANCE_FAIL_CLOSED",
+            "Full repository where SOURCE_DEVELOP_SHA exists but is NOT ancestor of HEAD fails closed (verified=false) even when prep artifact matches",
+            {"verified": False, "shallow_repository_fallback_used": False},
+            {
+                "verified": res_auc01["verified"],
+                "shallow_repository_fallback_used": res_auc01[
+                    "shallow_repository_fallback_used"
+                ],
+            },
+            auc01_ok,
+        )
+
+        # AUC-02: FULL repository, correct ancestry -> verified = true
+        def _git_auc02(args: list[str]) -> subprocess.CompletedProcess[str]:
+            if "cat-file" in args:
+                return subprocess.CompletedProcess(args, 0, stdout="", stderr="")
+            if "merge-base" in args:
+                return subprocess.CompletedProcess(args, 0, stdout="", stderr="")
+            return subprocess.CompletedProcess(args, 0, stdout="false\n", stderr="")
+
+        res_auc02 = verify_source_develop_commit_or_shallow_fallback(
+            repo_root, git_runner=_git_auc02
+        )
+        auc02_ok = (
+            res_auc02["commit_exists_in_local_git"] is True
+            and res_auc02["is_ancestor_of_head"] is True
+            and res_auc02["shallow_repository_fallback_used"] is False
+            and res_auc02["verified"] is True
+        )
+        record(
+            "AUC-02",
+            "SOURCE_PROVENANCE_FAIL_CLOSED",
+            "Full repository with valid ancestry succeeds (verified=true, shallow_repository_fallback_used=false)",
+            {"verified": True, "shallow_repository_fallback_used": False},
+            {
+                "verified": res_auc02["verified"],
+                "shallow_repository_fallback_used": res_auc02[
+                    "shallow_repository_fallback_used"
+                ],
+            },
+            auc02_ok,
+        )
+
+        # AUC-03: SHALLOW repository, source commit unavailable, all frozen fallback authorities exact -> verified = true
+        def _git_shallow_missing_commit(
+            args: list[str],
+        ) -> subprocess.CompletedProcess[str]:
+            if "cat-file" in args:
+                return subprocess.CompletedProcess(args, 1, stdout="", stderr="missing")
+            if "--is-shallow-repository" in args:
+                return subprocess.CompletedProcess(args, 0, stdout="true\n", stderr="")
+            return subprocess.CompletedProcess(args, 1, stdout="", stderr="")
+
+        res_auc03 = verify_source_develop_commit_or_shallow_fallback(
+            repo_root, git_runner=_git_shallow_missing_commit
+        )
+        auc03_ok = (
+            res_auc03["commit_exists_in_local_git"] is False
+            and res_auc03["is_shallow_repository"] is True
+            and res_auc03["shallow_repository_fallback_used"] is True
+            and res_auc03["verified"] is True
+        )
+        record(
+            "AUC-03",
+            "SOURCE_PROVENANCE_FAIL_CLOSED",
+            "Shallow repository where source commit is unavailable and all 4 frozen fallback authorities match succeeds (verified=true)",
+            {"verified": True, "shallow_repository_fallback_used": True},
+            {
+                "verified": res_auc03["verified"],
+                "shallow_repository_fallback_used": res_auc03[
+                    "shallow_repository_fallback_used"
+                ],
+            },
+            auc03_ok,
+        )
+
+        # AUC-04: SHALLOW repository, source commit unavailable, one fallback authority stale -> verified = false
+        with tempfile.TemporaryDirectory() as tmp_str:
+            tmp_dir = Path(tmp_str)
+            w06_tmp = tmp_dir / "data" / "evaluation" / "w06"
+            w06_tmp.mkdir(parents=True)
+            # Copy 2 valid authorities, corrupt 1
+            (tmp_dir / PROMPT_FREEZE_REL_PATH).write_bytes(
+                (repo_root / PROMPT_FREEZE_REL_PATH).read_bytes()
+            )
+            (tmp_dir / DEV_TUNE_PLAN_REL_PATH).write_bytes(
+                (repo_root / DEV_TUNE_PLAN_REL_PATH).read_bytes()
+            )
+            (tmp_dir / AUTHORIZATION_PREP_REL_PATH).write_bytes(b'{"stale": true}\n')
+            res_auc04 = verify_source_develop_commit_or_shallow_fallback(
+                tmp_dir, git_runner=_git_shallow_missing_commit
+            )
+        auc04_ok = (
+            res_auc04["is_shallow_repository"] is True
+            and res_auc04["shallow_repository_fallback_used"] is True
+            and res_auc04["verified"] is False
+        )
+        record(
+            "AUC-04",
+            "SOURCE_PROVENANCE_FAIL_CLOSED",
+            "Shallow repository with any stale fallback authority fails closed (verified=false)",
+            {"verified": False, "shallow_repository_fallback_used": True},
+            {
+                "verified": res_auc04["verified"],
+                "shallow_repository_fallback_used": res_auc04[
+                    "shallow_repository_fallback_used"
+                ],
+            },
+            auc04_ok,
+        )
+
+        # AUC-05: NON-SHALLOW repository, source commit unavailable -> verified = false
+        def _git_non_shallow_missing_commit(
+            args: list[str],
+        ) -> subprocess.CompletedProcess[str]:
+            if "cat-file" in args:
+                return subprocess.CompletedProcess(args, 1, stdout="", stderr="missing")
+            if "--is-shallow-repository" in args:
+                return subprocess.CompletedProcess(args, 0, stdout="false\n", stderr="")
+            return subprocess.CompletedProcess(args, 1, stdout="", stderr="")
+
+        res_auc05 = verify_source_develop_commit_or_shallow_fallback(
+            repo_root, git_runner=_git_non_shallow_missing_commit
+        )
+        auc05_ok = (
+            res_auc05["commit_exists_in_local_git"] is False
+            and res_auc05["is_shallow_repository"] is False
+            and res_auc05["shallow_repository_fallback_used"] is False
+            and res_auc05["verified"] is False
+        )
+        record(
+            "AUC-05",
+            "SOURCE_PROVENANCE_FAIL_CLOSED",
+            "Non-shallow repository with missing source commit fails closed (verified=false) without fallback",
+            {"verified": False, "shallow_repository_fallback_used": False},
+            {
+                "verified": res_auc05["verified"],
+                "shallow_repository_fallback_used": res_auc05[
+                    "shallow_repository_fallback_used"
+                ],
+            },
+            auc05_ok,
+        )
+
+        # AUC-06: Exact legitimate downstream authorization is recognized
+        legit_auth_path = repo_root / AUTHORIZATION_ARTIFACT_REL_PATH
+        legit_recognized = is_verified_downstream_w06_dev_tune_authorization_file(
+            legit_auth_path, repo_root=repo_root
+        )
+        record(
+            "AUC-06",
+            "DOWNSTREAM_AUTHORIZATION_RECOGNITION",
+            "Exact legitimate downstream authorization artifact (SHA256 b2c068d216e6a71ad5c193137207cc8f7a74526f9a549eccfaefa9a7bd5eeba4) is recognized",
+            True,
+            legit_recognized,
+            legit_recognized is True,
+        )
+
+        valid_auth_dict = json.loads(legit_auth_path.read_text(encoding="utf-8"))
+
+        # AUC-07: Same filename + correct task_id but wrong artifact file SHA is NOT exempted
+        with tempfile.TemporaryDirectory() as tmp_str:
+            p07 = Path(tmp_str) / "w06_dev_tune_live_authorization_v1.json"
+            # Add trailing whitespace/newline so JSON fields match but file SHA differs
+            p07.write_bytes(legit_auth_path.read_bytes() + b"\n")
+            auc07_recognized = is_verified_downstream_w06_dev_tune_authorization_file(
+                p07, repo_root=repo_root
+            )
+        record(
+            "AUC-07",
+            "DOWNSTREAM_AUTHORIZATION_RECOGNITION",
+            "Same filename + correct task_id but wrong artifact file SHA256 is rejected (not exempted)",
+            False,
+            auc07_recognized,
+            auc07_recognized is False,
+        )
+
+        # AUC-08: Same filename + correct task_id but wrong plan SHA is NOT exempted
+        with tempfile.TemporaryDirectory() as tmp_str:
+            p08 = Path(tmp_str) / "w06_dev_tune_live_authorization_v1.json"
+            bad_plan = dict(valid_auth_dict)
+            bad_plan.pop("authorization_artifact_sha256", None)
+            bad_plan["allowed_execution_plan_sha256"] = "0" * 64
+            bad_plan["authorization_artifact_sha256"] = sha256_bytes(
+                canonical_json_bytes(bad_plan)
+            )
+            p08.write_bytes(canonical_json_bytes(bad_plan))
+            auc08_recognized = is_verified_downstream_w06_dev_tune_authorization_file(
+                p08, repo_root=repo_root
+            )
+        record(
+            "AUC-08",
+            "DOWNSTREAM_AUTHORIZATION_RECOGNITION",
+            "Same filename + correct task_id but wrong allowed_execution_plan_sha256 is rejected (not exempted)",
+            False,
+            auc08_recognized,
+            auc08_recognized is False,
+        )
+
+        # AUC-09: Same filename + correct task_id but 121-call scope is NOT exempted
+        with tempfile.TemporaryDirectory() as tmp_str:
+            p09 = Path(tmp_str) / "w06_dev_tune_live_authorization_v1.json"
+            bad_calls = dict(valid_auth_dict)
+            bad_calls.pop("authorization_artifact_sha256", None)
+            bad_calls["maximum_live_generation_calls"] = 121
+            bad_calls["authorization_artifact_sha256"] = sha256_bytes(
+                canonical_json_bytes(bad_calls)
+            )
+            p09.write_bytes(canonical_json_bytes(bad_calls))
+            auc09_recognized = is_verified_downstream_w06_dev_tune_authorization_file(
+                p09, repo_root=repo_root
+            )
+        record(
+            "AUC-09",
+            "DOWNSTREAM_AUTHORIZATION_RECOGNITION",
+            "Same filename + correct task_id but 121-call scope is rejected (not exempted)",
+            False,
+            auc09_recognized,
+            auc09_recognized is False,
+        )
+
+        # AUC-10: Same filename + correct task_id but DEV_SELECT phase is NOT exempted
+        with tempfile.TemporaryDirectory() as tmp_str:
+            p10 = Path(tmp_str) / "w06_dev_tune_live_authorization_v1.json"
+            bad_phase = dict(valid_auth_dict)
+            bad_phase.pop("authorization_artifact_sha256", None)
+            bad_phase["allowed_phase"] = "DEV_SELECT"
+            bad_phase["maximum_live_generation_calls"] = 180
+            bad_phase["authorization_artifact_sha256"] = sha256_bytes(
+                canonical_json_bytes(bad_phase)
+            )
+            p10.write_bytes(canonical_json_bytes(bad_phase))
+            auc10_recognized = is_verified_downstream_w06_dev_tune_authorization_file(
+                p10, repo_root=repo_root
+            )
+        record(
+            "AUC-10",
+            "DOWNSTREAM_AUTHORIZATION_RECOGNITION",
+            "Same filename + correct task_id but DEV_SELECT phase is rejected (not exempted)",
+            False,
+            auc10_recognized,
+            auc10_recognized is False,
+        )
+
+        # AUC-11: Malformed downstream authorization JSON is NOT exempted
+        with tempfile.TemporaryDirectory() as tmp_str:
+            p11 = Path(tmp_str) / "w06_dev_tune_live_authorization_v1.json"
+            p11.write_text('{"task_id": "W06-DEV-TUNE-LIVE-AUTHORIZATION-01", broken', encoding="utf-8")
+            auc11_recognized = is_verified_downstream_w06_dev_tune_authorization_file(
+                p11, repo_root=repo_root
+            )
+        record(
+            "AUC-11",
+            "DOWNSTREAM_AUTHORIZATION_RECOGNITION",
+            "Malformed downstream authorization JSON is rejected (not exempted)",
+            False,
+            auc11_recognized,
+            auc11_recognized is False,
+        )
+
+        # AUC-12: Fake receipt pointing to wrong authorization artifact is NOT exempted
+        legit_receipt_path = repo_root / AUTHORIZATION_RECEIPT_REL_PATH
+        with tempfile.TemporaryDirectory() as tmp_str:
+            tmp_dir = Path(tmp_str)
+            # Copy valid auth file so sibling exists, then tamper receipt's authorization_artifact_file_sha256
+            (tmp_dir / "w06_dev_tune_live_authorization_v1.json").write_bytes(
+                legit_auth_path.read_bytes()
+            )
+            fake_receipt = json.loads(legit_receipt_path.read_text(encoding="utf-8"))
+            fake_receipt["authorization_artifact_file_sha256"] = "c" * 64
+            p12 = tmp_dir / "w06_dev_tune_live_authorization_01_receipt_v1.json"
+            p12.write_bytes(canonical_json_bytes(fake_receipt))
+            auc12_recognized = is_verified_downstream_w06_dev_tune_authorization_file(
+                p12, repo_root=repo_root
+            )
+        record(
+            "AUC-12",
+            "DOWNSTREAM_RECEIPT_RECOGNITION",
+            "Fake receipt pointing to wrong authorization_artifact_file_sha256 is rejected (not exempted)",
+            False,
+            auc12_recognized,
+            auc12_recognized is False,
+        )
+
+    return results
+
+
 def issue_and_persist_authorization_artifacts(
     repo_root: Path = REPO_ROOT,
 ) -> dict[str, Any]:
@@ -1075,18 +1638,31 @@ def issue_and_persist_authorization_artifacts(
 
     # Compute file SHA256 AFTER serialization (Section 8)
     auth_file_sha256 = sha256_bytes(normalize_lf_bytes(auth_path.read_bytes()))
+    if auth_file_sha256 != EXPECTED_AUTHORIZATION_ARTIFACT_FILE_SHA256:
+        raise RuntimeError(
+            f"UNEXPECTED_AUTHORIZATION_ARTIFACT_FILE_SHA_CHANGE: {auth_file_sha256} != {EXPECTED_AUTHORIZATION_ARTIFACT_FILE_SHA256}"
+        )
+    if (
+        auth_model.authorization_artifact_sha256
+        != EXPECTED_AUTHORIZATION_INTERNAL_SHA256
+    ):
+        raise RuntimeError(
+            f"UNEXPECTED_AUTHORIZATION_INTERNAL_SHA_CHANGE: {auth_model.authorization_artifact_sha256} != {EXPECTED_AUTHORIZATION_INTERNAL_SHA256}"
+        )
 
     au_checks = run_all_au_checks(repo_root, auth_artifact_path=auth_path)
-    failed = [c for c in au_checks if c["status"] != "PASS"]
-    if failed:
-        raise RuntimeError(f"AU checks failed: {failed}")
+    failed_au = [c for c in au_checks if c["status"] != "PASS"]
+    if failed_au:
+        raise RuntimeError(f"AU checks failed: {failed_au}")
 
     auths = load_verified_authorities(repo_root)
     cand_reg = auths["candidate_registry"]
 
-    receipt_payload: dict[str, Any] = {
+    base_receipt_payload: dict[str, Any] = {
         "artifact_id": RECEIPT_ARTIFACT_ID,
         "task_id": TASK_ID,
+        "audit_correction_task_id": AUDIT_CORRECTION_TASK_ID,
+        "previous_head_sha": PREVIOUS_HEAD_SHA,
         "source_develop_sha": SOURCE_DEVELOP_SHA,
         "code_basis_commit_sha": CODE_BASIS_COMMIT_SHA,
         "authorization_id": auth_model.authorization_id,
@@ -1160,6 +1736,19 @@ def issue_and_persist_authorization_artifacts(
             "hard_max_cost_usd": "NOT_DEFENSIBLY_COMPUTABLE",
             "authorization_prep_artifact_sha256": EXPECTED_PREP_ARTIFACT_SHA256,
         },
+        "historical_evidence_boundary": {
+            "historical_receipts_unmodified": True,
+            "historical_frozen_receipt_shas": HISTORICAL_FROZEN_RECEIPT_SHAS,
+            "policy_statement": (
+                "Historical checks refer to the repository state at their original gate. "
+                "A later, separately verified downstream authorization (cryptographically bound "
+                "to file SHA256 b2c068d216e6a71ad5c193137207cc8f7a74526f9a549eccfaefa9a7bd5eeba4 "
+                "and internal SHA256 fb2c181e14b0b122100f7b3b386bdaeaffe467c913d384db16717149374a1c83) "
+                "does not invalidate the original historical evidence. Any unknown, tampered, "
+                "or unverified authorization artifact invalidates current regression verification "
+                "and fails closed."
+            ),
+        },
         "live_provider_calls": 0,
         "provider_cost_usd": 0.0,
         "stage_a_created": False,
@@ -1170,13 +1759,42 @@ def issue_and_persist_authorization_artifacts(
         "dev_select_execution_started": False,
         "stochasticity_execution_started": False,
         "final100_used": False,
+    }
+
+    # Write provisional receipt so AUC-12 can inspect the persisted receipt on disk
+    receipt_path.write_bytes(
+        canonical_json_bytes(
+            {
+                **base_receipt_payload,
+                "verification_summary": {
+                    "total_checks": len(au_checks),
+                    "passed_checks": len(au_checks),
+                    "failed_checks": 0,
+                    "overall_status": "PASS",
+                },
+                "checks": au_checks,
+            }
+        )
+    )
+
+    auc_checks = run_all_auc_checks(repo_root)
+    failed_auc = [c for c in auc_checks if c["status"] != "PASS"]
+    if failed_auc:
+        raise RuntimeError(f"AUC checks failed: {failed_auc}")
+
+    receipt_payload: dict[str, Any] = {
+        **base_receipt_payload,
         "verification_summary": {
             "total_checks": len(au_checks),
             "passed_checks": sum(1 for c in au_checks if c["status"] == "PASS"),
             "failed_checks": sum(1 for c in au_checks if c["status"] != "PASS"),
+            "auc_total_checks": len(auc_checks),
+            "auc_passed_checks": sum(1 for c in auc_checks if c["status"] == "PASS"),
+            "auc_failed_checks": sum(1 for c in auc_checks if c["status"] != "PASS"),
             "overall_status": "PASS",
         },
         "checks": au_checks,
+        "audit_correction_checks": auc_checks,
     }
     assert_no_secrets_in_payload(
         receipt_payload, context="W06_DEV_TUNE_LIVE_AUTHORIZATION_RECEIPT"
@@ -1195,6 +1813,7 @@ if __name__ == "__main__":
         json.dumps(
             {
                 "task_id": receipt["task_id"],
+                "audit_correction_task_id": receipt["audit_correction_task_id"],
                 "authorization_id": receipt["authorization_id"],
                 "authorization_status": receipt["authorization_status"],
                 "authorized_by_role": receipt["authorized_by_role"],
@@ -1208,6 +1827,7 @@ if __name__ == "__main__":
                 ],
                 "receipt_file_sha256": receipt_file_sha,
                 "au_checks": f"{receipt['verification_summary']['passed_checks']}/{receipt['verification_summary']['total_checks']}",
+                "auc_checks": f"{receipt['verification_summary']['auc_passed_checks']}/{receipt['verification_summary']['auc_total_checks']}",
                 "stage_a_created": receipt["stage_a_created"],
                 "live_execution_capability_minted": receipt[
                     "live_execution_capability_minted"

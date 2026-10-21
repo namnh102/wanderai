@@ -40,7 +40,7 @@ The Project Owner explicitly supplied the following authorization sentence:
 | **`authorization_text_sha256`** | `90fca01f1b7ecacb2b5ee4405df2a52af6aff02f21dce8bd7c579c4d659327fe` |
 | **`authorization_artifact_sha256` (Non-Self-Referential Payload SHA256)** | `fb2c181e14b0b122100f7b3b386bdaeaffe467c913d384db16717149374a1c83` |
 | **`authorization_artifact_file_sha256` (Post-Serialization File SHA256)** | `b2c068d216e6a71ad5c193137207cc8f7a74526f9a549eccfaefa9a7bd5eeba4` |
-| **`receipt_file_sha256`** | `38d2aec057e8186d1f28b9f99199d63df0e8e3f449d1e61fc388850ad948d3e2` |
+| **`receipt_file_sha256`** | `d185e079e7dc5b7206bc1a48aec6dfaf83c5758c41b64790cda134a7c3d50813` |
 
 ---
 
@@ -150,3 +150,63 @@ All 30 offline authorization-issuance and adversarial scope-rejection checks exe
 | `AU-28` | `PRE_STAGE_A_FIREWALL` | No `LiveExecutionCapability` minted during authorization issuance | `PASS` |
 | `AU-29` | `PRE_STAGE_A_FIREWALL` | No transport journal or provider result directory created | `PASS` |
 | `AU-30` | `NETWORK_ISOLATION` | Zero outbound network calls and zero provider cost during authorization issuance | `PASS` |
+
+---
+
+## 6. Provenance & Lifecycle-Compatibility Hardening (`W06-DEV-TUNE-LIVE-AUTHORIZATION-01-AUDIT-CORRECTION-01`)
+
+### 6.1 Defect 1 Fix — Fail-Closed Source `develop` Provenance Verification (`AUC-01`..`AUC-05`)
+
+`verify_source_develop_commit_or_shallow_fallback()` in `scripts/issue_w06_dev_tune_live_authorization.py` was hardened to eliminate any non-ancestor fallback loophole:
+
+1. **Case A — `SOURCE_DEVELOP_SHA` (`cd9d4e6ae072e737083c9069123f00a5a04107a5`) exists in the local git object database (`git cat-file -e` succeeds):**
+   - `git merge-base --is-ancestor cd9d4e6ae072e737083c9069123f00a5a04107a5 HEAD` **MUST** succeed.
+   - If `SOURCE_DEVELOP_SHA` exists locally and is **not** an ancestor of `HEAD`, verification fails immediately (`SOURCE_DEVELOP_NOT_ANCESTOR_OF_HEAD`). Shallow-clone fallback is **never** permitted when the commit object exists locally.
+2. **Case B — `SOURCE_DEVELOP_SHA` does NOT exist in the local git object database:**
+   - Fallback is permitted **only** when `git rev-parse --is-shallow-repository` returns `"true"` **and** all four frozen authorities match (`w06_dev_tune_authorization_prep_v1.json == 168d29741fd75884a9b3f066822a843bcc6fd56ed06d4c16b40b8129d4d62f33`, `w06_dev_prompt_candidate_freeze_v1.json == 2f345363f580ea882b2e5b3562c587ef5309bc7f994440257a54d18994ab6956`, `w06_dev_tune_execution_plan_v1.json == 652e3beb08771c3125e613172b1aaa396fc1b60aaaf3b98cc238e91a14e0dc74`, and `SCIENTIFIC_CODE_BUNDLE_SHA256 == 0638f2fcb100b0000e3a2a4e08137a9d468449001f258de7354df21e185ca2e3`).
+   - If the repository is a full clone (`--is-shallow-repository == "false"`), missing `SOURCE_DEVELOP_SHA` fails closed (`SOURCE_DEVELOP_COMMIT_MISSING_IN_FULL_REPOSITORY`).
+
+### 6.2 Defect 2 Fix — Cryptographic Verification for Downstream Authorization Lifecycle Compatibility (`AUC-06`..`AUC-12`)
+
+The weak `filename + task_id` exemption in the three historical gate scripts (`scripts/audit_w06_dev_live_runner_qa_01.py`, `scripts/freeze_w06_dev_prompt_candidates.py`, and `scripts/prepare_w06_dev_tune_authorization.py`) was replaced with `is_verified_downstream_w06_dev_tune_authorization_file(path, repo_root=...)`:
+
+1. **For `data/evaluation/w06/w06_dev_tune_live_authorization_v1.json` (`is_verified_downstream_w06_authorization_artifact`):**
+   - Exact normalized LF file SHA256 must equal `b2c068d216e6a71ad5c193137207cc8f7a74526f9a549eccfaefa9a7bd5eeba4`.
+   - Production `verify_dev_live_authorization_artifact(...)` must pass against the frozen `DEV-TUNE` execution plan and prompt freeze.
+   - `authorization_artifact_sha256` must equal `fb2c181e14b0b122100f7b3b386bdaeaffe467c913d384db16717149374a1c83`.
+   - `authorization_id == "W06-DEV-TUNE-LIVE-AUTHORIZATION-01-V1"`, `authorized_by_role == "PROJECT_OWNER"`, `authorization_status == "AUTHORIZED"`, `allowed_phase == "DEV_TUNE"`, `allowed_execution_plan_sha256 == "582d9964b4fffbac91f83373d080f1fef120f0ddca4edab2d63e02796d0b20ae"`, `allowed_prompt_freeze_sha256 == "2f345363f580ea882b2e5b3562c587ef5309bc7f994440257a54d18994ab6956"`, `allowed_candidate_ids == ["C1", "C2", "C3"]`, `maximum_live_generation_calls == 120`, and `scientific_code_bundle_sha256 == "0638f2fcb100b0000e3a2a4e08137a9d468449001f258de7354df21e185ca2e3"`.
+2. **For `data/evaluation/w06/w06_dev_tune_live_authorization_01_receipt_v1.json` (`is_verified_downstream_w06_authorization_receipt`):**
+   - `artifact_id == "W06-DEV-TUNE-LIVE-AUTHORIZATION-01-RECEIPT-V1"`, `task_id == "W06-DEV-TUNE-LIVE-AUTHORIZATION-01"`.
+   - `authorization_artifact_file_sha256 == "b2c068d216e6a71ad5c193137207cc8f7a74526f9a549eccfaefa9a7bd5eeba4"`, `authorization_artifact_sha256 == "fb2c181e14b0b122100f7b3b386bdaeaffe467c913d384db16717149374a1c83"`, `authorization_text_sha256 == "90fca01f1b7ecacb2b5ee4405df2a52af6aff02f21dce8bd7c579c4d659327fe"`.
+   - `stage_a_created is False`, `live_execution_capability_minted is False`, `live_provider_calls == 0`, `provider_cost_usd == 0.0`, `overall_status == "PASS"`.
+   - Sibling `w06_dev_tune_live_authorization_v1.json` must also pass `is_verified_downstream_w06_authorization_artifact`.
+
+### 6.3 Audit Correction Verification Matrix (`AUC-01` through `AUC-12`)
+
+| Check ID | Domain | Description | Status |
+|---|---|---|---|
+| `AUC-01` | `SOURCE_PROVENANCE_FAIL_CLOSED` | Full repository where `SOURCE_DEVELOP_SHA` exists but is NOT ancestor of `HEAD` fails closed (`verified=false`) even when prep artifact matches | `PASS` |
+| `AUC-02` | `SOURCE_PROVENANCE_FAIL_CLOSED` | Full repository with valid ancestry succeeds (`verified=true`, `shallow_repository_fallback_used=false`) | `PASS` |
+| `AUC-03` | `SOURCE_PROVENANCE_FAIL_CLOSED` | Shallow repository where source commit is unavailable and all 4 frozen fallback authorities match succeeds (`verified=true`) | `PASS` |
+| `AUC-04` | `SOURCE_PROVENANCE_FAIL_CLOSED` | Shallow repository with any stale fallback authority fails closed (`verified=false`) | `PASS` |
+| `AUC-05` | `SOURCE_PROVENANCE_FAIL_CLOSED` | Non-shallow repository with missing source commit fails closed (`verified=false`) without fallback | `PASS` |
+| `AUC-06` | `DOWNSTREAM_AUTHORIZATION_RECOGNITION` | Exact legitimate downstream authorization artifact (SHA256 `b2c068d216e6a71ad5c193137207cc8f7a74526f9a549eccfaefa9a7bd5eeba4`) is recognized | `PASS` |
+| `AUC-07` | `DOWNSTREAM_AUTHORIZATION_RECOGNITION` | Same filename + correct `task_id` but wrong artifact file SHA256 is rejected (not exempted) | `PASS` |
+| `AUC-08` | `DOWNSTREAM_AUTHORIZATION_RECOGNITION` | Same filename + correct `task_id` but wrong `allowed_execution_plan_sha256` is rejected (not exempted) | `PASS` |
+| `AUC-09` | `DOWNSTREAM_AUTHORIZATION_RECOGNITION` | Same filename + correct `task_id` but 121-call scope is rejected (not exempted) | `PASS` |
+| `AUC-10` | `DOWNSTREAM_AUTHORIZATION_RECOGNITION` | Same filename + correct `task_id` but `DEV_SELECT` phase is rejected (not exempted) | `PASS` |
+| `AUC-11` | `DOWNSTREAM_AUTHORIZATION_RECOGNITION` | Malformed downstream authorization JSON is rejected (not exempted) | `PASS` |
+| `AUC-12` | `DOWNSTREAM_RECEIPT_RECOGNITION` | Fake receipt pointing to wrong `authorization_artifact_file_sha256` is rejected (not exempted) | `PASS` |
+
+---
+
+## 7. Historical Evidence Boundary & Lifecycle Compatibility
+
+1. **Historical Point-in-Time Receipts Are Immutable:**
+   - `data/evaluation/w06/w06_dev_live_runner_qa_01_receipt_v1.json` (`e400d319ca957acb8e3ef7e8fcb468b7406a837b51b6127ed95327ac6cf72ad2`)
+   - `data/evaluation/w06/w06_dev_prompt_candidate_freeze_01_receipt_v1.json` (`20b95381f9f06809ca37e3b806e639fbe788a9370a55a8e85a9f2d94aae0b6e5`)
+   - `data/evaluation/w06/w06_dev_tune_authorization_prep_v1.json` (`168d29741fd75884a9b3f066822a843bcc6fd56ed06d4c16b40b8129d4d62f33`)
+   These committed receipts record the repository state at the time each historical gate closed (`Runner QA-01`, `Prompt Candidate Freeze-01`, and `Authorization Prep-01`) before `W06-DEV-TUNE-LIVE-AUTHORIZATION-01` existed, and remain byte-for-byte unchanged.
+2. **Lifecycle Compatibility for Full-Suite Pytest Regression:**
+   - The three historical verification scripts (`scripts/audit_w06_dev_live_runner_qa_01.py`, `scripts/freeze_w06_dev_prompt_candidates.py`, and `scripts/prepare_w06_dev_tune_authorization.py`) remain runnable inside full-repository pytest regression after `W06-DEV-TUNE-LIVE-AUTHORIZATION-01` exists.
+   - They recognize the downstream authorization files **only** when `is_verified_downstream_w06_dev_tune_authorization_file` cryptographically confirms both the exact SHA256 hashes and the production `DevLiveAuthorizationArtifact` contract. Any unverified, spoofed, widened, or Stage-A artifact continues to fail those historical firewall gates immediately.

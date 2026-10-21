@@ -235,6 +235,7 @@ def test_report_markdown_contains_all_required_hashes() -> None:
 
     required_substrings = [
         "W06-DEV-TUNE-LIVE-AUTHORIZATION-01",
+        "W06-DEV-TUNE-LIVE-AUTHORIZATION-01-AUDIT-CORRECTION-01",
         "W06-DEV-TUNE-LIVE-AUTHORIZATION-01-V1",
         "cd9d4e6ae072e737083c9069123f00a5a04107a5",
         "2026-10-21T06:25:00Z",
@@ -248,3 +249,218 @@ def test_report_markdown_contains_all_required_hashes() -> None:
     ]
     for sub in required_substrings:
         assert sub in text, f"Missing required substring in report: {sub!r}"
+
+
+def test_all_12_auc_checks_pass() -> None:
+    """Verify AUC-01 through AUC-12 all pass against the repository and persisted artifacts."""
+    auc_checks = auth_mod.run_all_auc_checks(REPO_ROOT)
+    assert len(auc_checks) == 12
+    expected_ids = [f"AUC-{i:02d}" for i in range(1, 13)]
+    assert [c["check_id"] for c in auc_checks] == expected_ids
+
+    failed = [c for c in auc_checks if c["status"] != "PASS"]
+    assert not failed, f"Failed AUC checks: {failed}"
+
+
+@pytest.mark.parametrize("auc_idx", range(1, 13))
+def test_individual_auc_check_in_persisted_receipt(auc_idx: int) -> None:
+    """Verify each AUC-01..AUC-12 check recorded in w06_dev_tune_live_authorization_01_receipt_v1.json is PASS."""
+    receipt_path = REPO_ROOT / auth_mod.AUTHORIZATION_RECEIPT_REL_PATH
+    data = json.loads(receipt_path.read_text(encoding="utf-8"))
+    check_id = f"AUC-{auc_idx:02d}"
+    matching = [
+        c for c in data["audit_correction_checks"] if c["check_id"] == check_id
+    ]
+    assert len(matching) == 1
+    assert matching[0]["status"] == "PASS"
+
+
+def test_fail_closed_source_develop_provenance_matrix(tmp_path: Path) -> None:
+    """Directly test AUC-01..AUC-05 fail-closed git provenance behavior."""
+    import subprocess
+
+    # AUC-01: commit exists + NOT ancestor -> FAIL even when all 4 fallback files match
+    res_auc01 = auth_mod.verify_source_develop_commit_or_shallow_fallback(
+        REPO_ROOT,
+        git_runner=lambda args: (
+            subprocess.CompletedProcess(args, 0, stdout="", stderr="")
+            if "cat-file" in args
+            else (
+                subprocess.CompletedProcess(args, 1, stdout="", stderr="")
+                if "merge-base" in args
+                else subprocess.CompletedProcess(args, 0, stdout="true\n", stderr="")
+            )
+        ),
+    )
+    assert res_auc01["verified"] is False
+    assert res_auc01["shallow_repository_fallback_used"] is False
+
+    # AUC-02: commit exists + is-ancestor -> PASS without fallback
+    res_auc02 = auth_mod.verify_source_develop_commit_or_shallow_fallback(
+        REPO_ROOT,
+        git_runner=lambda args: (
+            subprocess.CompletedProcess(args, 0, stdout="", stderr="")
+            if "cat-file" in args
+            else (
+                subprocess.CompletedProcess(args, 0, stdout="", stderr="")
+                if "merge-base" in args
+                else subprocess.CompletedProcess(args, 0, stdout="false\n", stderr="")
+            )
+        ),
+    )
+    assert res_auc02["verified"] is True
+    assert res_auc02["shallow_repository_fallback_used"] is False
+
+    # AUC-03: commit missing + shallow repo + all 4 fallback authorities match -> PASS
+    res_auc03 = auth_mod.verify_source_develop_commit_or_shallow_fallback(
+        REPO_ROOT,
+        git_runner=lambda args: (
+            subprocess.CompletedProcess(args, 1, stdout="", stderr="missing")
+            if "cat-file" in args
+            else (
+                subprocess.CompletedProcess(args, 0, stdout="true\n", stderr="")
+                if "--is-shallow-repository" in args
+                else subprocess.CompletedProcess(args, 1, stdout="", stderr="")
+            )
+        ),
+    )
+    assert res_auc03["verified"] is True
+    assert res_auc03["shallow_repository_fallback_used"] is True
+
+    # AUC-04: commit missing + shallow repo + mismatched fallback authority -> FAIL
+    res_auc04 = auth_mod.verify_source_develop_commit_or_shallow_fallback(
+        tmp_path,
+        git_runner=lambda args: (
+            subprocess.CompletedProcess(args, 1, stdout="", stderr="missing")
+            if "cat-file" in args
+            else (
+                subprocess.CompletedProcess(args, 0, stdout="true\n", stderr="")
+                if "--is-shallow-repository" in args
+                else subprocess.CompletedProcess(args, 1, stdout="", stderr="")
+            )
+        ),
+    )
+    assert res_auc04["verified"] is False
+    assert res_auc04["shallow_repository_fallback_used"] is True
+
+    # AUC-05: commit missing + full repo (is-shallow-repository == false) -> FAIL
+    res_auc05 = auth_mod.verify_source_develop_commit_or_shallow_fallback(
+        REPO_ROOT,
+        git_runner=lambda args: (
+            subprocess.CompletedProcess(args, 1, stdout="", stderr="missing")
+            if "cat-file" in args
+            else (
+                subprocess.CompletedProcess(args, 0, stdout="false\n", stderr="")
+                if "--is-shallow-repository" in args
+                else subprocess.CompletedProcess(args, 1, stdout="", stderr="")
+            )
+        ),
+    )
+    assert res_auc05["verified"] is False
+    assert res_auc05["shallow_repository_fallback_used"] is False
+
+
+def test_downstream_authorization_cryptographic_verification_and_historical_gates(
+    tmp_path: Path,
+) -> None:
+    """Directly test AUC-06..AUC-12: cryptographic downstream verification and historical receipt immutability."""
+    import prepare_w06_dev_tune_authorization as prep_mod
+
+    w06_dir = tmp_path / "data" / "evaluation" / "w06"
+    w06_dir.mkdir(parents=True)
+    fake_auth = w06_dir / "w06_dev_tune_live_authorization_v1.json"
+    fake_receipt = w06_dir / "w06_dev_tune_live_authorization_01_receipt_v1.json"
+
+    # Fake task_id-only file rejected by cryptographic verifier AND historical firewall
+    fake_auth.write_text(
+        json.dumps({"task_id": "W06-DEV-TUNE-LIVE-AUTHORIZATION-01"}),
+        encoding="utf-8",
+    )
+    assert (
+        auth_mod.is_verified_downstream_w06_dev_tune_authorization_file(
+            fake_auth, repo_root=REPO_ROOT
+        )
+        is False
+    )
+    fw_fake = prep_mod.verify_pre_authorization_firewall(tmp_path)
+    assert fw_fake["pre_authorization_firewall_intact"] is False
+    assert (
+        "data/evaluation/w06/w06_dev_tune_live_authorization_v1.json"
+        in fw_fake["forbidden_auth_files"]
+    )
+
+    # Tampered calls=121 and allowed_phase=DEV_SELECT rejected
+    real_auth_dict = json.loads(
+        (REPO_ROOT / auth_mod.AUTHORIZATION_ARTIFACT_REL_PATH).read_text(
+            encoding="utf-8"
+        )
+    )
+    for field, bad_val in [
+        ("maximum_live_generation_calls", 121),
+        ("allowed_phase", "DEV_SELECT"),
+    ]:
+        tampered = dict(real_auth_dict)
+        tampered.pop("authorization_artifact_sha256", None)
+        tampered[field] = bad_val
+        tampered["authorization_artifact_sha256"] = sha256_bytes(
+            canonical_json_bytes(tampered)
+        )
+        fake_auth.write_bytes(
+            normalize_lf_bytes(
+                (json.dumps(tampered, indent=2, ensure_ascii=False) + "\n").encode(
+                    "utf-8"
+                )
+            )
+        )
+        assert (
+            auth_mod.is_verified_downstream_w06_dev_tune_authorization_file(
+                fake_auth, repo_root=REPO_ROOT
+            )
+            is False
+        )
+
+    # Tampered receipt with stage_a_created=True or live_provider_calls=1 rejected
+    fake_auth.write_bytes(
+        (REPO_ROOT / auth_mod.AUTHORIZATION_ARTIFACT_REL_PATH).read_bytes()
+    )
+    real_receipt_dict = json.loads(
+        (REPO_ROOT / auth_mod.AUTHORIZATION_RECEIPT_REL_PATH).read_text(
+            encoding="utf-8"
+        )
+    )
+    for r_field, r_bad_val in [
+        ("stage_a_created", True),
+        ("live_provider_calls", 1),
+    ]:
+        tampered_r = dict(real_receipt_dict)
+        tampered_r[r_field] = r_bad_val
+        fake_receipt.write_text(json.dumps(tampered_r, indent=2), encoding="utf-8")
+        assert (
+            auth_mod.is_verified_downstream_w06_dev_tune_authorization_file(
+                fake_receipt, repo_root=REPO_ROOT
+            )
+            is False
+        )
+
+    # Valid persisted files pass
+    assert (
+        auth_mod.is_verified_downstream_w06_dev_tune_authorization_file(
+            REPO_ROOT / auth_mod.AUTHORIZATION_ARTIFACT_REL_PATH,
+            repo_root=REPO_ROOT,
+        )
+        is True
+    )
+    assert (
+        auth_mod.is_verified_downstream_w06_dev_tune_authorization_file(
+            REPO_ROOT / auth_mod.AUTHORIZATION_RECEIPT_REL_PATH,
+            repo_root=REPO_ROOT,
+        )
+        is True
+    )
+
+    # Historical receipts remain byte-for-byte unchanged
+    for rel_path, expected_sha in auth_mod.HISTORICAL_FROZEN_RECEIPT_SHAS.items():
+        actual_sha = sha256_bytes(
+            normalize_lf_bytes((REPO_ROOT / rel_path).read_bytes())
+        )
+        assert actual_sha == expected_sha, f"Historical receipt modified: {rel_path}"

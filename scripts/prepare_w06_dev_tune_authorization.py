@@ -722,24 +722,19 @@ def verify_pre_authorization_firewall(repo_root: Path = REPO_ROOT) -> dict[str, 
     forbidden_live_cell_dirs: list[str] = []
 
     if w06_dir.is_dir():
+        from issue_w06_dev_tune_live_authorization import (
+            is_verified_downstream_w06_dev_tune_authorization_file,
+        )
+
         for path in sorted(w06_dir.rglob("*")):
             rel = path.relative_to(repo_root).as_posix()
             name_lower = path.name.lower()
             if path.is_file():
-                is_verified_downstream_auth01 = False
-                if path.name in {
-                    "w06_dev_tune_live_authorization_v1.json",
-                    "w06_dev_tune_live_authorization_01_receipt_v1.json",
-                }:
-                    try:
-                        obj = json.loads(path.read_text(encoding="utf-8"))
-                        if (
-                            isinstance(obj, dict)
-                            and obj.get("task_id") == "W06-DEV-TUNE-LIVE-AUTHORIZATION-01"
-                        ):
-                            is_verified_downstream_auth01 = True
-                    except Exception:
-                        pass
+                is_verified_downstream_auth01 = (
+                    is_verified_downstream_w06_dev_tune_authorization_file(
+                        path, repo_root=repo_root
+                    )
+                )
                 if (
                     "stage_a" in name_lower
                     or "stage-a" in name_lower
