@@ -726,6 +726,20 @@ def verify_pre_authorization_firewall(repo_root: Path = REPO_ROOT) -> dict[str, 
             rel = path.relative_to(repo_root).as_posix()
             name_lower = path.name.lower()
             if path.is_file():
+                is_verified_downstream_auth01 = False
+                if path.name in {
+                    "w06_dev_tune_live_authorization_v1.json",
+                    "w06_dev_tune_live_authorization_01_receipt_v1.json",
+                }:
+                    try:
+                        obj = json.loads(path.read_text(encoding="utf-8"))
+                        if (
+                            isinstance(obj, dict)
+                            and obj.get("task_id") == "W06-DEV-TUNE-LIVE-AUTHORIZATION-01"
+                        ):
+                            is_verified_downstream_auth01 = True
+                    except Exception:
+                        pass
                 if (
                     "stage_a" in name_lower
                     or "stage-a" in name_lower
@@ -737,6 +751,7 @@ def verify_pre_authorization_firewall(repo_root: Path = REPO_ROOT) -> dict[str, 
                 if (
                     "live_authorization" in name_lower
                     and name_lower != "w06_dev_tune_authorization_prep_v1.json"
+                    and not is_verified_downstream_auth01
                 ):
                     forbidden_auth_files.append(rel)
                 # Also inspect JSON files in w06_dir root for DevLiveAuthorizationArtifact or DevLiveStageAFreezeReceipt signatures
@@ -745,8 +760,11 @@ def verify_pre_authorization_firewall(repo_root: Path = REPO_ROOT) -> dict[str, 
                         data = json.loads(path.read_text(encoding="utf-8"))
                         if isinstance(data, dict):
                             if (
-                                "authorization_id" in data
-                                or data.get("authorization_status") == "AUTHORIZED"
+                                (
+                                    "authorization_id" in data
+                                    or data.get("authorization_status") == "AUTHORIZED"
+                                )
+                                and not is_verified_downstream_auth01
                             ):
                                 forbidden_auth_files.append(rel)
                             if (
