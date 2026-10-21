@@ -1,0 +1,553 @@
+{
+  "adversarial_checks": [
+    {
+      "check_id": "SAA-01",
+      "description": "Wrong execution_plan_sha256 is rejected by verify_stage_a_freeze_receipt",
+      "domain": "ADVERSARIAL_STAGE_A",
+      "expected": true,
+      "observed": true,
+      "status": "PASS"
+    },
+    {
+      "check_id": "SAA-02",
+      "description": "Wrong prompt_freeze_sha256 is rejected by verify_stage_a_freeze_receipt",
+      "domain": "ADVERSARIAL_STAGE_A",
+      "expected": true,
+      "observed": true,
+      "status": "PASS"
+    },
+    {
+      "check_id": "SAA-03",
+      "description": "Wrong authorization_artifact_sha256 is rejected by verify_stage_a_freeze_receipt",
+      "domain": "ADVERSARIAL_STAGE_A",
+      "expected": true,
+      "observed": true,
+      "status": "PASS"
+    },
+    {
+      "check_id": "SAA-04",
+      "description": "Wrong scientific_code_bundle_sha256 is rejected with ScientificCodeBundleIntegrityError",
+      "domain": "ADVERSARIAL_STAGE_A",
+      "expected": true,
+      "observed": true,
+      "status": "PASS"
+    },
+    {
+      "check_id": "SAA-05",
+      "description": "Wrong provider_config_registry_sha256 is rejected with CandidateRegistryIntegrityError",
+      "domain": "ADVERSARIAL_STAGE_A",
+      "expected": true,
+      "observed": true,
+      "status": "PASS"
+    },
+    {
+      "check_id": "SAA-06",
+      "description": "Non-existent or non-ancestor stage_a_commit_sha is rejected",
+      "domain": "ADVERSARIAL_STAGE_A",
+      "expected": true,
+      "observed": true,
+      "status": "PASS"
+    },
+    {
+      "check_id": "SAA-07",
+      "description": "Wrong code_basis_commit_sha is rejected by verify_stage_a_freeze_receipt",
+      "domain": "ADVERSARIAL_STAGE_A",
+      "expected": true,
+      "observed": true,
+      "status": "PASS"
+    },
+    {
+      "check_id": "SAA-08",
+      "description": "Missing or whitespace stage_a_process_token is rejected by DevLiveStageAFreezeReceipt",
+      "domain": "ADVERSARIAL_STAGE_A",
+      "expected": true,
+      "observed": true,
+      "status": "PASS"
+    },
+    {
+      "check_id": "SAA-09",
+      "description": "121-cell / tampered assigned_cell_run_ids list is rejected",
+      "domain": "ADVERSARIAL_STAGE_A",
+      "expected": true,
+      "observed": true,
+      "status": "PASS"
+    },
+    {
+      "check_id": "SAA-10",
+      "description": "Tampered assigned_cells_sha256 is rejected",
+      "domain": "ADVERSARIAL_STAGE_A",
+      "expected": true,
+      "observed": true,
+      "status": "PASS"
+    },
+    {
+      "check_id": "SAA-11",
+      "description": "Fake Stage-A filename/artifact_id-only file is rejected by cryptographic verifier and historical firewall",
+      "domain": "ADVERSARIAL_STAGE_A",
+      "expected": {
+        "firewall_rejected": true,
+        "verifier_rejected": true
+      },
+      "observed": {
+        "firewall_rejected": true,
+        "verifier_rejected": true
+      },
+      "status": "PASS"
+    },
+    {
+      "check_id": "SAA-12",
+      "description": "Same-process verification attempt is rejected with STAGE_A_AND_STAGE_B_SAME_PROCESS_FORBIDDEN",
+      "domain": "ADVERSARIAL_STAGE_A",
+      "expected": true,
+      "observed": true,
+      "status": "PASS"
+    },
+    {
+      "check_id": "SAA-13",
+      "description": "Uncommitted Stage-A receipt is rejected with STAGE_A_ARTIFACT_UNCOMMITTED when require_git_committed=True",
+      "domain": "ADVERSARIAL_STAGE_A",
+      "expected": true,
+      "observed": true,
+      "status": "PASS"
+    },
+    {
+      "check_id": "SAA-14",
+      "description": "Dirty tracked authority file is rejected when require_git_committed=True",
+      "domain": "ADVERSARIAL_STAGE_A",
+      "expected": true,
+      "observed": true,
+      "status": "PASS"
+    },
+    {
+      "check_id": "SAA-15",
+      "description": "All 5 historical frozen receipts/artifacts remain byte-for-byte unchanged",
+      "domain": "HISTORICAL_EVIDENCE_IMMUTABILITY",
+      "expected": [],
+      "observed": [],
+      "status": "PASS"
+    }
+  ],
+  "artifact_id": "W06-DEV-TUNE-STAGE-A-FREEZE-01-RECEIPT-V1",
+  "assigned_cells_sha256": "582d9964b4fffbac91f83373d080f1fef120f0ddca4edab2d63e02796d0b20ae",
+  "assigned_run_id_count": 120,
+  "authorization_file_sha256": "b2c068d216e6a71ad5c193137207cc8f7a74526f9a549eccfaefa9a7bd5eeba4",
+  "authorization_id": "W06-DEV-TUNE-LIVE-AUTHORIZATION-01-V1",
+  "authorization_internal_sha256": "fb2c181e14b0b122100f7b3b386bdaeaffe467c913d384db16717149374a1c83",
+  "authorization_text_sha256": "90fca01f1b7ecacb2b5ee4405df2a52af6aff02f21dce8bd7c579c4d659327fe",
+  "branch": "research/w06-dev-tune-stage-a-freeze-01",
+  "candidate_registry_sha256": "4dd29164afdf7f364978420f41ab88ef07ec396062188169fcb859a9ef01e058",
+  "checks": [
+    {
+      "check_id": "SA-01",
+      "description": "Source develop SHA 25c81ad0e03b2d7e0b0cd29550a2d72b18d6e32e exists and is ancestor of HEAD",
+      "domain": "SOURCE_STATE",
+      "expected": {
+        "source_develop_sha": "25c81ad0e03b2d7e0b0cd29550a2d72b18d6e32e",
+        "verified": true
+      },
+      "observed": {
+        "source_develop_sha": "25c81ad0e03b2d7e0b0cd29550a2d72b18d6e32e",
+        "verified": true
+      },
+      "status": "PASS"
+    },
+    {
+      "check_id": "SA-02",
+      "description": "Source worktree clean for all upstream frozen authorities and 14 scientific bundle files",
+      "domain": "SOURCE_STATE",
+      "expected": [],
+      "observed": [],
+      "status": "PASS"
+    },
+    {
+      "check_id": "SA-03",
+      "description": "DEV-TUNE execution plan SHA256 matches 582d9964b4fffbac91f83373d080f1fef120f0ddca4edab2d63e02796d0b20ae",
+      "domain": "FROZEN_PLAN",
+      "expected": "582d9964b4fffbac91f83373d080f1fef120f0ddca4edab2d63e02796d0b20ae",
+      "observed": "582d9964b4fffbac91f83373d080f1fef120f0ddca4edab2d63e02796d0b20ae",
+      "status": "PASS"
+    },
+    {
+      "check_id": "SA-04",
+      "description": "DEV-TUNE execution plan file SHA256 matches 652e3beb08771c3125e613172b1aaa396fc1b60aaaf3b98cc238e91a14e0dc74",
+      "domain": "FROZEN_PLAN",
+      "expected": "652e3beb08771c3125e613172b1aaa396fc1b60aaaf3b98cc238e91a14e0dc74",
+      "observed": "652e3beb08771c3125e613172b1aaa396fc1b60aaaf3b98cc238e91a14e0dc74",
+      "status": "PASS"
+    },
+    {
+      "check_id": "SA-05",
+      "description": "Prompt freeze SHA256 matches 2f345363f580ea882b2e5b3562c587ef5309bc7f994440257a54d18994ab6956",
+      "domain": "PROMPT_FREEZE",
+      "expected": "2f345363f580ea882b2e5b3562c587ef5309bc7f994440257a54d18994ab6956",
+      "observed": "2f345363f580ea882b2e5b3562c587ef5309bc7f994440257a54d18994ab6956",
+      "status": "PASS"
+    },
+    {
+      "check_id": "SA-06",
+      "description": "Authorization artifact file SHA256 matches b2c068d216e6a71ad5c193137207cc8f7a74526f9a549eccfaefa9a7bd5eeba4",
+      "domain": "AUTHORIZATION",
+      "expected": "b2c068d216e6a71ad5c193137207cc8f7a74526f9a549eccfaefa9a7bd5eeba4",
+      "observed": "b2c068d216e6a71ad5c193137207cc8f7a74526f9a549eccfaefa9a7bd5eeba4",
+      "status": "PASS"
+    },
+    {
+      "check_id": "SA-07",
+      "description": "Authorization internal SHA256 matches fb2c181e14b0b122100f7b3b386bdaeaffe467c913d384db16717149374a1c83",
+      "domain": "AUTHORIZATION",
+      "expected": "fb2c181e14b0b122100f7b3b386bdaeaffe467c913d384db16717149374a1c83",
+      "observed": "fb2c181e14b0b122100f7b3b386bdaeaffe467c913d384db16717149374a1c83",
+      "status": "PASS"
+    },
+    {
+      "check_id": "SA-08",
+      "description": "Stage-A phase and authorized phase are strictly DEV_TUNE",
+      "domain": "AUTHORIZATION_SCOPE",
+      "expected": "DEV_TUNE",
+      "observed": "DEV_TUNE",
+      "status": "PASS"
+    },
+    {
+      "check_id": "SA-09",
+      "description": "Authorized candidates are strictly ['C1', 'C2', 'C3']",
+      "domain": "AUTHORIZATION_SCOPE",
+      "expected": [
+        "C1",
+        "C2",
+        "C3"
+      ],
+      "observed": [
+        "C1",
+        "C2",
+        "C3"
+      ],
+      "status": "PASS"
+    },
+    {
+      "check_id": "SA-10",
+      "description": "Authorized maximum_live_generation_calls is strictly 120",
+      "domain": "CALL_BUDGET",
+      "expected": 120,
+      "observed": 120,
+      "status": "PASS"
+    },
+    {
+      "check_id": "SA-11",
+      "description": "Scientific code bundle SHA256 matches 0638f2fcb100b0000e3a2a4e08137a9d468449001f258de7354df21e185ca2e3 across all 14 files",
+      "domain": "SCIENTIFIC_AUTHORITIES",
+      "expected": "0638f2fcb100b0000e3a2a4e08137a9d468449001f258de7354df21e185ca2e3",
+      "observed": "0638f2fcb100b0000e3a2a4e08137a9d468449001f258de7354df21e185ca2e3",
+      "status": "PASS"
+    },
+    {
+      "check_id": "SA-12",
+      "description": "Provider config registry SHA256 matches 3dc05d29acc2f647cba58303865bd7406b8c1d9f7ccbe0f120e87ad471190938",
+      "domain": "SCIENTIFIC_AUTHORITIES",
+      "expected": "3dc05d29acc2f647cba58303865bd7406b8c1d9f7ccbe0f120e87ad471190938",
+      "observed": "3dc05d29acc2f647cba58303865bd7406b8c1d9f7ccbe0f120e87ad471190938",
+      "status": "PASS"
+    },
+    {
+      "check_id": "SA-13",
+      "description": "Candidate registry SHA256 matches 4dd29164afdf7f364978420f41ab88ef07ec396062188169fcb859a9ef01e058",
+      "domain": "SCIENTIFIC_AUTHORITIES",
+      "expected": "4dd29164afdf7f364978420f41ab88ef07ec396062188169fcb859a9ef01e058",
+      "observed": "4dd29164afdf7f364978420f41ab88ef07ec396062188169fcb859a9ef01e058",
+      "status": "PASS"
+    },
+    {
+      "check_id": "SA-14",
+      "description": "code_basis_commit_sha remains 60d52d720e66f5af8e82fabf9cebe2ea0e8a9e26",
+      "domain": "COMMIT_SEMANTICS",
+      "expected": "60d52d720e66f5af8e82fabf9cebe2ea0e8a9e26",
+      "observed": "60d52d720e66f5af8e82fabf9cebe2ea0e8a9e26",
+      "status": "PASS"
+    },
+    {
+      "check_id": "SA-15",
+      "description": "stage_a_commit_sha is 25c81ad0e03b2d7e0b0cd29550a2d72b18d6e32e",
+      "domain": "COMMIT_SEMANTICS",
+      "expected": "25c81ad0e03b2d7e0b0cd29550a2d72b18d6e32e",
+      "observed": "25c81ad0e03b2d7e0b0cd29550a2d72b18d6e32e",
+      "status": "PASS"
+    },
+    {
+      "check_id": "SA-16",
+      "description": "Production build_stage_a_freeze_receipt(...) used to construct persisted Stage-A receipt",
+      "domain": "PRODUCTION_CONTRACT",
+      "expected": true,
+      "observed": true,
+      "status": "PASS"
+    },
+    {
+      "check_id": "SA-17",
+      "description": "build_test_only_stage_a_freeze_receipt(...) is NOT used for persisted Stage-A receipt",
+      "domain": "PRODUCTION_CONTRACT",
+      "expected": false,
+      "observed": false,
+      "status": "PASS"
+    },
+    {
+      "check_id": "SA-18",
+      "description": "stage_a_process_token is non-empty and matches production auto-stamped format pid-<int>-ns-<int>",
+      "domain": "PRODUCTION_CONTRACT",
+      "expected": true,
+      "observed": true,
+      "status": "PASS"
+    },
+    {
+      "check_id": "SA-19",
+      "description": "stage_a_status is FROZEN_BEFORE_LIVE",
+      "domain": "STAGE_A_SEMANTICS",
+      "expected": "FROZEN_BEFORE_LIVE",
+      "observed": "FROZEN_BEFORE_LIVE",
+      "status": "PASS"
+    },
+    {
+      "check_id": "SA-20",
+      "description": "assigned_cell_run_ids contains exactly 120 unique run IDs",
+      "domain": "STAGE_A_SEMANTICS",
+      "expected": 120,
+      "observed": 120,
+      "status": "PASS"
+    },
+    {
+      "check_id": "SA-21",
+      "description": "assigned_cell_run_ids matches exact ordered 120 run IDs from frozen execution plan",
+      "domain": "STAGE_A_SEMANTICS",
+      "expected": true,
+      "observed": true,
+      "status": "PASS"
+    },
+    {
+      "check_id": "SA-22",
+      "description": "assigned_cells_sha256 recomputes exactly via compute_assigned_cells_sha256(execution_plan)",
+      "domain": "STAGE_A_SEMANTICS",
+      "expected": "582d9964b4fffbac91f83373d080f1fef120f0ddca4edab2d63e02796d0b20ae",
+      "observed": "582d9964b4fffbac91f83373d080f1fef120f0ddca4edab2d63e02796d0b20ae",
+      "status": "PASS"
+    },
+    {
+      "check_id": "SA-23",
+      "description": "Stage-A internal receipt SHA256 and file SHA256 verify against canonical JSON",
+      "domain": "STAGE_A_SEMANTICS",
+      "expected": "a0636ddafc4096e02ddaf7b1c69c0e214006030f5461346308a0005e06537d5f",
+      "observed": "a0636ddafc4096e02ddaf7b1c69c0e214006030f5461346308a0005e06537d5f",
+      "status": "PASS"
+    },
+    {
+      "check_id": "SA-24",
+      "description": "Same-process Stage-B verification is rejected with STAGE_A_AND_STAGE_B_SAME_PROCESS_FORBIDDEN",
+      "domain": "SAME_PROCESS_BARRIER",
+      "expected": true,
+      "observed": true,
+      "status": "PASS"
+    },
+    {
+      "check_id": "SA-25",
+      "description": "Separate-process verification succeeds via production verify_stage_a_freeze_receipt(..., require_git_committed=True)",
+      "domain": "SEPARATE_PROCESS_VERIFICATION",
+      "expected": true,
+      "observed": true,
+      "status": "PASS"
+    },
+    {
+      "check_id": "SA-26",
+      "description": "Git ancestor attestation succeeds for stage_a_commit_sha (25c81ad...) and code_basis_commit_sha (60d52d...)",
+      "domain": "GIT_BLOB_ATTESTATION",
+      "expected": {
+        "code_basis_ancestor": true,
+        "stage_a_ancestor": true
+      },
+      "observed": {
+        "code_basis_ancestor": true,
+        "stage_a_ancestor": true
+      },
+      "status": "PASS"
+    },
+    {
+      "check_id": "SA-27",
+      "description": "Execution plan committed blob at stage_a_commit_sha and HEAD matches disk SHA256",
+      "domain": "GIT_BLOB_ATTESTATION",
+      "expected": "652e3beb08771c3125e613172b1aaa396fc1b60aaaf3b98cc238e91a14e0dc74",
+      "observed": "652e3beb08771c3125e613172b1aaa396fc1b60aaaf3b98cc238e91a14e0dc74",
+      "status": "PASS"
+    },
+    {
+      "check_id": "SA-28",
+      "description": "Prompt freeze committed blob at stage_a_commit_sha and HEAD matches disk SHA256",
+      "domain": "GIT_BLOB_ATTESTATION",
+      "expected": "2f345363f580ea882b2e5b3562c587ef5309bc7f994440257a54d18994ab6956",
+      "observed": "2f345363f580ea882b2e5b3562c587ef5309bc7f994440257a54d18994ab6956",
+      "status": "PASS"
+    },
+    {
+      "check_id": "SA-29",
+      "description": "Authorization artifact committed blob at stage_a_commit_sha and HEAD matches disk SHA256",
+      "domain": "GIT_BLOB_ATTESTATION",
+      "expected": "b2c068d216e6a71ad5c193137207cc8f7a74526f9a549eccfaefa9a7bd5eeba4",
+      "observed": "b2c068d216e6a71ad5c193137207cc8f7a74526f9a549eccfaefa9a7bd5eeba4",
+      "status": "PASS"
+    },
+    {
+      "check_id": "SA-30",
+      "description": "Stage-A receipt HEAD blob matches persisted Stage-A receipt file SHA256",
+      "domain": "GIT_BLOB_ATTESTATION",
+      "expected": "a1980a388a39747f0890d0decfcc15d75b273921a6b3cb2c9faa9fb958e22a31",
+      "observed": "a1980a388a39747f0890d0decfcc15d75b273921a6b3cb2c9faa9fb958e22a31",
+      "status": "PASS"
+    },
+    {
+      "check_id": "SA-31",
+      "description": "All 14 scientific code bundle files match committed git blobs at stage_a_commit_sha and HEAD",
+      "domain": "GIT_BLOB_ATTESTATION",
+      "expected": [],
+      "observed": [],
+      "status": "PASS"
+    },
+    {
+      "check_id": "SA-32",
+      "description": "No LiveExecutionCapability minted during Stage-A freeze or verification",
+      "domain": "NO_LIVE_CAPABILITY",
+      "expected": false,
+      "observed": false,
+      "status": "PASS"
+    },
+    {
+      "check_id": "SA-33",
+      "description": "No production provider transport constructed",
+      "domain": "NO_LIVE_CAPABILITY",
+      "expected": [],
+      "observed": [],
+      "status": "PASS"
+    },
+    {
+      "check_id": "SA-34",
+      "description": "Zero live provider calls and zero provider cost",
+      "domain": "NETWORK_ISOLATION",
+      "expected": {
+        "blocked_attempts": 0,
+        "live_provider_calls": 0,
+        "provider_cost_usd": 0.0
+      },
+      "observed": {
+        "blocked_attempts": 0,
+        "live_provider_calls": 0,
+        "provider_cost_usd": 0.0
+      },
+      "status": "PASS"
+    },
+    {
+      "check_id": "SA-35",
+      "description": "No provider API key value read from environment or persisted in Stage-A artifacts",
+      "domain": "SECRET_HYGIENE",
+      "expected": {
+        "no_secrets_in_receipt": true,
+        "reads_env_secrets": false
+      },
+      "observed": {
+        "no_secrets_in_receipt": true,
+        "reads_env_secrets": false
+      },
+      "status": "PASS"
+    },
+    {
+      "check_id": "SA-36",
+      "description": "DEV_SELECT phase is rejected by Stage-A verification against DEV_TUNE plan and authorization",
+      "domain": "SCOPE_EXCLUSION",
+      "expected": true,
+      "observed": true,
+      "status": "PASS"
+    },
+    {
+      "check_id": "SA-37",
+      "description": "STOCHASTICITY phase is rejected by Stage-A verification against DEV_TUNE plan and authorization",
+      "domain": "SCOPE_EXCLUSION",
+      "expected": true,
+      "observed": true,
+      "status": "PASS"
+    },
+    {
+      "check_id": "SA-38",
+      "description": "Final100 paths and phases are strictly rejected with Final100FirewallViolationError",
+      "domain": "FINAL100_FIREWALL",
+      "expected": true,
+      "observed": true,
+      "status": "PASS"
+    },
+    {
+      "check_id": "SA-39",
+      "description": "Retry policy remains strictly 0 across all 120 assigned cells",
+      "domain": "EXECUTION_POLICY",
+      "expected": true,
+      "observed": true,
+      "status": "PASS"
+    },
+    {
+      "check_id": "SA-40",
+      "description": "No transport journal, live result directory, cell output directory, or unauthorized Stage-A file created",
+      "domain": "STAGE_B_FIREWALL",
+      "expected": {
+        "forbidden_live_cell_dirs": [],
+        "forbidden_transport_journals": [],
+        "unauthorized_stage_a_files": []
+      },
+      "observed": {
+        "forbidden_live_cell_dirs": [],
+        "forbidden_transport_journals": [],
+        "unauthorized_stage_a_files": []
+      },
+      "status": "PASS"
+    }
+  ],
+  "code_basis_commit_sha": "60d52d720e66f5af8e82fabf9cebe2ea0e8a9e26",
+  "dev_select_execution_started": false,
+  "dev_tune_execution_started": false,
+  "execution_plan_file_sha256": "652e3beb08771c3125e613172b1aaa396fc1b60aaaf3b98cc238e91a14e0dc74",
+  "execution_plan_sha256": "582d9964b4fffbac91f83373d080f1fef120f0ddca4edab2d63e02796d0b20ae",
+  "final100_used": false,
+  "freeze_created_at_utc": "2026-10-21T12:16:22Z",
+  "historical_evidence_boundary": {
+    "historical_frozen_receipt_shas": {
+      "data/evaluation/w06/w06_dev_live_runner_qa_01_receipt_v1.json": "e400d319ca957acb8e3ef7e8fcb468b7406a837b51b6127ed95327ac6cf72ad2",
+      "data/evaluation/w06/w06_dev_prompt_candidate_freeze_01_receipt_v1.json": "20b95381f9f06809ca37e3b806e639fbe788a9370a55a8e85a9f2d94aae0b6e5",
+      "data/evaluation/w06/w06_dev_tune_authorization_prep_v1.json": "168d29741fd75884a9b3f066822a843bcc6fd56ed06d4c16b40b8129d4d62f33",
+      "data/evaluation/w06/w06_dev_tune_live_authorization_01_receipt_v1.json": "d185e079e7dc5b7206bc1a48aec6dfaf83c5758c41b64790cda134a7c3d50813",
+      "data/evaluation/w06/w06_dev_tune_live_authorization_v1.json": "b2c068d216e6a71ad5c193137207cc8f7a74526f9a549eccfaefa9a7bd5eeba4"
+    },
+    "historical_receipts_unmodified": true
+  },
+  "live_execution_capability_minted": false,
+  "live_provider_calls": 0,
+  "phase": "DEV_TUNE",
+  "portable_schema_v2_sha256": "825a4ff912d851a95f7392cb564b7d7ca3588135508dc6eb3ac6304cdde3c490",
+  "production_provider_transport_constructed": false,
+  "prompt_freeze_sha256": "2f345363f580ea882b2e5b3562c587ef5309bc7f994440257a54d18994ab6956",
+  "prompt_registry_sha256": "846dc4c14ec2a87537b7b3e07bf492de51dc534d24b21e469094b7e3d34d32b6",
+  "provider_config_registry_sha256": "3dc05d29acc2f647cba58303865bd7406b8c1d9f7ccbe0f120e87ad471190938",
+  "provider_cost_usd": 0.0,
+  "same_process_execution_blocked": true,
+  "scientific_code_bundle_sha256": "0638f2fcb100b0000e3a2a4e08137a9d468449001f258de7354df21e185ca2e3",
+  "scientific_code_bundle_unchanged": true,
+  "semantic_schema_sha256": "e4169f7b890f77d13af65e9f2070b6071c535b206d88440f5e8f28c179977555",
+  "separate_process_committed_verification_passed": true,
+  "source_develop_sha": "25c81ad0e03b2d7e0b0cd29550a2d72b18d6e32e",
+  "stage_a_commit_sha": "25c81ad0e03b2d7e0b0cd29550a2d72b18d6e32e",
+  "stage_a_process_token_present": true,
+  "stage_a_receipt_file_sha256": "a1980a388a39747f0890d0decfcc15d75b273921a6b3cb2c9faa9fb958e22a31",
+  "stage_a_receipt_relative_path": "data/evaluation/w06/w06_dev_tune_stage_a_freeze_receipt_v1.json",
+  "stage_a_receipt_sha256": "a0636ddafc4096e02ddaf7b1c69c0e214006030f5461346308a0005e06537d5f",
+  "stage_a_status": "FROZEN_BEFORE_LIVE",
+  "stochasticity_execution_started": false,
+  "task": "W06-DEV-TUNE-STAGE-A-FREEZE-01",
+  "task_id": "W06-DEV-TUNE-STAGE-A-FREEZE-01",
+  "verification_summary": {
+    "overall_status": "PASS",
+    "sa_failed_checks": 0,
+    "sa_passed_checks": 40,
+    "sa_total_checks": 40,
+    "saa_failed_checks": 0,
+    "saa_passed_checks": 15,
+    "saa_total_checks": 15
+  }
+}

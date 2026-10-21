@@ -722,6 +722,9 @@ def verify_pre_authorization_firewall(repo_root: Path = REPO_ROOT) -> dict[str, 
     forbidden_live_cell_dirs: list[str] = []
 
     if w06_dir.is_dir():
+        from freeze_w06_dev_tune_stage_a import (
+            is_verified_downstream_w06_dev_tune_stage_a_file,
+        )
         from issue_w06_dev_tune_live_authorization import (
             is_verified_downstream_w06_dev_tune_authorization_file,
         )
@@ -735,10 +738,18 @@ def verify_pre_authorization_firewall(repo_root: Path = REPO_ROOT) -> dict[str, 
                         path, repo_root=repo_root
                     )
                 )
+                is_verified_downstream_stage_a = (
+                    is_verified_downstream_w06_dev_tune_stage_a_file(
+                        path, repo_root=repo_root
+                    )
+                )
                 if (
-                    "stage_a" in name_lower
-                    or "stage-a" in name_lower
-                    or name_lower == "stage_a_freeze_receipt.json"
+                    (
+                        "stage_a" in name_lower
+                        or "stage-a" in name_lower
+                        or name_lower == "stage_a_freeze_receipt.json"
+                    )
+                    and not is_verified_downstream_stage_a
                 ):
                     forbidden_stage_a_files.append(rel)
                 if "transport_journal" in name_lower:
@@ -763,9 +774,12 @@ def verify_pre_authorization_firewall(repo_root: Path = REPO_ROOT) -> dict[str, 
                             ):
                                 forbidden_auth_files.append(rel)
                             if (
-                                data.get("artifact_id")
-                                == "W06-DEV-LIVE-STAGE-A-FREEZE-RECEIPT-V1"
-                                or "stage_a_process_token" in data
+                                (
+                                    data.get("artifact_id")
+                                    == "W06-DEV-LIVE-STAGE-A-FREEZE-RECEIPT-V1"
+                                    or "stage_a_process_token" in data
+                                )
+                                and not is_verified_downstream_stage_a
                             ):
                                 forbidden_stage_a_files.append(rel)
                     except Exception:
