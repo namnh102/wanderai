@@ -1631,6 +1631,9 @@ def run_all_pf_checks(
         )
 
         # PF-33: no live authorization created
+        from freeze_w06_dev_tune_stage_a import (
+            is_verified_downstream_w06_dev_tune_stage_a_file,
+        )
         from issue_w06_dev_tune_live_authorization import (
             is_verified_downstream_w06_dev_tune_authorization_file,
         )
@@ -1642,8 +1645,13 @@ def run_all_pf_checks(
                 "live_authorization" in p.name.lower()
                 or "stage_a_freeze_receipt" in p.name.lower()
             ):
-                if p.is_file() and is_verified_downstream_w06_dev_tune_authorization_file(
-                    p, repo_root=REPO_ROOT
+                if p.is_file() and (
+                    is_verified_downstream_w06_dev_tune_authorization_file(
+                        p, repo_root=REPO_ROOT
+                    )
+                    or is_verified_downstream_w06_dev_tune_stage_a_file(
+                        p, repo_root=REPO_ROOT
+                    )
                 ):
                     continue
                 forbidden_live_files.append(p.name)
