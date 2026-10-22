@@ -1,0 +1,303 @@
+{
+  "artifact_id": "W06-DEV-TUNE-PROMPT-SELECTION-01-RECEIPT-V1",
+  "candidate_prompt_ids": [
+    "P1",
+    "P2"
+  ],
+  "cost_used_for_prompt_selection": false,
+  "criterion_1_survivors": [
+    "P1",
+    "P2"
+  ],
+  "criterion_2_survivors": [
+    "P1",
+    "P2"
+  ],
+  "criterion_3_survivors": [
+    "P1",
+    "P2"
+  ],
+  "criterion_metrics": {
+    "EXACT_GROUNDING_PASS_RATE": {
+      "best_percentage_decimal_str": "38.333333333333",
+      "best_percentage_rational": "115/3",
+      "best_surviving_prompt_id": "P1",
+      "criterion_id": "EXACT_GROUNDING_PASS_RATE",
+      "criterion_index": 2,
+      "input_survivors": [
+        "P1",
+        "P2"
+      ],
+      "output_survivors": [
+        "P1",
+        "P2"
+      ],
+      "prompts": {
+        "P1": {
+          "denominator": 60,
+          "distance_from_best_percentage_points_decimal_str": "0.000000000000",
+          "distance_from_best_percentage_points_rational": "0/1",
+          "false_count": 37,
+          "percentage_decimal_str": "38.333333333333",
+          "percentage_rational": "115/3",
+          "prompt_id": "P1",
+          "rate_decimal_str": "0.383333333333",
+          "rational_rate": "23/60",
+          "reduced_rational_rate": "23/60",
+          "true_count": 23,
+          "within_10pp_survivor_band": true
+        },
+        "P2": {
+          "denominator": 60,
+          "distance_from_best_percentage_points_decimal_str": "3.333333333333",
+          "distance_from_best_percentage_points_rational": "10/3",
+          "false_count": 39,
+          "percentage_decimal_str": "35.000000000000",
+          "percentage_rational": "35/1",
+          "prompt_id": "P2",
+          "rate_decimal_str": "0.350000000000",
+          "rational_rate": "21/60",
+          "reduced_rational_rate": "7/20",
+          "true_count": 21,
+          "within_10pp_survivor_band": true
+        }
+      },
+      "survivor_band_percentage_points_decimal_str": "10.0",
+      "survivor_threshold_percentage_decimal_str": "28.333333333333",
+      "survivor_threshold_percentage_rational": "85/3"
+    },
+    "FINAL_CORE_PASS_RATE": {
+      "best_percentage_decimal_str": "35.000000000000",
+      "best_percentage_rational": "35/1",
+      "best_surviving_prompt_id": "P2",
+      "criterion_id": "FINAL_CORE_PASS_RATE",
+      "criterion_index": 3,
+      "input_survivors": [
+        "P1",
+        "P2"
+      ],
+      "output_survivors": [
+        "P1",
+        "P2"
+      ],
+      "prompts": {
+        "P1": {
+          "denominator": 60,
+          "distance_from_best_percentage_points_decimal_str": "1.666666666667",
+          "distance_from_best_percentage_points_rational": "5/3",
+          "false_count": 40,
+          "percentage_decimal_str": "33.333333333333",
+          "percentage_rational": "100/3",
+          "prompt_id": "P1",
+          "rate_decimal_str": "0.333333333333",
+          "rational_rate": "20/60",
+          "reduced_rational_rate": "1/3",
+          "true_count": 20,
+          "within_10pp_survivor_band": true
+        },
+        "P2": {
+          "denominator": 60,
+          "distance_from_best_percentage_points_decimal_str": "0.000000000000",
+          "distance_from_best_percentage_points_rational": "0/1",
+          "false_count": 39,
+          "percentage_decimal_str": "35.000000000000",
+          "percentage_rational": "35/1",
+          "prompt_id": "P2",
+          "rate_decimal_str": "0.350000000000",
+          "rational_rate": "21/60",
+          "reduced_rational_rate": "7/20",
+          "true_count": 21,
+          "within_10pp_survivor_band": true
+        }
+      },
+      "survivor_band_percentage_points_decimal_str": "10.0",
+      "survivor_threshold_percentage_decimal_str": "25.000000000000",
+      "survivor_threshold_percentage_rational": "25/1"
+    },
+    "VALID_RUN_AND_SCHEMA_RATE": {
+      "best_percentage_decimal_str": "38.333333333333",
+      "best_percentage_rational": "115/3",
+      "best_surviving_prompt_id": "P1",
+      "criterion_id": "VALID_RUN_AND_SCHEMA_RATE",
+      "criterion_index": 1,
+      "input_survivors": [
+        "P1",
+        "P2"
+      ],
+      "output_survivors": [
+        "P1",
+        "P2"
+      ],
+      "prompts": {
+        "P1": {
+          "denominator": 60,
+          "distance_from_best_percentage_points_decimal_str": "0.000000000000",
+          "distance_from_best_percentage_points_rational": "0/1",
+          "false_count": 37,
+          "percentage_decimal_str": "38.333333333333",
+          "percentage_rational": "115/3",
+          "prompt_id": "P1",
+          "rate_decimal_str": "0.383333333333",
+          "rational_rate": "23/60",
+          "reduced_rational_rate": "23/60",
+          "true_count": 23,
+          "within_10pp_survivor_band": true
+        },
+        "P2": {
+          "denominator": 60,
+          "distance_from_best_percentage_points_decimal_str": "3.333333333333",
+          "distance_from_best_percentage_points_rational": "10/3",
+          "false_count": 39,
+          "percentage_decimal_str": "35.000000000000",
+          "percentage_rational": "35/1",
+          "prompt_id": "P2",
+          "rate_decimal_str": "0.350000000000",
+          "rational_rate": "21/60",
+          "reduced_rational_rate": "7/20",
+          "true_count": 21,
+          "within_10pp_survivor_band": true
+        }
+      },
+      "survivor_band_percentage_points_decimal_str": "10.0",
+      "survivor_threshold_percentage_decimal_str": "28.333333333333",
+      "survivor_threshold_percentage_rational": "85/3"
+    }
+  },
+  "dev_select_execution_started": false,
+  "dev_tune_execution_plan_file_sha256": "652e3beb08771c3125e613172b1aaa396fc1b60aaaf3b98cc238e91a14e0dc74",
+  "dev_tune_execution_plan_sha256": "582d9964b4fffbac91f83373d080f1fef120f0ddca4edab2d63e02796d0b20ae",
+  "final100_used": false,
+  "final_survivors": [
+    "P1",
+    "P2"
+  ],
+  "future_dev_select_prompt_lock": {
+    "allowed_dev_select_prompt_ids": [
+      "P1"
+    ],
+    "forbidden_dev_select_prompt_ids": [
+      "P2",
+      "P3"
+    ],
+    "locked_prompt_id": "P1",
+    "locked_prompt_semantic_sha256": "096ff4c74dd8d1aed1c0abe501b97c8dfd0f6424dbca535f2b79a242637a1c11",
+    "locked_prompt_system_sha256": "4bcb84a8aca1fc89f65709ac9d91c88e42359c284850061bae85c3607c345b0e",
+    "locked_prompt_user_template_sha256": "19762f7c72b4dd19b57c29e160d9195b8f2c72e836188823e9949f271a22f5de",
+    "locked_prompt_version": "TRAVEL_PLANNER_BENCHMARK_V2",
+    "prompt_editing_allowed": false,
+    "prompt_suffix_modification_allowed": false,
+    "provider_specific_prompt_allowed": false,
+    "user_template_modification_allowed": false
+  },
+  "latency_used_for_prompt_selection": false,
+  "launcher_lf_sha256": "b2bdbe062ea9d9e52701bfb73027ab30237f7648835a0ea285961b0e70e4fbbc",
+  "live_provider_calls_new": 0,
+  "model_selection_firewall": {
+    "candidates_removed_in_dev_tune": [],
+    "dev_select_candidate_ids": [
+      "C1",
+      "C2",
+      "C3"
+    ],
+    "dev_tune_candidate_rates_used_for_model_selection": false,
+    "model_selection_authority": "DEV_SELECT_ONLY",
+    "model_winner_selected": false,
+    "selected_model_id": null
+  },
+  "model_winner_selected": false,
+  "prompt_freeze_sha256": "2f345363f580ea882b2e5b3562c587ef5309bc7f994440257a54d18994ab6956",
+  "prompt_registry_sha256": "846dc4c14ec2a87537b7b3e07bf492de51dc534d24b21e469094b7e3d34d32b6",
+  "prompt_selection_artifact_file_sha256": "e1e79801117e59d3c8c703e024eacbad12d5336134c6597c333886c434a446b8",
+  "prompt_selection_artifact_internal_sha256": "1a718cb545f23b1c93e6d10d904ff252d4a6764dc58e7420217900dcdc8bc570",
+  "prompt_selection_artifact_relative_path": "data/evaluation/w06/w06_dev_tune_prompt_selection_v1.json",
+  "provider_specific_prompt_selection": false,
+  "ps_checks": {
+    "PS-01_source_develop_sha_exact": "PASS",
+    "PS-02_results_freeze_verifies": "PASS",
+    "PS-03_raw_tree_sha_exact": "PASS",
+    "PS-04_results_manifest_sha_exact": "PASS",
+    "PS-05_results_freeze_receipt_sha_exact": "PASS",
+    "PS-06_prompt_freeze_sha_exact": "PASS",
+    "PS-07_prompt_candidates_exact_p1_p2": "PASS",
+    "PS-08_p1_valid_schema_23_of_60": "PASS",
+    "PS-09_p2_valid_schema_21_of_60": "PASS",
+    "PS-10_criterion1_survivors_p1_p2": "PASS",
+    "PS-11_p1_grounding_23_of_60": "PASS",
+    "PS-12_p2_grounding_21_of_60": "PASS",
+    "PS-13_criterion2_survivors_p1_p2": "PASS",
+    "PS-14_p1_core_20_of_60": "PASS",
+    "PS-15_p2_core_21_of_60": "PASS",
+    "PS-16_criterion3_survivors_p1_p2": "PASS",
+    "PS-17_final_survivors_p1_p2": "PASS",
+    "PS-18_admin_tie_break_selects_p1": "PASS",
+    "PS-19_selected_p1_semantic_sha_exact": "PASS",
+    "PS-20_no_cost_criterion": "PASS",
+    "PS-21_no_latency_criterion": "PASS",
+    "PS-22_no_provider_specific_selection": "PASS",
+    "PS-23_superiority_claim_false": "PASS",
+    "PS-24_temporal_ordering_limitation_recorded": "PASS",
+    "PS-25_429_causal_claim_forbidden": "PASS",
+    "PS-26_model_winner_false": "PASS",
+    "PS-27_dev_select_not_started": "PASS",
+    "PS-28_stochasticity_not_started": "PASS",
+    "PS-29_final100_untouched": "PASS",
+    "PS-30_zero_new_provider_calls": "PASS",
+    "PS-31_raw_evidence_unchanged": "PASS",
+    "PS-32_results_manifest_unchanged": "PASS",
+    "PS-33_results_freeze_receipt_unchanged": "PASS",
+    "PS-34_prompt_freeze_unchanged": "PASS",
+    "PS-35_scientific_bundle_unchanged": "PASS"
+  },
+  "raw_evidence_tree_sha256": "9b6089f478979ce32e968529c656358fc1bb751101527e017c1e4d5a695cd1e8",
+  "results_freeze_receipt_file_sha256": "5f45c31a96b3827d64b927bccde154ad9345202fbfad6f8070c9f7927c40cbfe",
+  "results_manifest_file_sha256": "060c3da987638f8eeb96a6240e11b612d3b5e80e31be5046779c417fbca7be85",
+  "scientific_code_bundle_sha256": "0638f2fcb100b0000e3a2a4e08137a9d468449001f258de7354df21e185ca2e3",
+  "scientific_interpretation_statement": "P1 was selected by the preregistered administrative tie-break because both P1 and P2 remained within the 10-percentage-point survivor band through all three frozen criteria.",
+  "selected_prompt_id": "P1",
+  "selected_prompt_semantic_sha256": "096ff4c74dd8d1aed1c0abe501b97c8dfd0f6424dbca535f2b79a242637a1c11",
+  "selected_prompt_system_sha256": "4bcb84a8aca1fc89f65709ac9d91c88e42359c284850061bae85c3607c345b0e",
+  "selected_prompt_user_template_sha256": "19762f7c72b4dd19b57c29e160d9195b8f2c72e836188823e9949f271a22f5de",
+  "selected_prompt_version": "TRAVEL_PLANNER_BENCHMARK_V2",
+  "selection_criteria_order": [
+    "VALID_RUN_AND_SCHEMA_RATE",
+    "EXACT_GROUNDING_PASS_RATE",
+    "FINAL_CORE_PASS_RATE"
+  ],
+  "selection_reason": "ADMINISTRATIVE_TIE_BREAK_AFTER_ALL_PROMPTS_SURVIVED_ALL_THREE_CRITERIA",
+  "selection_status": "SELECTED",
+  "source_develop_sha": "7c326b36dcb999b9e16b1ecad7c5596dc2bccce1",
+  "source_results_freeze_status": "CLOSED",
+  "stochasticity_execution_started": false,
+  "superiority_claim": false,
+  "survivor_band_percentage_points": 10.0,
+  "survivor_band_percentage_points_decimal": "10.0",
+  "task_id": "W06-DEV-TUNE-PROMPT-SELECTION-01",
+  "temporal_ordering_limitation": {
+    "causal_inference_p2_causes_http_429_forbidden": true,
+    "forbidden_causal_claims": [
+      "P2 causes HTTP 429.",
+      "P2 prompt text caused provider rate limiting.",
+      "P2 is less reliable on C1 due to prompt wording."
+    ],
+    "observed_http_429_in_p1": 0,
+    "observed_http_429_in_p2_c1": 15,
+    "observed_http_429_total": 15,
+    "p1_assigned_cell_count": 60,
+    "p1_cell_indices": [
+      0,
+      59
+    ],
+    "p1_executed_before_p2": true,
+    "p2_assigned_cell_count": 60,
+    "p2_cell_indices": [
+      60,
+      119
+    ],
+    "primary_failure_classification_authority": "execution_receipt.failure_classification",
+    "primary_results_modification_forbidden": true,
+    "prompt_treatment_temporally_interleaved_or_randomized": false,
+    "retroactive_interleaved_rerun_forbidden": true,
+    "scientific_limitation_statement": "All 60 P1 cells executed before all 60 P2 cells without temporal interleaving or randomization. All 15 primary HTTP_429 classifications occurred in P2/C1, which may reflect cumulative provider quota/rate-limit state rather than prompt properties. It is strictly forbidden to infer that P2 causes HTTP 429 or to rerun/interleave after observing results. Because both P1 and P2 survived all three 10-percentage-point criteria, selecting P1 is a preregistered administrative tie-break outcome rather than a superiority claim."
+  },
+  "tie_break_policy": "PREREGISTERED_ADMINISTRATIVE_ORDER_P1_BEFORE_P2"
+}
