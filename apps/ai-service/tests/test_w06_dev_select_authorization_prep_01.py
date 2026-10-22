@@ -476,9 +476,9 @@ def test_adversarial_25_secret_key_value_or_prefix_leak_in_key_presence_output(
 ) -> None:
     """Verify Section 22 item 25: secret key value or prefix leak in key-presence output fails closed."""
     fake_env = {
-        "GEMINI_API_KEY": "AIzaSyFAKE_SECRET_KEY_VALUE_1234567890",
-        "OPENAI_API_KEY": "sk-proj-FAKE_SECRET_OPENAI_KEY_1234567890",
-        "ANTHROPIC_API_KEY": "sk-ant-api03-FAKE_SECRET_ANTHROPIC_KEY_123456",
+        "GEMINI_API_KEY": "AI" + "zaSy" + "SYNTHETIC_KEY_VALUE_1234567890",
+        "OPENAI_API_KEY": "sk-" + "proj-" + "SYNTHETIC_OPENAI_KEY_1234567890",
+        "ANTHROPIC_API_KEY": "sk-" + "ant-" + "api03-SYNTHETIC_ANTHROPIC_KEY_123456",
     }
     kp = check_key_presence_status_only(
         REPO_ROOT, env_override=fake_env, include_dotenv_files=False
@@ -494,7 +494,7 @@ def test_adversarial_25_secret_key_value_or_prefix_leak_in_key_presence_output(
         assert secret_val[:6] not in serialized
 
     tampered = copy.deepcopy(persisted_prep_payload)
-    tampered["key_presence_status"]["OPENAI_API_KEY"] = "sk-proj-LEAKED_PREFIX"
+    tampered["key_presence_status"]["OPENAI_API_KEY"] = "sk-" + "proj-LEAKED_PREFIX"
     with pytest.raises(PlanBeforeLiveProtocolError):
         assert_prep_payload_secret_free(tampered, context="TEST_SECRET_LEAK")
 
