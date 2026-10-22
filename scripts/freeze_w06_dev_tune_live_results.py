@@ -408,8 +408,12 @@ def compute_canonical_preflight_for_results_verification(
         )
 
     # Note: In W06-DEV-TUNE-LIVE-EXECUTION-PREFLIGHT-01, planned_artifact_paths_by_run_id
-    # was computed with batch_root_dir = REPO_ROOT / RAW_OUTPUT_ROOT_REL_PATH.
-    canonical_batch_root = REPO_ROOT / RAW_OUTPUT_ROOT_REL_PATH
+    # was computed on the primary execution workstation (D:\Do_an\wanderai) with
+    # batch_root_dir = REPO_ROOT / RAW_OUTPUT_ROOT_REL_PATH, where `str(c_dir / fname)`
+    # serialized as `D:\Do_an\wanderai\data\evaluation\w06\live_dev_tune_primary_v1\<run_id>\<fname>`.
+    # To make the path-set hash verification platform-independent across Windows and Linux CI
+    # without altering `run_dev_live_runner_dry_run` in the frozen scientific code bundle:
+    canonical_batch_root = repo_root / RAW_OUTPUT_ROOT_REL_PATH
     dry_out = run_dev_live_runner_dry_run(
         execution_plan=repo_root / DEV_TUNE_PLAN_REL_PATH,
         prompt_freeze=repo_root / PROMPT_FREEZE_REL_PATH,
@@ -420,7 +424,15 @@ def compute_canonical_preflight_for_results_verification(
         repo_root=repo_root,
     )
     req_map = dry_out["serialized_request_sha256_by_run_id"]
-    art_map = dry_out["planned_artifact_paths_by_run_id"]
+    raw_art_map = dry_out["planned_artifact_paths_by_run_id"]
+    primary_win_root = "D:\\Do_an\\wanderai\\data\\evaluation\\w06\\live_dev_tune_primary_v1"
+    art_map = {
+        run_id: {
+            fname: f"{primary_win_root}\\{run_id}\\{Path(p_str).name}"
+            for fname, p_str in files_map.items()
+        }
+        for run_id, files_map in raw_art_map.items()
+    }
     req_set_sha = sha256_bytes(canonical_json_bytes(req_map))
     path_set_sha = sha256_bytes(canonical_json_bytes(art_map))
     return {
