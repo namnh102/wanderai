@@ -1,0 +1,151 @@
+{
+  "DEV_SELECT_PLAN_FILE_SHA256": "c519baf7cd2557b5e1dd2699a5ceaec592af015d7bc6dcc83abf63892a8a329a",
+  "DEV_SELECT_PLAN_INTERNAL_SHA256": "de04255989a9e3bd8c2e39c766432487dce4ccd0612d5dba73b3476cbc9d0c6d",
+  "allowed_dev_select_prompt_ids": [
+    "P1"
+  ],
+  "artifact_id": "W06-DEV-SELECT-PLAN-FREEZE-01-RECEIPT-V1",
+  "assigned_cells": 180,
+  "attempts_per_cell": 1,
+  "candidate_count": 3,
+  "candidate_ids": [
+    "C1",
+    "C2",
+    "C3"
+  ],
+  "candidate_registry_sha256": "4dd29164afdf7f364978420f41ab88ef07ec396062188169fcb859a9ef01e058",
+  "code_basis_commit_sha": "c0adf74ceda9ffaf8b4ec42d299932e33f448e6a",
+  "code_commit_sha": "c0adf74ceda9ffaf8b4ec42d299932e33f448e6a",
+  "dev_final_overlap_receipt_sha256": "285699ee1370b537a6579b88a7fb02781b51ac52e0ed14f469d77969261f04aa",
+  "dev_fixture_bundle_sha256": "bb0f051446ea3da8229298f22f4ce92b4db20751695273c6d01b7766da044050",
+  "dev_fixture_freeze_receipt_sha256": "437a296cf123d1469f303b97cb6665cd8217c2dfeabd12d1712ec2789d890026",
+  "dev_fixture_manifest_sha256": "15cf3af6c93d3de967703dbc52d7e082bfd4a1e657409c0678ff51bd081e3c98",
+  "dev_select_execution_started": false,
+  "dev_select_fixture_ids_first": "W06-DEV-SELECT-001",
+  "dev_select_fixture_ids_last": "W06-DEV-SELECT-060",
+  "dev_select_marginals": {
+    "budget": {
+      "B1": 15,
+      "B2": 15,
+      "B3": 15,
+      "null": 15
+    },
+    "days": {
+      "2": 20,
+      "3": 20,
+      "4": 20
+    },
+    "destination": {
+      "da-nang": 20,
+      "ha-long": 20,
+      "ha-noi": 20
+    },
+    "interest_count": {
+      "1": 20,
+      "2": 20,
+      "3": 20
+    },
+    "travel_style": {
+      "BACKPACKER": 15,
+      "BUDGET": 15,
+      "COMFORT": 15,
+      "LUXURY": 15
+    },
+    "weekend": {
+      "false": 30,
+      "true": 30
+    }
+  },
+  "dev_select_plan_file_sha256": "c519baf7cd2557b5e1dd2699a5ceaec592af015d7bc6dcc83abf63892a8a329a",
+  "dev_select_plan_internal_sha256": "de04255989a9e3bd8c2e39c766432487dce4ccd0612d5dba73b3476cbc9d0c6d",
+  "dev_select_plan_relative_path": "data/evaluation/w06/w06_dev_select_execution_plan_v1.json",
+  "dev_select_support_class_marginals": {
+    "CLEAR": 48,
+    "EXCLUDED": 0,
+    "STRESS": 12
+  },
+  "dsp_checks": {
+    "DSP-01_source_develop_exact_or_ancestry_valid": "PASS",
+    "DSP-02_prompt_selection_artifact_exact": "PASS",
+    "DSP-03_prompt_selection_receipt_exact": "PASS",
+    "DSP-04_selected_prompt_p1_exact": "PASS",
+    "DSP-05_selected_p1_semantic_sha_exact": "PASS",
+    "DSP-06_p2_forbidden_in_dev_select": "PASS",
+    "DSP-07_candidate_ids_exact_c1_c2_c3": "PASS",
+    "DSP-08_candidate_registry_sha_exact": "PASS",
+    "DSP-09_provider_config_registry_sha_exact": "PASS",
+    "DSP-10_dev_fixture_bundle_sha_exact": "PASS",
+    "DSP-11_dev_manifest_sha_exact": "PASS",
+    "DSP-12_overlap_receipt_sha_exact": "PASS",
+    "DSP-13_fixture_count_exact_60": "PASS",
+    "DSP-14_fixture_ids_exact_001_to_060": "PASS",
+    "DSP-15_destination_marginals_exact": "PASS",
+    "DSP-16_days_marginals_exact": "PASS",
+    "DSP-17_interest_count_marginals_exact": "PASS",
+    "DSP-18_budget_marginals_exact": "PASS",
+    "DSP-19_travel_style_marginals_exact": "PASS",
+    "DSP-20_weekend_marginals_exact": "PASS",
+    "DSP-21_execution_plan_phase_dev_select": "PASS",
+    "DSP-22_prompt_ids_exact_p1": "PASS",
+    "DSP-23_candidate_ids_exact_c1_c2_c3": "PASS",
+    "DSP-24_expected_total_cells_exact_180": "PASS",
+    "DSP-25_actual_cells_exact_180": "PASS",
+    "DSP-26_unique_run_ids_exact_180": "PASS",
+    "DSP-27_unique_cell_keys_exact_180": "PASS",
+    "DSP-28_each_fixture_once_per_candidate": "PASS",
+    "DSP-29_attempts_per_cell_exact_1": "PASS",
+    "DSP-30_all_retries_zero": "PASS",
+    "DSP-31_fallback_repair_tools_disabled": "PASS",
+    "DSP-32_code_basis_exact": "PASS",
+    "DSP-33_scientific_bundle_exact": "PASS",
+    "DSP-34_portable_schema_exact": "PASS",
+    "DSP-35_semantic_schema_exact": "PASS",
+    "DSP-36_plan_internal_sha_recomputes_exact": "PASS",
+    "DSP-37_persisted_plan_file_sha_exact": "PASS",
+    "DSP-38_final100_untouched_and_unused": "PASS",
+    "DSP-39_model_winner_remains_false": "PASS",
+    "DSP-40_live_provider_calls_new_zero": "PASS"
+  },
+  "final100_used": false,
+  "first_run_id": "W06-DEV-SELECT-P1-C1-W06-DEV-SELECT-001",
+  "fixture_count": 60,
+  "forbidden_dev_select_prompt_ids": [
+    "P2",
+    "P3"
+  ],
+  "forbidden_final100_bundle_sha256": "c03bc6dc300604ac395505d59b6413c1a47339b21408cfd637671e81d4b555a1",
+  "forbidden_p11_manifest_sha256": "0aa9ae923d0e7f29df49735fa41e87530b1caf62418fcbec09a1eff81d83af62",
+  "last_run_id": "W06-DEV-SELECT-P1-C3-W06-DEV-SELECT-060",
+  "live_execution_capability_issued": false,
+  "live_provider_calls_new": 0,
+  "maximum_future_live_generation_calls": 180,
+  "model_winner_selected": false,
+  "phase": "DEV_SELECT",
+  "portable_schema_v2_sha256": "825a4ff912d851a95f7392cb564b7d7ca3588135508dc6eb3ac6304cdde3c490",
+  "production_transport_started": false,
+  "prompt_count": 1,
+  "prompt_selection_artifact_file_sha256": "e1e79801117e59d3c8c703e024eacbad12d5336134c6597c333886c434a446b8",
+  "prompt_selection_artifact_internal_sha256": "1a718cb545f23b1c93e6d10d904ff252d4a6764dc58e7420217900dcdc8bc570",
+  "prompt_selection_artifact_relative_path": "data/evaluation/w06/w06_dev_tune_prompt_selection_v1.json",
+  "prompt_selection_receipt_file_sha256": "0ad0921283c73917c5167ee4cf7355842efc6dedd8719bc169f329daba9ec114",
+  "prompt_selection_receipt_relative_path": "data/evaluation/w06/w06_dev_tune_prompt_selection_01_receipt_v1.json",
+  "provider_config_registry_sha256": "3dc05d29acc2f647cba58303865bd7406b8c1d9f7ccbe0f120e87ad471190938",
+  "provider_cost_usd_new": 0,
+  "retry_calls": 0,
+  "scientific_code_bundle_sha256": "0638f2fcb100b0000e3a2a4e08137a9d468449001f258de7354df21e185ca2e3",
+  "selected_prompt_id": "P1",
+  "selected_prompt_semantic_sha256": "096ff4c74dd8d1aed1c0abe501b97c8dfd0f6424dbca535f2b79a242637a1c11",
+  "selected_prompt_system_sha256": "4bcb84a8aca1fc89f65709ac9d91c88e42359c284850061bae85c3607c345b0e",
+  "selected_prompt_user_template_sha256": "19762f7c72b4dd19b57c29e160d9195b8f2c72e836188823e9949f271a22f5de",
+  "selected_prompt_version": "TRAVEL_PLANNER_BENCHMARK_V2",
+  "semantic_schema_sha256": "e4169f7b890f77d13af65e9f2070b6071c535b206d88440f5e8f28c179977555",
+  "source_develop_sha": "c0adf74ceda9ffaf8b4ec42d299932e33f448e6a",
+  "stochasticity_execution_started": false,
+  "task_id": "W06-DEV-SELECT-PLAN-FREEZE-01",
+  "unique_cell_keys": 180,
+  "unique_run_ids": 180,
+  "upstream_gates": {
+    "W06-DEV-TUNE-LIVE-RESULTS-FREEZE-01": "CLOSED",
+    "W06-DEV-TUNE-PROMPT-SELECTION-01": "CLOSED"
+  }
+}
