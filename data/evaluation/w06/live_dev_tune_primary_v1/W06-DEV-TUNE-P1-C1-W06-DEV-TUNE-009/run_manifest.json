@@ -1,0 +1,67 @@
+{
+  "benchmark_prompt_version": "P1",
+  "catalog_sha256": "f7517938598e3923906763f8f31334a500ee88bc06232f2992d38e2fcb28a444",
+  "claims_bitwise_model_determinism": false,
+  "code_commit_sha": "4a276ca8ca5e836a92d34ec72569998a3617d915",
+  "error_detail": null,
+  "execution_mode": "LIVE_DEV_TUNE",
+  "execution_timestamp_utc": "2026-10-22T05:35:15.772450+00:00",
+  "expected_model_id": "gemini-3.8-flash",
+  "generation_parameters": {
+    "candidate_id": "C1",
+    "code_basis_commit_sha": "60d52d720e66f5af8e82fabf9cebe2ea0e8a9e26",
+    "code_commit_sha_semantics": "AUTHORITATIVE_RUNTIME_HEAD_SHA_WITH_SEPARATE_CODE_BASIS_AND_BUNDLE_ATTESTATION",
+    "max_output_tokens": 16384,
+    "omitted_parameters": [
+      "temperature",
+      "top_p",
+      "top_k"
+    ],
+    "portable_generation_schema_v2_sha256": "825a4ff912d851a95f7392cb564b7d7ca3588135508dc6eb3ac6304cdde3c490",
+    "provider": "google",
+    "provider_config_sha256": "d4d417bdeff3f4156ac9605f976b46780c1cb0866d87674f1cee51d8bf3f3217",
+    "requested_model_id": "gemini-3.8-flash",
+    "retry": 0,
+    "runtime_head_sha": "4a276ca8ca5e836a92d34ec72569998a3617d915",
+    "scientific_code_bundle_sha256": "0638f2fcb100b0000e3a2a4e08137a9d468449001f258de7354df21e185ca2e3",
+    "seed": 2026101508,
+    "semantic_schema_sha256": "e4169f7b890f77d13af65e9f2070b6071c535b206d88440f5e8f28c179977555",
+    "temperature_status": "OMITTED",
+    "thinking_config": {
+      "include_thoughts": false,
+      "thinking_level": "medium"
+    },
+    "timeout_ms": 55000,
+    "timeout_seconds": 55.0,
+    "top_k_status": "OMITTED",
+    "top_p_status": "OMITTED"
+  },
+  "hash_basis_by_artifact": {
+    "BENCHMARK_PROMPT": "SHA256_EXACT_PERSISTED_UTF8_BYTES",
+    "CATALOG_CONTEXT": "SHA256_CANONICAL_JSON_UTF8_LF_BYTES",
+    "PARSED_PLAN_RESPONSE": "SHA256_CANONICAL_JSON_UTF8_LF_BYTES",
+    "PREPARATION_MANIFEST": "SHA256_CANONICAL_JSON_UTF8_LF_BYTES",
+    "RAW_PROVIDER_RESPONSE": "SHA256_EXACT_PERSISTED_UTF8_BYTES",
+    "RUN_MANIFEST": "SHA256_CANONICAL_JSON_UTF8_LF_BYTES",
+    "SCENARIO_INPUT": "SHA256_CANONICAL_JSON_UTF8_LF_BYTES",
+    "SOURCE_CATALOG": "SHA256_LF_NORMALIZED_SOURCE_BYTES"
+  },
+  "hash_basis_version": "W06-ARTIFACT-HASH-BASIS-V1",
+  "latency_ms": 44422.0,
+  "measurement_contract_id": "W06-MEASUREMENT-CONTRACT-01",
+  "measurement_contract_source_commit": "7fd5364ed4671c06b0c911b6fd53bd9f54cbc322",
+  "measurement_contract_version": "1.1.0",
+  "model_id": "gemini-3.8-flash",
+  "parsed_response_sha256": "8f3784393f33adbc699be9d59954330d03f6a71278c24575e124c83a9f623e05",
+  "provider": "C1",
+  "raw_response_sha256": "e5ce77199dd983dcd20623724adcd571a8d55543983a840dc69a54249fc1c93c",
+  "run_id": "W06-DEV-TUNE-P1-C1-W06-DEV-TUNE-009",
+  "run_status": "VALID",
+  "scenario_id": "W06-DEV-TUNE-009",
+  "scenario_sha256": "f97fe0ac64aaa38f084788801a630281c8ed16c7e8f80bb64c01df06615211e6",
+  "usage_metadata": {
+    "input_tokens": 38238,
+    "output_tokens": 3547,
+    "total_tokens": 44421
+  }
+}

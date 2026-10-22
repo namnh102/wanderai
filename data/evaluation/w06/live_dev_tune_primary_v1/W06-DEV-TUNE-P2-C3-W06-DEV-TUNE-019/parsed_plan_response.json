@@ -1,0 +1,321 @@
+{
+  "best_time_to_visit": "Tháng 3-5 và tháng 9-11 có thời tiết dễ chịu. Tháng 12 trời se lạnh, đôi khi có sương mù, nên mang theo áo khoác mỏng.",
+  "budget_analysis": {
+    "currency": "VND",
+    "estimated_cost": 1230000,
+    "is_over_budget": false,
+    "total_budget": 2000000,
+    "variance": -770000
+  },
+  "days": [
+    {
+      "date": "2026-12-08",
+      "day_cost": 325000,
+      "day_number": 1,
+      "items": [
+        {
+          "activity": "Dạo chợ Cái Dăm, mua hải sản khô và đặc sản địa phương",
+          "activity_kind": "POI_VISIT",
+          "end_time": "10:00",
+          "estimated_cost": 100000,
+          "notes": "Chợ mở cửa Thứ Hai đến Thứ Bảy, 08:00-16:00.",
+          "order_index": 1,
+          "place_id": "96523873-1b85-4d2f-b85c-cb3f5593091b",
+          "place_name": "Chợ Cái Dăm",
+          "start_time": "08:30",
+          "transport_mode": "motorbike"
+        },
+        {
+          "activity": "Di chuyển đến quán cà phê",
+          "activity_kind": "TRANSIT_ONLY",
+          "end_time": "10:20",
+          "estimated_cost": 30000,
+          "notes": "Di chuyển ngắn trong khu Bãi Cháy.",
+          "order_index": 2,
+          "place_id": null,
+          "place_name": null,
+          "start_time": "10:00",
+          "transport_mode": "taxi"
+        },
+        {
+          "activity": "Nghỉ chân uống cà phê và ngắm phố",
+          "activity_kind": "POI_VISIT",
+          "end_time": "11:20",
+          "estimated_cost": 45000,
+          "notes": "Quán mở cửa 07:30-22:30.",
+          "order_index": 3,
+          "place_id": "9215a3fe-8306-453f-b0ab-8201d6753fbc",
+          "place_name": "Orchid Coffee",
+          "start_time": "10:20",
+          "transport_mode": "walking"
+        },
+        {
+          "activity": "Di chuyển đến nhà hàng ăn trưa",
+          "activity_kind": "TRANSIT_ONLY",
+          "end_time": "11:40",
+          "estimated_cost": 30000,
+          "notes": "Di chuyển ngắn.",
+          "order_index": 4,
+          "place_id": null,
+          "place_name": null,
+          "start_time": "11:20",
+          "transport_mode": "taxi"
+        },
+        {
+          "activity": "Ăn trưa món địa phương tại nhà hàng",
+          "activity_kind": "POI_VISIT",
+          "end_time": "13:00",
+          "estimated_cost": 120000,
+          "notes": "Nhà hàng mở cửa 09:00-21:00.",
+          "order_index": 5,
+          "place_id": "256574ac-ddae-4ef3-a70c-a65dee5eacbd",
+          "place_name": "Nhà Hàng Phương Nam 2",
+          "start_time": "11:40",
+          "transport_mode": "taxi"
+        }
+      ],
+      "title": "Chợ Cái Dăm và ẩm thực bình dân khu Bãi Cháy"
+    },
+    {
+      "date": "2026-12-09",
+      "day_cost": 245000,
+      "day_number": 2,
+      "items": [
+        {
+          "activity": "Mua sắm và tìm hiểu hàng hóa tại chợ Hạ Long II",
+          "activity_kind": "POI_VISIT",
+          "end_time": "09:30",
+          "estimated_cost": 100000,
+          "notes": "Không có thông tin giờ mở cửa, nên đi buổi sáng.",
+          "order_index": 1,
+          "place_id": "6215446b-2fdd-4014-aacf-23de6e45e264",
+          "place_name": "Chợ Hạ Long II",
+          "start_time": "08:00",
+          "transport_mode": "motorbike"
+        },
+        {
+          "activity": "Đi bộ đến quán cà phê gần chợ",
+          "activity_kind": "TRANSIT_ONLY",
+          "end_time": "09:40",
+          "estimated_cost": 0,
+          "notes": "Đi bộ quãng ngắn.",
+          "order_index": 2,
+          "place_id": null,
+          "place_name": null,
+          "start_time": "09:30",
+          "transport_mode": "walking"
+        },
+        {
+          "activity": "Thưởng thức cà phê",
+          "activity_kind": "POI_VISIT",
+          "end_time": "10:40",
+          "estimated_cost": 55000,
+          "notes": "Không có thông tin giờ mở cửa.",
+          "order_index": 3,
+          "place_id": "85303289-9746-4a42-b0f0-a555ce2bfd0e",
+          "place_name": "Highlands Coffee",
+          "start_time": "09:40",
+          "transport_mode": "walking"
+        },
+        {
+          "activity": "Đi bộ đến quán ăn chay",
+          "activity_kind": "TRANSIT_ONLY",
+          "end_time": "10:50",
+          "estimated_cost": 0,
+          "notes": "Đi bộ quãng ngắn.",
+          "order_index": 4,
+          "place_id": null,
+          "place_name": null,
+          "start_time": "10:40",
+          "transport_mode": "walking"
+        },
+        {
+          "activity": "Ăn trưa món chay bình dân",
+          "activity_kind": "POI_VISIT",
+          "end_time": "12:00",
+          "estimated_cost": 70000,
+          "notes": "Quán mở cửa 07:00-22:00.",
+          "order_index": 5,
+          "place_id": "1a1c68b4-fbd1-49d4-9f17-3243b34b57e0",
+          "place_name": "Dược Điến Chay Quán",
+          "start_time": "10:50",
+          "transport_mode": "walking"
+        },
+        {
+          "activity": "Di chuyển đến Tháp Đồng Hồ",
+          "activity_kind": "TRANSIT_ONLY",
+          "end_time": "12:20",
+          "estimated_cost": 20000,
+          "notes": "Di chuyển bằng xe máy.",
+          "order_index": 6,
+          "place_id": null,
+          "place_name": null,
+          "start_time": "12:00",
+          "transport_mode": "motorbike"
+        },
+        {
+          "activity": "Tham quan và chụp ảnh tại Tháp Đồng Hồ",
+          "activity_kind": "POI_VISIT",
+          "end_time": "13:20",
+          "estimated_cost": 0,
+          "notes": "Điểm tham quan miễn phí.",
+          "order_index": 7,
+          "place_id": "65562a67-84ff-44a0-990d-31917a2a9bd0",
+          "place_name": "Tháp Đồng Hồ",
+          "start_time": "12:20",
+          "transport_mode": "walking"
+        }
+      ],
+      "title": "Chợ Hạ Long II và khu trung tâm Hòn Gai"
+    },
+    {
+      "date": "2026-12-10",
+      "day_cost": 320000,
+      "day_number": 3,
+      "items": [
+        {
+          "activity": "Dạo chợ Sa Tô, mua đồ ăn vặt và đặc sản",
+          "activity_kind": "POI_VISIT",
+          "end_time": "09:30",
+          "estimated_cost": 100000,
+          "notes": "Không có thông tin giờ mở cửa, nên đi buổi sáng.",
+          "order_index": 1,
+          "place_id": "939c66a4-0aa0-4897-bc28-6672bc2741d5",
+          "place_name": "Chợ Sa Tô",
+          "start_time": "08:00",
+          "transport_mode": "motorbike"
+        },
+        {
+          "activity": "Di chuyển đến chợ Cao Thắng",
+          "activity_kind": "TRANSIT_ONLY",
+          "end_time": "10:00",
+          "estimated_cost": 40000,
+          "notes": "Di chuyển bằng taxi.",
+          "order_index": 2,
+          "place_id": null,
+          "place_name": null,
+          "start_time": "09:30",
+          "transport_mode": "taxi"
+        },
+        {
+          "activity": "Tham quan chợ Cao Thắng, mua sắm đồ dùng và quà lưu niệm",
+          "activity_kind": "POI_VISIT",
+          "end_time": "11:30",
+          "estimated_cost": 100000,
+          "notes": "Không có thông tin giờ mở cửa.",
+          "order_index": 3,
+          "place_id": "fcf7d5de-3774-46a4-a90c-fe5110c0ec42",
+          "place_name": "Chợ Cao Thắng",
+          "start_time": "10:00",
+          "transport_mode": "taxi"
+        },
+        {
+          "activity": "Di chuyển đến Bảo tàng Quảng Ninh",
+          "activity_kind": "TRANSIT_ONLY",
+          "end_time": "12:00",
+          "estimated_cost": 40000,
+          "notes": "Di chuyển bằng taxi.",
+          "order_index": 4,
+          "place_id": null,
+          "place_name": null,
+          "start_time": "11:30",
+          "transport_mode": "taxi"
+        },
+        {
+          "activity": "Tham quan Bảo tàng Quảng Ninh, tìm hiểu lịch sử và văn hóa địa phương",
+          "activity_kind": "POI_VISIT",
+          "end_time": "13:30",
+          "estimated_cost": 40000,
+          "notes": "Không có thông tin giờ mở cửa, nên kiểm tra trước khi đến.",
+          "order_index": 5,
+          "place_id": "8f2b5a69-1293-4efe-8fc5-3a74193edd0f",
+          "place_name": "Bảo tàng Quảng Ninh",
+          "start_time": "12:00",
+          "transport_mode": "taxi"
+        }
+      ],
+      "title": "Chợ Sa Tô, Chợ Cao Thắng và Bảo tàng Quảng Ninh"
+    },
+    {
+      "date": "2026-12-11",
+      "day_cost": 340000,
+      "day_number": 4,
+      "items": [
+        {
+          "activity": "Dạo chợ Hà Lầm, mua rau củ, hải sản và quà biển",
+          "activity_kind": "POI_VISIT",
+          "end_time": "09:30",
+          "estimated_cost": 100000,
+          "notes": "Không có thông tin giờ mở cửa, nên đi buổi sáng.",
+          "order_index": 1,
+          "place_id": "51d98c43-1295-4c1b-bc44-419b8d639d69",
+          "place_name": "Chợ Hà Lầm",
+          "start_time": "08:00",
+          "transport_mode": "motorbike"
+        },
+        {
+          "activity": "Di chuyển đến chợ Hạ Long 3",
+          "activity_kind": "TRANSIT_ONLY",
+          "end_time": "09:45",
+          "estimated_cost": 30000,
+          "notes": "Di chuyển ngắn.",
+          "order_index": 2,
+          "place_id": null,
+          "place_name": null,
+          "start_time": "09:30",
+          "transport_mode": "taxi"
+        },
+        {
+          "activity": "Tham quan và mua sắm tại chợ Hạ Long 3",
+          "activity_kind": "POI_VISIT",
+          "end_time": "11:00",
+          "estimated_cost": 80000,
+          "notes": "Không có thông tin giờ mở cửa.",
+          "order_index": 3,
+          "place_id": "fc96fe38-7b00-4bf4-867f-8fbf78c39f5a",
+          "place_name": "Chợ Hạ Long 3",
+          "start_time": "09:45",
+          "transport_mode": "taxi"
+        },
+        {
+          "activity": "Di chuyển đến nhà hàng ăn trưa",
+          "activity_kind": "TRANSIT_ONLY",
+          "end_time": "11:15",
+          "estimated_cost": 30000,
+          "notes": "Di chuyển ngắn.",
+          "order_index": 4,
+          "place_id": null,
+          "place_name": null,
+          "start_time": "11:00",
+          "transport_mode": "taxi"
+        },
+        {
+          "activity": "Ăn trưa món địa phương kết thúc chuyến đi",
+          "activity_kind": "POI_VISIT",
+          "end_time": "12:30",
+          "estimated_cost": 100000,
+          "notes": "Nhà hàng mở cửa 09:00-21:00.",
+          "order_index": 5,
+          "place_id": "e21d0072-a8ef-4279-83b3-b138909b3826",
+          "place_name": "Mai Ly",
+          "start_time": "11:15",
+          "transport_mode": "taxi"
+        }
+      ],
+      "title": "Chợ Hà Lầm, Chợ Hạ Long 3 và bữa trưa địa phương"
+    }
+  ],
+  "destination": "Hạ Long",
+  "destination_slug": "ha-long",
+  "general_tips": [
+    "Chợ truyền thống thường đông và nhiều hàng hóa nhất vào buổi sáng, nên đi sớm.",
+    "Mang tiền mặt mệnh giá nhỏ và hỏi giá trước khi mua, có thể trả giá nhẹ nhàng.",
+    "Chợ Cái Dăm nghỉ Chủ nhật, nên đi vào các ngày từ thứ Hai đến thứ Bảy.",
+    "Dùng xe máy hoặc taxi công nghệ cho quãng đường xa, đi bộ cho các điểm gần nhau để tiết kiệm.",
+    "Mang áo khoác nhẹ vì buổi sáng tháng 12 ở Hạ Long khá lạnh."
+  ],
+  "overview": "Lịch trình 4 ngày tiết kiệm tại Hạ Long, tập trung vào mua sắm và chợ truyền thống địa phương (Chợ Cái Dăm, Chợ Hạ Long II, Chợ Sa Tô, Chợ Cao Thắng, Chợ Hà Lầm, Chợ Hạ Long 3), xen kẽ ăn uống bình dân và vài điểm tham quan gần chợ. Tổng chi phí ước tính khoảng 1.230.000 VND, thấp hơn mức trần 2.000.000 VND.",
+  "plan_id": "W06-DEV-TUNE-019-PLAN-01",
+  "scenario_id": "W06-DEV-TUNE-019",
+  "total_days": 4
+}

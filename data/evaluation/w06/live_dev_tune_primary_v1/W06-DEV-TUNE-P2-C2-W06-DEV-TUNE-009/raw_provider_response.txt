@@ -1,0 +1,210 @@
+{
+  "plan_id": "W06-DEV-TUNE-009-PLAN-01",
+  "scenario_id": "W06-DEV-TUNE-009",
+  "destination_slug": "da-nang",
+  "destination": "Đà Nẵng",
+  "total_days": 2,
+  "overview": "Lịch trình 2 ngày theo phong cách COMFORT, kết hợp biển Mỹ Khê và Non Nước với hải sản, chợ đêm và quán bar. Di chuyển bằng taxi, có khoảng trống nghỉ ngơi giữa buổi trưa và chương trình tối, không lặp lại địa điểm.",
+  "best_time_to_visit": "Tháng 3–8 thường phù hợp hơn cho hoạt động biển. Với chuyến đi ngày 07–08/12/2026, cần theo dõi mưa, gió và sóng; ưu tiên ngắm biển từ bờ khi điều kiện không an toàn.",
+  "general_tips": [
+    "Chi phí dự toán dành cho 1 người, gồm các hoạt động và chặng di chuyển được liệt kê; chưa gồm lưu trú, vé đến Đà Nẵng và đưa đón sân bay.",
+    "Các khoảng trống trong lịch dành cho nghỉ ngơi tự do; không phải hoạt động tại một địa điểm đã đặt trước.",
+    "Địa điểm không có dữ liệu giờ mở cửa cần được xác nhận trước; giờ trong lịch là thời gian dự kiến ghé thăm, không phải giờ hoạt động được công bố.",
+    "Đặt bàn trước tại nhà hàng và quán bar; hỏi rõ giá đồ uống, phụ thu và mức chi tiêu tối thiểu.",
+    "Không xuống biển khi có cờ cảnh báo hoặc sóng lớn. Dùng taxi sau khi uống đồ có cồn.",
+    "Chi phí là ước tính, không phải báo giá hay xác nhận đặt chỗ."
+  ],
+  "budget_analysis": {
+    "total_budget": null,
+    "estimated_cost": 3280000,
+    "currency": "VND",
+    "is_over_budget": false,
+    "variance": 0
+  },
+  "days": [
+    {
+      "day_number": 1,
+      "date": "2026-12-07",
+      "title": "Biển Mỹ Khê, hải sản và đêm vui bên sông Hàn",
+      "items": [
+        {
+          "order_index": 1,
+          "start_time": "09:00",
+          "end_time": "11:00",
+          "activity_kind": "POI_VISIT",
+          "activity": "Dạo biển, chụp ảnh và thư giãn bên bờ",
+          "place_name": "Bãi biển Mỹ Khê",
+          "place_id": "2f202acf-c2bb-526a-9803-aaca142ffdad",
+          "notes": "Chưa có dữ liệu giờ mở cửa. Chỉ tắm biển nếu thời tiết và cảnh báo tại chỗ cho phép; chi phí không gồm thuê ghế hoặc dịch vụ biển.",
+          "estimated_cost": 0,
+          "transport_mode": null
+        },
+        {
+          "order_index": 2,
+          "start_time": "11:00",
+          "end_time": "11:30",
+          "activity_kind": "TRANSIT_ONLY",
+          "activity": "Di chuyển bằng taxi đến nơi ăn trưa",
+          "place_name": null,
+          "place_id": null,
+          "notes": "Dự phòng thời gian đón xe và giao thông.",
+          "estimated_cost": 60000,
+          "transport_mode": "taxi"
+        },
+        {
+          "order_index": 3,
+          "start_time": "11:30",
+          "end_time": "13:00",
+          "activity_kind": "POI_VISIT",
+          "activity": "Ăn trưa hải sản với nhịp độ thong thả",
+          "place_name": "Nhà hàng hải sản Bé Anh",
+          "place_id": "fd118580-b5da-467d-9873-0116ba435f37",
+          "notes": "Giờ trong danh mục: hằng ngày 09:00–23:00. Hỏi giá theo cân và xác nhận khẩu phần trước khi gọi món.",
+          "estimated_cost": 450000,
+          "transport_mode": null
+        },
+        {
+          "order_index": 4,
+          "start_time": "17:30",
+          "end_time": "18:00",
+          "activity_kind": "TRANSIT_ONLY",
+          "activity": "Di chuyển sang khu vực chợ đêm",
+          "place_name": null,
+          "place_id": null,
+          "notes": "Khung giờ chiều để trống cho nghỉ ngơi; chặng này tính từ khu vực điểm ăn trưa.",
+          "estimated_cost": 90000,
+          "transport_mode": "taxi"
+        },
+        {
+          "order_index": 5,
+          "start_time": "18:00",
+          "end_time": "19:15",
+          "activity_kind": "POI_VISIT",
+          "activity": "Dạo chợ đêm và dùng bữa tối với các món ăn vặt",
+          "place_name": "Chợ Đêm Sơn Trà",
+          "place_id": "9a2ca486-437d-4044-8541-d34d911d4fb4",
+          "notes": "Giờ trong danh mục: hằng ngày 18:00–23:00. Ngân sách gồm bữa tối nhẹ, không gồm mua sắm cá nhân.",
+          "estimated_cost": 250000,
+          "transport_mode": null
+        },
+        {
+          "order_index": 6,
+          "start_time": "19:15",
+          "end_time": "20:00",
+          "activity_kind": "TRANSIT_ONLY",
+          "activity": "Di chuyển bằng taxi đến điểm giải trí buổi tối",
+          "place_name": null,
+          "place_id": null,
+          "notes": "Có thời gian dự phòng đón xe và làm thủ tục vào cửa.",
+          "estimated_cost": 100000,
+          "transport_mode": "taxi"
+        },
+        {
+          "order_index": 7,
+          "start_time": "20:00",
+          "end_time": "22:00",
+          "activity_kind": "POI_VISIT",
+          "activity": "Thưởng thức đồ uống và trải nghiệm không khí giải trí về đêm",
+          "place_name": "SKY36 NIGHTCLUB",
+          "place_id": "ff1791b2-da73-4451-a750-0a78dd1ee160",
+          "notes": "Giờ trong danh mục: hằng ngày 18:00–02:00 hôm sau. Xác nhận quy định trang phục, độ tuổi, phụ thu và mức chi tiêu tối thiểu trước khi đặt.",
+          "estimated_cost": 600000,
+          "transport_mode": null
+        }
+      ],
+      "day_cost": 1550000
+    },
+    {
+      "day_number": 2,
+      "date": "2026-12-08",
+      "title": "Biển Non Nước và buổi tối ẩm thực, cocktail",
+      "items": [
+        {
+          "order_index": 1,
+          "start_time": "09:00",
+          "end_time": "11:00",
+          "activity_kind": "POI_VISIT",
+          "activity": "Thư giãn và đi bộ nhẹ nhàng ven biển",
+          "place_name": "Bãi tắm Non Nước",
+          "place_id": "49d739b9-e868-5391-9f80-bf9bed803b0f",
+          "notes": "Chưa có dữ liệu giờ mở cửa. Kiểm tra lối tiếp cận công cộng và điều kiện sóng gió; không mặc định có dịch vụ ghế nghỉ.",
+          "estimated_cost": 0,
+          "transport_mode": null
+        },
+        {
+          "order_index": 2,
+          "start_time": "11:00",
+          "end_time": "11:45",
+          "activity_kind": "TRANSIT_ONLY",
+          "activity": "Di chuyển bằng taxi về khu vực ăn trưa",
+          "place_name": null,
+          "place_id": null,
+          "notes": "Dành thời gian thoải mái cho chặng đường từ biển về khu Mỹ An.",
+          "estimated_cost": 150000,
+          "transport_mode": "taxi"
+        },
+        {
+          "order_index": 3,
+          "start_time": "11:45",
+          "end_time": "13:00",
+          "activity_kind": "POI_VISIT",
+          "activity": "Ăn trưa với món Việt",
+          "place_name": "Vietnom Local Eatery",
+          "place_id": "4956e90b-5f87-4b22-94c3-93cd45bf02ba",
+          "notes": "Giờ trong danh mục: hằng ngày 07:30–22:00. Chọn khẩu phần vừa phải để dành thời gian nghỉ buổi chiều.",
+          "estimated_cost": 250000,
+          "transport_mode": null
+        },
+        {
+          "order_index": 4,
+          "start_time": "17:00",
+          "end_time": "17:30",
+          "activity_kind": "TRANSIT_ONLY",
+          "activity": "Di chuyển bằng taxi đến nhà hàng dùng bữa tối",
+          "place_name": null,
+          "place_id": null,
+          "notes": "Khung giờ chiều để trống cho nghỉ ngơi; dự toán chặng xe tính từ khu vực điểm ăn trưa.",
+          "estimated_cost": 40000,
+          "transport_mode": "taxi"
+        },
+        {
+          "order_index": 5,
+          "start_time": "17:30",
+          "end_time": "19:00",
+          "activity_kind": "POI_VISIT",
+          "activity": "Dùng bữa tối thong thả tại nhà hàng",
+          "place_name": "Le Comptoir",
+          "place_id": "871cc4e0-7d2e-41b6-b52f-a648dcf29d84",
+          "notes": "Giờ trong danh mục: hằng ngày 17:00–21:00. Nên đặt bàn và xác nhận thực đơn, giá món trước.",
+          "estimated_cost": 900000,
+          "transport_mode": null
+        },
+        {
+          "order_index": 6,
+          "start_time": "19:00",
+          "end_time": "19:15",
+          "activity_kind": "TRANSIT_ONLY",
+          "activity": "Di chuyển đến quán cocktail",
+          "place_name": null,
+          "place_id": null,
+          "notes": "Chặng taxi ngắn trong khu vực Mỹ An.",
+          "estimated_cost": 40000,
+          "transport_mode": "taxi"
+        },
+        {
+          "order_index": 7,
+          "start_time": "19:15",
+          "end_time": "21:00",
+          "activity_kind": "POI_VISIT",
+          "activity": "Thưởng thức cocktail và kết thúc chuyến đi bằng buổi tối thư giãn",
+          "place_name": "The Craftsman Cocktail Bar",
+          "place_id": "241dbbe0-e4f8-43d7-b2c5-ac9100011c3d",
+          "notes": "Giờ trong danh mục: hằng ngày 18:00–02:00 hôm sau. Có thể hỏi lựa chọn không cồn; không tự lái xe sau khi uống rượu bia.",
+          "estimated_cost": 350000,
+          "transport_mode": null
+        }
+      ],
+      "day_cost": 1730000
+    }
+  ]
+}

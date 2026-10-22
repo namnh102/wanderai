@@ -1,0 +1,160 @@
+{
+  "best_time_to_visit": "Mùa thu từ tháng 9 đến tháng 11 với thời tiết se lạnh, dễ chịu, rất phù hợp để thưởng thức cà phê và đi dạo phố cổ.",
+  "budget_analysis": {
+    "currency": "VND",
+    "estimated_cost": 515000,
+    "is_over_budget": false,
+    "total_budget": 1000000,
+    "variance": -485000
+  },
+  "days": [
+    {
+      "date": "2026-11-17",
+      "day_cost": 255000,
+      "day_number": 1,
+      "items": [
+        {
+          "activity": "Thưởng thức cà phê buổi sáng tại Orick Coffee",
+          "activity_kind": "POI_VISIT",
+          "end_time": "09:30",
+          "estimated_cost": 80000,
+          "notes": "Mở đầu ngày với tách cà phê trong không gian thư giãn gần khu Hoàn Kiếm.",
+          "order_index": 1,
+          "place_id": "d4bc8f9b-960a-4009-a71a-1f7f8d81082d",
+          "place_name": "Orick Coffee",
+          "start_time": "08:00",
+          "transport_mode": "taxi"
+        },
+        {
+          "activity": "Di chuyển sang quán cà phê tiếp theo",
+          "activity_kind": "TRANSIT_ONLY",
+          "end_time": "09:45",
+          "estimated_cost": 20000,
+          "notes": "Di chuyển ngắn trong nội đô.",
+          "order_index": 2,
+          "place_id": null,
+          "place_name": null,
+          "start_time": "09:30",
+          "transport_mode": "taxi"
+        },
+        {
+          "activity": "Nghỉ ngơi và trải nghiệm cà phê tại Van Viet Cafe",
+          "activity_kind": "POI_VISIT",
+          "end_time": "11:15",
+          "estimated_cost": 90000,
+          "notes": "Thư giãn và cảm nhận nhịp sống cà phê Hà Nội.",
+          "order_index": 3,
+          "place_id": "f07bc9a4-337a-4ece-a050-8159adb798d9",
+          "place_name": "Van Viet Cafe",
+          "start_time": "09:45",
+          "transport_mode": "taxi"
+        },
+        {
+          "activity": "Di chuyển đến Bảo tàng Phụ nữ Việt Nam",
+          "activity_kind": "TRANSIT_ONLY",
+          "end_time": "11:30",
+          "estimated_cost": 25000,
+          "notes": "Quãng đường rất gần.",
+          "order_index": 4,
+          "place_id": null,
+          "place_name": null,
+          "start_time": "11:15",
+          "transport_mode": "taxi"
+        },
+        {
+          "activity": "Tham quan Bảo tàng Phụ nữ Việt Nam",
+          "activity_kind": "POI_VISIT",
+          "end_time": "13:00",
+          "estimated_cost": 40000,
+          "notes": "Giờ mở cửa 08:00-17:00 hằng ngày.",
+          "order_index": 5,
+          "place_id": "fb8f1d59-838b-5b8f-9363-0541b1af42d8",
+          "place_name": "Bảo tàng Phụ nữ Việt Nam",
+          "start_time": "11:30",
+          "transport_mode": "taxi"
+        }
+      ],
+      "title": "Cà phê phố cổ và Bảo tàng Phụ nữ"
+    },
+    {
+      "date": "2026-11-18",
+      "day_cost": 260000,
+      "day_number": 2,
+      "items": [
+        {
+          "activity": "Thưởng thức cà phê tại Cà Phê Nola",
+          "activity_kind": "POI_VISIT",
+          "end_time": "10:30",
+          "estimated_cost": 80000,
+          "notes": "Khởi đầu ngày thứ hai với không gian cà phê gần phố cổ.",
+          "order_index": 1,
+          "place_id": "4146f2b7-8289-4309-b7e6-60ba7de3470e",
+          "place_name": "Cà Phê Nola",
+          "start_time": "09:00",
+          "transport_mode": "taxi"
+        },
+        {
+          "activity": "Di chuyển đến Hoàng thành Thăng Long",
+          "activity_kind": "TRANSIT_ONLY",
+          "end_time": "10:50",
+          "estimated_cost": 30000,
+          "notes": "Di chuyển nội đô bằng taxi.",
+          "order_index": 2,
+          "place_id": null,
+          "place_name": null,
+          "start_time": "10:30",
+          "transport_mode": "taxi"
+        },
+        {
+          "activity": "Tham quan Hoàng thành Thăng Long",
+          "activity_kind": "POI_VISIT",
+          "end_time": "12:20",
+          "estimated_cost": 30000,
+          "notes": "Giờ mở cửa Tu-Su 08:00-17:00; thứ Tư mở cửa.",
+          "order_index": 3,
+          "place_id": "b799793b-fb40-5bc2-9e67-6af92caeabe9",
+          "place_name": "Hoàng thành Thăng Long",
+          "start_time": "10:50",
+          "transport_mode": "taxi"
+        },
+        {
+          "activity": "Di chuyển đến quán cà phê tiếp theo",
+          "activity_kind": "TRANSIT_ONLY",
+          "end_time": "12:45",
+          "estimated_cost": 30000,
+          "notes": "Di chuyển nội đô bằng taxi.",
+          "order_index": 4,
+          "place_id": null,
+          "place_name": null,
+          "start_time": "12:20",
+          "transport_mode": "taxi"
+        },
+        {
+          "activity": "Thư giãn tại Cà Phê Cây Bàng Đổ",
+          "activity_kind": "POI_VISIT",
+          "end_time": "14:15",
+          "estimated_cost": 90000,
+          "notes": "Kết thúc hành trình bằng một tách cà phê thư thái.",
+          "order_index": 5,
+          "place_id": "ef76a682-35ef-4088-94ef-fe05fadf6a1d",
+          "place_name": "Cà Phê Cây Bàng Đổ",
+          "start_time": "12:45",
+          "transport_mode": "taxi"
+        }
+      ],
+      "title": "Cà phê, Hoàng thành và không gian xanh"
+    }
+  ],
+  "destination": "Hà Nội",
+  "destination_slug": "ha-noi",
+  "general_tips": [
+    "Nên đến các quán cà phê vào buổi sáng để tránh đông khách và có không gian yên tĩnh hơn.",
+    "Các địa điểm gần nhau trong khu trung tâm có thể di chuyển ngắn bằng taxi hoặc đi bộ.",
+    "Mang theo áo khoác mỏng vì đầu buổi sáng tháng 11 ở Hà Nội khá mát.",
+    "Kiểm tra lại giờ mở cửa của bảo tàng và di tích trước khi đến."
+  ],
+  "overview": "Lịch trình 2 ngày tại Hà Nội theo phong cách cao cấp, tập trung vào văn hóa cà phê: thưởng thức các quán cà phê đặc trưng quanh khu Hoàn Kiếm và Tây Hồ, xen kẽ tham quan Bảo tàng Phụ nữ Việt Nam và Hoàng thành Thăng Long. Tổng chi phí ước tính nằm trong ngân sách 1.000.000 VND.",
+  "plan_id": "W06-DEV-TUNE-001-ha-noi-plan",
+  "scenario_id": "W06-DEV-TUNE-001",
+  "total_days": 2
+}

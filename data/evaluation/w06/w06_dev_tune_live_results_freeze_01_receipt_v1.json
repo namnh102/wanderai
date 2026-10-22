@@ -1,0 +1,515 @@
+{
+  "artifact_id": "W06-DEV-TUNE-LIVE-RESULTS-FREEZE-01-RECEIPT-V1",
+  "authorization_internal_sha256": "fb2c181e14b0b122100f7b3b386bdaeaffe467c913d384db16717149374a1c83",
+  "base_execution_head_sha": "4a276ca8ca5e836a92d34ec72569998a3617d915",
+  "dev_select_execution_started": false,
+  "execution_id": "W06-DEV-TUNE-LIVE-EXECUTION-01",
+  "execution_plan_sha256": "582d9964b4fffbac91f83373d080f1fef120f0ddca4edab2d63e02796d0b20ae",
+  "execution_receipt_file_hashes_by_run_id": {
+    "W06-DEV-TUNE-P1-C1-W06-DEV-TUNE-001": "0d6dc88d69aadc3e58f7a1f5e35556da9cc2aaa9fd4c2072c833a6849a51e49f",
+    "W06-DEV-TUNE-P1-C1-W06-DEV-TUNE-002": "75ee43694fca2e3969ff10c2064f6f5f32f4cdd94e1a5b462d9a1ba31713f9f4",
+    "W06-DEV-TUNE-P1-C1-W06-DEV-TUNE-003": "1bcbd75e246ffbbb4cf0b359db6d784ec0f5b13102c0f565032fafa92b88d6a9",
+    "W06-DEV-TUNE-P1-C1-W06-DEV-TUNE-004": "efa4da309afe243a2e1dce88fe68b90bf89f929f44d1ebfc2dff203ca15f617b",
+    "W06-DEV-TUNE-P1-C1-W06-DEV-TUNE-005": "f15afe664836c71de8cf59f7c5912dff854df38cb8df1cc8ab2bb5ecac02620a",
+    "W06-DEV-TUNE-P1-C1-W06-DEV-TUNE-006": "d86169f752e277f26553c248dab527ff1f4f3ffbe516ec4693c5f1d23f06f81b",
+    "W06-DEV-TUNE-P1-C1-W06-DEV-TUNE-007": "3b64b17e0f086ed5bac21cce03645e757e9ed3f7438b60ecc75423a295cd7894",
+    "W06-DEV-TUNE-P1-C1-W06-DEV-TUNE-008": "718a09f00c11a4f57bcb31eb174ac8437d97f7f4c260c4279d178393ed36edb4",
+    "W06-DEV-TUNE-P1-C1-W06-DEV-TUNE-009": "40ad1d8ee3a855fb443969e2785738d0e7eef43313b55cdb9349f90fe74dc0b6",
+    "W06-DEV-TUNE-P1-C1-W06-DEV-TUNE-010": "10c28d7bb11ee2ea78c81a6045ef1dc1bd189fec2ba86ddac97dddca37a5456e",
+    "W06-DEV-TUNE-P1-C1-W06-DEV-TUNE-011": "b056bd538bf182326aa1d8e5cf6b1f3a315ea4c9e06e2dc8a3b1f13fdac3bfd4",
+    "W06-DEV-TUNE-P1-C1-W06-DEV-TUNE-012": "8b0bc407c50159cb2997680fd53c22e88c003b520bb23a954e031b35fb67d634",
+    "W06-DEV-TUNE-P1-C1-W06-DEV-TUNE-013": "726a1c7c07bee402154e85948ee6c70d97238bc068848828bc5ee1c5e15126ae",
+    "W06-DEV-TUNE-P1-C1-W06-DEV-TUNE-014": "fe124627f646281f251a8245af5ff73121bc20da992cf86ef000a42740b36930",
+    "W06-DEV-TUNE-P1-C1-W06-DEV-TUNE-015": "e4854f1509adab96c97dc15fdd8fabc591d68f0ba53f6d2e433eaecc55bf5b30",
+    "W06-DEV-TUNE-P1-C1-W06-DEV-TUNE-016": "4e1531b4838ae9334287e90d07fa3b4bc7b4c391495e14a0229607841574b90c",
+    "W06-DEV-TUNE-P1-C1-W06-DEV-TUNE-017": "e6ffa6f8f6962d32493cfe4c953321b1a17595cd6a8d8751e268bf1fd720085c",
+    "W06-DEV-TUNE-P1-C1-W06-DEV-TUNE-018": "4343b7acbd50bce5c933da0b6e667060fa2bc61feaa5f693b1c9daec9b3b25d1",
+    "W06-DEV-TUNE-P1-C1-W06-DEV-TUNE-019": "6c65a1620825c1deefaccacd3bec6509e0c528d57cb373b0a3ea752f6ef98d3a",
+    "W06-DEV-TUNE-P1-C1-W06-DEV-TUNE-020": "518e655b23df0ffdedd5ec4bd98c8d42ec285bf43007097527e980465cdb15ff",
+    "W06-DEV-TUNE-P1-C2-W06-DEV-TUNE-001": "51dd28dab62d4e37c23ef777a48844c1a58323e065c25533dc6d031c4861d261",
+    "W06-DEV-TUNE-P1-C2-W06-DEV-TUNE-002": "165b83c1e971a952ae78ed2c5822a2977c3335b8ab66a7523a63a4421e97704a",
+    "W06-DEV-TUNE-P1-C2-W06-DEV-TUNE-003": "2385def55f78eb9cce0cc507c43f00e48daeb7133b746e40d14aab8e44b5bdde",
+    "W06-DEV-TUNE-P1-C2-W06-DEV-TUNE-004": "1dff950ffffa037815a010b6edc9ff5d0745edca36bde3a0b1fc2625f2add9eb",
+    "W06-DEV-TUNE-P1-C2-W06-DEV-TUNE-005": "9e9963c3d30bf23bb43172ffc873d2bdac85400edd0847317357885d3c60cf71",
+    "W06-DEV-TUNE-P1-C2-W06-DEV-TUNE-006": "f70ce73c535f92adc0fd3cdd656032799a5ca586d52a3d3b34ea32a09e78a8a0",
+    "W06-DEV-TUNE-P1-C2-W06-DEV-TUNE-007": "63df553b90f130e7f915bd89d5493c13241700e374d9c54863d42dc4a165dcb2",
+    "W06-DEV-TUNE-P1-C2-W06-DEV-TUNE-008": "4a279a5732f2b2e58f8ae882f4a9a88ee0047598d0a790b5f22003b84ebd68cf",
+    "W06-DEV-TUNE-P1-C2-W06-DEV-TUNE-009": "d13409807c9461d792c9e3d0efa3611fb6687deaf3dce11e25d40b19c35e6e47",
+    "W06-DEV-TUNE-P1-C2-W06-DEV-TUNE-010": "c1422f033c17d562ef5f24f5001f0298aa1c010eb9201a7bcd46530f40fbc247",
+    "W06-DEV-TUNE-P1-C2-W06-DEV-TUNE-011": "354773a944f3d96e0c60b4c8566bd63eab4ec8cb0a624a508e046d3dc578d40d",
+    "W06-DEV-TUNE-P1-C2-W06-DEV-TUNE-012": "76f29aab95fcf73dcc9793cc859c7963e7aec509bc91a50f0c64d5f5a9e32c1b",
+    "W06-DEV-TUNE-P1-C2-W06-DEV-TUNE-013": "755f79fd1836cda1793ff4781649c9afd9215d8579cdda9170f3f31647aec6ba",
+    "W06-DEV-TUNE-P1-C2-W06-DEV-TUNE-014": "dded6d529895a527317a339d166b08127aa3267f91649cd9f05d07f2ebfbdd2b",
+    "W06-DEV-TUNE-P1-C2-W06-DEV-TUNE-015": "3e5d8457983f440329da78400e5efc777e26c102e7eba831bbc0fd3db1fb9ed9",
+    "W06-DEV-TUNE-P1-C2-W06-DEV-TUNE-016": "db515323aab93c2e28e8852f0c55fed3a331b80155a52fb0890e1f8943cc40c3",
+    "W06-DEV-TUNE-P1-C2-W06-DEV-TUNE-017": "e2fba2ba17695928d3bae7b39fc16c86e6b2b57fe048a84691c9d3b57239ed2b",
+    "W06-DEV-TUNE-P1-C2-W06-DEV-TUNE-018": "91d2b4356f28b186de6d127c7bd39910bf509884bce729de4dc0564517164df3",
+    "W06-DEV-TUNE-P1-C2-W06-DEV-TUNE-019": "d26a83877f70abadf9a5b776dbe62e558e034d6be7aadfa2d6e7b8641d985dc0",
+    "W06-DEV-TUNE-P1-C2-W06-DEV-TUNE-020": "ce3ad92382dd15b9c3f9d4e38f46e20ad9c557e7530a05e1e28bb3aefd1efe18",
+    "W06-DEV-TUNE-P1-C3-W06-DEV-TUNE-001": "d551fc2ca112aabc92641624a9cffe0969f9380f88c2ec9358dfc17d967922aa",
+    "W06-DEV-TUNE-P1-C3-W06-DEV-TUNE-002": "f31bba9893d0e8ec87b61e57b97afc25c570f78feb8b7c2ab7c51fdf0f9a8df4",
+    "W06-DEV-TUNE-P1-C3-W06-DEV-TUNE-003": "d6258f9e66e5778bad0ee3e643b5151a7b5bd714b547274a6c5b4945ca752f81",
+    "W06-DEV-TUNE-P1-C3-W06-DEV-TUNE-004": "7b88d5ce368e99e2cffe738e086c7765707791851ab22639664df1f2f4512e49",
+    "W06-DEV-TUNE-P1-C3-W06-DEV-TUNE-005": "e8a48017a08254babdeb48d4a6913d0bb2b2d832078866a0fe51fbd42c977fd2",
+    "W06-DEV-TUNE-P1-C3-W06-DEV-TUNE-006": "c1ab5c848c4de8cc821c9cd3110288537c0b7afa1516f0edfa6d48e952d2e9d1",
+    "W06-DEV-TUNE-P1-C3-W06-DEV-TUNE-007": "a1e9145d9ff69ba74174ea2dfe56f91d0abb6f6342b695e5c33ae2a853929247",
+    "W06-DEV-TUNE-P1-C3-W06-DEV-TUNE-008": "9ce4bc0286c14c12949108c8eae95a73cf48b0f4d84f7cab39c64d205631fbc8",
+    "W06-DEV-TUNE-P1-C3-W06-DEV-TUNE-009": "e4be59f082b5d5c703caec0109659862a3f13bf0682605acb3ae3b6d753bfab6",
+    "W06-DEV-TUNE-P1-C3-W06-DEV-TUNE-010": "1ee685abbf63159fce044b897777f343095d24a7f60cc98f4dad3f8af6870f45",
+    "W06-DEV-TUNE-P1-C3-W06-DEV-TUNE-011": "bba804bf24ad1e6380f3c9f8c923264d01823bd9d975a124e0d5c429e0a7a0d9",
+    "W06-DEV-TUNE-P1-C3-W06-DEV-TUNE-012": "1b232b3e87837e8274328a990f9da6fc177d00f2a37f3ac1a49a1eea810cc97f",
+    "W06-DEV-TUNE-P1-C3-W06-DEV-TUNE-013": "42da592b326067ee70042a093ecdeb3815aeaf0bbec396974fc24974a69250dc",
+    "W06-DEV-TUNE-P1-C3-W06-DEV-TUNE-014": "499d53b02f522200b79d75ac7105f960313925bf6f1e918ce5c848c320383355",
+    "W06-DEV-TUNE-P1-C3-W06-DEV-TUNE-015": "7cf2cf2f0ec2fea8cfd650c9d4cec40dd37257109fec44b59da84b6c6507a2bf",
+    "W06-DEV-TUNE-P1-C3-W06-DEV-TUNE-016": "3826f6dbebadfb360d3d269d4968a9d96fe13c613a36c4ab4467e13b0390bce8",
+    "W06-DEV-TUNE-P1-C3-W06-DEV-TUNE-017": "a1d8bb9041c25ab41cf4a4495f5374afbbe32b4d54a14240a8689a224e76111c",
+    "W06-DEV-TUNE-P1-C3-W06-DEV-TUNE-018": "7aa6477ac164e6421b0a0b96c121f2e0399cc155cdc0357f4a32ae35c3c61558",
+    "W06-DEV-TUNE-P1-C3-W06-DEV-TUNE-019": "a9ac9138416b2490f9a507b9ff50409f6bf8e1b44933e2c6807f239d8da9a576",
+    "W06-DEV-TUNE-P1-C3-W06-DEV-TUNE-020": "ce4f862cfe48bbcc573290a6bc8ab34374ffa6288e9b85b7e5717c177dd0d8c7",
+    "W06-DEV-TUNE-P2-C1-W06-DEV-TUNE-001": "2441590a923458ae7e0ee8483b15e4db22fac62c2ce3a33be1b9abc2cb74da0d",
+    "W06-DEV-TUNE-P2-C1-W06-DEV-TUNE-002": "d826a627f153e40abfbe502a278899a3fae4eaa372f05c0f7a873b68f5666fac",
+    "W06-DEV-TUNE-P2-C1-W06-DEV-TUNE-003": "152a4cd34b2bf3ac49299eeccb32284556acd57816f0ea5459660b8c91e775aa",
+    "W06-DEV-TUNE-P2-C1-W06-DEV-TUNE-004": "cc20e07f569c0655e430a49a37a8e5520f193c2d5bcf8b9ede0b1cc778bad2e3",
+    "W06-DEV-TUNE-P2-C1-W06-DEV-TUNE-005": "e9ff4abad1691cf53ef67f5e1b35ba3f77e4b4e8b80e89c94cf4e464fe4f69f0",
+    "W06-DEV-TUNE-P2-C1-W06-DEV-TUNE-006": "79ebfc196b0c6d84b5e7cc5509d41496a7ed15f001aa6eb8410e373ec90adc9b",
+    "W06-DEV-TUNE-P2-C1-W06-DEV-TUNE-007": "19ada7d504a1a43490302d39f194b93f618a14c666a30f1020c8d53762a68a53",
+    "W06-DEV-TUNE-P2-C1-W06-DEV-TUNE-008": "3d476b61d8af99262f79743e481b753b23e445d2edb0663bb24c7a9088415f40",
+    "W06-DEV-TUNE-P2-C1-W06-DEV-TUNE-009": "cf6cc9a41e9821a0a3ecd25845cfde6de754c05808556ffe69fd460618c4ee0b",
+    "W06-DEV-TUNE-P2-C1-W06-DEV-TUNE-010": "bee539b7f5be0d9389f7eb164b019a54a67bbd56f1fe092d6cf60ebbd6c965bf",
+    "W06-DEV-TUNE-P2-C1-W06-DEV-TUNE-011": "7dbc9db2bf28feaac9604f74da45c9c901fd50c52435f7590e9d89418fcbc826",
+    "W06-DEV-TUNE-P2-C1-W06-DEV-TUNE-012": "7996f917a9aac1443bb43c7327c3531948b730dffedffc0c63e811729a97213f",
+    "W06-DEV-TUNE-P2-C1-W06-DEV-TUNE-013": "ef6733db93eedcc930db8ae88cba9a337efb3faa1e16f10d917d0576082a73a1",
+    "W06-DEV-TUNE-P2-C1-W06-DEV-TUNE-014": "9d3ebf7be4a9210a3aef084359f9eae5cada208d56a791b15ba98d7440a49f19",
+    "W06-DEV-TUNE-P2-C1-W06-DEV-TUNE-015": "84d022e2c69613a6657e460ba404274dd978836ca736267d29c73321c6d3a131",
+    "W06-DEV-TUNE-P2-C1-W06-DEV-TUNE-016": "7eae950583de88abb4e2899fd2b8b3247479871f8a81234efa67108fc64075f3",
+    "W06-DEV-TUNE-P2-C1-W06-DEV-TUNE-017": "97c9a614f2763bca96e39f08ae2072791a7620a7c127809c2d740a91e4c1c447",
+    "W06-DEV-TUNE-P2-C1-W06-DEV-TUNE-018": "e75fcea0113f4b7c820435142094f1dfc3eddab2de421cdfd6ce49121dbecf9a",
+    "W06-DEV-TUNE-P2-C1-W06-DEV-TUNE-019": "06b1dbcb700cbc6141cae56788c848cb04a5704472a36f8fa2693eba3a67ccbe",
+    "W06-DEV-TUNE-P2-C1-W06-DEV-TUNE-020": "0fe157cfb728bc86c30463b350f1f26142f6e87f2567c73529bb05414b38c0f6",
+    "W06-DEV-TUNE-P2-C2-W06-DEV-TUNE-001": "dd3fa30890823c5eb4ba6c7ee8d3be4a475bc7c377b20f05aa57080afe48af57",
+    "W06-DEV-TUNE-P2-C2-W06-DEV-TUNE-002": "6050b2e831b0bd4b832b29a7473ddd843113d1101fc776594c09f06a06a45db7",
+    "W06-DEV-TUNE-P2-C2-W06-DEV-TUNE-003": "9d56b1c4850aba29f6f8bd25d1720aae0f462805a0a14af6e857aaee46174be8",
+    "W06-DEV-TUNE-P2-C2-W06-DEV-TUNE-004": "8aa2a9cd2e331d0a88a647a7d222c8a3c8f6b9235acca8809a8b557f9737f9af",
+    "W06-DEV-TUNE-P2-C2-W06-DEV-TUNE-005": "00ca60a29b137d8b8e631ed1f62a4eb9b64efea218117c2ed96d78105510e237",
+    "W06-DEV-TUNE-P2-C2-W06-DEV-TUNE-006": "1ab781fceb5bedc158fe4ae95fce9dfb051c4f2596bc4514139c57fa3a9556db",
+    "W06-DEV-TUNE-P2-C2-W06-DEV-TUNE-007": "aa96908a9c09fdfdbfaa1a9b6e60b51a8ae16359305aa11da7a0d3a5359fc4cf",
+    "W06-DEV-TUNE-P2-C2-W06-DEV-TUNE-008": "1f7fcd390212d188509d8a0c4dbb006f88bf425832bcf27a1f249d7b41e72c72",
+    "W06-DEV-TUNE-P2-C2-W06-DEV-TUNE-009": "18f371130c533271d42bd704315e9080e473be3982969499d357a4ce00dab72e",
+    "W06-DEV-TUNE-P2-C2-W06-DEV-TUNE-010": "e6b86c6afede5053a6b413b1764dfd31e0785a63c09fe87c504caeb7f5f1529b",
+    "W06-DEV-TUNE-P2-C2-W06-DEV-TUNE-011": "12e5676d7820f55d15b29c53ca51cbd77360254af1cb66586c925ec69d1603ef",
+    "W06-DEV-TUNE-P2-C2-W06-DEV-TUNE-012": "50eec86dbba9e33350a9da85b2f77d1d815a698a2ae32d91e1e939561e5230c7",
+    "W06-DEV-TUNE-P2-C2-W06-DEV-TUNE-013": "2128967c931f125c938565f45d222a5f4f1f1bbfc4e1288e83680500d7d58253",
+    "W06-DEV-TUNE-P2-C2-W06-DEV-TUNE-014": "785883ea762f69d42d2566500914ad4e9cdc1009a32367dbe5fdec868af2af46",
+    "W06-DEV-TUNE-P2-C2-W06-DEV-TUNE-015": "16f30140fac404fe8b3b1f853a2c5122ebbc8349d9d27bb06c63463217756f3b",
+    "W06-DEV-TUNE-P2-C2-W06-DEV-TUNE-016": "fb7b74ad98683f584b70122ae1ee6656d557c9710c01e3697e690a6f3da0c380",
+    "W06-DEV-TUNE-P2-C2-W06-DEV-TUNE-017": "cd5764545089ce9e2bb6a5c4834b385579d46004474a651745212cd8d86b07b9",
+    "W06-DEV-TUNE-P2-C2-W06-DEV-TUNE-018": "015691f8953daa1c5eb1cd64559f46219563fdb3c04899873596ceb88da74847",
+    "W06-DEV-TUNE-P2-C2-W06-DEV-TUNE-019": "9a82ef4491caa4a0a0fa5763369c86558cb55e8d4a054e101d6c23fece3e69dd",
+    "W06-DEV-TUNE-P2-C2-W06-DEV-TUNE-020": "695845c1083ca9810de720e1a30f5fd1a2dcb01a1441450a2b6f0d71ebf5e15f",
+    "W06-DEV-TUNE-P2-C3-W06-DEV-TUNE-001": "5ec7a018e8b5086ddc1df4bd1bf7df79a4740fb6cf81171b6552ac1ae4a019df",
+    "W06-DEV-TUNE-P2-C3-W06-DEV-TUNE-002": "c046e18f248c57eadd9ad299f71bea70f5452a0eb9a93044dd9293835d33941b",
+    "W06-DEV-TUNE-P2-C3-W06-DEV-TUNE-003": "0beb3e16f84b8b23233ba743f292b7f24a6b429f1712dcd712c48996aeaa7684",
+    "W06-DEV-TUNE-P2-C3-W06-DEV-TUNE-004": "43c87bba563ccc757a9c85d72f90f27104f509f6248a1b5e573df7eb8ab016ad",
+    "W06-DEV-TUNE-P2-C3-W06-DEV-TUNE-005": "a742cf835aaac8b61004698e6eab2f83b40665c809deaec90977b546cb590545",
+    "W06-DEV-TUNE-P2-C3-W06-DEV-TUNE-006": "5e5c4316b41b80cdf3e12a1beb014d4f2706f40baf50e01b3d3551e03a448114",
+    "W06-DEV-TUNE-P2-C3-W06-DEV-TUNE-007": "e4e3b5de489b056ccd6b93c7f54ce59681afdf14d5ff7c4722c765dc07030ff9",
+    "W06-DEV-TUNE-P2-C3-W06-DEV-TUNE-008": "b12e4cf7cd796531969e3081849018ff7b10c776ebbd5332ad51235533a50337",
+    "W06-DEV-TUNE-P2-C3-W06-DEV-TUNE-009": "685e893820bdef1224f0a9e25b1286534dfdf1ffe121824d14c9e9de0f2c8d8d",
+    "W06-DEV-TUNE-P2-C3-W06-DEV-TUNE-010": "6d80fb9ec100c06adb4d9ecdb40540a4382ea798b55f386272ac4a915400e572",
+    "W06-DEV-TUNE-P2-C3-W06-DEV-TUNE-011": "6e868e87750ebb3c26d212c2538a5c4fd7f744f09d035da2b55ed032f6a4e48b",
+    "W06-DEV-TUNE-P2-C3-W06-DEV-TUNE-012": "2f88a9105bf3d703977dee99051fcb110d4f4fe81299f259ec5c320069fc090f",
+    "W06-DEV-TUNE-P2-C3-W06-DEV-TUNE-013": "8958048426309ba536413bc287c42b6eb8330edbfaedc8dbb79eb4fed3444f38",
+    "W06-DEV-TUNE-P2-C3-W06-DEV-TUNE-014": "294b9931a126dfb0adf17c1156c821beddc1686947ba6b238f3f11e7d1964ac7",
+    "W06-DEV-TUNE-P2-C3-W06-DEV-TUNE-015": "e9033552aa24878ebbdac3f4e7c402ce83f1b2893f2f16fca9d70a45dfb05235",
+    "W06-DEV-TUNE-P2-C3-W06-DEV-TUNE-016": "1c3b3173a625987922348ac29361daa108a0558d61fc36a98de0d67e1c04f46f",
+    "W06-DEV-TUNE-P2-C3-W06-DEV-TUNE-017": "c1a8d43e58a683aabe89f9ac70e557f0ac570c1bba40e6ae942484a925d5d2f5",
+    "W06-DEV-TUNE-P2-C3-W06-DEV-TUNE-018": "fb81e45bcd5b7677e52fe41d946ca1b8b216703addc74de817c69a5719b5e1f0",
+    "W06-DEV-TUNE-P2-C3-W06-DEV-TUNE-019": "2ae003ae4407c84f22fc715759d2c0aa24551b34dad691172dc40669c1fd6cba",
+    "W06-DEV-TUNE-P2-C3-W06-DEV-TUNE-020": "b78033c82d679677dbed7e93d945845ced8f4385e4ceb4810bd1b6712c6255be"
+  },
+  "execution_summary": {
+    "assigned_cells": 120,
+    "authoritative_cost_cell_count": 42,
+    "cell_directories": 120,
+    "cell_hash_chain_valid": "120/120",
+    "cost_accounting_label": "AUTHORITATIVE_RECEIPT_COST_AVAILABLE_ONLY",
+    "cost_by_candidate_usd": {
+      "C1": {
+        "authoritative_cost_cells": 4,
+        "canonical_cost_usd_decimal": "0.080954"
+      },
+      "C2": {
+        "authoritative_cost_cells": 5,
+        "canonical_cost_usd_decimal": "0.3768775"
+      },
+      "C3": {
+        "authoritative_cost_cells": 33,
+        "canonical_cost_usd_decimal": "6.097749"
+      }
+    },
+    "exact_grounding_pass": {
+      "by_candidate": {
+        "C1": {
+          "false": 36,
+          "true": 4
+        },
+        "C2": {
+          "false": 33,
+          "true": 7
+        },
+        "C3": {
+          "false": 7,
+          "true": 33
+        }
+      },
+      "by_prompt": {
+        "P1": {
+          "false": 37,
+          "true": 23
+        },
+        "P2": {
+          "false": 39,
+          "true": 21
+        }
+      },
+      "by_prompt_candidate": {
+        "P1_C1": {
+          "false": 17,
+          "true": 3
+        },
+        "P1_C2": {
+          "false": 16,
+          "true": 4
+        },
+        "P1_C3": {
+          "false": 4,
+          "true": 16
+        },
+        "P2_C1": {
+          "false": 19,
+          "true": 1
+        },
+        "P2_C2": {
+          "false": 17,
+          "true": 3
+        },
+        "P2_C3": {
+          "false": 3,
+          "true": 17
+        }
+      },
+      "total": {
+        "false": 76,
+        "true": 44
+      }
+    },
+    "execution_receipts": 120,
+    "failure_classification_counts": {
+      "by_candidate": {
+        "C1": {
+          "HTTP_429": 15,
+          "HTTP_5XX": 3,
+          "NONE": 4,
+          "TIMEOUT": 18
+        },
+        "C2": {
+          "NONE": 7,
+          "TIMEOUT": 33
+        },
+        "C3": {
+          "HTTP_ERROR": 1,
+          "NONE": 33,
+          "TIMEOUT": 6
+        }
+      },
+      "by_prompt": {
+        "P1": {
+          "HTTP_5XX": 2,
+          "NONE": 23,
+          "TIMEOUT": 35
+        },
+        "P2": {
+          "HTTP_429": 15,
+          "HTTP_5XX": 1,
+          "HTTP_ERROR": 1,
+          "NONE": 21,
+          "TIMEOUT": 22
+        }
+      },
+      "total": {
+        "HTTP_429": 15,
+        "HTTP_5XX": 3,
+        "HTTP_ERROR": 1,
+        "NONE": 44,
+        "TIMEOUT": 57
+      }
+    },
+    "final_core_pass": {
+      "by_candidate": {
+        "C1": {
+          "false": 39,
+          "true": 1
+        },
+        "C2": {
+          "false": 33,
+          "true": 7
+        },
+        "C3": {
+          "false": 7,
+          "true": 33
+        }
+      },
+      "by_prompt": {
+        "P1": {
+          "false": 40,
+          "true": 20
+        },
+        "P2": {
+          "false": 39,
+          "true": 21
+        }
+      },
+      "by_prompt_candidate": {
+        "P1_C1": {
+          "false": 20,
+          "true": 0
+        },
+        "P1_C2": {
+          "false": 16,
+          "true": 4
+        },
+        "P1_C3": {
+          "false": 4,
+          "true": 16
+        },
+        "P2_C1": {
+          "false": 19,
+          "true": 1
+        },
+        "P2_C2": {
+          "false": 17,
+          "true": 3
+        },
+        "P2_C3": {
+          "false": 3,
+          "true": 17
+        }
+      },
+      "total": {
+        "false": 79,
+        "true": 41
+      }
+    },
+    "model_id_mismatch_count": 0,
+    "parsed_responses": 44,
+    "request_identity_match": "120/120",
+    "rerun_cells": 0,
+    "result_counts_by_candidate": {
+      "C1": 40,
+      "C2": 40,
+      "C3": 40
+    },
+    "result_counts_by_prompt": {
+      "P1": 60,
+      "P2": 60
+    },
+    "retry_calls": 0,
+    "total_canonical_cost_usd_available_only": "6.5555805",
+    "transport_ambiguous": 0,
+    "transport_completed": 120,
+    "transport_starting": 120,
+    "valid_run_and_schema": {
+      "by_candidate": {
+        "C1": {
+          "false": 36,
+          "true": 4
+        },
+        "C2": {
+          "false": 33,
+          "true": 7
+        },
+        "C3": {
+          "false": 7,
+          "true": 33
+        }
+      },
+      "by_prompt": {
+        "P1": {
+          "false": 37,
+          "true": 23
+        },
+        "P2": {
+          "false": 39,
+          "true": 21
+        }
+      },
+      "by_prompt_candidate": {
+        "P1_C1": {
+          "false": 17,
+          "true": 3
+        },
+        "P1_C2": {
+          "false": 16,
+          "true": 4
+        },
+        "P1_C3": {
+          "false": 4,
+          "true": 16
+        },
+        "P2_C1": {
+          "false": 19,
+          "true": 1
+        },
+        "P2_C2": {
+          "false": 17,
+          "true": 3
+        },
+        "P2_C3": {
+          "false": 3,
+          "true": 17
+        }
+      },
+      "total": {
+        "false": 76,
+        "true": 44
+      }
+    }
+  },
+  "final100_used": false,
+  "launcher_lf_sha256": "b2bdbe062ea9d9e52701bfb73027ab30237f7648835a0ea285961b0e70e4fbbc",
+  "live_provider_calls_new": 0,
+  "model_winner_selected": false,
+  "preflight_artifact_path_set_sha256": "eebd7a95fa2eb2ea17bffec7d81478594df565423c8a2d893e41a45ab4adc8a8",
+  "preflight_request_set_sha256": "438365622e97f9a7062bca5ef9f472ebf48b5d3438c8484d8b0ea8eba4761dc3",
+  "prompt_freeze_sha256": "2f345363f580ea882b2e5b3562c587ef5309bc7f994440257a54d18994ab6956",
+  "prompt_selection_preview": {
+    "administrative_tie_break_would_select": "P1",
+    "criterion_1_valid_run_and_schema_rate": {
+      "P1": {
+        "denominator": 60,
+        "pass_count": 23,
+        "rate_fraction": "23/60"
+      },
+      "P2": {
+        "denominator": 60,
+        "pass_count": 21,
+        "rate_fraction": "21/60"
+      },
+      "difference_percentage_points": 3.333333,
+      "survivors": [
+        "P1",
+        "P2"
+      ]
+    },
+    "criterion_2_exact_grounding_pass_rate": {
+      "P1": {
+        "denominator": 60,
+        "pass_count": 23,
+        "rate_fraction": "23/60"
+      },
+      "P2": {
+        "denominator": 60,
+        "pass_count": 21,
+        "rate_fraction": "21/60"
+      },
+      "difference_percentage_points": 3.333333,
+      "survivors": [
+        "P1",
+        "P2"
+      ]
+    },
+    "criterion_3_final_core_pass_rate": {
+      "P1": {
+        "denominator": 60,
+        "pass_count": 20,
+        "rate_fraction": "20/60"
+      },
+      "P2": {
+        "denominator": 60,
+        "pass_count": 21,
+        "rate_fraction": "21/60"
+      },
+      "difference_percentage_points": 1.666667,
+      "survivors": [
+        "P1",
+        "P2"
+      ]
+    },
+    "formal_selection_deferred_reason": "Raw live evidence must be independently frozen and audited before creating the formal prompt-selection artifact.",
+    "scientific_interpretation_guardrail": "Neither P1 nor P2 may be claimed statistically or scientifically superior; both prompts remain within the frozen 10 percentage-point survivor band across all three criteria.",
+    "status": "PREVIEW_ONLY_NOT_FORMAL_SELECTION_ARTIFACT",
+    "survivor_tolerance_percentage_points": 10.0,
+    "winning_prompt_selected": false
+  },
+  "raw_evidence_file_count": 1124,
+  "raw_evidence_max_file_bytes": 96816,
+  "raw_evidence_total_bytes": 11749420,
+  "raw_evidence_tree_sha256": "9b6089f478979ce32e968529c656358fc1bb751101527e017c1e4d5a695cd1e8",
+  "raw_output_root": "data/evaluation/w06/live_dev_tune_primary_v1",
+  "results_manifest_file_sha256": "060c3da987638f8eeb96a6240e11b612d3b5e80e31be5046779c417fbca7be85",
+  "results_manifest_relative_path": "data/evaluation/w06/w06_dev_tune_live_results_manifest_v1.json",
+  "rf_checks": {
+    "RF-01_execution_head_exact": "PASS",
+    "RF-02_raw_output_root_exact": "PASS",
+    "RF-03_raw_root_no_unknown_cell_dirs": "PASS",
+    "RF-04_120_assigned_run_ids_exact": "PASS",
+    "RF-05_request_manifest_count_120": "PASS",
+    "RF-06_transport_starting_count_120": "PASS",
+    "RF-07_transport_completed_count_120": "PASS",
+    "RF-08_raw_response_count_120": "PASS",
+    "RF-09_execution_receipt_count_120": "PASS",
+    "RF-10_evaluation_result_count_120": "PASS",
+    "RF-11_parsed_response_count_44": "PASS",
+    "RF-12_preflight_request_set_sha_exact": "PASS",
+    "RF-13_request_identity_120_of_120": "PASS",
+    "RF-14_per_cell_receipt_hash_chains_120_of_120": "PASS",
+    "RF-15_retry_count_zero": "PASS",
+    "RF-16_rerun_count_zero": "PASS",
+    "RF-17_model_mismatch_zero": "PASS",
+    "RF-18_failure_counts_exact": "PASS",
+    "RF-19_valid_schema_counts_exact": "PASS",
+    "RF-20_grounding_counts_exact": "PASS",
+    "RF-21_core_pass_counts_exact": "PASS",
+    "RF-22_authoritative_cost_cells_42": "PASS",
+    "RF-23_canonical_available_cost_6_5555805": "PASS",
+    "RF-24_p1_count_60": "PASS",
+    "RF-25_p2_count_60": "PASS",
+    "RF-26_c1_c2_c3_each_40": "PASS",
+    "RF-27_execution_ordering_records_p1_before_p2": "PASS",
+    "RF-28_429_temporal_confound_limitation_recorded": "PASS",
+    "RF-29_prompt_winner_not_yet_selected": "PASS",
+    "RF-30_model_winner_not_selected": "PASS",
+    "RF-31_final100_untouched": "PASS",
+    "RF-32_secret_scan_pass": "PASS",
+    "RF-33_raw_tree_hash_stable_before_after_freeze_generation": "PASS",
+    "RF-34_raw_tree_hash_stable_after_commit": "PASS",
+    "RF-35_scientific_bundle_unchanged": "PASS",
+    "RF-36_launcher_unchanged": "PASS"
+  },
+  "scientific_code_bundle_sha256": "0638f2fcb100b0000e3a2a4e08137a9d468449001f258de7354df21e185ca2e3",
+  "secret_scan_result": {
+    "scanned_file_count": 1124,
+    "secret_leak_detected": false,
+    "secret_leak_scan": "PASS"
+  },
+  "stage_a_internal_sha256": "a0636ddafc4096e02ddaf7b1c69c0e214006030f5461346308a0005e06537d5f",
+  "stochasticity_execution_started": false,
+  "task_id": "W06-DEV-TUNE-LIVE-RESULTS-FREEZE-01",
+  "temporal_ordering_limitation": {
+    "observed_http_429_in_p2_c1": 15,
+    "observed_http_429_total": 15,
+    "p1_cell_indices": [
+      0,
+      59
+    ],
+    "p1_executed_before_p2": true,
+    "p2_cell_indices": [
+      60,
+      119
+    ],
+    "prompt_treatment_temporally_interleaved_or_randomized": false,
+    "retroactive_reordering_or_interleaved_rerun_forbidden": true,
+    "scientific_interpretation": "P1 cells executed before P2 cells without temporal interleaving or randomization. All 15 HTTP_429 failures occurred in P2/C1. This pattern may reflect temporal/provider rate-limit conditions and MUST NOT be interpreted as evidence that P2 causes HTTP 429."
+  },
+  "winning_prompt_selected": false
+}

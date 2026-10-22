@@ -479,6 +479,9 @@ def verify_pre_stage_a_firewall(repo_root: Path = REPO_ROOT) -> dict[str, Any]:
     forbidden_live_cell_dirs: list[str] = []
 
     if w06_dir.is_dir():
+        from freeze_w06_dev_tune_live_results import (
+            is_verified_downstream_w06_dev_tune_live_results_file,
+        )
         from freeze_w06_dev_tune_stage_a import (
             is_verified_downstream_w06_dev_tune_stage_a_file,
         )
@@ -492,6 +495,11 @@ def verify_pre_stage_a_firewall(repo_root: Path = REPO_ROOT) -> dict[str, Any]:
                         path, repo_root=repo_root
                     )
                 )
+                is_verified_downstream_results = (
+                    is_verified_downstream_w06_dev_tune_live_results_file(
+                        path, repo_root=repo_root
+                    )
+                )
                 if (
                     (
                         "stage_a" in name_lower
@@ -499,9 +507,13 @@ def verify_pre_stage_a_firewall(repo_root: Path = REPO_ROOT) -> dict[str, Any]:
                         or name_lower == "stage_a_freeze_receipt.json"
                     )
                     and not is_verified_downstream_stage_a
+                    and not is_verified_downstream_results
                 ):
                     forbidden_stage_a_files.append(rel)
-                if "transport_journal" in name_lower:
+                if (
+                    "transport_journal" in name_lower
+                    and not is_verified_downstream_results
+                ):
                     forbidden_transport_journals.append(rel)
                 if path.suffix.lower() == ".json" and path.parent == w06_dir:
                     try:
@@ -514,6 +526,7 @@ def verify_pre_stage_a_firewall(repo_root: Path = REPO_ROOT) -> dict[str, Any]:
                                     or "stage_a_process_token" in data
                                 )
                                 and not is_verified_downstream_stage_a
+                                and not is_verified_downstream_results
                             ):
                                 forbidden_stage_a_files.append(rel)
                     except Exception:

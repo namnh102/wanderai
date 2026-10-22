@@ -916,6 +916,10 @@ def verify_no_live_execution_or_stage_b_artifacts(
     forbidden_live_cell_dirs: list[str] = []
 
     if w06_dir.is_dir():
+        from freeze_w06_dev_tune_live_results import (
+            is_verified_downstream_w06_dev_tune_live_results_file,
+        )
+
         for path in sorted(w06_dir.rglob("*")):
             rel = path.relative_to(repo_root).as_posix()
             name_lower = path.name.lower()
@@ -923,13 +927,25 @@ def verify_no_live_execution_or_stage_b_artifacts(
                 is_verified_stage_a = is_verified_downstream_w06_dev_tune_stage_a_file(
                     path, repo_root=repo_root
                 )
+                is_verified_results = (
+                    is_verified_downstream_w06_dev_tune_live_results_file(
+                        path, repo_root=repo_root
+                    )
+                )
                 if (
-                    "stage_a" in name_lower
-                    or "stage-a" in name_lower
-                    or name_lower == "stage_a_freeze_receipt.json"
-                ) and not is_verified_stage_a:
+                    (
+                        "stage_a" in name_lower
+                        or "stage-a" in name_lower
+                        or name_lower == "stage_a_freeze_receipt.json"
+                    )
+                    and not is_verified_stage_a
+                    and not is_verified_results
+                ):
                     unauthorized_stage_a_files.append(rel)
-                if "transport_journal" in name_lower:
+                if (
+                    "transport_journal" in name_lower
+                    and not is_verified_results
+                ):
                     forbidden_transport_journals.append(rel)
             elif path.is_dir():
                 if any(

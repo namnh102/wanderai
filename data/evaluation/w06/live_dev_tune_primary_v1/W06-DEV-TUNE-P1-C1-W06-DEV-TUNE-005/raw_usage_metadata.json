@@ -1,0 +1,29 @@
+{
+  "candidate_id": "C1",
+  "normalized_usage_metadata": {
+    "cache_creation_input_tokens": null,
+    "cache_read_input_tokens": null,
+    "cached_input_tokens": 0,
+    "cached_tokens": 0,
+    "candidate_id": "C1",
+    "input_tokens": 20114,
+    "output_tokens": 3608,
+    "provider": "google",
+    "reasoning_tokens": null,
+    "thinking_tokens": null,
+    "thought_tokens": 2007,
+    "total_tokens": 25729,
+    "usage_present": true
+  },
+  "provider": "google",
+  "raw_usage_metadata": {
+    "cached_content_token_count": null,
+    "candidates_token_count": 3608,
+    "prompt_token_count": 20114,
+    "thoughts_token_count": 2007,
+    "total_token_count": 25729,
+    "traffic_type": null
+  },
+  "run_id": "W06-DEV-TUNE-P1-C1-W06-DEV-TUNE-005",
+  "usage_present": true
+}

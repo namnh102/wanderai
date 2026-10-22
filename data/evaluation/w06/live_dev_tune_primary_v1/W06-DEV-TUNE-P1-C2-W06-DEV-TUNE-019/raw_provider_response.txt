@@ -1,0 +1,201 @@
+{
+  "plan_id": "W06-DEV-TUNE-019-plan-01",
+  "scenario_id": "W06-DEV-TUNE-019",
+  "destination_slug": "ha-long",
+  "destination": "Hạ Long",
+  "total_days": 4,
+  "overview": "Lịch trình tiết kiệm từ 08–11/12/2026, tập trung khám phá 8 chợ địa phương khác nhau, mua quà nhỏ và trải nghiệm ăn uống tại chợ. Các buổi chiều để trống nhằm linh hoạt nghỉ ngơi và hạn chế phát sinh chi phí. Không lặp lại place_id.",
+  "best_time_to_visit": "Tháng 12 thường phù hợp để đi chợ và khám phá nội đô nhờ thời tiết mát; nên mang áo khoác và kiểm tra dự báo mưa, gió trước chuyến đi.",
+  "general_tips": [
+    "Chi phí dự tính cho một người, gồm ăn uống tại chợ, khoản mua sắm giới hạn và các chặng di chuyển được ghi trong lịch trình; chưa gồm lưu trú và vé đi đến hoặc rời Hạ Long.",
+    "Ngân sách còn lại 620.000 VND cần dành cho các khoản ngoài lịch trình; hãy xác nhận giá lưu trú và phương tiện liên tỉnh trước khi chốt chuyến đi.",
+    "Ngoại trừ Chợ Cái Dăm có giờ hoạt động trong danh mục, các chợ còn lại chưa có dữ liệu giờ mở cửa; cần xác nhận trước ngày đi. Khung giờ đề xuất không phải giờ mở cửa đã được xác minh.",
+    "Hỏi giá trước khi mua, kiểm tra trọng lượng và hạn sử dụng; ưu tiên quà khô đóng gói thay vì hải sản tươi nếu không có phương án bảo quản.",
+    "Chi phí mỗi lượt ghé chợ là hạn mức dự kiến cho ăn uống và mua sắm, không phải giá vé vào cửa. Giá xe ôm là ước tính, cần kiểm tra trước khi đặt."
+  ],
+  "budget_analysis": {
+    "total_budget": 2000000,
+    "estimated_cost": 1380000,
+    "currency": "VND",
+    "is_over_budget": false,
+    "variance": -620000
+  },
+  "days": [
+    {
+      "day_number": 1,
+      "date": "2026-12-08",
+      "title": "Khám phá Chợ Cái Dăm và Chợ Hà Khẩu",
+      "items": [
+        {
+          "order_index": 1,
+          "start_time": "08:00",
+          "end_time": "10:00",
+          "activity_kind": "POI_VISIT",
+          "activity": "Dạo chợ, ăn sáng và khảo giá các mặt hàng làm quà",
+          "place_name": "Chợ Cái Dăm",
+          "place_id": "96523873-1b85-4d2f-b85c-cb3f5593091b",
+          "notes": "Khung giờ nằm trong lịch mở cửa Mo-Sa 08:00-16:00 của danh mục. Dự trù 50.000 VND ăn sáng và 100.000 VND mua sắm; so sánh giá trước khi quyết định.",
+          "estimated_cost": 150000,
+          "transport_mode": null
+        },
+        {
+          "order_index": 2,
+          "start_time": "10:00",
+          "end_time": "10:40",
+          "activity_kind": "TRANSIT_ONLY",
+          "activity": "Di chuyển từ chợ đầu tiên sang chợ tiếp theo",
+          "place_name": null,
+          "place_id": null,
+          "notes": "Dành thời gian đón xe và di chuyển; kiểm tra giá chuyến trước khi đặt.",
+          "estimated_cost": 60000,
+          "transport_mode": "motorbike"
+        },
+        {
+          "order_index": 3,
+          "start_time": "10:40",
+          "end_time": "12:30",
+          "activity_kind": "POI_VISIT",
+          "activity": "Tìm hiểu sinh hoạt mua bán địa phương, ăn trưa và chọn quà nhỏ",
+          "place_name": "Chợ Hà Khẩu",
+          "place_id": "74bda744-1144-4686-bce7-820d84369100",
+          "notes": "Dự trù 60.000 VND ăn trưa và nước uống, 90.000 VND mua sắm. Chọn hàng theo nhu cầu thực tế, không cần dùng hết hạn mức.",
+          "estimated_cost": 150000,
+          "transport_mode": null
+        }
+      ],
+      "day_cost": 360000
+    },
+    {
+      "day_number": 2,
+      "date": "2026-12-09",
+      "title": "Mua sắm tại Chợ Hạ Long II và Chợ Cao Thắng",
+      "items": [
+        {
+          "order_index": 1,
+          "start_time": "08:00",
+          "end_time": "10:00",
+          "activity_kind": "POI_VISIT",
+          "activity": "Ăn sáng, dạo các quầy hàng và tìm sản phẩm địa phương phù hợp ngân sách",
+          "place_name": "Chợ Hạ Long II",
+          "place_id": "6215446b-2fdd-4014-aacf-23de6e45e264",
+          "notes": "Dự trù 50.000 VND ăn sáng và 100.000 VND mua quà. Hỏi rõ giá theo gói hoặc theo cân, kiểm tra bao bì trước khi mua.",
+          "estimated_cost": 150000,
+          "transport_mode": null
+        },
+        {
+          "order_index": 2,
+          "start_time": "10:00",
+          "end_time": "10:30",
+          "activity_kind": "TRANSIT_ONLY",
+          "activity": "Di chuyển giữa hai chợ",
+          "place_name": null,
+          "place_id": null,
+          "notes": "Khung thời gian có dự phòng chờ xe; chi phí là ước tính một chiều.",
+          "estimated_cost": 40000,
+          "transport_mode": "motorbike"
+        },
+        {
+          "order_index": 3,
+          "start_time": "10:30",
+          "end_time": "12:30",
+          "activity_kind": "POI_VISIT",
+          "activity": "Quan sát chợ dân sinh, ăn trưa và mua những món cần thiết",
+          "place_name": "Chợ Cao Thắng",
+          "place_id": "fcf7d5de-3774-46a4-a90c-fe5110c0ec42",
+          "notes": "Dự trù 60.000 VND ăn trưa và nước uống, 90.000 VND mua sắm. Ưu tiên quầy ăn sạch và món được chế biến nóng.",
+          "estimated_cost": 150000,
+          "transport_mode": null
+        }
+      ],
+      "day_cost": 340000
+    },
+    {
+      "day_number": 3,
+      "date": "2026-12-10",
+      "title": "Trải nghiệm chợ dân sinh Hà Lầm và Hà Trung",
+      "items": [
+        {
+          "order_index": 1,
+          "start_time": "08:00",
+          "end_time": "10:00",
+          "activity_kind": "POI_VISIT",
+          "activity": "Ăn sáng và khám phá nhịp mua bán buổi sáng",
+          "place_name": "Chợ Hà Lầm",
+          "place_id": "51d98c43-1295-4c1b-bc44-419b8d639d69",
+          "notes": "Dự trù 50.000 VND ăn sáng và 100.000 VND mua sắm. Khảo sát trước một vòng để tránh mua trùng các món đã chọn những ngày trước.",
+          "estimated_cost": 150000,
+          "transport_mode": null
+        },
+        {
+          "order_index": 2,
+          "start_time": "10:00",
+          "end_time": "10:30",
+          "activity_kind": "TRANSIT_ONLY",
+          "activity": "Di chuyển sang chợ tiếp theo",
+          "place_name": null,
+          "place_id": null,
+          "notes": "Đặt xe sau khi hoàn tất mua sắm; giữ đồ gọn để di chuyển an toàn.",
+          "estimated_cost": 40000,
+          "transport_mode": "motorbike"
+        },
+        {
+          "order_index": 3,
+          "start_time": "10:30",
+          "end_time": "12:30",
+          "activity_kind": "POI_VISIT",
+          "activity": "Dạo chợ, ăn trưa và so sánh hàng hóa giữa các khu dân cư",
+          "place_name": "Chợ Hà Trung",
+          "place_id": "61237838-29a2-4675-ba86-ba4ebfd99dc1",
+          "notes": "Dự trù 60.000 VND ăn trưa và nước uống, 90.000 VND mua sắm. Xin phép trước khi chụp ảnh người bán hoặc quầy hàng.",
+          "estimated_cost": 150000,
+          "transport_mode": null
+        }
+      ],
+      "day_cost": 340000
+    },
+    {
+      "day_number": 4,
+      "date": "2026-12-11",
+      "title": "Khép lại hành trình tại Chợ Hà Tu và Chợ Hà Phong",
+      "items": [
+        {
+          "order_index": 1,
+          "start_time": "08:00",
+          "end_time": "10:00",
+          "activity_kind": "POI_VISIT",
+          "activity": "Ăn sáng và chọn những món quà cuối chuyến",
+          "place_name": "Chợ Hà Tu",
+          "place_id": "2e836121-7ea1-4942-8071-5242b61f49db",
+          "notes": "Dự trù 50.000 VND ăn sáng và 100.000 VND mua sắm. Chỉ mua thực phẩm phù hợp với thời gian vận chuyển về nhà.",
+          "estimated_cost": 150000,
+          "transport_mode": null
+        },
+        {
+          "order_index": 2,
+          "start_time": "10:00",
+          "end_time": "10:30",
+          "activity_kind": "TRANSIT_ONLY",
+          "activity": "Di chuyển giữa hai chợ trong khu vực phía đông",
+          "place_name": null,
+          "place_id": null,
+          "notes": "Dự phòng thời gian gọi xe; giá thực tế phụ thuộc điểm đón và tình trạng giao thông.",
+          "estimated_cost": 40000,
+          "transport_mode": "motorbike"
+        },
+        {
+          "order_index": 3,
+          "start_time": "10:30",
+          "end_time": "12:30",
+          "activity_kind": "POI_VISIT",
+          "activity": "Khám phá chợ địa phương, ăn trưa và hoàn tất mua sắm",
+          "place_name": "Chợ Hà Phong",
+          "place_id": "4dd773a5-ad80-41d8-8224-0f8de29d0a5c",
+          "notes": "Dự trù 60.000 VND ăn trưa và nước uống, 90.000 VND mua sắm. Kiểm tra lại tổng chi tiêu, đóng gói quà chắc chắn trước khi kết thúc.",
+          "estimated_cost": 150000,
+          "transport_mode": null
+        }
+      ],
+      "day_cost": 340000
+    }
+  ]
+}

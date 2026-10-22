@@ -1,0 +1,290 @@
+{
+  "plan_id": "W06-DEV-TUNE-018-plan-01",
+  "scenario_id": "W06-DEV-TUNE-018",
+  "destination_slug": "ha-long",
+  "destination": "Hạ Long",
+  "total_days": 3,
+  "overview": "Lịch trình nhịp độ thoải mái, kết hợp chợ địa phương, một ngày khám phá cảnh quan vịnh và hang động, cùng dạo bộ ven biển Hòn Gai. Ưu tiên taxi trên đất liền và tàu tham quan đặt trước; không lặp lại place_id.",
+  "best_time_to_visit": "Tháng 10–11 thường phù hợp để ngắm vịnh và đi bộ ngoài trời. Trong các ngày 07–09/11/2026, cần kiểm tra dự báo gió, mưa và thông báo cấp phép tàu trước khi khởi hành.",
+  "general_tips": [
+    "Chi phí là dự toán cho một người, không phải báo giá đã xác nhận; chưa gồm lưu trú, di chuyển đến và rời Hạ Long, cùng các bữa ăn không được liệt kê.",
+    "Đặt trước tàu có tuyến được phép ghé Động Thiên Cung và Hang Đầu Gỗ. Giờ cập điểm phụ thuộc lịch tàu, thời tiết và điều hành cảng.",
+    "Khoản 1.200.000 VND tại Vịnh Hạ Long là ngân sách dự kiến cho gói tàu, vé tuyến, vé hang và bữa trưa; các mục được ghi 0 VND trong cùng chuyến không tính phí lần hai. Xác nhận đầy đủ quyền lợi trước khi thanh toán.",
+    "Mang giày chống trượt khi đi hang, áo khoác mỏng và thuốc chống say tàu nếu cần; không xuống nước khi điều kiện không an toàn.",
+    "Chợ Cái Dăm được bố trí vào thứ Bảy theo giờ mở cửa trong danh mục. Các địa điểm chưa có giờ hoạt động cần được liên hệ xác nhận trước.",
+    "Chi phí mua sắm là khoản dự trù tùy chọn; hỏi giá và thống nhất đơn vị cân trước khi mua đặc sản hoặc gọi hải sản."
+  ],
+  "budget_analysis": {
+    "total_budget": null,
+    "estimated_cost": 3340000,
+    "currency": "VND",
+    "is_over_budget": false,
+    "variance": 0
+  },
+  "days": [
+    {
+      "day_number": 1,
+      "date": "2026-11-07",
+      "title": "Cái Dăm: chợ địa phương và ẩm thực thư thả",
+      "items": [
+        {
+          "order_index": 1,
+          "start_time": "09:00",
+          "end_time": "10:30",
+          "activity_kind": "POI_VISIT",
+          "activity": "Khám phá chợ, tìm hiểu sản vật và mua đặc sản",
+          "place_name": "Chợ Cái Dăm",
+          "place_id": "96523873-1b85-4d2f-b85c-cb3f5593091b",
+          "notes": "Trong khung mở cửa thứ Hai–thứ Bảy 08:00–16:00. Chi phí là khoản mua sắm tùy chọn.",
+          "estimated_cost": 300000,
+          "transport_mode": null
+        },
+        {
+          "order_index": 2,
+          "start_time": "10:30",
+          "end_time": "10:45",
+          "activity_kind": "TRANSIT_ONLY",
+          "activity": "Di chuyển đến quán cà phê",
+          "place_name": null,
+          "place_id": null,
+          "notes": "Chặng ngắn trong khu vực Cái Dăm; thời lượng có dự phòng đón xe.",
+          "estimated_cost": 50000,
+          "transport_mode": "taxi"
+        },
+        {
+          "order_index": 3,
+          "start_time": "10:45",
+          "end_time": "11:45",
+          "activity_kind": "POI_VISIT",
+          "activity": "Uống cà phê và nghỉ chân",
+          "place_name": "Orchid Coffee",
+          "place_id": "9215a3fe-8306-453f-b0ab-8201d6753fbc",
+          "notes": "Trong khung mở cửa 07:30–22:30; dành thời gian thư giãn thay vì di chuyển dày đặc.",
+          "estimated_cost": 70000,
+          "transport_mode": null
+        },
+        {
+          "order_index": 4,
+          "start_time": "11:45",
+          "end_time": "12:10",
+          "activity_kind": "TRANSIT_ONLY",
+          "activity": "Di chuyển đến nhà hàng ăn trưa",
+          "place_name": null,
+          "place_id": null,
+          "notes": "Taxi nội đô, có dự phòng giao thông cuối tuần.",
+          "estimated_cost": 80000,
+          "transport_mode": "taxi"
+        },
+        {
+          "order_index": 5,
+          "start_time": "12:10",
+          "end_time": "13:40",
+          "activity_kind": "POI_VISIT",
+          "activity": "Ăn trưa với các món hải sản theo sở thích",
+          "place_name": "Nhà Hàng Phương Nam 2",
+          "place_id": "256574ac-ddae-4ef3-a70c-a65dee5eacbd",
+          "notes": "Trong khung mở cửa 09:00–21:00. Hỏi giá theo trọng lượng trước khi gọi món; phần còn lại của ngày để tự do nghỉ ngơi.",
+          "estimated_cost": 400000,
+          "transport_mode": null
+        }
+      ],
+      "day_cost": 900000
+    },
+    {
+      "day_number": 2,
+      "date": "2026-11-08",
+      "title": "Cảnh quan vịnh và hai hang động trên đảo",
+      "items": [
+        {
+          "order_index": 1,
+          "start_time": "08:30",
+          "end_time": "11:30",
+          "activity_kind": "POI_VISIT",
+          "activity": "Ngắm cảnh vịnh từ tàu và dùng bữa trưa sớm trong gói tham quan",
+          "place_name": "Vịnh Hạ Long",
+          "place_id": "ade2140c-7945-4044-b99a-b1a028edce9e",
+          "notes": "Trải nghiệm ngắm cảnh có chủ đích, không chỉ di chuyển. Dự toán gói tàu, vé tuyến, hai hang và bữa trưa; điểm đón cùng giờ xuất phát phải được nhà tàu xác nhận.",
+          "estimated_cost": 1200000,
+          "transport_mode": "boat"
+        },
+        {
+          "order_index": 2,
+          "start_time": "11:30",
+          "end_time": "12:15",
+          "activity_kind": "TRANSIT_ONLY",
+          "activity": "Di chuyển đến điểm cập bến và đi bộ tới cửa hang",
+          "place_name": null,
+          "place_id": null,
+          "notes": "Di chuyển trong tuyến tàu đã đặt; chi phí đã nằm trong gói tham quan.",
+          "estimated_cost": 0,
+          "transport_mode": "boat"
+        },
+        {
+          "order_index": 3,
+          "start_time": "12:15",
+          "end_time": "13:15",
+          "activity_kind": "POI_VISIT",
+          "activity": "Tham quan thạch nhũ và cảnh quan trong động",
+          "place_name": "Động Thiên Cung",
+          "place_id": "9a979427-a0bb-421d-b75f-2a6ee79b120b",
+          "notes": "Có bậc thang và nền có thể trơn; đi chậm, nghỉ khi cần. Vé dự kiến đã gồm trong gói tàu.",
+          "estimated_cost": 0,
+          "transport_mode": null
+        },
+        {
+          "order_index": 4,
+          "start_time": "13:15",
+          "end_time": "13:35",
+          "activity_kind": "TRANSIT_ONLY",
+          "activity": "Đi bộ sang hang tiếp theo",
+          "place_name": null,
+          "place_id": null,
+          "notes": "Dành thời gian cho đường nối và bậc thang; đi theo hướng dẫn của đoàn.",
+          "estimated_cost": 0,
+          "transport_mode": "walking"
+        },
+        {
+          "order_index": 5,
+          "start_time": "13:35",
+          "end_time": "14:25",
+          "activity_kind": "POI_VISIT",
+          "activity": "Khám phá không gian hang đá vôi",
+          "place_name": "Hang Đầu Gỗ",
+          "place_id": "9fbcb0b4-27bc-4482-a8e3-8be6e3c72677",
+          "notes": "Vé dự kiến đã gồm trong gói tàu. Không chạm vào thạch nhũ và giữ lối đi thông thoáng.",
+          "estimated_cost": 0,
+          "transport_mode": null
+        },
+        {
+          "order_index": 6,
+          "start_time": "14:25",
+          "end_time": "15:45",
+          "activity_kind": "TRANSIT_ONLY",
+          "activity": "Đi bộ xuống bến và đi tàu trở về đất liền",
+          "place_name": null,
+          "place_id": null,
+          "notes": "Thời lượng dự kiến; giờ về thực tế theo điều hành nhà tàu. Chi phí đã gồm trong gói.",
+          "estimated_cost": 0,
+          "transport_mode": "boat"
+        },
+        {
+          "order_index": 7,
+          "start_time": "17:00",
+          "end_time": "17:30",
+          "activity_kind": "TRANSIT_ONLY",
+          "activity": "Di chuyển đến nhà hàng ăn tối",
+          "place_name": null,
+          "place_id": null,
+          "notes": "Dự trù taxi trong khu vực Bãi Cháy; có khoảng đệm sau chuyến tàu.",
+          "estimated_cost": 60000,
+          "transport_mode": "taxi"
+        },
+        {
+          "order_index": 8,
+          "start_time": "17:30",
+          "end_time": "19:00",
+          "activity_kind": "POI_VISIT",
+          "activity": "Ăn tối thư thả sau chuyến tham quan vịnh",
+          "place_name": "Nhà hàng Hồng Hạnh 3",
+          "place_id": "b37d68ee-0cb3-49f0-a399-cac4c8e2732c",
+          "notes": "Đặt bàn và xác nhận giờ phục vụ trước; chi phí tùy món và lượng hải sản gọi.",
+          "estimated_cost": 500000,
+          "transport_mode": null
+        }
+      ],
+      "day_cost": 1760000
+    },
+    {
+      "day_number": 3,
+      "date": "2026-11-09",
+      "title": "Hòn Gai: mua sắm địa phương và dạo bộ ven biển",
+      "items": [
+        {
+          "order_index": 1,
+          "start_time": "09:00",
+          "end_time": "10:30",
+          "activity_kind": "POI_VISIT",
+          "activity": "Tham quan chợ và chọn đặc sản mang về",
+          "place_name": "Chợ Hạ Long II",
+          "place_id": "6215446b-2fdd-4014-aacf-23de6e45e264",
+          "notes": "Xác nhận hoạt động của chợ trước khi đi. Khoản dự trù dành cho mua sắm tùy chọn; ưu tiên sản phẩm đóng gói phù hợp hành lý.",
+          "estimated_cost": 300000,
+          "transport_mode": null
+        },
+        {
+          "order_index": 2,
+          "start_time": "10:30",
+          "end_time": "10:45",
+          "activity_kind": "TRANSIT_ONLY",
+          "activity": "Di chuyển đến quán ăn trưa",
+          "place_name": null,
+          "place_id": null,
+          "notes": "Chặng taxi ngắn tại Hòn Gai.",
+          "estimated_cost": 40000,
+          "transport_mode": "taxi"
+        },
+        {
+          "order_index": 3,
+          "start_time": "10:45",
+          "end_time": "12:00",
+          "activity_kind": "POI_VISIT",
+          "activity": "Dùng bữa trưa chay nhẹ nhàng",
+          "place_name": "Dược Điến Chay Quán",
+          "place_id": "1a1c68b4-fbd1-49d4-9f17-3243b34b57e0",
+          "notes": "Trong khung mở cửa 07:00–22:00; phù hợp đổi vị sau ngày ăn hải sản.",
+          "estimated_cost": 180000,
+          "transport_mode": null
+        },
+        {
+          "order_index": 4,
+          "start_time": "12:00",
+          "end_time": "12:20",
+          "activity_kind": "TRANSIT_ONLY",
+          "activity": "Di chuyển đến công viên",
+          "place_name": null,
+          "place_id": null,
+          "notes": "Taxi nội đô, có thời gian đón và trả khách.",
+          "estimated_cost": 40000,
+          "transport_mode": "taxi"
+        },
+        {
+          "order_index": 5,
+          "start_time": "12:20",
+          "end_time": "13:30",
+          "activity_kind": "POI_VISIT",
+          "activity": "Dạo bộ nhẹ nhàng, ngắm cảnh ven biển và nghỉ chân",
+          "place_name": "Công viên Lán Bè",
+          "place_id": "708ee182-c879-477c-b920-516e2c99b0a6",
+          "notes": "Chọn đoạn đường phù hợp sức khỏe; mang nước và tránh đứng sát mép nước khi gió mạnh.",
+          "estimated_cost": 0,
+          "transport_mode": null
+        },
+        {
+          "order_index": 6,
+          "start_time": "13:30",
+          "end_time": "13:50",
+          "activity_kind": "TRANSIT_ONLY",
+          "activity": "Di chuyển đến quán cà phê cuối hành trình",
+          "place_name": null,
+          "place_id": null,
+          "notes": "Chặng ngắn trong khu vực Hòn Gai.",
+          "estimated_cost": 50000,
+          "transport_mode": "taxi"
+        },
+        {
+          "order_index": 7,
+          "start_time": "13:50",
+          "end_time": "15:00",
+          "activity_kind": "POI_VISIT",
+          "activity": "Uống cà phê và thư giãn trước khi kết thúc chuyến đi",
+          "place_name": "My Way",
+          "place_id": "737862ca-4941-4be5-b375-8e32e6fd28a6",
+          "notes": "Xác nhận giờ mở cửa trước; kết thúc sớm để chủ động cho hành trình rời Hạ Long.",
+          "estimated_cost": 70000,
+          "transport_mode": null
+        }
+      ],
+      "day_cost": 680000
+    }
+  ]
+}

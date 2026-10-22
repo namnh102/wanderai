@@ -1,0 +1,30 @@
+{
+  "candidate_id": "C3",
+  "normalized_usage_metadata": {
+    "cache_creation_input_tokens": 0,
+    "cache_read_input_tokens": 0,
+    "cached_input_tokens": 0,
+    "cached_tokens": 0,
+    "candidate_id": "C3",
+    "input_tokens": 23895,
+    "output_tokens": 4679,
+    "provider": "anthropic",
+    "reasoning_tokens": null,
+    "thinking_tokens": null,
+    "thought_tokens": null,
+    "total_tokens": 28574,
+    "usage_present": true
+  },
+  "provider": "anthropic",
+  "raw_usage_metadata": {
+    "cache_creation_input_tokens": 0,
+    "cache_read_input_tokens": 0,
+    "input_tokens": 23895,
+    "output_tokens": 4679,
+    "service_tier": "standard",
+    "thinking_blocks_count": 1,
+    "thinking_tokens": null
+  },
+  "run_id": "W06-DEV-TUNE-P2-C3-W06-DEV-TUNE-005",
+  "usage_present": true
+}

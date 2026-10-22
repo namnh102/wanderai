@@ -1,0 +1,68 @@
+{
+  "benchmark_prompt_version": "P2",
+  "catalog_sha256": "f7517938598e3923906763f8f31334a500ee88bc06232f2992d38e2fcb28a444",
+  "claims_bitwise_model_determinism": false,
+  "code_commit_sha": "4a276ca8ca5e836a92d34ec72569998a3617d915",
+  "error_detail": null,
+  "execution_mode": "LIVE_DEV_TUNE",
+  "execution_timestamp_utc": "2026-10-22T06:42:05.274722+00:00",
+  "expected_model_id": "claude-sonnet-5-5",
+  "generation_parameters": {
+    "candidate_id": "C3",
+    "code_basis_commit_sha": "60d52d720e66f5af8e82fabf9cebe2ea0e8a9e26",
+    "code_commit_sha_semantics": "AUTHORITATIVE_RUNTIME_HEAD_SHA_WITH_SEPARATE_CODE_BASIS_AND_BUNDLE_ATTESTATION",
+    "effort": "high",
+    "max_retries": 0,
+    "max_tokens": 16384,
+    "omitted_parameters": [
+      "seed",
+      "temperature",
+      "top_p",
+      "top_k"
+    ],
+    "portable_generation_schema_v2_sha256": "825a4ff912d851a95f7392cb564b7d7ca3588135508dc6eb3ac6304cdde3c490",
+    "provider": "anthropic",
+    "provider_config_sha256": "5ecff5a4e2899245d1cd113285d1193dad17b6ed4e7521bd10be3937650d2a29",
+    "requested_model_id": "claude-sonnet-5-5",
+    "runtime_head_sha": "4a276ca8ca5e836a92d34ec72569998a3617d915",
+    "scientific_code_bundle_sha256": "0638f2fcb100b0000e3a2a4e08137a9d468449001f258de7354df21e185ca2e3",
+    "seed_status": "OMITTED_UNSUPPORTED",
+    "semantic_schema_sha256": "e4169f7b890f77d13af65e9f2070b6071c535b206d88440f5e8f28c179977555",
+    "temperature_status": "OMITTED",
+    "thinking": {
+      "type": "adaptive"
+    },
+    "timeout_ms": 55000,
+    "timeout_seconds": 55.0,
+    "top_k_status": "OMITTED",
+    "top_p_status": "OMITTED"
+  },
+  "hash_basis_by_artifact": {
+    "BENCHMARK_PROMPT": "SHA256_EXACT_PERSISTED_UTF8_BYTES",
+    "CATALOG_CONTEXT": "SHA256_CANONICAL_JSON_UTF8_LF_BYTES",
+    "PARSED_PLAN_RESPONSE": "SHA256_CANONICAL_JSON_UTF8_LF_BYTES",
+    "PREPARATION_MANIFEST": "SHA256_CANONICAL_JSON_UTF8_LF_BYTES",
+    "RAW_PROVIDER_RESPONSE": "SHA256_EXACT_PERSISTED_UTF8_BYTES",
+    "RUN_MANIFEST": "SHA256_CANONICAL_JSON_UTF8_LF_BYTES",
+    "SCENARIO_INPUT": "SHA256_CANONICAL_JSON_UTF8_LF_BYTES",
+    "SOURCE_CATALOG": "SHA256_LF_NORMALIZED_SOURCE_BYTES"
+  },
+  "hash_basis_version": "W06-ARTIFACT-HASH-BASIS-V1",
+  "latency_ms": 30813.0,
+  "measurement_contract_id": "W06-MEASUREMENT-CONTRACT-01",
+  "measurement_contract_source_commit": "7fd5364ed4671c06b0c911b6fd53bd9f54cbc322",
+  "measurement_contract_version": "1.1.0",
+  "model_id": "claude-sonnet-5-5",
+  "parsed_response_sha256": "114be396a0b16a28ebd9668331e20f06e1cdd4a973917fec291ea161d92d917c",
+  "provider": "C3",
+  "raw_response_sha256": "501778a75950cfcac655bbdefa8b84e2f8e6efb467707961a8ce2ba06c9975df",
+  "run_id": "W06-DEV-TUNE-P2-C3-W06-DEV-TUNE-016",
+  "run_status": "VALID",
+  "scenario_id": "W06-DEV-TUNE-016",
+  "scenario_sha256": "182d14bae4959ffaef5844a6afd0286d87c63ab528bf14735ca23693ff6b65aa",
+  "usage_metadata": {
+    "input_tokens": 28710,
+    "output_tokens": 4784,
+    "total_tokens": 33494
+  }
+}
