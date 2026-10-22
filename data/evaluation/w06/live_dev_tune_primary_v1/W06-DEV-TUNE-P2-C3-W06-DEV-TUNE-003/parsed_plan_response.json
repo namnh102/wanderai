@@ -1,0 +1,328 @@
+{
+  "best_time_to_visit": "Tháng 10 đến tháng 12 và tháng 3 đến tháng 4 là thời điểm dễ chịu nhất, thời tiết mát và khô. Đầu tháng 12 trời se lạnh nên nên mang áo khoác mỏng.",
+  "budget_analysis": {
+    "currency": "VND",
+    "estimated_cost": 1030000,
+    "is_over_budget": false,
+    "total_budget": null,
+    "variance": 0
+  },
+  "days": [
+    {
+      "date": "2026-12-03",
+      "day_cost": 450000,
+      "day_number": 1,
+      "items": [
+        {
+          "activity": "Ăn sáng bằng phở truyền thống",
+          "activity_kind": "POI_VISIT",
+          "end_time": "08:30",
+          "estimated_cost": 50000,
+          "notes": "Bữa sáng đậm chất Hà Nội, giá bình dân.",
+          "order_index": 1,
+          "place_id": "5350dd97-2f75-45fc-9fc1-1979b08670f7",
+          "place_name": "Pho 10",
+          "start_time": "07:30",
+          "transport_mode": "walk"
+        },
+        {
+          "activity": "Đi bộ ra hồ Hoàn Kiếm",
+          "activity_kind": "TRANSIT_ONLY",
+          "end_time": "08:45",
+          "estimated_cost": 0,
+          "notes": "Đi bộ ngắn quanh khu trung tâm.",
+          "order_index": 2,
+          "place_id": null,
+          "place_name": null,
+          "start_time": "08:30",
+          "transport_mode": "walk"
+        },
+        {
+          "activity": "Dạo bộ ngắm hồ và cây cầu đỏ",
+          "activity_kind": "POI_VISIT",
+          "end_time": "09:45",
+          "estimated_cost": 0,
+          "notes": "Không gian thoáng đãng, phù hợp đi bộ buổi sáng.",
+          "order_index": 3,
+          "place_id": "ec52be7d-ba38-5e44-83e4-a4edc54dc153",
+          "place_name": "Cầu Thê Húc",
+          "start_time": "08:45",
+          "transport_mode": "walk"
+        },
+        {
+          "activity": "Tham quan đền giữa hồ",
+          "activity_kind": "POI_VISIT",
+          "end_time": "10:45",
+          "estimated_cost": 30000,
+          "notes": "Có vé vào cửa nhỏ.",
+          "order_index": 4,
+          "place_id": "44115e3a-6094-5bcd-b53c-0e3a596b3aff",
+          "place_name": "Đền Ngọc Sơn",
+          "start_time": "09:45",
+          "transport_mode": "walk"
+        },
+        {
+          "activity": "Di chuyển đến quán ăn trưa",
+          "activity_kind": "TRANSIT_ONLY",
+          "end_time": "11:15",
+          "estimated_cost": 30000,
+          "notes": "Đi xe công nghệ nội đô.",
+          "order_index": 5,
+          "place_id": null,
+          "place_name": null,
+          "start_time": "10:45",
+          "transport_mode": "motorbike"
+        },
+        {
+          "activity": "Ăn trưa với các món Việt đặc sản",
+          "activity_kind": "POI_VISIT",
+          "end_time": "12:30",
+          "estimated_cost": 80000,
+          "notes": "Nhiều món địa phương trong một quán.",
+          "order_index": 6,
+          "place_id": "acb22336-1124-49d5-a279-6357c2b2b445",
+          "place_name": "Quán Ăn Ngon - Phan Bội Châu",
+          "start_time": "11:15",
+          "transport_mode": "motorbike"
+        },
+        {
+          "activity": "Di chuyển đến công viên",
+          "activity_kind": "TRANSIT_ONLY",
+          "end_time": "13:00",
+          "estimated_cost": 30000,
+          "notes": "Đi xe công nghệ.",
+          "order_index": 7,
+          "place_id": null,
+          "place_name": null,
+          "start_time": "12:30",
+          "transport_mode": "motorbike"
+        },
+        {
+          "activity": "Thư giãn và đi dạo ở công viên",
+          "activity_kind": "POI_VISIT",
+          "end_time": "15:00",
+          "estimated_cost": 0,
+          "notes": "Không gian xanh, hồ nước và đường dạo mát.",
+          "order_index": 8,
+          "place_id": "766656bb-c7e0-555d-9963-d3132f0de086",
+          "place_name": "Công viên Thống Nhất",
+          "start_time": "13:00",
+          "transport_mode": "walk"
+        },
+        {
+          "activity": "Đi bộ đến quán cà phê",
+          "activity_kind": "TRANSIT_ONLY",
+          "end_time": "15:15",
+          "estimated_cost": 0,
+          "notes": "Quãng đi bộ ngắn.",
+          "order_index": 9,
+          "place_id": null,
+          "place_name": null,
+          "start_time": "15:00",
+          "transport_mode": "walk"
+        },
+        {
+          "activity": "Nghỉ chân uống cà phê",
+          "activity_kind": "POI_VISIT",
+          "end_time": "16:30",
+          "estimated_cost": 40000,
+          "notes": "Nghỉ ngơi trước buổi tối.",
+          "order_index": 10,
+          "place_id": "82150ecb-f97e-4f82-bbcc-b183d12bb503",
+          "place_name": "Cà Phê Big One",
+          "start_time": "15:15",
+          "transport_mode": "walk"
+        },
+        {
+          "activity": "Di chuyển về khu phố cổ",
+          "activity_kind": "TRANSIT_ONLY",
+          "end_time": "17:15",
+          "estimated_cost": 30000,
+          "notes": "Đi xe công nghệ.",
+          "order_index": 11,
+          "place_id": null,
+          "place_name": null,
+          "start_time": "16:30",
+          "transport_mode": "motorbike"
+        },
+        {
+          "activity": "Ăn tối với xôi",
+          "activity_kind": "POI_VISIT",
+          "end_time": "18:15",
+          "estimated_cost": 40000,
+          "notes": "Món ăn nhẹ giá rẻ.",
+          "order_index": 12,
+          "place_id": "5abba2de-af4b-4c0d-a3b7-7347cd0b266a",
+          "place_name": "Xoi Van Anh",
+          "start_time": "17:15",
+          "transport_mode": "walk"
+        },
+        {
+          "activity": "Thư giãn buổi tối tại quán bar",
+          "activity_kind": "POI_VISIT",
+          "end_time": "21:30",
+          "estimated_cost": 120000,
+          "notes": "Không khí sôi động ở khu phố cổ.",
+          "order_index": 13,
+          "place_id": "24436e5f-e90d-4eeb-9a00-6b265661ce02",
+          "place_name": "Roots Reggae bar",
+          "start_time": "19:30",
+          "transport_mode": "walk"
+        }
+      ],
+      "title": "Hồ Hoàn Kiếm, phở và công viên xanh"
+    },
+    {
+      "date": "2026-12-04",
+      "day_cost": 580000,
+      "day_number": 2,
+      "items": [
+        {
+          "activity": "Thưởng thức bánh tôm bên Hồ Tây",
+          "activity_kind": "POI_VISIT",
+          "end_time": "09:00",
+          "estimated_cost": 60000,
+          "notes": "Đặc sản nổi tiếng khu Hồ Tây.",
+          "order_index": 1,
+          "place_id": "b0641225-0f38-4bcc-9f4c-34f65fa50d45",
+          "place_name": "Cửa Hàng Bánh Tôm Hồ Tây",
+          "start_time": "08:00",
+          "transport_mode": "motorbike"
+        },
+        {
+          "activity": "Di chuyển đến công viên",
+          "activity_kind": "TRANSIT_ONLY",
+          "end_time": "09:45",
+          "estimated_cost": 40000,
+          "notes": "Đi xe công nghệ.",
+          "order_index": 2,
+          "place_id": null,
+          "place_name": null,
+          "start_time": "09:00",
+          "transport_mode": "motorbike"
+        },
+        {
+          "activity": "Dạo chơi trong công viên",
+          "activity_kind": "POI_VISIT",
+          "end_time": "11:45",
+          "estimated_cost": 40000,
+          "notes": "Mở cửa 06:00-18:00, có vé vào cổng.",
+          "order_index": 3,
+          "place_id": "1f9c2b46-e032-5cbc-a9dc-dc68c435c594",
+          "place_name": "Công viên Thủ Lệ",
+          "start_time": "09:45",
+          "transport_mode": "motorbike"
+        },
+        {
+          "activity": "Di chuyển đến quán ăn trưa",
+          "activity_kind": "TRANSIT_ONLY",
+          "end_time": "12:15",
+          "estimated_cost": 30000,
+          "notes": "Đi xe công nghệ.",
+          "order_index": 4,
+          "place_id": null,
+          "place_name": null,
+          "start_time": "11:45",
+          "transport_mode": "motorbike"
+        },
+        {
+          "activity": "Ăn trưa tại nhà hàng",
+          "activity_kind": "POI_VISIT",
+          "end_time": "13:30",
+          "estimated_cost": 80000,
+          "notes": "Chọn món vừa túi tiền.",
+          "order_index": 5,
+          "place_id": "a3ff8bb3-cf45-490f-9d6c-3a6ffdd7ab19",
+          "place_name": "Trà Xuân Tửu",
+          "start_time": "12:15",
+          "transport_mode": "motorbike"
+        },
+        {
+          "activity": "Đi bộ đến quán cà phê",
+          "activity_kind": "TRANSIT_ONLY",
+          "end_time": "13:45",
+          "estimated_cost": 0,
+          "notes": "Quãng đi bộ ngắn.",
+          "order_index": 6,
+          "place_id": null,
+          "place_name": null,
+          "start_time": "13:30",
+          "transport_mode": "walk"
+        },
+        {
+          "activity": "Uống cà phê thư giãn buổi chiều",
+          "activity_kind": "POI_VISIT",
+          "end_time": "15:00",
+          "estimated_cost": 40000,
+          "notes": "Không gian yên tĩnh để nghỉ ngơi.",
+          "order_index": 7,
+          "place_id": "ef76a682-35ef-4088-94ef-fe05fadf6a1d",
+          "place_name": "Cà Phê Cây Bàng Đổ",
+          "start_time": "13:45",
+          "transport_mode": "walk"
+        },
+        {
+          "activity": "Di chuyển đến khu chợ đêm",
+          "activity_kind": "TRANSIT_ONLY",
+          "end_time": "19:00",
+          "estimated_cost": 40000,
+          "notes": "Đi xe công nghệ về phố cổ.",
+          "order_index": 8,
+          "place_id": null,
+          "place_name": null,
+          "start_time": "18:15",
+          "transport_mode": "motorbike"
+        },
+        {
+          "activity": "Dạo chợ đêm và ăn đồ ăn đường phố",
+          "activity_kind": "POI_VISIT",
+          "end_time": "21:00",
+          "estimated_cost": 100000,
+          "notes": "Mở thứ Sáu đến Chủ nhật 18:00-23:00.",
+          "order_index": 9,
+          "place_id": "3f37f38d-b228-5e97-b572-c49bf1a875e8",
+          "place_name": "Chợ đêm",
+          "start_time": "19:00",
+          "transport_mode": "walk"
+        },
+        {
+          "activity": "Đi bộ đến quán bar",
+          "activity_kind": "TRANSIT_ONLY",
+          "end_time": "21:15",
+          "estimated_cost": 0,
+          "notes": "Quãng đi bộ ngắn.",
+          "order_index": 10,
+          "place_id": null,
+          "place_name": null,
+          "start_time": "21:00",
+          "transport_mode": "walk"
+        },
+        {
+          "activity": "Kết thúc chuyến đi với đồ uống tại quán bar",
+          "activity_kind": "POI_VISIT",
+          "end_time": "23:00",
+          "estimated_cost": 150000,
+          "notes": "Bar nhìn ra sông Hồng, hoạt động về đêm.",
+          "order_index": 11,
+          "place_id": "17bae7e1-2138-467f-bf34-1638e6a2fdd9",
+          "place_name": "Phuc Tan Bar",
+          "start_time": "21:15",
+          "transport_mode": "walk"
+        }
+      ],
+      "title": "Hồ Tây, công viên Thủ Lệ và đêm phố cổ"
+    }
+  ],
+  "destination": "Hà Nội",
+  "destination_slug": "ha-noi",
+  "general_tips": [
+    "Đi bộ hoặc dùng xe công nghệ để tiết kiệm chi phí di chuyển trong nội đô.",
+    "Chợ đêm khu phố cổ chỉ mở từ thứ Sáu đến Chủ nhật nên được xếp vào tối thứ Sáu.",
+    "Giờ mở cửa của một số địa điểm có thể thay đổi, nên kiểm tra lại trước khi đến.",
+    "Mang theo tiền mặt cho quán ăn đường phố và vé vào cửa nhỏ."
+  ],
+  "overview": "Lịch trình 2 ngày phong cách tiết kiệm tại Hà Nội, kết hợp ẩm thực địa phương, không gian xanh và các hoạt động buổi tối. Ngày 1 quanh khu Hồ Hoàn Kiếm và Công viên Thống Nhất, ngày 2 đi Hồ Tây, Công viên Thủ Lệ rồi kết thúc ở chợ đêm và quán bar.",
+  "plan_id": "W06-DEV-TUNE-003-PLAN-01",
+  "scenario_id": "W06-DEV-TUNE-003",
+  "total_days": 2
+}

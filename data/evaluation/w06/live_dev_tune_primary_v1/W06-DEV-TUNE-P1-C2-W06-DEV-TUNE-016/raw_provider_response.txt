@@ -1,0 +1,161 @@
+{
+  "plan_id": "W06-DEV-TUNE-016-plan-01",
+  "scenario_id": "W06-DEV-TUNE-016",
+  "destination_slug": "ha-long",
+  "destination": "Hạ Long",
+  "total_days": 2,
+  "overview": "Hai ngày kết hợp ngắm vịnh, thưởng thức cà phê và mua sắm địa phương. Ưu tiên trải nghiệm thoải mái, ăn uống chỉn chu và taxi; với ngân sách 2 triệu đồng, không bố trí du thuyền riêng hoặc lưu trú hạng sang. Chi phí dự kiến cho các hoạt động được liệt kê là 1.690.000 VND/người, chưa gồm lưu trú và di chuyển liên tỉnh.",
+  "best_time_to_visit": "Cuối tháng 11 thường phù hợp ngắm cảnh và đi bộ, nhưng có thể se lạnh hoặc có sương. Lịch đi vịnh ngày 22/11/2026 phụ thuộc thời tiết và quyết định cấp phép của cảng vụ.",
+  "general_tips": [
+    "Giá là dự toán cho một người, không phải báo giá đã xác nhận; kiểm tra giá cuối cùng trước khi đặt dịch vụ.",
+    "Đặt tàu ghép tham quan vịnh có chỗ ngồi thoải mái; xác nhận gói không quá 850.000 VND gồm vé tham quan, hành trình khứ hồi và bữa trưa. Không giả định đây là du thuyền hạng sang.",
+    "Ngân sách còn 310.000 VND dự phòng. Nếu cần bao gồm khách sạn trong trần 2 triệu đồng, phải điều chỉnh giảm trải nghiệm; ngân sách hiện tại không bảo đảm một đêm lưu trú cao cấp.",
+    "Mang áo khoác nhẹ, giày chống trượt và giấy tờ tùy thân khi đi tàu; không xuống nước nếu điều kiện không an toàn.",
+    "Các địa điểm không có giờ mở cửa trong danh mục cần được liên hệ xác nhận trước. Hỏi giá và thống nhất lượng hải sản trước khi gọi món."
+  ],
+  "budget_analysis": {
+    "total_budget": 2000000,
+    "estimated_cost": 1690000,
+    "currency": "VND",
+    "is_over_budget": false,
+    "variance": -310000
+  },
+  "days": [
+    {
+      "day_number": 1,
+      "date": "2026-11-22",
+      "title": "Cà phê thong thả, ngắm vịnh và bữa tối hải sản",
+      "items": [
+        {
+          "order_index": 1,
+          "start_time": "07:00",
+          "end_time": "07:45",
+          "activity_kind": "POI_VISIT",
+          "activity": "Thưởng thức cà phê và thư giãn đầu ngày",
+          "place_name": "Cafe ban mê",
+          "place_id": "70c3326e-1b53-45bf-a210-6c43a076e95b",
+          "notes": "Khung giờ nằm trong giờ mở cửa 06:30–23:30. Dự toán cho đồ uống.",
+          "estimated_cost": 60000,
+          "transport_mode": null
+        },
+        {
+          "order_index": 2,
+          "start_time": "07:45",
+          "end_time": "08:10",
+          "activity_kind": "TRANSIT_ONLY",
+          "activity": "Đi taxi tới điểm tập kết của chuyến tàu tham quan",
+          "place_name": null,
+          "place_id": null,
+          "notes": "Xác nhận điểm tập kết và giờ có mặt với đơn vị vận hành; thời gian có dự phòng.",
+          "estimated_cost": 40000,
+          "transport_mode": "taxi"
+        },
+        {
+          "order_index": 3,
+          "start_time": "08:10",
+          "end_time": "15:30",
+          "activity_kind": "POI_VISIT",
+          "activity": "Trải nghiệm tham quan vịnh bằng tàu ghép tiện nghi",
+          "place_name": "Vịnh Hạ Long",
+          "place_id": "ade2140c-7945-4044-b99a-b1a028edce9e",
+          "notes": "Khung thời gian gồm làm thủ tục, hành trình ngắm cảnh, ăn trưa và trở lại bờ. Dự toán trọn gói 850.000 VND; cần xác nhận lịch chạy, vé và bữa trưa trước khi mua. Không bao gồm dịch vụ tùy chọn và không cam kết cập đảo cụ thể.",
+          "estimated_cost": 850000,
+          "transport_mode": "boat"
+        },
+        {
+          "order_index": 4,
+          "start_time": "15:30",
+          "end_time": "16:00",
+          "activity_kind": "TRANSIT_ONLY",
+          "activity": "Đi taxi từ điểm trả khách của tàu tới nhà hàng",
+          "place_name": null,
+          "place_id": null,
+          "notes": "Ước tính cho chuyến tàu khởi hành và trở về khu vực Bãi Cháy; xác nhận trước để tránh phát sinh quãng đường.",
+          "estimated_cost": 40000,
+          "transport_mode": "taxi"
+        },
+        {
+          "order_index": 5,
+          "start_time": "16:00",
+          "end_time": "17:30",
+          "activity_kind": "POI_VISIT",
+          "activity": "Dùng bữa tối sớm với các món hải sản",
+          "place_name": "Nhà hàng Hồng Hạnh 3",
+          "place_id": "b37d68ee-0cb3-49f0-a399-cac4c8e2732c",
+          "notes": "Liên hệ xác nhận phục vụ lúc 16:00 và đặt bàn. Chọn món theo ngân sách 300.000 VND/người; tránh gọi hải sản tính theo cân khi chưa thống nhất giá.",
+          "estimated_cost": 300000,
+          "transport_mode": null
+        }
+      ],
+      "day_cost": 1290000
+    },
+    {
+      "day_number": 2,
+      "date": "2026-11-23",
+      "title": "Chợ địa phương và cà phê thư giãn ở Cái Dăm",
+      "items": [
+        {
+          "order_index": 1,
+          "start_time": "08:30",
+          "end_time": "10:00",
+          "activity_kind": "POI_VISIT",
+          "activity": "Khám phá chợ và chọn đặc sản đóng gói làm quà",
+          "place_name": "Chợ Cái Dăm",
+          "place_id": "96523873-1b85-4d2f-b85c-cb3f5593091b",
+          "notes": "Thứ Hai, nằm trong giờ mở cửa danh mục 08:00–16:00. Khoản 150.000 VND là hạn mức mua sắm, không phải vé vào chợ.",
+          "estimated_cost": 150000,
+          "transport_mode": null
+        },
+        {
+          "order_index": 2,
+          "start_time": "10:00",
+          "end_time": "10:15",
+          "activity_kind": "TRANSIT_ONLY",
+          "activity": "Đi bộ từ chợ tới quán cà phê",
+          "place_name": null,
+          "place_id": null,
+          "notes": "Hai điểm cùng khu vực Cái Dăm; chú ý giao thông khi sang đường.",
+          "estimated_cost": 0,
+          "transport_mode": "walking"
+        },
+        {
+          "order_index": 3,
+          "start_time": "10:15",
+          "end_time": "11:30",
+          "activity_kind": "POI_VISIT",
+          "activity": "Thưởng thức đồ uống và nghỉ chân sau buổi mua sắm",
+          "place_name": "Orchid Coffee",
+          "place_id": "9215a3fe-8306-453f-b0ab-8201d6753fbc",
+          "notes": "Khung giờ nằm trong giờ mở cửa 07:30–22:30. Dành thời gian thư giãn thay vì di chuyển dồn dập.",
+          "estimated_cost": 70000,
+          "transport_mode": null
+        },
+        {
+          "order_index": 4,
+          "start_time": "11:30",
+          "end_time": "11:45",
+          "activity_kind": "TRANSIT_ONLY",
+          "activity": "Đi bộ tới nhà hàng dùng bữa trưa",
+          "place_name": null,
+          "place_id": null,
+          "notes": "Chặng ngắn trong cùng khu vực, đã dành thời gian dự phòng tìm lối đi.",
+          "estimated_cost": 0,
+          "transport_mode": "walking"
+        },
+        {
+          "order_index": 5,
+          "start_time": "11:45",
+          "end_time": "13:00",
+          "activity_kind": "POI_VISIT",
+          "activity": "Dùng bữa trưa với pizza và kết thúc lịch trình",
+          "place_name": "14 Pizza Halong",
+          "place_id": "7a02c55f-5bfb-44f4-ab00-d9e93c48b85d",
+          "notes": "Thứ Hai thuộc lịch mở cửa We-Mo 10:00–22:00. Dự toán phần ăn và đồ uống trong hạn mức 180.000 VND.",
+          "estimated_cost": 180000,
+          "transport_mode": null
+        }
+      ],
+      "day_cost": 400000
+    }
+  ]
+}

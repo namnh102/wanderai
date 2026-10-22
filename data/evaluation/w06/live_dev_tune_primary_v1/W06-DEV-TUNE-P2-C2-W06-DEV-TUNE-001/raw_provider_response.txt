@@ -1,0 +1,185 @@
+{
+  "plan_id": "W06-DEV-TUNE-001-PLAN-01",
+  "scenario_id": "W06-DEV-TUNE-001",
+  "destination_slug": "ha-noi",
+  "destination": "Hà Nội",
+  "total_days": 2,
+  "overview": "Hai ngày khám phá văn hóa cà phê Hà Nội với nhịp độ thư thả, kết hợp di sản và ẩm thực. Phong cách LUXURY được điều chỉnh theo ngân sách: ưu tiên thời gian trải nghiệm, một bữa ăn chỉn chu và taxi ở chặng dài, không bao gồm lưu trú cao cấp.",
+  "best_time_to_visit": "Tháng 10–11 thường phù hợp để đi bộ và thưởng thức cà phê. Lịch trình áp dụng ngày 17–18/11/2026; nên kiểm tra dự báo thời tiết trước chuyến đi.",
+  "general_tips": [
+    "Chi phí dự kiến dành cho một người, gồm các hoạt động và chặng di chuyển được liệt kê; không bao gồm khách sạn, vé đến Hà Nội hoặc các bữa ăn ngoài lịch trình.",
+    "Các địa điểm có giờ mở cửa chưa được cung cấp cần được liên hệ xác nhận trước; khung giờ trong lịch là giờ dự kiến ghé, không phải giờ hoạt động đã xác minh.",
+    "Giá món ăn, đồ uống, vé và taxi là ước tính, không phải báo giá xác nhận. Kiểm tra thực đơn và tổng tiền gồm thuế, phí trước khi gọi món.",
+    "Ưu tiên khẩu phần vừa phải tại các quán cà phê; chọn món trong hạn mức ghi ở từng hoạt động để giữ ngân sách.",
+    "Mang giày dễ đi bộ, áo khoác mỏng và trang phục lịch sự khi vào đền. Phần thời gian ngoài lịch trình không có dịch vụ hoặc chi phí được đặt sẵn."
+  ],
+  "budget_analysis": {
+    "total_budget": 1000000,
+    "estimated_cost": 840000,
+    "currency": "VND",
+    "is_over_budget": false,
+    "variance": -160000
+  },
+  "days": [
+    {
+      "day_number": 1,
+      "date": "2026-11-17",
+      "title": "Cà phê phố cổ và bữa trưa chỉn chu",
+      "items": [
+        {
+          "order_index": 1,
+          "start_time": "09:00",
+          "end_time": "10:30",
+          "activity_kind": "POI_VISIT",
+          "activity": "Thưởng thức cà phê chậm rãi và quan sát nhịp sống phố cổ",
+          "place_name": "Cà Phê Nola",
+          "place_id": "4146f2b7-8289-4309-b7e6-60ba7de3470e",
+          "notes": "Dự trù 80.000 VND cho đồ uống; hỏi về cách pha và chọn vị phù hợp. Danh mục chưa cung cấp giờ mở cửa, cần xác nhận trước.",
+          "estimated_cost": 80000,
+          "transport_mode": null
+        },
+        {
+          "order_index": 2,
+          "start_time": "10:30",
+          "end_time": "10:45",
+          "activity_kind": "TRANSIT_ONLY",
+          "activity": "Đi bộ đến điểm tham quan tiếp theo",
+          "place_name": null,
+          "place_id": null,
+          "notes": "Chặng ngắn trong khu vực phố cổ; dành thời gian qua đường an toàn.",
+          "estimated_cost": 0,
+          "transport_mode": "walking"
+        },
+        {
+          "order_index": 3,
+          "start_time": "10:45",
+          "end_time": "11:45",
+          "activity_kind": "POI_VISIT",
+          "activity": "Tham quan kiến trúc đền và thư giãn trong không gian di sản",
+          "place_name": "Đền Ngọc Sơn",
+          "place_id": "44115e3a-6094-5bcd-b53c-0e3a596b3aff",
+          "notes": "Khung tham quan nằm trong giờ mở cửa thứ Ba 07:00–18:00 theo danh mục. Chi phí vé tạm tính, cần kiểm tra mức áp dụng thực tế.",
+          "estimated_cost": 50000,
+          "transport_mode": null
+        },
+        {
+          "order_index": 4,
+          "start_time": "11:45",
+          "end_time": "12:10",
+          "activity_kind": "TRANSIT_ONLY",
+          "activity": "Di chuyển bằng taxi đến nơi ăn trưa",
+          "place_name": null,
+          "place_id": null,
+          "notes": "Dự trù thời gian đón xe và lưu thông trong phố cổ; giá phụ thuộc điểm đón và tình trạng giao thông.",
+          "estimated_cost": 30000,
+          "transport_mode": "taxi"
+        },
+        {
+          "order_index": 5,
+          "start_time": "12:10",
+          "end_time": "13:40",
+          "activity_kind": "POI_VISIT",
+          "activity": "Dùng bữa trưa thư thả với món gọi riêng trong hạn mức",
+          "place_name": "Red bean",
+          "place_id": "1b924d05-4d1c-4f07-b661-9b14b551b381",
+          "notes": "Ưu tiên trải nghiệm ăn uống chỉn chu thay vì gọi thực đơn nhiều món. Hạn mức 250.000 VND gồm thuế, phí nếu có; xác nhận thực đơn, giờ phục vụ và đặt bàn trước.",
+          "estimated_cost": 250000,
+          "transport_mode": null
+        }
+      ],
+      "day_cost": 410000
+    },
+    {
+      "day_number": 2,
+      "date": "2026-11-18",
+      "title": "Hai điểm cà phê và câu chuyện văn hóa Việt",
+      "items": [
+        {
+          "order_index": 1,
+          "start_time": "09:00",
+          "end_time": "10:15",
+          "activity_kind": "POI_VISIT",
+          "activity": "Khởi đầu ngày bằng cà phê và thời gian đọc sách, thư giãn",
+          "place_name": "Orick Coffee",
+          "place_id": "d4bc8f9b-960a-4009-a71a-1f7f8d81082d",
+          "notes": "Dự trù một đồ uống trong hạn mức 70.000 VND. Danh mục chưa cung cấp giờ mở cửa; cần xác nhận khả năng phục vụ buổi sáng.",
+          "estimated_cost": 70000,
+          "transport_mode": null
+        },
+        {
+          "order_index": 2,
+          "start_time": "10:15",
+          "end_time": "10:30",
+          "activity_kind": "TRANSIT_ONLY",
+          "activity": "Đi bộ đến bảo tàng",
+          "place_name": null,
+          "place_id": null,
+          "notes": "Chặng đi bộ ngắn; thời gian đã có khoảng đệm qua đường.",
+          "estimated_cost": 0,
+          "transport_mode": "walking"
+        },
+        {
+          "order_index": 3,
+          "start_time": "10:30",
+          "end_time": "11:45",
+          "activity_kind": "POI_VISIT",
+          "activity": "Tìm hiểu đời sống và văn hóa qua các trưng bày về phụ nữ Việt Nam",
+          "place_name": "Bảo tàng Phụ nữ Việt Nam",
+          "place_id": "fb8f1d59-838b-5b8f-9363-0541b1af42d8",
+          "notes": "Nằm trong giờ mở cửa 08:00–17:00 theo danh mục. Dự trù vé vào cửa 40.000 VND; kiểm tra giá thực tế trước chuyến đi.",
+          "estimated_cost": 40000,
+          "transport_mode": null
+        },
+        {
+          "order_index": 4,
+          "start_time": "11:45",
+          "end_time": "12:00",
+          "activity_kind": "TRANSIT_ONLY",
+          "activity": "Đi bộ đến quán cà phê tiếp theo",
+          "place_name": null,
+          "place_id": null,
+          "notes": "Hai điểm ở gần nhau; dành khoảng đệm để di chuyển thong thả.",
+          "estimated_cost": 0,
+          "transport_mode": "walking"
+        },
+        {
+          "order_index": 5,
+          "start_time": "12:00",
+          "end_time": "13:00",
+          "activity_kind": "POI_VISIT",
+          "activity": "Thưởng thức đồ uống và so sánh trải nghiệm cà phê giữa các quán",
+          "place_name": "Van Viet Cafe",
+          "place_id": "f07bc9a4-337a-4ece-a050-8159adb798d9",
+          "notes": "Hạn mức 100.000 VND cho đồ uống và món nhẹ nếu thực đơn có phục vụ. Chọn đồ uống ít caffeine nếu cần; xác nhận giờ mở cửa trước.",
+          "estimated_cost": 100000,
+          "transport_mode": null
+        },
+        {
+          "order_index": 6,
+          "start_time": "13:00",
+          "end_time": "13:30",
+          "activity_kind": "TRANSIT_ONLY",
+          "activity": "Di chuyển bằng taxi đến nhà hàng",
+          "place_name": null,
+          "place_id": null,
+          "notes": "Chi phí taxi ước tính cho chặng nội đô, có thời gian đệm chờ xe.",
+          "estimated_cost": 40000,
+          "transport_mode": "taxi"
+        },
+        {
+          "order_index": 7,
+          "start_time": "13:30",
+          "end_time": "14:45",
+          "activity_kind": "POI_VISIT",
+          "activity": "Dùng bữa trưa muộn với món Việt gọi riêng",
+          "place_name": "Quán Ăn Ngon - Phan Bội Châu",
+          "place_id": "acb22336-1124-49d5-a279-6357c2b2b445",
+          "notes": "Nằm trong giờ mở cửa 06:45–22:00 theo danh mục. Chọn món và đồ uống trong tổng hạn mức 180.000 VND, kiểm tra thuế và phí trước khi gọi.",
+          "estimated_cost": 180000,
+          "transport_mode": null
+        }
+      ],
+      "day_cost": 430000
+    }
+  ]
+}

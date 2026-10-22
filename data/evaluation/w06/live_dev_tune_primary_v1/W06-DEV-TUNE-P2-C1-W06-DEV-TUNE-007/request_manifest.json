@@ -1,0 +1,347 @@
+{
+  "attempt_number": 1,
+  "authorization_artifact_sha256": "fb2c181e14b0b122100f7b3b386bdaeaffe467c913d384db16717149374a1c83",
+  "authorization_id": "W06-DEV-TUNE-LIVE-AUTHORIZATION-01-V1",
+  "automatic_retry": 0,
+  "call_budget_reservation_index": 79,
+  "candidate_id": "C1",
+  "catalog_context_sha256": "527c68f1dcb8a353942721f52afd2f1955eb92effdbea2155030f5acd6e58770",
+  "code_basis_commit_sha": "60d52d720e66f5af8e82fabf9cebe2ea0e8a9e26",
+  "code_commit_sha": "60d52d720e66f5af8e82fabf9cebe2ea0e8a9e26",
+  "deterministic_semantic_repair": false,
+  "execution_mode": "LIVE_DEV_TUNE",
+  "execution_started_at_utc": "2026-10-22T06:22:24.518403+00:00",
+  "fallback": false,
+  "fixture_id": "W06-DEV-TUNE-007",
+  "llm_repair": 0,
+  "manual_retry": 0,
+  "max_output_tokens": 16384,
+  "phase": "DEV_TUNE",
+  "portable_generation_schema_v2_sha256": "825a4ff912d851a95f7392cb564b7d7ca3588135508dc6eb3ac6304cdde3c490",
+  "prompt_id": "P2",
+  "provider_config_sha256": "d4d417bdeff3f4156ac9605f976b46780c1cb0866d87674f1cee51d8bf3f3217",
+  "provider_wire_request": {
+    "candidate_id": "C1",
+    "config": {
+      "automatic_function_calling": {
+        "disable": true
+      },
+      "http_options": {
+        "timeout": 55000
+      },
+      "max_output_tokens": 16384,
+      "response_json_schema": {
+        "$defs": {
+          "ActivityKind": {
+            "description": "Controlled itinerary activity universe frozen by W06-MEASUREMENT-CONTRACT-01 FIX-01C.",
+            "enum": [
+              "POI_VISIT",
+              "TRANSIT_ONLY"
+            ],
+            "title": "ActivityKind",
+            "type": "string"
+          },
+          "BenchmarkBudgetAnalysis": {
+            "additionalProperties": false,
+            "description": "Deterministic budget summary for a benchmark itinerary response.",
+            "properties": {
+              "currency": {
+                "title": "Currency",
+                "type": "string"
+              },
+              "estimated_cost": {
+                "title": "Estimated Cost",
+                "type": "integer"
+              },
+              "is_over_budget": {
+                "title": "Is Over Budget",
+                "type": "boolean"
+              },
+              "total_budget": {
+                "anyOf": [
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Total Budget"
+              },
+              "variance": {
+                "title": "Variance",
+                "type": "integer"
+              }
+            },
+            "required": [
+              "currency",
+              "estimated_cost",
+              "is_over_budget",
+              "total_budget",
+              "variance"
+            ],
+            "title": "BenchmarkBudgetAnalysis",
+            "type": "object"
+          },
+          "BenchmarkItineraryDay": {
+            "additionalProperties": false,
+            "description": "Strict benchmark itinerary day.",
+            "properties": {
+              "date": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Date"
+              },
+              "day_cost": {
+                "description": "[SEMANTIC_CONSTRAINTS: minimum=0]",
+                "title": "Day Cost",
+                "type": "integer"
+              },
+              "day_number": {
+                "description": "[SEMANTIC_CONSTRAINTS: minimum=1]",
+                "title": "Day Number",
+                "type": "integer"
+              },
+              "items": {
+                "items": {
+                  "$ref": "#/$defs/BenchmarkItineraryItem"
+                },
+                "minItems": 1,
+                "title": "Items",
+                "type": "array"
+              },
+              "title": {
+                "description": "[SEMANTIC_CONSTRAINTS: minLength=1]",
+                "title": "Title",
+                "type": "string"
+              }
+            },
+            "required": [
+              "date",
+              "day_cost",
+              "day_number",
+              "items",
+              "title"
+            ],
+            "title": "BenchmarkItineraryDay",
+            "type": "object"
+          },
+          "BenchmarkItineraryItem": {
+            "additionalProperties": false,
+            "description": "Strict benchmark itinerary item enforcing POI_VISIT vs TRANSIT_ONLY contract rules.",
+            "properties": {
+              "activity": {
+                "description": "[SEMANTIC_CONSTRAINTS: minLength=1]",
+                "title": "Activity",
+                "type": "string"
+              },
+              "activity_kind": {
+                "$ref": "#/$defs/ActivityKind"
+              },
+              "end_time": {
+                "description": "[SEMANTIC_CONSTRAINTS: minLength=1]",
+                "title": "End Time",
+                "type": "string"
+              },
+              "estimated_cost": {
+                "description": "[SEMANTIC_CONSTRAINTS: minimum=0]",
+                "title": "Estimated Cost",
+                "type": "integer"
+              },
+              "notes": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Notes"
+              },
+              "order_index": {
+                "description": "[SEMANTIC_CONSTRAINTS: minimum=1]",
+                "title": "Order Index",
+                "type": "integer"
+              },
+              "place_id": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Place Id"
+              },
+              "place_name": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Place Name"
+              },
+              "start_time": {
+                "description": "[SEMANTIC_CONSTRAINTS: minLength=1]",
+                "title": "Start Time",
+                "type": "string"
+              },
+              "transport_mode": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Transport Mode"
+              }
+            },
+            "required": [
+              "activity",
+              "activity_kind",
+              "end_time",
+              "estimated_cost",
+              "notes",
+              "order_index",
+              "place_id",
+              "place_name",
+              "start_time",
+              "transport_mode"
+            ],
+            "title": "BenchmarkItineraryItem",
+            "type": "object"
+          }
+        },
+        "additionalProperties": false,
+        "description": "Strict parsed benchmark plan response persisted as parsed_plan_response.json.",
+        "properties": {
+          "best_time_to_visit": {
+            "description": "[SEMANTIC_CONSTRAINTS: minLength=1]",
+            "title": "Best Time To Visit",
+            "type": "string"
+          },
+          "budget_analysis": {
+            "$ref": "#/$defs/BenchmarkBudgetAnalysis"
+          },
+          "days": {
+            "items": {
+              "$ref": "#/$defs/BenchmarkItineraryDay"
+            },
+            "minItems": 1,
+            "title": "Days",
+            "type": "array"
+          },
+          "destination": {
+            "description": "[SEMANTIC_CONSTRAINTS: minLength=1]",
+            "title": "Destination",
+            "type": "string"
+          },
+          "destination_slug": {
+            "description": "[SEMANTIC_CONSTRAINTS: minLength=1]",
+            "title": "Destination Slug",
+            "type": "string"
+          },
+          "general_tips": {
+            "items": {
+              "type": "string"
+            },
+            "title": "General Tips",
+            "type": "array"
+          },
+          "overview": {
+            "description": "[SEMANTIC_CONSTRAINTS: minLength=1]",
+            "title": "Overview",
+            "type": "string"
+          },
+          "plan_id": {
+            "description": "[SEMANTIC_CONSTRAINTS: minLength=1]",
+            "title": "Plan Id",
+            "type": "string"
+          },
+          "scenario_id": {
+            "description": "[SEMANTIC_CONSTRAINTS: minLength=1]",
+            "title": "Scenario Id",
+            "type": "string"
+          },
+          "total_days": {
+            "description": "[SEMANTIC_CONSTRAINTS: maximum=14; minimum=1]",
+            "title": "Total Days",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "best_time_to_visit",
+          "budget_analysis",
+          "days",
+          "destination",
+          "destination_slug",
+          "general_tips",
+          "overview",
+          "plan_id",
+          "scenario_id",
+          "total_days"
+        ],
+        "title": "BenchmarkPlanResponse",
+        "type": "object"
+      },
+      "response_mime_type": "application/json",
+      "seed": 2026101508,
+      "system_instruction": "You are the W06 Benchmark Itinerary Planner operating under architecture LLM_BASED_ITINERARY_PLANNER_WITH_DETERMINISTIC_GROUNDING_AND_VALIDATION_V1. Return strictly one JSON object conforming to BenchmarkPlanResponse with zero markdown fences and zero tool calls.\nBefore returning the JSON, perform a silent constraint check and correct the draft if needed:\n(1) every POI_VISIT must copy an exact place_id and matching place_name from the provided REC-A-CORE-V2 catalog;\n(2) each day must contain at least two POI_VISIT items;\n(3) do not repeat a place_id unless allow_revisit_place_ids=true;\n(4) use valid non-overlapping HH:MM intervals with start_time < end_time;\n(5) when opening_hours is known and parseable, schedule the POI visit within it, while missing or unknown opening_hours must not be invented;\nand (6) respect the scenario budget when a budget ceiling is provided.\nDo not reveal this checking process; output only the final JSON object.",
+      "thinking_config": {
+        "include_thoughts": false,
+        "thinking_level": "medium"
+      },
+      "tools": null
+    },
+    "contents": "Bạn là hệ thống lập lịch trình du lịch của GoMate đang chạy ở chế độ kiểm định khoa học (BENCHMARK MODE — TRAVEL_PLANNER_BENCHMARK_V2).\nNhiệm vụ của bạn là tạo lịch trình chi tiết từng ngày bằng JSON hợp lệ dựa trên ngữ cảnh kịch bản và DANH MỤC ĐỊA ĐIỂM ĐƯỢC PHÉP (REC-A-CORE-V2 CATALOG) dưới đây.\n\nTHÔNG TIN KỊCH BẢN (SCENARIO CONTEXT):\n- Mã kịch bản (scenario_id): W06-DEV-TUNE-007\n- Điểm đến (destination): Hà Nội (destination_slug: ha-noi)\n- Số ngày: 4 ngày (từ 2026-12-06 đến 2026-12-09)\n- Tổng ngân sách trần (budget ceiling): 8,000,000 VND\n- Phong cách du lịch (travel_style): LUXURY\n- Sở thích chuẩn hóa (canonical_interests): [\"coffee_culture\", \"culture_history\", \"nature_outdoor\"] (Văn hóa cà phê & Không gian thư giãn (coffee_culture), Văn hóa & Di tích lịch sử (culture_history), Thiên nhiên & Hoạt động ngoài trời (nature_outdoor))\n- Chính sách lặp lại địa điểm (allow_revisit_place_ids): false (TUYỆT ĐỐI KHÔNG lặp lại cùng một place_id trong lịch trình)\n\n\nQUY TẮC BẮT BUỘC (SCIENTIFIC BENCHMARK RULES):\nA. PHÂN LOẠI HOẠT ĐỘNG (activity_kind) — CHỈ ĐƯỢC DÙNG 1 TRONG 2 GIÁ TRỊ:\n   1. \"POI_VISIT\":\n      - Dùng cho mọi hoạt động tham quan, ăn uống, cà phê, mua sắm, vui chơi, nghỉ ngơi tại một địa điểm vật lý cụ thể.\n      - BẮT BUỘC có:\n        \"activity_kind\": \"POI_VISIT\"\n        \"place_id\": \"<sao chép CHÍNH XÁC từng ký tự place_id từ DANH MỤC ĐƯỢC PHÉP bên dưới>\"\n        \"place_name\": \"<tên name tương ứng của địa điểm đó trong danh mục>\"\n      - TUYỆT ĐỐI KHÔNG tự bịa ra place_id hoặc địa điểm nằm ngoài danh mục được cung cấp.\n   2. \"TRANSIT_ONLY\":\n      - CHỈ dùng cho hoạt động di chuyển thuần túy giữa các điểm tham quan.\n      - BẮT BUỘC có:\n        \"activity_kind\": \"TRANSIT_ONLY\"\n        \"place_id\": null\n        \"place_name\": null\n      - TUYỆT ĐỐI KHÔNG dùng \"TRANSIT_ONLY\" cho điểm tham quan, nhà hàng, quán cà phê, bảo tàng, công viên, hay bất kỳ địa điểm có tên cụ thể nào.\n\nB. KHÔNG LẶP LẠI ĐỊA ĐIỂM (NO DUPLICATE POI):\n   - Không được lặp lại cùng một \"place_id\" quá một lần trong toàn bộ lịch trình (trừ khi allow_revisit_place_ids = true).\n\nC. THỜI GIAN & CẤU TRÚC NGÀY (SCHEDULE & DAY STRUCTURE):\n   - Mảng \"days\" phải có đúng 4 ngày (day_number từ 1 đến 4).\n   - YÊU CẦU TỐI THIỂU MỖI NGÀY (min_poi_visits_per_day = 2): Mỗi ngày trong lịch trình BẮT BUỘC có ít nhất 2 hoạt động có \"activity_kind\": \"POI_VISIT\".\n   - CHỈ các hoạt động có \"activity_kind\" == \"POI_VISIT\" mới được tính vào số lượng tối thiểu 2 địa điểm/ngày này; \"TRANSIT_ONLY\" KHÔNG được tính vào số lượng tối thiểu này.\n   - Một ngày chỉ có 1 \"POI_VISIT\" kèm theo bất kỳ số lượng \"TRANSIT_ONLY\" nào đều bị tính là VI PHẠM cấu trúc ngày (non-compliant). Quy tắc tối thiểu 2 \"POI_VISIT\"/ngày này áp dụng ĐỘC LẬP cho TỪNG ngày trong lịch trình.\n   - Mỗi hoạt động phải có \"start_time\" và \"end_time\" đúng định dạng 24 giờ \"HH:MM\" (ví dụ: \"08:00\", \"10:30\"), thỏa mãn start_time < end_time.\n   - Trong cùng một ngày, các khung giờ [start_time, end_time) không được chồng chéo nhau.\n\nD. NGÂN SÁCH ƯỚC LƯỢNG (ESTIMATED BUDGET):\n   - Mỗi hoạt động có \"estimated_cost\" (số nguyên >= 0, đơn vị VND).\n   - Tổng \"estimated_cost\" của toàn bộ các hoạt động trong lịch trình phải <= tổng ngân sách trần (8,000,000 VND).\n\nE. ĐỊNH DẠNG ĐẦU RA (JSON ONLY):\n   - Chỉ trả về DUY NHẤT một đối tượng JSON hợp lệ (không kèm markdown ```json hay văn bản giải thích ngoài JSON):\n{\n  \"destination\": \"Hà Nội\",\n  \"total_days\": 4,\n  \"overview\": \"Mô tả tổng quan ngắn gọn về lịch trình.\",\n  \"best_time_to_visit\": \"Thông tin thời điểm phù hợp.\",\n  \"general_tips\": [\n    \"Lưu ý thực tế 1\",\n    \"Lưu ý thực tế 2\"\n  ],\n  \"days\": [\n    {\n      \"day_number\": 1,\n      \"date\": \"2026-12-06\",\n      \"title\": \"Chủ đề ngày 1\",\n      \"items\": [\n        {\n          \"order_index\": 1,\n          \"start_time\": \"08:00\",\n          \"end_time\": \"09:30\",\n          \"activity_kind\": \"POI_VISIT\",\n          \"activity\": \"Tham quan và trải nghiệm tại địa điểm thứ nhất\",\n          \"place_name\": \"<name địa điểm 1 từ danh mục>\",\n          \"place_id\": \"<place_id địa điểm 1 chính xác từ danh mục>\",\n          \"notes\": \"Ghi chú ngắn gọn cho địa điểm 1\",\n          \"estimated_cost\": 50000,\n          \"transport_mode\": \"motorbike\"\n        },\n        {\n          \"order_index\": 2,\n          \"start_time\": \"09:30\",\n          \"end_time\": \"10:00\",\n          \"activity_kind\": \"TRANSIT_ONLY\",\n          \"activity\": \"Di chuyển sang địa điểm tiếp theo\",\n          \"place_name\": null,\n          \"place_id\": null,\n          \"notes\": \"Di chuyển nội đô\",\n          \"estimated_cost\": 30000,\n          \"transport_mode\": \"taxi\"\n        },\n        {\n          \"order_index\": 3,\n          \"start_time\": \"10:00\",\n          \"end_time\": \"11:30\",\n          \"activity_kind\": \"POI_VISIT\",\n          \"activity\": \"Tham quan và trải nghiệm tại địa điểm thứ hai\",\n          \"place_name\": \"<name địa điểm 2 từ danh mục>\",\n          \"place_id\": \"<place_id địa điểm 2 chính xác từ danh mục>\",\n          \"notes\": \"Ghi chú ngắn gọn cho địa điểm 2\",\n          \"estimated_cost\": 60000,\n          \"transport_mode\": \"taxi\"\n        }\n      ]\n    }\n  ]\n}\n\nDANH MỤC ĐỊA ĐIỂM ĐƯỢC PHÉP CHO ha-noi (ALLOWED REC-A-CORE-V2 POI CATALOG — 145 POIs, SORTED BY place_id):\n[\n  {\n    \"place_id\": \"015e7408-de4d-5df7-88ef-cd266dc10277\",\n    \"name\": \"Bảo tàng Lịch sử Quốc gia Việt Nam\",\n    \"category\": \"culture\",\n    \"destination_slug\": \"ha-noi\",\n    \"lat\": 21.025331,\n    \"lng\": 105.858617,\n    \"opening_hours\": null\n  },\n  {\n    \"place_id\": \"0180e390-f144-4efc-849e-00eeb6cb3992\",\n    \"name\": \"Nhà Hàng New Day\",\n    \"category\": \"restaurant\",\n    \"destination_slug\": \"ha-noi\",\n    \"lat\": 21.034654,\n    \"lng\": 105.853359,\n    \"opening_hours\": null\n  },\n  {\n    \"place_id\": \"03e7eb46-afc0-4b25-91b0-dae3befb68da\",\n    \"name\": \"Khách Sạn Maison D'Hanoi\",\n    \"category\": \"hotel\",\n    \"destination_slug\": \"ha-noi\",\n    \"lat\": 21.031105,\n    \"lng\": 105.849487,\n    \"opening_hours\": null\n  },\n  {\n    \"place_id\": \"06020762-6ea5-45d8-8a16-221113c26050\",\n    \"name\": \"KFC\",\n    \"category\": \"restaurant\",\n    \"destination_slug\": \"ha-noi\",\n    \"lat\": 21.0109485,\n    \"lng\": 105.8114367,\n    \"opening_hours\": null\n  },\n  {\n    \"place_id\": \"067d4150-8810-5956-9df7-c48c5ea81203\",\n    \"name\": \"Cá sấu\",\n    \"category\": \"attraction\",\n    \"destination_slug\": \"ha-noi\",\n    \"lat\": 21.030376,\n    \"lng\": 105.808471,\n    \"opening_hours\": null\n  },\n  {\n    \"place_id\": \"06d8683d-46d2-5f86-bf8d-4dc72dba37ec\",\n    \"name\": \"Bảo tàng Lịch sử Quốc gia Việt Nam\",\n    \"category\": \"culture\",\n    \"destination_slug\": \"ha-noi\",\n    \"lat\": 21.024243,\n    \"lng\": 105.859716,\n    \"opening_hours\": \"Mo off; Tu-Su 08:00-12:00,13:30-17:00\"\n  },\n  {\n    \"place_id\": \"0938eb59-ee1c-5879-a798-58b5fdd07bce\",\n    \"name\": \"Nhà tù Hỏa Lò\",\n    \"category\": \"culture\",\n    \"destination_slug\": \"ha-noi\",\n    \"lat\": 21.025376,\n    \"lng\": 105.846427,\n    \"opening_hours\": \"Mo-Su 08:00-17:00\"\n  },\n  {\n    \"place_id\": \"0965af48-c4e7-5364-a486-f858e4c56a00\",\n    \"name\": \"Lệ Mật Snake Kingdom\",\n    \"category\": \"nature\",\n    \"destination_slug\": \"ha-noi\",\n    \"lat\": 21.056467,\n    \"lng\": 105.903761,\n    \"opening_hours\": null\n  },\n  {\n    \"place_id\": \"0bfe7078-d30c-45e5-8638-1139d51401e0\",\n    \"name\": \"Quán Pub Finnegan's Irish\",\n    \"category\": \"nightlife\",\n    \"destination_slug\": \"ha-noi\",\n    \"lat\": 21.0323539,\n    \"lng\": 105.8468029,\n    \"opening_hours\": null\n  },\n  {\n    \"place_id\": \"0c8675a6-db2d-594a-85d5-7d1cbaebb1e4\",\n    \"name\": \"Bảo tàng Lịch sử Quân sự Việt Nam\",\n    \"category\": \"culture\",\n    \"destination_slug\": \"ha-noi\",\n    \"lat\": 21.011577,\n    \"lng\": 105.754666,\n    \"opening_hours\": \"Tu-Th,Sa-Su,PH 08:00-11:30,13:00-16:30\"\n  },\n  {\n    \"place_id\": \"0d2e75ea-0868-4759-a4c1-e8d08373846e\",\n    \"name\": \"Thành Công\",\n    \"category\": \"hotel\",\n    \"destination_slug\": \"ha-noi\",\n    \"lat\": 21.013744,\n    \"lng\": 105.813221,\n    \"opening_hours\": null\n  },\n  {\n    \"place_id\": \"0e05db2b-2299-5243-87c9-d7d3a9198cc5\",\n    \"name\": \"Shaun the Sheep\",\n    \"category\": \"nature\",\n    \"destination_slug\": \"ha-noi\",\n    \"lat\": 21.07651,\n    \"lng\": 105.836765,\n    \"opening_hours\": null\n  },\n  {\n    \"place_id\": \"0ef5ad18-1c3a-49a6-8243-7d8d70e91e3c\",\n    \"name\": \"Khách Sạn Prince\",\n    \"category\": \"hotel\",\n    \"destination_slug\": \"ha-noi\",\n    \"lat\": 21.027311,\n    \"lng\": 105.843531,\n    \"opening_hours\": null\n  },\n  {\n    \"place_id\": \"17bae7e1-2138-467f-bf34-1638e6a2fdd9\",\n    \"name\": \"Phuc Tan Bar\",\n    \"category\": \"nightlife\",\n    \"destination_slug\": \"ha-noi\",\n    \"lat\": 21.0383923,\n    \"lng\": 105.8551456,\n    \"opening_hours\": null\n  },\n  {\n    \"place_id\": \"17f25462-dbb9-457d-a946-e4d0cf1a688e\",\n    \"name\": \"Nhà hàng Thành Lộc\",\n    \"category\": \"restaurant\",\n    \"destination_slug\": \"ha-noi\",\n    \"lat\": 21.008355,\n    \"lng\": 105.856771,\n    \"opening_hours\": null\n  },\n  {\n    \"place_id\": \"19a2bdd8-ac79-4543-a685-bf1ea15f1142\",\n    \"name\": \"Nhà Hàng Mediterraneo\",\n    \"category\": \"restaurant\",\n    \"destination_slug\": \"ha-noi\",\n    \"lat\": 21.0288946,\n    \"lng\": 105.8498777,\n    \"opening_hours\": null\n  },\n  {\n    \"place_id\": \"1b924d05-4d1c-4f07-b661-9b14b551b381\",\n    \"name\": \"Red bean\",\n    \"category\": \"restaurant\",\n    \"destination_slug\": \"ha-noi\",\n    \"lat\": 21.0342414,\n    \"lng\": 105.8533178,\n    \"opening_hours\": null\n  },\n  {\n    \"place_id\": \"1f9c2b46-e032-5cbc-a9dc-dc68c435c594\",\n    \"name\": \"Công viên Thủ Lệ\",\n    \"category\": \"nature\",\n    \"destination_slug\": \"ha-noi\",\n    \"lat\": 21.030741,\n    \"lng\": 105.80664,\n    \"opening_hours\": \"Mo-Su 06:00-18:00\"\n  },\n  {\n    \"place_id\": \"204b1369-5d51-5cad-a350-5c89e34944aa\",\n    \"name\": \"Chùa Quán Sứ\",\n    \"category\": \"culture\",\n    \"destination_slug\": \"ha-noi\",\n    \"lat\": 21.024453,\n    \"lng\": 105.845415,\n    \"opening_hours\": null\n  },\n  {\n    \"place_id\": \"206b2bd6-1d90-50c2-bfb3-e559b2e9fefa\",\n    \"name\": \"Phủ Chủ Tịch\",\n    \"category\": \"attraction\",\n    \"destination_slug\": \"ha-noi\",\n    \"lat\": 21.039302,\n    \"lng\": 105.834441,\n    \"opening_hours\": null\n  },\n  {\n    \"place_id\": \"22c3f181-d69d-5c46-9183-b07192d14524\",\n    \"name\": \"Cu ngói\",\n    \"category\": \"attraction\",\n    \"destination_slug\": \"ha-noi\",\n    \"lat\": 21.03021,\n    \"lng\": 105.804031,\n    \"opening_hours\": null\n  },\n  {\n    \"place_id\": \"24436e5f-e90d-4eeb-9a00-6b265661ce02\",\n    \"name\": \"Roots Reggae bar\",\n    \"category\": \"nightlife\",\n    \"destination_slug\": \"ha-noi\",\n    \"lat\": 21.0350376,\n    \"lng\": 105.8541586,\n    \"opening_hours\": null\n  },\n  {\n    \"place_id\": \"29a380ee-5690-453f-9e5b-13b64f2cd997\",\n    \"name\": \"Nha Hang Little Italian\",\n    \"category\": \"restaurant\",\n    \"destination_slug\": \"ha-noi\",\n    \"lat\": 21.016954,\n    \"lng\": 105.852831,\n    \"opening_hours\": null\n  },\n  {\n    \"place_id\": \"2ad993ae-bbe2-51cd-8717-712253a5cb8d\",\n    \"name\": \"Chùa Một Cột\",\n    \"category\": \"attraction\",\n    \"destination_slug\": \"ha-noi\",\n    \"lat\": 21.035856,\n    \"lng\": 105.833614,\n    \"opening_hours\": null\n  },\n  {\n    \"place_id\": \"2ae50f31-e1dd-4be4-bffc-680318074f7f\",\n    \"name\": \"Nhà Hàng Little Hanoi\",\n    \"category\": \"restaurant\",\n    \"destination_slug\": \"ha-noi\",\n    \"lat\": 21.03219,\n    \"lng\": 105.850937,\n    \"opening_hours\": null\n  },\n  {\n    \"place_id\": \"2c99e80d-25a7-4b7c-9dbc-6138c8e5d5be\",\n    \"name\": \"The Drift Backpackers Hostel\",\n    \"category\": \"hotel\",\n    \"destination_slug\": \"ha-noi\",\n    \"lat\": 21.019147,\n    \"lng\": 105.848404,\n    \"opening_hours\": null\n  },\n  {\n    \"place_id\": \"2ca68907-f1c6-4c4c-ad75-ac37e8ea2971\",\n    \"name\": \"Khách Sạn Blue Star\",\n    \"category\": \"hotel\",\n    \"destination_slug\": \"ha-noi\",\n    \"lat\": 21.0336734,\n    \"lng\": 105.8474742,\n    \"opening_hours\": null\n  },\n  {\n    \"place_id\": \"30f0baad-95b1-558a-8538-c34c18533c7c\",\n    \"name\": \"Phố đường tàu Hà Nội\",\n    \"category\": \"attraction\",\n    \"destination_slug\": \"ha-noi\",\n    \"lat\": 21.029974,\n    \"lng\": 105.843128,\n    \"opening_hours\": null\n  },\n  {\n    \"place_id\": \"34e677eb-5a2f-42f2-a2ba-373b6af40cef\",\n    \"name\": \"Khách Sạn Hanoi Youth\",\n    \"category\": \"hotel\",\n    \"destination_slug\": \"ha-noi\",\n    \"lat\": 21.033115,\n    \"lng\": 105.850488,\n    \"opening_hours\": null\n  },\n  {\n    \"place_id\": \"368e87d3-a03b-5b3f-b9be-79142ce8eb99\",\n    \"name\": \"Cu li nhỏ\",\n    \"category\": \"attraction\",\n    \"destination_slug\": \"ha-noi\",\n    \"lat\": 21.030355,\n    \"lng\": 105.803267,\n    \"opening_hours\": null\n  },\n  {\n    \"place_id\": \"36f1743d-adfb-4391-86f9-9eeda2fa568b\",\n    \"name\": \"Cà Phê Ete\",\n    \"category\": \"nightlife\",\n    \"destination_slug\": \"ha-noi\",\n    \"lat\": 21.0337988,\n    \"lng\": 105.8269214,\n    \"opening_hours\": null\n  },\n  {\n    \"place_id\": \"39e061bd-478a-488a-a803-6c9342400b6b\",\n    \"name\": \"Khách Sạn Bạch Tùng Điệp\",\n    \"category\": \"hotel\",\n    \"destination_slug\": \"ha-noi\",\n    \"lat\": 21.032947,\n    \"lng\": 105.847996,\n    \"opening_hours\": null\n  },\n  {\n    \"place_id\": \"3b3ca713-1a38-491f-9106-fe8d061275a7\",\n    \"name\": \"Nhà 48 phố Hàng Ngang\",\n    \"category\": \"culture\",\n    \"destination_slug\": \"ha-noi\",\n    \"lat\": 21.034328,\n    \"lng\": 105.850439,\n    \"opening_hours\": null\n  },\n  {\n    \"place_id\": \"3b99b4e7-dd50-5252-8525-eb0dde679b5c\",\n    \"name\": \"Đường sắt Hà Nội - Đồng Đăng\",\n    \"category\": \"attraction\",\n    \"destination_slug\": \"ha-noi\",\n    \"lat\": 21.038781,\n    \"lng\": 105.847153,\n    \"opening_hours\": null\n  },\n  {\n    \"place_id\": \"3f37f38d-b228-5e97-b572-c49bf1a875e8\",\n    \"name\": \"Chợ đêm\",\n    \"category\": \"attraction\",\n    \"destination_slug\": \"ha-noi\",\n    \"lat\": 21.034592,\n    \"lng\": 105.850396,\n    \"opening_hours\": \"Fr-Su 18:00-23:00\"\n  },\n  {\n    \"place_id\": \"40f78727-b11e-49d2-8127-fa9619a0df77\",\n    \"name\": \"Phu Hoa\",\n    \"category\": \"hotel\",\n    \"destination_slug\": \"ha-noi\",\n    \"lat\": 21.033448,\n    \"lng\": 105.850029,\n    \"opening_hours\": null\n  },\n  {\n    \"place_id\": \"4146f2b7-8289-4309-b7e6-60ba7de3470e\",\n    \"name\": \"Cà Phê Nola\",\n    \"category\": \"cafe\",\n    \"destination_slug\": \"ha-noi\",\n    \"lat\": 21.034072,\n    \"lng\": 105.853586,\n    \"opening_hours\": null\n  },\n  {\n    \"place_id\": \"44115e3a-6094-5bcd-b53c-0e3a596b3aff\",\n    \"name\": \"Đền Ngọc Sơn\",\n    \"category\": \"culture\",\n    \"destination_slug\": \"ha-noi\",\n    \"lat\": 21.03073,\n    \"lng\": 105.852376,\n    \"opening_hours\": \"Mo-Fr 07:00-18:00\"\n  },\n  {\n    \"place_id\": \"4c76ded0-e7df-54f7-bc5d-87ceed138bb2\",\n    \"name\": \"Đền Kim Liên\",\n    \"category\": \"culture\",\n    \"destination_slug\": \"ha-noi\",\n    \"lat\": 21.010678,\n    \"lng\": 105.838174,\n    \"opening_hours\": null\n  },\n  {\n    \"place_id\": \"4f8dd6fe-b02d-4d19-b25f-8d0b3b3561ae\",\n    \"name\": \"The King Cafe\",\n    \"category\": \"restaurant\",\n    \"destination_slug\": \"ha-noi\",\n    \"lat\": 21.0348473,\n    \"lng\": 105.8515895,\n    \"opening_hours\": null\n  },\n  {\n    \"place_id\": \"5350dd97-2f75-45fc-9fc1-1979b08670f7\",\n    \"name\": \"Pho 10\",\n    \"category\": \"restaurant\",\n    \"destination_slug\": \"ha-noi\",\n    \"lat\": 21.0304724,\n    \"lng\": 105.8488474,\n    \"opening_hours\": \"Mo-Su 06:00-22:00\"\n  },\n  {\n    \"place_id\": \"54965bd3-db07-495f-b636-460a84310d2c\",\n    \"name\": \"Khách Sạn Indochina Queen\",\n    \"category\": \"hotel\",\n    \"destination_slug\": \"ha-noi\",\n    \"lat\": 21.035476,\n    \"lng\": 105.852749,\n    \"opening_hours\": null\n  },\n  {\n    \"place_id\": \"54cb11e4-f1b9-48ed-aeed-6383a6e42f03\",\n    \"name\": \"Sushi Tiger\",\n    \"category\": \"restaurant\",\n    \"destination_slug\": \"ha-noi\",\n    \"lat\": 21.028523,\n    \"lng\": 105.806156,\n    \"opening_hours\": null\n  },\n  {\n    \"place_id\": \"54d4fe79-435e-5688-8a63-3aa322ed916c\",\n    \"name\": \"Tòa nhà trung tâm Bưu điện Hà Nội\",\n    \"category\": \"attraction\",\n    \"destination_slug\": \"ha-noi\",\n    \"lat\": 21.026506,\n    \"lng\": 105.853726,\n    \"opening_hours\": null\n  },\n  {\n    \"place_id\": \"557f3c33-eaa8-418c-adab-8106ce640903\",\n    \"name\": \"Khách Sạn Hanoi Phoenix II\",\n    \"category\": \"hotel\",\n    \"destination_slug\": \"ha-noi\",\n    \"lat\": 21.035451,\n    \"lng\": 105.852588,\n    \"opening_hours\": null\n  },\n  {\n    \"place_id\": \"5839d9a4-ddcd-59c8-b5b0-9f8530778c18\",\n    \"name\": \"Công viên Hòa Bình\",\n    \"category\": \"nature\",\n    \"destination_slug\": \"ha-noi\",\n    \"lat\": 21.065409,\n    \"lng\": 105.787299,\n    \"opening_hours\": null\n  },\n  {\n    \"place_id\": \"5abba2de-af4b-4c0d-a3b7-7347cd0b266a\",\n    \"name\": \"Xoi Van Anh\",\n    \"category\": \"restaurant\",\n    \"destination_slug\": \"ha-noi\",\n    \"lat\": 21.033942,\n    \"lng\": 105.854606,\n    \"opening_hours\": null\n  },\n  {\n    \"place_id\": \"5bd45eb7-a691-4426-9691-a5a00f38d1ad\",\n    \"name\": \"Highlands Coffee\",\n    \"category\": \"cafe\",\n    \"destination_slug\": \"ha-noi\",\n    \"lat\": 21.011372,\n    \"lng\": 105.849589,\n    \"opening_hours\": null\n  },\n  {\n    \"place_id\": \"5e92e89d-8524-4792-862a-6dfce0994862\",\n    \"name\": \"Sheraton Hanoi\",\n    \"category\": \"hotel\",\n    \"destination_slug\": \"ha-noi\",\n    \"lat\": 21.0597444,\n    \"lng\": 105.8320123,\n    \"opening_hours\": null\n  },\n  {\n    \"place_id\": \"62093f68-3162-52cd-967a-4bf88aa9171f\",\n    \"name\": \"Đài tưởng niệm các Anh hùng liệt sĩ\",\n    \"category\": \"culture\",\n    \"destination_slug\": \"ha-noi\",\n    \"lat\": 21.036036,\n    \"lng\": 105.838691,\n    \"opening_hours\": null\n  },\n  {\n    \"place_id\": \"62570370-9468-5567-8215-f93a5afb0c0f\",\n    \"name\": \"Khu Di tích Phủ Chủ tịch\",\n    \"category\": \"nature\",\n    \"destination_slug\": \"ha-noi\",\n    \"lat\": 21.038861,\n    \"lng\": 105.834232,\n    \"opening_hours\": null\n  },\n  {\n    \"place_id\": \"633ed51e-40be-438e-891e-a2abaf023e12\",\n    \"name\": \"Especen Hotel\",\n    \"category\": \"hotel\",\n    \"destination_slug\": \"ha-noi\",\n    \"lat\": 21.029055,\n    \"lng\": 105.8485059,\n    \"opening_hours\": null\n  },\n  {\n    \"place_id\": \"6377c9e4-6376-4070-97fa-799c1cb45838\",\n    \"name\": \"Royal Hotel\",\n    \"category\": \"hotel\",\n    \"destination_slug\": \"ha-noi\",\n    \"lat\": 21.0295866,\n    \"lng\": 105.8349908,\n    \"opening_hours\": null\n  },\n  {\n    \"place_id\": \"6490cf19-2a35-4128-8b2c-ad795f1f2a07\",\n    \"name\": \"Zephyr Hotel\",\n    \"category\": \"hotel\",\n    \"destination_slug\": \"ha-noi\",\n    \"lat\": 21.025617,\n    \"lng\": 105.851429,\n    \"opening_hours\": null\n  },\n  {\n    \"place_id\": \"65b612a7-79d4-4dbb-9f13-656b9540e553\",\n    \"name\": \"Prince 57 Hotel\",\n    \"category\": \"hotel\",\n    \"destination_slug\": \"ha-noi\",\n    \"lat\": 21.032635,\n    \"lng\": 105.853961,\n    \"opening_hours\": null\n  },\n  {\n    \"place_id\": \"6775ce64-9699-5818-ad57-d86c84981f36\",\n    \"name\": \"Cung Văn hóa Lao động Hữu nghị Việt Xô\",\n    \"category\": \"attraction\",\n    \"destination_slug\": \"ha-noi\",\n    \"lat\": 21.022216,\n    \"lng\": 105.844235,\n    \"opening_hours\": null\n  },\n  {\n    \"place_id\": \"698ee756-6062-5f47-955b-bdf458682e57\",\n    \"name\": \"Lăng Chủ tịch Hồ Chí Minh\",\n    \"category\": \"attraction\",\n    \"destination_slug\": \"ha-noi\",\n    \"lat\": 21.036762,\n    \"lng\": 105.834692,\n    \"opening_hours\": \"Tu-Th 07:30-10:30; Sa,Su 07:30-11:00\"\n  },\n  {\n    \"place_id\": \"6ad4a9fb-f6d0-4268-b50a-d485d4fcff4b\",\n    \"name\": \"Real Darling Cafe Guesthouse\",\n    \"category\": \"hotel\",\n    \"destination_slug\": \"ha-noi\",\n    \"lat\": 21.032639,\n    \"lng\": 105.849564,\n    \"opening_hours\": null\n  },\n  {\n    \"place_id\": \"6c071d41-2f13-5b32-bfc4-0d1228075983\",\n    \"name\": \"Đền Voi Phục\",\n    \"category\": \"culture\",\n    \"destination_slug\": \"ha-noi\",\n    \"lat\": 21.030078,\n    \"lng\": 105.805066,\n    \"opening_hours\": \"Mo-Su 08:00-20:00\"\n  },\n  {\n    \"place_id\": \"6cc58952-68f8-46c9-b9fe-dc674dc4299e\",\n    \"name\": \"KFC\",\n    \"category\": \"restaurant\",\n    \"destination_slug\": \"ha-noi\",\n    \"lat\": 21.0470606,\n    \"lng\": 105.8781666,\n    \"opening_hours\": null\n  },\n  {\n    \"place_id\": \"6ccaef28-4739-48f8-bd75-be205773666e\",\n    \"name\": \"Khách Sạn Golden Lotus\",\n    \"category\": \"hotel\",\n    \"destination_slug\": \"ha-noi\",\n    \"lat\": 21.030829,\n    \"lng\": 105.849364,\n    \"opening_hours\": null\n  },\n  {\n    \"place_id\": \"7035a23e-b828-4ad3-a937-d4e69f296711\",\n    \"name\": \"Khách Sạn Hanoi Gecko III\",\n    \"category\": \"hotel\",\n    \"destination_slug\": \"ha-noi\",\n    \"lat\": 21.03367,\n    \"lng\": 105.847356,\n    \"opening_hours\": null\n  },\n  {\n    \"place_id\": \"73864775-249c-59d2-b744-8ef7c5928f0e\",\n    \"name\": \"Hội thánh Tin lành Hà Nội\",\n    \"category\": \"culture\",\n    \"destination_slug\": \"ha-noi\",\n    \"lat\": 21.031025,\n    \"lng\": 105.846023,\n    \"opening_hours\": null\n  },\n  {\n    \"place_id\": \"73f4bf3d-52f0-4ee0-bf6a-a14b556bb264\",\n    \"name\": \"Quán Pub Mika\",\n    \"category\": \"nightlife\",\n    \"destination_slug\": \"ha-noi\",\n    \"lat\": 21.0241143,\n    \"lng\": 105.8495331,\n    \"opening_hours\": null\n  },\n  {\n    \"place_id\": \"766656bb-c7e0-555d-9963-d3132f0de086\",\n    \"name\": \"Công viên Thống Nhất\",\n    \"category\": \"nature\",\n    \"destination_slug\": \"ha-noi\",\n    \"lat\": 21.012508,\n    \"lng\": 105.844525,\n    \"opening_hours\": \"Mo-Su 06:00-22:00\"\n  },\n  {\n    \"place_id\": \"7773c82b-4bc6-5e1b-8c12-6b0fdfbd32c5\",\n    \"name\": \"Nhà hát Lớn\",\n    \"category\": \"attraction\",\n    \"destination_slug\": \"ha-noi\",\n    \"lat\": 21.024193,\n    \"lng\": 105.857825,\n    \"opening_hours\": null\n  },\n  {\n    \"place_id\": \"79624561-abc4-5c9a-a068-3d5f83cbb07d\",\n    \"name\": \"Vườn hoa Lý Thái Tổ\",\n    \"category\": \"nature\",\n    \"destination_slug\": \"ha-noi\",\n    \"lat\": 21.027452,\n    \"lng\": 105.854748,\n    \"opening_hours\": null\n  },\n  {\n    \"place_id\": \"7aff3970-7d96-5c7a-81c8-e622a43cd4bb\",\n    \"name\": \"Báo lửa\",\n    \"category\": \"attraction\",\n    \"destination_slug\": \"ha-noi\",\n    \"lat\": 21.030925,\n    \"lng\": 105.806534,\n    \"opening_hours\": null\n  },\n  {\n    \"place_id\": \"7e858523-dbb1-40ca-a1d7-6e0f744d9ae9\",\n    \"name\": \"Nguyen Art Gallery\",\n    \"category\": \"museum\",\n    \"destination_slug\": \"ha-noi\",\n    \"lat\": 21.0285199,\n    \"lng\": 105.8364926,\n    \"opening_hours\": null\n  },\n  {\n    \"place_id\": \"82150ecb-f97e-4f82-bbcc-b183d12bb503\",\n    \"name\": \"Cà Phê Big One\",\n    \"category\": \"cafe\",\n    \"destination_slug\": \"ha-noi\",\n    \"lat\": 21.009861,\n    \"lng\": 105.847649,\n    \"opening_hours\": null\n  },\n  {\n    \"place_id\": \"822bf84c-9bc8-4221-898b-705951932617\",\n    \"name\": \"Sago\",\n    \"category\": \"nightlife\",\n    \"destination_slug\": \"ha-noi\",\n    \"lat\": 21.0323292,\n    \"lng\": 105.8520426,\n    \"opening_hours\": null\n  },\n  {\n    \"place_id\": \"82f23f75-2a79-4765-93e6-abc9b94a6755\",\n    \"name\": \"Khách Sạn Morning Star\",\n    \"category\": \"hotel\",\n    \"destination_slug\": \"ha-noi\",\n    \"lat\": 21.0317073,\n    \"lng\": 105.8507545,\n    \"opening_hours\": null\n  },\n  {\n    \"place_id\": \"82f60206-02cd-5e5d-8206-395d55219244\",\n    \"name\": \"Công viên Võ Thị Sáu\",\n    \"category\": \"nature\",\n    \"destination_slug\": \"ha-noi\",\n    \"lat\": 21.00554,\n    \"lng\": 105.857052,\n    \"opening_hours\": \"24/7\"\n  },\n  {\n    \"place_id\": \"869e9a98-6808-55b0-b189-91d67efe05a4\",\n    \"name\": \"Tháp Hòa Phong\",\n    \"category\": \"attraction\",\n    \"destination_slug\": \"ha-noi\",\n    \"lat\": 21.026336,\n    \"lng\": 105.853313,\n    \"opening_hours\": null\n  },\n  {\n    \"place_id\": \"8708d047-6900-4dbc-80e9-381a269ba488\",\n    \"name\": \"Nhà hàng Nam Phương\",\n    \"category\": \"restaurant\",\n    \"destination_slug\": \"ha-noi\",\n    \"lat\": 21.021755,\n    \"lng\": 105.856386,\n    \"opening_hours\": null\n  },\n  {\n    \"place_id\": \"89982921-9495-52a1-a2a1-204961327524\",\n    \"name\": \"Bảo tàng Hồ Chí Minh\",\n    \"category\": \"culture\",\n    \"destination_slug\": \"ha-noi\",\n    \"lat\": 21.035618,\n    \"lng\": 105.832625,\n    \"opening_hours\": \"Tu-Th 08:00-11:30; Sa-Su 14:00-16:30\"\n  },\n  {\n    \"place_id\": \"8ab00bcc-ae33-4cf3-94af-4f231dc859e2\",\n    \"name\": \"Rising Dragon\",\n    \"category\": \"hotel\",\n    \"destination_slug\": \"ha-noi\",\n    \"lat\": 21.0324116,\n    \"lng\": 105.8539573,\n    \"opening_hours\": null\n  },\n  {\n    \"place_id\": \"8aefb46d-b6c6-4a07-a5f5-7c0d294f8224\",\n    \"name\": \"Hybra Ultra Lounge\",\n    \"category\": \"nightlife\",\n    \"destination_slug\": \"ha-noi\",\n    \"lat\": 21.0356982,\n    \"lng\": 105.853259,\n    \"opening_hours\": \"Mo-Su 20:00-2:00\"\n  },\n  {\n    \"place_id\": \"8b3e5a81-6765-4aa6-a94a-d84300ce8c8b\",\n    \"name\": \"Chùa Trung Kính Thượng\",\n    \"category\": \"temple\",\n    \"destination_slug\": \"ha-noi\",\n    \"lat\": 21.0133523,\n    \"lng\": 105.80608,\n    \"opening_hours\": null\n  },\n  {\n    \"place_id\": \"8cfab7e7-5c69-47fc-847a-6136379883f5\",\n    \"name\": \"R&R Tavern\",\n    \"category\": \"nightlife\",\n    \"destination_slug\": \"ha-noi\",\n    \"lat\": 21.027487,\n    \"lng\": 105.8443647,\n    \"opening_hours\": null\n  },\n  {\n    \"place_id\": \"8f3a6929-d00e-4b3a-a629-d4e63a0fa85f\",\n    \"name\": \"Chùa Lý Triều Quốc Sư\",\n    \"category\": \"temple\",\n    \"destination_slug\": \"ha-noi\",\n    \"lat\": 21.0295101,\n    \"lng\": 105.8491717,\n    \"opening_hours\": null\n  },\n  {\n    \"place_id\": \"8f6623e0-69fd-491d-ab2d-f2e1cefdfcc8\",\n    \"name\": \"Solace\",\n    \"category\": \"nightlife\",\n    \"destination_slug\": \"ha-noi\",\n    \"lat\": 21.0301308,\n    \"lng\": 105.8609285,\n    \"opening_hours\": null\n  },\n  {\n    \"place_id\": \"904c9200-2262-4df1-888b-ce8d7884e714\",\n    \"name\": \"Khách Sạn Hanoi Backpackers\",\n    \"category\": \"hotel\",\n    \"destination_slug\": \"ha-noi\",\n    \"lat\": 21.029387,\n    \"lng\": 105.848071,\n    \"opening_hours\": null\n  },\n  {\n    \"place_id\": \"9244a3af-2a8e-42da-8a04-092627863b74\",\n    \"name\": \"Khách Sạn Camellia\",\n    \"category\": \"hotel\",\n    \"destination_slug\": \"ha-noi\",\n    \"lat\": 21.033588,\n    \"lng\": 105.852824,\n    \"opening_hours\": null\n  },\n  {\n    \"place_id\": \"939a2b1e-5557-46a8-918f-5841ec320b33\",\n    \"name\": \"Tien Thuy Hotel\",\n    \"category\": \"hotel\",\n    \"destination_slug\": \"ha-noi\",\n    \"lat\": 21.032124,\n    \"lng\": 105.854983,\n    \"opening_hours\": null\n  },\n  {\n    \"place_id\": \"95e4dd6b-ce28-4642-838d-bd14f786a71b\",\n    \"name\": \"Khách Sạn Classic 2\",\n    \"category\": \"hotel\",\n    \"destination_slug\": \"ha-noi\",\n    \"lat\": 21.03465,\n    \"lng\": 105.85174,\n    \"opening_hours\": null\n  },\n  {\n    \"place_id\": \"9a96e0a0-e040-4e16-a3f2-682ca373dd8e\",\n    \"name\": \"Somerset Grand Hanoi\",\n    \"category\": \"hotel\",\n    \"destination_slug\": \"ha-noi\",\n    \"lat\": 21.025833,\n    \"lng\": 105.846367,\n    \"opening_hours\": null\n  },\n  {\n    \"place_id\": \"9b08dfe9-6f97-4d4b-94f6-f3548efd696c\",\n    \"name\": \"Le Pub\",\n    \"category\": \"nightlife\",\n    \"destination_slug\": \"ha-noi\",\n    \"lat\": 21.033101,\n    \"lng\": 105.8539305,\n    \"opening_hours\": null\n  },\n  {\n    \"place_id\": \"a175c813-cebf-52e1-9241-320d2f4e9842\",\n    \"name\": \"Đền Bà Kiệu\",\n    \"category\": \"culture\",\n    \"destination_slug\": \"ha-noi\",\n    \"lat\": 21.031107,\n    \"lng\": 105.853457,\n    \"opening_hours\": null\n  },\n  {\n    \"place_id\": \"a2037ceb-201f-5c45-a596-af795a399e60\",\n    \"name\": \"Công viên Lê-nin\",\n    \"category\": \"nature\",\n    \"destination_slug\": \"ha-noi\",\n    \"lat\": 21.031782,\n    \"lng\": 105.839584,\n    \"opening_hours\": null\n  },\n  {\n    \"place_id\": \"a2fc15de-d609-4d4f-abf1-9779d57901a6\",\n    \"name\": \"Cà Phê Kafa\",\n    \"category\": \"cafe\",\n    \"destination_slug\": \"ha-noi\",\n    \"lat\": 21.037861,\n    \"lng\": 105.801001,\n    \"opening_hours\": \"Mo-Su 07:00-23:00\"\n  },\n  {\n    \"place_id\": \"a3ff8bb3-cf45-490f-9d6c-3a6ffdd7ab19\",\n    \"name\": \"Trà Xuân Tửu\",\n    \"category\": \"restaurant\",\n    \"destination_slug\": \"ha-noi\",\n    \"lat\": 21.029755,\n    \"lng\": 105.827764,\n    \"opening_hours\": null\n  },\n  {\n    \"place_id\": \"a4a59fc4-08f7-4f8c-a4f2-643a857026da\",\n    \"name\": \"Khách Sạn Đông Á\",\n    \"category\": \"hotel\",\n    \"destination_slug\": \"ha-noi\",\n    \"lat\": 21.035395,\n    \"lng\": 105.853321,\n    \"opening_hours\": null\n  },\n  {\n    \"place_id\": \"a7bfcb70-18f2-42f7-9901-b6772874ca28\",\n    \"name\": \"Cà Phê Hao\",\n    \"category\": \"cafe\",\n    \"destination_slug\": \"ha-noi\",\n    \"lat\": 21.041759,\n    \"lng\": 105.870242,\n    \"opening_hours\": null\n  },\n  {\n    \"place_id\": \"a9eb8578-6bcc-5ee8-a190-cb882c8bfac3\",\n    \"name\": \"Chợ Đêm\",\n    \"category\": \"attraction\",\n    \"destination_slug\": \"ha-noi\",\n    \"lat\": 21.033219,\n    \"lng\": 105.852376,\n    \"opening_hours\": \"Fr-Su 19:00-22:00\"\n  },\n  {\n    \"place_id\": \"ab71efcd-656d-4720-a2a7-aa6588093eb1\",\n    \"name\": \"Quán Pub Irish Wolfhound\",\n    \"category\": \"nightlife\",\n    \"destination_slug\": \"ha-noi\",\n    \"lat\": 21.0350376,\n    \"lng\": 105.8537954,\n    \"opening_hours\": null\n  },\n  {\n    \"place_id\": \"ab78f751-d68d-4436-b42a-93587aa5a22a\",\n    \"name\": \"Khách Sạn Little Hanoi\",\n    \"category\": \"hotel\",\n    \"destination_slug\": \"ha-noi\",\n    \"lat\": 21.0349399,\n    \"lng\": 105.8469714,\n    \"opening_hours\": null\n  },\n  {\n    \"place_id\": \"ac3015e9-66aa-53b1-95f9-144aa6b32de9\",\n    \"name\": \"Bảo tàng Hà Nội\",\n    \"category\": \"culture\",\n    \"destination_slug\": \"ha-noi\",\n    \"lat\": 21.010013,\n    \"lng\": 105.786309,\n    \"opening_hours\": \"Tu-Su 08:00-11:30,13:30-17:00\"\n  },\n  {\n    \"place_id\": \"ac39bb02-5154-445b-af31-7d832351b379\",\n    \"name\": \"Nha Hang Indochine\",\n    \"category\": \"restaurant\",\n    \"destination_slug\": \"ha-noi\",\n    \"lat\": 21.026587,\n    \"lng\": 105.843005,\n    \"opening_hours\": null\n  },\n  {\n    \"place_id\": \"acb22336-1124-49d5-a279-6357c2b2b445\",\n    \"name\": \"Quán Ăn Ngon - Phan Bội Châu\",\n    \"category\": \"restaurant\",\n    \"destination_slug\": \"ha-noi\",\n    \"lat\": 21.02626,\n    \"lng\": 105.843304,\n    \"opening_hours\": \"Mo-Su 06:45-22:00\"\n  },\n  {\n    \"place_id\": \"afb3793b-7227-4645-a68a-3647c7468638\",\n    \"name\": \"Sen Tây Hồ\",\n    \"category\": \"restaurant\",\n    \"destination_slug\": \"ha-noi\",\n    \"lat\": 21.074149,\n    \"lng\": 105.815469,\n    \"opening_hours\": null\n  },\n  {\n    \"place_id\": \"b0641225-0f38-4bcc-9f4c-34f65fa50d45\",\n    \"name\": \"Cửa Hàng Bánh Tôm Hồ Tây\",\n    \"category\": \"restaurant\",\n    \"destination_slug\": \"ha-noi\",\n    \"lat\": 21.047321,\n    \"lng\": 105.837626,\n    \"opening_hours\": null\n  },\n  {\n    \"place_id\": \"b33b6d8e-4dc2-4281-b88f-138bc4edbae3\",\n    \"name\": \"Khách Sạn Hanoi Gecko 2\",\n    \"category\": \"hotel\",\n    \"destination_slug\": \"ha-noi\",\n    \"lat\": 21.0334,\n    \"lng\": 105.85244,\n    \"opening_hours\": null\n  },\n  {\n    \"place_id\": \"b799793b-fb40-5bc2-9e67-6af92caeabe9\",\n    \"name\": \"Hoàng thành Thăng Long\",\n    \"category\": \"culture\",\n    \"destination_slug\": \"ha-noi\",\n    \"lat\": 21.036289,\n    \"lng\": 105.840442,\n    \"opening_hours\": \"Tu-Su 08:00-17:00\"\n  },\n  {\n    \"place_id\": \"b82492e3-ca7a-4a0d-a709-9e2529351d4a\",\n    \"name\": \"Thu Giang Guest House\",\n    \"category\": \"hotel\",\n    \"destination_slug\": \"ha-noi\",\n    \"lat\": 21.031678,\n    \"lng\": 105.847975,\n    \"opening_hours\": null\n  },\n  {\n    \"place_id\": \"b83ed5ca-0fdf-5768-95c0-b30a769ee0d2\",\n    \"name\": \"Nhà thờ Giáo xứ Kẻ Sét\",\n    \"category\": \"culture\",\n    \"destination_slug\": \"ha-noi\",\n    \"lat\": 20.987722,\n    \"lng\": 105.843058,\n    \"opening_hours\": null\n  },\n  {\n    \"place_id\": \"bac279ff-37a6-4f87-8b4a-e05fe1ecb174\",\n    \"name\": \"Nhà Hàng Chay Phương Nam\",\n    \"category\": \"restaurant\",\n    \"destination_slug\": \"ha-noi\",\n    \"lat\": 21.022232,\n    \"lng\": 105.84695,\n    \"opening_hours\": null\n  },\n  {\n    \"place_id\": \"bbb53fbd-3962-5357-ade3-221673e21ee4\",\n    \"name\": \"Đền Bạch Mã\",\n    \"category\": \"culture\",\n    \"destination_slug\": \"ha-noi\",\n    \"lat\": 21.035913,\n    \"lng\": 105.850991,\n    \"opening_hours\": \"Tu-Su 08:00-11:00, 14:00-17:00\"\n  },\n  {\n    \"place_id\": \"c04b7f76-28b3-4548-8aa3-84a608d1f077\",\n    \"name\": \"Prince Hotel\",\n    \"category\": \"hotel\",\n    \"destination_slug\": \"ha-noi\",\n    \"lat\": 21.034751,\n    \"lng\": 105.851691,\n    \"opening_hours\": null\n  },\n  {\n    \"place_id\": \"c34ee8cb-8132-5338-aeda-0827cee56002\",\n    \"name\": \"Bồ câu\",\n    \"category\": \"attraction\",\n    \"destination_slug\": \"ha-noi\",\n    \"lat\": 21.030464,\n    \"lng\": 105.803251,\n    \"opening_hours\": null\n  },\n  {\n    \"place_id\": \"c41383b0-231b-51a4-90e9-7f146fda7f9f\",\n    \"name\": \"Chợ Đêm Hàng Đào – Đồng Xuân\",\n    \"category\": \"attraction\",\n    \"destination_slug\": \"ha-noi\",\n    \"lat\": 21.033508,\n    \"lng\": 105.850957,\n    \"opening_hours\": \"Fr-Su 18:00-00:00\"\n  },\n  {\n    \"place_id\": \"c4a4f14c-8217-4681-a13a-16f1ff8237a8\",\n    \"name\": \"Khách Sạn Bảo Anh\",\n    \"category\": \"hotel\",\n    \"destination_slug\": \"ha-noi\",\n    \"lat\": 21.0294692,\n    \"lng\": 105.8479138,\n    \"opening_hours\": null\n  },\n  {\n    \"place_id\": \"c693a3f8-e323-41ec-803f-04dd01b65bde\",\n    \"name\": \"Khách Sạn Little Hanoi Diamond\",\n    \"category\": \"hotel\",\n    \"destination_slug\": \"ha-noi\",\n    \"lat\": 21.033677,\n    \"lng\": 105.847615,\n    \"opening_hours\": null\n  },\n  {\n    \"place_id\": \"c7247e62-eb53-5ab1-9ab0-0ad7715b9efa\",\n    \"name\": \"Tượng kỷ niệm chiến thắng B52\",\n    \"category\": \"attraction\",\n    \"destination_slug\": \"ha-noi\",\n    \"lat\": 21.04683,\n    \"lng\": 105.836831,\n    \"opening_hours\": null\n  },\n  {\n    \"place_id\": \"c8ff94c6-666c-4d50-883b-605bd0c8ff98\",\n    \"name\": \"Đình Khương Đình\",\n    \"category\": \"temple\",\n    \"destination_slug\": \"ha-noi\",\n    \"lat\": 20.9922894,\n    \"lng\": 105.8164724,\n    \"opening_hours\": null\n  },\n  {\n    \"place_id\": \"ca16bdd4-00a2-4c99-a8a7-33f640b85a44\",\n    \"name\": \"Quán Bar Dragonfly\",\n    \"category\": \"nightlife\",\n    \"destination_slug\": \"ha-noi\",\n    \"lat\": 21.0358287,\n    \"lng\": 105.8522274,\n    \"opening_hours\": null\n  },\n  {\n    \"place_id\": \"cad64db8-cd74-58fe-ad94-329e0d8110e1\",\n    \"name\": \"Nhà thờ Lớn\",\n    \"category\": \"culture\",\n    \"destination_slug\": \"ha-noi\",\n    \"lat\": 21.028659,\n    \"lng\": 105.848851,\n    \"opening_hours\": null\n  },\n  {\n    \"place_id\": \"cb4e11b7-3909-53a7-9023-c3bf5a79172d\",\n    \"name\": \"Đoan Môn\",\n    \"category\": \"attraction\",\n    \"destination_slug\": \"ha-noi\",\n    \"lat\": 21.035257,\n    \"lng\": 105.840252,\n    \"opening_hours\": null\n  },\n  {\n    \"place_id\": \"ccc16d21-9212-5b42-aaa1-13929676fa11\",\n    \"name\": \"Tháp Rùa\",\n    \"category\": \"culture\",\n    \"destination_slug\": \"ha-noi\",\n    \"lat\": 21.027873,\n    \"lng\": 105.852293,\n    \"opening_hours\": null\n  },\n  {\n    \"place_id\": \"d1d42413-3c41-465d-82eb-23ab639935f1\",\n    \"name\": \"Thai Village\",\n    \"category\": \"restaurant\",\n    \"destination_slug\": \"ha-noi\",\n    \"lat\": 21.0320076,\n    \"lng\": 105.8512129,\n    \"opening_hours\": null\n  },\n  {\n    \"place_id\": \"d2a4e091-aa2f-5a48-aea7-b58126b79eac\",\n    \"name\": \"Red River Beach\",\n    \"category\": \"beach\",\n    \"destination_slug\": \"ha-noi\",\n    \"lat\": 21.011893,\n    \"lng\": 105.87683,\n    \"opening_hours\": null\n  },\n  {\n    \"place_id\": \"d2f280c5-5932-59b3-aace-4594dda958e5\",\n    \"name\": \"Nhà thờ Cửa Bắc\",\n    \"category\": \"attraction\",\n    \"destination_slug\": \"ha-noi\",\n    \"lat\": 21.041453,\n    \"lng\": 105.840506,\n    \"opening_hours\": null\n  },\n  {\n    \"place_id\": \"d4bc8f9b-960a-4009-a71a-1f7f8d81082d\",\n    \"name\": \"Orick Coffee\",\n    \"category\": \"cafe\",\n    \"destination_slug\": \"ha-noi\",\n    \"lat\": 21.0242859,\n    \"lng\": 105.8476001,\n    \"opening_hours\": null\n  },\n  {\n    \"place_id\": \"d4be9816-04ec-5578-b22e-113265d6d45d\",\n    \"name\": \"Bảo tàng Chiến thắng B52\",\n    \"category\": \"culture\",\n    \"destination_slug\": \"ha-noi\",\n    \"lat\": 21.035553,\n    \"lng\": 105.826082,\n    \"opening_hours\": null\n  },\n  {\n    \"place_id\": \"da64cc83-b270-4cb3-ab90-0abc172cf763\",\n    \"name\": \"Khách Sạn Đức Thái\",\n    \"category\": \"hotel\",\n    \"destination_slug\": \"ha-noi\",\n    \"lat\": 21.034004,\n    \"lng\": 105.847144,\n    \"opening_hours\": null\n  },\n  {\n    \"place_id\": \"dc09ceb3-06f0-5b0a-be20-01c6a4742036\",\n    \"name\": \"Vietgangz Farm\",\n    \"category\": \"nature\",\n    \"destination_slug\": \"ha-noi\",\n    \"lat\": 20.985871,\n    \"lng\": 105.947439,\n    \"opening_hours\": \"Mo-Su 09:00-12:00,15:00-22:30\"\n  },\n  {\n    \"place_id\": \"dc3ce5f4-b073-5871-9db5-76599b9c58df\",\n    \"name\": \"Đài quan sát Lotte Skywalk\",\n    \"category\": \"attraction\",\n    \"destination_slug\": \"ha-noi\",\n    \"lat\": 21.032202,\n    \"lng\": 105.812329,\n    \"opening_hours\": \"Mo-Su 09:00-00:00\"\n  },\n  {\n    \"place_id\": \"dc6593cd-eefb-59a9-bbf3-1e69c944d5c3\",\n    \"name\": \"Bảo tàng Mỹ thuật Việt Nam\",\n    \"category\": \"culture\",\n    \"destination_slug\": \"ha-noi\",\n    \"lat\": 21.030653,\n    \"lng\": 105.837032,\n    \"opening_hours\": \"Mo-Su 08:30-17:00\"\n  },\n  {\n    \"place_id\": \"dd39c695-fc86-53d2-819b-640482b57730\",\n    \"name\": \"Cá sấu\",\n    \"category\": \"attraction\",\n    \"destination_slug\": \"ha-noi\",\n    \"lat\": 21.030733,\n    \"lng\": 105.803498,\n    \"opening_hours\": null\n  },\n  {\n    \"place_id\": \"dd91802f-d8ed-5cfb-a57b-9dbebee3d4b3\",\n    \"name\": \"Quảng trường Ba Đình\",\n    \"category\": \"attraction\",\n    \"destination_slug\": \"ha-noi\",\n    \"lat\": 21.036972,\n    \"lng\": 105.835802,\n    \"opening_hours\": null\n  },\n  {\n    \"place_id\": \"e3fe1f1a-f524-55cf-9d83-903e427d0ba4\",\n    \"name\": \"Chùa Trấn Quốc\",\n    \"category\": \"culture\",\n    \"destination_slug\": \"ha-noi\",\n    \"lat\": 21.0479,\n    \"lng\": 105.83676,\n    \"opening_hours\": null\n  },\n  {\n    \"place_id\": \"e5729e0c-08a4-41c4-ad37-ecbfaa244efc\",\n    \"name\": \"Khách Sạn Golden Sunrise\",\n    \"category\": \"hotel\",\n    \"destination_slug\": \"ha-noi\",\n    \"lat\": 21.0314747,\n    \"lng\": 105.850246,\n    \"opening_hours\": null\n  },\n  {\n    \"place_id\": \"e8b9de1c-520f-53f8-9078-5c1c7f2e99c4\",\n    \"name\": \"Bắc Bộ Phủ\",\n    \"category\": \"attraction\",\n    \"destination_slug\": \"ha-noi\",\n    \"lat\": 21.02662,\n    \"lng\": 105.855284,\n    \"opening_hours\": null\n  },\n  {\n    \"place_id\": \"ec52be7d-ba38-5e44-83e4-a4edc54dc153\",\n    \"name\": \"Cầu Thê Húc\",\n    \"category\": \"attraction\",\n    \"destination_slug\": \"ha-noi\",\n    \"lat\": 21.030769,\n    \"lng\": 105.852782,\n    \"opening_hours\": null\n  },\n  {\n    \"place_id\": \"ecf049b8-19d8-50ee-aeb6-2b4f645c1217\",\n    \"name\": \"Vườn hoa Diên Hồng\",\n    \"category\": \"nature\",\n    \"destination_slug\": \"ha-noi\",\n    \"lat\": 21.026481,\n    \"lng\": 105.856013,\n    \"opening_hours\": \"24/7\"\n  },\n  {\n    \"place_id\": \"eeb884ae-2300-56dc-a459-35f038bd6fea\",\n    \"name\": \"Công viên Indira Gandhi\",\n    \"category\": \"nature\",\n    \"destination_slug\": \"ha-noi\",\n    \"lat\": 21.018801,\n    \"lng\": 105.814098,\n    \"opening_hours\": null\n  },\n  {\n    \"place_id\": \"ef76a682-35ef-4088-94ef-fe05fadf6a1d\",\n    \"name\": \"Cà Phê Cây Bàng Đổ\",\n    \"category\": \"cafe\",\n    \"destination_slug\": \"ha-noi\",\n    \"lat\": 21.027327,\n    \"lng\": 105.822037,\n    \"opening_hours\": null\n  },\n  {\n    \"place_id\": \"f07bc9a4-337a-4ece-a050-8159adb798d9\",\n    \"name\": \"Van Viet Cafe\",\n    \"category\": \"cafe\",\n    \"destination_slug\": \"ha-noi\",\n    \"lat\": 21.0231794,\n    \"lng\": 105.8516744,\n    \"opening_hours\": null\n  },\n  {\n    \"place_id\": \"f0d424bd-f722-540f-8964-5e6fd8875b56\",\n    \"name\": \"Bảo tàng Dân tộc học Việt Nam\",\n    \"category\": \"culture\",\n    \"destination_slug\": \"ha-noi\",\n    \"lat\": 21.040394,\n    \"lng\": 105.798837,\n    \"opening_hours\": \"Tu-Su 08:30-17:30\"\n  },\n  {\n    \"place_id\": \"f141ef72-6bd5-4bd2-aa41-182f96a774be\",\n    \"name\": \"Khách Sạn Allura\",\n    \"category\": \"hotel\",\n    \"destination_slug\": \"ha-noi\",\n    \"lat\": 21.0338753,\n    \"lng\": 105.8536358,\n    \"opening_hours\": null\n  },\n  {\n    \"place_id\": \"f66a0589-bfcf-53c9-8f49-fcce9e7bda64\",\n    \"name\": \"Bảo tàng Phòng không - Không quân\",\n    \"category\": \"culture\",\n    \"destination_slug\": \"ha-noi\",\n    \"lat\": 20.999274,\n    \"lng\": 105.829233,\n    \"opening_hours\": \"Mo-Su 08:00-11:00,13:00-16:00; Fr off\"\n  },\n  {\n    \"place_id\": \"f6f82c88-2577-4b65-a225-ee98afb345a9\",\n    \"name\": \"Cây Si\",\n    \"category\": \"restaurant\",\n    \"destination_slug\": \"ha-noi\",\n    \"lat\": 21.028867,\n    \"lng\": 105.843101,\n    \"opening_hours\": null\n  },\n  {\n    \"place_id\": \"f9c0b1c9-6925-5a33-b3ed-1c619a609a58\",\n    \"name\": \"Đền Quán Thánh\",\n    \"category\": \"culture\",\n    \"destination_slug\": \"ha-noi\",\n    \"lat\": 21.04303,\n    \"lng\": 105.836588,\n    \"opening_hours\": null\n  },\n  {\n    \"place_id\": \"fb8f1d59-838b-5b8f-9363-0541b1af42d8\",\n    \"name\": \"Bảo tàng Phụ nữ Việt Nam\",\n    \"category\": \"culture\",\n    \"destination_slug\": \"ha-noi\",\n    \"lat\": 21.023402,\n    \"lng\": 105.851603,\n    \"opening_hours\": \"Mo-Su 08:00-17:00\"\n  },\n  {\n    \"place_id\": \"fba71fa1-0b3f-406d-9192-6ab9c8057f6a\",\n    \"name\": \"Tượng đài Lý Thái Tổ\",\n    \"category\": \"culture\",\n    \"destination_slug\": \"ha-noi\",\n    \"lat\": 21.027489,\n    \"lng\": 105.854501,\n    \"opening_hours\": null\n  }\n]\n",
+    "manual_retry": 0,
+    "model": "gemini-3.8-flash",
+    "omitted_parameters": [
+      "temperature",
+      "top_p",
+      "top_k"
+    ],
+    "portable_generation_schema_v2_sha256": "825a4ff912d851a95f7392cb564b7d7ca3588135508dc6eb3ac6304cdde3c490",
+    "provider": "google",
+    "retry": 0,
+    "sdk_retry": 0,
+    "semantic_schema_sha256": "e4169f7b890f77d13af65e9f2070b6071c535b206d88440f5e8f28c179977555",
+    "timeout_ms": 55000,
+    "timeout_seconds": 55.0,
+    "tools": false,
+    "transport_retry": 0
+  },
+  "repair": 0,
+  "requested_model_id": "gemini-3.8-flash",
+  "retry": 0,
+  "run_id": "W06-DEV-TUNE-P2-C1-W06-DEV-TUNE-007",
+  "runner_execution_mode": "LIVE_EXECUTION",
+  "runtime_head_sha": "4a276ca8ca5e836a92d34ec72569998a3617d915",
+  "sampling_reasoning_configuration": {
+    "seed": 2026101508,
+    "thinking_level": "medium"
+  },
+  "scenario_sha256": "b74f1551127fa35e67086ae3f82f6baf749251ef48fa95d80677bed495d8cd6d",
+  "scientific_code_bundle_sha256": "0638f2fcb100b0000e3a2a4e08137a9d468449001f258de7354df21e185ca2e3",
+  "semantic_schema_sha256": "e4169f7b890f77d13af65e9f2070b6071c535b206d88440f5e8f28c179977555",
+  "stage_a_commit_sha": "25c81ad0e03b2d7e0b0cd29550a2d72b18d6e32e",
+  "stage_a_receipt_sha256": "a0636ddafc4096e02ddaf7b1c69c0e214006030f5461346308a0005e06537d5f",
+  "system_prompt_sha256": "ab8ec41b7099c1c207217a55e1afd7e075d5de6be9b2fc14863329b5535e6c68",
+  "timeout_ms": 55000,
+  "tools": false,
+  "transport_retry": 0,
+  "user_prompt_sha256": "a448e9ca85d1aca526ca54c38f7bc59ecce70ba692cbdbcb4311a07b9c6037b9"
+}

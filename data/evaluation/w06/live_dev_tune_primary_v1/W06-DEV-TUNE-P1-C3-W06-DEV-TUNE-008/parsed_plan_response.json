@@ -1,0 +1,256 @@
+{
+  "best_time_to_visit": "Từ tháng 2 đến tháng 5 thời tiết khô ráo, nắng đẹp. Đầu tháng 12 là cuối mùa mưa, nên mang theo áo mưa mỏng và kiểm tra dự báo thời tiết mỗi sáng.",
+  "budget_analysis": {
+    "currency": "VND",
+    "estimated_cost": 565000,
+    "is_over_budget": false,
+    "total_budget": 2000000,
+    "variance": -1435000
+  },
+  "days": [
+    {
+      "date": "2026-12-06",
+      "day_cost": 270000,
+      "day_number": 1,
+      "items": [
+        {
+          "activity": "Tham quan Bảo tàng Đà Nẵng để tìm hiểu lịch sử thành phố",
+          "activity_kind": "POI_VISIT",
+          "end_time": "09:30",
+          "estimated_cost": 30000,
+          "notes": "Mở cửa 08:00-17:00, nên đến ngay đầu giờ.",
+          "order_index": 1,
+          "place_id": "cb6cce60-8270-5f43-b9f7-42de2d7d7da3",
+          "place_name": "Bảo tàng Đà Nẵng",
+          "start_time": "08:00",
+          "transport_mode": "walking"
+        },
+        {
+          "activity": "Đi bộ sang địa điểm tiếp theo",
+          "activity_kind": "TRANSIT_ONLY",
+          "end_time": "09:45",
+          "estimated_cost": 0,
+          "notes": "Khoảng cách ngắn, đi bộ trong nội đô.",
+          "order_index": 2,
+          "place_id": null,
+          "place_name": null,
+          "start_time": "09:30",
+          "transport_mode": "walking"
+        },
+        {
+          "activity": "Tham quan di tích Thành Điện Hải",
+          "activity_kind": "POI_VISIT",
+          "end_time": "10:30",
+          "estimated_cost": 0,
+          "notes": "Di tích thành cổ thế kỷ 19 gắn với cuộc kháng chiến chống Pháp.",
+          "order_index": 3,
+          "place_id": "8e4ae78c-755f-5e8f-b853-198846050f1b",
+          "place_name": "Thành Điện Hải",
+          "start_time": "09:45",
+          "transport_mode": "walking"
+        },
+        {
+          "activity": "Di chuyển bằng xe công nghệ sang Bảo tàng Chăm",
+          "activity_kind": "TRANSIT_ONLY",
+          "end_time": "10:45",
+          "estimated_cost": 25000,
+          "notes": "Đi xe ngắn trong nội đô.",
+          "order_index": 4,
+          "place_id": null,
+          "place_name": null,
+          "start_time": "10:30",
+          "transport_mode": "taxi"
+        },
+        {
+          "activity": "Chiêm ngưỡng các hiện vật điêu khắc Chăm Pa",
+          "activity_kind": "POI_VISIT",
+          "end_time": "12:00",
+          "estimated_cost": 60000,
+          "notes": "Bộ sưu tập điêu khắc Chăm lớn nhất thế giới, nên thuê hoặc xem thuyết minh.",
+          "order_index": 5,
+          "place_id": "a24d48ff-59d6-5e53-af77-36448e60d1cc",
+          "place_name": "Bảo tàng Nghệ thuật Điêu khắc Chăm Đà Nẵng",
+          "start_time": "10:45",
+          "transport_mode": "taxi"
+        },
+        {
+          "activity": "Di chuyển đến quán ăn trưa",
+          "activity_kind": "TRANSIT_ONLY",
+          "end_time": "12:15",
+          "estimated_cost": 25000,
+          "notes": "Đi xe công nghệ quãng ngắn.",
+          "order_index": 6,
+          "place_id": null,
+          "place_name": null,
+          "start_time": "12:00",
+          "transport_mode": "taxi"
+        },
+        {
+          "activity": "Ăn trưa món mì Quảng đặc sản",
+          "activity_kind": "POI_VISIT",
+          "end_time": "13:15",
+          "estimated_cost": 50000,
+          "notes": "Món ăn bình dân đặc trưng của xứ Quảng, mở cửa 06:00-21:00.",
+          "order_index": 7,
+          "place_id": "182869e0-13e2-4504-8383-46002589ee9c",
+          "place_name": "Mi Quang 1A",
+          "start_time": "12:15",
+          "transport_mode": "taxi"
+        },
+        {
+          "activity": "Đi bộ đến chợ Cồn",
+          "activity_kind": "TRANSIT_ONLY",
+          "end_time": "13:30",
+          "estimated_cost": 0,
+          "notes": "Quãng đường khoảng 600 m.",
+          "order_index": 8,
+          "place_id": null,
+          "place_name": null,
+          "start_time": "13:15",
+          "transport_mode": "walking"
+        },
+        {
+          "activity": "Dạo chợ Cồn, thưởng thức ẩm thực và đời sống địa phương",
+          "activity_kind": "POI_VISIT",
+          "end_time": "15:00",
+          "estimated_cost": 80000,
+          "notes": "Chợ truyền thống lâu đời của Đà Nẵng, nên mặc cả khi mua đồ.",
+          "order_index": 9,
+          "place_id": "a302989c-08f1-5ca2-8022-a84c1a424018",
+          "place_name": "Chợ Cồn",
+          "start_time": "13:30",
+          "transport_mode": "walking"
+        }
+      ],
+      "title": "Bảo tàng và di tích lịch sử khu trung tâm"
+    },
+    {
+      "date": "2026-12-07",
+      "day_cost": 295000,
+      "day_number": 2,
+      "items": [
+        {
+          "activity": "Tham quan Ngũ Hành Sơn, các hang động và chùa trên núi",
+          "activity_kind": "POI_VISIT",
+          "end_time": "10:00",
+          "estimated_cost": 55000,
+          "notes": "Vé tham quan cộng thêm phí thang máy, nên mang giày đế bám và nước uống.",
+          "order_index": 1,
+          "place_id": "6f758ad7-5685-57b5-9913-d28e15bdb7c5",
+          "place_name": "Ngũ Hành Sơn",
+          "start_time": "08:00",
+          "transport_mode": "taxi"
+        },
+        {
+          "activity": "Đi bộ đến chùa Tam Tôn",
+          "activity_kind": "TRANSIT_ONLY",
+          "end_time": "10:15",
+          "estimated_cost": 0,
+          "notes": "Các điểm nằm gần nhau trong khu Ngũ Hành Sơn.",
+          "order_index": 2,
+          "place_id": null,
+          "place_name": null,
+          "start_time": "10:00",
+          "transport_mode": "walking"
+        },
+        {
+          "activity": "Viếng chùa Tam Tôn và tìm hiểu kiến trúc Phật giáo",
+          "activity_kind": "POI_VISIT",
+          "end_time": "11:00",
+          "estimated_cost": 0,
+          "notes": "Ăn mặc lịch sự khi vào chùa.",
+          "order_index": 3,
+          "place_id": "3752ef68-697c-4b99-97ef-4c02da1ccfb7",
+          "place_name": "Chùa Tam Tôn",
+          "start_time": "10:15",
+          "transport_mode": "walking"
+        },
+        {
+          "activity": "Di chuyển về trung tâm thành phố",
+          "activity_kind": "TRANSIT_ONLY",
+          "end_time": "11:40",
+          "estimated_cost": 120000,
+          "notes": "Đi xe công nghệ khoảng 10 km.",
+          "order_index": 4,
+          "place_id": null,
+          "place_name": null,
+          "start_time": "11:00",
+          "transport_mode": "taxi"
+        },
+        {
+          "activity": "Ăn trưa mì Quảng tại quán địa phương",
+          "activity_kind": "POI_VISIT",
+          "end_time": "12:40",
+          "estimated_cost": 50000,
+          "notes": "Mở cửa 06:00-22:30, giá bình dân.",
+          "order_index": 5,
+          "place_id": "8aeb7e35-cd7a-4b95-b8f8-98b96540563b",
+          "place_name": "Mỳ Quảng Cô Sáu",
+          "start_time": "11:40",
+          "transport_mode": "taxi"
+        },
+        {
+          "activity": "Di chuyển đến Bảo tàng Quân khu 5",
+          "activity_kind": "TRANSIT_ONLY",
+          "end_time": "13:00",
+          "estimated_cost": 20000,
+          "notes": "Đi xe công nghệ trong nội đô.",
+          "order_index": 6,
+          "place_id": null,
+          "place_name": null,
+          "start_time": "12:40",
+          "transport_mode": "taxi"
+        },
+        {
+          "activity": "Tham quan hiện vật lịch sử quân sự khu vực miền Trung",
+          "activity_kind": "POI_VISIT",
+          "end_time": "14:30",
+          "estimated_cost": 30000,
+          "notes": "Có khu trưng bày ngoài trời với nhiều hiện vật lớn.",
+          "order_index": 7,
+          "place_id": "9f32d3a7-cc00-55a4-9441-e29a660a8055",
+          "place_name": "Bảo tàng Quân khu 5",
+          "start_time": "13:00",
+          "transport_mode": "taxi"
+        },
+        {
+          "activity": "Di chuyển sang Bảo tàng Hồ Chí Minh",
+          "activity_kind": "TRANSIT_ONLY",
+          "end_time": "14:45",
+          "estimated_cost": 20000,
+          "notes": "Hai bảo tàng nằm gần nhau, đi xe quãng ngắn.",
+          "order_index": 8,
+          "place_id": null,
+          "place_name": null,
+          "start_time": "14:30",
+          "transport_mode": "taxi"
+        },
+        {
+          "activity": "Tìm hiểu cuộc đời và sự nghiệp Chủ tịch Hồ Chí Minh",
+          "activity_kind": "POI_VISIT",
+          "end_time": "16:00",
+          "estimated_cost": 0,
+          "notes": "Nên kiểm tra giờ mở cửa trước khi đến.",
+          "order_index": 9,
+          "place_id": "c573cb9b-3ec8-5b59-9d5c-8b3737add5e7",
+          "place_name": "Bảo tàng Hồ Chí Minh",
+          "start_time": "14:45",
+          "transport_mode": "taxi"
+        }
+      ],
+      "title": "Ngũ Hành Sơn và bảo tàng lịch sử quân sự"
+    }
+  ],
+  "destination": "Đà Nẵng",
+  "destination_slug": "da-nang",
+  "general_tips": [
+    "Mang áo mưa và nước uống vì thời tiết tháng 12 ở Đà Nẵng có thể mưa và se lạnh.",
+    "Ăn mặc kín đáo khi vào chùa và các địa điểm tâm linh.",
+    "Các bảo tàng thường đóng cửa nghỉ trưa hoặc cuối ngày, nên đến sớm và kiểm tra giờ mở cửa.",
+    "Dùng ứng dụng gọi xe hoặc đi bộ ở khu trung tâm để tiết kiệm chi phí di chuyển."
+  ],
+  "overview": "Lịch trình 2 ngày tiết kiệm tập trung vào văn hóa và di tích lịch sử Đà Nẵng. Ngày 1 đi các bảo tàng, thành cổ và chợ Cồn ở trung tâm. Ngày 2 thăm Ngũ Hành Sơn, chùa Tam Tôn, rồi về các bảo tàng Quân khu 5 và Hồ Chí Minh. Tổng chi phí ước tính khoảng 565.000 VND, thấp hơn nhiều so với trần 2.000.000 VND.",
+  "plan_id": "W06-DEV-TUNE-008-PLAN-01",
+  "scenario_id": "W06-DEV-TUNE-008",
+  "total_days": 2
+}

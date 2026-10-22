@@ -1,0 +1,256 @@
+{
+  "best_time_to_visit": "Tháng 10 đến tháng 12 và tháng 3 đến tháng 5 có thời tiết mát mẻ, ít mưa, thích hợp tham quan và thưởng thức cà phê. Cuối tháng 11 trời se lạnh, nên mang theo áo khoác mỏng.",
+  "budget_analysis": {
+    "currency": "VND",
+    "estimated_cost": 2490000,
+    "is_over_budget": false,
+    "total_budget": 4000000,
+    "variance": -1510000
+  },
+  "days": [
+    {
+      "date": "2026-11-20",
+      "day_cost": 1760000,
+      "day_number": 1,
+      "items": [
+        {
+          "activity": "Thưởng thức cà phê sáng thư thả tại quán",
+          "activity_kind": "POI_VISIT",
+          "end_time": "08:45",
+          "estimated_cost": 80000,
+          "notes": "Quán mở cửa từ 06:30, không gian yên tĩnh để bắt đầu ngày mới",
+          "order_index": 1,
+          "place_id": "70c3326e-1b53-45bf-a210-6c43a076e95b",
+          "place_name": "Cafe ban mê",
+          "start_time": "07:30",
+          "transport_mode": "walking"
+        },
+        {
+          "activity": "Di chuyển đến khu vực vịnh Hạ Long",
+          "activity_kind": "TRANSIT_ONLY",
+          "end_time": "09:15",
+          "estimated_cost": 40000,
+          "notes": "Di chuyển bằng taxi",
+          "order_index": 2,
+          "place_id": null,
+          "place_name": null,
+          "start_time": "08:45",
+          "transport_mode": "taxi"
+        },
+        {
+          "activity": "Ngắm cảnh và trải nghiệm du thuyền trên vịnh Hạ Long",
+          "activity_kind": "POI_VISIT",
+          "end_time": "12:00",
+          "estimated_cost": 900000,
+          "notes": "Chuyến du thuyền ngắn theo phong cách thoải mái, nên mang áo khoác mỏng",
+          "order_index": 3,
+          "place_id": "ade2140c-7945-4044-b99a-b1a028edce9e",
+          "place_name": "Vịnh Hạ Long",
+          "start_time": "09:15",
+          "transport_mode": "boat"
+        },
+        {
+          "activity": "Di chuyển về nhà hàng ăn trưa",
+          "activity_kind": "TRANSIT_ONLY",
+          "end_time": "12:30",
+          "estimated_cost": 40000,
+          "notes": "Di chuyển bằng taxi",
+          "order_index": 4,
+          "place_id": null,
+          "place_name": null,
+          "start_time": "12:00",
+          "transport_mode": "taxi"
+        },
+        {
+          "activity": "Ăn trưa hải sản",
+          "activity_kind": "POI_VISIT",
+          "end_time": "13:45",
+          "estimated_cost": 600000,
+          "notes": "Nhà hàng mở bữa trưa 10:30-14:00",
+          "order_index": 5,
+          "place_id": "71578b1b-a6a2-4bb6-be11-b94483cf7cbd",
+          "place_name": "Nhà hàng Biển 14",
+          "start_time": "12:30",
+          "transport_mode": "taxi"
+        },
+        {
+          "activity": "Đi bộ đến quán cà phê gần đó",
+          "activity_kind": "TRANSIT_ONLY",
+          "end_time": "14:00",
+          "estimated_cost": 0,
+          "notes": "Đi bộ ngắn trong khu vực",
+          "order_index": 6,
+          "place_id": null,
+          "place_name": null,
+          "start_time": "13:45",
+          "transport_mode": "walking"
+        },
+        {
+          "activity": "Cà phê chiều thư giãn",
+          "activity_kind": "POI_VISIT",
+          "end_time": "15:30",
+          "estimated_cost": 100000,
+          "notes": "Thưởng thức cà phê Việt Nam sau bữa trưa",
+          "order_index": 7,
+          "place_id": "2df74ade-33c0-43be-8b10-4b7769d92ef4",
+          "place_name": "Trung Nguyên Coffee",
+          "start_time": "14:00",
+          "transport_mode": "walking"
+        }
+      ],
+      "title": "Cà phê sáng Bãi Cháy và ngắm vịnh Hạ Long"
+    },
+    {
+      "date": "2026-11-21",
+      "day_cost": 730000,
+      "day_number": 2,
+      "items": [
+        {
+          "activity": "Cà phê sáng tại quán Sakura Coffee",
+          "activity_kind": "POI_VISIT",
+          "end_time": "09:30",
+          "estimated_cost": 80000,
+          "notes": "Bắt đầu ngày thứ hai nhẹ nhàng ở khu Hòn Gai",
+          "order_index": 1,
+          "place_id": "3ec2326d-c2b8-4918-b35b-a492e3d49571",
+          "place_name": "Sakura Coffee",
+          "start_time": "08:00",
+          "transport_mode": "taxi"
+        },
+        {
+          "activity": "Đi bộ đến Cầu Koi",
+          "activity_kind": "TRANSIT_ONLY",
+          "end_time": "09:45",
+          "estimated_cost": 0,
+          "notes": "Quãng đường rất gần",
+          "order_index": 2,
+          "place_id": null,
+          "place_name": null,
+          "start_time": "09:30",
+          "transport_mode": "walking"
+        },
+        {
+          "activity": "Dạo bộ và chụp ảnh tại Cầu Koi",
+          "activity_kind": "POI_VISIT",
+          "end_time": "10:45",
+          "estimated_cost": 0,
+          "notes": "Không gian thơ mộng, miễn phí tham quan",
+          "order_index": 3,
+          "place_id": "486977b9-621c-4c1b-9db6-2012c7b6d215",
+          "place_name": "Cầu Koi",
+          "start_time": "09:45",
+          "transport_mode": "walking"
+        },
+        {
+          "activity": "Di chuyển đến quán trà",
+          "activity_kind": "TRANSIT_ONLY",
+          "end_time": "11:15",
+          "estimated_cost": 40000,
+          "notes": "Di chuyển bằng taxi",
+          "order_index": 4,
+          "place_id": null,
+          "place_name": null,
+          "start_time": "10:45",
+          "transport_mode": "taxi"
+        },
+        {
+          "activity": "Thưởng thức trà và cà phê tại Mộc Trà Quán",
+          "activity_kind": "POI_VISIT",
+          "end_time": "12:30",
+          "estimated_cost": 90000,
+          "notes": "Không gian thư giãn kiểu trà quán",
+          "order_index": 5,
+          "place_id": "7c006eb6-8055-44e9-9622-25adcce427eb",
+          "place_name": "Mộc Trà Quán",
+          "start_time": "11:15",
+          "transport_mode": "taxi"
+        },
+        {
+          "activity": "Đi bộ đến nhà hàng ăn trưa",
+          "activity_kind": "TRANSIT_ONLY",
+          "end_time": "12:45",
+          "estimated_cost": 0,
+          "notes": "Đi bộ ngắn",
+          "order_index": 6,
+          "place_id": null,
+          "place_name": null,
+          "start_time": "12:30",
+          "transport_mode": "walking"
+        },
+        {
+          "activity": "Ăn trưa tại Rock House Pizza",
+          "activity_kind": "POI_VISIT",
+          "end_time": "14:00",
+          "estimated_cost": 350000,
+          "notes": "Nhà hàng mở cửa 07:30-22:30 từ thứ Ba đến Chủ nhật",
+          "order_index": 7,
+          "place_id": "b676dff3-14ef-4d4c-9b11-96153e38eac5",
+          "place_name": "Rock House Pizza",
+          "start_time": "12:45",
+          "transport_mode": "walking"
+        },
+        {
+          "activity": "Di chuyển đến công viên Lán Bè",
+          "activity_kind": "TRANSIT_ONLY",
+          "end_time": "14:15",
+          "estimated_cost": 50000,
+          "notes": "Di chuyển bằng taxi",
+          "order_index": 8,
+          "place_id": null,
+          "place_name": null,
+          "start_time": "14:00",
+          "transport_mode": "taxi"
+        },
+        {
+          "activity": "Dạo công viên ven biển Lán Bè",
+          "activity_kind": "POI_VISIT",
+          "end_time": "15:45",
+          "estimated_cost": 0,
+          "notes": "Đi dạo nhẹ nhàng, ngắm cảnh biển",
+          "order_index": 9,
+          "place_id": "708ee182-c879-477c-b920-516e2c99b0a6",
+          "place_name": "Công viên Lán Bè",
+          "start_time": "14:15",
+          "transport_mode": "taxi"
+        },
+        {
+          "activity": "Đi bộ đến quán cà phê cuối ngày",
+          "activity_kind": "TRANSIT_ONLY",
+          "end_time": "16:00",
+          "estimated_cost": 0,
+          "notes": "Đi bộ ngắn",
+          "order_index": 10,
+          "place_id": null,
+          "place_name": null,
+          "start_time": "15:45",
+          "transport_mode": "walking"
+        },
+        {
+          "activity": "Cà phê chiều kết thúc chuyến đi",
+          "activity_kind": "POI_VISIT",
+          "end_time": "17:30",
+          "estimated_cost": 120000,
+          "notes": "Nghỉ ngơi trước khi kết thúc hành trình",
+          "order_index": 11,
+          "place_id": "85303289-9746-4a42-b0f0-a555ce2bfd0e",
+          "place_name": "Highlands Coffee",
+          "start_time": "16:00",
+          "transport_mode": "walking"
+        }
+      ],
+      "title": "Cà phê và trà ở khu Hòn Gai"
+    }
+  ],
+  "destination": "Hạ Long",
+  "destination_slug": "ha-long",
+  "general_tips": [
+    "Mang áo khoác mỏng vì gió biển buổi sáng và chiều tối khá lạnh vào cuối tháng 11.",
+    "Nên đặt tour du thuyền trên vịnh trước và kiểm tra giờ tàu để tránh chờ đợi.",
+    "Nhà hàng Biển 14 phục vụ bữa trưa đến 14:00 nên cần đến đúng giờ.",
+    "Dùng taxi hoặc ứng dụng gọi xe cho các chặng xa, các điểm gần nhau có thể đi bộ."
+  ],
+  "overview": "Lịch trình 2 ngày thoải mái tại Hạ Long theo phong cách COMFORT, tập trung vào văn hóa cà phê. Ngày 1 là cà phê sáng, ngắm vịnh Hạ Long và ăn trưa hải sản, rồi nghỉ chiều ở khu Bãi Cháy. Ngày 2 là các quán cà phê và trà ở khu Hòn Gai, dạo Cầu Koi và công viên Lán Bè. Tổng chi phí ước tính nằm trong ngân sách 4.000.000 VND.",
+  "plan_id": "plan-W06-DEV-TUNE-015",
+  "scenario_id": "W06-DEV-TUNE-015",
+  "total_days": 2
+}

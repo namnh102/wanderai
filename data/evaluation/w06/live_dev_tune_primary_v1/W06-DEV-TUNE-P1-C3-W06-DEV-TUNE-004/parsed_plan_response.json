@@ -1,0 +1,300 @@
+{
+  "best_time_to_visit": "Tháng 10 đến tháng 12 là thời điểm đẹp nhất: trời se lạnh, khô ráo, rất hợp với đi bộ tham quan di tích.",
+  "budget_analysis": {
+    "currency": "VND",
+    "estimated_cost": 1280000,
+    "is_over_budget": false,
+    "total_budget": 3000000,
+    "variance": -1720000
+  },
+  "days": [
+    {
+      "date": "2026-11-12",
+      "day_cost": 420000,
+      "day_number": 1,
+      "items": [
+        {
+          "activity": "Tham quan Bảo tàng Hồ Chí Minh",
+          "activity_kind": "POI_VISIT",
+          "end_time": "09:30",
+          "estimated_cost": 40000,
+          "notes": "Mở cửa buổi sáng từ 08:00 đến 11:30 vào các ngày thứ Ba đến thứ Năm.",
+          "order_index": 1,
+          "place_id": "89982921-9495-52a1-a2a1-204961327524",
+          "place_name": "Bảo tàng Hồ Chí Minh",
+          "start_time": "08:00",
+          "transport_mode": "taxi"
+        },
+        {
+          "activity": "Di chuyển sang Chùa Một Cột",
+          "activity_kind": "TRANSIT_ONLY",
+          "end_time": "09:45",
+          "estimated_cost": 50000,
+          "notes": "Quãng đường rất gần.",
+          "order_index": 2,
+          "place_id": null,
+          "place_name": null,
+          "start_time": "09:30",
+          "transport_mode": "taxi"
+        },
+        {
+          "activity": "Tham quan Chùa Một Cột",
+          "activity_kind": "POI_VISIT",
+          "end_time": "10:30",
+          "estimated_cost": 0,
+          "notes": "Ngôi chùa mang kiến trúc độc đáo, biểu tượng của Hà Nội.",
+          "order_index": 3,
+          "place_id": "2ad993ae-bbe2-51cd-8717-712253a5cb8d",
+          "place_name": "Chùa Một Cột",
+          "start_time": "09:45",
+          "transport_mode": "taxi"
+        },
+        {
+          "activity": "Di chuyển đến Hoàng thành Thăng Long",
+          "activity_kind": "TRANSIT_ONLY",
+          "end_time": "10:50",
+          "estimated_cost": 50000,
+          "notes": "Di chuyển nội đô.",
+          "order_index": 4,
+          "place_id": null,
+          "place_name": null,
+          "start_time": "10:30",
+          "transport_mode": "taxi"
+        },
+        {
+          "activity": "Khám phá Hoàng thành Thăng Long",
+          "activity_kind": "POI_VISIT",
+          "end_time": "12:20",
+          "estimated_cost": 30000,
+          "notes": "Di sản thế giới UNESCO, mở cửa từ 08:00 đến 17:00.",
+          "order_index": 5,
+          "place_id": "b799793b-fb40-5bc2-9e67-6af92caeabe9",
+          "place_name": "Hoàng thành Thăng Long",
+          "start_time": "10:50",
+          "transport_mode": "taxi"
+        },
+        {
+          "activity": "Di chuyển đến nhà hàng ăn trưa",
+          "activity_kind": "TRANSIT_ONLY",
+          "end_time": "12:40",
+          "estimated_cost": 50000,
+          "notes": "Di chuyển nội đô.",
+          "order_index": 6,
+          "place_id": null,
+          "place_name": null,
+          "start_time": "12:20",
+          "transport_mode": "taxi"
+        },
+        {
+          "activity": "Ăn trưa với món Việt tại Quán Ăn Ngon",
+          "activity_kind": "POI_VISIT",
+          "end_time": "13:40",
+          "estimated_cost": 200000,
+          "notes": "Thưởng thức ẩm thực Việt Nam đa dạng.",
+          "order_index": 7,
+          "place_id": "acb22336-1124-49d5-a279-6357c2b2b445",
+          "place_name": "Quán Ăn Ngon - Phan Bội Châu",
+          "start_time": "12:40",
+          "transport_mode": "taxi"
+        }
+      ],
+      "title": "Khu Ba Đình và Hoàng thành Thăng Long"
+    },
+    {
+      "date": "2026-11-13",
+      "day_cost": 400000,
+      "day_number": 2,
+      "items": [
+        {
+          "activity": "Tham quan Nhà tù Hỏa Lò",
+          "activity_kind": "POI_VISIT",
+          "end_time": "09:30",
+          "estimated_cost": 100000,
+          "notes": "Di tích lịch sử về thời kỳ kháng chiến.",
+          "order_index": 1,
+          "place_id": "0938eb59-ee1c-5879-a798-58b5fdd07bce",
+          "place_name": "Nhà tù Hỏa Lò",
+          "start_time": "08:00",
+          "transport_mode": "taxi"
+        },
+        {
+          "activity": "Di chuyển đến Bảo tàng Lịch sử Quốc gia",
+          "activity_kind": "TRANSIT_ONLY",
+          "end_time": "09:45",
+          "estimated_cost": 50000,
+          "notes": "Di chuyển nội đô.",
+          "order_index": 2,
+          "place_id": null,
+          "place_name": null,
+          "start_time": "09:30",
+          "transport_mode": "taxi"
+        },
+        {
+          "activity": "Tham quan Bảo tàng Lịch sử Quốc gia Việt Nam",
+          "activity_kind": "POI_VISIT",
+          "end_time": "11:30",
+          "estimated_cost": 40000,
+          "notes": "Mở cửa buổi sáng đến 12:00, nghỉ thứ Hai.",
+          "order_index": 3,
+          "place_id": "06d8683d-46d2-5f86-bf8d-4dc72dba37ec",
+          "place_name": "Bảo tàng Lịch sử Quốc gia Việt Nam",
+          "start_time": "09:45",
+          "transport_mode": "taxi"
+        },
+        {
+          "activity": "Di chuyển đến quán phở",
+          "activity_kind": "TRANSIT_ONLY",
+          "end_time": "11:45",
+          "estimated_cost": 50000,
+          "notes": "Di chuyển nội đô.",
+          "order_index": 4,
+          "place_id": null,
+          "place_name": null,
+          "start_time": "11:30",
+          "transport_mode": "taxi"
+        },
+        {
+          "activity": "Ăn trưa với phở Hà Nội",
+          "activity_kind": "POI_VISIT",
+          "end_time": "12:45",
+          "estimated_cost": 100000,
+          "notes": "Quán phở truyền thống, mở cửa từ 06:00 đến 22:00.",
+          "order_index": 5,
+          "place_id": "5350dd97-2f75-45fc-9fc1-1979b08670f7",
+          "place_name": "Pho 10",
+          "start_time": "11:45",
+          "transport_mode": "taxi"
+        },
+        {
+          "activity": "Di chuyển đến Hồ Gươm",
+          "activity_kind": "TRANSIT_ONLY",
+          "end_time": "13:00",
+          "estimated_cost": 30000,
+          "notes": "Di chuyển nội đô.",
+          "order_index": 6,
+          "place_id": null,
+          "place_name": null,
+          "start_time": "12:45",
+          "transport_mode": "taxi"
+        },
+        {
+          "activity": "Tham quan Đền Ngọc Sơn",
+          "activity_kind": "POI_VISIT",
+          "end_time": "14:00",
+          "estimated_cost": 30000,
+          "notes": "Mở cửa từ 07:00 đến 18:00 vào các ngày trong tuần.",
+          "order_index": 7,
+          "place_id": "44115e3a-6094-5bcd-b53c-0e3a596b3aff",
+          "place_name": "Đền Ngọc Sơn",
+          "start_time": "13:00",
+          "transport_mode": "taxi"
+        }
+      ],
+      "title": "Lịch sử cận đại và khu Hồ Gươm"
+    },
+    {
+      "date": "2026-11-14",
+      "day_cost": 460000,
+      "day_number": 3,
+      "items": [
+        {
+          "activity": "Tham quan Bảo tàng Dân tộc học Việt Nam",
+          "activity_kind": "POI_VISIT",
+          "end_time": "10:30",
+          "estimated_cost": 40000,
+          "notes": "Tìm hiểu văn hóa các dân tộc Việt Nam.",
+          "order_index": 1,
+          "place_id": "f0d424bd-f722-540f-8964-5e6fd8875b56",
+          "place_name": "Bảo tàng Dân tộc học Việt Nam",
+          "start_time": "08:30",
+          "transport_mode": "taxi"
+        },
+        {
+          "activity": "Di chuyển đến Bảo tàng Mỹ thuật Việt Nam",
+          "activity_kind": "TRANSIT_ONLY",
+          "end_time": "11:00",
+          "estimated_cost": 60000,
+          "notes": "Di chuyển nội đô.",
+          "order_index": 2,
+          "place_id": null,
+          "place_name": null,
+          "start_time": "10:30",
+          "transport_mode": "taxi"
+        },
+        {
+          "activity": "Tham quan Bảo tàng Mỹ thuật Việt Nam",
+          "activity_kind": "POI_VISIT",
+          "end_time": "12:00",
+          "estimated_cost": 40000,
+          "notes": "Mở cửa từ 08:30 đến 17:00 hằng ngày.",
+          "order_index": 3,
+          "place_id": "dc6593cd-eefb-59a9-bbf3-1e69c944d5c3",
+          "place_name": "Bảo tàng Mỹ thuật Việt Nam",
+          "start_time": "11:00",
+          "transport_mode": "taxi"
+        },
+        {
+          "activity": "Di chuyển đến nhà hàng ăn trưa",
+          "activity_kind": "TRANSIT_ONLY",
+          "end_time": "12:15",
+          "estimated_cost": 50000,
+          "notes": "Di chuyển nội đô.",
+          "order_index": 4,
+          "place_id": null,
+          "place_name": null,
+          "start_time": "12:00",
+          "transport_mode": "taxi"
+        },
+        {
+          "activity": "Ăn trưa tại nhà hàng Cây Si",
+          "activity_kind": "POI_VISIT",
+          "end_time": "13:15",
+          "estimated_cost": 200000,
+          "notes": "Bữa trưa thoải mái với món Việt.",
+          "order_index": 5,
+          "place_id": "f6f82c88-2577-4b65-a225-ee98afb345a9",
+          "place_name": "Cây Si",
+          "start_time": "12:15",
+          "transport_mode": "taxi"
+        },
+        {
+          "activity": "Di chuyển đến Chùa Trấn Quốc",
+          "activity_kind": "TRANSIT_ONLY",
+          "end_time": "13:45",
+          "estimated_cost": 70000,
+          "notes": "Di chuyển về phía Hồ Tây.",
+          "order_index": 6,
+          "place_id": null,
+          "place_name": null,
+          "start_time": "13:15",
+          "transport_mode": "taxi"
+        },
+        {
+          "activity": "Tham quan Chùa Trấn Quốc bên Hồ Tây",
+          "activity_kind": "POI_VISIT",
+          "end_time": "14:45",
+          "estimated_cost": 0,
+          "notes": "Ngôi chùa cổ nhất Hà Nội, không gian yên tĩnh.",
+          "order_index": 7,
+          "place_id": "e3fe1f1a-f524-55cf-9d83-903e427d0ba4",
+          "place_name": "Chùa Trấn Quốc",
+          "start_time": "13:45",
+          "transport_mode": "taxi"
+        }
+      ],
+      "title": "Bảo tàng văn hóa và chùa Trấn Quốc"
+    }
+  ],
+  "destination": "Hà Nội",
+  "destination_slug": "ha-noi",
+  "general_tips": [
+    "Kiểm tra giờ mở cửa trước khi đi, vì nhiều bảo tàng đóng cửa vào giờ trưa hoặc ngày nghỉ.",
+    "Mặc trang phục kín đáo khi vào chùa, đền.",
+    "Nên dùng taxi hoặc xe công nghệ cho các chặng xa để thoải mái hơn.",
+    "Mang theo tiền mặt nhỏ để mua vé và ăn uống."
+  ],
+  "overview": "Lịch trình 3 ngày thoải mái tại Hà Nội, tập trung vào văn hóa và di tích lịch sử: khu Ba Đình – Hoàng thành, khu phố cổ và Hồ Gươm, cùng các bảo tàng và chùa nổi tiếng. Mỗi ngày có ít nhất 2 địa điểm tham quan, không lặp lại địa điểm và tổng chi phí nằm trong ngân sách.",
+  "plan_id": "W06-DEV-TUNE-004-PLAN-01",
+  "scenario_id": "W06-DEV-TUNE-004",
+  "total_days": 3
+}

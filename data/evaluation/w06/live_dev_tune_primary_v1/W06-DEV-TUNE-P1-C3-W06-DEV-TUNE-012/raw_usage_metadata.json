@@ -1,0 +1,22 @@
+{
+  "candidate_id": "C3",
+  "normalized_usage_metadata": {
+    "cache_creation_input_tokens": null,
+    "cache_read_input_tokens": null,
+    "cached_input_tokens": null,
+    "cached_tokens": null,
+    "candidate_id": "C3",
+    "input_tokens": null,
+    "output_tokens": null,
+    "provider": "anthropic",
+    "reasoning_tokens": null,
+    "thinking_tokens": null,
+    "thought_tokens": null,
+    "total_tokens": null,
+    "usage_present": false
+  },
+  "provider": "anthropic",
+  "raw_usage_metadata": null,
+  "run_id": "W06-DEV-TUNE-P1-C3-W06-DEV-TUNE-012",
+  "usage_present": false
+}

@@ -1,0 +1,275 @@
+{
+  "plan_id": "PLAN-W06-DEV-TUNE-005",
+  "scenario_id": "W06-DEV-TUNE-005",
+  "destination_slug": "ha-noi",
+  "destination": "Hà Nội",
+  "total_days": 3,
+  "overview": "Lịch trình 3 ngày khám phá chiều sâu văn hóa lịch sử và không gian xanh thoáng đãng tại thủ đô Hà Nội với chi phí tiết kiệm tối ưu.",
+  "best_time_to_visit": "Tháng 10 đến tháng 12 với tiết trời thu đông se lạnh, mát mẻ và khô ráo, rất thích hợp cho việc đi bộ tham quan.",
+  "general_tips": [
+    "Nên chuẩn bị trang phục lịch sự, kín đáo khi tham quan các khu di tích lịch sử và đền chùa.",
+    "Tận dụng đi bộ hoặc các phương tiện công cộng/xe ôm công nghệ để tiết kiệm tối đa chi phí di chuyển.",
+    "Nên mang theo thẻ học sinh/sinh viên nếu có để nhận ưu đãi giảm giá vé tại các bảo tàng và di tích."
+  ],
+  "budget_analysis": {
+    "total_budget": 1500000,
+    "estimated_cost": 395000,
+    "currency": "VND",
+    "is_over_budget": false,
+    "variance": 1105000
+  },
+  "days": [
+    {
+      "day_number": 1,
+      "date": "2026-11-24",
+      "title": "Dấu ấn lịch sử Thăng Long và không gian Ba Đình",
+      "items": [
+        {
+          "order_index": 1,
+          "start_time": "08:30",
+          "end_time": "10:30",
+          "activity_kind": "POI_VISIT",
+          "activity": "Tham quan khu di sản Hoàng thành Thăng Long",
+          "place_name": "Hoàng thành Thăng Long",
+          "place_id": "b799793b-fb40-5bc2-9e67-6af92caeabe9",
+          "notes": "Tìm hiểu các tầng văn hóa lịch sử nghìn năm của Thăng Long Hà Nội.",
+          "estimated_cost": 30000,
+          "transport_mode": null
+        },
+        {
+          "order_index": 2,
+          "start_time": "10:30",
+          "end_time": "10:50",
+          "activity_kind": "TRANSIT_ONLY",
+          "activity": "Đi bộ sang Khu Di tích Phủ Chủ tịch",
+          "place_name": null,
+          "place_id": null,
+          "notes": "Di chuyển quãng đường ngắn qua đường Hoàng Hoa Thám / Hùng Vương.",
+          "estimated_cost": 0,
+          "transport_mode": "walking"
+        },
+        {
+          "order_index": 3,
+          "start_time": "10:50",
+          "end_time": "12:15",
+          "activity_kind": "POI_VISIT",
+          "activity": "Dạo bước tham quan Khu Di tích Phủ Chủ tịch",
+          "place_name": "Khu Di tích Phủ Chủ tịch",
+          "place_id": "62570370-9468-5567-8215-f93a5afb0c0f",
+          "notes": "Khám phá khuôn viên vườn cây, ao cá và nhà sàn Bác Hồ rợp bóng mát.",
+          "estimated_cost": 40000,
+          "transport_mode": null
+        },
+        {
+          "order_index": 4,
+          "start_time": "13:45",
+          "end_time": "14:00",
+          "activity_kind": "TRANSIT_ONLY",
+          "activity": "Di chuyển sang Chùa Một Cột",
+          "place_name": null,
+          "place_id": null,
+          "notes": "Đi bộ trong khu vực lân cận quần thể Ba Đình.",
+          "estimated_cost": 0,
+          "transport_mode": "walking"
+        },
+        {
+          "order_index": 5,
+          "start_time": "14:00",
+          "end_time": "15:00",
+          "activity_kind": "POI_VISIT",
+          "activity": "Chiêm bái kiến trúc Chùa Một Cột",
+          "place_name": "Chùa Một Cột",
+          "place_id": "2ad993ae-bbe2-51cd-8717-712253a5cb8d",
+          "notes": "Chiêm ngưỡng ngôi chùa có hình dáng đài sen độc đáo biểu tượng của thủ đô.",
+          "estimated_cost": 0,
+          "transport_mode": null
+        },
+        {
+          "order_index": 6,
+          "start_time": "15:00",
+          "end_time": "15:20",
+          "activity_kind": "TRANSIT_ONLY",
+          "activity": "Đi bộ qua Công viên Lê-nin",
+          "place_name": null,
+          "place_id": null,
+          "notes": "Tản bộ qua đường Điện Biên Phủ.",
+          "estimated_cost": 0,
+          "transport_mode": "walking"
+        },
+        {
+          "order_index": 7,
+          "start_time": "15:20",
+          "end_time": "16:45",
+          "activity_kind": "POI_VISIT",
+          "activity": "Thư giãn ngoài trời tại Công viên Lê-nin",
+          "place_name": "Công viên Lê-nin",
+          "place_id": "a2037ceb-201f-5c45-a596-af795a399e60",
+          "notes": "Không gian cây xanh thoáng đãng, ngắm nhìn Cột cờ Hà Nội từ xa.",
+          "estimated_cost": 0,
+          "transport_mode": null
+        }
+      ],
+      "day_cost": 70000
+    },
+    {
+      "day_number": 2,
+      "date": "2026-11-25",
+      "title": "Mỹ thuật, ký ức lịch sử và thiên nhiên nội đô",
+      "items": [
+        {
+          "order_index": 1,
+          "start_time": "08:30",
+          "end_time": "10:30",
+          "activity_kind": "POI_VISIT",
+          "activity": "Chiêm ngưỡng các tác phẩm tại Bảo tàng Mỹ thuật Việt Nam",
+          "place_name": "Bảo tàng Mỹ thuật Việt Nam",
+          "place_id": "dc6593cd-eefb-59a9-bbf3-1e69c944d5c3",
+          "notes": "Tìm hiểu nền mỹ thuật dân gian và hiện đại phong phú của Việt Nam.",
+          "estimated_cost": 40000,
+          "transport_mode": null
+        },
+        {
+          "order_index": 2,
+          "start_time": "10:30",
+          "end_time": "10:50",
+          "activity_kind": "TRANSIT_ONLY",
+          "activity": "Di chuyển đến Di tích Nhà tù Hỏa Lò",
+          "place_name": null,
+          "place_id": null,
+          "notes": "Đi xe ôm hoặc xe buýt nội đô tuyến ngắn.",
+          "estimated_cost": 25000,
+          "transport_mode": "motorbike"
+        },
+        {
+          "order_index": 3,
+          "start_time": "10:50",
+          "end_time": "12:30",
+          "activity_kind": "POI_VISIT",
+          "activity": "Tham quan Di tích lịch sử Nhà tù Hỏa Lò",
+          "place_name": "Nhà tù Hỏa Lò",
+          "place_id": "0938eb59-ee1c-5879-a798-58b5fdd07bce",
+          "notes": "Lắng nghe những câu chuyện lịch sử kiên cường qua hệ thống tư liệu trưng bày hiện đại.",
+          "estimated_cost": 50000,
+          "transport_mode": null
+        },
+        {
+          "order_index": 4,
+          "start_time": "14:00",
+          "end_time": "14:25",
+          "activity_kind": "TRANSIT_ONLY",
+          "activity": "Di chuyển về phía Công viên Thống Nhất",
+          "place_name": null,
+          "place_id": null,
+          "notes": "Di chuyển bằng xe ôm công nghệ giá rẻ.",
+          "estimated_cost": 25000,
+          "transport_mode": "motorbike"
+        },
+        {
+          "order_index": 5,
+          "start_time": "14:25",
+          "end_time": "16:45",
+          "activity_kind": "POI_VISIT",
+          "activity": "Dạo chơi và tận hưởng thiên nhiên tại Công viên Thống Nhất",
+          "place_name": "Công viên Thống Nhất",
+          "place_id": "766656bb-c7e0-555d-9963-d3132f0de086",
+          "notes": "Tản bộ quanh hồ Bảy Mẫu dưới tán cây xanh mát, hít thở không khí trong lành.",
+          "estimated_cost": 10000,
+          "transport_mode": null
+        }
+      ],
+      "day_cost": 150000
+    },
+    {
+      "day_number": 3,
+      "date": "2026-11-26",
+      "title": "Trái tim thủ đô và văn hóa truyền thống",
+      "items": [
+        {
+          "order_index": 1,
+          "start_time": "08:00",
+          "end_time": "09:30",
+          "activity_kind": "POI_VISIT",
+          "activity": "Khám phá Đền Ngọc Sơn bên hồ Hoàn Kiếm",
+          "place_name": "Đền Ngọc Sơn",
+          "place_id": "44115e3a-6094-5bcd-b53c-0e3a596b3aff",
+          "notes": "Chiêm bái ngôi đền cổ kính linh thiêng giữa lòng hồ Gươm.",
+          "estimated_cost": 50000,
+          "transport_mode": null
+        },
+        {
+          "order_index": 2,
+          "start_time": "09:30",
+          "end_time": "09:45",
+          "activity_kind": "TRANSIT_ONLY",
+          "activity": "Tản bộ ven hồ sang Vườn hoa Lý Thái Tổ",
+          "place_name": null,
+          "place_id": null,
+          "notes": "Đi bộ thư thái dọc theo bờ hồ Đinh Tiên Hoàng.",
+          "estimated_cost": 0,
+          "transport_mode": "walking"
+        },
+        {
+          "order_index": 3,
+          "start_time": "09:45",
+          "end_time": "10:45",
+          "activity_kind": "POI_VISIT",
+          "activity": "Nghỉ ngơi và dạo bộ tại Vườn hoa Lý Thái Tổ",
+          "place_name": "Vườn hoa Lý Thái Tổ",
+          "place_id": "79624561-abc4-5c9a-a068-3d5f83cbb07d",
+          "notes": "Khuôn viên ngoài trời thoáng mát bên bờ hồ, ngắm cảnh phố phường nhộn nhịp.",
+          "estimated_cost": 0,
+          "transport_mode": null
+        },
+        {
+          "order_index": 4,
+          "start_time": "10:45",
+          "end_time": "11:05",
+          "activity_kind": "TRANSIT_ONLY",
+          "activity": "Đi bộ sang Bảo tàng Phụ nữ Việt Nam",
+          "place_name": null,
+          "place_id": null,
+          "notes": "Tản bộ qua phố Lý Thường Kiệt.",
+          "estimated_cost": 0,
+          "transport_mode": "walking"
+        },
+        {
+          "order_index": 5,
+          "start_time": "11:05",
+          "end_time": "12:30",
+          "activity_kind": "POI_VISIT",
+          "activity": "Khám phá Bảo tàng Phụ nữ Việt Nam",
+          "place_name": "Bảo tàng Phụ nữ Việt Nam",
+          "place_id": "fb8f1d59-838b-5b8f-9363-0541b1af42d8",
+          "notes": "Bảo tàng ấn tượng trưng bày văn hóa gia đình, y phục và vai trò lịch sử của phụ nữ Việt Nam.",
+          "estimated_cost": 40000,
+          "transport_mode": null
+        },
+        {
+          "order_index": 6,
+          "start_time": "14:00",
+          "end_time": "14:15",
+          "activity_kind": "TRANSIT_ONLY",
+          "activity": "Đi bộ sang Vườn hoa Diên Hồng",
+          "place_name": null,
+          "place_id": null,
+          "notes": "Đi bộ về phía vườn hoa con Cóc.",
+          "estimated_cost": 0,
+          "transport_mode": "walking"
+        },
+        {
+          "order_index": 7,
+          "start_time": "14:15",
+          "end_time": "15:45",
+          "activity_kind": "POI_VISIT",
+          "activity": "Thư giãn ngoài trời tại Vườn hoa Diên Hồng",
+          "place_name": "Vườn hoa Diên Hồng",
+          "place_id": "ecf049b8-19d8-50ee-aeb6-2b4f645c1217",
+          "notes": "Ngắm đài phun nước cổ kính mang phong cách kiến trúc Pháp cổ điển giữa bóng mát cây xanh.",
+          "estimated_cost": 0,
+          "transport_mode": null
+        }
+      ],
+      "day_cost": 90000
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "attempt_number": 1,
+  "authorization_id": "W06-DEV-TUNE-LIVE-AUTHORIZATION-01-V1",
+  "cell_identity": {
+    "attempt_number": 1,
+    "candidate_id": "C3",
+    "fixture_id": "W06-DEV-TUNE-017",
+    "phase": "DEV_TUNE",
+    "prompt_id": "P1"
+  },
+  "code_basis_commit_sha": "60d52d720e66f5af8e82fabf9cebe2ea0e8a9e26",
+  "execution_started_at_utc": "2026-10-22T05:58:56.009963+00:00",
+  "latency_ns": 36875000000,
+  "run_id": "W06-DEV-TUNE-P1-C3-W06-DEV-TUNE-017",
+  "runtime_head_sha": "4a276ca8ca5e836a92d34ec72569998a3617d915",
+  "scientific_code_bundle_sha256": "0638f2fcb100b0000e3a2a4e08137a9d468449001f258de7354df21e185ca2e3",
+  "status": "TRANSPORT_COMPLETED",
+  "timestamp_utc": "2026-10-22T05:59:32.899709+00:00",
+  "transport_completed_at_utc": "2026-10-22T05:59:32.899709+00:00"
+}

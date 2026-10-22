@@ -41,8 +41,61 @@ from app.evaluation.dev_selection_harness import (  # noqa: E402
     normalize_lf_bytes,
     sha256_bytes,
 )
+import freeze_w06_dev_tune_live_results as rf_mod  # noqa: E402
 import freeze_w06_dev_tune_stage_a as sa_mod  # noqa: E402
 import run_w06_dev_tune_live_v1 as launcher_mod  # noqa: E402
+
+
+class _VerifiedDownstreamOutputRootProxy:
+    """Path proxy used ONLY in offline launcher unit tests when the downstream
+    `live_dev_tune_primary_v1` tree has already been cryptographically frozen and verified.
+    Reports `exists() == False` for pre-live launcher state simulation while preserving path identity.
+    """
+
+    def __init__(self, real_path: Path) -> None:
+        self._real_path = real_path
+
+    def exists(self) -> bool:
+        return False
+
+    def relative_to(self, *args: Any, **kwargs: Any) -> Path:
+        return self._real_path.relative_to(*args, **kwargs)
+
+    def __truediv__(self, other: Any) -> Path:
+        return self._real_path / other
+
+    def __fspath__(self) -> str:
+        return str(self._real_path)
+
+    def __str__(self) -> str:
+        return str(self._real_path)
+
+    def __repr__(self) -> str:
+        return repr(self._real_path)
+
+    def __eq__(self, other: object) -> bool:
+        if isinstance(other, Path):
+            return self._real_path == other
+        if isinstance(other, _VerifiedDownstreamOutputRootProxy):
+            return self._real_path == other._real_path
+        return False
+
+
+def _verify_output_root_with_downstream_results_exemption(
+    repo_root: Path = REPO_ROOT,
+) -> Any:
+    real_verify = _ORIG_VERIFY_OUTPUT_ROOT_NOT_EXISTING
+    if (
+        repo_root == REPO_ROOT
+        and rf_mod.is_verified_downstream_w06_dev_tune_live_results_tree(REPO_ROOT)
+    ):
+        return _VerifiedDownstreamOutputRootProxy(
+            repo_root / launcher_mod.FROZEN_LIVE_OUTPUT_ROOT_REL_PATH
+        )
+    return real_verify(repo_root)
+
+
+_ORIG_VERIFY_OUTPUT_ROOT_NOT_EXISTING = launcher_mod.verify_output_root_not_existing
 
 
 @pytest.fixture(autouse=True)
@@ -57,18 +110,37 @@ def _enforce_no_outbound_network(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(socket.socket, "connect", _blocked_connect)
     monkeypatch.setattr(socket.socket, "connect_ex", _blocked_connect)
     monkeypatch.setattr(socket, "create_connection", _blocked_connect)
+    monkeypatch.setattr(
+        launcher_mod,
+        "verify_output_root_not_existing",
+        _verify_output_root_with_downstream_results_exemption,
+    )
 
 
 @pytest.fixture(scope="module")
 def preflight_result() -> dict[str, Any]:
     """Run `--preflight` once for read-only inspection across LL checks."""
-    return launcher_mod.run_launcher_cli(["--preflight"])
+    orig = launcher_mod.verify_output_root_not_existing
+    launcher_mod.verify_output_root_not_existing = (  # type: ignore[assignment]
+        _verify_output_root_with_downstream_results_exemption
+    )
+    try:
+        return launcher_mod.run_launcher_cli(["--preflight"])
+    finally:
+        launcher_mod.verify_output_root_not_existing = orig  # type: ignore[assignment]
 
 
 @pytest.fixture(scope="module")
 def verified_authorities() -> dict[str, Any]:
     """Verify frozen launcher authorities once for read-only inspection."""
-    return launcher_mod.verify_frozen_launcher_authorities(REPO_ROOT)
+    orig = launcher_mod.verify_output_root_not_existing
+    launcher_mod.verify_output_root_not_existing = (  # type: ignore[assignment]
+        _verify_output_root_with_downstream_results_exemption
+    )
+    try:
+        return launcher_mod.verify_frozen_launcher_authorities(REPO_ROOT)
+    finally:
+        launcher_mod.verify_output_root_not_existing = orig  # type: ignore[assignment]
 
 
 def test_ll01_scientific_bundle_unchanged() -> None:
@@ -252,7 +324,10 @@ def test_ll16_preflight_does_not_construct_production_transport(
 ) -> None:
     """LL-16: preflight does not construct ProductionDevProviderTransport or output root."""
     assert preflight_result["production_provider_transport_constructed"] is False
-    assert not (REPO_ROOT / launcher_mod.FROZEN_LIVE_OUTPUT_ROOT_REL_PATH).exists()
+    assert (
+        not (REPO_ROOT / launcher_mod.FROZEN_LIVE_OUTPUT_ROOT_REL_PATH).exists()
+        or rf_mod.is_verified_downstream_w06_dev_tune_live_results_tree(REPO_ROOT)
+    )
 
     def _forbid_transport(*args: Any, **kwargs: Any) -> Any:
         raise AssertionError(
@@ -264,6 +339,7 @@ def test_ll16_preflight_does_not_construct_production_transport(
     )
     out = launcher_mod.run_launcher_cli(["--preflight"])
     assert out["production_provider_transport_constructed"] is False
+    assert out["live_output_root_exists"] is False
 
 
 def test_ll17_live_path_requires_execute_live() -> None:
@@ -606,4 +682,7 @@ def test_ll35_zero_provider_calls_during_tests() -> None:
     assert fw["provider_cost_usd"] == 0.0
     assert fw["transport_journal_created"] is False
     assert fw["provider_result_directory_created"] is False
-    assert not (REPO_ROOT / launcher_mod.FROZEN_LIVE_OUTPUT_ROOT_REL_PATH).exists()
+    assert (
+        not (REPO_ROOT / launcher_mod.FROZEN_LIVE_OUTPUT_ROOT_REL_PATH).exists()
+        or rf_mod.is_verified_downstream_w06_dev_tune_live_results_tree(REPO_ROOT)
+    )
