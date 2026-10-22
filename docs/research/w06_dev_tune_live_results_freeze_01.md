@@ -69,9 +69,12 @@ All files under `data/evaluation/w06/live_dev_tune_primary_v1` were hashed over 
 
 ## 4. Recomputed Execution Summary & Prompt × Candidate Breakdown
 
-### 4.1 Failure Classification Counts (`120` cells)
+### 4.1 Primary Failure Classification Counts (`120` cells)
 
-| Failure Classification | Total | `C1` (`gemini-3.8-flash`) | `C2` (`gpt-6.1-sol`) | `C3` (`claude-sonnet-5-5`) | `P1` (`60` cells) | `P2` (`60` cells) |
+- **Primary Failure Classification Authority:** `execution_receipt.failure_classification` (`PRIMARY_FAILURE_CLASSIFICATION_AUTHORITY = execution_receipt.failure_classification`)
+- All scientific failure reporting and prompt-selection preconditions are governed exclusively by `execution_receipt.json` field `failure_classification`. No secondary diagnostic taxonomy replaces `execution_receipt.failure_classification` or is used for scientific outcome reporting or prompt selection.
+
+| Failure Classification (`execution_receipt.failure_classification`) | Total | `C1` (`gemini-3.8-flash`) | `C2` (`gpt-6.1-sol`) | `C3` (`claude-sonnet-5-5`) | `P1` (`60` cells) | `P2` (`60` cells) |
 |---|---:|---:|---:|---:|---:|---:|
 | `NONE` | **44** | 4 | 7 | 33 | 23 | 21 |
 | `TIMEOUT` | **57** | 18 | 33 | 6 | 35 | 22 |
@@ -170,4 +173,9 @@ To allow committing the verified post-Stage-A live execution evidence under `dat
 3. `scripts/freeze_w06_dev_tune_stage_a.py`
 4. `apps/ai-service/tests/test_w06_dev_tune_live_launcher_01.py`
 
-No historical frozen JSON receipt (`w06_dev_tune_authorization_prep_01_v1.json`, `w06_dev_tune_live_authorization_v1.json`, `w06_dev_tune_stage_a_freeze_receipt_v1.json`, `w06_dev_prompt_candidate_freeze_v1.json`, `w06_dev_tune_execution_plan_v1.json`) and no file in `SCIENTIFIC_CODE_BUNDLE_RELATIVE_PATHS` or `scripts/run_w06_dev_tune_live_v1.py` was modified.
+Every call to `is_verified_downstream_w06_dev_tune_live_results_tree(...)` is strictly stateless (zero positive verification cache) and freshly validates from disk:
+- Exact LF-normalized `RESULTS_MANIFEST_FILE_SHA256 = 060c3da987638f8eeb96a6240e11b612d3b5e80e31be5046779c417fbca7be85` and manifest semantics
+- Exact LF-normalized `RESULTS_FREEZE_RECEIPT_FILE_SHA256 = 5f45c31a96b3827d64b927bccde154ad9345202fbfad6f8070c9f7927c40cbfe` and receipt semantics
+- Exact raw-byte `RAW_EVIDENCE_TREE_SHA256 = 9b6089f478979ce32e968529c656358fc1bb751101527e017c1e4d5a695cd1e8` (`1,124` files, `11,749,420` bytes)
+
+No historical frozen JSON receipt (`w06_dev_tune_authorization_prep_v1.json`, `w06_dev_tune_live_authorization_v1.json`, `w06_dev_tune_stage_a_freeze_receipt_v1.json`, `w06_dev_prompt_candidate_freeze_v1.json`, `w06_dev_tune_execution_plan_v1.json`) and no file in `SCIENTIFIC_CODE_BUNDLE_RELATIVE_PATHS` or `scripts/run_w06_dev_tune_live_v1.py` was modified.

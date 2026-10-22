@@ -1391,38 +1391,62 @@ def build_results_freeze_receipt_payload(
 # ==============================================================================
 
 
-_VERIFIED_DOWNSTREAM_RESULTS_TREE_CACHE: dict[str, bool] = {}
+def is_path_in_downstream_w06_dev_tune_live_results_scope(
+    path: Path,
+    *,
+    repo_root: Path = REPO_ROOT,
+) -> bool:
+    """Return True if `path` is one of the downstream W06 DEV-TUNE live-results paths.
+
+    NOTE: This helper checks path scope ONLY and never grants an exemption by itself.
+    Any exemption MUST be gated by `is_verified_downstream_w06_dev_tune_live_results_tree(repo_root)`.
+    """
+    try:
+        rel_posix = path.relative_to(repo_root).as_posix()
+    except ValueError:
+        try:
+            rel_posix = path.resolve().relative_to(repo_root.resolve()).as_posix()
+        except Exception:
+            return False
+
+    return (
+        rel_posix
+        in (
+            RESULTS_MANIFEST_REL_PATH,
+            RESULTS_FREEZE_RECEIPT_REL_PATH,
+            RAW_OUTPUT_ROOT_REL_PATH,
+        )
+        or rel_posix.startswith(f"{RAW_OUTPUT_ROOT_REL_PATH}/")
+    )
 
 
 def is_verified_downstream_w06_dev_tune_live_results_tree(
     repo_root: Path = REPO_ROOT,
     *,
     raw_output_root: Path | None = None,
+    results_manifest_path: Path | None = None,
+    results_freeze_receipt_path: Path | None = None,
 ) -> bool:
-    """Return True ONLY if the raw live output tree and results manifest in `repo_root`
-    match the exact cryptographically frozen W06-DEV-TUNE-LIVE-RESULTS-FREEZE-01 state (Section 23).
+    """Return True ONLY if the raw live output tree, results manifest, and results-freeze
+    receipt in `repo_root` match the exact cryptographically frozen
+    W06-DEV-TUNE-LIVE-RESULTS-FREEZE-01 state (Section 23).
 
-    Bound to exact:
-    - RAW_EVIDENCE_TREE_SHA256
-    - RESULTS_MANIFEST_FILE_SHA256
-    - execution_id = W06-DEV-TUNE-LIVE-EXECUTION-01
-    - DEV_TUNE_PLAN_SHA256
-    - AUTHORIZATION_INTERNAL_SHA256
-    - STAGE_A_INTERNAL_SHA256
-    - 120 assigned run_ids
-    - retry_calls = 0 and rerun_cells = 0
-    Any unknown or tampered result tree or file returns False (fails closed).
+    Strictly stateless (zero positive verification cache): every invocation freshly
+    validates from disk:
+    - RESULTS_MANIFEST_FILE_SHA256 = 060c3da987638f8eeb96a6240e11b612d3b5e80e31be5046779c417fbca7be85
+    - RESULTS_FREEZE_RECEIPT_FILE_SHA256 = 5f45c31a96b3827d64b927bccde154ad9345202fbfad6f8070c9f7927c40cbfe
+    - RAW_EVIDENCE_TREE_SHA256 = 9b6089f478979ce32e968529c656358fc1bb751101527e017c1e4d5a695cd1e8
+    - Exact manifest and receipt semantic bindings (execution_id, base_execution_head_sha,
+      plan SHA, prompt freeze SHA, authorization SHA, Stage-A SHA, scientific bundle SHA,
+      launcher SHA, preflight request/path set SHAs, 120 ordered assigned run_ids,
+      retry_calls=0, rerun_cells=0, winner/selection/Final100 flags false, live_provider_calls_new=0).
+    Any unknown or tampered result tree, manifest, or receipt returns False (fails closed).
     """
     raw_root = raw_output_root or (repo_root / RAW_OUTPUT_ROOT_REL_PATH)
-    cache_key = f"{repo_root.resolve()}::{raw_root.resolve()}"
-    if (
-        raw_output_root is None
-        and cache_key in _VERIFIED_DOWNSTREAM_RESULTS_TREE_CACHE
-    ):
-        return _VERIFIED_DOWNSTREAM_RESULTS_TREE_CACHE[cache_key]
-
-    manifest_path = repo_root / RESULTS_MANIFEST_REL_PATH
-    receipt_path = repo_root / RESULTS_FREEZE_RECEIPT_REL_PATH
+    manifest_path = results_manifest_path or (repo_root / RESULTS_MANIFEST_REL_PATH)
+    receipt_path = results_freeze_receipt_path or (
+        repo_root / RESULTS_FREEZE_RECEIPT_REL_PATH
+    )
     plan_path = repo_root / DEV_TUNE_PLAN_REL_PATH
     if (
         not raw_root.is_dir()
@@ -1435,46 +1459,65 @@ def is_verified_downstream_w06_dev_tune_live_results_tree(
     try:
         manifest_bytes = normalize_lf_bytes(manifest_path.read_bytes())
         manifest_sha = sha256_bytes(manifest_bytes)
-        if manifest_sha != EXPECTED_RESULTS_MANIFEST_FILE_SHA256:
+
+        receipt_bytes = normalize_lf_bytes(receipt_path.read_bytes())
+        receipt_sha = sha256_bytes(receipt_bytes)
+
+        plan_bytes = normalize_lf_bytes(plan_path.read_bytes())
+        plan_file_sha = sha256_bytes(plan_bytes)
+        if plan_file_sha != EXPECTED_DEV_TUNE_PLAN_FILE_SHA256:
             return False
 
         manifest_obj = json.loads(manifest_bytes.decode("utf-8"))
-        receipt_obj = json.loads(
-            normalize_lf_bytes(receipt_path.read_bytes()).decode("utf-8")
-        )
-        plan_obj = json.loads(normalize_lf_bytes(plan_path.read_bytes()).decode("utf-8"))
+        receipt_obj = json.loads(receipt_bytes.decode("utf-8"))
+        plan_obj = json.loads(plan_bytes.decode("utf-8"))
+        if not isinstance(manifest_obj, dict) or not isinstance(receipt_obj, dict):
+            return False
+        if plan_obj.get("plan_sha256") != EXPECTED_DEV_TUNE_PLAN_SHA256:
+            return False
+
         expected_run_ids = [c["run_id"] for c in plan_obj.get("cells", [])]
-        if len(expected_run_ids) != 120:
+        if len(expected_run_ids) != 120 or len(set(expected_run_ids)) != 120:
             return False
 
-        root_children = sorted(raw_root.iterdir(), key=lambda p: p.name)
-        if any(not p.is_dir() for p in root_children):
-            return False
-        observed_dir_names = [p.name for p in root_children if p.is_dir()]
-        if len(observed_dir_names) != 120 or set(observed_dir_names) != set(expected_run_ids):
-            return False
-
-        tm = build_raw_evidence_tree_manifest(
-            repo_root=repo_root, raw_output_root=raw_root
-        )
-        if (
-            tm["raw_evidence_file_count"] != EXPECTED_RAW_EVIDENCE_FILE_COUNT
-            or tm["raw_evidence_total_bytes"] != EXPECTED_RAW_EVIDENCE_TOTAL_BYTES
-            or tm["raw_evidence_tree_sha256"] != EXPECTED_RAW_EVIDENCE_TREE_SHA256
-        ):
-            return False
-
-        verified = (
+        manifest_semantics_ok = (
             manifest_obj.get("artifact_id") == RESULTS_MANIFEST_ARTIFACT_ID
             and manifest_obj.get("task_id") == TASK_ID
             and manifest_obj.get("execution_id") == EXECUTION_ID
             and manifest_obj.get("execution_head_sha") == BASE_EXECUTION_HEAD_SHA
+            and manifest_obj.get("pre_live_head_sha") == PRE_LIVE_HEAD_SHA
+            and manifest_obj.get("post_live_head_sha") == POST_LIVE_HEAD_SHA
+            and manifest_obj.get("phase") == "DEV_TUNE"
             and manifest_obj.get("execution_plan_sha256")
             == EXPECTED_DEV_TUNE_PLAN_SHA256
+            and manifest_obj.get("execution_plan_file_sha256")
+            == EXPECTED_DEV_TUNE_PLAN_FILE_SHA256
+            and manifest_obj.get("prompt_freeze_sha256") == EXPECTED_PROMPT_FREEZE_SHA256
+            and manifest_obj.get("prompt_registry_sha256")
+            == EXPECTED_PROMPT_REGISTRY_SHA256
+            and manifest_obj.get("authorization_id") == EXPECTED_AUTHORIZATION_ID
+            and manifest_obj.get("authorization_file_sha256")
+            == EXPECTED_AUTHORIZATION_FILE_SHA256
             and manifest_obj.get("authorization_internal_sha256")
             == EXPECTED_AUTHORIZATION_INTERNAL_SHA256
+            and manifest_obj.get("stage_a_file_sha256") == EXPECTED_STAGE_A_FILE_SHA256
             and manifest_obj.get("stage_a_internal_sha256")
             == EXPECTED_STAGE_A_INTERNAL_SHA256
+            and manifest_obj.get("scientific_code_bundle_sha256")
+            == EXPECTED_SCIENTIFIC_CODE_BUNDLE_SHA256
+            and manifest_obj.get("launcher_lf_sha256") == EXPECTED_LAUNCHER_LF_SHA256
+            and manifest_obj.get("launcher_git_blob_sha")
+            == EXPECTED_LAUNCHER_GIT_BLOB_SHA
+            and manifest_obj.get("preflight_request_set_sha256")
+            == EXPECTED_PREFLIGHT_REQUEST_SET_SHA256
+            and manifest_obj.get("preflight_artifact_path_set_sha256")
+            == EXPECTED_PREFLIGHT_ARTIFACT_PATH_SET_SHA256
+            and manifest_obj.get("raw_evidence_file_count")
+            == EXPECTED_RAW_EVIDENCE_FILE_COUNT
+            and manifest_obj.get("raw_evidence_total_bytes")
+            == EXPECTED_RAW_EVIDENCE_TOTAL_BYTES
+            and manifest_obj.get("raw_evidence_max_file_bytes")
+            == EXPECTED_RAW_EVIDENCE_MAX_FILE_BYTES
             and manifest_obj.get("raw_evidence_tree_sha256")
             == EXPECTED_RAW_EVIDENCE_TREE_SHA256
             and manifest_obj.get("assigned_run_ids") == expected_run_ids
@@ -1482,22 +1525,76 @@ def is_verified_downstream_w06_dev_tune_live_results_tree(
             and manifest_obj.get("rerun_cells") == 0
             and manifest_obj.get("winning_prompt_selected") is False
             and manifest_obj.get("model_winner_selected") is False
+            and manifest_obj.get("dev_select_execution_started") is False
+            and manifest_obj.get("stochasticity_execution_started") is False
             and manifest_obj.get("final100_used") is False
+            and manifest_obj.get("live_provider_calls_new") == 0
+        )
+        if not manifest_semantics_ok:
+            return False
+
+        receipt_semantics_ok = (
+            receipt_obj.get("artifact_id") == RESULTS_FREEZE_RECEIPT_ARTIFACT_ID
+            and receipt_obj.get("task_id") == TASK_ID
+            and receipt_obj.get("execution_id") == EXECUTION_ID
+            and receipt_obj.get("base_execution_head_sha") == BASE_EXECUTION_HEAD_SHA
             and receipt_obj.get("results_manifest_file_sha256")
             == EXPECTED_RESULTS_MANIFEST_FILE_SHA256
+            and receipt_obj.get("raw_evidence_file_count")
+            == EXPECTED_RAW_EVIDENCE_FILE_COUNT
+            and receipt_obj.get("raw_evidence_total_bytes")
+            == EXPECTED_RAW_EVIDENCE_TOTAL_BYTES
+            and receipt_obj.get("raw_evidence_max_file_bytes")
+            == EXPECTED_RAW_EVIDENCE_MAX_FILE_BYTES
             and receipt_obj.get("raw_evidence_tree_sha256")
             == EXPECTED_RAW_EVIDENCE_TREE_SHA256
+            and receipt_obj.get("execution_plan_sha256")
+            == EXPECTED_DEV_TUNE_PLAN_SHA256
+            and receipt_obj.get("prompt_freeze_sha256") == EXPECTED_PROMPT_FREEZE_SHA256
+            and receipt_obj.get("authorization_internal_sha256")
+            == EXPECTED_AUTHORIZATION_INTERNAL_SHA256
+            and receipt_obj.get("stage_a_internal_sha256")
+            == EXPECTED_STAGE_A_INTERNAL_SHA256
+            and receipt_obj.get("scientific_code_bundle_sha256")
+            == EXPECTED_SCIENTIFIC_CODE_BUNDLE_SHA256
+            and receipt_obj.get("launcher_lf_sha256") == EXPECTED_LAUNCHER_LF_SHA256
+            and receipt_obj.get("preflight_request_set_sha256")
+            == EXPECTED_PREFLIGHT_REQUEST_SET_SHA256
+            and receipt_obj.get("preflight_artifact_path_set_sha256")
+            == EXPECTED_PREFLIGHT_ARTIFACT_PATH_SET_SHA256
             and receipt_obj.get("winning_prompt_selected") is False
             and receipt_obj.get("model_winner_selected") is False
+            and receipt_obj.get("dev_select_execution_started") is False
+            and receipt_obj.get("stochasticity_execution_started") is False
+            and receipt_obj.get("final100_used") is False
             and receipt_obj.get("live_provider_calls_new") == 0
         )
-        if (
-            raw_output_root is None
-            and repo_root.resolve() == REPO_ROOT.resolve()
-            and verified
+        if not receipt_semantics_ok:
+            return False
+
+        if manifest_sha != EXPECTED_RESULTS_MANIFEST_FILE_SHA256:
+            return False
+        if receipt_sha != EXPECTED_RESULTS_FREEZE_RECEIPT_FILE_SHA256:
+            return False
+
+        root_children = sorted(raw_root.iterdir(), key=lambda p: p.name)
+        if any(not p.is_dir() for p in root_children):
+            return False
+        observed_dir_names = [p.name for p in root_children if p.is_dir()]
+        if len(observed_dir_names) != 120 or set(observed_dir_names) != set(
+            expected_run_ids
         ):
-            _VERIFIED_DOWNSTREAM_RESULTS_TREE_CACHE[cache_key] = True
-        return verified
+            return False
+
+        tm = build_raw_evidence_tree_manifest(
+            repo_root=repo_root, raw_output_root=raw_root
+        )
+        return (
+            tm["raw_evidence_file_count"] == EXPECTED_RAW_EVIDENCE_FILE_COUNT
+            and tm["raw_evidence_total_bytes"] == EXPECTED_RAW_EVIDENCE_TOTAL_BYTES
+            and tm["raw_evidence_max_file_bytes"] == EXPECTED_RAW_EVIDENCE_MAX_FILE_BYTES
+            and tm["raw_evidence_tree_sha256"] == EXPECTED_RAW_EVIDENCE_TREE_SHA256
+        )
     except Exception:
         return False
 
@@ -1510,15 +1607,9 @@ def is_verified_downstream_w06_dev_tune_live_results_file(
     """Return True ONLY if `path` belongs to the cryptographically verified downstream
     W06 DEV-TUNE live results tree or its manifest/receipt (Section 23).
     """
-    try:
-        rel_posix = path.resolve().relative_to(repo_root.resolve()).as_posix()
-    except Exception:
-        return False
-
-    if rel_posix not in (
-        RESULTS_MANIFEST_REL_PATH,
-        RESULTS_FREEZE_RECEIPT_REL_PATH,
-    ) and not rel_posix.startswith(f"{RAW_OUTPUT_ROOT_REL_PATH}/"):
+    if not is_path_in_downstream_w06_dev_tune_live_results_scope(
+        path, repo_root=repo_root
+    ):
         return False
 
     return is_verified_downstream_w06_dev_tune_live_results_tree(repo_root)
