@@ -1,0 +1,665 @@
+{
+  "allowed_prompt_ids": [
+    "P1"
+  ],
+  "artifact_id": "W06-DEV-SELECT-AUTHORIZATION-PREP-01-V1",
+  "assigned_cells": 180,
+  "attempts_per_cell": 1,
+  "authorization_scope": {
+    "allowed_candidate_ids": [
+      "C1",
+      "C2",
+      "C3"
+    ],
+    "allowed_execution_plan_file_sha256": "c519baf7cd2557b5e1dd2699a5ceaec592af015d7bc6dcc83abf63892a8a329a",
+    "allowed_execution_plan_internal_sha256": "de04255989a9e3bd8c2e39c766432487dce4ccd0612d5dba73b3476cbc9d0c6d",
+    "allowed_phase": "DEV_SELECT",
+    "allowed_plan_freeze_receipt_file_sha256": "5f32782f6359f409c7dd68f08699218cd577cb48bcb517f14c15939f896b9549",
+    "allowed_prompt_id": "P1",
+    "attempts_per_cell": 1,
+    "calls_beyond_180_authorized": false,
+    "candidate_substitution_authorized": false,
+    "dev_tune_rerun_authorized": false,
+    "extra_diagnostic_calls_authorized": false,
+    "final100_authorized": false,
+    "maximum_live_generation_calls": 180,
+    "prompt_substitution_authorized": false,
+    "retry": 0,
+    "stochasticity_authorized": false
+  },
+  "call_budget_policy": {
+    "assigned_cells": 180,
+    "dev_tune_rerun_calls": 0,
+    "diagnostic_generation_calls": 0,
+    "final100_calls": 0,
+    "max_outbound_http_requests_per_cell": 1,
+    "maximum_live_generation_calls": 180,
+    "no_hidden_calls": true,
+    "reserve_calls_beyond_180": 0,
+    "retry_calls": 0,
+    "stochasticity_calls": 0
+  },
+  "candidate_count": 3,
+  "candidate_ids": [
+    "C1",
+    "C2",
+    "C3"
+  ],
+  "candidate_list": [
+    {
+      "candidate_id": "C1",
+      "cells_in_dev_select": 60,
+      "env_key_name": "GEMINI_API_KEY",
+      "max_output_tokens": 16384,
+      "omitted_parameters": [
+        "temperature",
+        "top_p",
+        "top_k"
+      ],
+      "provider": "Google",
+      "provider_config_sha256": "d4d417bdeff3f4156ac9605f976b46780c1cb0866d87674f1cee51d8bf3f3217",
+      "requested_model_id": "gemini-3.8-flash",
+      "sampling_reasoning_config": {
+        "seed": 2026101508,
+        "thinking_level": "medium"
+      },
+      "technical_preflight_v2_status": "PASSED_TECHNICAL_PREFLIGHT_SCHEMA_V2",
+      "timeout_ms": 55000
+    },
+    {
+      "candidate_id": "C2",
+      "cells_in_dev_select": 60,
+      "env_key_name": "OPENAI_API_KEY",
+      "max_output_tokens": 16384,
+      "omitted_parameters": [
+        "temperature",
+        "top_p",
+        "top_k",
+        "logprobs",
+        "top_logprobs"
+      ],
+      "provider": "OpenAI",
+      "provider_config_sha256": "6201244268383e85106b4d6e6ad0f503e066de9def361cbafa685227e8ba332e",
+      "requested_model_id": "gpt-6.1-sol",
+      "sampling_reasoning_config": {
+        "reasoning_effort": "medium",
+        "seed": 2026101508,
+        "service_tier": "default"
+      },
+      "technical_preflight_v2_status": "PASSED_TECHNICAL_PREFLIGHT_SCHEMA_V2",
+      "timeout_ms": 55000
+    },
+    {
+      "candidate_id": "C3",
+      "cells_in_dev_select": 60,
+      "env_key_name": "ANTHROPIC_API_KEY",
+      "max_output_tokens": 16384,
+      "omitted_parameters": [
+        "temperature",
+        "top_p",
+        "top_k",
+        "seed"
+      ],
+      "provider": "Anthropic",
+      "provider_config_sha256": "5ecff5a4e2899245d1cd113285d1193dad17b6ed4e7521bd10be3937650d2a29",
+      "requested_model_id": "claude-sonnet-5-5",
+      "sampling_reasoning_config": {
+        "effort": "high",
+        "thinking": {
+          "type": "adaptive"
+        }
+      },
+      "technical_preflight_v2_status": "PASSED_TECHNICAL_PREFLIGHT_SCHEMA_V2",
+      "timeout_ms": 55000
+    }
+  ],
+  "candidate_registry_sha256": "4dd29164afdf7f364978420f41ab88ef07ec396062188169fcb859a9ef01e058",
+  "cells_per_candidate": {
+    "C1": 60,
+    "C2": 60,
+    "C3": 60
+  },
+  "cells_per_fixture": 3,
+  "cells_per_prompt": {
+    "P1": 180
+  },
+  "closed_upstream_gates": {
+    "W06-DEV-SELECT-PLAN-FREEZE-01": "CLOSED",
+    "W06-DEV-TUNE-LIVE-RESULTS-FREEZE-01": "CLOSED",
+    "W06-DEV-TUNE-PROMPT-SELECTION-01": "CLOSED"
+  },
+  "cost_envelope": {
+    "conditional_16384_billable_output_reference_decimal_str": "35.0124",
+    "conditional_16384_billable_output_reference_usd": 35.01,
+    "cost_estimation_policy": "CONSERVATIVE_PLANNING_RANGE_NO_FALSE_PRECISION",
+    "cost_is_not_scientific_or_stop_or_retry_criterion": true,
+    "estimated_expected_cost_usd": {
+      "assumptions": "60 cells per candidate (180 cells total = 60 DEV-SELECT fixtures x 1 locked prompt P1 x 3 candidates, retry=0), using the elementwise maximum of Phase 01D live receipt pricing (2026-10-17) and Runner DEFAULT_COST_COMPARABILITY_BY_CANDIDATE (2026-10-16), with 8,000-14,000 input tokens and 2,500-5,500 billable output+thinking tokens per cell.",
+      "high_expected_usd": 14.74,
+      "low_expected_usd": 7.31,
+      "range_usd": "$7.31 - $14.74 USD",
+      "status": "CONSERVATIVE_AUTHORIZATION_PLANNING_RANGE_NOT_GUARANTEED_INVOICE"
+    },
+    "hard_max_cost_explanation": "Exact pre-execution token counts require provider-proprietary tokenizers (which cannot be called offline) and provider-internal structured-output grammar injection into input_tokens; furthermore, in C1 (Google gemini-3.8-flash) thoughts_token_count is billed disjointly from candidates_token_count (billable_output_tokens = output_tokens + thought_tokens). Actual provider billing depends on actual token usage and provider rules; therefore HARD_MAX_COST_USD is marked NOT_DEFENSIBLY_COMPUTABLE and the planning envelope is not a guaranteed invoice.",
+    "hard_max_cost_usd": "NOT_DEFENSIBLY_COMPUTABLE",
+    "historical_dev_tune_observational_cost_context": {
+      "authoritative_cost_cell_count": 42,
+      "authoritative_receipt_cost_total_usd": "6.5555805",
+      "cost_by_candidate_usd": {
+        "C1": {
+          "authoritative_cost_cells": 4,
+          "canonical_cost_usd_decimal": "0.080954"
+        },
+        "C2": {
+          "authoritative_cost_cells": 5,
+          "canonical_cost_usd_decimal": "0.3768775"
+        },
+        "C3": {
+          "authoritative_cost_cells": 33,
+          "canonical_cost_usd_decimal": "6.097749"
+        }
+      },
+      "scientific_usage_restriction": "OBSERVATIONAL_CONTEXT_ONLY: Historical DEV-TUNE cost is recorded strictly as observational context and is NEVER extrapolated as a scientific selection criterion, automatic stop criterion, retry criterion, or hard budget constraint.",
+      "source_artifact": "data/evaluation/w06/w06_dev_tune_live_results_manifest_v1.json"
+    },
+    "per_candidate_conservative_envelope": {
+      "C1": {
+        "cells_in_dev_select": 60,
+        "conditional_16384_billable_output_cap_reference_60_cells_decimal_str": "4.4964",
+        "conditional_16384_billable_output_cap_reference_60_cells_usd": 4.4964,
+        "conservative_input_price_per_1m_usd": 0.75,
+        "conservative_output_price_per_1m_usd": 3.75,
+        "estimated_expected_range_60_cells_usd": {
+          "high_decimal_str": "1.8675",
+          "high_usd": 1.8675,
+          "low_decimal_str": "0.9225",
+          "low_usd": 0.9225
+        }
+      },
+      "C2": {
+        "cells_in_dev_select": 60,
+        "conditional_16384_billable_output_cap_reference_60_cells_decimal_str": "12.5304",
+        "conditional_16384_billable_output_cap_reference_60_cells_usd": 12.5304,
+        "conservative_input_price_per_1m_usd": 2.5,
+        "conservative_output_price_per_1m_usd": 10.0,
+        "estimated_expected_range_60_cells_usd": {
+          "high_decimal_str": "5.4",
+          "high_usd": 5.4,
+          "low_decimal_str": "2.7",
+          "low_usd": 2.7
+        }
+      },
+      "C3": {
+        "cells_in_dev_select": 60,
+        "conditional_16384_billable_output_cap_reference_60_cells_decimal_str": "17.9856",
+        "conditional_16384_billable_output_cap_reference_60_cells_usd": 17.9856,
+        "conservative_input_price_per_1m_usd": 3.0,
+        "conservative_output_price_per_1m_usd": 15.0,
+        "estimated_expected_range_60_cells_usd": {
+          "high_decimal_str": "7.47",
+          "high_usd": 7.47,
+          "low_decimal_str": "3.69",
+          "low_usd": 3.69
+        }
+      }
+    },
+    "planning_cost_envelope_high_decimal_str": "14.7375",
+    "planning_cost_envelope_high_usd": 14.74,
+    "planning_cost_envelope_low_decimal_str": "7.3125",
+    "planning_cost_envelope_low_usd": 7.31,
+    "rendered_prompt_utf8_byte_statistics_across_60_dev_select_fixtures": {
+      "fixture_count": 60,
+      "max_rendered_user_prompt_utf8_bytes": 74597,
+      "min_rendered_user_prompt_utf8_bytes": 40418,
+      "p1_system_prompt_utf8_bytes": 263,
+      "prompt_id": "P1",
+      "total_cells": 180,
+      "total_rendered_user_prompt_utf8_bytes_60_fixtures": 3304906
+    }
+  },
+  "dev_final_overlap_receipt_sha256": "285699ee1370b537a6579b88a7fb02781b51ac52e0ed14f469d77969261f04aa",
+  "dev_fixture_bundle_sha256": "bb0f051446ea3da8229298f22f4ce92b4db20751695273c6d01b7766da044050",
+  "dev_fixture_freeze_receipt_sha256": "437a296cf123d1469f303b97cb6665cd8217c2dfeabd12d1712ec2789d890026",
+  "dev_fixture_manifest_sha256": "15cf3af6c93d3de967703dbc52d7e082bfd4a1e657409c0678ff51bd081e3c98",
+  "dev_select_execution_started": false,
+  "dsap_checks": {
+    "DSAP-01_source_develop_exact_or_ancestor_valid": "PASS",
+    "DSAP-02_dev_select_plan_internal_sha_exact": "PASS",
+    "DSAP-03_dev_select_plan_file_sha_exact": "PASS",
+    "DSAP-04_plan_freeze_receipt_sha_exact": "PASS",
+    "DSAP-05_phase_dev_select": "PASS",
+    "DSAP-06_assigned_cells_180": "PASS",
+    "DSAP-07_unique_run_ids_180": "PASS",
+    "DSAP-08_selected_prompt_p1": "PASS",
+    "DSAP-09_p1_semantic_sha_exact": "PASS",
+    "DSAP-10_prompt_selection_artifact_exact": "PASS",
+    "DSAP-11_candidates_exact_c1_c2_c3": "PASS",
+    "DSAP-12_candidate_registry_exact": "PASS",
+    "DSAP-13_provider_config_registry_exact": "PASS",
+    "DSAP-14_scientific_bundle_exact": "PASS",
+    "DSAP-15_portable_schema_exact": "PASS",
+    "DSAP-16_semantic_schema_exact": "PASS",
+    "DSAP-17_plan_code_basis_exact_c0adf74": "PASS",
+    "DSAP-18_attempts_per_cell_1": "PASS",
+    "DSAP-19_retry_zero": "PASS",
+    "DSAP-20_fallback_false": "PASS",
+    "DSAP-21_repair_disabled": "PASS",
+    "DSAP-22_tools_false": "PASS",
+    "DSAP-23_max_generation_calls_180": "PASS",
+    "DSAP-24_reserve_calls_zero": "PASS",
+    "DSAP-25_dev_tune_rerun_unauthorized": "PASS",
+    "DSAP-26_stochasticity_unauthorized": "PASS",
+    "DSAP-27_final100_unauthorized": "PASS",
+    "DSAP-28_no_authorization_artifact_created": "PASS",
+    "DSAP-29_no_stage_a_created": "PASS",
+    "DSAP-30_no_live_execution_capability": "PASS",
+    "DSAP-31_no_transport_constructed": "PASS",
+    "DSAP-32_no_live_output_directory": "PASS",
+    "DSAP-33_zero_provider_calls": "PASS",
+    "DSAP-34_key_presence_checker_leaks_no_secret": "PASS",
+    "DSAP-35_sdk_versions_recorded": "PASS",
+    "DSAP-36_cost_envelope_uses_dev_select_60_fixture_p1_workload": "PASS",
+    "DSAP-37_hard_cost_max_truthfully_not_defensibly_computable": "PASS",
+    "DSAP-38_exact_authorization_sentence": "PASS",
+    "DSAP-39_authorization_sentence_sha_exact": "PASS",
+    "DSAP-40_project_owner_status_not_granted": "PASS"
+  },
+  "execution_plan_file_sha256": "c519baf7cd2557b5e1dd2699a5ceaec592af015d7bc6dcc83abf63892a8a329a",
+  "execution_plan_internal_sha256": "de04255989a9e3bd8c2e39c766432487dce4ccd0612d5dba73b3476cbc9d0c6d",
+  "execution_plan_relative_path": "data/evaluation/w06/w06_dev_select_execution_plan_v1.json",
+  "failure_policy": {
+    "batch_fatal_integrity_failures": [
+      "MODEL_INTEGRITY_MISMATCH",
+      "HARNESS_INTERNAL_ERROR",
+      "SCIENTIFIC_CODE_BUNDLE_MISMATCH",
+      "PROVIDER_CONFIG_MISMATCH",
+      "PROMPT_INTEGRITY_MISMATCH",
+      "EXECUTION_PLAN_INTEGRITY_MISMATCH",
+      "AUTHORIZATION_INTEGRITY_MISMATCH",
+      "STAGE_A_INTEGRITY_MISMATCH",
+      "RUNTIME_HEAD_DRIFT",
+      "CALL_BUDGET_INTEGRITY_FAILURE"
+    ],
+    "batch_fatal_treatment": {
+      "action": "STOP_BATCH_IMMEDIATELY_FAIL_CLOSED",
+      "batch_stop_required": true,
+      "counts_in_denominator": false
+    },
+    "ordinary_denominator_preserving_failures": [
+      "HTTP_429",
+      "HTTP_5XX",
+      "TIMEOUT",
+      "PARTIAL_TIMEOUT",
+      "AUTHENTICATION_FAILURE",
+      "MODEL_ACCESS_FAILURE",
+      "MALFORMED_JSON",
+      "SEMANTIC_VALIDATION_FAILURE",
+      "REFUSAL",
+      "MAX_TOKEN_TRUNCATION"
+    ],
+    "ordinary_failure_treatment": {
+      "batch_stop_required": false,
+      "counts_in_denominator": true,
+      "exact_grounding_pass": false,
+      "final_core_pass": false,
+      "retry": 0,
+      "valid_run_and_schema": false
+    }
+  },
+  "final100_firewall": {
+    "final100_authorized": false,
+    "final100_bundle_sha256": "c03bc6dc300604ac395505d59b6413c1a47339b21408cfd637671e81d4b555a1",
+    "final100_used": false,
+    "p11_assignment_manifest_sha256": "0aa9ae923d0e7f29df49735fa41e87530b1caf62418fcbec09a1eff81d83af62"
+  },
+  "final100_used": false,
+  "fixture_count": 60,
+  "fixture_ids": [
+    "W06-DEV-SELECT-001",
+    "W06-DEV-SELECT-002",
+    "W06-DEV-SELECT-003",
+    "W06-DEV-SELECT-004",
+    "W06-DEV-SELECT-005",
+    "W06-DEV-SELECT-006",
+    "W06-DEV-SELECT-007",
+    "W06-DEV-SELECT-008",
+    "W06-DEV-SELECT-009",
+    "W06-DEV-SELECT-010",
+    "W06-DEV-SELECT-011",
+    "W06-DEV-SELECT-012",
+    "W06-DEV-SELECT-013",
+    "W06-DEV-SELECT-014",
+    "W06-DEV-SELECT-015",
+    "W06-DEV-SELECT-016",
+    "W06-DEV-SELECT-017",
+    "W06-DEV-SELECT-018",
+    "W06-DEV-SELECT-019",
+    "W06-DEV-SELECT-020",
+    "W06-DEV-SELECT-021",
+    "W06-DEV-SELECT-022",
+    "W06-DEV-SELECT-023",
+    "W06-DEV-SELECT-024",
+    "W06-DEV-SELECT-025",
+    "W06-DEV-SELECT-026",
+    "W06-DEV-SELECT-027",
+    "W06-DEV-SELECT-028",
+    "W06-DEV-SELECT-029",
+    "W06-DEV-SELECT-030",
+    "W06-DEV-SELECT-031",
+    "W06-DEV-SELECT-032",
+    "W06-DEV-SELECT-033",
+    "W06-DEV-SELECT-034",
+    "W06-DEV-SELECT-035",
+    "W06-DEV-SELECT-036",
+    "W06-DEV-SELECT-037",
+    "W06-DEV-SELECT-038",
+    "W06-DEV-SELECT-039",
+    "W06-DEV-SELECT-040",
+    "W06-DEV-SELECT-041",
+    "W06-DEV-SELECT-042",
+    "W06-DEV-SELECT-043",
+    "W06-DEV-SELECT-044",
+    "W06-DEV-SELECT-045",
+    "W06-DEV-SELECT-046",
+    "W06-DEV-SELECT-047",
+    "W06-DEV-SELECT-048",
+    "W06-DEV-SELECT-049",
+    "W06-DEV-SELECT-050",
+    "W06-DEV-SELECT-051",
+    "W06-DEV-SELECT-052",
+    "W06-DEV-SELECT-053",
+    "W06-DEV-SELECT-054",
+    "W06-DEV-SELECT-055",
+    "W06-DEV-SELECT-056",
+    "W06-DEV-SELECT-057",
+    "W06-DEV-SELECT-058",
+    "W06-DEV-SELECT-059",
+    "W06-DEV-SELECT-060"
+  ],
+  "forbidden_prompt_ids": [
+    "P0",
+    "P2"
+  ],
+  "hard_max_cost_usd": "NOT_DEFENSIBLY_COMPUTABLE",
+  "key_presence_status": {
+    "ANTHROPIC_API_KEY": "PRESENT",
+    "GEMINI_API_KEY": "PRESENT",
+    "OPENAI_API_KEY": "PRESENT"
+  },
+  "live_authorization_artifact_created": false,
+  "live_execution_capability_issued": false,
+  "live_provider_calls_new": 0,
+  "maximum_live_generation_calls": 180,
+  "model_winner_selected": false,
+  "phase": "DEV_SELECT",
+  "plan_code_basis_commit_sha": "c0adf74ceda9ffaf8b4ec42d299932e33f448e6a",
+  "plan_code_commit_sha": "c0adf74ceda9ffaf8b4ec42d299932e33f448e6a",
+  "plan_freeze_receipt_file_sha256": "5f32782f6359f409c7dd68f08699218cd577cb48bcb517f14c15939f896b9549",
+  "plan_freeze_receipt_relative_path": "data/evaluation/w06/w06_dev_select_plan_freeze_01_receipt_v1.json",
+  "portable_schema_v2_sha256": "825a4ff912d851a95f7392cb564b7d7ca3588135508dc6eb3ac6304cdde3c490",
+  "pre_authorization_firewall": {
+    "dev_select_execution_started": false,
+    "dev_select_live_authorization_artifact_created": false,
+    "dev_select_live_result_directory_created": false,
+    "dev_select_stage_a_receipt_created": false,
+    "forbidden_dev_select_auth_files": [],
+    "forbidden_dev_select_live_dirs": [],
+    "forbidden_dev_select_stage_a_files": [],
+    "forbidden_transport_journals": [],
+    "live_execution_capability_issued": false,
+    "live_provider_calls_new": 0,
+    "pre_authorization_firewall_intact": true,
+    "production_provider_transport_constructed": false,
+    "provider_cost_usd_new": 0,
+    "transport_journal_created": false
+  },
+  "pricing_evidence": {
+    "C1": {
+      "cache_billing_treatment": "FAIL_SAFE_NON_COMPARABLE_IF_NONZERO: Context caching is not enabled or requested. If cached_input_tokens > 0 is returned, compute_canonical_cell_cost_decimal returns None rather than mixing discounted cache pricing.",
+      "candidate_id": "C1",
+      "input_price_basis": {
+        "conservative_envelope_usd_per_1m_tokens": 0.75,
+        "preflight_01d_receipt_usd_per_1m_tokens": 0.75,
+        "runner_default_comparability_usd_per_1m_tokens": 0.3,
+        "unit": "USD per 1,000,000 input tokens"
+      },
+      "output_price_basis": {
+        "conservative_envelope_usd_per_1m_tokens": 3.75,
+        "preflight_01d_receipt_usd_per_1m_tokens": 3.75,
+        "runner_default_comparability_usd_per_1m_tokens": 2.5,
+        "unit": "USD per 1,000,000 billable output tokens (candidates_token_count + thoughts_token_count)"
+      },
+      "pricing_checked_at_utc": "2026-10-17T00:00:00Z",
+      "pricing_source": "https://ai.google.dev/gemini-api/docs/pricing",
+      "provider": "Google",
+      "reasoning_thought_billing_treatment": "DISJOINT_ADDED_TO_OUTPUT: In Google Gemini (C1), candidates_token_count (output_tokens) is disjoint from thoughts_token_count (thought_tokens). Canonical formula bills billable_output_tokens = output_tokens + thought_tokens.",
+      "repository_authority_artifacts": [
+        "data/evaluation/w06/w06_model_preflight_01d_v2_live_receipt_v1.json",
+        "apps/ai-service/app/evaluation/dev_live_runner.py::DEFAULT_COST_COMPARABILITY_BY_CANDIDATE['C1']"
+      ],
+      "requested_model_id": "gemini-3.8-flash"
+    },
+    "C2": {
+      "cache_billing_treatment": "FAIL_SAFE_NON_COMPARABLE_IF_NONZERO: Explicit prompt caching is not requested. If cached_input_tokens > 0 is returned by automatic caching, compute_canonical_cell_cost_decimal returns None (fail-safe non-comparable cost).",
+      "candidate_id": "C2",
+      "input_price_basis": {
+        "conservative_envelope_usd_per_1m_tokens": 2.5,
+        "preflight_01d_receipt_usd_per_1m_tokens": 2.0,
+        "runner_default_comparability_usd_per_1m_tokens": 2.5,
+        "unit": "USD per 1,000,000 input tokens (service_tier='default')"
+      },
+      "output_price_basis": {
+        "conservative_envelope_usd_per_1m_tokens": 10.0,
+        "preflight_01d_receipt_usd_per_1m_tokens": 10.0,
+        "runner_default_comparability_usd_per_1m_tokens": 10.0,
+        "unit": "USD per 1,000,000 completion tokens (inclusive of reasoning_tokens, service_tier='default')"
+      },
+      "pricing_checked_at_utc": "2026-10-17T00:00:00Z",
+      "pricing_source": "https://platform.openai.com/docs/pricing",
+      "provider": "OpenAI",
+      "reasoning_thought_billing_treatment": "INCLUSIVE_IN_OUTPUT_TOKENS: In OpenAI Chat Completions (C2), completion_tokens (output_tokens) is already inclusive of reasoning_tokens. Canonical formula bills billable_output_tokens = output_tokens (never double-counted).",
+      "repository_authority_artifacts": [
+        "data/evaluation/w06/w06_model_preflight_01d_v2_live_receipt_v1.json",
+        "apps/ai-service/app/evaluation/dev_live_runner.py::DEFAULT_COST_COMPARABILITY_BY_CANDIDATE['C2']"
+      ],
+      "requested_model_id": "gpt-6.1-sol"
+    },
+    "C3": {
+      "cache_billing_treatment": "FAIL_SAFE_NON_COMPARABLE_IF_NONZERO: No cache_control breakpoints are sent. If cache_read_input_tokens > 0 or cache_creation_input_tokens > 0 is returned, compute_canonical_cell_cost_decimal returns None.",
+      "candidate_id": "C3",
+      "input_price_basis": {
+        "conservative_envelope_usd_per_1m_tokens": 3.0,
+        "preflight_01d_receipt_usd_per_1m_tokens": 2.0,
+        "runner_default_comparability_usd_per_1m_tokens": 3.0,
+        "unit": "USD per 1,000,000 input tokens"
+      },
+      "output_price_basis": {
+        "conservative_envelope_usd_per_1m_tokens": 15.0,
+        "preflight_01d_receipt_usd_per_1m_tokens": 10.0,
+        "runner_default_comparability_usd_per_1m_tokens": 15.0,
+        "unit": "USD per 1,000,000 output tokens (inclusive of adaptive thinking tokens)"
+      },
+      "pricing_checked_at_utc": "2026-10-17T00:00:00Z",
+      "pricing_source": "https://docs.anthropic.com/en/docs/about-claude/pricing",
+      "provider": "Anthropic",
+      "reasoning_thought_billing_treatment": "INCLUSIVE_IN_OUTPUT_TOKENS: In Anthropic Messages API (C3), usage.output_tokens is already inclusive of adaptive thinking tokens. Canonical formula bills billable_output_tokens = output_tokens (never double-counted).",
+      "repository_authority_artifacts": [
+        "data/evaluation/w06/w06_model_preflight_01d_v2_live_receipt_v1.json",
+        "apps/ai-service/app/evaluation/dev_live_runner.py::DEFAULT_COST_COMPARABILITY_BY_CANDIDATE['C3']"
+      ],
+      "requested_model_id": "claude-sonnet-5-5"
+    }
+  },
+  "production_provider_transport_constructed": false,
+  "project_owner_authorization_status": "NOT_GRANTED",
+  "prompt_count": 1,
+  "prompt_selection_artifact_file_sha256": "e1e79801117e59d3c8c703e024eacbad12d5336134c6597c333886c434a446b8",
+  "prompt_selection_artifact_internal_sha256": "1a718cb545f23b1c93e6d10d904ff252d4a6764dc58e7420217900dcdc8bc570",
+  "prompt_selection_artifact_relative_path": "data/evaluation/w06/w06_dev_tune_prompt_selection_v1.json",
+  "prompt_selection_receipt_file_sha256": "0ad0921283c73917c5167ee4cf7355842efc6dedd8719bc169f329daba9ec114",
+  "prompt_selection_receipt_relative_path": "data/evaluation/w06/w06_dev_tune_prompt_selection_01_receipt_v1.json",
+  "proposed_project_owner_authorization_text": "I authorize W06 DEV-SELECT live execution for exactly the frozen 180-cell plan de04255989a9e3bd8c2e39c766432487dce4ccd0612d5dba73b3476cbc9d0c6d (plan file c519baf7cd2557b5e1dd2699a5ceaec592af015d7bc6dcc83abf63892a8a329a), bound by plan-freeze receipt 5f32782f6359f409c7dd68f08699218cd577cb48bcb517f14c15939f896b9549, using locked prompt P1 from prompt-selection artifact e1e79801117e59d3c8c703e024eacbad12d5336134c6597c333886c434a446b8 (semantic SHA 096ff4c74dd8d1aed1c0abe501b97c8dfd0f6424dbca535f2b79a242637a1c11), candidates C1/C2/C3, maximum 180 generation calls, zero retry, no DEV-TUNE rerun, no stochasticity, and no Final100.",
+  "proposed_project_owner_authorization_text_sha256": "6c32d37fcc557916b89ef0c1c87790bf76465e1352841a38655d5cf9676dbad7",
+  "provider_config_registry_sha256": "3dc05d29acc2f647cba58303865bd7406b8c1d9f7ccbe0f120e87ad471190938",
+  "provider_cost_usd_new": 0,
+  "provider_specific_prompt_variants_allowed": false,
+  "readiness_matrix": {
+    "all_scientific_prerequisites": "READY",
+    "authorization_state": "NOT_YET_GRANTED",
+    "candidate_registry": "READY",
+    "dev_fixtures": "READY",
+    "dev_select_plan_freeze": "READY",
+    "final100_firewall": "READY",
+    "key_presence": "READY",
+    "key_presence_details": {
+      "all_three_keys_present": true,
+      "missing_env_vars": [],
+      "operational_only_not_scientific_blocker": true,
+      "status_by_env_var": {
+        "ANTHROPIC_API_KEY": "PRESENT",
+        "GEMINI_API_KEY": "PRESENT",
+        "OPENAI_API_KEY": "PRESENT"
+      }
+    },
+    "live_execution_state": "NOT_STARTED",
+    "operational_live_readiness": "READY",
+    "p1_prompt_lock": "READY",
+    "portable_schema": "READY",
+    "provider_configs": "READY",
+    "runner": "READY",
+    "runner_qa": "READY",
+    "runtime_versions": "READY",
+    "runtime_versions_details": {
+      "drifted_components": [],
+      "environment_version_drift": false,
+      "expected_frozen_versions": {
+        "ANTHROPIC_VERSION": "1.15.0",
+        "GOOGLE_GENAI_VERSION": "2.25.0",
+        "HTTPX2_VERSION": "2.13.0",
+        "HTTPX_VERSION": "0.28.1",
+        "OPENAI_VERSION": "3.17.0",
+        "PYTHON_VERSION": "3.11.9"
+      },
+      "observed_versions": {
+        "ANTHROPIC_VERSION": "1.15.0",
+        "GOOGLE_GENAI_VERSION": "2.25.0",
+        "HTTPX2_VERSION": "2.13.0",
+        "HTTPX_VERSION": "0.28.1",
+        "OPENAI_VERSION": "3.17.0",
+        "PYTHON_VERSION": "3.11.9"
+      },
+      "runtime_sdk_status": "READY"
+    },
+    "scientific_bundle": "READY",
+    "semantic_schema": "READY",
+    "stage_a_state": "NOT_YET_CREATED"
+  },
+  "retry_calls": 0,
+  "retry_policy": {
+    "attempt_number": 1,
+    "automatic_retry": 0,
+    "best_of": false,
+    "deterministic_semantic_repair": false,
+    "fallback": false,
+    "llm_repair": 0,
+    "manual_retry": 0,
+    "max_outbound_generation_requests_per_assigned_cell": 1,
+    "sdk_retry": 0,
+    "tools": false,
+    "transport_retry": 0
+  },
+  "runtime_sdk_version_evidence": {
+    "drifted_components": [],
+    "environment_version_drift": false,
+    "expected_frozen_versions": {
+      "ANTHROPIC_VERSION": "1.15.0",
+      "GOOGLE_GENAI_VERSION": "2.25.0",
+      "HTTPX2_VERSION": "2.13.0",
+      "HTTPX_VERSION": "0.28.1",
+      "OPENAI_VERSION": "3.17.0",
+      "PYTHON_VERSION": "3.11.9"
+    },
+    "observed_versions": {
+      "ANTHROPIC_VERSION": "1.15.0",
+      "GOOGLE_GENAI_VERSION": "2.25.0",
+      "HTTPX2_VERSION": "2.13.0",
+      "HTTPX_VERSION": "0.28.1",
+      "OPENAI_VERSION": "3.17.0",
+      "PYTHON_VERSION": "3.11.9"
+    },
+    "runtime_sdk_status": "READY"
+  },
+  "scientific_code_bundle_file_count": 14,
+  "scientific_code_bundle_file_hashes": [
+    {
+      "path": "apps/ai-service/app/evaluation/dev_live_runner.py",
+      "sha256": "9f3441c2ca290e9a33b4daa78eaaa58063978364d8375145fc7483b04ed8b817"
+    },
+    {
+      "path": "apps/ai-service/app/evaluation/dev_selection_harness.py",
+      "sha256": "85b17c2daa1ea59e26c3118d5cafb38cb3c73a5d57288e2fb4e5fc0e0a732c97"
+    },
+    {
+      "path": "apps/ai-service/app/evaluation/model_preflight/__init__.py",
+      "sha256": "178aede4930a6b848714fa6d84e14e415df35d1bf7641312ff6f311e3de477dd"
+    },
+    {
+      "path": "apps/ai-service/app/evaluation/model_preflight/anthropic_adapter.py",
+      "sha256": "ef2570126f6db736a4ef056ac27fcfc77db97fa6ed6526c901e299c71b1b1d42"
+    },
+    {
+      "path": "apps/ai-service/app/evaluation/model_preflight/base.py",
+      "sha256": "55bd026f224eaf15f5fb68e98d9cd9467bf85f0f90305acac397caef0970454d"
+    },
+    {
+      "path": "apps/ai-service/app/evaluation/model_preflight/google_adapter.py",
+      "sha256": "184887b19826094326e5fea47efd7aec71308b36af404225f5ef8d0d40882f1c"
+    },
+    {
+      "path": "apps/ai-service/app/evaluation/model_preflight/openai_adapter.py",
+      "sha256": "62b72237402808ab88d71627ce05d948d4b7d251ba87af51208876c784ee9346"
+    },
+    {
+      "path": "apps/ai-service/app/evaluation/model_preflight/schema_adapter.py",
+      "sha256": "19513c8735ba4acb2b88587915d6458de2c28d622499c05314d4f9030eb3c589"
+    },
+    {
+      "path": "apps/ai-service/app/evaluation/model_preflight/types.py",
+      "sha256": "1fdb31f200a71df4193f1fe4844b49dc1e9750c51c7388e6642dac44ae349371"
+    },
+    {
+      "path": "apps/ai-service/app/evaluation/planner_benchmark_evaluator.py",
+      "sha256": "1b299f75a3a51d01b63b1b004df3d8b9d92224591ccde5d537b83735ca268f66"
+    },
+    {
+      "path": "apps/ai-service/app/prompts/planner_benchmark_prompt.py",
+      "sha256": "22aa9cd172548fe51a8699704e5832ad44e1d8e946a1ad79437aed99d46c98cb"
+    },
+    {
+      "path": "apps/ai-service/app/schemas/planner_benchmark.py",
+      "sha256": "3f27ed7e12b2492d722937d4f36476e8dbf97635c281a6e270fd0621cc18e712"
+    },
+    {
+      "path": "apps/ai-service/app/services/planner_benchmark_runner.py",
+      "sha256": "2831f5aadd80959a86f388508c73679215830ca8854f2a4fbd474328fa7288b7"
+    },
+    {
+      "path": "apps/ai-service/recommendation/reca/contract.py",
+      "sha256": "1a62c36a95092be35ab78dca43e20f646016e154746ee051a499bdebfc67538c"
+    }
+  ],
+  "scientific_code_bundle_sha256": "0638f2fcb100b0000e3a2a4e08137a9d468449001f258de7354df21e185ca2e3",
+  "selected_prompt_id": "P1",
+  "selected_prompt_semantic_sha256": "096ff4c74dd8d1aed1c0abe501b97c8dfd0f6424dbca535f2b79a242637a1c11",
+  "selected_prompt_system_sha256": "4bcb84a8aca1fc89f65709ac9d91c88e42359c284850061bae85c3607c345b0e",
+  "selected_prompt_user_template_sha256": "19762f7c72b4dd19b57c29e160d9195b8f2c72e836188823e9949f271a22f5de",
+  "selected_prompt_version": "TRAVEL_PLANNER_BENCHMARK_V2",
+  "semantic_schema_sha256": "e4169f7b890f77d13af65e9f2070b6071c535b206d88440f5e8f28c179977555",
+  "source_develop_sha": "549ce2e6eab239f9053775477f5c2fe58a16c65f",
+  "stage_a_created": false,
+  "stochasticity_execution_started": false,
+  "task_id": "W06-DEV-SELECT-AUTHORIZATION-PREP-01",
+  "unique_cell_keys": 180,
+  "unique_run_ids": 180,
+  "version": "1.0.0"
+}
