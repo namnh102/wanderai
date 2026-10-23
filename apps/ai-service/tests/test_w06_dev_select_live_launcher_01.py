@@ -71,7 +71,7 @@ from app.evaluation.dev_selection_harness import (  # noqa: E402
 import run_w06_dev_select_live_v1 as launcher  # noqa: E402
 
 EXPECTED_LAUNCHER_LF_SHA256 = (
-    "f992157e0b0fadcd6be2133cd041cd86f5c7f535a6acd9fe1b0106208f5ff520"
+    "cd36b8ecad24059edb597c0039bd6e760a37ee8b4f36f49077801c65e7ddc7bf"
 )
 EXPECTED_PREFLIGHT_REQUEST_SET_SHA256 = (
     "3ef997b8833399095b9bf5953ae200d45dd85acb7b253c5b6975adf1b01667e2"
@@ -665,19 +665,30 @@ def test_dsl_20_live_execution_code_path_delegation_order(
 
 
 def test_dsl_21_adversarial_wrong_plan_sha_and_wrong_plan_file(
-    tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """DSL-21: Reject wrong execution plan SHA256 or tampered plan file bytes."""
-    fake_plan = tmp_path / "bad_plan.json"
-    fake_plan.write_text('{"corrupt": true}\n', encoding="utf-8")
+    """DSL-21: Reject wrong execution plan SHA256, tampered plan file hash, or missing plan file."""
+    monkeypatch.setattr(launcher, "EXPECTED_EXECUTION_PLAN_SHA256", "0" * 64)
+    with pytest.raises(
+        PlanBeforeLiveProtocolError, match="EXECUTION_PLAN_SHA256_MISMATCH"
+    ):
+        launcher.verify_frozen_launcher_authorities(REPO_ROOT)
+
+    monkeypatch.undo()
+    monkeypatch.setattr(launcher, "EXPECTED_EXECUTION_PLAN_FILE_SHA256", "1" * 64)
+    with pytest.raises(
+        PlanBeforeLiveProtocolError, match="EXECUTION_PLAN_FILE_SHA256_MISMATCH"
+    ):
+        launcher.verify_frozen_launcher_authorities(REPO_ROOT)
+
+    monkeypatch.undo()
     monkeypatch.setattr(
         launcher,
         "EXECUTION_PLAN_REL_PATH",
-        str(fake_plan.relative_to(tmp_path)) if False else "bad_plan.json",
+        "data/evaluation/w06/non_existent_plan.json",
     )
-    with pytest.raises(PlanBeforeLiveProtocolError):
-        launcher.verify_frozen_launcher_authorities(tmp_path)
+    with pytest.raises(PlanBeforeLiveProtocolError, match="EXECUTION_PLAN_MISSING"):
+        launcher.verify_frozen_launcher_authorities(REPO_ROOT)
 
 
 def test_dsl_22_adversarial_wrong_p1_semantic_sha_and_p2_substitution(

@@ -753,7 +753,12 @@ def verify_committed_stage_a_for_launcher(
         *[eff_root / p for p in SCIENTIFIC_CODE_BUNDLE_RELATIVE_PATHS],
     ]
     for fpath in tracked_paths:
-        rel_posix = fpath.resolve().relative_to(eff_root.resolve()).as_posix()
+        try:
+            rel_posix = fpath.resolve().relative_to(eff_root.resolve()).as_posix()
+        except ValueError as exc:
+            raise PlanBeforeLiveProtocolError(
+                f"STAGE_A_ARTIFACT_OUTSIDE_REPO: {fpath} is outside repository root {eff_root}."
+            ) from exc
         ls_proc = subprocess.run(
             ["git", "ls-files", "--error-unmatch", rel_posix],
             cwd=str(eff_root),
@@ -795,7 +800,6 @@ def verify_committed_stage_a_for_launcher(
     return receipt
 
 
-_dlr_mod.verify_stage_a_freeze_receipt = verify_committed_stage_a_for_launcher
 verify_stage_a_freeze_receipt = verify_committed_stage_a_for_launcher
 
 
@@ -816,7 +820,11 @@ def verify_dev_select_runner_prompt_freeze_artifact(
     repo_root: Path | None = None,
 ) -> DevPromptFreezeArtifact:
     """Verify `DevPromptFreezeArtifact` for `DEV_SELECT` against the committed frozen `w06_dev_tune_execution_plan_v1.json`."""
-    if isinstance(execution_plan, DevExecutionPlan) and execution_plan.phase == FROZEN_PHASE:
+    if (
+        isinstance(execution_plan, DevExecutionPlan)
+        and execution_plan.phase == FROZEN_PHASE
+        and execution_plan.plan_sha256 == EXPECTED_EXECUTION_PLAN_SHA256
+    ):
         if prompt_freeze is None:
             raise PromptFreezeFirewallError(
                 "PROMPT_FREEZE_MISSING: Live/runner execution requires a verified DevPromptFreezeArtifact."
@@ -868,8 +876,23 @@ def verify_dev_select_runner_prompt_freeze_artifact(
     )
 
 
-_dlr_mod.verify_runner_prompt_freeze_artifact = verify_dev_select_runner_prompt_freeze_artifact
 verify_runner_prompt_freeze_artifact = verify_dev_select_runner_prompt_freeze_artifact
+
+
+@contextlib.contextmanager
+def _launcher_runner_bridge() -> Iterator[None]:
+    """Scope Stage-A commit enforcement and DEV_SELECT prompt-freeze bridge strictly to launcher execution."""
+    prev_stage_a = _dlr_mod.verify_stage_a_freeze_receipt
+    prev_pf = _dlr_mod.verify_runner_prompt_freeze_artifact
+    _dlr_mod.verify_stage_a_freeze_receipt = verify_committed_stage_a_for_launcher
+    _dlr_mod.verify_runner_prompt_freeze_artifact = (
+        verify_dev_select_runner_prompt_freeze_artifact
+    )
+    try:
+        yield
+    finally:
+        _dlr_mod.verify_stage_a_freeze_receipt = prev_stage_a
+        _dlr_mod.verify_runner_prompt_freeze_artifact = prev_pf
 
 
 def load_and_verify_frozen_prompt_authorities(
@@ -955,8 +978,6 @@ def verify_frozen_launcher_authorities(
     repo_root: Path = REPO_ROOT,
 ) -> dict[str, Any]:
     """Verify source develop provenance, scientific bundle, schemas, registries, plan, P1 prompt, authorization, committed Stage-A, and output root."""
-    source_prov = verify_source_develop_provenance(repo_root=repo_root)
-
     if LAUNCHER_REL_PATH in SCIENTIFIC_CODE_BUNDLE_RELATIVE_PATHS:
         raise ScientificCodeBundleIntegrityError(
             f"LAUNCHER_IN_SCIENTIFIC_BUNDLE_FORBIDDEN: {LAUNCHER_REL_PATH} must remain outside SCIENTIFIC_CODE_BUNDLE_RELATIVE_PATHS."
@@ -1179,6 +1200,8 @@ def verify_frozen_launcher_authorities(
         raise DevLiveAuthorizationError(
             "AUTHORIZATION_SCOPE_LOCK_MISMATCH: Authorization does not match hard-locked DEV_SELECT 180-cell scope."
         )
+
+    source_prov = verify_source_develop_provenance(repo_root=repo_root)
 
     verified_stage_a = verify_committed_stage_a_for_launcher(
         stage_a_path,
@@ -1425,7 +1448,7 @@ def run_preflight(
     require_live_ready: bool = True,
 ) -> dict[str, Any]:
     """Run `--preflight` mode strictly offline under `NetworkKillSwitchGuard` (0 provider calls)."""
-    with NetworkKillSwitchGuard():
+    with NetworkKillSwitchGuard(), _launcher_runner_bridge():
         verified = verify_frozen_launcher_authorities(repo_root)
         prompt_reg: PromptRegistry = verified["prompt_registry"]
         plan_model: DevExecutionPlan = verified["execution_plan"]
@@ -1641,84 +1664,85 @@ def run_live_execution(
     10. construct production transports
     11. execute frozen plan
     """
-    verified = verify_frozen_launcher_authorities(repo_root)
+    with _launcher_runner_bridge():
+        verified = verify_frozen_launcher_authorities(repo_root)
 
-    key_presence = check_key_presence_status_only(
-        repo_root,
-        env_override=env_override,
-        include_dotenv_files=include_dotenv_files,
-    )
-    missing_keys = [
-        k for k in REQUIRED_ENV_KEYS if key_presence.get(k) != "PRESENT"
-    ]
-    if missing_keys:
-        raise DevLiveAuthorizationError(
-            f"LIVE_API_KEY_MISSING: Missing required provider API keys {missing_keys}."
+        key_presence = check_key_presence_status_only(
+            repo_root,
+            env_override=env_override,
+            include_dotenv_files=include_dotenv_files,
         )
+        missing_keys = [
+            k for k in REQUIRED_ENV_KEYS if key_presence.get(k) != "PRESENT"
+        ]
+        if missing_keys:
+            raise DevLiveAuthorizationError(
+                f"LIVE_API_KEY_MISSING: Missing required provider API keys {missing_keys}."
+            )
 
-    sdk_info = check_runtime_sdk_versions(versions_override=versions_override)
-    if sdk_info["environment_version_drift"]:
-        raise PlanBeforeLiveProtocolError(
-            f"LIVE_RUNTIME_SDK_DRIFT: Runtime/SDK version drift in {sdk_info['drifted_components']}."
+        sdk_info = check_runtime_sdk_versions(versions_override=versions_override)
+        if sdk_info["environment_version_drift"]:
+            raise PlanBeforeLiveProtocolError(
+                f"LIVE_RUNTIME_SDK_DRIFT: Runtime/SDK version drift in {sdk_info['drifted_components']}."
+            )
+
+        frozen_p1_p2_registry: PromptRegistry = verified["prompt_registry"]
+        plan_path: Path = verified["execution_plan_path"]
+        pf_path: Path = verified["prompt_freeze_path"]
+        auth_path: Path = verified["authorization_path"]
+        stage_a_path: Path = verified["stage_a_receipt_path"]
+        output_root: Path = verified["output_root"]
+
+        capability, plan_obj, verified_pf, verified_auth, _ = (
+            issue_live_execution_capability(
+                execute_live=True,
+                execution_plan_path=plan_path,
+                prompt_freeze_path=pf_path,
+                authorization_path=auth_path,
+                stage_a_freeze_receipt_path=stage_a_path,
+                prompt_registry=frozen_p1_p2_registry,
+                repo_root=repo_root,
+            )
         )
-
-    frozen_p1_p2_registry: PromptRegistry = verified["prompt_registry"]
-    plan_path: Path = verified["execution_plan_path"]
-    pf_path: Path = verified["prompt_freeze_path"]
-    auth_path: Path = verified["authorization_path"]
-    stage_a_path: Path = verified["stage_a_receipt_path"]
-    output_root: Path = verified["output_root"]
-
-    capability, plan_obj, verified_pf, verified_auth, _ = (
-        issue_live_execution_capability(
-            execute_live=True,
+        reattest_stage_a_at_live_action_boundary(
+            live_capability=capability,
+            execution_plan=plan_obj,
+            prompt_freeze=verified_pf,
+            authorization=verified_auth,
+            prompt_registry=frozen_p1_p2_registry,
             execution_plan_path=plan_path,
             prompt_freeze_path=pf_path,
             authorization_path=auth_path,
             stage_a_freeze_receipt_path=stage_a_path,
-            prompt_registry=frozen_p1_p2_registry,
             repo_root=repo_root,
         )
-    )
-    reattest_stage_a_at_live_action_boundary(
-        live_capability=capability,
-        execution_plan=plan_obj,
-        prompt_freeze=verified_pf,
-        authorization=verified_auth,
-        prompt_registry=frozen_p1_p2_registry,
-        execution_plan_path=plan_path,
-        prompt_freeze_path=pf_path,
-        authorization_path=auth_path,
-        stage_a_freeze_receipt_path=stage_a_path,
-        repo_root=repo_root,
-    )
-    prod_transport = create_live_provider_transport_factory(
-        execute_live=True,
-        authorization=verified_auth,
-        live_capability=capability,
-    )
-    receipts, ledger = execute_live_dev_batch(
-        execution_plan_path=plan_path,
-        prompt_freeze_path=pf_path,
-        authorization_path=auth_path,
-        stage_a_freeze_receipt_path=stage_a_path,
-        batch_root_dir=output_root,
-        prompt_registry=frozen_p1_p2_registry,
-        transport=prod_transport,
-        execution_mode=RUNNER_EXECUTION_MODE_LIVE_EXECUTION,
-        live_capability=capability,
-        repo_root=repo_root,
-    )
-    return {
-        "mode": "execute_live",
-        "phase": plan_obj.phase,
-        "selected_prompt_id": FROZEN_SELECTED_PROMPT_ID,
-        "frozen_plan_prompt_ids": list(FROZEN_PLAN_PROMPT_IDS),
-        "frozen_prompt_registry_sha256": frozen_p1_p2_registry.registry_sha256,
-        "live_output_root": FROZEN_LIVE_OUTPUT_ROOT_REL_PATH,
-        "executed_cells": len(receipts),
-        "ledger": ledger.summary(),
-    }
+        prod_transport = create_live_provider_transport_factory(
+            execute_live=True,
+            authorization=verified_auth,
+            live_capability=capability,
+        )
+        receipts, ledger = execute_live_dev_batch(
+            execution_plan_path=plan_path,
+            prompt_freeze_path=pf_path,
+            authorization_path=auth_path,
+            stage_a_freeze_receipt_path=stage_a_path,
+            batch_root_dir=output_root,
+            prompt_registry=frozen_p1_p2_registry,
+            transport=prod_transport,
+            execution_mode=RUNNER_EXECUTION_MODE_LIVE_EXECUTION,
+            live_capability=capability,
+            repo_root=repo_root,
+        )
+        return {
+            "mode": "execute_live",
+            "phase": plan_obj.phase,
+            "selected_prompt_id": FROZEN_SELECTED_PROMPT_ID,
+            "frozen_plan_prompt_ids": list(FROZEN_PLAN_PROMPT_IDS),
+            "frozen_prompt_registry_sha256": frozen_p1_p2_registry.registry_sha256,
+            "live_output_root": FROZEN_LIVE_OUTPUT_ROOT_REL_PATH,
+            "executed_cells": len(receipts),
+            "ledger": ledger.summary(),
+        }
 
 
 # ==============================================================================

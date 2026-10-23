@@ -6,7 +6,7 @@
 - **Branch:** `research/w06-dev-select-live-launcher-01`
 - **Base `develop` SHA:** `681510af0e9232bae318562cf115e2ff4ce05968`
 - **Launcher Script Path:** `scripts/run_w06_dev_select_live_v1.py`
-- **Launcher LF-Normalized SHA256 (`LAUNCHER_LF_SHA256`):** `f992157e0b0fadcd6be2133cd041cd86f5c7f535a6acd9fe1b0106208f5ff520`
+- **Launcher LF-Normalized SHA256 (`LAUNCHER_LF_SHA256`):** `cd36b8ecad24059edb597c0039bd6e760a37ee8b4f36f49077801c65e7ddc7bf`
 - **Launcher Outside Scientific Code Bundle:** `true` (`len(SCIENTIFIC_CODE_BUNDLE_RELATIVE_PATHS) == 14`)
 - **Scientific Code Bundle SHA256:** `0638f2fcb100b0000e3a2a4e08137a9d468449001f258de7354df21e185ca2e3`
 - **Offline Execution Status:**
