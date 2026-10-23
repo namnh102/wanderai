@@ -17,6 +17,7 @@ from typing import Any
 import urllib.request
 
 import httpx
+import httpx2
 import pytest
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
@@ -1063,7 +1064,9 @@ def test_adv25_model_winner_selected_true_fails_closed(
 
 
 def test_adv26_outbound_network_kill_switch_blocks_all_transports() -> None:
-    """Adversarial 26: network kill-switch test proving provider/network access is blocked."""
+    """Adversarial 26: network kill-switch test proving provider/network access is blocked across socket, urllib, httpx, and actual httpx2."""
+    assert httpx2.__name__ == "httpx2"
+    assert httpx2 is not httpx
     with NetworkKillSwitchGuard() as guard:
         with pytest.raises(OutboundNetworkBlockedError):
             socket.create_connection(("example.com", 443), timeout=0.1)
@@ -1072,4 +1075,8 @@ def test_adv26_outbound_network_kill_switch_blocks_all_transports() -> None:
         with pytest.raises(OutboundNetworkBlockedError):
             with httpx.Client() as client:
                 client.get("https://example.com")
-        assert len(guard.blocked_attempts) == 3
+        with pytest.raises(OutboundNetworkBlockedError):
+            httpx2.get("https://example.com")
+        assert len(guard.blocked_attempts) == 4
+        assert "httpx.Client.send" in guard.blocked_attempts
+        assert "httpx2.Client.send" in guard.blocked_attempts
