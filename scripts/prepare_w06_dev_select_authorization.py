@@ -581,6 +581,10 @@ def verify_pre_authorization_firewall(repo_root: Path = REPO_ROOT) -> dict[str, 
     forbidden_dev_select_live_dirs: list[str] = []
 
     if w06_dir.is_dir():
+        from issue_w06_dev_select_live_authorization import (
+            is_verified_downstream_w06_dev_select_authorization_file,
+        )
+
         verified_dev_tune_results_tree = (
             is_verified_downstream_w06_dev_tune_live_results_tree(repo_root)
         )
@@ -596,6 +600,11 @@ def verify_pre_authorization_firewall(repo_root: Path = REPO_ROOT) -> dict[str, 
             if path.is_file():
                 is_verified_dev_tune_auth = (
                     is_verified_downstream_w06_dev_tune_authorization_file(
+                        path, repo_root=repo_root
+                    )
+                )
+                is_verified_dev_select_auth = (
+                    is_verified_downstream_w06_dev_select_authorization_file(
                         path, repo_root=repo_root
                     )
                 )
@@ -627,6 +636,7 @@ def verify_pre_authorization_firewall(repo_root: Path = REPO_ROOT) -> dict[str, 
                         "w06_dev_select_authorization_prep_v1.json",
                     }
                     and not is_verified_dev_tune_auth
+                    and not is_verified_dev_select_auth
                     and not is_verified_dev_tune_results
                 ):
                     forbidden_dev_select_auth_files.append(rel)
@@ -641,6 +651,7 @@ def verify_pre_authorization_firewall(repo_root: Path = REPO_ROOT) -> dict[str, 
                                     or data.get("authorization_status") == "AUTHORIZED"
                                 )
                                 and not is_verified_dev_tune_auth
+                                and not is_verified_dev_select_auth
                                 and not is_verified_dev_tune_stage_a
                                 and not is_verified_dev_tune_results
                             ):

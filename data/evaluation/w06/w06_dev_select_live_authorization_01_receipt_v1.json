@@ -1,0 +1,622 @@
+{
+  "adversarial_checks": [
+    {
+      "check_id": "ADV-01",
+      "description": "wrong phase DEV_TUNE rejected",
+      "status": "PASS"
+    },
+    {
+      "check_id": "ADV-02",
+      "description": "wrong phase STOCHASTICITY rejected",
+      "status": "PASS"
+    },
+    {
+      "check_id": "ADV-03",
+      "description": "Final100 rejected with Final100FirewallViolationError",
+      "status": "PASS"
+    },
+    {
+      "check_id": "ADV-04",
+      "description": "179 and 181 call budgets rejected",
+      "status": "PASS"
+    },
+    {
+      "check_id": "ADV-05",
+      "description": "candidate C4 rejected",
+      "status": "PASS"
+    },
+    {
+      "check_id": "ADV-06",
+      "description": "missing candidate rejected",
+      "status": "PASS"
+    },
+    {
+      "check_id": "ADV-07",
+      "description": "wrong plan internal SHA rejected",
+      "status": "PASS"
+    },
+    {
+      "check_id": "ADV-08",
+      "description": "wrong prompt-freeze SHA rejected",
+      "status": "PASS"
+    },
+    {
+      "check_id": "ADV-09",
+      "description": "wrong owner role rejected",
+      "status": "PASS"
+    },
+    {
+      "check_id": "ADV-10",
+      "description": "authorization_status != AUTHORIZED rejected",
+      "status": "PASS"
+    },
+    {
+      "check_id": "ADV-11",
+      "description": "wrong scientific bundle SHA rejected",
+      "status": "PASS"
+    },
+    {
+      "check_id": "ADV-12",
+      "description": "wrong code basis (e.g. 1f5f94f...) rejected",
+      "status": "PASS"
+    },
+    {
+      "check_id": "ADV-13",
+      "description": "tampered internal authorization SHA rejected",
+      "status": "PASS"
+    },
+    {
+      "check_id": "ADV-14",
+      "description": "tampered authorization file rejected",
+      "status": "PASS"
+    },
+    {
+      "check_id": "ADV-15",
+      "description": "one-character authorization-text mutation rejected",
+      "status": "PASS"
+    },
+    {
+      "check_id": "ADV-16",
+      "description": "authorization-text SHA mismatch rejected",
+      "status": "PASS"
+    },
+    {
+      "check_id": "ADV-17",
+      "description": "P2 substituted into DEV-SELECT plan rejected",
+      "status": "PASS"
+    },
+    {
+      "check_id": "ADV-18",
+      "description": "retry=1 in DEV-SELECT cell rejected",
+      "status": "PASS"
+    },
+    {
+      "check_id": "ADV-19",
+      "description": "Stage-A or provider result directory fabricated early detected and rejected",
+      "status": "PASS"
+    },
+    {
+      "check_id": "ADV-20",
+      "description": "outbound network attempt blocked by kill switch",
+      "status": "PASS"
+    }
+  ],
+  "allowed_candidate_ids": [
+    "C1",
+    "C2",
+    "C3"
+  ],
+  "allowed_execution_plan_sha256": "de04255989a9e3bd8c2e39c766432487dce4ccd0612d5dba73b3476cbc9d0c6d",
+  "allowed_phase": "DEV_SELECT",
+  "allowed_prompt_freeze_sha256": "2f345363f580ea882b2e5b3562c587ef5309bc7f994440257a54d18994ab6956",
+  "artifact_id": "W06-DEV-SELECT-LIVE-AUTHORIZATION-01-RECEIPT-V1",
+  "attempts_per_cell": 1,
+  "authorization_artifact_file_sha256": "247c0f201d8b900a1e0356d874891ba6e2884138b1ddd8500dfedb663f04f5f7",
+  "authorization_artifact_relative_path": "data/evaluation/w06/w06_dev_select_live_authorization_v1.json",
+  "authorization_artifact_sha256": "31cebcf5aafa7a575d4bf1327fc9d454a2817c2acbbdb2c087d8c1210e8ec504",
+  "authorization_id": "W06-DEV-SELECT-LIVE-AUTHORIZATION-01-V1",
+  "authorization_prep_file_sha256": "60e6f0125ed54d6541e506e538a37b63b027a6c60a55572dcd612aa7cd2b72b8",
+  "authorization_source": "PROJECT_OWNER_EXPLICIT_CHAT_AUTHORIZATION",
+  "authorization_status": "AUTHORIZED",
+  "authorization_text_character_count": 633,
+  "authorization_text_sha256": "6c32d37fcc557916b89ef0c1c87790bf76465e1352841a38655d5cf9676dbad7",
+  "authorized_at_utc": "2026-10-23T05:47:00Z",
+  "authorized_at_utc_semantics": "authorized_at_utc represents formal artifact issuance immediately following the already-explicit Project Owner authorization; it is not a fabricated historical chat timestamp.",
+  "authorized_by_role": "PROJECT_OWNER",
+  "candidate_registry_sha256": "4dd29164afdf7f364978420f41ab88ef07ec396062188169fcb859a9ef01e058",
+  "checks": [
+    {
+      "check_id": "DSAU-01",
+      "description": "Source develop SHA 1f5f94f81bb57b4c6e746d86dc179f4c975e5f4f provenance is valid",
+      "domain": "SOURCE_PROVENANCE",
+      "expected": {
+        "source_develop_sha": "1f5f94f81bb57b4c6e746d86dc179f4c975e5f4f",
+        "verified": true
+      },
+      "observed": {
+        "source_develop_sha": "1f5f94f81bb57b4c6e746d86dc179f4c975e5f4f",
+        "verified": true
+      },
+      "status": "PASS"
+    },
+    {
+      "check_id": "DSAU-02",
+      "description": "Exact Project Owner authorization text matches prep_artifact.proposed_project_owner_authorization_text character-for-character",
+      "domain": "AUTHORIZATION_EVIDENCE",
+      "expected": "I authorize W06 DEV-SELECT live execution for exactly the frozen 180-cell plan de04255989a9e3bd8c2e39c766432487dce4ccd0612d5dba73b3476cbc9d0c6d (plan file c519baf7cd2557b5e1dd2699a5ceaec592af015d7bc6dcc83abf63892a8a329a), bound by plan-freeze receipt 5f32782f6359f409c7dd68f08699218cd577cb48bcb517f14c15939f896b9549, using locked prompt P1 from prompt-selection artifact e1e79801117e59d3c8c703e024eacbad12d5336134c6597c333886c434a446b8 (semantic SHA 096ff4c74dd8d1aed1c0abe501b97c8dfd0f6424dbca535f2b79a242637a1c11), candidates C1/C2/C3, maximum 180 generation calls, zero retry, no DEV-TUNE rerun, no stochasticity, and no Final100.",
+      "observed": "I authorize W06 DEV-SELECT live execution for exactly the frozen 180-cell plan de04255989a9e3bd8c2e39c766432487dce4ccd0612d5dba73b3476cbc9d0c6d (plan file c519baf7cd2557b5e1dd2699a5ceaec592af015d7bc6dcc83abf63892a8a329a), bound by plan-freeze receipt 5f32782f6359f409c7dd68f08699218cd577cb48bcb517f14c15939f896b9549, using locked prompt P1 from prompt-selection artifact e1e79801117e59d3c8c703e024eacbad12d5336134c6597c333886c434a446b8 (semantic SHA 096ff4c74dd8d1aed1c0abe501b97c8dfd0f6424dbca535f2b79a242637a1c11), candidates C1/C2/C3, maximum 180 generation calls, zero retry, no DEV-TUNE rerun, no stochasticity, and no Final100.",
+      "status": "PASS"
+    },
+    {
+      "check_id": "DSAU-03",
+      "description": "SHA256(exact UTF-8 bytes) equals 6c32d37fcc557916b89ef0c1c87790bf76465e1352841a38655d5cf9676dbad7",
+      "domain": "AUTHORIZATION_EVIDENCE",
+      "expected": "6c32d37fcc557916b89ef0c1c87790bf76465e1352841a38655d5cf9676dbad7",
+      "observed": "6c32d37fcc557916b89ef0c1c87790bf76465e1352841a38655d5cf9676dbad7",
+      "status": "PASS"
+    },
+    {
+      "check_id": "DSAU-04",
+      "description": "Exact Project Owner authorization sentence length is 633 characters",
+      "domain": "AUTHORIZATION_EVIDENCE",
+      "expected": 633,
+      "observed": 633,
+      "status": "PASS"
+    },
+    {
+      "check_id": "DSAU-05",
+      "description": "authorized_by_role is strictly PROJECT_OWNER",
+      "domain": "AUTHORIZATION_SCOPE",
+      "expected": "PROJECT_OWNER",
+      "observed": "PROJECT_OWNER",
+      "status": "PASS"
+    },
+    {
+      "check_id": "DSAU-06",
+      "description": "authorization_status is strictly AUTHORIZED",
+      "domain": "AUTHORIZATION_SCOPE",
+      "expected": "AUTHORIZED",
+      "observed": "AUTHORIZED",
+      "status": "PASS"
+    },
+    {
+      "check_id": "DSAU-07",
+      "description": "allowed_phase and all 180 plan cells are strictly DEV_SELECT",
+      "domain": "AUTHORIZATION_SCOPE",
+      "expected": "DEV_SELECT",
+      "observed": "DEV_SELECT",
+      "status": "PASS"
+    },
+    {
+      "check_id": "DSAU-08",
+      "description": "allowed_execution_plan_sha256 matches frozen DEV-SELECT plan internal SHA de04255989a9e3bd8c2e39c766432487dce4ccd0612d5dba73b3476cbc9d0c6d",
+      "domain": "EXECUTION_PLAN_AUTHORITY",
+      "expected": "de04255989a9e3bd8c2e39c766432487dce4ccd0612d5dba73b3476cbc9d0c6d",
+      "observed": "de04255989a9e3bd8c2e39c766432487dce4ccd0612d5dba73b3476cbc9d0c6d",
+      "status": "PASS"
+    },
+    {
+      "check_id": "DSAU-09",
+      "description": "w06_dev_select_execution_plan_v1.json file SHA256 equals c519baf7cd2557b5e1dd2699a5ceaec592af015d7bc6dcc83abf63892a8a329a",
+      "domain": "EXECUTION_PLAN_AUTHORITY",
+      "expected": "c519baf7cd2557b5e1dd2699a5ceaec592af015d7bc6dcc83abf63892a8a329a",
+      "observed": "c519baf7cd2557b5e1dd2699a5ceaec592af015d7bc6dcc83abf63892a8a329a",
+      "status": "PASS"
+    },
+    {
+      "check_id": "DSAU-10",
+      "description": "w06_dev_select_plan_freeze_01_receipt_v1.json file SHA256 equals 5f32782f6359f409c7dd68f08699218cd577cb48bcb517f14c15939f896b9549",
+      "domain": "EXECUTION_PLAN_AUTHORITY",
+      "expected": "5f32782f6359f409c7dd68f08699218cd577cb48bcb517f14c15939f896b9549",
+      "observed": "5f32782f6359f409c7dd68f08699218cd577cb48bcb517f14c15939f896b9549",
+      "status": "PASS"
+    },
+    {
+      "check_id": "DSAU-11",
+      "description": "allowed_prompt_freeze_sha256 equals 2f345363f580ea882b2e5b3562c587ef5309bc7f994440257a54d18994ab6956",
+      "domain": "PROMPT_AUTHORITY",
+      "expected": "2f345363f580ea882b2e5b3562c587ef5309bc7f994440257a54d18994ab6956",
+      "observed": "2f345363f580ea882b2e5b3562c587ef5309bc7f994440257a54d18994ab6956",
+      "status": "PASS"
+    },
+    {
+      "check_id": "DSAU-12",
+      "description": "DEV-SELECT prompt is locked strictly to P1 (TRAVEL_PLANNER_BENCHMARK_V2); P2 is not authorized",
+      "domain": "PROMPT_AUTHORITY",
+      "expected": {
+        "prompt_ids": [
+          "P1"
+        ],
+        "version": "TRAVEL_PLANNER_BENCHMARK_V2"
+      },
+      "observed": {
+        "prompt_ids": [
+          "P1"
+        ],
+        "version": "TRAVEL_PLANNER_BENCHMARK_V2"
+      },
+      "status": "PASS"
+    },
+    {
+      "check_id": "DSAU-13",
+      "description": "P1 semantic SHA256 (096ff4c7...), system SHA256 (4bcb84a8...), and user-template SHA256 (19762f7c...) match across all 180 cells",
+      "domain": "PROMPT_AUTHORITY",
+      "expected": "096ff4c74dd8d1aed1c0abe501b97c8dfd0f6424dbca535f2b79a242637a1c11",
+      "observed": "096ff4c74dd8d1aed1c0abe501b97c8dfd0f6424dbca535f2b79a242637a1c11",
+      "status": "PASS"
+    },
+    {
+      "check_id": "DSAU-14",
+      "description": "Prompt-selection artifact SHA256 (e1e79801...) and receipt SHA256 (0ad09212...) match exactly",
+      "domain": "PROMPT_AUTHORITY",
+      "expected": {
+        "artifact_sha256": "e1e79801117e59d3c8c703e024eacbad12d5336134c6597c333886c434a446b8",
+        "receipt_sha256": "0ad0921283c73917c5167ee4cf7355842efc6dedd8719bc169f329daba9ec114"
+      },
+      "observed": {
+        "artifact_sha256": "e1e79801117e59d3c8c703e024eacbad12d5336134c6597c333886c434a446b8",
+        "receipt_sha256": "0ad0921283c73917c5167ee4cf7355842efc6dedd8719bc169f329daba9ec114"
+      },
+      "status": "PASS"
+    },
+    {
+      "check_id": "DSAU-15",
+      "description": "Allowed candidate IDs are strictly ['C1', 'C2', 'C3'] with frozen candidate and provider-config registries",
+      "domain": "CANDIDATE_SCOPE",
+      "expected": [
+        "C1",
+        "C2",
+        "C3"
+      ],
+      "observed": [
+        "C1",
+        "C2",
+        "C3"
+      ],
+      "status": "PASS"
+    },
+    {
+      "check_id": "DSAU-16",
+      "description": "maximum_live_generation_calls is strictly 180",
+      "domain": "CALL_BUDGET",
+      "expected": 180,
+      "observed": 180,
+      "status": "PASS"
+    },
+    {
+      "check_id": "DSAU-17",
+      "description": "Plan contains 180 assigned cells, 180 unique run IDs, 180 unique cell keys, and 60 unique DEV-SELECT fixtures",
+      "domain": "CALL_BUDGET",
+      "expected": {
+        "cells": 180,
+        "fixtures": 60,
+        "unique_cell_keys": 180,
+        "unique_run_ids": 180
+      },
+      "observed": {
+        "cells": 180,
+        "fixtures": 60,
+        "unique_cell_keys": 180,
+        "unique_run_ids": 180
+      },
+      "status": "PASS"
+    },
+    {
+      "check_id": "DSAU-18",
+      "description": "attempts_per_cell is strictly 1 across all 180 assigned cells",
+      "domain": "EXECUTION_POLICY",
+      "expected": 1,
+      "observed": 1,
+      "status": "PASS"
+    },
+    {
+      "check_id": "DSAU-19",
+      "description": "All retry/fallback/repair/tools flags are strictly zero/false across all 180 cells",
+      "domain": "EXECUTION_POLICY",
+      "expected": 0,
+      "observed": 0,
+      "status": "PASS"
+    },
+    {
+      "check_id": "DSAU-20",
+      "description": "All 14 scientific code bundle files match SHA256 0638f2fcb100b0000e3a2a4e08137a9d468449001f258de7354df21e185ca2e3",
+      "domain": "SCIENTIFIC_CODE_BUNDLE",
+      "expected": "0638f2fcb100b0000e3a2a4e08137a9d468449001f258de7354df21e185ca2e3",
+      "observed": "0638f2fcb100b0000e3a2a4e08137a9d468449001f258de7354df21e185ca2e3",
+      "status": "PASS"
+    },
+    {
+      "check_id": "DSAU-21",
+      "description": "code_basis_commit_sha equals frozen plan code basis c0adf74ceda9ffaf8b4ec42d299932e33f448e6a (not replaced with source develop SHA)",
+      "domain": "CODE_BASIS",
+      "expected": "c0adf74ceda9ffaf8b4ec42d299932e33f448e6a",
+      "observed": "c0adf74ceda9ffaf8b4ec42d299932e33f448e6a",
+      "status": "PASS"
+    },
+    {
+      "check_id": "DSAU-22",
+      "description": "Production app.evaluation.dev_live_runner.build_dev_live_authorization_artifact produces identical artifact",
+      "domain": "PRODUCTION_CONTRACT",
+      "expected": "31cebcf5aafa7a575d4bf1327fc9d454a2817c2acbbdb2c087d8c1210e8ec504",
+      "observed": "31cebcf5aafa7a575d4bf1327fc9d454a2817c2acbbdb2c087d8c1210e8ec504",
+      "status": "PASS"
+    },
+    {
+      "check_id": "DSAU-23",
+      "description": "Production verify_dev_live_authorization_artifact(..., expected_phase='DEV_SELECT') passes",
+      "domain": "PRODUCTION_CONTRACT",
+      "expected": "W06-DEV-SELECT-LIVE-AUTHORIZATION-01-V1",
+      "observed": "W06-DEV-SELECT-LIVE-AUTHORIZATION-01-V1",
+      "status": "PASS"
+    },
+    {
+      "check_id": "DSAU-24",
+      "description": "DEV_TUNE phase is rejected by verify_dev_live_authorization_artifact",
+      "domain": "SCOPE_EXCLUSION",
+      "expected": true,
+      "observed": true,
+      "status": "PASS"
+    },
+    {
+      "check_id": "DSAU-25",
+      "description": "STOCHASTICITY phase is rejected by verify_dev_live_authorization_artifact",
+      "domain": "SCOPE_EXCLUSION",
+      "expected": true,
+      "observed": true,
+      "status": "PASS"
+    },
+    {
+      "check_id": "DSAU-26",
+      "description": "FINAL100 phase is rejected with Final100FirewallViolationError",
+      "domain": "FINAL100_FIREWALL",
+      "expected": true,
+      "observed": true,
+      "status": "PASS"
+    },
+    {
+      "check_id": "DSAU-27",
+      "description": "maximum_live_generation_calls=181 (and 179) rejected by production contract",
+      "domain": "ADVERSARIAL_REJECTION",
+      "expected": {
+        "179_rejected": true,
+        "181_rejected": true
+      },
+      "observed": {
+        "179_rejected": true,
+        "181_rejected": true
+      },
+      "status": "PASS"
+    },
+    {
+      "check_id": "DSAU-28",
+      "description": "Candidate C4 and missing candidate subset are rejected by production contract",
+      "domain": "ADVERSARIAL_REJECTION",
+      "expected": {
+        "c4_rejected": true,
+        "missing_cand_rejected": true
+      },
+      "observed": {
+        "c4_rejected": true,
+        "missing_cand_rejected": true
+      },
+      "status": "PASS"
+    },
+    {
+      "check_id": "DSAU-29",
+      "description": "Mismatched allowed_execution_plan_sha256 is rejected by verify_dev_live_authorization_artifact",
+      "domain": "ADVERSARIAL_REJECTION",
+      "expected": true,
+      "observed": true,
+      "status": "PASS"
+    },
+    {
+      "check_id": "DSAU-30",
+      "description": "Mismatched allowed_prompt_freeze_sha256 is rejected by verify_dev_live_authorization_artifact",
+      "domain": "ADVERSARIAL_REJECTION",
+      "expected": true,
+      "observed": true,
+      "status": "PASS"
+    },
+    {
+      "check_id": "DSAU-31",
+      "description": "Non-PROJECT_OWNER authorized_by_role is rejected by production contract",
+      "domain": "ADVERSARIAL_REJECTION",
+      "expected": true,
+      "observed": true,
+      "status": "PASS"
+    },
+    {
+      "check_id": "DSAU-32",
+      "description": "Non-AUTHORIZED authorization_status is rejected by production contract",
+      "domain": "ADVERSARIAL_REJECTION",
+      "expected": true,
+      "observed": true,
+      "status": "PASS"
+    },
+    {
+      "check_id": "DSAU-33",
+      "description": "assert_no_secrets_in_payload passes and zero key material/metadata is persisted",
+      "domain": "SECRET_SAFETY",
+      "expected": true,
+      "observed": true,
+      "status": "PASS"
+    },
+    {
+      "check_id": "DSAU-34",
+      "description": "Actual httpx2 (distinct from httpx), httpx, urllib, and socket outbound calls are blocked by NetworkKillSwitchGuard",
+      "domain": "NETWORK_ISOLATION",
+      "expected": {
+        "httpx2_blocked": true,
+        "httpx2_distinct": true,
+        "httpx_blocked": true,
+        "socket_blocked": true,
+        "urllib_blocked": true
+      },
+      "observed": {
+        "httpx2_blocked": true,
+        "httpx2_distinct": true,
+        "httpx_blocked": true,
+        "socket_blocked": true,
+        "urllib_blocked": true
+      },
+      "status": "PASS"
+    },
+    {
+      "check_id": "DSAU-35",
+      "description": "STAGE_A_CREATED is false and no DEV-SELECT Stage-A receipt exists",
+      "domain": "PRE_STAGE_A_FIREWALL",
+      "expected": false,
+      "observed": false,
+      "status": "PASS"
+    },
+    {
+      "check_id": "DSAU-36",
+      "description": "LIVE_EXECUTION_CAPABILITY_ISSUED is false",
+      "domain": "PRE_STAGE_A_FIREWALL",
+      "expected": false,
+      "observed": false,
+      "status": "PASS"
+    },
+    {
+      "check_id": "DSAU-37",
+      "description": "PRODUCTION_PROVIDER_TRANSPORT_CONSTRUCTED and TRANSPORT_JOURNAL_CREATED are false",
+      "domain": "PRE_STAGE_A_FIREWALL",
+      "expected": {
+        "production_provider_transport_constructed": false,
+        "transport_journal_created": false
+      },
+      "observed": {
+        "production_provider_transport_constructed": false,
+        "transport_journal_created": false
+      },
+      "status": "PASS"
+    },
+    {
+      "check_id": "DSAU-38",
+      "description": "DEV_SELECT_EXECUTION_STARTED, DEV_SELECT_LIVE_RESULT_DIRECTORY_CREATED, MODEL_WINNER_SELECTED, and STOCHASTICITY_EXECUTION_STARTED are false",
+      "domain": "PRE_STAGE_A_FIREWALL",
+      "expected": false,
+      "observed": false,
+      "status": "PASS"
+    },
+    {
+      "check_id": "DSAU-39",
+      "description": "LIVE_PROVIDER_CALLS_NEW = 0 and PROVIDER_COST_USD_NEW = 0",
+      "domain": "NETWORK_ISOLATION",
+      "expected": {
+        "live_provider_calls_new": 0,
+        "provider_cost_usd_new": 0
+      },
+      "observed": {
+        "live_provider_calls_new": 0,
+        "provider_cost_usd_new": 0
+      },
+      "status": "PASS"
+    },
+    {
+      "check_id": "DSAU-40",
+      "description": "FINAL100_USED is false and Final100/P11 files are untouched and unreferenced",
+      "domain": "FINAL100_FIREWALL",
+      "expected": false,
+      "observed": false,
+      "status": "PASS"
+    }
+  ],
+  "code_basis_commit_sha": "c0adf74ceda9ffaf8b4ec42d299932e33f448e6a",
+  "dev_select_execution_started": false,
+  "dev_select_live_result_directory_created": false,
+  "exact_authorization_text": "I authorize W06 DEV-SELECT live execution for exactly the frozen 180-cell plan de04255989a9e3bd8c2e39c766432487dce4ccd0612d5dba73b3476cbc9d0c6d (plan file c519baf7cd2557b5e1dd2699a5ceaec592af015d7bc6dcc83abf63892a8a329a), bound by plan-freeze receipt 5f32782f6359f409c7dd68f08699218cd577cb48bcb517f14c15939f896b9549, using locked prompt P1 from prompt-selection artifact e1e79801117e59d3c8c703e024eacbad12d5336134c6597c333886c434a446b8 (semantic SHA 096ff4c74dd8d1aed1c0abe501b97c8dfd0f6424dbca535f2b79a242637a1c11), candidates C1/C2/C3, maximum 180 generation calls, zero retry, no DEV-TUNE rerun, no stochasticity, and no Final100.",
+  "execution_plan_file_sha256": "c519baf7cd2557b5e1dd2699a5ceaec592af015d7bc6dcc83abf63892a8a329a",
+  "experiment_matrix": {
+    "attempts_per_cell": 1,
+    "candidates": [
+      "C1",
+      "C2",
+      "C3"
+    ],
+    "fixture_count": 60,
+    "forbidden_prompts": [
+      "P0",
+      "P2"
+    ],
+    "phase": "DEV_SELECT",
+    "prompts": [
+      "P1"
+    ],
+    "total_scientific_cells": 180,
+    "unique_run_ids": 180,
+    "unique_scientific_cell_keys": 180
+  },
+  "final100_used": false,
+  "historical_evidence_boundary": {
+    "historical_artifacts_unmodified": true,
+    "historical_frozen_shas": {
+      "data/evaluation/w06/w06_dev_prompt_candidate_freeze_v1.json": "2f345363f580ea882b2e5b3562c587ef5309bc7f994440257a54d18994ab6956",
+      "data/evaluation/w06/w06_dev_select_authorization_prep_v1.json": "60e6f0125ed54d6541e506e538a37b63b027a6c60a55572dcd612aa7cd2b72b8",
+      "data/evaluation/w06/w06_dev_select_execution_plan_v1.json": "c519baf7cd2557b5e1dd2699a5ceaec592af015d7bc6dcc83abf63892a8a329a",
+      "data/evaluation/w06/w06_dev_select_plan_freeze_01_receipt_v1.json": "5f32782f6359f409c7dd68f08699218cd577cb48bcb517f14c15939f896b9549",
+      "data/evaluation/w06/w06_dev_tune_prompt_selection_01_receipt_v1.json": "0ad0921283c73917c5167ee4cf7355842efc6dedd8719bc169f329daba9ec114",
+      "data/evaluation/w06/w06_dev_tune_prompt_selection_v1.json": "e1e79801117e59d3c8c703e024eacbad12d5336134c6597c333886c434a446b8"
+    },
+    "prep_artifact_status_preserved_as_not_granted": true
+  },
+  "live_execution_capability_issued": false,
+  "live_provider_calls_new": 0,
+  "maximum_live_generation_calls": 180,
+  "model_winner_selected": false,
+  "plan_freeze_receipt_file_sha256": "5f32782f6359f409c7dd68f08699218cd577cb48bcb517f14c15939f896b9549",
+  "portable_schema_v2_sha256": "825a4ff912d851a95f7392cb564b7d7ca3588135508dc6eb3ac6304cdde3c490",
+  "production_provider_transport_constructed": false,
+  "prompt_selection_artifact_file_sha256": "e1e79801117e59d3c8c703e024eacbad12d5336134c6597c333886c434a446b8",
+  "prompt_selection_receipt_file_sha256": "0ad0921283c73917c5167ee4cf7355842efc6dedd8719bc169f329daba9ec114",
+  "provider_config_registry_sha256": "3dc05d29acc2f647cba58303865bd7406b8c1d9f7ccbe0f120e87ad471190938",
+  "provider_cost_usd_new": 0,
+  "retry_calls": 0,
+  "retry_policy": {
+    "attempts_per_cell": 1,
+    "automatic_retry": 0,
+    "best_of": false,
+    "deterministic_semantic_repair": false,
+    "fallback": false,
+    "llm_repair": 0,
+    "manual_retry": 0,
+    "max_outbound_generation_http_requests_per_cell": 1,
+    "retry": 0,
+    "sdk_retry": 0,
+    "tools": false,
+    "transport_retry": 0
+  },
+  "scientific_code_bundle_sha256": "0638f2fcb100b0000e3a2a4e08137a9d468449001f258de7354df21e185ca2e3",
+  "scope_exclusions": {
+    "alternate_code_basis_authorized": false,
+    "alternate_plan_sha_authorized": false,
+    "alternate_scientific_bundle_authorized": false,
+    "calls_above_180_authorized": false,
+    "candidate_c4_or_others_authorized": false,
+    "dev_tune_authorized": false,
+    "final100_authorized": false,
+    "prompt_p2_authorized": false,
+    "retry_above_zero_authorized": false,
+    "stochasticity_authorized": false
+  },
+  "selected_prompt_id": "P1",
+  "selected_prompt_semantic_sha256": "096ff4c74dd8d1aed1c0abe501b97c8dfd0f6424dbca535f2b79a242637a1c11",
+  "selected_prompt_system_sha256": "4bcb84a8aca1fc89f65709ac9d91c88e42359c284850061bae85c3607c345b0e",
+  "selected_prompt_user_template_sha256": "19762f7c72b4dd19b57c29e160d9195b8f2c72e836188823e9949f271a22f5de",
+  "selected_prompt_version": "TRAVEL_PLANNER_BENCHMARK_V2",
+  "semantic_schema_sha256": "e4169f7b890f77d13af65e9f2070b6071c535b206d88440f5e8f28c179977555",
+  "source_develop_sha": "1f5f94f81bb57b4c6e746d86dc179f4c975e5f4f",
+  "stage_a_created": false,
+  "stochasticity_execution_started": false,
+  "task_id": "W06-DEV-SELECT-LIVE-AUTHORIZATION-01",
+  "transport_journal_created": false,
+  "verification_summary": {
+    "adversarial_failed_checks": 0,
+    "adversarial_passed_checks": 20,
+    "adversarial_total_checks": 20,
+    "dsau_failed_checks": 0,
+    "dsau_passed_checks": 40,
+    "dsau_total_checks": 40,
+    "overall_status": "PASS"
+  }
+}

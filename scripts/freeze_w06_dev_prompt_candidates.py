@@ -1634,6 +1634,9 @@ def run_all_pf_checks(
         from freeze_w06_dev_tune_stage_a import (
             is_verified_downstream_w06_dev_tune_stage_a_file,
         )
+        from issue_w06_dev_select_live_authorization import (
+            is_verified_downstream_w06_dev_select_authorization_file,
+        )
         from issue_w06_dev_tune_live_authorization import (
             is_verified_downstream_w06_dev_tune_authorization_file,
         )
@@ -1647,6 +1650,9 @@ def run_all_pf_checks(
             ):
                 if p.is_file() and (
                     is_verified_downstream_w06_dev_tune_authorization_file(
+                        p, repo_root=REPO_ROOT
+                    )
+                    or is_verified_downstream_w06_dev_select_authorization_file(
                         p, repo_root=REPO_ROOT
                     )
                     or is_verified_downstream_w06_dev_tune_stage_a_file(

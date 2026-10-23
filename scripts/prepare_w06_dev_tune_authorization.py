@@ -729,6 +729,9 @@ def verify_pre_authorization_firewall(repo_root: Path = REPO_ROOT) -> dict[str, 
         from freeze_w06_dev_tune_stage_a import (
             is_verified_downstream_w06_dev_tune_stage_a_file,
         )
+        from issue_w06_dev_select_live_authorization import (
+            is_verified_downstream_w06_dev_select_authorization_file,
+        )
         from issue_w06_dev_tune_live_authorization import (
             is_verified_downstream_w06_dev_tune_authorization_file,
         )
@@ -749,6 +752,11 @@ def verify_pre_authorization_firewall(repo_root: Path = REPO_ROOT) -> dict[str, 
             if path.is_file():
                 is_verified_downstream_auth01 = (
                     is_verified_downstream_w06_dev_tune_authorization_file(
+                        path, repo_root=repo_root
+                    )
+                )
+                is_verified_downstream_dev_select_auth01 = (
+                    is_verified_downstream_w06_dev_select_authorization_file(
                         path, repo_root=repo_root
                     )
                 )
@@ -776,6 +784,7 @@ def verify_pre_authorization_firewall(repo_root: Path = REPO_ROOT) -> dict[str, 
                     "live_authorization" in name_lower
                     and name_lower != "w06_dev_tune_authorization_prep_v1.json"
                     and not is_verified_downstream_auth01
+                    and not is_verified_downstream_dev_select_auth01
                     and not is_verified_downstream_results
                 ):
                     forbidden_auth_files.append(rel)
@@ -790,6 +799,7 @@ def verify_pre_authorization_firewall(repo_root: Path = REPO_ROOT) -> dict[str, 
                                     or data.get("authorization_status") == "AUTHORIZED"
                                 )
                                 and not is_verified_downstream_auth01
+                                and not is_verified_downstream_dev_select_auth01
                                 and not is_verified_downstream_stage_a
                                 and not is_verified_downstream_results
                             ):
