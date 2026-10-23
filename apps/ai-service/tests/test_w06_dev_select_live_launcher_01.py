@@ -56,11 +56,13 @@ from app.evaluation.dev_selection_harness import (  # noqa: E402
     FORBIDDEN_FINAL100_BUNDLE_SHA256,
     FORBIDDEN_P11_MANIFEST_SHA256,
     SCIENTIFIC_CODE_BUNDLE_RELATIVE_PATHS,
+    CodeCommitProvenanceError,
     DevExecutionPlan,
     Final100FirewallViolationError,
     ScientificCodeBundleIntegrityError,
     assert_not_final100_path,
     assert_not_final100_scenario_id,
+    build_default_infrastructure_prompt_registry,
     canonical_json_bytes,
     compute_scientific_code_bundle_sha256,
     load_and_verify_candidate_registry,
@@ -1065,8 +1067,11 @@ def test_dsl_35_adversarial_no_capability_or_transport_or_filesystem_output_duri
     assert not (REPO_ROOT / launcher.FROZEN_LIVE_OUTPUT_ROOT_REL_PATH).exists()
 
 
-def test_dsl_36_generic_runner_cli_firewall_section_24() -> None:
-    """DSL-36: Verify `dev_live_runner.py` generic CLI fails closed on missing args, Final100, or combined Stage-A + live (Section 24)."""
+def test_dsl_36_generic_runner_cli_firewall_section_24(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """DSL-36: Verify `dev_live_runner.py` generic CLI fails closed on missing args, Final100, combined Stage-A + live, and the exact frozen DEV-SELECT `--execute-live` bypass attempt (Section 24)."""
     with pytest.raises(LiveExecutionNotAuthorizedError, match="NO_MODE_SPECIFIED"):
         run_generic_runner_cli([])
 
@@ -1078,6 +1083,122 @@ def test_dsl_36_generic_runner_cli_firewall_section_24() -> None:
 
     with pytest.raises(PlanBeforeLiveProtocolError, match="EXECUTION_PLAN_MISSING"):
         run_generic_runner_cli(["--execute-live"])
+
+    temp_batch_root = tmp_path / "generic_cli_bypass_batch_root"
+    temp_batch_root.mkdir(parents=True, exist_ok=True)
+    assert list(temp_batch_root.iterdir()) == []
+
+    orig_issue_capability = dlr_mod.issue_live_execution_capability
+    capability_attempts: list[dict[str, Any]] = []
+    minted_capabilities: list[LiveExecutionCapability] = []
+    transport_constructed = False
+    batch_executed = False
+
+    def _spy_real_issue_capability(*args: Any, **kwargs: Any) -> Any:
+        capability_attempts.append({"args": args, "kwargs": dict(kwargs)})
+        res = orig_issue_capability(*args, **kwargs)
+        minted_capabilities.append(res[0])
+        return res
+
+    def _fail_if_transport_constructed(*_args: Any, **_kwargs: Any) -> Any:
+        nonlocal transport_constructed
+        transport_constructed = True
+        pytest.fail(
+            "BLOCKER: Generic run_cli unexpectedly reached create_live_provider_transport_factory!"
+        )
+
+    def _fail_if_batch_executed(*_args: Any, **_kwargs: Any) -> Any:
+        nonlocal batch_executed
+        batch_executed = True
+        pytest.fail(
+            "BLOCKER: Generic run_cli unexpectedly reached execute_live_dev_batch!"
+        )
+
+    monkeypatch.setattr(
+        dlr_mod, "issue_live_execution_capability", _spy_real_issue_capability
+    )
+    monkeypatch.setattr(
+        dlr_mod,
+        "create_live_provider_transport_factory",
+        _fail_if_transport_constructed,
+    )
+    monkeypatch.setattr(
+        dlr_mod, "execute_live_dev_batch", _fail_if_batch_executed
+    )
+    monkeypatch.chdir(REPO_ROOT)
+
+    exact_generic_dev_select_live_argv = [
+        "--execute-live",
+        "--execution-plan",
+        "data/evaluation/w06/w06_dev_select_execution_plan_v1.json",
+        "--prompt-freeze",
+        "data/evaluation/w06/w06_dev_prompt_candidate_freeze_v1.json",
+        "--authorization-artifact",
+        "data/evaluation/w06/w06_dev_select_live_authorization_v1.json",
+        "--stage-a-freeze-receipt",
+        "data/evaluation/w06/w06_dev_select_stage_a_freeze_receipt_v1.json",
+        "--phase",
+        "DEV_SELECT",
+        "--batch-root-dir",
+        str(temp_batch_root),
+    ]
+
+    with launcher.NetworkKillSwitchGuard():
+        # 1. Pure unpatched generic `run_cli` fails closed inside `issue_live_execution_capability`
+        #    -> `verify_runner_prompt_freeze_artifact` (at `build_dev_tune_execution_plan`
+        #    with `CodeCommitProvenanceError`, or `PromptFreezeFirewallError` if HEAD == code_basis_commit_sha).
+        with pytest.raises(
+            (PromptFreezeFirewallError, CodeCommitProvenanceError)
+        ) as exc_unpatched:
+            run_generic_runner_cli(exact_generic_dev_select_live_argv)
+
+        assert isinstance(
+            exc_unpatched.value,
+            (PromptFreezeFirewallError, CodeCommitProvenanceError),
+        )
+        assert len(capability_attempts) == 1
+        default_infra_reg = build_default_infrastructure_prompt_registry()
+        supplied_prompt_reg = capability_attempts[0]["kwargs"]["prompt_registry"]
+        assert (
+            supplied_prompt_reg.registry_sha256
+            == default_infra_reg.registry_sha256
+        )
+        assert (
+            supplied_prompt_reg.registry_sha256
+            != "846dc4c14ec2a87537b7b3e07bf492de51dc534d24b21e469094b7e3d34d32b6"
+        )
+        assert len(minted_capabilities) == 0
+        assert transport_constructed is False
+        assert batch_executed is False
+        assert list(temp_batch_root.iterdir()) == []
+        assert not (
+            REPO_ROOT / "data/evaluation/w06/live_dev_select_primary_v1"
+        ).exists()
+
+        # 2. Even with the committed DEV_TUNE plan bridge active, generic `run_cli`
+        #    fails closed with `PromptFreezeFirewallError` because `run_cli` uses
+        #    `build_default_infrastructure_prompt_registry()` whereas the committed
+        #    prompt-freeze binds `build_frozen_p1_p2_registry()`
+        #    (`846dc4c14ec2a87537b7b3e07bf492de51dc534d24b21e469094b7e3d34d32b6`).
+        with launcher._launcher_runner_bridge():
+            with pytest.raises(PromptFreezeFirewallError) as exc_bridged:
+                run_generic_runner_cli(exact_generic_dev_select_live_argv)
+
+        err_msg = str(exc_bridged.value)
+        assert (
+            "PROMPT_CANDIDATE_ID_MISMATCH" in err_msg
+            or "846dc4c14ec2a87537b7b3e07bf492de51dc534d24b21e469094b7e3d34d32b6"
+            in err_msg
+            or "PROMPT_FREEZE" in err_msg
+        )
+        assert len(capability_attempts) == 2
+        assert len(minted_capabilities) == 0
+        assert transport_constructed is False
+        assert batch_executed is False
+        assert list(temp_batch_root.iterdir()) == []
+        assert not (
+            REPO_ROOT / "data/evaluation/w06/live_dev_select_primary_v1"
+        ).exists()
 
 
 def test_dsl_37_schema_authorities_locked(
