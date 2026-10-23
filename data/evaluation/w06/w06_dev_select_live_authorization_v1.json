@@ -1,0 +1,19 @@
+{
+  "allowed_candidate_ids": [
+    "C1",
+    "C2",
+    "C3"
+  ],
+  "allowed_execution_plan_sha256": "de04255989a9e3bd8c2e39c766432487dce4ccd0612d5dba73b3476cbc9d0c6d",
+  "allowed_phase": "DEV_SELECT",
+  "allowed_prompt_freeze_sha256": "2f345363f580ea882b2e5b3562c587ef5309bc7f994440257a54d18994ab6956",
+  "authorization_artifact_sha256": "31cebcf5aafa7a575d4bf1327fc9d454a2817c2acbbdb2c087d8c1210e8ec504",
+  "authorization_id": "W06-DEV-SELECT-LIVE-AUTHORIZATION-01-V1",
+  "authorization_status": "AUTHORIZED",
+  "authorized_at_utc": "2026-10-23T05:47:00Z",
+  "authorized_by_role": "PROJECT_OWNER",
+  "code_basis_commit_sha": "c0adf74ceda9ffaf8b4ec42d299932e33f448e6a",
+  "maximum_live_generation_calls": 180,
+  "scientific_code_bundle_sha256": "0638f2fcb100b0000e3a2a4e08137a9d468449001f258de7354df21e185ca2e3",
+  "task_id": "W06-DEV-SELECT-LIVE-AUTHORIZATION-01"
+}

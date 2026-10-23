@@ -4578,6 +4578,9 @@ def run_all_runner_qa_01_checks() -> Dict[str, Any]:
         # ------------------------------------------------------------------
         # RQA-60: Zero live provider calls, zero cost, prompt freeze NOT_YET_FROZEN
         # ------------------------------------------------------------------
+        from issue_w06_dev_select_live_authorization import (
+            is_verified_downstream_w06_dev_select_authorization_file,
+        )
         from issue_w06_dev_tune_live_authorization import (
             is_verified_downstream_w06_dev_tune_authorization_file,
         )
@@ -4587,6 +4590,8 @@ def run_all_runner_qa_01_checks() -> Dict[str, Any]:
         for p in sorted(w06_dir.glob("*.json")):
             if "prompt_freeze" in p.name.lower() or "live_authorization" in p.name.lower():
                 if is_verified_downstream_w06_dev_tune_authorization_file(
+                    p, repo_root=REPO_ROOT
+                ) or is_verified_downstream_w06_dev_select_authorization_file(
                     p, repo_root=REPO_ROOT
                 ):
                     continue
