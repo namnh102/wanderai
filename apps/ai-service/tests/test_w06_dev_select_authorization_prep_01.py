@@ -14,6 +14,7 @@ import sys
 import urllib.request
 
 import httpx
+import httpx2
 import pytest
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
@@ -500,7 +501,13 @@ def test_adversarial_25_secret_key_value_or_prefix_leak_in_key_presence_output(
 
 
 def test_adversarial_26_outbound_network_attempt_during_prep_or_verify() -> None:
-    """Verify Section 22 item 26: any outbound network attempt during prep or verify-only is blocked fail-closed."""
+    """Verify Section 22 item 26: any outbound network attempt during prep or verify-only is blocked fail-closed across socket, urllib, httpx, and actual httpx2."""
+    assert httpx2.__name__ == "httpx2"
+    assert httpx2 is not httpx
+
+    orig_httpx2_send = httpx2.Client.send
+    orig_httpx2_async_send = httpx2.AsyncClient.send
+
     with NetworkKillSwitchGuard() as guard:
         with pytest.raises(OutboundNetworkBlockedError):
             s = socket.socket()
@@ -515,4 +522,104 @@ def test_adversarial_26_outbound_network_attempt_during_prep_or_verify() -> None
         with pytest.raises(OutboundNetworkBlockedError):
             httpx.get("https://example.com")
 
-        assert len(guard.blocked_attempts) == 3
+        with pytest.raises(OutboundNetworkBlockedError):
+            httpx2.get("https://example.com")
+
+        assert len(guard.blocked_attempts) == 4
+        assert "socket.socket.connect" in guard.blocked_attempts
+        assert "urllib.request.urlopen" in guard.blocked_attempts
+        assert "httpx.Client.send" in guard.blocked_attempts
+        assert "httpx2.Client.send" in guard.blocked_attempts
+
+    assert httpx2.Client.send == orig_httpx2_send
+    assert httpx2.AsyncClient.send == orig_httpx2_async_send
+
+
+def test_research_report_consistency_with_canonical_prep_artifact(
+    persisted_prep_payload: dict,
+) -> None:
+    """Verify Section 10: research report agrees with canonical prep JSON and contains no stale values."""
+    report_path = REPO_ROOT / PREP_REPORT_REL_PATH
+    assert report_path.is_file()
+    report_text = report_path.read_text(encoding="utf-8")
+
+    hist = persisted_prep_payload["cost_envelope"][
+        "historical_dev_tune_observational_cost_context"
+    ]
+    c_map = {
+        c["candidate_id"]: c for c in persisted_prep_payload["candidate_list"]
+    }
+
+    required_canonical_substrings = [
+        persisted_prep_payload["source_develop_sha"],
+        persisted_prep_payload["execution_plan_internal_sha256"],
+        persisted_prep_payload["execution_plan_file_sha256"],
+        persisted_prep_payload["plan_freeze_receipt_file_sha256"],
+        persisted_prep_payload["dev_fixture_bundle_sha256"],
+        persisted_prep_payload["selected_prompt_semantic_sha256"],
+        persisted_prep_payload["candidate_registry_sha256"],
+        persisted_prep_payload["provider_config_registry_sha256"],
+        persisted_prep_payload["portable_schema_v2_sha256"],
+        persisted_prep_payload["semantic_schema_sha256"],
+        persisted_prep_payload["scientific_code_bundle_sha256"],
+        persisted_prep_payload["final100_firewall"]["final100_bundle_sha256"],
+        persisted_prep_payload["final100_firewall"][
+            "p11_assignment_manifest_sha256"
+        ],
+        c_map["C1"]["requested_model_id"],
+        c_map["C2"]["requested_model_id"],
+        c_map["C3"]["requested_model_id"],
+        c_map["C1"]["provider_config_sha256"],
+        c_map["C2"]["provider_config_sha256"],
+        c_map["C3"]["provider_config_sha256"],
+        str(c_map["C1"]["timeout_ms"]),
+        str(
+            persisted_prep_payload["cost_envelope"][
+                "planning_cost_envelope_low_usd"
+            ]
+        ),
+        str(
+            persisted_prep_payload["cost_envelope"][
+                "planning_cost_envelope_high_usd"
+            ]
+        ),
+        str(hist["authoritative_cost_cell_count"]),
+        str(hist["authoritative_receipt_cost_total_usd"]),
+        hist["cost_by_candidate_usd"]["C1"]["canonical_cost_usd_decimal"],
+        hist["cost_by_candidate_usd"]["C2"]["canonical_cost_usd_decimal"],
+        hist["cost_by_candidate_usd"]["C3"]["canonical_cost_usd_decimal"],
+        hist["source_artifact"],
+        "AUTHORITATIVE_RECEIPT_COST_AVAILABLE_ONLY",
+        "W06-DEV-SELECT-001",
+        "W06-DEV-SELECT-060",
+        "P2 and P3 are not authorized",
+        persisted_prep_payload[
+            "proposed_project_owner_authorization_text_sha256"
+        ],
+    ]
+    for expected_substr in required_canonical_substrings:
+        assert (
+            expected_substr in report_text
+        ), f"Missing canonical authority in research report: {expected_substr!r}"
+
+    forbidden_stale_substrings = [
+        "f4d91d7e23d0d5084020e3190f1ee8a8eb2ea3931a3d720eeab0e4028d1bf02a",
+        "74e7faaa3f9af6a4ab1ffeb7c10fdbe8fb42dc0fb6f4a835db5157c6beebad6e",
+        "b14357613aa7a736f24cd4fdbe3a221ec52cd8ec2b7ffefeb8efaa89f2d80e0a",
+        "8beec9cfba8cc38a7c7cc3cc821edefbd1fd6c278ebca8dc412276a0b74decf1",
+        "2fb2e38caaa67f5eb6a2ca14eb585f0e233eb5d46fe2dc407e9458931a1bc06b",
+        "512c693bf728fa0ba37da449fe22773e6261482041f0bc79a96f62f2ba48bf50",
+        "3129a973e8e62921e780ef25f00ba3c5b2ec9950b5b5f19ba7a5e8f8fd355fa5",
+        "0735bb9dc60d7e8fb94c8e71a9cf3a72844ff8cc061f47c4f6cb4cd5e572b80c",
+        "120000",
+        "2.8388",
+        "0.1449",
+        "1.0156",
+        "1.6783",
+        "w06_dev_tune_live_results_v1_manifest.json",
+        "D021..D080",
+    ]
+    for stale_substr in forbidden_stale_substrings:
+        assert (
+            stale_substr not in report_text
+        ), f"Stale value found in research report: {stale_substr!r}"

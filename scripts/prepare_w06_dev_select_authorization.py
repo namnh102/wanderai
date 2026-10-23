@@ -146,9 +146,16 @@ from select_w06_dev_tune_prompt import (  # noqa: E402
 )
 
 try:
-    import httpx as httpx2
-except Exception:  # pragma: no cover
-    httpx2 = httpx  # type: ignore[assignment]
+    import httpx2
+except Exception as _httpx2_exc:  # pragma: no cover
+    raise RuntimeError(
+        "CRITICAL_DEPENDENCY_MISSING: Frozen package 'httpx2' is required for W06 offline network kill-switch."
+    ) from _httpx2_exc
+
+if getattr(httpx2, "__name__", None) != "httpx2" or httpx2 is httpx:
+    raise RuntimeError(
+        "CRITICAL_DEPENDENCY_ALIAS_ERROR: 'httpx2' must be the actual installed httpx2 package, not an alias of httpx."
+    )
 
 
 # ==============================================================================
@@ -273,6 +280,16 @@ class NetworkKillSwitchGuard:
         self._orig_httpx_async_transport = httpx.AsyncHTTPTransport.handle_async_request
         self._orig_httpx2_send = httpx2.Client.send
         self._orig_httpx2_async_send = httpx2.AsyncClient.send
+        self._orig_httpx2_transport = (
+            httpx2.HTTPTransport.handle_request
+            if hasattr(httpx2, "HTTPTransport")
+            else None
+        )
+        self._orig_httpx2_async_transport = (
+            httpx2.AsyncHTTPTransport.handle_async_request
+            if hasattr(httpx2, "AsyncHTTPTransport")
+            else None
+        )
 
         def _deny(label: str) -> Any:
             def _raiser(*_a: Any, **_kw: Any) -> Any:
@@ -295,6 +312,14 @@ class NetworkKillSwitchGuard:
         )
         httpx2.Client.send = _deny("httpx2.Client.send")  # type: ignore[method-assign]
         httpx2.AsyncClient.send = _deny("httpx2.AsyncClient.send")  # type: ignore[method-assign]
+        if hasattr(httpx2, "HTTPTransport"):
+            httpx2.HTTPTransport.handle_request = _deny(  # type: ignore[method-assign]
+                "httpx2.HTTPTransport.handle_request"
+            )
+        if hasattr(httpx2, "AsyncHTTPTransport"):
+            httpx2.AsyncHTTPTransport.handle_async_request = _deny(  # type: ignore[method-assign]
+                "httpx2.AsyncHTTPTransport.handle_async_request"
+            )
         return self
 
     def __exit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
@@ -310,6 +335,18 @@ class NetworkKillSwitchGuard:
         )
         httpx2.Client.send = self._orig_httpx2_send  # type: ignore[method-assign]
         httpx2.AsyncClient.send = self._orig_httpx2_async_send  # type: ignore[method-assign]
+        if (
+            hasattr(httpx2, "HTTPTransport")
+            and self._orig_httpx2_transport is not None
+        ):
+            httpx2.HTTPTransport.handle_request = self._orig_httpx2_transport  # type: ignore[method-assign]
+        if (
+            hasattr(httpx2, "AsyncHTTPTransport")
+            and self._orig_httpx2_async_transport is not None
+        ):
+            httpx2.AsyncHTTPTransport.handle_async_request = (  # type: ignore[method-assign]
+                self._orig_httpx2_async_transport
+            )
 
     @contextlib.contextmanager
     def activate(self) -> Iterator["NetworkKillSwitchGuard"]:
