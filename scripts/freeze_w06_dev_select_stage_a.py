@@ -669,31 +669,26 @@ def load_verified_stage_a_authorities(
 # 5. STRONG CRYPTOGRAPHIC STAGE-A DOWNSTREAM VERIFIER (SECTION 17)
 # ==============================================================================
 
-_CACHED_CANONICAL_STAGE_A_AUTHORITIES: dict[str, Any] | None = None
+
+def _resolve_effective_repo_root(repo_root: Path = REPO_ROOT) -> Path:
+    if (
+        repo_root
+        / "apps"
+        / "ai-service"
+        / "app"
+        / "evaluation"
+        / "dev_live_runner.py"
+    ).is_file():
+        return repo_root
+    return REPO_ROOT
 
 
 def _get_canonical_stage_a_authorities(
     repo_root: Path = REPO_ROOT,
 ) -> dict[str, Any]:
-    global _CACHED_CANONICAL_STAGE_A_AUTHORITIES
-    effective_root = (
-        repo_root
-        if (
-            repo_root
-            / "apps"
-            / "ai-service"
-            / "app"
-            / "evaluation"
-            / "dev_live_runner.py"
-        ).is_file()
-        else REPO_ROOT
-    )
-    if effective_root == REPO_ROOT and _CACHED_CANONICAL_STAGE_A_AUTHORITIES is not None:
-        return _CACHED_CANONICAL_STAGE_A_AUTHORITIES
-    auths = load_verified_stage_a_authorities(effective_root)
-    if effective_root == REPO_ROOT:
-        _CACHED_CANONICAL_STAGE_A_AUTHORITIES = auths
-    return auths
+    """Statelessly load and verify all canonical Stage-A authorities from disk on every invocation (no positive cache)."""
+    effective_root = _resolve_effective_repo_root(repo_root)
+    return load_verified_stage_a_authorities(effective_root)
 
 
 def is_verified_downstream_w06_dev_select_stage_a_freeze_receipt(
@@ -703,6 +698,7 @@ def is_verified_downstream_w06_dev_select_stage_a_freeze_receipt(
 ) -> bool:
     """Return True ONLY if `path` is the exact, cryptographically verified W06-DEV-SELECT-STAGE-A-FREEZE-01 Stage-A receipt (Section 17).
 
+    Stateless: re-reads and re-verifies all upstream disk authorities on every invocation.
     Never accepts by filename or `artifact_id` alone.
     """
     if (
@@ -727,19 +723,8 @@ def is_verified_downstream_w06_dev_select_stage_a_freeze_receipt(
             raw_dict, context="DOWNSTREAM_DEV_SELECT_STAGE_A_RECEIPT_VERIFICATION"
         )
 
-        auths = _get_canonical_stage_a_authorities(repo_root)
-        effective_root = (
-            repo_root
-            if (
-                repo_root
-                / "apps"
-                / "ai-service"
-                / "app"
-                / "evaluation"
-                / "dev_live_runner.py"
-            ).is_file()
-            else REPO_ROOT
-        )
+        effective_root = _resolve_effective_repo_root(repo_root)
+        auths = _get_canonical_stage_a_authorities(effective_root)
 
         verification_dict = dict(raw_dict)
         real_token = str(verification_dict.get("stage_a_process_token", ""))

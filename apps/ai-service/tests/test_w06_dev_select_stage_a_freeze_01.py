@@ -662,3 +662,176 @@ def test_source_develop_provenance_fail_closed_and_shallow_ci_fallback() -> None
     )
     assert shallow_ok["verified"] is True
     assert shallow_ok["shallow_repository_fallback_used"] is True
+
+
+def test_downstream_verifier_has_no_positive_cache_and_reloads_authorities_each_call(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Section 2 & 5: Verify _CACHED_CANONICAL_STAGE_A_AUTHORITIES is removed and load_verified_stage_a_authorities is called on every invocation."""
+    assert not hasattr(dsa_mod, "_CACHED_CANONICAL_STAGE_A_AUTHORITIES")
+
+    orig_loader = dsa_mod.load_verified_stage_a_authorities
+    call_count = 0
+
+    def _wrapped_loader(repo_root: Path = REPO_ROOT) -> dict[str, object]:
+        nonlocal call_count
+        call_count += 1
+        return orig_loader(repo_root)
+
+    monkeypatch.setattr(
+        dsa_mod, "load_verified_stage_a_authorities", _wrapped_loader
+    )
+
+    stage_a_path = REPO_ROOT / dsa_mod.STAGE_A_RECEIPT_REL_PATH
+    assert (
+        dsa_mod.is_verified_downstream_w06_dev_select_stage_a_freeze_receipt(
+            stage_a_path, repo_root=REPO_ROOT
+        )
+        is True
+    )
+    assert (
+        dsa_mod.is_verified_downstream_w06_dev_select_stage_a_freeze_receipt(
+            stage_a_path, repo_root=REPO_ROOT
+        )
+        is True
+    )
+    assert call_count == 2
+
+
+def test_saa_stat_01_to_04_same_process_upstream_tamper_rejected(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Sections 3, 4, 6, 7: Prove stateless same-process fail-closed behavior across SAA-STAT-01..04, task-audit verifier, and historical firewalls."""
+    stage_a_path = REPO_ROOT / dsa_mod.STAGE_A_RECEIPT_REL_PATH
+    audit_path = REPO_ROOT / dsa_mod.TASK_AUDIT_RECEIPT_REL_PATH
+    orig_read_bytes = Path.read_bytes
+    tampered_rel_paths: set[str] = set()
+
+    def _tampering_read_bytes(self: Path) -> bytes:
+        raw = orig_read_bytes(self)
+        try:
+            rel = self.resolve().relative_to(REPO_ROOT.resolve()).as_posix()
+        except Exception:
+            rel = ""
+        if rel in tampered_rel_paths:
+            return raw + b"\n"
+        return raw
+
+    monkeypatch.setattr(Path, "read_bytes", _tampering_read_bytes)
+
+    def _assert_stateless_tamper_cycle(target_rel_path: str) -> None:
+        try:
+            # A. Verify legitimate downstream Stage-A receipt, task-audit receipt, and historical firewalls => True / clean
+            assert (
+                dsa_mod.is_verified_downstream_w06_dev_select_stage_a_freeze_receipt(
+                    stage_a_path, repo_root=REPO_ROOT
+                )
+                is True
+            )
+            assert (
+                dsa_mod.is_verified_downstream_w06_dev_select_stage_a_task_audit_receipt(
+                    audit_path, repo_root=REPO_ROOT
+                )
+                is True
+            )
+            assert (
+                dsa_mod.is_verified_downstream_w06_dev_select_stage_a_file(
+                    stage_a_path, repo_root=REPO_ROOT
+                )
+                is True
+            )
+            assert (
+                dsa_mod.is_verified_downstream_w06_dev_select_stage_a_file(
+                    audit_path, repo_root=REPO_ROOT
+                )
+                is True
+            )
+            fw_auth_clean = ds_auth_mod.verify_pre_stage_a_firewall(REPO_ROOT)
+            assert fw_auth_clean["stage_a_created"] is False
+            fw_prep_clean = ds_prep_mod.verify_pre_authorization_firewall(REPO_ROOT)
+            assert fw_prep_clean["dev_select_stage_a_receipt_created"] is False
+
+            # B. WITHOUT restarting Python process, tamper the upstream authority read from disk
+            tampered_rel_paths.add(target_rel_path)
+
+            # C & D. Call the same downstream verifiers and historical firewalls again => require False / fail closed
+            assert (
+                dsa_mod.is_verified_downstream_w06_dev_select_stage_a_freeze_receipt(
+                    stage_a_path, repo_root=REPO_ROOT
+                )
+                is False
+            )
+            assert (
+                dsa_mod.is_verified_downstream_w06_dev_select_stage_a_task_audit_receipt(
+                    audit_path, repo_root=REPO_ROOT
+                )
+                is False
+            )
+            assert (
+                dsa_mod.is_verified_downstream_w06_dev_select_stage_a_file(
+                    stage_a_path, repo_root=REPO_ROOT
+                )
+                is False
+            )
+            assert (
+                dsa_mod.is_verified_downstream_w06_dev_select_stage_a_file(
+                    audit_path, repo_root=REPO_ROOT
+                )
+                is False
+            )
+            fw_auth_tampered = ds_auth_mod.verify_pre_stage_a_firewall(REPO_ROOT)
+            assert fw_auth_tampered["stage_a_created"] is True
+            assert (
+                dsa_mod.STAGE_A_RECEIPT_REL_PATH
+                in fw_auth_tampered["forbidden_dev_select_stage_a_files"]
+            )
+            fw_prep_tampered = ds_prep_mod.verify_pre_authorization_firewall(REPO_ROOT)
+            assert fw_prep_tampered["dev_select_stage_a_receipt_created"] is True
+            assert (
+                dsa_mod.STAGE_A_RECEIPT_REL_PATH
+                in fw_prep_tampered["forbidden_dev_select_stage_a_files"]
+            )
+        finally:
+            # E. Restore exact bytes
+            tampered_rel_paths.discard(target_rel_path)
+
+        # F. Verify again => True / clean
+        assert (
+            dsa_mod.is_verified_downstream_w06_dev_select_stage_a_freeze_receipt(
+                stage_a_path, repo_root=REPO_ROOT
+            )
+            is True
+        )
+        assert (
+            dsa_mod.is_verified_downstream_w06_dev_select_stage_a_task_audit_receipt(
+                audit_path, repo_root=REPO_ROOT
+            )
+            is True
+        )
+        assert (
+            dsa_mod.is_verified_downstream_w06_dev_select_stage_a_file(
+                stage_a_path, repo_root=REPO_ROOT
+            )
+            is True
+        )
+        assert (
+            dsa_mod.is_verified_downstream_w06_dev_select_stage_a_file(
+                audit_path, repo_root=REPO_ROOT
+            )
+            is True
+        )
+
+    # SAA-STAT-01: execution plan bytes tampered after first successful verification
+    _assert_stateless_tamper_cycle(dsa_mod.DEV_SELECT_PLAN_REL_PATH)
+
+    # SAA-STAT-02: prompt-freeze bytes tampered after first successful verification
+    _assert_stateless_tamper_cycle(dsa_mod.PROMPT_FREEZE_REL_PATH)
+
+    # SAA-STAT-03: live authorization bytes tampered after first successful verification
+    _assert_stateless_tamper_cycle(dsa_mod.AUTHORIZATION_REL_PATH)
+
+    # SAA-STAT-04: scientific bundle authority tampered after first successful verification
+    _assert_stateless_tamper_cycle(
+        "apps/ai-service/app/evaluation/dev_live_runner.py"
+    )
