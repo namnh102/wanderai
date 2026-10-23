@@ -1,0 +1,209 @@
+{
+  "plan_id": "W06-DEV-SELECT-042-plan-01",
+  "scenario_id": "W06-DEV-SELECT-042",
+  "destination_slug": "ha-long",
+  "destination": "Hạ Long",
+  "total_days": 2,
+  "overview": "Hai ngày khám phá ẩm thực tại Bãi Cháy và Hòn Gai, kết hợp chợ địa phương, nhà hàng và cà phê. Nhịp đi thong thả, ưu tiên taxi cho các chặng xa và không lặp lại địa điểm. Chi phí hoạt động dự kiến 800.000 VND/người; chưa bao gồm lưu trú và di chuyển đến hoặc rời Hạ Long.",
+  "best_time_to_visit": "Tháng 10–12 phù hợp cho hành trình ẩm thực và dạo phố. Ngày 09–10/12 có thể se lạnh; nên kiểm tra dự báo thời tiết sát ngày đi.",
+  "general_tips": [
+    "Các khoản tiền là dự toán cho một người, không phải báo giá đã xác nhận; còn 200.000 VND trong ngân sách trần để dự phòng.",
+    "Nếu ngân sách 1.000.000 VND phải bao gồm cả lưu trú và vé đi lại liên tỉnh, cần xác nhận các khoản này trước khi đặt dịch vụ.",
+    "Hỏi giá theo suất hoặc theo trọng lượng, phí chế biến và phụ thu trước khi gọi hải sản; ưu tiên món chín và thông báo dị ứng.",
+    "Địa điểm chưa có giờ mở cửa trong danh mục cần được liên hệ xác nhận trước chuyến đi.",
+    "Các khoảng trống giữa hoạt động là thời gian tự do, không phải dịch vụ nghỉ ngơi hoặc bữa ăn đã được tính phí."
+  ],
+  "budget_analysis": {
+    "total_budget": 1000000,
+    "estimated_cost": 800000,
+    "currency": "VND",
+    "is_over_budget": false,
+    "variance": 200000
+  },
+  "days": [
+    {
+      "day_number": 1,
+      "date": "2026-12-09",
+      "title": "Bãi Cháy: chợ địa phương, hải sản và sữa chua",
+      "items": [
+        {
+          "order_index": 1,
+          "start_time": "08:30",
+          "end_time": "09:30",
+          "activity_kind": "POI_VISIT",
+          "activity": "Khám phá nguyên liệu địa phương và chọn đồ ăn nhẹ",
+          "place_name": "Chợ Cái Dăm",
+          "place_id": "96523873-1b85-4d2f-b85c-cb3f5593091b",
+          "notes": "Trong giờ mở cửa thứ Hai–thứ Bảy 08:00–16:00. Khoản dự toán dành cho đồ ăn nhẹ; hỏi giá trước khi mua.",
+          "estimated_cost": 60000,
+          "transport_mode": null
+        },
+        {
+          "order_index": 2,
+          "start_time": "09:30",
+          "end_time": "09:45",
+          "activity_kind": "TRANSIT_ONLY",
+          "activity": "Di chuyển đến quán cà phê",
+          "place_name": null,
+          "place_id": null,
+          "notes": "Chặng ngắn trong khu vực Cái Dăm; dự toán theo một lượt taxi.",
+          "estimated_cost": 25000,
+          "transport_mode": "taxi"
+        },
+        {
+          "order_index": 3,
+          "start_time": "09:45",
+          "end_time": "10:45",
+          "activity_kind": "POI_VISIT",
+          "activity": "Uống cà phê và thư giãn",
+          "place_name": "Orchid Coffee",
+          "place_id": "9215a3fe-8306-453f-b0ab-8201d6753fbc",
+          "notes": "Giờ mở cửa trong danh mục: 07:30–22:30 hằng ngày. Dự toán một đồ uống.",
+          "estimated_cost": 40000,
+          "transport_mode": null
+        },
+        {
+          "order_index": 4,
+          "start_time": "11:15",
+          "end_time": "11:30",
+          "activity_kind": "TRANSIT_ONLY",
+          "activity": "Di chuyển đến nhà hàng ăn trưa",
+          "place_name": null,
+          "place_id": null,
+          "notes": "Đi taxi chặng ngắn để hạn chế đi bộ và giữ nhịp thoải mái.",
+          "estimated_cost": 25000,
+          "transport_mode": "taxi"
+        },
+        {
+          "order_index": 5,
+          "start_time": "11:30",
+          "end_time": "13:00",
+          "activity_kind": "POI_VISIT",
+          "activity": "Ăn trưa với các món hải sản trong hạn mức",
+          "place_name": "Nhà hàng Thủy Chung",
+          "place_id": "66c19c4f-735a-4ce1-bced-5709769697c5",
+          "notes": "Xác nhận giờ phục vụ và thực đơn. Ưu tiên suất cá nhân hoặc món định giá rõ ràng; tránh gọi hải sản theo cân khi chưa chốt giá.",
+          "estimated_cost": 160000,
+          "transport_mode": null
+        },
+        {
+          "order_index": 6,
+          "start_time": "13:00",
+          "end_time": "13:20",
+          "activity_kind": "TRANSIT_ONLY",
+          "activity": "Di chuyển đến điểm ăn tráng miệng",
+          "place_name": null,
+          "place_id": null,
+          "notes": "Dự trù khoảng 20 phút cho chặng nội đô.",
+          "estimated_cost": 40000,
+          "transport_mode": "taxi"
+        },
+        {
+          "order_index": 7,
+          "start_time": "13:20",
+          "end_time": "14:00",
+          "activity_kind": "POI_VISIT",
+          "activity": "Thưởng thức sữa chua trân châu Hạ Long",
+          "place_name": "Sữa chua trân châu Hạ Long cơ sở 00",
+          "place_id": "b57b3f7d-9704-44b0-8139-19bea1998391",
+          "notes": "Dự toán một phần tráng miệng. Xác nhận giờ hoạt động trước khi đến.",
+          "estimated_cost": 35000,
+          "transport_mode": null
+        }
+      ],
+      "day_cost": 385000
+    },
+    {
+      "day_number": 2,
+      "date": "2026-12-10",
+      "title": "Hòn Gai: trải nghiệm chợ, món chay và bữa chiều",
+      "items": [
+        {
+          "order_index": 1,
+          "start_time": "09:00",
+          "end_time": "10:15",
+          "activity_kind": "POI_VISIT",
+          "activity": "Tìm hiểu đặc sản và thưởng thức đồ ăn nhẹ tại chợ",
+          "place_name": "Chợ Hạ Long II",
+          "place_id": "6215446b-2fdd-4014-aacf-23de6e45e264",
+          "notes": "Dự toán đồ ăn nhẹ, không bao gồm mua quà. Chọn hàng đang phục vụ, chế biến sạch và công khai giá.",
+          "estimated_cost": 60000,
+          "transport_mode": null
+        },
+        {
+          "order_index": 2,
+          "start_time": "10:45",
+          "end_time": "11:00",
+          "activity_kind": "TRANSIT_ONLY",
+          "activity": "Di chuyển đến quán ăn trưa",
+          "place_name": null,
+          "place_id": null,
+          "notes": "Chặng ngắn trong khu vực Hòn Gai.",
+          "estimated_cost": 25000,
+          "transport_mode": "taxi"
+        },
+        {
+          "order_index": 3,
+          "start_time": "11:00",
+          "end_time": "12:15",
+          "activity_kind": "POI_VISIT",
+          "activity": "Ăn trưa với món chay để đổi vị",
+          "place_name": "Dược Điến Chay Quán",
+          "place_id": "1a1c68b4-fbd1-49d4-9f17-3243b34b57e0",
+          "notes": "Giờ mở cửa trong danh mục: 07:00–22:00. Chọn suất ăn hoặc các món nhỏ phù hợp ngân sách.",
+          "estimated_cost": 90000,
+          "transport_mode": null
+        },
+        {
+          "order_index": 4,
+          "start_time": "15:20",
+          "end_time": "15:30",
+          "activity_kind": "TRANSIT_ONLY",
+          "activity": "Đi bộ đến quán cà phê gần đó",
+          "place_name": null,
+          "place_id": null,
+          "notes": "Hai địa điểm cách nhau khoảng vài trăm mét; thời gian thực tế tùy lối đi.",
+          "estimated_cost": 0,
+          "transport_mode": "walking"
+        },
+        {
+          "order_index": 5,
+          "start_time": "15:30",
+          "end_time": "16:15",
+          "activity_kind": "POI_VISIT",
+          "activity": "Nghỉ chân với một đồ uống",
+          "place_name": "Highlands Coffee",
+          "place_id": "85303289-9746-4a42-b0f0-a555ce2bfd0e",
+          "notes": "Chi nhánh theo tọa độ trong danh mục tại khu vực Hòn Gai; xác nhận giờ mở cửa.",
+          "estimated_cost": 40000,
+          "transport_mode": null
+        },
+        {
+          "order_index": 6,
+          "start_time": "16:15",
+          "end_time": "16:40",
+          "activity_kind": "TRANSIT_ONLY",
+          "activity": "Di chuyển đến nhà hàng cho bữa chiều",
+          "place_name": null,
+          "place_id": null,
+          "notes": "Dự trù 25 phút di chuyển nội đô bằng taxi.",
+          "estimated_cost": 50000,
+          "transport_mode": "taxi"
+        },
+        {
+          "order_index": 7,
+          "start_time": "17:00",
+          "end_time": "18:15",
+          "activity_kind": "POI_VISIT",
+          "activity": "Ăn chiều và khám phá thực đơn địa phương",
+          "place_name": "Mai Ly",
+          "place_id": "e21d0072-a8ef-4279-83b3-b138909b3826",
+          "notes": "Giờ mở cửa trong danh mục: 09:00–21:00 hằng ngày. Hỏi món địa phương đang phục vụ và chốt tổng tiền trước khi gọi.",
+          "estimated_cost": 150000,
+          "transport_mode": null
+        }
+      ],
+      "day_cost": 415000
+    }
+  ]
+}

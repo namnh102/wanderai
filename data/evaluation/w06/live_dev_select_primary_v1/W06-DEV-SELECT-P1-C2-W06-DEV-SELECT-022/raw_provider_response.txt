@@ -1,0 +1,161 @@
+{
+  "plan_id": "W06-DEV-SELECT-022-plan-01",
+  "scenario_id": "W06-DEV-SELECT-022",
+  "destination_slug": "da-nang",
+  "destination": "Đà Nẵng",
+  "total_days": 2,
+  "overview": "Lịch trình ẩm thực tiết kiệm ngày 12–13/11/2026 dành cho một người, tập trung vào mì Quảng, bánh xèo và các chợ địa phương. Mỗi ngày có ba điểm ăn uống, không lặp địa điểm; tổng chi phí ăn uống và di chuyển giữa các điểm dự kiến 590.000 VND.",
+  "best_time_to_visit": "Đà Nẵng thường thuận tiện tham quan hơn vào khoảng tháng 2–8. Với chuyến đi tháng 11, cần theo dõi mưa lớn và cảnh báo thời tiết; ưu tiên ăn uống trong khu vực có mái che.",
+  "general_tips": [
+    "Chi phí là ước tính cho một người, không phải báo giá đã xác nhận; hỏi giá trước khi gọi món hoặc mua đặc sản.",
+    "Tổng dự toán chỉ gồm các hoạt động và chặng di chuyển được liệt kê, chưa gồm lưu trú, vé đến Đà Nẵng và đưa đón sân bay.",
+    "Còn 410.000 VND trong ngân sách trần để dự phòng; nếu cần lưu trú, phải kiểm tra giá phòng trước khi chốt chuyến đi.",
+    "Những địa điểm có opening_hours bằng null chưa được xác nhận giờ hoạt động; kiểm tra lại trước ngày đi, đặc biệt các quầy ẩm thực trong chợ.",
+    "Ưu tiên món nấu chín, hỏi thành phần nước chấm nếu dị ứng và mang áo mưa. Các khoảng trống giữa bữa ăn là thời gian tự do, không có hoạt động đặt trước."
+  ],
+  "budget_analysis": {
+    "total_budget": 1000000,
+    "estimated_cost": 590000,
+    "currency": "VND",
+    "is_over_budget": false,
+    "variance": -410000
+  },
+  "days": [
+    {
+      "day_number": 1,
+      "date": "2026-11-12",
+      "title": "Ẩm thực Hải Châu: mì Quảng, Chợ Cồn và bánh xèo",
+      "items": [
+        {
+          "order_index": 1,
+          "start_time": "08:00",
+          "end_time": "08:45",
+          "activity_kind": "POI_VISIT",
+          "activity": "Ăn sáng với một phần mì Quảng",
+          "place_name": "Mi Quang 1A",
+          "place_id": "182869e0-13e2-4504-8383-46002589ee9c",
+          "notes": "Khung giờ nằm trong giờ mở cửa 06:00–21:00 của danh mục. Dự toán gồm một phần mì và nước uống đơn giản; hỏi giá món thêm.",
+          "estimated_cost": 50000,
+          "transport_mode": null
+        },
+        {
+          "order_index": 2,
+          "start_time": "10:40",
+          "end_time": "11:00",
+          "activity_kind": "TRANSIT_ONLY",
+          "activity": "Di chuyển từ điểm ăn sáng đến chợ cho bữa trưa",
+          "place_name": null,
+          "place_id": null,
+          "notes": "Chặng nội đô ngắn; đặt xe ôm công nghệ và kiểm tra giá trước khi xác nhận.",
+          "estimated_cost": 20000,
+          "transport_mode": "motorbike"
+        },
+        {
+          "order_index": 3,
+          "start_time": "11:00",
+          "end_time": "12:30",
+          "activity_kind": "POI_VISIT",
+          "activity": "Khám phá ẩm thực chợ và ăn trưa với các phần nhỏ",
+          "place_name": "Chợ Cồn",
+          "place_id": "a302989c-08f1-5ca2-8022-a84c1a424018",
+          "notes": "Dành tối đa 100.000 VND cho bữa trưa, món ăn vặt và nước uống. Chọn quầy đang hoạt động, hỏi giá trước; giờ bán từng quầy chưa được xác nhận.",
+          "estimated_cost": 100000,
+          "transport_mode": null
+        },
+        {
+          "order_index": 4,
+          "start_time": "17:00",
+          "end_time": "17:20",
+          "activity_kind": "TRANSIT_ONLY",
+          "activity": "Di chuyển từ khu vực chợ đến điểm ăn tối",
+          "place_name": null,
+          "place_id": null,
+          "notes": "Dự trù 20 phút cho xe ôm công nghệ, có thể lâu hơn nếu mưa hoặc đông xe.",
+          "estimated_cost": 25000,
+          "transport_mode": "motorbike"
+        },
+        {
+          "order_index": 5,
+          "start_time": "17:20",
+          "end_time": "18:20",
+          "activity_kind": "POI_VISIT",
+          "activity": "Ăn tối với bánh xèo, rau và nước chấm",
+          "place_name": "Bánh Xèo Bà Dưỡng",
+          "place_id": "62a874a9-13e2-44d2-95b5-30e980b98965",
+          "notes": "Khung giờ nằm trong giờ mở cửa 09:30–21:30 của danh mục. Gọi lượng vừa đủ cho một người, hỏi giá trước khi thêm món; dự toán gồm nước uống.",
+          "estimated_cost": 80000,
+          "transport_mode": null
+        }
+      ],
+      "day_cost": 275000
+    },
+    {
+      "day_number": 2,
+      "date": "2026-11-13",
+      "title": "Ẩm thực bờ đông: mì Quảng và hai khu chợ",
+      "items": [
+        {
+          "order_index": 1,
+          "start_time": "08:00",
+          "end_time": "08:45",
+          "activity_kind": "POI_VISIT",
+          "activity": "Ăn sáng và trải nghiệm một cách chế biến mì Quảng khác",
+          "place_name": "Mỳ Quảng Cô Sáu",
+          "place_id": "8aeb7e35-cd7a-4b95-b8f8-98b96540563b",
+          "notes": "Khung giờ nằm trong giờ mở cửa 06:00–22:30 của danh mục. Dự toán một phần mì và nước uống đơn giản.",
+          "estimated_cost": 50000,
+          "transport_mode": null
+        },
+        {
+          "order_index": 2,
+          "start_time": "10:30",
+          "end_time": "11:00",
+          "activity_kind": "TRANSIT_ONLY",
+          "activity": "Di chuyển đến khu chợ cho bữa trưa",
+          "place_name": null,
+          "place_id": null,
+          "notes": "Dự trù 30 phút bằng xe ôm công nghệ; giá thực tế phụ thuộc thời tiết và nhu cầu đặt xe.",
+          "estimated_cost": 30000,
+          "transport_mode": "motorbike"
+        },
+        {
+          "order_index": 3,
+          "start_time": "11:00",
+          "end_time": "12:15",
+          "activity_kind": "POI_VISIT",
+          "activity": "Ăn trưa và tìm hiểu các món ăn vặt tại chợ",
+          "place_name": "Chợ Bắc Mỹ An",
+          "place_id": "c2afbb07-aaf9-47c1-9877-d17e64422066",
+          "notes": "Chọn một món chính và món ngọt hoặc ăn vặt tùy quầy đang bán, giới hạn tổng chi 100.000 VND. Danh mục chưa cung cấp giờ mở cửa.",
+          "estimated_cost": 100000,
+          "transport_mode": null
+        },
+        {
+          "order_index": 4,
+          "start_time": "17:30",
+          "end_time": "18:00",
+          "activity_kind": "TRANSIT_ONLY",
+          "activity": "Di chuyển đến chợ đêm để ăn tối",
+          "place_name": null,
+          "place_id": null,
+          "notes": "Dự trù 30 phút bằng xe ôm công nghệ. Nếu mưa lớn, kiểm tra điều kiện di chuyển và hoạt động của chợ trước khi đi.",
+          "estimated_cost": 35000,
+          "transport_mode": "motorbike"
+        },
+        {
+          "order_index": 5,
+          "start_time": "18:00",
+          "end_time": "19:30",
+          "activity_kind": "POI_VISIT",
+          "activity": "Dạo chợ đêm và ăn tối theo ngân sách cố định",
+          "place_name": "Chợ Đêm Sơn Trà",
+          "place_id": "9a2ca486-437d-4044-8541-d34d911d4fb4",
+          "notes": "Khung giờ nằm trong giờ mở cửa 18:00–23:00 của danh mục. Ưu tiên món có niêm yết giá, tổng ăn uống tối đa 100.000 VND; không tính mua quà vào dự toán.",
+          "estimated_cost": 100000,
+          "transport_mode": null
+        }
+      ],
+      "day_cost": 315000
+    }
+  ]
+}

@@ -1026,6 +1026,10 @@ def verify_no_live_execution_or_stage_b_artifacts(
     forbidden_dev_select_live_dirs: list[str] = []
 
     if w06_dir.is_dir():
+        from freeze_w06_dev_select_live_results import (
+            is_path_in_downstream_w06_dev_select_live_results_scope,
+            is_verified_downstream_w06_dev_select_live_results_tree,
+        )
         from freeze_w06_dev_tune_live_results import (
             is_path_in_downstream_w06_dev_tune_live_results_scope,
             is_verified_downstream_w06_dev_tune_live_results_tree,
@@ -1037,6 +1041,9 @@ def verify_no_live_execution_or_stage_b_artifacts(
         verified_downstream_results_tree = (
             is_verified_downstream_w06_dev_tune_live_results_tree(repo_root)
         )
+        verified_downstream_dev_select_results_tree = (
+            is_verified_downstream_w06_dev_select_live_results_tree(repo_root)
+        )
 
         for path in sorted(w06_dir.rglob("*")):
             rel = path.relative_to(repo_root).as_posix()
@@ -1044,6 +1051,11 @@ def verify_no_live_execution_or_stage_b_artifacts(
             is_verified_downstream_results = (
                 verified_downstream_results_tree
                 and is_path_in_downstream_w06_dev_tune_live_results_scope(
+                    path, repo_root=repo_root
+                )
+            ) or (
+                verified_downstream_dev_select_results_tree
+                and is_path_in_downstream_w06_dev_select_live_results_scope(
                     path, repo_root=repo_root
                 )
             )

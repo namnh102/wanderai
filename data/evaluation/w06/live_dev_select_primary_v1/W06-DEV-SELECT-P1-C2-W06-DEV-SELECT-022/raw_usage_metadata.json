@@ -1,0 +1,32 @@
+{
+  "candidate_id": "C2",
+  "normalized_usage_metadata": {
+    "cache_creation_input_tokens": null,
+    "cache_read_input_tokens": null,
+    "cached_input_tokens": 0,
+    "cached_tokens": 0,
+    "candidate_id": "C2",
+    "input_tokens": 29633,
+    "output_tokens": 2402,
+    "provider": "openai",
+    "reasoning_tokens": 292,
+    "thinking_tokens": null,
+    "thought_tokens": null,
+    "total_tokens": 32035,
+    "usage_present": true
+  },
+  "provider": "openai",
+  "raw_usage_metadata": {
+    "completion_tokens": 2402,
+    "completion_tokens_details": {
+      "reasoning_tokens": 292
+    },
+    "prompt_tokens": 29633,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    },
+    "total_tokens": 32035
+  },
+  "run_id": "W06-DEV-SELECT-P1-C2-W06-DEV-SELECT-022",
+  "usage_present": true
+}

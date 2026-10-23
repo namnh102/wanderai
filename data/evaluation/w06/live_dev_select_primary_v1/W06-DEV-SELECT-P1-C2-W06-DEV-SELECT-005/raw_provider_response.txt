@@ -1,0 +1,233 @@
+{
+  "plan_id": "W06-DEV-SELECT-005-plan-01",
+  "scenario_id": "W06-DEV-SELECT-005",
+  "destination_slug": "ha-noi",
+  "destination": "Hà Nội",
+  "total_days": 2,
+  "overview": "Lịch trình tiết kiệm dành cho một người, tập trung vào cà phê, món Việt và chợ đêm, kết hợp một điểm văn hóa. Các điểm được nhóm theo khu vực để ưu tiên đi bộ, không lặp lại địa điểm. Chi phí hoạt động dự kiến 695.000 VND, chưa gồm lưu trú và di chuyển đến hoặc rời Hà Nội.",
+  "best_time_to_visit": "Cuối tháng 11 thường phù hợp để đi bộ và thưởng thức cà phê tại Hà Nội; nên mang áo khoác nhẹ và kiểm tra dự báo thời tiết trước chuyến đi. Chợ đêm được xếp vào tối thứ Sáu, ngày 27/11/2026, đúng khung mở cửa trong danh mục.",
+  "general_tips": [
+    "Giá ăn uống, vé và di chuyển là ước tính cho một người; kiểm tra thực đơn và giá thực tế trước khi sử dụng dịch vụ.",
+    "Các quán có opening_hours để trống trong danh mục chưa có giờ hoạt động được xác nhận; nên liên hệ trước chuyến đi.",
+    "Ưu tiên đi bộ giữa các điểm gần nhau, mang giày thoải mái và chú ý xe máy khi qua đường.",
+    "Giữ lại 305.000 VND chưa phân bổ để dự phòng phát sinh; chi phí lưu trú và đi đến hoặc rời Hà Nội cần được tính riêng.",
+    "Các khoảng trống giữa hoạt động là thời gian linh hoạt, không bao gồm dịch vụ hay địa điểm ngoài lịch trình."
+  ],
+  "budget_analysis": {
+    "total_budget": 1000000,
+    "estimated_cost": 695000,
+    "currency": "VND",
+    "is_over_budget": false,
+    "variance": -305000
+  },
+  "days": [
+    {
+      "day_number": 1,
+      "date": "2026-11-26",
+      "title": "Phở sáng, cà phê và món Việt trong phố cổ",
+      "items": [
+        {
+          "order_index": 1,
+          "start_time": "08:00",
+          "end_time": "08:45",
+          "activity_kind": "POI_VISIT",
+          "activity": "Ăn sáng với phở, khởi đầu ngày khám phá ẩm thực Hà Nội",
+          "place_name": "Pho 10",
+          "place_id": "5350dd97-2f75-45fc-9fc1-1979b08670f7",
+          "notes": "Dự trù một bát phở; khung giờ nằm trong giờ mở cửa 06:00–22:00 của danh mục.",
+          "estimated_cost": 60000,
+          "transport_mode": null
+        },
+        {
+          "order_index": 2,
+          "start_time": "08:45",
+          "end_time": "09:05",
+          "activity_kind": "TRANSIT_ONLY",
+          "activity": "Đi bộ đến quán cà phê tiếp theo",
+          "place_name": null,
+          "place_id": null,
+          "notes": "Dự trù khoảng 20 phút, bao gồm thời gian qua đường.",
+          "estimated_cost": 0,
+          "transport_mode": "walking"
+        },
+        {
+          "order_index": 3,
+          "start_time": "09:05",
+          "end_time": "10:30",
+          "activity_kind": "POI_VISIT",
+          "activity": "Thưởng thức cà phê và thư giãn",
+          "place_name": "Cà Phê Nola",
+          "place_id": "4146f2b7-8289-4309-b7e6-60ba7de3470e",
+          "notes": "Dự trù một đồ uống; hỏi lựa chọn cà phê Việt và giá trên thực đơn. Cần xác nhận giờ mở cửa.",
+          "estimated_cost": 55000,
+          "transport_mode": null
+        },
+        {
+          "order_index": 4,
+          "start_time": "10:30",
+          "end_time": "10:40",
+          "activity_kind": "TRANSIT_ONLY",
+          "activity": "Đi bộ đến địa điểm ăn trưa",
+          "place_name": null,
+          "place_id": null,
+          "notes": "Hai điểm ở gần nhau; dành thêm thời gian tìm lối vào.",
+          "estimated_cost": 0,
+          "transport_mode": "walking"
+        },
+        {
+          "order_index": 5,
+          "start_time": "11:00",
+          "end_time": "12:00",
+          "activity_kind": "POI_VISIT",
+          "activity": "Ăn trưa với món Việt theo phần",
+          "place_name": "Nhà Hàng New Day",
+          "place_id": "0180e390-f144-4efc-849e-00eeb6cb3992",
+          "notes": "Chọn phần ăn vừa đủ và kiểm tra giá trước khi gọi để giữ mức dự trù 100.000 VND.",
+          "estimated_cost": 100000,
+          "transport_mode": null
+        },
+        {
+          "order_index": 6,
+          "start_time": "17:30",
+          "end_time": "17:50",
+          "activity_kind": "TRANSIT_ONLY",
+          "activity": "Đi bộ đến địa điểm ăn tối",
+          "place_name": null,
+          "place_id": null,
+          "notes": "Chặng di chuyển ngắn trong khu trung tâm; khoảng chiều trước đó để tự do, không tính thêm hoạt động trả phí.",
+          "estimated_cost": 0,
+          "transport_mode": "walking"
+        },
+        {
+          "order_index": 7,
+          "start_time": "18:00",
+          "end_time": "19:00",
+          "activity_kind": "POI_VISIT",
+          "activity": "Ăn tối và thử thêm một món Việt khác bữa trưa",
+          "place_name": "Nhà Hàng Little Hanoi",
+          "place_id": "2ae50f31-e1dd-4be4-bffc-680318074f7f",
+          "notes": "Ưu tiên một món chính trong mức dự trù; xác nhận thực đơn và giờ phục vụ trước khi đến.",
+          "estimated_cost": 100000,
+          "transport_mode": null
+        }
+      ],
+      "day_cost": 315000
+    },
+    {
+      "day_number": 2,
+      "date": "2026-11-27",
+      "title": "Cà phê thư thả, ẩm thực Việt và chợ đêm thứ Sáu",
+      "items": [
+        {
+          "order_index": 1,
+          "start_time": "09:00",
+          "end_time": "10:15",
+          "activity_kind": "POI_VISIT",
+          "activity": "Thưởng thức cà phê buổi sáng",
+          "place_name": "Orick Coffee",
+          "place_id": "d4bc8f9b-960a-4009-a71a-1f7f8d81082d",
+          "notes": "Dự trù một đồ uống, không bao gồm bữa sáng. Cần xác nhận giờ hoạt động.",
+          "estimated_cost": 45000,
+          "transport_mode": null
+        },
+        {
+          "order_index": 2,
+          "start_time": "10:15",
+          "end_time": "10:35",
+          "activity_kind": "TRANSIT_ONLY",
+          "activity": "Đi bộ đến địa điểm ăn trưa",
+          "place_name": null,
+          "place_id": null,
+          "notes": "Di chuyển quãng ngắn, có thời gian đệm trước bữa trưa.",
+          "estimated_cost": 0,
+          "transport_mode": "walking"
+        },
+        {
+          "order_index": 3,
+          "start_time": "11:00",
+          "end_time": "12:00",
+          "activity_kind": "POI_VISIT",
+          "activity": "Ăn trưa và khám phá món Việt trên thực đơn",
+          "place_name": "Quán Ăn Ngon - Phan Bội Châu",
+          "place_id": "acb22336-1124-49d5-a279-6357c2b2b445",
+          "notes": "Giới hạn tổng gọi món khoảng 120.000 VND; giờ mở cửa trong danh mục là 06:45–22:00.",
+          "estimated_cost": 120000,
+          "transport_mode": null
+        },
+        {
+          "order_index": 4,
+          "start_time": "12:00",
+          "end_time": "12:25",
+          "activity_kind": "TRANSIT_ONLY",
+          "activity": "Đi bộ đến bảo tàng",
+          "place_name": null,
+          "place_id": null,
+          "notes": "Dành khoảng 25 phút cho chặng đi bộ và qua đường.",
+          "estimated_cost": 0,
+          "transport_mode": "walking"
+        },
+        {
+          "order_index": 5,
+          "start_time": "12:30",
+          "end_time": "14:00",
+          "activity_kind": "POI_VISIT",
+          "activity": "Tìm hiểu đời sống và văn hóa phụ nữ Việt Nam",
+          "place_name": "Bảo tàng Phụ nữ Việt Nam",
+          "place_id": "fb8f1d59-838b-5b8f-9363-0541b1af42d8",
+          "notes": "Chi phí vé tạm tính 40.000 VND, cần kiểm tra lại. Khung tham quan nằm trong giờ mở cửa 08:00–17:00.",
+          "estimated_cost": 40000,
+          "transport_mode": null
+        },
+        {
+          "order_index": 6,
+          "start_time": "14:00",
+          "end_time": "14:10",
+          "activity_kind": "TRANSIT_ONLY",
+          "activity": "Đi bộ đến quán cà phê gần đó",
+          "place_name": null,
+          "place_id": null,
+          "notes": "Chặng rất ngắn; thời gian có đệm để tìm quán.",
+          "estimated_cost": 0,
+          "transport_mode": "walking"
+        },
+        {
+          "order_index": 7,
+          "start_time": "14:10",
+          "end_time": "15:20",
+          "activity_kind": "POI_VISIT",
+          "activity": "Nghỉ chân và thưởng thức đồ uống buổi chiều",
+          "place_name": "Van Viet Cafe",
+          "place_id": "f07bc9a4-337a-4ece-a050-8159adb798d9",
+          "notes": "Dự trù một đồ uống; có thể chọn loại cà phê khác buổi sáng. Cần xác nhận giờ hoạt động.",
+          "estimated_cost": 45000,
+          "transport_mode": null
+        },
+        {
+          "order_index": 8,
+          "start_time": "17:30",
+          "end_time": "18:00",
+          "activity_kind": "TRANSIT_ONLY",
+          "activity": "Di chuyển bằng xe ôm công nghệ đến khu chợ đêm",
+          "place_name": null,
+          "place_id": null,
+          "notes": "Dự trù 30.000 VND; kiểm tra giá trên ứng dụng và đội mũ bảo hiểm.",
+          "estimated_cost": 30000,
+          "transport_mode": "motorbike"
+        },
+        {
+          "order_index": 9,
+          "start_time": "18:00",
+          "end_time": "19:30",
+          "activity_kind": "POI_VISIT",
+          "activity": "Dạo chợ đêm và dùng bữa tối nhẹ với đồ ăn tại chợ",
+          "place_name": "Chợ Đêm Hàng Đào – Đồng Xuân",
+          "place_id": "c41383b0-231b-51a4-90e9-7f146fda7f9f",
+          "notes": "Thứ Sáu, phù hợp giờ mở cửa 18:00–00:00 trong danh mục. Dự trù 100.000 VND cho đồ ăn và nước, không gồm mua sắm; hỏi giá trước khi mua.",
+          "estimated_cost": 100000,
+          "transport_mode": null
+        }
+      ],
+      "day_cost": 380000
+    }
+  ]
+}

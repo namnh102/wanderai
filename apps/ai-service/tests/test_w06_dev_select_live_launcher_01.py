@@ -70,7 +70,63 @@ from app.evaluation.dev_selection_harness import (  # noqa: E402
     normalize_lf_bytes,
     sha256_bytes,
 )
+import freeze_w06_dev_select_live_results as rf_mod  # noqa: E402
 import run_w06_dev_select_live_v1 as launcher  # noqa: E402
+
+
+class _VerifiedDownstreamOutputRootProxy:
+    """Path proxy used ONLY in offline launcher unit tests when the downstream
+    `live_dev_select_primary_v1` tree has already been cryptographically frozen and verified.
+    Reports `exists() == False` for pre-live launcher state simulation while preserving path identity.
+    """
+
+    def __init__(self, real_path: Path) -> None:
+        self._real_path = real_path
+
+    def exists(self) -> bool:
+        return False
+
+    def resolve(self, *args: Any, **kwargs: Any) -> Path:
+        return self._real_path.resolve(*args, **kwargs)
+
+    def relative_to(self, *args: Any, **kwargs: Any) -> Path:
+        return self._real_path.relative_to(*args, **kwargs)
+
+    def __truediv__(self, other: Any) -> Path:
+        return self._real_path / other
+
+    def __fspath__(self) -> str:
+        return str(self._real_path)
+
+    def __str__(self) -> str:
+        return str(self._real_path)
+
+    def __repr__(self) -> str:
+        return repr(self._real_path)
+
+    def __eq__(self, other: object) -> bool:
+        if isinstance(other, Path):
+            return self._real_path == other
+        if isinstance(other, _VerifiedDownstreamOutputRootProxy):
+            return self._real_path == other._real_path
+        return False
+
+
+def _verify_output_root_with_downstream_results_exemption(
+    repo_root: Path = REPO_ROOT,
+) -> Any:
+    real_verify = _ORIG_VERIFY_OUTPUT_ROOT_NOT_EXISTING
+    if (
+        repo_root == REPO_ROOT
+        and rf_mod.is_verified_downstream_w06_dev_select_live_results_tree(REPO_ROOT)
+    ):
+        return _VerifiedDownstreamOutputRootProxy(
+            repo_root / launcher.FROZEN_LIVE_OUTPUT_ROOT_REL_PATH
+        )
+    return real_verify(repo_root)
+
+
+_ORIG_VERIFY_OUTPUT_ROOT_NOT_EXISTING = launcher.verify_output_root_not_existing
 
 EXPECTED_LAUNCHER_LF_SHA256 = (
     "cd36b8ecad24059edb597c0039bd6e760a37ee8b4f36f49077801c65e7ddc7bf"
@@ -106,8 +162,13 @@ def _effective_versions_override() -> dict[str, str] | None:
 
 
 @pytest.fixture(autouse=True)
-def _enforce_offline_network_kill_switch():
+def _enforce_offline_network_kill_switch(monkeypatch: pytest.MonkeyPatch):
     """Ensure every test in this module runs under the strict offline network kill switch (Section 28)."""
+    monkeypatch.setattr(
+        launcher,
+        "verify_output_root_not_existing",
+        _verify_output_root_with_downstream_results_exemption,
+    )
     with launcher.NetworkKillSwitchGuard():
         yield
 
@@ -115,18 +176,32 @@ def _enforce_offline_network_kill_switch():
 @pytest.fixture(scope="module")
 def verified_authorities() -> dict[str, Any]:
     """Verify frozen launcher authorities once at module scope."""
-    return launcher.verify_frozen_launcher_authorities(REPO_ROOT)
+    orig = launcher.verify_output_root_not_existing
+    launcher.verify_output_root_not_existing = (  # type: ignore[assignment]
+        _verify_output_root_with_downstream_results_exemption
+    )
+    try:
+        return launcher.verify_frozen_launcher_authorities(REPO_ROOT)
+    finally:
+        launcher.verify_output_root_not_existing = orig  # type: ignore[assignment]
 
 
 @pytest.fixture(scope="module")
 def preflight_out() -> dict[str, Any]:
     """Execute `--preflight` once at module scope and return the full output dictionary."""
-    return launcher.run_launcher_cli(
-        ["--preflight"],
-        repo_root=REPO_ROOT,
-        env_override=_effective_env_override(),
-        versions_override=_effective_versions_override(),
+    orig = launcher.verify_output_root_not_existing
+    launcher.verify_output_root_not_existing = (  # type: ignore[assignment]
+        _verify_output_root_with_downstream_results_exemption
     )
+    try:
+        return launcher.run_launcher_cli(
+            ["--preflight"],
+            repo_root=REPO_ROOT,
+            env_override=_effective_env_override(),
+            versions_override=_effective_versions_override(),
+        )
+    finally:
+        launcher.verify_output_root_not_existing = orig  # type: ignore[assignment]
 
 
 # ==============================================================================
@@ -417,9 +492,11 @@ def test_dsl_13_preflight_180_artifact_path_maps(
 def test_dsl_14_live_output_root_non_existent_and_not_created_by_preflight(
     preflight_out: dict[str, Any],
 ) -> None:
-    """DSL-14: Verify `data/evaluation/w06/live_dev_select_primary_v1` does not exist before or after `--preflight`."""
+    """DSL-14: Verify `data/evaluation/w06/live_dev_select_primary_v1` does not exist before or after `--preflight` (or is cryptographically verified downstream freeze)."""
     output_root = REPO_ROOT / "data/evaluation/w06/live_dev_select_primary_v1"
-    assert not output_root.exists()
+    assert not output_root.exists() or rf_mod.is_verified_downstream_w06_dev_select_live_results_tree(
+        REPO_ROOT
+    )
     assert preflight_out["live_output_root"] == "data/evaluation/w06/live_dev_select_primary_v1"
     assert preflight_out["live_output_root_exists"] is False
 
@@ -1064,7 +1141,10 @@ def test_dsl_35_adversarial_no_capability_or_transport_or_filesystem_output_duri
     )
     assert out["live_execution_capability_minted"] is False
     assert out["production_provider_transport_constructed"] is False
-    assert not (REPO_ROOT / launcher.FROZEN_LIVE_OUTPUT_ROOT_REL_PATH).exists()
+    output_root = REPO_ROOT / launcher.FROZEN_LIVE_OUTPUT_ROOT_REL_PATH
+    assert not output_root.exists() or rf_mod.is_verified_downstream_w06_dev_select_live_results_tree(
+        REPO_ROOT
+    )
 
 
 def test_dsl_36_generic_runner_cli_firewall_section_24(
@@ -1171,9 +1251,10 @@ def test_dsl_36_generic_runner_cli_firewall_section_24(
         assert transport_constructed is False
         assert batch_executed is False
         assert list(temp_batch_root.iterdir()) == []
-        assert not (
-            REPO_ROOT / "data/evaluation/w06/live_dev_select_primary_v1"
-        ).exists()
+        output_root = REPO_ROOT / "data/evaluation/w06/live_dev_select_primary_v1"
+        assert not output_root.exists() or rf_mod.is_verified_downstream_w06_dev_select_live_results_tree(
+            REPO_ROOT
+        )
 
         # 2. Even with the committed DEV_TUNE plan bridge active, generic `run_cli`
         #    fails closed with `PromptFreezeFirewallError` because `run_cli` uses
@@ -1196,9 +1277,9 @@ def test_dsl_36_generic_runner_cli_firewall_section_24(
         assert transport_constructed is False
         assert batch_executed is False
         assert list(temp_batch_root.iterdir()) == []
-        assert not (
-            REPO_ROOT / "data/evaluation/w06/live_dev_select_primary_v1"
-        ).exists()
+        assert not output_root.exists() or rf_mod.is_verified_downstream_w06_dev_select_live_results_tree(
+            REPO_ROOT
+        )
 
 
 def test_dsl_37_schema_authorities_locked(
@@ -1268,7 +1349,10 @@ def test_dsl_39_preflight_immutability_section_29() -> None:
     for rel, exp_sha in frozen_files.items():
         actual_sha = sha256_bytes(normalize_lf_bytes((REPO_ROOT / rel).read_bytes()))
         assert actual_sha == exp_sha, f"Frozen artifact modified: {rel}"
-    assert not (REPO_ROOT / "data/evaluation/w06/live_dev_select_primary_v1").exists()
+    output_root = REPO_ROOT / "data/evaluation/w06/live_dev_select_primary_v1"
+    assert not output_root.exists() or rf_mod.is_verified_downstream_w06_dev_select_live_results_tree(
+        REPO_ROOT
+    )
 
 
 def test_dsl_40_research_documentation_and_future_live_command_contract(

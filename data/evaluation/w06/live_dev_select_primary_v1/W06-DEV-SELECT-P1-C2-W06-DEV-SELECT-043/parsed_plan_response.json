@@ -1,0 +1,221 @@
+{
+  "best_time_to_visit": "Tháng 10–12 thường phù hợp để ngắm cảnh và đi bộ. Ngày 02–03/12 có thể lạnh, có sương mù hoặc gió; cần xác nhận điều kiện hoạt động của tàu trước ngày đi.",
+  "budget_analysis": {
+    "currency": "VND",
+    "estimated_cost": 3580000,
+    "is_over_budget": false,
+    "total_budget": 4000000,
+    "variance": -420000
+  },
+  "days": [
+    {
+      "date": "2026-12-02",
+      "day_cost": 2830000,
+      "day_number": 1,
+      "items": [
+        {
+          "activity": "Thưởng thức cà phê và ăn sáng nhẹ",
+          "activity_kind": "POI_VISIT",
+          "end_time": "08:30",
+          "estimated_cost": 100000,
+          "notes": "Khung giờ nằm trong giờ mở cửa 06:30–23:30. Dự toán gồm đồ uống và bữa sáng nhẹ; xác nhận món ăn khi đặt.",
+          "order_index": 1,
+          "place_id": "70c3326e-1b53-45bf-a210-6c43a076e95b",
+          "place_name": "Cafe ban mê",
+          "start_time": "07:30",
+          "transport_mode": null
+        },
+        {
+          "activity": "Đi taxi đến điểm đón tàu theo xác nhận của đơn vị tổ chức",
+          "activity_kind": "TRANSIT_ONLY",
+          "end_time": "09:00",
+          "estimated_cost": 60000,
+          "notes": "Thời lượng gồm di chuyển và thời gian dự phòng trước giờ lên tàu.",
+          "order_index": 2,
+          "place_id": null,
+          "place_name": null,
+          "start_time": "08:30",
+          "transport_mode": "taxi"
+        },
+        {
+          "activity": "Du ngoạn ban ngày, ngắm cảnh núi đá vôi và dùng bữa trưa trên tàu",
+          "activity_kind": "POI_VISIT",
+          "end_time": "16:00",
+          "estimated_cost": 950000,
+          "notes": "Dự toán tour ghép tàu tiện nghi gồm vé, bữa trưa và hành trình khứ hồi. Khung giờ bao gồm lên xuống tàu; chỉ chốt sau khi xác nhận tuyến, giá và thời tiết. Không phải thuê tàu riêng.",
+          "order_index": 3,
+          "place_id": "ade2140c-7945-4044-b99a-b1a028edce9e",
+          "place_name": "Vịnh Hạ Long",
+          "start_time": "09:00",
+          "transport_mode": "boat"
+        },
+        {
+          "activity": "Đi taxi từ điểm trả khách của tàu đến khu vực ăn tối",
+          "activity_kind": "TRANSIT_ONLY",
+          "end_time": "16:30",
+          "estimated_cost": 60000,
+          "notes": "Có khoảng đệm trước bữa tối để tránh lịch quá gấp nếu tàu về muộn.",
+          "order_index": 4,
+          "place_id": null,
+          "place_name": null,
+          "start_time": "16:00",
+          "transport_mode": "taxi"
+        },
+        {
+          "activity": "Dùng bữa tối buffet với nhịp độ thư thả",
+          "activity_kind": "POI_VISIT",
+          "end_time": "19:00",
+          "estimated_cost": 400000,
+          "notes": "Đúng khung phục vụ tối 17:30–21:30. Đặt bàn trước và kiểm tra giá buffet, đồ uống cùng phụ thu.",
+          "order_index": 5,
+          "place_id": "065f8492-2ab3-4ea0-ae8f-9cc6f8c18ae5",
+          "place_name": "Nhà hàng Buffet Sen Á Đông",
+          "start_time": "17:30",
+          "transport_mode": null
+        },
+        {
+          "activity": "Đi taxi đến khách sạn nhận phòng",
+          "activity_kind": "TRANSIT_ONLY",
+          "end_time": "19:20",
+          "estimated_cost": 60000,
+          "notes": "Thông báo trước với khách sạn về thời gian nhận phòng buổi tối.",
+          "order_index": 6,
+          "place_id": null,
+          "place_name": null,
+          "start_time": "19:00",
+          "transport_mode": "taxi"
+        },
+        {
+          "activity": "Nhận phòng và nghỉ đêm tại khách sạn cao cấp",
+          "activity_kind": "POI_VISIT",
+          "end_time": "23:59",
+          "estimated_cost": 1200000,
+          "notes": "Dự toán một phòng cho một đêm, ưu tiên gói có bữa sáng. Nghỉ thực tế kéo dài đến sáng 03/12; hoạt động chỉ ghi một lần để không lặp place_id. Giá phòng chưa được xác nhận.",
+          "order_index": 7,
+          "place_id": "80b93f9b-1a08-4a9c-9786-6b98d80b30bd",
+          "place_name": "Khách sạn Mường Thanh Luxury Hạ Long Centre",
+          "start_time": "19:20",
+          "transport_mode": null
+        }
+      ],
+      "title": "Cà phê buổi sáng, du ngoạn vịnh và nghỉ dưỡng cao cấp"
+    },
+    {
+      "date": "2026-12-03",
+      "day_cost": 750000,
+      "day_number": 2,
+      "items": [
+        {
+          "activity": "Đi taxi sang Hòn Gai sau khi ăn sáng và trả phòng",
+          "activity_kind": "TRANSIT_ONLY",
+          "end_time": "09:10",
+          "estimated_cost": 180000,
+          "notes": "Ăn sáng và trả phòng thuộc lượt lưu trú đã tính ngày đầu. Mang hành lý theo xe để không phải quay lại khách sạn.",
+          "order_index": 1,
+          "place_id": null,
+          "place_name": null,
+          "start_time": "08:30",
+          "transport_mode": "taxi"
+        },
+        {
+          "activity": "Thưởng thức cà phê và thư giãn buổi sáng",
+          "activity_kind": "POI_VISIT",
+          "end_time": "10:30",
+          "estimated_cost": 100000,
+          "notes": "Dành thời gian trải nghiệm đồ uống thay vì di chuyển vội. Xác nhận giờ mở cửa trước khi đến.",
+          "order_index": 2,
+          "place_id": "3ec2326d-c2b8-4918-b35b-a492e3d49571",
+          "place_name": "Sakura Coffee",
+          "start_time": "09:10",
+          "transport_mode": null
+        },
+        {
+          "activity": "Đi taxi đến công viên",
+          "activity_kind": "TRANSIT_ONLY",
+          "end_time": "10:50",
+          "estimated_cost": 60000,
+          "notes": "Di chuyển ngắn trong khu vực Hòn Gai.",
+          "order_index": 3,
+          "place_id": null,
+          "place_name": null,
+          "start_time": "10:30",
+          "transport_mode": "taxi"
+        },
+        {
+          "activity": "Đi bộ nhẹ, ngắm cảnh ven biển và chụp ảnh ngoài trời",
+          "activity_kind": "POI_VISIT",
+          "end_time": "12:00",
+          "estimated_cost": 0,
+          "notes": "Ưu tiên đoạn đường bằng phẳng, nghỉ khi cần; rút ngắn thời gian ngoài trời nếu gió lạnh hoặc mưa.",
+          "order_index": 4,
+          "place_id": "708ee182-c879-477c-b920-516e2c99b0a6",
+          "place_name": "Công viên Lán Bè",
+          "start_time": "10:50",
+          "transport_mode": "walking"
+        },
+        {
+          "activity": "Đi taxi đến địa điểm ăn trưa",
+          "activity_kind": "TRANSIT_ONLY",
+          "end_time": "12:20",
+          "estimated_cost": 60000,
+          "notes": "Thời gian có dự phòng cho việc đón xe.",
+          "order_index": 5,
+          "place_id": null,
+          "place_name": null,
+          "start_time": "12:00",
+          "transport_mode": "taxi"
+        },
+        {
+          "activity": "Dùng bữa trưa chay nhẹ nhàng",
+          "activity_kind": "POI_VISIT",
+          "end_time": "13:30",
+          "estimated_cost": 250000,
+          "notes": "Trong giờ mở cửa 07:00–22:00. Dự toán một bữa gọi món và đồ uống cho một người.",
+          "order_index": 6,
+          "place_id": "1a1c68b4-fbd1-49d4-9f17-3243b34b57e0",
+          "place_name": "Dược Điến Chay Quán",
+          "start_time": "12:20",
+          "transport_mode": null
+        },
+        {
+          "activity": "Đi taxi đến bảo tàng",
+          "activity_kind": "TRANSIT_ONLY",
+          "end_time": "13:50",
+          "estimated_cost": 60000,
+          "notes": "Giữ hành lý gọn; hỏi trước chính sách mang hoặc gửi hành lý.",
+          "order_index": 7,
+          "place_id": null,
+          "place_name": null,
+          "start_time": "13:30",
+          "transport_mode": "taxi"
+        },
+        {
+          "activity": "Tìm hiểu thiên nhiên và lịch sử địa phương trong không gian trong nhà",
+          "activity_kind": "POI_VISIT",
+          "end_time": "15:30",
+          "estimated_cost": 40000,
+          "notes": "Điểm kết thúc nhẹ nhàng sau buổi sáng ngoài trời. Giá vé là dự toán; cần xác nhận lịch mở cửa chiều ngày 03/12.",
+          "order_index": 8,
+          "place_id": "8f2b5a69-1293-4efe-8fc5-3a74193edd0f",
+          "place_name": "Bảo tàng Quảng Ninh",
+          "start_time": "14:00",
+          "transport_mode": null
+        }
+      ],
+      "title": "Cà phê Hòn Gai và không gian thư giãn ven biển"
+    }
+  ],
+  "destination": "Hạ Long",
+  "destination_slug": "ha-long",
+  "general_tips": [
+    "Chi phí là dự toán cho một người, gồm một đêm khách sạn, các bữa ăn và di chuyển được ghi trong lịch; không gồm hành trình đến và rời Hạ Long.",
+    "Đặt trước phòng khách sạn và tour tàu ban ngày; xác nhận giá cuối cùng, thuế, vé tham quan, bữa trưa và giờ đón trả trước khi thanh toán.",
+    "Danh mục không cung cấp giờ mở cửa của một số địa điểm. Hãy xác nhận trực tiếp, đặc biệt với quán cà phê và bảo tàng.",
+    "Mang áo khoác chắn gió và giày chống trượt. Không đi tàu khi có thông báo đình chỉ vì thời tiết.",
+    "Khoản nghỉ khách sạn được ghi một lần vào ngày đầu và bao gồm cả đêm cùng bữa sáng hôm sau; không tạo thêm lượt ghé cho cùng địa điểm."
+  ],
+  "overview": "Lịch trình cho một người, kết hợp du ngoạn vịnh, trải nghiệm cà phê và thư giãn ven biển. Ưu tiên khách sạn cao cấp, taxi và bữa tối buffet trong ngân sách 4.000.000 VND; không lặp lại địa điểm.",
+  "plan_id": "W06-DEV-SELECT-043-PLAN-01",
+  "scenario_id": "W06-DEV-SELECT-043",
+  "total_days": 2
+}

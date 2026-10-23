@@ -1,0 +1,103 @@
+{
+  "actual_http_request_count": 1,
+  "authorization_id": "W06-DEV-SELECT-LIVE-AUTHORIZATION-01-V1",
+  "candidate_id": "C2",
+  "code_basis_commit_sha": "c0adf74ceda9ffaf8b4ec42d299932e33f448e6a",
+  "code_commit_sha": "c0adf74ceda9ffaf8b4ec42d299932e33f448e6a",
+  "execution_mode": "LIVE_DEV_SELECT",
+  "execution_started_at_utc": "2026-10-23T16:47:04.437874+00:00",
+  "finish_reason": "stop",
+  "generation_parameters": {
+    "candidate_id": "C2",
+    "code_basis_commit_sha": "c0adf74ceda9ffaf8b4ec42d299932e33f448e6a",
+    "code_commit_sha_semantics": "AUTHORITATIVE_RUNTIME_HEAD_SHA_WITH_SEPARATE_CODE_BASIS_AND_BUNDLE_ATTESTATION",
+    "endpoint": "chat.completions",
+    "logprobs_status": "OMITTED",
+    "max_completion_tokens": 16384,
+    "max_retries": 0,
+    "omitted_parameters": [
+      "temperature",
+      "top_p",
+      "top_k",
+      "top_logprobs",
+      "logprobs"
+    ],
+    "portable_generation_schema_v2_sha256": "825a4ff912d851a95f7392cb564b7d7ca3588135508dc6eb3ac6304cdde3c490",
+    "provider": "openai",
+    "provider_config_sha256": "6201244268383e85106b4d6e6ad0f503e066de9def361cbafa685227e8ba332e",
+    "reasoning_effort": "medium",
+    "requested_model_id": "gpt-6.1-sol",
+    "runtime_head_sha": "eac86a38f6b457c9b6ff078f26c4f953a9fc98a7",
+    "scientific_code_bundle_sha256": "0638f2fcb100b0000e3a2a4e08137a9d468449001f258de7354df21e185ca2e3",
+    "seed": 2026101508,
+    "semantic_schema_sha256": "e4169f7b890f77d13af65e9f2070b6071c535b206d88440f5e8f28c179977555",
+    "service_tier": "default",
+    "temperature_status": "OMITTED",
+    "timeout_ms": 55000,
+    "timeout_seconds": 55.0,
+    "top_k_status": "OMITTED",
+    "top_logprobs_status": "OMITTED",
+    "top_p_status": "OMITTED"
+  },
+  "latency_ms": 35906.0,
+  "latency_ms_display": 35906.0,
+  "latency_ns": 35906000000,
+  "max_token_state": false,
+  "normalized_provider_metadata": {
+    "actual_http_request_count": 1,
+    "candidate_id": "C2",
+    "finish_or_stop_reason": "stop",
+    "max_token_state": false,
+    "provider": "openai",
+    "reasoning_effort": "medium",
+    "refusal_state": false,
+    "requested_model_id": "gpt-6.1-sol",
+    "returned_model_id": "gpt-6.1-sol",
+    "seed_sent": 2026101508,
+    "service_tier": "default",
+    "temperature_status": "OMITTED"
+  },
+  "provider": "openai",
+  "provider_config_sha256": "6201244268383e85106b4d6e6ad0f503e066de9def361cbafa685227e8ba332e",
+  "raw_provider_metadata": {
+    "finish_reason": "stop",
+    "id": "chatcmpl-EcChk8afDbDOgmLuPCZD3FFnbm02r",
+    "model": "gpt-6.1-sol",
+    "service_tier": "default",
+    "system_fingerprint": null
+  },
+  "refusal_state": false,
+  "requested_model_id": "gpt-6.1-sol",
+  "returned_model_id": "gpt-6.1-sol",
+  "run_id": "W06-DEV-SELECT-P1-C2-W06-DEV-SELECT-001",
+  "runner_execution_mode": "LIVE_EXECUTION",
+  "runtime_head_sha": "eac86a38f6b457c9b6ff078f26c4f953a9fc98a7",
+  "scientific_code_bundle_sha256": "0638f2fcb100b0000e3a2a4e08137a9d468449001f258de7354df21e185ca2e3",
+  "simulated_failure": "NONE",
+  "stage_a_commit_sha": "e69b7d70c3908d2b888b7c5d7e6c4e1d49fac863",
+  "stage_a_receipt_sha256": "1b933067516b7142b4250870a18e6deef216c6854b1c9790d01830d196dde014",
+  "transport_completed_at_utc": "2026-10-23T16:47:40.339995+00:00",
+  "usage_metadata": {
+    "authoritative_usage_available": true,
+    "cache_creation_input_tokens": null,
+    "cache_read_input_tokens": null,
+    "cached_input_tokens": 0,
+    "input_tokens": 16097,
+    "output_tokens": 2064,
+    "raw_usage_metadata": {
+      "completion_tokens": 2064,
+      "completion_tokens_details": {
+        "reasoning_tokens": 146
+      },
+      "prompt_tokens": 16097,
+      "prompt_tokens_details": {
+        "cached_tokens": 0
+      },
+      "total_tokens": 18161
+    },
+    "reasoning_tokens": 146,
+    "thinking_tokens": null,
+    "thought_tokens": null,
+    "total_tokens": 18161
+  }
+}
