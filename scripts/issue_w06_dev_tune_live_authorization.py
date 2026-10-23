@@ -479,6 +479,9 @@ def verify_pre_stage_a_firewall(repo_root: Path = REPO_ROOT) -> dict[str, Any]:
     forbidden_live_cell_dirs: list[str] = []
 
     if w06_dir.is_dir():
+        from freeze_w06_dev_select_stage_a import (
+            is_verified_downstream_w06_dev_select_stage_a_file,
+        )
         from freeze_w06_dev_tune_live_results import (
             is_path_in_downstream_w06_dev_tune_live_results_scope,
             is_verified_downstream_w06_dev_tune_live_results_tree,
@@ -503,6 +506,9 @@ def verify_pre_stage_a_firewall(repo_root: Path = REPO_ROOT) -> dict[str, Any]:
             if path.is_file():
                 is_verified_downstream_stage_a = (
                     is_verified_downstream_w06_dev_tune_stage_a_file(
+                        path, repo_root=repo_root
+                    )
+                    or is_verified_downstream_w06_dev_select_stage_a_file(
                         path, repo_root=repo_root
                     )
                 )
