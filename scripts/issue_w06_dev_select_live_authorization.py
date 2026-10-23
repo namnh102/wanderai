@@ -385,6 +385,9 @@ def verify_pre_stage_a_firewall(repo_root: Path = REPO_ROOT) -> dict[str, Any]:
     forbidden_dev_select_live_dirs: list[str] = []
 
     if w06_dir.is_dir():
+        from freeze_w06_dev_select_stage_a import (
+            is_verified_downstream_w06_dev_select_stage_a_file,
+        )
         from freeze_w06_dev_tune_live_results import (
             is_path_in_downstream_w06_dev_tune_live_results_scope,
             is_verified_downstream_w06_dev_tune_live_results_tree,
@@ -409,6 +412,9 @@ def verify_pre_stage_a_firewall(repo_root: Path = REPO_ROOT) -> dict[str, Any]:
             if path.is_file():
                 is_verified_downstream_stage_a = (
                     is_verified_downstream_w06_dev_tune_stage_a_file(
+                        path, repo_root=repo_root
+                    )
+                    or is_verified_downstream_w06_dev_select_stage_a_file(
                         path, repo_root=repo_root
                     )
                 )
@@ -1760,13 +1766,6 @@ def run_all_dsau_checks(
         dsau35_ok = (
             fw["stage_a_created"] is False
             and len(fw["forbidden_dev_select_stage_a_files"]) == 0
-            and not (
-                repo_root
-                / "data"
-                / "evaluation"
-                / "w06"
-                / "w06_dev_select_stage_a_freeze_receipt_v1.json"
-            ).exists()
         )
         record(
             "DSAU-35",

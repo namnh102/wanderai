@@ -581,6 +581,9 @@ def verify_pre_authorization_firewall(repo_root: Path = REPO_ROOT) -> dict[str, 
     forbidden_dev_select_live_dirs: list[str] = []
 
     if w06_dir.is_dir():
+        from freeze_w06_dev_select_stage_a import (
+            is_verified_downstream_w06_dev_select_stage_a_file,
+        )
         from issue_w06_dev_select_live_authorization import (
             is_verified_downstream_w06_dev_select_authorization_file,
         )
@@ -610,6 +613,9 @@ def verify_pre_authorization_firewall(repo_root: Path = REPO_ROOT) -> dict[str, 
                 )
                 is_verified_dev_tune_stage_a = (
                     is_verified_downstream_w06_dev_tune_stage_a_file(
+                        path, repo_root=repo_root
+                    )
+                    or is_verified_downstream_w06_dev_select_stage_a_file(
                         path, repo_root=repo_root
                     )
                 )

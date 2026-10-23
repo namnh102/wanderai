@@ -1,0 +1,546 @@
+{
+  "adversarial_checks": [
+    {
+      "check_id": "ADV-01",
+      "description": "Wrong phase DEV_TUNE rejected by verify_stage_a_freeze_receipt",
+      "status": "PASS"
+    },
+    {
+      "check_id": "ADV-02",
+      "description": "Wrong phase STOCHASTICITY rejected by verify_stage_a_freeze_receipt",
+      "status": "PASS"
+    },
+    {
+      "check_id": "ADV-03",
+      "description": "Final100 path rejected with Final100FirewallViolationError",
+      "status": "PASS"
+    },
+    {
+      "check_id": "ADV-04",
+      "description": "Wrong execution_plan_sha256 rejected by verify_stage_a_freeze_receipt",
+      "status": "PASS"
+    },
+    {
+      "check_id": "ADV-05",
+      "description": "Wrong prompt_freeze_sha256 rejected by verify_stage_a_freeze_receipt",
+      "status": "PASS"
+    },
+    {
+      "check_id": "ADV-06",
+      "description": "Wrong authorization_artifact_sha256 rejected by verify_stage_a_freeze_receipt",
+      "status": "PASS"
+    },
+    {
+      "check_id": "ADV-07",
+      "description": "Wrong scientific_code_bundle_sha256 rejected with ScientificCodeBundleIntegrityError",
+      "status": "PASS"
+    },
+    {
+      "check_id": "ADV-08",
+      "description": "Wrong provider_config_registry_sha256 rejected with CandidateRegistryIntegrityError",
+      "status": "PASS"
+    },
+    {
+      "check_id": "ADV-09",
+      "description": "Wrong code_basis_commit_sha rejected by verify_stage_a_freeze_receipt",
+      "status": "PASS"
+    },
+    {
+      "check_id": "ADV-10",
+      "description": "Wrong/non-ancestor stage_a_commit_sha rejected by verify_stage_a_freeze_receipt",
+      "status": "PASS"
+    },
+    {
+      "check_id": "ADV-11",
+      "description": "Missing or blank stage_a_process_token rejected by DevLiveStageAFreezeReceipt",
+      "status": "PASS"
+    },
+    {
+      "check_id": "ADV-12",
+      "description": "Same-process verification token rejected with STAGE_A_AND_STAGE_B_SAME_PROCESS_FORBIDDEN",
+      "status": "PASS"
+    },
+    {
+      "check_id": "ADV-13",
+      "description": "179 or 181 assigned_cell_run_ids rejected by verify_stage_a_freeze_receipt",
+      "status": "PASS"
+    },
+    {
+      "check_id": "ADV-14",
+      "description": "Duplicate run IDs in assigned_cell_run_ids rejected by DevLiveStageAFreezeReceipt",
+      "status": "PASS"
+    },
+    {
+      "check_id": "ADV-15",
+      "description": "Reordered assigned_cell_run_ids rejected by verify_stage_a_freeze_receipt",
+      "status": "PASS"
+    },
+    {
+      "check_id": "ADV-16",
+      "description": "Tampered assigned_cells_sha256 rejected by verify_stage_a_freeze_receipt",
+      "status": "PASS"
+    },
+    {
+      "check_id": "ADV-17",
+      "description": "Tampered stage_a_receipt_sha256 rejected by DevLiveStageAFreezeReceipt",
+      "status": "PASS"
+    },
+    {
+      "check_id": "ADV-18",
+      "description": "Uncommitted Stage-A receipt rejected when require_git_committed=True",
+      "status": "PASS"
+    },
+    {
+      "check_id": "ADV-19",
+      "description": "Dirty execution_plan_path rejected when require_git_committed=True",
+      "status": "PASS"
+    },
+    {
+      "check_id": "ADV-20",
+      "description": "Dirty prompt_freeze_path rejected when require_git_committed=True",
+      "status": "PASS"
+    },
+    {
+      "check_id": "ADV-21",
+      "description": "Dirty authorization_path rejected when require_git_committed=True",
+      "status": "PASS"
+    },
+    {
+      "check_id": "ADV-22",
+      "description": "Dirty stage_a_receipt_path rejected when require_git_committed=True",
+      "status": "PASS"
+    },
+    {
+      "check_id": "ADV-23",
+      "description": "Missing path arguments rejected when require_git_committed=True",
+      "status": "PASS"
+    },
+    {
+      "check_id": "ADV-24",
+      "description": "Synthetic unknown/tampered Stage-A file rejected by cryptographic verifier and historical firewalls",
+      "status": "PASS"
+    },
+    {
+      "check_id": "ADV-25",
+      "description": "Secret-bearing payload rejected by assert_no_secrets_in_payload",
+      "status": "PASS"
+    },
+    {
+      "check_id": "ADV-26",
+      "description": "socket, urllib, httpx, and httpx2 outbound attempts blocked by NetworkKillSwitchGuard",
+      "status": "PASS"
+    },
+    {
+      "check_id": "ADV-27",
+      "description": "P2 cell injection into DEV-SELECT plan rejected fail-closed",
+      "status": "PASS"
+    }
+  ],
+  "artifact_id": "W06-DEV-SELECT-STAGE-A-FREEZE-01-RECEIPT-V1",
+  "assigned_cell_count": 180,
+  "assigned_cells_sha256": "de04255989a9e3bd8c2e39c766432487dce4ccd0612d5dba73b3476cbc9d0c6d",
+  "authorization_artifact_file_sha256": "247c0f201d8b900a1e0356d874891ba6e2884138b1ddd8500dfedb663f04f5f7",
+  "authorization_artifact_sha256": "31cebcf5aafa7a575d4bf1327fc9d454a2817c2acbbdb2c087d8c1210e8ec504",
+  "authorization_id": "W06-DEV-SELECT-LIVE-AUTHORIZATION-01-V1",
+  "authorization_prep_file_sha256": "60e6f0125ed54d6541e506e538a37b63b027a6c60a55572dcd612aa7cd2b72b8",
+  "authorization_receipt_file_sha256": "cb2dc986d9e03502f8e351d569e14d55147346fee64102a5f4cbedc9be895f39",
+  "authorization_text_sha256": "6c32d37fcc557916b89ef0c1c87790bf76465e1352841a38655d5cf9676dbad7",
+  "candidate_registry_sha256": "4dd29164afdf7f364978420f41ab88ef07ec396062188169fcb859a9ef01e058",
+  "checks": [
+    {
+      "check_id": "DSA-01",
+      "description": "Source develop commit e69b7d70c3908d2b888b7c5d7e6c4e1d49fac863 verified fail-closed",
+      "domain": "SOURCE_PROVENANCE",
+      "expected": {
+        "source_develop_sha": "e69b7d70c3908d2b888b7c5d7e6c4e1d49fac863",
+        "verified": true
+      },
+      "observed": {
+        "source_develop_sha": "e69b7d70c3908d2b888b7c5d7e6c4e1d49fac863",
+        "verified": true
+      },
+      "status": "PASS"
+    },
+    {
+      "check_id": "DSA-02",
+      "description": "code_basis_commit_sha equals c0adf74ceda9ffaf8b4ec42d299932e33f448e6a",
+      "domain": "COMMIT_SEMANTICS",
+      "expected": "c0adf74ceda9ffaf8b4ec42d299932e33f448e6a",
+      "observed": "c0adf74ceda9ffaf8b4ec42d299932e33f448e6a",
+      "status": "PASS"
+    },
+    {
+      "check_id": "DSA-03",
+      "description": "stage_a_commit_sha equals e69b7d70c3908d2b888b7c5d7e6c4e1d49fac863",
+      "domain": "COMMIT_SEMANTICS",
+      "expected": "e69b7d70c3908d2b888b7c5d7e6c4e1d49fac863",
+      "observed": "e69b7d70c3908d2b888b7c5d7e6c4e1d49fac863",
+      "status": "PASS"
+    },
+    {
+      "check_id": "DSA-04",
+      "description": "phase is strictly DEV_SELECT across plan, authorization, and Stage-A receipt",
+      "domain": "PHASE_SCOPE",
+      "expected": "DEV_SELECT",
+      "observed": "DEV_SELECT",
+      "status": "PASS"
+    },
+    {
+      "check_id": "DSA-05",
+      "description": "execution_plan_sha256 matches de04255989a9e3bd8c2e39c766432487dce4ccd0612d5dba73b3476cbc9d0c6d",
+      "domain": "PLAN_AUTHORITY",
+      "expected": "de04255989a9e3bd8c2e39c766432487dce4ccd0612d5dba73b3476cbc9d0c6d",
+      "observed": "de04255989a9e3bd8c2e39c766432487dce4ccd0612d5dba73b3476cbc9d0c6d",
+      "status": "PASS"
+    },
+    {
+      "check_id": "DSA-06",
+      "description": "DEV-SELECT plan file SHA256 matches c519baf7cd2557b5e1dd2699a5ceaec592af015d7bc6dcc83abf63892a8a329a",
+      "domain": "PLAN_AUTHORITY",
+      "expected": "c519baf7cd2557b5e1dd2699a5ceaec592af015d7bc6dcc83abf63892a8a329a",
+      "observed": "c519baf7cd2557b5e1dd2699a5ceaec592af015d7bc6dcc83abf63892a8a329a",
+      "status": "PASS"
+    },
+    {
+      "check_id": "DSA-07",
+      "description": "prompt_freeze_sha256 matches 2f345363f580ea882b2e5b3562c587ef5309bc7f994440257a54d18994ab6956",
+      "domain": "PROMPT_AUTHORITY",
+      "expected": "2f345363f580ea882b2e5b3562c587ef5309bc7f994440257a54d18994ab6956",
+      "observed": "2f345363f580ea882b2e5b3562c587ef5309bc7f994440257a54d18994ab6956",
+      "status": "PASS"
+    },
+    {
+      "check_id": "DSA-08",
+      "description": "Selected prompt P1 semantic SHA 096ff4c74dd8d1aed1c0abe501b97c8dfd0f6424dbca535f2b79a242637a1c11 locked across all 180 cells",
+      "domain": "PROMPT_AUTHORITY",
+      "expected": "096ff4c74dd8d1aed1c0abe501b97c8dfd0f6424dbca535f2b79a242637a1c11",
+      "observed": "096ff4c74dd8d1aed1c0abe501b97c8dfd0f6424dbca535f2b79a242637a1c11",
+      "status": "PASS"
+    },
+    {
+      "check_id": "DSA-09",
+      "description": "authorization_artifact_sha256 matches 31cebcf5aafa7a575d4bf1327fc9d454a2817c2acbbdb2c087d8c1210e8ec504",
+      "domain": "AUTHORIZATION_AUTHORITY",
+      "expected": "31cebcf5aafa7a575d4bf1327fc9d454a2817c2acbbdb2c087d8c1210e8ec504",
+      "observed": "31cebcf5aafa7a575d4bf1327fc9d454a2817c2acbbdb2c087d8c1210e8ec504",
+      "status": "PASS"
+    },
+    {
+      "check_id": "DSA-10",
+      "description": "Authorization artifact file SHA256 matches 247c0f201d8b900a1e0356d874891ba6e2884138b1ddd8500dfedb663f04f5f7",
+      "domain": "AUTHORIZATION_AUTHORITY",
+      "expected": "247c0f201d8b900a1e0356d874891ba6e2884138b1ddd8500dfedb663f04f5f7",
+      "observed": "247c0f201d8b900a1e0356d874891ba6e2884138b1ddd8500dfedb663f04f5f7",
+      "status": "PASS"
+    },
+    {
+      "check_id": "DSA-11",
+      "description": "scientific_code_bundle_sha256 matches 0638f2fcb100b0000e3a2a4e08137a9d468449001f258de7354df21e185ca2e3 across all 14 files",
+      "domain": "SCIENTIFIC_AUTHORITIES",
+      "expected": "0638f2fcb100b0000e3a2a4e08137a9d468449001f258de7354df21e185ca2e3",
+      "observed": "0638f2fcb100b0000e3a2a4e08137a9d468449001f258de7354df21e185ca2e3",
+      "status": "PASS"
+    },
+    {
+      "check_id": "DSA-12",
+      "description": "provider_config_registry_sha256 matches 3dc05d29acc2f647cba58303865bd7406b8c1d9f7ccbe0f120e87ad471190938",
+      "domain": "SCIENTIFIC_AUTHORITIES",
+      "expected": "3dc05d29acc2f647cba58303865bd7406b8c1d9f7ccbe0f120e87ad471190938",
+      "observed": "3dc05d29acc2f647cba58303865bd7406b8c1d9f7ccbe0f120e87ad471190938",
+      "status": "PASS"
+    },
+    {
+      "check_id": "DSA-13",
+      "description": "candidate_registry_sha256 matches 4dd29164afdf7f364978420f41ab88ef07ec396062188169fcb859a9ef01e058",
+      "domain": "SCIENTIFIC_AUTHORITIES",
+      "expected": "4dd29164afdf7f364978420f41ab88ef07ec396062188169fcb859a9ef01e058",
+      "observed": "4dd29164afdf7f364978420f41ab88ef07ec396062188169fcb859a9ef01e058",
+      "status": "PASS"
+    },
+    {
+      "check_id": "DSA-14",
+      "description": "assigned_cell_run_ids count is strictly 180",
+      "domain": "STAGE_A_CELLS",
+      "expected": 180,
+      "observed": 180,
+      "status": "PASS"
+    },
+    {
+      "check_id": "DSA-15",
+      "description": "assigned_cell_run_ids contains 180 unique run IDs",
+      "domain": "STAGE_A_CELLS",
+      "expected": 180,
+      "observed": 180,
+      "status": "PASS"
+    },
+    {
+      "check_id": "DSA-16",
+      "description": "assigned_cell_run_ids matches exact ordered 180 run_ids from frozen DEV-SELECT plan",
+      "domain": "STAGE_A_CELLS",
+      "expected": true,
+      "observed": true,
+      "status": "PASS"
+    },
+    {
+      "check_id": "DSA-17",
+      "description": "assigned_cells_sha256 matches compute_assigned_cells_sha256(execution_plan)",
+      "domain": "STAGE_A_CELLS",
+      "expected": "de04255989a9e3bd8c2e39c766432487dce4ccd0612d5dba73b3476cbc9d0c6d",
+      "observed": "de04255989a9e3bd8c2e39c766432487dce4ccd0612d5dba73b3476cbc9d0c6d",
+      "status": "PASS"
+    },
+    {
+      "check_id": "DSA-18",
+      "description": "Production build_stage_a_freeze_receipt(...) used to construct persisted Stage-A receipt",
+      "domain": "PRODUCTION_CONTRACT",
+      "expected": true,
+      "observed": true,
+      "status": "PASS"
+    },
+    {
+      "check_id": "DSA-19",
+      "description": "build_test_only_stage_a_freeze_receipt(...) is NOT used for real persisted Stage-A receipt",
+      "domain": "PRODUCTION_CONTRACT",
+      "expected": false,
+      "observed": false,
+      "status": "PASS"
+    },
+    {
+      "check_id": "DSA-20",
+      "description": "stage_a_process_token is non-empty and matches production auto-stamped format pid-<int>-ns-<int>",
+      "domain": "PRODUCTION_CONTRACT",
+      "expected": true,
+      "observed": true,
+      "status": "PASS"
+    },
+    {
+      "check_id": "DSA-21",
+      "description": "stage_a_status is strictly FROZEN_BEFORE_LIVE",
+      "domain": "STAGE_A_SEMANTICS",
+      "expected": "FROZEN_BEFORE_LIVE",
+      "observed": "FROZEN_BEFORE_LIVE",
+      "status": "PASS"
+    },
+    {
+      "check_id": "DSA-22",
+      "description": "stage_a_receipt_sha256 and file SHA256 verify against canonical JSON",
+      "domain": "STAGE_A_SEMANTICS",
+      "expected": "1b933067516b7142b4250870a18e6deef216c6854b1c9790d01830d196dde014",
+      "observed": "1b933067516b7142b4250870a18e6deef216c6854b1c9790d01830d196dde014",
+      "status": "PASS"
+    },
+    {
+      "check_id": "DSA-23",
+      "description": "Same-process verification is rejected with STAGE_A_AND_STAGE_B_SAME_PROCESS_FORBIDDEN",
+      "domain": "SAME_PROCESS_BARRIER",
+      "expected": true,
+      "observed": true,
+      "status": "PASS"
+    },
+    {
+      "check_id": "DSA-24",
+      "description": "Separate-process committed verification passes via verify_stage_a_freeze_receipt(..., require_git_committed=True)",
+      "domain": "SEPARATE_PROCESS_VERIFICATION",
+      "expected": true,
+      "observed": true,
+      "status": "PASS"
+    },
+    {
+      "check_id": "DSA-25",
+      "description": "stage_a_commit_sha (e69b7d70c3908d2b888b7c5d7e6c4e1d49fac863) is an ancestor of HEAD",
+      "domain": "GIT_BLOB_ATTESTATION",
+      "expected": true,
+      "observed": true,
+      "status": "PASS"
+    },
+    {
+      "check_id": "DSA-26",
+      "description": "code_basis_commit_sha (c0adf74ceda9ffaf8b4ec42d299932e33f448e6a) is an ancestor of HEAD",
+      "domain": "GIT_BLOB_ATTESTATION",
+      "expected": true,
+      "observed": true,
+      "status": "PASS"
+    },
+    {
+      "check_id": "DSA-27",
+      "description": "Execution plan git blob verified at stage_a_commit_sha and HEAD",
+      "domain": "GIT_BLOB_ATTESTATION",
+      "expected": "c519baf7cd2557b5e1dd2699a5ceaec592af015d7bc6dcc83abf63892a8a329a",
+      "observed": "c519baf7cd2557b5e1dd2699a5ceaec592af015d7bc6dcc83abf63892a8a329a",
+      "status": "PASS"
+    },
+    {
+      "check_id": "DSA-28",
+      "description": "Prompt freeze git blob verified at stage_a_commit_sha and HEAD",
+      "domain": "GIT_BLOB_ATTESTATION",
+      "expected": "2f345363f580ea882b2e5b3562c587ef5309bc7f994440257a54d18994ab6956",
+      "observed": "2f345363f580ea882b2e5b3562c587ef5309bc7f994440257a54d18994ab6956",
+      "status": "PASS"
+    },
+    {
+      "check_id": "DSA-29",
+      "description": "Authorization artifact git blob verified at stage_a_commit_sha and HEAD",
+      "domain": "GIT_BLOB_ATTESTATION",
+      "expected": "247c0f201d8b900a1e0356d874891ba6e2884138b1ddd8500dfedb663f04f5f7",
+      "observed": "247c0f201d8b900a1e0356d874891ba6e2884138b1ddd8500dfedb663f04f5f7",
+      "status": "PASS"
+    },
+    {
+      "check_id": "DSA-30",
+      "description": "All 14 scientific code bundle git blobs verified at stage_a_commit_sha and HEAD",
+      "domain": "GIT_BLOB_ATTESTATION",
+      "expected": [],
+      "observed": [],
+      "status": "PASS"
+    },
+    {
+      "check_id": "DSA-31",
+      "description": "Stage-A freeze receipt git blob verified at HEAD",
+      "domain": "GIT_BLOB_ATTESTATION",
+      "expected": "dd31582860e899b865d3dacd52bd1f92786ee6cf31d851e68e9050d93c451a26",
+      "observed": "dd31582860e899b865d3dacd52bd1f92786ee6cf31d851e68e9050d93c451a26",
+      "status": "PASS"
+    },
+    {
+      "check_id": "DSA-32",
+      "description": "All historical frozen receipts/artifacts remain byte-for-byte unchanged",
+      "domain": "HISTORICAL_IMMUTABILITY",
+      "expected": [],
+      "observed": [],
+      "status": "PASS"
+    },
+    {
+      "check_id": "DSA-33",
+      "description": "assert_no_secrets_in_payload passes and zero key material/metadata is read or persisted",
+      "domain": "SECRET_HYGIENE",
+      "expected": {
+        "reads_env_secrets": false,
+        "secret_scan_ok": true
+      },
+      "observed": {
+        "reads_env_secrets": false,
+        "secret_scan_ok": true
+      },
+      "status": "PASS"
+    },
+    {
+      "check_id": "DSA-34",
+      "description": "Actual httpx2 (distinct from httpx), httpx, urllib, and socket outbound calls are blocked by NetworkKillSwitchGuard",
+      "domain": "NETWORK_ISOLATION",
+      "expected": true,
+      "observed": true,
+      "status": "PASS"
+    },
+    {
+      "check_id": "DSA-35",
+      "description": "LIVE_EXECUTION_CAPABILITY_ISSUED is false",
+      "domain": "NO_LIVE_CAPABILITY",
+      "expected": false,
+      "observed": false,
+      "status": "PASS"
+    },
+    {
+      "check_id": "DSA-36",
+      "description": "PRODUCTION_PROVIDER_TRANSPORT_CONSTRUCTED is false",
+      "domain": "NO_LIVE_CAPABILITY",
+      "expected": [],
+      "observed": [],
+      "status": "PASS"
+    },
+    {
+      "check_id": "DSA-37",
+      "description": "TRANSPORT_JOURNAL_CREATED is false",
+      "domain": "STAGE_B_FIREWALL",
+      "expected": false,
+      "observed": false,
+      "status": "PASS"
+    },
+    {
+      "check_id": "DSA-38",
+      "description": "DEV_SELECT_EXECUTION_STARTED, DEV_SELECT_LIVE_RESULT_DIRECTORY_CREATED, MODEL_WINNER_SELECTED, and STOCHASTICITY_EXECUTION_STARTED are false",
+      "domain": "STAGE_B_FIREWALL",
+      "expected": false,
+      "observed": false,
+      "status": "PASS"
+    },
+    {
+      "check_id": "DSA-39",
+      "description": "LIVE_PROVIDER_CALLS_NEW = 0 and PROVIDER_COST_USD_NEW = 0",
+      "domain": "NETWORK_ISOLATION",
+      "expected": {
+        "live_provider_calls_new": 0,
+        "provider_cost_usd_new": 0
+      },
+      "observed": {
+        "live_provider_calls_new": 0,
+        "provider_cost_usd_new": 0
+      },
+      "status": "PASS"
+    },
+    {
+      "check_id": "DSA-40",
+      "description": "FINAL100_USED is false and Final100/P11 files are untouched and unreferenced",
+      "domain": "FINAL100_FIREWALL",
+      "expected": false,
+      "observed": false,
+      "status": "PASS"
+    }
+  ],
+  "code_basis_commit_sha": "c0adf74ceda9ffaf8b4ec42d299932e33f448e6a",
+  "dev_select_execution_started": false,
+  "dev_select_live_result_directory_created": false,
+  "execution_plan_file_sha256": "c519baf7cd2557b5e1dd2699a5ceaec592af015d7bc6dcc83abf63892a8a329a",
+  "execution_plan_sha256": "de04255989a9e3bd8c2e39c766432487dce4ccd0612d5dba73b3476cbc9d0c6d",
+  "final100_used": false,
+  "freeze_created_at_utc": "2026-10-23T09:05:00Z",
+  "historical_evidence_boundary": {
+    "historical_frozen_receipt_shas": {
+      "data/evaluation/w06/w06_dev_prompt_candidate_freeze_v1.json": "2f345363f580ea882b2e5b3562c587ef5309bc7f994440257a54d18994ab6956",
+      "data/evaluation/w06/w06_dev_select_authorization_prep_v1.json": "60e6f0125ed54d6541e506e538a37b63b027a6c60a55572dcd612aa7cd2b72b8",
+      "data/evaluation/w06/w06_dev_select_execution_plan_v1.json": "c519baf7cd2557b5e1dd2699a5ceaec592af015d7bc6dcc83abf63892a8a329a",
+      "data/evaluation/w06/w06_dev_select_live_authorization_01_receipt_v1.json": "cb2dc986d9e03502f8e351d569e14d55147346fee64102a5f4cbedc9be895f39",
+      "data/evaluation/w06/w06_dev_select_live_authorization_v1.json": "247c0f201d8b900a1e0356d874891ba6e2884138b1ddd8500dfedb663f04f5f7",
+      "data/evaluation/w06/w06_dev_select_plan_freeze_01_receipt_v1.json": "5f32782f6359f409c7dd68f08699218cd577cb48bcb517f14c15939f896b9549",
+      "data/evaluation/w06/w06_dev_tune_prompt_selection_01_receipt_v1.json": "0ad0921283c73917c5167ee4cf7355842efc6dedd8719bc169f329daba9ec114",
+      "data/evaluation/w06/w06_dev_tune_prompt_selection_v1.json": "e1e79801117e59d3c8c703e024eacbad12d5336134c6597c333886c434a446b8"
+    },
+    "historical_receipts_unmodified": true
+  },
+  "live_execution_capability_issued": false,
+  "live_provider_calls_new": 0,
+  "model_winner_selected": false,
+  "phase": "DEV_SELECT",
+  "plan_freeze_receipt_file_sha256": "5f32782f6359f409c7dd68f08699218cd577cb48bcb517f14c15939f896b9549",
+  "production_provider_transport_constructed": false,
+  "prompt_freeze_sha256": "2f345363f580ea882b2e5b3562c587ef5309bc7f994440257a54d18994ab6956",
+  "prompt_selection_artifact_file_sha256": "e1e79801117e59d3c8c703e024eacbad12d5336134c6597c333886c434a446b8",
+  "prompt_selection_receipt_file_sha256": "0ad0921283c73917c5167ee4cf7355842efc6dedd8719bc169f329daba9ec114",
+  "provider_config_registry_sha256": "3dc05d29acc2f647cba58303865bd7406b8c1d9f7ccbe0f120e87ad471190938",
+  "provider_cost_usd_new": 0,
+  "same_process_verification_rejected": true,
+  "scientific_code_bundle_sha256": "0638f2fcb100b0000e3a2a4e08137a9d468449001f258de7354df21e185ca2e3",
+  "selected_prompt_id": "P1",
+  "selected_prompt_semantic_sha256": "096ff4c74dd8d1aed1c0abe501b97c8dfd0f6424dbca535f2b79a242637a1c11",
+  "selected_prompt_system_sha256": "4bcb84a8aca1fc89f65709ac9d91c88e42359c284850061bae85c3607c345b0e",
+  "selected_prompt_user_template_sha256": "19762f7c72b4dd19b57c29e160d9195b8f2c72e836188823e9949f271a22f5de",
+  "selected_prompt_version": "TRAVEL_PLANNER_BENCHMARK_V2",
+  "separate_process_committed_verification_passed": true,
+  "source_develop_sha": "e69b7d70c3908d2b888b7c5d7e6c4e1d49fac863",
+  "stage_a_commit_sha": "e69b7d70c3908d2b888b7c5d7e6c4e1d49fac863",
+  "stage_a_process_token_present": true,
+  "stage_a_receipt_file_sha256": "dd31582860e899b865d3dacd52bd1f92786ee6cf31d851e68e9050d93c451a26",
+  "stage_a_receipt_sha256": "1b933067516b7142b4250870a18e6deef216c6854b1c9790d01830d196dde014",
+  "stage_a_status": "FROZEN_BEFORE_LIVE",
+  "stochasticity_execution_started": false,
+  "task_id": "W06-DEV-SELECT-STAGE-A-FREEZE-01",
+  "transport_journal_created": false,
+  "verification_summary": {
+    "adv_failed_checks": 0,
+    "adv_passed_checks": 27,
+    "adv_total_checks": 27,
+    "dsa_failed_checks": 0,
+    "dsa_passed_checks": 40,
+    "dsa_total_checks": 40,
+    "overall_status": "PASS"
+  }
+}

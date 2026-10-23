@@ -916,6 +916,9 @@ def verify_no_live_execution_or_stage_b_artifacts(
     forbidden_live_cell_dirs: list[str] = []
 
     if w06_dir.is_dir():
+        from freeze_w06_dev_select_stage_a import (
+            is_verified_downstream_w06_dev_select_stage_a_file,
+        )
         from freeze_w06_dev_tune_live_results import (
             is_path_in_downstream_w06_dev_tune_live_results_scope,
             is_verified_downstream_w06_dev_tune_live_results_tree,
@@ -935,8 +938,13 @@ def verify_no_live_execution_or_stage_b_artifacts(
                 )
             )
             if path.is_file():
-                is_verified_stage_a = is_verified_downstream_w06_dev_tune_stage_a_file(
-                    path, repo_root=repo_root
+                is_verified_stage_a = (
+                    is_verified_downstream_w06_dev_tune_stage_a_file(
+                        path, repo_root=repo_root
+                    )
+                    or is_verified_downstream_w06_dev_select_stage_a_file(
+                        path, repo_root=repo_root
+                    )
                 )
                 if (
                     (
