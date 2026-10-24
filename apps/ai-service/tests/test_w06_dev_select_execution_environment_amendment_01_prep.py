@@ -638,3 +638,184 @@ def test_eap_15_cli_verify_only_and_markdown_documentation() -> None:
         "PENDING_CHATGPT_AMENDMENT_DECISION",
     ):
         assert required_token in doc_text
+
+
+def test_eap_16_counterfactual_observability_cost_and_pacing_wording_firewall(
+    disk_prep_payload: dict,
+) -> None:
+    """EAP-16: Regression test preventing forbidden counterfactual/observability/cost/pacing claims."""
+    artifact_text = (REPO_ROOT / prep_mod.PREP_ARTIFACT_REL_PATH).read_text(
+        encoding="utf-8"
+    )
+    doc_text = (REPO_ROOT / prep_mod.PREP_DOC_REL_PATH).read_text(encoding="utf-8")
+
+    forbidden_phrases = (
+        "allows all 60",
+        "allow all 60",
+        "allowing true observation",
+        "Enables direct observation",
+        "Maximizes observability of true",
+        "Bounded and modest",
+        "bounded and modest",
+        "smooth transient provider burst load",
+        "Does not smooth burst request cadence against `HTTP 503`",
+    )
+    for phrase in forbidden_phrases:
+        assert phrase not in artifact_text, (
+            f"Forbidden phrase in prep JSON: {phrase!r}"
+        )
+        assert phrase not in doc_text, f"Forbidden phrase in prep doc: {phrase!r}"
+
+    # Counterfactual wording in POA-03 and C2 readiness attestation
+    poa_by_id = {
+        row["action_id"]: row for row in disk_prep_payload["project_owner_action_matrix"]
+    }
+    expected_counterfactual_clause = (
+        "a longer client timeout permits calls to continue beyond the frozen 55s client cutoff "
+        "and may increase billable token exposure; no completion count or success rate is predicted."
+    )
+    assert expected_counterfactual_clause in poa_by_id["POA-03"]["reason"]
+    assert expected_counterfactual_clause in doc_text
+
+    # Observability wording in recommendation and T3
+    expected_observability_clause = (
+        "Removes the frozen 55s client-side cutoff from the secondary configuration and materially reduces "
+        "client-side right-censoring risk; provider-side deadlines, capacity errors, quota failures, "
+        "or other transport failures may still prevent observation."
+    )
+    assert (
+        disk_prep_payload["anty_analytical_recommendation"]["criteria_evaluation"][
+            "planner_quality_observability"
+        ]
+        == expected_observability_clause
+    )
+    assert expected_observability_clause in doc_text
+
+    # Cost wording
+    expected_cost_clause = (
+        "LOW and HIGH are historical planning envelopes from frozen repository price snapshots, not hard cost caps"
+    )
+    assert (
+        expected_cost_clause
+        in disk_prep_payload["cost_planning"]["envelope_nature"]
+    )
+    assert (
+        expected_cost_clause
+        in disk_prep_payload["anty_analytical_recommendation"]["criteria_evaluation"][
+            "cost"
+        ]
+    )
+    assert (
+        disk_prep_payload["cost_planning"]["current_price_input_status"]
+        == "EXTERNAL_PRICING_REFRESH_REQUIRED_BEFORE_AUTHORIZATION"
+    )
+    assert disk_prep_payload["cost_planning"]["hard_maximum_claimed"] is False
+
+    # Pacing wording
+    pacing_by_id = {
+        opt["option_id"]: opt
+        for opt in disk_prep_payload["pacing_policy_options"]["options"]
+    }
+    p1_assess = pacing_by_id["P1_FIXED_2000MS_INTER_CALL_DELAY"][
+        "scientific_and_engineering_assessment"
+    ]
+    assert "Bounds client-issued request cadence only" in p1_assess
+    assert (
+        "Client-side pacing does not remove or prevent provider-side high-demand HTTP 503 errors."
+        in p1_assess
+    )
+
+
+def test_eap_17_google_quota_requirement_tied_to_authorized_call_count(
+    disk_prep_payload: dict,
+) -> None:
+    """EAP-17: Regression test that Google quota requirement is tied to exact authorized call count (no arbitrary >=200 RPD)."""
+    artifact_text = (REPO_ROOT / prep_mod.PREP_ARTIFACT_REL_PATH).read_text(
+        encoding="utf-8"
+    )
+    doc_text = (REPO_ROOT / prep_mod.PREP_DOC_REL_PATH).read_text(encoding="utf-8")
+
+    assert "200 RPD" not in artifact_text
+    assert "200 RPD" not in doc_text
+
+    expected_quota_clause = (
+        "daily/request quota and RPM/TPM limits must be sufficient for the exact authorized C1 call count; "
+        "under S2 maximum C1 generation calls = 63, with no Free Tier 20-RPD ceiling"
+    )
+    poa_by_id = {
+        row["action_id"]: row for row in disk_prep_payload["project_owner_action_matrix"]
+    }
+    assert expected_quota_clause in poa_by_id["POA-02"]["action"]
+    c1_attestations = " ".join(
+        disk_prep_payload["provider_readiness_attestation_design"]["candidates"]["C1"][
+            "required_attestations_before_amended_live_authorization"
+        ]
+    )
+    assert expected_quota_clause in c1_attestations
+
+
+def test_eap_18_attestation_vs_canary_separation_and_canary_semantics(
+    disk_prep_payload: dict,
+) -> None:
+    """EAP-18: Regression test distinguishing OWNER_AND_PROVIDER_ATTESTATION from LIVE_READINESS_CANARY and enforcing canary semantics."""
+    pr = disk_prep_payload["provider_readiness_attestation_design"]
+    sep = pr["attestation_vs_canary_separation"]
+    assert "OWNER_AND_PROVIDER_ATTESTATION" in sep
+    assert "LIVE_READINESS_CANARY" in sep
+    assert sep["canary_proves_full_batch_quota_sufficiency"] is False
+    assert (
+        sep["canary_proves_absence_of_later_capacity_or_deadline_failures"] is False
+    )
+    assert (
+        "3 canary calls do not prove quota sufficiency for 63 calls"
+        in sep["LIVE_READINESS_CANARY"]
+    )
+
+    expected_planner_quality_firewall = (
+        "A successful HTTP/provider response that later fails schema/core evaluation MUST NOT fail the operational "
+        "readiness gate merely because of planner quality. Canary readiness is not model selection."
+    )
+    canary_gov = pr["canary_governance_requirements_if_selected"]
+    assert canary_gov["must_be_frozen_before_any_canary_authorization"] == [
+        "exact_canary_fixture_ids",
+        "exact_3x3_call_matrix",
+        "operational_pass_fail_rules",
+        "zero_selection_weight",
+        "no_adaptive_parameter_changes",
+    ]
+    assert canary_gov["selection_weight"] == 0
+    assert canary_gov["adaptive_parameter_changes_permitted"] is False
+    assert (
+        canary_gov["planner_quality_firewall_rule"]
+        == expected_planner_quality_firewall
+    )
+
+    f3 = next(
+        opt
+        for opt in disk_prep_payload["fixture_policy_options"]["options"]
+        if opt["policy_id"]
+        == "POLICY_F3_ENGINEERING_READINESS_SUBSET_PLUS_AMENDED_COMPARATIVE_SET"
+    )
+    assert (
+        f3["canary_governance_requirements_if_selected"][
+            "planner_quality_firewall_rule"
+        ]
+        == expected_planner_quality_firewall
+    )
+
+    s2 = next(
+        opt
+        for opt in disk_prep_payload["call_budget_options"]["options"]
+        if opt["budget_option_id"] == "S2_READINESS_CANARY_PLUS_COMPARATIVE_180"
+    )
+    assert (
+        s2["canary_governance_requirements_if_selected"][
+            "planner_quality_firewall_rule"
+        ]
+        == expected_planner_quality_firewall
+    )
+
+    doc_text = (REPO_ROOT / prep_mod.PREP_DOC_REL_PATH).read_text(encoding="utf-8")
+    assert "OWNER_AND_PROVIDER_ATTESTATION" in doc_text
+    assert "LIVE_READINESS_CANARY" in doc_text
+    assert expected_planner_quality_firewall in doc_text

@@ -182,10 +182,10 @@ FORBIDDEN_AMENDED_OR_DOWNSTREAM_REL_PATHS: tuple[str, ...] = (
 )
 
 EXPECTED_PREP_ARTIFACT_FILE_SHA256 = (
-    "21ad72d89a35af7b4607ecd941a5873e7cd60d7e5c54621729d01e6954dfcc11"
+    "e8786c4f538b86c8aa1d6b2c0cfb4afd6b8b6a1efa5b51799e44bd6bdd5a9a91"
 )
 EXPECTED_PREP_ARTIFACT_INTERNAL_SHA256 = (
-    "57794e675d4b279bc875762a000ce74a07173a181afbdb31d0149f01f94b53c9"
+    "49c24e65690cb4fb947d2733ddf8b019d863046cf955d9415eec1d16e9eaaf7a"
 )
 
 
@@ -461,8 +461,9 @@ def build_timeout_policy_options(
             "timeout_seconds": 90,
             "timeout_ms": 90000,
             "scientific_rationale": (
-                "Provides a +63.6% (+35,000 ms) headroom expansion above the 55s cutoff where 52/60 C2 cells and 13/14 C1 "
-                "timeout cells clustered, allowing observation of responses that require 55..90s to complete."
+                "Provides a +63.6% (+35,000 ms) client-side deadline expansion above the frozen 55s cutoff where 52/60 C2 cells "
+                "and 13/14 C1 timeout cells clustered; permits calls to continue up to 90s on the client side without predicting "
+                "any completion count or success rate."
             ),
             "engineering_rationale": (
                 "Moderate increase in per-cell deadline while keeping worst-case 180-cell sequential execution under 4.5 hours."
@@ -475,7 +476,7 @@ def build_timeout_policy_options(
             ),
             "risk_of_excessively_long_stuck_requests": "LOW_TO_MODERATE (90s max stall per stuck socket).",
             "comparability_implications": (
-                "Uniformly relaxes the deadline across C1, C2, and C3, but risks leaving residual right-censoring on 4-day scenarios."
+                "Uniformly relaxes the client-side deadline across C1, C2, and C3, but risks leaving substantial client-side right-censoring on 3-day and 4-day scenarios."
             ),
         },
         {
@@ -484,9 +485,9 @@ def build_timeout_policy_options(
             "timeout_seconds": 120,
             "timeout_ms": 120000,
             "scientific_rationale": (
-                "More than doubles (+118.2%, +65,000 ms) the primary 55s cutoff, providing substantial headroom beyond "
-                "the observed 2-day completion range (35.8..53.1s) to observe 3-day and 4-day structured itinerary generation "
-                "under medium/high/adaptive reasoning."
+                "More than doubles (+118.2%, +65,000 ms) the frozen 55s client-side cutoff, extending the client deadline beyond "
+                "the observed 2-day completion range (35.8..53.1s) and reducing client-side right-censoring risk on 3-day and 4-day "
+                "scenarios; no completion count or success rate is predicted."
             ),
             "engineering_rationale": (
                 "Standard 2-minute synchronous API timeout ceiling compatible with Google, OpenAI, and Anthropic SDK defaults, "
@@ -510,9 +511,10 @@ def build_timeout_policy_options(
             "timeout_seconds": 180,
             "timeout_ms": 180000,
             "scientific_rationale": (
-                "Provides 3.27x (+125,000 ms) the primary 55s boundary, minimizing the risk that client-side timeout censoring "
-                "masquerades as model planning failure across 2-day, 3-day, and 4-day itinerary schemas for all three reasoning configurations "
-                "(C1 thinking_level=medium, C2 reasoning_effort=medium, C3 effort=high + thinking=adaptive)."
+                "Provides 3.27x (+125,000 ms) the frozen 55s client-side cutoff, materially reducing client-side right-censoring risk "
+                "across 2-day, 3-day, and 4-day itinerary schemas for all three reasoning configurations "
+                "(C1 thinking_level=medium, C2 reasoning_effort=medium, C3 effort=high + thinking=adaptive); "
+                "no completion count or success rate is predicted."
             ),
             "engineering_rationale": (
                 "Aligns client-side httpx timeout with longer upstream gateway deadlines for large structured JSON generation "
@@ -529,8 +531,9 @@ def build_timeout_policy_options(
                 "though healthy completions terminate upon response receipt)."
             ),
             "comparability_implications": (
-                "Maximizes observability of true schema/grounding/core planning quality across C1, C2, and C3 on equal terms "
-                "within the secondary stabilization track."
+                "Removes the frozen 55s client-side cutoff from the secondary configuration and materially reduces client-side "
+                "right-censoring risk across C1, C2, and C3 on equal terms; provider-side deadlines, capacity errors, quota failures, "
+                "or other transport failures may still prevent observation."
             ),
         },
         {
@@ -645,8 +648,9 @@ def build_pacing_policy_options() -> dict[str, Any]:
                 ),
                 "added_wall_clock_seconds_180_cells": 358,
                 "scientific_and_engineering_assessment": (
-                    "Adds only 5.97 minutes across a 180-cell batch while guaranteeing at least 6.0 seconds between same-provider "
-                    "requests even in the worst case where the other two providers fail instantaneously."
+                    "Bounds client-issued request cadence only: adds 5.97 minutes across a 180-cell batch and enforces at least "
+                    "6.0 seconds between client-initiated requests to the same provider even if the other two providers fail "
+                    "instantaneously. Client-side pacing does not remove or prevent provider-side high-demand HTTP 503 errors."
                 ),
             },
             {
@@ -658,8 +662,9 @@ def build_pacing_policy_options() -> dict[str, Any]:
                 ),
                 "added_wall_clock_seconds_180_cells": 895,
                 "scientific_and_engineering_assessment": (
-                    "Adds 14.92 minutes across a 180-cell batch and guarantees at least 15.0 seconds (<=4 RPM) between consecutive "
-                    "calls to the same provider regardless of how fast other candidates return."
+                    "Bounds client-issued request cadence only: adds 14.92 minutes across a 180-cell batch and enforces at least "
+                    "15.0 seconds (<=4 RPM client emission rate) between consecutive client-initiated requests to the same provider. "
+                    "Client-side pacing does not remove or prevent provider-side high-demand HTTP 503 errors."
                 ),
             },
         ],
@@ -705,6 +710,36 @@ def build_provider_readiness_attestation_design() -> dict[str, Any]:
     return {
         "gate_id": "W06-DEV-SELECT-AMENDED-PRE-LIVE-PROVIDER-READINESS-GATE-V1",
         "generation_calls_performed_during_prep": 0,
+        "attestation_vs_canary_separation": {
+            "OWNER_AND_PROVIDER_ATTESTATION": (
+                "Administrative and account-level verification required before authorization: billing active, daily/request quota "
+                "and RPM/TPM limits sufficient for the exact authorized call count (e.g., 63 C1 calls under S2, with no Free Tier "
+                "20-RPD ceiling), positive credit balance sufficient for the full authorized batch, and model access/tier ready."
+            ),
+            "LIVE_READINESS_CANARY": (
+                "Optional pre-batch live probe (e.g., 3 canary calls per candidate under F3/S2) that only checks immediate "
+                "operational behavior under the frozen amended configuration; 3 canary calls do not prove quota sufficiency "
+                "for 63 calls and do not prove absence of later capacity (HTTP 503) or deadline (HTTP 504) failures."
+            ),
+            "canary_proves_full_batch_quota_sufficiency": False,
+            "canary_proves_absence_of_later_capacity_or_deadline_failures": False,
+        },
+        "canary_governance_requirements_if_selected": {
+            "must_be_frozen_before_any_canary_authorization": [
+                "exact_canary_fixture_ids",
+                "exact_3x3_call_matrix",
+                "operational_pass_fail_rules",
+                "zero_selection_weight",
+                "no_adaptive_parameter_changes",
+            ],
+            "exact_call_matrix_shape": "3_fixtures_x_3_candidates_equals_9_calls",
+            "selection_weight": 0,
+            "adaptive_parameter_changes_permitted": False,
+            "planner_quality_firewall_rule": (
+                "A successful HTTP/provider response that later fails schema/core evaluation MUST NOT fail the operational "
+                "readiness gate merely because of planner quality. Canary readiness is not model selection."
+            ),
+        },
         "secret_safety_invariants": {
             "print_secret_values": False,
             "print_secret_hashes": False,
@@ -721,8 +756,8 @@ def build_provider_readiness_attestation_design() -> dict[str, Any]:
                 "required_attestations_before_amended_live_authorization": [
                     "API key presence verified as boolean PRESENT without reading or logging secret value/hash/prefix/suffix.",
                     "Account/project identity consistency verified so the configured GEMINI_API_KEY belongs to the intended billing-enabled project without disclosing project/account identifiers.",
-                    "Paid tier / quota readiness attested as sufficient for the planned C1 call count (eliminating the 20 requests/day Free Tier ceiling observed in 35/60 primary C1 cells).",
-                    "No known daily-call (RPD) or per-minute (RPM/TPM) ceiling below the planned C1 batch call count.",
+                    "Paid tier / quota readiness attested: daily/request quota and RPM/TPM limits must be sufficient for the exact authorized C1 call count; under S2 maximum C1 generation calls = 63, with no Free Tier 20-RPD ceiling (60 under S1, 30 under S3; eliminating the 20 requests/day Free Tier limit observed in 35/60 primary C1 cells; any additional quota headroom is optional operational safety margin).",
+                    "No known daily-call (RPD) or per-minute (RPM/TPM) ceiling below the exact authorized C1 batch call count.",
                     "Model access verified for gemini-3.8-flash under Portable Schema V2.",
                 ],
             },
@@ -734,7 +769,7 @@ def build_provider_readiness_attestation_design() -> dict[str, Any]:
                 "owner_action_marker": "OWNER_ACTION_REQUIRED",
                 "required_attestations_before_amended_live_authorization": [
                     "API key presence verified as boolean PRESENT without reading or logging secret value/hash/prefix/suffix.",
-                    "Active billing/credit balance verified as sufficient for the planned C2 call count under higher timeout ceiling (confirming no billing/quota blocker is present, consistent with 0/60 billing/quota errors in primary DEV-SELECT).",
+                    "Active billing/credit balance verified as sufficient for the exact authorized C2 call count under an extended client timeout ceiling (a longer client timeout permits calls to continue beyond the frozen 55s client cutoff and may increase billable token exposure; no completion count or success rate is predicted).",
                     "Model access verified for gpt-6.1-sol under Portable Schema V2.",
                 ],
             },
@@ -747,7 +782,7 @@ def build_provider_readiness_attestation_design() -> dict[str, Any]:
                 "required_attestations_before_amended_live_authorization": [
                     "API key presence verified as boolean PRESENT without reading or logging secret value/hash/prefix/suffix.",
                     "Anthropic API billing/credit status verified as active with positive credit balance (resolving the 60/60 HTTP 400 credit-balance rejection observed in primary DEV-SELECT).",
-                    "Credit envelope attested as sufficient for the full planned C3 call count with safety margin.",
+                    "Credit envelope attested as sufficient for the exact authorized C3 call count with optional operational safety margin.",
                     "Model access verified for claude-sonnet-5-5 under Portable Schema V2.",
                 ],
             },
@@ -774,27 +809,28 @@ def build_fairness_policy_options() -> dict[str, Any]:
                     "primary_metrics": list(PRIMARY_DEV_RATE_CRITERIA),
                 },
                 "advantages": [
-                    "Changes only the two directly evidenced environmental blockers (provider billing/quota provisioning and the 55s timeout boundary) while keeping execution pacing identical to the primary run.",
-                    "Enables direct observation of C1, C2, and C3 planning quality across 2-day, 3-day, and 4-day scenarios.",
+                    "Changes only the two directly evidenced environmental blockers (provider billing/quota provisioning and the 55s client timeout boundary) while keeping execution pacing identical to the primary run.",
+                    "Removes the frozen 55s client-side cutoff from the secondary configuration and materially reduces client-side right-censoring risk across 2-day, 3-day, and 4-day scenarios; provider-side deadlines, capacity errors, quota failures, or other transport failures may still prevent observation.",
                     "Preserves retry=0, prompt P1, Portable Schema V2, and all primary evaluation metrics.",
                 ],
                 "scientific_weaknesses": [
-                    " constitutes a secondary post-hoc stabilization track after observing primary operational failures, requiring dual reporting alongside the primary benchmark.",
-                    "Without inter-call pacing, if one candidate still fails rapidly, consecutive calls to the remaining candidates occur with minimal spacing.",
+                    "Constitutes a secondary post-hoc stabilization track after observing primary operational failures, requiring dual reporting alongside the primary benchmark.",
+                    "Without inter-call pacing, if one candidate still fails rapidly, consecutive client-issued calls to the remaining candidates occur with minimal spacing.",
                 ],
                 "engineering_weaknesses": [
-                    "Does not add deterministic inter-call spacing to smooth transient provider burst load (such as the 10/60 C1 HTTP 503 high-demand errors).",
+                    "Does not bound client-issued request cadence when other candidates fail rapidly (note that even with fixed client-side pacing, provider-side high-demand HTTP 503 errors are controlled by external provider load and are not prevented by client pacing).",
                 ],
                 "cost_implications": (
-                    "Requires funding/provisioning one amended comparative batch (e.g., 180 calls under S1, estimated $12.357 LOW to $24.03 HIGH under frozen runner registry pricing)."
+                    "Requires funding/provisioning one amended comparative batch (e.g., 180 calls under S1; historical planning envelopes from frozen repository price snapshots are $12.357 LOW to $24.03 HIGH under the 2026-10-16 runner registry snapshot, not hard cost caps)."
                 ),
                 "defense_thesis_implications": (
                     "Clear and parsimonious to defend in thesis: primary benchmark documents strict 55s one-shot operational reality, "
-                    "while secondary stabilization track isolates model planning quality once billing/quota and 55s truncation are removed."
+                    "while the secondary stabilization track evaluates comparative planner behavior after addressing account provisioning "
+                    "and removing the 55s client-side cutoff (recognizing that provider-side errors or deadlines may still occur)."
                 ),
                 "risk_to_final100_quality": (
-                    "LOW_TO_MODERATE: Substantially lowers the risk of picking a suboptimal model or running Final100 with a censoring timeout, "
-                    "provided provider burst capacity remains stable."
+                    "LOW_TO_MODERATE: Materially reduces the risk of unprovisioned accounts and 55s client-side timeout right-censoring "
+                    "prior to Final100, though external provider-side capacity or deadline failures remain possible."
                 ),
             },
             {
@@ -811,26 +847,26 @@ def build_fairness_policy_options() -> dict[str, Any]:
                     "primary_metrics": list(PRIMARY_DEV_RATE_CRITERIA),
                 },
                 "advantages": [
-                    "Addresses all three operational failure modes observed in the diagnostic: account/quota readiness (C1 429, C3 400), 55s timeout censoring (C2 52/60, C1 14/60), and burst spacing via deterministic non-adaptive pacing.",
-                    "Includes a formal pre-live provider-readiness attestation gate so a batch is not launched against an unprovisioned account.",
-                    "Maintains strict fairness across C1, C2, and C3 (identical timeout, identical deterministic pacing, retry=0, same P1 and V2 schema).",
+                    "Addresses account/quota provisioning (C1 429, C3 400), relaxes the 55s client-side timeout boundary (C2 52/60, C1 4/60 client ReadTimeout), and bounds client-issued request cadence via deterministic non-adaptive pacing (recognizing that client-side pacing bounds client emission cadence only and does not remove or prevent provider-side high-demand HTTP 503 errors).",
+                    "Separates (A) OWNER_AND_PROVIDER_ATTESTATION (billing active, quota sufficient for the exact authorized call count such as 63 C1 calls under S2, model access/tier ready) from (B) LIVE_READINESS_CANARY (which only checks immediate operational behavior under the frozen amended configuration and does not prove full-batch quota sufficiency or absence of later capacity/deadline failures).",
+                    "Maintains strict fairness across C1, C2, and C3 (identical client timeout, identical deterministic pacing, retry=0, same P1 and V2 schema).",
                 ],
                 "scientific_weaknesses": [
-                    "Introduces two controlled execution-environment changes (timeout ceiling + fixed inter-call pacing) relative to the primary track, so differences from the primary run reflect the combined stabilization environment rather than timeout alone.",
+                    "Introduces two controlled execution-environment changes (client timeout ceiling + fixed client inter-call pacing) relative to the primary track, so differences from the primary run reflect the combined stabilization environment rather than timeout alone.",
                 ],
                 "engineering_weaknesses": [
                     "Slightly longer wall-clock batch runtime (+5.97 min for 2s pacing or +14.92 min for 5s pacing, plus higher timeout ceiling on any genuinely hung socket).",
                 ],
                 "cost_implications": (
-                    "Same comparative generation call cost as Option A (plus optional 3..9 smoke/readiness calls if paired with S2/F3, adding ~$0.25..$0.70)."
+                    "Same comparative generation call cost as Option A, plus optional 9 canary calls if paired with S2/F3 (historical planning envelopes from frozen repository price snapshots are $12.97485 LOW to $25.2315 HIGH across 189 calls under the 2026-10-16 runner registry snapshot, not hard cost caps)."
                 ),
                 "defense_thesis_implications": (
-                    "Strongest methodological defense: demonstrates rigorous root-cause diagnosis followed by a pre-attested, symmetric, "
-                    "non-adaptive stabilization protocol before committing the locked Final100 evaluation."
+                    "Strongest methodological defense: demonstrates rigorous root-cause diagnosis followed by pre-attested account readiness, "
+                    "symmetric non-adaptive client-side stabilization, and explicit separation between operational readiness and model selection before Final100."
                 ),
                 "risk_to_final100_quality": (
-                    "LOW: Provides the highest probability of obtaining complete, valid comparative measurements across all three candidates "
-                    "and carrying a validated execution environment into Stochasticity and Final100."
+                    "LOW: Materially reduces the risk of unprovisioned accounts and client-side 55s right-censoring before selecting a model "
+                    "and locking execution-environment settings for Stochasticity and Final100, without claiming guaranteed completion or complete observability."
                 ),
             },
             {
@@ -961,25 +997,48 @@ def build_fixture_policy_options(repo_root: Path) -> dict[str, Any]:
                 "fixture_count_comparative": 60,
                 "fixture_source": (
                     "Stage 1 Readiness Canary: 3 deterministic non-Final fixtures spanning 2, 3, and 4 days from DEV-TUNE "
-                    "(or 1 synthetic smoke fixture W06-PREFLIGHT-SMOKE-001) x 3 candidates (3..9 calls, zero selection weight). "
+                    "(or 1 synthetic smoke fixture W06-PREFLIGHT-SMOKE-001) x 3 candidates (exact 3 x 3 call matrix = 9 calls, zero selection weight, no adaptive parameter changes). "
                     "Stage 2 Comparative Batch: exact 60 DEV-SELECT fixtures W06-DEV-SELECT-001..060 x 3 candidates (180 calls)."
                 ),
+                "canary_governance_requirements_if_selected": {
+                    "must_be_frozen_before_any_canary_authorization": [
+                        "exact_canary_fixture_ids",
+                        "exact_3x3_call_matrix",
+                        "operational_pass_fail_rules",
+                        "zero_selection_weight",
+                        "no_adaptive_parameter_changes",
+                    ],
+                    "exact_call_matrix_shape": "3_fixtures_x_3_candidates_equals_9_calls",
+                    "selection_weight": 0,
+                    "adaptive_parameter_changes_permitted": False,
+                    "canary_vs_attestation_boundary": (
+                        "LIVE_READINESS_CANARY only checks immediate operational behavior under the frozen amended configuration; "
+                        "3 canary calls do not prove quota sufficiency for 63 calls and do not prove absence of later capacity or deadline failures."
+                    ),
+                    "planner_quality_firewall_rule": (
+                        "A successful HTTP/provider response that later fails schema/core evaluation MUST NOT fail the operational "
+                        "readiness gate merely because of planner quality. Canary readiness is not model selection."
+                    ),
+                },
                 "post_hoc_bias_risk": (
-                    "LOW: Stage 1 is strictly a binary operational gate (verifying HTTP 200, billing/quota readiness, and non-truncation "
-                    "under the chosen timeout) with zero prompt/model tuning, while Stage 2 uses the full balanced 60-fixture DEV-SELECT set."
+                    "LOW: Stage 1 is strictly an operational readiness probe (checking immediate HTTP/provider response behavior under the "
+                    "frozen amended configuration, where 3 canary calls do not prove quota sufficiency for 63 calls or absence of later "
+                    "capacity/deadline failures) with zero selection weight and no adaptive parameter changes. A successful HTTP/provider "
+                    "response that later fails schema/core evaluation MUST NOT fail the operational readiness gate merely because of planner quality. "
+                    "Canary readiness is not model selection. Stage 2 uses the full balanced 60-fixture DEV-SELECT set."
                 ),
                 "comparability_to_primary": (
                     "HIGHEST: Stage 2 retains full 1-to-1 comparability with the 60 primary DEV-SELECT fixtures."
                 ),
                 "risk_of_overfitting_after_observing_results": (
-                    "VERY_LOW: Canary outcomes cannot modify prompts, schemas, or candidate models; they only prevent launching "
-                    "the 180-cell comparative batch if an account or timeout misconfiguration persists."
+                    "VERY_LOW: Canary outcomes cannot modify prompts, schemas, candidate models, or adaptive parameters; they only prevent launching "
+                    "the 180-cell comparative batch if an immediate operational transport/account failure is detected."
                 ),
                 "final100_leakage_risk": (
                     "ZERO (uses only DEV-TUNE / W06-PREFLIGHT-SMOKE-001 and DEV-SELECT-001..060; Final100 remains untouched)."
                 ),
                 "implementation_complexity": (
-                    "LOW_TO_MODERATE: Clean separation between pre-batch readiness attestation receipt and comparative 180-cell execution."
+                    "LOW_TO_MODERATE: Clean separation between OWNER_AND_PROVIDER_ATTESTATION, optional LIVE_READINESS_CANARY, and comparative 180-cell execution."
                 ),
             },
         ],
@@ -1000,7 +1059,7 @@ def build_call_budget_options() -> dict[str, Any]:
                 "comparative_benchmark_calls": 180,
                 "maximum_generation_calls": 180,
                 "calls_per_candidate": {"C1": 60, "C2": 60, "C3": 60},
-                "estimated_relative_cost_exposure": "1.00x baseline comparative batch ($12.357 LOW to $24.03 HIGH under frozen runner registry pricing; $10.5525 LOW to $20.565 HIGH under Preflight 01D pricing)",
+                "estimated_relative_cost_exposure": "1.00x baseline comparative batch (historical planning envelopes from frozen repository price snapshots: $12.357 LOW to $24.03 HIGH under 2026-10-16 runner registry snapshot; $10.5525 LOW to $20.565 HIGH under 2026-10-17 Preflight 01D snapshot; not hard cost caps)",
                 "scientific_strength": (
                     "HIGH: Preserves the full n=60 per-candidate denominator and exact 20x3 destination / 20x3 day-duration "
                     "stratification required by W06-MODEL-ARCH-SELECTION-METHOD-LOCK-01."
@@ -1010,8 +1069,8 @@ def build_call_budget_options() -> dict[str, Any]:
                     "(6-cell) practical-tie survivor threshold."
                 ),
                 "operational_risk": (
-                    "MODERATE: If a provider account or timeout issue was not caught before launch, it is discovered directly "
-                    "inside the 180-call comparative batch."
+                    "MODERATE: Relies solely on OWNER_AND_PROVIDER_ATTESTATION prior to launch without a live canary probe; if an immediate "
+                    "operational transport or account issue remains, it is encountered directly inside the 180-call comparative batch."
                 ),
             },
             {
@@ -1022,17 +1081,38 @@ def build_call_budget_options() -> dict[str, Any]:
                 "comparative_benchmark_calls": 180,
                 "maximum_generation_calls": 189,
                 "calls_per_candidate": {"C1": 63, "C2": 63, "C3": 63},
-                "estimated_relative_cost_exposure": "1.05x baseline comparative batch ($12.97485 LOW to $25.2315 HIGH for 189 calls under frozen runner registry pricing; $11.080125 LOW to $21.59325 HIGH under Preflight 01D pricing)",
+                "canary_governance_requirements_if_selected": {
+                    "must_be_frozen_before_any_canary_authorization": [
+                        "exact_canary_fixture_ids",
+                        "exact_3x3_call_matrix",
+                        "operational_pass_fail_rules",
+                        "zero_selection_weight",
+                        "no_adaptive_parameter_changes",
+                    ],
+                    "exact_call_matrix_shape": "3_fixtures_x_3_candidates_equals_9_calls",
+                    "selection_weight": 0,
+                    "adaptive_parameter_changes_permitted": False,
+                    "canary_vs_attestation_boundary": (
+                        "LIVE_READINESS_CANARY only checks immediate operational behavior under the frozen amended configuration; "
+                        "3 canary calls do not prove quota sufficiency for 63 calls and do not prove absence of later capacity or deadline failures."
+                    ),
+                    "planner_quality_firewall_rule": (
+                        "A successful HTTP/provider response that later fails schema/core evaluation MUST NOT fail the operational "
+                        "readiness gate merely because of planner quality. Canary readiness is not model selection."
+                    ),
+                },
+                "estimated_relative_cost_exposure": "1.05x baseline comparative batch (historical planning envelopes from frozen repository price snapshots: $12.97485 LOW to $25.2315 HIGH for 189 calls under 2026-10-16 runner registry snapshot; $11.080125 LOW to $21.59325 HIGH under 2026-10-17 Preflight 01D snapshot; not hard cost caps)",
                 "scientific_strength": (
-                    "HIGHEST: Combines pre-batch operational verification on 2/3/4-day canary scenarios with the full "
-                    "uncompromised 180-cell comparative benchmark."
+                    "HIGHEST: Combines OWNER_AND_PROVIDER_ATTESTATION and an immediate 3x3 operational readiness canary probe with the full "
+                    "uncompromised 180-cell comparative benchmark (with canary selection_weight = 0)."
                 ),
                 "selection_confidence": (
-                    "HIGHEST: Full n=60 per-candidate comparative denominator protected by pre-verified billing, quota, and timeout readiness."
+                    "HIGHEST: Full n=60 per-candidate comparative denominator preceded by OWNER_AND_PROVIDER_ATTESTATION (quota sufficient for "
+                    "exact authorized 63 C1 calls with no Free Tier 20-RPD ceiling) and immediate operational verification."
                 ),
                 "operational_risk": (
-                    "LOW: Any residual billing, quota, or timeout misconfiguration halts at <=9 canary calls before the "
-                    "180-cell comparative batch is committed."
+                    "LOW: Immediate account/transport misconfigurations halt at <=9 canary calls before the 180-cell comparative batch is committed "
+                    "(recognizing that 3 canary calls per candidate do not prove quota sufficiency for 63 calls or absence of later capacity/deadline failures)."
                 ),
             },
             {
@@ -1042,7 +1122,7 @@ def build_call_budget_options() -> dict[str, Any]:
                 "comparative_benchmark_calls": 90,
                 "maximum_generation_calls": 90,
                 "calls_per_candidate": {"C1": 30, "C2": 30, "C3": 30},
-                "estimated_relative_cost_exposure": "0.50x baseline comparative batch ($6.1785 LOW to $12.015 HIGH under frozen runner registry pricing; $5.27625 LOW to $10.2825 HIGH under Preflight 01D pricing)",
+                "estimated_relative_cost_exposure": "0.50x baseline comparative batch (historical planning envelopes from frozen repository price snapshots: $6.1785 LOW to $12.015 HIGH under 2026-10-16 runner registry snapshot; $5.27625 LOW to $10.2825 HIGH under 2026-10-17 Preflight 01D snapshot; not hard cost caps)",
                 "scientific_strength": (
                     "MODERATE: Reduces per-candidate sample size from 60 to 30 (10 per destination, 10 per day duration), "
                     "increasing sampling variance by sqrt(2) (+41.4%)."
@@ -1087,8 +1167,8 @@ def build_cost_planning_analysis(
     token_profiles = {
         "LOW_PLANNING_ENVELOPE": {
             "description": (
-                "Grounded in lower-to-median observed prompt + catalog token footprint and compact 2..3 day "
-                "structured JSON output + moderate reasoning/thinking token overhead."
+                "Historical planning envelope (not a hard cost cap) grounded in lower-to-median observed prompt + catalog "
+                "token footprint and compact 2..3 day structured JSON output + moderate reasoning/thinking token overhead."
             ),
             "per_call_tokens_by_candidate": {
                 "C1": {"input_tokens": 24000, "billable_output_plus_thought_tokens": 4500},
@@ -1098,8 +1178,8 @@ def build_cost_planning_analysis(
         },
         "HIGH_PLANNING_ENVELOPE": {
             "description": (
-                "Grounded in upper observed catalog token footprint (~93 KB wire payload) and heavy 3..4 day "
-                "structured JSON output + reasoning/adaptive-thinking token consumption."
+                "Historical planning envelope (not a hard cost cap) grounded in upper observed catalog token footprint (~93 KB wire payload) "
+                "and heavy 3..4 day structured JSON output + reasoning/adaptive-thinking token consumption."
             ),
             "per_call_tokens_by_candidate": {
                 "C1": {"input_tokens": 40000, "billable_output_plus_thought_tokens": 9000},
@@ -1149,17 +1229,21 @@ def build_cost_planning_analysis(
     return {
         "current_price_input_status": "EXTERNAL_PRICING_REFRESH_REQUIRED_BEFORE_AUTHORIZATION",
         "hard_maximum_claimed": False,
+        "envelope_nature": (
+            "LOW and HIGH are historical planning envelopes from frozen repository price snapshots, not hard cost caps."
+        ),
         "why_hard_maximum_is_not_claimed": (
-            "A hard invoice maximum cannot be claimed offline because: (1) repository pricing snapshots from 2026-10-16 "
-            "(dev_live_runner.py) and 2026-10-17 (w06_model_preflight_01d_v2_live_receipt_v1.json) differ slightly and must be "
-            "refreshed against live provider pricing schedules before authorization; (2) provider billing treatment of internal "
-            "reasoning/thinking tokens relative to max_output_tokens=16,384 varies by provider; and (3) providers may bill for "
-            "tokens generated prior to a client-side or gateway timeout even when the client receives no usage_metadata."
+            "A hard invoice maximum cannot be claimed offline because: (1) LOW and HIGH are historical planning envelopes from "
+            "frozen repository price snapshots (2026-10-16 in dev_live_runner.py and 2026-10-17 in "
+            "w06_model_preflight_01d_v2_live_receipt_v1.json), not hard cost caps, and must be refreshed against live provider "
+            "pricing schedules before authorization; (2) provider billing treatment of internal reasoning/thinking tokens relative "
+            "to max_output_tokens=16,384 varies by provider; and (3) providers may bill for tokens generated prior to a client-side "
+            "or gateway timeout even when the client receives no usage_metadata."
         ),
         "cost_category_separation": {
             "planning_estimate": (
                 "Pre-execution analytical cost envelope (LOW / HIGH / CONDITIONAL_MAX_OUTPUT_REFERENCE) computed from token profiles "
-                "and reference price tables to size account credit provisioning before authorization."
+                "and historical frozen repository price snapshots (not hard cost caps) to size account credit provisioning before authorization."
             ),
             "authoritative_provider_receipt_cost": (
                 "Post-execution deterministic token-usage cost computed in execution_receipt.json from provider-returned "
@@ -1244,29 +1328,35 @@ def build_anty_analytical_recommendation() -> dict[str, Any]:
                 "secondary stabilization track on the exact 60 balanced DEV-SELECT fixtures under retry=0, prompt P1, and Schema V2."
             ),
             "fair_provider_conditions": (
-                "Verifies paid quota on C1 (Google), active credit balance on C3 (Anthropic), and billing readiness on C2 (OpenAI) "
-                "via a pre-live readiness canary before comparative execution, applying the exact same 180s timeout and 2.0s deterministic "
-                "inter-call spacing to all three candidates."
+                "Explicitly separates (A) OWNER_AND_PROVIDER_ATTESTATION (billing active, daily/request quota and RPM/TPM limits sufficient "
+                "for the exact authorized call count — under S2 maximum C1 generation calls = 63, with no Free Tier 20-RPD ceiling — and "
+                "model access/tier ready) from (B) LIVE_READINESS_CANARY (which only checks immediate operational behavior under the frozen "
+                "amended configuration; 3 canary calls do not prove quota sufficiency for 63 calls and do not prove absence of later "
+                "capacity/deadline failures), while applying the exact same 180s client timeout and 2.0s deterministic client pacing across C1, C2, and C3."
             ),
             "planner_quality_observability": (
-                "Eliminates the 55s boundary truncation that censored 52/60 C2 cells (including 40/40 3-day and 4-day scenarios) "
-                "and 14/60 C1 cells, allowing true observation of schema validity, grounding accuracy, and core constraint satisfaction."
+                "Removes the frozen 55s client-side cutoff from the secondary configuration and materially reduces client-side "
+                "right-censoring risk; provider-side deadlines, capacity errors, quota failures, or other transport failures may still prevent observation."
             ),
             "final100_risk": (
-                "Protects Final100 completely during amendment prep and execution (zero Final100 access), while ensuring the winning "
-                "candidate and operational timeout/pacing parameters are empirically validated on 3-day and 4-day scenarios before Final100."
+                "Protects Final100 completely during amendment prep and execution (zero Final100 access), while evaluating candidate "
+                "and operational timeout/pacing behavior on 2-day, 3-day, and 4-day DEV scenarios before Final100."
             ),
             "cost": (
-                "Bounded and modest: $12.97485 LOW to $25.2315 HIGH total across 189 calls (9 canary + 180 comparative) under frozen runner "
-                "registry rates ($11.080125 LOW to $21.59325 HIGH under Preflight 01D rates), with the 9-call canary preventing wasted spend if any account issue remains."
+                "LOW and HIGH are historical planning envelopes from frozen repository price snapshots, not hard cost caps: "
+                "$12.97485 LOW to $25.2315 HIGH across 189 calls (9 canary + 180 comparative) under the 2026-10-16 runner registry snapshot "
+                "($11.080125 LOW to $21.59325 HIGH under the 2026-10-17 Preflight 01D snapshot; CONDITIONAL_MAX_OUTPUT_REFERENCE $39.91428 / $34.21656), "
+                "with current_price_input_status = EXTERNAL_PRICING_REFRESH_REQUIRED_BEFORE_AUTHORIZATION and hard_maximum_claimed = false."
             ),
             "time": (
-                "2.0s deterministic inter-call pacing adds only ~6.3 minutes across 189 calls, and healthy responses return as soon as "
-                "generation completes without waiting for the 180s timeout ceiling."
+                "P1 (2,000 ms fixed delay) bounds client-issued request cadence only (adding ~6.3 minutes across 189 calls without "
+                "removing or preventing provider-side high-demand HTTP 503 errors), and healthy responses return upon completion without "
+                "waiting for the 180s client timeout ceiling."
             ),
             "thesis_defense_quality": (
                 "Provides a transparent two-track empirical narrative: Track 1 reports strict preregistered 55s operational fragility "
-                "(9/180 completions), and Track 2 reports controlled comparative model quality once administrative/timeout confounders are removed."
+                "(9/180 completions), and Track 2 evaluates comparative model behavior under attested account provisioning and a relaxed "
+                "client-side timeout boundary without claiming guaranteed completion or complete observability."
             ),
         },
     }
@@ -1278,8 +1368,8 @@ def build_project_owner_action_matrix() -> list[dict[str, Any]]:
         {
             "action_id": "POA-01",
             "action": (
-                "Verify Anthropic console Plans & Billing status and ensure positive credit balance sufficient for planned C3 calls "
-                "(>=63 calls under S2 or >=60 calls under S1, recommended >=$15..$20 credit headroom)."
+                "Verify Anthropic console Plans & Billing status and ensure positive credit balance sufficient for the exact "
+                "authorized C3 call count (63 calls under S2, 60 calls under S1, or 30 calls under S3; additional credit buffer is optional operational safety margin)."
             ),
             "provider": "anthropic (C3 / claude-sonnet-5-5)",
             "required_before_which_gate": "W06-DEV-SELECT-AMENDED-LIVE-AUTHORIZATION-AND-READINESS-GATE",
@@ -1289,8 +1379,8 @@ def build_project_owner_action_matrix() -> list[dict[str, Any]]:
                 "'Your credit balance is too low to access the Anthropic API. Please go to Plans & Billing to upgrade or purchase credits.'"
             ),
             "how_to_verify_without_secret_disclosure": (
-                "Project Owner confirms active positive credit tier in Anthropic Console and runs the future ChatGPT-approved "
-                "pre-live readiness attestation check, which records only boolean readiness status and HTTP 200 model-access verification "
+                "Project Owner confirms active positive credit tier in Anthropic Console (OWNER_AND_PROVIDER_ATTESTATION) and, if selected by ChatGPT, "
+                "runs the frozen LIVE_READINESS_CANARY check, recording boolean readiness status and HTTP 200 response verification "
                 "without logging API keys, hashes, prefixes, or organization IDs."
             ),
             "owner_action_marker": "OWNER_ACTION_REQUIRED",
@@ -1299,8 +1389,9 @@ def build_project_owner_action_matrix() -> list[dict[str, Any]]:
         {
             "action_id": "POA-02",
             "action": (
-                "Verify Google AI Studio / Google Cloud project bound to GEMINI_API_KEY is on Paid Tier (Pay-as-you-go) "
-                "with daily request quota >=200 RPD and rate limits sufficient for >=63 C1 calls."
+                "Verify Google AI Studio / Google Cloud project bound to GEMINI_API_KEY is on Paid Tier (Pay-as-you-go): "
+                "daily/request quota and RPM/TPM limits must be sufficient for the exact authorized C1 call count; under S2 "
+                "maximum C1 generation calls = 63, with no Free Tier 20-RPD ceiling (any larger quota margin is optional operational safety margin)."
             ),
             "provider": "google (C1 / gemini-3.8-flash)",
             "required_before_which_gate": "W06-DEV-SELECT-AMENDED-LIVE-AUTHORIZATION-AND-READINESS-GATE",
@@ -1310,8 +1401,9 @@ def build_project_owner_action_matrix() -> list[dict[str, Any]]:
                 "'GenerateRequestsPerDayPerProjectPerModel-FreeTier' and quotaValue '20'."
             ),
             "how_to_verify_without_secret_disclosure": (
-                "Project Owner confirms Paid Tier billing linkage in Google AI Studio / Cloud Console and records boolean "
-                "tier attestation in the pre-live readiness receipt without disclosing project IDs, billing account IDs, or API key material."
+                "Project Owner confirms Paid Tier billing linkage and quota sufficiency for the exact authorized C1 call count in Google AI Studio / "
+                "Cloud Console (OWNER_AND_PROVIDER_ATTESTATION; note that a 3-call LIVE_READINESS_CANARY does not prove quota sufficiency for 63 calls) "
+                "without disclosing project IDs, billing account IDs, or API key material."
             ),
             "owner_action_marker": "OWNER_ACTION_REQUIRED",
             "status": "PENDING_CHATGPT_AMENDMENT_DECISION",
@@ -1320,18 +1412,19 @@ def build_project_owner_action_matrix() -> list[dict[str, Any]]:
             "action_id": "POA-03",
             "action": (
                 "Verify OpenAI platform billing credit balance and usage tier limits for OPENAI_API_KEY are sufficient "
-                "for >=63 C2 calls with up to 16,384 max_output_tokens."
+                "for the exact authorized C2 call count (63 calls under S2, 60 calls under S1, or 30 calls under S3) with up to 16,384 max_output_tokens."
             ),
             "provider": "openai (C2 / gpt-6.1-sol)",
             "required_before_which_gate": "W06-DEV-SELECT-AMENDED-LIVE-AUTHORIZATION-AND-READINESS-GATE",
             "mandatory_or_optional": "MANDATORY_IF_AMENDED_COMPARATIVE_TRACK_APPROVED",
             "reason": (
                 "Although C2 recorded 0/60 billing/quota errors in primary DEV-SELECT (8/60 NONE, 52/60 client timeout at 55s), "
-                "longer timeouts allow all 60 cells to complete token generation and incur full output token billing (~$3.51..$7.50+)."
+                "a longer client timeout permits calls to continue beyond the frozen 55s client cutoff and may increase billable token exposure; "
+                "no completion count or success rate is predicted."
             ),
             "how_to_verify_without_secret_disclosure": (
-                "Project Owner confirms positive OpenAI credit balance in OpenAI Platform Billing and records boolean readiness "
-                "status without exposing API keys, organization IDs, or secret hashes."
+                "Project Owner confirms positive OpenAI credit balance in OpenAI Platform Billing (OWNER_AND_PROVIDER_ATTESTATION) and records boolean "
+                "readiness status without exposing API keys, organization IDs, or secret hashes."
             ),
             "owner_action_marker": "OWNER_ACTION_REQUIRED",
             "status": "PENDING_CHATGPT_AMENDMENT_DECISION",
@@ -1346,8 +1439,8 @@ def build_project_owner_action_matrix() -> list[dict[str, Any]]:
             "required_before_which_gate": "W06-DEV-SELECT-AMENDED-LIVE-AUTHORIZATION-AND-READINESS-GATE",
             "mandatory_or_optional": "OPTIONAL_FOR_OPERATIONAL_READINESS_MANDATORY_FOR_COST_TIEBREAK_AUTHORITY",
             "reason": (
-                "Repository contains two historical pricing snapshots (2026-10-16 in dev_live_runner.py and 2026-10-17 in "
-                "w06_model_preflight_01d_v2_live_receipt_v1.json); current_price_input_status is marked "
+                "LOW and HIGH are historical planning envelopes from frozen repository price snapshots (2026-10-16 in dev_live_runner.py and 2026-10-17 in "
+                "w06_model_preflight_01d_v2_live_receipt_v1.json), not hard cost caps; current_price_input_status is marked "
                 "EXTERNAL_PRICING_REFRESH_REQUIRED_BEFORE_AUTHORIZATION."
             ),
             "how_to_verify_without_secret_disclosure": (
@@ -1564,9 +1657,19 @@ def compute_w06_execution_environment_amendment_prep_payload(
             },
             "execution_environment_factors_under_review": {
                 "A_provider_readiness_account_provisioning": {
-                    "C1": "Quota and Paid Tier rate-limit readiness sufficient for planned C1 call batch (removing 20 RPD Free Tier cap).",
-                    "C2": "Confirm active API key, billing credit sufficiency, and model access; no billing/quota blocker was evidenced in primary DEV-SELECT (0/60 HTTP 429/400).",
-                    "C3": "Anthropic API billing and positive credit balance sufficient for planned C3 call batch (resolving 60/60 HTTP 400 credit rejection).",
+                    "C1": (
+                        "Daily/request quota and RPM/TPM limits must be sufficient for the exact authorized C1 call count; "
+                        "under S2 maximum C1 generation calls = 63, with no Free Tier 20-RPD ceiling."
+                    ),
+                    "C2": (
+                        "Confirm active API key, billing credit sufficiency, and model access; no billing/quota blocker was evidenced "
+                        "in primary DEV-SELECT (0/60 HTTP 429/400), though a longer client timeout permits calls to continue beyond "
+                        "the frozen 55s client cutoff and may increase billable token exposure."
+                    ),
+                    "C3": (
+                        "Anthropic API billing and positive credit balance sufficient for the exact authorized C3 call count "
+                        "(resolving 60/60 HTTP 400 credit rejection)."
+                    ),
                 },
                 "B_request_timeout_policy": timeout_policy_options,
                 "C_pacing_policy": pacing_policy_options,

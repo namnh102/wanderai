@@ -6,8 +6,8 @@
 - **Artifact ID:** `W06-DEV-SELECT-EXECUTION-ENVIRONMENT-AMENDMENT-01-PREP-V1`
 - **Authoritative Base (`develop`):** `811255a7dd00234d63184ab483e9f88b1f2d8554`
 - **Prep Artifact Path:** `data/evaluation/w06/w06_dev_select_execution_environment_amendment_01_prep_v1.json`
-- **Prep Artifact File SHA256 (LF):** `21ad72d89a35af7b4607ecd941a5873e7cd60d7e5c54621729d01e6954dfcc11`
-- **Prep Artifact Internal SHA256:** `57794e675d4b279bc875762a000ce74a07173a181afbdb31d0149f01f94b53c9`
+- **Prep Artifact File SHA256 (LF):** `e8786c4f538b86c8aa1d6b2c0cfb4afd6b8b6a1efa5b51799e44bd6bdd5a9a91`
+- **Prep Artifact Internal SHA256:** `49c24e65690cb4fb947d2733ddf8b019d863046cf955d9415eec1d16e9eaaf7a`
 - **Scientific Code Bundle SHA256:** `0638f2fcb100b0000e3a2a4e08137a9d468449001f258de7354df21e185ca2e3` (unchanged)
 - **Final Methodology Decision Authority:** `CHATGPT`
 
@@ -87,7 +87,7 @@ It **must not** be described as:
 - a rerun of failed cells, or
 - a continuation of the same primary batch.
 
-Both tracks remain reportable in the thesis: the primary track documents strict preregistered 55s one-shot operational behavior, and the secondary stabilization track evaluates comparative planner quality under verified account provisioning and relaxed transport deadlines.
+Both tracks remain reportable in the thesis: the primary track documents strict preregistered 55s one-shot operational behavior, and the secondary stabilization track evaluates comparative planner behavior after addressing account provisioning and removing the frozen 55s client-side cutoff (recognizing that provider-side deadlines, capacity errors, quota failures, or other transport failures may still prevent observation).
 
 ---
 
@@ -114,9 +114,9 @@ Unless ChatGPT explicitly amends them in a subsequent decision gate, all core sc
 ## 6. Execution-Environment Factors Under Review & Timeout Evidence Analysis (Sections 6 & 8)
 
 ### 6.1 Factor A: Provider Readiness & Account Provisioning
-- **C1 (`Google`):** Paid tier / billing linkage and daily/per-minute quota sufficient for the planned C1 batch (`>=60..63` calls), eliminating the 20 RPD Free Tier ceiling.
-- **C2 (`OpenAI`):** Confirm active billing credit balance and tier limits for `gpt-6.1-sol` (primary DEV-SELECT evidenced `0/60` billing/quota errors on C2, but higher timeout ceilings will allow more cells to complete and bill output tokens).
-- **C3 (`Anthropic`):** Active billing and positive credit balance sufficient for the planned C3 batch (`>=60..63` calls), eliminating the `60/60` HTTP 400 credit balance rejection.
+- **C1 (`Google`):** Paid tier / billing linkage; daily/request quota and RPM/TPM limits must be sufficient for the exact authorized C1 call count; under `S2` maximum C1 generation calls = `63`, with no Free Tier `20-RPD` ceiling (any additional quota headroom is optional operational safety margin, not a hard protocol requirement).
+- **C2 (`OpenAI`):** Confirm active billing credit balance and tier limits for `gpt-6.1-sol` sufficient for the exact authorized C2 call count (`63` under `S2`, `60` under `S1`, `30` under `S3`). Although C2 recorded `0/60` billing/quota errors in primary DEV-SELECT (`8/60` `NONE`, `52/60` client timeout at `55s`), a longer client timeout permits calls to continue beyond the frozen 55s client cutoff and may increase billable token exposure; no completion count or success rate is predicted.
+- **C3 (`Anthropic`):** Active billing and positive credit balance sufficient for the exact authorized C3 call count (`63` under `S2`, `60` under `S1`, `30` under `S3`), resolving the `60/60` HTTP 400 credit balance rejection.
 
 ### 6.2 Factor B & Section 8: Request Timeout Policy Decision-Support Table
 
@@ -129,20 +129,20 @@ Unless ChatGPT explicitly amends them in a subsequent decision gate, all core sc
 > [!WARNING]
 > **Counterfactual Firewall:**
 > - **Permitted Statement (FACT / DERIVED PATTERN):** `55 seconds demonstrably censors many C2 requests at the configured boundary.`
-> - **Forbidden Claim (NOT SUPPORTED):** Do **not** estimate counterfactual completion rates (e.g., `"120 seconds would yield X/60"`) or claim that any timeout value `"guarantees success"`.
+> - **Forbidden Claim (NOT SUPPORTED):** Do **not** estimate counterfactual completion rates (e.g., `"120 seconds would yield X/60"`), do **not** claim that any timeout value guarantees or causes completion, and do **not** claim complete observability. A longer client timeout permits calls to continue beyond the frozen 55s client cutoff and may increase billable token exposure; no completion count or success rate is predicted.
 
 | Option ID | Timeout | Worst-Case 180-Cell Unpaced | Worst-Case 180-Cell (+2s Pacing) | Worst-Case 189-Cell (+2s Pacing) | Worst-Case 90-Cell (+2s Pacing) | Censoring Risk | Stuck-Request Risk | Scientific & Engineering Rationale |
 |---|---:|---:|---:|---:|---:|---|---|---|
 | `T0_BASELINE_55S` | `55 s` (`55,000 ms`) | `2.75 h` (`9,900 s`) | `2.85 h` (`10,258 s`) | `2.99 h` (`10,771 s`) | `1.42 h` (`5,128 s`) | `DEMONSTRATED_HIGH` (`52/60` C2, `14/60` C1) | `LOW` | Frozen primary baseline; severely truncates 3-day and 4-day structured itinerary generation (`0/40` C2 3..4 day completions). |
-| `T1_CANDIDATE_90S` | `90 s` (`90,000 ms`) | `4.50 h` (`16,200 s`) | `4.60 h` (`16,558 s`) | `4.83 h` (`17,386 s`) | `2.30 h` (`8,278 s`) | `MODERATE_TO_HIGH` | `LOW_TO_MODERATE` | Adds `+35 s` (`+63.6%`) headroom above `55 s`, but because C2 2-day trips already reached `53.1 s`, 4-day trips with medium/high reasoning may still exceed `90 s`. |
-| `T2_CANDIDATE_120S` | `120 s` (`120,000 ms`) | `6.00 h` (`21,600 s`) | `6.10 h` (`21,958 s`) | `6.40 h` (`23,056 s`) | `3.05 h` (`10,978 s`) | `MODERATE_LOW` | `MODERATE` | More than doubles (`+118.2%`) the 55s cutoff, providing substantial headroom for 3-day and 4-day JSON generation while bounding worst-case 180-cell runtime to `~6.1 h`. |
-| `T3_CANDIDATE_180S` | `180 s` (`180,000 ms`) | `9.00 h` (`32,400 s`) | `9.10 h` (`32,758 s`) | `9.55 h` (`34,396 s`) | `4.55 h` (`16,378 s`) | `LOW_CLIENT_SIDE` | `MODERATE_HIGH` | Provides `3.27x` (`+125 s`) client-side headroom for large `16,384` max-token structured outputs and adaptive/medium reasoning across all 2..4 day scenarios. (Upstream provider 504 gateway deadlines remain provider-controlled.) |
+| `T1_CANDIDATE_90S` | `90 s` (`90,000 ms`) | `4.50 h` (`16,200 s`) | `4.60 h` (`16,558 s`) | `4.83 h` (`17,386 s`) | `2.30 h` (`8,278 s`) | `MODERATE_TO_HIGH` | `LOW_TO_MODERATE` | Adds `+35 s` (`+63.6%`) client-side deadline expansion above `55 s`, permitting calls to continue up to `90 s` on the client side without predicting any completion count or success rate; 3-day and 4-day trips may still exceed `90 s`. |
+| `T2_CANDIDATE_120S` | `120 s` (`120,000 ms`) | `6.00 h` (`21,600 s`) | `6.10 h` (`21,958 s`) | `6.40 h` (`23,056 s`) | `3.05 h` (`10,978 s`) | `MODERATE_LOW` | `MODERATE` | More than doubles (`+118.2%`) the frozen 55s client-side cutoff, reducing client-side right-censoring risk on 3-day and 4-day scenarios while bounding worst-case 180-cell runtime to `~6.1 h`; no completion count or success rate is predicted. |
+| `T3_CANDIDATE_180S` | `180 s` (`180,000 ms`) | `9.00 h` (`32,400 s`) | `9.10 h` (`32,758 s`) | `9.55 h` (`34,396 s`) | `4.55 h` (`16,378 s`) | `LOW_CLIENT_SIDE` | `MODERATE_HIGH` | Removes the frozen 55s client-side cutoff (`3.27x`, `+125 s`) and materially reduces client-side right-censoring risk across all 2..4 day scenarios; provider-side deadlines, capacity errors, quota failures, or other transport failures may still prevent observation, and no completion count or success rate is predicted. |
 | `T4_OPTIONAL_UPPER_BOUND_240S` | `240 s` (`240,000 ms`) | `12.00 h` (`43,200 s`) | `12.10 h` (`43,558 s`) | `12.70 h` (`45,736 s`) | `6.05 h` (`21,778 s`) | `VERY_LOW_CLIENT_SIDE` | `HIGH` | Upper-bound reference only if extreme client headroom is desired; diminishing return over `180 s` due to upstream provider gateway timeouts. |
 
 ### 6.3 Factor C: Pacing Policy Options (Non-Adaptive, Deterministic, `retry = 0`)
 - **`P0_UNPACED_INTERLEAVED_C1_C2_C3` (`0 ms` delay):** Retains current `C1 -> C2 -> C3` ordering with `0 ms` sleep. Natural spacing exists when all 3 providers take `20..50 s`, but collapses if two providers fail rapidly.
-- **`P1_FIXED_2000MS_INTER_CALL_DELAY` (`2,000 ms` delay):** Unconditional fixed `2.0 s` pause between consecutive cells (`+358 s` = `5.97 min` across `180` cells), guaranteeing `>=6.0 s` same-provider spacing even if two providers fail instantaneously.
-- **`P2_FIXED_5000MS_INTER_CALL_DELAY` (`5,000 ms` delay):** Unconditional fixed `5.0 s` pause between consecutive cells (`+895 s` = `14.92 min` across `180` cells), guaranteeing `>=15.0 s` (`<=4 RPM`) same-provider spacing.
+- **`P1_FIXED_2000MS_INTER_CALL_DELAY` (`2,000 ms` delay):** Unconditional fixed `2.0 s` pause between consecutive cells (`+358 s` = `5.97 min` across `180` cells). Bounds client-issued request cadence only (`>=6.0 s` between client-initiated requests to the same provider even if two providers fail instantaneously); client-side pacing does **not** remove or prevent provider-side high-demand `HTTP 503` errors.
+- **`P2_FIXED_5000MS_INTER_CALL_DELAY` (`5,000 ms` delay):** Unconditional fixed `5.0 s` pause between consecutive cells (`+895 s` = `14.92 min` across `180` cells). Bounds client-issued request cadence only (`>=15.0 s` / `<=4 RPM` client emission rate to the same provider); client-side pacing does **not** remove or prevent provider-side high-demand `HTTP 503` errors.
 
 ### 6.4 Factor D: Retry Policy Options
 - **`R0_STRICT_ZERO_RETRY` (`retry = 0`, Default Proposed):** Preserves the single-attempt per-cell invariant (`automatic_retry = 0`, `transport_retry = 0`, `llm_repair = 0`, `manual_retry = 0`, `fallback = false`).
@@ -150,21 +150,35 @@ Unless ChatGPT explicitly amends them in a subsequent decision gate, all core sc
 
 ---
 
-## 7. Pre-Live Provider-Readiness Attestation Design
+## 7. Pre-Live Provider-Readiness Attestation Design vs. Canary Readiness
 
-Before any amended comparative live batch is authorized, a dedicated pre-live readiness gate (`W06-DEV-SELECT-AMENDED-PRE-LIVE-PROVIDER-READINESS-GATE-V1`) must verify:
+Before any amended comparative live batch is authorized, readiness verification (`W06-DEV-SELECT-AMENDED-PRE-LIVE-PROVIDER-READINESS-GATE-V1`) explicitly separates two distinct mechanisms:
 
+### 7.1 Explicit Separation: Attestation vs. Canary
+- **A. `OWNER_AND_PROVIDER_ATTESTATION`:** Administrative and account-level verification required before authorization: billing active, daily/request quota and RPM/TPM limits sufficient for the exact authorized call count (e.g., `63` C1 calls under `S2`, with no Free Tier `20-RPD` ceiling), positive credit balance sufficient for the full authorized batch, and model access/tier ready.
+- **B. `LIVE_READINESS_CANARY`:** Optional pre-batch live probe (`3` canary calls per candidate under `F3`/`S2`) that only checks immediate operational behavior under the frozen amended configuration; **`3` canary calls do not prove quota sufficiency for `63` calls and do not prove absence of later capacity (`HTTP 503`) or deadline (`HTTP 504`) failures**.
+
+### 7.2 Canary Governance Rules (If `F3`/`S2` Is Selected by ChatGPT)
+If `POLICY_F3` / `S2` is selected by ChatGPT, the following must be frozen before any canary authorization:
+- exact canary fixture IDs,
+- exact `3 x 3` call matrix (`3` fixtures × `3` candidates = `9` calls),
+- operational pass/fail rules,
+- zero selection weight (`selection_weight = 0`),
+- no adaptive parameter changes (`adaptive_parameter_changes_permitted = false`).
+- **Planner-Quality Firewall Rule:** *"A successful HTTP/provider response that later fails schema/core evaluation MUST NOT fail the operational readiness gate merely because of planner quality. Canary readiness is not model selection."*
+
+### 7.3 Candidate-Specific Attestation Requirements
 1. **C1 (`Google / gemini-3.8-flash` — `OWNER_ACTION_REQUIRED`):**
    - `GEMINI_API_KEY` boolean presence (`PRESENT`), without printing or hashing secret material.
    - Project/account billing linkage attested as Paid Tier (`billing_tier_status = PAID_TIER_ATTESTED`) without disclosing sensitive project/account IDs.
-   - Daily quota (`RPD`) and rate limits (`RPM`/`TPM`) attested above planned C1 call volume (no `20 RPD` Free Tier ceiling).
+   - Daily/request quota and RPM/TPM limits must be sufficient for the exact authorized C1 call count; under `S2` maximum C1 generation calls = `63` (`60` under `S1`, `30` under `S3`), with no Free Tier `20-RPD` ceiling (any additional quota headroom is optional operational safety margin).
 2. **C2 (`OpenAI / gpt-6.1-sol` — `OWNER_ACTION_REQUIRED`):**
    - `OPENAI_API_KEY` boolean presence (`PRESENT`).
-   - Active billing credit balance sufficient for planned C2 calls under extended timeout ceiling.
+   - Active billing credit balance sufficient for the exact authorized C2 call count under an extended client timeout ceiling (a longer client timeout permits calls to continue beyond the frozen 55s client cutoff and may increase billable token exposure; no completion count or success rate is predicted).
    - Model access verified for `gpt-6.1-sol`.
 3. **C3 (`Anthropic / claude-sonnet-5-5` — `OWNER_ACTION_REQUIRED`):**
    - `ANTHROPIC_API_KEY` boolean presence (`PRESENT`).
-   - Active billing and positive credit balance (`credit_balance_status = POSITIVE_SUFFICIENT_FOR_BATCH`), resolving the `60/60` HTTP 400 credit rejection.
+   - Active billing and positive credit balance (`credit_balance_status = POSITIVE_SUFFICIENT_FOR_BATCH`) sufficient for the exact authorized C3 call count, resolving the `60/60` HTTP 400 credit rejection.
    - Model access verified for `claude-sonnet-5-5`.
 
 ---
@@ -173,8 +187,8 @@ Before any amended comparative live batch is authorized, a dedicated pre-live re
 
 | Option ID | Summary | Advantages | Scientific Weaknesses | Engineering Weaknesses | Cost Implications | Defense / Thesis Implications | Risk to Final100 Quality |
 |---|---|---|---|---|---|---|---|
-| **`OPTION_A_MINIMAL_ENVIRONMENT_REPAIR`** | Fix provider billing/quota + raise timeout to one fixed candidate value (`e.g. 120s/180s`); unpaced `P0`; `retry=0`; same `P1`, `C1..C3`, and metrics. | Minimal change relative to primary run; isolates billing/quota and timeout truncation directly. | Secondary post-hoc track requires dual reporting; no inter-call spacing if a provider fails fast. | Does not smooth burst request cadence against `HTTP 503` high-demand spikes. | `S1 (180 calls)`: `$12.357` LOW to `$24.03` HIGH (runner registry pricing). | Clear parsimonious contrast between 55s primary run and repaired environment. | `LOW_TO_MODERATE` |
-| **`OPTION_B_CONSERVATIVE_RELIABILITY_ENVIRONMENT`** | Fix provider billing/quota + pre-live readiness attestation + stronger timeout ceiling (`e.g. 180s`) + fixed deterministic pacing (`e.g. 2.0s`); `retry=0`. | Addresses quota/billing, timeout truncation, and burst pacing symmetrically across all 3 candidates; prevents launching against unprovisioned accounts. | Combines timeout relaxation and fixed pacing in one stabilization track. | Adds `~6..15 min` deterministic pacing overhead and longer wait on hung sockets. | `S2 (189 calls)`: `$12.97485` LOW to `$25.2315` HIGH (runner registry pricing). | Strongest defense: systematic diagnosis followed by pre-attested, fair stabilization before Final100. | `LOW` |
+| **`OPTION_A_MINIMAL_ENVIRONMENT_REPAIR`** | Fix provider billing/quota + raise timeout to one fixed candidate value (`e.g. 120s/180s`); unpaced `P0`; `retry=0`; same `P1`, `C1..C3`, and metrics. | Minimal change relative to primary run; removes the frozen 55s client-side cutoff from the secondary configuration and materially reduces client-side right-censoring risk (provider-side deadlines, capacity errors, quota failures, or other transport failures may still prevent observation). | Secondary post-hoc track requires dual reporting; no inter-call spacing if a provider fails fast. | Does not bound client-issued request cadence when other candidates fail rapidly (note that even client-side pacing does not prevent provider-side high-demand `HTTP 503` errors). | `S1 (180 calls)`: historical planning envelopes `$12.357` LOW to `$24.03` HIGH (2026-10-16 runner registry snapshot, not hard cost caps). | Clear parsimonious contrast between 55s primary run and secondary stabilization track without claiming guaranteed observability. | `LOW_TO_MODERATE` |
+| **`OPTION_B_CONSERVATIVE_RELIABILITY_ENVIRONMENT`** | Fix provider billing/quota + `OWNER_AND_PROVIDER_ATTESTATION` + optional `LIVE_READINESS_CANARY` + stronger client timeout ceiling (`e.g. 180s`) + fixed deterministic pacing (`e.g. 2.0s`); `retry=0`. | Addresses quota/billing, relaxes the 55s client-side timeout cutoff, and bounds client-issued request cadence symmetrically across all 3 candidates (recognizing client pacing does not prevent provider-side `HTTP 503` errors). | Combines client timeout relaxation and fixed client pacing in one stabilization track. | Adds `~6..15 min` deterministic pacing overhead and longer wait on hung sockets. | `S2 (189 calls)`: historical planning envelopes `$12.97485` LOW to `$25.2315` HIGH (2026-10-16 runner registry snapshot, not hard cost caps). | Strongest defense: systematic diagnosis followed by pre-attested account readiness and symmetric non-adaptive stabilization before Final100. | `LOW` |
 | **`OPTION_C_NO_AMENDED_COMPARATIVE_BENCHMARK`** | Accept primary `180`-cell results as sole comparative basis; select winner under original rules; stabilize environment only after winner selection. | `$0.00` additional DEV-SELECT spend; zero secondary comparative runs. | **Severe:** selects winner with `0/60` C3 generations, `35/60` C1 Free Tier 429s, and `52/60` C2 55s timeouts (`0/40` on 3..4 day trips). | Multi-day itinerary generation remains unverified before Final100. | `$0.00` now, but high risk of wasted spend or failure in Stochasticity / Final100. | Difficult to defend claiming comparative model selection when C3 never generated a single token. | `HIGH` |
 
 ---
@@ -187,33 +201,34 @@ All options strictly forbid reading, inspecting, or calibrating on `Final100` (`
 |---|---|---|---|---|---|---|
 | **`POLICY_F1_REUSE_EXISTING_DEV_SELECT_60`** | Reuse exact `60` `DEV-SELECT` fixtures (`W06-DEV-SELECT-001..060`). | `LOW` (no prompt, model, or schema change; only environment stabilization). | `HIGHEST` (`1-to-1` across all 60 scenarios and exact marginal balance). | `VERY_LOW` (`P1` and models remain frozen). | `ZERO` | `LOW` |
 | **`POLICY_F2_SECONDARY_STABILIZATION_FROM_NON_FINAL_FROZEN_DEV`** | Construct a `30`-fixture stratified subset from `w06_dev_fixtures_freeze_v1.json` (`DEV-TUNE` / `DEV-SELECT`). | `LOW_TO_MODERATE` (requires a post-hoc subset selection rule). | `LOWER` (loses 1-to-1 cell correspondence and halves sample size). | `LOW` (overlaps with `DEV-TUNE` stochasticity fixtures if `DEV-TUNE` is used). | `ZERO` | `MODERATE` |
-| **`POLICY_F3_ENGINEERING_READINESS_SUBSET_PLUS_AMENDED_COMPARATIVE_SET`** | Stage 1: `3` deterministic readiness canary fixtures (`2/3/4` days from `DEV-TUNE` or `W06-PREFLIGHT-SMOKE-001`, `3..9` calls, zero selection weight) + Stage 2: exact `60` `DEV-SELECT` comparative fixtures (`180` calls). | `LOW` (Stage 1 is binary readiness verification; Stage 2 is full `DEV-SELECT-60`). | `HIGHEST` (`1-to-1` on all `60` comparative scenarios). | `VERY_LOW` (canary cannot alter prompts, schemas, or models). | `ZERO` | `LOW_TO_MODERATE` |
+| **`POLICY_F3_ENGINEERING_READINESS_SUBSET_PLUS_AMENDED_COMPARATIVE_SET`** | Stage 1: `3` deterministic readiness canary fixtures (`2/3/4` days from `DEV-TUNE` or `W06-PREFLIGHT-SMOKE-001`, exact `3 x 3` call matrix = `9` calls, `selection_weight = 0`, no adaptive parameter changes) + Stage 2: exact `60` `DEV-SELECT` comparative fixtures (`180` calls). | `LOW` (Stage 1 checks immediate operational response only; a successful HTTP/provider response that later fails schema/core evaluation MUST NOT fail the operational readiness gate merely because of planner quality; canary readiness is not model selection). | `HIGHEST` (`1-to-1` on all `60` comparative scenarios). | `VERY_LOW` (canary cannot alter prompts, schemas, models, or parameters). | `ZERO` | `LOW_TO_MODERATE` |
 
 ---
 
 ## 10. Call-Budget Options & Cost Planning (Sections 11 & 12)
 
 ### 10.1 Call-Budget Alternatives
-- **`S1_FULL_COMPARATIVE_180`:** `3 candidates × 60 comparative cells = 180 calls` (`0` canary calls). High statistical power (`n = 60`/candidate); moderate operational risk if an account issue is discovered mid-batch.
-- **`S2_READINESS_CANARY_PLUS_COMPARATIVE_180`:** `3..9 engineering readiness canary calls + 180 comparative cells = 183..189 calls max`. Highest scientific and operational confidence; halts at `<=9` calls if any provider readiness check fails.
+- **`S1_FULL_COMPARATIVE_180`:** `3 candidates × 60 comparative cells = 180 calls` (`0` canary calls). High statistical power (`n = 60`/candidate); relies on `OWNER_AND_PROVIDER_ATTESTATION` without a pre-batch live canary probe.
+- **`S2_READINESS_CANARY_PLUS_COMPARATIVE_180`:** `3 × 3 = 9 engineering readiness canary calls + 180 comparative cells = 189 calls max` (`63` calls/candidate max). Requires exact canary fixture IDs, exact `3 x 3` call matrix, pass/fail rules, zero selection weight, and no adaptive parameter changes to be frozen before any canary authorization. Combines `OWNER_AND_PROVIDER_ATTESTATION` with an immediate operational probe before the 180-cell comparative batch.
 - **`S3_REDUCED_STRATIFIED_COMPARATIVE_90`:** `3 candidates × 30 stratified comparative cells = 90 calls`. Halves cost and runtime (`0.50x`), but increases binomial sampling variance (`1 cell = 3.33%` vs `1.67%`).
 
 ### 10.2 Cost Planning Envelopes & Pricing Status
 - **Current Price Input Status:** `EXTERNAL_PRICING_REFRESH_REQUIRED_BEFORE_AUTHORIZATION`
-- **Hard Maximum Claimed:** `false` (providers may update public rates, bill internal thinking tokens differently relative to `max_output_tokens = 16,384`, or bill partial generation before client timeout).
+- **Hard Maximum Claimed:** `false`
+- **Envelope Nature:** `LOW` and `HIGH` are **historical planning envelopes from frozen repository price snapshots**, not hard cost caps (providers may update public rates, bill internal thinking tokens differently relative to `max_output_tokens = 16,384`, or bill partial generation before client timeout).
 - **Separated Cost Categories:**
-  1. `planning_estimate`: Pre-execution analytical envelope (`LOW` / `HIGH` / `CONDITIONAL_MAX_OUTPUT_REFERENCE`).
+  1. `planning_estimate`: Pre-execution analytical envelope (`LOW` / `HIGH` / `CONDITIONAL_MAX_OUTPUT_REFERENCE`) from historical frozen repository price snapshots (not hard cost caps).
   2. `authoritative_provider_receipt_cost`: Post-execution deterministic cost from `usage_metadata` in `execution_receipt.json`.
   3. `provider_invoice`: Actual external billing statement on Google Cloud / OpenAI / Anthropic consoles.
 
-#### Cost Envelopes Under Frozen Runner Registry Rates (`2026-10-16`: C1 `$0.30/$2.50`, C2 `$2.50/$10.00`, C3 `$3.00/$15.00` per 1M tokens)
+#### Historical Planning Envelopes Under Frozen Runner Registry Snapshot (`2026-10-16`: C1 `$0.30/$2.50`, C2 `$2.50/$10.00`, C3 `$3.00/$15.00` per 1M tokens)
 | Budget Option | Calls | `LOW_PLANNING_ENVELOPE` | `HIGH_PLANNING_ENVELOPE` | `CONDITIONAL_MAX_OUTPUT_REFERENCE` (`16,384` out/call) |
 |---|---:|---:|---:|---:|
 | **`S1_FULL_COMPARATIVE_180`** | `180` (`60`/cand) | **`$12.357`** (`C1=$1.107, C2=$4.50, C3=$6.75`) | **`$24.03`** (`C1=$2.07, C2=$9.00, C3=$12.96`) | **`$38.0136`** (`C1=$3.1776, C2=$14.3304, C3=$20.5056`) |
 | **`S2_READINESS_CANARY_PLUS_COMPARATIVE_180`** | `189` (`63`/cand) | **`$12.97485`** (`C1=$1.16235, C2=$4.725, C3=$7.0875`) | **`$25.2315`** (`C1=$2.1735, C2=$9.45, C3=$13.608`) | **`$39.91428`** (`C1=$3.33648, C2=$15.04692, C3=$21.53088`) |
 | **`S3_REDUCED_STRATIFIED_COMPARATIVE_90`** | `90` (`30`/cand) | **`$6.1785`** (`C1=$0.5535, C2=$2.25, C3=$3.375`) | **`$12.015`** (`C1=$1.035, C2=$4.50, C3=$6.48`) | **`$19.0068`** (`C1=$1.5888, C2=$7.1652, C3=$10.2528`) |
 
-*(Corresponding envelopes under the `2026-10-17` Preflight 01D receipt rates — C1 `$0.75/$3.75`, C2 `$2.00/$10.00`, C3 `$2.00/$10.00` — are `$10.5525` LOW / `$20.565` HIGH / `$32.5872` CONDITIONAL_MAX for `S1`, `$11.080125` LOW / `$21.59325` HIGH / `$34.21656` CONDITIONAL_MAX for `S2`, and `$5.27625` LOW / `$10.2825` HIGH / `$16.2936` CONDITIONAL_MAX for `S3`.)*
+*(Corresponding historical planning envelopes under the `2026-10-17` Preflight 01D receipt snapshot — C1 `$0.75/$3.75`, C2 `$2.00/$10.00`, C3 `$2.00/$10.00` — are `$10.5525` LOW / `$20.565` HIGH / `$32.5872` CONDITIONAL_MAX for `S1`, `$11.080125` LOW / `$21.59325` HIGH / `$34.21656` CONDITIONAL_MAX for `S2`, and `$5.27625` LOW / `$10.2825` HIGH / `$16.2936` CONDITIONAL_MAX for `S3`.)*
 
 ---
 
@@ -225,10 +240,14 @@ All options strictly forbid reading, inspecting, or calibrating on `Final100` (`
   - **Track Classification:** `SECONDARY_POST_HOC_EXECUTION_ENVIRONMENT_STABILIZATION_TRACK`
   - **Fairness Policy:** `OPTION_B_CONSERVATIVE_RELIABILITY_ENVIRONMENT`
   - **Timeout Policy:** `T3_CANDIDATE_180S` (`180,000 ms` applied symmetrically to `C1`, `C2`, `C3`)
-  - **Pacing Policy:** `P1_FIXED_2000MS_INTER_CALL_DELAY` (`2,000 ms` deterministic non-adaptive spacing)
+  - **Pacing Policy:** `P1_FIXED_2000MS_INTER_CALL_DELAY` (`2,000 ms` deterministic non-adaptive spacing bounding client-issued request cadence only)
   - **Retry Policy:** `R0_STRICT_ZERO_RETRY` (`retry = 0`)
-  - **Fixture Policy:** `POLICY_F3_ENGINEERING_READINESS_SUBSET_PLUS_AMENDED_COMPARATIVE_SET` (`3` readiness canary fixtures × `3` candidates = `9` canary calls, followed by the exact `60` `DEV-SELECT` comparative fixtures = `180` calls)
-  - **Call-Budget Option:** `S2_READINESS_CANARY_PLUS_COMPARATIVE_180` (`189` calls maximum)
+  - **Fixture Policy:** `POLICY_F3_ENGINEERING_READINESS_SUBSET_PLUS_AMENDED_COMPARATIVE_SET` (`3` readiness canary fixtures × `3` candidates = `9` canary calls with `selection_weight = 0` and no adaptive parameter changes, followed by the exact `60` `DEV-SELECT` comparative fixtures = `180` calls)
+  - **Call-Budget Option:** `S2_READINESS_CANARY_PLUS_COMPARATIVE_180` (`189` calls maximum; `63` calls/candidate max)
+- **Key Scientific & Operational Semantics:**
+  - **Observability:** Removes the frozen 55s client-side cutoff from the secondary configuration and materially reduces client-side right-censoring risk; provider-side deadlines, capacity errors, quota failures, or other transport failures may still prevent observation.
+  - **Attestation vs. Canary:** Separates `OWNER_AND_PROVIDER_ATTESTATION` (billing active, quota sufficient for the exact authorized call count such as `63` C1 calls under `S2` with no Free Tier `20-RPD` ceiling, model access/tier ready) from `LIVE_READINESS_CANARY` (which only checks immediate operational behavior under the frozen amended configuration; `3` canary calls do not prove quota sufficiency for `63` calls and do not prove absence of later capacity/deadline failures). A successful HTTP/provider response that later fails schema/core evaluation MUST NOT fail the operational readiness gate merely because of planner quality. Canary readiness is not model selection.
+  - **Cost:** `LOW` and `HIGH` are historical planning envelopes from frozen repository price snapshots, not hard cost caps (`current_price_input_status = EXTERNAL_PRICING_REFRESH_REQUIRED_BEFORE_AUTHORIZATION`, `hard_maximum_claimed = false`).
 
 ---
 
@@ -238,7 +257,7 @@ All owner actions carry status `PENDING_CHATGPT_AMENDMENT_DECISION` and marker `
 
 | Action ID | Provider | Mandatory / Optional | Required Before Gate | Reason | Secret-Safe Verification Method | Status |
 |---|---|---|---|---|---|---|
-| `POA-01` | `anthropic (C3 / claude-sonnet-5-5)` | `MANDATORY_IF_AMENDED_COMPARATIVE_TRACK_APPROVED` | `W06-DEV-SELECT-AMENDED-LIVE-AUTHORIZATION-AND-READINESS-GATE` | `60/60` primary C3 cells failed with HTTP 400 low credit balance. | Owner confirms positive credit balance in Anthropic Console + future readiness gate records boolean status & HTTP 200 without key/hash/org disclosure. | `PENDING_CHATGPT_AMENDMENT_DECISION` |
-| `POA-02` | `google (C1 / gemini-3.8-flash)` | `MANDATORY_IF_AMENDED_COMPARATIVE_TRACK_APPROVED` | `W06-DEV-SELECT-AMENDED-LIVE-AUTHORIZATION-AND-READINESS-GATE` | `35/60` primary C1 cells failed with HTTP 429 Free Tier `20 RPD` quota exhaustion. | Owner confirms Paid Tier billing linkage in Google AI Studio / Cloud Console + boolean readiness attestation without project/key disclosure. | `PENDING_CHATGPT_AMENDMENT_DECISION` |
-| `POA-03` | `openai (C2 / gpt-6.1-sol)` | `MANDATORY_IF_AMENDED_COMPARATIVE_TRACK_APPROVED` | `W06-DEV-SELECT-AMENDED-LIVE-AUTHORIZATION-AND-READINESS-GATE` | Longer timeout ceiling (`120..180s`) allows all 60 C2 cells to complete and bill output tokens. | Owner confirms positive OpenAI credit balance + boolean readiness attestation without key/org disclosure. | `PENDING_CHATGPT_AMENDMENT_DECISION` |
-| `POA-04` | `all_providers (C1, C2, C3)` | `OPTIONAL_FOR_OPERATIONAL_READINESS_MANDATORY_FOR_COST_TIEBREAK_AUTHORITY` | `W06-DEV-SELECT-AMENDED-LIVE-AUTHORIZATION-AND-READINESS-GATE` | Refresh `2026-10-16` / `2026-10-17` repository pricing snapshots (`EXTERNAL_PRICING_REFRESH_REQUIRED_BEFORE_AUTHORIZATION`). | Record public provider pricing URLs, access date, and per-million USD rates in amended authorization plan. | `PENDING_CHATGPT_AMENDMENT_DECISION` |
+| `POA-01` | `anthropic (C3 / claude-sonnet-5-5)` | `MANDATORY_IF_AMENDED_COMPARATIVE_TRACK_APPROVED` | `W06-DEV-SELECT-AMENDED-LIVE-AUTHORIZATION-AND-READINESS-GATE` | `60/60` primary C3 cells failed with HTTP 400 low credit balance. | Owner confirms positive credit balance sufficient for exact authorized C3 call count in Anthropic Console (`OWNER_AND_PROVIDER_ATTESTATION`) + optional frozen canary check without key/hash/org disclosure. | `PENDING_CHATGPT_AMENDMENT_DECISION` |
+| `POA-02` | `google (C1 / gemini-3.8-flash)` | `MANDATORY_IF_AMENDED_COMPARATIVE_TRACK_APPROVED` | `W06-DEV-SELECT-AMENDED-LIVE-AUTHORIZATION-AND-READINESS-GATE` | `35/60` primary C1 cells failed with HTTP 429 Free Tier `20 RPD` quota exhaustion. | Owner confirms Paid Tier billing linkage and daily/request quota + RPM/TPM limits sufficient for the exact authorized C1 call count (`63` max under `S2`, with no Free Tier `20-RPD` ceiling) via `OWNER_AND_PROVIDER_ATTESTATION` without project/key disclosure. | `PENDING_CHATGPT_AMENDMENT_DECISION` |
+| `POA-03` | `openai (C2 / gpt-6.1-sol)` | `MANDATORY_IF_AMENDED_COMPARATIVE_TRACK_APPROVED` | `W06-DEV-SELECT-AMENDED-LIVE-AUTHORIZATION-AND-READINESS-GATE` | Although C2 recorded `0/60` billing/quota errors in primary DEV-SELECT (`8/60` `NONE`, `52/60` client timeout at `55s`), a longer client timeout permits calls to continue beyond the frozen 55s client cutoff and may increase billable token exposure; no completion count or success rate is predicted. | Owner confirms positive OpenAI credit balance (`OWNER_AND_PROVIDER_ATTESTATION`) + boolean readiness attestation without key/org disclosure. | `PENDING_CHATGPT_AMENDMENT_DECISION` |
+| `POA-04` | `all_providers (C1, C2, C3)` | `OPTIONAL_FOR_OPERATIONAL_READINESS_MANDATORY_FOR_COST_TIEBREAK_AUTHORITY` | `W06-DEV-SELECT-AMENDED-LIVE-AUTHORIZATION-AND-READINESS-GATE` | `LOW` and `HIGH` are historical planning envelopes from frozen repository price snapshots (`2026-10-16` / `2026-10-17`), not hard cost caps (`EXTERNAL_PRICING_REFRESH_REQUIRED_BEFORE_AUTHORIZATION`). | Record public provider pricing URLs, access date, and per-million USD rates in amended authorization plan. | `PENDING_CHATGPT_AMENDMENT_DECISION` |
