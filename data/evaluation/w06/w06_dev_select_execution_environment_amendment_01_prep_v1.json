@@ -1,0 +1,1332 @@
+{
+  "AMENDED_LIVE_AUTHORIZED": false,
+  "AMENDED_LIVE_EXECUTED": false,
+  "AMENDMENT_APPROVED": false,
+  "FINAL100_USED": false,
+  "FINAL_METHODOLOGY_DECISION_AUTHORITY": "CHATGPT",
+  "LIVE_PROVIDER_CALLS_NEW": 0,
+  "MODEL_WINNER_SELECTED": false,
+  "PRIMARY_DENOMINATORS_CHANGED": false,
+  "PRIMARY_EXPERIMENT_MUTATED": false,
+  "PRIMARY_RESULTS_REPLACED": false,
+  "SELECTED_MODEL_ID": null,
+  "STOCHASTICITY_EXECUTION_STARTED": false,
+  "amended_live_authorized": false,
+  "amended_live_executed": false,
+  "amendment_approved": false,
+  "amendment_classification": {
+    "classification": "SECONDARY_POST_HOC_EXECUTION_ENVIRONMENT_STABILIZATION_TRACK",
+    "forbidden_descriptions": [
+      "replacement of primary benchmark",
+      "retroactive preregistration",
+      "correction of primary results",
+      "rerun of failed cells",
+      "continuation of the same primary batch"
+    ],
+    "primary_experiment_remains_reportable": true,
+    "primary_experiment_valid": true
+  },
+  "amendment_scope_boundary": {
+    "candidate_model_change_proposed": false,
+    "candidates": {
+      "C1": "gemini-3.8-flash",
+      "C2": "gpt-6.1-sol",
+      "C3": "claude-sonnet-5-5"
+    },
+    "evaluator_semantics_unchanged": true,
+    "final100_used_for_amendment_calibration": false,
+    "fourth_model_addition_proposed": false,
+    "portable_schema_v2_sha256": "825a4ff912d851a95f7392cb564b7d7ca3588135508dc6eb3ac6304cdde3c490",
+    "portable_schema_v2_unchanged": true,
+    "primary_model_selection_metrics": [
+      "VALID_RUN_AND_SCHEMA_RATE",
+      "EXACT_GROUNDING_PASS_RATE",
+      "FINAL_CORE_PASS_RATE"
+    ],
+    "prompt_id": "P1",
+    "prompt_retuning_proposed": false,
+    "semantic_schema_sha256": "e4169f7b890f77d13af65e9f2070b6071c535b206d88440f5e8f28c179977555",
+    "semantic_schema_unchanged": true,
+    "ten_percentage_point_survivor_rule_threshold": "0.1",
+    "ten_percentage_point_survivor_rule_unchanged": true
+  },
+  "anty_analytical_recommendation": {
+    "advisory_only": true,
+    "criteria_evaluation": {
+      "cost": "Bounded and modest: $12.97485 LOW to $25.2315 HIGH total across 189 calls (9 canary + 180 comparative) under frozen runner registry rates ($11.080125 LOW to $21.59325 HIGH under Preflight 01D rates), with the 9-call canary preventing wasted spend if any account issue remains.",
+      "fair_provider_conditions": "Verifies paid quota on C1 (Google), active credit balance on C3 (Anthropic), and billing readiness on C2 (OpenAI) via a pre-live readiness canary before comparative execution, applying the exact same 180s timeout and 2.0s deterministic inter-call spacing to all three candidates.",
+      "final100_risk": "Protects Final100 completely during amendment prep and execution (zero Final100 access), while ensuring the winning candidate and operational timeout/pacing parameters are empirically validated on 3-day and 4-day scenarios before Final100.",
+      "planner_quality_observability": "Eliminates the 55s boundary truncation that censored 52/60 C2 cells (including 40/40 3-day and 4-day scenarios) and 14/60 C1 cells, allowing true observation of schema validity, grounding accuracy, and core constraint satisfaction.",
+      "scientific_defensibility": "Preserves the primary 180-cell one-shot benchmark immutable and reportable, while executing a clearly labeled secondary stabilization track on the exact 60 balanced DEV-SELECT fixtures under retry=0, prompt P1, and Schema V2.",
+      "thesis_defense_quality": "Provides a transparent two-track empirical narrative: Track 1 reports strict preregistered 55s operational fragility (9/180 completions), and Track 2 reports controlled comparative model quality once administrative/timeout confounders are removed.",
+      "time": "2.0s deterministic inter-call pacing adds only ~6.3 minutes across 189 calls, and healthy responses return as soon as generation completes without waiting for the 180s timeout ceiling."
+    },
+    "final_methodology_decision_authority": "CHATGPT",
+    "recommendation_implemented": false,
+    "recommended_policy_bundle": {
+      "amendment_track_classification": "SECONDARY_POST_HOC_EXECUTION_ENVIRONMENT_STABILIZATION_TRACK",
+      "call_budget_option_id": "S2_READINESS_CANARY_PLUS_COMPARATIVE_180",
+      "fairness_policy_option_id": "OPTION_B_CONSERVATIVE_RELIABILITY_ENVIRONMENT",
+      "fixture_policy_option_id": "POLICY_F3_ENGINEERING_READINESS_SUBSET_PLUS_AMENDED_COMPARATIVE_SET",
+      "pacing_policy_option_id": "P1_FIXED_2000MS_INTER_CALL_DELAY",
+      "retry_policy_option_id": "R0_STRICT_ZERO_RETRY",
+      "timeout_policy_option_id": "T3_CANDIDATE_180S"
+    }
+  },
+  "artifact_id": "W06-DEV-SELECT-EXECUTION-ENVIRONMENT-AMENDMENT-01-PREP-V1",
+  "authoritative_base_develop_sha": "811255a7dd00234d63184ab483e9f88b1f2d8554",
+  "call_budget_options": {
+    "authorized_generation_calls_in_prep": 0,
+    "options": [
+      {
+        "budget_option_id": "S1_FULL_COMPARATIVE_180",
+        "calls_per_candidate": {
+          "C1": 60,
+          "C2": 60,
+          "C3": 60
+        },
+        "comparative_benchmark_calls": 180,
+        "estimated_relative_cost_exposure": "1.00x baseline comparative batch ($12.357 LOW to $24.03 HIGH under frozen runner registry pricing; $10.5525 LOW to $20.565 HIGH under Preflight 01D pricing)",
+        "maximum_generation_calls": 180,
+        "operational_risk": "MODERATE: If a provider account or timeout issue was not caught before launch, it is discovered directly inside the 180-call comparative batch.",
+        "readiness_canary_calls": 0,
+        "scientific_strength": "HIGH: Preserves the full n=60 per-candidate denominator and exact 20x3 destination / 20x3 day-duration stratification required by W06-MODEL-ARCH-SELECTION-METHOD-LOCK-01.",
+        "selection_confidence": "HIGH: Full 60-cell resolution (1 cell = 1.67 percentage points) for applying the 10 percentage-point (6-cell) practical-tie survivor threshold.",
+        "title": "S1: 3 Candidates x 60 Comparative Cells = 180 Calls"
+      },
+      {
+        "budget_option_id": "S2_READINESS_CANARY_PLUS_COMPARATIVE_180",
+        "calls_per_candidate": {
+          "C1": 63,
+          "C2": 63,
+          "C3": 63
+        },
+        "comparative_benchmark_calls": 180,
+        "estimated_relative_cost_exposure": "1.05x baseline comparative batch ($12.97485 LOW to $25.2315 HIGH for 189 calls under frozen runner registry pricing; $11.080125 LOW to $21.59325 HIGH under Preflight 01D pricing)",
+        "maximum_generation_calls": 189,
+        "operational_risk": "LOW: Any residual billing, quota, or timeout misconfiguration halts at <=9 canary calls before the 180-cell comparative batch is committed.",
+        "readiness_canary_calls_max": 9,
+        "readiness_canary_calls_min": 3,
+        "scientific_strength": "HIGHEST: Combines pre-batch operational verification on 2/3/4-day canary scenarios with the full uncompromised 180-cell comparative benchmark.",
+        "selection_confidence": "HIGHEST: Full n=60 per-candidate comparative denominator protected by pre-verified billing, quota, and timeout readiness.",
+        "title": "S2: Small Engineering Readiness Phase (3..9 Calls) + 3 Candidates x 60 Comparative Cells (180 Calls)"
+      },
+      {
+        "budget_option_id": "S3_REDUCED_STRATIFIED_COMPARATIVE_90",
+        "calls_per_candidate": {
+          "C1": 30,
+          "C2": 30,
+          "C3": 30
+        },
+        "comparative_benchmark_calls": 90,
+        "estimated_relative_cost_exposure": "0.50x baseline comparative batch ($6.1785 LOW to $12.015 HIGH under frozen runner registry pricing; $5.27625 LOW to $10.2825 HIGH under Preflight 01D pricing)",
+        "maximum_generation_calls": 90,
+        "operational_risk": "LOW_TO_MODERATE: Halves call volume, daily quota consumption (30 calls/provider), and wall-clock runtime, useful if provider daily quota or budget constraints are tight.",
+        "readiness_canary_calls": 0,
+        "scientific_strength": "MODERATE: Reduces per-candidate sample size from 60 to 30 (10 per destination, 10 per day duration), increasing sampling variance by sqrt(2) (+41.4%).",
+        "selection_confidence": "MODERATE: Each cell represents 3.33 percentage points (3 cells = 10.0 percentage points), making the 10 percentage-point practical-tie threshold more sensitive to 1..2 boundary cells.",
+        "title": "S3: Smaller Amended Comparative Benchmark (3 Candidates x 30 Stratified Cells = 90 Calls)"
+      }
+    ],
+    "selected_call_budget_option_id": null,
+    "selection_authority": "CHATGPT"
+  },
+  "cost_planning": {
+    "cost_category_separation": {
+      "authoritative_provider_receipt_cost": "Post-execution deterministic token-usage cost computed in execution_receipt.json from provider-returned usage_metadata and the frozen CandidateCostComparabilityRecord rate table.",
+      "planning_estimate": "Pre-execution analytical cost envelope (LOW / HIGH / CONDITIONAL_MAX_OUTPUT_REFERENCE) computed from token profiles and reference price tables to size account credit provisioning before authorization.",
+      "provider_invoice": "Actual financial charge billed on the Project Owner's Google Cloud / OpenAI / Anthropic billing statement, which is external to the benchmark harness."
+    },
+    "current_price_input_status": "EXTERNAL_PRICING_REFRESH_REQUIRED_BEFORE_AUTHORIZATION",
+    "envelopes_by_call_budget_under_preflight_01d_2026_10_17_pricing": {
+      "S1_180_CALLS_60_PER_CANDIDATE": {
+        "CONDITIONAL_MAX_OUTPUT_REFERENCE": {
+          "by_candidate_usd": {
+            "C1": "5.4864",
+            "C2": "13.4304",
+            "C3": "13.6704"
+          },
+          "total_usd": "32.5872"
+        },
+        "HIGH_PLANNING_ENVELOPE": {
+          "by_candidate_usd": {
+            "C1": "3.825",
+            "C2": "8.1",
+            "C3": "8.64"
+          },
+          "total_usd": "20.565"
+        },
+        "LOW_PLANNING_ENVELOPE": {
+          "by_candidate_usd": {
+            "C1": "2.0925",
+            "C2": "3.96",
+            "C3": "4.5"
+          },
+          "total_usd": "10.5525"
+        }
+      },
+      "S2_189_CALLS_63_PER_CANDIDATE": {
+        "CONDITIONAL_MAX_OUTPUT_REFERENCE": {
+          "by_candidate_usd": {
+            "C1": "5.76072",
+            "C2": "14.10192",
+            "C3": "14.35392"
+          },
+          "total_usd": "34.21656"
+        },
+        "HIGH_PLANNING_ENVELOPE": {
+          "by_candidate_usd": {
+            "C1": "4.01625",
+            "C2": "8.505",
+            "C3": "9.072"
+          },
+          "total_usd": "21.59325"
+        },
+        "LOW_PLANNING_ENVELOPE": {
+          "by_candidate_usd": {
+            "C1": "2.197125",
+            "C2": "4.158",
+            "C3": "4.725"
+          },
+          "total_usd": "11.080125"
+        }
+      },
+      "S3_90_CALLS_30_PER_CANDIDATE": {
+        "CONDITIONAL_MAX_OUTPUT_REFERENCE": {
+          "by_candidate_usd": {
+            "C1": "2.7432",
+            "C2": "6.7152",
+            "C3": "6.8352"
+          },
+          "total_usd": "16.2936"
+        },
+        "HIGH_PLANNING_ENVELOPE": {
+          "by_candidate_usd": {
+            "C1": "1.9125",
+            "C2": "4.05",
+            "C3": "4.32"
+          },
+          "total_usd": "10.2825"
+        },
+        "LOW_PLANNING_ENVELOPE": {
+          "by_candidate_usd": {
+            "C1": "1.04625",
+            "C2": "1.98",
+            "C3": "2.25"
+          },
+          "total_usd": "5.27625"
+        }
+      }
+    },
+    "envelopes_by_call_budget_under_runner_registry_2026_10_16_pricing": {
+      "S1_180_CALLS_60_PER_CANDIDATE": {
+        "CONDITIONAL_MAX_OUTPUT_REFERENCE": {
+          "by_candidate_usd": {
+            "C1": "3.1776",
+            "C2": "14.3304",
+            "C3": "20.5056"
+          },
+          "total_usd": "38.0136"
+        },
+        "HIGH_PLANNING_ENVELOPE": {
+          "by_candidate_usd": {
+            "C1": "2.07",
+            "C2": "9",
+            "C3": "12.96"
+          },
+          "total_usd": "24.03"
+        },
+        "LOW_PLANNING_ENVELOPE": {
+          "by_candidate_usd": {
+            "C1": "1.107",
+            "C2": "4.5",
+            "C3": "6.75"
+          },
+          "total_usd": "12.357"
+        }
+      },
+      "S2_189_CALLS_63_PER_CANDIDATE": {
+        "CONDITIONAL_MAX_OUTPUT_REFERENCE": {
+          "by_candidate_usd": {
+            "C1": "3.33648",
+            "C2": "15.04692",
+            "C3": "21.53088"
+          },
+          "total_usd": "39.91428"
+        },
+        "HIGH_PLANNING_ENVELOPE": {
+          "by_candidate_usd": {
+            "C1": "2.1735",
+            "C2": "9.45",
+            "C3": "13.608"
+          },
+          "total_usd": "25.2315"
+        },
+        "LOW_PLANNING_ENVELOPE": {
+          "by_candidate_usd": {
+            "C1": "1.16235",
+            "C2": "4.725",
+            "C3": "7.0875"
+          },
+          "total_usd": "12.97485"
+        }
+      },
+      "S3_90_CALLS_30_PER_CANDIDATE": {
+        "CONDITIONAL_MAX_OUTPUT_REFERENCE": {
+          "by_candidate_usd": {
+            "C1": "1.5888",
+            "C2": "7.1652",
+            "C3": "10.2528"
+          },
+          "total_usd": "19.0068"
+        },
+        "HIGH_PLANNING_ENVELOPE": {
+          "by_candidate_usd": {
+            "C1": "1.035",
+            "C2": "4.5",
+            "C3": "6.48"
+          },
+          "total_usd": "12.015"
+        },
+        "LOW_PLANNING_ENVELOPE": {
+          "by_candidate_usd": {
+            "C1": "0.5535",
+            "C2": "2.25",
+            "C3": "3.375"
+          },
+          "total_usd": "6.1785"
+        }
+      }
+    },
+    "frozen_repository_pricing_snapshots": {
+      "preflight_01d_receipt_2026_10_17": {
+        "C1": {
+          "input_price_per_million_usd": "0.75",
+          "output_price_per_million_usd": "3.75",
+          "pricing_access_date": "2026-10-17",
+          "pricing_source": "w06_model_preflight_01d_v2_live_receipt_v1.json"
+        },
+        "C2": {
+          "input_price_per_million_usd": "2",
+          "output_price_per_million_usd": "10",
+          "pricing_access_date": "2026-10-17",
+          "pricing_source": "w06_model_preflight_01d_v2_live_receipt_v1.json"
+        },
+        "C3": {
+          "input_price_per_million_usd": "2",
+          "output_price_per_million_usd": "10",
+          "pricing_access_date": "2026-10-17",
+          "pricing_source": "w06_model_preflight_01d_v2_live_receipt_v1.json"
+        }
+      },
+      "runner_registry_2026_10_16": {
+        "C1": {
+          "input_price_per_million_usd": "0.3",
+          "output_price_per_million_usd": "2.5",
+          "pricing_access_date": "2026-10-16",
+          "pricing_source": "w06_model_preflight_01d_v2_live_receipt_v1.json"
+        },
+        "C2": {
+          "input_price_per_million_usd": "2.5",
+          "output_price_per_million_usd": "10",
+          "pricing_access_date": "2026-10-16",
+          "pricing_source": "w06_model_preflight_01d_v2_live_receipt_v1.json"
+        },
+        "C3": {
+          "input_price_per_million_usd": "3",
+          "output_price_per_million_usd": "15",
+          "pricing_access_date": "2026-10-16",
+          "pricing_source": "w06_model_preflight_01d_v2_live_receipt_v1.json"
+        }
+      }
+    },
+    "hard_maximum_claimed": false,
+    "observed_primary_token_and_cost_evidence": {
+      "c1_completed_cell_summary": {
+        "billable_output_plus_thought_tokens": 6068,
+        "canonical_cost_usd": "0.0266516",
+        "completed_count": 1,
+        "fixture_id": "W06-DEV-SELECT-026",
+        "input_tokens": 38272,
+        "latency_ms": 46688.0,
+        "output_tokens": 3336,
+        "run_id": "W06-DEV-SELECT-P1-C1-W06-DEV-SELECT-026",
+        "thought_tokens": 2732,
+        "total_tokens": 44340
+      },
+      "c2_completed_cells_summary": {
+        "canonical_cost_usd_max": "0.1031875",
+        "canonical_cost_usd_min": "0.0608825",
+        "canonical_cost_usd_total": "0.620245",
+        "completed_count": 8,
+        "input_tokens_max": 29633,
+        "input_tokens_median": 17950.5,
+        "input_tokens_min": 16086,
+        "output_tokens_max": 3099,
+        "output_tokens_median": 2804.0,
+        "output_tokens_min": 2064,
+        "reasoning_tokens_max": 368,
+        "reasoning_tokens_median": 304.0,
+        "reasoning_tokens_min": 146,
+        "scenario_days_for_all_completed": 2
+      },
+      "c3_completed_cells_summary": {
+        "completed_count": 0,
+        "dev_select_generations_observed": 0,
+        "preflight_01d_smoke_reference": {
+          "fixture_id": "W06-PREFLIGHT-SMOKE-001",
+          "input_tokens": 3333,
+          "latency_ms": 15070.173,
+          "output_tokens": 1874,
+          "total_tokens": 5207
+        }
+      },
+      "dev_select_completed_cell_count": 9
+    },
+    "token_envelope_assumptions": {
+      "CONDITIONAL_MAX_OUTPUT_REFERENCE": {
+        "description": "Conditional upper reference assuming every single call consumes upper input tokens AND reaches the configured max_output_tokens = 16,384 ceiling. Not a hard invoice maximum if a provider bills internal thinking tokens outside max_output_tokens or bills partial generation on timeout.",
+        "per_call_tokens_by_candidate": {
+          "C1": {
+            "billable_output_plus_thought_tokens": 16384,
+            "input_tokens": 40000
+          },
+          "C2": {
+            "billable_output_plus_thought_tokens": 16384,
+            "input_tokens": 30000
+          },
+          "C3": {
+            "billable_output_plus_thought_tokens": 16384,
+            "input_tokens": 32000
+          }
+        }
+      },
+      "HIGH_PLANNING_ENVELOPE": {
+        "description": "Grounded in upper observed catalog token footprint (~93 KB wire payload) and heavy 3..4 day structured JSON output + reasoning/adaptive-thinking token consumption.",
+        "per_call_tokens_by_candidate": {
+          "C1": {
+            "billable_output_plus_thought_tokens": 9000,
+            "input_tokens": 40000
+          },
+          "C2": {
+            "billable_output_plus_thought_tokens": 7500,
+            "input_tokens": 30000
+          },
+          "C3": {
+            "billable_output_plus_thought_tokens": 8000,
+            "input_tokens": 32000
+          }
+        }
+      },
+      "LOW_PLANNING_ENVELOPE": {
+        "description": "Grounded in lower-to-median observed prompt + catalog token footprint and compact 2..3 day structured JSON output + moderate reasoning/thinking token overhead.",
+        "per_call_tokens_by_candidate": {
+          "C1": {
+            "billable_output_plus_thought_tokens": 4500,
+            "input_tokens": 24000
+          },
+          "C2": {
+            "billable_output_plus_thought_tokens": 3000,
+            "input_tokens": 18000
+          },
+          "C3": {
+            "billable_output_plus_thought_tokens": 3500,
+            "input_tokens": 20000
+          }
+        }
+      }
+    },
+    "why_hard_maximum_is_not_claimed": "A hard invoice maximum cannot be claimed offline because: (1) repository pricing snapshots from 2026-10-16 (dev_live_runner.py) and 2026-10-17 (w06_model_preflight_01d_v2_live_receipt_v1.json) differ slightly and must be refreshed against live provider pricing schedules before authorization; (2) provider billing treatment of internal reasoning/thinking tokens relative to max_output_tokens=16,384 varies by provider; and (3) providers may bill for tokens generated prior to a client-side or gateway timeout even when the client receives no usage_metadata."
+  },
+  "evidence_supported_reasons_for_amendment_consideration": {
+    "C1": {
+      "candidate_id": "C1",
+      "http_429_free_tier_quota_exhaustion_ratio": "35/60",
+      "http_503_high_demand_capacity_failure_ratio": "10/60",
+      "none_completed_ratio": "1/60",
+      "primary_counts": {
+        "HTTP_429": 35,
+        "HTTP_5XX": 10,
+        "HTTP_ERROR": 0,
+        "NONE": 1,
+        "TIMEOUT": 14
+      },
+      "primary_timeout_breakdown": {
+        "client_read_timeout_count": 4,
+        "server_http_504_deadline_exceeded_count": 10,
+        "total_timeout_ratio": "14/60"
+      },
+      "secondary_counts": {
+        "CLIENT_TIMEOUT_REPORTED": 4,
+        "HTTP_429_PROVIDER_RATE_OR_QUOTA_DECLARED": 35,
+        "HTTP_429_UNSPECIFIED": 0,
+        "HTTP_4XX_OTHER": 0,
+        "HTTP_4XX_PROVIDER_BILLING_OR_CREDIT_DECLARED": 0,
+        "HTTP_5XX_OTHER": 10,
+        "HTTP_5XX_PROVIDER_CAPACITY_OR_HIGH_DEMAND_DECLARED": 10,
+        "HTTP_ERROR_OTHER": 0,
+        "SUCCESSFUL_PROVIDER_RESPONSE": 1,
+        "UNKNOWN_OR_INSUFFICIENT_EVIDENCE": 0
+      }
+    },
+    "C2": {
+      "all_completed_cells_scenario_days": 2,
+      "candidate_id": "C2",
+      "client_api_timeout_error_ratio": "52/60",
+      "completed_3_day_or_4_day_cells": 0,
+      "frozen_timeout_ms": 55000,
+      "none_completed_latency_range_ms": [
+        35812.0,
+        53094.0
+      ],
+      "none_completed_ratio": "8/60",
+      "primary_counts": {
+        "HTTP_429": 0,
+        "HTTP_5XX": 0,
+        "HTTP_ERROR": 0,
+        "NONE": 8,
+        "TIMEOUT": 52
+      },
+      "secondary_counts": {
+        "CLIENT_TIMEOUT_REPORTED": 52,
+        "HTTP_429_PROVIDER_RATE_OR_QUOTA_DECLARED": 0,
+        "HTTP_429_UNSPECIFIED": 0,
+        "HTTP_4XX_OTHER": 0,
+        "HTTP_4XX_PROVIDER_BILLING_OR_CREDIT_DECLARED": 0,
+        "HTTP_5XX_OTHER": 0,
+        "HTTP_5XX_PROVIDER_CAPACITY_OR_HIGH_DEMAND_DECLARED": 0,
+        "HTTP_ERROR_OTHER": 0,
+        "SUCCESSFUL_PROVIDER_RESPONSE": 8,
+        "UNKNOWN_OR_INSUFFICIENT_EVIDENCE": 0
+      },
+      "timeout_latency_range_ms": [
+        55078.0,
+        55797.0
+      ]
+    },
+    "C3": {
+      "candidate_id": "C3",
+      "http_400_invalid_request_error_ratio": "60/60",
+      "model_generations_observed": 0,
+      "primary_counts": {
+        "HTTP_429": 0,
+        "HTTP_5XX": 0,
+        "HTTP_ERROR": 60,
+        "NONE": 0,
+        "TIMEOUT": 0
+      },
+      "provider_declared_billing_credit_rejection_ratio": "60/60",
+      "secondary_counts": {
+        "CLIENT_TIMEOUT_REPORTED": 0,
+        "HTTP_429_PROVIDER_RATE_OR_QUOTA_DECLARED": 0,
+        "HTTP_429_UNSPECIFIED": 0,
+        "HTTP_4XX_OTHER": 0,
+        "HTTP_4XX_PROVIDER_BILLING_OR_CREDIT_DECLARED": 60,
+        "HTTP_5XX_OTHER": 0,
+        "HTTP_5XX_PROVIDER_CAPACITY_OR_HIGH_DEMAND_DECLARED": 0,
+        "HTTP_ERROR_OTHER": 0,
+        "SUCCESSFUL_PROVIDER_RESPONSE": 0,
+        "UNKNOWN_OR_INSUFFICIENT_EVIDENCE": 0
+      }
+    },
+    "harness_and_binding_integrity": {
+      "cell_hash_chain_valid": "180/180",
+      "harness_or_binding_inconsistency_observed": false,
+      "model_id_mismatch_count": 0,
+      "request_identity_match": "180/180",
+      "rerun_cells": 0,
+      "retry_calls": 0
+    }
+  },
+  "execution_environment_factors_under_review": {
+    "A_provider_readiness_account_provisioning": {
+      "C1": "Quota and Paid Tier rate-limit readiness sufficient for planned C1 call batch (removing 20 RPD Free Tier cap).",
+      "C2": "Confirm active API key, billing credit sufficiency, and model access; no billing/quota blocker was evidenced in primary DEV-SELECT (0/60 HTTP 429/400).",
+      "C3": "Anthropic API billing and positive credit balance sufficient for planned C3 call batch (resolving 60/60 HTTP 400 credit rejection)."
+    },
+    "B_request_timeout_policy": {
+      "candidate_timeout_options": [
+        {
+          "comparability_implications": "Exact match to primary benchmark, but severely confounds planner itinerary quality with the 55s transport cutoff for 3-day and 4-day structured JSON generation.",
+          "engineering_rationale": "Caps per-cell wait time at 55s, bounding worst-case 180-cell sequential wall-clock time to 2.75 hours.",
+          "estimated_worst_case_sequential_wall_clock_impact": {
+            "s1_180_cells_unpaced_worst_case_hours": 2.75,
+            "s1_180_cells_unpaced_worst_case_seconds": 9900,
+            "s1_180_cells_with_2s_pacing_worst_case_hours": 2.85,
+            "s1_180_cells_with_2s_pacing_worst_case_seconds": 10258,
+            "s2_189_cells_with_2s_pacing_worst_case_hours": 2.99,
+            "s2_189_cells_with_2s_pacing_worst_case_seconds": 10771,
+            "s3_90_cells_with_2s_pacing_worst_case_hours": 1.42,
+            "s3_90_cells_with_2s_pacing_worst_case_seconds": 5128
+          },
+          "option_id": "T0_BASELINE_55S",
+          "risk_of_excessively_long_stuck_requests": "LOW (55s cap per call).",
+          "risk_of_still_censoring_long_responses": "DEMONSTRATED_HIGH: In frozen primary evidence, 52/60 C2 cells timed out at 55,078..55,797 ms, All 8 completed C2 cells were 2-day scenarios (35,812..53,094 ms; max 53.09s is within 1.91s of the 55s cutoff), and 0/20 3-day and 0/20 4-day C2 scenarios completed within 55s. C1 also recorded 14/60 TIMEOUT cells (4 client ReadTimeout at 55,781..56,016 ms and 10 server 504 DEADLINE_EXCEEDED at 53,031..55,891 ms).",
+          "scientific_rationale": "Represents the preregistered primary operational timeout boundary (55,000 ms). Preserved as the immutable reference for the primary 180-cell benchmark.",
+          "status": "FROZEN_PRIMARY_BASELINE_REFERENCE",
+          "timeout_ms": 55000,
+          "timeout_seconds": 55
+        },
+        {
+          "comparability_implications": "Uniformly relaxes the deadline across C1, C2, and C3, but risks leaving residual right-censoring on 4-day scenarios.",
+          "engineering_rationale": "Moderate increase in per-cell deadline while keeping worst-case 180-cell sequential execution under 4.5 hours.",
+          "estimated_worst_case_sequential_wall_clock_impact": {
+            "s1_180_cells_unpaced_worst_case_hours": 4.5,
+            "s1_180_cells_unpaced_worst_case_seconds": 16200,
+            "s1_180_cells_with_2s_pacing_worst_case_hours": 4.6,
+            "s1_180_cells_with_2s_pacing_worst_case_seconds": 16558,
+            "s2_189_cells_with_2s_pacing_worst_case_hours": 4.83,
+            "s2_189_cells_with_2s_pacing_worst_case_seconds": 17386,
+            "s3_90_cells_with_2s_pacing_worst_case_hours": 2.3,
+            "s3_90_cells_with_2s_pacing_worst_case_seconds": 8278
+          },
+          "option_id": "T1_CANDIDATE_90S",
+          "risk_of_excessively_long_stuck_requests": "LOW_TO_MODERATE (90s max stall per stuck socket).",
+          "risk_of_still_censoring_long_responses": "MODERATE_TO_HIGH: Because C2 2-day completions already reached 53,094 ms (median 45,898.5 ms), 3-day and 4-day itineraries with 3 interests and medium/adaptive reasoning may plausibly exceed 90,000 ms without completing structured JSON output.",
+          "scientific_rationale": "Provides a +63.6% (+35,000 ms) headroom expansion above the 55s cutoff where 52/60 C2 cells and 13/14 C1 timeout cells clustered, allowing observation of responses that require 55..90s to complete.",
+          "status": "CANDIDATE_FOR_CHATGPT_DECISION",
+          "timeout_ms": 90000,
+          "timeout_seconds": 90
+        },
+        {
+          "comparability_implications": "Applied identically to C1, C2, and C3 under the secondary stabilization track while preserving primary 55s results intact.",
+          "engineering_rationale": "Standard 2-minute synchronous API timeout ceiling compatible with Google, OpenAI, and Anthropic SDK defaults, bounding worst-case 180-cell sequential wall-clock time to 6.0 hours.",
+          "estimated_worst_case_sequential_wall_clock_impact": {
+            "s1_180_cells_unpaced_worst_case_hours": 6.0,
+            "s1_180_cells_unpaced_worst_case_seconds": 21600,
+            "s1_180_cells_with_2s_pacing_worst_case_hours": 6.1,
+            "s1_180_cells_with_2s_pacing_worst_case_seconds": 21958,
+            "s2_189_cells_with_2s_pacing_worst_case_hours": 6.4,
+            "s2_189_cells_with_2s_pacing_worst_case_seconds": 23056,
+            "s3_90_cells_with_2s_pacing_worst_case_hours": 3.05,
+            "s3_90_cells_with_2s_pacing_worst_case_seconds": 10978
+          },
+          "option_id": "T2_CANDIDATE_120S",
+          "risk_of_excessively_long_stuck_requests": "MODERATE (up to 2 minutes per stalled transport call if a provider hangs).",
+          "risk_of_still_censoring_long_responses": "MODERATE_LOW: Substantially reduces right-censoring relative to 55s and 90s, though complex 4-day scenarios under C3 high/adaptive thinking or C2 medium reasoning could still approach 120s under provider load.",
+          "scientific_rationale": "More than doubles (+118.2%, +65,000 ms) the primary 55s cutoff, providing substantial headroom beyond the observed 2-day completion range (35.8..53.1s) to observe 3-day and 4-day structured itinerary generation under medium/high/adaptive reasoning.",
+          "status": "CANDIDATE_FOR_CHATGPT_DECISION",
+          "timeout_ms": 120000,
+          "timeout_seconds": 120
+        },
+        {
+          "comparability_implications": "Maximizes observability of true schema/grounding/core planning quality across C1, C2, and C3 on equal terms within the secondary stabilization track.",
+          "engineering_rationale": "Aligns client-side httpx timeout with longer upstream gateway deadlines for large structured JSON generation (max_output_tokens=16,384); note that upstream provider server-side 504 deadlines (such as Google 54..55s gateway timeouts) may still occur independently if enforced by the provider's server infrastructure.",
+          "estimated_worst_case_sequential_wall_clock_impact": {
+            "s1_180_cells_unpaced_worst_case_hours": 9.0,
+            "s1_180_cells_unpaced_worst_case_seconds": 32400,
+            "s1_180_cells_with_2s_pacing_worst_case_hours": 9.1,
+            "s1_180_cells_with_2s_pacing_worst_case_seconds": 32758,
+            "s2_189_cells_with_2s_pacing_worst_case_hours": 9.55,
+            "s2_189_cells_with_2s_pacing_worst_case_seconds": 34396,
+            "s3_90_cells_with_2s_pacing_worst_case_hours": 4.55,
+            "s3_90_cells_with_2s_pacing_worst_case_seconds": 16378
+          },
+          "option_id": "T3_CANDIDATE_180S",
+          "risk_of_excessively_long_stuck_requests": "MODERATE_HIGH (up to 3 minutes per genuinely hung connection; worst-case 180-cell all-timeout run is 9.0 hours, though healthy completions terminate upon response receipt).",
+          "risk_of_still_censoring_long_responses": "LOW_CLIENT_SIDE (Note: client-side censoring above 180s is unlikely for normal generation, though provider-enforced server-side HTTP 504 deadlines remain controlled by the provider).",
+          "scientific_rationale": "Provides 3.27x (+125,000 ms) the primary 55s boundary, minimizing the risk that client-side timeout censoring masquerades as model planning failure across 2-day, 3-day, and 4-day itinerary schemas for all three reasoning configurations (C1 thinking_level=medium, C2 reasoning_effort=medium, C3 effort=high + thinking=adaptive).",
+          "status": "CANDIDATE_FOR_CHATGPT_DECISION",
+          "timeout_ms": 180000,
+          "timeout_seconds": 180
+        },
+        {
+          "comparability_implications": "Identical across candidates, but operationally heavy with limited incremental benefit over 180s.",
+          "engineering_rationale": "4-minute client socket ceiling; exceeds typical cloud load-balancer idle timeouts and increases worst-case sequential batch duration to 12.0 hours if many cells stall.",
+          "estimated_worst_case_sequential_wall_clock_impact": {
+            "s1_180_cells_unpaced_worst_case_hours": 12.0,
+            "s1_180_cells_unpaced_worst_case_seconds": 43200,
+            "s1_180_cells_with_2s_pacing_worst_case_hours": 12.1,
+            "s1_180_cells_with_2s_pacing_worst_case_seconds": 43558,
+            "s2_189_cells_with_2s_pacing_worst_case_hours": 12.7,
+            "s2_189_cells_with_2s_pacing_worst_case_seconds": 45736,
+            "s3_90_cells_with_2s_pacing_worst_case_hours": 6.05,
+            "s3_90_cells_with_2s_pacing_worst_case_seconds": 21778
+          },
+          "option_id": "T4_OPTIONAL_UPPER_BOUND_240S",
+          "risk_of_excessively_long_stuck_requests": "HIGH (up to 4 minutes per hung request; diminishing return over 180s because upstream provider gateways frequently enforce their own server-side deadline at or before 60..180s).",
+          "risk_of_still_censoring_long_responses": "VERY_LOW_CLIENT_SIDE.",
+          "scientific_rationale": "Included as a fourth reference option only if ChatGPT prioritizes near-zero client-side timeout censoring for C3 high/adaptive thinking + 16,384 max_output_tokens on 4-day catalogs (~93 KB wire payload).",
+          "status": "OPTIONAL_FOURTH_CANDIDATE_IF_EXTREME_HEADROOM_REQUIRED",
+          "timeout_ms": 240000,
+          "timeout_seconds": 240
+        }
+      ],
+      "counterfactual_firewall": {
+        "counterfactual_success_rate_estimated": false,
+        "forbidden_counterfactual_claims": [
+          "90 seconds would yield X/60 completions",
+          "120 seconds would yield X/60 completions",
+          "180 seconds would yield X/60 completions",
+          "120 seconds guarantees success",
+          "180 seconds guarantees success"
+        ],
+        "permitted_evidence_statement": "55 seconds demonstrably censors many C2 requests at the configured boundary (52/60 C2 cells timed out at 55,078..55,797 ms, and 8/8 C2 completions were 2-day scenarios at 35,812..53,094 ms)."
+      },
+      "current_frozen_timeout_ms": 55000,
+      "current_frozen_timeout_seconds": 55,
+      "frozen_evidence_basis": {
+        "c1_completed_none_count": 1,
+        "c1_completed_none_latency_ms": 46688.0,
+        "c1_timeout_boundary_buckets": {
+          "from_54000_to_lt_55000_ms": 8,
+          "from_55000_to_57000_ms": 5,
+          "gt_57000_ms": 0,
+          "lt_54000_ms": 1
+        },
+        "c1_timeout_breakdown": {
+          "client_read_timeout_count": 4,
+          "client_read_timeout_latency_range_ms": [
+            55781.0,
+            56016.0
+          ],
+          "server_http_504_deadline_exceeded_count": 10,
+          "server_http_504_latency_range_ms": [
+            53031.0,
+            55891.0
+          ]
+        },
+        "c1_timeout_count": 14,
+        "c2_completed_none_count": 8,
+        "c2_completed_none_latency_ms": {
+          "all_completed_days": [
+            2
+          ],
+          "max_ms": 53094.0,
+          "median_ms": 45898.5,
+          "min_ms": 35812.0
+        },
+        "c2_timeout_boundary_buckets": {
+          "from_54000_to_lt_55000_ms": 0,
+          "from_55000_to_57000_ms": 52,
+          "gt_57000_ms": 0,
+          "lt_54000_ms": 0
+        },
+        "c2_timeout_count": 52,
+        "c2_timeout_latency_ms": {
+          "max_ms": 55797.0,
+          "median_ms": 55132.5,
+          "min_ms": 55078.0
+        }
+      },
+      "selected_timeout_option_id": null,
+      "selection_authority": "CHATGPT"
+    },
+    "C_pacing_policy": {
+      "current_pacing_policy": "UNPACED_SEQUENTIAL_INTERLEAVED_C1_C2_C3",
+      "invariants_for_all_pacing_options": {
+        "adapts_to_provider_responses_or_headers": false,
+        "applies_by_explicit_fair_rule": true,
+        "fixed_before_execution": true,
+        "performs_retry": false,
+        "reacts_to_success_or_failure": false
+      },
+      "options": [
+        {
+          "added_wall_clock_seconds_180_cells": 0,
+          "inter_call_delay_ms": 0,
+          "option_id": "P0_UNPACED_INTERLEAVED_C1_C2_C3",
+          "rule": "Retain current deterministic sequential execution order (C1 -> C2 -> C3 for each fixture 001..060) with 0 ms artificial inter-call delay.",
+          "scientific_and_engineering_assessment": "When all three providers take 20..50s per call, natural inter-call spacing for any single provider is 40..100s. However, if two providers fail fast (e.g., <2s HTTP 400/429), consecutive calls to the remaining provider occur nearly back-to-back."
+        },
+        {
+          "added_wall_clock_seconds_180_cells": 358,
+          "inter_call_delay_ms": 2000,
+          "option_id": "P1_FIXED_2000MS_INTER_CALL_DELAY",
+          "rule": "Insert a fixed, unconditional 2,000 ms (2.0s) deterministic pause between every consecutive cell execution (179 intervals for 180 cells), independent of cell outcome or candidate.",
+          "scientific_and_engineering_assessment": "Adds only 5.97 minutes across a 180-cell batch while guaranteeing at least 6.0 seconds between same-provider requests even in the worst case where the other two providers fail instantaneously."
+        },
+        {
+          "added_wall_clock_seconds_180_cells": 895,
+          "inter_call_delay_ms": 5000,
+          "option_id": "P2_FIXED_5000MS_INTER_CALL_DELAY",
+          "rule": "Insert a fixed, unconditional 5,000 ms (5.0s) deterministic pause between every consecutive cell execution (179 intervals for 180 cells), independent of cell outcome or candidate.",
+          "scientific_and_engineering_assessment": "Adds 14.92 minutes across a 180-cell batch and guarantees at least 15.0 seconds (<=4 RPM) between consecutive calls to the same provider regardless of how fast other candidates return."
+        }
+      ],
+      "pacing_implemented_in_prep": false,
+      "selected_pacing_option_id": null,
+      "selection_authority": "CHATGPT"
+    },
+    "D_retry_policy": {
+      "default_proposal_option_id": "R0_STRICT_ZERO_RETRY",
+      "options": [
+        {
+          "automatic_retry": 0,
+          "fallback": false,
+          "llm_repair": 0,
+          "manual_retry": 0,
+          "option_id": "R0_STRICT_ZERO_RETRY",
+          "rationale": "Preserves the core W06 one-shot per-cell scientific measurement contract: every cell makes at most 1 outbound HTTP generation request, keeping call count, cost envelope, and failure attribution strictly deterministic.",
+          "recommendation_status": "DEFAULT_PROPOSED",
+          "retry": 0,
+          "transport_retry": 0
+        },
+        {
+          "option_id": "R1_BOUNDED_TRANSPORT_RETRY_ALTERNATIVE",
+          "rationale": "Marked NOT_RECOMMENDED_WITHOUT_MAJOR_METHODOLOGY_CHANGE. Allowing even 1 transport retry on HTTP 503/504/timeout breaks the 1-call-per-cell invariant, doubles worst-case call and cost exposure, and confounds single-shot reliability with retry recovery.",
+          "recommendation_status": "NOT_RECOMMENDED_WITHOUT_MAJOR_METHODOLOGY_CHANGE",
+          "retry": 1
+        }
+      ],
+      "selected_retry_option_id": "R0_STRICT_ZERO_RETRY"
+    }
+  },
+  "fairness_policy_options": {
+    "options": [
+      {
+        "advantages": [
+          "Changes only the two directly evidenced environmental blockers (provider billing/quota provisioning and the 55s timeout boundary) while keeping execution pacing identical to the primary run.",
+          "Enables direct observation of C1, C2, and C3 planning quality across 2-day, 3-day, and 4-day scenarios.",
+          "Preserves retry=0, prompt P1, Portable Schema V2, and all primary evaluation metrics."
+        ],
+        "cost_implications": "Requires funding/provisioning one amended comparative batch (e.g., 180 calls under S1, estimated $12.357 LOW to $24.03 HIGH under frozen runner registry pricing).",
+        "defense_thesis_implications": "Clear and parsimonious to defend in thesis: primary benchmark documents strict 55s one-shot operational reality, while secondary stabilization track isolates model planning quality once billing/quota and 55s truncation are removed.",
+        "engineering_weaknesses": [
+          "Does not add deterministic inter-call spacing to smooth transient provider burst load (such as the 10/60 C1 HTTP 503 high-demand errors)."
+        ],
+        "option_id": "OPTION_A_MINIMAL_ENVIRONMENT_REPAIR",
+        "risk_to_final100_quality": "LOW_TO_MODERATE: Substantially lowers the risk of picking a suboptimal model or running Final100 with a censoring timeout, provided provider burst capacity remains stable.",
+        "scientific_weaknesses": [
+          " constitutes a secondary post-hoc stabilization track after observing primary operational failures, requiring dual reporting alongside the primary benchmark.",
+          "Without inter-call pacing, if one candidate still fails rapidly, consecutive calls to the remaining candidates occur with minimal spacing."
+        ],
+        "specification": {
+          "candidates": [
+            "C1",
+            "C2",
+            "C3"
+          ],
+          "pacing_policy": "P0_UNPACED_INTERLEAVED_C1_C2_C3",
+          "primary_metrics": [
+            "VALID_RUN_AND_SCHEMA_RATE",
+            "EXACT_GROUNDING_PASS_RATE",
+            "FINAL_CORE_PASS_RATE"
+          ],
+          "prompt_id": "P1",
+          "provider_billing_and_quota_readiness_fixed": true,
+          "retry": 0,
+          "timeout_policy": "INCREASED_TO_SINGLE_FIXED_CANDIDATE_VALUE_ACROSS_ALL_CANDIDATES"
+        },
+        "title": "Option A: Minimal Environment Repair"
+      },
+      {
+        "advantages": [
+          "Addresses all three operational failure modes observed in the diagnostic: account/quota readiness (C1 429, C3 400), 55s timeout censoring (C2 52/60, C1 14/60), and burst spacing via deterministic non-adaptive pacing.",
+          "Includes a formal pre-live provider-readiness attestation gate so a batch is not launched against an unprovisioned account.",
+          "Maintains strict fairness across C1, C2, and C3 (identical timeout, identical deterministic pacing, retry=0, same P1 and V2 schema)."
+        ],
+        "cost_implications": "Same comparative generation call cost as Option A (plus optional 3..9 smoke/readiness calls if paired with S2/F3, adding ~$0.25..$0.70).",
+        "defense_thesis_implications": "Strongest methodological defense: demonstrates rigorous root-cause diagnosis followed by a pre-attested, symmetric, non-adaptive stabilization protocol before committing the locked Final100 evaluation.",
+        "engineering_weaknesses": [
+          "Slightly longer wall-clock batch runtime (+5.97 min for 2s pacing or +14.92 min for 5s pacing, plus higher timeout ceiling on any genuinely hung socket)."
+        ],
+        "option_id": "OPTION_B_CONSERVATIVE_RELIABILITY_ENVIRONMENT",
+        "risk_to_final100_quality": "LOW: Provides the highest probability of obtaining complete, valid comparative measurements across all three candidates and carrying a validated execution environment into Stochasticity and Final100.",
+        "scientific_weaknesses": [
+          "Introduces two controlled execution-environment changes (timeout ceiling + fixed inter-call pacing) relative to the primary track, so differences from the primary run reflect the combined stabilization environment rather than timeout alone."
+        ],
+        "specification": {
+          "candidates": [
+            "C1",
+            "C2",
+            "C3"
+          ],
+          "pacing_policy": "DETERMINISTIC_FIXED_INTER_CALL_DELAY (e.g. P1_2000MS or P2_5000MS)",
+          "pre_live_provider_readiness_attestation_gate": true,
+          "primary_metrics": [
+            "VALID_RUN_AND_SCHEMA_RATE",
+            "EXACT_GROUNDING_PASS_RATE",
+            "FINAL_CORE_PASS_RATE"
+          ],
+          "prompt_id": "P1",
+          "provider_billing_and_quota_readiness_fixed": true,
+          "retry": 0,
+          "timeout_policy": "STRONGER_FIXED_TIMEOUT_CEILING_ACROSS_ALL_CANDIDATES (e.g. T3_180S or T2_120S)"
+        },
+        "title": "Option B: Conservative Reliability Environment"
+      },
+      {
+        "advantages": [
+          "Zero additional DEV-SELECT provider calls or cost ($0.00 new DEV-SELECT spend).",
+          "Strict adherence to the initial one-shot preregistered execution without a secondary comparative track."
+        ],
+        "cost_implications": "Zero immediate DEV-SELECT cost, but high risk of wasted spend or failed execution in Stochasticity and Final100 if environment parameters are adjusted ad hoc later.",
+        "defense_thesis_implications": "Vulnerable to thesis committee critique that C3 was never evaluated and C1/C2 were predominantly censored by quota/timeout settings rather than evaluated on itinerary planning quality.",
+        "engineering_weaknesses": [
+          "Winner selection would be based on only 9/180 completed cells (8 C2 2-day cells and 1 C1 2-day cell), leaving 3-day and 4-day itinerary capability unverified prior to Final100."
+        ],
+        "option_id": "OPTION_C_NO_AMENDED_COMPARATIVE_BENCHMARK",
+        "risk_to_final100_quality": "HIGH: Proceeding to Final100 without first validating multi-day completion stability and fair 3-candidate comparison risks either massive Final100 timeouts or unvalidated model selection.",
+        "scientific_weaknesses": [
+          "SEVERE: Selects a winner when C3 had 0/60 model generations due to account credit balance, C1 had 35/60 Free Tier quota rejections, and C2 had 52/60 55s timeouts with 0/40 completions on 3-day and 4-day scenarios.",
+          "Confounds administrative account provisioning and a 55s client timeout with intrinsic model planning quality."
+        ],
+        "specification": {
+          "accept_primary_180_cell_results_for_selection": true,
+          "candidates": [
+            "C1",
+            "C2",
+            "C3"
+          ],
+          "engineering_stabilization_only_after_winner_selection": true,
+          "primary_metrics": [
+            "VALID_RUN_AND_SCHEMA_RATE",
+            "EXACT_GROUNDING_PASS_RATE",
+            "FINAL_CORE_PASS_RATE"
+          ],
+          "prompt_id": "P1",
+          "provider_billing_and_quota_readiness_fixed": false,
+          "retry": 0,
+          "select_under_original_preregistered_criteria": true
+        },
+        "title": "Option C: No Amended Comparative Benchmark"
+      }
+    ],
+    "selected_fairness_policy_option_id": null,
+    "selection_authority": "CHATGPT"
+  },
+  "final100_used": false,
+  "final_methodology_decision_authority": "CHATGPT",
+  "fixture_policy_options": {
+    "final100_calibration_forbidden": true,
+    "final100_scenarios_inspected_or_used": false,
+    "frozen_dev_pool_summary": {
+      "dev_select_fixture_count": 60,
+      "dev_select_id_range": "W06-DEV-SELECT-001..W06-DEV-SELECT-060",
+      "dev_tune_fixture_count": 20,
+      "dev_tune_id_range": "W06-DEV-TUNE-001..W06-DEV-TUNE-020",
+      "preflight_smoke_fixture_id": "W06-PREFLIGHT-SMOKE-001",
+      "source_file": "data/evaluation/w06/w06_dev_fixtures_freeze_v1.json",
+      "source_file_sha256": "bb0f051446ea3da8229298f22f4ce92b4db20751695273c6d01b7766da044050",
+      "total_dev_fixtures": 80
+    },
+    "options": [
+      {
+        "comparability_to_primary": "HIGHEST (1-to-1 cell correspondence across all 60 scenarios, preserving the exact 20x3 destination, 20x3 day-duration, 20x3 interest-count, and 15x4 budget/style marginal balance).",
+        "final100_leakage_risk": "ZERO (strictly disjoint from w06_scenarios_freeze_v1.json as attested by w06_dev_final_overlap_receipt_v1.json).",
+        "fixture_count_comparative": 60,
+        "fixture_source": "W06-DEV-SELECT-001..W06-DEV-SELECT-060 (exact 60 fixtures from w06_dev_fixtures_freeze_v1.json)",
+        "implementation_complexity": "LOW: Reuses the exact 60 frozen DEV-SELECT scenario definitions and prompt hashes.",
+        "policy_id": "POLICY_F1_REUSE_EXISTING_DEV_SELECT_60",
+        "post_hoc_bias_risk": "LOW: Although 9/180 cells completed in the primary run, no prompt, schema, or model parameter is being tuned; only uniform execution-environment parameters (billing/quota readiness and timeout/pacing) are stabilized.",
+        "risk_of_overfitting_after_observing_results": "VERY_LOW: Prompt P1, candidate models C1/C2/C3, Portable Schema V2, and evaluator rules remain strictly frozen; environment stabilization cannot overfit itinerary content to specific scenarios.",
+        "title": "Policy F1: Reuse Exact Existing DEV-SELECT 60 Fixtures (W06-DEV-SELECT-001..060)"
+      },
+      {
+        "comparability_to_primary": "LOWER: Loses 1-to-1 scenario correspondence and reduces statistical precision (wider binomial confidence intervals under the 10 percentage-point practical-tie rule).",
+        "final100_leakage_risk": "ZERO (restricted to w06_dev_fixtures_freeze_v1.json; Final100 remains untouched).",
+        "fixture_count_comparative": 30,
+        "fixture_source": "Stratified subset drawn from w06_dev_fixtures_freeze_v1.json (e.g., 20 DEV-TUNE fixtures W06-DEV-TUNE-001..020 or a balanced 30-fixture stratified subset across destination x days x interests without touching Final100).",
+        "implementation_complexity": "MODERATE: Requires defining and freezing a new subset manifest and marginal-balance verification receipt.",
+        "policy_id": "POLICY_F2_SECONDARY_STABILIZATION_FROM_NON_FINAL_FROZEN_DEV",
+        "post_hoc_bias_risk": "LOW_TO_MODERATE: Drawing a new subset after observing primary results introduces subset-selection degrees of freedom unless the subset rule is fixed deterministically by ChatGPT.",
+        "risk_of_overfitting_after_observing_results": "LOW (since P1 and models are frozen), though using DEV-TUNE fixtures overlaps with the 5 stochasticity fixtures (W06-DEV-TUNE-001..005).",
+        "title": "Policy F2: Construct Secondary Stabilization Set from Non-Final Frozen DEV Material"
+      },
+      {
+        "comparability_to_primary": "HIGHEST: Stage 2 retains full 1-to-1 comparability with the 60 primary DEV-SELECT fixtures.",
+        "final100_leakage_risk": "ZERO (uses only DEV-TUNE / W06-PREFLIGHT-SMOKE-001 and DEV-SELECT-001..060; Final100 remains untouched).",
+        "fixture_count_comparative": 60,
+        "fixture_count_readiness_canary": 3,
+        "fixture_source": "Stage 1 Readiness Canary: 3 deterministic non-Final fixtures spanning 2, 3, and 4 days from DEV-TUNE (or 1 synthetic smoke fixture W06-PREFLIGHT-SMOKE-001) x 3 candidates (3..9 calls, zero selection weight). Stage 2 Comparative Batch: exact 60 DEV-SELECT fixtures W06-DEV-SELECT-001..060 x 3 candidates (180 calls).",
+        "implementation_complexity": "LOW_TO_MODERATE: Clean separation between pre-batch readiness attestation receipt and comparative 180-cell execution.",
+        "policy_id": "POLICY_F3_ENGINEERING_READINESS_SUBSET_PLUS_AMENDED_COMPARATIVE_SET",
+        "post_hoc_bias_risk": "LOW: Stage 1 is strictly a binary operational gate (verifying HTTP 200, billing/quota readiness, and non-truncation under the chosen timeout) with zero prompt/model tuning, while Stage 2 uses the full balanced 60-fixture DEV-SELECT set.",
+        "risk_of_overfitting_after_observing_results": "VERY_LOW: Canary outcomes cannot modify prompts, schemas, or candidate models; they only prevent launching the 180-cell comparative batch if an account or timeout misconfiguration persists.",
+        "title": "Policy F3: Small Engineering Readiness Canary Subset Followed by Full 60-Fixture Comparative Set"
+      }
+    ],
+    "selected_fixture_policy_id": null,
+    "selection_authority": "CHATGPT"
+  },
+  "live_provider_calls_new": 0,
+  "model_winner_selected": false,
+  "next_gate": "W06-DEV-SELECT-EXECUTION-ENVIRONMENT-AMENDMENT-01-CHATGPT-DECISION",
+  "pacing_policy_options": {
+    "current_pacing_policy": "UNPACED_SEQUENTIAL_INTERLEAVED_C1_C2_C3",
+    "invariants_for_all_pacing_options": {
+      "adapts_to_provider_responses_or_headers": false,
+      "applies_by_explicit_fair_rule": true,
+      "fixed_before_execution": true,
+      "performs_retry": false,
+      "reacts_to_success_or_failure": false
+    },
+    "options": [
+      {
+        "added_wall_clock_seconds_180_cells": 0,
+        "inter_call_delay_ms": 0,
+        "option_id": "P0_UNPACED_INTERLEAVED_C1_C2_C3",
+        "rule": "Retain current deterministic sequential execution order (C1 -> C2 -> C3 for each fixture 001..060) with 0 ms artificial inter-call delay.",
+        "scientific_and_engineering_assessment": "When all three providers take 20..50s per call, natural inter-call spacing for any single provider is 40..100s. However, if two providers fail fast (e.g., <2s HTTP 400/429), consecutive calls to the remaining provider occur nearly back-to-back."
+      },
+      {
+        "added_wall_clock_seconds_180_cells": 358,
+        "inter_call_delay_ms": 2000,
+        "option_id": "P1_FIXED_2000MS_INTER_CALL_DELAY",
+        "rule": "Insert a fixed, unconditional 2,000 ms (2.0s) deterministic pause between every consecutive cell execution (179 intervals for 180 cells), independent of cell outcome or candidate.",
+        "scientific_and_engineering_assessment": "Adds only 5.97 minutes across a 180-cell batch while guaranteeing at least 6.0 seconds between same-provider requests even in the worst case where the other two providers fail instantaneously."
+      },
+      {
+        "added_wall_clock_seconds_180_cells": 895,
+        "inter_call_delay_ms": 5000,
+        "option_id": "P2_FIXED_5000MS_INTER_CALL_DELAY",
+        "rule": "Insert a fixed, unconditional 5,000 ms (5.0s) deterministic pause between every consecutive cell execution (179 intervals for 180 cells), independent of cell outcome or candidate.",
+        "scientific_and_engineering_assessment": "Adds 14.92 minutes across a 180-cell batch and guarantees at least 15.0 seconds (<=4 RPM) between consecutive calls to the same provider regardless of how fast other candidates return."
+      }
+    ],
+    "pacing_implemented_in_prep": false,
+    "selected_pacing_option_id": null,
+    "selection_authority": "CHATGPT"
+  },
+  "prep_artifact_internal_sha256": "57794e675d4b279bc875762a000ce74a07173a181afbdb31d0149f01f94b53c9",
+  "primary_denominators_changed": false,
+  "primary_experiment_immutability": {
+    "classification": "PRIMARY_PREREGISTERED_ONE_SHOT_OPERATIONAL_BENCHMARK",
+    "diagnostic_artifact_file_sha256": "b729883505ecfc98f15917347239ea6d09cede106691b155026891996391e692",
+    "diagnostic_artifact_internal_sha256": "509528413e1d9eb8408943867be21f83dc2dda72acd53fe9028e3c37c7db05c8",
+    "primary_counts_by_candidate": {
+      "C1": {
+        "HTTP_429": 35,
+        "HTTP_5XX": 10,
+        "HTTP_ERROR": 0,
+        "NONE": 1,
+        "TIMEOUT": 14
+      },
+      "C2": {
+        "HTTP_429": 0,
+        "HTTP_5XX": 0,
+        "HTTP_ERROR": 0,
+        "NONE": 8,
+        "TIMEOUT": 52
+      },
+      "C3": {
+        "HTTP_429": 0,
+        "HTTP_5XX": 0,
+        "HTTP_ERROR": 60,
+        "NONE": 0,
+        "TIMEOUT": 0
+      }
+    },
+    "primary_counts_total": {
+      "HTTP_429": 35,
+      "HTTP_5XX": 10,
+      "HTTP_ERROR": 60,
+      "NONE": 9,
+      "TIMEOUT": 66
+    },
+    "primary_denominators_by_candidate": {
+      "C1": 60,
+      "C2": 60,
+      "C3": 60
+    },
+    "primary_failure_classification_authority": "execution_receipt.failure_classification",
+    "prohibitions_enforced": {
+      "change_primary_denominator": false,
+      "claim_primary_invalidated_by_amendment_proposal": false,
+      "delete_primary_failures": false,
+      "overwrite_primary_manifests": false,
+      "reclassify_primary_failures": false,
+      "replace_primary_outputs": false,
+      "rerun_primary_cells": false
+    },
+    "raw_evidence_tree_sha256": "d5c4e53952500655b656a624657a3cf1ec7aae685809c9e53a318459cc319817",
+    "results_freeze_receipt_file_sha256": "c021094e26277d41664c4ae2f0560b7684435b6002c5b7ba742a17808c5b07a4",
+    "results_manifest_file_sha256": "1d303e1c07b627c3f3eb87287b744f55ba3f6d3d85bd5cec36959b01919d26c0"
+  },
+  "primary_experiment_mutated": false,
+  "primary_results_replaced": false,
+  "project_owner_action_matrix": [
+    {
+      "action": "Verify Anthropic console Plans & Billing status and ensure positive credit balance sufficient for planned C3 calls (>=63 calls under S2 or >=60 calls under S1, recommended >=$15..$20 credit headroom).",
+      "action_id": "POA-01",
+      "how_to_verify_without_secret_disclosure": "Project Owner confirms active positive credit tier in Anthropic Console and runs the future ChatGPT-approved pre-live readiness attestation check, which records only boolean readiness status and HTTP 200 model-access verification without logging API keys, hashes, prefixes, or organization IDs.",
+      "mandatory_or_optional": "MANDATORY_IF_AMENDED_COMPARATIVE_TRACK_APPROVED",
+      "owner_action_marker": "OWNER_ACTION_REQUIRED",
+      "provider": "anthropic (C3 / claude-sonnet-5-5)",
+      "reason": "60/60 primary C3 cells failed with HTTP 400 invalid_request_error: 'Your credit balance is too low to access the Anthropic API. Please go to Plans & Billing to upgrade or purchase credits.'",
+      "required_before_which_gate": "W06-DEV-SELECT-AMENDED-LIVE-AUTHORIZATION-AND-READINESS-GATE",
+      "status": "PENDING_CHATGPT_AMENDMENT_DECISION"
+    },
+    {
+      "action": "Verify Google AI Studio / Google Cloud project bound to GEMINI_API_KEY is on Paid Tier (Pay-as-you-go) with daily request quota >=200 RPD and rate limits sufficient for >=63 C1 calls.",
+      "action_id": "POA-02",
+      "how_to_verify_without_secret_disclosure": "Project Owner confirms Paid Tier billing linkage in Google AI Studio / Cloud Console and records boolean tier attestation in the pre-live readiness receipt without disclosing project IDs, billing account IDs, or API key material.",
+      "mandatory_or_optional": "MANDATORY_IF_AMENDED_COMPARATIVE_TRACK_APPROVED",
+      "owner_action_marker": "OWNER_ACTION_REQUIRED",
+      "provider": "google (C1 / gemini-3.8-flash)",
+      "reason": "35/60 primary C1 cells failed with HTTP 429 RESOURCE_EXHAUSTED explicitly citing quotaId 'GenerateRequestsPerDayPerProjectPerModel-FreeTier' and quotaValue '20'.",
+      "required_before_which_gate": "W06-DEV-SELECT-AMENDED-LIVE-AUTHORIZATION-AND-READINESS-GATE",
+      "status": "PENDING_CHATGPT_AMENDMENT_DECISION"
+    },
+    {
+      "action": "Verify OpenAI platform billing credit balance and usage tier limits for OPENAI_API_KEY are sufficient for >=63 C2 calls with up to 16,384 max_output_tokens.",
+      "action_id": "POA-03",
+      "how_to_verify_without_secret_disclosure": "Project Owner confirms positive OpenAI credit balance in OpenAI Platform Billing and records boolean readiness status without exposing API keys, organization IDs, or secret hashes.",
+      "mandatory_or_optional": "MANDATORY_IF_AMENDED_COMPARATIVE_TRACK_APPROVED",
+      "owner_action_marker": "OWNER_ACTION_REQUIRED",
+      "provider": "openai (C2 / gpt-6.1-sol)",
+      "reason": "Although C2 recorded 0/60 billing/quota errors in primary DEV-SELECT (8/60 NONE, 52/60 client timeout at 55s), longer timeouts allow all 60 cells to complete token generation and incur full output token billing (~$3.51..$7.50+).",
+      "required_before_which_gate": "W06-DEV-SELECT-AMENDED-LIVE-AUTHORIZATION-AND-READINESS-GATE",
+      "status": "PENDING_CHATGPT_AMENDMENT_DECISION"
+    },
+    {
+      "action": "Confirm current official per-million input/output/thinking token price schedules for C1 (gemini-3.8-flash), C2 (gpt-6.1-sol), and C3 (claude-sonnet-5-5) before amended live authorization.",
+      "action_id": "POA-04",
+      "how_to_verify_without_secret_disclosure": "Record public provider documentation URLs, access date, and per-million USD rates in the amended authorization plan (public pricing metadata contains no secrets).",
+      "mandatory_or_optional": "OPTIONAL_FOR_OPERATIONAL_READINESS_MANDATORY_FOR_COST_TIEBREAK_AUTHORITY",
+      "owner_action_marker": "OWNER_ACTION_REQUIRED",
+      "provider": "all_providers (C1, C2, C3)",
+      "reason": "Repository contains two historical pricing snapshots (2026-10-16 in dev_live_runner.py and 2026-10-17 in w06_model_preflight_01d_v2_live_receipt_v1.json); current_price_input_status is marked EXTERNAL_PRICING_REFRESH_REQUIRED_BEFORE_AUTHORIZATION.",
+      "required_before_which_gate": "W06-DEV-SELECT-AMENDED-LIVE-AUTHORIZATION-AND-READINESS-GATE",
+      "status": "PENDING_CHATGPT_AMENDMENT_DECISION"
+    }
+  ],
+  "proposed_status": "READY_FOR_CHATGPT_DECISION",
+  "provider_readiness_attestation_design": {
+    "candidates": {
+      "C1": {
+        "candidate_id": "C1",
+        "env_key_name": "GEMINI_API_KEY",
+        "owner_action_marker": "OWNER_ACTION_REQUIRED",
+        "provider": "google",
+        "requested_model_id": "gemini-3.8-flash",
+        "required_attestations_before_amended_live_authorization": [
+          "API key presence verified as boolean PRESENT without reading or logging secret value/hash/prefix/suffix.",
+          "Account/project identity consistency verified so the configured GEMINI_API_KEY belongs to the intended billing-enabled project without disclosing project/account identifiers.",
+          "Paid tier / quota readiness attested as sufficient for the planned C1 call count (eliminating the 20 requests/day Free Tier ceiling observed in 35/60 primary C1 cells).",
+          "No known daily-call (RPD) or per-minute (RPM/TPM) ceiling below the planned C1 batch call count.",
+          "Model access verified for gemini-3.8-flash under Portable Schema V2."
+        ]
+      },
+      "C2": {
+        "candidate_id": "C2",
+        "env_key_name": "OPENAI_API_KEY",
+        "owner_action_marker": "OWNER_ACTION_REQUIRED",
+        "provider": "openai",
+        "requested_model_id": "gpt-6.1-sol",
+        "required_attestations_before_amended_live_authorization": [
+          "API key presence verified as boolean PRESENT without reading or logging secret value/hash/prefix/suffix.",
+          "Active billing/credit balance verified as sufficient for the planned C2 call count under higher timeout ceiling (confirming no billing/quota blocker is present, consistent with 0/60 billing/quota errors in primary DEV-SELECT).",
+          "Model access verified for gpt-6.1-sol under Portable Schema V2."
+        ]
+      },
+      "C3": {
+        "candidate_id": "C3",
+        "env_key_name": "ANTHROPIC_API_KEY",
+        "owner_action_marker": "OWNER_ACTION_REQUIRED",
+        "provider": "anthropic",
+        "requested_model_id": "claude-sonnet-5-5",
+        "required_attestations_before_amended_live_authorization": [
+          "API key presence verified as boolean PRESENT without reading or logging secret value/hash/prefix/suffix.",
+          "Anthropic API billing/credit status verified as active with positive credit balance (resolving the 60/60 HTTP 400 credit-balance rejection observed in primary DEV-SELECT).",
+          "Credit envelope attested as sufficient for the full planned C3 call count with safety margin.",
+          "Model access verified for claude-sonnet-5-5 under Portable Schema V2."
+        ]
+      }
+    },
+    "gate_id": "W06-DEV-SELECT-AMENDED-PRE-LIVE-PROVIDER-READINESS-GATE-V1",
+    "generation_calls_performed_during_prep": 0,
+    "secret_safety_invariants": {
+      "print_secret_hashes": false,
+      "print_secret_prefixes_or_suffixes": false,
+      "print_secret_values": false,
+      "print_sensitive_account_or_org_ids": false
+    }
+  },
+  "retry_policy_options": {
+    "default_proposal_option_id": "R0_STRICT_ZERO_RETRY",
+    "options": [
+      {
+        "automatic_retry": 0,
+        "fallback": false,
+        "llm_repair": 0,
+        "manual_retry": 0,
+        "option_id": "R0_STRICT_ZERO_RETRY",
+        "rationale": "Preserves the core W06 one-shot per-cell scientific measurement contract: every cell makes at most 1 outbound HTTP generation request, keeping call count, cost envelope, and failure attribution strictly deterministic.",
+        "recommendation_status": "DEFAULT_PROPOSED",
+        "retry": 0,
+        "transport_retry": 0
+      },
+      {
+        "option_id": "R1_BOUNDED_TRANSPORT_RETRY_ALTERNATIVE",
+        "rationale": "Marked NOT_RECOMMENDED_WITHOUT_MAJOR_METHODOLOGY_CHANGE. Allowing even 1 transport retry on HTTP 503/504/timeout breaks the 1-call-per-cell invariant, doubles worst-case call and cost exposure, and confounds single-shot reliability with retry recovery.",
+        "recommendation_status": "NOT_RECOMMENDED_WITHOUT_MAJOR_METHODOLOGY_CHANGE",
+        "retry": 1
+      }
+    ],
+    "selected_retry_option_id": "R0_STRICT_ZERO_RETRY"
+  },
+  "scientific_code_bundle_sha256": "0638f2fcb100b0000e3a2a4e08137a9d468449001f258de7354df21e185ca2e3",
+  "selected_model_id": null,
+  "stochasticity_execution_started": false,
+  "task_id": "W06-DEV-SELECT-EXECUTION-ENVIRONMENT-AMENDMENT-01-PREP",
+  "timeout_policy_options": {
+    "candidate_timeout_options": [
+      {
+        "comparability_implications": "Exact match to primary benchmark, but severely confounds planner itinerary quality with the 55s transport cutoff for 3-day and 4-day structured JSON generation.",
+        "engineering_rationale": "Caps per-cell wait time at 55s, bounding worst-case 180-cell sequential wall-clock time to 2.75 hours.",
+        "estimated_worst_case_sequential_wall_clock_impact": {
+          "s1_180_cells_unpaced_worst_case_hours": 2.75,
+          "s1_180_cells_unpaced_worst_case_seconds": 9900,
+          "s1_180_cells_with_2s_pacing_worst_case_hours": 2.85,
+          "s1_180_cells_with_2s_pacing_worst_case_seconds": 10258,
+          "s2_189_cells_with_2s_pacing_worst_case_hours": 2.99,
+          "s2_189_cells_with_2s_pacing_worst_case_seconds": 10771,
+          "s3_90_cells_with_2s_pacing_worst_case_hours": 1.42,
+          "s3_90_cells_with_2s_pacing_worst_case_seconds": 5128
+        },
+        "option_id": "T0_BASELINE_55S",
+        "risk_of_excessively_long_stuck_requests": "LOW (55s cap per call).",
+        "risk_of_still_censoring_long_responses": "DEMONSTRATED_HIGH: In frozen primary evidence, 52/60 C2 cells timed out at 55,078..55,797 ms, All 8 completed C2 cells were 2-day scenarios (35,812..53,094 ms; max 53.09s is within 1.91s of the 55s cutoff), and 0/20 3-day and 0/20 4-day C2 scenarios completed within 55s. C1 also recorded 14/60 TIMEOUT cells (4 client ReadTimeout at 55,781..56,016 ms and 10 server 504 DEADLINE_EXCEEDED at 53,031..55,891 ms).",
+        "scientific_rationale": "Represents the preregistered primary operational timeout boundary (55,000 ms). Preserved as the immutable reference for the primary 180-cell benchmark.",
+        "status": "FROZEN_PRIMARY_BASELINE_REFERENCE",
+        "timeout_ms": 55000,
+        "timeout_seconds": 55
+      },
+      {
+        "comparability_implications": "Uniformly relaxes the deadline across C1, C2, and C3, but risks leaving residual right-censoring on 4-day scenarios.",
+        "engineering_rationale": "Moderate increase in per-cell deadline while keeping worst-case 180-cell sequential execution under 4.5 hours.",
+        "estimated_worst_case_sequential_wall_clock_impact": {
+          "s1_180_cells_unpaced_worst_case_hours": 4.5,
+          "s1_180_cells_unpaced_worst_case_seconds": 16200,
+          "s1_180_cells_with_2s_pacing_worst_case_hours": 4.6,
+          "s1_180_cells_with_2s_pacing_worst_case_seconds": 16558,
+          "s2_189_cells_with_2s_pacing_worst_case_hours": 4.83,
+          "s2_189_cells_with_2s_pacing_worst_case_seconds": 17386,
+          "s3_90_cells_with_2s_pacing_worst_case_hours": 2.3,
+          "s3_90_cells_with_2s_pacing_worst_case_seconds": 8278
+        },
+        "option_id": "T1_CANDIDATE_90S",
+        "risk_of_excessively_long_stuck_requests": "LOW_TO_MODERATE (90s max stall per stuck socket).",
+        "risk_of_still_censoring_long_responses": "MODERATE_TO_HIGH: Because C2 2-day completions already reached 53,094 ms (median 45,898.5 ms), 3-day and 4-day itineraries with 3 interests and medium/adaptive reasoning may plausibly exceed 90,000 ms without completing structured JSON output.",
+        "scientific_rationale": "Provides a +63.6% (+35,000 ms) headroom expansion above the 55s cutoff where 52/60 C2 cells and 13/14 C1 timeout cells clustered, allowing observation of responses that require 55..90s to complete.",
+        "status": "CANDIDATE_FOR_CHATGPT_DECISION",
+        "timeout_ms": 90000,
+        "timeout_seconds": 90
+      },
+      {
+        "comparability_implications": "Applied identically to C1, C2, and C3 under the secondary stabilization track while preserving primary 55s results intact.",
+        "engineering_rationale": "Standard 2-minute synchronous API timeout ceiling compatible with Google, OpenAI, and Anthropic SDK defaults, bounding worst-case 180-cell sequential wall-clock time to 6.0 hours.",
+        "estimated_worst_case_sequential_wall_clock_impact": {
+          "s1_180_cells_unpaced_worst_case_hours": 6.0,
+          "s1_180_cells_unpaced_worst_case_seconds": 21600,
+          "s1_180_cells_with_2s_pacing_worst_case_hours": 6.1,
+          "s1_180_cells_with_2s_pacing_worst_case_seconds": 21958,
+          "s2_189_cells_with_2s_pacing_worst_case_hours": 6.4,
+          "s2_189_cells_with_2s_pacing_worst_case_seconds": 23056,
+          "s3_90_cells_with_2s_pacing_worst_case_hours": 3.05,
+          "s3_90_cells_with_2s_pacing_worst_case_seconds": 10978
+        },
+        "option_id": "T2_CANDIDATE_120S",
+        "risk_of_excessively_long_stuck_requests": "MODERATE (up to 2 minutes per stalled transport call if a provider hangs).",
+        "risk_of_still_censoring_long_responses": "MODERATE_LOW: Substantially reduces right-censoring relative to 55s and 90s, though complex 4-day scenarios under C3 high/adaptive thinking or C2 medium reasoning could still approach 120s under provider load.",
+        "scientific_rationale": "More than doubles (+118.2%, +65,000 ms) the primary 55s cutoff, providing substantial headroom beyond the observed 2-day completion range (35.8..53.1s) to observe 3-day and 4-day structured itinerary generation under medium/high/adaptive reasoning.",
+        "status": "CANDIDATE_FOR_CHATGPT_DECISION",
+        "timeout_ms": 120000,
+        "timeout_seconds": 120
+      },
+      {
+        "comparability_implications": "Maximizes observability of true schema/grounding/core planning quality across C1, C2, and C3 on equal terms within the secondary stabilization track.",
+        "engineering_rationale": "Aligns client-side httpx timeout with longer upstream gateway deadlines for large structured JSON generation (max_output_tokens=16,384); note that upstream provider server-side 504 deadlines (such as Google 54..55s gateway timeouts) may still occur independently if enforced by the provider's server infrastructure.",
+        "estimated_worst_case_sequential_wall_clock_impact": {
+          "s1_180_cells_unpaced_worst_case_hours": 9.0,
+          "s1_180_cells_unpaced_worst_case_seconds": 32400,
+          "s1_180_cells_with_2s_pacing_worst_case_hours": 9.1,
+          "s1_180_cells_with_2s_pacing_worst_case_seconds": 32758,
+          "s2_189_cells_with_2s_pacing_worst_case_hours": 9.55,
+          "s2_189_cells_with_2s_pacing_worst_case_seconds": 34396,
+          "s3_90_cells_with_2s_pacing_worst_case_hours": 4.55,
+          "s3_90_cells_with_2s_pacing_worst_case_seconds": 16378
+        },
+        "option_id": "T3_CANDIDATE_180S",
+        "risk_of_excessively_long_stuck_requests": "MODERATE_HIGH (up to 3 minutes per genuinely hung connection; worst-case 180-cell all-timeout run is 9.0 hours, though healthy completions terminate upon response receipt).",
+        "risk_of_still_censoring_long_responses": "LOW_CLIENT_SIDE (Note: client-side censoring above 180s is unlikely for normal generation, though provider-enforced server-side HTTP 504 deadlines remain controlled by the provider).",
+        "scientific_rationale": "Provides 3.27x (+125,000 ms) the primary 55s boundary, minimizing the risk that client-side timeout censoring masquerades as model planning failure across 2-day, 3-day, and 4-day itinerary schemas for all three reasoning configurations (C1 thinking_level=medium, C2 reasoning_effort=medium, C3 effort=high + thinking=adaptive).",
+        "status": "CANDIDATE_FOR_CHATGPT_DECISION",
+        "timeout_ms": 180000,
+        "timeout_seconds": 180
+      },
+      {
+        "comparability_implications": "Identical across candidates, but operationally heavy with limited incremental benefit over 180s.",
+        "engineering_rationale": "4-minute client socket ceiling; exceeds typical cloud load-balancer idle timeouts and increases worst-case sequential batch duration to 12.0 hours if many cells stall.",
+        "estimated_worst_case_sequential_wall_clock_impact": {
+          "s1_180_cells_unpaced_worst_case_hours": 12.0,
+          "s1_180_cells_unpaced_worst_case_seconds": 43200,
+          "s1_180_cells_with_2s_pacing_worst_case_hours": 12.1,
+          "s1_180_cells_with_2s_pacing_worst_case_seconds": 43558,
+          "s2_189_cells_with_2s_pacing_worst_case_hours": 12.7,
+          "s2_189_cells_with_2s_pacing_worst_case_seconds": 45736,
+          "s3_90_cells_with_2s_pacing_worst_case_hours": 6.05,
+          "s3_90_cells_with_2s_pacing_worst_case_seconds": 21778
+        },
+        "option_id": "T4_OPTIONAL_UPPER_BOUND_240S",
+        "risk_of_excessively_long_stuck_requests": "HIGH (up to 4 minutes per hung request; diminishing return over 180s because upstream provider gateways frequently enforce their own server-side deadline at or before 60..180s).",
+        "risk_of_still_censoring_long_responses": "VERY_LOW_CLIENT_SIDE.",
+        "scientific_rationale": "Included as a fourth reference option only if ChatGPT prioritizes near-zero client-side timeout censoring for C3 high/adaptive thinking + 16,384 max_output_tokens on 4-day catalogs (~93 KB wire payload).",
+        "status": "OPTIONAL_FOURTH_CANDIDATE_IF_EXTREME_HEADROOM_REQUIRED",
+        "timeout_ms": 240000,
+        "timeout_seconds": 240
+      }
+    ],
+    "counterfactual_firewall": {
+      "counterfactual_success_rate_estimated": false,
+      "forbidden_counterfactual_claims": [
+        "90 seconds would yield X/60 completions",
+        "120 seconds would yield X/60 completions",
+        "180 seconds would yield X/60 completions",
+        "120 seconds guarantees success",
+        "180 seconds guarantees success"
+      ],
+      "permitted_evidence_statement": "55 seconds demonstrably censors many C2 requests at the configured boundary (52/60 C2 cells timed out at 55,078..55,797 ms, and 8/8 C2 completions were 2-day scenarios at 35,812..53,094 ms)."
+    },
+    "current_frozen_timeout_ms": 55000,
+    "current_frozen_timeout_seconds": 55,
+    "frozen_evidence_basis": {
+      "c1_completed_none_count": 1,
+      "c1_completed_none_latency_ms": 46688.0,
+      "c1_timeout_boundary_buckets": {
+        "from_54000_to_lt_55000_ms": 8,
+        "from_55000_to_57000_ms": 5,
+        "gt_57000_ms": 0,
+        "lt_54000_ms": 1
+      },
+      "c1_timeout_breakdown": {
+        "client_read_timeout_count": 4,
+        "client_read_timeout_latency_range_ms": [
+          55781.0,
+          56016.0
+        ],
+        "server_http_504_deadline_exceeded_count": 10,
+        "server_http_504_latency_range_ms": [
+          53031.0,
+          55891.0
+        ]
+      },
+      "c1_timeout_count": 14,
+      "c2_completed_none_count": 8,
+      "c2_completed_none_latency_ms": {
+        "all_completed_days": [
+          2
+        ],
+        "max_ms": 53094.0,
+        "median_ms": 45898.5,
+        "min_ms": 35812.0
+      },
+      "c2_timeout_boundary_buckets": {
+        "from_54000_to_lt_55000_ms": 0,
+        "from_55000_to_57000_ms": 52,
+        "gt_57000_ms": 0,
+        "lt_54000_ms": 0
+      },
+      "c2_timeout_count": 52,
+      "c2_timeout_latency_ms": {
+        "max_ms": 55797.0,
+        "median_ms": 55132.5,
+        "min_ms": 55078.0
+      }
+    },
+    "selected_timeout_option_id": null,
+    "selection_authority": "CHATGPT"
+  }
+}
