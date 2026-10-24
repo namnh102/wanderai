@@ -5,8 +5,8 @@
 - **Task ID:** `W06-DEV-SELECT-EXECUTION-ENVIRONMENT-AMENDMENT-01-APPROVAL-RECEIPT-PREP`
 - **Approval Receipt Artifact ID:** `W06-DEV-SELECT-EXECUTION-ENVIRONMENT-AMENDMENT-01-APPROVAL-RECEIPT-V1`
 - **Approval Receipt Path:** `data/evaluation/w06/w06_dev_select_execution_environment_amendment_01_approval_receipt_v1.json`
-- **Approval Receipt File SHA256 (LF):** `f0f6641fd2baa4c91c4b493cc1f0f6a6058ecb3d40360be34cf9c079b08ebb17`
-- **Approval Receipt Internal SHA256:** `41b5451a79c33fdf43eff760d00ca01dda9404b946f82262d3fbb927e2c4238a`
+- **Approval Receipt File SHA256 (LF):** `171564d09b0011ddfc0e2b70ca2f9029bf6981b944527c09331fa7f6a0f914a5`
+- **Approval Receipt Internal SHA256:** `d32e1c61b130a93c5ccbf18294fc1e972c36ba4e561b7fff51a9ea13b43aa991`
 - **Authoritative Base (`develop`):** `1de6ad5288f2fc5f3036145f4089d3e1bb46f1ab`
 - **Approval Authority:** `CHATGPT`
 - **Approval Scope:** `METHODOLOGY_ONLY`
@@ -71,7 +71,9 @@
 - `scientific_code_bundle_sha256 = 0638f2fcb100b0000e3a2a4e08137a9d468449001f258de7354df21e185ca2e3`
 - `raw_evidence_tree_sha256 = d5c4e53952500655b656a624657a3cf1ec7aae685809c9e53a318459cc319817`
 - `results_manifest_file_sha256 = 1d303e1c07b627c3f3eb87287b744f55ba3f6d3d85bd5cec36959b01919d26c0`
+- `results_manifest_internal_sha256 = 4e2f8f0df0a6e069d65b563b8221c3ba3086bb50ad73854e9cc592a9beb05011`
 - `results_freeze_receipt_file_sha256 = c021094e26277d41664c4ae2f0560b7684435b6002c5b7ba742a17808c5b07a4`
+- `results_freeze_receipt_internal_sha256 = 7b270de482f0b077e79bbba40a0c662851da46355a18b5e05f8fdf572880943a`
 - `diagnostic_file_sha256 = b729883505ecfc98f15917347239ea6d09cede106691b155026891996391e692`
 - `diagnostic_internal_sha256 = 509528413e1d9eb8408943867be21f83dc2dda72acd53fe9028e3c37c7db05c8`
 

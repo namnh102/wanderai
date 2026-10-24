@@ -165,7 +165,7 @@ EXPECTED_RESULTS_FREEZE_RECEIPT_FILE_SHA256 = (
     "c021094e26277d41664c4ae2f0560b7684435b6002c5b7ba742a17808c5b07a4"
 )
 EXPECTED_RESULTS_FREEZE_RECEIPT_INTERNAL_SHA256 = (
-    "053d15328d76efbc0da057a1fe6095ec548de59bc9d0d542d4ba72fa6874a665"
+    "7b270de482f0b077e79bbba40a0c662851da46355a18b5e05f8fdf572880943a"
 )
 EXPECTED_DIAGNOSTIC_FILE_SHA256 = (
     "b729883505ecfc98f15917347239ea6d09cede106691b155026891996391e692"
@@ -191,10 +191,10 @@ CANARY_CALL_ORDER_MATRIX: tuple[str, ...] = (
 
 # Deterministic self-hashes for the approval receipt artifact
 EXPECTED_APPROVAL_RECEIPT_FILE_SHA256 = (
-    "f0f6641fd2baa4c91c4b493cc1f0f6a6058ecb3d40360be34cf9c079b08ebb17"
+    "171564d09b0011ddfc0e2b70ca2f9029bf6981b944527c09331fa7f6a0f914a5"
 )
 EXPECTED_APPROVAL_RECEIPT_INTERNAL_SHA256 = (
-    "41b5451a79c33fdf43eff760d00ca01dda9404b946f82262d3fbb927e2c4238a"
+    "d32e1c61b130a93c5ccbf18294fc1e972c36ba4e561b7fff51a9ea13b43aa991"
 )
 
 
@@ -468,6 +468,34 @@ def _verify_all_upstream_authorities(repo_root: Path) -> dict[str, Any]:
     if decision_payload.get("AMENDMENT_APPROVED") is not False:
         raise PlanBeforeLiveProtocolError(
             "DECISION_ARTIFACT_HISTORICAL_AMENDMENT_APPROVED_MUST_REMAIN_FALSE"
+        )
+
+    # Cross-bind primary results-freeze receipt internal SHA across _freeze_mod, decision, and disk receipt
+    if (
+        EXPECTED_RESULTS_FREEZE_RECEIPT_INTERNAL_SHA256
+        != _freeze_mod.EXPECTED_RESULTS_FREEZE_RECEIPT_INTERNAL_SHA256
+    ):
+        raise PlanBeforeLiveProtocolError(
+            "RESULTS_FREEZE_RECEIPT_INTERNAL_SHA256_MODULE_CONSTANT_MISMATCH"
+        )
+    if (
+        decision_payload.get("bound_authorities", {}).get(
+            "primary_results_freeze_receipt_internal_sha256"
+        )
+        != _freeze_mod.EXPECTED_RESULTS_FREEZE_RECEIPT_INTERNAL_SHA256
+    ):
+        raise PlanBeforeLiveProtocolError(
+            "DECISION_RESULTS_FREEZE_RECEIPT_INTERNAL_SHA256_MISMATCH"
+        )
+    freeze_receipt_doc = _load_json_dict(
+        repo_root / _freeze_mod.RESULTS_FREEZE_RECEIPT_REL_PATH
+    )
+    if (
+        freeze_receipt_doc.get("results_freeze_receipt_sha256")
+        != _freeze_mod.EXPECTED_RESULTS_FREEZE_RECEIPT_INTERNAL_SHA256
+    ):
+        raise PlanBeforeLiveProtocolError(
+            "DISK_RESULTS_FREEZE_RECEIPT_INTERNAL_SHA256_MISMATCH"
         )
 
     canary_path = repo_root / CANARY_MANIFEST_REL_PATH
@@ -816,6 +844,17 @@ def verify_w06_execution_environment_amendment_approval_receipt(
         if recorded_internal != recomputed_internal:
             raise PlanBeforeLiveProtocolError(
                 f"APPROVAL_RECEIPT_INTERNAL_SHA256_TAMPERED: recorded {recorded_internal}, recomputed {recomputed_internal}"
+            )
+
+        prim_auth = disk_payload.get("bound_authorities", {}).get(
+            "primary_authorities", {}
+        )
+        if (
+            prim_auth.get("results_freeze_receipt_internal_sha256")
+            != _freeze_mod.EXPECTED_RESULTS_FREEZE_RECEIPT_INTERNAL_SHA256
+        ):
+            raise PlanBeforeLiveProtocolError(
+                "APPROVAL_RECEIPT_RESULTS_FREEZE_RECEIPT_INTERNAL_SHA256_MISMATCH"
             )
 
         expected_payload = (

@@ -24,7 +24,7 @@
   "STOCHASTICITY_EXECUTION_STARTED": false,
   "approval_authority": "CHATGPT",
   "approval_firewall_statement": "AMENDMENT_APPROVED=true does NOT imply any provider readiness, live-call authorization, canary authorization, or comparative authorization.",
-  "approval_receipt_internal_sha256": "41b5451a79c33fdf43eff760d00ca01dda9404b946f82262d3fbb927e2c4238a",
+  "approval_receipt_internal_sha256": "d32e1c61b130a93c5ccbf18294fc1e972c36ba4e561b7fff51a9ea13b43aa991",
   "approval_scope": "METHODOLOGY_ONLY",
   "approval_statement": "ChatGPT, acting as final methodology decision authority, approved the frozen secondary post-hoc execution-environment stabilization methodology after independent audit of the formal decision artifact, normal merge of PR #68, and successful post-merge CI on the exact merge SHA.",
   "approved_frozen_policy": {
@@ -126,7 +126,7 @@
       "portable_schema_v2_sha256": "825a4ff912d851a95f7392cb564b7d7ca3588135508dc6eb3ac6304cdde3c490",
       "raw_evidence_tree_sha256": "d5c4e53952500655b656a624657a3cf1ec7aae685809c9e53a318459cc319817",
       "results_freeze_receipt_file_sha256": "c021094e26277d41664c4ae2f0560b7684435b6002c5b7ba742a17808c5b07a4",
-      "results_freeze_receipt_internal_sha256": "053d15328d76efbc0da057a1fe6095ec548de59bc9d0d542d4ba72fa6874a665",
+      "results_freeze_receipt_internal_sha256": "7b270de482f0b077e79bbba40a0c662851da46355a18b5e05f8fdf572880943a",
       "results_manifest_file_sha256": "1d303e1c07b627c3f3eb87287b744f55ba3f6d3d85bd5cec36959b01919d26c0",
       "results_manifest_internal_sha256": "4e2f8f0df0a6e069d65b563b8221c3ba3086bb50ad73854e9cc592a9beb05011",
       "scientific_code_bundle_sha256": "0638f2fcb100b0000e3a2a4e08137a9d468449001f258de7354df21e185ca2e3",

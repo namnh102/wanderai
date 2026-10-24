@@ -56,12 +56,14 @@ from app.evaluation.dev_selection_harness import (  # noqa: E402
     FORBIDDEN_FINAL100_BUNDLE_SHA256,
     FORBIDDEN_P11_MANIFEST_SHA256,
     SCIENTIFIC_CODE_BUNDLE_RELATIVE_PATHS,
+    canonical_json_bytes,
     compute_scientific_code_bundle_sha256,
     normalize_lf_bytes,
     sha256_bytes,
 )
 import freeze_w06_dev_select_execution_environment_amendment_01_approval_receipt as rec_mod  # noqa: E402
 import freeze_w06_dev_select_execution_environment_amendment_01_decision as dec_mod  # noqa: E402
+import freeze_w06_dev_select_live_results as _freeze_mod  # noqa: E402
 from run_w06_dev_select_live_v1 import OutboundNetworkBlockedError  # noqa: E402
 
 
@@ -116,9 +118,9 @@ def test_ear_01_decision_and_canary_artifacts_remain_byte_identical(
 
 
 def test_ear_02_receipt_binds_decision_canary_merge_and_postmerge_ci(
-    disk_approval_receipt: dict,
+    disk_approval_receipt: dict, disk_decision_payload: dict
 ) -> None:
-    """EAR-02 (Reqs 3, 4, 5): Receipt binds exact decision/canary SHA256s, PR #68 merge commit/parents, and post-merge CI run 40094419087."""
+    """EAR-02 (Reqs 3, 4, 5 & Corrective A..D): Receipt binds exact decision/canary SHA256s, PR #68 merge commit/parents, post-merge CI run 40094419087, and cross-bound primary results-freeze receipt internal SHA."""
     expected_base = "1de6ad5288f2fc5f3036145f4089d3e1bb46f1ab"
     assert (
         disk_approval_receipt["authoritative_base_develop_sha"] == expected_base
@@ -208,6 +210,30 @@ def test_ear_02_receipt_binds_decision_canary_merge_and_postmerge_ci(
     assert (
         prim_ba["results_freeze_receipt_file_sha256"]
         == "c021094e26277d41664c4ae2f0560b7684435b6002c5b7ba742a17808c5b07a4"
+    )
+    # Mandatory Assertions A, B, C, D:
+    assert (
+        prim_ba["results_freeze_receipt_internal_sha256"]
+        == "7b270de482f0b077e79bbba40a0c662851da46355a18b5e05f8fdf572880943a"
+    )
+    assert (
+        rec_mod.EXPECTED_RESULTS_FREEZE_RECEIPT_INTERNAL_SHA256
+        == _freeze_mod.EXPECTED_RESULTS_FREEZE_RECEIPT_INTERNAL_SHA256
+    )
+    assert (
+        disk_decision_payload["bound_authorities"][
+            "primary_results_freeze_receipt_internal_sha256"
+        ]
+        == _freeze_mod.EXPECTED_RESULTS_FREEZE_RECEIPT_INTERNAL_SHA256
+    )
+    freeze_receipt_doc = json.loads(
+        normalize_lf_bytes(
+            (REPO_ROOT / _freeze_mod.RESULTS_FREEZE_RECEIPT_REL_PATH).read_bytes()
+        ).decode("utf-8")
+    )
+    assert (
+        freeze_receipt_doc["results_freeze_receipt_sha256"]
+        == _freeze_mod.EXPECTED_RESULTS_FREEZE_RECEIPT_INTERNAL_SHA256
     )
     assert (
         prim_ba["diagnostic_file_sha256"]
@@ -535,6 +561,37 @@ def test_ear_07_tamper_detection_immutability_guards_and_secret_scan(
             receipt_path=tampered_path, repo_root=REPO_ROOT
         )
 
+    # Mandatory Assertion E: Receipt using the old incorrect primary results-freeze receipt internal SHA
+    # (`053d15328d76efbc0da057a1fe6095ec548de59bc9d0d542d4ba72fa6874a665`) is rejected even with recomputed self-hash
+    stale_sha_path = tmp_path / "stale_results_freeze_receipt_sha.json"
+    stale_payload = copy.deepcopy(disk_approval_receipt)
+    stale_payload["bound_authorities"]["primary_authorities"][
+        "results_freeze_receipt_internal_sha256"
+    ] = "053d15328d76efbc0da057a1fe6095ec548de59bc9d0d542d4ba72fa6874a665"
+    stale_without_self_hash = {
+        k: v
+        for k, v in stale_payload.items()
+        if k != "approval_receipt_internal_sha256"
+    }
+    stale_payload["approval_receipt_internal_sha256"] = sha256_bytes(
+        canonical_json_bytes(stale_without_self_hash)
+    )
+    stale_sha_path.write_bytes(
+        (
+            json.dumps(
+                stale_payload, indent=2, sort_keys=True, ensure_ascii=False
+            )
+            + "\n"
+        ).encode("utf-8")
+    )
+    with pytest.raises(
+        PlanBeforeLiveProtocolError,
+        match="APPROVAL_RECEIPT_RESULTS_FREEZE_RECEIPT_INTERNAL_SHA256_MISMATCH",
+    ):
+        rec_mod.verify_w06_execution_environment_amendment_approval_receipt(
+            receipt_path=stale_sha_path, repo_root=REPO_ROOT
+        )
+
     # Guard against overwriting decision artifact, canary manifest, or raw evidence
     with pytest.raises(
         PlanBeforeLiveProtocolError,
@@ -606,6 +663,7 @@ def test_ear_08_cli_verify_only_and_markdown_documentation() -> None:
         "3ce0ebaac35f22dfe8c981478a6c63d7a2fde0580b372fd8f25762ab3b18fb96",
         "707d99fee54d65822f194cc690cbfadea14ad2176594d4ef882e7d8031990518",
         "1de6ad5288f2fc5f3036145f4089d3e1bb46f1ab",
+        "7b270de482f0b077e79bbba40a0c662851da46355a18b5e05f8fdf572880943a",
         "40094419087",
         "METHODOLOGY_ONLY",
         "PENDING_CHATGPT_AUDIT_AND_REPOSITORY_FREEZE",
@@ -613,3 +671,7 @@ def test_ear_08_cli_verify_only_and_markdown_documentation() -> None:
         "W06-DEV-SELECT-EXECUTION-ENVIRONMENT-AMENDMENT-01-APPROVAL-RECEIPT-CHATGPT-AUDIT",
     ):
         assert token in doc_text
+    assert (
+        "053d15328d76efbc0da057a1fe6095ec548de59bc9d0d542d4ba72fa6874a665"
+        not in doc_text
+    )
