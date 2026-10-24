@@ -87,14 +87,22 @@ def test_eap_01_exact_base_sha_binding(
     assert computed_prep_payload["authoritative_base_develop_sha"] == expected_base
     assert disk_prep_payload["authoritative_base_develop_sha"] == expected_base
 
-    proc = subprocess.run(
-        ["git", "merge-base", "--is-ancestor", expected_base, "HEAD"],
+    cat_proc = subprocess.run(
+        ["git", "cat-file", "-e", f"{expected_base}^{{commit}}"],
         cwd=str(REPO_ROOT),
         capture_output=True,
         text=True,
         check=False,
     )
-    assert proc.returncode == 0
+    if cat_proc.returncode == 0:
+        proc = subprocess.run(
+            ["git", "merge-base", "--is-ancestor", expected_base, "HEAD"],
+            cwd=str(REPO_ROOT),
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        assert proc.returncode == 0
 
 
 def test_eap_02_raw_tree_and_results_freeze_bindings(
@@ -450,20 +458,53 @@ def test_eap_12_scientific_bundle_and_final100_unchanged() -> None:
         == FORBIDDEN_P11_MANIFEST_SHA256
     )
 
-    proc = subprocess.run(
-        ["git", "diff", "--name-only", prep_mod.AUTHORITATIVE_BASE_DEVELOP_SHA],
+    plan_doc = json.loads(
+        (
+            REPO_ROOT / "data/evaluation/w06/w06_dev_select_execution_plan_v1.json"
+        ).read_text(encoding="utf-8")
+    )
+    expected_file_hashes = {
+        entry["path"]: entry["sha256"]
+        for entry in plan_doc["scientific_code_bundle_file_hashes"]
+    }
+    assert set(expected_file_hashes.keys()) == set(
+        SCIENTIFIC_CODE_BUNDLE_RELATIVE_PATHS
+    )
+    for sci_rel, exp_sha in expected_file_hashes.items():
+        actual_sha = sha256_bytes(
+            normalize_lf_bytes((REPO_ROOT / sci_rel).read_bytes())
+        )
+        assert actual_sha == exp_sha, (
+            f"Scientific code bundle file modified: {sci_rel}"
+        )
+
+    cat_proc = subprocess.run(
+        [
+            "git",
+            "cat-file",
+            "-e",
+            f"{prep_mod.AUTHORITATIVE_BASE_DEVELOP_SHA}^{{commit}}",
+        ],
         cwd=str(REPO_ROOT),
         capture_output=True,
         text=True,
-        check=True,
+        check=False,
     )
-    changed_paths = {
-        line.strip() for line in proc.stdout.splitlines() if line.strip()
-    }
-    for sci_rel in SCIENTIFIC_CODE_BUNDLE_RELATIVE_PATHS:
-        assert sci_rel not in changed_paths, (
-            f"Scientific code bundle file modified: {sci_rel}"
+    if cat_proc.returncode == 0:
+        proc = subprocess.run(
+            ["git", "diff", "--name-only", prep_mod.AUTHORITATIVE_BASE_DEVELOP_SHA],
+            cwd=str(REPO_ROOT),
+            capture_output=True,
+            text=True,
+            check=True,
         )
+        changed_paths = {
+            line.strip() for line in proc.stdout.splitlines() if line.strip()
+        }
+        for sci_rel in SCIENTIFIC_CODE_BUNDLE_RELATIVE_PATHS:
+            assert sci_rel not in changed_paths, (
+                f"Scientific code bundle file modified: {sci_rel}"
+            )
 
 
 def test_eap_13_no_api_key_or_dotenv_read_and_network_kill_switch(

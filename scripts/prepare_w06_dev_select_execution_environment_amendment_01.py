@@ -227,9 +227,24 @@ def _assert_not_inside_raw_evidence(target_path: Path, repo_root: Path) -> None:
 
 
 def _verify_git_base_lineage(repo_root: Path) -> None:
-    """Verify `AUTHORITATIVE_BASE_DEVELOP_SHA` is a valid ancestor of or equal to git HEAD when git is available."""
+    """Verify `AUTHORITATIVE_BASE_DEVELOP_SHA` is a valid ancestor of or equal to git HEAD when present in git history."""
     git_dir = repo_root / ".git"
     if not git_dir.exists():
+        return
+    cat_proc = subprocess.run(
+        [
+            "git",
+            "cat-file",
+            "-e",
+            f"{AUTHORITATIVE_BASE_DEVELOP_SHA}^{{commit}}",
+        ],
+        cwd=str(repo_root),
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if cat_proc.returncode != 0:
+        # Shallow CI clone (fetch-depth: 1); upstream file SHA256s are verified directly below.
         return
     proc = subprocess.run(
         [
