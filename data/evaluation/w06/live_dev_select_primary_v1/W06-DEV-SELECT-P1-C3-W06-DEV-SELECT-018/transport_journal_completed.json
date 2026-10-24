@@ -1,0 +1,20 @@
+{
+  "attempt_number": 1,
+  "authorization_id": "W06-DEV-SELECT-LIVE-AUTHORIZATION-01-V1",
+  "cell_identity": {
+    "attempt_number": 1,
+    "candidate_id": "C3",
+    "fixture_id": "W06-DEV-SELECT-018",
+    "phase": "DEV_SELECT",
+    "prompt_id": "P1"
+  },
+  "code_basis_commit_sha": "c0adf74ceda9ffaf8b4ec42d299932e33f448e6a",
+  "execution_started_at_utc": "2026-10-23T17:18:40.243307+00:00",
+  "latency_ns": 735000000,
+  "run_id": "W06-DEV-SELECT-P1-C3-W06-DEV-SELECT-018",
+  "runtime_head_sha": "eac86a38f6b457c9b6ff078f26c4f953a9fc98a7",
+  "scientific_code_bundle_sha256": "0638f2fcb100b0000e3a2a4e08137a9d468449001f258de7354df21e185ca2e3",
+  "status": "TRANSPORT_COMPLETED",
+  "timestamp_utc": "2026-10-23T17:18:40.987517+00:00",
+  "transport_completed_at_utc": "2026-10-23T17:18:40.987517+00:00"
+}

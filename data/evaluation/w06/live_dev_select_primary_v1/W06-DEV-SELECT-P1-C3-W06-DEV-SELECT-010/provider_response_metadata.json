@@ -1,0 +1,82 @@
+{
+  "actual_http_request_count": 1,
+  "authorization_id": "W06-DEV-SELECT-LIVE-AUTHORIZATION-01-V1",
+  "candidate_id": "C3",
+  "code_basis_commit_sha": "c0adf74ceda9ffaf8b4ec42d299932e33f448e6a",
+  "code_commit_sha": "c0adf74ceda9ffaf8b4ec42d299932e33f448e6a",
+  "execution_mode": "LIVE_DEV_SELECT",
+  "execution_started_at_utc": "2026-10-23T17:03:09.105190+00:00",
+  "finish_reason": "PROVIDER_EXCEPTION:HTTP_ERROR:BadRequestError: Error code: 400 - {'type': 'error', 'error': {'type': 'invalid_request_error', 'message': 'Your credit balance is too low to access the Anthropic API. Please go to Plans & Billing to upgrade or purchase credits.'}, 'request_id': 'req_011CgKXgB3jRQqMi61i5Nhd3'}",
+  "generation_parameters": {
+    "candidate_id": "C3",
+    "code_basis_commit_sha": "c0adf74ceda9ffaf8b4ec42d299932e33f448e6a",
+    "code_commit_sha_semantics": "AUTHORITATIVE_RUNTIME_HEAD_SHA_WITH_SEPARATE_CODE_BASIS_AND_BUNDLE_ATTESTATION",
+    "effort": "high",
+    "max_retries": 0,
+    "max_tokens": 16384,
+    "omitted_parameters": [
+      "seed",
+      "temperature",
+      "top_p",
+      "top_k"
+    ],
+    "portable_generation_schema_v2_sha256": "825a4ff912d851a95f7392cb564b7d7ca3588135508dc6eb3ac6304cdde3c490",
+    "provider": "anthropic",
+    "provider_config_sha256": "5ecff5a4e2899245d1cd113285d1193dad17b6ed4e7521bd10be3937650d2a29",
+    "requested_model_id": "claude-sonnet-5-5",
+    "runtime_head_sha": "eac86a38f6b457c9b6ff078f26c4f953a9fc98a7",
+    "scientific_code_bundle_sha256": "0638f2fcb100b0000e3a2a4e08137a9d468449001f258de7354df21e185ca2e3",
+    "seed_status": "OMITTED_UNSUPPORTED",
+    "semantic_schema_sha256": "e4169f7b890f77d13af65e9f2070b6071c535b206d88440f5e8f28c179977555",
+    "temperature_status": "OMITTED",
+    "thinking": {
+      "type": "adaptive"
+    },
+    "timeout_ms": 55000,
+    "timeout_seconds": 55.0,
+    "top_k_status": "OMITTED",
+    "top_p_status": "OMITTED"
+  },
+  "latency_ms": 750.0,
+  "latency_ms_display": 750.0,
+  "latency_ns": 750000000,
+  "max_token_state": false,
+  "normalized_provider_metadata": {
+    "actual_http_request_count": 1,
+    "candidate_id": "C3",
+    "error_detail_sanitized": "BadRequestError: Error code: 400 - {'type': 'error', 'error': {'type': 'invalid_request_error', 'message': 'Your credit balance is too low to access the Anthropic API. Please go to Plans & Billing to upgrade or purchase credits.'}, 'request_id': 'req_011CgKXgB3jRQqMi61i5Nhd3'}",
+    "failure_classification": "HTTP_ERROR",
+    "provider": "anthropic",
+    "requested_model_id": "claude-sonnet-5-5",
+    "returned_model_id": null
+  },
+  "provider": "anthropic",
+  "provider_config_sha256": "5ecff5a4e2899245d1cd113285d1193dad17b6ed4e7521bd10be3937650d2a29",
+  "raw_provider_metadata": {
+    "error_detail_sanitized": "BadRequestError: Error code: 400 - {'type': 'error', 'error': {'type': 'invalid_request_error', 'message': 'Your credit balance is too low to access the Anthropic API. Please go to Plans & Billing to upgrade or purchase credits.'}, 'request_id': 'req_011CgKXgB3jRQqMi61i5Nhd3'}"
+  },
+  "refusal_state": false,
+  "requested_model_id": "claude-sonnet-5-5",
+  "returned_model_id": null,
+  "run_id": "W06-DEV-SELECT-P1-C3-W06-DEV-SELECT-010",
+  "runner_execution_mode": "LIVE_EXECUTION",
+  "runtime_head_sha": "eac86a38f6b457c9b6ff078f26c4f953a9fc98a7",
+  "scientific_code_bundle_sha256": "0638f2fcb100b0000e3a2a4e08137a9d468449001f258de7354df21e185ca2e3",
+  "simulated_failure": "HTTP_ERROR",
+  "stage_a_commit_sha": "e69b7d70c3908d2b888b7c5d7e6c4e1d49fac863",
+  "stage_a_receipt_sha256": "1b933067516b7142b4250870a18e6deef216c6854b1c9790d01830d196dde014",
+  "transport_completed_at_utc": "2026-10-23T17:03:09.859828+00:00",
+  "usage_metadata": {
+    "authoritative_usage_available": false,
+    "cache_creation_input_tokens": null,
+    "cache_read_input_tokens": null,
+    "cached_input_tokens": null,
+    "input_tokens": null,
+    "output_tokens": null,
+    "raw_usage_metadata": null,
+    "reasoning_tokens": null,
+    "thinking_tokens": null,
+    "thought_tokens": null,
+    "total_tokens": null
+  }
+}

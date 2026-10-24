@@ -1,0 +1,161 @@
+{
+  "plan_id": "W06-DEV-SELECT-001-plan-01",
+  "scenario_id": "W06-DEV-SELECT-001",
+  "destination_slug": "ha-noi",
+  "destination": "Hà Nội",
+  "total_days": 2,
+  "overview": "Lịch trình tiết kiệm trong hai ngày, tập trung vào ăn tối, chợ đêm và trải nghiệm quán bar, pub tại trung tâm Hà Nội. Các hoạt động bắt đầu từ chiều tối, ưu tiên đi bộ và không lặp lại địa điểm.",
+  "best_time_to_visit": "Đầu tháng 12 thường phù hợp để đi bộ buổi tối, nhưng nên mang áo ấm. Xếp chợ đêm vào Chủ nhật 06/12/2026 theo giờ mở cửa trong danh mục; thứ Hai dành cho trải nghiệm pub.",
+  "general_tips": [
+    "Chi phí dự kiến cho một người, gồm ăn uống và các hoạt động được liệt kê; chưa gồm lưu trú và di chuyển đến hoặc rời Hà Nội.",
+    "Danh mục không cung cấp giờ mở cửa của các quán pub, bar và Nhà Hàng New Day; cần xác nhận trước chuyến đi. Các khung giờ này là thời gian đề xuất, không phải giờ hoạt động đã được xác minh.",
+    "Hỏi giá đồ uống, phí vào cửa và phụ thu trước khi gọi món; chọn đồ uống không cồn nếu muốn tiết kiệm.",
+    "Không lái xe sau khi uống rượu bia; giữ tư trang cẩn thận tại chợ đêm.",
+    "Ngân sách còn lại có thể dành cho lưu trú, các bữa ăn ngoài lịch trình và phương tiện về chỗ nghỉ."
+  ],
+  "budget_analysis": {
+    "total_budget": 2000000,
+    "estimated_cost": 630000,
+    "currency": "VND",
+    "is_over_budget": false,
+    "variance": -1370000
+  },
+  "days": [
+    {
+      "day_number": 1,
+      "date": "2026-12-06",
+      "title": "Tối Chủ nhật: ăn tối, chợ đêm và bar",
+      "items": [
+        {
+          "order_index": 1,
+          "start_time": "17:30",
+          "end_time": "18:20",
+          "activity_kind": "POI_VISIT",
+          "activity": "Ăn tối trước khi khám phá chợ đêm",
+          "place_name": "Nhà Hàng New Day",
+          "place_id": "0180e390-f144-4efc-849e-00eeb6cb3992",
+          "notes": "Dự trù 100.000 VND cho bữa tối; xem giá thực đơn trước khi gọi món.",
+          "estimated_cost": 100000,
+          "transport_mode": null
+        },
+        {
+          "order_index": 2,
+          "start_time": "18:20",
+          "end_time": "18:35",
+          "activity_kind": "TRANSIT_ONLY",
+          "activity": "Đi bộ sang điểm chợ đêm",
+          "place_name": null,
+          "place_id": null,
+          "notes": "Dành thời gian đệm cho đường đông vào tối cuối tuần.",
+          "estimated_cost": 0,
+          "transport_mode": "walking"
+        },
+        {
+          "order_index": 3,
+          "start_time": "18:35",
+          "end_time": "19:40",
+          "activity_kind": "POI_VISIT",
+          "activity": "Dạo chợ đêm, xem hàng và thưởng thức đồ ăn nhẹ",
+          "place_name": "Chợ Đêm Hàng Đào – Đồng Xuân",
+          "place_id": "c41383b0-231b-51a4-90e9-7f146fda7f9f",
+          "notes": "Chủ nhật nằm trong lịch mở cửa Fr-Su 18:00-00:00. Khoản 100.000 VND là hạn mức ăn nhẹ và mua sắm tùy chọn.",
+          "estimated_cost": 100000,
+          "transport_mode": null
+        },
+        {
+          "order_index": 4,
+          "start_time": "19:40",
+          "end_time": "20:00",
+          "activity_kind": "TRANSIT_ONLY",
+          "activity": "Đi bộ sang quán bar",
+          "place_name": null,
+          "place_id": null,
+          "notes": "Di chuyển quãng ngắn trong khu vực trung tâm.",
+          "estimated_cost": 0,
+          "transport_mode": "walking"
+        },
+        {
+          "order_index": 5,
+          "start_time": "20:00",
+          "end_time": "21:15",
+          "activity_kind": "POI_VISIT",
+          "activity": "Thư giãn và trải nghiệm không khí bar buổi tối",
+          "place_name": "Roots Reggae bar",
+          "place_id": "24436e5f-e90d-4eeb-9a00-6b265661ce02",
+          "notes": "Dự trù 120.000 VND cho đồ uống; xác nhận giờ mở cửa và phụ thu. Không mặc định có biểu diễn trực tiếp.",
+          "estimated_cost": 120000,
+          "transport_mode": null
+        }
+      ],
+      "day_cost": 320000
+    },
+    {
+      "day_number": 2,
+      "date": "2026-12-07",
+      "title": "Tối thứ Hai: phở và khám phá hai quán pub",
+      "items": [
+        {
+          "order_index": 1,
+          "start_time": "18:00",
+          "end_time": "18:45",
+          "activity_kind": "POI_VISIT",
+          "activity": "Ăn phở cho bữa tối tiết kiệm",
+          "place_name": "Pho 10",
+          "place_id": "5350dd97-2f75-45fc-9fc1-1979b08670f7",
+          "notes": "Khung giờ nằm trong lịch mở cửa hằng ngày 06:00-22:00; giá bữa ăn là ước tính.",
+          "estimated_cost": 70000,
+          "transport_mode": null
+        },
+        {
+          "order_index": 2,
+          "start_time": "18:45",
+          "end_time": "19:00",
+          "activity_kind": "TRANSIT_ONLY",
+          "activity": "Đi bộ đến quán pub đầu tiên",
+          "place_name": null,
+          "place_id": null,
+          "notes": "Quãng đường ngắn; có thời gian đệm để qua đường.",
+          "estimated_cost": 0,
+          "transport_mode": "walking"
+        },
+        {
+          "order_index": 3,
+          "start_time": "19:00",
+          "end_time": "20:10",
+          "activity_kind": "POI_VISIT",
+          "activity": "Trải nghiệm không khí pub và thưởng thức đồ uống",
+          "place_name": "Quán Pub Finnegan's Irish",
+          "place_id": "0bfe7078-d30c-45e5-8638-1139d51401e0",
+          "notes": "Dự trù 120.000 VND cho đồ uống; cần xác nhận quán hoạt động vào tối thứ Hai.",
+          "estimated_cost": 120000,
+          "transport_mode": null
+        },
+        {
+          "order_index": 4,
+          "start_time": "20:10",
+          "end_time": "20:30",
+          "activity_kind": "TRANSIT_ONLY",
+          "activity": "Đi bộ sang quán tiếp theo",
+          "place_name": null,
+          "place_id": null,
+          "notes": "Dành khoảng 20 phút di chuyển giữa hai điểm.",
+          "estimated_cost": 0,
+          "transport_mode": "walking"
+        },
+        {
+          "order_index": 5,
+          "start_time": "20:30",
+          "end_time": "21:45",
+          "activity_kind": "POI_VISIT",
+          "activity": "Kết thúc chuyến đi bằng trải nghiệm tavern buổi tối",
+          "place_name": "R&R Tavern",
+          "place_id": "8cfab7e7-5c69-47fc-847a-6136379883f5",
+          "notes": "Dự trù 120.000 VND cho đồ uống; xác nhận giờ mở cửa và phụ thu trước khi đến. Không mặc định có chương trình âm nhạc.",
+          "estimated_cost": 120000,
+          "transport_mode": null
+        }
+      ],
+      "day_cost": 310000
+    }
+  ]
+}

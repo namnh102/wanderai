@@ -581,6 +581,10 @@ def verify_pre_authorization_firewall(repo_root: Path = REPO_ROOT) -> dict[str, 
     forbidden_dev_select_live_dirs: list[str] = []
 
     if w06_dir.is_dir():
+        from freeze_w06_dev_select_live_results import (
+            is_path_in_downstream_w06_dev_select_live_results_scope,
+            is_verified_downstream_w06_dev_select_live_results_tree,
+        )
         from freeze_w06_dev_select_stage_a import (
             is_verified_downstream_w06_dev_select_stage_a_file,
         )
@@ -591,15 +595,24 @@ def verify_pre_authorization_firewall(repo_root: Path = REPO_ROOT) -> dict[str, 
         verified_dev_tune_results_tree = (
             is_verified_downstream_w06_dev_tune_live_results_tree(repo_root)
         )
+        verified_dev_select_results_tree = (
+            is_verified_downstream_w06_dev_select_live_results_tree(repo_root)
+        )
         for path in sorted(w06_dir.rglob("*")):
             rel = path.relative_to(repo_root).as_posix()
             name_lower = path.name.lower()
+            is_verified_dev_select_results = (
+                verified_dev_select_results_tree
+                and is_path_in_downstream_w06_dev_select_live_results_scope(
+                    path, repo_root=repo_root
+                )
+            )
             is_verified_dev_tune_results = (
                 verified_dev_tune_results_tree
                 and is_path_in_downstream_w06_dev_tune_live_results_scope(
                     path, repo_root=repo_root
                 )
-            )
+            ) or is_verified_dev_select_results
             if path.is_file():
                 is_verified_dev_tune_auth = (
                     is_verified_downstream_w06_dev_tune_authorization_file(
@@ -676,15 +689,18 @@ def verify_pre_authorization_firewall(repo_root: Path = REPO_ROOT) -> dict[str, 
                         pass
             elif path.is_dir():
                 if (
-                    any(
-                        tok in name_lower
-                        for tok in (
-                            "live_dev_select",
-                            "dev_select_live",
-                            "stochasticity_live",
-                            "live_runs",
-                            "cell_outputs",
+                    (
+                        any(
+                            tok in name_lower
+                            for tok in (
+                                "live_dev_select",
+                                "dev_select_live",
+                                "stochasticity_live",
+                                "live_runs",
+                                "cell_outputs",
+                            )
                         )
+                        and not is_verified_dev_select_results
                     )
                     or (
                         any(

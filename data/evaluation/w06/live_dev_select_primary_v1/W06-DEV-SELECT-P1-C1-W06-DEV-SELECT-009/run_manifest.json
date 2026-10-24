@@ -1,0 +1,67 @@
+{
+  "benchmark_prompt_version": "P1",
+  "catalog_sha256": "f7517938598e3923906763f8f31334a500ee88bc06232f2992d38e2fcb28a444",
+  "claims_bitwise_model_determinism": false,
+  "code_commit_sha": "eac86a38f6b457c9b6ff078f26c4f953a9fc98a7",
+  "error_detail": "HTTP_5XX",
+  "execution_mode": "LIVE_DEV_SELECT",
+  "execution_timestamp_utc": "2026-10-23T16:59:51.760854+00:00",
+  "expected_model_id": "gemini-3.8-flash",
+  "generation_parameters": {
+    "candidate_id": "C1",
+    "code_basis_commit_sha": "c0adf74ceda9ffaf8b4ec42d299932e33f448e6a",
+    "code_commit_sha_semantics": "AUTHORITATIVE_RUNTIME_HEAD_SHA_WITH_SEPARATE_CODE_BASIS_AND_BUNDLE_ATTESTATION",
+    "max_output_tokens": 16384,
+    "omitted_parameters": [
+      "temperature",
+      "top_p",
+      "top_k"
+    ],
+    "portable_generation_schema_v2_sha256": "825a4ff912d851a95f7392cb564b7d7ca3588135508dc6eb3ac6304cdde3c490",
+    "provider": "google",
+    "provider_config_sha256": "d4d417bdeff3f4156ac9605f976b46780c1cb0866d87674f1cee51d8bf3f3217",
+    "requested_model_id": "gemini-3.8-flash",
+    "retry": 0,
+    "runtime_head_sha": "eac86a38f6b457c9b6ff078f26c4f953a9fc98a7",
+    "scientific_code_bundle_sha256": "0638f2fcb100b0000e3a2a4e08137a9d468449001f258de7354df21e185ca2e3",
+    "seed": 2026101508,
+    "semantic_schema_sha256": "e4169f7b890f77d13af65e9f2070b6071c535b206d88440f5e8f28c179977555",
+    "temperature_status": "OMITTED",
+    "thinking_config": {
+      "include_thoughts": false,
+      "thinking_level": "medium"
+    },
+    "timeout_ms": 55000,
+    "timeout_seconds": 55.0,
+    "top_k_status": "OMITTED",
+    "top_p_status": "OMITTED"
+  },
+  "hash_basis_by_artifact": {
+    "BENCHMARK_PROMPT": "SHA256_EXACT_PERSISTED_UTF8_BYTES",
+    "CATALOG_CONTEXT": "SHA256_CANONICAL_JSON_UTF8_LF_BYTES",
+    "PARSED_PLAN_RESPONSE": "SHA256_CANONICAL_JSON_UTF8_LF_BYTES",
+    "PREPARATION_MANIFEST": "SHA256_CANONICAL_JSON_UTF8_LF_BYTES",
+    "RAW_PROVIDER_RESPONSE": "SHA256_EXACT_PERSISTED_UTF8_BYTES",
+    "RUN_MANIFEST": "SHA256_CANONICAL_JSON_UTF8_LF_BYTES",
+    "SCENARIO_INPUT": "SHA256_CANONICAL_JSON_UTF8_LF_BYTES",
+    "SOURCE_CATALOG": "SHA256_LF_NORMALIZED_SOURCE_BYTES"
+  },
+  "hash_basis_version": "W06-ARTIFACT-HASH-BASIS-V1",
+  "latency_ms": 43812.0,
+  "measurement_contract_id": "W06-MEASUREMENT-CONTRACT-01",
+  "measurement_contract_source_commit": "7fd5364ed4671c06b0c911b6fd53bd9f54cbc322",
+  "measurement_contract_version": "1.1.0",
+  "model_id": "MISSING_RETURNED_MODEL_ID",
+  "parsed_response_sha256": null,
+  "provider": "C1",
+  "raw_response_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "run_id": "W06-DEV-SELECT-P1-C1-W06-DEV-SELECT-009",
+  "run_status": "API_ERROR",
+  "scenario_id": "W06-DEV-SELECT-009",
+  "scenario_sha256": "4f7059f15f04671b5f8e043d87e723e92b2791cfe4bc7d9522315a47d17e5609",
+  "usage_metadata": {
+    "input_tokens": null,
+    "output_tokens": null,
+    "total_tokens": null
+  }
+}
