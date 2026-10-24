@@ -1,0 +1,214 @@
+{
+  "AMENDED_CANARY_LIVE_AUTHORIZED": false,
+  "AMENDED_COMPARATIVE_LIVE_AUTHORIZED": false,
+  "AMENDED_LIVE_AUTHORIZED": false,
+  "AMENDED_LIVE_EXECUTED": false,
+  "AMENDMENT_APPROVED": true,
+  "AMENDMENT_METHODOLOGY_SELECTED": true,
+  "C1_PROVIDER_READINESS": "NOT_YET_ATTESTED",
+  "C2_PROVIDER_READINESS": "NOT_YET_ATTESTED",
+  "C3_PROVIDER_READINESS": "NOT_YET_ATTESTED",
+  "CANARY_EXECUTED": false,
+  "COMPARATIVE_EXECUTED": false,
+  "EXTERNAL_PRICING_REFRESH_REQUIRED_BEFORE_AUTHORIZATION": true,
+  "FINAL100_STATUS": "NO-GO",
+  "FINAL100_USED": false,
+  "LIVE_PROVIDER_CALLS_NEW": 0,
+  "MODEL_WINNER_SELECTED": false,
+  "NEXT_GATE": "W06-DEV-SELECT-EXECUTION-ENVIRONMENT-AMENDMENT-01-APPROVAL-RECEIPT-CHATGPT-AUDIT",
+  "OWNER_PROVIDER_ACTION_REQUIRED_BEFORE_CANARY_AUTHORIZATION": true,
+  "PRIMARY_DENOMINATORS_CHANGED": false,
+  "PRIMARY_EXPERIMENT_MUTATED": false,
+  "PRIMARY_RESULTS_REPLACED": false,
+  "SELECTED_MODEL_ID": null,
+  "STOCHASTICITY_EXECUTION_STARTED": false,
+  "approval_authority": "CHATGPT",
+  "approval_firewall_statement": "AMENDMENT_APPROVED=true does NOT imply any provider readiness, live-call authorization, canary authorization, or comparative authorization.",
+  "approval_receipt_internal_sha256": "41b5451a79c33fdf43eff760d00ca01dda9404b946f82262d3fbb927e2c4238a",
+  "approval_scope": "METHODOLOGY_ONLY",
+  "approval_statement": "ChatGPT, acting as final methodology decision authority, approved the frozen secondary post-hoc execution-environment stabilization methodology after independent audit of the formal decision artifact, normal merge of PR #68, and successful post-merge CI on the exact merge SHA.",
+  "approved_frozen_policy": {
+    "CALL_BUDGET_POLICY": {
+      "call_budget_policy_id": "S2_READINESS_CANARY_PLUS_COMPARATIVE_180",
+      "calls_per_candidate_max": 63,
+      "comparative_assigned_calls": 180,
+      "maximum_generation_calls": 189,
+      "readiness_canary_assigned_calls": 9
+    },
+    "FAIRNESS_POLICY": "OPTION_B_CONSERVATIVE_RELIABILITY_ENVIRONMENT",
+    "FIXTURE_POLICY": "POLICY_F3_ENGINEERING_READINESS_SUBSET_PLUS_AMENDED_COMPARATIVE_SET",
+    "PACING_POLICY": {
+      "adaptive": false,
+      "deterministic": true,
+      "fixed": true,
+      "inter_call_delay_ms": 2000,
+      "pacing_policy_id": "P1_FIXED_2000MS_INTER_CALL_DELAY",
+      "prevents_provider_http_503_or_high_demand_failures_claimed": false,
+      "response_dependent": false,
+      "scientific_wording": "Pacing bounds client-issued request cadence only. It MUST NOT be claimed to prevent provider HTTP 503/high-demand failures."
+    },
+    "RETRY_POLICY": {
+      "automatic_retry": 0,
+      "fallback": false,
+      "llm_repair": 0,
+      "manual_retry": 0,
+      "retry": 0,
+      "retry_policy_id": "R0_STRICT_ZERO_RETRY",
+      "semantic_repair": 0,
+      "transport_retry": 0
+    },
+    "TIMEOUT_POLICY": {
+      "guarantees_completion": false,
+      "scientific_wording": "This removes the frozen 55s client-side cutoff from the secondary configuration and materially reduces client-side right-censoring risk. It does NOT guarantee completion. Provider-side deadlines, capacity failures, quota errors, or other transport failures may still prevent observation.",
+      "timeout_applies_symmetrically_to": [
+        "C1",
+        "C2",
+        "C3"
+      ],
+      "timeout_ms": 180000,
+      "timeout_ms_by_candidate": {
+        "C1": 180000,
+        "C2": 180000,
+        "C3": 180000
+      },
+      "timeout_policy_id": "T3_CANDIDATE_180S",
+      "timeout_seconds": 180
+    }
+  },
+  "artifact_id": "W06-DEV-SELECT-EXECUTION-ENVIRONMENT-AMENDMENT-01-APPROVAL-RECEIPT-V1",
+  "authoritative_base_develop_sha": "1de6ad5288f2fc5f3036145f4089d3e1bb46f1ab",
+  "becomes_repository_authoritative_after_chatgpt_pass_merge_and_postmerge_ci": true,
+  "bound_authorities": {
+    "canary_manifest": {
+      "artifact_id": "W06-DEV-SELECT-AMENDMENT-01-CANARY-ASSIGNMENT-MANIFEST-V1",
+      "file_sha256": "3ce0ebaac35f22dfe8c981478a6c63d7a2fde0580b372fd8f25762ab3b18fb96",
+      "internal_sha256": "707d99fee54d65822f194cc690cbfadea14ad2176594d4ef882e7d8031990518",
+      "path": "data/evaluation/w06/w06_dev_select_amendment_01_canary_manifest_v1.json"
+    },
+    "formal_decision": {
+      "artifact_id": "W06-DEV-SELECT-EXECUTION-ENVIRONMENT-AMENDMENT-01-DECISION-V1",
+      "decision_artifact_file_sha256": "2e4211893c1988230e2eeb2718195d48c093da87725cd2fa074e1743ee599ddf",
+      "decision_artifact_internal_sha256": "38dc02de2e846d4cf72108e8beacffdcfcf6308879e0ea72cca3bb83bf71387a",
+      "decision_artifact_path": "data/evaluation/w06/w06_dev_select_execution_environment_amendment_01_decision_v1.json",
+      "historical_decision_amendment_approved": false,
+      "historical_decision_amendment_methodology_selected": true,
+      "historical_decision_state_immutable": true
+    },
+    "formal_decision_merge": {
+      "merge_commit_sha": "1de6ad5288f2fc5f3036145f4089d3e1bb46f1ab",
+      "merge_method": "NORMAL_MERGE_COMMIT",
+      "parent1": "bc913ed61097f26db8eae87b9fe47d1869dc3ec5",
+      "parent2": "b745067e7e1949a3dfc2ee4974522913ca0c6a39",
+      "pr_number": 68,
+      "pr_state": "MERGED"
+    },
+    "post_merge_ci": {
+      "conclusion": "success",
+      "event": "push",
+      "exact_head_sha": "1de6ad5288f2fc5f3036145f4089d3e1bb46f1ab",
+      "required_jobs": {
+        "ai-service": "success",
+        "backend": "success",
+        "data-contract": "success",
+        "mobile": "success"
+      },
+      "run_id": 40094419087
+    },
+    "prep_authorities": {
+      "prep_artifact_file_sha256": "e8786c4f538b86c8aa1d6b2c0cfb4afd6b8b6a1efa5b51799e44bd6bdd5a9a91",
+      "prep_artifact_internal_sha256": "49c24e65690cb4fb947d2733ddf8b019d863046cf955d9415eec1d16e9eaaf7a",
+      "prep_artifact_path": "data/evaluation/w06/w06_dev_select_execution_environment_amendment_01_prep_v1.json"
+    },
+    "primary_authorities": {
+      "dev_fixtures_freeze_sha256": "bb0f051446ea3da8229298f22f4ce92b4db20751695273c6d01b7766da044050",
+      "diagnostic_file_sha256": "b729883505ecfc98f15917347239ea6d09cede106691b155026891996391e692",
+      "diagnostic_internal_sha256": "509528413e1d9eb8408943867be21f83dc2dda72acd53fe9028e3c37c7db05c8",
+      "portable_schema_v2_sha256": "825a4ff912d851a95f7392cb564b7d7ca3588135508dc6eb3ac6304cdde3c490",
+      "raw_evidence_tree_sha256": "d5c4e53952500655b656a624657a3cf1ec7aae685809c9e53a318459cc319817",
+      "results_freeze_receipt_file_sha256": "c021094e26277d41664c4ae2f0560b7684435b6002c5b7ba742a17808c5b07a4",
+      "results_freeze_receipt_internal_sha256": "053d15328d76efbc0da057a1fe6095ec548de59bc9d0d542d4ba72fa6874a665",
+      "results_manifest_file_sha256": "1d303e1c07b627c3f3eb87287b744f55ba3f6d3d85bd5cec36959b01919d26c0",
+      "results_manifest_internal_sha256": "4e2f8f0df0a6e069d65b563b8221c3ba3086bb50ad73854e9cc592a9beb05011",
+      "scientific_code_bundle_sha256": "0638f2fcb100b0000e3a2a4e08137a9d468449001f258de7354df21e185ca2e3",
+      "semantic_schema_sha256": "e4169f7b890f77d13af65e9f2070b6071c535b206d88440f5e8f28c179977555"
+    }
+  },
+  "canary_authorities": {
+    "canary_gate_pass_requirement": "9/9 operational PASS",
+    "canary_pass_automatically_authorizes_or_launches_comparative_benchmark": false,
+    "exact_assigned_canary_cells": 9,
+    "exact_call_matrix_order": [
+      "01 W06-DEV-TUNE-007 × C1",
+      "02 W06-DEV-TUNE-007 × C2",
+      "03 W06-DEV-TUNE-007 × C3",
+      "04 W06-DEV-TUNE-011 × C1",
+      "05 W06-DEV-TUNE-011 × C2",
+      "06 W06-DEV-TUNE-011 × C3",
+      "07 W06-DEV-TUNE-015 × C1",
+      "08 W06-DEV-TUNE-015 × C2",
+      "09 W06-DEV-TUNE-015 × C3"
+    ],
+    "exact_fixture_ids": [
+      "W06-DEV-TUNE-007",
+      "W06-DEV-TUNE-011",
+      "W06-DEV-TUNE-015"
+    ],
+    "if_any_cell_operationally_fails": {
+      "AMENDED_COMPARATIVE_AUTHORIZED": false,
+      "CANARY_GATE_PASS": false,
+      "next_action": "RETURN_TO_CHATGPT_HOLD"
+    },
+    "pacing_inter_call_delay_ms": 2000,
+    "planner_quality_results_determine_operational_readiness": false,
+    "required_operational_pass_count": 9,
+    "required_pass_fraction": "9/9",
+    "selection_weight": 0,
+    "separate_chatgpt_authorization_required_for_180_cell_comparative_benchmark": true,
+    "successful_provider_response_failing_schema_or_core_is_operational_pass": true
+  },
+  "effective_amendment_state": {
+    "approval_receipt_amendment_approved": true,
+    "approval_receipt_amendment_methodology_selected": true,
+    "approval_scope": "METHODOLOGY_ONLY",
+    "decision_historical_amendment_approved": false,
+    "decision_historical_amendment_methodology_selected": true,
+    "derivation_rule": "decision.AMENDMENT_METHODOLOGY_SELECTED == true AND decision.AMENDMENT_APPROVED == false (historical immutable decision freeze) AND approval_receipt.AMENDMENT_METHODOLOGY_SELECTED == true AND approval_receipt.AMENDMENT_APPROVED == true AND approval_receipt.approval_scope == 'METHODOLOGY_ONLY' => methodology_approved = true, amended_live_authorized = false",
+    "effective_amended_canary_live_authorized": false,
+    "effective_amended_comparative_live_authorized": false,
+    "effective_amended_live_authorized": false,
+    "effective_amended_live_executed": false,
+    "effective_amendment_status": "METHODOLOGY_APPROVED_LIVE_UNAUTHORIZED",
+    "effective_live_provider_calls_new": 0,
+    "effective_methodology_approved": true,
+    "effective_methodology_selected": true,
+    "historical_decision_amendment_approved_false_preserved": true,
+    "historical_decision_contradiction": false,
+    "methodology_approval_derives_live_authorization": false
+  },
+  "primary_experiment_classification": "PRIMARY_PREREGISTERED_ONE_SHOT_OPERATIONAL_BENCHMARK",
+  "provider_readiness_status": {
+    "C1_PROVIDER_READINESS": "NOT_YET_ATTESTED",
+    "C2_PROVIDER_READINESS": "NOT_YET_ATTESTED",
+    "C3_PROVIDER_READINESS": "NOT_YET_ATTESTED",
+    "EXTERNAL_PRICING_REFRESH_REQUIRED_BEFORE_AUTHORIZATION": true,
+    "OWNER_PROVIDER_ACTION_REQUIRED_BEFORE_CANARY_AUTHORIZATION": true,
+    "api_keys_inspected_read_printed_hashed_or_transmitted": false,
+    "live_api_calls_made_to_validate_provider_readiness": false,
+    "owner_and_provider_attestation_distinct_from_live_readiness_canary": true
+  },
+  "receipt_authority_model": {
+    "becomes_repository_authoritative_after_chatgpt_pass_merge_and_postmerge_ci": true,
+    "receipt_candidate_status": "PENDING_CHATGPT_AUDIT_AND_REPOSITORY_FREEZE",
+    "repository_authoritative_before_merge": false,
+    "required_steps_for_repository_authority": [
+      "1. ChatGPT independent audit = PASS",
+      "2. normal merge into develop",
+      "3. successful post-merge CI on exact develop merge SHA"
+    ]
+  },
+  "receipt_candidate_status": "PENDING_CHATGPT_AUDIT_AND_REPOSITORY_FREEZE",
+  "repository_authoritative_before_merge": false,
+  "schema_version": "1.0.0",
+  "task_id": "W06-DEV-SELECT-EXECUTION-ENVIRONMENT-AMENDMENT-01-APPROVAL-RECEIPT-PREP",
+  "track_classification": "SECONDARY_POST_HOC_EXECUTION_ENVIRONMENT_STABILIZATION_TRACK"
+}
