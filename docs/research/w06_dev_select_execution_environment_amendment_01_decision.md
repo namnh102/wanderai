@@ -14,9 +14,9 @@
 - **Prep Artifact File SHA256 (LF):** `e8786c4f538b86c8aa1d6b2c0cfb4afd6b8b6a1efa5b51799e44bd6bdd5a9a91`
 - **Prep Artifact Internal SHA256:** `49c24e65690cb4fb947d2733ddf8b019d863046cf955d9415eec1d16e9eaaf7a`
 - **Decision Artifact Path:** `data/evaluation/w06/w06_dev_select_execution_environment_amendment_01_decision_v1.json`
-- **Decision Artifact File SHA256 (LF):** `02e154b465c8aab91682568f131727c8612d27fdad18eb3b1ccf6978bf4c4897`
-- **Decision Artifact Internal SHA256:** `566d0869a5b9ae3f648d50cf8bc5cc460eddcb7cc35def9d6df28c4bfb1f7f6d`
-- **Canary Manifest Path:** `data/evaluation/w06/w06_dev_select_amendment_01_canary_assignment_manifest_v1.json`
+- **Decision Artifact File SHA256 (LF):** `2e4211893c1988230e2eeb2718195d48c093da87725cd2fa074e1743ee599ddf`
+- **Decision Artifact Internal SHA256:** `38dc02de2e846d4cf72108e8beacffdcfcf6308879e0ea72cca3bb83bf71387a`
+- **Canary Manifest Path:** `data/evaluation/w06/w06_dev_select_amendment_01_canary_manifest_v1.json`
 - **Canary Manifest File SHA256 (LF):** `3ce0ebaac35f22dfe8c981478a6c63d7a2fde0580b372fd8f25762ab3b18fb96`
 - **Canary Manifest Internal SHA256:** `707d99fee54d65822f194cc690cbfadea14ad2176594d4ef882e7d8031990518`
 - **Scientific Code Bundle SHA256:** `0638f2fcb100b0000e3a2a4e08137a9d468449001f258de7354df21e185ca2e3` (unchanged)

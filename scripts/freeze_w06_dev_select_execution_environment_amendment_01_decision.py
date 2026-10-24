@@ -83,7 +83,7 @@ DECISION_ARTIFACT_REL_PATH = (
     "data/evaluation/w06/w06_dev_select_execution_environment_amendment_01_decision_v1.json"
 )
 CANARY_MANIFEST_REL_PATH = (
-    "data/evaluation/w06/w06_dev_select_amendment_01_canary_assignment_manifest_v1.json"
+    "data/evaluation/w06/w06_dev_select_amendment_01_canary_manifest_v1.json"
 )
 DECISION_DOC_REL_PATH = (
     "docs/research/w06_dev_select_execution_environment_amendment_01_decision.md"
@@ -249,10 +249,10 @@ EXPECTED_CANARY_MANIFEST_INTERNAL_SHA256 = (
     "707d99fee54d65822f194cc690cbfadea14ad2176594d4ef882e7d8031990518"
 )
 EXPECTED_DECISION_ARTIFACT_FILE_SHA256 = (
-    "02e154b465c8aab91682568f131727c8612d27fdad18eb3b1ccf6978bf4c4897"
+    "2e4211893c1988230e2eeb2718195d48c093da87725cd2fa074e1743ee599ddf"
 )
 EXPECTED_DECISION_ARTIFACT_INTERNAL_SHA256 = (
-    "566d0869a5b9ae3f648d50cf8bc5cc460eddcb7cc35def9d6df28c4bfb1f7f6d"
+    "38dc02de2e846d4cf72108e8beacffdcfcf6308879e0ea72cca3bb83bf71387a"
 )
 
 

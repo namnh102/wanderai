@@ -38,7 +38,7 @@
     "authoritative_base_develop_sha": "bc913ed61097f26db8eae87b9fe47d1869dc3ec5",
     "canary_manifest_file_sha256": "3ce0ebaac35f22dfe8c981478a6c63d7a2fde0580b372fd8f25762ab3b18fb96",
     "canary_manifest_internal_sha256": "707d99fee54d65822f194cc690cbfadea14ad2176594d4ef882e7d8031990518",
-    "canary_manifest_path": "data/evaluation/w06/w06_dev_select_amendment_01_canary_assignment_manifest_v1.json",
+    "canary_manifest_path": "data/evaluation/w06/w06_dev_select_amendment_01_canary_manifest_v1.json",
     "candidate_registry_sha256": "4dd29164afdf7f364978420f41ab88ef07ec396062188169fcb859a9ef01e058",
     "dev_final_overlap_receipt_sha256": "285699ee1370b537a6579b88a7fb02781b51ac52e0ed14f469d77969261f04aa",
     "dev_fixture_manifest_sha256": "15cf3af6c93d3de967703dbc52d7e082bfd4a1e657409c0678ff51bd081e3c98",
@@ -80,7 +80,7 @@
     "assigned_cell_count": 9,
     "canary_manifest_file_sha256": "3ce0ebaac35f22dfe8c981478a6c63d7a2fde0580b372fd8f25762ab3b18fb96",
     "canary_manifest_internal_sha256": "707d99fee54d65822f194cc690cbfadea14ad2176594d4ef882e7d8031990518",
-    "canary_manifest_path": "data/evaluation/w06/w06_dev_select_amendment_01_canary_assignment_manifest_v1.json",
+    "canary_manifest_path": "data/evaluation/w06/w06_dev_select_amendment_01_canary_manifest_v1.json",
     "cells": [
       {
         "attempt_number": 1,
@@ -686,7 +686,7 @@
     "separate_chatgpt_authorization_gate_required_before_180_comparative_calls": true,
     "timeout_ms": 180000
   },
-  "decision_artifact_internal_sha256": "566d0869a5b9ae3f648d50cf8bc5cc460eddcb7cc35def9d6df28c4bfb1f7f6d",
+  "decision_artifact_internal_sha256": "38dc02de2e846d4cf72108e8beacffdcfcf6308879e0ea72cca3bb83bf71387a",
   "final100_firewall": {
     "final100_calibration_forbidden": true,
     "final100_execution_forbidden": true,
