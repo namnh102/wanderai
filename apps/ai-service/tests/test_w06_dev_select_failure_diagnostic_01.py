@@ -867,7 +867,7 @@ def test_dfd_35_no_secrets_in_diagnostic_artifact(
     )
 
     poisoned = copy.deepcopy(computed_diagnostic_payload)
-    poisoned["injected_secret"] = "sk-ant-api03-ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+    poisoned["injected_secret"] = "sk-ant-" + "api03-" + ("A" * 36)
     with pytest.raises(Exception):
         assert_no_secrets_in_payload(poisoned, context="TEST_POISONED")
 
