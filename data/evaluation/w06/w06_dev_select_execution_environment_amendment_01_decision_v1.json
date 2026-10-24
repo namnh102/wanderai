@@ -1,0 +1,974 @@
+{
+  "AMENDED_CANARY_LIVE_AUTHORIZED": false,
+  "AMENDED_COMPARATIVE_LIVE_AUTHORIZED": false,
+  "AMENDED_LIVE_AUTHORIZED": false,
+  "AMENDED_LIVE_EXECUTED": false,
+  "AMENDMENT_APPROVED": false,
+  "AMENDMENT_METHODOLOGY_SELECTED": true,
+  "CHATGPT_FINAL_METHODOLOGY_DECISION_FOR_FREEZE": "APPROVED_FOR_FORMAL_FREEZE",
+  "FINAL100_USED": false,
+  "FINAL_METHODOLOGY_DECISION_AUTHORITY": "CHATGPT",
+  "LIVE_PROVIDER_CALLS_NEW": 0,
+  "MODEL_WINNER_SELECTED": false,
+  "PREP_GATE": "CLOSED",
+  "PRIMARY_DENOMINATORS_CHANGED": false,
+  "PRIMARY_EXPERIMENT_MUTATED": false,
+  "PRIMARY_RESULTS_REPLACED": false,
+  "SELECTED_MODEL_ID": null,
+  "STOCHASTICITY_EXECUTION_STARTED": false,
+  "amended_canary_live_authorized": false,
+  "amended_comparative_live_authorized": false,
+  "amended_live_authorized": false,
+  "amended_live_executed": false,
+  "amendment_approved": false,
+  "amendment_methodology_selected": true,
+  "amendment_status_lifecycle": {
+    "amended_canary_live_authorized": false,
+    "amended_comparative_live_authorized": false,
+    "amended_live_authorized": false,
+    "amended_live_executed": false,
+    "amendment_approved": false,
+    "amendment_approved_transition_rule": "AMENDMENT_APPROVED remains false in this formal decision freeze PR and may become true only in the authoritative decision receipt after ChatGPT audits and merges this formal-decision PR.",
+    "amendment_methodology_selected": true,
+    "live_provider_calls_new": 0
+  },
+  "artifact_id": "W06-DEV-SELECT-EXECUTION-ENVIRONMENT-AMENDMENT-01-DECISION-V1",
+  "authoritative_base_develop_sha": "bc913ed61097f26db8eae87b9fe47d1869dc3ec5",
+  "bound_authorities": {
+    "authoritative_base_develop_sha": "bc913ed61097f26db8eae87b9fe47d1869dc3ec5",
+    "canary_manifest_file_sha256": "3ce0ebaac35f22dfe8c981478a6c63d7a2fde0580b372fd8f25762ab3b18fb96",
+    "canary_manifest_internal_sha256": "707d99fee54d65822f194cc690cbfadea14ad2176594d4ef882e7d8031990518",
+    "canary_manifest_path": "data/evaluation/w06/w06_dev_select_amendment_01_canary_manifest_v1.json",
+    "candidate_registry_sha256": "4dd29164afdf7f364978420f41ab88ef07ec396062188169fcb859a9ef01e058",
+    "dev_final_overlap_receipt_sha256": "285699ee1370b537a6579b88a7fb02781b51ac52e0ed14f469d77969261f04aa",
+    "dev_fixture_manifest_sha256": "15cf3af6c93d3de967703dbc52d7e082bfd4a1e657409c0678ff51bd081e3c98",
+    "dev_fixtures_freeze_sha256": "bb0f051446ea3da8229298f22f4ce92b4db20751695273c6d01b7766da044050",
+    "dev_select_execution_plan_file_sha256": "c519baf7cd2557b5e1dd2699a5ceaec592af015d7bc6dcc83abf63892a8a329a",
+    "dev_select_execution_plan_internal_sha256": "de04255989a9e3bd8c2e39c766432487dce4ccd0612d5dba73b3476cbc9d0c6d",
+    "dev_tune_execution_plan_file_sha256": "652e3beb08771c3125e613172b1aaa396fc1b60aaaf3b98cc238e91a14e0dc74",
+    "dev_tune_execution_plan_internal_sha256": "582d9964b4fffbac91f83373d080f1fef120f0ddca4edab2d63e02796d0b20ae",
+    "diagnostic_artifact_file_sha256": "b729883505ecfc98f15917347239ea6d09cede106691b155026891996391e692",
+    "diagnostic_artifact_internal_sha256": "509528413e1d9eb8408943867be21f83dc2dda72acd53fe9028e3c37c7db05c8",
+    "p1_semantic_prompt_sha256": "096ff4c74dd8d1aed1c0abe501b97c8dfd0f6424dbca535f2b79a242637a1c11",
+    "p1_system_prompt_sha256": "4bcb84a8aca1fc89f65709ac9d91c88e42359c284850061bae85c3607c345b0e",
+    "p1_user_prompt_template_sha256": "19762f7c72b4dd19b57c29e160d9195b8f2c72e836188823e9949f271a22f5de",
+    "portable_schema_v2_sha256": "825a4ff912d851a95f7392cb564b7d7ca3588135508dc6eb3ac6304cdde3c490",
+    "prep_artifact_file_sha256": "e8786c4f538b86c8aa1d6b2c0cfb4afd6b8b6a1efa5b51799e44bd6bdd5a9a91",
+    "prep_artifact_internal_sha256": "49c24e65690cb4fb947d2733ddf8b019d863046cf955d9415eec1d16e9eaaf7a",
+    "prep_base_develop_sha": "811255a7dd00234d63184ab483e9f88b1f2d8554",
+    "primary_provider_config_sha256_by_candidate": {
+      "C1": "d4d417bdeff3f4156ac9605f976b46780c1cb0866d87674f1cee51d8bf3f3217",
+      "C2": "6201244268383e85106b4d6e6ad0f503e066de9def361cbafa685227e8ba332e",
+      "C3": "5ecff5a4e2899245d1cd113285d1193dad17b6ed4e7521bd10be3937650d2a29"
+    },
+    "primary_raw_evidence_tree_sha256": "d5c4e53952500655b656a624657a3cf1ec7aae685809c9e53a318459cc319817",
+    "primary_results_freeze_receipt_file_sha256": "c021094e26277d41664c4ae2f0560b7684435b6002c5b7ba742a17808c5b07a4",
+    "primary_results_freeze_receipt_internal_sha256": "7b270de482f0b077e79bbba40a0c662851da46355a18b5e05f8fdf572880943a",
+    "primary_results_manifest_file_sha256": "1d303e1c07b627c3f3eb87287b744f55ba3f6d3d85bd5cec36959b01919d26c0",
+    "primary_results_manifest_internal_sha256": "4e2f8f0df0a6e069d65b563b8221c3ba3086bb50ad73854e9cc592a9beb05011",
+    "prompt_freeze_file_sha256": "2f345363f580ea882b2e5b3562c587ef5309bc7f994440257a54d18994ab6956",
+    "prompt_registry_sha256": "846dc4c14ec2a87537b7b3e07bf492de51dc534d24b21e469094b7e3d34d32b6",
+    "prompt_selection_file_sha256": "e1e79801117e59d3c8c703e024eacbad12d5336134c6597c333886c434a446b8",
+    "prompt_selection_internal_sha256": "1a718cb545f23b1c93e6d10d904ff252d4a6764dc58e7420217900dcdc8bc570",
+    "provider_config_registry_sha256": "3dc05d29acc2f647cba58303865bd7406b8c1d9f7ccbe0f120e87ad471190938",
+    "scientific_code_bundle_sha256": "0638f2fcb100b0000e3a2a4e08137a9d468449001f258de7354df21e185ca2e3",
+    "semantic_schema_sha256": "e4169f7b890f77d13af65e9f2070b6071c535b206d88440f5e8f28c179977555"
+  },
+  "canary_call_matrix_and_order": {
+    "all_9_cells_assigned_once": true,
+    "alternate_fixtures_permitted": false,
+    "assigned_cell_count": 9,
+    "canary_manifest_file_sha256": "3ce0ebaac35f22dfe8c981478a6c63d7a2fde0580b372fd8f25762ab3b18fb96",
+    "canary_manifest_internal_sha256": "707d99fee54d65822f194cc690cbfadea14ad2176594d4ef882e7d8031990518",
+    "canary_manifest_path": "data/evaluation/w06/w06_dev_select_amendment_01_canary_manifest_v1.json",
+    "cells": [
+      {
+        "attempt_number": 1,
+        "automatic_retry": 0,
+        "canary_fixture_slot": "A",
+        "candidate_id": "C1",
+        "catalog_context_sha256": "527c68f1dcb8a353942721f52afd2f1955eb92effdbea2155030f5acd6e58770",
+        "cell_id": "W06-AMENDMENT-01-CANARY-01-P1-C1-W06-DEV-TUNE-007",
+        "days": 4,
+        "destination": "Hà Nội",
+        "destination_slug": "ha-noi",
+        "fallback": false,
+        "fixture_id": "W06-DEV-TUNE-007",
+        "inter_call_delay_ms_before_next_cell": 2000,
+        "interest_count": 3,
+        "llm_repair": 0,
+        "manual_retry": 0,
+        "matrix_label": "01 W06-DEV-TUNE-007 × C1",
+        "max_output_tokens": 16384,
+        "order_code": "01",
+        "order_index": 1,
+        "portable_generation_schema_v2_sha256": "825a4ff912d851a95f7392cb564b7d7ca3588135508dc6eb3ac6304cdde3c490",
+        "primary_baseline_provider_config_sha256": "d4d417bdeff3f4156ac9605f976b46780c1cb0866d87674f1cee51d8bf3f3217",
+        "prompt_id": "P1",
+        "provider": "google",
+        "requested_model_id": "gemini-3.8-flash",
+        "retry": 0,
+        "sampling_reasoning_configuration": {
+          "seed": 2026101508,
+          "thinking_level": "medium"
+        },
+        "scenario_sha256": "b74f1551127fa35e67086ae3f82f6baf749251ef48fa95d80677bed495d8cd6d",
+        "scientific_code_bundle_sha256": "0638f2fcb100b0000e3a2a4e08137a9d468449001f258de7354df21e185ca2e3",
+        "selection_weight": 0,
+        "semantic_repair": 0,
+        "semantic_schema_sha256": "e4169f7b890f77d13af65e9f2070b6071c535b206d88440f5e8f28c179977555",
+        "system_prompt_sha256": "4bcb84a8aca1fc89f65709ac9d91c88e42359c284850061bae85c3607c345b0e",
+        "timeout_ms": 180000,
+        "tools": false,
+        "transport_retry": 0,
+        "user_prompt_sha256": "a448e9ca85d1aca526ca54c38f7bc59ecce70ba692cbdbcb4311a07b9c6037b9"
+      },
+      {
+        "attempt_number": 1,
+        "automatic_retry": 0,
+        "canary_fixture_slot": "A",
+        "candidate_id": "C2",
+        "catalog_context_sha256": "527c68f1dcb8a353942721f52afd2f1955eb92effdbea2155030f5acd6e58770",
+        "cell_id": "W06-AMENDMENT-01-CANARY-02-P1-C2-W06-DEV-TUNE-007",
+        "days": 4,
+        "destination": "Hà Nội",
+        "destination_slug": "ha-noi",
+        "fallback": false,
+        "fixture_id": "W06-DEV-TUNE-007",
+        "inter_call_delay_ms_before_next_cell": 2000,
+        "interest_count": 3,
+        "llm_repair": 0,
+        "manual_retry": 0,
+        "matrix_label": "02 W06-DEV-TUNE-007 × C2",
+        "max_output_tokens": 16384,
+        "order_code": "02",
+        "order_index": 2,
+        "portable_generation_schema_v2_sha256": "825a4ff912d851a95f7392cb564b7d7ca3588135508dc6eb3ac6304cdde3c490",
+        "primary_baseline_provider_config_sha256": "6201244268383e85106b4d6e6ad0f503e066de9def361cbafa685227e8ba332e",
+        "prompt_id": "P1",
+        "provider": "openai",
+        "requested_model_id": "gpt-6.1-sol",
+        "retry": 0,
+        "sampling_reasoning_configuration": {
+          "reasoning_effort": "medium",
+          "seed": 2026101508,
+          "service_tier": "default"
+        },
+        "scenario_sha256": "b74f1551127fa35e67086ae3f82f6baf749251ef48fa95d80677bed495d8cd6d",
+        "scientific_code_bundle_sha256": "0638f2fcb100b0000e3a2a4e08137a9d468449001f258de7354df21e185ca2e3",
+        "selection_weight": 0,
+        "semantic_repair": 0,
+        "semantic_schema_sha256": "e4169f7b890f77d13af65e9f2070b6071c535b206d88440f5e8f28c179977555",
+        "system_prompt_sha256": "4bcb84a8aca1fc89f65709ac9d91c88e42359c284850061bae85c3607c345b0e",
+        "timeout_ms": 180000,
+        "tools": false,
+        "transport_retry": 0,
+        "user_prompt_sha256": "a448e9ca85d1aca526ca54c38f7bc59ecce70ba692cbdbcb4311a07b9c6037b9"
+      },
+      {
+        "attempt_number": 1,
+        "automatic_retry": 0,
+        "canary_fixture_slot": "A",
+        "candidate_id": "C3",
+        "catalog_context_sha256": "527c68f1dcb8a353942721f52afd2f1955eb92effdbea2155030f5acd6e58770",
+        "cell_id": "W06-AMENDMENT-01-CANARY-03-P1-C3-W06-DEV-TUNE-007",
+        "days": 4,
+        "destination": "Hà Nội",
+        "destination_slug": "ha-noi",
+        "fallback": false,
+        "fixture_id": "W06-DEV-TUNE-007",
+        "inter_call_delay_ms_before_next_cell": 2000,
+        "interest_count": 3,
+        "llm_repair": 0,
+        "manual_retry": 0,
+        "matrix_label": "03 W06-DEV-TUNE-007 × C3",
+        "max_output_tokens": 16384,
+        "order_code": "03",
+        "order_index": 3,
+        "portable_generation_schema_v2_sha256": "825a4ff912d851a95f7392cb564b7d7ca3588135508dc6eb3ac6304cdde3c490",
+        "primary_baseline_provider_config_sha256": "5ecff5a4e2899245d1cd113285d1193dad17b6ed4e7521bd10be3937650d2a29",
+        "prompt_id": "P1",
+        "provider": "anthropic",
+        "requested_model_id": "claude-sonnet-5-5",
+        "retry": 0,
+        "sampling_reasoning_configuration": {
+          "effort": "high",
+          "thinking": {
+            "type": "adaptive"
+          }
+        },
+        "scenario_sha256": "b74f1551127fa35e67086ae3f82f6baf749251ef48fa95d80677bed495d8cd6d",
+        "scientific_code_bundle_sha256": "0638f2fcb100b0000e3a2a4e08137a9d468449001f258de7354df21e185ca2e3",
+        "selection_weight": 0,
+        "semantic_repair": 0,
+        "semantic_schema_sha256": "e4169f7b890f77d13af65e9f2070b6071c535b206d88440f5e8f28c179977555",
+        "system_prompt_sha256": "4bcb84a8aca1fc89f65709ac9d91c88e42359c284850061bae85c3607c345b0e",
+        "timeout_ms": 180000,
+        "tools": false,
+        "transport_retry": 0,
+        "user_prompt_sha256": "a448e9ca85d1aca526ca54c38f7bc59ecce70ba692cbdbcb4311a07b9c6037b9"
+      },
+      {
+        "attempt_number": 1,
+        "automatic_retry": 0,
+        "canary_fixture_slot": "B",
+        "candidate_id": "C1",
+        "catalog_context_sha256": "a33dc65c84eb09394fef8e08bb6f12a060c0bd78b8d8935f7667db57001aae8d",
+        "cell_id": "W06-AMENDMENT-01-CANARY-04-P1-C1-W06-DEV-TUNE-011",
+        "days": 3,
+        "destination": "Đà Nẵng",
+        "destination_slug": "da-nang",
+        "fallback": false,
+        "fixture_id": "W06-DEV-TUNE-011",
+        "inter_call_delay_ms_before_next_cell": 2000,
+        "interest_count": 2,
+        "llm_repair": 0,
+        "manual_retry": 0,
+        "matrix_label": "04 W06-DEV-TUNE-011 × C1",
+        "max_output_tokens": 16384,
+        "order_code": "04",
+        "order_index": 4,
+        "portable_generation_schema_v2_sha256": "825a4ff912d851a95f7392cb564b7d7ca3588135508dc6eb3ac6304cdde3c490",
+        "primary_baseline_provider_config_sha256": "d4d417bdeff3f4156ac9605f976b46780c1cb0866d87674f1cee51d8bf3f3217",
+        "prompt_id": "P1",
+        "provider": "google",
+        "requested_model_id": "gemini-3.8-flash",
+        "retry": 0,
+        "sampling_reasoning_configuration": {
+          "seed": 2026101508,
+          "thinking_level": "medium"
+        },
+        "scenario_sha256": "48743d390e4168b8972978e5902a722804635bc9f0b9ecab5f20e06d2b3dfa97",
+        "scientific_code_bundle_sha256": "0638f2fcb100b0000e3a2a4e08137a9d468449001f258de7354df21e185ca2e3",
+        "selection_weight": 0,
+        "semantic_repair": 0,
+        "semantic_schema_sha256": "e4169f7b890f77d13af65e9f2070b6071c535b206d88440f5e8f28c179977555",
+        "system_prompt_sha256": "4bcb84a8aca1fc89f65709ac9d91c88e42359c284850061bae85c3607c345b0e",
+        "timeout_ms": 180000,
+        "tools": false,
+        "transport_retry": 0,
+        "user_prompt_sha256": "94eebc53131d18b8e08dbbb4fb0e295ec41518c02a6cd06492a9504b44507bd1"
+      },
+      {
+        "attempt_number": 1,
+        "automatic_retry": 0,
+        "canary_fixture_slot": "B",
+        "candidate_id": "C2",
+        "catalog_context_sha256": "a33dc65c84eb09394fef8e08bb6f12a060c0bd78b8d8935f7667db57001aae8d",
+        "cell_id": "W06-AMENDMENT-01-CANARY-05-P1-C2-W06-DEV-TUNE-011",
+        "days": 3,
+        "destination": "Đà Nẵng",
+        "destination_slug": "da-nang",
+        "fallback": false,
+        "fixture_id": "W06-DEV-TUNE-011",
+        "inter_call_delay_ms_before_next_cell": 2000,
+        "interest_count": 2,
+        "llm_repair": 0,
+        "manual_retry": 0,
+        "matrix_label": "05 W06-DEV-TUNE-011 × C2",
+        "max_output_tokens": 16384,
+        "order_code": "05",
+        "order_index": 5,
+        "portable_generation_schema_v2_sha256": "825a4ff912d851a95f7392cb564b7d7ca3588135508dc6eb3ac6304cdde3c490",
+        "primary_baseline_provider_config_sha256": "6201244268383e85106b4d6e6ad0f503e066de9def361cbafa685227e8ba332e",
+        "prompt_id": "P1",
+        "provider": "openai",
+        "requested_model_id": "gpt-6.1-sol",
+        "retry": 0,
+        "sampling_reasoning_configuration": {
+          "reasoning_effort": "medium",
+          "seed": 2026101508,
+          "service_tier": "default"
+        },
+        "scenario_sha256": "48743d390e4168b8972978e5902a722804635bc9f0b9ecab5f20e06d2b3dfa97",
+        "scientific_code_bundle_sha256": "0638f2fcb100b0000e3a2a4e08137a9d468449001f258de7354df21e185ca2e3",
+        "selection_weight": 0,
+        "semantic_repair": 0,
+        "semantic_schema_sha256": "e4169f7b890f77d13af65e9f2070b6071c535b206d88440f5e8f28c179977555",
+        "system_prompt_sha256": "4bcb84a8aca1fc89f65709ac9d91c88e42359c284850061bae85c3607c345b0e",
+        "timeout_ms": 180000,
+        "tools": false,
+        "transport_retry": 0,
+        "user_prompt_sha256": "94eebc53131d18b8e08dbbb4fb0e295ec41518c02a6cd06492a9504b44507bd1"
+      },
+      {
+        "attempt_number": 1,
+        "automatic_retry": 0,
+        "canary_fixture_slot": "B",
+        "candidate_id": "C3",
+        "catalog_context_sha256": "a33dc65c84eb09394fef8e08bb6f12a060c0bd78b8d8935f7667db57001aae8d",
+        "cell_id": "W06-AMENDMENT-01-CANARY-06-P1-C3-W06-DEV-TUNE-011",
+        "days": 3,
+        "destination": "Đà Nẵng",
+        "destination_slug": "da-nang",
+        "fallback": false,
+        "fixture_id": "W06-DEV-TUNE-011",
+        "inter_call_delay_ms_before_next_cell": 2000,
+        "interest_count": 2,
+        "llm_repair": 0,
+        "manual_retry": 0,
+        "matrix_label": "06 W06-DEV-TUNE-011 × C3",
+        "max_output_tokens": 16384,
+        "order_code": "06",
+        "order_index": 6,
+        "portable_generation_schema_v2_sha256": "825a4ff912d851a95f7392cb564b7d7ca3588135508dc6eb3ac6304cdde3c490",
+        "primary_baseline_provider_config_sha256": "5ecff5a4e2899245d1cd113285d1193dad17b6ed4e7521bd10be3937650d2a29",
+        "prompt_id": "P1",
+        "provider": "anthropic",
+        "requested_model_id": "claude-sonnet-5-5",
+        "retry": 0,
+        "sampling_reasoning_configuration": {
+          "effort": "high",
+          "thinking": {
+            "type": "adaptive"
+          }
+        },
+        "scenario_sha256": "48743d390e4168b8972978e5902a722804635bc9f0b9ecab5f20e06d2b3dfa97",
+        "scientific_code_bundle_sha256": "0638f2fcb100b0000e3a2a4e08137a9d468449001f258de7354df21e185ca2e3",
+        "selection_weight": 0,
+        "semantic_repair": 0,
+        "semantic_schema_sha256": "e4169f7b890f77d13af65e9f2070b6071c535b206d88440f5e8f28c179977555",
+        "system_prompt_sha256": "4bcb84a8aca1fc89f65709ac9d91c88e42359c284850061bae85c3607c345b0e",
+        "timeout_ms": 180000,
+        "tools": false,
+        "transport_retry": 0,
+        "user_prompt_sha256": "94eebc53131d18b8e08dbbb4fb0e295ec41518c02a6cd06492a9504b44507bd1"
+      },
+      {
+        "attempt_number": 1,
+        "automatic_retry": 0,
+        "canary_fixture_slot": "C",
+        "candidate_id": "C1",
+        "catalog_context_sha256": "aa79c3382c5e017eddfa979a0d88921b71f889a44ef8a549eaf38bb5963772d3",
+        "cell_id": "W06-AMENDMENT-01-CANARY-07-P1-C1-W06-DEV-TUNE-015",
+        "days": 2,
+        "destination": "Hạ Long",
+        "destination_slug": "ha-long",
+        "fallback": false,
+        "fixture_id": "W06-DEV-TUNE-015",
+        "inter_call_delay_ms_before_next_cell": 2000,
+        "interest_count": 1,
+        "llm_repair": 0,
+        "manual_retry": 0,
+        "matrix_label": "07 W06-DEV-TUNE-015 × C1",
+        "max_output_tokens": 16384,
+        "order_code": "07",
+        "order_index": 7,
+        "portable_generation_schema_v2_sha256": "825a4ff912d851a95f7392cb564b7d7ca3588135508dc6eb3ac6304cdde3c490",
+        "primary_baseline_provider_config_sha256": "d4d417bdeff3f4156ac9605f976b46780c1cb0866d87674f1cee51d8bf3f3217",
+        "prompt_id": "P1",
+        "provider": "google",
+        "requested_model_id": "gemini-3.8-flash",
+        "retry": 0,
+        "sampling_reasoning_configuration": {
+          "seed": 2026101508,
+          "thinking_level": "medium"
+        },
+        "scenario_sha256": "265c1a354a32b71fe164bcc27c57f2782bb90f133bca973297fad5f4aa618298",
+        "scientific_code_bundle_sha256": "0638f2fcb100b0000e3a2a4e08137a9d468449001f258de7354df21e185ca2e3",
+        "selection_weight": 0,
+        "semantic_repair": 0,
+        "semantic_schema_sha256": "e4169f7b890f77d13af65e9f2070b6071c535b206d88440f5e8f28c179977555",
+        "system_prompt_sha256": "4bcb84a8aca1fc89f65709ac9d91c88e42359c284850061bae85c3607c345b0e",
+        "timeout_ms": 180000,
+        "tools": false,
+        "transport_retry": 0,
+        "user_prompt_sha256": "60ee37d0c765c34e793d8d86469c2e128994c7bdb3ab54611f87abe0fd231d4a"
+      },
+      {
+        "attempt_number": 1,
+        "automatic_retry": 0,
+        "canary_fixture_slot": "C",
+        "candidate_id": "C2",
+        "catalog_context_sha256": "aa79c3382c5e017eddfa979a0d88921b71f889a44ef8a549eaf38bb5963772d3",
+        "cell_id": "W06-AMENDMENT-01-CANARY-08-P1-C2-W06-DEV-TUNE-015",
+        "days": 2,
+        "destination": "Hạ Long",
+        "destination_slug": "ha-long",
+        "fallback": false,
+        "fixture_id": "W06-DEV-TUNE-015",
+        "inter_call_delay_ms_before_next_cell": 2000,
+        "interest_count": 1,
+        "llm_repair": 0,
+        "manual_retry": 0,
+        "matrix_label": "08 W06-DEV-TUNE-015 × C2",
+        "max_output_tokens": 16384,
+        "order_code": "08",
+        "order_index": 8,
+        "portable_generation_schema_v2_sha256": "825a4ff912d851a95f7392cb564b7d7ca3588135508dc6eb3ac6304cdde3c490",
+        "primary_baseline_provider_config_sha256": "6201244268383e85106b4d6e6ad0f503e066de9def361cbafa685227e8ba332e",
+        "prompt_id": "P1",
+        "provider": "openai",
+        "requested_model_id": "gpt-6.1-sol",
+        "retry": 0,
+        "sampling_reasoning_configuration": {
+          "reasoning_effort": "medium",
+          "seed": 2026101508,
+          "service_tier": "default"
+        },
+        "scenario_sha256": "265c1a354a32b71fe164bcc27c57f2782bb90f133bca973297fad5f4aa618298",
+        "scientific_code_bundle_sha256": "0638f2fcb100b0000e3a2a4e08137a9d468449001f258de7354df21e185ca2e3",
+        "selection_weight": 0,
+        "semantic_repair": 0,
+        "semantic_schema_sha256": "e4169f7b890f77d13af65e9f2070b6071c535b206d88440f5e8f28c179977555",
+        "system_prompt_sha256": "4bcb84a8aca1fc89f65709ac9d91c88e42359c284850061bae85c3607c345b0e",
+        "timeout_ms": 180000,
+        "tools": false,
+        "transport_retry": 0,
+        "user_prompt_sha256": "60ee37d0c765c34e793d8d86469c2e128994c7bdb3ab54611f87abe0fd231d4a"
+      },
+      {
+        "attempt_number": 1,
+        "automatic_retry": 0,
+        "canary_fixture_slot": "C",
+        "candidate_id": "C3",
+        "catalog_context_sha256": "aa79c3382c5e017eddfa979a0d88921b71f889a44ef8a549eaf38bb5963772d3",
+        "cell_id": "W06-AMENDMENT-01-CANARY-09-P1-C3-W06-DEV-TUNE-015",
+        "days": 2,
+        "destination": "Hạ Long",
+        "destination_slug": "ha-long",
+        "fallback": false,
+        "fixture_id": "W06-DEV-TUNE-015",
+        "inter_call_delay_ms_before_next_cell": 0,
+        "interest_count": 1,
+        "llm_repair": 0,
+        "manual_retry": 0,
+        "matrix_label": "09 W06-DEV-TUNE-015 × C3",
+        "max_output_tokens": 16384,
+        "order_code": "09",
+        "order_index": 9,
+        "portable_generation_schema_v2_sha256": "825a4ff912d851a95f7392cb564b7d7ca3588135508dc6eb3ac6304cdde3c490",
+        "primary_baseline_provider_config_sha256": "5ecff5a4e2899245d1cd113285d1193dad17b6ed4e7521bd10be3937650d2a29",
+        "prompt_id": "P1",
+        "provider": "anthropic",
+        "requested_model_id": "claude-sonnet-5-5",
+        "retry": 0,
+        "sampling_reasoning_configuration": {
+          "effort": "high",
+          "thinking": {
+            "type": "adaptive"
+          }
+        },
+        "scenario_sha256": "265c1a354a32b71fe164bcc27c57f2782bb90f133bca973297fad5f4aa618298",
+        "scientific_code_bundle_sha256": "0638f2fcb100b0000e3a2a4e08137a9d468449001f258de7354df21e185ca2e3",
+        "selection_weight": 0,
+        "semantic_repair": 0,
+        "semantic_schema_sha256": "e4169f7b890f77d13af65e9f2070b6071c535b206d88440f5e8f28c179977555",
+        "system_prompt_sha256": "4bcb84a8aca1fc89f65709ac9d91c88e42359c284850061bae85c3607c345b0e",
+        "timeout_ms": 180000,
+        "tools": false,
+        "transport_retry": 0,
+        "user_prompt_sha256": "60ee37d0c765c34e793d8d86469c2e128994c7bdb3ab54611f87abe0fd231d4a"
+      }
+    ],
+    "inter_call_delay_ms": 2000,
+    "matrix_summary": [
+      "01 W06-DEV-TUNE-007 × C1",
+      "02 W06-DEV-TUNE-007 × C2",
+      "03 W06-DEV-TUNE-007 × C3",
+      "04 W06-DEV-TUNE-011 × C1",
+      "05 W06-DEV-TUNE-011 × C2",
+      "06 W06-DEV-TUNE-011 × C3",
+      "07 W06-DEV-TUNE-015 × C1",
+      "08 W06-DEV-TUNE-015 × C2",
+      "09 W06-DEV-TUNE-015 × C3"
+    ],
+    "reruns_permitted": false,
+    "retries_permitted": false
+  },
+  "canary_fixtures": {
+    "bound_fixture_source_file": "data/evaluation/w06/w06_dev_fixtures_freeze_v1.json",
+    "bound_fixture_source_sha256": "bb0f051446ea3da8229298f22f4ce92b4db20751695273c6d01b7766da044050",
+    "fixture_count": 3,
+    "fixture_ids": [
+      "W06-DEV-TUNE-007",
+      "W06-DEV-TUNE-011",
+      "W06-DEV-TUNE-015"
+    ],
+    "fixture_selection_rationale": {
+      "method": "DETERMINISTIC_STRUCTURAL_COVERAGE_ONLY",
+      "prior_canary_success_or_failure_used": false,
+      "prior_model_quality_output_used": false,
+      "rationale_statement": "Chosen by deterministic structural coverage only: all 3 destinations ({Hà Nội, Đà Nẵng, Hạ Long}) covered exactly once, day counts ({2, 3, 4}) covered exactly once, and interest counts ({1, 2, 3}) covered exactly once. No prior model-quality output or prior canary success/failure was used to justify these fixture IDs.",
+      "structural_coverage_verification": {
+        "all_3_destinations_exactly_once": true,
+        "day_counts_2_3_4_exactly_once": true,
+        "days": [
+          4,
+          3,
+          2
+        ],
+        "destinations": [
+          "Hà Nội",
+          "Đà Nẵng",
+          "Hạ Long"
+        ],
+        "interest_counts": [
+          3,
+          2,
+          1
+        ],
+        "interest_counts_1_2_3_exactly_once": true
+      }
+    },
+    "fixtures": [
+      {
+        "allow_revisit_place_ids": false,
+        "budget": 8000000,
+        "canary_fixture_slot": "A",
+        "catalog_context_sha256": "527c68f1dcb8a353942721f52afd2f1955eb92effdbea2155030f5acd6e58770",
+        "currency": "VND",
+        "days": 4,
+        "destination": "Hà Nội",
+        "destination_slug": "ha-noi",
+        "end_date": "2026-12-09",
+        "fixture_id": "W06-DEV-TUNE-007",
+        "interest_count": 3,
+        "interests": [
+          "coffee_culture",
+          "culture_history",
+          "nature_outdoor"
+        ],
+        "p1_system_prompt_sha256": "4bcb84a8aca1fc89f65709ac9d91c88e42359c284850061bae85c3607c345b0e",
+        "p1_user_prompt_sha256": "a448e9ca85d1aca526ca54c38f7bc59ecce70ba692cbdbcb4311a07b9c6037b9",
+        "scenario_sha256": "b74f1551127fa35e67086ae3f82f6baf749251ef48fa95d80677bed495d8cd6d",
+        "source_file": "data/evaluation/w06/w06_dev_fixtures_freeze_v1.json",
+        "source_file_sha256": "bb0f051446ea3da8229298f22f4ce92b4db20751695273c6d01b7766da044050",
+        "source_pool": "W06_DEV_TUNE",
+        "start_date": "2026-12-06",
+        "travel_style": "LUXURY"
+      },
+      {
+        "allow_revisit_place_ids": false,
+        "budget": 1500000,
+        "canary_fixture_slot": "B",
+        "catalog_context_sha256": "a33dc65c84eb09394fef8e08bb6f12a060c0bd78b8d8935f7667db57001aae8d",
+        "currency": "VND",
+        "days": 3,
+        "destination": "Đà Nẵng",
+        "destination_slug": "da-nang",
+        "end_date": "2026-11-29",
+        "fixture_id": "W06-DEV-TUNE-011",
+        "interest_count": 2,
+        "interests": [
+          "food_cuisine",
+          "shopping_local"
+        ],
+        "p1_system_prompt_sha256": "4bcb84a8aca1fc89f65709ac9d91c88e42359c284850061bae85c3607c345b0e",
+        "p1_user_prompt_sha256": "94eebc53131d18b8e08dbbb4fb0e295ec41518c02a6cd06492a9504b44507bd1",
+        "scenario_sha256": "48743d390e4168b8972978e5902a722804635bc9f0b9ecab5f20e06d2b3dfa97",
+        "source_file": "data/evaluation/w06/w06_dev_fixtures_freeze_v1.json",
+        "source_file_sha256": "bb0f051446ea3da8229298f22f4ce92b4db20751695273c6d01b7766da044050",
+        "source_pool": "W06_DEV_TUNE",
+        "start_date": "2026-11-27",
+        "travel_style": "BACKPACKER"
+      },
+      {
+        "allow_revisit_place_ids": false,
+        "budget": 4000000,
+        "canary_fixture_slot": "C",
+        "catalog_context_sha256": "aa79c3382c5e017eddfa979a0d88921b71f889a44ef8a549eaf38bb5963772d3",
+        "currency": "VND",
+        "days": 2,
+        "destination": "Hạ Long",
+        "destination_slug": "ha-long",
+        "end_date": "2026-11-21",
+        "fixture_id": "W06-DEV-TUNE-015",
+        "interest_count": 1,
+        "interests": [
+          "coffee_culture"
+        ],
+        "p1_system_prompt_sha256": "4bcb84a8aca1fc89f65709ac9d91c88e42359c284850061bae85c3607c345b0e",
+        "p1_user_prompt_sha256": "60ee37d0c765c34e793d8d86469c2e128994c7bdb3ab54611f87abe0fd231d4a",
+        "scenario_sha256": "265c1a354a32b71fe164bcc27c57f2782bb90f133bca973297fad5f4aa618298",
+        "source_file": "data/evaluation/w06/w06_dev_fixtures_freeze_v1.json",
+        "source_file_sha256": "bb0f051446ea3da8229298f22f4ce92b4db20751695273c6d01b7766da044050",
+        "source_pool": "W06_DEV_TUNE",
+        "start_date": "2026-11-20",
+        "travel_style": "COMFORT"
+      }
+    ]
+  },
+  "canary_gate_and_operational_pass_rules": {
+    "canary_gate_rule": {
+      "action_on_any_failure": "RETURN_TO_CHATGPT_HOLD",
+      "automatic_adjustments_on_failure_permitted": {
+        "automatic_pacing_change": false,
+        "automatic_prompt_or_model_or_schema_modification": false,
+        "automatic_provider_specific_parameter_change": false,
+        "automatic_replacement_fixture": false,
+        "automatic_rerun": false,
+        "automatic_retry": false,
+        "automatic_timeout_increase": false
+      },
+      "if_any_single_cell_operationally_fails": {
+        "AMENDED_COMPARATIVE_AUTHORIZED": false,
+        "CANARY_GATE_PASS": false,
+        "next_status": "CHATGPT_HOLD"
+      },
+      "required_operational_pass_cell_count": 9,
+      "total_assigned_canary_cells": 9
+    },
+    "canary_selection_weight_policy": {
+      "can_alter_prompt_model_schema_or_evaluator_parameters": false,
+      "can_contribute_to_dev_select_comparative_denominator": false,
+      "can_contribute_to_final100": false,
+      "can_contribute_to_stochasticity": false,
+      "can_select_model_winner": false,
+      "selection_weight": 0
+    },
+    "operational_canary_cell_pass_rule": {
+      "all_conditions_required_for_operational_pass": [
+        "correct_frozen_candidate_and_config_requested",
+        "exactly_1_outbound_generation_request_attempted",
+        "retry_count_equals_0",
+        "no_api_auth_rejection",
+        "no_billing_or_credit_rejection",
+        "no_quota_or_rate_limit_rejection",
+        "no_model_access_rejection",
+        "no_client_timeout",
+        "no_provider_transport_failure",
+        "no_http_or_provider_4xx_5xx_failure",
+        "successful_provider_response_received",
+        "request_and_cell_identity_evidence_valid",
+        "returned_model_identity_when_supplied_by_provider_does_not_mismatch_frozen_candidate"
+      ],
+      "planner_quality_firewall": {
+        "excluded_planner_quality_metrics": [
+          "VALID_RUN_AND_SCHEMA_RATE",
+          "EXACT_GROUNDING_PASS_RATE",
+          "OPENING_HOUR_COMPLIANCE",
+          "BUDGET_METRIC",
+          "FINAL_CORE_PASS"
+        ],
+        "planner_quality_determines_operational_pass_or_fail": false,
+        "rule_statement": "Schema validity, exact grounding, opening-hour compliance, budget metric, or FINAL_CORE_PASS MUST NOT determine operational canary PASS/FAIL. A successful provider response that fails schema/core evaluation remains OPERATIONAL PASS.",
+        "successful_provider_response_failing_schema_or_core_is_operational_pass": true
+      }
+    }
+  },
+  "comparative_batch_policy": {
+    "assigned_comparative_cells": 180,
+    "calls_per_candidate": {
+      "C1": 60,
+      "C2": 60,
+      "C3": 60
+    },
+    "canary_pass_automatically_launches_comparative_execution": false,
+    "candidate_ids": [
+      "C1",
+      "C2",
+      "C3"
+    ],
+    "comparative_fixture_count": 60,
+    "comparative_fixture_id_range": "W06-DEV-SELECT-001..W06-DEV-SELECT-060",
+    "comparative_fixture_source_file": "data/evaluation/w06/w06_dev_fixtures_freeze_v1.json",
+    "comparative_fixture_source_sha256": "bb0f051446ea3da8229298f22f4ce92b4db20751695273c6d01b7766da044050",
+    "evaluator_semantics_unchanged": true,
+    "inter_call_delay_ms": 2000,
+    "portable_generation_schema_v2_sha256": "825a4ff912d851a95f7392cb564b7d7ca3588135508dc6eb3ac6304cdde3c490",
+    "portable_generation_schema_v2_unchanged": true,
+    "practical_tie_survivor_threshold_cells": 6,
+    "practical_tie_survivor_threshold_denominator": 60,
+    "practical_tie_survivor_threshold_percentage_points": 10,
+    "practical_tie_survivor_threshold_ratio": "0.1",
+    "practical_tie_survivor_threshold_unchanged": true,
+    "prerequisite_1_future_canary_audited_pass_by_chatgpt": true,
+    "prerequisite_2_separate_chatgpt_comparative_authorization_gate": true,
+    "primary_model_selection_metrics": [
+      "VALID_RUN_AND_SCHEMA_RATE",
+      "EXACT_GROUNDING_PASS_RATE",
+      "FINAL_CORE_PASS_RATE"
+    ],
+    "prompt_id": "P1",
+    "prompt_unchanged": true,
+    "retry": 0,
+    "separate_chatgpt_authorization_gate_required_before_180_comparative_calls": true,
+    "timeout_ms": 180000
+  },
+  "decision_artifact_internal_sha256": "38dc02de2e846d4cf72108e8beacffdcfcf6308879e0ea72cca3bb83bf71387a",
+  "final100_firewall": {
+    "final100_calibration_forbidden": true,
+    "final100_execution_forbidden": true,
+    "final100_scenarios_file_sha256": "c03bc6dc300604ac395505d59b6413c1a47339b21408cfd637671e81d4b555a1",
+    "final100_status": "NO-GO",
+    "final100_used": false,
+    "p11_manifest_file_sha256": "0aa9ae923d0e7f29df49735fa41e87530b1caf62418fcbec09a1eff81d83af62"
+  },
+  "final100_used": false,
+  "final_methodology_decision_authority": "CHATGPT",
+  "frozen_scientific_invariants": {
+    "candidate_models": {
+      "C1": "gemini-3.8-flash",
+      "C2": "gpt-6.1-sol",
+      "C3": "claude-sonnet-5-5"
+    },
+    "candidate_reasoning_and_thinking_settings": {
+      "C1": {
+        "seed": 2026101508,
+        "thinking_level": "medium"
+      },
+      "C2": {
+        "reasoning_effort": "medium",
+        "seed": 2026101508,
+        "service_tier": "default"
+      },
+      "C3": {
+        "effort": "high",
+        "thinking": {
+          "type": "adaptive"
+        }
+      }
+    },
+    "candidate_reasoning_settings_unchanged": true,
+    "candidates_unchanged": true,
+    "evaluator_semantics_unchanged": true,
+    "final100_unchanged": true,
+    "fourth_model_added": false,
+    "fourth_model_addition_forbidden": true,
+    "max_output_tokens": 16384,
+    "portable_schema_v2_sha256": "825a4ff912d851a95f7392cb564b7d7ca3588135508dc6eb3ac6304cdde3c490",
+    "portable_schema_v2_unchanged": true,
+    "practical_tie_rule_unchanged": true,
+    "primary_180_evidence_and_results_unchanged": true,
+    "primary_selection_metrics": [
+      "VALID_RUN_AND_SCHEMA_RATE",
+      "EXACT_GROUNDING_PASS_RATE",
+      "FINAL_CORE_PASS_RATE"
+    ],
+    "primary_selection_metrics_unchanged": true,
+    "prompt_id": "P1",
+    "prompt_p1_unchanged": true,
+    "retry0_unchanged": true,
+    "semantic_schema_sha256": "e4169f7b890f77d13af65e9f2070b6071c535b206d88440f5e8f28c179977555",
+    "semantic_schema_unchanged": true
+  },
+  "frozen_selected_policy_bundle": {
+    "call_budget_policy": {
+      "call_budget_policy_id": "S2_READINESS_CANARY_PLUS_COMPARATIVE_180",
+      "calls_per_candidate_max": 63,
+      "canary_assigned_calls_by_candidate": {
+        "C1": 3,
+        "C2": 3,
+        "C3": 3
+      },
+      "comparative_assigned_calls": 180,
+      "comparative_assigned_calls_by_candidate": {
+        "C1": 60,
+        "C2": 60,
+        "C3": 60
+      },
+      "exact_canary_assigned_matrix_cells": 9,
+      "maximum_generation_calls": 189,
+      "readiness_canary_assigned_calls": 9,
+      "total_calls_per_candidate_max": {
+        "C1": 63,
+        "C2": 63,
+        "C3": 63
+      },
+      "variable_canary_range_removed": true
+    },
+    "fairness_policy_id": "OPTION_B_CONSERVATIVE_RELIABILITY_ENVIRONMENT",
+    "fixture_policy_id": "POLICY_F3_ENGINEERING_READINESS_SUBSET_PLUS_AMENDED_COMPARATIVE_SET",
+    "pacing_policy": {
+      "adaptive": false,
+      "deterministic": true,
+      "fixed": true,
+      "inter_call_delay_ms": 2000,
+      "pacing_policy_id": "P1_FIXED_2000MS_INTER_CALL_DELAY",
+      "prevents_provider_http_503_or_high_demand_failures_claimed": false,
+      "response_dependent": false,
+      "scientific_wording": "Pacing bounds client-issued request cadence only. It MUST NOT be claimed to prevent provider HTTP 503/high-demand failures."
+    },
+    "retry_policy": {
+      "automatic_retry": 0,
+      "fallback": false,
+      "llm_repair": 0,
+      "manual_retry": 0,
+      "retry": 0,
+      "retry_policy_id": "R0_STRICT_ZERO_RETRY",
+      "semantic_repair": 0,
+      "transport_retry": 0
+    },
+    "timeout_policy": {
+      "applied_symmetrically_to_candidates": [
+        "C1",
+        "C2",
+        "C3"
+      ],
+      "guarantees_completion": false,
+      "scientific_wording": "This removes the frozen 55s client-side cutoff from the secondary configuration and materially reduces client-side right-censoring risk. It does NOT guarantee completion. Provider-side deadlines, capacity failures, quota errors, or other transport failures may still prevent observation.",
+      "timeout_ms": 180000,
+      "timeout_ms_by_candidate": {
+        "C1": 180000,
+        "C2": 180000,
+        "C3": 180000
+      },
+      "timeout_policy_id": "T3_CANDIDATE_180S",
+      "timeout_seconds": 180
+    },
+    "track_classification": "SECONDARY_POST_HOC_EXECUTION_ENVIRONMENT_STABILIZATION_TRACK"
+  },
+  "live_provider_calls_new": 0,
+  "model_winner_selected": false,
+  "next_gate": "W06-DEV-SELECT-EXECUTION-ENVIRONMENT-AMENDMENT-01-FORMAL-DECISION-CHATGPT-AUDIT",
+  "prep_gate": "CLOSED",
+  "pricing_and_cost_boundary": {
+    "current_price_input_status": "EXTERNAL_PRICING_REFRESH_REQUIRED_BEFORE_AUTHORIZATION",
+    "envelope_nature": "Historical LOW/HIGH envelopes from frozen repository price snapshots remain planning references only; they are not hard cost caps.",
+    "hard_maximum_claimed": false,
+    "historical_s2_189_call_envelopes_reference": {
+      "preflight_01d_2026_10_17_snapshot": {
+        "CONDITIONAL_MAX_OUTPUT_REFERENCE": {
+          "by_candidate_usd": {
+            "C1": "5.76072",
+            "C2": "14.10192",
+            "C3": "14.35392"
+          },
+          "total_usd": "34.21656"
+        },
+        "HIGH_PLANNING_ENVELOPE": {
+          "by_candidate_usd": {
+            "C1": "4.01625",
+            "C2": "8.505",
+            "C3": "9.072"
+          },
+          "total_usd": "21.59325"
+        },
+        "LOW_PLANNING_ENVELOPE": {
+          "by_candidate_usd": {
+            "C1": "2.197125",
+            "C2": "4.158",
+            "C3": "4.725"
+          },
+          "total_usd": "11.080125"
+        }
+      },
+      "runner_registry_2026_10_16_snapshot": {
+        "CONDITIONAL_MAX_OUTPUT_REFERENCE": {
+          "by_candidate_usd": {
+            "C1": "3.33648",
+            "C2": "15.04692",
+            "C3": "21.53088"
+          },
+          "total_usd": "39.91428"
+        },
+        "HIGH_PLANNING_ENVELOPE": {
+          "by_candidate_usd": {
+            "C1": "2.1735",
+            "C2": "9.45",
+            "C3": "13.608"
+          },
+          "total_usd": "25.2315"
+        },
+        "LOW_PLANNING_ENVELOPE": {
+          "by_candidate_usd": {
+            "C1": "1.16235",
+            "C2": "4.725",
+            "C3": "7.0875"
+          },
+          "total_usd": "12.97485"
+        }
+      }
+    },
+    "live_pricing_calls_performed_in_decision_freeze": 0
+  },
+  "primary_denominators_changed": false,
+  "primary_experiment_immutability": {
+    "classification": "PRIMARY_PREREGISTERED_ONE_SHOT_OPERATIONAL_BENCHMARK",
+    "primary_counts_by_candidate": {
+      "C1": {
+        "HTTP_429": 35,
+        "HTTP_5XX": 10,
+        "HTTP_ERROR": 0,
+        "NONE": 1,
+        "TIMEOUT": 14
+      },
+      "C2": {
+        "HTTP_429": 0,
+        "HTTP_5XX": 0,
+        "HTTP_ERROR": 0,
+        "NONE": 8,
+        "TIMEOUT": 52
+      },
+      "C3": {
+        "HTTP_429": 0,
+        "HTTP_5XX": 0,
+        "HTTP_ERROR": 60,
+        "NONE": 0,
+        "TIMEOUT": 0
+      }
+    },
+    "primary_counts_total": {
+      "HTTP_429": 35,
+      "HTTP_5XX": 10,
+      "HTTP_ERROR": 60,
+      "NONE": 9,
+      "TIMEOUT": 66
+    },
+    "primary_denominators_by_candidate": {
+      "C1": 60,
+      "C2": 60,
+      "C3": 60
+    },
+    "primary_denominators_changed": false,
+    "primary_experiment_mutated": false,
+    "primary_results_replaced": false,
+    "raw_evidence_tree_sha256": "d5c4e53952500655b656a624657a3cf1ec7aae685809c9e53a318459cc319817",
+    "reclassification_or_rerun_or_replacement_permitted": false,
+    "results_freeze_receipt_file_sha256": "c021094e26277d41664c4ae2f0560b7684435b6002c5b7ba742a17808c5b07a4",
+    "results_manifest_file_sha256": "1d303e1c07b627c3f3eb87287b744f55ba3f6d3d85bd5cec36959b01919d26c0"
+  },
+  "primary_experiment_mutated": false,
+  "primary_results_replaced": false,
+  "provider_readiness_boundary": {
+    "candidates": {
+      "C1": {
+        "candidate_id": "C1",
+        "env_key_name": "GEMINI_API_KEY",
+        "max_authorized_calls_under_s2": 63,
+        "no_free_tier_20_rpd_ceiling_required": true,
+        "paid_or_billing_enabled_tier_required": true,
+        "provider": "google",
+        "quota_and_rate_limit_requirement": "Paid/billing-enabled tier with daily/request quota and RPM/TPM limits sufficient for the exact total authorized C1 call count (under selected S2 = max 63 C1 calls), with no Free Tier 20-RPD ceiling.",
+        "requested_model_id": "gemini-3.8-flash"
+      },
+      "C2": {
+        "active_billing_or_credit_required": true,
+        "candidate_id": "C2",
+        "env_key_name": "OPENAI_API_KEY",
+        "max_authorized_calls_under_s2": 63,
+        "model_access_required": true,
+        "provider": "openai",
+        "quota_and_rate_limit_requirement": "Active billing/credit, verified model access, and sufficient account limits for the exact authorized C2 volume (under selected S2 = max 63 C2 calls) under the 180,000 ms client timeout.",
+        "requested_model_id": "gpt-6.1-sol"
+      },
+      "C3": {
+        "active_billing_required": true,
+        "candidate_id": "C3",
+        "env_key_name": "ANTHROPIC_API_KEY",
+        "max_authorized_calls_under_s2": 63,
+        "model_access_required": true,
+        "positive_credits_sufficient_for_exact_authorized_volume_required": true,
+        "provider": "anthropic",
+        "quota_and_rate_limit_requirement": "Active billing, positive credits sufficient for the exact authorized C3 volume (under selected S2 = max 63 C3 calls), and verified model access.",
+        "requested_model_id": "claude-sonnet-5-5"
+      }
+    },
+    "owner_and_provider_attestation_separate_from_live_readiness_canary": true,
+    "secret_safety_invariants": {
+      "print_billing_or_project_or_org_ids": false,
+      "print_secret_hashes": false,
+      "print_secret_prefixes_or_suffixes": false,
+      "print_secret_values": false
+    },
+    "separation_contract": {
+      "LIVE_READINESS_CANARY": "9-cell operational readiness probe (3 fixtures x 3 candidates) under the frozen amended configuration; 3 canary calls per candidate do not prove quota sufficiency for 63 calls and do not prove absence of later capacity or deadline failures.",
+      "OWNER_AND_PROVIDER_ATTESTATION": "Pre-authorization administrative/account attestation that billing is active, daily/request quota and RPM/TPM limits are sufficient for the exact authorized call count (max 63 per candidate under S2, with no Free Tier 20-RPD ceiling on C1), positive credits cover the authorized volume, and model access is enabled."
+    }
+  },
+  "scientific_code_bundle_sha256": "0638f2fcb100b0000e3a2a4e08137a9d468449001f258de7354df21e185ca2e3",
+  "selected_model_id": null,
+  "stochasticity_execution_started": false,
+  "task_id": "W06-DEV-SELECT-EXECUTION-ENVIRONMENT-AMENDMENT-01-FORMAL-DECISION-FREEZE"
+}
