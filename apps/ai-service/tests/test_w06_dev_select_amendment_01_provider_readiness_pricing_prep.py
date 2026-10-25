@@ -1,11 +1,12 @@
-"""Tests for W06-DEV-SELECT-EXECUTION-ENVIRONMENT-AMENDMENT-01-PROVIDER-READINESS-AND-PRICING-PREP."""
+"""Tests for W06-DEV-SELECT-EXECUTION-ENVIRONMENT-AMENDMENT-01-PROVIDER-READINESS-AND-PRICING-PREP (including Corrective 01)."""
 
 from __future__ import annotations
 
 import copy
+import inspect
 import json
 from pathlib import Path
-import shutil
+import re
 import sys
 
 import pytest
@@ -100,7 +101,10 @@ def test_primary_metric_authority_and_erroneous_report_rejection() -> None:
         ):
             rates = auth["verified_metrics"][metric_name]["rates_by_candidate"]
             assert rates == {"C1": "1/60", "C2": "8/60", "C3": "0/60"}
-            assert auth["verified_metrics"][metric_name]["cross_checked_identical"] is True
+            assert (
+                auth["verified_metrics"][metric_name]["cross_checked_identical"]
+                is True
+            )
 
         with pytest.raises(
             PlanBeforeLiveProtocolError,
@@ -226,13 +230,22 @@ def test_public_pricing_snapshot_sources_models_and_google_billing_surface_guard
 
     # Reject non-allowlisted domains or cloud.google.com for C1
     bad_records = copy.deepcopy(cands)
-    bad_records["C1"]["official_source_url"] = "https://cloud.google.com/vertex-ai/pricing"
-    with pytest.raises(PlanBeforeLiveProtocolError, match="cloud.google.com is forbidden"):
+    bad_records["C1"]["official_source_url"] = (
+        "https://cloud.google.com/vertex-ai/pricing"
+    )
+    with pytest.raises(
+        PlanBeforeLiveProtocolError, match="cloud.google.com is forbidden"
+    ):
         prep_mod.validate_pricing_source_urls(bad_records)
 
     bad_records_2 = copy.deepcopy(cands)
-    bad_records_2["C2"]["official_source_url"] = "https://reddit.com/r/openai/pricing"
-    with pytest.raises(PlanBeforeLiveProtocolError, match="Disallowed pricing authority domain"):
+    bad_records_2["C2"]["official_source_url"] = (
+        "https://reddit.com/r/openai/pricing"
+    )
+    with pytest.raises(
+        PlanBeforeLiveProtocolError,
+        match="Disallowed direct pricing authority domain",
+    ):
         prep_mod.validate_pricing_source_urls(bad_records_2)
 
     # Verify Google billing surface fail-closed behavior when ambiguous or Vertex AI
@@ -246,6 +259,166 @@ def test_public_pricing_snapshot_sources_models_and_google_billing_surface_guard
         ambiguous["pricing_status"]
         == "BILLING_SURFACE_NOT_YET_DETERMINISTICALLY_RESOLVED"
     )
+
+
+def test_anthropic_direct_authority_boundary_and_redirect_handling() -> None:
+    """Verify Anthropic direct authority allowlist excludes platform.claude.com while allowing bound redirects and binding exact C3 anthropic.com sources."""
+    assert prep_mod.ALLOWLISTED_PRICING_DOMAINS_BY_PROVIDER["ANTHROPIC"] == (
+        "docs.anthropic.com",
+        "anthropic.com",
+    )
+    assert (
+        "platform.claude.com"
+        not in prep_mod.ALLOWLISTED_PRICING_DOMAINS_BY_PROVIDER["ANTHROPIC"]
+    )
+
+    snap_json, _ = _load_json(prep_mod.PUBLIC_PRICING_SNAPSHOT_REL_PATH)
+    cands = snap_json["candidates"]
+    c3 = cands["C3"]
+
+    assert (
+        c3["exact_model_official_source_url"]
+        == "https://www.anthropic.com/claude/sonnet"
+    )
+    assert (
+        "https://www.anthropic.com/claude/sonnet"
+        in c3["additional_official_source_urls"]
+    )
+    assert (
+        "https://www.anthropic.com/claude-sonnet-5-5"
+        in c3["additional_official_source_urls"]
+    )
+    ev = c3["exact_model_anthropic_com_evidence"]
+    assert ev["verified_api_model_id"] == "claude-sonnet-5-5"
+    assert ev["verified_input_usd_per_1m_tokens"] == "2.00"
+    assert ev["verified_output_usd_per_1m_tokens"] == "10.00"
+    assert ev["verified_cache_read_usd_per_1m_tokens_non_applicable"] == "0.10"
+
+    # Legitimate docs.anthropic.com -> platform.claude.com redirect passes
+    prep_mod.validate_pricing_source_urls(cands)
+
+    # Arbitrary direct platform.claude.com URL in official_source_url is rejected
+    bad_direct = copy.deepcopy(cands)
+    bad_direct["C3"]["official_source_url"] = (
+        "https://platform.claude.com/docs/en/about-claude/pricing"
+    )
+    with pytest.raises(
+        PlanBeforeLiveProtocolError,
+        match="Disallowed direct pricing authority domain 'platform.claude.com'",
+    ):
+        prep_mod.validate_pricing_source_urls(bad_direct)
+
+    # Arbitrary direct platform.claude.com URL in additional_official_source_urls is rejected
+    bad_additional = copy.deepcopy(cands)
+    bad_additional["C3"]["additional_official_source_urls"].append(
+        "https://platform.claude.com/arbitrary-page"
+    )
+    with pytest.raises(
+        PlanBeforeLiveProtocolError,
+        match="Disallowed direct pricing authority domain 'platform.claude.com'",
+    ):
+        prep_mod.validate_pricing_source_urls(bad_additional)
+
+    # Unbound redirect entry (not tied to an allowlisted direct source URL) is rejected
+    bad_redirect_unbound = copy.deepcopy(cands)
+    bad_redirect_unbound["C3"]["official_redirect_resolutions"].append(
+        {
+            "allowlisted_source_url": "https://docs.anthropic.com/en/docs/unlisted-page",
+            "resolved_destination_url": "https://platform.claude.com/docs/en/unlisted-page",
+        }
+    )
+    with pytest.raises(
+        PlanBeforeLiveProtocolError,
+        match="is not bound to an allowlisted direct source URL",
+    ):
+        prep_mod.validate_pricing_source_urls(bad_redirect_unbound)
+
+
+def test_machine_to_human_markdown_cost_consistency_and_no_duplicate_constants() -> None:
+    """Verify every Markdown cost cell equals canonical JSON cost_analysis and no duplicate cost constants exist in the renderer."""
+    with NetworkKillSwitchGuard():
+        snap_json, _ = _load_json(prep_mod.PUBLIC_PRICING_SNAPSHOT_REL_PATH)
+        prep_json, _ = _load_json(
+            prep_mod.PROVIDER_READINESS_PRICING_PREP_REL_PATH
+        )
+        cost_analysis = prep_json["cost_analysis"]
+
+        # Verify exact authoritative JSON cost values
+        assert cost_analysis["A_readiness_canary_9_calls"][
+            "EXPECTED_OR_EMPIRICAL_PLANNING_ESTIMATE"
+        ]["by_candidate_usd"] == {
+            "C1": "0.129986",
+            "C2": "0.213327",
+            "C3": "0.370762",
+        }
+        assert (
+            cost_analysis["A_readiness_canary_9_calls"][
+                "EXPECTED_OR_EMPIRICAL_PLANNING_ESTIMATE"
+            ]["total_usd"]
+            == "0.714076"
+        )
+        assert cost_analysis["B_amended_comparative_180_calls"][
+            "EXPECTED_OR_EMPIRICAL_PLANNING_ESTIMATE"
+        ]["by_candidate_usd"] == {
+            "C1": "2.599729",
+            "C2": "4.266544",
+            "C3": "7.415247",
+        }
+        assert (
+            cost_analysis["B_amended_comparative_180_calls"][
+                "EXPECTED_OR_EMPIRICAL_PLANNING_ESTIMATE"
+            ]["total_usd"]
+            == "14.281520"
+        )
+        assert cost_analysis["C_total_amendment_track_189_calls"][
+            "EXPECTED_OR_EMPIRICAL_PLANNING_ESTIMATE"
+        ]["by_candidate_usd"] == {
+            "C1": "2.729715",
+            "C2": "4.479871",
+            "C3": "7.786009",
+        }
+        assert (
+            cost_analysis["C_total_amendment_track_189_calls"][
+                "EXPECTED_OR_EMPIRICAL_PLANNING_ESTIMATE"
+            ]["total_usd"]
+            == "14.995596"
+        )
+
+        # Render markdown and compare with disk markdown
+        rendered_md = prep_mod.build_markdown_report(snap_json, prep_json)
+        disk_md = (
+            REPO_ROOT / prep_mod.PROVIDER_READINESS_PRICING_PREP_DOC_REL_PATH
+        ).read_text(encoding="utf-8")
+        assert rendered_md == disk_md
+
+        # Verify every single cell across all 3 scopes and 3 categories
+        prep_mod.verify_markdown_cost_consistency(cost_analysis, disk_md)
+        extracted = prep_mod.parse_markdown_cost_table_values(disk_md)
+        assert len(extracted) == 9
+
+        # Reject all 5 stale/drifted cost values anywhere in Markdown or script
+        stale_values = (
+            "0.129987",
+            "2.599736",
+            "14.281527",
+            "2.729723",
+            "14.995603",
+        )
+        script_src = Path(prep_mod.__file__).read_text(encoding="utf-8")
+        for stale in stale_values:
+            assert stale not in disk_md, f"Stale value {stale} found in Markdown"
+            assert stale not in script_src, f"Stale value {stale} found in script"
+
+        # Prove build_markdown_report contains zero hard-coded cost decimal literals
+        renderer_src = inspect.getsource(prep_mod.build_markdown_report)
+        assert re.search(r"\b\d+\.\d{4,6}\b", renderer_src) is None
+
+        # Prove a single-digit drift in Markdown or JSON fails verification immediately
+        drifted_md = disk_md.replace("`$0.129986`", "`$0.129987`", 1)
+        with pytest.raises(
+            PlanBeforeLiveProtocolError, match="Markdown vs JSON cost drift"
+        ):
+            prep_mod.verify_markdown_cost_consistency(cost_analysis, drifted_md)
 
 
 def test_openai_long_context_and_hard_maximum_status() -> None:
@@ -349,30 +522,18 @@ def test_tamper_detection_on_pricing_snapshot_and_prep_artifact(
     snap_src = REPO_ROOT / prep_mod.PUBLIC_PRICING_SNAPSHOT_REL_PATH
     prep_src = REPO_ROOT / prep_mod.PROVIDER_READINESS_PRICING_PREP_REL_PATH
 
-    tampered_snap = tmp_path / "tampered_snap.json"
     snap_data = json.loads(snap_src.read_text(encoding="utf-8"))
     snap_data["candidates"]["C1"]["selected_unit_pricing_usd_per_1m_tokens"][
         "input_usd_per_1m_tokens"
     ] = "9.99"
-    tampered_snap.write_text(json.dumps(snap_data), encoding="utf-8")
 
-    orig_rel_snap = prep_mod.PUBLIC_PRICING_SNAPSHOT_REL_PATH
-    monkeypatch.setattr(
-        prep_mod,
-        "PUBLIC_PRICING_SNAPSHOT_REL_PATH",
-        str(tampered_snap.relative_to(tmp_path)),
-    )
-    # Test direct tamper check by copying into a temporary repo structure for the two target files
-    monkeypatch.setattr(
-        prep_mod, "PUBLIC_PRICING_SNAPSHOT_REL_PATH", orig_rel_snap
-    )
-
-    # Monkeypatch Path.read_bytes on the specific target file to simulate on-disk tamper without touching repo files
     orig_read_bytes = Path.read_bytes
 
     def _tampered_snap_read_bytes(self: Path) -> bytes:
         if self.resolve() == snap_src.resolve():
-            return json.dumps(snap_data, indent=2, sort_keys=True).encode("utf-8")
+            return json.dumps(snap_data, indent=2, sort_keys=True).encode(
+                "utf-8"
+            )
         return orig_read_bytes(self)
 
     monkeypatch.setattr(Path, "read_bytes", _tampered_snap_read_bytes)
@@ -387,7 +548,9 @@ def test_tamper_detection_on_pricing_snapshot_and_prep_artifact(
 
     def _tampered_prep_read_bytes(self: Path) -> bytes:
         if self.resolve() == prep_src.resolve():
-            return json.dumps(prep_data, indent=2, sort_keys=True).encode("utf-8")
+            return json.dumps(prep_data, indent=2, sort_keys=True).encode(
+                "utf-8"
+            )
         return orig_read_bytes(self)
 
     monkeypatch.setattr(Path, "read_bytes", _tampered_prep_read_bytes)

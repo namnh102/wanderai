@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Fail-closed provider-readiness and current-pricing PREP generator and verifier for W06 DEV-SELECT Amendment 01.
 
-TASK: W06-DEV-SELECT-EXECUTION-ENVIRONMENT-AMENDMENT-01-PROVIDER-READINESS-AND-PRICING-PREP
+TASK: W06-DEV-SELECT-EXECUTION-ENVIRONMENT-AMENDMENT-01-PROVIDER-READINESS-AND-PRICING-CORRECTIVE-01
 
 PURPOSE:
 Prepare and statelessly verify the fail-closed provider-readiness and current-pricing
@@ -18,6 +18,7 @@ STRICT FIREWALLS:
 - Does NOT select a model (`MODEL_WINNER_SELECTED = false`, `SELECTED_MODEL_ID = null`).
 - Does NOT touch Final100 (`FINAL100_USED = false`, `FINAL100_STATUS = "NO-GO"`).
 - Does NOT mutate primary DEV-SELECT evidence (`PRIMARY_EXPERIMENT_MUTATED = false`).
+- ONE calculation authority: `analyze_requests_and_costs()` -> `cost_analysis` -> JSON artifact -> Markdown renderer.
 """
 
 from __future__ import annotations
@@ -27,7 +28,6 @@ from decimal import Decimal, ROUND_HALF_UP
 import json
 from pathlib import Path
 import re
-import subprocess
 import sys
 from typing import Any
 from urllib.parse import urlparse
@@ -45,15 +45,8 @@ from app.evaluation.dev_live_runner import (  # noqa: E402
     assert_no_secrets_in_payload,
 )
 from app.evaluation.dev_selection_harness import (  # noqa: E402
-    EXPECTED_PORTABLE_SCHEMA_V2_SHA256,
-    EXPECTED_SEMANTIC_SCHEMA_SHA256,
-    FORBIDDEN_FINAL100_BUNDLE_SHA256,
-    FORBIDDEN_P11_MANIFEST_SHA256,
     canonical_json_bytes,
-    compute_provider_config_registry_sha256,
     compute_scientific_code_bundle_sha256,
-    load_and_verify_candidate_registry,
-    load_and_verify_frozen_dev_bundle,
     normalize_lf_bytes,
     sha256_bytes,
 )
@@ -73,6 +66,9 @@ from prepare_w06_dev_select_execution_environment_amendment_01 import (  # noqa:
 
 TASK_ID = (
     "W06-DEV-SELECT-EXECUTION-ENVIRONMENT-AMENDMENT-01-PROVIDER-READINESS-AND-PRICING-PREP"
+)
+CORRECTIVE_TASK_ID = (
+    "W06-DEV-SELECT-EXECUTION-ENVIRONMENT-AMENDMENT-01-PROVIDER-READINESS-AND-PRICING-CORRECTIVE-01"
 )
 PUBLIC_PRICING_SNAPSHOT_ARTIFACT_ID = (
     "W06-DEV-SELECT-AMENDMENT-01-PUBLIC-PRICING-SNAPSHOT-V1"
@@ -152,9 +148,7 @@ EXPECTED_FAILURE_DIAGNOSTIC_FILE_SHA256 = (
     "b729883505ecfc98f15917347239ea6d09cede106691b155026891996391e692"
 )
 EXPECTED_FAILURE_DIAGNOSTIC_INTERNAL_SHA256 = (
-    "509528413e1d9eb8408943867be21f83dc2dda72acd53fe9028e3c37c7db0508".replace(
-        "0508", "05c8"
-    )
+    "509528413e1d9eb8408943867be21f83dc2dda72acd53fe9028e3c37c7db05c8"
 )
 
 EXPECTED_SCIENTIFIC_CODE_BUNDLE_SHA256 = (
@@ -204,11 +198,17 @@ CANARY_FIXTURE_IDS: tuple[str, ...] = (
     "W06-DEV-TUNE-015",
 )
 
-# Section 5: Allowlisted Pricing Domains
+# Section 5 (and Corrective Section 4): Direct Allowlisted Pricing Domains
+# Note: platform.claude.com is NOT a direct authority domain; it may only appear
+# as a subordinate redirect target bound to an already-allowlisted docs.anthropic.com URL.
 ALLOWLISTED_PRICING_DOMAINS_BY_PROVIDER: dict[str, tuple[str, ...]] = {
     "GOOGLE": ("ai.google.dev",),
     "OPENAI": ("developers.openai.com", "platform.openai.com", "openai.com"),
-    "ANTHROPIC": ("docs.anthropic.com", "anthropic.com", "platform.claude.com"),
+    "ANTHROPIC": ("docs.anthropic.com", "anthropic.com"),
+}
+ALLOWED_REDIRECT_TARGET_DOMAINS_BY_SOURCE_DOMAIN: dict[str, tuple[str, ...]] = {
+    "docs.anthropic.com": ("platform.claude.com", "docs.anthropic.com"),
+    "platform.openai.com": ("developers.openai.com", "platform.openai.com"),
 }
 FORBIDDEN_GOOGLE_CLOUD_DOMAIN = "cloud.google.com"
 
@@ -219,7 +219,7 @@ HARD_MAXIMUM_STATUS = "NOT_DEFENSIBLY_COMPUTABLE"
 PROVIDER_READINESS_NOT_YET_ATTESTED = "NOT_YET_ATTESTED"
 EFFECTIVE_AMENDMENT_STATUS = "METHODOLOGY_APPROVED_LIVE_UNAUTHORIZED"
 NEXT_GATE_ID = (
-    "W06-DEV-SELECT-EXECUTION-ENVIRONMENT-AMENDMENT-01-PROVIDER-READINESS-AND-PRICING-CHATGPT-AUDIT"
+    "W06-DEV-SELECT-EXECUTION-ENVIRONMENT-AMENDMENT-01-PROVIDER-READINESS-AND-PRICING-CORRECTIVE-01-CHATGPT-AUDIT"
 )
 
 
@@ -648,12 +648,24 @@ def inspect_billing_surfaces_from_repo(repo_root: Path = REPO_ROOT) -> dict[str,
 
 
 # ==============================================================================
-# 4. PUBLIC PRICING SNAPSHOT BUILDER (SECTIONS 5, 7, 8)
+# 4. PUBLIC PRICING SNAPSHOT BUILDER & SOURCE AUTHORITY GUARD (SECTIONS 5, 7, 8)
 # ==============================================================================
 
 
+def _host_matches_domain_tuple(host: str, allowed_domains: tuple[str, ...]) -> bool:
+    return any(host == d or host.endswith("." + d) for d in allowed_domains)
+
+
 def validate_pricing_source_urls(records: dict[str, dict[str, Any]]) -> None:
-    """Enforce that every pricing source URL belongs to the provider's allowlisted domains."""
+    """Enforce frozen direct source domain allowlist and subordinate redirect rules.
+
+    - Direct authority URLs (`official_source_url`, `exact_model_official_source_url`,
+      `additional_official_source_urls`) MUST belong to `ALLOWLISTED_PRICING_DOMAINS_BY_PROVIDER[provider]`.
+    - For Anthropic, only `docs.anthropic.com` and `anthropic.com` (including `www.anthropic.com`)
+      are valid direct authority domains. An arbitrary direct `platform.claude.com` URL is REJECTED.
+    - `platform.claude.com` is accepted ONLY inside `official_redirect_resolutions` when bound to
+      an already-allowlisted `docs.anthropic.com` source URL present in the candidate's direct source list.
+    """
     for cid, rec in records.items():
         provider = str(rec.get("provider", ""))
         allowed_domains = ALLOWLISTED_PRICING_DOMAINS_BY_PROVIDER.get(provider, ())
@@ -661,10 +673,15 @@ def validate_pricing_source_urls(records: dict[str, dict[str, Any]]) -> None:
             raise PlanBeforeLiveProtocolError(
                 f"Unknown provider in pricing snapshot for {cid}: {provider}"
             )
-        urls_to_check = [str(rec.get("official_source_url", ""))] + [
+
+        direct_urls: list[str] = [str(rec.get("official_source_url", ""))]
+        if rec.get("exact_model_official_source_url") is not None:
+            direct_urls.append(str(rec.get("exact_model_official_source_url", "")))
+        direct_urls.extend(
             str(u) for u in rec.get("additional_official_source_urls", [])
-        ]
-        for url in urls_to_check:
+        )
+
+        for url in direct_urls:
             parsed = urlparse(url)
             host = (parsed.hostname or "").lower()
             if parsed.scheme != "https" or not host:
@@ -678,11 +695,34 @@ def validate_pricing_source_urls(records: dict[str, dict[str, Any]]) -> None:
                 raise PlanBeforeLiveProtocolError(
                     f"cloud.google.com is forbidden for C1 because frozen C1 transport uses Gemini Developer API (ai.google.dev), not Google Cloud/Vertex AI: {url}"
                 )
-            if not any(
-                host == d or host.endswith("." + d) for d in allowed_domains
-            ):
+            if not _host_matches_domain_tuple(host, allowed_domains):
                 raise PlanBeforeLiveProtocolError(
-                    f"Disallowed pricing authority domain '{host}' for {cid} ({provider}); allowed: {allowed_domains}"
+                    f"Disallowed direct pricing authority domain '{host}' for {cid} ({provider}); allowed direct domains: {allowed_domains}"
+                )
+
+        # Validate optional subordinate redirect resolutions
+        direct_url_set = set(direct_urls)
+        for redirect_entry in rec.get("official_redirect_resolutions", []):
+            src_url = str(redirect_entry.get("allowlisted_source_url", ""))
+            dst_url = str(redirect_entry.get("resolved_destination_url", ""))
+            if src_url not in direct_url_set:
+                raise PlanBeforeLiveProtocolError(
+                    f"Redirect source URL '{src_url}' for {cid} is not bound to an allowlisted direct source URL in {direct_urls}"
+                )
+            src_parsed = urlparse(src_url)
+            dst_parsed = urlparse(dst_url)
+            src_host = (src_parsed.hostname or "").lower()
+            dst_host = (dst_parsed.hostname or "").lower()
+            if dst_parsed.scheme != "https" or not dst_host:
+                raise PlanBeforeLiveProtocolError(
+                    f"Invalid redirect destination URL for {cid}: {dst_url}"
+                )
+            allowed_redirect_targets = (
+                ALLOWED_REDIRECT_TARGET_DOMAINS_BY_SOURCE_DOMAIN.get(src_host, ())
+            )
+            if not _host_matches_domain_tuple(dst_host, allowed_redirect_targets):
+                raise PlanBeforeLiveProtocolError(
+                    f"Disallowed redirect destination domain '{dst_host}' from source '{src_host}' for {cid}; allowed redirect targets: {allowed_redirect_targets}"
                 )
 
 
@@ -694,11 +734,18 @@ def build_public_pricing_snapshot_payload() -> dict[str, Any]:
             "provider": "GOOGLE",
             "exact_model_id": "gemini-3.8-flash",
             "official_source_url": "https://ai.google.dev/gemini-api/docs/pricing",
+            "exact_model_official_source_url": "https://ai.google.dev/gemini-api/docs/models/gemini-3.8-flash",
             "additional_official_source_urls": [
                 "https://ai.google.dev/gemini-api/docs/models/gemini-3.8-flash",
                 "https://ai.google.dev/gemini-api/docs/rate-limits",
             ],
+            "official_redirect_resolutions": [],
             "retrieval_timestamp_utc": "2026-10-25T03:05:48Z",
+            "source_retrieval_timestamps_utc": {
+                "https://ai.google.dev/gemini-api/docs/pricing": "2026-10-25T03:05:48Z",
+                "https://ai.google.dev/gemini-api/docs/models/gemini-3.8-flash": "2026-10-25T03:05:48Z",
+                "https://ai.google.dev/gemini-api/docs/rate-limits": "2026-10-25T03:05:08Z",
+            },
             "pricing_effective_date": "Current promotional pricing effective through 2026-12-31 (scheduled standard adjustment on 2027-01-01)",
             "promotional_expiration_date": "2026-12-31",
             "post_promotional_effective_date": "2027-01-01",
@@ -752,11 +799,18 @@ def build_public_pricing_snapshot_payload() -> dict[str, Any]:
             "provider": "OPENAI",
             "exact_model_id": "gpt-6.1-sol",
             "official_source_url": "https://developers.openai.com/api/docs/pricing",
+            "exact_model_official_source_url": "https://developers.openai.com/api/docs/models/gpt-6.1-sol",
             "additional_official_source_urls": [
                 "https://developers.openai.com/api/docs/models/gpt-6.1-sol",
                 "https://developers.openai.com/api/docs/guides/rate-limits",
             ],
+            "official_redirect_resolutions": [],
             "retrieval_timestamp_utc": "2026-10-25T03:05:50Z",
+            "source_retrieval_timestamps_utc": {
+                "https://developers.openai.com/api/docs/pricing": "2026-10-25T03:05:50Z",
+                "https://developers.openai.com/api/docs/models/gpt-6.1-sol": "2026-10-25T03:05:50Z",
+                "https://developers.openai.com/api/docs/guides/rate-limits": "2026-10-25T03:05:50Z",
+            },
             "pricing_effective_date": "Current published Standard tier pricing (model snapshot gpt-6.1-sol-2026-08-05)",
             "promotional_expiration_date": None,
             "currency": "USD",
@@ -810,11 +864,41 @@ def build_public_pricing_snapshot_payload() -> dict[str, Any]:
             "provider": "ANTHROPIC",
             "exact_model_id": "claude-sonnet-5-5",
             "official_source_url": "https://docs.anthropic.com/en/docs/about-claude/pricing",
+            "exact_model_official_source_url": "https://www.anthropic.com/claude/sonnet",
             "additional_official_source_urls": [
+                "https://www.anthropic.com/claude/sonnet",
+                "https://www.anthropic.com/claude-sonnet-5-5",
                 "https://docs.anthropic.com/en/api/rate-limits",
             ],
+            "official_redirect_resolutions": [
+                {
+                    "allowlisted_source_url": "https://docs.anthropic.com/en/docs/about-claude/pricing",
+                    "resolved_destination_url": "https://platform.claude.com/docs/en/about-claude/pricing",
+                    "authority_rule": "platform.claude.com is recorded strictly as the HTTP 308 redirect destination of the allowlisted docs.anthropic.com URL and is NOT an independent direct authority domain.",
+                },
+                {
+                    "allowlisted_source_url": "https://docs.anthropic.com/en/api/rate-limits",
+                    "resolved_destination_url": "https://platform.claude.com/docs/en/api/rate-limits",
+                    "authority_rule": "platform.claude.com is recorded strictly as the HTTP 308 redirect destination of the allowlisted docs.anthropic.com URL and is NOT an independent direct authority domain.",
+                },
+            ],
             "retrieval_timestamp_utc": "2026-10-25T03:05:51Z",
-            "pricing_effective_date": "Current published Claude API Standard pricing",
+            "source_retrieval_timestamps_utc": {
+                "https://docs.anthropic.com/en/docs/about-claude/pricing": "2026-10-25T03:05:51Z",
+                "https://docs.anthropic.com/en/api/rate-limits": "2026-10-25T03:05:54Z",
+                "https://www.anthropic.com/claude/sonnet": "2026-10-25T03:58:45Z",
+                "https://www.anthropic.com/claude-sonnet-5-5": "2026-10-25T03:58:46Z",
+            },
+            "exact_model_anthropic_com_evidence": {
+                "model_page_url": "https://www.anthropic.com/claude/sonnet",
+                "announcement_page_url": "https://www.anthropic.com/claude-sonnet-5-5",
+                "announcement_published_date": "2026-09-28",
+                "verified_api_model_id": "claude-sonnet-5-5",
+                "verified_input_usd_per_1m_tokens": "2.00",
+                "verified_output_usd_per_1m_tokens": "10.00",
+                "verified_cache_read_usd_per_1m_tokens_non_applicable": "0.10",
+            },
+            "pricing_effective_date": "Current published Claude API Standard pricing (Claude Sonnet 5.5 released 2026-09-28)",
             "promotional_expiration_date": None,
             "currency": "USD",
             "pricing_surface_product": "Anthropic Claude API First-Party Direct (api.anthropic.com /v1/messages) — Standard Synchronous Global Routing",
@@ -851,7 +935,7 @@ def build_public_pricing_snapshot_payload() -> dict[str, Any]:
             "note_on_stale_repo_rate_table": (
                 "Frozen primary runner (dev_live_runner.py) contains a historical 2026-10-16 rate constant "
                 "($3.00 input / $15.00 output per 1M). Per Section 7, this PREP package uses the current official "
-                "docs.anthropic.com Standard pricing ($2.00 input / $10.00 output per 1M) without mutating dev_live_runner.py."
+                "docs.anthropic.com and anthropic.com Standard pricing ($2.00 input / $10.00 output per 1M) without mutating dev_live_runner.py."
             ),
         },
     }
@@ -861,6 +945,7 @@ def build_public_pricing_snapshot_payload() -> dict[str, Any]:
     payload: dict[str, Any] = {
         "artifact_id": PUBLIC_PRICING_SNAPSHOT_ARTIFACT_ID,
         "task_id": TASK_ID,
+        "corrective_task_id": CORRECTIVE_TASK_ID,
         "authoritative_base_develop_sha": AUTHORITATIVE_BASE_DEVELOP_SHA,
         "approval_receipt_file_sha256": EXPECTED_APPROVAL_RECEIPT_FILE_SHA256,
         "approval_receipt_internal_sha256": EXPECTED_APPROVAL_RECEIPT_INTERNAL_SHA256,
@@ -873,6 +958,10 @@ def build_public_pricing_snapshot_payload() -> dict[str, Any]:
         "contains_copyrighted_full_webpage_dump": False,
         "allowlisted_domains_by_provider": {
             k: list(v) for k, v in ALLOWLISTED_PRICING_DOMAINS_BY_PROVIDER.items()
+        },
+        "redirect_target_policy_by_source_domain": {
+            k: list(v)
+            for k, v in ALLOWED_REDIRECT_TARGET_DOMAINS_BY_SOURCE_DOMAIN.items()
         },
         "forbidden_google_cloud_domain_used": False,
         "candidates": candidate_records,
@@ -970,7 +1059,10 @@ def analyze_requests_and_costs(repo_root: Path = REPO_ROOT) -> dict[str, Any]:
     all_63_c2 = canary_c2_stats + comparative_c2_stats
     max_wire_entry = max(all_63_c2, key=lambda x: x["wire_payload_utf8_bytes"])
     min_wire_entry = min(all_63_c2, key=lambda x: x["wire_payload_utf8_bytes"])
-    if max_wire_entry["wire_payload_utf8_bytes"] >= OPENAI_LONG_CONTEXT_THRESHOLD_INPUT_TOKENS:
+    if (
+        max_wire_entry["wire_payload_utf8_bytes"]
+        >= OPENAI_LONG_CONTEXT_THRESHOLD_INPUT_TOKENS
+    ):
         raise PlanBeforeLiveProtocolError(
             f"C2 serialized wire bytes ({max_wire_entry['wire_payload_utf8_bytes']}) exceed 272K threshold!"
         )
@@ -1005,8 +1097,6 @@ def analyze_requests_and_costs(repo_root: Path = REPO_ROOT) -> dict[str, Any]:
             out_tok = int(rec["output_tokens"])
             th_tok = int(rec.get("thought_tokens") or 0)
             reas_tok = int(rec.get("reasoning_tokens") or 0)
-            # For C1, Gemini bills output_tokens + thought_tokens at the output rate.
-            # For C2 (OpenAI) and C3 (Anthropic), output_tokens in execution_receipt already includes reasoning/thinking tokens.
             billable_out = out_tok + th_tok if cid == "C1" else out_tok
             observed_p1_by_candidate[cid].append(
                 {
@@ -1121,19 +1211,12 @@ def analyze_requests_and_costs(repo_root: Path = REPO_ROOT) -> dict[str, Any]:
     c3_in_rate = Decimal("2.00") / Decimal("1000000")
     c3_out_rate = Decimal("10.00") / Decimal("1000000")
 
-    # Empirical P1 means:
-    # C1: 4 observed P1 cells (2 ha-noi: in_mean=20106.0, 2 da-nang: in_mean=38255.0; 0 ha-long due to Free-Tier 20-RPD exhaustion).
-    # Unimputed 4-cell observed mean: in_mean = 29180.5, billable_out_mean = 5718.25 (output_tokens mean 3246.0 + thought_tokens mean 2472.25).
     c1_emp_in_per_call = Decimal("29180.5")
     c1_emp_out_per_call = Decimal("5718.25")
     c1_emp_cost_per_call = (
         c1_emp_in_per_call * c1_in_rate + c1_emp_out_per_call * c1_out_rate
     )
 
-    # C2: 12 observed P1 cells covering all 3 destinations (ha-noi in_mean=16098.0, da-nang in_mean=29632.0, ha-long in_mean=19803.6).
-    # Since both the 3-fixture canary and 60-fixture comparative split are exactly balanced 1:1:1 across (ha-noi, da-nang, ha-long),
-    # the exact destination-balanced empirical mean input tokens per call is (16098.0 + 29632.0 + 19803.6) / 3 = 21844.533333...
-    # and mean output_tokens (which includes reasoning_tokens) across all 12 observed P1 C2 cells is 32904 / 12 = 2742.0.
     c2_emp_in_per_call = (
         Decimal("16098.0") + Decimal("29632.0") + Decimal("19803.6")
     ) / Decimal("3")
@@ -1142,9 +1225,6 @@ def analyze_requests_and_costs(repo_root: Path = REPO_ROOT) -> dict[str, Any]:
         c2_emp_in_per_call * c2_in_rate + c2_emp_out_per_call * c2_out_rate
     )
 
-    # C3: 16 observed P1 cells covering all 3 destinations (ha-noi in_mean=23642.8, da-nang in_mean=41151.6, ha-long in_mean=170645/6=28440.833333...).
-    # Exact destination-balanced empirical mean input tokens per call = (23642.8 + 41151.6 + 170645/6) / 3 = 559411 / 18 = 31078.388888...
-    # Mean output_tokens across all 16 observed P1 C3 cells = 98289 / 16 = 6143.0625.
     c3_emp_in_per_call = (
         Decimal("23642.8")
         + Decimal("41151.6")
@@ -1155,15 +1235,10 @@ def analyze_requests_and_costs(repo_root: Path = REPO_ROOT) -> dict[str, Any]:
         c3_emp_in_per_call * c3_in_rate + c3_emp_out_per_call * c3_out_rate
     )
 
-    # Conservative planning envelope per-call token bounds (explicitly above max observed input on largest catalog da-nang and above max observed output):
-    # C1: 40,000 input (vs max observed 38,272) + 10,000 billable output (vs max observed 6,183) = $0.067500 / call
-    # C2: 32,000 input (vs max observed 29,633) + 8,000 output (vs max observed 3,822) = $0.144000 / call
-    # C3: 42,000 input (vs max observed 41,189) + 10,000 output (vs max observed 8,060) = $0.184000 / call
     c1_cons_per_call = Decimal("40000") * c1_in_rate + Decimal("10000") * c1_out_rate
     c2_cons_per_call = Decimal("32000") * c2_in_rate + Decimal("8000") * c2_out_rate
     c3_cons_per_call = Decimal("42000") * c3_in_rate + Decimal("10000") * c3_out_rate
 
-    # Configured max_output_tokens = 16,384 reference per call (NOT a hard maximum):
     c1_maxref_per_call = Decimal("40000") * c1_in_rate + Decimal("16384") * c1_out_rate
     c2_maxref_per_call = Decimal("32000") * c2_in_rate + Decimal("16384") * c2_out_rate
     c3_maxref_per_call = Decimal("42000") * c3_in_rate + Decimal("16384") * c3_out_rate
@@ -1316,27 +1391,27 @@ def analyze_requests_and_costs(repo_root: Path = REPO_ROOT) -> dict[str, Any]:
                 },
                 "candidate_derivation_notes": {
                     "C1": (
-                        "4 completed P1 cells exist in repository (2 ha-noi: mean input 20,106.0 tokens; 2 da-nang: mean input 38,255.0 tokens; "
-                        "0 ha-long completions because Free-Tier 20-RPD quota was exhausted before ha-long fixtures). "
-                        "Unimputed 4-cell observed mean is 29,180.5 input tokens and 5,718.25 billable output tokens "
-                        "(3,246.0 output_tokens + 2,472.25 thought_tokens), yielding $0.043329/call under current $0.75/$3.75 pricing. "
-                        "Conservative planning envelope bounds every C1 call at 40,000 input tokens (above max observed da-nang 38,272) "
-                        "and 10,000 billable output tokens (above max observed 6,183), yielding $0.067500/call."
+                        f"4 completed P1 cells exist in repository (2 ha-noi: mean input 20,106.0 tokens; 2 da-nang: mean input 38,255.0 tokens; "
+                        f"0 ha-long completions because Free-Tier 20-RPD quota was exhausted before ha-long fixtures). "
+                        f"Unimputed 4-cell observed mean is 29,180.5 input tokens and 5,718.25 billable output tokens "
+                        f"(3,246.0 output_tokens + 2,472.25 thought_tokens), yielding ${_fmt_usd(c1_emp_cost_per_call)}/call under current $0.75/$3.75 pricing. "
+                        f"Conservative planning envelope bounds every C1 call at 40,000 input tokens (above max observed da-nang 38,272) "
+                        f"and 10,000 billable output tokens (above max observed 6,183), yielding ${_fmt_usd(c1_cons_per_call)}/call."
                     ),
                     "C2": (
-                        "12 completed P1 cells exist across all 3 destinations (5 ha-noi: mean input 16,098.0; 5 ha-long: mean input 19,803.6; "
-                        "2 da-nang: mean input 29,632.0). Because both the 3-fixture canary and 60-fixture comparative set are balanced 1:1:1 "
-                        "across destinations, the destination-balanced empirical mean input is 21,844.53 tokens/call and mean output "
-                        "(including reasoning_tokens) is 2,742.0 tokens/call, yielding $0.071109/call under current $2.00/$10.00 pricing. "
-                        "Conservative planning envelope bounds every C2 call at 32,000 input tokens and 8,000 output tokens (more than 2x max observed 3,822 "
-                        "to account for 3-day and 5-day itineraries that timed out at 55s), yielding $0.144000/call."
+                        f"12 completed P1 cells exist across all 3 destinations (5 ha-noi: mean input 16,098.0; 5 ha-long: mean input 19,803.6; "
+                        f"2 da-nang: mean input 29,632.0). Because both the 3-fixture canary and 60-fixture comparative set are balanced 1:1:1 "
+                        f"across destinations, the destination-balanced empirical mean input is 21,844.53 tokens/call and mean output "
+                        f"(including reasoning_tokens) is 2,742.0 tokens/call, yielding ${_fmt_usd(c2_emp_cost_per_call)}/call under current $2.00/$10.00 pricing. "
+                        f"Conservative planning envelope bounds every C2 call at 32,000 input tokens and 8,000 output tokens (more than 2x max observed 3,822 "
+                        f"to account for 3-day and 5-day itineraries that timed out at 55s), yielding ${_fmt_usd(c2_cons_per_call)}/call."
                     ),
                     "C3": (
-                        "16 completed P1 cells exist across all 3 destinations (5 ha-noi: mean input 23,642.8; 6 ha-long: mean input 28,440.83; "
-                        "5 da-nang: mean input 41,151.6), including 2 of the 3 exact canary fixtures (011 and 015). Destination-balanced empirical "
-                        "mean input is 31,078.39 tokens/call and mean output (including adaptive thinking) is 6,143.06 tokens/call, yielding "
-                        "$0.123587/call under current $2.00/$10.00 pricing. Conservative planning envelope bounds every C3 call at 42,000 input tokens "
-                        "and 10,000 output tokens (above max observed 8,060), yielding $0.184000/call."
+                        f"16 completed P1 cells exist across all 3 destinations (5 ha-noi: mean input 23,642.8; 6 ha-long: mean input 28,440.83; "
+                        f"5 da-nang: mean input 41,151.6), including 2 of the 3 exact canary fixtures (011 and 015). Destination-balanced empirical "
+                        f"mean input is 31,078.39 tokens/call and mean output (including adaptive thinking) is 6,143.06 tokens/call, yielding "
+                        f"${_fmt_usd(c3_emp_cost_per_call)}/call under current $2.00/$10.00 pricing. Conservative planning envelope bounds every C3 call at 42,000 input tokens "
+                        f"and 10,000 output tokens (above max observed 8,060), yielding ${_fmt_usd(c3_cons_per_call)}/call."
                     ),
                 },
             },
@@ -1364,8 +1439,23 @@ def analyze_requests_and_costs(repo_root: Path = REPO_ROOT) -> dict[str, Any]:
 # ==============================================================================
 
 
-def build_provider_readiness_and_attestation_package() -> dict[str, Any]:
-    """Construct Sections 11, 12, 13, and 14 structures."""
+def build_provider_readiness_and_attestation_package(
+    cost_analysis: dict[str, Any],
+) -> dict[str, Any]:
+    """Construct Sections 11, 12, 13, and 14 structures consuming canonical cost_analysis."""
+    can_cons = cost_analysis["A_readiness_canary_9_calls"][
+        "CONSERVATIVE_PLANNING_ENVELOPE"
+    ]["by_candidate_usd"]
+    cmp_cons = cost_analysis["B_amended_comparative_180_calls"][
+        "CONSERVATIVE_PLANNING_ENVELOPE"
+    ]["by_candidate_usd"]
+    tot_cons = cost_analysis["C_total_amendment_track_189_calls"][
+        "CONSERVATIVE_PLANNING_ENVELOPE"
+    ]["by_candidate_usd"]
+    tot_mref = cost_analysis["C_total_amendment_track_189_calls"][
+        "CONFIGURED_MAX_OUTPUT_16384_REFERENCE"
+    ]["by_candidate_usd"]
+
     provider_readiness_matrix = {
         "C1_PROVIDER_READINESS": PROVIDER_READINESS_NOT_YET_ATTESTED,
         "C2_PROVIDER_READINESS": PROVIDER_READINESS_NOT_YET_ATTESTED,
@@ -1382,7 +1472,11 @@ def build_provider_readiness_and_attestation_package() -> dict[str, Any]:
                 "C_quota_request_volume_readiness": "Remaining daily/request quota (RPD) not constrained by the prior Free Tier 20-RPD ceiling and sufficient for the exact authorized S2 volume (up to 63 C1 generation calls: 3 canary + 60 comparative).",
                 "D_rpm_readiness": "Project RPM limit for gemini-3.8-flash sufficient for the frozen deterministic schedule (client issues at most 1 request per >=2,000ms inter-call delay plus model execution time; sequential C1-only upper bound <= 30 RPM, interleaved 3-candidate cadence <= 10 RPM per provider).",
                 "E_tpm_readiness": "Project TPM limit for gemini-3.8-flash sufficient for ~20K-40K input tokens + up to 16,384 output/thought tokens per call under the frozen schedule.",
-                "F_credit_spend_readiness": "Active Cloud Billing linkage / spend cap sufficient to cover the C1 conservative planning envelope ($0.2025 canary / $4.0500 comparative / $4.2525 total 63 calls; $5.7607 max-output-16384 reference).",
+                "F_credit_spend_readiness": (
+                    f"Active Cloud Billing linkage / spend cap sufficient to cover the C1 conservative planning envelope "
+                    f"(${can_cons['C1']} canary / ${cmp_cons['C1']} comparative / ${tot_cons['C1']} total 63 calls; "
+                    f"${tot_mref['C1']} max-output-16384 reference)."
+                ),
                 "G_selected_billing_surface": "GEMINI_DEVELOPER_API_GOOGLE_AI_STUDIO_STANDARD_PAID_TIER",
                 "H_evidence_required_from_project_owner": "Sanitized Project Owner attestation confirming Paid Tier active, exact gemini-3.8-flash access, Free-Tier 20-RPD ceiling no longer active, and RPD/RPM/TPM + spend cap sufficient for 63 C1 calls.",
                 "I_sanitization_requirements": "Must NOT include GEMINI_API_KEY, key prefix, Google Cloud billing account ID, project number/ID, organization ID, payment instrument details, or personal email/account identifiers.",
@@ -1397,7 +1491,11 @@ def build_provider_readiness_and_attestation_package() -> dict[str, Any]:
                 "C_quota_request_volume_readiness": "Usage tier and monthly spend/quota limits sufficient for the exact authorized S2 volume (up to 63 C2 generation calls: 3 canary + 60 comparative).",
                 "D_rpm_readiness": "Account RPM limit for gpt-6.1-sol sufficient for the frozen 2,000ms deterministic pacing schedule.",
                 "E_tpm_readiness": "Account TPM limit for gpt-6.1-sol sufficient for ~16K-30K input tokens + up to 16,384 completion tokens per call under the frozen schedule.",
-                "F_credit_spend_readiness": "Available API credits / remaining monthly budget sufficient to cover the C2 conservative planning envelope ($0.4320 canary / $8.6400 comparative / $9.0720 total 63 calls; $14.3539 max-output-16384 reference).",
+                "F_credit_spend_readiness": (
+                    f"Available API credits / remaining monthly budget sufficient to cover the C2 conservative planning envelope "
+                    f"(${can_cons['C2']} canary / ${cmp_cons['C2']} comparative / ${tot_cons['C2']} total 63 calls; "
+                    f"${tot_mref['C2']} max-output-16384 reference)."
+                ),
                 "G_selected_billing_surface": "OPENAI_STANDARD_API_CHAT_COMPLETIONS_DEFAULT_SERVICE_TIER",
                 "H_evidence_required_from_project_owner": "Sanitized Project Owner attestation confirming active OpenAI API billing, gpt-6.1-sol access, and credit/spend + RPM/TPM/RPD limits sufficient for 63 C2 calls.",
                 "I_sanitization_requirements": "Must NOT include OPENAI_API_KEY, key prefix, OpenAI organization ID, project ID, billing account ID, credit-card details, or personal account identifiers.",
@@ -1412,7 +1510,11 @@ def build_provider_readiness_and_attestation_package() -> dict[str, Any]:
                 "C_quota_request_volume_readiness": "Account usage tier and monthly spend limits sufficient for the exact authorized S2 volume (up to 63 C3 generation calls: 3 canary + 60 comparative).",
                 "D_rpm_readiness": "Account RPM limit for claude-sonnet-5-5 sufficient for the frozen 2,000ms deterministic pacing schedule.",
                 "E_tpm_readiness": "Account ITPM/OTPM limits for claude-sonnet-5-5 sufficient for ~23.6K-41.2K input tokens and ~4.5K-8.1K (up to 16,384 max_tokens) output tokens per call under the frozen schedule.",
-                "F_credit_spend_readiness": "Positive, sufficient API credit balance or approved billing state covering the C3 conservative planning envelope ($0.5520 canary / $11.0400 comparative / $11.5920 total 63 calls; $15.6139 max-output-16384 reference).",
+                "F_credit_spend_readiness": (
+                    f"Positive, sufficient API credit balance or approved billing state covering the C3 conservative planning envelope "
+                    f"(${can_cons['C3']} canary / ${cmp_cons['C3']} comparative / ${tot_cons['C3']} total 63 calls; "
+                    f"${tot_mref['C3']} max-output-16384 reference)."
+                ),
                 "G_selected_billing_surface": "ANTHROPIC_CLAUDE_API_FIRST_PARTY_DIRECT_MESSAGES_STANDARD_GLOBAL",
                 "H_evidence_required_from_project_owner": "Sanitized Project Owner attestation confirming active Anthropic API billing, positive credit balance sufficient for the planning budget, claude-sonnet-5-5 access, and RPM/ITPM/OTPM limits sufficient for 63 C3 calls.",
                 "I_sanitization_requirements": "Must NOT include ANTHROPIC_API_KEY, key prefix, Anthropic organization/workspace ID, billing account ID, credit-card details, or personal account identifiers.",
@@ -1532,7 +1634,7 @@ def build_provider_readiness_and_attestation_package() -> dict[str, Any]:
 
 
 # ==============================================================================
-# 7. MAIN PREP ARTIFACT & MARKDOWN BUILDERS
+# 7. MAIN PREP ARTIFACT & MARKDOWN BUILDERS (SINGLE COST CALCULATION AUTHORITY)
 # ==============================================================================
 
 
@@ -1544,7 +1646,9 @@ def build_provider_readiness_pricing_prep_payload(
     primary_authority = read_and_crosscheck_primary_metric_authority(repo_root)
     billing_surfaces = inspect_billing_surfaces_from_repo(repo_root)
     cost_and_long_context = analyze_requests_and_costs(repo_root)
-    readiness_pkg = build_provider_readiness_and_attestation_package()
+    readiness_pkg = build_provider_readiness_and_attestation_package(
+        cost_and_long_context["cost_analysis"]
+    )
 
     pricing_snapshot_raw = canonical_json_bytes(pricing_snapshot)
     pricing_snapshot_file_sha256 = sha256_bytes(pricing_snapshot_raw)
@@ -1555,6 +1659,7 @@ def build_provider_readiness_pricing_prep_payload(
     payload: dict[str, Any] = {
         "artifact_id": PROVIDER_READINESS_PRICING_PREP_ARTIFACT_ID,
         "task_id": TASK_ID,
+        "corrective_task_id": CORRECTIVE_TASK_ID,
         "authoritative_base_develop_sha": AUTHORITATIVE_BASE_DEVELOP_SHA,
         "approval_receipt_merge_governance": {
             "pr_number": APPROVAL_RECEIPT_PR_NUMBER,
@@ -1661,15 +1766,63 @@ def build_provider_readiness_pricing_prep_payload(
     return payload
 
 
+COST_TABLE_SCOPE_SPECS: tuple[tuple[str, str], ...] = (
+    ("A_readiness_canary_9_calls", "**A. Readiness Canary**"),
+    ("B_amended_comparative_180_calls", "**B. Amended Comparative**"),
+    ("C_total_amendment_track_189_calls", "**C. Total Amendment Track**"),
+)
+
+COST_TABLE_CATEGORY_SPECS: tuple[tuple[str, str], ...] = (
+    (
+        "EXPECTED_OR_EMPIRICAL_PLANNING_ESTIMATE",
+        "`EXPECTED_OR_EMPIRICAL_PLANNING_ESTIMATE`",
+    ),
+    (
+        "CONSERVATIVE_PLANNING_ENVELOPE",
+        "`CONSERVATIVE_PLANNING_ENVELOPE`",
+    ),
+    (
+        "CONFIGURED_MAX_OUTPUT_16384_REFERENCE",
+        "`CONFIGURED_MAX_OUTPUT_16384_REFERENCE` (not hard max)",
+    ),
+)
+
+
 def build_markdown_report(
     pricing_snapshot: dict[str, Any],
     prep_payload: dict[str, Any],
 ) -> str:
-    """Render human-readable markdown documentation matching the JSON artifacts."""
+    """Render human-readable markdown documentation directly from canonical JSON structures.
+
+    ZERO duplicate hard-coded cost literals: every cost cell is rendered from
+    `prep_payload["cost_analysis"]` and `pricing_snapshot["candidates"]`.
+    """
     snap_file_sha = sha256_bytes(canonical_json_bytes(pricing_snapshot))
     snap_int_sha = pricing_snapshot["public_pricing_snapshot_sha256"]
     prep_file_sha = sha256_bytes(canonical_json_bytes(prep_payload))
     prep_int_sha = prep_payload["provider_readiness_pricing_prep_sha256"]
+
+    cost_analysis = prep_payload["cost_analysis"]
+    hist_ref = cost_analysis["HISTORICAL_OBSERVED_COST_REFERENCE"]
+    hist_by_cand = hist_ref["by_candidate_usd"]
+
+    cands_snap = pricing_snapshot["candidates"]
+    c1_unit = cands_snap["C1"]["selected_unit_pricing_usd_per_1m_tokens"]
+    c2_unit = cands_snap["C2"]["selected_unit_pricing_usd_per_1m_tokens"]
+    c3_unit = cands_snap["C3"]["selected_unit_pricing_usd_per_1m_tokens"]
+
+    cost_rows: list[str] = []
+    for scope_key, scope_label in COST_TABLE_SCOPE_SPECS:
+        scope_block = cost_analysis[scope_key]
+        calls_str = f"`{scope_block['total_calls']}` (`{scope_block['calls_per_candidate']}`/cand)"
+        for cat_key, cat_label in COST_TABLE_CATEGORY_SPECS:
+            cat_block = scope_block[cat_key]
+            by_cand = cat_block["by_candidate_usd"]
+            tot_val = cat_block["total_usd"]
+            cost_rows.append(
+                f"| {scope_label} | {calls_str} | {cat_label} | "
+                f"`${by_cand['C1']}` | `${by_cand['C2']}` | `${by_cand['C3']}` | **`${tot_val}`** |"
+            )
 
     lines = [
         "# W06 DEV-SELECT Amendment 01 — Provider Readiness & Current Pricing PREP",
@@ -1677,6 +1830,7 @@ def build_markdown_report(
         "## 1. Governance & Scope Boundary",
         "",
         f"- **Task ID:** `{TASK_ID}`",
+        f"- **Corrective Task ID:** `{CORRECTIVE_TASK_ID}`",
         f"- **Authoritative Base:** `develop@{AUTHORITATIVE_BASE_DEVELOP_SHA}` (PR #{APPROVAL_RECEIPT_PR_NUMBER} merged, post-merge CI run `{APPROVAL_RECEIPT_POST_MERGE_CI_RUN_ID}` green)",
         f"- **Public Pricing Snapshot Artifact:** `{PUBLIC_PRICING_SNAPSHOT_REL_PATH}`",
         f"  - `file_sha256`: `{snap_file_sha}`",
@@ -1697,7 +1851,7 @@ def build_markdown_report(
         "",
         "## 2. Report Correction Firewall & Primary Metric Authority",
         "",
-        "Independently read from `data/evaluation/w06/w06_dev_select_live_results_manifest_v1.json` (`1d303e1c07b627c3f3eb87287b744f55ba3f6d3d85bd5cec36959b01919d26c0`) and cross-checked against `data/evaluation/w06/w06_dev_select_live_results_freeze_01_receipt_v1.json` (`c021094e26277d41664c4ae2f0560b7684435b6002c5b7ba742a17808c5b07a4` / internal `7b270de482f0b077e79bbba40a0c662851da46355a18b5e05f8fdf572880943a`):",
+        f"Independently read from `{PRIMARY_RESULTS_MANIFEST_REL_PATH}` (`{EXPECTED_PRIMARY_RESULTS_MANIFEST_FILE_SHA256}`) and cross-checked against `{PRIMARY_RESULTS_FREEZE_RECEIPT_REL_PATH}` (`{EXPECTED_PRIMARY_RESULTS_FREEZE_RECEIPT_FILE_SHA256}` / internal `{EXPECTED_PRIMARY_RESULTS_FREEZE_RECEIPT_INTERNAL_SHA256}`):",
         "",
         "| Metric | C1 (`gemini-3.8-flash`) | C2 (`gpt-6.1-sol`) | C3 (`claude-sonnet-5-5`) | Total |",
         "| --- | --- | --- | --- | --- |",
@@ -1711,9 +1865,18 @@ def build_markdown_report(
         "",
         "| Candidate | Provider / Model | Determined Billing Surface | Input / 1M | Output / 1M | Official Source URL | Retrieved (UTC) |",
         "| --- | --- | --- | --- | --- | --- | --- |",
-        "| `C1` | `GOOGLE` / `gemini-3.8-flash` | Gemini Developer API (AI Studio / `generativelanguage.googleapis.com`) Standard Paid Tier (promotional through `2026-12-31`) | `$0.75` | `$3.75` (incl. thinking) | `https://ai.google.dev/gemini-api/docs/pricing` | `2026-10-25T03:05:48Z` |",
-        "| `C2` | `OPENAI` / `gpt-6.1-sol` | OpenAI Standard API (`api.openai.com` `/v1/chat/completions`, `service_tier='default'`, `<=272K` input) | `$2.00` (cached `$0.10`, assumed `0%`) | `$10.00` (incl. reasoning) | `https://developers.openai.com/api/docs/pricing` | `2026-10-25T03:05:50Z` |",
-        "| `C3` | `ANTHROPIC` / `claude-sonnet-5-5` | Anthropic Claude API First-Party Direct (`api.anthropic.com` `/v1/messages`, `service_tier='standard'`, global, caching disabled) | `$2.00` | `$10.00` (incl. thinking) | `https://docs.anthropic.com/en/docs/about-claude/pricing` | `2026-10-25T03:05:51Z` |",
+        (
+            f"| `C1` | `GOOGLE` / `{cands_snap['C1']['exact_model_id']}` | Gemini Developer API (AI Studio / `generativelanguage.googleapis.com`) Standard Paid Tier (promotional through `{cands_snap['C1']['promotional_expiration_date']}`) | "
+            f"`${c1_unit['input_usd_per_1m_tokens']}` | `${c1_unit['output_including_thinking_usd_per_1m_tokens']}` (incl. thinking) | `{cands_snap['C1']['official_source_url']}` (`{cands_snap['C1']['exact_model_official_source_url']}`) | `{cands_snap['C1']['retrieval_timestamp_utc']}` |"
+        ),
+        (
+            f"| `C2` | `OPENAI` / `{cands_snap['C2']['exact_model_id']}` | OpenAI Standard API (`api.openai.com` `/v1/chat/completions`, `service_tier='default'`, `<=272K` input) | "
+            f"`${c2_unit['input_usd_per_1m_tokens']}` (cached `${c2_unit['cached_input_usd_per_1m_tokens']}`, assumed `0%`) | `${c2_unit['output_including_reasoning_usd_per_1m_tokens']}` (incl. reasoning) | `{cands_snap['C2']['official_source_url']}` (`{cands_snap['C2']['exact_model_official_source_url']}`) | `{cands_snap['C2']['retrieval_timestamp_utc']}` |"
+        ),
+        (
+            f"| `C3` | `ANTHROPIC` / `{cands_snap['C3']['exact_model_id']}` | Anthropic Claude API First-Party Direct (`api.anthropic.com` `/v1/messages`, `service_tier='standard'`, global, caching disabled) | "
+            f"`${c3_unit['input_usd_per_1m_tokens']}` | `${c3_unit['output_including_thinking_usd_per_1m_tokens']}` (incl. thinking) | `{cands_snap['C3']['official_source_url']}` (`{cands_snap['C3']['exact_model_official_source_url']}`) | `{cands_snap['C3']['retrieval_timestamp_utc']}` |"
+        ),
         "",
         "- **OpenAI Long-Context (`>272,000` input tokens) Surcharge Status:** `NOT_APPLICABLE_PROVEN` (maximum serialized UTF-8 wire payload across all 63 frozen C2 requests is `89,435` bytes on `W06-DEV-SELECT-032`, strictly `<90,000` tokens under any byte-level BPE tokenizer, and empirical `prompt_tokens` across all 12 completed P1 C2 cells is `16,086..29,633` tokens).",
         "",
@@ -1721,21 +1884,92 @@ def build_markdown_report(
         "",
         "| Scope | Calls | Category | C1 (`gemini-3.8-flash`) | C2 (`gpt-6.1-sol`) | C3 (`claude-sonnet-5-5`) | Total (USD) |",
         "| --- | --- | --- | --- | --- | --- | --- |",
-        "| **A. Readiness Canary** | `9` (`3`/cand) | `EXPECTED_OR_EMPIRICAL_PLANNING_ESTIMATE` | `$0.129987` | `$0.213327` | `$0.370762` | **`$0.714076`** |",
-        "| **A. Readiness Canary** | `9` (`3`/cand) | `CONSERVATIVE_PLANNING_ENVELOPE` | `$0.202500` | `$0.432000` | `$0.552000` | **`$1.186500`** |",
-        "| **A. Readiness Canary** | `9` (`3`/cand) | `CONFIGURED_MAX_OUTPUT_16384_REFERENCE` (not hard max) | `$0.274320` | `$0.683520` | `$0.743520` | **`$1.701360`** |",
-        "| **B. Amended Comparative** | `180` (`60`/cand) | `EXPECTED_OR_EMPIRICAL_PLANNING_ESTIMATE` | `$2.599736` | `$4.266544` | `$7.415247` | **`$14.281527`** |",
-        "| **B. Amended Comparative** | `180` (`60`/cand) | `CONSERVATIVE_PLANNING_ENVELOPE` | `$4.050000` | `$8.640000` | `$11.040000` | **`$23.730000`** |",
-        "| **B. Amended Comparative** | `180` (`60`/cand) | `CONFIGURED_MAX_OUTPUT_16384_REFERENCE` (not hard max) | `$5.486400` | `$13.670400` | `$14.870400` | **`$34.027200`** |",
-        "| **C. Total Amendment Track** | `189` (`63`/cand) | `EXPECTED_OR_EMPIRICAL_PLANNING_ESTIMATE` | `$2.729723` | `$4.479871` | `$7.786009` | **`$14.995603`** |",
-        "| **C. Total Amendment Track** | `189` (`63`/cand) | `CONSERVATIVE_PLANNING_ENVELOPE` | `$4.252500` | `$9.072000` | `$11.592000` | **`$24.916500`** |",
-        "| **C. Total Amendment Track** | `189` (`63`/cand) | `CONFIGURED_MAX_OUTPUT_16384_REFERENCE` (not hard max) | `$5.760720` | `$14.353920` | `$15.613920` | **`$35.728560`** |",
+        *cost_rows,
         "",
-        "- **Historical Observed Primary Reference:** `9` authoritative cost cells = `0.6468966 USD` (`C1 = 0.0266516 USD`, `C2 = 0.620245 USD`, `C3 = 0 USD`). Not scaled blindly to 189 calls.",
+        (
+            f"- **Historical Observed Primary Reference:** `{hist_ref['authoritative_cost_cells']}` authoritative cost cells = "
+            f"`{hist_ref['total_canonical_receipt_cost_usd']} USD` (`C1 = {hist_by_cand['C1']['canonical_cost_usd_decimal']} USD`, "
+            f"`C2 = {hist_by_cand['C2']['canonical_cost_usd_decimal']} USD`, `C3 = {hist_by_cand['C3']['canonical_cost_usd_decimal']} USD`). "
+            "Not scaled blindly to 189 calls."
+        ),
         f"- **Hard Maximum Status:** `{HARD_MAXIMUM_STATUS}` (`hard_maximum_usd = null`).",
         "",
     ]
     return "\n".join(lines)
+
+
+def parse_markdown_cost_table_values(md_text: str) -> dict[tuple[str, str], dict[str, str]]:
+    """Extract every displayed cost cell from Section 4 of the Markdown report for consistency verification."""
+    scope_by_label = {label: key for key, label in COST_TABLE_SCOPE_SPECS}
+    cat_by_label = {label: key for key, label in COST_TABLE_CATEGORY_SPECS}
+    extracted: dict[tuple[str, str], dict[str, str]] = {}
+
+    for raw_line in md_text.splitlines():
+        line = raw_line.strip()
+        if not line.startswith("| **"):
+            continue
+        parts = [p.strip() for p in line.strip("|").split("|")]
+        if len(parts) != 7:
+            raise PlanBeforeLiveProtocolError(
+                f"Malformed cost table row in Markdown: {raw_line}"
+            )
+        scope_label, _calls_col, cat_label, c1_col, c2_col, c3_col, tot_col = parts
+        if scope_label not in scope_by_label or cat_label not in cat_by_label:
+            raise PlanBeforeLiveProtocolError(
+                f"Unrecognized scope or category in Markdown cost table row: {raw_line}"
+            )
+        scope_key = scope_by_label[scope_label]
+        cat_key = cat_by_label[cat_label]
+
+        def _strip_currency(cell: str) -> str:
+            cleaned = cell.replace("*", "").replace("`", "").strip()
+            if not cleaned.startswith("$"):
+                raise PlanBeforeLiveProtocolError(
+                    f"Expected $-prefixed currency cell in Markdown, got: {cell}"
+                )
+            return cleaned[1:]
+
+        extracted[(scope_key, cat_key)] = {
+            "C1": _strip_currency(c1_col),
+            "C2": _strip_currency(c2_col),
+            "C3": _strip_currency(c3_col),
+            "total_usd": _strip_currency(tot_col),
+        }
+
+    return extracted
+
+
+def verify_markdown_cost_consistency(
+    cost_analysis: dict[str, Any],
+    md_text: str,
+) -> None:
+    """Verify every numeric cost cell in the Markdown table equals the canonical JSON cost_analysis."""
+    extracted = parse_markdown_cost_table_values(md_text)
+    expected_keys: set[tuple[str, str]] = set()
+    for scope_key, _ in COST_TABLE_SCOPE_SPECS:
+        for cat_key, _ in COST_TABLE_CATEGORY_SPECS:
+            expected_keys.add((scope_key, cat_key))
+            if (scope_key, cat_key) not in extracted:
+                raise PlanBeforeLiveProtocolError(
+                    f"Missing Markdown cost table row for ({scope_key}, {cat_key})"
+                )
+            row = extracted[(scope_key, cat_key)]
+            cat_block = cost_analysis[scope_key][cat_key]
+            expected_row = {
+                "C1": str(cat_block["by_candidate_usd"]["C1"]),
+                "C2": str(cat_block["by_candidate_usd"]["C2"]),
+                "C3": str(cat_block["by_candidate_usd"]["C3"]),
+                "total_usd": str(cat_block["total_usd"]),
+            }
+            if row != expected_row:
+                raise PlanBeforeLiveProtocolError(
+                    f"Markdown vs JSON cost drift for ({scope_key}, {cat_key}): "
+                    f"markdown={row} != json={expected_row}"
+                )
+    if set(extracted.keys()) != expected_keys:
+        raise PlanBeforeLiveProtocolError(
+            f"Unexpected rows in Markdown cost table: {set(extracted.keys()) ^ expected_keys}"
+        )
 
 
 # ==============================================================================
@@ -1801,16 +2035,25 @@ def verify_provider_readiness_pricing_prep_artifacts(
                 "Provider readiness/pricing PREP artifact byte/hash tamper detected or out of sync with canonical builder."
             )
 
-        # Verify Markdown doc on disk
+        # Verify Markdown doc on disk and exact machine <-> human cost consistency
         doc_path = repo_root / PROVIDER_READINESS_PRICING_PREP_DOC_REL_PATH
         if not doc_path.is_file():
             raise PlanBeforeLiveProtocolError(
                 f"Missing markdown report: {PROVIDER_READINESS_PRICING_PREP_DOC_REL_PATH}"
             )
         doc_raw = normalize_lf_bytes(doc_path.read_bytes())
+        doc_text = doc_raw.decode("utf-8")
         assert_no_secrets_in_payload(
-            doc_raw.decode("utf-8"),
+            doc_text,
             context=PROVIDER_READINESS_PRICING_PREP_DOC_REL_PATH,
+        )
+        expected_md_text = build_markdown_report(expected_snap, expected_prep)
+        if doc_raw != normalize_lf_bytes(expected_md_text.encode("utf-8")):
+            raise PlanBeforeLiveProtocolError(
+                "Markdown report out of sync with canonical JSON authorities."
+            )
+        verify_markdown_cost_consistency(
+            prep_disk["cost_analysis"], doc_text
         )
 
         return {

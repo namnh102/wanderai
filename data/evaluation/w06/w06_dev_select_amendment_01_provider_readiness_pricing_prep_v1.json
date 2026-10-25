@@ -134,11 +134,12 @@
     "primary_results_manifest_file_sha256": "1d303e1c07b627c3f3eb87287b744f55ba3f6d3d85bd5cec36959b01919d26c0",
     "primary_results_manifest_internal_sha256": "4e2f8f0df0a6e069d65b563b8221c3ba3086bb50ad73854e9cc592a9beb05011",
     "primary_results_manifest_relative_path": "data/evaluation/w06/w06_dev_select_live_results_manifest_v1.json",
-    "public_pricing_snapshot_file_sha256": "c6cac7846da35507294cc4556af76540356dec24c52132c2edf8cbcf3d2dcdee",
-    "public_pricing_snapshot_internal_sha256": "5bb9de7ef3a91595a66cee1cf201810155e3c767affdda73bc2f23178fee2ae0",
+    "public_pricing_snapshot_file_sha256": "2302724e26c24c7eec09ecafaa3a707bc51a45e505d4954f3661601473946cf6",
+    "public_pricing_snapshot_internal_sha256": "bcc8daeb0d5feae6426446ffc206726f8d91c07bdad3b82df2b8bcddcacb5ffe",
     "public_pricing_snapshot_relative_path": "data/evaluation/w06/w06_dev_select_amendment_01_public_pricing_snapshot_v1.json",
     "scientific_code_bundle_sha256": "0638f2fcb100b0000e3a2a4e08137a9d468449001f258de7354df21e185ca2e3"
   },
+  "corrective_task_id": "W06-DEV-SELECT-EXECUTION-ENVIRONMENT-AMENDMENT-01-PROVIDER-READINESS-AND-PRICING-CORRECTIVE-01",
   "cost_analysis": {
     "A_readiness_canary_9_calls": {
       "CONFIGURED_MAX_OUTPUT_16384_REFERENCE": {
@@ -404,7 +405,7 @@
     "track_classification": "SECONDARY_POST_HOC_EXECUTION_ENVIRONMENT_STABILIZATION_TRACK",
     "transport_retry": 0
   },
-  "next_gate": "W06-DEV-SELECT-EXECUTION-ENVIRONMENT-AMENDMENT-01-PROVIDER-READINESS-AND-PRICING-CHATGPT-AUDIT",
+  "next_gate": "W06-DEV-SELECT-EXECUTION-ENVIRONMENT-AMENDMENT-01-PROVIDER-READINESS-AND-PRICING-CORRECTIVE-01-CHATGPT-AUDIT",
   "openai_long_context_check": {
     "long_context_over_272k_rates_usd_per_1m": {
       "cached_input": "0.20",
@@ -502,7 +503,7 @@
         "C_quota_request_volume_readiness": "Remaining daily/request quota (RPD) not constrained by the prior Free Tier 20-RPD ceiling and sufficient for the exact authorized S2 volume (up to 63 C1 generation calls: 3 canary + 60 comparative).",
         "D_rpm_readiness": "Project RPM limit for gemini-3.8-flash sufficient for the frozen deterministic schedule (client issues at most 1 request per >=2,000ms inter-call delay plus model execution time; sequential C1-only upper bound <= 30 RPM, interleaved 3-candidate cadence <= 10 RPM per provider).",
         "E_tpm_readiness": "Project TPM limit for gemini-3.8-flash sufficient for ~20K-40K input tokens + up to 16,384 output/thought tokens per call under the frozen schedule.",
-        "F_credit_spend_readiness": "Active Cloud Billing linkage / spend cap sufficient to cover the C1 conservative planning envelope ($0.2025 canary / $4.0500 comparative / $4.2525 total 63 calls; $5.7607 max-output-16384 reference).",
+        "F_credit_spend_readiness": "Active Cloud Billing linkage / spend cap sufficient to cover the C1 conservative planning envelope ($0.202500 canary / $4.050000 comparative / $4.252500 total 63 calls; $5.760720 max-output-16384 reference).",
         "G_selected_billing_surface": "GEMINI_DEVELOPER_API_GOOGLE_AI_STUDIO_STANDARD_PAID_TIER",
         "H_evidence_required_from_project_owner": "Sanitized Project Owner attestation confirming Paid Tier active, exact gemini-3.8-flash access, Free-Tier 20-RPD ceiling no longer active, and RPD/RPM/TPM + spend cap sufficient for 63 C1 calls.",
         "I_sanitization_requirements": "Must NOT include GEMINI_API_KEY, key prefix, Google Cloud billing account ID, project number/ID, organization ID, payment instrument details, or personal email/account identifiers.",
@@ -517,7 +518,7 @@
         "C_quota_request_volume_readiness": "Usage tier and monthly spend/quota limits sufficient for the exact authorized S2 volume (up to 63 C2 generation calls: 3 canary + 60 comparative).",
         "D_rpm_readiness": "Account RPM limit for gpt-6.1-sol sufficient for the frozen 2,000ms deterministic pacing schedule.",
         "E_tpm_readiness": "Account TPM limit for gpt-6.1-sol sufficient for ~16K-30K input tokens + up to 16,384 completion tokens per call under the frozen schedule.",
-        "F_credit_spend_readiness": "Available API credits / remaining monthly budget sufficient to cover the C2 conservative planning envelope ($0.4320 canary / $8.6400 comparative / $9.0720 total 63 calls; $14.3539 max-output-16384 reference).",
+        "F_credit_spend_readiness": "Available API credits / remaining monthly budget sufficient to cover the C2 conservative planning envelope ($0.432000 canary / $8.640000 comparative / $9.072000 total 63 calls; $14.353920 max-output-16384 reference).",
         "G_selected_billing_surface": "OPENAI_STANDARD_API_CHAT_COMPLETIONS_DEFAULT_SERVICE_TIER",
         "H_evidence_required_from_project_owner": "Sanitized Project Owner attestation confirming active OpenAI API billing, gpt-6.1-sol access, and credit/spend + RPM/TPM/RPD limits sufficient for 63 C2 calls.",
         "I_sanitization_requirements": "Must NOT include OPENAI_API_KEY, key prefix, OpenAI organization ID, project ID, billing account ID, credit-card details, or personal account identifiers.",
@@ -532,7 +533,7 @@
         "C_quota_request_volume_readiness": "Account usage tier and monthly spend limits sufficient for the exact authorized S2 volume (up to 63 C3 generation calls: 3 canary + 60 comparative).",
         "D_rpm_readiness": "Account RPM limit for claude-sonnet-5-5 sufficient for the frozen 2,000ms deterministic pacing schedule.",
         "E_tpm_readiness": "Account ITPM/OTPM limits for claude-sonnet-5-5 sufficient for ~23.6K-41.2K input tokens and ~4.5K-8.1K (up to 16,384 max_tokens) output tokens per call under the frozen schedule.",
-        "F_credit_spend_readiness": "Positive, sufficient API credit balance or approved billing state covering the C3 conservative planning envelope ($0.5520 canary / $11.0400 comparative / $11.5920 total 63 calls; $15.6139 max-output-16384 reference).",
+        "F_credit_spend_readiness": "Positive, sufficient API credit balance or approved billing state covering the C3 conservative planning envelope ($0.552000 canary / $11.040000 comparative / $11.592000 total 63 calls; $15.613920 max-output-16384 reference).",
         "G_selected_billing_surface": "ANTHROPIC_CLAUDE_API_FIRST_PARTY_DIRECT_MESSAGES_STANDARD_GLOBAL",
         "H_evidence_required_from_project_owner": "Sanitized Project Owner attestation confirming active Anthropic API billing, positive credit balance sufficient for the planning budget, claude-sonnet-5-5 access, and RPM/ITPM/OTPM limits sufficient for 63 C3 calls.",
         "I_sanitization_requirements": "Must NOT include ANTHROPIC_API_KEY, key prefix, Anthropic organization/workspace ID, billing account ID, credit-card details, or personal account identifiers.",
@@ -544,7 +545,7 @@
     },
     "owner_action_occurred": false
   },
-  "provider_readiness_pricing_prep_sha256": "8b680eb7b2dafc5721f1a3b49dba262bc23bac275ccd6b10e3e2dff541a3798b",
+  "provider_readiness_pricing_prep_sha256": "07f61e211c6e77ee3ed08936b04ee07ac090398e50047c7534ab30d32d24506e",
   "rate_limit_analysis": {
     "adaptive": false,
     "counterfactual_firewall": "A fixed 2,000ms inter-call delay bounds client-issued request cadence only; it does NOT guarantee that provider-side HTTP 429 (rate-limit/quota) or HTTP 503/5xx (overload) errors will not occur.",
