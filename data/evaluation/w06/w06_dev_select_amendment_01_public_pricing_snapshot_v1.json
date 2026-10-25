@@ -1,0 +1,242 @@
+{
+  "allowlisted_domains_by_provider": {
+    "ANTHROPIC": [
+      "docs.anthropic.com",
+      "anthropic.com"
+    ],
+    "GOOGLE": [
+      "ai.google.dev"
+    ],
+    "OPENAI": [
+      "developers.openai.com",
+      "platform.openai.com",
+      "openai.com"
+    ]
+  },
+  "api_keys_inspected": false,
+  "approval_receipt_file_sha256": "171564d09b0011ddfc0e2b70ca2f9029bf6981b944527c09331fa7f6a0f914a5",
+  "approval_receipt_internal_sha256": "d32e1c61b130a93c5ccbf18294fc1e972c36ba4e561b7fff51a9ea13b43aa991",
+  "artifact_id": "W06-DEV-SELECT-AMENDMENT-01-PUBLIC-PRICING-SNAPSHOT-V1",
+  "authoritative_base_develop_sha": "c2e5126b7e1d3aa25ef6e46352e030c346fc733a",
+  "canary_manifest_file_sha256": "3ce0ebaac35f22dfe8c981478a6c63d7a2fde0580b372fd8f25762ab3b18fb96",
+  "canary_manifest_internal_sha256": "707d99fee54d65822f194cc690cbfadea14ad2176594d4ef882e7d8031990518",
+  "candidates": {
+    "C1": {
+      "additional_official_source_urls": [
+        "https://ai.google.dev/gemini-api/docs/models/gemini-3.8-flash",
+        "https://ai.google.dev/gemini-api/docs/rate-limits"
+      ],
+      "candidate_id": "C1",
+      "currency": "USD",
+      "evidence_status": "VERIFIED_OFFICIAL_PUBLIC_DOCUMENTATION",
+      "exact_model_id": "gemini-3.8-flash",
+      "exact_model_official_source_url": "https://ai.google.dev/gemini-api/docs/models/gemini-3.8-flash",
+      "non_applicable_pricing_dimensions": {
+        "batch_or_flex_tier": {
+          "applicable_to_frozen_w06_config": false,
+          "batch_input_usd_per_1m_tokens_through_2026_12_31": "0.375",
+          "batch_output_usd_per_1m_tokens_through_2026_12_31": "1.875",
+          "reason": "Frozen W06 runner executes synchronous on-demand generateContent calls, not Batch or Flex jobs."
+        },
+        "context_caching": {
+          "applicable_to_frozen_w06_config": false,
+          "cache_storage_usd_per_1m_tokens_per_hour_from_2027_01_01": "1.00",
+          "cache_storage_usd_per_1m_tokens_per_hour_through_2026_12_31": "0.50",
+          "cached_input_usd_per_1m_tokens_from_2027_01_01": "0.15",
+          "cached_input_usd_per_1m_tokens_through_2026_12_31": "0.075",
+          "reason": "Explicit context caching (cached_content) is not enabled in the frozen C1 wire request."
+        },
+        "free_tier": {
+          "applicable_to_frozen_w06_config": false,
+          "reason": "Free Tier ($0.00) is subject to the 20-RPD quota ceiling that caused 35 HTTP_429 failures in primary DEV-SELECT; amended execution requires Standard Paid Tier."
+        },
+        "long_context_surcharge": {
+          "applicable_to_frozen_w06_config": false,
+          "rule": "None stated for gemini-3.8-flash up to its 1,048,576 input-token window."
+        }
+      },
+      "note_on_stale_repo_rate_table": "Frozen primary runner (dev_live_runner.py) contains a historical 2026-10-16 rate constant ($0.30 input / $2.50 output per 1M). Per Section 7, this PREP package uses the current official ai.google.dev Standard Paid promotional pricing ($0.75 input / $3.75 output per 1M through 2026-12-31) without mutating dev_live_runner.py.",
+      "official_redirect_resolutions": [],
+      "official_source_url": "https://ai.google.dev/gemini-api/docs/pricing",
+      "post_2026_12_31_scheduled_unit_pricing_usd_per_1m_tokens": {
+        "applicable_during_2026_execution": false,
+        "effective_date": "2027-01-01",
+        "input_usd_per_1m_tokens": "1.50",
+        "output_including_thinking_usd_per_1m_tokens": "7.50"
+      },
+      "post_promotional_effective_date": "2027-01-01",
+      "pricing_effective_date": "Current promotional pricing effective through 2026-12-31 (scheduled standard adjustment on 2027-01-01)",
+      "pricing_surface_product": "Gemini Developer API (Google AI Studio / generativelanguage.googleapis.com) — Standard Paid Tier (Synchronous generateContent)",
+      "promotional_expiration_date": "2026-12-31",
+      "provider": "GOOGLE",
+      "retrieval_timestamp_utc": "2026-10-25T03:05:48Z",
+      "selected_as_applicable_to_frozen_w06_config": true,
+      "selected_unit_pricing_usd_per_1m_tokens": {
+        "input_usd_per_1m_tokens": "0.75",
+        "output_including_thinking_usd_per_1m_tokens": "3.75"
+      },
+      "source_retrieval_timestamps_utc": {
+        "https://ai.google.dev/gemini-api/docs/models/gemini-3.8-flash": "2026-10-25T03:05:48Z",
+        "https://ai.google.dev/gemini-api/docs/pricing": "2026-10-25T03:05:48Z",
+        "https://ai.google.dev/gemini-api/docs/rate-limits": "2026-10-25T03:05:08Z"
+      }
+    },
+    "C2": {
+      "additional_official_source_urls": [
+        "https://developers.openai.com/api/docs/models/gpt-6.1-sol",
+        "https://developers.openai.com/api/docs/guides/rate-limits"
+      ],
+      "candidate_id": "C2",
+      "currency": "USD",
+      "evidence_status": "VERIFIED_OFFICIAL_PUBLIC_DOCUMENTATION",
+      "exact_model_id": "gpt-6.1-sol",
+      "exact_model_official_source_url": "https://developers.openai.com/api/docs/models/gpt-6.1-sol",
+      "non_applicable_pricing_dimensions": {
+        "batch_or_flex_or_fast_or_ultrafast_tiers": {
+          "applicable_to_frozen_w06_config": false,
+          "batch_or_flex_input_usd_per_1m_tokens": "1.00",
+          "batch_or_flex_output_usd_per_1m_tokens": "5.00",
+          "fast_input_usd_per_1m_tokens": "4.00",
+          "fast_output_usd_per_1m_tokens": "20.00",
+          "reason": "Frozen C2 wire request explicitly pins service_tier='default'.",
+          "ultrafast_input_usd_per_1m_tokens": "12.00",
+          "ultrafast_output_usd_per_1m_tokens": "60.00"
+        },
+        "explicit_cache_write": {
+          "applicable_to_frozen_w06_config": false,
+          "cache_write_12h_usd_per_1m_tokens": "5.00",
+          "cache_write_30m_usd_per_1m_tokens": "2.50",
+          "reason": "Frozen C2 request does not configure explicit cache retention writes."
+        },
+        "long_context_over_272k_input_tokens": {
+          "applicable_to_frozen_w06_config": false,
+          "reason": "Proven NOT_APPLICABLE_PROVEN: maximum serialized UTF-8 wire request across all 63 frozen W06 fixtures is 89,435 bytes (<89,435 tokens under any byte-level BPE tokenizer, and empirical prompt_tokens across 12 completed P1 C2 cells is 16,086..29,633 tokens, <11% of 272,000).",
+          "rule": "For requests with >272,000 input tokens, input/cache tokens are charged at 2x ($4.00 / 1M uncached input, $0.20 / 1M cached input) and output tokens at 1.5x ($15.00 / 1M output) for the full request.",
+          "surcharge_status": "NOT_APPLICABLE_PROVEN",
+          "threshold_input_tokens": 272000
+        },
+        "regional_data_residency_surcharge": {
+          "applicable_to_frozen_w06_config": false,
+          "multiplier": "1.10",
+          "reason": "Standard global api.openai.com endpoint is used without regional residency routing."
+        }
+      },
+      "note_on_stale_repo_rate_table": "Frozen primary runner (dev_live_runner.py) contains a historical 2026-10-16 rate constant ($2.50 input / $10.00 output per 1M). Per Section 7, this PREP package uses the current official developers.openai.com Standard pricing ($2.00 input / $10.00 output per 1M) without mutating dev_live_runner.py.",
+      "official_redirect_resolutions": [],
+      "official_source_url": "https://developers.openai.com/api/docs/pricing",
+      "pricing_effective_date": "Current published Standard tier pricing (model snapshot gpt-6.1-sol-2026-08-05)",
+      "pricing_surface_product": "OpenAI Standard API (api.openai.com /v1/chat/completions) — Standard Processing (service_tier='default'), Short Context (<= 272,000 input tokens)",
+      "promotional_expiration_date": null,
+      "provider": "OPENAI",
+      "retrieval_timestamp_utc": "2026-10-25T03:05:50Z",
+      "selected_as_applicable_to_frozen_w06_config": true,
+      "selected_unit_pricing_usd_per_1m_tokens": {
+        "cached_input_planning_assumption": "0% cached tokens assumed for conservative cost planning (100% of input tokens billed at $2.00 / 1M).",
+        "cached_input_usd_per_1m_tokens": "0.10",
+        "input_usd_per_1m_tokens": "2.00",
+        "output_including_reasoning_usd_per_1m_tokens": "10.00"
+      },
+      "source_retrieval_timestamps_utc": {
+        "https://developers.openai.com/api/docs/guides/rate-limits": "2026-10-25T03:05:50Z",
+        "https://developers.openai.com/api/docs/models/gpt-6.1-sol": "2026-10-25T03:05:50Z",
+        "https://developers.openai.com/api/docs/pricing": "2026-10-25T03:05:50Z"
+      }
+    },
+    "C3": {
+      "additional_official_source_urls": [
+        "https://www.anthropic.com/claude/sonnet",
+        "https://www.anthropic.com/claude-sonnet-5-5",
+        "https://docs.anthropic.com/en/api/rate-limits"
+      ],
+      "candidate_id": "C3",
+      "currency": "USD",
+      "evidence_status": "VERIFIED_OFFICIAL_PUBLIC_DOCUMENTATION",
+      "exact_model_anthropic_com_evidence": {
+        "announcement_page_url": "https://www.anthropic.com/claude-sonnet-5-5",
+        "announcement_published_date": "2026-09-28",
+        "model_page_url": "https://www.anthropic.com/claude/sonnet",
+        "verified_api_model_id": "claude-sonnet-5-5",
+        "verified_cache_read_usd_per_1m_tokens_non_applicable": "0.10",
+        "verified_input_usd_per_1m_tokens": "2.00",
+        "verified_output_usd_per_1m_tokens": "10.00"
+      },
+      "exact_model_id": "claude-sonnet-5-5",
+      "exact_model_official_source_url": "https://www.anthropic.com/claude/sonnet",
+      "non_applicable_pricing_dimensions": {
+        "batch_api": {
+          "applicable_to_frozen_w06_config": false,
+          "batch_input_usd_per_1m_tokens": "1.00",
+          "batch_output_usd_per_1m_tokens": "5.00",
+          "reason": "Frozen C3 runner uses synchronous /v1/messages, not Batch API."
+        },
+        "long_context_surcharge": {
+          "applicable_to_frozen_w06_config": false,
+          "rule": "Official Claude API documentation states Claude 4.6 and later models (including Claude Sonnet 5.5) include the full 1M context window at standard pricing."
+        },
+        "prompt_caching": {
+          "applicable_to_frozen_w06_config": false,
+          "cache_read_usd_per_1m_tokens": "0.10",
+          "cache_write_1h_usd_per_1m_tokens": "4.00",
+          "cache_write_5m_usd_per_1m_tokens": "2.50",
+          "reason": "Frozen C3 wire requests send no cache_control breakpoints (cache_creation_input_tokens=0 and cache_read_input_tokens=0 in all 33 completed C3 DEV-TUNE cells). Excluded from selected C3 cost equation per Section 7."
+        },
+        "us_only_inference_geo_surcharge": {
+          "applicable_to_frozen_w06_config": false,
+          "multiplier": "1.10",
+          "reason": "Frozen C3 wire request does not set inference_geo='us'."
+        }
+      },
+      "note_on_stale_repo_rate_table": "Frozen primary runner (dev_live_runner.py) contains a historical 2026-10-16 rate constant ($3.00 input / $15.00 output per 1M). Per Section 7, this PREP package uses the current official docs.anthropic.com and anthropic.com Standard pricing ($2.00 input / $10.00 output per 1M) without mutating dev_live_runner.py.",
+      "official_redirect_resolutions": [
+        {
+          "allowlisted_source_url": "https://docs.anthropic.com/en/docs/about-claude/pricing",
+          "authority_rule": "platform.claude.com is recorded strictly as the HTTP 308 redirect destination of the allowlisted docs.anthropic.com URL and is NOT an independent direct authority domain.",
+          "resolved_destination_url": "https://platform.claude.com/docs/en/about-claude/pricing"
+        },
+        {
+          "allowlisted_source_url": "https://docs.anthropic.com/en/api/rate-limits",
+          "authority_rule": "platform.claude.com is recorded strictly as the HTTP 308 redirect destination of the allowlisted docs.anthropic.com URL and is NOT an independent direct authority domain.",
+          "resolved_destination_url": "https://platform.claude.com/docs/en/api/rate-limits"
+        }
+      ],
+      "official_source_url": "https://docs.anthropic.com/en/docs/about-claude/pricing",
+      "pricing_effective_date": "Current published Claude API Standard pricing (Claude Sonnet 5.5 released 2026-09-28)",
+      "pricing_surface_product": "Anthropic Claude API First-Party Direct (api.anthropic.com /v1/messages) — Standard Synchronous Global Routing",
+      "promotional_expiration_date": null,
+      "provider": "ANTHROPIC",
+      "retrieval_timestamp_utc": "2026-10-25T03:05:51Z",
+      "selected_as_applicable_to_frozen_w06_config": true,
+      "selected_unit_pricing_usd_per_1m_tokens": {
+        "input_usd_per_1m_tokens": "2.00",
+        "output_including_thinking_usd_per_1m_tokens": "10.00"
+      },
+      "source_retrieval_timestamps_utc": {
+        "https://docs.anthropic.com/en/api/rate-limits": "2026-10-25T03:05:54Z",
+        "https://docs.anthropic.com/en/docs/about-claude/pricing": "2026-10-25T03:05:51Z",
+        "https://www.anthropic.com/claude-sonnet-5-5": "2026-10-25T03:58:46Z",
+        "https://www.anthropic.com/claude/sonnet": "2026-10-25T03:58:45Z"
+      }
+    }
+  },
+  "contains_copyrighted_full_webpage_dump": false,
+  "corrective_task_id": "W06-DEV-SELECT-EXECUTION-ENVIRONMENT-AMENDMENT-01-PROVIDER-READINESS-AND-PRICING-CORRECTIVE-01",
+  "decision_artifact_file_sha256": "2e4211893c1988230e2eeb2718195d48c093da87725cd2fa074e1743ee599ddf",
+  "decision_artifact_internal_sha256": "38dc02de2e846d4cf72108e8beacffdcfcf6308879e0ea72cca3bb83bf71387a",
+  "env_file_read": false,
+  "forbidden_google_cloud_domain_used": false,
+  "live_provider_calls_new": 0,
+  "public_pricing_snapshot_sha256": "bcc8daeb0d5feae6426446ffc206726f8d91c07bdad3b82df2b8bcddcacb5ffe",
+  "redirect_target_policy_by_source_domain": {
+    "docs.anthropic.com": [
+      "platform.claude.com",
+      "docs.anthropic.com"
+    ],
+    "platform.openai.com": [
+      "developers.openai.com",
+      "platform.openai.com"
+    ]
+  },
+  "scientific_code_bundle_sha256": "0638f2fcb100b0000e3a2a4e08137a9d468449001f258de7354df21e185ca2e3",
+  "snapshot_scope": "CANONICAL_EXTRACTED_PUBLIC_PRICING_FACTS_ONLY",
+  "task_id": "W06-DEV-SELECT-EXECUTION-ENVIRONMENT-AMENDMENT-01-PROVIDER-READINESS-AND-PRICING-PREP"
+}
