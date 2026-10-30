@@ -7,7 +7,7 @@ PURPOSE:
 Create and statelessly verify the strictly offline authorization-prep candidate
 (`W06-DEV-SELECT-AMENDMENT-01-CANARY-LIVE-AUTHORIZATION-PREP-V1`) for the approved
 9-call readiness canary of the W06 secondary post-hoc execution-environment stabilization track:
-1. `data/evaluation/w06/w06_dev_select_amendment_01_canary_live_authorization_prep_v1.json`
+1. `data/evaluation/w06/w06_dev_select_amendment_01_canary_authorization_prep_v1.json`
 2. `docs/research/w06_dev_select_amendment_01_canary_live_authorization_prep.md`
 
 STRICT FIREWALLS:
@@ -100,7 +100,7 @@ CANARY_AUTH_PREP_ARTIFACT_ID = (
     "W06-DEV-SELECT-AMENDMENT-01-CANARY-LIVE-AUTHORIZATION-PREP-V1"
 )
 CANARY_AUTH_PREP_REL_PATH = (
-    "data/evaluation/w06/w06_dev_select_amendment_01_canary_live_authorization_prep_v1.json"
+    "data/evaluation/w06/w06_dev_select_amendment_01_canary_authorization_prep_v1.json"
 )
 CANARY_AUTH_PREP_DOC_REL_PATH = (
     "docs/research/w06_dev_select_amendment_01_canary_live_authorization_prep.md"
