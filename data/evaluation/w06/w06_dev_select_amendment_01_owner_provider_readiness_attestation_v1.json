@@ -1,0 +1,418 @@
+{
+  "ALL_CANARY_PROVIDER_READINESS": "READY",
+  "AMENDED_CANARY_LIVE_AUTHORIZED": false,
+  "AMENDED_COMPARATIVE_LIVE_AUTHORIZED": false,
+  "AMENDED_LIVE_AUTHORIZED": false,
+  "AMENDED_LIVE_EXECUTED": false,
+  "AMENDMENT_APPROVED": true,
+  "AMENDMENT_METHODOLOGY_SELECTED": true,
+  "API_KEYS_INSPECTED": false,
+  "C1_PROVIDER_READINESS": "READY_FOR_CANARY",
+  "C2_PROVIDER_READINESS": "READY_FOR_CANARY",
+  "C3_PROVIDER_READINESS": "READY_FOR_CANARY",
+  "CANARY_EXECUTED": false,
+  "CANARY_OPERATIONAL_PASS_STILL_REQUIRES_9_OF_9": true,
+  "CANARY_PASS_DOES_NOT_AUTO_AUTHORIZE_COMPARATIVE": true,
+  "COMPARATIVE_EXECUTED": false,
+  "ENV_FILE_READ": false,
+  "FINAL100_STATUS": "NO-GO",
+  "FINAL100_USED": false,
+  "LIVE_PROVIDER_CALLS_NEW": 0,
+  "MODEL_WINNER_SELECTED": false,
+  "NEXT_GATE": "W06-DEV-SELECT-EXECUTION-ENVIRONMENT-AMENDMENT-01-OWNER-PROVIDER-READINESS-ATTESTATION-CHATGPT-AUDIT",
+  "OWNER_PROVIDER_READINESS_ATTESTED": true,
+  "PRIMARY_DENOMINATORS_CHANGED": false,
+  "PRIMARY_EXPERIMENT_MUTATED": false,
+  "PRIMARY_RESULTS_REPLACED": false,
+  "READY_FOR_CANARY_IS_NOT_CANARY_AUTHORIZATION": true,
+  "SELECTED_MODEL_ID": null,
+  "STOCHASTICITY_EXECUTION_STARTED": false,
+  "artifact_id": "W06-DEV-SELECT-AMENDMENT-01-OWNER-PROVIDER-READINESS-ATTESTATION-V1",
+  "attestation_scope": "CANARY_READINESS_ATTESTATION_ONLY",
+  "authoritative_base_develop_sha": "ef78127ef06215849861e7d3358e24cb5222281e",
+  "becomes_repository_authoritative_after_chatgpt_pass_merge_and_postmerge_ci": true,
+  "bound_authorities": {
+    "amendment_prep": {
+      "file_sha256": "e8786c4f538b86c8aa1d6b2c0cfb4afd6b8b6a1efa5b51799e44bd6bdd5a9a91",
+      "internal_sha256": "49c24e65690cb4fb947d2733ddf8b019d863046cf955d9415eec1d16e9eaaf7a",
+      "path": "data/evaluation/w06/w06_dev_select_execution_environment_amendment_01_prep_v1.json"
+    },
+    "approval_receipt": {
+      "artifact_id": "W06-DEV-SELECT-EXECUTION-ENVIRONMENT-AMENDMENT-01-APPROVAL-RECEIPT-V1",
+      "file_sha256": "171564d09b0011ddfc0e2b70ca2f9029bf6981b944527c09331fa7f6a0f914a5",
+      "internal_sha256": "d32e1c61b130a93c5ccbf18294fc1e972c36ba4e561b7fff51a9ea13b43aa991",
+      "path": "data/evaluation/w06/w06_dev_select_execution_environment_amendment_01_approval_receipt_v1.json"
+    },
+    "canary_manifest": {
+      "artifact_id": "W06-DEV-SELECT-AMENDMENT-01-CANARY-ASSIGNMENT-MANIFEST-V1",
+      "file_sha256": "3ce0ebaac35f22dfe8c981478a6c63d7a2fde0580b372fd8f25762ab3b18fb96",
+      "internal_sha256": "707d99fee54d65822f194cc690cbfadea14ad2176594d4ef882e7d8031990518",
+      "path": "data/evaluation/w06/w06_dev_select_amendment_01_canary_manifest_v1.json"
+    },
+    "develop_base_sha": "ef78127ef06215849861e7d3358e24cb5222281e",
+    "failure_diagnostics": {
+      "file_sha256": "b729883505ecfc98f15917347239ea6d09cede106691b155026891996391e692",
+      "internal_sha256": "509528413e1d9eb8408943867be21f83dc2dda72acd53fe9028e3c37c7db05c8",
+      "path": "data/evaluation/w06/w06_dev_select_failure_diagnostic_v1.json"
+    },
+    "formal_decision": {
+      "artifact_id": "W06-DEV-SELECT-EXECUTION-ENVIRONMENT-AMENDMENT-01-DECISION-V1",
+      "file_sha256": "2e4211893c1988230e2eeb2718195d48c093da87725cd2fa074e1743ee599ddf",
+      "internal_sha256": "38dc02de2e846d4cf72108e8beacffdcfcf6308879e0ea72cca3bb83bf71387a",
+      "path": "data/evaluation/w06/w06_dev_select_execution_environment_amendment_01_decision_v1.json"
+    },
+    "portable_schema_v2_sha256": "825a4ff912d851a95f7392cb564b7d7ca3588135508dc6eb3ac6304cdde3c490",
+    "primary_results_freeze_receipt": {
+      "file_sha256": "c021094e26277d41664c4ae2f0560b7684435b6002c5b7ba742a17808c5b07a4",
+      "internal_sha256": "7b270de482f0b077e79bbba40a0c662851da46355a18b5e05f8fdf572880943a",
+      "path": "data/evaluation/w06/w06_dev_select_live_results_freeze_01_receipt_v1.json"
+    },
+    "primary_results_manifest": {
+      "file_sha256": "1d303e1c07b627c3f3eb87287b744f55ba3f6d3d85bd5cec36959b01919d26c0",
+      "internal_sha256": "4e2f8f0df0a6e069d65b563b8221c3ba3086bb50ad73854e9cc592a9beb05011",
+      "path": "data/evaluation/w06/w06_dev_select_live_results_manifest_v1.json"
+    },
+    "provider_readiness_pricing_prep": {
+      "artifact_id": "W06-DEV-SELECT-AMENDMENT-01-PROVIDER-READINESS-PRICING-PREP-V1",
+      "file_sha256": "ef94513ceb5d64a84da2ee3a4890e563dde19fb597e27d3e545bdbe4add58006",
+      "historical_prep_c1_provider_readiness": "NOT_YET_ATTESTED",
+      "historical_prep_c2_provider_readiness": "NOT_YET_ATTESTED",
+      "historical_prep_c3_provider_readiness": "NOT_YET_ATTESTED",
+      "historical_prep_state_immutable": true,
+      "internal_sha256": "07f61e211c6e77ee3ed08936b04ee07ac090398e50047c7534ab30d32d24506e",
+      "path": "data/evaluation/w06/w06_dev_select_amendment_01_provider_readiness_pricing_prep_v1.json"
+    },
+    "provider_readiness_pricing_prep_merge": {
+      "merge_commit_sha": "ef78127ef06215849861e7d3358e24cb5222281e",
+      "parent1": "c2e5126b7e1d3aa25ef6e46352e030c346fc733a",
+      "parent2": "ceb41980545982ac1a664a59d8caf8eb4526f90c",
+      "post_merge_ci_conclusion": "success",
+      "post_merge_ci_event": "push",
+      "post_merge_ci_head_sha": "ef78127ef06215849861e7d3358e24cb5222281e",
+      "post_merge_ci_required_jobs": {
+        "ai-service": "success",
+        "backend": "success",
+        "data-contract": "success",
+        "mobile": "success"
+      },
+      "post_merge_ci_run_id": 40162573640,
+      "pr_number": 70,
+      "pr_state": "MERGED"
+    },
+    "public_pricing_snapshot": {
+      "artifact_id": "W06-DEV-SELECT-AMENDMENT-01-PUBLIC-PRICING-SNAPSHOT-V1",
+      "file_sha256": "2302724e26c24c7eec09ecafaa3a707bc51a45e505d4954f3661601473946cf6",
+      "internal_sha256": "bcc8daeb0d5feae6426446ffc206726f8d91c07bdad3b82df2b8bcddcacb5ffe",
+      "path": "data/evaluation/w06/w06_dev_select_amendment_01_public_pricing_snapshot_v1.json"
+    },
+    "scientific_code_bundle_sha256": "0638f2fcb100b0000e3a2a4e08137a9d468449001f258de7354df21e185ca2e3",
+    "semantic_schema_sha256": "e4169f7b890f77d13af65e9f2070b6071c535b206d88440f5e8f28c179977555"
+  },
+  "candidate_readiness_attestations": {
+    "C1": {
+      "billing_surface": "GEMINI_DEVELOPER_API_GOOGLE_AI_STUDIO_STANDARD_PAID_TIER",
+      "candidate_id": "C1",
+      "exact_model_id": "gemini-3.8-flash",
+      "exact_prepaid_vnd_balance_stored": false,
+      "owner_observed": {
+        "billing_active": true,
+        "canary_assigned_calls": 3,
+        "exact_model_visible_in_rate_limit_dashboard": true,
+        "paid_tier_active": true,
+        "positive_prepaid_credit_available": true,
+        "required_max_candidate_calls_under_frozen_amendment": 63,
+        "rpd_sufficient_for_frozen_canary": true,
+        "rpm_sufficient_for_frozen_canary": true,
+        "standard_input_tpm_limit": 2000000,
+        "standard_rpd_limit": 10000,
+        "standard_rpm_limit": 1000,
+        "tpm_sufficient_for_frozen_canary": true,
+        "usage_tier": "TIER_1"
+      },
+      "owner_observed_evidence_date": "2026-10-30",
+      "provider": "GOOGLE",
+      "provider_readiness": "READY_FOR_CANARY",
+      "sanitization_note": "Exact prepaid VND balance is operational account evidence, not a scientific experiment variable; boolean positive_prepaid_credit_available=true is recorded."
+    },
+    "C2": {
+      "billing_surface": "OPENAI_STANDARD_API_CHAT_COMPLETIONS_DEFAULT_SERVICE_TIER",
+      "candidate_id": "C2",
+      "exact_current_dollar_balance_stored": false,
+      "exact_model_id": "gpt-6.1-sol",
+      "owner_observed": {
+        "api_credit_sufficient_for_canary_planning_envelope": true,
+        "billing_active": true,
+        "canary_assigned_calls": 3,
+        "exact_model_access_supported_by": [
+          "current official gpt-6.1-sol model availability for Build tier",
+          "historical successful frozen primary C2 responses using the exact candidate family/config"
+        ],
+        "organization_spend_limit_blocking": false,
+        "positive_api_credit_available": true,
+        "required_max_candidate_calls_under_frozen_amendment": 63,
+        "rpm_sufficient_for_frozen_canary": true,
+        "standard_rpm_limit": 5000,
+        "standard_tpm_limit": 1000000,
+        "tpm_sufficient_for_frozen_canary": true,
+        "usage_tier": "BUILD"
+      },
+      "owner_observed_evidence_date": "2026-10-30",
+      "provider": "OPENAI",
+      "provider_readiness": "READY_FOR_CANARY",
+      "public_model_rate_limit_authority_domains": [
+        "developers.openai.com",
+        "platform.openai.com",
+        "openai.com"
+      ],
+      "sanitization_note": "Exact current USD balance is omitted; boolean positive_api_credit_available=true and api_credit_sufficient_for_canary_planning_envelope=true are recorded."
+    },
+    "C3": {
+      "attestation_scope": "CANARY_READINESS_ATTESTATION_ONLY",
+      "billing_surface": "ANTHROPIC_CLAUDE_API_FIRST_PARTY_DIRECT_MESSAGES_STANDARD_GLOBAL",
+      "candidate_id": "C3",
+      "comparative_readiness_must_be_rechecked_before_comparative_authorization": true,
+      "comparative_scope_firewall_note": "Evaluation Tier limits (500,000 input / 80,000 output / 1,000 requests) are attested ONLY for the 3-call C3 canary slice (3 * 16,384 = 49,152 < 80,000). They are NOT generalized as readiness proof for the future 60-call comparative run; comparative readiness must be rechecked before comparative authorization.",
+      "exact_model_id": "claude-sonnet-5-5",
+      "generalized_as_readiness_proof_for_future_60_call_comparative_run": false,
+      "owner_observed": {
+        "account_tier": "EVALUATION_TIER",
+        "billing_active": true,
+        "canary_assigned_calls": 3,
+        "configured_max_output_tokens_per_call": 16384,
+        "configured_three_call_max_output_reference": 49152,
+        "exact_model_visible_in_rate_limit_dashboard": true,
+        "input_capacity_sufficient_for_frozen_canary_planning_envelope": true,
+        "input_token_limit": 500000,
+        "output_capacity_sufficient_for_frozen_canary_reference": true,
+        "output_token_limit": 80000,
+        "positive_credit_available": true,
+        "request_capacity_sufficient_for_frozen_canary": true,
+        "request_limit": 1000,
+        "three_call_max_output_reference_comparison": "49152 < 80000",
+        "three_call_max_output_reference_strictly_less_than_output_token_limit": true
+      },
+      "owner_observed_evidence_date": "2026-10-30",
+      "provider": "ANTHROPIC",
+      "provider_readiness": "READY_FOR_CANARY"
+    }
+  },
+  "effective_owner_readiness_state": {
+    "all_canary_provider_readiness": "READY",
+    "attestation_scope": "CANARY_READINESS_ATTESTATION_ONLY",
+    "c1_provider_readiness": "READY_FOR_CANARY",
+    "c2_provider_readiness": "READY_FOR_CANARY",
+    "c3_provider_readiness": "READY_FOR_CANARY",
+    "canary_operational_pass_still_requires_9_of_9": true,
+    "canary_pass_does_not_auto_authorize_comparative": true,
+    "comparative_60_call_readiness_attested": false,
+    "comparative_readiness_must_be_rechecked_before_comparative_authorization": true,
+    "derivation_rule": "approval_receipt.AMENDMENT_APPROVED == true AND pricing_prep.C1/C2/C3_PROVIDER_READINESS == 'NOT_YET_ATTESTED' (historical immutable PREP) AND owner_attestation.OWNER_PROVIDER_READINESS_ATTESTED == true AND owner_attestation.C1/C2/C3_PROVIDER_READINESS == 'READY_FOR_CANARY' => all_canary_provider_readiness = 'READY', amended_canary_live_authorized = false, amended_comparative_live_authorized = false",
+    "effective_amended_canary_live_authorized": false,
+    "effective_amended_comparative_live_authorized": false,
+    "effective_amended_live_authorized": false,
+    "effective_amended_live_executed": false,
+    "effective_amendment_status": "METHODOLOGY_APPROVED_OWNER_CANARY_READINESS_ATTESTED_LIVE_UNAUTHORIZED",
+    "effective_live_provider_calls_new": 0,
+    "historical_pricing_prep_contradiction": false,
+    "historical_pricing_prep_readiness_not_yet_attested_preserved": true,
+    "owner_provider_readiness_attested": true,
+    "ready_for_canary_is_not_canary_authorization": true
+  },
+  "frozen_scientific_policy": {
+    "automatic_retry": 0,
+    "call_budget_policy": "S2_READINESS_CANARY_PLUS_COMPARATIVE_180",
+    "canary_assigned_calls": 9,
+    "comparative_assigned_calls": 180,
+    "exact_canary_fixtures": [
+      "W06-DEV-TUNE-007",
+      "W06-DEV-TUNE-011",
+      "W06-DEV-TUNE-015"
+    ],
+    "exact_candidates": {
+      "C1": {
+        "model": "gemini-3.8-flash",
+        "provider": "GOOGLE"
+      },
+      "C2": {
+        "model": "gpt-6.1-sol",
+        "provider": "OPENAI"
+      },
+      "C3": {
+        "model": "claude-sonnet-5-5",
+        "provider": "ANTHROPIC"
+      }
+    },
+    "fairness_policy": "OPTION_B_CONSERVATIVE_RELIABILITY_ENVIRONMENT",
+    "fallback": false,
+    "fixture_policy": "POLICY_F3_ENGINEERING_READINESS_SUBSET_PLUS_AMENDED_COMPARATIVE_SET",
+    "inter_call_delay_ms": 2000,
+    "llm_repair": 0,
+    "manual_retry": 0,
+    "maximum_candidate_calls": 63,
+    "maximum_generation_calls": 189,
+    "pacing_policy": "P1_FIXED_2000MS_INTER_CALL_DELAY",
+    "retry_policy": "R0_STRICT_ZERO_RETRY",
+    "semantic_repair": 0,
+    "timeout_ms": 180000,
+    "timeout_policy": "T3_CANDIDATE_180S",
+    "transport_retry": 0
+  },
+  "observation_mode": "MANUAL_PROVIDER_DASHBOARD_OBSERVATION_SANITIZED",
+  "owner_attestation_authority": "PROJECT_OWNER",
+  "owner_observed_readiness_evidence_date": "2026-10-30",
+  "owner_readiness_attestation_internal_sha256": "45af6219a72bcef6c79bd6b83d7a95f6c549342e13d73e266abe4ac1260edf86",
+  "primary_authority_firewall": {
+    "authoritative_primary_strict_rates": {
+      "C1": "1/60",
+      "C2": "8/60",
+      "C3": "0/60"
+    },
+    "erroneous_report_propagated": false,
+    "rejected_erroneous_human_report_rates": {
+      "C1": "0/60",
+      "C2": "43/60",
+      "C3": "0/60"
+    },
+    "verified_metrics_cross_checked": {
+      "EXACT_GROUNDING_PASS": {
+        "cross_checked_identical": true,
+        "details_by_candidate": {
+          "C1": {
+            "denominator": 60,
+            "fail_count": 59,
+            "pass_count": 1,
+            "rate_fraction": "1/60"
+          },
+          "C2": {
+            "denominator": 60,
+            "fail_count": 52,
+            "pass_count": 8,
+            "rate_fraction": "8/60"
+          },
+          "C3": {
+            "denominator": 60,
+            "fail_count": 60,
+            "pass_count": 0,
+            "rate_fraction": "0/60"
+          }
+        },
+        "manifest_key": "exact_grounding_pass_counts",
+        "rates_by_candidate": {
+          "C1": "1/60",
+          "C2": "8/60",
+          "C3": "0/60"
+        },
+        "receipt_key": "execution_summary.exact_grounding_pass"
+      },
+      "FINAL_CORE_PASS": {
+        "cross_checked_identical": true,
+        "details_by_candidate": {
+          "C1": {
+            "denominator": 60,
+            "fail_count": 59,
+            "pass_count": 1,
+            "rate_fraction": "1/60"
+          },
+          "C2": {
+            "denominator": 60,
+            "fail_count": 52,
+            "pass_count": 8,
+            "rate_fraction": "8/60"
+          },
+          "C3": {
+            "denominator": 60,
+            "fail_count": 60,
+            "pass_count": 0,
+            "rate_fraction": "0/60"
+          }
+        },
+        "manifest_key": "final_core_pass_counts",
+        "rates_by_candidate": {
+          "C1": "1/60",
+          "C2": "8/60",
+          "C3": "0/60"
+        },
+        "receipt_key": "execution_summary.final_core_pass"
+      },
+      "VALID_RUN_AND_SCHEMA": {
+        "cross_checked_identical": true,
+        "details_by_candidate": {
+          "C1": {
+            "denominator": 60,
+            "fail_count": 59,
+            "pass_count": 1,
+            "rate_fraction": "1/60"
+          },
+          "C2": {
+            "denominator": 60,
+            "fail_count": 52,
+            "pass_count": 8,
+            "rate_fraction": "8/60"
+          },
+          "C3": {
+            "denominator": 60,
+            "fail_count": 60,
+            "pass_count": 0,
+            "rate_fraction": "0/60"
+          }
+        },
+        "manifest_key": "valid_run_and_schema_counts",
+        "rates_by_candidate": {
+          "C1": "1/60",
+          "C2": "8/60",
+          "C3": "0/60"
+        },
+        "receipt_key": "execution_summary.valid_run_and_schema"
+      }
+    }
+  },
+  "primary_experiment_classification": "PRIMARY_PREREGISTERED_ONE_SHOT_OPERATIONAL_BENCHMARK",
+  "readiness_semantics_and_non_implication_firewall": {
+    "CANARY_OPERATIONAL_PASS_STILL_REQUIRES_9_OF_9": true,
+    "CANARY_PASS_DOES_NOT_AUTO_AUTHORIZE_COMPARATIVE": true,
+    "READY_FOR_CANARY_IS_NOT_CANARY_AUTHORIZATION": true,
+    "comparative_60_call_readiness_requires_separate_recheck_before_comparative_authorization": true,
+    "does_not_mean": {
+      "all_9_canary_calls_will_complete": false,
+      "comparative_execution_is_authorized": false,
+      "final100_is_authorized": false,
+      "provider_5xx_cannot_occur": false,
+      "provider_availability_is_guaranteed": false,
+      "provider_high_demand_failures_cannot_occur": false,
+      "schema_or_core_quality_will_pass": false
+    },
+    "provider_readiness_meaning": "The owner-observed account state has sufficient billing/model/quota evidence to proceed to a SEPARATE canary authorization gate."
+  },
+  "receipt_authority_model": {
+    "becomes_repository_authoritative_after_chatgpt_pass_merge_and_postmerge_ci": true,
+    "receipt_candidate_status": "PENDING_CHATGPT_AUDIT_AND_REPOSITORY_FREEZE",
+    "repository_authoritative_before_merge": false,
+    "required_steps_for_repository_authority": [
+      "1. ChatGPT independent audit = PASS",
+      "2. normal merge into develop",
+      "3. exact-head post-merge CI success"
+    ]
+  },
+  "receipt_candidate_status": "PENDING_CHATGPT_AUDIT_AND_REPOSITORY_FREEZE",
+  "repository_authoritative_before_merge": false,
+  "sanitization_and_privacy_attestation": {
+    "api_key_prefixes_or_suffixes_stored": false,
+    "api_keys_inspected": false,
+    "api_keys_stored": false,
+    "billing_account_ids_stored": false,
+    "email_addresses_stored": false,
+    "env_file_read": false,
+    "exact_current_dollar_balance_stored": false,
+    "exact_prepaid_vnd_balance_stored": false,
+    "only_sanitized_readiness_facts_persisted": true,
+    "organization_ids_stored": false,
+    "payment_card_details_stored": false,
+    "payment_transaction_identifiers_stored": false,
+    "personal_names_stored": false,
+    "project_numeric_ids_stored": false,
+    "screenshots_stored_in_repository": false
+  },
+  "schema_version": "1.0.0",
+  "task_id": "W06-DEV-SELECT-EXECUTION-ENVIRONMENT-AMENDMENT-01-OWNER-PROVIDER-READINESS-ATTESTATION-RECEIPT-PREP",
+  "track_classification": "SECONDARY_POST_HOC_EXECUTION_ENVIRONMENT_STABILIZATION_TRACK"
+}
