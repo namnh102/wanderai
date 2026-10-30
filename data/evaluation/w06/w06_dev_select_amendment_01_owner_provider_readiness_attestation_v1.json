@@ -19,7 +19,7 @@
   "FINAL100_USED": false,
   "LIVE_PROVIDER_CALLS_NEW": 0,
   "MODEL_WINNER_SELECTED": false,
-  "NEXT_GATE": "W06-DEV-SELECT-EXECUTION-ENVIRONMENT-AMENDMENT-01-OWNER-PROVIDER-READINESS-ATTESTATION-CHATGPT-AUDIT",
+  "NEXT_GATE": "W06-DEV-SELECT-EXECUTION-ENVIRONMENT-AMENDMENT-01-OWNER-PROVIDER-READINESS-ATTESTATION-CORRECTIVE-01-CHATGPT-AUDIT",
   "OWNER_PROVIDER_READINESS_ATTESTED": true,
   "PRIMARY_DENOMINATORS_CHANGED": false,
   "PRIMARY_EXPERIMENT_MUTATED": false,
@@ -135,6 +135,38 @@
       "sanitization_note": "Exact prepaid VND balance is operational account evidence, not a scientific experiment variable; boolean positive_prepaid_credit_available=true is recorded."
     },
     "C2": {
+      "HISTORICAL_MODEL_ACCESS_EVIDENCE": {
+        "completed_primary_dev_select_c2_cells": 8,
+        "completed_primary_dev_tune_p1_c2_cells": 4,
+        "evidence_classification": "FROZEN_REPOSITORY_HISTORICAL_EXECUTION_EVIDENCE",
+        "example_frozen_response_metadata_path": "data/evaluation/w06/live_dev_select_primary_v1/W06-DEV-SELECT-P1-C2-W06-DEV-SELECT-001/provider_response_metadata.json",
+        "observed_provider_model_snapshot": "gpt-6.1-sol-2026-08-05",
+        "observed_service_tier": "default",
+        "separate_from_owner_dashboard_observation": true,
+        "total_completed_p1_c2_cells_in_repo": 12
+      },
+      "OFFICIAL_PROVIDER_DERIVED_RATE_LIMIT_EVIDENCE": {
+        "additional_authority_url": "https://developers.openai.com/api/docs/guides/rate-limits",
+        "authority_url": "https://developers.openai.com/api/docs/models/gpt-6.1-sol",
+        "canary_assigned_calls": 3,
+        "evidence_classification": "OFFICIAL_PROVIDER_DOC_DERIVED_FROM_OWNER_OBSERVED_TIER",
+        "exact_model_id": "gpt-6.1-sol",
+        "required_max_candidate_calls_under_frozen_amendment": 63,
+        "rpm_or_tpm_manually_observed_in_owner_dashboard": false,
+        "rpm_sufficient_for_frozen_canary": true,
+        "source": "official OpenAI gpt-6.1-sol model documentation",
+        "standard_rpm_limit": 5000,
+        "standard_tpm_limit": 1000000,
+        "tpm_sufficient_for_frozen_canary": true,
+        "usage_tier": "BUILD"
+      },
+      "OWNER_OBSERVED_ACCOUNT_STATE": {
+        "api_credit_sufficient_for_canary_planning_envelope": true,
+        "billing_active": true,
+        "organization_spend_limit_blocking": false,
+        "positive_api_credit_available": true,
+        "usage_tier": "BUILD"
+      },
       "billing_surface": "OPENAI_STANDARD_API_CHAT_COMPLETIONS_DEFAULT_SERVICE_TIER",
       "candidate_id": "C2",
       "exact_current_dollar_balance_stored": false,
@@ -142,18 +174,8 @@
       "owner_observed": {
         "api_credit_sufficient_for_canary_planning_envelope": true,
         "billing_active": true,
-        "canary_assigned_calls": 3,
-        "exact_model_access_supported_by": [
-          "current official gpt-6.1-sol model availability for Build tier",
-          "historical successful frozen primary C2 responses using the exact candidate family/config"
-        ],
         "organization_spend_limit_blocking": false,
         "positive_api_credit_available": true,
-        "required_max_candidate_calls_under_frozen_amendment": 63,
-        "rpm_sufficient_for_frozen_canary": true,
-        "standard_rpm_limit": 5000,
-        "standard_tpm_limit": 1000000,
-        "tpm_sufficient_for_frozen_canary": true,
         "usage_tier": "BUILD"
       },
       "owner_observed_evidence_date": "2026-10-30",
@@ -164,38 +186,131 @@
         "platform.openai.com",
         "openai.com"
       ],
-      "sanitization_note": "Exact current USD balance is omitted; boolean positive_api_credit_available=true and api_credit_sufficient_for_canary_planning_envelope=true are recorded."
+      "readiness_derivation": {
+        "derivation_inputs": [
+          "OWNER_OBSERVED_ACCOUNT_STATE.usage_tier == 'BUILD'",
+          "OWNER_OBSERVED_ACCOUNT_STATE.billing_active == true AND positive_api_credit_available == true AND api_credit_sufficient_for_canary_planning_envelope == true",
+          "OWNER_OBSERVED_ACCOUNT_STATE.organization_spend_limit_blocking == false",
+          "OFFICIAL_PROVIDER_DERIVED_RATE_LIMIT_EVIDENCE (gpt-6.1-sol Build tier: 5000 RPM, 1000000 TPM from https://developers.openai.com/api/docs/models/gpt-6.1-sol)",
+          "HISTORICAL_MODEL_ACCESS_EVIDENCE (12 completed frozen P1 C2 responses using the exact candidate family/config)"
+        ],
+        "derived_c2_provider_readiness": "READY_FOR_CANARY"
+      },
+      "rpm_or_tpm_claimed_manually_observed_in_owner_dashboard": false,
+      "sanitization_note": "Exact current USD balance is omitted; boolean positive_api_credit_available=true and api_credit_sufficient_for_canary_planning_envelope=true are recorded in OWNER_OBSERVED_ACCOUNT_STATE while 5000 RPM / 1000000 TPM are recorded in OFFICIAL_PROVIDER_DERIVED_RATE_LIMIT_EVIDENCE."
     },
     "C3": {
       "attestation_scope": "CANARY_READINESS_ATTESTATION_ONLY",
       "billing_surface": "ANTHROPIC_CLAUDE_API_FIRST_PARTY_DIRECT_MESSAGES_STANDARD_GLOBAL",
+      "c3_canary_input_capacity_numeric_proof": {
+        "C3_INPUT_CAPACITY_STATUS": "PROVEN_SUFFICIENT_FOR_CANARY_BY_DETERMINISTIC_OFFLINE_BOUND",
+        "exact_historical_p1_usage_available_count": 2,
+        "exact_historical_p1_usage_available_for_all_three_canary_fixtures": false,
+        "future_execution_guaranteed_to_consume_exact_same_tokens": false,
+        "input_capacity_sufficient_for_frozen_canary_planning_envelope": true,
+        "input_tokens_per_minute_limit": 500000,
+        "invented_or_silently_imputed_values": false,
+        "missing_exact_historical_p1_usage_fixture_ids": [
+          "W06-DEV-TUNE-007"
+        ],
+        "missing_exact_historical_p1_usage_reason": "W06-DEV-TUNE-P1-C3-W06-DEV-TUNE-007 timed out at the 55,000ms primary client timeout without returning provider usage metadata; no exact P1 token count is invented.",
+        "per_fixture_canary_input_evidence": {
+          "W06-DEV-TUNE-007": {
+            "authoritative_p1_usage_available": false,
+            "destination_slug": "ha-noi",
+            "exact_historical_p1_input_tokens": null,
+            "fixture_id": "W06-DEV-TUNE-007",
+            "reference_method": "DETERMINISTIC_SERIALIZED_WIRE_PAYLOAD_UTF8_BYTE_UPPER_BOUND",
+            "reference_or_upper_bound_input_tokens": 50794,
+            "run_id": "W06-DEV-TUNE-P1-C3-W06-DEV-TUNE-007",
+            "serialized_wire_request_utf8_bytes": 50794,
+            "system_plus_user_prompt_utf8_bytes": 40840
+          },
+          "W06-DEV-TUNE-011": {
+            "authoritative_p1_usage_available": true,
+            "destination_slug": "da-nang",
+            "exact_historical_p1_input_tokens": 41165,
+            "fixture_id": "W06-DEV-TUNE-011",
+            "reference_method": "EXACT_FROZEN_HISTORICAL_C3_DEV_TUNE_P1_RECEIPT",
+            "reference_or_upper_bound_input_tokens": 41165,
+            "run_id": "W06-DEV-TUNE-P1-C3-W06-DEV-TUNE-011",
+            "serialized_wire_request_utf8_bytes": 89229,
+            "system_plus_user_prompt_utf8_bytes": 74749
+          },
+          "W06-DEV-TUNE-015": {
+            "authoritative_p1_usage_available": true,
+            "destination_slug": "ha-long",
+            "exact_historical_p1_input_tokens": 28412,
+            "fixture_id": "W06-DEV-TUNE-015",
+            "reference_method": "EXACT_FROZEN_HISTORICAL_C3_DEV_TUNE_P1_RECEIPT",
+            "reference_or_upper_bound_input_tokens": 28412,
+            "run_id": "W06-DEV-TUNE-P1-C3-W06-DEV-TUNE-015",
+            "serialized_wire_request_utf8_bytes": 61683,
+            "system_plus_user_prompt_utf8_bytes": 50424
+          }
+        },
+        "readiness_evidence_only_note": "This numeric bound is offline canary readiness evidence only; future live execution is not claimed to consume the exact same token count if provider-side token accounting changes.",
+        "same_destination_hanoi_corroboration": {
+          "completed_hanoi_c3_p1_cell_count": 5,
+          "justification": "W06-DEV-TUNE-007 (ha-noi) has a smaller serialized wire payload (50,794 UTF-8 bytes) than completed W06-DEV-TUNE-003 (ha-noi, 50,832 UTF-8 bytes, 23,692 exact input tokens). Using the full 50,794 UTF-8 byte count as a 1-byte-per-token upper bound for 007 plus exact P1 usage for 011 (41,165) and 015 (28,412) yields 120,371 <= 500,000 ITPM, and even the pure 3-call UTF-8 wire-byte sum (50,794 + 89,229 + 61,683 = 201,706) is < 40.4% of 500,000 ITPM.",
+          "max_observed_hanoi_c3_p1_fixture_id": "W06-DEV-TUNE-003",
+          "max_observed_hanoi_c3_p1_input_tokens": 23692,
+          "max_observed_hanoi_c3_p1_wire_utf8_bytes": 50832,
+          "w06_dev_tune_007_wire_utf8_bytes": 50794
+        },
+        "three_call_conservative_planning_envelope_reference": 126000,
+        "three_call_input_reference_comparison": "120371 < 500000 ITPM (pure wire-byte upper bound 201706 < 500000 ITPM)",
+        "three_call_input_reference_source": "HYBRID_FROZEN_HISTORICAL_C3_DEV_TUNE_P1_USAGE_AND_DETERMINISTIC_SERIALIZED_WIRE_BYTE_UPPER_BOUND",
+        "three_call_input_reference_strictly_less_than_itpm_limit": true,
+        "three_call_input_token_reference": 120371,
+        "three_call_pure_serialized_wire_utf8_byte_upper_bound": 201706,
+        "three_call_same_destination_max_observed_p1_reference": 93269
+      },
+      "c3_canary_output_capacity_numeric_proof": {
+        "anthropic_otpm_accounting_semantics": "Anthropic rate limiting counts actual generated output tokens against OTPM; official documentation states max_tokens=16384 itself is not reserved against or consumed from the OTPM limit on request dispatch. 3 x 16384 = 49152 < 80000 OTPM is recorded strictly as a conservative possible-output upper-bound reference.",
+        "canary_assigned_calls": 3,
+        "configured_max_output_tokens_per_call": 16384,
+        "conservative_three_call_configured_output_upper_bound_reference": 49152,
+        "conservative_three_call_output_upper_bound_comparison": "49152 < 80000 OTPM",
+        "conservative_three_call_output_upper_bound_strictly_less_than_otpm_limit": true,
+        "max_tokens_setting_itself_consumes_or_reserves_otpm_claimed": false,
+        "output_capacity_sufficient_for_frozen_canary_reference": true,
+        "output_tokens_per_minute_limit": 80000
+      },
+      "c3_canary_request_capacity_numeric_proof": {
+        "canary_assigned_calls": 3,
+        "request_capacity_sufficient_for_frozen_canary": true,
+        "requests_per_minute_limit": 1000,
+        "three_call_request_comparison": "3 < 1000 RPM"
+      },
       "candidate_id": "C3",
       "comparative_readiness_must_be_rechecked_before_comparative_authorization": true,
-      "comparative_scope_firewall_note": "Evaluation Tier limits (500,000 input / 80,000 output / 1,000 requests) are attested ONLY for the 3-call C3 canary slice (3 * 16,384 = 49,152 < 80,000). They are NOT generalized as readiness proof for the future 60-call comparative run; comparative readiness must be rechecked before comparative authorization.",
+      "comparative_scope_firewall_note": "Account-specific Evaluation Tier per-minute limits (1,000 RPM / 500,000 ITPM / 80,000 OTPM) are attested ONLY for the 3-call C3 canary slice (input bound 120,371 < 500,000 ITPM; conservative output upper bound 3 x 16,384 = 49,152 < 80,000 OTPM). They are NOT generalized as readiness proof for the future 60-call comparative run; comparative readiness must be rechecked before comparative authorization.",
       "exact_model_id": "claude-sonnet-5-5",
       "generalized_as_readiness_proof_for_future_60_call_comparative_run": false,
       "owner_observed": {
         "account_tier": "EVALUATION_TIER",
         "billing_active": true,
-        "canary_assigned_calls": 3,
-        "configured_max_output_tokens_per_call": 16384,
-        "configured_three_call_max_output_reference": 49152,
         "exact_model_visible_in_rate_limit_dashboard": true,
-        "input_capacity_sufficient_for_frozen_canary_planning_envelope": true,
-        "input_token_limit": 500000,
-        "output_capacity_sufficient_for_frozen_canary_reference": true,
-        "output_token_limit": 80000,
+        "generic_public_claude_tier_table_substituted": false,
+        "input_tokens_per_minute_limit": 500000,
+        "output_tokens_per_minute_limit": 80000,
         "positive_credit_available": true,
-        "request_capacity_sufficient_for_frozen_canary": true,
-        "request_limit": 1000,
-        "three_call_max_output_reference_comparison": "49152 < 80000",
-        "three_call_max_output_reference_strictly_less_than_output_token_limit": true
+        "rate_limit_authority_source": "OWNER_OBSERVED_ACCOUNT_SPECIFIC_ANTHROPIC_DASHBOARD",
+        "rate_limit_dimensions": [
+          "RPM",
+          "ITPM",
+          "OTPM"
+        ],
+        "rate_limit_window": "PER_MINUTE",
+        "requests_per_minute_limit": 1000
       },
       "owner_observed_evidence_date": "2026-10-30",
       "provider": "ANTHROPIC",
       "provider_readiness": "READY_FOR_CANARY"
     }
   },
+  "corrective_task_id": "W06-DEV-SELECT-EXECUTION-ENVIRONMENT-AMENDMENT-01-OWNER-PROVIDER-READINESS-ATTESTATION-CORRECTIVE-01",
   "effective_owner_readiness_state": {
     "all_canary_provider_readiness": "READY",
     "attestation_scope": "CANARY_READINESS_ATTESTATION_ONLY",
@@ -260,7 +375,7 @@
   "observation_mode": "MANUAL_PROVIDER_DASHBOARD_OBSERVATION_SANITIZED",
   "owner_attestation_authority": "PROJECT_OWNER",
   "owner_observed_readiness_evidence_date": "2026-10-30",
-  "owner_readiness_attestation_internal_sha256": "45af6219a72bcef6c79bd6b83d7a95f6c549342e13d73e266abe4ac1260edf86",
+  "owner_readiness_attestation_internal_sha256": "137aae6ba52912c10098262ecd29238cb591c92005d99eb226ffbe65c9dfbd75",
   "primary_authority_firewall": {
     "authoritative_primary_strict_rates": {
       "C1": "1/60",
@@ -372,16 +487,16 @@
     "CANARY_PASS_DOES_NOT_AUTO_AUTHORIZE_COMPARATIVE": true,
     "READY_FOR_CANARY_IS_NOT_CANARY_AUTHORIZATION": true,
     "comparative_60_call_readiness_requires_separate_recheck_before_comparative_authorization": true,
-    "does_not_mean": {
-      "all_9_canary_calls_will_complete": false,
-      "comparative_execution_is_authorized": false,
-      "final100_is_authorized": false,
-      "provider_5xx_cannot_occur": false,
-      "provider_availability_is_guaranteed": false,
-      "provider_high_demand_failures_cannot_occur": false,
-      "schema_or_core_quality_will_pass": false
-    },
-    "provider_readiness_meaning": "The owner-observed account state has sufficient billing/model/quota evidence to proceed to a SEPARATE canary authorization gate."
+    "provider_readiness_meaning": "The owner-observed account state has sufficient billing/model/quota evidence to proceed to a SEPARATE canary authorization gate.",
+    "readiness_implications": {
+      "all_9_canary_calls_guaranteed_to_complete": false,
+      "comparative_execution_authorized": false,
+      "final100_authorized": false,
+      "provider_5xx_impossible": false,
+      "provider_availability_guaranteed": false,
+      "provider_high_demand_failures_impossible": false,
+      "schema_or_core_quality_guaranteed": false
+    }
   },
   "receipt_authority_model": {
     "becomes_repository_authoritative_after_chatgpt_pass_merge_and_postmerge_ci": true,

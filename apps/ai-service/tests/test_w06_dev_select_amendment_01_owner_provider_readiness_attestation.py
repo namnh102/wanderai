@@ -1,4 +1,4 @@
-"""Offline verification test suite for W06-DEV-SELECT-EXECUTION-ENVIRONMENT-AMENDMENT-01-OWNER-PROVIDER-READINESS-ATTESTATION-RECEIPT-PREP."""
+"""Offline verification test suite for W06-DEV-SELECT-EXECUTION-ENVIRONMENT-AMENDMENT-01-OWNER-PROVIDER-READINESS-ATTESTATION-RECEIPT-PREP and CORRECTIVE-01."""
 
 from __future__ import annotations
 
@@ -122,19 +122,43 @@ def test_opr_01_all_upstream_authorities_byte_and_hash_unchanged() -> None:
 
 
 def test_opr_02_receipt_binds_base_merge_and_frozen_scientific_policy() -> None:
-    """Verify receipt binds develop@ef78127..., PR #70 merge/CI, frozen policy, and candidateauthority model."""
+    """Verify receipt binds develop@ef78127..., PR #70 merge/CI, frozen policy, and regenerated corrective hashes."""
     att_json, att_sha = _load_json(att_mod.OWNER_READINESS_ATTESTATION_REL_PATH)
     assert (
         att_sha
-        == "622878407081f5bb4566d8a29d827258031b52edecb067e0cf1ebe253a162a9d"
+        == "91702599a9c81d57bfa1360d33cf19129537608a5141d35bbba58958a62b1d06"
     )
     assert (
         att_json["owner_readiness_attestation_internal_sha256"]
-        == "45af6219a72bcef6c79bd6b83d7a95f6c549342e13d73e266abe4ac1260edf86"
+        == "137aae6ba52912c10098262ecd29238cb591c92005d99eb226ffbe65c9dfbd75"
     )
+    # Must NOT retain stale pre-corrective hashes
+    assert (
+        att_sha
+        != "622878407081f5bb4566d8a29d827258031b52edecb067e0cf1ebe253a162a9d"
+    )
+    assert (
+        att_json["owner_readiness_attestation_internal_sha256"]
+        != "45af6219a72bcef6c79bd6b83d7a95f6c549342e13d73e266abe4ac1260edf86"
+    )
+
+    doc_sha = sha256_bytes(
+        normalize_lf_bytes(
+            (REPO_ROOT / att_mod.OWNER_READINESS_ATTESTATION_DOC_REL_PATH).read_bytes()
+        )
+    )
+    assert (
+        doc_sha
+        == "ed5a565ecc08446c87e61b7f980283b3411881100fc270c3280ad1a6491ec29e"
+    )
+
     assert (
         att_json["authoritative_base_develop_sha"]
         == "ef78127ef06215849861e7d3358e24cb5222281e"
+    )
+    assert (
+        att_json["corrective_task_id"]
+        == "W06-DEV-SELECT-EXECUTION-ENVIRONMENT-AMENDMENT-01-OWNER-PROVIDER-READINESS-ATTESTATION-CORRECTIVE-01"
     )
     assert att_json["owner_observed_readiness_evidence_date"] == "2026-10-30"
     assert (
@@ -203,12 +227,12 @@ def test_opr_02_receipt_binds_base_merge_and_frozen_scientific_policy() -> None:
     }
 
 
-def test_opr_03_c1_c2_c3_sanitized_readiness_evidence_and_statuses() -> None:
-    """Verify exact C1 (Tier 1, 1000 RPM, 2M TPM, 10K RPD), C2 (Build, 5000 RPM, 1M TPM), and C3 (Evaluation Tier, 500K in, 80K out, 1K req, 49152 < 80000) readiness evidence."""
+def test_opr_03_c1_c2_provenance_separation_and_c3_numeric_rate_limit_proofs() -> None:
+    """Verify C1 dashboard facts, C2 3-way provenance separation (owner_observed vs official doc-derived vs historical), and C3 RPM/ITPM/OTPM + numeric input/output proofs."""
     att_json, _ = _load_json(att_mod.OWNER_READINESS_ATTESTATION_REL_PATH)
     cands = att_json["candidate_readiness_attestations"]
 
-    # C1 / GOOGLE
+    # 1. C1 / GOOGLE
     c1 = cands["C1"]
     assert c1["candidate_id"] == "C1"
     assert c1["provider"] == "GOOGLE"
@@ -234,7 +258,7 @@ def test_opr_03_c1_c2_c3_sanitized_readiness_evidence_and_statuses() -> None:
     assert c1["provider_readiness"] == "READY_FOR_CANARY"
     assert c1["exact_prepaid_vnd_balance_stored"] is False
 
-    # C2 / OPENAI
+    # 2. C2 / OPENAI — 3-way provenance separation
     c2 = cands["C2"]
     assert c2["candidate_id"] == "C2"
     assert c2["provider"] == "OPENAI"
@@ -244,21 +268,52 @@ def test_opr_03_c1_c2_c3_sanitized_readiness_evidence_and_statuses() -> None:
         == "OPENAI_STANDARD_API_CHAT_COMPLETIONS_DEFAULT_SERVICE_TIER"
     )
     c2_obs = c2["owner_observed"]
+    assert set(c2_obs.keys()) == {
+        "billing_active",
+        "positive_api_credit_available",
+        "api_credit_sufficient_for_canary_planning_envelope",
+        "usage_tier",
+        "organization_spend_limit_blocking",
+    }
     assert c2_obs["billing_active"] is True
     assert c2_obs["positive_api_credit_available"] is True
     assert c2_obs["api_credit_sufficient_for_canary_planning_envelope"] is True
     assert c2_obs["usage_tier"] == "BUILD"
     assert c2_obs["organization_spend_limit_blocking"] is False
-    assert c2_obs["standard_rpm_limit"] == 5000
-    assert c2_obs["standard_tpm_limit"] == 1000000
-    assert c2_obs["required_max_candidate_calls_under_frozen_amendment"] == 63
-    assert c2_obs["canary_assigned_calls"] == 3
-    assert c2_obs["rpm_sufficient_for_frozen_canary"] is True
-    assert c2_obs["tpm_sufficient_for_frozen_canary"] is True
+    assert "standard_rpm_limit" not in c2_obs
+    assert "standard_tpm_limit" not in c2_obs
+
+    assert c2["OWNER_OBSERVED_ACCOUNT_STATE"] == c2_obs
+
+    c2_drv = c2["OFFICIAL_PROVIDER_DERIVED_RATE_LIMIT_EVIDENCE"]
+    assert c2_drv["exact_model_id"] == "gpt-6.1-sol"
+    assert c2_drv["usage_tier"] == "BUILD"
+    assert c2_drv["standard_rpm_limit"] == 5000
+    assert c2_drv["standard_tpm_limit"] == 1000000
+    assert c2_drv["source"] == "official OpenAI gpt-6.1-sol model documentation"
+    assert (
+        c2_drv["authority_url"]
+        == "https://developers.openai.com/api/docs/models/gpt-6.1-sol"
+    )
+    assert (
+        c2_drv["evidence_classification"]
+        == "OFFICIAL_PROVIDER_DOC_DERIVED_FROM_OWNER_OBSERVED_TIER"
+    )
+    assert c2_drv["rpm_or_tpm_manually_observed_in_owner_dashboard"] is False
+    assert c2_drv["required_max_candidate_calls_under_frozen_amendment"] == 63
+    assert c2_drv["canary_assigned_calls"] == 3
+    assert c2_drv["rpm_sufficient_for_frozen_canary"] is True
+    assert c2_drv["tpm_sufficient_for_frozen_canary"] is True
+
+    c2_hist = c2["HISTORICAL_MODEL_ACCESS_EVIDENCE"]
+    assert c2_hist["separate_from_owner_dashboard_observation"] is True
+    assert c2_hist["completed_primary_dev_select_c2_cells"] == 8
+    assert c2_hist["total_completed_p1_c2_cells_in_repo"] == 12
+    assert c2["rpm_or_tpm_claimed_manually_observed_in_owner_dashboard"] is False
     assert c2["provider_readiness"] == "READY_FOR_CANARY"
     assert c2["exact_current_dollar_balance_stored"] is False
 
-    # C3 / ANTHROPIC
+    # 3. C3 / ANTHROPIC — explicit per-minute units + numeric input proof + output semantics
     c3 = cands["C3"]
     assert c3["candidate_id"] == "C3"
     assert c3["provider"] == "ANTHROPIC"
@@ -272,29 +327,81 @@ def test_opr_03_c1_c2_c3_sanitized_readiness_evidence_and_statuses() -> None:
     assert c3_obs["positive_credit_available"] is True
     assert c3_obs["exact_model_visible_in_rate_limit_dashboard"] is True
     assert c3_obs["account_tier"] == "EVALUATION_TIER"
-    assert c3_obs["input_token_limit"] == 500000
-    assert c3_obs["output_token_limit"] == 80000
-    assert c3_obs["request_limit"] == 1000
-    assert c3_obs["canary_assigned_calls"] == 3
-    assert c3_obs["configured_max_output_tokens_per_call"] == 16384
-    assert c3_obs["configured_three_call_max_output_reference"] == 49152
+    assert c3_obs["input_tokens_per_minute_limit"] == 500000
+    assert c3_obs["output_tokens_per_minute_limit"] == 80000
+    assert c3_obs["requests_per_minute_limit"] == 1000
+    assert c3_obs["rate_limit_dimensions"] == ["RPM", "ITPM", "OTPM"]
+    assert c3_obs["rate_limit_window"] == "PER_MINUTE"
+    assert c3_obs["generic_public_claude_tier_table_substituted"] is False
+    # Ambiguous legacy keys must NOT exist
+    assert "input_token_limit" not in c3_obs
+    assert "output_token_limit" not in c3_obs
+    assert "request_limit" not in c3_obs
+    assert "configured_three_call_max_output_reference" not in c3_obs
+
+    # C3 numeric input capacity proof
+    in_proof = c3["c3_canary_input_capacity_numeric_proof"]
+    assert set(in_proof["per_fixture_canary_input_evidence"].keys()) == {
+        "W06-DEV-TUNE-007",
+        "W06-DEV-TUNE-011",
+        "W06-DEV-TUNE-015",
+    }
+    assert in_proof["input_tokens_per_minute_limit"] == 500000
+    assert in_proof["three_call_input_token_reference"] == 120371
     assert (
-        c3_obs["configured_three_call_max_output_reference"]
-        < c3_obs["output_token_limit"]
+        in_proof["three_call_input_token_reference"]
+        < in_proof["input_tokens_per_minute_limit"]
     )
-    assert c3_obs["three_call_max_output_reference_comparison"] == "49152 < 80000"
     assert (
-        c3_obs[
-            "three_call_max_output_reference_strictly_less_than_output_token_limit"
+        in_proof["three_call_pure_serialized_wire_utf8_byte_upper_bound"] == 201706
+    )
+    assert (
+        in_proof["three_call_pure_serialized_wire_utf8_byte_upper_bound"]
+        < in_proof["input_tokens_per_minute_limit"]
+    )
+    assert (
+        in_proof["three_call_same_destination_max_observed_p1_reference"] == 93269
+    )
+    assert in_proof["three_call_conservative_planning_envelope_reference"] == 126000
+    assert (
+        in_proof["C3_INPUT_CAPACITY_STATUS"]
+        == "PROVEN_SUFFICIENT_FOR_CANARY_BY_DETERMINISTIC_OFFLINE_BOUND"
+    )
+    assert (
+        in_proof["future_execution_guaranteed_to_consume_exact_same_tokens"]
+        is False
+    )
+
+    # C3 output semantics
+    out_proof = c3["c3_canary_output_capacity_numeric_proof"]
+    assert out_proof["canary_assigned_calls"] == 3
+    assert out_proof["configured_max_output_tokens_per_call"] == 16384
+    assert (
+        out_proof["conservative_three_call_configured_output_upper_bound_reference"]
+        == 49152
+    )
+    assert (
+        out_proof["conservative_three_call_configured_output_upper_bound_reference"]
+        < c3_obs["output_tokens_per_minute_limit"]
+    )
+    assert (
+        out_proof[
+            "conservative_three_call_output_upper_bound_strictly_less_than_otpm_limit"
         ]
         is True
     )
     assert (
-        c3_obs["input_capacity_sufficient_for_frozen_canary_planning_envelope"]
-        is True
+        out_proof["max_tokens_setting_itself_consumes_or_reserves_otpm_claimed"]
+        is False
     )
-    assert c3_obs["output_capacity_sufficient_for_frozen_canary_reference"] is True
-    assert c3_obs["request_capacity_sufficient_for_frozen_canary"] is True
+    assert out_proof["output_capacity_sufficient_for_frozen_canary_reference"] is True
+
+    # C3 request semantics
+    req_proof = c3["c3_canary_request_capacity_numeric_proof"]
+    assert req_proof["canary_assigned_calls"] == 3
+    assert req_proof["requests_per_minute_limit"] == 1000
+    assert req_proof["request_capacity_sufficient_for_frozen_canary"] is True
+
     assert c3["provider_readiness"] == "READY_FOR_CANARY"
     assert c3["attestation_scope"] == "CANARY_READINESS_ATTESTATION_ONLY"
     assert (
@@ -316,7 +423,7 @@ def test_opr_03_c1_c2_c3_sanitized_readiness_evidence_and_statuses() -> None:
 
 
 def test_opr_04_readiness_semantics_and_live_execution_firewalls() -> None:
-    """Verify readiness does not imply authorization, comparative readiness remains separate, and all live/Final100/winner/stochasticity/primary firewalls hold."""
+    """Verify unambiguous readiness_implications schema, comparative readiness remains false/unattested, and all live/Final100/winner/stochasticity/primary firewalls hold."""
     att_json, _ = _load_json(att_mod.OWNER_READINESS_ATTESTATION_REL_PATH)
 
     assert att_json["READY_FOR_CANARY_IS_NOT_CANARY_AUTHORIZATION"] is True
@@ -333,14 +440,17 @@ def test_opr_04_readiness_semantics_and_live_execution_firewalls() -> None:
         ]
         is True
     )
-    does_not_mean = sem["does_not_mean"]
-    assert does_not_mean["provider_availability_is_guaranteed"] is False
-    assert does_not_mean["all_9_canary_calls_will_complete"] is False
-    assert does_not_mean["schema_or_core_quality_will_pass"] is False
-    assert does_not_mean["provider_5xx_cannot_occur"] is False
-    assert does_not_mean["provider_high_demand_failures_cannot_occur"] is False
-    assert does_not_mean["comparative_execution_is_authorized"] is False
-    assert does_not_mean["final100_is_authorized"] is False
+    assert "does_not_mean" not in sem
+    impl = sem["readiness_implications"]
+    assert impl == {
+        "provider_availability_guaranteed": False,
+        "all_9_canary_calls_guaranteed_to_complete": False,
+        "schema_or_core_quality_guaranteed": False,
+        "provider_5xx_impossible": False,
+        "provider_high_demand_failures_impossible": False,
+        "comparative_execution_authorized": False,
+        "final100_authorized": False,
+    }
 
     # Live / execution / scientific firewalls
     assert att_json["AMENDED_CANARY_LIVE_AUTHORIZED"] is False
@@ -362,7 +472,7 @@ def test_opr_04_readiness_semantics_and_live_execution_firewalls() -> None:
     assert att_json["API_KEYS_INSPECTED"] is False
     assert (
         att_json["NEXT_GATE"]
-        == "W06-DEV-SELECT-EXECUTION-ENVIRONMENT-AMENDMENT-01-OWNER-PROVIDER-READINESS-ATTESTATION-CHATGPT-AUDIT"
+        == "W06-DEV-SELECT-EXECUTION-ENVIRONMENT-AMENDMENT-01-OWNER-PROVIDER-READINESS-ATTESTATION-CORRECTIVE-01-CHATGPT-AUDIT"
     )
 
     # Primary metric firewall (1/60, 8/60, 0/60 vs rejected 0/60, 43/60, 0/60)
@@ -462,7 +572,7 @@ def test_opr_06_offline_network_kill_switch_and_no_env_or_provider_calls() -> No
 def test_opr_07_tamper_detection_and_immutability_write_guards(
     tmp_path: Path,
 ) -> None:
-    """Verify tamper detection on JSON/Markdown and write protection on upstream/raw evidence paths."""
+    """Verify tamper detection on JSON/Markdown, C2 provenance guards, C3 unit/bound guards, and write protection."""
     att_json, _ = _load_json(att_mod.OWNER_READINESS_ATTESTATION_REL_PATH)
     doc_bytes = (
         REPO_ROOT / att_mod.OWNER_READINESS_ATTESTATION_DOC_REL_PATH
@@ -504,7 +614,28 @@ def test_opr_07_tamper_detection_and_immutability_write_guards(
             receipt_path=valid_receipt_copy, doc_path=tampered_doc
         )
 
-    # 3. Attempting to derive state with live authorization = True -> rejected
+    # 3. Attempting to inject derived RPM/TPM into C2 owner_observed -> rejected
+    bad_c2 = copy.deepcopy(att_json["candidate_readiness_attestations"])
+    bad_c2["C2"]["owner_observed"]["standard_rpm_limit"] = 5000
+    bad_c2["C2"]["OWNER_OBSERVED_ACCOUNT_STATE"]["standard_rpm_limit"] = 5000
+    with pytest.raises(
+        PlanBeforeLiveProtocolError,
+        match="C2_PROVENANCE_VIOLATION",
+    ):
+        att_mod.validate_sanitized_candidate_attestations(bad_c2)
+
+    # 4. Attempting to claim max_tokens setting itself consumes OTPM -> rejected
+    bad_c3_otpm = copy.deepcopy(att_json["candidate_readiness_attestations"])
+    bad_c3_otpm["C3"]["c3_canary_output_capacity_numeric_proof"][
+        "max_tokens_setting_itself_consumes_or_reserves_otpm_claimed"
+    ] = True
+    with pytest.raises(
+        PlanBeforeLiveProtocolError,
+        match="C3_OUTPUT_UPPER_BOUND_SEMANTICS_OR_COMPARISON_INVALID",
+    ):
+        att_mod.validate_sanitized_candidate_attestations(bad_c3_otpm)
+
+    # 5. Attempting to derive state with live authorization = True -> rejected
     prp_json, _ = _load_json(att_mod.PROVIDER_READINESS_PRICING_PREP_REL_PATH)
     app_json, _ = _load_json(att_mod.APPROVAL_RECEIPT_REL_PATH)
     bad_live = copy.deepcopy(att_json)
@@ -519,7 +650,7 @@ def test_opr_07_tamper_detection_and_immutability_write_guards(
             owner_attestation_payload=bad_live,
         )
 
-    # 4. Attempting to generalize C3 Evaluation Tier to 60-call comparative run -> rejected
+    # 6. Attempting to generalize C3 Evaluation Tier to 60-call comparative run -> rejected
     bad_c3 = copy.deepcopy(att_json["candidate_readiness_attestations"])
     bad_c3["C3"][
         "generalized_as_readiness_proof_for_future_60_call_comparative_run"
@@ -530,7 +661,7 @@ def test_opr_07_tamper_detection_and_immutability_write_guards(
     ):
         att_mod.validate_sanitized_candidate_attestations(bad_c3)
 
-    # 5. Attempting to overwrite immutable upstream artifacts or raw evidence -> rejected
+    # 7. Attempting to overwrite immutable upstream artifacts or raw evidence -> rejected
     with pytest.raises(
         PlanBeforeLiveProtocolError,
         match="IMMUTABLE_UPSTREAM_ARTIFACT_MUTATION_FORBIDDEN",

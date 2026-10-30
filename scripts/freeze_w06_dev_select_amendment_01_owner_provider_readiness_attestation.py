@@ -2,6 +2,7 @@
 """Strictly offline Owner Provider Readiness Attestation Receipt generator and verifier for W06 DEV-SELECT Amendment 01.
 
 TASK: W06-DEV-SELECT-EXECUTION-ENVIRONMENT-AMENDMENT-01-OWNER-PROVIDER-READINESS-ATTESTATION-RECEIPT-PREP
+CORRECTIVE TASK: W06-DEV-SELECT-EXECUTION-ENVIRONMENT-AMENDMENT-01-OWNER-PROVIDER-READINESS-ATTESTATION-CORRECTIVE-01
 
 PURPOSE:
 Create and statelessly verify a sanitized, repository-auditable Owner Provider
@@ -13,6 +14,19 @@ for the approved W06 secondary post-hoc execution-environment stabilization trac
 STRICT FIREWALLS:
 - Records OWNER-OBSERVED PROVIDER READINESS ONLY (`OWNER_PROVIDER_READINESS_ATTESTED = true`,
   `C1/C2/C3_PROVIDER_READINESS = "READY_FOR_CANARY"`, `ALL_CANARY_PROVIDER_READINESS = "READY"`).
+- Separates C2 evidence into:
+  (A) `OWNER_OBSERVED_ACCOUNT_STATE` (direct owner dashboard observation only; no doc-derived RPM/TPM),
+  (B) `OFFICIAL_PROVIDER_DERIVED_RATE_LIMIT_EVIDENCE` (`gpt-6.1-sol` `BUILD` tier `5000` RPM / `1000000` TPM
+      from `https://developers.openai.com/api/docs/models/gpt-6.1-sol`), and
+  (C) `HISTORICAL_MODEL_ACCESS_EVIDENCE` (frozen primary C2 completions).
+- Encodes C3 Evaluation Tier rate limits explicitly as per-minute dimensions (`RPM`, `ITPM`, `OTPM`,
+  `rate_limit_window = "PER_MINUTE"`), proves C3 3-call canary input capacity offline from frozen
+  `W06-DEV-TUNE-007/011/015` artifacts (`120371 < 500000 ITPM` hybrid / `201706 < 500000 ITPM` pure wire-byte bound),
+  and records `conservative_three_call_configured_output_upper_bound_reference = 49152 < 80000 OTPM`
+  without claiming that `max_tokens=16384` itself consumes or reserves OTPM.
+- Does NOT generalize C3 Evaluation Tier limits as readiness proof for the future 60-call
+  comparative run (`CANARY_READINESS_ATTESTATION_ONLY`; comparative readiness must be
+  rechecked before comparative authorization).
 - Does NOT authorize or execute any live provider call (`AMENDED_CANARY_LIVE_AUTHORIZED = false`,
   `AMENDED_COMPARATIVE_LIVE_AUTHORIZED = false`, `AMENDED_LIVE_AUTHORIZED = false`,
   `AMENDED_LIVE_EXECUTED = false`, `CANARY_EXECUTED = false`, `COMPARATIVE_EXECUTED = false`,
@@ -21,9 +35,6 @@ STRICT FIREWALLS:
 - Does NOT store screenshots, API keys, key prefixes/suffixes, payment card details, billing
   account IDs, project numeric IDs, organization IDs, email addresses, personal names,
   payment transaction IDs, or exact prepaid VND/USD account balances.
-- Does NOT generalize C3 Evaluation Tier limits as readiness proof for the future 60-call
-  comparative run (`CANARY_READINESS_ATTESTATION_ONLY`; comparative readiness must be
-  rechecked before comparative authorization).
 - Does NOT select a model (`MODEL_WINNER_SELECTED = false`, `SELECTED_MODEL_ID = null`).
 - Does NOT touch Final100 (`FINAL100_USED = false`, `FINAL100_STATUS = "NO-GO"`).
 - Does NOT mutate primary DEV-SELECT evidence (`PRIMARY_EXPERIMENT_MUTATED = false`,
@@ -48,7 +59,6 @@ for _p in (SCRIPTS_DIR, AI_SERVICE_DIR):
         sys.path.insert(0, str(_p))
 
 from app.evaluation.dev_live_runner import (  # noqa: E402
-    ORDERED_CANDIDATE_IDS,
     PlanBeforeLiveProtocolError,
     assert_no_secrets_in_payload,
 )
@@ -82,6 +92,9 @@ from prepare_w06_dev_select_execution_environment_amendment_01 import (  # noqa:
 
 TASK_ID = (
     "W06-DEV-SELECT-EXECUTION-ENVIRONMENT-AMENDMENT-01-OWNER-PROVIDER-READINESS-ATTESTATION-RECEIPT-PREP"
+)
+CORRECTIVE_TASK_ID = (
+    "W06-DEV-SELECT-EXECUTION-ENVIRONMENT-AMENDMENT-01-OWNER-PROVIDER-READINESS-ATTESTATION-CORRECTIVE-01"
 )
 OWNER_READINESS_ATTESTATION_ARTIFACT_ID = (
     "W06-DEV-SELECT-AMENDMENT-01-OWNER-PROVIDER-READINESS-ATTESTATION-V1"
@@ -125,7 +138,7 @@ EFFECTIVE_AMENDMENT_STATUS = (
     "METHODOLOGY_APPROVED_OWNER_CANARY_READINESS_ATTESTED_LIVE_UNAUTHORIZED"
 )
 NEXT_GATE_ID = (
-    "W06-DEV-SELECT-EXECUTION-ENVIRONMENT-AMENDMENT-01-OWNER-PROVIDER-READINESS-ATTESTATION-CHATGPT-AUDIT"
+    "W06-DEV-SELECT-EXECUTION-ENVIRONMENT-AMENDMENT-01-OWNER-PROVIDER-READINESS-ATTESTATION-CORRECTIVE-01-CHATGPT-AUDIT"
 )
 
 # Bound upstream artifact paths and hashes
@@ -230,12 +243,23 @@ CANARY_FIXTURE_IDS: tuple[str, ...] = (
     "W06-DEV-TUNE-015",
 )
 
+C2_OFFICIAL_MODEL_DOC_URL = "https://developers.openai.com/api/docs/models/gpt-6.1-sol"
+C2_OFFICIAL_RATE_LIMITS_DOC_URL = (
+    "https://developers.openai.com/api/docs/guides/rate-limits"
+)
+C2_EVIDENCE_CLASSIFICATION_OFFICIAL_DOC_DERIVED = (
+    "OFFICIAL_PROVIDER_DOC_DERIVED_FROM_OWNER_OBSERVED_TIER"
+)
+
+C3_RATE_LIMIT_DIMENSIONS: tuple[str, ...] = ("RPM", "ITPM", "OTPM")
+C3_RATE_LIMIT_WINDOW = "PER_MINUTE"
+
 # Deterministic self-hashes for the owner readiness attestation receipt artifact
 EXPECTED_OWNER_READINESS_ATTESTATION_FILE_SHA256 = (
-    "622878407081f5bb4566d8a29d827258031b52edecb067e0cf1ebe253a162a9d"
+    "91702599a9c81d57bfa1360d33cf19129537608a5141d35bbba58958a62b1d06"
 )
 EXPECTED_OWNER_READINESS_ATTESTATION_INTERNAL_SHA256 = (
-    "45af6219a72bcef6c79bd6b83d7a95f6c549342e13d73e266abe4ac1260edf86"
+    "137aae6ba52912c10098262ecd29238cb591c92005d99eb226ffbe65c9dfbd75"
 )
 
 
@@ -300,20 +324,35 @@ FORBIDDEN_SCREENSHOT_EXTENSIONS: tuple[str, ...] = (
 )
 
 SENSITIVE_ACCOUNT_AND_SECRET_PATTERNS: tuple[tuple[str, re.Pattern[str]], ...] = (
-    ("API_KEY_OPENAI_OR_ANTHROPIC", re.compile(r"\bsk-(?:proj-|ant-|live-|test-)?[A-Za-z0-9_\-]{6,}\b")),
+    (
+        "API_KEY_OPENAI_OR_ANTHROPIC",
+        re.compile(r"\bsk-(?:proj-|ant-|live-|test-)?[A-Za-z0-9_\-]{6,}\b"),
+    ),
     ("API_KEY_GOOGLE_AIZA", re.compile(r"\bAIza[0-9A-Za-z_\-]{10,}\b")),
     ("API_KEY_MASKED_AIZA", re.compile(r"\bAIza[0-9A-Za-z_\-*.\u2026]{2,}\b")),
     ("API_KEY_MASKED_SK", re.compile(r"\bsk-[A-Za-z0-9_\-*.\u2026]{3,}\b")),
-    ("GOOGLE_BILLING_ACCOUNT_ID", re.compile(r"\b[0-9A-F]{6}-[0-9A-F]{6}-[0-9A-F]{6}\b", re.IGNORECASE)),
+    (
+        "GOOGLE_BILLING_ACCOUNT_ID",
+        re.compile(r"\b[0-9A-F]{6}-[0-9A-F]{6}-[0-9A-F]{6}\b", re.IGNORECASE),
+    ),
     ("OPENAI_ORG_ID", re.compile(r"\borg-[A-Za-z0-9]{8,}\b")),
     (
         "GOOGLE_PROJECT_NUMERIC_ID",
         re.compile(r"\b(?!40162573640\b|40099797847\b|40094419087\b)\d{11,15}\b"),
     ),
-    ("EMAIL_ADDRESS", re.compile(r"\b[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}\b")),
+    (
+        "EMAIL_ADDRESS",
+        re.compile(r"\b[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}\b"),
+    ),
     ("PAYMENT_CARD_PAN", re.compile(r"\b(?:\d{4}[ -]){3}\d{4}\b")),
-    ("PAYMENT_TRANSACTION_ID", re.compile(r"\b(?:pi|ch|in|txn|py|seti)_[A-Za-z0-9]{10,}\b")),
-    ("EXACT_VND_MONETARY_BALANCE", re.compile(r"\b\d[\d,._]*\s*(?:VND|₫)\b", re.IGNORECASE)),
+    (
+        "PAYMENT_TRANSACTION_ID",
+        re.compile(r"\b(?:pi|ch|in|txn|py|seti)_[A-Za-z0-9]{10,}\b"),
+    ),
+    (
+        "EXACT_VND_MONETARY_BALANCE",
+        re.compile(r"\b\d[\d,._]*\s*(?:VND|₫)\b", re.IGNORECASE),
+    ),
 )
 
 FORBIDDEN_SENSITIVE_KEY_NAMES: frozenset[str] = frozenset(
@@ -457,8 +496,248 @@ def _verify_git_base_and_merge_lineage(repo_root: Path) -> None:
 
 
 # ==============================================================================
-# 3. CANDIDATE READINESS VALIDATION & EFFECTIVE STATE DERIVATION
+# 3. C3 OFFLINE CANARY INPUT CAPACITY NUMERIC PROOF (SECTION 3)
 # ==============================================================================
+
+
+def build_c3_canary_input_capacity_numeric_proof(
+    *,
+    repo_root: Path = REPO_ROOT,
+    itpm_limit: int = 500000,
+) -> dict[str, Any]:
+    """Compute offline numeric proof of C3 3-call canary input capacity against 500,000 ITPM.
+
+    Attempts to obtain exact offline historical input-token evidence from frozen C3 DEV-TUNE P1
+    receipts for W06-DEV-TUNE-007, W06-DEV-TUNE-011, and W06-DEV-TUNE-015.
+    Where an exact historical P1 usage receipt is unavailable (W06-DEV-TUNE-007 timed out at 55,000ms
+    in primary DEV-TUNE without returning token usage metadata), does NOT invent values; instead
+    derives a conservative deterministic offline upper bound from the frozen serialized C3 wire
+    request (`provider_wire_request` UTF-8 byte count, where 1 token <= 1 UTF-8 byte under byte-level BPE)
+    and cross-checks against all completed same-destination (`ha-noi`) C3 P1 receipts.
+    If a defensible bound cannot be constructed or is not strictly < itpm_limit, fails closed with
+    `C3_INPUT_CAPACITY_STATUS = "NOT_FULLY_PROVEN"`.
+    """
+    tune_dir = repo_root / "data/evaluation/w06/live_dev_tune_primary_v1"
+    per_fixture_records: dict[str, dict[str, Any]] = {}
+    all_three_have_exact_p1_usage = True
+
+    for fid in CANARY_FIXTURE_IDS:
+        cell_dir = tune_dir / f"W06-DEV-TUNE-P1-C3-{fid}"
+        rec_path = cell_dir / "execution_receipt.json"
+        req_path = cell_dir / "request_manifest.json"
+        if not rec_path.is_file() or not req_path.is_file():
+            raise PlanBeforeLiveProtocolError(
+                f"C3_INPUT_CAPACITY_PROOF_HOLD: missing frozen DEV-TUNE P1 cell files for {fid}"
+            )
+        rec = _load_json_dict(rec_path)
+        req = _load_json_dict(req_path)
+        wire = req.get("provider_wire_request")
+        if not isinstance(wire, dict):
+            raise PlanBeforeLiveProtocolError(
+                f"C3_INPUT_CAPACITY_PROOF_HOLD: missing provider_wire_request for {fid}"
+            )
+
+        wire_bytes = len(
+            json.dumps(wire, ensure_ascii=False, sort_keys=True).encode("utf-8")
+        )
+        sys_text = str(wire.get("system", ""))
+        msgs = wire.get("messages", [])
+        usr_text = str(msgs[0].get("content", "")) if msgs else ""
+        sys_plus_usr_bytes = len(sys_text.encode("utf-8")) + len(
+            usr_text.encode("utf-8")
+        )
+        dest_match = re.search(r'"destination_slug":\s*"([^"]+)"', usr_text)
+        dest = dest_match.group(1) if dest_match else "unknown"
+
+        auth_usage = bool(rec.get("authoritative_usage_available"))
+        exact_in = (
+            int(rec["input_tokens"])
+            if auth_usage and rec.get("input_tokens") is not None
+            else None
+        )
+        if exact_in is None:
+            all_three_have_exact_p1_usage = False
+
+        per_fixture_records[fid] = {
+            "fixture_id": fid,
+            "run_id": f"W06-DEV-TUNE-P1-C3-{fid}",
+            "destination_slug": dest,
+            "authoritative_p1_usage_available": auth_usage,
+            "exact_historical_p1_input_tokens": exact_in,
+            "serialized_wire_request_utf8_bytes": wire_bytes,
+            "system_plus_user_prompt_utf8_bytes": sys_plus_usr_bytes,
+            "reference_or_upper_bound_input_tokens": (
+                exact_in if exact_in is not None else wire_bytes
+            ),
+            "reference_method": (
+                "EXACT_FROZEN_HISTORICAL_C3_DEV_TUNE_P1_RECEIPT"
+                if exact_in is not None
+                else "DETERMINISTIC_SERIALIZED_WIRE_PAYLOAD_UTF8_BYTE_UPPER_BOUND"
+            ),
+        }
+
+    # Verify same-destination (ha-noi) completed P1 C3 cells for corroboration on W06-DEV-TUNE-007
+    hanoi_completed_p1: list[dict[str, Any]] = []
+    for idx in range(1, 8):
+        fid = f"W06-DEV-TUNE-{idx:03d}"
+        cell_dir = tune_dir / f"W06-DEV-TUNE-P1-C3-{fid}"
+        rec = _load_json_dict(cell_dir / "execution_receipt.json")
+        req = _load_json_dict(cell_dir / "request_manifest.json")
+        wire = req["provider_wire_request"]
+        wb = len(
+            json.dumps(wire, ensure_ascii=False, sort_keys=True).encode("utf-8")
+        )
+        if rec.get("authoritative_usage_available") and rec.get("input_tokens") is not None:
+            hanoi_completed_p1.append(
+                {
+                    "fixture_id": fid,
+                    "input_tokens": int(rec["input_tokens"]),
+                    "wire_bytes": wb,
+                }
+            )
+
+    if not hanoi_completed_p1:
+        raise PlanBeforeLiveProtocolError(
+            "C3_INPUT_CAPACITY_PROOF_HOLD: no completed ha-noi C3 P1 cells found"
+        )
+    max_hanoi_cell = max(hanoi_completed_p1, key=lambda x: x["input_tokens"])
+    if (
+        max_hanoi_cell["wire_bytes"]
+        <= per_fixture_records["W06-DEV-TUNE-007"][
+            "serialized_wire_request_utf8_bytes"
+        ]
+    ):
+        raise PlanBeforeLiveProtocolError(
+            "C3_INPUT_CAPACITY_PROOF_HOLD: expected larger ha-noi completed wire payload than W06-DEV-TUNE-007"
+        )
+
+    if all_three_have_exact_p1_usage:
+        three_call_ref = sum(
+            int(per_fixture_records[fid]["exact_historical_p1_input_tokens"])
+            for fid in CANARY_FIXTURE_IDS
+        )
+        ref_source = "FROZEN_HISTORICAL_C3_DEV_TUNE_P1_USAGE"
+    else:
+        three_call_ref = sum(
+            int(
+                per_fixture_records[fid]["reference_or_upper_bound_input_tokens"]
+            )
+            for fid in CANARY_FIXTURE_IDS
+        )
+        ref_source = (
+            "HYBRID_FROZEN_HISTORICAL_C3_DEV_TUNE_P1_USAGE_AND_"
+            "DETERMINISTIC_SERIALIZED_WIRE_BYTE_UPPER_BOUND"
+        )
+
+    pure_wire_byte_upper_bound = sum(
+        int(per_fixture_records[fid]["serialized_wire_request_utf8_bytes"])
+        for fid in CANARY_FIXTURE_IDS
+    )
+    same_dest_max_p1_ref = (
+        int(max_hanoi_cell["input_tokens"])
+        + int(
+            per_fixture_records["W06-DEV-TUNE-011"][
+                "exact_historical_p1_input_tokens"
+            ]
+        )
+        + int(
+            per_fixture_records["W06-DEV-TUNE-015"][
+                "exact_historical_p1_input_tokens"
+            ]
+        )
+    )
+    conservative_planning_envelope_3_calls = 3 * 42000
+
+    if not (
+        three_call_ref < itpm_limit
+        and pure_wire_byte_upper_bound < itpm_limit
+        and conservative_planning_envelope_3_calls < itpm_limit
+        and same_dest_max_p1_ref < itpm_limit
+    ):
+        return {
+            "C3_INPUT_CAPACITY_STATUS": "NOT_FULLY_PROVEN",
+            "input_capacity_sufficient_for_frozen_canary_planning_envelope": False,
+            "hold_required": True,
+        }
+
+    return {
+        "C3_INPUT_CAPACITY_STATUS": "PROVEN_SUFFICIENT_FOR_CANARY_BY_DETERMINISTIC_OFFLINE_BOUND",
+        "exact_historical_p1_usage_available_for_all_three_canary_fixtures": all_three_have_exact_p1_usage,
+        "exact_historical_p1_usage_available_count": 2,
+        "missing_exact_historical_p1_usage_fixture_ids": ["W06-DEV-TUNE-007"],
+        "missing_exact_historical_p1_usage_reason": (
+            "W06-DEV-TUNE-P1-C3-W06-DEV-TUNE-007 timed out at the 55,000ms primary client "
+            "timeout without returning provider usage metadata; no exact P1 token count is invented."
+        ),
+        "invented_or_silently_imputed_values": False,
+        "per_fixture_canary_input_evidence": per_fixture_records,
+        "three_call_input_reference_source": ref_source,
+        "three_call_input_token_reference": three_call_ref,
+        "three_call_pure_serialized_wire_utf8_byte_upper_bound": pure_wire_byte_upper_bound,
+        "three_call_conservative_planning_envelope_reference": conservative_planning_envelope_3_calls,
+        "three_call_same_destination_max_observed_p1_reference": same_dest_max_p1_ref,
+        "same_destination_hanoi_corroboration": {
+            "completed_hanoi_c3_p1_cell_count": len(hanoi_completed_p1),
+            "max_observed_hanoi_c3_p1_fixture_id": max_hanoi_cell["fixture_id"],
+            "max_observed_hanoi_c3_p1_input_tokens": max_hanoi_cell[
+                "input_tokens"
+            ],
+            "max_observed_hanoi_c3_p1_wire_utf8_bytes": max_hanoi_cell[
+                "wire_bytes"
+            ],
+            "w06_dev_tune_007_wire_utf8_bytes": per_fixture_records[
+                "W06-DEV-TUNE-007"
+            ]["serialized_wire_request_utf8_bytes"],
+            "justification": (
+                "W06-DEV-TUNE-007 (ha-noi) has a smaller serialized wire payload (50,794 UTF-8 bytes) "
+                "than completed W06-DEV-TUNE-003 (ha-noi, 50,832 UTF-8 bytes, 23,692 exact input tokens). "
+                "Using the full 50,794 UTF-8 byte count as a 1-byte-per-token upper bound for 007 plus exact "
+                "P1 usage for 011 (41,165) and 015 (28,412) yields 120,371 <= 500,000 ITPM, and even the "
+                "pure 3-call UTF-8 wire-byte sum (50,794 + 89,229 + 61,683 = 201,706) is < 40.4% of 500,000 ITPM."
+            ),
+        },
+        "input_tokens_per_minute_limit": itpm_limit,
+        "three_call_input_reference_comparison": (
+            f"{three_call_ref} < {itpm_limit} ITPM "
+            f"(pure wire-byte upper bound {pure_wire_byte_upper_bound} < {itpm_limit} ITPM)"
+        ),
+        "three_call_input_reference_strictly_less_than_itpm_limit": True,
+        "input_capacity_sufficient_for_frozen_canary_planning_envelope": True,
+        "future_execution_guaranteed_to_consume_exact_same_tokens": False,
+        "readiness_evidence_only_note": (
+            "This numeric bound is offline canary readiness evidence only; future live execution "
+            "is not claimed to consume the exact same token count if provider-side token accounting changes."
+        ),
+    }
+
+
+# ==============================================================================
+# 4. CANDIDATE READINESS VALIDATION & EFFECTIVE STATE DERIVATION
+# ==============================================================================
+
+FORBIDDEN_C2_OWNER_OBSERVED_DOC_DERIVED_KEYS: frozenset[str] = frozenset(
+    {
+        "standard_rpm_limit",
+        "standard_tpm_limit",
+        "standard_rpd_limit",
+        "rpm_limit",
+        "tpm_limit",
+        "exact_model_access_supported_by",
+        "required_max_candidate_calls_under_frozen_amendment",
+        "canary_assigned_calls",
+        "rpm_sufficient_for_frozen_canary",
+        "tpm_sufficient_for_frozen_canary",
+    }
+)
+
+FORBIDDEN_C3_AMBIGUOUS_LIMIT_KEYS: frozenset[str] = frozenset(
+    {
+        "input_token_limit",
+        "output_token_limit",
+        "request_limit",
+        "configured_three_call_max_output_reference",
+    }
+)
 
 
 def validate_sanitized_candidate_attestations(
@@ -518,11 +797,13 @@ def validate_sanitized_candidate_attestations(
     ):
         raise PlanBeforeLiveProtocolError("C1_CANARY_CAPACITY_SUFFICIENCY_MISMATCH")
     if c1.get("provider_readiness") != PROVIDER_READINESS_READY_FOR_CANARY:
-        raise PlanBeforeLiveProtocolError("C1_PROVIDER_READINESS_MUST_BE_READY_FOR_CANARY")
+        raise PlanBeforeLiveProtocolError(
+            "C1_PROVIDER_READINESS_MUST_BE_READY_FOR_CANARY"
+        )
     if c1.get("exact_prepaid_vnd_balance_stored") is not False:
         raise PlanBeforeLiveProtocolError("C1_EXACT_VND_BALANCE_MUST_NOT_BE_STORED")
 
-    # C2 / OPENAI
+    # C2 / OPENAI — Provenance Separation (Corrective Section 1)
     c2 = candidate_attestations["C2"]
     if (
         c2.get("candidate_id") != "C2"
@@ -535,43 +816,98 @@ def validate_sanitized_candidate_attestations(
         != "OPENAI_STANDARD_API_CHAT_COMPLETIONS_DEFAULT_SERVICE_TIER"
     ):
         raise PlanBeforeLiveProtocolError("C2_BILLING_SURFACE_MISMATCH")
+
+    c2_owner_state = c2.get("OWNER_OBSERVED_ACCOUNT_STATE", {})
     c2_obs = c2.get("owner_observed", {})
-    if c2_obs.get("billing_active") is not True:
+    if c2_owner_state != c2_obs:
+        raise PlanBeforeLiveProtocolError(
+            "C2_OWNER_OBSERVED_ACCOUNT_STATE_MISMATCH"
+        )
+    for forbidden_key in FORBIDDEN_C2_OWNER_OBSERVED_DOC_DERIVED_KEYS:
+        if forbidden_key in c2_owner_state or forbidden_key in c2_obs:
+            raise PlanBeforeLiveProtocolError(
+                f"C2_PROVENANCE_VIOLATION: doc-derived field '{forbidden_key}' must not appear in owner_observed / OWNER_OBSERVED_ACCOUNT_STATE"
+            )
+    expected_c2_owner_keys = {
+        "billing_active",
+        "positive_api_credit_available",
+        "api_credit_sufficient_for_canary_planning_envelope",
+        "usage_tier",
+        "organization_spend_limit_blocking",
+    }
+    if set(c2_owner_state.keys()) != expected_c2_owner_keys:
+        raise PlanBeforeLiveProtocolError(
+            f"C2_OWNER_OBSERVED_KEYS_MISMATCH: expected {expected_c2_owner_keys}, got {set(c2_owner_state.keys())}"
+        )
+    if c2_owner_state.get("billing_active") is not True:
         raise PlanBeforeLiveProtocolError("C2_BILLING_ACTIVE_MUST_BE_TRUE")
-    if c2_obs.get("positive_api_credit_available") is not True:
+    if c2_owner_state.get("positive_api_credit_available") is not True:
         raise PlanBeforeLiveProtocolError(
             "C2_POSITIVE_API_CREDIT_AVAILABLE_MUST_BE_TRUE"
         )
-    if c2_obs.get("api_credit_sufficient_for_canary_planning_envelope") is not True:
+    if (
+        c2_owner_state.get("api_credit_sufficient_for_canary_planning_envelope")
+        is not True
+    ):
         raise PlanBeforeLiveProtocolError(
             "C2_API_CREDIT_SUFFICIENT_FOR_CANARY_PLANNING_ENVELOPE_MUST_BE_TRUE"
         )
-    if c2_obs.get("usage_tier") != "BUILD":
+    if c2_owner_state.get("usage_tier") != "BUILD":
         raise PlanBeforeLiveProtocolError("C2_USAGE_TIER_MUST_BE_BUILD")
-    if c2_obs.get("organization_spend_limit_blocking") is not False:
+    if c2_owner_state.get("organization_spend_limit_blocking") is not False:
         raise PlanBeforeLiveProtocolError(
             "C2_ORGANIZATION_SPEND_LIMIT_BLOCKING_MUST_BE_FALSE"
         )
-    if c2_obs.get("standard_rpm_limit") != 5000:
-        raise PlanBeforeLiveProtocolError("C2_STANDARD_RPM_LIMIT_MUST_BE_5000")
-    if c2_obs.get("standard_tpm_limit") != 1000000:
-        raise PlanBeforeLiveProtocolError("C2_STANDARD_TPM_LIMIT_MUST_BE_1000000")
+
+    c2_doc_ev = c2.get("OFFICIAL_PROVIDER_DERIVED_RATE_LIMIT_EVIDENCE", {})
     if (
-        c2_obs.get("required_max_candidate_calls_under_frozen_amendment") != 63
-        or c2_obs.get("canary_assigned_calls") != 3
+        c2_doc_ev.get("exact_model_id") != "gpt-6.1-sol"
+        or c2_doc_ev.get("usage_tier") != "BUILD"
+        or c2_doc_ev.get("standard_rpm_limit") != 5000
+        or c2_doc_ev.get("standard_tpm_limit") != 1000000
+        or c2_doc_ev.get("source")
+        != "official OpenAI gpt-6.1-sol model documentation"
+        or c2_doc_ev.get("authority_url") != C2_OFFICIAL_MODEL_DOC_URL
+        or c2_doc_ev.get("evidence_classification")
+        != C2_EVIDENCE_CLASSIFICATION_OFFICIAL_DOC_DERIVED
+        or c2_doc_ev.get("rpm_or_tpm_manually_observed_in_owner_dashboard")
+        is not False
     ):
-        raise PlanBeforeLiveProtocolError("C2_CALL_BUDGET_REFERENCE_MISMATCH")
+        raise PlanBeforeLiveProtocolError(
+            "C2_OFFICIAL_PROVIDER_DERIVED_RATE_LIMIT_EVIDENCE_MISMATCH"
+        )
     if (
-        c2_obs.get("rpm_sufficient_for_frozen_canary") is not True
-        or c2_obs.get("tpm_sufficient_for_frozen_canary") is not True
+        c2_doc_ev.get("required_max_candidate_calls_under_frozen_amendment") != 63
+        or c2_doc_ev.get("canary_assigned_calls") != 3
+        or c2_doc_ev.get("rpm_sufficient_for_frozen_canary") is not True
+        or c2_doc_ev.get("tpm_sufficient_for_frozen_canary") is not True
     ):
         raise PlanBeforeLiveProtocolError("C2_CANARY_CAPACITY_SUFFICIENCY_MISMATCH")
-    if c2.get("provider_readiness") != PROVIDER_READINESS_READY_FOR_CANARY:
-        raise PlanBeforeLiveProtocolError("C2_PROVIDER_READINESS_MUST_BE_READY_FOR_CANARY")
-    if c2.get("exact_current_dollar_balance_stored") is not False:
-        raise PlanBeforeLiveProtocolError("C2_EXACT_DOLLAR_BALANCE_MUST_NOT_BE_STORED")
 
-    # C3 / ANTHROPIC
+    c2_hist_ev = c2.get("HISTORICAL_MODEL_ACCESS_EVIDENCE", {})
+    if (
+        c2_hist_ev.get("separate_from_owner_dashboard_observation") is not True
+        or c2_hist_ev.get("completed_primary_dev_select_c2_cells") != 8
+        or c2_hist_ev.get("total_completed_p1_c2_cells_in_repo") != 12
+    ):
+        raise PlanBeforeLiveProtocolError(
+            "C2_HISTORICAL_MODEL_ACCESS_EVIDENCE_MISMATCH"
+        )
+
+    if c2.get("rpm_or_tpm_claimed_manually_observed_in_owner_dashboard") is not False:
+        raise PlanBeforeLiveProtocolError(
+            "C2_MUST_NOT_CLAIM_RPM_OR_TPM_MANUALLY_OBSERVED_IN_OWNER_DASHBOARD"
+        )
+    if c2.get("provider_readiness") != PROVIDER_READINESS_READY_FOR_CANARY:
+        raise PlanBeforeLiveProtocolError(
+            "C2_PROVIDER_READINESS_MUST_BE_READY_FOR_CANARY"
+        )
+    if c2.get("exact_current_dollar_balance_stored") is not False:
+        raise PlanBeforeLiveProtocolError(
+            "C2_EXACT_DOLLAR_BALANCE_MUST_NOT_BE_STORED"
+        )
+
+    # C3 / ANTHROPIC — Per-Minute Rate Limits, Input Numeric Proof & Output Upper-Bound Semantics (Corrective Sections 2, 3, 4)
     c3 = candidate_attestations["C3"]
     if (
         c3.get("candidate_id") != "C3"
@@ -584,7 +920,14 @@ def validate_sanitized_candidate_attestations(
         != "ANTHROPIC_CLAUDE_API_FIRST_PARTY_DIRECT_MESSAGES_STANDARD_GLOBAL"
     ):
         raise PlanBeforeLiveProtocolError("C3_BILLING_SURFACE_MISMATCH")
+
     c3_obs = c3.get("owner_observed", {})
+    for forbidden_c3_key in FORBIDDEN_C3_AMBIGUOUS_LIMIT_KEYS:
+        if forbidden_c3_key in c3_obs or forbidden_c3_key in c3:
+            raise PlanBeforeLiveProtocolError(
+                f"C3_AMBIGUOUS_FIELD_FORBIDDEN: '{forbidden_c3_key}' must be replaced with explicit per-minute / conservative upper-bound semantics"
+            )
+
     if c3_obs.get("billing_active") is not True:
         raise PlanBeforeLiveProtocolError("C3_BILLING_ACTIVE_MUST_BE_TRUE")
     if c3_obs.get("positive_credit_available") is not True:
@@ -599,55 +942,133 @@ def validate_sanitized_candidate_attestations(
         raise PlanBeforeLiveProtocolError(
             "C3_ACCOUNT_TIER_MUST_BE_EVALUATION_TIER"
         )
-    if c3_obs.get("input_token_limit") != 500000:
-        raise PlanBeforeLiveProtocolError("C3_INPUT_TOKEN_LIMIT_MUST_BE_500000")
-    if c3_obs.get("output_token_limit") != 80000:
-        raise PlanBeforeLiveProtocolError("C3_OUTPUT_TOKEN_LIMIT_MUST_BE_80000")
-    if c3_obs.get("request_limit") != 1000:
-        raise PlanBeforeLiveProtocolError("C3_REQUEST_LIMIT_MUST_BE_1000")
-    if c3_obs.get("canary_assigned_calls") != 3:
-        raise PlanBeforeLiveProtocolError("C3_CANARY_ASSIGNED_CALLS_MUST_BE_3")
-    if c3_obs.get("configured_max_output_tokens_per_call") != 16384:
+    if c3_obs.get("requests_per_minute_limit") != 1000:
         raise PlanBeforeLiveProtocolError(
-            "C3_CONFIGURED_MAX_OUTPUT_TOKENS_PER_CALL_MUST_BE_16384"
+            "C3_REQUESTS_PER_MINUTE_LIMIT_MUST_BE_1000"
         )
-    expected_three_call_ref = (
-        c3_obs["canary_assigned_calls"]
-        * c3_obs["configured_max_output_tokens_per_call"]
+    if c3_obs.get("input_tokens_per_minute_limit") != 500000:
+        raise PlanBeforeLiveProtocolError(
+            "C3_INPUT_TOKENS_PER_MINUTE_LIMIT_MUST_BE_500000"
+        )
+    if c3_obs.get("output_tokens_per_minute_limit") != 80000:
+        raise PlanBeforeLiveProtocolError(
+            "C3_OUTPUT_TOKENS_PER_MINUTE_LIMIT_MUST_BE_80000"
+        )
+    if c3_obs.get("rate_limit_dimensions") != list(C3_RATE_LIMIT_DIMENSIONS):
+        raise PlanBeforeLiveProtocolError(
+            "C3_RATE_LIMIT_DIMENSIONS_MUST_BE_RPM_ITPM_OTPM"
+        )
+    if c3_obs.get("rate_limit_window") != C3_RATE_LIMIT_WINDOW:
+        raise PlanBeforeLiveProtocolError(
+            "C3_RATE_LIMIT_WINDOW_MUST_BE_PER_MINUTE"
+        )
+    if c3_obs.get("generic_public_claude_tier_table_substituted") is not False:
+        raise PlanBeforeLiveProtocolError(
+            "C3_GENERIC_PUBLIC_CLAUDE_TIER_TABLE_SUBSTITUTION_FORBIDDEN"
+        )
+
+    c3_in_proof = c3.get("c3_canary_input_capacity_numeric_proof", {})
+    if (
+        c3_in_proof.get("C3_INPUT_CAPACITY_STATUS")
+        != "PROVEN_SUFFICIENT_FOR_CANARY_BY_DETERMINISTIC_OFFLINE_BOUND"
+    ):
+        raise PlanBeforeLiveProtocolError(
+            f"C3_INPUT_CAPACITY_NOT_PROVEN: status={c3_in_proof.get('C3_INPUT_CAPACITY_STATUS')}"
+        )
+    if c3_in_proof.get("invented_or_silently_imputed_values") is not False:
+        raise PlanBeforeLiveProtocolError("C3_INPUT_PROOF_INVENTED_VALUES_FORBIDDEN")
+    per_fix = c3_in_proof.get("per_fixture_canary_input_evidence", {})
+    if set(per_fix.keys()) != set(CANARY_FIXTURE_IDS):
+        raise PlanBeforeLiveProtocolError("C3_INPUT_PROOF_FIXTURES_MISMATCH")
+    if (
+        per_fix["W06-DEV-TUNE-007"].get("exact_historical_p1_input_tokens")
+        is not None
+        or per_fix["W06-DEV-TUNE-007"].get("serialized_wire_request_utf8_bytes")
+        != 50794
+    ):
+        raise PlanBeforeLiveProtocolError("C3_INPUT_PROOF_007_EVIDENCE_MISMATCH")
+    if (
+        per_fix["W06-DEV-TUNE-011"].get("exact_historical_p1_input_tokens") != 41165
+        or per_fix["W06-DEV-TUNE-015"].get("exact_historical_p1_input_tokens")
+        != 28412
+    ):
+        raise PlanBeforeLiveProtocolError(
+            "C3_INPUT_PROOF_011_OR_015_EXACT_TOKENS_MISMATCH"
+        )
+    in_ref = c3_in_proof.get("three_call_input_token_reference")
+    wire_bound = c3_in_proof.get(
+        "three_call_pure_serialized_wire_utf8_byte_upper_bound"
     )
     if (
-        expected_three_call_ref != 49152
-        or c3_obs.get("configured_three_call_max_output_reference") != 49152
-    ):
-        raise PlanBeforeLiveProtocolError(
-            "C3_THREE_CALL_MAX_OUTPUT_REFERENCE_MUST_BE_49152"
+        in_ref != 120371
+        or wire_bound != 201706
+        or not (in_ref < c3_obs["input_tokens_per_minute_limit"])
+        or not (wire_bound < c3_obs["input_tokens_per_minute_limit"])
+        or c3_in_proof.get(
+            "three_call_input_reference_strictly_less_than_itpm_limit"
         )
-    if not (
-        c3_obs["configured_three_call_max_output_reference"]
-        < c3_obs["output_token_limit"]
-    ):
-        raise PlanBeforeLiveProtocolError(
-            "C3_THREE_CALL_MAX_OUTPUT_REFERENCE_MUST_BE_LESS_THAN_OUTPUT_TOKEN_LIMIT"
+        is not True
+        or c3_in_proof.get(
+            "input_capacity_sufficient_for_frozen_canary_planning_envelope"
         )
+        is not True
+        or c3_in_proof.get(
+            "future_execution_guaranteed_to_consume_exact_same_tokens"
+        )
+        is not False
+    ):
+        raise PlanBeforeLiveProtocolError("C3_INPUT_CAPACITY_NUMERIC_BOUND_INVALID")
+
+    c3_out_proof = c3.get("c3_canary_output_capacity_numeric_proof", {})
     if (
-        c3_obs.get(
-            "three_call_max_output_reference_strictly_less_than_output_token_limit"
+        c3_out_proof.get("canary_assigned_calls") != 3
+        or c3_out_proof.get("configured_max_output_tokens_per_call") != 16384
+    ):
+        raise PlanBeforeLiveProtocolError("C3_OUTPUT_PROOF_CALL_CONFIG_MISMATCH")
+    expected_three_call_out_ref = (
+        c3_out_proof["canary_assigned_calls"]
+        * c3_out_proof["configured_max_output_tokens_per_call"]
+    )
+    if (
+        expected_three_call_out_ref != 49152
+        or c3_out_proof.get(
+            "conservative_three_call_configured_output_upper_bound_reference"
         )
+        != 49152
+        or not (
+            c3_out_proof[
+                "conservative_three_call_configured_output_upper_bound_reference"
+            ]
+            < c3_obs["output_tokens_per_minute_limit"]
+        )
+        or c3_out_proof.get(
+            "conservative_three_call_output_upper_bound_strictly_less_than_otpm_limit"
+        )
+        is not True
+        or c3_out_proof.get(
+            "max_tokens_setting_itself_consumes_or_reserves_otpm_claimed"
+        )
+        is not False
+        or c3_out_proof.get("output_capacity_sufficient_for_frozen_canary_reference")
         is not True
     ):
         raise PlanBeforeLiveProtocolError(
-            "C3_THREE_CALL_COMPARISON_FLAG_MUST_BE_TRUE"
+            "C3_OUTPUT_UPPER_BOUND_SEMANTICS_OR_COMPARISON_INVALID"
         )
+
+    c3_req_proof = c3.get("c3_canary_request_capacity_numeric_proof", {})
     if (
-        c3_obs.get("input_capacity_sufficient_for_frozen_canary_planning_envelope")
+        c3_req_proof.get("canary_assigned_calls") != 3
+        or c3_req_proof.get("requests_per_minute_limit") != 1000
+        or c3_req_proof.get("request_capacity_sufficient_for_frozen_canary")
         is not True
-        or c3_obs.get("output_capacity_sufficient_for_frozen_canary_reference")
-        is not True
-        or c3_obs.get("request_capacity_sufficient_for_frozen_canary") is not True
     ):
-        raise PlanBeforeLiveProtocolError("C3_CANARY_CAPACITY_SUFFICIENCY_MISMATCH")
+        raise PlanBeforeLiveProtocolError("C3_REQUEST_CAPACITY_PROOF_INVALID")
+
     if c3.get("provider_readiness") != PROVIDER_READINESS_READY_FOR_CANARY:
-        raise PlanBeforeLiveProtocolError("C3_PROVIDER_READINESS_MUST_BE_READY_FOR_CANARY")
+        raise PlanBeforeLiveProtocolError(
+            "C3_PROVIDER_READINESS_MUST_BE_READY_FOR_CANARY"
+        )
     if (
         c3.get("generalized_as_readiness_proof_for_future_60_call_comparative_run")
         is not False
@@ -656,11 +1077,39 @@ def validate_sanitized_candidate_attestations(
             "C3_EVALUATION_TIER_LIMITS_MUST_NOT_BE_GENERALIZED_TO_60_CALL_COMPARATIVE_RUN"
         )
     if (
-        c3.get("comparative_readiness_must_be_rechecked_before_comparative_authorization")
+        c3.get(
+            "comparative_readiness_must_be_rechecked_before_comparative_authorization"
+        )
         is not True
     ):
         raise PlanBeforeLiveProtocolError(
             "C3_COMPARATIVE_READINESS_RECHECK_REQUIREMENT_MUST_BE_TRUE"
+        )
+
+
+def validate_readiness_non_implication_firewall(
+    sem_block: dict[str, Any],
+) -> None:
+    """Validate the unambiguous readiness_implications schema (Corrective Section 5)."""
+    if "does_not_mean" in sem_block:
+        raise PlanBeforeLiveProtocolError(
+            "AMBIGUOUS_DOES_NOT_MEAN_STRUCTURE_FORBIDDEN: use readiness_implications"
+        )
+    implications = sem_block.get("readiness_implications")
+    if not isinstance(implications, dict):
+        raise PlanBeforeLiveProtocolError("MISSING_READINESS_IMPLICATIONS_DICT")
+    expected_implications = {
+        "provider_availability_guaranteed": False,
+        "all_9_canary_calls_guaranteed_to_complete": False,
+        "schema_or_core_quality_guaranteed": False,
+        "provider_5xx_impossible": False,
+        "provider_high_demand_failures_impossible": False,
+        "comparative_execution_authorized": False,
+        "final100_authorized": False,
+    }
+    if implications != expected_implications:
+        raise PlanBeforeLiveProtocolError(
+            f"READINESS_IMPLICATIONS_MISMATCH: expected {expected_implications}, got {implications}"
         )
 
 
@@ -709,6 +1158,11 @@ def derive_effective_owner_readiness_state(
     validate_sanitized_candidate_attestations(
         owner_attestation_payload.get("candidate_readiness_attestations", {})
     )
+    validate_readiness_non_implication_firewall(
+        owner_attestation_payload.get(
+            "readiness_semantics_and_non_implication_firewall", {}
+        )
+    )
 
     if owner_attestation_payload.get("OWNER_PROVIDER_READINESS_ATTESTED") is not True:
         raise PlanBeforeLiveProtocolError(
@@ -733,7 +1187,9 @@ def derive_effective_owner_readiness_state(
     if (
         owner_attestation_payload.get("READY_FOR_CANARY_IS_NOT_CANARY_AUTHORIZATION")
         is not True
-        or owner_attestation_payload.get("CANARY_OPERATIONAL_PASS_STILL_REQUIRES_9_OF_9")
+        or owner_attestation_payload.get(
+            "CANARY_OPERATIONAL_PASS_STILL_REQUIRES_9_OF_9"
+        )
         is not True
         or owner_attestation_payload.get(
             "CANARY_PASS_DOES_NOT_AUTO_AUTHORIZE_COMPARATIVE"
@@ -959,7 +1415,7 @@ def _verify_all_upstream_authorities(repo_root: Path) -> dict[str, Any]:
 
 
 # ==============================================================================
-# 4. BUILD OWNER PROVIDER READINESS ATTESTATION RECEIPT PAYLOAD & MARKDOWN
+# 5. BUILD OWNER PROVIDER READINESS ATTESTATION RECEIPT PAYLOAD & MARKDOWN
 # ==============================================================================
 
 
@@ -972,6 +1428,26 @@ def build_w06_owner_provider_readiness_attestation_payload(
         pricing_prep_payload = verified["pricing_prep_payload"]
         approval_payload = verified["approval_payload"]
         primary_metric_auth = verified["primary_metric_auth"]
+
+        c2_owner_observed_account_state: dict[str, Any] = {
+            "billing_active": True,
+            "positive_api_credit_available": True,
+            "api_credit_sufficient_for_canary_planning_envelope": True,
+            "usage_tier": "BUILD",
+            "organization_spend_limit_blocking": False,
+        }
+
+        c3_input_numeric_proof = build_c3_canary_input_capacity_numeric_proof(
+            repo_root=repo_root,
+            itpm_limit=500000,
+        )
+        if (
+            c3_input_numeric_proof.get("C3_INPUT_CAPACITY_STATUS")
+            != "PROVEN_SUFFICIENT_FOR_CANARY_BY_DETERMINISTIC_OFFLINE_BOUND"
+        ):
+            raise PlanBeforeLiveProtocolError(
+                "C3_INPUT_CAPACITY_NOT_FULLY_PROVEN_HOLD"
+            )
 
         candidate_attestations: dict[str, dict[str, Any]] = {
             "C1": {
@@ -1008,23 +1484,49 @@ def build_w06_owner_provider_readiness_attestation_payload(
                 "exact_model_id": "gpt-6.1-sol",
                 "billing_surface": "OPENAI_STANDARD_API_CHAT_COMPLETIONS_DEFAULT_SERVICE_TIER",
                 "owner_observed_evidence_date": OWNER_ATTESTATION_EVIDENCE_DATE,
-                "owner_observed": {
-                    "billing_active": True,
-                    "positive_api_credit_available": True,
-                    "api_credit_sufficient_for_canary_planning_envelope": True,
+                "OWNER_OBSERVED_ACCOUNT_STATE": dict(
+                    c2_owner_observed_account_state
+                ),
+                "owner_observed": dict(c2_owner_observed_account_state),
+                "OFFICIAL_PROVIDER_DERIVED_RATE_LIMIT_EVIDENCE": {
+                    "exact_model_id": "gpt-6.1-sol",
                     "usage_tier": "BUILD",
-                    "organization_spend_limit_blocking": False,
-                    "exact_model_access_supported_by": [
-                        "current official gpt-6.1-sol model availability for Build tier",
-                        "historical successful frozen primary C2 responses using the exact candidate family/config",
-                    ],
                     "standard_rpm_limit": 5000,
                     "standard_tpm_limit": 1000000,
+                    "source": "official OpenAI gpt-6.1-sol model documentation",
+                    "authority_url": C2_OFFICIAL_MODEL_DOC_URL,
+                    "additional_authority_url": C2_OFFICIAL_RATE_LIMITS_DOC_URL,
+                    "evidence_classification": C2_EVIDENCE_CLASSIFICATION_OFFICIAL_DOC_DERIVED,
+                    "rpm_or_tpm_manually_observed_in_owner_dashboard": False,
                     "required_max_candidate_calls_under_frozen_amendment": 63,
                     "canary_assigned_calls": 3,
                     "rpm_sufficient_for_frozen_canary": True,
                     "tpm_sufficient_for_frozen_canary": True,
                 },
+                "HISTORICAL_MODEL_ACCESS_EVIDENCE": {
+                    "evidence_classification": "FROZEN_REPOSITORY_HISTORICAL_EXECUTION_EVIDENCE",
+                    "separate_from_owner_dashboard_observation": True,
+                    "completed_primary_dev_select_c2_cells": 8,
+                    "completed_primary_dev_tune_p1_c2_cells": 4,
+                    "total_completed_p1_c2_cells_in_repo": 12,
+                    "example_frozen_response_metadata_path": (
+                        "data/evaluation/w06/live_dev_select_primary_v1/"
+                        "W06-DEV-SELECT-P1-C2-W06-DEV-SELECT-001/provider_response_metadata.json"
+                    ),
+                    "observed_provider_model_snapshot": "gpt-6.1-sol-2026-08-05",
+                    "observed_service_tier": "default",
+                },
+                "readiness_derivation": {
+                    "derived_c2_provider_readiness": PROVIDER_READINESS_READY_FOR_CANARY,
+                    "derivation_inputs": [
+                        "OWNER_OBSERVED_ACCOUNT_STATE.usage_tier == 'BUILD'",
+                        "OWNER_OBSERVED_ACCOUNT_STATE.billing_active == true AND positive_api_credit_available == true AND api_credit_sufficient_for_canary_planning_envelope == true",
+                        "OWNER_OBSERVED_ACCOUNT_STATE.organization_spend_limit_blocking == false",
+                        "OFFICIAL_PROVIDER_DERIVED_RATE_LIMIT_EVIDENCE (gpt-6.1-sol Build tier: 5000 RPM, 1000000 TPM from https://developers.openai.com/api/docs/models/gpt-6.1-sol)",
+                        "HISTORICAL_MODEL_ACCESS_EVIDENCE (12 completed frozen P1 C2 responses using the exact candidate family/config)",
+                    ],
+                },
+                "rpm_or_tpm_claimed_manually_observed_in_owner_dashboard": False,
                 "public_model_rate_limit_authority_domains": list(
                     _prp_mod.ALLOWLISTED_PRICING_DOMAINS_BY_PROVIDER["OPENAI"]
                 ),
@@ -1032,7 +1534,9 @@ def build_w06_owner_provider_readiness_attestation_payload(
                 "exact_current_dollar_balance_stored": False,
                 "sanitization_note": (
                     "Exact current USD balance is omitted; boolean positive_api_credit_available=true "
-                    "and api_credit_sufficient_for_canary_planning_envelope=true are recorded."
+                    "and api_credit_sufficient_for_canary_planning_envelope=true are recorded in "
+                    "OWNER_OBSERVED_ACCOUNT_STATE while 5000 RPM / 1000000 TPM are recorded in "
+                    "OFFICIAL_PROVIDER_DERIVED_RATE_LIMIT_EVIDENCE."
                 ),
             },
             "C3": {
@@ -1046,16 +1550,35 @@ def build_w06_owner_provider_readiness_attestation_payload(
                     "positive_credit_available": True,
                     "exact_model_visible_in_rate_limit_dashboard": True,
                     "account_tier": "EVALUATION_TIER",
-                    "input_token_limit": 500000,
-                    "output_token_limit": 80000,
-                    "request_limit": 1000,
+                    "requests_per_minute_limit": 1000,
+                    "input_tokens_per_minute_limit": 500000,
+                    "output_tokens_per_minute_limit": 80000,
+                    "rate_limit_dimensions": list(C3_RATE_LIMIT_DIMENSIONS),
+                    "rate_limit_window": C3_RATE_LIMIT_WINDOW,
+                    "rate_limit_authority_source": "OWNER_OBSERVED_ACCOUNT_SPECIFIC_ANTHROPIC_DASHBOARD",
+                    "generic_public_claude_tier_table_substituted": False,
+                },
+                "c3_canary_input_capacity_numeric_proof": c3_input_numeric_proof,
+                "c3_canary_output_capacity_numeric_proof": {
                     "canary_assigned_calls": 3,
                     "configured_max_output_tokens_per_call": 16384,
-                    "configured_three_call_max_output_reference": 49152,
-                    "three_call_max_output_reference_comparison": "49152 < 80000",
-                    "three_call_max_output_reference_strictly_less_than_output_token_limit": True,
-                    "input_capacity_sufficient_for_frozen_canary_planning_envelope": True,
+                    "conservative_three_call_configured_output_upper_bound_reference": 49152,
+                    "output_tokens_per_minute_limit": 80000,
+                    "conservative_three_call_output_upper_bound_comparison": "49152 < 80000 OTPM",
+                    "conservative_three_call_output_upper_bound_strictly_less_than_otpm_limit": True,
+                    "anthropic_otpm_accounting_semantics": (
+                        "Anthropic rate limiting counts actual generated output tokens against OTPM; "
+                        "official documentation states max_tokens=16384 itself is not reserved against "
+                        "or consumed from the OTPM limit on request dispatch. 3 x 16384 = 49152 < 80000 OTPM "
+                        "is recorded strictly as a conservative possible-output upper-bound reference."
+                    ),
+                    "max_tokens_setting_itself_consumes_or_reserves_otpm_claimed": False,
                     "output_capacity_sufficient_for_frozen_canary_reference": True,
+                },
+                "c3_canary_request_capacity_numeric_proof": {
+                    "canary_assigned_calls": 3,
+                    "requests_per_minute_limit": 1000,
+                    "three_call_request_comparison": "3 < 1000 RPM",
                     "request_capacity_sufficient_for_frozen_canary": True,
                 },
                 "provider_readiness": PROVIDER_READINESS_READY_FOR_CANARY,
@@ -1063,10 +1586,11 @@ def build_w06_owner_provider_readiness_attestation_payload(
                 "generalized_as_readiness_proof_for_future_60_call_comparative_run": False,
                 "comparative_readiness_must_be_rechecked_before_comparative_authorization": True,
                 "comparative_scope_firewall_note": (
-                    "Evaluation Tier limits (500,000 input / 80,000 output / 1,000 requests) are "
-                    "attested ONLY for the 3-call C3 canary slice (3 * 16,384 = 49,152 < 80,000). "
-                    "They are NOT generalized as readiness proof for the future 60-call comparative "
-                    "run; comparative readiness must be rechecked before comparative authorization."
+                    "Account-specific Evaluation Tier per-minute limits (1,000 RPM / 500,000 ITPM / "
+                    "80,000 OTPM) are attested ONLY for the 3-call C3 canary slice (input bound "
+                    "120,371 < 500,000 ITPM; conservative output upper bound 3 x 16,384 = 49,152 < "
+                    "80,000 OTPM). They are NOT generalized as readiness proof for the future 60-call "
+                    "comparative run; comparative readiness must be rechecked before comparative authorization."
                 ),
             },
         }
@@ -1074,6 +1598,7 @@ def build_w06_owner_provider_readiness_attestation_payload(
         payload_without_hash: dict[str, Any] = {
             "artifact_id": OWNER_READINESS_ATTESTATION_ARTIFACT_ID,
             "task_id": TASK_ID,
+            "corrective_task_id": CORRECTIVE_TASK_ID,
             "schema_version": "1.0.0",
             "authoritative_base_develop_sha": AUTHORITATIVE_BASE_DEVELOP_SHA,
             "owner_attestation_authority": OWNER_ATTESTATION_AUTHORITY,
@@ -1238,14 +1763,14 @@ def build_w06_owner_provider_readiness_attestation_payload(
                     "The owner-observed account state has sufficient billing/model/quota evidence "
                     "to proceed to a SEPARATE canary authorization gate."
                 ),
-                "does_not_mean": {
-                    "provider_availability_is_guaranteed": False,
-                    "all_9_canary_calls_will_complete": False,
-                    "schema_or_core_quality_will_pass": False,
-                    "provider_5xx_cannot_occur": False,
-                    "provider_high_demand_failures_cannot_occur": False,
-                    "comparative_execution_is_authorized": False,
-                    "final100_is_authorized": False,
+                "readiness_implications": {
+                    "provider_availability_guaranteed": False,
+                    "all_9_canary_calls_guaranteed_to_complete": False,
+                    "schema_or_core_quality_guaranteed": False,
+                    "provider_5xx_impossible": False,
+                    "provider_high_demand_failures_impossible": False,
+                    "comparative_execution_authorized": False,
+                    "final100_authorized": False,
                 },
                 "READY_FOR_CANARY_IS_NOT_CANARY_AUTHORIZATION": True,
                 "CANARY_OPERATIONAL_PASS_STILL_REQUIRES_9_OF_9": True,
@@ -1297,12 +1822,18 @@ def render_owner_provider_readiness_attestation_markdown(
     c1 = payload["candidate_readiness_attestations"]["C1"]
     c1_obs = c1["owner_observed"]
     c2 = payload["candidate_readiness_attestations"]["C2"]
-    c2_obs = c2["owner_observed"]
+    c2_obs = c2["OWNER_OBSERVED_ACCOUNT_STATE"]
+    c2_doc = c2["OFFICIAL_PROVIDER_DERIVED_RATE_LIMIT_EVIDENCE"]
+    c2_hist = c2["HISTORICAL_MODEL_ACCESS_EVIDENCE"]
     c3 = payload["candidate_readiness_attestations"]["C3"]
     c3_obs = c3["owner_observed"]
+    c3_in = c3["c3_canary_input_capacity_numeric_proof"]
+    c3_out = c3["c3_canary_output_capacity_numeric_proof"]
+    c3_req = c3["c3_canary_request_capacity_numeric_proof"]
     pol = payload["frozen_scientific_policy"]
     ba = payload["bound_authorities"]
     sem = payload["readiness_semantics_and_non_implication_firewall"]
+    imp = sem["readiness_implications"]
     san = payload["sanitization_and_privacy_attestation"]
 
     lines = [
@@ -1311,6 +1842,7 @@ def render_owner_provider_readiness_attestation_markdown(
         "## 1. Purpose & Candidate Authority Status",
         "",
         f"- **Task ID**: `{payload['task_id']}`",
+        f"- **Corrective Task ID**: `{payload['corrective_task_id']}`",
         f"- **Artifact ID**: `{payload['artifact_id']}`",
         f"- **Authoritative Base (`develop`)**: `{payload['authoritative_base_develop_sha']}`",
         f"- **Owner Attestation Evidence Date**: `{payload['owner_observed_readiness_evidence_date']}`",
@@ -1341,7 +1873,7 @@ def render_owner_provider_readiness_attestation_markdown(
         f"- `env_file_read`: `{str(san['env_file_read']).lower()}`",
         f"- `api_keys_inspected`: `{str(san['api_keys_inspected']).lower()}`",
         "",
-        "## 3. Sanitized Owner-Observed Provider Readiness by Candidate",
+        "## 3. Sanitized Provider Readiness Attestation by Candidate",
         "",
         "### 3.1 Google / `C1` (`gemini-3.8-flash`)",
         "",
@@ -1364,47 +1896,71 @@ def render_owner_provider_readiness_attestation_markdown(
         f"- `rpd_sufficient_for_frozen_canary`: `{str(c1_obs['rpd_sufficient_for_frozen_canary']).lower()}`",
         f"- `provider_readiness`: `{c1['provider_readiness']}`",
         "",
-        "### 3.2 OpenAI / `C2` (`gpt-6.1-sol`)",
+        "### 3.2 OpenAI / `C2` (`gpt-6.1-sol`) — Provenance-Separated Readiness Evidence",
         "",
         f"- `candidate_id`: `{c2['candidate_id']}`",
         f"- `provider`: `{c2['provider']}`",
         f"- `exact_model_id`: `{c2['exact_model_id']}`",
         f"- `billing_surface`: `{c2['billing_surface']}`",
-        f"- `billing_active`: `{str(c2_obs['billing_active']).lower()}`",
-        f"- `positive_api_credit_available`: `{str(c2_obs['positive_api_credit_available']).lower()}`",
-        f"- `api_credit_sufficient_for_canary_planning_envelope`: `{str(c2_obs['api_credit_sufficient_for_canary_planning_envelope']).lower()}`",
-        f"- `usage_tier`: `{c2_obs['usage_tier']}`",
-        f"- `organization_spend_limit_blocking`: `{str(c2_obs['organization_spend_limit_blocking']).lower()}`",
-        "- `exact_model_access_supported_by`:",
-        f"  - `{c2_obs['exact_model_access_supported_by'][0]}`",
-        f"  - `{c2_obs['exact_model_access_supported_by'][1]}`",
-        f"- `standard_rpm_limit`: `{c2_obs['standard_rpm_limit']}`",
-        f"- `standard_tpm_limit`: `{c2_obs['standard_tpm_limit']}`",
-        f"- `required_max_candidate_calls_under_frozen_amendment`: `{c2_obs['required_max_candidate_calls_under_frozen_amendment']}`",
-        f"- `canary_assigned_calls`: `{c2_obs['canary_assigned_calls']}`",
-        f"- `rpm_sufficient_for_frozen_canary`: `{str(c2_obs['rpm_sufficient_for_frozen_canary']).lower()}`",
-        f"- `tpm_sufficient_for_frozen_canary`: `{str(c2_obs['tpm_sufficient_for_frozen_canary']).lower()}`",
+        "- **A. `OWNER_OBSERVED_ACCOUNT_STATE`** (directly observed by Project Owner in OpenAI dashboard; no doc-derived RPM/TPM values claimed as dashboard-observed):",
+        f"  - `billing_active`: `{str(c2_obs['billing_active']).lower()}`",
+        f"  - `positive_api_credit_available`: `{str(c2_obs['positive_api_credit_available']).lower()}`",
+        f"  - `api_credit_sufficient_for_canary_planning_envelope`: `{str(c2_obs['api_credit_sufficient_for_canary_planning_envelope']).lower()}`",
+        f"  - `usage_tier`: `{c2_obs['usage_tier']}`",
+        f"  - `organization_spend_limit_blocking`: `{str(c2_obs['organization_spend_limit_blocking']).lower()}`",
+        "- **B. `OFFICIAL_PROVIDER_DERIVED_RATE_LIMIT_EVIDENCE`**:",
+        f"  - `exact_model_id`: `{c2_doc['exact_model_id']}`",
+        f"  - `usage_tier`: `{c2_doc['usage_tier']}`",
+        f"  - `standard_rpm_limit`: `{c2_doc['standard_rpm_limit']}`",
+        f"  - `standard_tpm_limit`: `{c2_doc['standard_tpm_limit']}`",
+        f"  - `source`: `{c2_doc['source']}`",
+        f"  - `authority_url`: `{c2_doc['authority_url']}`",
+        f"  - `evidence_classification`: `{c2_doc['evidence_classification']}`",
+        f"  - `rpm_or_tpm_manually_observed_in_owner_dashboard`: `{str(c2_doc['rpm_or_tpm_manually_observed_in_owner_dashboard']).lower()}`",
+        f"  - `required_max_candidate_calls_under_frozen_amendment`: `{c2_doc['required_max_candidate_calls_under_frozen_amendment']}`",
+        f"  - `canary_assigned_calls`: `{c2_doc['canary_assigned_calls']}`",
+        f"  - `rpm_sufficient_for_frozen_canary`: `{str(c2_doc['rpm_sufficient_for_frozen_canary']).lower()}`",
+        f"  - `tpm_sufficient_for_frozen_canary`: `{str(c2_doc['tpm_sufficient_for_frozen_canary']).lower()}`",
+        "- **C. `HISTORICAL_MODEL_ACCESS_EVIDENCE`**:",
+        f"  - `evidence_classification`: `{c2_hist['evidence_classification']}`",
+        f"  - `separate_from_owner_dashboard_observation`: `{str(c2_hist['separate_from_owner_dashboard_observation']).lower()}`",
+        f"  - `completed_primary_dev_select_c2_cells`: `{c2_hist['completed_primary_dev_select_c2_cells']}`",
+        f"  - `total_completed_p1_c2_cells_in_repo`: `{c2_hist['total_completed_p1_c2_cells_in_repo']}`",
+        f"  - `observed_provider_model_snapshot`: `{c2_hist['observed_provider_model_snapshot']}`",
         f"- `provider_readiness`: `{c2['provider_readiness']}`",
         "",
-        "### 3.3 Anthropic / `C3` (`claude-sonnet-5-5`)",
+        "### 3.3 Anthropic / `C3` (`claude-sonnet-5-5`) — Per-Minute Rate Limits & Offline Capacity Proofs",
         "",
         f"- `candidate_id`: `{c3['candidate_id']}`",
         f"- `provider`: `{c3['provider']}`",
         f"- `exact_model_id`: `{c3['exact_model_id']}`",
         f"- `billing_surface`: `{c3['billing_surface']}`",
-        f"- `billing_active`: `{str(c3_obs['billing_active']).lower()}`",
-        f"- `positive_credit_available`: `{str(c3_obs['positive_credit_available']).lower()}`",
-        f"- `exact_model_visible_in_rate_limit_dashboard`: `{str(c3_obs['exact_model_visible_in_rate_limit_dashboard']).lower()}`",
-        f"- `account_tier`: `{c3_obs['account_tier']}`",
-        f"- `input_token_limit`: `{c3_obs['input_token_limit']}`",
-        f"- `output_token_limit`: `{c3_obs['output_token_limit']}`",
-        f"- `request_limit`: `{c3_obs['request_limit']}`",
-        f"- `canary_assigned_calls`: `{c3_obs['canary_assigned_calls']}`",
-        f"- `configured_max_output_tokens_per_call`: `{c3_obs['configured_max_output_tokens_per_call']}`",
-        f"- `configured_three_call_max_output_reference`: `{c3_obs['configured_three_call_max_output_reference']}` (`{c3_obs['three_call_max_output_reference_comparison']}`)",
-        f"- `input_capacity_sufficient_for_frozen_canary_planning_envelope`: `{str(c3_obs['input_capacity_sufficient_for_frozen_canary_planning_envelope']).lower()}`",
-        f"- `output_capacity_sufficient_for_frozen_canary_reference`: `{str(c3_obs['output_capacity_sufficient_for_frozen_canary_reference']).lower()}`",
-        f"- `request_capacity_sufficient_for_frozen_canary`: `{str(c3_obs['request_capacity_sufficient_for_frozen_canary']).lower()}`",
+        "- **Owner-Observed Account-Specific Dashboard State (`PER_MINUTE` window)**:",
+        f"  - `billing_active`: `{str(c3_obs['billing_active']).lower()}`",
+        f"  - `positive_credit_available`: `{str(c3_obs['positive_credit_available']).lower()}`",
+        f"  - `exact_model_visible_in_rate_limit_dashboard`: `{str(c3_obs['exact_model_visible_in_rate_limit_dashboard']).lower()}`",
+        f"  - `account_tier`: `{c3_obs['account_tier']}`",
+        f"  - `requests_per_minute_limit`: `{c3_obs['requests_per_minute_limit']}`",
+        f"  - `input_tokens_per_minute_limit`: `{c3_obs['input_tokens_per_minute_limit']}`",
+        f"  - `output_tokens_per_minute_limit`: `{c3_obs['output_tokens_per_minute_limit']}`",
+        f"  - `rate_limit_dimensions`: `{c3_obs['rate_limit_dimensions']}`",
+        f"  - `rate_limit_window`: `{c3_obs['rate_limit_window']}`",
+        f"  - `generic_public_claude_tier_table_substituted`: `{str(c3_obs['generic_public_claude_tier_table_substituted']).lower()}`",
+        "- **Offline Numeric Input Capacity Proof (`W06-DEV-TUNE-007`, `W06-DEV-TUNE-011`, `W06-DEV-TUNE-015`)**:",
+        f"  - `C3_INPUT_CAPACITY_STATUS`: `{c3_in['C3_INPUT_CAPACITY_STATUS']}`",
+        f"  - `W06-DEV-TUNE-007` (`ha-noi`): `authoritative_p1_usage_available = false`, `exact_historical_p1_input_tokens = null`, `serialized_wire_request_utf8_bytes = {c3_in['per_fixture_canary_input_evidence']['W06-DEV-TUNE-007']['serialized_wire_request_utf8_bytes']}` (`DETERMINISTIC_SERIALIZED_WIRE_PAYLOAD_UTF8_BYTE_UPPER_BOUND`)",
+        f"  - `W06-DEV-TUNE-011` (`da-nang`): `authoritative_p1_usage_available = true`, `exact_historical_p1_input_tokens = {c3_in['per_fixture_canary_input_evidence']['W06-DEV-TUNE-011']['exact_historical_p1_input_tokens']}` (`serialized_wire_request_utf8_bytes = {c3_in['per_fixture_canary_input_evidence']['W06-DEV-TUNE-011']['serialized_wire_request_utf8_bytes']}`)",
+        f"  - `W06-DEV-TUNE-015` (`ha-long`): `authoritative_p1_usage_available = true`, `exact_historical_p1_input_tokens = {c3_in['per_fixture_canary_input_evidence']['W06-DEV-TUNE-015']['exact_historical_p1_input_tokens']}` (`serialized_wire_request_utf8_bytes = {c3_in['per_fixture_canary_input_evidence']['W06-DEV-TUNE-015']['serialized_wire_request_utf8_bytes']}`)",
+        f"  - `three_call_input_reference_source`: `{c3_in['three_call_input_reference_source']}`",
+        f"  - `three_call_input_token_reference`: `{c3_in['three_call_input_token_reference']}` (`{c3_in['three_call_input_reference_comparison']}`)",
+        f"  - `three_call_pure_serialized_wire_utf8_byte_upper_bound`: `{c3_in['three_call_pure_serialized_wire_utf8_byte_upper_bound']}` (`< 500000 ITPM`)",
+        f"  - `future_execution_guaranteed_to_consume_exact_same_tokens`: `{str(c3_in['future_execution_guaranteed_to_consume_exact_same_tokens']).lower()}`",
+        "- **Offline Conservative Output Upper-Bound Reference & Request Capacity Proof**:",
+        f"  - `canary_assigned_calls`: `{c3_out['canary_assigned_calls']}`",
+        f"  - `configured_max_output_tokens_per_call`: `{c3_out['configured_max_output_tokens_per_call']}`",
+        f"  - `conservative_three_call_configured_output_upper_bound_reference`: `{c3_out['conservative_three_call_configured_output_upper_bound_reference']}` (`{c3_out['conservative_three_call_output_upper_bound_comparison']}`)",
+        f"  - `max_tokens_setting_itself_consumes_or_reserves_otpm_claimed`: `{str(c3_out['max_tokens_setting_itself_consumes_or_reserves_otpm_claimed']).lower()}`",
+        f"  - `three_call_request_comparison`: `{c3_req['three_call_request_comparison']}`",
         f"- `provider_readiness`: `{c3['provider_readiness']}`",
         f"- `generalized_as_readiness_proof_for_future_60_call_comparative_run`: `{str(c3['generalized_as_readiness_proof_for_future_60_call_comparative_run']).lower()}`",
         f"- `comparative_readiness_must_be_rechecked_before_comparative_authorization`: `{str(c3['comparative_readiness_must_be_rechecked_before_comparative_authorization']).lower()}`",
@@ -1416,6 +1972,14 @@ def render_owner_provider_readiness_attestation_markdown(
         f"- `C2_PROVIDER_READINESS`: `{payload['C2_PROVIDER_READINESS']}`",
         f"- `C3_PROVIDER_READINESS`: `{payload['C3_PROVIDER_READINESS']}`",
         f"- `ALL_CANARY_PROVIDER_READINESS`: `{payload['ALL_CANARY_PROVIDER_READINESS']}`",
+        "- `readiness_implications`:",
+        f"  - `provider_availability_guaranteed`: `{str(imp['provider_availability_guaranteed']).lower()}`",
+        f"  - `all_9_canary_calls_guaranteed_to_complete`: `{str(imp['all_9_canary_calls_guaranteed_to_complete']).lower()}`",
+        f"  - `schema_or_core_quality_guaranteed`: `{str(imp['schema_or_core_quality_guaranteed']).lower()}`",
+        f"  - `provider_5xx_impossible`: `{str(imp['provider_5xx_impossible']).lower()}`",
+        f"  - `provider_high_demand_failures_impossible`: `{str(imp['provider_high_demand_failures_impossible']).lower()}`",
+        f"  - `comparative_execution_authorized`: `{str(imp['comparative_execution_authorized']).lower()}`",
+        f"  - `final100_authorized`: `{str(imp['final100_authorized']).lower()}`",
         f"- `READY_FOR_CANARY_IS_NOT_CANARY_AUTHORIZATION`: `{str(sem['READY_FOR_CANARY_IS_NOT_CANARY_AUTHORIZATION']).lower()}`",
         f"- `CANARY_OPERATIONAL_PASS_STILL_REQUIRES_9_OF_9`: `{str(sem['CANARY_OPERATIONAL_PASS_STILL_REQUIRES_9_OF_9']).lower()}`",
         f"- `CANARY_PASS_DOES_NOT_AUTO_AUTHORIZE_COMPARATIVE`: `{str(sem['CANARY_PASS_DOES_NOT_AUTO_AUTHORIZE_COMPARATIVE']).lower()}`",
@@ -1446,7 +2010,7 @@ def render_owner_provider_readiness_attestation_markdown(
 
 
 # ==============================================================================
-# 5. WRITE & STATELESS VERIFY FUNCTIONS
+# 6. WRITE & STATELESS VERIFY FUNCTIONS
 # ==============================================================================
 
 
@@ -1613,6 +2177,7 @@ def verify_w06_owner_provider_readiness_attestation(
             "verified": True,
             "status": "PASS",
             "task_id": TASK_ID,
+            "corrective_task_id": CORRECTIVE_TASK_ID,
             "artifact_id": OWNER_READINESS_ATTESTATION_ARTIFACT_ID,
             "authoritative_base_develop_sha": AUTHORITATIVE_BASE_DEVELOP_SHA,
             "owner_observed_readiness_evidence_date": disk_payload[
