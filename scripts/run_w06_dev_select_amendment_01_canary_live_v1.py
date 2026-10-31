@@ -166,14 +166,14 @@ TASK_ID = (
     "W06-DEV-SELECT-EXECUTION-ENVIRONMENT-AMENDMENT-01-CANARY-LIVE-LAUNCHER-PREP"
 )
 CORRECTIVE_TASK_ID = (
-    "W06-DEV-SELECT-EXECUTION-ENVIRONMENT-AMENDMENT-01-CANARY-LIVE-LAUNCHER-CORRECTIVE-01"
+    "W06-DEV-SELECT-EXECUTION-ENVIRONMENT-AMENDMENT-01-CANARY-LIVE-LAUNCHER-CORRECTIVE-02"
 )
 PREVIOUS_GATE_ID = (
     "W06-DEV-SELECT-EXECUTION-ENVIRONMENT-AMENDMENT-01-AMENDED-CANARY-LIVE-AUTHORIZATION-POSTMERGE-CHATGPT-AUDIT"
 )
 PREVIOUS_GATE_DECISION = "PASS"
 NEXT_GATE_ID = (
-    "W06-DEV-SELECT-EXECUTION-ENVIRONMENT-AMENDMENT-01-CANARY-LIVE-LAUNCHER-CORRECTIVE-01-CHATGPT-AUDIT"
+    "W06-DEV-SELECT-EXECUTION-ENVIRONMENT-AMENDMENT-01-CANARY-LIVE-LAUNCHER-CORRECTIVE-02-CHATGPT-AUDIT"
 )
 FUTURE_LIVE_EXECUTION_GATE_ID = (
     "W06-DEV-SELECT-EXECUTION-ENVIRONMENT-AMENDMENT-01-CANARY-LIVE-EXECUTION-01"
@@ -181,6 +181,7 @@ FUTURE_LIVE_EXECUTION_GATE_ID = (
 
 LAUNCHER_IDENTITY_ID = "W06-AMENDMENT-01-CANARY-LIVE-LAUNCHER-V1"
 LAUNCHER_VERSION = "1.0.0"
+LAUNCHER_PR_NUMBER = 73
 
 CANARY_LIVE_EXECUTION_AUTH_RECEIPT_REL_PATH = (
     "data/evaluation/w06/w06_dev_select_amendment_01_canary_live_execution_authorization_v1.json"
@@ -1534,18 +1535,40 @@ def _expected_9_cell_order_records() -> list[dict[str, Any]]:
     ]
 
 
+def _is_valid_sha40(value: Any) -> bool:
+    return (
+        isinstance(value, str)
+        and len(value) == 40
+        and all(c in "0123456789abcdef" for c in value)
+    )
+
+
+def _is_valid_sha64(value: Any) -> bool:
+    return (
+        isinstance(value, str)
+        and len(value) == 64
+        and all(c in "0123456789abcdef" for c in value)
+    )
+
+
 def build_canary_live_execution_authorization_receipt_payload(
     *,
-    authorized_code_basis_commit_sha: str = AUTHORITATIVE_BASE_DEVELOP_SHA,
-    launcher_merge_commit_sha: str = AUTHORITATIVE_BASE_DEVELOP_SHA,
-    launcher_pr_number: int = 73,
+    launcher_pr_head_sha: str,
+    launcher_merge_commit_sha: str,
+    authorized_code_basis_commit_sha: str,
+    launcher_file_lf_sha256: str,
+    launcher_pr_number: int = LAUNCHER_PR_NUMBER,
     overrides: Mapping[str, Any] | None = None,
     recompute_internal_sha: bool = True,
 ) -> dict[str, Any]:
     """Build a canonical future `w06_dev_select_amendment_01_canary_live_execution_authorization_v1.json` payload.
 
-    Used by unit tests to verify the two-layer authorization contract offline without creating
-    an effective production execution authorization receipt in the repository during PREP.
+    Corrective 02 (Sections 2, 3, 6):
+    - Requires explicit `launcher_pr_head_sha`, `launcher_merge_commit_sha`,
+      `authorized_code_basis_commit_sha`, and `launcher_file_lf_sha256`.
+    - Does NOT default any PR #73 commit field to pre-launcher `AUTHORITATIVE_BASE_DEVELOP_SHA` (`1ebe30c...`).
+    - Used by unit tests to verify the two-layer authorization contract offline without creating
+      an effective production execution authorization receipt in the repository during PREP.
     """
     payload: dict[str, Any] = {
         "artifact_id": CANARY_LIVE_EXECUTION_AUTH_RECEIPT_ARTIFACT_ID,
@@ -1602,13 +1625,20 @@ def build_canary_live_execution_authorization_receipt_payload(
         "launcher_identity_id": LAUNCHER_IDENTITY_ID,
         "launcher_version": LAUNCHER_VERSION,
         "launcher_path": LAUNCHER_REL_PATH,
+        "launcher_pr_number": launcher_pr_number,
+        "launcher_pr_head_sha": launcher_pr_head_sha,
+        "launcher_merge_commit_sha": launcher_merge_commit_sha,
+        "authorized_code_basis_commit_sha": authorized_code_basis_commit_sha,
+        "launcher_file_lf_sha256": launcher_file_lf_sha256,
         "scientific_code_bundle_sha256": EXPECTED_SCIENTIFIC_CODE_BUNDLE_SHA256,
         "authoritative_base_develop_sha": AUTHORITATIVE_BASE_DEVELOP_SHA,
-        "authorized_code_basis_commit_sha": authorized_code_basis_commit_sha,
         "launcher_repository_merge_provenance": {
             "pr_number": launcher_pr_number,
             "base_develop_sha": AUTHORITATIVE_BASE_DEVELOP_SHA,
+            "pr_head_sha": launcher_pr_head_sha,
             "merge_commit_sha": launcher_merge_commit_sha,
+            "authorized_code_basis_commit_sha": authorized_code_basis_commit_sha,
+            "launcher_file_lf_sha256": launcher_file_lf_sha256,
         },
         "CANARY_LIVE_EXECUTION_AUTHORIZED": True,
     }
@@ -1622,15 +1652,217 @@ def build_canary_live_execution_authorization_receipt_payload(
     return payload
 
 
+def verify_canary_launcher_execution_code_provenance(
+    repo_root: Path = REPO_ROOT,
+    *,
+    launcher_pr_number: Any,
+    launcher_pr_head_sha: Any,
+    launcher_merge_commit_sha: Any,
+    authorized_code_basis_commit_sha: Any,
+    launcher_file_lf_sha256: Any,
+    launcher_path: Any,
+    git_runner: Callable[[ list[str]], subprocess.CompletedProcess[str]] | None = None,
+    launcher_file_path_override: Path | None = None,
+) -> dict[str, Any]:
+    """Verify cryptographic & Git provenance of the merged PR #73 launcher revision (Corrective 02 Sections 2, 3, 4, 5).
+
+    Fails closed unless the repository (and actual launcher file content) prove:
+    1. `launcher_pr_number == 73` and `launcher_path == "scripts/run_w06_dev_select_amendment_01_canary_live_v1.py"`;
+    2. `launcher_pr_head_sha`, `launcher_merge_commit_sha`, and `authorized_code_basis_commit_sha` are valid 40-char
+       hex SHAs and none equals pre-launcher `develop@1ebe30c251958542088a3056dcfc6b780dac3a88`;
+    3. `launcher_pr_head_sha` exists in git (`git cat-file -e`);
+    4. `launcher_merge_commit_sha` exists in git (`git cat-file -e`);
+    5. `authorized_code_basis_commit_sha` exists in git (`git cat-file -e`);
+    6. `authorized_code_basis_commit_sha == launcher_merge_commit_sha`;
+    7. `launcher_merge_commit_sha` is a 2-parent merge commit (`git rev-list --parents -n 1`) whose:
+       - base parent (parent 1) is frozen pre-launcher `develop@1ebe30c251958542088a3056dcfc6b780dac3a88`,
+       - PR head parent (parent 2) is `launcher_pr_head_sha`,
+       - `AUTHORITATIVE_BASE_DEVELOP_SHA` is an ancestor of `launcher_pr_head_sha`, and
+       - `launcher_pr_head_sha` is an ancestor of `launcher_merge_commit_sha`;
+    8. `launcher_merge_commit_sha` is an ancestor of the runtime `HEAD` used for execution (`git merge-base --is-ancestor`);
+    9. LF-normalized SHA256 of `scripts/run_w06_dev_select_amendment_01_canary_live_v1.py` equals `launcher_file_lf_sha256`.
+    """
+    if (
+        not isinstance(launcher_pr_number, int)
+        or isinstance(launcher_pr_number, bool)
+        or launcher_pr_number != LAUNCHER_PR_NUMBER
+    ):
+        raise LiveExecutionNotAuthorizedError(
+            f"CANARY_EXECUTION_LAUNCHER_PR_NUMBER_MISMATCH: expected={LAUNCHER_PR_NUMBER}, got={launcher_pr_number!r}"
+        )
+    if launcher_path != LAUNCHER_REL_PATH:
+        raise LiveExecutionNotAuthorizedError(
+            f"CANARY_EXECUTION_LAUNCHER_PATH_MISMATCH: expected={LAUNCHER_REL_PATH!r}, got={launcher_path!r}"
+        )
+    if (
+        not _is_valid_sha40(launcher_pr_head_sha)
+        or not _is_valid_sha40(launcher_merge_commit_sha)
+        or not _is_valid_sha40(authorized_code_basis_commit_sha)
+    ):
+        raise LiveExecutionNotAuthorizedError(
+            "CANARY_EXECUTION_LAUNCHER_SHA40_FORMAT_INVALID: "
+            "launcher_pr_head_sha, launcher_merge_commit_sha, and authorized_code_basis_commit_sha must be 40-char lowercase hex."
+        )
+    if (
+        launcher_pr_head_sha == AUTHORITATIVE_BASE_DEVELOP_SHA
+        or launcher_merge_commit_sha == AUTHORITATIVE_BASE_DEVELOP_SHA
+        or authorized_code_basis_commit_sha == AUTHORITATIVE_BASE_DEVELOP_SHA
+    ):
+        raise LiveExecutionNotAuthorizedError(
+            "CANARY_EXECUTION_PRE_LAUNCHER_BASE_DEVELOP_SHA_FORBIDDEN: "
+            f"Pre-launcher develop@{AUTHORITATIVE_BASE_DEVELOP_SHA} must not be used as PR #73 head, merge, or authorized code basis commit."
+        )
+
+    # Content hash binding of scripts/run_w06_dev_select_amendment_01_canary_live_v1.py (Section 5)
+    if not _is_valid_sha64(launcher_file_lf_sha256):
+        raise LiveExecutionNotAuthorizedError(
+            f"CANARY_EXECUTION_LAUNCHER_FILE_LF_SHA256_INVALID: {launcher_file_lf_sha256!r}"
+        )
+    target_launcher_file = launcher_file_path_override or (
+        repo_root / LAUNCHER_REL_PATH
+    )
+    _assert_runner_not_final100_path(target_launcher_file)
+    if not target_launcher_file.is_file():
+        raise LiveExecutionNotAuthorizedError(
+            f"CANARY_EXECUTION_LAUNCHER_FILE_MISSING: {target_launcher_file}"
+        )
+    actual_launcher_lf_sha256 = _compute_file_lf_sha256(target_launcher_file)
+    if actual_launcher_lf_sha256 != launcher_file_lf_sha256:
+        raise LiveExecutionNotAuthorizedError(
+            f"CANARY_EXECUTION_LAUNCHER_FILE_LF_SHA256_MISMATCH: "
+            f"receipt={launcher_file_lf_sha256!r}, actual={actual_launcher_lf_sha256!r}"
+        )
+
+    def _run_git(args: list[str]) -> subprocess.CompletedProcess[str]:
+        if git_runner is not None:
+            return git_runner(args)
+        return subprocess.run(
+            ["git", *args],
+            cwd=str(repo_root),
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+
+    # 1. launcher_pr_head_sha exists in git
+    pr_head_cat = _run_git(["cat-file", "-e", f"{launcher_pr_head_sha}^{{commit}}"])
+    if pr_head_cat.returncode != 0:
+        raise LiveExecutionNotAuthorizedError(
+            f"CANARY_EXECUTION_LAUNCHER_PR_HEAD_COMMIT_NOT_FOUND: {launcher_pr_head_sha}"
+        )
+
+    # 2. launcher_merge_commit_sha exists in git
+    merge_cat = _run_git(["cat-file", "-e", f"{launcher_merge_commit_sha}^{{commit}}"])
+    if merge_cat.returncode != 0:
+        raise LiveExecutionNotAuthorizedError(
+            f"CANARY_EXECUTION_LAUNCHER_MERGE_COMMIT_NOT_FOUND: {launcher_merge_commit_sha}"
+        )
+
+    # 3. authorized_code_basis_commit_sha exists in git
+    basis_cat = _run_git(
+        ["cat-file", "-e", f"{authorized_code_basis_commit_sha}^{{commit}}"]
+    )
+    if basis_cat.returncode != 0:
+        raise LiveExecutionNotAuthorizedError(
+            f"CANARY_EXECUTION_AUTHORIZED_CODE_BASIS_COMMIT_NOT_FOUND: {authorized_code_basis_commit_sha}"
+        )
+
+    # 4. authorized_code_basis_commit_sha == launcher_merge_commit_sha
+    if authorized_code_basis_commit_sha != launcher_merge_commit_sha:
+        raise LiveExecutionNotAuthorizedError(
+            f"CANARY_EXECUTION_CODE_BASIS_NOT_EQUAL_TO_LAUNCHER_MERGE_COMMIT: "
+            f"authorized_code_basis_commit_sha={authorized_code_basis_commit_sha} != "
+            f"launcher_merge_commit_sha={launcher_merge_commit_sha}"
+        )
+
+    # 5, 6, 7. Merge commit parents & PR #73 ancestry
+    parents_proc = _run_git(
+        ["rev-list", "--parents", "-n", "1", launcher_merge_commit_sha]
+    )
+    parent_tokens = (
+        parents_proc.stdout.strip().split() if parents_proc.returncode == 0 else []
+    )
+    if len(parent_tokens) != 3 or parent_tokens[0] != launcher_merge_commit_sha:
+        raise LiveExecutionNotAuthorizedError(
+            f"CANARY_EXECUTION_LAUNCHER_MERGE_COMMIT_NOT_TWO_PARENT_MERGE: "
+            f"rev-list --parents returned {parent_tokens!r} for {launcher_merge_commit_sha}"
+        )
+    merge_parent_1, merge_parent_2 = parent_tokens[1], parent_tokens[2]
+
+    # 6. PR #73 base parent must be frozen pre-launcher develop@1ebe30c251958542088a3056dcfc6b780dac3a88
+    if merge_parent_1 != AUTHORITATIVE_BASE_DEVELOP_SHA:
+        raise LiveExecutionNotAuthorizedError(
+            f"CANARY_EXECUTION_LAUNCHER_MERGE_BASE_PARENT_MISMATCH: "
+            f"expected base parent {AUTHORITATIVE_BASE_DEVELOP_SHA}, got {merge_parent_1}"
+        )
+
+    # 5 & 7. Merge commit must descend from expected PR #73 head, and PR #73 head must descend from base
+    pr_head_anc_merge = _run_git(
+        ["merge-base", "--is-ancestor", launcher_pr_head_sha, launcher_merge_commit_sha]
+    )
+    base_anc_pr_head = _run_git(
+        [
+            "merge-base",
+            "--is-ancestor",
+            AUTHORITATIVE_BASE_DEVELOP_SHA,
+            launcher_pr_head_sha,
+        ]
+    )
+    if (
+        merge_parent_2 != launcher_pr_head_sha
+        or pr_head_anc_merge.returncode != 0
+        or base_anc_pr_head.returncode != 0
+    ):
+        raise LiveExecutionNotAuthorizedError(
+            f"CANARY_EXECUTION_LAUNCHER_MERGE_PR_HEAD_ANCESTRY_MISMATCH: "
+            f"merge_parent_2={merge_parent_2}, expected launcher_pr_head_sha={launcher_pr_head_sha}"
+        )
+
+    # 8. Launcher merge commit must be an ancestor of runtime HEAD
+    head_proc = _run_git(["rev-parse", "HEAD"])
+    runtime_head_sha = (
+        head_proc.stdout.strip() if head_proc.returncode == 0 else ""
+    )
+    if not _is_valid_sha40(runtime_head_sha):
+        raise LiveExecutionNotAuthorizedError(
+            f"CANARY_EXECUTION_RUNTIME_HEAD_RESOLUTION_FAILED: {runtime_head_sha!r}"
+        )
+    merge_anc_runtime = _run_git(
+        ["merge-base", "--is-ancestor", launcher_merge_commit_sha, runtime_head_sha]
+    )
+    if merge_anc_runtime.returncode != 0:
+        raise LiveExecutionNotAuthorizedError(
+            f"CANARY_EXECUTION_LAUNCHER_MERGE_NOT_ANCESTOR_OF_RUNTIME_HEAD: "
+            f"launcher_merge_commit_sha={launcher_merge_commit_sha} is not an ancestor of runtime_head_sha={runtime_head_sha}"
+        )
+
+    return {
+        "verified": True,
+        "launcher_pr_number": launcher_pr_number,
+        "authoritative_base_develop_sha": AUTHORITATIVE_BASE_DEVELOP_SHA,
+        "launcher_pr_head_sha": launcher_pr_head_sha,
+        "launcher_merge_commit_sha": launcher_merge_commit_sha,
+        "authorized_code_basis_commit_sha": authorized_code_basis_commit_sha,
+        "runtime_head_sha": runtime_head_sha,
+        "merge_parent_1": merge_parent_1,
+        "merge_parent_2": merge_parent_2,
+        "launcher_path": LAUNCHER_REL_PATH,
+        "launcher_file_lf_sha256": actual_launcher_lf_sha256,
+    }
+
+
 def verify_canary_live_execution_authorization_receipt(
     repo_root: Path = REPO_ROOT,
     *,
     receipt_path_override: Path | None = None,
     receipt_payload_override: Mapping[str, Any] | None = None,
+    git_runner: Callable[[list[str]], subprocess.CompletedProcess[str]] | None = None,
+    launcher_file_path_override: Path | None = None,
 ) -> dict[str, Any]:
     """Validate the separate future `w06_dev_select_amendment_01_canary_live_execution_authorization_v1.json` receipt.
 
-    Enforces canonical internal SHA256 tamper detection and all frozen bindings required by Corrective 01 Blocker 1.
+    Enforces canonical internal SHA256 tamper detection, all frozen bindings (Corrective 01 Blocker 1),
+    and cryptographic + Git code provenance binding to the merged PR #73 launcher revision (Corrective 02).
     """
     target_path = receipt_path_override or (
         repo_root / CANARY_LIVE_EXECUTION_AUTH_RECEIPT_REL_PATH
@@ -1792,34 +2024,42 @@ def verify_canary_live_execution_authorization_receipt(
             "CANARY_EXECUTION_AUTH_COMPARATIVE_OR_DOWNSTREAM_FORBIDDEN: Comparative180, winner selection, and stochasticity must remain false/null."
         )
 
-    # 9. Exact launcher identity/version & merge provenance / authorized code basis
-    code_basis_sha = data.get("authorized_code_basis_commit_sha")
+    # 9. Exact launcher identity/version & repository merge provenance consistency
     merge_prov = data.get("launcher_repository_merge_provenance")
-    merge_sha = (
-        merge_prov.get("merge_commit_sha") if isinstance(merge_prov, Mapping) else None
-    )
     if (
         data.get("launcher_identity_id") != LAUNCHER_IDENTITY_ID
         or data.get("launcher_version") != LAUNCHER_VERSION
-        or data.get("launcher_path") != LAUNCHER_REL_PATH
         or data.get("scientific_code_bundle_sha256")
         != EXPECTED_SCIENTIFIC_CODE_BUNDLE_SHA256
         or data.get("authoritative_base_develop_sha") != AUTHORITATIVE_BASE_DEVELOP_SHA
-        or not isinstance(code_basis_sha, str)
-        or len(code_basis_sha) != 40
-        or any(c not in "0123456789abcdef" for c in code_basis_sha)
         or not isinstance(merge_prov, Mapping)
-        or merge_prov.get("pr_number") != 73
+        or merge_prov.get("pr_number") != data.get("launcher_pr_number")
         or merge_prov.get("base_develop_sha") != AUTHORITATIVE_BASE_DEVELOP_SHA
-        or not isinstance(merge_sha, str)
-        or len(merge_sha) != 40
-        or any(c not in "0123456789abcdef" for c in merge_sha)
+        or merge_prov.get("pr_head_sha") != data.get("launcher_pr_head_sha")
+        or merge_prov.get("merge_commit_sha") != data.get("launcher_merge_commit_sha")
+        or merge_prov.get("authorized_code_basis_commit_sha")
+        != data.get("authorized_code_basis_commit_sha")
+        or merge_prov.get("launcher_file_lf_sha256")
+        != data.get("launcher_file_lf_sha256")
     ):
         raise LiveExecutionNotAuthorizedError(
             "CANARY_EXECUTION_AUTH_LAUNCHER_IDENTITY_OR_PROVENANCE_MISMATCH"
         )
 
-    # 10. Effective authorization flag
+    # 10. Cryptographic + Git provenance verification of PR #73 launcher revision (Corrective 02 Sections 2..5)
+    code_provenance = verify_canary_launcher_execution_code_provenance(
+        repo_root=repo_root,
+        launcher_pr_number=data.get("launcher_pr_number"),
+        launcher_pr_head_sha=data.get("launcher_pr_head_sha"),
+        launcher_merge_commit_sha=data.get("launcher_merge_commit_sha"),
+        authorized_code_basis_commit_sha=data.get("authorized_code_basis_commit_sha"),
+        launcher_file_lf_sha256=data.get("launcher_file_lf_sha256"),
+        launcher_path=data.get("launcher_path"),
+        git_runner=git_runner,
+        launcher_file_path_override=launcher_file_path_override,
+    )
+
+    # 11. Effective authorization flag
     if data.get("CANARY_LIVE_EXECUTION_AUTHORIZED") is not True:
         raise LiveExecutionNotAuthorizedError(
             "CANARY_LIVE_EXECUTION_NOT_AUTHORIZED: CANARY_LIVE_EXECUTION_AUTHORIZED must be true in receipt."
@@ -1831,6 +2071,7 @@ def verify_canary_live_execution_authorization_receipt(
         "execution_authorization_receipt_file_sha256": file_sha256,
         "execution_authorization_receipt_internal_sha256": computed_internal,
         "CANARY_LIVE_EXECUTION_AUTHORIZED": True,
+        "code_provenance": code_provenance,
         "receipt": data,
     }
 
@@ -1839,6 +2080,8 @@ def inspect_canary_live_execution_authorization_state(
     repo_root: Path = REPO_ROOT,
     *,
     receipt_path_override: Path | None = None,
+    git_runner: Callable[[list[str]], subprocess.CompletedProcess[str]] | None = None,
+    launcher_file_path_override: Path | None = None,
 ) -> dict[str, Any]:
     """Inspect whether the separate live-execution authorization receipt exists and is valid.
 
@@ -1867,6 +2110,8 @@ def inspect_canary_live_execution_authorization_state(
     verified_rec = verify_canary_live_execution_authorization_receipt(
         repo_root=repo_root,
         receipt_path_override=target_path,
+        git_runner=git_runner,
+        launcher_file_path_override=launcher_file_path_override,
     )
     return {
         "execution_authorization_receipt_path": (
@@ -1891,15 +2136,18 @@ def verify_two_layer_canary_live_execution_authorization(
     output_root_override: Path | None = None,
     execution_auth_receipt_path_override: Path | None = None,
     execution_auth_receipt_payload_override: Mapping[str, Any] | None = None,
+    git_runner: Callable[[list[str]], subprocess.CompletedProcess[str]] | None = None,
+    launcher_file_path_override: Path | None = None,
 ) -> dict[str, Any]:
-    """Enforce the two-layer live execution authorization contract (Blocker 1 & Section 5).
+    """Enforce the two-layer live execution authorization contract (Blocker 1 & Corrective 02 Sections 2..5).
 
     Requires BOTH:
     1. Frozen authorization PREP (`w06_dev_select_amendment_01_canary_authorization_prep_v1.json`)
        remains valid and unmutated (`AMENDED_CANARY_LIVE_AUTHORIZED == false`); AND
     2. Separate execution authorization receipt
        (`w06_dev_select_amendment_01_canary_live_execution_authorization_v1.json`)
-       is present and valid (`CANARY_LIVE_EXECUTION_AUTHORIZED == true`).
+       is present and valid (`CANARY_LIVE_EXECUTION_AUTHORIZED == true`) with verified PR #73 merge
+       git provenance and exact launcher file LF SHA256.
     """
     verified_authorities = verify_frozen_canary_launcher_authorities(
         repo_root=repo_root,
@@ -1909,6 +2157,8 @@ def verify_two_layer_canary_live_execution_authorization(
         repo_root=repo_root,
         receipt_path_override=execution_auth_receipt_path_override,
         receipt_payload_override=execution_auth_receipt_payload_override,
+        git_runner=git_runner,
+        launcher_file_path_override=launcher_file_path_override,
     )
     return {
         "verified": True,
@@ -3457,6 +3707,8 @@ def run_live_canary_execution(
     *,
     output_root_override: Path | None = None,
     execution_authorization_receipt_path_override: Path | None = None,
+    git_runner: Callable[[list[str]], subprocess.CompletedProcess[str]] | None = None,
+    launcher_file_path_override: Path | None = None,
     api_key_loader: Callable[[str], str] | None = None,
     live_transport_invoker: Callable[..., ProviderNormalizedTransportResponse]
     | None = None,
@@ -3470,12 +3722,14 @@ def run_live_canary_execution(
        must match exact file/internal SHA256 and preserve `AMENDED_CANARY_LIVE_AUTHORIZED == False`.
     2. Separate live-execution authorization receipt (`w06_dev_select_amendment_01_canary_live_execution_authorization_v1.json`)
        must exist, pass canonical internal SHA256 tamper verification, bind all frozen hashes/models/order/budget/zero-retry/firewalls,
-       and have `CANARY_LIVE_EXECUTION_AUTHORIZED == True`.
+       bind exact PR #73 merge git provenance and launcher file LF SHA256, and have `CANARY_LIVE_EXECUTION_AUTHORIZED == True`.
     """
     verify_two_layer_canary_live_execution_authorization(
         repo_root=repo_root,
         execution_auth_receipt_path_override=execution_authorization_receipt_path_override,
         output_root_override=output_root_override,
+        git_runner=git_runner,
+        launcher_file_path_override=launcher_file_path_override,
     )
     return execute_canary_9_cell_sequence(
         repo_root=repo_root,

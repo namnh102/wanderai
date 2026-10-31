@@ -862,6 +862,113 @@ def test_29_cli_safety_flags_and_live_execution_gate_firewall() -> None:
 # ==============================================================================
 
 
+SYNTHETIC_PR_73_HEAD_SHA = "b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1"
+SYNTHETIC_PR_73_MERGE_SHA = "c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2"
+SYNTHETIC_RUNTIME_HEAD_SHA = "d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3"
+
+
+def _current_launcher_lf_sha256() -> str:
+    return sha256_bytes(
+        normalize_lf_bytes(
+            (REPO_ROOT / canary_launcher.LAUNCHER_REL_PATH).read_bytes()
+        )
+    )
+
+
+def _make_synthetic_git_runner(
+    *,
+    parents_by_commit: dict[str, list[str]] | None = None,
+    runtime_head_sha: str = SYNTHETIC_RUNTIME_HEAD_SHA,
+):
+    """Build an offline synthetic Git graph runner (`BASE -> PR_HEAD -> MERGE(BASE, PR_HEAD) -> RUNTIME_HEAD`)."""
+    base_sha = canary_launcher.AUTHORITATIVE_BASE_DEVELOP_SHA
+    default_graph: dict[str, list[str]] = {
+        canary_launcher.PR_72_MERGE_PARENT_1: [],
+        canary_launcher.PR_72_MERGE_PARENT_2: [],
+        base_sha: [
+            canary_launcher.PR_72_MERGE_PARENT_1,
+            canary_launcher.PR_72_MERGE_PARENT_2,
+        ],
+        SYNTHETIC_PR_73_HEAD_SHA: [base_sha],
+        SYNTHETIC_PR_73_MERGE_SHA: [base_sha, SYNTHETIC_PR_73_HEAD_SHA],
+        SYNTHETIC_RUNTIME_HEAD_SHA: [SYNTHETIC_PR_73_MERGE_SHA],
+    }
+    graph = parents_by_commit if parents_by_commit is not None else default_graph
+
+    def _is_ancestor(anc: str, desc: str) -> bool:
+        if anc not in graph or desc not in graph:
+            return False
+        visited: set[str] = set()
+        stack = [desc]
+        while stack:
+            cur = stack.pop()
+            if cur == anc:
+                return True
+            if cur in visited:
+                continue
+            visited.add(cur)
+            stack.extend(graph.get(cur, []))
+        return False
+
+    def _runner(args: list[str]) -> subprocess.CompletedProcess[str]:
+        if len(args) >= 3 and args[0] == "cat-file" and args[1] == "-e":
+            target = args[2].split("^")[0]
+            rc = 0 if target in graph else 1
+            return subprocess.CompletedProcess(args, rc, stdout="", stderr="")
+        if (
+            len(args) >= 4
+            and args[0] == "rev-list"
+            and "--parents" in args
+            and "-n" in args
+        ):
+            target = args[-1]
+            if target not in graph:
+                return subprocess.CompletedProcess(args, 1, stdout="", stderr="missing")
+            parents = graph[target]
+            line = " ".join([target, *parents]) + "\n"
+            return subprocess.CompletedProcess(args, 0, stdout=line, stderr="")
+        if (
+            len(args) >= 4
+            and args[0] == "merge-base"
+            and args[1] == "--is-ancestor"
+        ):
+            anc, desc = args[2], args[3]
+            rc = 0 if _is_ancestor(anc, desc) else 1
+            return subprocess.CompletedProcess(args, rc, stdout="", stderr="")
+        if args == ["rev-parse", "HEAD"]:
+            return subprocess.CompletedProcess(
+                args, 0, stdout=f"{runtime_head_sha}\n", stderr=""
+            )
+        return subprocess.CompletedProcess(args, 1, stdout="", stderr="unsupported")
+
+    return _runner
+
+
+def _build_synthetic_valid_receipt(
+    *,
+    launcher_pr_head_sha: str = SYNTHETIC_PR_73_HEAD_SHA,
+    launcher_merge_commit_sha: str = SYNTHETIC_PR_73_MERGE_SHA,
+    authorized_code_basis_commit_sha: str = SYNTHETIC_PR_73_MERGE_SHA,
+    launcher_file_lf_sha256: str | None = None,
+    launcher_pr_number: int = 73,
+    overrides: dict[str, Any] | None = None,
+    recompute_internal_sha: bool = True,
+) -> dict[str, Any]:
+    return canary_launcher.build_canary_live_execution_authorization_receipt_payload(
+        launcher_pr_head_sha=launcher_pr_head_sha,
+        launcher_merge_commit_sha=launcher_merge_commit_sha,
+        authorized_code_basis_commit_sha=authorized_code_basis_commit_sha,
+        launcher_file_lf_sha256=(
+            launcher_file_lf_sha256
+            if launcher_file_lf_sha256 is not None
+            else _current_launcher_lf_sha256()
+        ),
+        launcher_pr_number=launcher_pr_number,
+        overrides=overrides,
+        recompute_internal_sha=recompute_internal_sha,
+    )
+
+
 def _resign_receipt(payload: dict[str, Any]) -> dict[str, Any]:
     """Recompute canonical internal SHA256 after mutating a field (to isolate field-level checks)."""
     cloned = copy.deepcopy(payload)
@@ -965,7 +1072,7 @@ def test_31_auth_02_malformed_execution_receipt_fails(tmp_path: Path) -> None:
 
 def test_32_auth_03_wrong_prep_hash_in_receipt_fails(tmp_path: Path) -> None:
     """Auth Test 3: Wrong canary authorization PREP file/internal/doc SHA256 in receipt fails closed."""
-    base = canary_launcher.build_canary_live_execution_authorization_receipt_payload()
+    base = _build_synthetic_valid_receipt()
     for field in (
         "canary_authorization_prep_file_sha256",
         "canary_authorization_prep_internal_sha256",
@@ -980,13 +1087,15 @@ def test_32_auth_03_wrong_prep_hash_in_receipt_fails(tmp_path: Path) -> None:
             match="CANARY_EXECUTION_AUTH_PREP_SHA256_MISMATCH",
         ):
             canary_launcher.verify_canary_live_execution_authorization_receipt(
-                repo_root=REPO_ROOT, receipt_path_override=p
+                repo_root=REPO_ROOT,
+                receipt_path_override=p,
+                git_runner=_make_synthetic_git_runner(),
             )
 
 
 def test_33_auth_04_wrong_manifest_hash_in_receipt_fails(tmp_path: Path) -> None:
     """Auth Test 4: Wrong canary manifest file/internal SHA256 in receipt fails closed."""
-    base = canary_launcher.build_canary_live_execution_authorization_receipt_payload()
+    base = _build_synthetic_valid_receipt()
     for field in ("canary_manifest_file_sha256", "canary_manifest_internal_sha256"):
         bad = copy.deepcopy(base)
         bad[field] = "f" * 64
@@ -997,13 +1106,15 @@ def test_33_auth_04_wrong_manifest_hash_in_receipt_fails(tmp_path: Path) -> None
             match="CANARY_EXECUTION_AUTH_MANIFEST_SHA256_MISMATCH",
         ):
             canary_launcher.verify_canary_live_execution_authorization_receipt(
-                repo_root=REPO_ROOT, receipt_path_override=p
+                repo_root=REPO_ROOT,
+                receipt_path_override=p,
+                git_runner=_make_synthetic_git_runner(),
             )
 
 
 def test_34_auth_05_wrong_model_set_in_receipt_fails(tmp_path: Path) -> None:
     """Auth Test 5: Wrong model set in receipt fails closed."""
-    base = canary_launcher.build_canary_live_execution_authorization_receipt_payload()
+    base = _build_synthetic_valid_receipt()
     bad = copy.deepcopy(base)
     bad["candidates"]["C2"]["exact_model_id"] = "gpt-5.4"
     bad = _resign_receipt(bad)
@@ -1013,13 +1124,15 @@ def test_34_auth_05_wrong_model_set_in_receipt_fails(tmp_path: Path) -> None:
         match="CANARY_EXECUTION_AUTH_CANDIDATE_SET_MISMATCH",
     ):
         canary_launcher.verify_canary_live_execution_authorization_receipt(
-            repo_root=REPO_ROOT, receipt_path_override=p
+            repo_root=REPO_ROOT,
+            receipt_path_override=p,
+            git_runner=_make_synthetic_git_runner(),
         )
 
 
 def test_35_auth_06_wrong_9_cell_order_in_receipt_fails(tmp_path: Path) -> None:
     """Auth Test 6: Wrong 9-cell execution order in receipt fails closed."""
-    base = canary_launcher.build_canary_live_execution_authorization_receipt_payload()
+    base = _build_synthetic_valid_receipt()
     bad = copy.deepcopy(base)
     cells = bad["exact_9_cell_execution_order"]
     cells[0], cells[1] = cells[1], cells[0]
@@ -1030,13 +1143,15 @@ def test_35_auth_06_wrong_9_cell_order_in_receipt_fails(tmp_path: Path) -> None:
         match="CANARY_EXECUTION_AUTH_9_CELL_ORDER_MISMATCH",
     ):
         canary_launcher.verify_canary_live_execution_authorization_receipt(
-            repo_root=REPO_ROOT, receipt_path_override=p
+            repo_root=REPO_ROOT,
+            receipt_path_override=p,
+            git_runner=_make_synthetic_git_runner(),
         )
 
 
 def test_36_auth_07_max_calls_not_equal_9_in_receipt_fails(tmp_path: Path) -> None:
     """Auth Test 7: max_provider_generation_calls != 9 in receipt fails closed."""
-    base = canary_launcher.build_canary_live_execution_authorization_receipt_payload()
+    base = _build_synthetic_valid_receipt()
     bad = copy.deepcopy(base)
     bad["max_provider_generation_calls"] = 18
     bad = _resign_receipt(bad)
@@ -1046,13 +1161,15 @@ def test_36_auth_07_max_calls_not_equal_9_in_receipt_fails(tmp_path: Path) -> No
         match="CANARY_EXECUTION_AUTH_RUNTIME_POLICY_MISMATCH",
     ):
         canary_launcher.verify_canary_live_execution_authorization_receipt(
-            repo_root=REPO_ROOT, receipt_path_override=p
+            repo_root=REPO_ROOT,
+            receipt_path_override=p,
+            git_runner=_make_synthetic_git_runner(),
         )
 
 
 def test_37_auth_08_retry_not_zero_in_receipt_fails(tmp_path: Path) -> None:
     """Auth Test 8: Any retry dimension != 0 in receipt fails closed."""
-    base = canary_launcher.build_canary_live_execution_authorization_receipt_payload()
+    base = _build_synthetic_valid_receipt()
     bad = copy.deepcopy(base)
     bad["automatic_retry"] = 1
     bad = _resign_receipt(bad)
@@ -1062,7 +1179,9 @@ def test_37_auth_08_retry_not_zero_in_receipt_fails(tmp_path: Path) -> None:
         match="CANARY_EXECUTION_AUTH_RUNTIME_POLICY_MISMATCH",
     ):
         canary_launcher.verify_canary_live_execution_authorization_receipt(
-            repo_root=REPO_ROOT, receipt_path_override=p
+            repo_root=REPO_ROOT,
+            receipt_path_override=p,
+            git_runner=_make_synthetic_git_runner(),
         )
 
 
@@ -1070,7 +1189,7 @@ def test_38_auth_09_comparative_authorized_true_in_receipt_fails(
     tmp_path: Path,
 ) -> None:
     """Auth Test 9: AMENDED_COMPARATIVE_LIVE_AUTHORIZED = true in receipt fails closed."""
-    base = canary_launcher.build_canary_live_execution_authorization_receipt_payload()
+    base = _build_synthetic_valid_receipt()
     bad = copy.deepcopy(base)
     bad["AMENDED_COMPARATIVE_LIVE_AUTHORIZED"] = True
     bad = _resign_receipt(bad)
@@ -1080,7 +1199,9 @@ def test_38_auth_09_comparative_authorized_true_in_receipt_fails(
         match="CANARY_EXECUTION_AUTH_COMPARATIVE_OR_DOWNSTREAM_FORBIDDEN",
     ):
         canary_launcher.verify_canary_live_execution_authorization_receipt(
-            repo_root=REPO_ROOT, receipt_path_override=p
+            repo_root=REPO_ROOT,
+            receipt_path_override=p,
+            git_runner=_make_synthetic_git_runner(),
         )
 
 
@@ -1088,7 +1209,7 @@ def test_39_auth_10_holdout_firewall_authorized_or_used_in_receipt_fails(
     tmp_path: Path,
 ) -> None:
     """Auth Test 10: FINAL100_USED = true or FINAL100_STATUS != 'NO-GO' in receipt fails closed."""
-    base = canary_launcher.build_canary_live_execution_authorization_receipt_payload()
+    base = _build_synthetic_valid_receipt()
     bad = copy.deepcopy(base)
     bad["FINAL100_USED"] = True
     bad = _resign_receipt(bad)
@@ -1098,13 +1219,15 @@ def test_39_auth_10_holdout_firewall_authorized_or_used_in_receipt_fails(
         match="CANARY_EXECUTION_AUTH_FINAL100_FORBIDDEN",
     ):
         canary_launcher.verify_canary_live_execution_authorization_receipt(
-            repo_root=REPO_ROOT, receipt_path_override=p
+            repo_root=REPO_ROOT,
+            receipt_path_override=p,
+            git_runner=_make_synthetic_git_runner(),
         )
 
 
 def test_40_auth_11_tampered_internal_sha_in_receipt_fails(tmp_path: Path) -> None:
     """Auth Test 11: Tampered canary_live_execution_authorization_internal_sha256 fails closed."""
-    base = canary_launcher.build_canary_live_execution_authorization_receipt_payload()
+    base = _build_synthetic_valid_receipt()
     tampered = copy.deepcopy(base)
     tampered[canary_launcher.CANARY_LIVE_EXECUTION_AUTH_INTERNAL_SHA_KEY] = "a" * 64
     p = _write_receipt(tmp_path / "tampered_sha.json", tampered)
@@ -1113,7 +1236,9 @@ def test_40_auth_11_tampered_internal_sha_in_receipt_fails(tmp_path: Path) -> No
         match="CANARY_LIVE_EXECUTION_AUTHORIZATION_INTERNAL_SHA256_MISMATCH",
     ):
         canary_launcher.verify_canary_live_execution_authorization_receipt(
-            repo_root=REPO_ROOT, receipt_path_override=p
+            repo_root=REPO_ROOT,
+            receipt_path_override=p,
+            git_runner=_make_synthetic_git_runner(),
         )
 
 
@@ -1121,9 +1246,7 @@ def test_41_auth_12_valid_synthetic_temporary_receipt_passes_verifier_offline(
     tmp_path: Path,
 ) -> None:
     """Auth Test 12: Valid synthetic temporary receipt passes two-layer authorization verifier without any live network call."""
-    valid_payload = (
-        canary_launcher.build_canary_live_execution_authorization_receipt_payload()
-    )
+    valid_payload = _build_synthetic_valid_receipt()
     receipt_path = _write_receipt(tmp_path / "valid_synthetic_receipt.json", valid_payload)
     out_root = tmp_path / "valid_auth_out_root"
 
@@ -1132,6 +1255,7 @@ def test_41_auth_12_valid_synthetic_temporary_receipt_passes_verifier_offline(
             repo_root=REPO_ROOT,
             execution_auth_receipt_path_override=receipt_path,
             output_root_override=out_root,
+            git_runner=_make_synthetic_git_runner(),
         )
 
     assert res["verified"] is True
@@ -1155,9 +1279,7 @@ def test_42_blocker_2a_missing_credential_before_generation_invocation_fails_clo
     tmp_path: Path,
 ) -> None:
     """Blocker 2(A): Missing credential before generation invocation writes cell failure evidence with 0 logical/actual calls, triggers fail-stop, leaves remaining cells unscheduled, and leaks no secrets."""
-    valid_payload = (
-        canary_launcher.build_canary_live_execution_authorization_receipt_payload()
-    )
+    valid_payload = _build_synthetic_valid_receipt()
     receipt_path = _write_receipt(
         tmp_path / "synthetic_exec_receipt.json", valid_payload
     )
@@ -1178,6 +1300,7 @@ def test_42_blocker_2a_missing_credential_before_generation_invocation_fails_clo
         repo_root=REPO_ROOT,
         output_root_override=out_root,
         execution_authorization_receipt_path_override=receipt_path,
+        git_runner=_make_synthetic_git_runner(),
         api_key_loader=_missing_key_loader,
         live_transport_invoker=_never_called_invoker,
         sleep_fn=lambda _sec: None,
@@ -1232,9 +1355,7 @@ def test_43_blocker_2b_provider_exception_after_1_generation_invocation_records_
     tmp_path: Path,
 ) -> None:
     """Blocker 2(B): Provider exception after 1 generation invocation records logical_generation_invocation_count = 1, actual_provider_http_request_count from counter, retry_count = 0, and triggers fail-stop."""
-    valid_payload = (
-        canary_launcher.build_canary_live_execution_authorization_receipt_payload()
-    )
+    valid_payload = _build_synthetic_valid_receipt()
     receipt_path = _write_receipt(
         tmp_path / "synthetic_exec_receipt.json", valid_payload
     )
@@ -1266,6 +1387,7 @@ def test_43_blocker_2b_provider_exception_after_1_generation_invocation_records_
         repo_root=REPO_ROOT,
         output_root_override=out_root,
         execution_authorization_receipt_path_override=receipt_path,
+        git_runner=_make_synthetic_git_runner(),
         api_key_loader=_dummy_key_loader,
         live_transport_invoker=_failing_transport_invoker,
         sleep_fn=lambda _sec: None,
@@ -1449,3 +1571,358 @@ def test_46_blocker_3c_http_timeout_or_transport_failure_sets_provider_returns_r
             is False
         )
         assert op_eval["cell_operational_pass"] is False
+
+
+# ==============================================================================
+# CORRECTIVE 02 — EXECUTION AUTHORIZATION RECEIPT CRYPTOGRAPHIC CODE & GIT
+# PROVENANCE BINDING (SECTIONS 2–8)
+# ==============================================================================
+
+
+def test_47_corrective_02_unsafe_receipt_builder_defaults_removed_and_base_develop_rejected(
+    tmp_path: Path,
+) -> None:
+    """Section 3 & 6: Builder requires explicit provenance args (no default to 1ebe30c...) and rejects 1ebe30c... for PR head, merge commit, or code basis."""
+    with pytest.raises(TypeError):
+        canary_launcher.build_canary_live_execution_authorization_receipt_payload()  # type: ignore[call-arg]
+
+    base_dev = canary_launcher.AUTHORITATIVE_BASE_DEVELOP_SHA
+    for bad_kwargs in (
+        {"launcher_pr_head_sha": base_dev},
+        {"launcher_merge_commit_sha": base_dev},
+        {"authorized_code_basis_commit_sha": base_dev},
+    ):
+        payload = _build_synthetic_valid_receipt(**bad_kwargs)
+        p = _write_receipt(tmp_path / "bad_pre_launcher_base.json", payload)
+        with pytest.raises(
+            LiveExecutionNotAuthorizedError,
+            match="CANARY_EXECUTION_PRE_LAUNCHER_BASE_DEVELOP_SHA_FORBIDDEN",
+        ):
+            canary_launcher.verify_canary_live_execution_authorization_receipt(
+                repo_root=REPO_ROOT,
+                receipt_path_override=p,
+                git_runner=_make_synthetic_git_runner(),
+            )
+
+
+def test_48_corrective_02_neg_01_nonexistent_launcher_pr_head_sha_fails(
+    tmp_path: Path,
+) -> None:
+    """Section 7(1): Nonexistent launcher_pr_head_sha fails closed."""
+    missing_pr_head = "1111111111111111111111111111111111111111"
+    payload = _build_synthetic_valid_receipt(launcher_pr_head_sha=missing_pr_head)
+    p = _write_receipt(tmp_path / "neg_01_missing_pr_head.json", payload)
+    with pytest.raises(
+        LiveExecutionNotAuthorizedError,
+        match="CANARY_EXECUTION_LAUNCHER_PR_HEAD_COMMIT_NOT_FOUND",
+    ):
+        canary_launcher.verify_canary_live_execution_authorization_receipt(
+            repo_root=REPO_ROOT,
+            receipt_path_override=p,
+            git_runner=_make_synthetic_git_runner(),
+        )
+
+
+def test_49_corrective_02_neg_02_nonexistent_launcher_merge_commit_sha_fails(
+    tmp_path: Path,
+) -> None:
+    """Section 7(2): Nonexistent launcher_merge_commit_sha fails closed."""
+    missing_merge = "2222222222222222222222222222222222222222"
+    payload = _build_synthetic_valid_receipt(
+        launcher_merge_commit_sha=missing_merge,
+        authorized_code_basis_commit_sha=missing_merge,
+    )
+    p = _write_receipt(tmp_path / "neg_02_missing_merge.json", payload)
+    with pytest.raises(
+        LiveExecutionNotAuthorizedError,
+        match="CANARY_EXECUTION_LAUNCHER_MERGE_COMMIT_NOT_FOUND",
+    ):
+        canary_launcher.verify_canary_live_execution_authorization_receipt(
+            repo_root=REPO_ROOT,
+            receipt_path_override=p,
+            git_runner=_make_synthetic_git_runner(),
+        )
+
+
+def test_50_corrective_02_neg_03_nonexistent_authorized_code_basis_commit_sha_fails(
+    tmp_path: Path,
+) -> None:
+    """Section 7(3): Nonexistent authorized_code_basis_commit_sha fails closed."""
+    missing_basis = "3333333333333333333333333333333333333333"
+    payload = _build_synthetic_valid_receipt(
+        authorized_code_basis_commit_sha=missing_basis,
+    )
+    p = _write_receipt(tmp_path / "neg_03_missing_basis.json", payload)
+    with pytest.raises(
+        LiveExecutionNotAuthorizedError,
+        match="CANARY_EXECUTION_AUTHORIZED_CODE_BASIS_COMMIT_NOT_FOUND",
+    ):
+        canary_launcher.verify_canary_live_execution_authorization_receipt(
+            repo_root=REPO_ROOT,
+            receipt_path_override=p,
+            git_runner=_make_synthetic_git_runner(),
+        )
+
+
+def test_51_corrective_02_neg_04_code_basis_not_equal_to_launcher_merge_commit_fails(
+    tmp_path: Path,
+) -> None:
+    """Section 7(4): authorized_code_basis_commit_sha != launcher_merge_commit_sha fails closed even when both exist in git."""
+    payload = _build_synthetic_valid_receipt(
+        launcher_pr_head_sha=SYNTHETIC_PR_73_HEAD_SHA,
+        launcher_merge_commit_sha=SYNTHETIC_PR_73_MERGE_SHA,
+        authorized_code_basis_commit_sha=SYNTHETIC_PR_73_HEAD_SHA,
+    )
+    p = _write_receipt(tmp_path / "neg_04_basis_ne_merge.json", payload)
+    with pytest.raises(
+        LiveExecutionNotAuthorizedError,
+        match="CANARY_EXECUTION_CODE_BASIS_NOT_EQUAL_TO_LAUNCHER_MERGE_COMMIT",
+    ):
+        canary_launcher.verify_canary_live_execution_authorization_receipt(
+            repo_root=REPO_ROOT,
+            receipt_path_override=p,
+            git_runner=_make_synthetic_git_runner(),
+        )
+
+
+def test_52_corrective_02_neg_05_merge_commit_not_descended_from_expected_pr_head_fails(
+    tmp_path: Path,
+) -> None:
+    """Section 7(5): Merge commit not descended from expected PR head fails closed."""
+    base_sha = canary_launcher.AUTHORITATIVE_BASE_DEVELOP_SHA
+    other_branch_head = "4444444444444444444444444444444444444444"
+    bad_graph = {
+        canary_launcher.PR_72_MERGE_PARENT_1: [],
+        canary_launcher.PR_72_MERGE_PARENT_2: [],
+        base_sha: [
+            canary_launcher.PR_72_MERGE_PARENT_1,
+            canary_launcher.PR_72_MERGE_PARENT_2,
+        ],
+        SYNTHETIC_PR_73_HEAD_SHA: [base_sha],
+        other_branch_head: [base_sha],
+        SYNTHETIC_PR_73_MERGE_SHA: [base_sha, other_branch_head],
+        SYNTHETIC_RUNTIME_HEAD_SHA: [SYNTHETIC_PR_73_MERGE_SHA],
+    }
+    payload = _build_synthetic_valid_receipt()
+    p = _write_receipt(tmp_path / "neg_05_wrong_pr_head_parent.json", payload)
+    with pytest.raises(
+        LiveExecutionNotAuthorizedError,
+        match="CANARY_EXECUTION_LAUNCHER_MERGE_PR_HEAD_ANCESTRY_MISMATCH",
+    ):
+        canary_launcher.verify_canary_live_execution_authorization_receipt(
+            repo_root=REPO_ROOT,
+            receipt_path_override=p,
+            git_runner=_make_synthetic_git_runner(parents_by_commit=bad_graph),
+        )
+
+
+def test_53_corrective_02_neg_06_wrong_base_parent_fails(
+    tmp_path: Path,
+) -> None:
+    """Section 7(6): Wrong base parent on merge commit fails closed."""
+    base_sha = canary_launcher.AUTHORITATIVE_BASE_DEVELOP_SHA
+    wrong_base = "5555555555555555555555555555555555555555"
+    bad_graph = {
+        canary_launcher.PR_72_MERGE_PARENT_1: [],
+        canary_launcher.PR_72_MERGE_PARENT_2: [],
+        base_sha: [
+            canary_launcher.PR_72_MERGE_PARENT_1,
+            canary_launcher.PR_72_MERGE_PARENT_2,
+        ],
+        wrong_base: [],
+        SYNTHETIC_PR_73_HEAD_SHA: [base_sha],
+        SYNTHETIC_PR_73_MERGE_SHA: [wrong_base, SYNTHETIC_PR_73_HEAD_SHA],
+        SYNTHETIC_RUNTIME_HEAD_SHA: [SYNTHETIC_PR_73_MERGE_SHA],
+    }
+    payload = _build_synthetic_valid_receipt()
+    p = _write_receipt(tmp_path / "neg_06_wrong_base_parent.json", payload)
+    with pytest.raises(
+        LiveExecutionNotAuthorizedError,
+        match="CANARY_EXECUTION_LAUNCHER_MERGE_BASE_PARENT_MISMATCH",
+    ):
+        canary_launcher.verify_canary_live_execution_authorization_receipt(
+            repo_root=REPO_ROOT,
+            receipt_path_override=p,
+            git_runner=_make_synthetic_git_runner(parents_by_commit=bad_graph),
+        )
+
+
+def test_54_corrective_02_neg_07_merge_commit_not_ancestor_of_runtime_head_fails(
+    tmp_path: Path,
+) -> None:
+    """Section 7(7): Merge commit not ancestor of runtime HEAD fails closed."""
+    base_sha = canary_launcher.AUTHORITATIVE_BASE_DEVELOP_SHA
+    unrelated_runtime = "6666666666666666666666666666666666666666"
+    bad_graph = {
+        canary_launcher.PR_72_MERGE_PARENT_1: [],
+        canary_launcher.PR_72_MERGE_PARENT_2: [],
+        base_sha: [
+            canary_launcher.PR_72_MERGE_PARENT_1,
+            canary_launcher.PR_72_MERGE_PARENT_2,
+        ],
+        SYNTHETIC_PR_73_HEAD_SHA: [base_sha],
+        SYNTHETIC_PR_73_MERGE_SHA: [base_sha, SYNTHETIC_PR_73_HEAD_SHA],
+        unrelated_runtime: [base_sha],
+    }
+    payload = _build_synthetic_valid_receipt()
+    p = _write_receipt(tmp_path / "neg_07_not_runtime_ancestor.json", payload)
+    with pytest.raises(
+        LiveExecutionNotAuthorizedError,
+        match="CANARY_EXECUTION_LAUNCHER_MERGE_NOT_ANCESTOR_OF_RUNTIME_HEAD",
+    ):
+        canary_launcher.verify_canary_live_execution_authorization_receipt(
+            repo_root=REPO_ROOT,
+            receipt_path_override=p,
+            git_runner=_make_synthetic_git_runner(
+                parents_by_commit=bad_graph,
+                runtime_head_sha=unrelated_runtime,
+            ),
+        )
+
+
+def test_55_corrective_02_neg_08_receipt_launcher_hash_differs_from_current_launcher_file_hash_fails(
+    tmp_path: Path,
+) -> None:
+    """Section 7(8): Receipt launcher_file_lf_sha256 differs from current launcher file LF SHA256 fails closed."""
+    wrong_file_sha = "7" * 64
+    payload = _build_synthetic_valid_receipt(launcher_file_lf_sha256=wrong_file_sha)
+    p = _write_receipt(tmp_path / "neg_08_wrong_launcher_sha.json", payload)
+    with pytest.raises(
+        LiveExecutionNotAuthorizedError,
+        match="CANARY_EXECUTION_LAUNCHER_FILE_LF_SHA256_MISMATCH",
+    ):
+        canary_launcher.verify_canary_live_execution_authorization_receipt(
+            repo_root=REPO_ROOT,
+            receipt_path_override=p,
+            git_runner=_make_synthetic_git_runner(),
+        )
+
+
+def test_56_corrective_02_neg_09_launcher_file_modified_after_authorization_fails(
+    tmp_path: Path,
+) -> None:
+    """Section 7(9): Launcher file modified after authorization receipt was issued fails closed."""
+    payload = _build_synthetic_valid_receipt()
+    p = _write_receipt(tmp_path / "neg_09_valid_receipt.json", payload)
+
+    modified_launcher = tmp_path / "modified_launcher.py"
+    original_bytes = (REPO_ROOT / canary_launcher.LAUNCHER_REL_PATH).read_bytes()
+    modified_launcher.write_bytes(original_bytes + b"\n# unauthorized post-auth edit\n")
+
+    with pytest.raises(
+        LiveExecutionNotAuthorizedError,
+        match="CANARY_EXECUTION_LAUNCHER_FILE_LF_SHA256_MISMATCH",
+    ):
+        canary_launcher.verify_canary_live_execution_authorization_receipt(
+            repo_root=REPO_ROOT,
+            receipt_path_override=p,
+            git_runner=_make_synthetic_git_runner(),
+            launcher_file_path_override=modified_launcher,
+        )
+
+
+def test_57_corrective_02_neg_10_arbitrary_valid_looking_40_char_shas_rejected_by_real_git(
+    tmp_path: Path,
+) -> None:
+    """Section 7(10): Arbitrary valid-looking 40-char SHA values AND real older git commits that lack PR #73 merge ancestry are rejected by real git."""
+    # Case A: Arbitrary 40-char hex SHAs against real repository git (no mock git_runner)
+    arbitrary_pr_head = "deadbeefdeadbeefdeadbeefdeadbeefdeadbeef"
+    arbitrary_merge = "cafebabecafebabecafebabecafebabecafebabe"
+    payload_arbitrary = _build_synthetic_valid_receipt(
+        launcher_pr_head_sha=arbitrary_pr_head,
+        launcher_merge_commit_sha=arbitrary_merge,
+        authorized_code_basis_commit_sha=arbitrary_merge,
+    )
+    p_arbitrary = _write_receipt(
+        tmp_path / "neg_10a_arbitrary_40char.json", payload_arbitrary
+    )
+    with pytest.raises(
+        LiveExecutionNotAuthorizedError,
+        match="CANARY_EXECUTION_LAUNCHER_PR_HEAD_COMMIT_NOT_FOUND",
+    ):
+        canary_launcher.verify_canary_live_execution_authorization_receipt(
+            repo_root=REPO_ROOT,
+            receipt_path_override=p_arbitrary,
+        )
+
+    # Case B: Real existing commits in repository git (e.g. PR #72 parent commits) that do NOT have PR #73 merge ancestry
+    payload_real_old_commits = _build_synthetic_valid_receipt(
+        launcher_pr_head_sha=canary_launcher.PR_72_MERGE_PARENT_2,
+        launcher_merge_commit_sha=canary_launcher.PR_72_MERGE_PARENT_1,
+        authorized_code_basis_commit_sha=canary_launcher.PR_72_MERGE_PARENT_1,
+    )
+    p_real_old = _write_receipt(
+        tmp_path / "neg_10b_real_old_commits.json", payload_real_old_commits
+    )
+    with pytest.raises(
+        LiveExecutionNotAuthorizedError,
+        match="CANARY_EXECUTION_LAUNCHER_MERGE_NOT_TWO_PARENT_MERGE_COMMIT|CANARY_EXECUTION_LAUNCHER_MERGE_BASE_PARENT_MISMATCH",
+    ):
+        canary_launcher.verify_canary_live_execution_authorization_receipt(
+            repo_root=REPO_ROOT,
+            receipt_path_override=p_real_old,
+        )
+
+
+def test_58_corrective_02_pos_synthetic_git_merge_graph_and_content_binding_passes_offline(
+    tmp_path: Path,
+) -> None:
+    """Section 8: Controlled offline synthetic Git graph BASE -> PR_HEAD -> MERGE(BASE, PR_HEAD) -> RUNTIME_HEAD passes all provenance and content checks with zero network calls and zero key access."""
+    expected_launcher_sha = _current_launcher_lf_sha256()
+    valid_payload = _build_synthetic_valid_receipt(
+        launcher_pr_head_sha=SYNTHETIC_PR_73_HEAD_SHA,
+        launcher_merge_commit_sha=SYNTHETIC_PR_73_MERGE_SHA,
+        authorized_code_basis_commit_sha=SYNTHETIC_PR_73_MERGE_SHA,
+        launcher_file_lf_sha256=expected_launcher_sha,
+        launcher_pr_number=73,
+    )
+    receipt_path = _write_receipt(
+        tmp_path / "pos_synthetic_merge_graph_receipt.json", valid_payload
+    )
+    out_root = tmp_path / "pos_synthetic_out_root"
+    git_runner = _make_synthetic_git_runner()
+
+    with (
+        canary_launcher.NetworkKillSwitchGuard(),
+        canary_launcher.PreflightSecretAndEnvFileAccessGuard(),
+    ):
+        prov = canary_launcher.verify_canary_launcher_execution_code_provenance(
+            repo_root=REPO_ROOT,
+            launcher_pr_number=valid_payload["launcher_pr_number"],
+            launcher_pr_head_sha=valid_payload["launcher_pr_head_sha"],
+            launcher_merge_commit_sha=valid_payload["launcher_merge_commit_sha"],
+            authorized_code_basis_commit_sha=valid_payload[
+                "authorized_code_basis_commit_sha"
+            ],
+            launcher_file_lf_sha256=valid_payload["launcher_file_lf_sha256"],
+            launcher_path=valid_payload["launcher_path"],
+            git_runner=git_runner,
+        )
+        two_layer = canary_launcher.verify_two_layer_canary_live_execution_authorization(
+            repo_root=REPO_ROOT,
+            execution_auth_receipt_path_override=receipt_path,
+            output_root_override=out_root,
+            git_runner=git_runner,
+        )
+
+    assert prov["verified"] is True
+    assert prov["launcher_pr_number"] == 73
+    assert (
+        prov["authoritative_base_develop_sha"]
+        == "1ebe30c251958542088a3056dcfc6b780dac3a88"
+    )
+    assert prov["launcher_pr_head_sha"] == SYNTHETIC_PR_73_HEAD_SHA
+    assert prov["launcher_merge_commit_sha"] == SYNTHETIC_PR_73_MERGE_SHA
+    assert prov["authorized_code_basis_commit_sha"] == SYNTHETIC_PR_73_MERGE_SHA
+    assert prov["merge_parent_1"] == "1ebe30c251958542088a3056dcfc6b780dac3a88"
+    assert prov["merge_parent_2"] == SYNTHETIC_PR_73_HEAD_SHA
+    assert prov["runtime_head_sha"] == SYNTHETIC_RUNTIME_HEAD_SHA
+    assert prov["launcher_path"] == "scripts/run_w06_dev_select_amendment_01_canary_live_v1.py"
+    assert prov["launcher_file_lf_sha256"] == expected_launcher_sha
+
+    assert two_layer["verified"] is True
+    assert two_layer["effective_live_execution_authorized"] is True
+    assert (
+        two_layer["execution_authorization_receipt"]["code_provenance"]["verified"]
+        is True
+    )
