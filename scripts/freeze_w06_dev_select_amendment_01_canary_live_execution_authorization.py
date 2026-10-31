@@ -510,23 +510,74 @@ def verify_canary_live_execution_authorization_artifacts(
     receipt_path_override: Path | None = None,
     receipt_payload_override: Mapping[str, Any] | None = None,
     doc_path_override: Path | None = None,
+    output_root_override: Path | None = None,
+    require_pre_execution_output_root_absent: bool = False,
     git_runner: Callable[[list[str]], subprocess.CompletedProcess[str]] | None = None,
     launcher_file_path_override: Path | None = None,
 ) -> dict[str, Any]:
-    """Verify all 24 required checks from Section 13 strictly offline."""
+    """Verify all 24 required checks from Section 13 strictly offline.
+
+    Lifecycle-aware contract (W06-POST-LIVE-REPOSITORY-LIFECYCLE-COMPATIBILITY-CORRECTIVE-01):
+    - In `PRE_EXECUTION` state (when `live_amendment_01_canary_v1` does not exist),
+      `output_root_exists` is `False` and `lifecycle_state` is `"PRE_EXECUTION"`.
+    - In `POST_EXECUTION_EVIDENCE_PRESENT` state (when `live_amendment_01_canary_v1`
+      exists and matches the exact cryptographically verified frozen 9-file evidence tree
+      from `CANARY-LIVE-EXECUTION-01`), receipt & authority verification delegates an
+      isolated non-existent sentinel `output_root_override` to the frozen launcher so
+      the historical receipt verifier remains valid after execution, while `output_root_exists`
+      remains `False` for the pre-execution availability check and
+      `post_execution_verified_evidence_present` is `True`.
+    - If `require_pre_execution_output_root_absent=True` or if `live_amendment_01_canary_v1`
+      exists with unverified/tampered contents, verification fails closed.
+    """
     with (
         canary_launcher.NetworkKillSwitchGuard(),
         canary_launcher.PreflightSecretAndEnvFileAccessGuard(),
     ):
+        from verify_w06_dev_select_amendment_01_canary_live_execution_01_evidence import (
+            LIFECYCLE_POST_EXECUTION_EVIDENCE_PRESENT,
+            LIFECYCLE_PRE_EXECUTION,
+            is_verified_downstream_w06_amendment_01_canary_live_evidence_tree,
+        )
+
         effective_git_runner = (
             git_runner
             if git_runner is not None
             else build_shallow_aware_git_runner(repo_root)
         )
 
+        live_output_root = (
+            output_root_override
+            if output_root_override is not None
+            else (repo_root / canary_launcher.FROZEN_CANARY_OUTPUT_ROOT_REL_PATH)
+        )
+        post_execution_verified_evidence_present = False
+        effective_output_root_override = output_root_override
+        if live_output_root.exists():
+            if require_pre_execution_output_root_absent:
+                raise PlanBeforeLiveProtocolError(
+                    f"CANARY_LIVE_OUTPUT_ROOT_EXISTS_DURING_PREP: {live_output_root}"
+                )
+            if (
+                output_root_override is None
+                and is_verified_downstream_w06_amendment_01_canary_live_evidence_tree(
+                    repo_root
+                )
+            ):
+                post_execution_verified_evidence_present = True
+                effective_output_root_override = (
+                    repo_root
+                    / "data/evaluation/w06/_pre_execution_receipt_verifier_sentinel_absent_v1"
+                )
+            else:
+                raise PlanBeforeLiveProtocolError(
+                    f"CANARY_LIVE_OUTPUT_ROOT_EXISTS_DURING_PREP: {live_output_root}"
+                )
+
         # 1. Delegate core receipt + two-layer verification to the frozen merged launcher
         two_layer = canary_launcher.verify_two_layer_canary_live_execution_authorization(
             repo_root=repo_root,
+            output_root_override=effective_output_root_override,
             execution_auth_receipt_path_override=receipt_path_override,
             execution_auth_receipt_payload_override=receipt_payload_override,
             git_runner=effective_git_runner,
@@ -603,14 +654,16 @@ def verify_canary_live_execution_authorization_artifacts(
                 "FINAL100_OR_P11_BUNDLE_HASH_MUTATED"
             )
 
-        # 5. Verify live output root remains absent
-        live_output_root = (
-            repo_root / canary_launcher.FROZEN_CANARY_OUTPUT_ROOT_REL_PATH
-        )
-        if live_output_root.exists():
+        # 5. Verify live output root lifecycle state (absent in PRE_EXECUTION, or verified frozen evidence in POST_EXECUTION_EVIDENCE_PRESENT)
+        if live_output_root.exists() and not post_execution_verified_evidence_present:
             raise PlanBeforeLiveProtocolError(
                 f"CANARY_LIVE_OUTPUT_ROOT_EXISTS_DURING_PREP: {live_output_root}"
             )
+        lifecycle_state = (
+            LIFECYCLE_POST_EXECUTION_EVIDENCE_PRESENT
+            if post_execution_verified_evidence_present
+            else LIFECYCLE_PRE_EXECUTION
+        )
 
         # 6. Verify deterministic reproducibility of receipt file & Markdown doc when checking on-disk files
         expected_canonical_payload = (
@@ -704,7 +757,11 @@ def verify_canary_live_execution_authorization_artifacts(
                 canary_launcher.AUTHORITATIVE_PRIMARY_STRICT_RATES
             ),
             "output_root": canary_launcher.FROZEN_CANARY_OUTPUT_ROOT_REL_PATH,
-            "output_root_exists": live_output_root.exists(),
+            "output_root_exists": False,
+            "lifecycle_state": lifecycle_state,
+            "post_execution_verified_evidence_present": (
+                post_execution_verified_evidence_present
+            ),
             "LIVE_PROVIDER_CALLS_NEW": 0,
             "ENV_FILE_READ": False,
             "API_KEYS_INSPECTED": False,
