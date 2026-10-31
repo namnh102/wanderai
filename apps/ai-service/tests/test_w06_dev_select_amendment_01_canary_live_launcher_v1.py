@@ -59,6 +59,7 @@ from app.evaluation.dev_live_runner import (  # noqa: E402
     ImmutableCellExecutionError,
     LiveExecutionNotAuthorizedError,
     PlanBeforeLiveProtocolError,
+    ProviderNormalizedTransportResponse,
     StochasticityGateViolationError,
 )
 from app.evaluation.dev_selection_harness import (  # noqa: E402
@@ -67,6 +68,7 @@ from app.evaluation.dev_selection_harness import (  # noqa: E402
     SCIENTIFIC_CODE_BUNDLE_RELATIVE_PATHS,
     DevCellFailureClassification,
     Final100FirewallViolationError,
+    canonical_json_bytes,
     compute_scientific_code_bundle_sha256,
     normalize_lf_bytes,
     sha256_bytes,
@@ -847,8 +849,603 @@ def test_29_cli_safety_flags_and_live_execution_gate_firewall() -> None:
 
     with pytest.raises(
         LiveExecutionNotAuthorizedError,
-        match="CANARY_LIVE_EXECUTION_NOT_YET_AUTHORIZED",
+        match="CANARY_LIVE_EXECUTION_AUTHORIZATION_RECEIPT_MISSING",
     ):
         canary_launcher.run_canary_launcher_cli(
             ["--execute-live", "--confirm-frozen-9-canary-cells"]
         )
+
+
+# ==============================================================================
+# CORRECTIVE 01 — BLOCKER 1 & SECTION 5: TWO-LAYER LIVE-EXECUTION AUTHORIZATION
+# (12 REQUIRED SCENARIOS)
+# ==============================================================================
+
+
+def _resign_receipt(payload: dict[str, Any]) -> dict[str, Any]:
+    """Recompute canonical internal SHA256 after mutating a field (to isolate field-level checks)."""
+    cloned = copy.deepcopy(payload)
+    key = canary_launcher.CANARY_LIVE_EXECUTION_AUTH_INTERNAL_SHA_KEY
+    without_sig = {k: v for k, v in cloned.items() if k != key}
+    cloned[key] = sha256_bytes(canonical_json_bytes(without_sig))
+    return cloned
+
+
+def _write_receipt(path: Path, payload: dict[str, Any]) -> Path:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(
+        json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+    return path
+
+
+def test_30_auth_01_no_execution_receipt_and_prep_immutability_state(
+    preflight_out: dict[str, Any],
+    verified_authorities: dict[str, Any],
+    tmp_path: Path,
+) -> None:
+    """Auth Test 1: No execution receipt exists in repo; preflight reports receipt absent/unauthorized; live mode fails before key access or network; mutating PREP AMENDED_CANARY_LIVE_AUTHORIZED to true fails closed."""
+    prod_receipt_path = (
+        REPO_ROOT / canary_launcher.CANARY_LIVE_EXECUTION_AUTH_RECEIPT_REL_PATH
+    )
+    assert not prod_receipt_path.exists()
+    assert (
+        preflight_out["canary_authorization_prep_doc_path"]
+        == "docs/research/w06_dev_select_amendment_01_canary_live_authorization_prep.md"
+    )
+    assert (
+        preflight_out["execution_authorization_receipt_path"]
+        == "data/evaluation/w06/w06_dev_select_amendment_01_canary_live_execution_authorization_v1.json"
+    )
+    assert preflight_out["execution_authorization_receipt_present"] is False
+    assert preflight_out["effective_live_execution_authorized"] is False
+    assert preflight_out["live_execution_available"] is False
+    assert preflight_out["AMENDED_CANARY_LIVE_AUTHORIZED"] is False
+
+    # Also verify that if anyone mutated AMENDED_CANARY_LIVE_AUTHORIZED to True in PREP, contract verification rejects it
+    mutated_prep = copy.deepcopy(verified_authorities["auth_prep"])
+    mutated_prep["AMENDED_CANARY_LIVE_AUTHORIZED"] = True
+    with pytest.raises(
+        PlanBeforeLiveProtocolError, match="CANARY_AUTH_PREP_STATE_FLAG_MISMATCH"
+    ):
+        canary_launcher.verify_frozen_canary_contract_and_cells(
+            auth_prep=mutated_prep,
+            canary_manifest=verified_authorities["canary_manifest"],
+            dev_bundle=verified_authorities["dev_bundle"],
+            cand_reg=verified_authorities["candidate_registry"],
+            p1_spec=verified_authorities["p1_spec"],
+        )
+
+    key_loader_called = False
+
+    def _forbidden_key_loader(_cid: str) -> str:
+        nonlocal key_loader_called
+        key_loader_called = True
+        raise AssertionError("Key loader must not be reached when receipt is absent")
+
+    missing_receipt = tmp_path / "nonexistent_receipt.json"
+    out_root = tmp_path / "unauth_live_out"
+    with pytest.raises(
+        LiveExecutionNotAuthorizedError,
+        match="CANARY_LIVE_EXECUTION_AUTHORIZATION_RECEIPT_MISSING",
+    ):
+        canary_launcher.run_live_canary_execution(
+            repo_root=REPO_ROOT,
+            output_root_override=out_root,
+            execution_authorization_receipt_path_override=missing_receipt,
+            api_key_loader=_forbidden_key_loader,
+        )
+    assert key_loader_called is False
+    assert not out_root.exists()
+
+
+def test_31_auth_02_malformed_execution_receipt_fails(tmp_path: Path) -> None:
+    """Auth Test 2: Malformed JSON or non-mapping receipt fails closed."""
+    bad_json_path = tmp_path / "malformed.json"
+    bad_json_path.write_text("{not valid json", encoding="utf-8")
+    with pytest.raises(
+        LiveExecutionNotAuthorizedError,
+        match="CANARY_LIVE_EXECUTION_AUTHORIZATION_RECEIPT_MALFORMED",
+    ):
+        canary_launcher.verify_canary_live_execution_authorization_receipt(
+            repo_root=REPO_ROOT, receipt_path_override=bad_json_path
+        )
+
+    list_json_path = tmp_path / "list_receipt.json"
+    list_json_path.write_text("[1, 2, 3]\n", encoding="utf-8")
+    with pytest.raises(
+        LiveExecutionNotAuthorizedError,
+        match="CANARY_LIVE_EXECUTION_AUTHORIZATION_RECEIPT_MALFORMED",
+    ):
+        canary_launcher.verify_canary_live_execution_authorization_receipt(
+            repo_root=REPO_ROOT, receipt_path_override=list_json_path
+        )
+
+
+def test_32_auth_03_wrong_prep_hash_in_receipt_fails(tmp_path: Path) -> None:
+    """Auth Test 3: Wrong canary authorization PREP file/internal/doc SHA256 in receipt fails closed."""
+    base = canary_launcher.build_canary_live_execution_authorization_receipt_payload()
+    for field in (
+        "canary_authorization_prep_file_sha256",
+        "canary_authorization_prep_internal_sha256",
+        "canary_authorization_prep_doc_sha256",
+    ):
+        bad = copy.deepcopy(base)
+        bad[field] = "0" * 64
+        bad = _resign_receipt(bad)
+        p = _write_receipt(tmp_path / f"bad_{field}.json", bad)
+        with pytest.raises(
+            LiveExecutionNotAuthorizedError,
+            match="CANARY_EXECUTION_AUTH_PREP_SHA256_MISMATCH",
+        ):
+            canary_launcher.verify_canary_live_execution_authorization_receipt(
+                repo_root=REPO_ROOT, receipt_path_override=p
+            )
+
+
+def test_33_auth_04_wrong_manifest_hash_in_receipt_fails(tmp_path: Path) -> None:
+    """Auth Test 4: Wrong canary manifest file/internal SHA256 in receipt fails closed."""
+    base = canary_launcher.build_canary_live_execution_authorization_receipt_payload()
+    for field in ("canary_manifest_file_sha256", "canary_manifest_internal_sha256"):
+        bad = copy.deepcopy(base)
+        bad[field] = "f" * 64
+        bad = _resign_receipt(bad)
+        p = _write_receipt(tmp_path / f"bad_{field}.json", bad)
+        with pytest.raises(
+            LiveExecutionNotAuthorizedError,
+            match="CANARY_EXECUTION_AUTH_MANIFEST_SHA256_MISMATCH",
+        ):
+            canary_launcher.verify_canary_live_execution_authorization_receipt(
+                repo_root=REPO_ROOT, receipt_path_override=p
+            )
+
+
+def test_34_auth_05_wrong_model_set_in_receipt_fails(tmp_path: Path) -> None:
+    """Auth Test 5: Wrong model set in receipt fails closed."""
+    base = canary_launcher.build_canary_live_execution_authorization_receipt_payload()
+    bad = copy.deepcopy(base)
+    bad["candidates"]["C2"]["exact_model_id"] = "gpt-5.4"
+    bad = _resign_receipt(bad)
+    p = _write_receipt(tmp_path / "bad_models.json", bad)
+    with pytest.raises(
+        CandidateRegistryIntegrityError,
+        match="CANARY_EXECUTION_AUTH_CANDIDATE_SET_MISMATCH",
+    ):
+        canary_launcher.verify_canary_live_execution_authorization_receipt(
+            repo_root=REPO_ROOT, receipt_path_override=p
+        )
+
+
+def test_35_auth_06_wrong_9_cell_order_in_receipt_fails(tmp_path: Path) -> None:
+    """Auth Test 6: Wrong 9-cell execution order in receipt fails closed."""
+    base = canary_launcher.build_canary_live_execution_authorization_receipt_payload()
+    bad = copy.deepcopy(base)
+    cells = bad["exact_9_cell_execution_order"]
+    cells[0], cells[1] = cells[1], cells[0]
+    bad = _resign_receipt(bad)
+    p = _write_receipt(tmp_path / "bad_order.json", bad)
+    with pytest.raises(
+        PlanBeforeLiveProtocolError,
+        match="CANARY_EXECUTION_AUTH_9_CELL_ORDER_MISMATCH",
+    ):
+        canary_launcher.verify_canary_live_execution_authorization_receipt(
+            repo_root=REPO_ROOT, receipt_path_override=p
+        )
+
+
+def test_36_auth_07_max_calls_not_equal_9_in_receipt_fails(tmp_path: Path) -> None:
+    """Auth Test 7: max_provider_generation_calls != 9 in receipt fails closed."""
+    base = canary_launcher.build_canary_live_execution_authorization_receipt_payload()
+    bad = copy.deepcopy(base)
+    bad["max_provider_generation_calls"] = 18
+    bad = _resign_receipt(bad)
+    p = _write_receipt(tmp_path / "bad_max_calls.json", bad)
+    with pytest.raises(
+        PlanBeforeLiveProtocolError,
+        match="CANARY_EXECUTION_AUTH_RUNTIME_POLICY_MISMATCH",
+    ):
+        canary_launcher.verify_canary_live_execution_authorization_receipt(
+            repo_root=REPO_ROOT, receipt_path_override=p
+        )
+
+
+def test_37_auth_08_retry_not_zero_in_receipt_fails(tmp_path: Path) -> None:
+    """Auth Test 8: Any retry dimension != 0 in receipt fails closed."""
+    base = canary_launcher.build_canary_live_execution_authorization_receipt_payload()
+    bad = copy.deepcopy(base)
+    bad["automatic_retry"] = 1
+    bad = _resign_receipt(bad)
+    p = _write_receipt(tmp_path / "bad_retry.json", bad)
+    with pytest.raises(
+        PlanBeforeLiveProtocolError,
+        match="CANARY_EXECUTION_AUTH_RUNTIME_POLICY_MISMATCH",
+    ):
+        canary_launcher.verify_canary_live_execution_authorization_receipt(
+            repo_root=REPO_ROOT, receipt_path_override=p
+        )
+
+
+def test_38_auth_09_comparative_authorized_true_in_receipt_fails(
+    tmp_path: Path,
+) -> None:
+    """Auth Test 9: AMENDED_COMPARATIVE_LIVE_AUTHORIZED = true in receipt fails closed."""
+    base = canary_launcher.build_canary_live_execution_authorization_receipt_payload()
+    bad = copy.deepcopy(base)
+    bad["AMENDED_COMPARATIVE_LIVE_AUTHORIZED"] = True
+    bad = _resign_receipt(bad)
+    p = _write_receipt(tmp_path / "bad_comp_auth.json", bad)
+    with pytest.raises(
+        LiveExecutionNotAuthorizedError,
+        match="CANARY_EXECUTION_AUTH_COMPARATIVE_OR_DOWNSTREAM_FORBIDDEN",
+    ):
+        canary_launcher.verify_canary_live_execution_authorization_receipt(
+            repo_root=REPO_ROOT, receipt_path_override=p
+        )
+
+
+def test_39_auth_10_holdout_firewall_authorized_or_used_in_receipt_fails(
+    tmp_path: Path,
+) -> None:
+    """Auth Test 10: FINAL100_USED = true or FINAL100_STATUS != 'NO-GO' in receipt fails closed."""
+    base = canary_launcher.build_canary_live_execution_authorization_receipt_payload()
+    bad = copy.deepcopy(base)
+    bad["FINAL100_USED"] = True
+    bad = _resign_receipt(bad)
+    p = _write_receipt(tmp_path / "bad_holdout_flag.json", bad)
+    with pytest.raises(
+        Final100FirewallViolationError,
+        match="CANARY_EXECUTION_AUTH_FINAL100_FORBIDDEN",
+    ):
+        canary_launcher.verify_canary_live_execution_authorization_receipt(
+            repo_root=REPO_ROOT, receipt_path_override=p
+        )
+
+
+def test_40_auth_11_tampered_internal_sha_in_receipt_fails(tmp_path: Path) -> None:
+    """Auth Test 11: Tampered canary_live_execution_authorization_internal_sha256 fails closed."""
+    base = canary_launcher.build_canary_live_execution_authorization_receipt_payload()
+    tampered = copy.deepcopy(base)
+    tampered[canary_launcher.CANARY_LIVE_EXECUTION_AUTH_INTERNAL_SHA_KEY] = "a" * 64
+    p = _write_receipt(tmp_path / "tampered_sha.json", tampered)
+    with pytest.raises(
+        LiveExecutionNotAuthorizedError,
+        match="CANARY_LIVE_EXECUTION_AUTHORIZATION_INTERNAL_SHA256_MISMATCH",
+    ):
+        canary_launcher.verify_canary_live_execution_authorization_receipt(
+            repo_root=REPO_ROOT, receipt_path_override=p
+        )
+
+
+def test_41_auth_12_valid_synthetic_temporary_receipt_passes_verifier_offline(
+    tmp_path: Path,
+) -> None:
+    """Auth Test 12: Valid synthetic temporary receipt passes two-layer authorization verifier without any live network call."""
+    valid_payload = (
+        canary_launcher.build_canary_live_execution_authorization_receipt_payload()
+    )
+    receipt_path = _write_receipt(tmp_path / "valid_synthetic_receipt.json", valid_payload)
+    out_root = tmp_path / "valid_auth_out_root"
+
+    with canary_launcher.PreflightSecretAndEnvFileAccessGuard():
+        res = canary_launcher.verify_two_layer_canary_live_execution_authorization(
+            repo_root=REPO_ROOT,
+            execution_auth_receipt_path_override=receipt_path,
+            output_root_override=out_root,
+        )
+
+    assert res["verified"] is True
+    assert res["layer_1_frozen_auth_prep_verified"] is True
+    assert res["layer_1_auth_prep_amended_canary_live_authorized"] is False
+    assert res["layer_2_execution_authorization_receipt_verified"] is True
+    assert res["effective_live_execution_authorized"] is True
+    assert res["execution_authorization_receipt"]["CANARY_LIVE_EXECUTION_AUTHORIZED"] is True
+    assert (
+        res["authorities"]["auth_prep"]["AMENDED_CANARY_LIVE_AUTHORIZED"]
+        is False
+    )
+
+
+# ==============================================================================
+# CORRECTIVE 01 — BLOCKER 2: PRE-PROVIDER CREDENTIAL FAILURE & PROVIDER EXCEPTION
+# ==============================================================================
+
+
+def test_42_blocker_2a_missing_credential_before_generation_invocation_fails_closed(
+    tmp_path: Path,
+) -> None:
+    """Blocker 2(A): Missing credential before generation invocation writes cell failure evidence with 0 logical/actual calls, triggers fail-stop, leaves remaining cells unscheduled, and leaks no secrets."""
+    valid_payload = (
+        canary_launcher.build_canary_live_execution_authorization_receipt_payload()
+    )
+    receipt_path = _write_receipt(
+        tmp_path / "synthetic_exec_receipt.json", valid_payload
+    )
+    out_root = tmp_path / "sim_missing_credential_cell_1"
+    invoker_called = False
+
+    def _missing_key_loader(cid: str) -> str:
+        raise LiveExecutionNotAuthorizedError(
+            f"MISSING_PROVIDER_API_KEY_FOR_{cid}: GEMINI_API_KEY is not configured."
+        )
+
+    def _never_called_invoker(**_kwargs: Any) -> ProviderNormalizedTransportResponse:
+        nonlocal invoker_called
+        invoker_called = True
+        raise AssertionError("Transport invoker must not be called when key is missing")
+
+    summary = canary_launcher.run_live_canary_execution(
+        repo_root=REPO_ROOT,
+        output_root_override=out_root,
+        execution_authorization_receipt_path_override=receipt_path,
+        api_key_loader=_missing_key_loader,
+        live_transport_invoker=_never_called_invoker,
+        sleep_fn=lambda _sec: None,
+    )
+
+    assert invoker_called is False
+    assert summary["attempted_cells_count"] == 1
+    assert summary["total_logical_generation_invocations"] == 0
+    assert summary["total_actual_provider_http_requests"] == 0
+    assert summary["operational_pass_cells_count"] == 0
+    assert summary["operational_pass_fraction"] == "0/9"
+    assert summary["unscheduled_cells_count"] == 8
+    assert summary["fail_stop_triggered"] is True
+    assert summary["stopped_at_order_index"] == 1
+    assert summary["stopped_at_short_label"] == "007 / C1"
+    assert summary["ALL_9_CANARY_OPERATIONAL_PASS"] is False
+    assert summary["aggregate_canary_status"] == "FAIL"
+
+    cell_1 = summary["attempted_cells"][0]
+    assert cell_1["logical_generation_invocation_count"] == 0
+    assert cell_1["generation_call_count"] == 0
+    assert cell_1["actual_provider_http_request_count"] == 0
+    assert cell_1["provider_response_received"] is False
+    assert cell_1["provider_returned_response"] is False
+    assert cell_1["authentication_failure"] is True
+    assert cell_1["cell_operational_pass"] is False
+    assert (
+        cell_1["required_operational_conditions"][
+            "exactly_one_generation_call_attempted"
+        ]
+        is False
+    )
+    assert (
+        cell_1["required_operational_conditions"]["no_authentication_failure"]
+        is False
+    )
+    assert (
+        cell_1["required_operational_conditions"]["provider_returns_response"]
+        is False
+    )
+
+    # Verify all per-cell evidence files were written for cell 1 and none for cells 2..9
+    cell_1_dir = out_root / "W06-AMENDMENT-01-CANARY-01-P1-C1-W06-DEV-TUNE-007"
+    assert cell_1_dir.is_dir()
+    for fname in canary_launcher.CANARY_CELL_ARTIFACT_FILENAMES:
+        assert (cell_1_dir / fname).is_file()
+    for unscheduled_id in summary["unscheduled_cell_ids"]:
+        assert not (out_root / unscheduled_id).exists()
+
+
+def test_43_blocker_2b_provider_exception_after_1_generation_invocation_records_truthful_counts(
+    tmp_path: Path,
+) -> None:
+    """Blocker 2(B): Provider exception after 1 generation invocation records logical_generation_invocation_count = 1, actual_provider_http_request_count from counter, retry_count = 0, and triggers fail-stop."""
+    valid_payload = (
+        canary_launcher.build_canary_live_execution_authorization_receipt_payload()
+    )
+    receipt_path = _write_receipt(
+        tmp_path / "synthetic_exec_receipt.json", valid_payload
+    )
+    out_root = tmp_path / "sim_provider_exception_cell_1"
+
+    def _dummy_key_loader(_cid: str) -> str:
+        return "DUMMY_NON_SECRET_TEST_TOKEN"
+
+    def _failing_transport_invoker(
+        *,
+        cell_manifest: Any,
+        wire_request: dict[str, Any],
+        http_counter: Any,
+        api_key: str,
+    ) -> ProviderNormalizedTransportResponse:
+        assert api_key == "DUMMY_NON_SECRET_TEST_TOKEN"
+        assert wire_request["candidate_id"] == "C1"
+        # Simulate exactly 1 outbound HTTP attempt recorded by the transport wrapper before raising TimeoutError
+        http_counter.record_outbound_http_request_before_send(
+            run_id=cell_manifest.run_id,
+            candidate_id=cell_manifest.candidate_id,
+            method="POST",
+            url="https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent",
+            body_bytes=b"{}",
+        )
+        raise TimeoutError("ReadTimeout after 180000ms")
+
+    summary = canary_launcher.run_live_canary_execution(
+        repo_root=REPO_ROOT,
+        output_root_override=out_root,
+        execution_authorization_receipt_path_override=receipt_path,
+        api_key_loader=_dummy_key_loader,
+        live_transport_invoker=_failing_transport_invoker,
+        sleep_fn=lambda _sec: None,
+    )
+
+    assert summary["attempted_cells_count"] == 1
+    assert summary["total_logical_generation_invocations"] == 1
+    assert summary["total_actual_provider_http_requests"] == 1
+    assert summary["operational_pass_cells_count"] == 0
+    assert summary["unscheduled_cells_count"] == 8
+    assert summary["fail_stop_triggered"] is True
+    assert summary["stopped_at_order_index"] == 1
+    assert summary["ALL_9_CANARY_OPERATIONAL_PASS"] is False
+
+    cell_1 = summary["attempted_cells"][0]
+    assert cell_1["logical_generation_invocation_count"] == 1
+    assert cell_1["generation_call_count"] == 1
+    assert cell_1["actual_provider_http_request_count"] == 1
+    assert cell_1["retry_count"] == 0
+    assert cell_1["provider_response_received"] is False
+    assert cell_1["provider_returned_response"] is False
+    assert cell_1["timeout_failure"] is True
+    assert cell_1["cell_operational_pass"] is False
+    assert (
+        cell_1["required_operational_conditions"][
+            "exactly_one_generation_call_attempted"
+        ]
+        is True
+    )
+    assert cell_1["required_operational_conditions"]["no_client_timeout"] is False
+    assert (
+        cell_1["required_operational_conditions"]["provider_returns_response"]
+        is False
+    )
+    assert cell_1["required_operational_conditions"]["retry_count_equals_zero"] is True
+
+
+# ==============================================================================
+# CORRECTIVE 01 — BLOCKER 3: ADVERSARIAL `provider_returns_response` SEMANTICS
+# ==============================================================================
+
+
+def test_44_blocker_3a_empty_text_with_valid_provider_response_passes_operationally(
+    tmp_path: Path,
+) -> None:
+    """Blocker 3(A): Provider response received with empty raw_text ('') and valid model identity passes operationally."""
+    out_root = tmp_path / "sim_empty_text_operational_pass"
+
+    def _responder(
+        _order_index: int,
+        cell_record: dict[str, Any],
+        _wire_request: dict[str, Any],
+    ) -> dict[str, Any]:
+        return {
+            "raw_text": "",
+            "returned_model_id": cell_record["requested_model_id"],
+            "provider_response_received": True,
+            "simulated_failure": DevCellFailureClassification.NONE,
+        }
+
+    with canary_launcher.PreflightSecretAndEnvFileAccessGuard():
+        summary = canary_launcher.execute_canary_9_cell_sequence(
+            repo_root=REPO_ROOT,
+            output_root=out_root,
+            execution_mode="OFFLINE_SIMULATION",
+            simulated_cell_responder=_responder,
+            persist_artifacts=True,
+        )
+
+    assert summary["ALL_9_CANARY_OPERATIONAL_PASS"] is True
+    assert summary["operational_pass_cells_count"] == 9
+    for cell_ev in summary["attempted_cells"]:
+        assert cell_ev["provider_response_received"] is True
+        assert cell_ev["provider_returned_response"] is True
+        assert (
+            cell_ev["required_operational_conditions"]["provider_returns_response"]
+            is True
+        )
+        assert cell_ev["raw_text_present"] is True
+        assert cell_ev["raw_text_non_empty"] is False
+        assert cell_ev["raw_text_length"] == 0
+        assert cell_ev["provider_model_identity_evidence_captured"] is True
+        assert cell_ev["diagnostic_schema_valid"] is False
+        assert cell_ev["cell_operational_pass"] is True
+
+
+def test_45_blocker_3b_refusal_or_safety_response_with_valid_identity_passes_operationally(
+    tmp_path: Path,
+) -> None:
+    """Blocker 3(B): Provider response received in refusal/safety state with valid model identity passes operationally."""
+    out_root = tmp_path / "sim_refusal_operational_pass"
+
+    def _responder(
+        _order_index: int,
+        cell_record: dict[str, Any],
+        _wire_request: dict[str, Any],
+    ) -> dict[str, Any]:
+        return {
+            "raw_text": "",
+            "returned_model_id": cell_record["requested_model_id"],
+            "provider_response_received": True,
+            "refusal_state": True,
+            "finish_reason": "refusal",
+            "simulated_failure": DevCellFailureClassification.REFUSAL,
+        }
+
+    with canary_launcher.PreflightSecretAndEnvFileAccessGuard():
+        summary = canary_launcher.execute_canary_9_cell_sequence(
+            repo_root=REPO_ROOT,
+            output_root=out_root,
+            execution_mode="OFFLINE_SIMULATION",
+            simulated_cell_responder=_responder,
+            persist_artifacts=True,
+        )
+
+    assert summary["ALL_9_CANARY_OPERATIONAL_PASS"] is True
+    assert summary["operational_pass_cells_count"] == 9
+    for cell_ev in summary["attempted_cells"]:
+        assert cell_ev["provider_response_received"] is True
+        assert cell_ev["provider_returned_response"] is True
+        assert (
+            cell_ev["required_operational_conditions"]["provider_returns_response"]
+            is True
+        )
+        assert cell_ev["refusal_or_safety_state"] is True
+        assert cell_ev["provider_model_identity_evidence_captured"] is True
+        assert cell_ev["diagnostic_schema_valid"] is False
+        assert cell_ev["cell_operational_pass"] is True
+
+
+def test_46_blocker_3c_http_timeout_or_transport_failure_sets_provider_returns_response_false(
+    verified_authorities: dict[str, Any],
+) -> None:
+    """Blocker 3(C): HTTP 4xx/5xx, timeout, and transport failures set provider_returns_response = False and cell_operational_pass = False."""
+    cell_record = verified_authorities["ordered_canary_cells"][0]
+    norm_usage = canary_launcher.normalize_candidate_usage_metadata("C1", None)
+
+    for failure_cls, extra_kwargs in (
+        (DevCellFailureClassification.TIMEOUT, {"provider_response_received": False}),
+        (
+            DevCellFailureClassification.HARNESS_INTERNAL_ERROR,
+            {"provider_response_received": False, "transport_failure": True},
+        ),
+        (
+            DevCellFailureClassification.HTTP_5XX,
+            {"provider_response_received": False, "http_5xx_failure": True},
+        ),
+        (
+            DevCellFailureClassification.HTTP_429,
+            {"provider_response_received": False, "http_4xx_failure": True},
+        ),
+    ):
+        resp = ProviderNormalizedTransportResponse(
+            candidate_id="C1",
+            provider="google",
+            requested_model_id="gemini-3.8-flash",
+            returned_model_id=None,
+            raw_text="",
+            finish_or_stop_reason=failure_cls.value,
+            finish_reason=failure_cls.value,
+            raw_usage_metadata=None,
+            normalized_usage_metadata=norm_usage,
+            raw_provider_metadata={},
+            normalized_provider_metadata={},
+            actual_http_request_count=1,
+            simulated_failure=failure_cls,
+            authoritative_usage_available=False,
+        )
+        op_eval = canary_launcher.evaluate_canary_cell_operational_pass(
+            cell_record=cell_record,
+            transport_response=resp,
+            generation_calls_attempted=1,
+            actual_http_request_count=1,
+            retry_count=0,
+            **extra_kwargs,
+        )
+        assert op_eval["provider_response_received"] is False
+        assert op_eval["provider_returned_response"] is False
+        assert (
+            op_eval["required_operational_conditions"]["provider_returns_response"]
+            is False
+        )
+        assert op_eval["cell_operational_pass"] is False

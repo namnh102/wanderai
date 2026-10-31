@@ -165,15 +165,31 @@ import prepare_w06_dev_select_execution_environment_amendment_01 as _prep_mod  #
 TASK_ID = (
     "W06-DEV-SELECT-EXECUTION-ENVIRONMENT-AMENDMENT-01-CANARY-LIVE-LAUNCHER-PREP"
 )
+CORRECTIVE_TASK_ID = (
+    "W06-DEV-SELECT-EXECUTION-ENVIRONMENT-AMENDMENT-01-CANARY-LIVE-LAUNCHER-CORRECTIVE-01"
+)
 PREVIOUS_GATE_ID = (
     "W06-DEV-SELECT-EXECUTION-ENVIRONMENT-AMENDMENT-01-AMENDED-CANARY-LIVE-AUTHORIZATION-POSTMERGE-CHATGPT-AUDIT"
 )
 PREVIOUS_GATE_DECISION = "PASS"
 NEXT_GATE_ID = (
-    "W06-DEV-SELECT-EXECUTION-ENVIRONMENT-AMENDMENT-01-CANARY-LIVE-LAUNCHER-PREP-CHATGPT-AUDIT"
+    "W06-DEV-SELECT-EXECUTION-ENVIRONMENT-AMENDMENT-01-CANARY-LIVE-LAUNCHER-CORRECTIVE-01-CHATGPT-AUDIT"
 )
 FUTURE_LIVE_EXECUTION_GATE_ID = (
     "W06-DEV-SELECT-EXECUTION-ENVIRONMENT-AMENDMENT-01-CANARY-LIVE-EXECUTION-01"
+)
+
+LAUNCHER_IDENTITY_ID = "W06-AMENDMENT-01-CANARY-LIVE-LAUNCHER-V1"
+LAUNCHER_VERSION = "1.0.0"
+
+CANARY_LIVE_EXECUTION_AUTH_RECEIPT_REL_PATH = (
+    "data/evaluation/w06/w06_dev_select_amendment_01_canary_live_execution_authorization_v1.json"
+)
+CANARY_LIVE_EXECUTION_AUTH_RECEIPT_ARTIFACT_ID = (
+    "W06-DEV-SELECT-AMENDMENT-01-CANARY-LIVE-EXECUTION-AUTHORIZATION-V1"
+)
+CANARY_LIVE_EXECUTION_AUTH_INTERNAL_SHA_KEY = (
+    "canary_live_execution_authorization_internal_sha256"
 )
 
 AUTHORITATIVE_BASE_DEVELOP_SHA = "1ebe30c251958542088a3056dcfc6b780dac3a88"
@@ -974,6 +990,17 @@ def verify_frozen_canary_contract_and_cells(
     p1_spec: PromptCandidateSpec,
 ) -> list[dict[str, Any]]:
     """Verify the frozen 3 candidates, 3 fixtures, 9-cell order, runtime policy, and operational criteria (Sections 5, 6, 7, 12)."""
+    if (
+        auth_prep.get("AMENDED_CANARY_LIVE_AUTHORIZED") is not False
+        or auth_prep.get("AMENDED_COMPARATIVE_LIVE_AUTHORIZED") is not False
+        or auth_prep.get("AMENDED_LIVE_AUTHORIZED") is not False
+        or auth_prep.get("FINAL100_USED") is not False
+        or auth_prep.get("FINAL100_STATUS") != "NO-GO"
+    ):
+        raise PlanBeforeLiveProtocolError(
+            "CANARY_AUTH_PREP_STATE_FLAG_MISMATCH: Frozen PREP artifact must preserve "
+            "AMENDED_CANARY_LIVE_AUTHORIZED=False, AMENDED_COMPARATIVE_LIVE_AUTHORIZED=False, and FINAL100_STATUS='NO-GO'."
+        )
     contract = auth_prep.get("frozen_canary_execution_contract")
     if not isinstance(contract, Mapping):
         raise PlanBeforeLiveProtocolError(
@@ -1275,6 +1302,13 @@ def verify_frozen_canary_launcher_authorities(
         internal_sha_key="canary_live_authorization_prep_internal_sha256",
         expected_internal_sha256=EXPECTED_CANARY_AUTH_PREP_INTERNAL_SHA256,
     )
+    if auth_prep.get("AMENDED_CANARY_LIVE_AUTHORIZED") is not False:
+        raise PlanBeforeLiveProtocolError(
+            "CANARY_AUTH_PREP_HISTORICAL_MUTATION_FORBIDDEN: "
+            "w06_dev_select_amendment_01_canary_authorization_prep_v1.json is historical/frozen and "
+            "its AMENDED_CANARY_LIVE_AUTHORIZED must remain false. Live authorization requires the "
+            f"separate receipt {CANARY_LIVE_EXECUTION_AUTH_RECEIPT_REL_PATH}."
+        )
     auth_prep_doc_path = repo_root / CANARY_AUTH_PREP_DOC_REL_PATH
     if (
         not auth_prep_doc_path.is_file()
@@ -1484,6 +1518,406 @@ def verify_frozen_canary_launcher_authorities(
         "provider_config_registry_sha256": pconf_reg_sha,
         "portable_schema_v2_sha256": portable_schema_sha,
         "semantic_schema_sha256": semantic_schema_sha,
+    }
+
+
+def _expected_9_cell_order_records() -> list[dict[str, Any]]:
+    return [
+        {
+            "order_index": r[0],
+            "short_label": r[1],
+            "fixture_id": r[2],
+            "candidate_id": r[3],
+            "cell_id": r[4],
+        }
+        for r in EXPECTED_CANARY_9_CELL_ORDER
+    ]
+
+
+def build_canary_live_execution_authorization_receipt_payload(
+    *,
+    authorized_code_basis_commit_sha: str = AUTHORITATIVE_BASE_DEVELOP_SHA,
+    launcher_merge_commit_sha: str = AUTHORITATIVE_BASE_DEVELOP_SHA,
+    launcher_pr_number: int = 73,
+    overrides: Mapping[str, Any] | None = None,
+    recompute_internal_sha: bool = True,
+) -> dict[str, Any]:
+    """Build a canonical future `w06_dev_select_amendment_01_canary_live_execution_authorization_v1.json` payload.
+
+    Used by unit tests to verify the two-layer authorization contract offline without creating
+    an effective production execution authorization receipt in the repository during PREP.
+    """
+    payload: dict[str, Any] = {
+        "artifact_id": CANARY_LIVE_EXECUTION_AUTH_RECEIPT_ARTIFACT_ID,
+        "task_id": FUTURE_LIVE_EXECUTION_GATE_ID,
+        "authorized_execution_gate": FUTURE_LIVE_EXECUTION_GATE_ID,
+        "canary_authorization_prep_path": CANARY_AUTH_PREP_REL_PATH,
+        "canary_authorization_prep_doc_path": CANARY_AUTH_PREP_DOC_REL_PATH,
+        "canary_authorization_prep_file_sha256": EXPECTED_CANARY_AUTH_PREP_FILE_SHA256,
+        "canary_authorization_prep_internal_sha256": (
+            EXPECTED_CANARY_AUTH_PREP_INTERNAL_SHA256
+        ),
+        "canary_authorization_prep_doc_sha256": EXPECTED_CANARY_AUTH_PREP_DOC_SHA256,
+        "canary_manifest_path": CANARY_MANIFEST_REL_PATH,
+        "canary_manifest_file_sha256": EXPECTED_CANARY_MANIFEST_FILE_SHA256,
+        "canary_manifest_internal_sha256": EXPECTED_CANARY_MANIFEST_INTERNAL_SHA256,
+        "owner_readiness_attestation_path": OWNER_READINESS_ATTESTATION_REL_PATH,
+        "owner_readiness_attestation_file_sha256": (
+            EXPECTED_OWNER_READINESS_ATTESTATION_FILE_SHA256
+        ),
+        "owner_readiness_attestation_internal_sha256": (
+            EXPECTED_OWNER_READINESS_ATTESTATION_INTERNAL_SHA256
+        ),
+        "candidates": copy.deepcopy(FROZEN_CANDIDATES),
+        "prompt_id": FROZEN_PROMPT_ID,
+        "selected_prompt_semantic_sha256": EXPECTED_P1_SEMANTIC_SHA256,
+        "exact_canary_fixtures": list(FROZEN_CANARY_FIXTURE_IDS),
+        "exact_9_cell_execution_order": _expected_9_cell_order_records(),
+        "max_provider_generation_calls": FROZEN_MAX_GENERATION_CALLS,
+        "generation_calls_per_assigned_cell": FROZEN_GENERATION_CALLS_PER_CELL,
+        "concurrency": FROZEN_CONCURRENCY,
+        "timeout_policy_id": FROZEN_TIMEOUT_POLICY_ID,
+        "timeout_ms": FROZEN_TIMEOUT_MS,
+        "pacing_policy_id": FROZEN_PACING_POLICY_ID,
+        "inter_call_delay_ms": FROZEN_INTER_CALL_DELAY_MS,
+        "delay_before_first_call_ms": FROZEN_DELAY_BEFORE_FIRST_CALL_MS,
+        "delay_after_last_call_ms": FROZEN_DELAY_AFTER_LAST_CALL_MS,
+        "maximum_scheduled_delays": FROZEN_MAX_SCHEDULED_DELAYS,
+        "retry_policy_id": FROZEN_RETRY_POLICY_ID,
+        "retry": 0,
+        "automatic_retry": FROZEN_AUTOMATIC_RETRY,
+        "transport_retry": FROZEN_TRANSPORT_RETRY,
+        "manual_retry": FROZEN_MANUAL_RETRY,
+        "llm_repair": FROZEN_LLM_REPAIR,
+        "semantic_repair": FROZEN_SEMANTIC_REPAIR,
+        "fallback": FROZEN_FALLBACK,
+        "final100_permitted": False,
+        "FINAL100_USED": False,
+        "FINAL100_STATUS": "NO-GO",
+        "comparative_live_authorized": False,
+        "AMENDED_COMPARATIVE_LIVE_AUTHORIZED": False,
+        "MODEL_WINNER_SELECTED": False,
+        "SELECTED_MODEL_ID": None,
+        "STOCHASTICITY_EXECUTION_STARTED": False,
+        "launcher_identity_id": LAUNCHER_IDENTITY_ID,
+        "launcher_version": LAUNCHER_VERSION,
+        "launcher_path": LAUNCHER_REL_PATH,
+        "scientific_code_bundle_sha256": EXPECTED_SCIENTIFIC_CODE_BUNDLE_SHA256,
+        "authoritative_base_develop_sha": AUTHORITATIVE_BASE_DEVELOP_SHA,
+        "authorized_code_basis_commit_sha": authorized_code_basis_commit_sha,
+        "launcher_repository_merge_provenance": {
+            "pr_number": launcher_pr_number,
+            "base_develop_sha": AUTHORITATIVE_BASE_DEVELOP_SHA,
+            "merge_commit_sha": launcher_merge_commit_sha,
+        },
+        "CANARY_LIVE_EXECUTION_AUTHORIZED": True,
+    }
+    if overrides:
+        for k, v in overrides.items():
+            payload[k] = v
+    if recompute_internal_sha:
+        payload[CANARY_LIVE_EXECUTION_AUTH_INTERNAL_SHA_KEY] = _compute_internal_sha256(
+            payload, CANARY_LIVE_EXECUTION_AUTH_INTERNAL_SHA_KEY
+        )
+    return payload
+
+
+def verify_canary_live_execution_authorization_receipt(
+    repo_root: Path = REPO_ROOT,
+    *,
+    receipt_path_override: Path | None = None,
+    receipt_payload_override: Mapping[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Validate the separate future `w06_dev_select_amendment_01_canary_live_execution_authorization_v1.json` receipt.
+
+    Enforces canonical internal SHA256 tamper detection and all frozen bindings required by Corrective 01 Blocker 1.
+    """
+    target_path = receipt_path_override or (
+        repo_root / CANARY_LIVE_EXECUTION_AUTH_RECEIPT_REL_PATH
+    )
+    _assert_runner_not_final100_path(target_path)
+
+    if receipt_payload_override is not None:
+        if not isinstance(receipt_payload_override, Mapping):
+            raise LiveExecutionNotAuthorizedError(
+                "CANARY_LIVE_EXECUTION_AUTHORIZATION_RECEIPT_MALFORMED: Receipt payload must be a JSON object."
+            )
+        data: dict[str, Any] = dict(receipt_payload_override)
+        file_sha256 = sha256_bytes(canonical_json_bytes(data))
+    else:
+        if not target_path.is_file():
+            raise LiveExecutionNotAuthorizedError(
+                f"CANARY_LIVE_EXECUTION_AUTHORIZATION_RECEIPT_MISSING: Separate execution authorization receipt "
+                f"{target_path} is not present (execution_authorization_receipt_present=false, "
+                f"effective_live_execution_authorized=false). Wait for {FUTURE_LIVE_EXECUTION_GATE_ID}."
+            )
+        try:
+            raw_obj = json.loads(target_path.read_text(encoding="utf-8"))
+        except Exception as exc:
+            raise LiveExecutionNotAuthorizedError(
+                f"CANARY_LIVE_EXECUTION_AUTHORIZATION_RECEIPT_MALFORMED: Failed to parse JSON from {target_path}: {exc}"
+            ) from exc
+        if not isinstance(raw_obj, dict):
+            raise LiveExecutionNotAuthorizedError(
+                f"CANARY_LIVE_EXECUTION_AUTHORIZATION_RECEIPT_MALFORMED: {target_path} must contain a JSON object."
+            )
+        data = raw_obj
+        file_sha256 = _compute_file_lf_sha256(target_path)
+
+    # 1. Final100 firewall checks first
+    if (
+        data.get("final100_permitted") is not False
+        or data.get("FINAL100_USED") is not False
+        or data.get("FINAL100_STATUS") != "NO-GO"
+    ):
+        raise Final100FirewallViolationError(
+            "CANARY_EXECUTION_AUTH_FINAL100_FORBIDDEN: Final100 must remain strictly forbidden (NO-GO, unused)."
+        )
+
+    # 2. Canonical internal SHA256 tamper detection
+    recorded_internal = data.get(CANARY_LIVE_EXECUTION_AUTH_INTERNAL_SHA_KEY)
+    computed_internal = _compute_internal_sha256(
+        data, CANARY_LIVE_EXECUTION_AUTH_INTERNAL_SHA_KEY
+    )
+    if (
+        not isinstance(recorded_internal, str)
+        or len(recorded_internal) != 64
+        or any(c not in "0123456789abcdef" for c in recorded_internal)
+        or recorded_internal != computed_internal
+    ):
+        raise LiveExecutionNotAuthorizedError(
+            f"CANARY_LIVE_EXECUTION_AUTHORIZATION_INTERNAL_SHA256_MISMATCH: "
+            f"recorded={recorded_internal!r}, computed={computed_internal!r}"
+        )
+
+    # 3. Artifact/task/gate identity
+    if (
+        data.get("artifact_id") != CANARY_LIVE_EXECUTION_AUTH_RECEIPT_ARTIFACT_ID
+        or data.get("task_id") != FUTURE_LIVE_EXECUTION_GATE_ID
+        or data.get("authorized_execution_gate") != FUTURE_LIVE_EXECUTION_GATE_ID
+    ):
+        raise LiveExecutionNotAuthorizedError(
+            "CANARY_EXECUTION_AUTH_GATE_OR_ARTIFACT_ID_MISMATCH: Receipt must bind exact future gate "
+            f"{FUTURE_LIVE_EXECUTION_GATE_ID} and artifact {CANARY_LIVE_EXECUTION_AUTH_RECEIPT_ARTIFACT_ID}."
+        )
+
+    # 4. Exact authorization PREP & canary manifest & owner readiness SHA256 bindings
+    if (
+        data.get("canary_authorization_prep_path") != CANARY_AUTH_PREP_REL_PATH
+        or data.get("canary_authorization_prep_doc_path")
+        != CANARY_AUTH_PREP_DOC_REL_PATH
+        or data.get("canary_authorization_prep_file_sha256")
+        != EXPECTED_CANARY_AUTH_PREP_FILE_SHA256
+        or data.get("canary_authorization_prep_internal_sha256")
+        != EXPECTED_CANARY_AUTH_PREP_INTERNAL_SHA256
+        or data.get("canary_authorization_prep_doc_sha256")
+        != EXPECTED_CANARY_AUTH_PREP_DOC_SHA256
+    ):
+        raise LiveExecutionNotAuthorizedError(
+            "CANARY_EXECUTION_AUTH_PREP_SHA256_MISMATCH: Bound authorization PREP hashes do not match frozen authority."
+        )
+    if (
+        data.get("canary_manifest_path") != CANARY_MANIFEST_REL_PATH
+        or data.get("canary_manifest_file_sha256") != EXPECTED_CANARY_MANIFEST_FILE_SHA256
+        or data.get("canary_manifest_internal_sha256")
+        != EXPECTED_CANARY_MANIFEST_INTERNAL_SHA256
+    ):
+        raise LiveExecutionNotAuthorizedError(
+            "CANARY_EXECUTION_AUTH_MANIFEST_SHA256_MISMATCH: Bound canary manifest hashes do not match frozen authority."
+        )
+    if (
+        data.get("owner_readiness_attestation_path")
+        != OWNER_READINESS_ATTESTATION_REL_PATH
+        or data.get("owner_readiness_attestation_file_sha256")
+        != EXPECTED_OWNER_READINESS_ATTESTATION_FILE_SHA256
+        or data.get("owner_readiness_attestation_internal_sha256")
+        != EXPECTED_OWNER_READINESS_ATTESTATION_INTERNAL_SHA256
+    ):
+        raise LiveExecutionNotAuthorizedError(
+            "CANARY_EXECUTION_AUTH_OWNER_READINESS_SHA256_MISMATCH"
+        )
+
+    # 5. Exact candidate set & P1 prompt bindings
+    if data.get("candidates") != FROZEN_CANDIDATES:
+        raise CandidateRegistryIntegrityError(
+            f"CANARY_EXECUTION_AUTH_CANDIDATE_SET_MISMATCH: {data.get('candidates')!r}"
+        )
+    if (
+        data.get("prompt_id") != FROZEN_PROMPT_ID
+        or data.get("selected_prompt_semantic_sha256") != EXPECTED_P1_SEMANTIC_SHA256
+    ):
+        raise PromptFreezeFirewallError("CANARY_EXECUTION_AUTH_PROMPT_P1_MISMATCH")
+
+    # 6. Exact fixtures & 9-cell order bindings
+    if data.get("exact_canary_fixtures") != list(FROZEN_CANARY_FIXTURE_IDS):
+        raise PlanBeforeLiveProtocolError("CANARY_EXECUTION_AUTH_FIXTURE_SET_MISMATCH")
+    if data.get("exact_9_cell_execution_order") != _expected_9_cell_order_records():
+        raise PlanBeforeLiveProtocolError("CANARY_EXECUTION_AUTH_9_CELL_ORDER_MISMATCH")
+
+    # 7. Exact runtime policy bindings (max_calls=9, retry=0, timeout=180000, pacing=2000, fallback=false)
+    if (
+        data.get("max_provider_generation_calls") != FROZEN_MAX_GENERATION_CALLS
+        or data.get("generation_calls_per_assigned_cell")
+        != FROZEN_GENERATION_CALLS_PER_CELL
+        or data.get("concurrency") != FROZEN_CONCURRENCY
+        or data.get("timeout_policy_id") != FROZEN_TIMEOUT_POLICY_ID
+        or data.get("timeout_ms") != FROZEN_TIMEOUT_MS
+        or data.get("pacing_policy_id") != FROZEN_PACING_POLICY_ID
+        or data.get("inter_call_delay_ms") != FROZEN_INTER_CALL_DELAY_MS
+        or data.get("delay_before_first_call_ms") != FROZEN_DELAY_BEFORE_FIRST_CALL_MS
+        or data.get("delay_after_last_call_ms") != FROZEN_DELAY_AFTER_LAST_CALL_MS
+        or data.get("maximum_scheduled_delays") != FROZEN_MAX_SCHEDULED_DELAYS
+        or data.get("retry_policy_id") != FROZEN_RETRY_POLICY_ID
+        or data.get("retry") != 0
+        or data.get("automatic_retry") != 0
+        or data.get("transport_retry") != 0
+        or data.get("manual_retry") != 0
+        or data.get("llm_repair") != 0
+        or data.get("semantic_repair") != 0
+        or data.get("fallback") is not False
+    ):
+        raise PlanBeforeLiveProtocolError(
+            "CANARY_EXECUTION_AUTH_RUNTIME_POLICY_MISMATCH: Receipt violates frozen 9-call / 0-retry / 180s / 2000ms / fallback=false policy."
+        )
+
+    # 8. Comparative & downstream gates remain unauthorized
+    if (
+        data.get("comparative_live_authorized") is not False
+        or data.get("AMENDED_COMPARATIVE_LIVE_AUTHORIZED") is not False
+        or data.get("MODEL_WINNER_SELECTED") is not False
+        or data.get("SELECTED_MODEL_ID") is not None
+        or data.get("STOCHASTICITY_EXECUTION_STARTED") is not False
+    ):
+        raise LiveExecutionNotAuthorizedError(
+            "CANARY_EXECUTION_AUTH_COMPARATIVE_OR_DOWNSTREAM_FORBIDDEN: Comparative180, winner selection, and stochasticity must remain false/null."
+        )
+
+    # 9. Exact launcher identity/version & merge provenance / authorized code basis
+    code_basis_sha = data.get("authorized_code_basis_commit_sha")
+    merge_prov = data.get("launcher_repository_merge_provenance")
+    merge_sha = (
+        merge_prov.get("merge_commit_sha") if isinstance(merge_prov, Mapping) else None
+    )
+    if (
+        data.get("launcher_identity_id") != LAUNCHER_IDENTITY_ID
+        or data.get("launcher_version") != LAUNCHER_VERSION
+        or data.get("launcher_path") != LAUNCHER_REL_PATH
+        or data.get("scientific_code_bundle_sha256")
+        != EXPECTED_SCIENTIFIC_CODE_BUNDLE_SHA256
+        or data.get("authoritative_base_develop_sha") != AUTHORITATIVE_BASE_DEVELOP_SHA
+        or not isinstance(code_basis_sha, str)
+        or len(code_basis_sha) != 40
+        or any(c not in "0123456789abcdef" for c in code_basis_sha)
+        or not isinstance(merge_prov, Mapping)
+        or merge_prov.get("pr_number") != 73
+        or merge_prov.get("base_develop_sha") != AUTHORITATIVE_BASE_DEVELOP_SHA
+        or not isinstance(merge_sha, str)
+        or len(merge_sha) != 40
+        or any(c not in "0123456789abcdef" for c in merge_sha)
+    ):
+        raise LiveExecutionNotAuthorizedError(
+            "CANARY_EXECUTION_AUTH_LAUNCHER_IDENTITY_OR_PROVENANCE_MISMATCH"
+        )
+
+    # 10. Effective authorization flag
+    if data.get("CANARY_LIVE_EXECUTION_AUTHORIZED") is not True:
+        raise LiveExecutionNotAuthorizedError(
+            "CANARY_LIVE_EXECUTION_NOT_AUTHORIZED: CANARY_LIVE_EXECUTION_AUTHORIZED must be true in receipt."
+        )
+
+    return {
+        "verified": True,
+        "execution_authorization_receipt_path": str(target_path),
+        "execution_authorization_receipt_file_sha256": file_sha256,
+        "execution_authorization_receipt_internal_sha256": computed_internal,
+        "CANARY_LIVE_EXECUTION_AUTHORIZED": True,
+        "receipt": data,
+    }
+
+
+def inspect_canary_live_execution_authorization_state(
+    repo_root: Path = REPO_ROOT,
+    *,
+    receipt_path_override: Path | None = None,
+) -> dict[str, Any]:
+    """Inspect whether the separate live-execution authorization receipt exists and is valid.
+
+    In the current PREP state, `w06_dev_select_amendment_01_canary_live_execution_authorization_v1.json`
+    is NOT created, so this returns:
+    - `execution_authorization_receipt_present = false`
+    - `effective_live_execution_authorized = false`
+    - `live_execution_available = false`
+    """
+    target_path = receipt_path_override or (
+        repo_root / CANARY_LIVE_EXECUTION_AUTH_RECEIPT_REL_PATH
+    )
+    _assert_runner_not_final100_path(target_path)
+    if not target_path.is_file():
+        return {
+            "execution_authorization_receipt_path": (
+                CANARY_LIVE_EXECUTION_AUTH_RECEIPT_REL_PATH
+            ),
+            "execution_authorization_receipt_present": False,
+            "effective_live_execution_authorized": False,
+            "live_execution_available": False,
+            "live_execution_status": (
+                "UNAVAILABLE_PENDING_SEPARATE_EXECUTION_AUTHORIZATION_RECEIPT"
+            ),
+        }
+    verified_rec = verify_canary_live_execution_authorization_receipt(
+        repo_root=repo_root,
+        receipt_path_override=target_path,
+    )
+    return {
+        "execution_authorization_receipt_path": (
+            CANARY_LIVE_EXECUTION_AUTH_RECEIPT_REL_PATH
+        ),
+        "execution_authorization_receipt_present": True,
+        "effective_live_execution_authorized": True,
+        "live_execution_available": True,
+        "live_execution_status": "AUTHORIZED_BY_SEPARATE_EXECUTION_RECEIPT",
+        "execution_authorization_receipt_file_sha256": verified_rec[
+            "execution_authorization_receipt_file_sha256"
+        ],
+        "execution_authorization_receipt_internal_sha256": verified_rec[
+            "execution_authorization_receipt_internal_sha256"
+        ],
+    }
+
+
+def verify_two_layer_canary_live_execution_authorization(
+    repo_root: Path = REPO_ROOT,
+    *,
+    output_root_override: Path | None = None,
+    execution_auth_receipt_path_override: Path | None = None,
+    execution_auth_receipt_payload_override: Mapping[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Enforce the two-layer live execution authorization contract (Blocker 1 & Section 5).
+
+    Requires BOTH:
+    1. Frozen authorization PREP (`w06_dev_select_amendment_01_canary_authorization_prep_v1.json`)
+       remains valid and unmutated (`AMENDED_CANARY_LIVE_AUTHORIZED == false`); AND
+    2. Separate execution authorization receipt
+       (`w06_dev_select_amendment_01_canary_live_execution_authorization_v1.json`)
+       is present and valid (`CANARY_LIVE_EXECUTION_AUTHORIZED == true`).
+    """
+    verified_authorities = verify_frozen_canary_launcher_authorities(
+        repo_root=repo_root,
+        output_root_override=output_root_override,
+    )
+    verified_exec_receipt = verify_canary_live_execution_authorization_receipt(
+        repo_root=repo_root,
+        receipt_path_override=execution_auth_receipt_path_override,
+        receipt_payload_override=execution_auth_receipt_payload_override,
+    )
+    return {
+        "verified": True,
+        "layer_1_frozen_auth_prep_verified": True,
+        "layer_1_auth_prep_amended_canary_live_authorized": False,
+        "layer_2_execution_authorization_receipt_verified": True,
+        "effective_live_execution_authorized": True,
+        "authorities": verified_authorities,
+        "execution_authorization_receipt": verified_exec_receipt,
     }
 
 
@@ -1970,6 +2404,8 @@ def evaluate_canary_cell_operational_pass(
     transport_response: ProviderNormalizedTransportResponse,
     generation_calls_attempted: int,
     retry_count: int,
+    actual_http_request_count: int | None = None,
+    provider_response_received: bool = True,
     billing_or_credit_failure: bool = False,
     http_4xx_failure: bool = False,
     http_5xx_failure: bool = False,
@@ -1977,9 +2413,14 @@ def evaluate_canary_cell_operational_pass(
 ) -> dict[str, Any]:
     """Evaluate the exact 13 operational PASS conditions from `w06_dev_select_amendment_01_canary_authorization_prep_v1.json`.
 
-    Per Section 12:
+    Per Section 12 & Corrective 01 Blockers 2 & 3:
     - Schema validity and planner final-core quality are diagnostic only.
-    - Does NOT add `raw_response_parseable_json` as an operational gate.
+    - Does NOT add `raw_response_parseable_json` or non-empty `raw_text` (`len(raw_text) > 0`) as an operational gate.
+    - `provider_returns_response` is True when a provider response object was received (`provider_response_received=True`)
+      and no auth/billing/quota/model-access/timeout/transport/HTTP4xx/HTTP5xx failure occurred (even if `raw_text` is empty,
+      a refusal/safety stop, non-JSON text, or schema-invalid JSON).
+    - `exactly_one_generation_call_attempted` requires `logical_generation_invocation_count == 1` (passed as
+      `generation_calls_attempted`) and at most 1 actual HTTP request.
     - A cell operationally passes if and only if all 13 `required_operational_conditions` are True.
     """
     expected_cid = str(cell_record["candidate_id"])
@@ -2020,17 +2461,24 @@ def evaluate_canary_cell_operational_pass(
         )
     )
     provider_returned_resp = bool(
-        not timeout_fail
+        provider_response_received
+        and not auth_fail
+        and not billing_or_credit_failure
+        and not quota_fail
+        and not model_access_fail
+        and not timeout_fail
         and not is_transport_fail
         and not is_4xx
         and not is_5xx
-        and isinstance(transport_response.raw_text, str)
-        and len(transport_response.raw_text) > 0
+    )
+    exactly_one_call_ok = bool(
+        generation_calls_attempted == 1
+        and (actual_http_request_count is None or actual_http_request_count <= 1)
     )
 
     conditions: dict[str, bool] = {
         "correct_candidate_provider_model_config_used": bool(config_ok),
-        "exactly_one_generation_call_attempted": (generation_calls_attempted == 1),
+        "exactly_one_generation_call_attempted": exactly_one_call_ok,
         "no_authentication_failure": not auth_fail,
         "no_billing_or_credit_failure": not billing_or_credit_failure,
         "no_client_timeout": not timeout_fail,
@@ -2061,6 +2509,9 @@ def evaluate_canary_cell_operational_pass(
             else f"OPERATIONAL_FAILURE:{','.join(failed_conditions)}"
         )
     )
+    raw_text_val = transport_response.raw_text
+    raw_text_present = isinstance(raw_text_val, str)
+    raw_text_non_empty = bool(raw_text_present and len(raw_text_val) > 0)
 
     return {
         "required_operational_conditions": conditions,
@@ -2075,7 +2526,19 @@ def evaluate_canary_cell_operational_pass(
         "transport_failure": is_transport_fail,
         "http_4xx_failure": is_4xx,
         "http_5xx_failure": is_5xx,
+        "provider_response_received": bool(provider_response_received),
         "provider_returned_response": provider_returned_resp,
+        "raw_text_present": raw_text_present,
+        "raw_text_non_empty": raw_text_non_empty,
+        "raw_text_length": len(raw_text_val) if raw_text_present else 0,
+        "refusal_or_safety_state": bool(
+            transport_response.refusal_state
+            or f_cls == DevCellFailureClassification.REFUSAL
+        ),
+        "max_token_truncation_state": bool(
+            transport_response.max_token_state
+            or f_cls == DevCellFailureClassification.MAX_TOKEN_TRUNCATION
+        ),
         "provider_model_identity_evidence_captured": model_identity_ok,
     }
 
@@ -2170,6 +2633,8 @@ def execute_canary_9_cell_sequence(
     clock_fn: Callable[[], str] = default_utc_now_clock,
     persist_artifacts: bool = True,
     api_key_loader: Callable[[str], str] | None = None,
+    live_transport_invoker: Callable[..., ProviderNormalizedTransportResponse]
+    | None = None,
 ) -> dict[str, Any]:
     """Execute the frozen 9-cell canary sequence with strict sequential order, 2000ms pacing, and immediate fail-stop.
 
@@ -2177,7 +2642,10 @@ def execute_canary_9_cell_sequence(
       and `PreflightSecretAndEnvFileAccessGuard` (`LIVE_PROVIDER_CALLS_NEW = 0`, `ENV_FILE_READ = false`,
       `API_KEYS_INSPECTED = false`).
     - In `LIVE_CANARY_EXECUTION`, invokes the production provider transport layer at most once per cell
-      (`max_requests_per_cell = 1`, `max_total_requests = 9`).
+      (`max_requests_per_cell = 1`, `max_total_requests = 9`). Credential loading and provider invocation
+      both run inside the fail-closed per-cell evidence lifecycle so pre-provider credential failures
+      write normalized cell failure evidence (`logical_generation_invocation_count = 0`,
+      `actual_provider_http_request_count = 0`, `cell_operational_pass = False`) and trigger immediate fail-stop.
     """
     if execution_mode not in ("OFFLINE_SIMULATION", "LIVE_CANARY_EXECUTION"):
         raise LiveExecutionNotAuthorizedError(
@@ -2286,7 +2754,9 @@ def execute_canary_9_cell_sequence(
         http_4xx_fail = False
         http_5xx_fail = False
         transport_fail = False
-        gen_calls_for_cell = 1
+        logical_gen_calls_for_cell = 1
+        actual_http_requests_for_cell = 1
+        provider_response_received = True
         retry_count_for_cell = 0
 
         if execution_mode == "OFFLINE_SIMULATION":
@@ -2305,7 +2775,39 @@ def execute_canary_9_cell_sequence(
             http_4xx_fail = bool(sim_out.get("http_4xx_failure", False))
             http_5xx_fail = bool(sim_out.get("http_5xx_failure", False))
             transport_fail = bool(sim_out.get("transport_failure", False))
-            gen_calls_for_cell = int(sim_out.get("generation_calls_attempted", 1))
+            logical_gen_calls_for_cell = int(
+                sim_out.get(
+                    "logical_generation_invocation_count",
+                    sim_out.get("generation_calls_attempted", 1),
+                )
+            )
+            actual_http_requests_for_cell = int(
+                sim_out.get(
+                    "actual_provider_http_request_count",
+                    logical_gen_calls_for_cell,
+                )
+            )
+            default_resp_received = bool(
+                logical_gen_calls_for_cell >= 1
+                and sim_failure
+                not in (
+                    DevCellFailureClassification.AUTHENTICATION_FAILURE,
+                    DevCellFailureClassification.HTTP_429,
+                    DevCellFailureClassification.MODEL_ACCESS_FAILURE,
+                    DevCellFailureClassification.TIMEOUT,
+                    DevCellFailureClassification.PARTIAL_TIMEOUT,
+                    DevCellFailureClassification.HTTP_5XX,
+                    DevCellFailureClassification.HTTP_ERROR,
+                    DevCellFailureClassification.HARNESS_INTERNAL_ERROR,
+                )
+                and not billing_fail
+                and not http_4xx_fail
+                and not http_5xx_fail
+                and not transport_fail
+            )
+            provider_response_received = bool(
+                sim_out.get("provider_response_received", default_resp_received)
+            )
             retry_count_for_cell = int(sim_out.get("retry_count", 0))
             raw_usage = sim_out.get(
                 "raw_usage_metadata",
@@ -2314,7 +2816,7 @@ def execute_canary_9_cell_sequence(
             norm_usage = normalize_candidate_usage_metadata(cid, raw_usage)
             latency_ns = int(sim_out.get("latency_ns", 1_500_000_000))
             transport_resp = ProviderNormalizedTransportResponse(
-                candidate_id= str(sim_out.get("candidate_id", cid)),
+                candidate_id=str(sim_out.get("candidate_id", cid)),
                 provider=str(sim_out.get("provider_slug", cell_record["provider_slug"])),
                 requested_model_id=str(
                     sim_out.get("requested_model_id", cell_record["requested_model_id"])
@@ -2323,22 +2825,28 @@ def execute_canary_9_cell_sequence(
                 raw_text=raw_text,
                 finish_or_stop_reason=str(sim_out.get("finish_reason", "stop")),
                 finish_reason=str(sim_out.get("finish_reason", "stop")),
-                refusal_state=(sim_failure == DevCellFailureClassification.REFUSAL),
-                max_token_state=(
-                    sim_failure == DevCellFailureClassification.MAX_TOKEN_TRUNCATION
+                refusal_state=bool(
+                    sim_out.get("refusal_state", False)
+                    or sim_failure == DevCellFailureClassification.REFUSAL
+                ),
+                max_token_state=bool(
+                    sim_out.get("max_token_state", False)
+                    or sim_failure == DevCellFailureClassification.MAX_TOKEN_TRUNCATION
                 ),
                 raw_usage_metadata=raw_usage,
                 normalized_usage_metadata=norm_usage,
                 raw_provider_metadata={
                     "simulated": True,
                     "returned_model_id": returned_model_id,
+                    "provider_response_received": provider_response_received,
                 },
                 normalized_provider_metadata={
                     "simulated": True,
                     "candidate_id": cid,
                     "returned_model_id": returned_model_id,
+                    "provider_response_received": provider_response_received,
                 },
-                actual_http_request_count=gen_calls_for_cell,
+                actual_http_request_count=actual_http_requests_for_cell,
                 latency_ns=latency_ns,
                 latency_ms=round(latency_ns / 1_000_000.0, 3),
                 simulated_failure=sim_failure,
@@ -2351,46 +2859,31 @@ def execute_canary_9_cell_sequence(
             key_loader = api_key_loader or (
                 lambda c: _load_candidate_api_key_for_live_transport(c)
             )
-            api_key = key_loader(cid)
+            invoker = (
+                live_transport_invoker or _invoke_canary_production_transport_for_cell
+            )
+            logical_gen_calls_for_cell = 0
+            actual_http_requests_for_cell = 0
+            provider_response_received = False
+            pre_provider_credential_failure = False
+            api_key: str | None = None
             try:
-                transport_resp = _invoke_canary_production_transport_for_cell(
-                    cell_manifest=cell_manifest,
-                    wire_request=wire_request,
-                    http_counter=http_counter,
-                    api_key=api_key,
-                )
-            except (
-                ImmutableCellExecutionError,
-                BatchExecutionFatalStopError,
-                DevCallBudgetExhaustedError,
-                CandidateRegistryIntegrityError,
-            ):
-                raise
-            except Exception as exc:
-                f_cls = classify_provider_transport_exception(exc)
-                safe_msg = sanitize_runner_text(
-                    f"{type(exc).__name__}: {exc}", [api_key]
-                )
-                msg_low = safe_msg.lower()
-                if any(
-                    tok in msg_low
-                    for tok in (
-                        "credit balance",
-                        "insufficient_quota",
-                        "billing",
-                        "payment",
+                loaded_key = key_loader(cid)
+                if not isinstance(loaded_key, str) or not loaded_key.strip():
+                    raise LiveExecutionNotAuthorizedError(
+                        f"MISSING_OR_EMPTY_CREDENTIAL_FOR_{cid}"
                     )
-                ):
-                    billing_fail = True
-                status_code = getattr(exc, "status_code", None) or getattr(
-                    exc, "code", None
+                api_key = loaded_key.strip()
+            except Exception as cred_exc:
+                pre_provider_credential_failure = True
+                logical_gen_calls_for_cell = 0
+                actual_http_requests_for_cell = (
+                    http_counter.per_cell_http_requests.get(cell_id, 0)
                 )
-                if isinstance(status_code, int) and 400 <= status_code < 500:
-                    http_4xx_fail = True
-                elif isinstance(status_code, int) and 500 <= status_code < 600:
-                    http_5xx_fail = True
-                elif f_cls == DevCellFailureClassification.HARNESS_INTERNAL_ERROR:
-                    transport_fail = True
+                provider_response_received = False
+                safe_cred_msg = sanitize_runner_text(
+                    f"{type(cred_exc).__name__}: {cred_exc}", []
+                )
                 norm_usage = normalize_candidate_usage_metadata(cid, None)
                 transport_resp = ProviderNormalizedTransportResponse(
                     candidate_id=cid,
@@ -2398,30 +2891,111 @@ def execute_canary_9_cell_sequence(
                     requested_model_id=str(cell_record["requested_model_id"]),
                     returned_model_id=None,
                     raw_text="",
-                    finish_or_stop_reason=f"PROVIDER_EXCEPTION:{f_cls.value}",
-                    finish_reason=f"PROVIDER_EXCEPTION:{f_cls.value}:{safe_msg}",
-                    refusal_state=(f_cls == DevCellFailureClassification.REFUSAL),
-                    max_token_state=(
-                        f_cls == DevCellFailureClassification.MAX_TOKEN_TRUNCATION
-                    ),
+                    finish_or_stop_reason="PRE_PROVIDER_CREDENTIAL_FAILURE:AUTHENTICATION_FAILURE",
+                    finish_reason=f"PRE_PROVIDER_CREDENTIAL_FAILURE:{safe_cred_msg}",
+                    refusal_state=False,
+                    max_token_state=False,
                     raw_usage_metadata=None,
                     normalized_usage_metadata=norm_usage,
-                    raw_provider_metadata={"exception_summary": safe_msg},
+                    raw_provider_metadata={
+                        "pre_provider_failure": True,
+                        "failure_stage": "CREDENTIAL_RESOLUTION_BEFORE_GENERATION_INVOCATION",
+                        "exception_summary": safe_cred_msg,
+                    },
                     normalized_provider_metadata={
                         "candidate_id": cid,
-                        "exception_classification": f_cls.value,
-                        "exception_summary": safe_msg,
+                        "pre_provider_failure": True,
+                        "failure_stage": "CREDENTIAL_RESOLUTION_BEFORE_GENERATION_INVOCATION",
+                        "exception_classification": DevCellFailureClassification.AUTHENTICATION_FAILURE.value,
+                        "exception_summary": safe_cred_msg,
+                        "logical_generation_invocation_count": 0,
+                        "actual_http_request_count": actual_http_requests_for_cell,
                     },
-                    actual_http_request_count=http_counter.per_cell_http_requests.get(
-                        cell_id, 1
-                    ),
-                    simulated_failure=f_cls,
+                    actual_http_request_count=actual_http_requests_for_cell,
+                    simulated_failure=DevCellFailureClassification.AUTHENTICATION_FAILURE,
                     authoritative_usage_available=False,
                 )
+
+            if not pre_provider_credential_failure:
+                assert api_key is not None
+                logical_gen_calls_for_cell = 1
+                try:
+                    transport_resp = invoker(
+                        cell_manifest=cell_manifest,
+                        wire_request=wire_request,
+                        http_counter=http_counter,
+                        api_key=api_key,
+                    )
+                    provider_response_received = True
+                    actual_http_requests_for_cell = int(
+                        transport_resp.actual_http_request_count
+                    )
+                except (
+                    ImmutableCellExecutionError,
+                    BatchExecutionFatalStopError,
+                    DevCallBudgetExhaustedError,
+                    CandidateRegistryIntegrityError,
+                ):
+                    raise
+                except Exception as exc:
+                    provider_response_received = False
+                    actual_http_requests_for_cell = (
+                        http_counter.per_cell_http_requests.get(cell_id, 0)
+                    )
+                    f_cls = classify_provider_transport_exception(exc)
+                    safe_msg = sanitize_runner_text(
+                        f"{type(exc).__name__}: {exc}", [api_key]
+                    )
+                    msg_low = safe_msg.lower()
+                    if any(
+                        tok in msg_low
+                        for tok in (
+                            "credit balance",
+                            "insufficient_quota",
+                            "billing",
+                            "payment",
+                        )
+                    ):
+                        billing_fail = True
+                    status_code = getattr(exc, "status_code", None) or getattr(
+                        exc, "code", None
+                    )
+                    if isinstance(status_code, int) and 400 <= status_code < 500:
+                        http_4xx_fail = True
+                    elif isinstance(status_code, int) and 500 <= status_code < 600:
+                        http_5xx_fail = True
+                    elif f_cls == DevCellFailureClassification.HARNESS_INTERNAL_ERROR:
+                        transport_fail = True
+                    norm_usage = normalize_candidate_usage_metadata(cid, None)
+                    transport_resp = ProviderNormalizedTransportResponse(
+                        candidate_id=cid,
+                        provider=str(cell_record["provider_slug"]),
+                        requested_model_id=str(cell_record["requested_model_id"]),
+                        returned_model_id=None,
+                        raw_text="",
+                        finish_or_stop_reason=f"PROVIDER_EXCEPTION:{f_cls.value}",
+                        finish_reason=f"PROVIDER_EXCEPTION:{f_cls.value}:{safe_msg}",
+                        refusal_state=(f_cls == DevCellFailureClassification.REFUSAL),
+                        max_token_state=(
+                            f_cls == DevCellFailureClassification.MAX_TOKEN_TRUNCATION
+                        ),
+                        raw_usage_metadata=None,
+                        normalized_usage_metadata=norm_usage,
+                        raw_provider_metadata={"exception_summary": safe_msg},
+                        normalized_provider_metadata={
+                            "candidate_id": cid,
+                            "exception_classification": f_cls.value,
+                            "exception_summary": safe_msg,
+                            "logical_generation_invocation_count": logical_gen_calls_for_cell,
+                            "actual_http_request_count": actual_http_requests_for_cell,
+                        },
+                        actual_http_request_count=actual_http_requests_for_cell,
+                        simulated_failure=f_cls,
+                        authoritative_usage_available=False,
+                    )
             latency_ns = max(1, time.perf_counter_ns() - t0_ns)
             transport_resp.latency_ns = latency_ns
             transport_resp.latency_ms = round(latency_ns / 1_000_000.0, 3)
-            gen_calls_for_cell = max(1, transport_resp.actual_http_request_count)
 
         completed_at_utc = clock_fn()
         raw_response_sha256 = sha256_bytes(
@@ -2431,7 +3005,9 @@ def execute_canary_9_cell_sequence(
         op_eval = evaluate_canary_cell_operational_pass(
             cell_record=cell_record,
             transport_response=transport_resp,
-            generation_calls_attempted=gen_calls_for_cell,
+            generation_calls_attempted=logical_gen_calls_for_cell,
+            actual_http_request_count=actual_http_requests_for_cell,
+            provider_response_received=provider_response_received,
             retry_count=retry_count_for_cell,
             billing_or_credit_failure=billing_fail,
             http_4xx_failure=http_4xx_fail,
@@ -2458,7 +3034,9 @@ def execute_canary_9_cell_sequence(
             "returned_model_id": transport_resp.returned_model_id,
             "prompt_id": cell_record["prompt_id"],
             "attempt_number": 1,
-            "generation_call_count": gen_calls_for_cell,
+            "logical_generation_invocation_count": logical_gen_calls_for_cell,
+            "generation_call_count": logical_gen_calls_for_cell,
+            "actual_provider_http_request_count": actual_http_requests_for_cell,
             "retry_count": retry_count_for_cell,
             "execution_started_at_utc": started_at_utc,
             "transport_completed_at_utc": completed_at_utc,
@@ -2475,7 +3053,13 @@ def execute_canary_9_cell_sequence(
             "transport_failure": op_eval["transport_failure"],
             "http_4xx_failure": op_eval["http_4xx_failure"],
             "http_5xx_failure": op_eval["http_5xx_failure"],
+            "provider_response_received": op_eval["provider_response_received"],
             "provider_returned_response": op_eval["provider_returned_response"],
+            "raw_text_present": op_eval["raw_text_present"],
+            "raw_text_non_empty": op_eval["raw_text_non_empty"],
+            "raw_text_length": op_eval["raw_text_length"],
+            "refusal_or_safety_state": op_eval["refusal_or_safety_state"],
+            "max_token_truncation_state": op_eval["max_token_truncation_state"],
             "provider_model_identity_evidence_captured": op_eval[
                 "provider_model_identity_evidence_captured"
             ],
@@ -2508,6 +3092,9 @@ def execute_canary_9_cell_sequence(
                     "execution_started_at_utc": started_at_utc,
                     "transport_completed_at_utc": completed_at_utc,
                     "latency_ns": transport_resp.latency_ns,
+                    "logical_generation_invocation_count": logical_gen_calls_for_cell,
+                    "actual_provider_http_request_count": actual_http_requests_for_cell,
+                    "provider_response_received": op_eval["provider_response_received"],
                     "status": TRANSPORT_STATUS_COMPLETED,
                 },
             )
@@ -2522,6 +3109,10 @@ def execute_canary_9_cell_sequence(
                     "normalized_provider_metadata": transport_resp.normalized_provider_metadata,
                     "returned_model_id": transport_resp.returned_model_id,
                     "finish_or_stop_reason": transport_resp.finish_or_stop_reason,
+                    "provider_response_received": op_eval["provider_response_received"],
+                    "raw_text_present": op_eval["raw_text_present"],
+                    "raw_text_non_empty": op_eval["raw_text_non_empty"],
+                    "raw_text_length": op_eval["raw_text_length"],
                     "raw_response_sha256": raw_response_sha256,
                 },
             )
@@ -2560,6 +3151,12 @@ def execute_canary_9_cell_sequence(
     pass_count = sum(
         1 for c in attempted_cell_evidence if c["cell_operational_pass"] is True
     )
+    total_logical_invocations = sum(
+        int(c["logical_generation_invocation_count"]) for c in attempted_cell_evidence
+    )
+    total_actual_http_requests = sum(
+        int(c["actual_provider_http_request_count"]) for c in attempted_cell_evidence
+    )
     unscheduled_cells = ordered_cells[attempted_count:]
     all_9_pass = (
         attempted_count == FROZEN_CANARY_CELL_COUNT
@@ -2586,6 +3183,8 @@ def execute_canary_9_cell_sequence(
         "scientific_code_bundle_sha256": EXPECTED_SCIENTIFIC_CODE_BUNDLE_SHA256,
         "total_assigned_canary_cells": FROZEN_CANARY_CELL_COUNT,
         "attempted_cells_count": attempted_count,
+        "total_logical_generation_invocations": total_logical_invocations,
+        "total_actual_provider_http_requests": total_actual_http_requests,
         "operational_pass_cells_count": pass_count,
         "operational_pass_fraction": f"{pass_count}/{FROZEN_CANARY_CELL_COUNT}",
         "unscheduled_cells_count": len(unscheduled_cells),
@@ -2643,6 +3242,9 @@ def run_preflight(
         verified = verify_frozen_canary_launcher_authorities(
             repo_root=repo_root,
             output_root_override=output_root_override,
+        )
+        exec_auth_state = inspect_canary_live_execution_authorization_state(
+            repo_root=repo_root
         )
         ordered_cells: list[dict[str, Any]] = verified["ordered_canary_cells"]
         dev_bundle: VerifiedDevBundle = verified["dev_bundle"]
@@ -2736,6 +3338,7 @@ def run_preflight(
             "scientific_code_bundle_sha256": verified["scientific_code_bundle_sha256"],
             "scientific_code_bundle_unchanged": True,
             "canary_authorization_prep_path": CANARY_AUTH_PREP_REL_PATH,
+            "canary_authorization_prep_doc_path": CANARY_AUTH_PREP_DOC_REL_PATH,
             "canary_authorization_prep_file_sha256": (
                 EXPECTED_CANARY_AUTH_PREP_FILE_SHA256
             ),
@@ -2745,6 +3348,17 @@ def run_preflight(
             "canary_authorization_prep_doc_sha256": (
                 EXPECTED_CANARY_AUTH_PREP_DOC_SHA256
             ),
+            "execution_authorization_receipt_path": exec_auth_state[
+                "execution_authorization_receipt_path"
+            ],
+            "execution_authorization_receipt_present": exec_auth_state[
+                "execution_authorization_receipt_present"
+            ],
+            "effective_live_execution_authorized": exec_auth_state[
+                "effective_live_execution_authorized"
+            ],
+            "live_execution_available": exec_auth_state["live_execution_available"],
+            "live_execution_status": exec_auth_state["live_execution_status"],
             "canary_manifest_path": CANARY_MANIFEST_REL_PATH,
             "canary_manifest_file_sha256": EXPECTED_CANARY_MANIFEST_FILE_SHA256,
             "canary_manifest_internal_sha256": (
@@ -2842,26 +3456,27 @@ def run_live_canary_execution(
     repo_root: Path = REPO_ROOT,
     *,
     output_root_override: Path | None = None,
+    execution_authorization_receipt_path_override: Path | None = None,
     api_key_loader: Callable[[str], str] | None = None,
+    live_transport_invoker: Callable[..., ProviderNormalizedTransportResponse]
+    | None = None,
     sleep_fn: Callable[[float], None] | None = None,
 ) -> dict[str, Any]:
     """Run Mode B (`--execute-live --confirm-frozen-9-canary-cells`).
 
-    Note: In the current repository state (`AMENDED_CANARY_LIVE_AUTHORIZED = false`),
-    this mode also verifies that live canary execution has been explicitly authorized
-    before any live provider call is made.
+    Enforces two-layer live authorization BEFORE any API key access, cell directory creation,
+    or provider network call:
+    1. Frozen authorization PREP artifact (`w06_dev_select_amendment_01_canary_authorization_prep_v1.json`)
+       must match exact file/internal SHA256 and preserve `AMENDED_CANARY_LIVE_AUTHORIZED == False`.
+    2. Separate live-execution authorization receipt (`w06_dev_select_amendment_01_canary_live_execution_authorization_v1.json`)
+       must exist, pass canonical internal SHA256 tamper verification, bind all frozen hashes/models/order/budget/zero-retry/firewalls,
+       and have `CANARY_LIVE_EXECUTION_AUTHORIZED == True`.
     """
-    verified = verify_frozen_canary_launcher_authorities(
+    verify_two_layer_canary_live_execution_authorization(
         repo_root=repo_root,
+        execution_auth_receipt_path_override=execution_authorization_receipt_path_override,
         output_root_override=output_root_override,
     )
-    auth_prep = verified["auth_prep"]
-    if auth_prep.get("AMENDED_CANARY_LIVE_AUTHORIZED") is not True:
-        raise LiveExecutionNotAuthorizedError(
-            "CANARY_LIVE_EXECUTION_NOT_YET_AUTHORIZED: "
-            "AMENDED_CANARY_LIVE_AUTHORIZED is false in the bound authorization artifact. "
-            f"Wait for {NEXT_GATE_ID} and explicit task {FUTURE_LIVE_EXECUTION_GATE_ID}."
-        )
     return execute_canary_9_cell_sequence(
         repo_root=repo_root,
         output_root=output_root_override,
@@ -2869,6 +3484,7 @@ def run_live_canary_execution(
         sleep_fn=sleep_fn,
         persist_artifacts=True,
         api_key_loader=api_key_loader,
+        live_transport_invoker=live_transport_invoker,
     )
 
 
