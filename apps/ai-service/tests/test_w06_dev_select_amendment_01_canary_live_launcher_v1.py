@@ -73,12 +73,82 @@ from app.evaluation.dev_selection_harness import (  # noqa: E402
     normalize_lf_bytes,
     sha256_bytes,
 )
+import freeze_w06_dev_select_amendment_01_canary_live_execution_authorization as exec_auth_mod  # noqa: E402
 import run_w06_dev_select_amendment_01_canary_live_v1 as canary_launcher  # noqa: E402
+
+_ORIG_INSPECT_EXEC_AUTH_STATE = (
+    canary_launcher.inspect_canary_live_execution_authorization_state
+)
+_ORIG_VERIFY_EXEC_AUTH_RECEIPT = (
+    canary_launcher.verify_canary_live_execution_authorization_receipt
+)
+_PRE_RECEIPT_ABSENT_SENTINEL_REL_PATH = (
+    "data/evaluation/w06/_pre_receipt_absent_simulation_v1.json"
+)
+
+
+def _inspect_exec_auth_with_downstream_receipt_exemption(
+    repo_root: Path = REPO_ROOT,
+    *,
+    receipt_path_override: Path | None = None,
+    git_runner: Any = None,
+    launcher_file_path_override: Path | None = None,
+) -> dict[str, Any]:
+    if (
+        receipt_path_override is None
+        and repo_root == REPO_ROOT
+        and exec_auth_mod.is_verified_downstream_w06_canary_live_execution_authorization_receipt(
+            REPO_ROOT
+        )
+    ):
+        receipt_path_override = repo_root / _PRE_RECEIPT_ABSENT_SENTINEL_REL_PATH
+    return _ORIG_INSPECT_EXEC_AUTH_STATE(
+        repo_root=repo_root,
+        receipt_path_override=receipt_path_override,
+        git_runner=git_runner,
+        launcher_file_path_override=launcher_file_path_override,
+    )
+
+
+def _verify_exec_auth_with_downstream_receipt_exemption(
+    repo_root: Path = REPO_ROOT,
+    *,
+    receipt_path_override: Path | None = None,
+    receipt_payload_override: Any = None,
+    git_runner: Any = None,
+    launcher_file_path_override: Path | None = None,
+) -> dict[str, Any]:
+    if (
+        receipt_path_override is None
+        and receipt_payload_override is None
+        and repo_root == REPO_ROOT
+        and exec_auth_mod.is_verified_downstream_w06_canary_live_execution_authorization_receipt(
+            REPO_ROOT
+        )
+    ):
+        receipt_path_override = repo_root / _PRE_RECEIPT_ABSENT_SENTINEL_REL_PATH
+    return _ORIG_VERIFY_EXEC_AUTH_RECEIPT(
+        repo_root=repo_root,
+        receipt_path_override=receipt_path_override,
+        receipt_payload_override=receipt_payload_override,
+        git_runner=git_runner,
+        launcher_file_path_override=launcher_file_path_override,
+    )
 
 
 @pytest.fixture(autouse=True)
-def _enforce_offline_guards():
+def _enforce_offline_guards(monkeypatch: pytest.MonkeyPatch):
     """Run every test in this module under the offline network kill-switch."""
+    monkeypatch.setattr(
+        canary_launcher,
+        "inspect_canary_live_execution_authorization_state",
+        _inspect_exec_auth_with_downstream_receipt_exemption,
+    )
+    monkeypatch.setattr(
+        canary_launcher,
+        "verify_canary_live_execution_authorization_receipt",
+        _verify_exec_auth_with_downstream_receipt_exemption,
+    )
     with canary_launcher.NetworkKillSwitchGuard():
         yield
 
@@ -86,7 +156,25 @@ def _enforce_offline_guards():
 @pytest.fixture(scope="module")
 def preflight_out() -> dict[str, Any]:
     """Execute `--preflight` once at module scope."""
-    return canary_launcher.run_canary_launcher_cli(["--preflight"], repo_root=REPO_ROOT)
+    orig_inspect = canary_launcher.inspect_canary_live_execution_authorization_state
+    orig_verify = canary_launcher.verify_canary_live_execution_authorization_receipt
+    canary_launcher.inspect_canary_live_execution_authorization_state = (  # type: ignore[assignment]
+        _inspect_exec_auth_with_downstream_receipt_exemption
+    )
+    canary_launcher.verify_canary_live_execution_authorization_receipt = (  # type: ignore[assignment]
+        _verify_exec_auth_with_downstream_receipt_exemption
+    )
+    try:
+        return canary_launcher.run_canary_launcher_cli(
+            ["--preflight"], repo_root=REPO_ROOT
+        )
+    finally:
+        canary_launcher.inspect_canary_live_execution_authorization_state = (  # type: ignore[assignment]
+            orig_inspect
+        )
+        canary_launcher.verify_canary_live_execution_authorization_receipt = (  # type: ignore[assignment]
+            orig_verify
+        )
 
 
 @pytest.fixture(scope="module")
@@ -996,7 +1084,12 @@ def test_30_auth_01_no_execution_receipt_and_prep_immutability_state(
     prod_receipt_path = (
         REPO_ROOT / canary_launcher.CANARY_LIVE_EXECUTION_AUTH_RECEIPT_REL_PATH
     )
-    assert not prod_receipt_path.exists()
+    assert (
+        not prod_receipt_path.exists()
+        or exec_auth_mod.is_verified_downstream_w06_canary_live_execution_authorization_receipt(
+            REPO_ROOT
+        )
+    )
     assert (
         preflight_out["canary_authorization_prep_doc_path"]
         == "docs/research/w06_dev_select_amendment_01_canary_live_authorization_prep.md"
