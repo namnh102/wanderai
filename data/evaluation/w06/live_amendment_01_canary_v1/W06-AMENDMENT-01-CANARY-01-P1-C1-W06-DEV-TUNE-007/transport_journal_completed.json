@@ -1,0 +1,16 @@
+{
+  "actual_provider_http_request_count": 1,
+  "attempt_number": 1,
+  "candidate_id": "C1",
+  "cell_id": "W06-AMENDMENT-01-CANARY-01-P1-C1-W06-DEV-TUNE-007",
+  "execution_started_at_utc": "2026-10-31T16:38:27.522525+00:00",
+  "fixture_id": "W06-DEV-TUNE-007",
+  "latency_ns": 179986664200,
+  "logical_generation_invocation_count": 1,
+  "order_index": 1,
+  "provider_response_received": false,
+  "runtime_head_sha": "4d631da5b5d439d54e511c3561d5e2584765033c",
+  "short_label": "007 / C1",
+  "status": "TRANSPORT_COMPLETED",
+  "transport_completed_at_utc": "2026-10-31T16:41:27.515438+00:00"
+}
