@@ -1,0 +1,189 @@
+{
+  "AMENDED_COMPARATIVE_LIVE_AUTHORIZED": false,
+  "AMENDED_LIVE_EXECUTED": false,
+  "API_KEYS_INSPECTED": false,
+  "CANARY_EXECUTED": false,
+  "CANARY_LIVE_EXECUTION_AUTHORIZED": true,
+  "COMPARATIVE_EXECUTED": false,
+  "ENV_FILE_READ": false,
+  "FINAL100_STATUS": "NO-GO",
+  "FINAL100_USED": false,
+  "LIVE_PROVIDER_CALLS_NEW": 0,
+  "MODEL_WINNER_SELECTED": false,
+  "PRIMARY_DENOMINATORS_CHANGED": false,
+  "PRIMARY_EXPERIMENT_MUTATED": false,
+  "PRIMARY_RESULTS_REPLACED": false,
+  "SELECTED_MODEL_ID": null,
+  "STOCHASTICITY_EXECUTION_STARTED": false,
+  "artifact_id": "W06-DEV-SELECT-AMENDMENT-01-CANARY-LIVE-EXECUTION-AUTHORIZATION-V1",
+  "authoritative_base_develop_sha": "1ebe30c251958542088a3056dcfc6b780dac3a88",
+  "authoritative_primary_strict_rates": {
+    "C1": "1/60",
+    "C2": "8/60",
+    "C3": "0/60"
+  },
+  "authorized_code_basis_commit_sha": "3e103587ab0324717c03af14e236dc37fc579295",
+  "authorized_execution_gate": "W06-DEV-SELECT-EXECUTION-ENVIRONMENT-AMENDMENT-01-CANARY-LIVE-EXECUTION-01",
+  "automatic_retry": 0,
+  "canary_authorization_prep_doc_path": "docs/research/w06_dev_select_amendment_01_canary_live_authorization_prep.md",
+  "canary_authorization_prep_doc_sha256": "d9db3cf7876c408f9a30f703200bd575934e1c81679740e7cdd6ba30256904da",
+  "canary_authorization_prep_file_sha256": "21f9432c4c8bfa0ba5f63bdd99e8ab8c15d2802918b7e0a9c21cb5c0ccc63b61",
+  "canary_authorization_prep_internal_sha256": "0f1480969d506d5b6dc16951a45cf2f8aaf913a13c011f2add6ec3e31721af61",
+  "canary_authorization_prep_path": "data/evaluation/w06/w06_dev_select_amendment_01_canary_authorization_prep_v1.json",
+  "canary_live_execution_authorization_internal_sha256": "d045b1c5e45675dd330515aad5e591e9efb94e219d4418aa739eb8b2270ad8c5",
+  "canary_manifest_file_sha256": "3ce0ebaac35f22dfe8c981478a6c63d7a2fde0580b372fd8f25762ab3b18fb96",
+  "canary_manifest_internal_sha256": "707d99fee54d65822f194cc690cbfadea14ad2176594d4ef882e7d8031990518",
+  "canary_manifest_path": "data/evaluation/w06/w06_dev_select_amendment_01_canary_manifest_v1.json",
+  "canary_pass_does_not_auto_authorize_comparative": true,
+  "candidates": {
+    "C1": {
+      "candidate_id": "C1",
+      "exact_model_id": "gemini-3.8-flash",
+      "provider": "GOOGLE",
+      "provider_slug": "google"
+    },
+    "C2": {
+      "candidate_id": "C2",
+      "exact_model_id": "gpt-6.1-sol",
+      "provider": "OPENAI",
+      "provider_slug": "openai"
+    },
+    "C3": {
+      "candidate_id": "C3",
+      "exact_model_id": "claude-sonnet-5-5",
+      "provider": "ANTHROPIC",
+      "provider_slug": "anthropic"
+    }
+  },
+  "comparative_live_authorized": false,
+  "concurrency": 1,
+  "delay_after_last_call_ms": 0,
+  "delay_before_first_call_ms": 0,
+  "exact_9_cell_execution_order": [
+    {
+      "candidate_id": "C1",
+      "cell_id": "W06-AMENDMENT-01-CANARY-01-P1-C1-W06-DEV-TUNE-007",
+      "fixture_id": "W06-DEV-TUNE-007",
+      "order_index": 1,
+      "short_label": "007 / C1"
+    },
+    {
+      "candidate_id": "C2",
+      "cell_id": "W06-AMENDMENT-01-CANARY-02-P1-C2-W06-DEV-TUNE-007",
+      "fixture_id": "W06-DEV-TUNE-007",
+      "order_index": 2,
+      "short_label": "007 / C2"
+    },
+    {
+      "candidate_id": "C3",
+      "cell_id": "W06-AMENDMENT-01-CANARY-03-P1-C3-W06-DEV-TUNE-007",
+      "fixture_id": "W06-DEV-TUNE-007",
+      "order_index": 3,
+      "short_label": "007 / C3"
+    },
+    {
+      "candidate_id": "C1",
+      "cell_id": "W06-AMENDMENT-01-CANARY-04-P1-C1-W06-DEV-TUNE-011",
+      "fixture_id": "W06-DEV-TUNE-011",
+      "order_index": 4,
+      "short_label": "011 / C1"
+    },
+    {
+      "candidate_id": "C2",
+      "cell_id": "W06-AMENDMENT-01-CANARY-05-P1-C2-W06-DEV-TUNE-011",
+      "fixture_id": "W06-DEV-TUNE-011",
+      "order_index": 5,
+      "short_label": "011 / C2"
+    },
+    {
+      "candidate_id": "C3",
+      "cell_id": "W06-AMENDMENT-01-CANARY-06-P1-C3-W06-DEV-TUNE-011",
+      "fixture_id": "W06-DEV-TUNE-011",
+      "order_index": 6,
+      "short_label": "011 / C3"
+    },
+    {
+      "candidate_id": "C1",
+      "cell_id": "W06-AMENDMENT-01-CANARY-07-P1-C1-W06-DEV-TUNE-015",
+      "fixture_id": "W06-DEV-TUNE-015",
+      "order_index": 7,
+      "short_label": "015 / C1"
+    },
+    {
+      "candidate_id": "C2",
+      "cell_id": "W06-AMENDMENT-01-CANARY-08-P1-C2-W06-DEV-TUNE-015",
+      "fixture_id": "W06-DEV-TUNE-015",
+      "order_index": 8,
+      "short_label": "015 / C2"
+    },
+    {
+      "candidate_id": "C3",
+      "cell_id": "W06-AMENDMENT-01-CANARY-09-P1-C3-W06-DEV-TUNE-015",
+      "fixture_id": "W06-DEV-TUNE-015",
+      "order_index": 9,
+      "short_label": "015 / C3"
+    }
+  ],
+  "exact_canary_fixtures": [
+    "W06-DEV-TUNE-007",
+    "W06-DEV-TUNE-011",
+    "W06-DEV-TUNE-015"
+  ],
+  "fallback": false,
+  "final100_permitted": false,
+  "generation_calls_per_assigned_cell": 1,
+  "inter_call_delay_ms": 2000,
+  "launcher_file_lf_sha256": "7db06f178d5e07980642dc846fa160f51305db7ce59981e706790a3475a8bda2",
+  "launcher_identity_id": "W06-AMENDMENT-01-CANARY-LIVE-LAUNCHER-V1",
+  "launcher_merge_commit_sha": "3e103587ab0324717c03af14e236dc37fc579295",
+  "launcher_path": "scripts/run_w06_dev_select_amendment_01_canary_live_v1.py",
+  "launcher_post_merge_ci_evidence": {
+    "conclusion": "success",
+    "event": "push",
+    "head_sha": "3e103587ab0324717c03af14e236dc37fc579295",
+    "pr_number": 73,
+    "pr_state": "MERGED",
+    "required_jobs": {
+      "ai-service": "success",
+      "backend": "success",
+      "data-contract": "success",
+      "mobile": "success"
+    },
+    "run_id": 41181343010
+  },
+  "launcher_pr_head_sha": "c6c984aef8712538c8c29587caff1e0bbb36afaa",
+  "launcher_pr_number": 73,
+  "launcher_repository_merge_provenance": {
+    "authorized_code_basis_commit_sha": "3e103587ab0324717c03af14e236dc37fc579295",
+    "base_develop_sha": "1ebe30c251958542088a3056dcfc6b780dac3a88",
+    "launcher_file_lf_sha256": "7db06f178d5e07980642dc846fa160f51305db7ce59981e706790a3475a8bda2",
+    "merge_commit_sha": "3e103587ab0324717c03af14e236dc37fc579295",
+    "pr_head_sha": "c6c984aef8712538c8c29587caff1e0bbb36afaa",
+    "pr_number": 73
+  },
+  "launcher_version": "1.0.0",
+  "live_execution_requires_pr_ci_chatgpt_audit_merge_postmerge_ci_and_explicit_execution_gate": true,
+  "llm_repair": 0,
+  "manual_retry": 0,
+  "max_provider_generation_calls": 9,
+  "maximum_scheduled_delays": 8,
+  "next_gate": "W06-DEV-SELECT-EXECUTION-ENVIRONMENT-AMENDMENT-01-CANARY-LIVE-EXECUTION-AUTHORIZATION-RECEIPT-PREP-CHATGPT-AUDIT",
+  "owner_readiness_attestation_file_sha256": "91702599a9c81d57bfa1360d33cf19129537608a5141d35bbba58958a62b1d06",
+  "owner_readiness_attestation_internal_sha256": "137aae6ba52912c10098262ecd29238cb591c92005d99eb226ffbe65c9dfbd75",
+  "owner_readiness_attestation_path": "data/evaluation/w06/w06_dev_select_amendment_01_owner_provider_readiness_attestation_v1.json",
+  "pacing_policy_id": "P1_FIXED_2000MS_INTER_CALL_DELAY",
+  "prep_task_id": "W06-DEV-SELECT-EXECUTION-ENVIRONMENT-AMENDMENT-01-CANARY-LIVE-EXECUTION-AUTHORIZATION-RECEIPT-PREP",
+  "previous_gate": "W06-DEV-SELECT-EXECUTION-ENVIRONMENT-AMENDMENT-01-CANARY-LIVE-LAUNCHER-POSTMERGE-CHATGPT-AUDIT",
+  "previous_gate_decision": "PASS",
+  "prompt_id": "P1",
+  "receipt_prep_only_not_executable_during_prep_task": true,
+  "retry": 0,
+  "retry_policy_id": "R0_STRICT_ZERO_RETRY",
+  "scientific_code_bundle_sha256": "0638f2fcb100b0000e3a2a4e08137a9d468449001f258de7354df21e185ca2e3",
+  "selected_prompt_semantic_sha256": "096ff4c74dd8d1aed1c0abe501b97c8dfd0f6424dbca535f2b79a242637a1c11",
+  "semantic_repair": 0,
+  "task_id": "W06-DEV-SELECT-EXECUTION-ENVIRONMENT-AMENDMENT-01-CANARY-LIVE-EXECUTION-01",
+  "timeout_ms": 180000,
+  "timeout_policy_id": "T3_CANDIDATE_180S",
+  "transport_retry": 0
+}
