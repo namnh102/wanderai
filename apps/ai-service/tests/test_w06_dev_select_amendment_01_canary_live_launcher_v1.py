@@ -1845,22 +1845,32 @@ def test_57_corrective_02_neg_10_arbitrary_valid_looking_40_char_shas_rejected_b
             receipt_path_override=p_arbitrary,
         )
 
-    # Case B: Real existing commits in repository git (e.g. PR #72 parent commits) that do NOT have PR #73 merge ancestry
-    payload_real_old_commits = _build_synthetic_valid_receipt(
-        launcher_pr_head_sha=canary_launcher.PR_72_MERGE_PARENT_2,
-        launcher_merge_commit_sha=canary_launcher.PR_72_MERGE_PARENT_1,
-        authorized_code_basis_commit_sha=canary_launcher.PR_72_MERGE_PARENT_1,
+    # Case B: Real existing commit in repository git (current HEAD, present in both full and shallow CI checkouts) that lacks PR #73 merge ancestry
+    real_head_sha = subprocess.check_output(
+        ["git", "rev-parse", "HEAD"],
+        cwd=str(REPO_ROOT),
+        text=True,
+    ).strip()
+    payload_real_commit = _build_synthetic_valid_receipt(
+        launcher_pr_head_sha=real_head_sha,
+        launcher_merge_commit_sha=real_head_sha,
+        authorized_code_basis_commit_sha=real_head_sha,
     )
-    p_real_old = _write_receipt(
-        tmp_path / "neg_10b_real_old_commits.json", payload_real_old_commits
+    p_real_commit = _write_receipt(
+        tmp_path / "neg_10b_real_existing_commit.json", payload_real_commit
     )
     with pytest.raises(
         LiveExecutionNotAuthorizedError,
-        match="CANARY_EXECUTION_LAUNCHER_MERGE_NOT_TWO_PARENT_MERGE_COMMIT|CANARY_EXECUTION_LAUNCHER_MERGE_BASE_PARENT_MISMATCH",
+        match=(
+            "CANARY_EXECUTION_LAUNCHER_MERGE_COMMIT_NOT_TWO_PARENT_MERGE|"
+            "CANARY_EXECUTION_LAUNCHER_MERGE_BASE_PARENT_MISMATCH|"
+            "CANARY_EXECUTION_LAUNCHER_MERGE_PR_HEAD_ANCESTRY_MISMATCH|"
+            "CANARY_EXECUTION_PRE_LAUNCHER_BASE_DEVELOP_SHA_FORBIDDEN"
+        ),
     ):
         canary_launcher.verify_canary_live_execution_authorization_receipt(
             repo_root=REPO_ROOT,
-            receipt_path_override=p_real_old,
+            receipt_path_override=p_real_commit,
         )
 
 
