@@ -165,6 +165,7 @@ def test_02_post_live_immutable_evidence_verifier_all_9_files_and_semantics(
 
 def test_03_scenario_a_historical_pre_live_environment_guards_pass(
     tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Scenario A: Historical pre-live environment (synthetic/isolated canonical root absent -> old PREP/pre-live guards PASS)."""
     isolated_absent_root = tmp_path / "absent_canary_root" / "live_amendment_01_canary_v1"
@@ -182,6 +183,19 @@ def test_03_scenario_a_historical_pre_live_environment_guards_pass(
         output_root_override=isolated_absent_root,
     )
     assert auths["output_root"] == isolated_absent_root
+
+    orig_inspect = canary_launcher.inspect_canary_live_execution_authorization_state
+    shallow_git_runner = exec_auth_freeze.build_shallow_aware_git_runner(REPO_ROOT)
+    monkeypatch.setattr(
+        canary_launcher,
+        "inspect_canary_live_execution_authorization_state",
+        lambda repo_root=REPO_ROOT, **kwargs: orig_inspect(
+            repo_root=repo_root,
+            git_runner=kwargs.get("git_runner") or shallow_git_runner,
+            receipt_path_override=kwargs.get("receipt_path_override"),
+            launcher_file_path_override=kwargs.get("launcher_file_path_override"),
+        ),
+    )
 
     preflight = canary_launcher.run_preflight(
         repo_root=REPO_ROOT,
