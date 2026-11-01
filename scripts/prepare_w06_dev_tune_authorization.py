@@ -742,6 +742,10 @@ def verify_pre_authorization_firewall(repo_root: Path = REPO_ROOT) -> dict[str, 
         from issue_w06_dev_tune_live_authorization import (
             is_verified_downstream_w06_dev_tune_authorization_file,
         )
+        from verify_w06_dev_select_amendment_01_canary_live_execution_01_evidence import (
+            is_path_in_downstream_w06_amendment_01_canary_live_evidence_scope,
+            is_verified_downstream_w06_amendment_01_canary_live_evidence_tree,
+        )
 
         verified_downstream_results_tree = (
             is_verified_downstream_w06_dev_tune_live_results_tree(repo_root)
@@ -749,19 +753,31 @@ def verify_pre_authorization_firewall(repo_root: Path = REPO_ROOT) -> dict[str, 
         verified_downstream_dev_select_results_tree = (
             is_verified_downstream_w06_dev_select_live_results_tree(repo_root)
         )
+        verified_downstream_canary_live_evidence_tree = (
+            is_verified_downstream_w06_amendment_01_canary_live_evidence_tree(repo_root)
+        )
 
         for path in sorted(w06_dir.rglob("*")):
             rel = path.relative_to(repo_root).as_posix()
             name_lower = path.name.lower()
             is_verified_downstream_results = (
-                verified_downstream_results_tree
-                and is_path_in_downstream_w06_dev_tune_live_results_scope(
-                    path, repo_root=repo_root
+                (
+                    verified_downstream_results_tree
+                    and is_path_in_downstream_w06_dev_tune_live_results_scope(
+                        path, repo_root=repo_root
+                    )
                 )
-            ) or (
-                verified_downstream_dev_select_results_tree
-                and is_path_in_downstream_w06_dev_select_live_results_scope(
-                    path, repo_root=repo_root
+                or (
+                    verified_downstream_dev_select_results_tree
+                    and is_path_in_downstream_w06_dev_select_live_results_scope(
+                        path, repo_root=repo_root
+                    )
+                )
+                or (
+                    verified_downstream_canary_live_evidence_tree
+                    and is_path_in_downstream_w06_amendment_01_canary_live_evidence_scope(
+                        path, repo_root=repo_root
+                    )
                 )
             )
             if path.is_file():

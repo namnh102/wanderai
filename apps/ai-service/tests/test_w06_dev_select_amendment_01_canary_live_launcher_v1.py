@@ -154,8 +154,12 @@ def _enforce_offline_guards(monkeypatch: pytest.MonkeyPatch):
 
 
 @pytest.fixture(scope="module")
-def preflight_out() -> dict[str, Any]:
-    """Execute `--preflight` once at module scope."""
+def preflight_out(tmp_path_factory: pytest.TempPathFactory) -> dict[str, Any]:
+    """Execute `--preflight` once at module scope in an isolated pre-execution output root."""
+    isolated_pre_live_root = (
+        tmp_path_factory.mktemp("canary_preflight_pre_live_root")
+        / "live_amendment_01_canary_v1"
+    )
     orig_inspect = canary_launcher.inspect_canary_live_execution_authorization_state
     orig_verify = canary_launcher.verify_canary_live_execution_authorization_receipt
     canary_launcher.inspect_canary_live_execution_authorization_state = (  # type: ignore[assignment]
@@ -166,7 +170,9 @@ def preflight_out() -> dict[str, Any]:
     )
     try:
         return canary_launcher.run_canary_launcher_cli(
-            ["--preflight"], repo_root=REPO_ROOT
+            ["--preflight"],
+            repo_root=REPO_ROOT,
+            output_root_override=isolated_pre_live_root,
         )
     finally:
         canary_launcher.inspect_canary_live_execution_authorization_state = (  # type: ignore[assignment]
@@ -178,9 +184,16 @@ def preflight_out() -> dict[str, Any]:
 
 
 @pytest.fixture(scope="module")
-def verified_authorities() -> dict[str, Any]:
-    """Verify frozen canary launcher authorities once at module scope."""
-    return canary_launcher.verify_frozen_canary_launcher_authorities(REPO_ROOT)
+def verified_authorities(tmp_path_factory: pytest.TempPathFactory) -> dict[str, Any]:
+    """Verify frozen canary launcher authorities once at module scope in an isolated pre-execution output root."""
+    isolated_pre_live_root = (
+        tmp_path_factory.mktemp("canary_authorities_pre_live_root")
+        / "live_amendment_01_canary_v1"
+    )
+    return canary_launcher.verify_frozen_canary_launcher_authorities(
+        REPO_ROOT,
+        output_root_override=isolated_pre_live_root,
+    )
 
 
 # ==============================================================================
@@ -896,8 +909,11 @@ def test_28_simulated_9_of_9_passes_while_comparative_remains_unauthorized(
         assert all(cell_ev["required_operational_conditions"].values())
 
 
-def test_29_cli_safety_flags_and_live_execution_gate_firewall() -> None:
+def test_29_cli_safety_flags_and_live_execution_gate_firewall(
+    tmp_path: Path,
+) -> None:
     """Verify CLI flag discipline and that Mode B rejects execution while AMENDED_CANARY_LIVE_AUTHORIZED is false."""
+    isolated_pre_live_root = tmp_path / "isolated_cli_pre_live_root"
     with pytest.raises(LiveExecutionNotAuthorizedError, match="NO_MODE_SPECIFIED"):
         canary_launcher.run_canary_launcher_cli([])
 
@@ -940,7 +956,8 @@ def test_29_cli_safety_flags_and_live_execution_gate_firewall() -> None:
         match="CANARY_LIVE_EXECUTION_AUTHORIZATION_RECEIPT_MISSING",
     ):
         canary_launcher.run_canary_launcher_cli(
-            ["--execute-live", "--confirm-frozen-9-canary-cells"]
+            ["--execute-live", "--confirm-frozen-9-canary-cells"],
+            output_root_override=isolated_pre_live_root,
         )
 
 

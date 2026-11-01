@@ -320,9 +320,16 @@ def test_04_runtime_contract_and_downstream_firewalls_and_upstream_hashes(
         == "0638f2fcb100b0000e3a2a4e08137a9d468449001f258de7354df21e185ca2e3"
     )
 
-    # Offline safety & live output root absence
+    # Offline safety & lifecycle-aware live output root verification
+    from verify_w06_dev_select_amendment_01_canary_live_execution_01_evidence import (
+        is_verified_downstream_w06_amendment_01_canary_live_evidence_tree,
+    )
+
     assert verified_out["output_root_exists"] is False
-    assert not (REPO_ROOT / "data/evaluation/w06/live_amendment_01_canary_v1").exists()
+    live_root = REPO_ROOT / "data/evaluation/w06/live_amendment_01_canary_v1"
+    assert not live_root.exists() or is_verified_downstream_w06_amendment_01_canary_live_evidence_tree(
+        REPO_ROOT
+    )
     assert verified_out["LIVE_PROVIDER_CALLS_NEW"] == 0
     assert verified_out["ENV_FILE_READ"] is False
     assert verified_out["API_KEYS_INSPECTED"] is False
@@ -619,4 +626,48 @@ def test_19_neg_15_execution_authorized_false_fails(
     ):
         exec_auth_freeze.verify_canary_live_execution_authorization_artifacts(
             repo_root=REPO_ROOT, receipt_path_override=p
+        )
+
+
+def test_20_pre_live_and_post_live_receipt_lifecycle_separation(
+    tmp_path: Path,
+) -> None:
+    """Section 10: Pre-live receipt verification passes when isolated output root is absent, while post-live second execution against an existing canonical output root fails closed."""
+    from app.evaluation.dev_live_runner import ImmutableCellExecutionError
+    from verify_w06_dev_select_amendment_01_canary_live_execution_01_evidence import (
+        materialize_frozen_canary_live_execution_01_evidence_tree,
+    )
+
+    absent_out = tmp_path / "isolated_pre_live_absent_root"
+    pre_res = exec_auth_freeze.verify_canary_live_execution_authorization_artifacts(
+        repo_root=REPO_ROOT,
+        output_root_override=absent_out,
+        require_pre_execution_output_root_absent=True,
+    )
+    assert pre_res["verified"] is True
+    assert pre_res["output_root_exists"] is False
+    assert pre_res["lifecycle_state"] == "PRE_EXECUTION"
+
+    existing_out = tmp_path / "live_amendment_01_canary_v1"
+    materialize_frozen_canary_live_execution_01_evidence_tree(
+        existing_out, repo_root=REPO_ROOT
+    )
+    with pytest.raises(
+        PlanBeforeLiveProtocolError,
+        match="CANARY_LIVE_OUTPUT_ROOT_EXISTS_DURING_PREP",
+    ):
+        exec_auth_freeze.verify_canary_live_execution_authorization_artifacts(
+            repo_root=REPO_ROOT,
+            output_root_override=existing_out,
+            require_pre_execution_output_root_absent=True,
+        )
+
+    with pytest.raises(
+        ImmutableCellExecutionError,
+        match="CANARY_OUTPUT_ROOT_ALREADY_EXISTS",
+    ):
+        canary_launcher.verify_two_layer_canary_live_execution_authorization(
+            repo_root=REPO_ROOT,
+            output_root_override=existing_out,
+            git_runner=exec_auth_freeze.build_shallow_aware_git_runner(REPO_ROOT),
         )
