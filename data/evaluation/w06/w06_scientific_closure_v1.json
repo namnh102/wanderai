@@ -1,0 +1,273 @@
+{
+  "ALL_9_CANARY_OPERATIONAL_PASS": false,
+  "AMENDED_COMPARATIVE_LIVE_AUTHORIZED": false,
+  "AMENDMENT_01_CANARY_STATUS": "FAILED_OPERATIONAL_GATE",
+  "API_KEYS_INSPECTED": false,
+  "COMPARATIVE_EXECUTED": false,
+  "ENV_FILE_READ": false,
+  "FINAL100_STATUS": "NO-GO",
+  "FINAL100_USED": false,
+  "LIVE_PROVIDER_CALLS_NEW": 0,
+  "MODEL_SELECTION_STATUS": "INCONCLUSIVE",
+  "MODEL_WINNER_SELECTED": false,
+  "PRIMARY_DEV_SELECT_STATUS": "OPERATIONALLY_VALID_BUT_NON_COMPARABLE_FOR_PLANNER_QUALITY",
+  "SELECTED_MODEL_ID": null,
+  "STOCHASTICITY_EXECUTION_STARTED": false,
+  "W06_EVALUATION_PROTOCOL_STATUS": "COMPLETED",
+  "W06_IMPLEMENTATION_STATUS": "COMPLETED",
+  "W06_OVERALL_STATUS": "CLOSED_WITH_OPERATIONAL_LIMITATION",
+  "amendment_01_canary_authority": {
+    "ALL_9_CANARY_OPERATIONAL_PASS": false,
+    "actual_http_requests": 1,
+    "assigned_cells": 9,
+    "attempted_cells": 1,
+    "candidate_id": "C1",
+    "classification": "TIMEOUT",
+    "fail_stop": true,
+    "fixture_id": "W06-DEV-TUNE-007",
+    "generation_invocations": 1,
+    "http_5xx": true,
+    "latency_ms": 179986.664,
+    "latency_ns": 179986664200,
+    "model_identity_evidence": false,
+    "operational_pass": "0/9",
+    "operational_pass_cells_count": 0,
+    "prompt": "P1",
+    "provider": "Google",
+    "provider_code": "GOOGLE",
+    "provider_response_received": false,
+    "provider_slug": "google",
+    "reported_error": "504 DEADLINE_EXCEEDED",
+    "requested_model": "gemini-3.8-flash",
+    "rerun": 0,
+    "retry": 0,
+    "status": "FAILED_OPERATIONAL_GATE",
+    "stopped_at": "007 / C1",
+    "stopped_at_cell_id": "W06-AMENDMENT-01-CANARY-01-P1-C1-W06-DEV-TUNE-007",
+    "timeout_ms": 180000,
+    "unscheduled_cell_ids": [
+      "W06-AMENDMENT-01-CANARY-02-P1-C2-W06-DEV-TUNE-007",
+      "W06-AMENDMENT-01-CANARY-03-P1-C3-W06-DEV-TUNE-007",
+      "W06-AMENDMENT-01-CANARY-04-P1-C1-W06-DEV-TUNE-011",
+      "W06-AMENDMENT-01-CANARY-05-P1-C2-W06-DEV-TUNE-011",
+      "W06-AMENDMENT-01-CANARY-06-P1-C3-W06-DEV-TUNE-011",
+      "W06-AMENDMENT-01-CANARY-07-P1-C1-W06-DEV-TUNE-015",
+      "W06-AMENDMENT-01-CANARY-08-P1-C2-W06-DEV-TUNE-015",
+      "W06-AMENDMENT-01-CANARY-09-P1-C3-W06-DEV-TUNE-015"
+    ],
+    "unscheduled_cells": 8,
+    "unscheduled_cells_list": [
+      "007/C2",
+      "007/C3",
+      "011/C1",
+      "011/C2",
+      "011/C3",
+      "015/C1",
+      "015/C2",
+      "015/C3"
+    ],
+    "unscheduled_cells_status": "UNSCHEDULED_DUE_TO_FAIL_STOP"
+  },
+  "artifact_id": "W06-SCIENTIFIC-CLOSURE-V1",
+  "authoritative_base_develop_sha": "f4235a04bad56e60fb9a255a0d670d83c44181b8",
+  "authoritative_candidates": {
+    "C1": "gemini-3.8-flash",
+    "C2": "gpt-6.1-sol",
+    "C3": "claude-sonnet-5-5"
+  },
+  "bound_provenance": {
+    "artifacts": {
+      "amendment_01_approval_receipt": {
+        "expected_file_sha256": "171564d09b0011ddfc0e2b70ca2f9029bf6981b944527c09331fa7f6a0f914a5",
+        "expected_internal_sha256": "d32e1c61b130a93c5ccbf18294fc1e972c36ba4e561b7fff51a9ea13b43aa991",
+        "internal_sha256_field": "approval_receipt_internal_sha256",
+        "path": "data/evaluation/w06/w06_dev_select_execution_environment_amendment_01_approval_receipt_v1.json"
+      },
+      "amendment_01_canary_authorization_prep": {
+        "expected_file_sha256": "21f9432c4c8bfa0ba5f63bdd99e8ab8c15d2802918b7e0a9c21cb5c0ccc63b61",
+        "expected_internal_sha256": "0f1480969d506d5b6dc16951a45cf2f8aaf913a13c011f2add6ec3e31721af61",
+        "internal_sha256_field": "canary_live_authorization_prep_internal_sha256",
+        "path": "data/evaluation/w06/w06_dev_select_amendment_01_canary_authorization_prep_v1.json"
+      },
+      "amendment_01_canary_live_execution_authorization_receipt": {
+        "expected_file_sha256": "e68c7ad76e9261aaf687660dd20441118ec192a727a6cbf88b15cf4f0268d684",
+        "expected_internal_sha256": "d045b1c5e45675dd330515aad5e591e9efb94e219d4418aa739eb8b2270ad8c5",
+        "internal_sha256_field": "canary_live_execution_authorization_internal_sha256",
+        "path": "data/evaluation/w06/w06_dev_select_amendment_01_canary_live_execution_authorization_v1.json"
+      },
+      "amendment_01_canary_manifest": {
+        "expected_file_sha256": "3ce0ebaac35f22dfe8c981478a6c63d7a2fde0580b372fd8f25762ab3b18fb96",
+        "expected_internal_sha256": "707d99fee54d65822f194cc690cbfadea14ad2176594d4ef882e7d8031990518",
+        "internal_sha256_field": "canary_manifest_internal_sha256",
+        "path": "data/evaluation/w06/w06_dev_select_amendment_01_canary_manifest_v1.json"
+      },
+      "amendment_01_decision": {
+        "expected_file_sha256": "2e4211893c1988230e2eeb2718195d48c093da87725cd2fa074e1743ee599ddf",
+        "expected_internal_sha256": "38dc02de2e846d4cf72108e8beacffdcfcf6308879e0ea72cca3bb83bf71387a",
+        "internal_sha256_field": "decision_artifact_internal_sha256",
+        "path": "data/evaluation/w06/w06_dev_select_execution_environment_amendment_01_decision_v1.json"
+      },
+      "amendment_01_owner_readiness_attestation": {
+        "expected_file_sha256": "91702599a9c81d57bfa1360d33cf19129537608a5141d35bbba58958a62b1d06",
+        "expected_internal_sha256": "137aae6ba52912c10098262ecd29238cb591c92005d99eb226ffbe65c9dfbd75",
+        "internal_sha256_field": "owner_readiness_attestation_internal_sha256",
+        "path": "data/evaluation/w06/w06_dev_select_amendment_01_owner_provider_readiness_attestation_v1.json"
+      },
+      "primary_dev_select_failure_diagnostic": {
+        "expected_file_sha256": "b729883505ecfc98f15917347239ea6d09cede106691b155026891996391e692",
+        "expected_internal_sha256": "509528413e1d9eb8408943867be21f83dc2dda72acd53fe9028e3c37c7db05c8",
+        "internal_sha256_field": "diagnostic_artifact_sha256",
+        "path": "data/evaluation/w06/w06_dev_select_failure_diagnostic_v1.json"
+      },
+      "primary_dev_select_results_freeze_receipt": {
+        "expected_file_sha256": "c021094e26277d41664c4ae2f0560b7684435b6002c5b7ba742a17808c5b07a4",
+        "expected_internal_sha256": "7b270de482f0b077e79bbba40a0c662851da46355a18b5e05f8fdf572880943a",
+        "internal_sha256_field": "results_freeze_receipt_sha256",
+        "path": "data/evaluation/w06/w06_dev_select_live_results_freeze_01_receipt_v1.json"
+      },
+      "primary_dev_select_results_manifest": {
+        "expected_file_sha256": "1d303e1c07b627c3f3eb87287b744f55ba3f6d3d85bd5cec36959b01919d26c0",
+        "expected_internal_sha256": "4e2f8f0df0a6e069d65b563b8221c3ba3086bb50ad73854e9cc592a9beb05011",
+        "internal_sha256_field": "results_manifest_sha256",
+        "path": "data/evaluation/w06/w06_dev_select_live_results_manifest_v1.json"
+      }
+    },
+    "code_and_launchers": {
+      "canary_launcher_lf_sha256": "7db06f178d5e07980642dc846fa160f51305db7ce59981e706790a3475a8bda2",
+      "canary_launcher_path": "scripts/run_w06_dev_select_amendment_01_canary_live_v1.py",
+      "primary_launcher_lf_sha256": "cd36b8ecad24059edb597c0039bd6e760a37ee8b4f36f49077801c65e7ddc7bf",
+      "primary_launcher_path": "scripts/run_w06_dev_select_live_v1.py",
+      "scientific_code_bundle_sha256": "0638f2fcb100b0000e3a2a4e08137a9d468449001f258de7354df21e185ca2e3"
+    },
+    "git_lineage": {
+      "authoritative_base_develop_sha": "f4235a04bad56e60fb9a255a0d670d83c44181b8",
+      "original_live_evidence_commit_sha": "f7d3225dc02e9cf8cd34e7142f3d6c242d25a993",
+      "pr72_authorization_prep_merge_commit_sha": "1ebe30c251958542088a3056dcfc6b780dac3a88",
+      "pr73_canary_launcher_merge_commit_sha": "3e103587ab0324717c03af14e236dc37fc579295",
+      "pr74_execution_authorization_receipt_merge_commit_sha": "4d631da5b5d439d54e511c3561d5e2584765033c",
+      "pr75_live_evidence_merge_commit_sha": "f4235a04bad56e60fb9a255a0d670d83c44181b8",
+      "pr75_merge_parent_1_sha": "fb53d1a46775b27b204a7f71a2f8718b2414f28d",
+      "pr75_merge_parent_2_sha": "3a8bf83611b04eb6241a6ab044b00a1a2b3b2b38",
+      "pr76_lifecycle_corrective_merge_commit_sha": "fb53d1a46775b27b204a7f71a2f8718b2414f28d"
+    },
+    "merged_live_evidence": {
+      "batch_summary_sha256": "d16a3f5f49101914a584045bee2e7470e4dee7eb7aa106c7e9409b1d3d77a8ec",
+      "cell_01_receipt_sha256": "1456833419e4ba76bd52be9f3e4444724febc52e24e08ff30c808379596442c6",
+      "evidence_file_count": 9,
+      "evidence_file_lf_sha256": {
+        "data/evaluation/w06/live_amendment_01_canary_v1/W06-AMENDMENT-01-CANARY-01-P1-C1-W06-DEV-TUNE-007/canary_cell_evidence_receipt.json": "1456833419e4ba76bd52be9f3e4444724febc52e24e08ff30c808379596442c6",
+        "data/evaluation/w06/live_amendment_01_canary_v1/W06-AMENDMENT-01-CANARY-01-P1-C1-W06-DEV-TUNE-007/diagnostic_evaluation.json": "fd66de87664c5dbc24adab8c58c7457408e62ca72280f091f52d9d157aef57ff",
+        "data/evaluation/w06/live_amendment_01_canary_v1/W06-AMENDMENT-01-CANARY-01-P1-C1-W06-DEV-TUNE-007/provider_response_metadata.json": "5a3a345baa1bbb116f10a1759801b9d45a22d8d632cdf2b38572aadad438a885",
+        "data/evaluation/w06/live_amendment_01_canary_v1/W06-AMENDMENT-01-CANARY-01-P1-C1-W06-DEV-TUNE-007/raw_provider_response.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "data/evaluation/w06/live_amendment_01_canary_v1/W06-AMENDMENT-01-CANARY-01-P1-C1-W06-DEV-TUNE-007/raw_usage_metadata.json": "6a40b68c53cc49e8f49c22ef79f97dafe36a57f3ed4615eb32e15d0e56d2f9de",
+        "data/evaluation/w06/live_amendment_01_canary_v1/W06-AMENDMENT-01-CANARY-01-P1-C1-W06-DEV-TUNE-007/request_manifest.json": "360db1d7f655705379e3879bcdb0868d772688c5a3e1089a0d3a020e48e61db6",
+        "data/evaluation/w06/live_amendment_01_canary_v1/W06-AMENDMENT-01-CANARY-01-P1-C1-W06-DEV-TUNE-007/transport_journal_completed.json": "f0946e08a666bee2f67776e59696ed3e4e4e433bdc76913ee29fc948f442a78a",
+        "data/evaluation/w06/live_amendment_01_canary_v1/W06-AMENDMENT-01-CANARY-01-P1-C1-W06-DEV-TUNE-007/transport_journal_starting.json": "f8d4fd09fb20f001314ca16bc8133aef0a359a09a6cf1e15e4cecd79d5ac4a7d",
+        "data/evaluation/w06/live_amendment_01_canary_v1/canary_batch_execution_summary_v1.json": "d16a3f5f49101914a584045bee2e7470e4dee7eb7aa106c7e9409b1d3d77a8ec"
+      },
+      "lifecycle_state": "POST_EXECUTION_EVIDENCE_PRESENT",
+      "output_root": "data/evaluation/w06/live_amendment_01_canary_v1",
+      "second_live_execution_blocked": true
+    }
+  },
+  "closure_internal_sha256": "7dec87d9b318165ba5233d1470df8f12dfbe99449bceabb86dc2322aaab89e12",
+  "critical_scientific_interpretation": {
+    "amendment_01_establishes_gemini_inferior_planner_quality": false,
+    "authoritative_statement": "Under the frozen W6 execution-environment protocol, C1/fixture 007 did not satisfy the operational readiness criteria within the fixed 180-second timeout.",
+    "comparative180_cannot_be_authorized": true,
+    "fair_amendment_01_comparative_quality_dataset_exists": false,
+    "final100_cannot_be_opened": true,
+    "no_model_winner_can_be_selected": true,
+    "why_comparative180_not_authorized": "Frozen Amendment-01 authorization required 9/9 operational PASS (ALL_9_CANARY_OPERATIONAL_PASS = true) and a subsequent dedicated ChatGPT audit gate before any 180-cell comparative execution could be authorized. Cell 1 (007/C1) failed operationally with TIMEOUT (504 DEADLINE_EXCEEDED) and triggered immediate fail-stop (0/9).",
+    "why_final100_remains_no_go": "Final100 is a locked holdout evaluation reserve that requires a validly selected model winner from DEV-SELECT and completion of stochasticity checks. Because MODEL_SELECTION_STATUS is INCONCLUSIVE and SELECTED_MODEL_ID is null, Final100 remains untouched with status NO-GO."
+  },
+  "downstream_firewalls": {
+    "ALL_9_CANARY_OPERATIONAL_PASS": false,
+    "AMENDED_COMPARATIVE_LIVE_AUTHORIZED": false,
+    "COMPARATIVE_EXECUTED": false,
+    "FINAL100_STATUS": "NO-GO",
+    "FINAL100_USED": false,
+    "MODEL_WINNER_SELECTED": false,
+    "SELECTED_MODEL_ID": null,
+    "STOCHASTICITY_EXECUTION_STARTED": false,
+    "claims_from_final100_forbidden": true,
+    "final100_untouched": true
+  },
+  "forbidden_actions_enforced": {
+    "amendment_02_created": false,
+    "c2_c3_side_tests_executed": false,
+    "canary_rerun_executed": false,
+    "comparative180_executed": false,
+    "final100_accessed_or_used": false,
+    "live_provider_calls_new": 0,
+    "model_order_changed": false,
+    "model_replacement_performed": false,
+    "retries_enabled": false,
+    "stochasticity_started": false,
+    "timeout_modified": false
+  },
+  "next_gate": "W06-SCIENTIFIC-CLOSURE-CHATGPT-AUDIT",
+  "previous_gate": "W06-AMENDMENT-01-CANARY-LIVE-EXECUTION-01-EVIDENCE-POSTMERGE-CHATGPT-AUDIT",
+  "previous_gate_decision": "PASS",
+  "primary_dev_select_authority": {
+    "authoritative_candidates": {
+      "C1": "gemini-3.8-flash",
+      "C2": "gpt-6.1-sol",
+      "C3": "claude-sonnet-5-5"
+    },
+    "declare_winner_forbidden": true,
+    "infer_c2_is_best_forbidden": true,
+    "non_comparability_reason": "Severe asymmetric execution-environment failures across providers during the 180-cell primary run (C1 provider deadline/timeout dominance, C2 max_output_tokens=4096 JSON truncation, C3 provider credit-balance exhaustion) confounded planner quality with execution-environment failure modes.",
+    "operationally_valid_benchmark": true,
+    "rank_models_from_primary_rates_forbidden": true,
+    "status": "OPERATIONALLY_VALID_BUT_NON_COMPARABLE_FOR_PLANNER_QUALITY",
+    "strict_valid_core_rates": {
+      "C1": "1/60",
+      "C2": "8/60",
+      "C3": "0/60"
+    },
+    "total_cells": 180,
+    "total_fixtures": 60
+  },
+  "schema_version": "1.0.0",
+  "task_id": "W06-SCIENTIFIC-CLOSURE",
+  "thesis_reporting_and_w07_handoff": {
+    "limitations_to_report_in_thesis": [
+      "Primary 180-cell DEV-SELECT exhibited severe asymmetric provider execution-environment failures (C1 1/60, C2 8/60, C3 0/60), rendering cross-model planner-quality ranking scientifically invalid.",
+      "Amendment-01 repaired execution-environment confounds (output budget 8192, timeout 180000 ms, pacing 2000 ms, pre-run owner readiness) under a strict 9-cell fail-stop canary gate.",
+      "In Amendment-01 Canary Execution-01, Cell 1 (007/C1, Google gemini-3.8-flash) timed out after 179986.664 ms with provider error 504 DEADLINE_EXCEEDED, triggering immediate fail-stop with 0/9 operational passes and leaving Cells 2-9 unscheduled.",
+      "The timeout establishes an operational readiness limitation under the frozen 180-second protocol and does NOT establish that Gemini is inferior in itinerary-planning quality.",
+      "Because strict pre-registered governance forbade ad-hoc retries, reruns, or skipping C1, no fair comparative dataset was produced, MODEL_SELECTION_STATUS remains INCONCLUSIVE, SELECTED_MODEL_ID is null, Comparative180 was not authorized, and Final100 remains NO-GO."
+    ],
+    "w07_handoff_conditions": {
+      "comparative_winner_claim_permitted": false,
+      "final100_benchmark_claim_permitted": false,
+      "planner_and_validator_architecture_ready_for_w07": true,
+      "runtime_model_configuration_interpretation": "Any model configured in downstream application or W7 workflows must be documented strictly as an engineering/operational default and NEVER as an empirically validated W6 comparative winner.",
+      "w06_scientific_closure_status": "CLOSED_WITH_OPERATIONAL_LIMITATION"
+    }
+  },
+  "w06_successfully_delivered": {
+    "classified_as_implementation_failure": false,
+    "deliverable_count": 17,
+    "deliverables": [
+      "deterministic grounded planner context",
+      "structured itinerary-generation contract",
+      "deterministic read-only validator",
+      "exact POI grounding semantics",
+      "time-overlap validation",
+      "estimated-budget compliance evaluation",
+      "opening-hours evaluation",
+      "Haversine diagnostic",
+      "fixed candidate registry",
+      "fixed scenario suites",
+      "provider adapters",
+      "frozen SDK environment",
+      "offline evaluator",
+      "immutable evidence pipeline",
+      "one-shot/fail-stop live execution controls",
+      "reproducible provenance/hashes",
+      "operational limitation evidence"
+    ]
+  }
+}
