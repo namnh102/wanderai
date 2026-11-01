@@ -1,0 +1,1605 @@
+{
+  "schema_version": "w07_data_rag_readiness_audit.v1",
+  "task_id": "W07-0-DATA-RAG-READINESS-AUDIT-CORRECTIVE-01",
+  "previous_gate": "W07-DATA-RAG-READINESS-AUDIT-CHATGPT-AUDIT = SCIENTIFIC_AUDIT_ACCEPTED / ACQUISITION_PLAN_HOLD_CORRECTIVE",
+  "previous_gate_decision": "SCIENTIFIC_AUDIT_ACCEPTED / ACQUISITION_PLAN_HOLD_CORRECTIVE",
+  "authoritative_base_commit": "bdd4810de0bc03ef52c67cc112e09d5787a7ffad",
+  "w06_status": "CLOSED_UNMODIFIED",
+  "next_gate": "W07-DATA-RAG-READINESS-AUDIT-CORRECTIVE-01-CHATGPT-AUDIT",
+  "section_3_repository_data_sources": {
+    "summary": {
+      "total_sources_inspected": 12,
+      "real_provenanced_review_text_sources_present": 0,
+      "real_provenanced_review_text_rows": 0,
+      "synthetic_review_text_rows": 9,
+      "stub_template_review_strings": 2,
+      "rating_only_interaction_rows_no_text": 17911,
+      "non_review_rag_documents_in_freeze_v2": 1223
+    },
+    "sources": [
+      {
+        "source_id": "gomate_places_freeze_v2",
+        "paths": [
+          "data/curated/gomate_places_freeze_v2.json"
+        ],
+        "storage_status": "TRACKED_COMMITTED",
+        "classification": "API_DERIVED_PUBLIC_VERIFIED",
+        "provenance_category": "official/public + API (OpenStreetMap Overpass ODbL 1.0 + Overture Maps 2026-09-23.1)",
+        "entity_type": "POI_AUTHORITY",
+        "row_count": 759,
+        "has_review_text": false,
+        "has_ratings": false,
+        "notes": "Authoritative canonical POI freeze v2: 759 verified OSM POIs (622 REC-A core 3-city POIs + 137 secondary POIs). All rating=null and review_count=0."
+      },
+      {
+        "source_id": "places_canonical_v1_legacy",
+        "paths": [
+          "data/curated/places_canonical.json"
+        ],
+        "storage_status": "TRACKED_COMMITTED",
+        "classification": "MIXED_OSM_AND_LEGACY_SEED",
+        "provenance_category": "official/public (97 OSM/Overture rows) + synthetic/legacy seed (11 unsourced rows)",
+        "entity_type": "LEGACY_POI_TABLE",
+        "row_count": 108,
+        "has_review_text": false,
+        "has_ratings": false,
+        "notes": "Legacy 108-POI table used by data/pipelines/reviews/link_reviews.py; 97 overlap with Freeze v2, while 11 have sources=[] (and all 8 linked synthetic reviews map to those 11 unsourced rows)."
+      },
+      {
+        "source_id": "vietnam_travel_reviews_synthetic_pipeline",
+        "paths": [
+          "data/raw/vietnam_travel_reviews.json",
+          "data/processed/reviews_normalized.json",
+          "data/curated/reviews_curated.json",
+          "data/manifests/review-provenance.json"
+        ],
+        "storage_status": "TRACKED_COMMITTED",
+        "classification": "GENERATED_SYNTHETIC_QUARANTINED",
+        "provenance_category": "synthetic",
+        "entity_type": "SYNTHETIC_REVIEW_FIXTURE",
+        "row_count": 9,
+        "has_review_text": true,
+        "has_ratings": true,
+        "notes": "9 handcrafted Vietnamese review rows created as pipeline unit-test fixtures; quarantined by review-provenance.json (overall_status=UNVERIFIED_SYNTHETIC, verified_real_count=0)."
+      },
+      {
+        "source_id": "vihorec_restricted_hotel_interactions",
+        "paths": [
+          "data/restricted/vihorec/hotels.csv",
+          "data/restricted/vihorec/interactions.csv",
+          "data/restricted/vihorec/users.csv",
+          "data/restricted/vihorec/train.csv",
+          "data/restricted/vihorec/val.csv",
+          "data/restricted/vihorec/test.csv"
+        ],
+        "storage_status": "LOCAL_ONLY_GITIGNORED_SHA256_FROZEN",
+        "classification": "RESTRICTED_PUBLIC_ACADEMIC_DATASET",
+        "provenance_category": "Kaggle/Hugging Face/GitHub + restricted",
+        "entity_type": "HOTEL_RATING_INTERACTIONS_NO_TEXT",
+        "row_count": 17911,
+        "has_review_text": false,
+        "has_ratings": true,
+        "notes": "17,911 real hotel rating interactions (1.0-10.0 scale) across 560 hotels and 6,822 users from Booking/Traveloka/iVIVU. Contains 0 review text and 0 Hà Nội / Hạ Long hotels."
+      },
+      {
+        "source_id": "vlsp2018_and_vimacsa_candidates",
+        "paths": [
+          "data/manifests/review-dataset-candidates.yaml",
+          "data/restricted/README.md"
+        ],
+        "storage_status": "REFERENCED_IN_MANIFEST_NOT_PRESENT_ON_DISK",
+        "classification": "RESTRICTED_EXTERNAL_NOT_ACQUIRED",
+        "provenance_category": "restricted",
+        "entity_type": "EXTERNAL_CANDIDATE_MANIFEST_ONLY",
+        "row_count": 0,
+        "has_review_text": false,
+        "has_ratings": false,
+        "notes": "Documented in review-dataset-candidates.yaml (9 candidates: vlsp_2018_absa_hotel, vimacsa, vihorec, google_maps_reviews, tripadvisor_reviews). Neither data/restricted/vlsp2018/ nor data/restricted/vimacsa/ exists on disk (status=REQUEST_NOT_SENT)."
+      },
+      {
+        "source_id": "wikivoyage_and_osm_rag_documents",
+        "paths": [
+          "data/manifests/dataset-freeze-v2.yaml",
+          "apps/ai-service/app/rag/retriever.py"
+        ],
+        "storage_status": "TRACKED_MANIFEST_AND_DB_SEED",
+        "classification": "PUBLIC_ENCYCLOPEDIC_AND_OSM_METADATA",
+        "provenance_category": "official/public",
+        "entity_type": "NON_REVIEW_RAG_DOCUMENTS",
+        "row_count": 1223,
+        "has_review_text": false,
+        "has_ratings": false,
+        "notes": "464 English Wikivoyage destination guide chunks (CC BY-SA 3.0) + 759 OSM place metadata documents (ODbL 1.0) in Freeze v2 database state. Contains 0 user reviews."
+      },
+      {
+        "source_id": "synthetic_preferences_and_seed_files",
+        "paths": [
+          "data/research/preferences/synthetic_preferences_v1.jsonl",
+          "data/evaluation/synthetic/preferences_n300_seed42.json",
+          "data/seed/synthetic_places.json",
+          "data/seed/synthetic_destinations.json",
+          "database/seed/places.json"
+        ],
+        "storage_status": "TRACKED_COMMITTED",
+        "classification": "GENERATED_SYNTHETIC",
+        "provenance_category": "synthetic",
+        "entity_type": "SYNTHETIC_PERSONAS_AND_SEED_PLACES",
+        "row_count": 406,
+        "has_review_text": false,
+        "has_ratings": true,
+        "notes": "300 synthetic user preference profiles (seed=42) for REC-A + 56 legacy synthetic seed places + 50 synthetic destinations. Quarantined from W07 review RAG."
+      },
+      {
+        "source_id": "ai_service_search_reviews_tool_stub",
+        "paths": [
+          "apps/ai-service/app/tools/search_reviews.py"
+        ],
+        "storage_status": "TRACKED_COMMITTED",
+        "classification": "GENERATED_SYNTHETIC_CODE_STUB",
+        "provenance_category": "synthetic",
+        "entity_type": "MOCK_TOOL_STUB",
+        "row_count": 2,
+        "has_review_text": true,
+        "has_ratings": false,
+        "notes": "Hardcoded Python stub returning 2 generic English strings for any place_name."
+      }
+    ]
+  },
+  "section_4_poi_authority": {
+    "total_canonical_pois_db": 882,
+    "verified_pois_freeze_v2": 759,
+    "core_pois_rec_a_v2": 622,
+    "secondary_verified_pois_v2": 137,
+    "unverified_legacy_seed_pois_in_db": 123,
+    "legacy_places_canonical_v1_count": 108,
+    "legacy_places_canonical_v1_sourced": 97,
+    "legacy_places_canonical_v1_unsourced": 11,
+    "legacy_places_v1_overlap_with_freeze_v2": 97,
+    "counts_by_core_city_verified_v2": {
+      "ha_noi": 145,
+      "da_nang_total_verified": 293,
+      "da_nang_rec_a_core": 289,
+      "da_nang_outside_core": 4,
+      "ha_long": 188
+    },
+    "counts_by_secondary_city_verified_v2": {
+      "hoi_an": 50,
+      "hue": 50,
+      "nha_trang": 33
+    },
+    "category_distribution_verified_v2": {
+      "attraction": 145,
+      "beach": 14,
+      "cafe": 78,
+      "culture": 115,
+      "entertainment": 8,
+      "hotel": 150,
+      "market": 36,
+      "museum": 3,
+      "nature": 21,
+      "nightlife": 28,
+      "park": 5,
+      "restaurant": 110,
+      "temple": 46
+    },
+    "category_distribution_core_v2": {
+      "attraction": 83,
+      "beach": 11,
+      "cafe": 78,
+      "culture": 50,
+      "entertainment": 4,
+      "hotel": 150,
+      "market": 36,
+      "museum": 3,
+      "nature": 18,
+      "nightlife": 28,
+      "park": 5,
+      "restaurant": 110,
+      "temple": 46
+    },
+    "canonical_id_format": "UUID (v4/v5 lowercase 36-char hyphenated string, e.g. 7d7e049e-d3f9-436a-aa1a-bf49ca0d1206)",
+    "available_source_ids": {
+      "osm": {
+        "places_count": 759,
+        "coverage_pct_of_verified_v2": 100.0,
+        "id_format": "{node|way|relation}/{osm_numeric_id}"
+      },
+      "overture": {
+        "places_count": 247,
+        "coverage_pct_of_verified_v2": 32.54,
+        "id_format": "32-hex-char Overture GERS ID"
+      }
+    },
+    "usable_mapping_keys_for_reviews": [
+      "place_id (canonical GoMate UUID from gomate_places_freeze_v2.json - required on every final review row)",
+      "sources[].source_id where source_name=='osm' (deterministic upstream OSM element key)",
+      "sources[].source_id where source_name=='overture' (deterministic Overture GERS key for 247 POIs)",
+      "(latitude, longitude, normalized_name, city/address) - audited multi-signal geo/entity resolution with manual verification for ambiguous cases; name-only automatic linking is forbidden as scientific authority"
+    ],
+    "review_to_poi_mapping_audit": {
+      "synthetic_reviews_curated_9_rows_against_freeze_v2_759": {
+        "EXACT_MAPPING": 0,
+        "HEURISTIC_MAPPING": 3,
+        "UNMAPPED": 6,
+        "explanation": "0/9 rows carry a Freeze v2 place_id or OSM source_id (EXACT_MAPPING=0). All 8 linked place_ids in reviews_curated.json (8/9 in places_canonical.json, 0/9 in gomate_places_freeze_v2.json) point to unsourced legacy v1 rows. By normalized (city, name) string heuristic against Freeze v2, only 3/9 match."
+      },
+      "synthetic_reviews_curated_9_rows_against_legacy_places_canonical_108": {
+        "EXACT_MAPPING": 0,
+        "HEURISTIC_MAPPING": 8,
+        "UNMAPPED": 1,
+        "explanation": "Linked by data/pipelines/reviews/link_reviews.py using target_place_name + city string similarity (no upstream POI ID)."
+      },
+      "vihorec_560_hotels_17911_interactions_against_freeze_v2_759": {
+        "EXACT_MAPPING_HOTELS": 0,
+        "EXACT_MAPPING_INTERACTIONS": 0,
+        "HEURISTIC_MAPPING_HOTELS": 2,
+        "HEURISTIC_MAPPING_INTERACTIONS": 36,
+        "UNMAPPED_HOTELS": 558,
+        "UNMAPPED_INTERACTIONS": 17875,
+        "explanation": "ViHoRec uses internal hotel_id H0000..H0559 with no coordinates or OSM IDs (EXACT_MAPPING=0). Only 2 Đà Nẵng hotels (36 rating-only interactions) match Freeze v2 by exact normalized (city, hotel_name)."
+      },
+      "real_text_reviews_against_freeze_v2_759": {
+        "EXACT_MAPPING": 0,
+        "HEURISTIC_MAPPING": 0,
+        "UNMAPPED": 0,
+        "explanation": "0 real provenanced review text records exist in the repository."
+      }
+    }
+  },
+  "section_5_review_corpus_inventory": {
+    "authoritative_real_review_text_corpus_against_freeze_v2_759": {
+      "total_rows": 0,
+      "unique_reviews": 0,
+      "unique_pois_with_reviews": 0,
+      "reviews_by_city": {
+        "Hà Nội": 0,
+        "Đà Nẵng": 0,
+        "Hạ Long": 0
+      },
+      "reviews_per_poi_across_759_verified_pois": {
+        "poi_universe_size": 759,
+        "total_reviews_mapped": 0,
+        "min_reviews_per_poi": 0,
+        "median_reviews_per_poi": 0.0,
+        "mean_reviews_per_poi": 0.0,
+        "max_reviews_per_poi": 0,
+        "p25_reviews_per_poi": 0.0,
+        "p50_reviews_per_poi": 0.0,
+        "p75_reviews_per_poi": 0.0,
+        "p90_reviews_per_poi": 0.0,
+        "pois_with_0_reviews": 759,
+        "pois_with_1_to_4_reviews": 0,
+        "pois_with_5_to_9_reviews": 0,
+        "pois_with_10_plus_reviews": 0,
+        "pois_with_20_plus_reviews": 0
+      },
+      "reviews_per_poi_across_622_core_pois": {
+        "poi_universe_size": 622,
+        "total_reviews_mapped": 0,
+        "min_reviews_per_poi": 0,
+        "median_reviews_per_poi": 0.0,
+        "mean_reviews_per_poi": 0.0,
+        "max_reviews_per_poi": 0,
+        "p25_reviews_per_poi": 0.0,
+        "p50_reviews_per_poi": 0.0,
+        "p75_reviews_per_poi": 0.0,
+        "p90_reviews_per_poi": 0.0,
+        "pois_with_0_reviews": 622,
+        "pois_with_1_to_4_reviews": 0,
+        "pois_with_5_to_9_reviews": 0,
+        "pois_with_10_plus_reviews": 0,
+        "pois_with_20_plus_reviews": 0
+      }
+    },
+    "quarantined_synthetic_reviews_curated": {
+      "total_rows": 9,
+      "unique_reviews": 9,
+      "unique_pois_linked_in_legacy_v1": 8,
+      "unique_pois_linked_by_id_in_freeze_v2": 0,
+      "unique_pois_heuristic_name_match_in_freeze_v2": 3,
+      "reviews_by_city": {
+        "Huế": 1,
+        "Hà Nội": 2,
+        "Hội An": 1,
+        "Vùng sâu": 1,
+        "Đà Nẵng": 4
+      },
+      "core_three_city_coverage": {
+        "Hà Nội": 2,
+        "Đà Nẵng": 4,
+        "Hạ Long": 0
+      },
+      "reviews_per_poi_across_759_verified_pois_by_id": {
+        "poi_universe_size": 759,
+        "total_reviews_mapped": 0,
+        "min_reviews_per_poi": 0,
+        "median_reviews_per_poi": 0.0,
+        "mean_reviews_per_poi": 0.0,
+        "max_reviews_per_poi": 0,
+        "p25_reviews_per_poi": 0.0,
+        "p50_reviews_per_poi": 0.0,
+        "p75_reviews_per_poi": 0.0,
+        "p90_reviews_per_poi": 0.0,
+        "pois_with_0_reviews": 759,
+        "pois_with_1_to_4_reviews": 0,
+        "pois_with_5_to_9_reviews": 0,
+        "pois_with_10_plus_reviews": 0,
+        "pois_with_20_plus_reviews": 0
+      },
+      "reviews_per_poi_across_759_verified_pois_if_heuristic_name_matched": {
+        "poi_universe_size": 759,
+        "total_reviews_mapped": 5,
+        "min_reviews_per_poi": 0,
+        "median_reviews_per_poi": 0.0,
+        "mean_reviews_per_poi": 0.0066,
+        "max_reviews_per_poi": 1,
+        "p25_reviews_per_poi": 0.0,
+        "p50_reviews_per_poi": 0.0,
+        "p75_reviews_per_poi": 0.0,
+        "p90_reviews_per_poi": 0.0,
+        "pois_with_0_reviews": 754,
+        "pois_with_1_to_4_reviews": 5,
+        "pois_with_5_to_9_reviews": 0,
+        "pois_with_10_plus_reviews": 0,
+        "pois_with_20_plus_reviews": 0
+      },
+      "reviews_per_poi_across_108_legacy_v1_pois": {
+        "poi_universe_size": 108,
+        "total_reviews_mapped": 8,
+        "min_reviews_per_poi": 0,
+        "median_reviews_per_poi": 0.0,
+        "mean_reviews_per_poi": 0.0741,
+        "max_reviews_per_poi": 1,
+        "p25_reviews_per_poi": 0.0,
+        "p50_reviews_per_poi": 0.0,
+        "p75_reviews_per_poi": 0.0,
+        "p90_reviews_per_poi": 0.0,
+        "pois_with_0_reviews": 100,
+        "pois_with_1_to_4_reviews": 8,
+        "pois_with_5_to_9_reviews": 0,
+        "pois_with_10_plus_reviews": 0,
+        "pois_with_20_plus_reviews": 0
+      }
+    },
+    "vihorec_rating_interactions": {
+      "presence_status": "LOCAL_GITIGNORED_PRESENT_AND_SHA256_VERIFIED",
+      "total_hotels": 560,
+      "total_users": 6822,
+      "total_interactions": 17911,
+      "train_rows": 8645,
+      "val_rows": 798,
+      "test_rows": 798,
+      "review_text_rows": 0,
+      "hotels_by_city": {
+        "Huế": 42,
+        "Hội An": 47,
+        "Nha Trang": 78,
+        "Phan Thiết": 60,
+        "Phú Quốc": 55,
+        "Quy Nhơn": 41,
+        "Vũng Tàu": 68,
+        "Đà Lạt": 98,
+        "Đà Nẵng": 71
+      },
+      "interactions_by_city": {
+        "Huế": 1059,
+        "Hội An": 718,
+        "Nha Trang": 1984,
+        "Phan Thiết": 1635,
+        "Phú Quốc": 1701,
+        "Quy Nhơn": 1333,
+        "Vũng Tàu": 3988,
+        "Đà Lạt": 3233,
+        "Đà Nẵng": 2260
+      },
+      "interactions_by_source": {
+        "booking": 7239,
+        "ivivu": 4399,
+        "traveloka": 6273
+      },
+      "core_three_city_coverage": {
+        "hanoi_hotels": 0,
+        "hanoi_interactions": 0,
+        "danang_hotels": 71,
+        "danang_interactions": 2260,
+        "halong_hotels": 0,
+        "halong_interactions": 0
+      },
+      "interactions_per_hotel_stats": {
+        "poi_universe_size": 560,
+        "total_reviews_mapped": 17911,
+        "min_reviews_per_poi": 1,
+        "median_reviews_per_poi": 17.0,
+        "mean_reviews_per_poi": 31.9839,
+        "max_reviews_per_poi": 308,
+        "p25_reviews_per_poi": 6.0,
+        "p50_reviews_per_poi": 17.0,
+        "p75_reviews_per_poi": 41.0,
+        "p90_reviews_per_poi": 83.0,
+        "pois_with_0_reviews": 0,
+        "pois_with_1_to_4_reviews": 103,
+        "pois_with_5_to_9_reviews": 104,
+        "pois_with_10_plus_reviews": 353,
+        "pois_with_20_plus_reviews": 248
+      },
+      "rating_audit": {
+        "scale": "1.0_to_10.0",
+        "missing_rating_count": 0,
+        "invalid_range_count": 0,
+        "min": 1.0,
+        "max": 10.0,
+        "mean": 7.5765,
+        "median": 8.0,
+        "bucket_distribution": {
+          "1.0_to_2.9": 365,
+          "3.0_to_4.9": 655,
+          "5.0_to_6.9": 5001,
+          "7.0_to_8.9": 5613,
+          "9.0_to_10.0": 6277
+        },
+        "per_city_distribution": {
+          "Huế": {
+            "interactions": 1059,
+            "min": 1.0,
+            "max": 10.0,
+            "mean": 7.8128,
+            "median": 8.5
+          },
+          "Hội An": {
+            "interactions": 718,
+            "min": 1.0,
+            "max": 10.0,
+            "mean": 8.0423,
+            "median": 8.5
+          },
+          "Nha Trang": {
+            "interactions": 1984,
+            "min": 1.0,
+            "max": 10.0,
+            "mean": 7.6057,
+            "median": 8.0
+          },
+          "Phan Thiết": {
+            "interactions": 1635,
+            "min": 1.0,
+            "max": 10.0,
+            "mean": 7.4972,
+            "median": 7.8
+          },
+          "Phú Quốc": {
+            "interactions": 1701,
+            "min": 1.0,
+            "max": 10.0,
+            "mean": 7.602,
+            "median": 8.0
+          },
+          "Quy Nhơn": {
+            "interactions": 1333,
+            "min": 1.0,
+            "max": 10.0,
+            "mean": 7.7323,
+            "median": 8.0
+          },
+          "Vũng Tàu": {
+            "interactions": 3988,
+            "min": 1.0,
+            "max": 10.0,
+            "mean": 7.4563,
+            "median": 7.3
+          },
+          "Đà Lạt": {
+            "interactions": 3233,
+            "min": 1.0,
+            "max": 10.0,
+            "mean": 7.5134,
+            "median": 7.0
+          },
+          "Đà Nẵng": {
+            "interactions": 2260,
+            "min": 1.0,
+            "max": 10.0,
+            "mean": 7.5408,
+            "median": 8.0
+          }
+        },
+        "per_source_distribution": {
+          "booking": {
+            "interactions": 7239,
+            "min": 1.0,
+            "max": 10.0,
+            "mean": 7.3916,
+            "median": 8.0
+          },
+          "ivivu": {
+            "interactions": 4399,
+            "min": 1.0,
+            "max": 10.0,
+            "mean": 7.7724,
+            "median": 8.0
+          },
+          "traveloka": {
+            "interactions": 6273,
+            "min": 4.5,
+            "max": 10.0,
+            "mean": 7.6525,
+            "median": 8.4
+          }
+        }
+      },
+      "temporal_audit": {
+        "timestamp_format_interactions_csv": "YYYY-MM-DD",
+        "timestamp_format_splits_csv": "unix_epoch_seconds",
+        "oldest_date": "2011-10-15",
+        "newest_date": "2023-12-09",
+        "missing_date_count": 0,
+        "missing_date_pct": 0.0,
+        "invalid_or_future_date_count": 0,
+        "counts_by_year": {
+          "2011": 2,
+          "2012": 69,
+          "2013": 116,
+          "2014": 233,
+          "2015": 981,
+          "2016": 1097,
+          "2017": 1237,
+          "2018": 1303,
+          "2019": 1632,
+          "2020": 1600,
+          "2021": 1794,
+          "2022": 4450,
+          "2023": 3397
+        },
+        "recency_aware_retrieval_possible": false,
+        "recency_reason": "Timestamps exist (2011-10-15 to 2023-12-09), but review_text is 100% missing (ratings only)."
+      },
+      "canonical_poi_mapping": {
+        "EXACT_MAPPING_HOTELS": 0,
+        "EXACT_MAPPING_INTERACTIONS": 0,
+        "HEURISTIC_MAPPING_EXACT_NORMALIZED_NAME_CITY_HOTELS": 2,
+        "HEURISTIC_MAPPING_EXACT_NORMALIZED_NAME_CITY_INTERACTIONS": 36,
+        "UNMAPPED_BY_DETERMINISTIC_ID_HOTELS": 560,
+        "UNMAPPED_BY_DETERMINISTIC_ID_INTERACTIONS": 17911,
+        "exact_normalized_name_city_matches": [
+          {
+            "hotel_id": "H0113",
+            "location": "Đà Nẵng",
+            "hotel_name": "Sala Danang Beach Hotel",
+            "matched_v2_place_id": "e34aeb01-dec5-4b55-a7f1-c96b4eb4e1c9",
+            "interaction_count": 23
+          },
+          {
+            "hotel_id": "H0114",
+            "location": "Đà Nẵng",
+            "hotel_name": "HAIAN Beach Hotel & Spa",
+            "matched_v2_place_id": "d7fface5-c0f4-4c9f-893a-5b9c66c74334",
+            "interaction_count": 13
+          }
+        ]
+      },
+      "cryptographic_manifest_entries": {
+        "hotels.csv": {
+          "path": "data/restricted/vihorec/hotels.csv",
+          "bytes": 27214,
+          "sha256": "64d4108855d1eec303253bcfae71596a8abc26733b7fade0dd33b9425b976b16"
+        },
+        "interactions.csv": {
+          "path": "data/restricted/vihorec/interactions.csv",
+          "bytes": 776686,
+          "sha256": "6461d3f3abc15a79615cd09c46950dee4750575b951c4471a98b5c11fe40feeb"
+        },
+        "users.csv": {
+          "path": "data/restricted/vihorec/users.csv",
+          "bytes": 109476,
+          "sha256": "02926a6e666c7fcc23ae40733bbd1fe0b4565a25001ed3d85c9f14308ad6fbb3"
+        },
+        "train.csv": {
+          "path": "data/restricted/vihorec/train.csv",
+          "bytes": 196724,
+          "sha256": "781a3b99e5a020179e8f1c427c2acf858d1035385040114f88e76ab1320c915e"
+        },
+        "val.csv": {
+          "path": "data/restricted/vihorec/val.csv",
+          "bytes": 18229,
+          "sha256": "dcaeba814337360e1c483be1e3d61201ecbfb587555938114ae907bf8a15b948"
+        },
+        "test.csv": {
+          "path": "data/restricted/vihorec/test.csv",
+          "bytes": 18217,
+          "sha256": "eb2d913269c597d986e242b65c53f7067f765c68915005054fae99426e97afbc"
+        }
+      }
+    }
+  },
+  "section_6_review_field_quality": {
+    "required_fields": [
+      "review_id",
+      "poi_id",
+      "source",
+      "source_review_id",
+      "city",
+      "rating",
+      "review_text",
+      "language",
+      "created_at",
+      "author/anonymized_author",
+      "source_url/source_ref",
+      "collected_at",
+      "provenance"
+    ],
+    "sources": {
+      "vietnam_travel_reviews_raw_json": {
+        "path": "data/raw/vietnam_travel_reviews.json",
+        "total_rows": 9,
+        "missingness_pct_by_field": {
+          "review_id": 100.0,
+          "poi_id": 100.0,
+          "source": 0.0,
+          "source_review_id": 0.0,
+          "city": 0.0,
+          "rating": 0.0,
+          "review_text": 0.0,
+          "language": 100.0,
+          "created_at": 100.0,
+          "author/anonymized_author": 100.0,
+          "source_url/source_ref": 100.0,
+          "collected_at": 100.0,
+          "provenance": 0.0
+        },
+        "field_notes": {
+          "review_id": "Missing in raw; only source_review_id (rev_dn_001..rev_unmatched_001) exists.",
+          "poi_id": "100% missing in raw; only target_place_name string exists.",
+          "provenance": "Top-level metadata falsely claims academic_benchmark; audited as UNVERIFIED_SYNTHETIC in data/manifests/review-provenance.json."
+        }
+      },
+      "reviews_curated_json": {
+        "path": "data/curated/reviews_curated.json",
+        "total_rows": 9,
+        "missingness_pct_by_field": {
+          "review_id": 0.0,
+          "poi_id": 11.11,
+          "source": 0.0,
+          "source_review_id": 0.0,
+          "city": 0.0,
+          "rating": 0.0,
+          "review_text": 0.0,
+          "language": 100.0,
+          "created_at": 100.0,
+          "author/anonymized_author": 100.0,
+          "source_url/source_ref": 100.0,
+          "collected_at": 100.0,
+          "provenance": 0.0
+        },
+        "field_notes": {
+          "poi_id": "1/9 missing (11.11%, rev_unmatched_001); 8/9 heuristically linked ONLY to unsourced legacy v1 rows in places_canonical.json (0/9 in gomate_places_freeze_v2.json).",
+          "review_text": "Stored under key 'content'; all 9 rows are handcrafted synthetic Vietnamese fixtures."
+        }
+      },
+      "vihorec_interactions_csv": {
+        "path": "data/restricted/vihorec/interactions.csv",
+        "total_rows": 17911,
+        "missingness_pct_by_field": {
+          "review_id": 100.0,
+          "poi_id": 0.0,
+          "source": 0.0,
+          "source_review_id": 100.0,
+          "city": 0.0,
+          "rating": 0.0,
+          "review_text": 100.0,
+          "language": 100.0,
+          "created_at": 0.0,
+          "author/anonymized_author": 0.0,
+          "source_url/source_ref": 100.0,
+          "collected_at": 100.0,
+          "provenance": 0.0
+        },
+        "field_notes": {
+          "poi_id": "Has ViHoRec internal hotel_id (H0000..H0559) via hotels.csv, but 100% missing canonical GoMate place_id or OSM source_id.",
+          "review_text": "100% missing (0 review text rows across all 17,911 interactions).",
+          "author/anonymized_author": "Has anonymized user_id (U00000..U06821)."
+        }
+      },
+      "ai_service_search_reviews_stub": {
+        "path": "apps/ai-service/app/tools/search_reviews.py",
+        "total_rows": 2,
+        "missingness_pct_by_field": {
+          "review_id": 100.0,
+          "poi_id": 100.0,
+          "source": 100.0,
+          "source_review_id": 100.0,
+          "city": 100.0,
+          "rating": 100.0,
+          "review_text": 0.0,
+          "language": 100.0,
+          "created_at": 100.0,
+          "author/anonymized_author": 100.0,
+          "source_url/source_ref": 100.0,
+          "collected_at": 100.0,
+          "provenance": 0.0
+        },
+        "field_notes": {
+          "review_text": "Hardcoded mock tool returning 2 template strings ('Loved visiting {place_name}!', 'It was okay, a bit crowded.')."
+        }
+      }
+    }
+  },
+  "section_7_text_quality_audit": {
+    "real_review_text_corpus": {
+      "total_rows": 0,
+      "non_empty_text_rows": 0,
+      "empty_review_count": 0,
+      "whitespace_only_count": 0,
+      "very_short_reviews_lt_20_chars": 0,
+      "very_short_reviews_lt_5_words": 0,
+      "excessively_long_reviews_gt_2000_chars": 0,
+      "url_only_or_noise_reviews": 0,
+      "emoji_only_reviews": 0,
+      "exact_duplicate_text_rows": 0,
+      "normalized_duplicate_text_rows": 0,
+      "near_duplicate_pairs_jaccard_ge_0_80": 0,
+      "encoding_or_unicode_problem_rows": 0,
+      "html_remnant_rows": 0,
+      "malformed_rows": 0,
+      "char_length_distribution": {
+        "min": 0,
+        "p25": 0.0,
+        "p50": 0.0,
+        "p75": 0.0,
+        "p90": 0.0,
+        "max": 0,
+        "mean": 0.0
+      },
+      "word_length_distribution": {
+        "min": 0,
+        "p25": 0.0,
+        "p50": 0.0,
+        "p75": 0.0,
+        "p90": 0.0,
+        "max": 0,
+        "mean": 0.0
+      }
+    },
+    "quarantined_synthetic_reviews_curated_9_rows": {
+      "total_rows": 9,
+      "non_empty_text_rows": 9,
+      "empty_review_count": 0,
+      "whitespace_only_count": 0,
+      "very_short_reviews_lt_20_chars": 0,
+      "very_short_reviews_lt_5_words": 0,
+      "excessively_long_reviews_gt_2000_chars": 0,
+      "url_only_or_noise_reviews": 0,
+      "emoji_only_reviews": 0,
+      "exact_duplicate_text_rows": 0,
+      "normalized_duplicate_text_rows": 0,
+      "near_duplicate_pairs_jaccard_ge_0_80": 0,
+      "encoding_or_unicode_problem_rows": 0,
+      "html_remnant_rows": 0,
+      "malformed_rows": 0,
+      "char_length_distribution": {
+        "min": 85,
+        "p25": 168.0,
+        "p50": 176.0,
+        "p75": 180.0,
+        "p90": 185.8,
+        "max": 189,
+        "mean": 166.8889
+      },
+      "word_length_distribution": {
+        "min": 19,
+        "p25": 38.0,
+        "p50": 40.0,
+        "p75": 41.0,
+        "p90": 41.2,
+        "max": 42,
+        "mean": 37.3333
+      }
+    },
+    "vihorec_interactions_17911_rows": {
+      "total_rows": 17911,
+      "non_empty_text_rows": 0,
+      "empty_review_count": 17911,
+      "note": "ViHoRec contains numerical ratings only; 100% of rows have no review_text column."
+    }
+  },
+  "section_8_language_audit": {
+    "method": "Deterministic offline regex/Unicode diacritic + lexical marker classification (zero LLM calls)",
+    "real_review_text_corpus": {
+      "vi": 0,
+      "en": 0,
+      "mixed_vi_en": 0,
+      "unknown_or_other": 0
+    },
+    "quarantined_synthetic_reviews_curated_9_rows": {
+      "vi": 9,
+      "en": 0,
+      "mixed_vi_en": 0,
+      "unknown_or_other": 0
+    },
+    "ai_service_search_reviews_stub_2_rows": {
+      "vi": 0,
+      "en": 2,
+      "mixed_vi_en": 0,
+      "unknown_or_other": 0
+    },
+    "existing_non_review_rag_wikivoyage_464_chunks": {
+      "language": "en",
+      "note": "Wikivoyage travel-guide chunks are 100% English encyclopedic text, not Vietnamese user reviews."
+    }
+  },
+  "section_9_rating_audit": {
+    "scale_comparison_and_incompatibility": {
+      "places_freeze_v2": "All 759 verified POIs have rating=null (100% missing by governance rule).",
+      "vietnam_travel_reviews_synthetic_9_rows": "1.0 to 5.0 scale (0.5 increments; range observed 3.0 to 5.0).",
+      "vihorec_17911_interactions": "1.0 to 10.0 scale (OTA hotel rating scale from Booking/Traveloka/iVIVU).",
+      "scales_differ_between_sources": true,
+      "normalization_performed_in_w07_0": false
+    },
+    "quarantined_synthetic_reviews_curated_9_rows": {
+      "scale": "1.0_to_5.0",
+      "missing_rating_count": 0,
+      "invalid_range_count": 0,
+      "min": 3.0,
+      "max": 5.0,
+      "mean": 4.5,
+      "median": 4.5,
+      "value_distribution": {
+        "3.0": 1,
+        "4.0": 1,
+        "4.5": 3,
+        "5.0": 4
+      },
+      "per_city_distribution": {
+        "Huế": {
+          "count": 1,
+          "min": 4.5,
+          "max": 4.5,
+          "mean": 4.5,
+          "median": 4.5
+        },
+        "Hà Nội": {
+          "count": 2,
+          "min": 5.0,
+          "max": 5.0,
+          "mean": 5.0,
+          "median": 5.0
+        },
+        "Hội An": {
+          "count": 1,
+          "min": 4.5,
+          "max": 4.5,
+          "mean": 4.5,
+          "median": 4.5
+        },
+        "Vùng sâu": {
+          "count": 1,
+          "min": 3.0,
+          "max": 3.0,
+          "mean": 3.0,
+          "median": 3.0
+        },
+        "Đà Nẵng": {
+          "count": 4,
+          "min": 4.0,
+          "max": 5.0,
+          "mean": 4.625,
+          "median": 4.75
+        }
+      },
+      "per_source_distribution": {
+        "academic_benchmark_unverified_synthetic": {
+          "count": 9,
+          "mean": 4.5,
+          "median": 4.5
+        }
+      }
+    },
+    "vihorec_interactions_17911_rows": {
+      "scale": "1.0_to_10.0",
+      "missing_rating_count": 0,
+      "invalid_range_count": 0,
+      "min": 1.0,
+      "max": 10.0,
+      "mean": 7.5765,
+      "median": 8.0,
+      "bucket_distribution": {
+        "1.0_to_2.9": 365,
+        "3.0_to_4.9": 655,
+        "5.0_to_6.9": 5001,
+        "7.0_to_8.9": 5613,
+        "9.0_to_10.0": 6277
+      },
+      "per_city_distribution": {
+        "Huế": {
+          "interactions": 1059,
+          "min": 1.0,
+          "max": 10.0,
+          "mean": 7.8128,
+          "median": 8.5
+        },
+        "Hội An": {
+          "interactions": 718,
+          "min": 1.0,
+          "max": 10.0,
+          "mean": 8.0423,
+          "median": 8.5
+        },
+        "Nha Trang": {
+          "interactions": 1984,
+          "min": 1.0,
+          "max": 10.0,
+          "mean": 7.6057,
+          "median": 8.0
+        },
+        "Phan Thiết": {
+          "interactions": 1635,
+          "min": 1.0,
+          "max": 10.0,
+          "mean": 7.4972,
+          "median": 7.8
+        },
+        "Phú Quốc": {
+          "interactions": 1701,
+          "min": 1.0,
+          "max": 10.0,
+          "mean": 7.602,
+          "median": 8.0
+        },
+        "Quy Nhơn": {
+          "interactions": 1333,
+          "min": 1.0,
+          "max": 10.0,
+          "mean": 7.7323,
+          "median": 8.0
+        },
+        "Vũng Tàu": {
+          "interactions": 3988,
+          "min": 1.0,
+          "max": 10.0,
+          "mean": 7.4563,
+          "median": 7.3
+        },
+        "Đà Lạt": {
+          "interactions": 3233,
+          "min": 1.0,
+          "max": 10.0,
+          "mean": 7.5134,
+          "median": 7.0
+        },
+        "Đà Nẵng": {
+          "interactions": 2260,
+          "min": 1.0,
+          "max": 10.0,
+          "mean": 7.5408,
+          "median": 8.0
+        }
+      },
+      "per_source_distribution": {
+        "booking": {
+          "interactions": 7239,
+          "min": 1.0,
+          "max": 10.0,
+          "mean": 7.3916,
+          "median": 8.0
+        },
+        "ivivu": {
+          "interactions": 4399,
+          "min": 1.0,
+          "max": 10.0,
+          "mean": 7.7724,
+          "median": 8.0
+        },
+        "traveloka": {
+          "interactions": 6273,
+          "min": 4.5,
+          "max": 10.0,
+          "mean": 7.6525,
+          "median": 8.4
+        }
+      }
+    }
+  },
+  "section_10_temporal_audit": {
+    "quarantined_synthetic_reviews_curated_9_rows": {
+      "oldest_review": null,
+      "newest_review": null,
+      "missing_date_count": 9,
+      "missing_date_pct": 100.0,
+      "counts_by_year": {},
+      "invalid_or_future_dates": 0,
+      "timestamp_format": null,
+      "recency_aware_retrieval_possible": false
+    },
+    "vihorec_interactions_17911_rows": {
+      "timestamp_format_interactions_csv": "YYYY-MM-DD",
+      "timestamp_format_splits_csv": "unix_epoch_seconds",
+      "oldest_date": "2011-10-15",
+      "newest_date": "2023-12-09",
+      "missing_date_count": 0,
+      "missing_date_pct": 0.0,
+      "invalid_or_future_date_count": 0,
+      "counts_by_year": {
+        "2011": 2,
+        "2012": 69,
+        "2013": 116,
+        "2014": 233,
+        "2015": 981,
+        "2016": 1097,
+        "2017": 1237,
+        "2018": 1303,
+        "2019": 1632,
+        "2020": 1600,
+        "2021": 1794,
+        "2022": 4450,
+        "2023": 3397
+      },
+      "recency_aware_retrieval_possible": false,
+      "recency_reason": "Timestamps exist (2011-10-15 to 2023-12-09), but review_text is 100% missing (ratings only)."
+    },
+    "recency_aware_retrieval_overall_feasibility": {
+      "possible_now": false,
+      "reason": "Synthetic text reviews have 100% missing dates; ViHoRec has valid dates (2011-2023) but 0% review text."
+    }
+  },
+  "section_11_provenance_and_licensing_audit": {
+    "sources": [
+      {
+        "source_id": "vietnam_travel_reviews_synthetic_pipeline",
+        "provenance_class": "synthetic",
+        "license": "Internal test fixture (falsely labeled CC BY-NC-SA 4.0 / academic_benchmark in raw header; corrected to UNVERIFIED_SYNTHETIC in data/manifests/review-provenance.json)",
+        "explains_where_from": true,
+        "explains_when_collected": true,
+        "explains_which_poi": false,
+        "thesis_authority_risk": "HIGH_RISK_IF_CLAIMED_AS_REAL",
+        "audit_verdict": "MUST NOT be claimed as real user reviews or academic benchmark data in the thesis; strictly quarantined as a 9-row pipeline unit test fixture."
+      },
+      {
+        "source_id": "vihorec_restricted_hotel_interactions",
+        "provenance_class": "Kaggle/Hugging Face/GitHub + restricted",
+        "license": "Academic research benchmark (upstream ViHoRec 1.0.0; git-ignored under data/restricted/vihorec/, SHA256-locked in dataset-freeze-v2.yaml)",
+        "explains_where_from": true,
+        "explains_when_collected": true,
+        "explains_which_poi": false,
+        "thesis_authority_risk": "LOW_FOR_RECB_COLLABORATIVE_FILTERING_HIGH_IF_CLAIMED_FOR_RAG",
+        "audit_verdict": "Valid for REC-B hotel collaborative filtering only; cannot support W07 review-text RAG because review_text is 100% absent and hotels lack deterministic links to canonical OSM POIs."
+      },
+      {
+        "source_id": "vlsp2018_and_vimacsa_external_candidates",
+        "provenance_class": "restricted",
+        "license": "Pending academic DUA / request not sent",
+        "explains_where_from": true,
+        "explains_when_collected": false,
+        "explains_which_poi": false,
+        "thesis_authority_risk": "NOT_USABLE_NOT_ACQUIRED_AND_UNLINKED_TO_POIS",
+        "audit_verdict": "0 files present on disk; furthermore VLSP 2018 ABSA consists of anonymized sentence-level fragments without POI identifiers."
+      },
+      {
+        "source_id": "gomate_places_freeze_v2_and_wikivoyage",
+        "provenance_class": "official/public + API",
+        "license": "ODbL 1.0 (OpenStreetMap) + CDLA Permissive 2.0 / Apache 2.0 / CC0 (Overture) + CC BY-SA 3.0 (Wikivoyage)",
+        "explains_where_from": true,
+        "explains_when_collected": true,
+        "explains_which_poi": true,
+        "thesis_authority_risk": "LOW_AUTHORITATIVE_FOR_POI_METADATA_AND_GUIDES",
+        "audit_verdict": "Authoritative for canonical POI entity layer (759 POIs) and general destination guide chunks (464 chunks), but contains 0 user reviews."
+      }
+    ]
+  },
+  "section_12_synthetic_data_firewall": {
+    "REAL_REVIEW_DATA": {
+      "text_review_rows": 0,
+      "rating_only_interaction_rows_no_text": 17911,
+      "sources": [
+        "None for review text (0 rows). ViHoRec (17,911 rows) is real rating-only interaction data with 0 text."
+      ]
+    },
+    "SYNTHETIC_REVIEW_DATA": {
+      "text_review_rows": 9,
+      "tool_stub_template_rows": 2,
+      "synthetic_preference_personas": 300,
+      "synthetic_seed_places": 56,
+      "synthetic_seed_destinations": 50,
+      "sources": [
+        "data/raw/vietnam_travel_reviews.json (9 rows)",
+        "data/processed/reviews_normalized.json (9 rows)",
+        "data/curated/reviews_curated.json (9 rows)",
+        "apps/ai-service/app/tools/search_reviews.py (2 stub strings)",
+        "data/research/preferences/synthetic_preferences_v1.jsonl (300 personas)",
+        "data/seed/synthetic_places.json (56 rows)",
+        "data/seed/synthetic_destinations.json (50 rows)"
+      ],
+      "firewall_rule": "Strictly quarantined from W07 scientific retrieval and factuality evaluation (`review-provenance.json`: overall_status=UNVERIFIED_SYNTHETIC)."
+    },
+    "UNKNOWN_PROVENANCE": {
+      "text_review_rows": 0,
+      "unverified_legacy_seed_places_in_db": 123,
+      "sources": [
+        "123 legacy seed places in DB / 11 unsourced rows in data/curated/places_canonical.json with sources=[] (excluded from gomate_places_freeze_v2.json)."
+      ]
+    }
+  },
+  "section_13_retrieval_unit_recommendation": {
+    "recommended_primary_unit": "one_review_equals_one_retrieval_unit",
+    "rationale": "Typical travel/hospitality reviews (and the 9 repository fixture reviews at 85-189 chars / 19-42 words, median 176 chars / 40 words) are short, self-contained opinion units tied to a single (poi_id, rating, author, created_at) tuple. Splitting short reviews into sentence or sliding-window fragments severs aspect opinions from their POI/rating/date metadata and inflates index noise, while aggregating all reviews of a POI into one giant block dilutes aspect-specific retrieval precision.",
+    "comparison_matrix": [
+      {
+        "unit_type": "one_review_equals_one_retrieval_unit",
+        "pros": "Preserves exact review_id, poi_id, rating, timestamp, and aspect context; ideal for 20-250 word travel reviews; straightforward citation & factuality grounding.",
+        "cons": "Very long multi-topic blog-style reviews (>1,500 chars / >300 words) may benefit from secondary sub-chunking with parent review_id metadata.",
+        "verdict": "RECOMMENDED_DEFAULT (with optional sub-chunking only if acquired reviews exceed 300 words)."
+      },
+      {
+        "unit_type": "sentence_chunks",
+        "pros": "Fine-grained aspect isolation.",
+        "cons": "Loses coreference ('Quán rất sạch', 'Giá hợp lý') and detaches sentences from surrounding sentiment caveats.",
+        "verdict": "NOT_RECOMMENDED_AS_PRIMARY"
+      },
+      {
+        "unit_type": "sliding_window_chunks",
+        "pros": "Useful for long encyclopedic guides (e.g., 464 Wikivoyage chunks).",
+        "cons": "Unnecessary overhead and boundary duplication for short user reviews (<200 words).",
+        "verdict": "NOT_RECOMMENDED_FOR_SHORT_REVIEWS"
+      },
+      {
+        "unit_type": "aggregated_poi_review_blocks",
+        "pros": "One document per POI.",
+        "cons": "Mixes contradictory user opinions and ratings into a single vector, degrading aspect-specific top-k retrieval and per-review citation.",
+        "verdict": "NOT_RECOMMENDED_AS_PRIMARY"
+      }
+    ]
+  },
+  "section_14_w07_evaluation_feasibility": {
+    "RAG_READINESS_STATUS": "NOT_READY",
+    "target_query_set_size": "40-60 queries",
+    "required_query_dimensions": [
+      "POI specific",
+      "food",
+      "service",
+      "culture",
+      "nature",
+      "family",
+      "budget",
+      "positive aspect",
+      "negative aspect",
+      "location",
+      "experience"
+    ],
+    "dimension_coverage_in_current_real_review_data": {
+      "POI specific": {
+        "real_reviews_available": 0,
+        "status": "UNSUPPORTED_ZERO_REAL_DATA"
+      },
+      "food": {
+        "real_reviews_available": 0,
+        "status": "UNSUPPORTED_ZERO_REAL_DATA"
+      },
+      "service": {
+        "real_reviews_available": 0,
+        "status": "UNSUPPORTED_ZERO_REAL_DATA"
+      },
+      "culture": {
+        "real_reviews_available": 0,
+        "status": "UNSUPPORTED_ZERO_REAL_DATA"
+      },
+      "nature": {
+        "real_reviews_available": 0,
+        "status": "UNSUPPORTED_ZERO_REAL_DATA"
+      },
+      "family": {
+        "real_reviews_available": 0,
+        "status": "UNSUPPORTED_ZERO_REAL_DATA"
+      },
+      "budget": {
+        "real_reviews_available": 0,
+        "status": "UNSUPPORTED_ZERO_REAL_DATA"
+      },
+      "positive aspect": {
+        "real_reviews_available": 0,
+        "status": "UNSUPPORTED_ZERO_REAL_DATA"
+      },
+      "negative aspect": {
+        "real_reviews_available": 0,
+        "status": "UNSUPPORTED_ZERO_REAL_DATA"
+      },
+      "location": {
+        "real_reviews_available": 0,
+        "status": "UNSUPPORTED_ZERO_REAL_DATA"
+      },
+      "experience": {
+        "real_reviews_available": 0,
+        "status": "UNSUPPORTED_ZERO_REAL_DATA"
+      }
+    },
+    "can_create_human_relevance_labels_from_current_corpus": false,
+    "evidence_summary": "The repository currently contains 0 real provenanced review text records across all 759 verified OSM POIs (and 0 across the 622 REC-A core POIs in Hà Nội, Đà Nẵng, and Hạ Long). The only review text in the repository is a 9-row synthetic fixture (vietnam_travel_reviews.json / reviews_curated.json) quarantined by review-provenance.json, which covers 0 POIs in Hạ Long, 0 verified Freeze v2 POIs by ID, and has only 1 negative-aspect sentence across the entire file. Therefore, a scientifically valid 40-60 query review-RAG evaluation benchmark cannot be constructed or human-labeled until an authoritative POI-linked review corpus is acquired."
+  },
+  "section_15_technology_decision_matrix": {
+    "winner_frozen_in_w07_0": false,
+    "candidate_status": "PROVISIONAL_SHORTLIST_NO_WINNER_FROZEN",
+    "measurement_hygiene_label": "PLANNING_ESTIMATE_NOT_MEASURED",
+    "measurement_hygiene_note": "All latency, RAM, and workload figures in Section 15 and Section 16 are strictly labelled PLANNING_ESTIMATE_NOT_MEASURED and must NOT be cited as experimental W07 evidence.",
+    "expected_target_corpus_scale_after_acquisition": "Scientific Minimum >= 300 reviews across >= 60 POIs; Preferred 600-1,200 reviews across 75-100 POIs; Stretch 1,100-1,650 reviews across ~110 POIs in Hà Nội, Đà Nẵng, and Hạ Long (comfortably fits in local RAM/CPU).",
+    "lexical_baseline": {
+      "method": "BM25 (rank_bm25 / BM25Okapi with Vietnamese-aware tokenization & accent-preserving + accent-folded dual fields)",
+      "role": "Mandatory deterministic lexical baseline for exact POI names, dish names, and Vietnamese aspect keywords.",
+      "local_cpu_feasible": true,
+      "measurement_status": "PLANNING_ESTIMATE_NOT_MEASURED"
+    },
+    "dense_retrieval_candidate_families": [
+      {
+        "candidate_id": "intfloat/multilingual-e5-small",
+        "family": "Multilingual E5 (118M params, 384d)",
+        "vietnamese_support": "Strong multilingual retrieval alignment (query/passage prefix protocol)",
+        "cpu_latency_and_memory": "PLANNING_ESTIMATE_NOT_MEASURED: compact local CPU bi-encoder (approx. <500 MB RAM class)",
+        "measurement_status": "PLANNING_ESTIMATE_NOT_MEASURED",
+        "free_local_operation": true
+      },
+      {
+        "candidate_id": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
+        "family": "Multilingual MiniLM (118M params, 384d)",
+        "vietnamese_support": "Solid baseline multilingual semantic similarity",
+        "cpu_latency_and_memory": "PLANNING_ESTIMATE_NOT_MEASURED: compact local CPU bi-encoder (approx. <500 MB RAM class)",
+        "measurement_status": "PLANNING_ESTIMATE_NOT_MEASURED",
+        "free_local_operation": true
+      },
+      {
+        "candidate_id": "bkai-foundation-models/vietnamese-bi-encoder",
+        "family": "PhoBERT-based Vietnamese Bi-Encoder (135M params, 768d)",
+        "vietnamese_support": "Native Vietnamese segmentation & semantics",
+        "cpu_latency_and_memory": "PLANNING_ESTIMATE_NOT_MEASURED: local CPU bi-encoder (approx. ~600 MB RAM class); weaker on English/mixed queries",
+        "measurement_status": "PLANNING_ESTIMATE_NOT_MEASURED",
+        "free_local_operation": true
+      },
+      {
+        "candidate_id": "BAAI/bge-m3",
+        "family": "BGE-M3 multilingual dense+sparse (568M params, 1024d)",
+        "vietnamese_support": "High-accuracy Vietnamese + cross-lingual retrieval",
+        "cpu_latency_and_memory": "PLANNING_ESTIMATE_NOT_MEASURED: heavier model class (approx. ~2.2 GB RAM class); optional for 300-1,650 docs",
+        "measurement_status": "PLANNING_ESTIMATE_NOT_MEASURED",
+        "free_local_operation": true
+      }
+    ],
+    "hybrid_retrieval": {
+      "methods": [
+        "Reciprocal Rank Fusion (RRF, k=60) combining BM25 + Dense top-k",
+        "Min-max / z-score normalized linear score fusion (alpha * dense + (1 - alpha) * bm25)"
+      ],
+      "recommendation": "Evaluate RRF and convex score fusion over BM25 + top dense bi-encoder; particularly effective for Vietnamese queries mixing exact POI/food terms with semantic aspect intent.",
+      "measurement_status": "PLANNING_ESTIMATE_NOT_MEASURED"
+    },
+    "reranker_evaluation": {
+      "justified_at_target_scale": "OPTIONAL_FOR_ABLATION",
+      "candidates": [
+        "BAAI/bge-reranker-v2-m3 (or lightweight multilingual MiniLM cross-encoder such as cross-encoder/mmarco-mMiniLMv2-L12-H384-v1)"
+      ],
+      "analysis": "For a 300-1,650 review corpus with poi_id/city metadata pre-filtering, bi-encoder + BM25 hybrid already retrieves from a small candidate pool (5-15 reviews per POI). A lightweight multilingual cross-encoder top-20 -> top-5 reranker is optional for scientific ablation in W07.",
+      "measurement_status": "PLANNING_ESTIMATE_NOT_MEASURED"
+    },
+    "index_and_vector_store_comparison": [
+      {
+        "option": "Local in-memory / flat index (FAISS IndexFlatIP / NumPy exact cosine + rank_bm25)",
+        "retrieval_quality": "100% exact nearest-neighbor recall (no ANN quantization loss)",
+        "vietnamese_support": "Model-determined; full Unicode metadata filtering in Python",
+        "latency": "PLANNING_ESTIMATE_NOT_MEASURED: sub-10ms class for <=2,000 vectors on local CPU",
+        "memory": "PLANNING_ESTIMATE_NOT_MEASURED: <50 MB class for <=2,000 x 768d float32 vectors",
+        "measurement_status": "PLANNING_ESTIMATE_NOT_MEASURED",
+        "installation_complexity": "Minimal (Pure Python / faiss-cpu)",
+        "deployment_complexity": "Zero daemon / zero server required",
+        "free_local_operation": true,
+        "reproducibility": "100% deterministic offline artifact snapshots",
+        "verdict": "RECOMMENDED_FOR_W07_SCIENTIFIC_BENCHMARK"
+      },
+      {
+        "option": "PostgreSQL + pgvector (already integrated in apps/backend/prisma/schema.prisma & apps/ai-service/app/rag/retriever.py)",
+        "retrieval_quality": "Exact or HNSW vector search + SQL relational filtering by place_id/city",
+        "vietnamese_support": "Full UTF-8 + SQL metadata joins with canonical places",
+        "latency": "PLANNING_ESTIMATE_NOT_MEASURED: local DB query class",
+        "memory": "PLANNING_ESTIMATE_NOT_MEASURED: managed by existing local PostgreSQL container",
+        "measurement_status": "PLANNING_ESTIMATE_NOT_MEASURED",
+        "installation_complexity": "Already present in repository stack",
+        "deployment_complexity": "Requires running PostgreSQL service (blocked in mandatory stateless CI)",
+        "free_local_operation": true,
+        "reproducibility": "High when seeded from frozen JSON/embeddings",
+        "verdict": "RECOMMENDED_FOR_APPLICATION_INTEGRATION_AFTER_OFFLINE_BENCHMARK"
+      },
+      {
+        "option": "Qdrant (local or server)",
+        "retrieval_quality": "Equivalent to exact/HNSW vector search",
+        "vietnamese_support": "UTF-8 payload filtering",
+        "latency": "PLANNING_ESTIMATE_NOT_MEASURED: local vector DB query class",
+        "memory": "PLANNING_ESTIMATE_NOT_MEASURED: additional container/process overhead",
+        "measurement_status": "PLANNING_ESTIMATE_NOT_MEASURED",
+        "installation_complexity": "Requires adding new client & server dependency not currently in stack",
+        "deployment_complexity": "Unnecessary extra infrastructure for <10,000 reviews when FAISS/NumPy (offline benchmark) and pgvector (app stack) already cover all needs",
+        "free_local_operation": true,
+        "reproducibility": "No advantage over local FAISS/NumPy at this corpus scale",
+        "verdict": "NOT_NEEDED"
+      }
+    ]
+  },
+  "section_16_infrastructure_readiness": {
+    "measurement_hygiene_label": "PLANNING_ESTIMATE_NOT_MEASURED",
+    "items": {
+      "cpu_only": {
+        "classification": "REQUIRED",
+        "purpose": "Run offline data pipelines, BM25, compact multilingual bi-encoders (<=135M params), FAISS/NumPy exact search, and deterministic evaluation tests.",
+        "minimum_requirement": "Standard developer laptop CPU (4+ cores, 8-16 GB RAM)",
+        "free_alternative": "Already available locally and in GitHub Actions CI",
+        "approximate_workload": "PLANNING_ESTIMATE_NOT_MEASURED: batch encoding 300-1,650 short reviews with compact bi-encoder on CPU",
+        "measurement_status": "PLANNING_ESTIMATE_NOT_MEASURED",
+        "can_wait": false
+      },
+      "local_gpu": {
+        "classification": "OPTIONAL",
+        "purpose": "Accelerate larger embedding/reranker ablations (e.g., BGE-M3) if tested.",
+        "minimum_requirement": "None required now; CPU or free Colab T4 is sufficient",
+        "free_alternative": "CPU (for small/base models) or free Google Colab T4",
+        "approximate_workload": "PLANNING_ESTIMATE_NOT_MEASURED: optional batch embedding export",
+        "measurement_status": "PLANNING_ESTIMATE_NOT_MEASURED",
+        "can_wait": true
+      },
+      "google_colab": {
+        "classification": "OPTIONAL",
+        "purpose": "Free T4 GPU fallback if benchmarking heavier 560M+ parameter bi-encoders/rerankers and exporting frozen embeddings.",
+        "minimum_requirement": "Standard free Google account",
+        "free_alternative": "Free Google Colab tier or local CPU with compact models",
+        "approximate_workload": "PLANNING_ESTIMATE_NOT_MEASURED: one-time batch embedding export if needed",
+        "measurement_status": "PLANNING_ESTIMATE_NOT_MEASURED",
+        "can_wait": true
+      },
+      "paid_gpu": {
+        "classification": "NOT_NEEDED",
+        "purpose": "None for W07 corpus scale (300-1,650 reviews).",
+        "minimum_requirement": "N/A",
+        "free_alternative": "Local CPU / free Google Colab",
+        "approximate_workload": "0",
+        "measurement_status": "PLANNING_ESTIMATE_NOT_MEASURED",
+        "can_wait": true
+      },
+      "vps": {
+        "classification": "NOT_NEEDED",
+        "purpose": "W07 retrieval evaluation and offline benchmarking run 100% locally.",
+        "minimum_requirement": "N/A",
+        "free_alternative": "Local workstation",
+        "approximate_workload": "0",
+        "measurement_status": "PLANNING_ESTIMATE_NOT_MEASURED",
+        "can_wait": true
+      },
+      "vector_db_server": {
+        "classification": "NOT_NEEDED",
+        "purpose": "In-memory FAISS/NumPy handles offline W07 scientific benchmarking; existing local PostgreSQL/pgvector handles app integration.",
+        "minimum_requirement": "N/A",
+        "free_alternative": "Local FAISS / NumPy + existing pgvector schema",
+        "approximate_workload": "0",
+        "measurement_status": "PLANNING_ESTIMATE_NOT_MEASURED",
+        "can_wait": true
+      },
+      "redis": {
+        "classification": "NOT_NEEDED",
+        "purpose": "Not needed for W07 review corpus curation or offline retrieval benchmarking.",
+        "minimum_requirement": "N/A",
+        "free_alternative": "Local disk JSON/NPZ cache",
+        "approximate_workload": "0",
+        "measurement_status": "PLANNING_ESTIMATE_NOT_MEASURED",
+        "can_wait": true
+      },
+      "paid_embedding_api": {
+        "classification": "NOT_NEEDED",
+        "purpose": "Open-weight multilingual/Vietnamese sentence-transformers run locally for free with higher reproducibility.",
+        "minimum_requirement": "N/A",
+        "free_alternative": "Open-weight HuggingFace models (multilingual-e5-small, paraphrase-multilingual-MiniLM-L12-v2, vietnamese-bi-encoder)",
+        "approximate_workload": "0",
+        "measurement_status": "PLANNING_ESTIMATE_NOT_MEASURED",
+        "can_wait": true
+      },
+      "llm_api": {
+        "classification": "OPTIONAL",
+        "purpose": "Not needed now (W07-0 and retrieval benchmarking are 100% offline/extractive). Only optional in a later synthesis stage if generative review summarization is evaluated alongside extractive aspect synthesis.",
+        "minimum_requirement": "None now (NEW_LLM_PROVIDER_CALLS = 0)",
+        "free_alternative": "Deterministic extractive aspect & snippet synthesis from retrieved top-k reviews",
+        "approximate_workload": "0 calls now",
+        "measurement_status": "PLANNING_ESTIMATE_NOT_MEASURED",
+        "can_wait": true
+      }
+    }
+  },
+  "section_17_api_external_ai_firewall": {
+    "NEW_LLM_PROVIDER_CALLS": 0,
+    "NEW_REVIEW_DATA_ACQUIRED": 0,
+    "gemini_calls": 0,
+    "openai_calls": 0,
+    "claude_calls": 0,
+    "google_places_calls": 0,
+    "tripadvisor_calls": 0,
+    "external_embedding_api_calls": 0,
+    "paid_reranker_api_calls": 0,
+    "crawler_execution_count": 0,
+    "dataset_download_count": 0,
+    "secrets_inspected_or_printed": false
+  },
+  "section_19_decision_categories": {
+    "CURRENT_REVIEW_DATA_SUFFICIENT_FOR_W07": false,
+    "ADDITIONAL_REVIEW_DATA_REQUIRED": true,
+    "HUMAN_LABELING_REQUIRED": true,
+    "GPU_REQUIRED_NOW": false,
+    "SERVER_REQUIRED_NOW": false,
+    "VECTOR_DB_SERVER_REQUIRED_NOW": false,
+    "PAID_EMBEDDING_API_REQUIRED": false,
+    "LLM_API_REQUIRED_NOW": false
+  },
+  "section_20_review_data_acquisition_specification": {
+    "crawling_performed_in_w07_0": false,
+    "NEW_REVIEW_DATA_ACQUIRED": 0,
+    "api_feasibility_corrections": {
+      "google_places": {
+        "GOOGLE_PLACES_MAX_REVIEWS_PER_PLACE": 5,
+        "GOOGLE_PLACES_OFFLINE_CORPUS_ROLE": "NOT_APPROVED_PENDING_STORAGE_TERMS_REVIEW",
+        "can_satisfy_10_to_15_reviews_per_poi_by_itself": false,
+        "approved_as_primary_frozen_w07_corpus": false,
+        "policy_and_technical_reasons": [
+          "Google Places API returns at most 5 reviews per place (GOOGLE_PLACES_MAX_REVIEWS_PER_PLACE = 5) and therefore cannot satisfy a 10-15 reviews/POI target by itself.",
+          "Google Maps Platform Places policies restrict pre-fetching, caching, and persistent offline storage of Places content except documented exceptions such as place IDs."
+        ],
+        "permitted_later_consideration": [
+          "live/runtime enrichment",
+          "UI display",
+          "place mapping"
+        ]
+      },
+      "tripadvisor": {
+        "TRIPADVISOR_CONTENT_API_ACADEMIC_CORPUS_ROLE": "NOT_RECOMMENDED",
+        "approved_as_primary_frozen_w07_corpus": false,
+        "policy_and_technical_reasons": [
+          "Current consumer Content API exposes only a small number of reviews per location.",
+          "Tripadvisor states its Content API is intended for consumer-facing B2C applications.",
+          "Academic research access is not supported under normal Content API eligibility."
+        ]
+      }
+    },
+    "acquisition_target_tiers": {
+      "scientific_minimum": {
+        "tier_name": "Scientific Minimum",
+        "role": "Minimum dataset allowed to begin W07 retrieval science",
+        "min_canonical_pois": 60,
+        "city_balance": "Balanced across all 3 thesis cities (~20 POIs/city: Hà Nội ~20, Đà Nẵng ~20, Hạ Long ~20)",
+        "min_reviews_per_poi": 5,
+        "min_total_usable_reviews": 300
+      },
+      "preferred": {
+        "tier_name": "Preferred",
+        "role": "Recommended balanced benchmark target",
+        "target_canonical_pois_range": "75-100",
+        "city_and_category_balance": "Approximately balanced across Hà Nội, Đà Nẵng, Hạ Long and core POI categories",
+        "target_reviews_per_poi_range": "8-12",
+        "target_total_usable_reviews_range": "600-1,200"
+      },
+      "stretch": {
+        "tier_name": "Stretch",
+        "role": "Stretch target only — explicitly NOT a prerequisite for starting W07",
+        "is_prerequisite_for_starting_w07": false,
+        "target_canonical_pois_approx": 110,
+        "target_reviews_per_poi_range": "10-15",
+        "target_total_usable_reviews_range": "1,100-1,650"
+      }
+    },
+    "candidate_source_classes_ranked": [
+      {
+        "tier": "Tier A",
+        "classification": "PREFERRED_PRIMARY_SCIENTIFIC_CORPUS",
+        "description": "Public/research-permitted datasets containing review text, place/business identity, city/address and preferably coordinates, provenance, usage/license permitting research, and enough metadata for deterministic or audited mapping to GoMate canonical POIs."
+      },
+      {
+        "tier": "Tier B",
+        "classification": "ACCEPTABLE_PRIMARY_SCIENTIFIC_CORPUS",
+        "description": "Owner-curated or research-collected reviews where reuse rights are clear, provenance is recorded, source reference is retained, and exact canonical POI mapping is possible."
+      },
+      {
+        "tier": "Tier C",
+        "classification": "RUNTIME_ENRICHMENT_ONLY_NOT_PERSISTENT_FROZEN_CORPUS",
+        "description": "Official APIs usable for runtime enrichment but unsuitable as a persistent frozen research corpus under standard terms. Google Places belongs here unless storage/research rights are independently established."
+      },
+      {
+        "tier": "Excluded",
+        "classification": "FORBIDDEN_FOR_PRIMARY_POI_RAG_AUTHORITY",
+        "excluded_categories": [
+          "synthetic review generation for scientific evaluation",
+          "unprovenanced scraped text",
+          "datasets with no review text (e.g., ViHoRec ratings-only)",
+          "anonymous text-only sentiment corpora as the primary POI-grounded RAG corpus"
+        ]
+      }
+    ],
+    "candidate_dataset_feasibility_queue": [
+      {
+        "candidate_slot": "Candidate A",
+        "dataset_id": "ThanThoai9x/vietnamese-food-images",
+        "status": "PROMISING_BUT_NOT_YET_APPROVED",
+        "reported_unique_places_approx": 1989,
+        "indicated_public_metadata_fields": [
+          "place_name",
+          "address",
+          "lat",
+          "lng",
+          "review_id",
+          "review_rating",
+          "text",
+          "review_url",
+          "crawled_at"
+        ],
+        "required_next_checks": [
+          "gated access",
+          "exact license/reuse terms",
+          "Google-origin implications",
+          "Hà Nội coverage",
+          "Đà Nẵng coverage",
+          "Hạ Long coverage",
+          "number of text reviews",
+          "number of unique POIs",
+          "coordinate mapping rate to Freeze v2"
+        ],
+        "acquired_or_downloaded_in_w07_0": false
+      },
+      {
+        "candidate_slot": "Candidate B",
+        "dataset_id": "pqthinh232/vietnamese-restaurant-review-sentiment-dataset",
+        "status": "AUXILIARY_TEXT_DATA_ONLY",
+        "reason": "Large Vietnamese restaurant-review corpus, but currently exposed fields do not provide sufficient POI identity/location metadata for canonical POI RAG.",
+        "potential_use": [
+          "linguistic robustness",
+          "sentiment auxiliary experiment"
+        ],
+        "usable_for_authoritative_poi_grounded_retrieval": false,
+        "acquired_or_downloaded_in_w07_0": false
+      },
+      {
+        "candidate_slot": "Candidate C",
+        "dataset_id": "VLSP2018-ABSA-Restaurant",
+        "status": "AUXILIARY_ABSA_DATASET",
+        "potential_use": [
+          "aspect extraction",
+          "sentiment evaluation",
+          "query/aspect vocabulary development"
+        ],
+        "usable_for_authoritative_poi_grounded_retrieval": false,
+        "restriction_note": "Do not use as canonical POI review corpus unless deterministic POI identity unexpectedly exists.",
+        "acquired_or_downloaded_in_w07_0": false
+      }
+    ],
+    "canonical_mapping_requirements": {
+      "required_mapping_support": [
+        "EXACT_MAPPING",
+        "AUDITED_HIGH_CONFIDENCE_GEO_ENTITY_RESOLUTION"
+      ],
+      "preferred_mapping_evidence_hierarchy": [
+        "1. exact upstream POI ID (e.g., OSM node/way/relation ID or Overture GERS ID)",
+        "2. coordinates + normalized name + city/address",
+        "3. manual verification for ambiguous cases"
+      ],
+      "name_only_automatic_linking_forbidden": true,
+      "required_canonical_foreign_key": "poi_id from data/curated/gomate_places_freeze_v2.json on every final review row"
+    },
+    "required_primary_corpus_schema_fields": [
+      "review_id",
+      "poi_id",
+      "upstream_place_id",
+      "city",
+      "source",
+      "source_review_id",
+      "rating",
+      "rating_scale_max",
+      "review_text",
+      "language",
+      "created_at",
+      "collected_at",
+      "source_ref / review_url",
+      "provenance",
+      "license_or_usage_class",
+      "mapping_method",
+      "mapping_confidence"
+    ],
+    "do_not_fabricate_missing_upstream_fields": true,
+    "human_labeling_specification_after_corpus_freeze": {
+      "query_count": "40-60 frozen evaluation queries stratified across Hà Nội, Đà Nẵng, Hạ Long and all 11 query dimensions",
+      "labeling_protocol": "Graded relevance (0=irrelevant, 1=partially relevant, 2=highly relevant) over pooled top-k candidates from BM25 + Dense retrievers"
+    }
+  },
+  "artifact_sha256": "7a951b5f93473998d4032aabfeaa250ac8e7ba2ea42cbdaf230389cd5fe3a6a9"
+}
