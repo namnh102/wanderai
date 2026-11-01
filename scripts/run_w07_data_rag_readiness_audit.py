@@ -5,13 +5,19 @@ Read-only evidence-based audit of all repository data sources relevant to W07
 Review Intelligence / RAG prior to corpus, retrieval, embedding, index,
 reranker, summarizer, or infrastructure selection.
 
-Enforces:
-- W06 remains CLOSED and unmodified.
-- NEW_LLM_PROVIDER_CALLS = 0 (no external LLM, embedding, or reranker API calls).
-- Zero mutation of authoritative datasets.
-- Deterministic verification both locally (with git-ignored ViHoRec CSVs present)
-  and in GitHub Actions CI (where git-ignored data/restricted/ files are verified
-  against their frozen cryptographic entries in data/manifests/dataset-freeze-v2.yaml).
+Includes Corrective 01 (Acquisition Plan Feasibility Corrective 01):
+- Google Places max-review constraint (GOOGLE_PLACES_MAX_REVIEWS_PER_PLACE = 5)
+  and offline storage restriction (GOOGLE_PLACES_OFFLINE_CORPUS_ROLE =
+  NOT_APPROVED_PENDING_STORAGE_TERMS_REVIEW).
+- Tripadvisor Content API academic exclusion (TRIPADVISOR_CONTENT_API_ACADEMIC_CORPUS_ROLE =
+  NOT_RECOMMENDED).
+- Three-tier corpus acquisition target (Scientific Minimum >= 60 POIs / >= 300 reviews,
+  Preferred 75-100 POIs / 600-1,200 reviews, Stretch ~110 POIs / 1,100-1,650 reviews).
+- Ranked candidate source classes (Tier A, Tier B, Tier C, Excluded) and Candidate
+  Dataset Feasibility Queue (Candidate A/B/C).
+- Canonical POI mapping rules (name-only automatic linking forbidden) and 17-field schema.
+- Explicit PLANNING_ESTIMATE_NOT_MEASURED hygiene on all unmeasured latency/RAM estimates.
+- W06 remains CLOSED and unmodified; NEW_LLM_PROVIDER_CALLS = 0; NEW_REVIEW_DATA_ACQUIRED = 0.
 """
 
 from __future__ import annotations
@@ -36,9 +42,17 @@ AUDIT_JSON_RELPATH = "data/evaluation/w07/w07_data_rag_readiness_audit_v1.json"
 AUDIT_MD_RELPATH = "docs/research/w07_data_rag_readiness_audit.md"
 
 AUTHORITATIVE_DEVELOP_BASE_SHA = "bdd4810de0bc03ef52c67cc112e09d5787a7ffad"
-PREVIOUS_GATE = "W06-SCIENTIFIC-CLOSURE-POSTMERGE-CHATGPT-AUDIT"
-PREVIOUS_GATE_DECISION = "PASS"
-NEXT_GATE = "W07-DATA-RAG-READINESS-AUDIT-CHATGPT-AUDIT"
+PREVIOUS_GATE = (
+    "W07-DATA-RAG-READINESS-AUDIT-CHATGPT-AUDIT = "
+    "SCIENTIFIC_AUDIT_ACCEPTED / ACQUISITION_PLAN_HOLD_CORRECTIVE"
+)
+PREVIOUS_GATE_DECISION = "SCIENTIFIC_AUDIT_ACCEPTED / ACQUISITION_PLAN_HOLD_CORRECTIVE"
+NEXT_GATE = "W07-DATA-RAG-READINESS-AUDIT-CORRECTIVE-01-CHATGPT-AUDIT"
+
+GOOGLE_PLACES_MAX_REVIEWS_PER_PLACE = 5
+GOOGLE_PLACES_OFFLINE_CORPUS_ROLE = "NOT_APPROVED_PENDING_STORAGE_TERMS_REVIEW"
+TRIPADVISOR_CONTENT_API_ACADEMIC_CORPUS_ROLE = "NOT_RECOMMENDED"
+PLANNING_ESTIMATE_LABEL = "PLANNING_ESTIMATE_NOT_MEASURED"
 
 SECTION_6_REQUIRED_FIELDS = [
     "review_id",
@@ -54,6 +68,26 @@ SECTION_6_REQUIRED_FIELDS = [
     "source_url/source_ref",
     "collected_at",
     "provenance",
+]
+
+SECTION_8_TARGET_CORPUS_SCHEMA_FIELDS = [
+    "review_id",
+    "poi_id",
+    "upstream_place_id",
+    "city",
+    "source",
+    "source_review_id",
+    "rating",
+    "rating_scale_max",
+    "review_text",
+    "language",
+    "created_at",
+    "collected_at",
+    "source_ref / review_url",
+    "provenance",
+    "license_or_usage_class",
+    "mapping_method",
+    "mapping_confidence",
 ]
 
 VIETNAMESE_DIACRITIC_RE = re.compile(
@@ -307,6 +341,12 @@ def build_w07_audit_payload(repo_root: Path = REPO_ROOT) -> dict[str, Any]:
         (repo_root / "data/seed/synthetic_destinations.json").read_text(encoding="utf-8")
     )
 
+    if (
+        len(norm_reviews) != len(curated_reviews)
+        or review_provenance.get("audit_result", {}).get("verified_real_count") != 0
+    ):
+        raise ValueError("Unexpected review pipeline state.")
+
     # Canonical POI calculations
     v2_by_slug = Counter(p["destination_slug"] for p in places_v2)
     v2_core = [p for p in places_v2 if p.get("is_rec_a_core_v2")]
@@ -323,10 +363,6 @@ def build_w07_audit_payload(repo_root: Path = REPO_ROOT) -> dict[str, Any]:
         1
         for p in places_v2
         if any(s.get("source_name") == "overture" for s in p.get("sources", []))
-    )
-    v2_non_null_ratings = sum(1 for p in places_v2 if p.get("rating") is not None)
-    v2_nonzero_review_counts = sum(
-        1 for p in places_v2 if (p.get("review_count") or 0) > 0
     )
 
     v2_ids = {p["place_id"]: p for p in places_v2}
@@ -654,7 +690,7 @@ def build_w07_audit_payload(repo_root: Path = REPO_ROOT) -> dict[str, Any]:
                     "provenance": 0.0,
                 },
                 "field_notes": {
-                    "poi_id": "HasViHoRec internal hotel_id (H0000..H0559) via hotels.csv, but 100% missing canonical GoMate place_id or OSM source_id.",
+                    "poi_id": "Has ViHoRec internal hotel_id (H0000..H0559) via hotels.csv, but 100% missing canonical GoMate place_id or OSM source_id.",
                     "review_text": "100% missing (0 review text rows across all 17,911 interactions).",
                     "author/anonymized_author": "Has anonymized user_id (U00000..U06821).",
                 },
@@ -686,7 +722,7 @@ def build_w07_audit_payload(repo_root: Path = REPO_ROOT) -> dict[str, Any]:
 
     payload: dict[str, Any] = {
         "schema_version": "w07_data_rag_readiness_audit.v1",
-        "task_id": "W07-0-DATA-RAG-READINESS-AUDIT",
+        "task_id": "W07-0-DATA-RAG-READINESS-AUDIT-CORRECTIVE-01",
         "previous_gate": PREVIOUS_GATE,
         "previous_gate_decision": PREVIOUS_GATE_DECISION,
         "authoritative_base_commit": AUTHORITATIVE_DEVELOP_BASE_SHA,
@@ -867,10 +903,10 @@ def build_w07_audit_payload(repo_root: Path = REPO_ROOT) -> dict[str, Any]:
                 },
             },
             "usable_mapping_keys_for_reviews": [
-                "place_id (canonical GoMate UUID - primary deterministic foreign key)",
+                "place_id (canonical GoMate UUID from gomate_places_freeze_v2.json - required on every final review row)",
                 "sources[].source_id where source_name=='osm' (deterministic upstream OSM element key)",
                 "sources[].source_id where source_name=='overture' (deterministic Overture GERS key for 247 POIs)",
-                "(destination_slug, normalized_name, latitude, longitude) - multi-signal geo+name resolution only when coordinates exist; name-only matching is non-deterministic and prone to false positives",
+                "(latitude, longitude, normalized_name, city/address) - audited multi-signal geo/entity resolution with manual verification for ambiguous cases; name-only automatic linking is forbidden as scientific authority",
             ],
             "review_to_poi_mapping_audit": {
                 "synthetic_reviews_curated_9_rows_against_freeze_v2_759": {
@@ -1211,39 +1247,53 @@ def build_w07_audit_payload(repo_root: Path = REPO_ROOT) -> dict[str, Any]:
         },
         "section_15_technology_decision_matrix": {
             "winner_frozen_in_w07_0": False,
-            "expected_target_corpus_scale_after_acquisition": "1,200 to 3,000 review documents across 90-150 priority canonical POIs in Hà Nội, Đà Nẵng, and Hạ Long (comfortably fits in local RAM/CPU).",
+            "candidate_status": "PROVISIONAL_SHORTLIST_NO_WINNER_FROZEN",
+            "measurement_hygiene_label": PLANNING_ESTIMATE_LABEL,
+            "measurement_hygiene_note": (
+                "All latency, RAM, and workload figures in Section 15 and Section 16 are strictly "
+                "labelled PLANNING_ESTIMATE_NOT_MEASURED and must NOT be cited as experimental W07 evidence."
+            ),
+            "expected_target_corpus_scale_after_acquisition": (
+                "Scientific Minimum >= 300 reviews across >= 60 POIs; Preferred 600-1,200 reviews across 75-100 POIs; "
+                "Stretch 1,100-1,650 reviews across ~110 POIs in Hà Nội, Đà Nẵng, and Hạ Long (comfortably fits in local RAM/CPU)."
+            ),
             "lexical_baseline": {
                 "method": "BM25 (rank_bm25 / BM25Okapi with Vietnamese-aware tokenization & accent-preserving + accent-folded dual fields)",
                 "role": "Mandatory deterministic lexical baseline for exact POI names, dish names, and Vietnamese aspect keywords.",
                 "local_cpu_feasible": True,
+                "measurement_status": PLANNING_ESTIMATE_LABEL,
             },
             "dense_retrieval_candidate_families": [
                 {
                     "candidate_id": "intfloat/multilingual-e5-small",
                     "family": "Multilingual E5 (118M params, 384d)",
                     "vietnamese_support": "Strong multilingual retrieval alignment (query/passage prefix protocol)",
-                    "cpu_latency_and_memory": "Fast on local CPU (~15-30 ms/query, <500 MB RAM)",
+                    "cpu_latency_and_memory": f"{PLANNING_ESTIMATE_LABEL}: compact local CPU bi-encoder (approx. <500 MB RAM class)",
+                    "measurement_status": PLANNING_ESTIMATE_LABEL,
                     "free_local_operation": True,
                 },
                 {
                     "candidate_id": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
                     "family": "Multilingual MiniLM (118M params, 384d)",
                     "vietnamese_support": "Solid baseline multilingual semantic similarity",
-                    "cpu_latency_and_memory": "Very fast on local CPU (<500 MB RAM)",
+                    "cpu_latency_and_memory": f"{PLANNING_ESTIMATE_LABEL}: compact local CPU bi-encoder (approx. <500 MB RAM class)",
+                    "measurement_status": PLANNING_ESTIMATE_LABEL,
                     "free_local_operation": True,
                 },
                 {
                     "candidate_id": "bkai-foundation-models/vietnamese-bi-encoder",
                     "family": "PhoBERT-based Vietnamese Bi-Encoder (135M params, 768d)",
                     "vietnamese_support": "Native Vietnamese segmentation & semantics",
-                    "cpu_latency_and_memory": "Fast on local CPU (~600 MB RAM); weaker on English/mixed queries",
+                    "cpu_latency_and_memory": f"{PLANNING_ESTIMATE_LABEL}: local CPU bi-encoder (approx. ~600 MB RAM class); weaker on English/mixed queries",
+                    "measurement_status": PLANNING_ESTIMATE_LABEL,
                     "free_local_operation": True,
                 },
                 {
                     "candidate_id": "BAAI/bge-m3",
                     "family": "BGE-M3 multilingual dense+sparse (568M params, 1024d)",
                     "vietnamese_support": "High-accuracy Vietnamese + cross-lingual retrieval",
-                    "cpu_latency_and_memory": "Heavier on CPU (~2.2 GB RAM); best run on Colab/local GPU if benchmarked, optional for 1.5k-3k docs",
+                    "cpu_latency_and_memory": f"{PLANNING_ESTIMATE_LABEL}: heavier model class (approx. ~2.2 GB RAM class); optional for 300-1,650 docs",
+                    "measurement_status": PLANNING_ESTIMATE_LABEL,
                     "free_local_operation": True,
                 },
             ],
@@ -1253,21 +1303,28 @@ def build_w07_audit_payload(repo_root: Path = REPO_ROOT) -> dict[str, Any]:
                     "Min-max / z-score normalized linear score fusion (alpha * dense + (1 - alpha) * bm25)",
                 ],
                 "recommendation": "Evaluate RRF and convex score fusion over BM25 + top dense bi-encoder; particularly effective for Vietnamese queries mixing exact POI/food terms with semantic aspect intent.",
+                "measurement_status": PLANNING_ESTIMATE_LABEL,
             },
             "reranker_evaluation": {
                 "justified_at_target_scale": "OPTIONAL_FOR_ABLATION",
                 "candidates": [
                     "BAAI/bge-reranker-v2-m3 (or lightweight multilingual MiniLM cross-encoder such as cross-encoder/mmarco-mMiniLMv2-L12-H384-v1)"
                 ],
-                "analysis": "For a 1,200-3,000 review corpus with poi_id/city metadata pre-filtering, bi-encoder + BM25 hybrid already retrieves from a small candidate pool (10-50 reviews per POI). A lightweight multilingual cross-encoder top-20 -> top-5 reranker is worth a scientific ablation in W07 only if CPU latency stays reasonable.",
+                "analysis": (
+                    "For a 300-1,650 review corpus with poi_id/city metadata pre-filtering, bi-encoder + BM25 hybrid "
+                    "already retrieves from a small candidate pool (5-15 reviews per POI). A lightweight multilingual "
+                    "cross-encoder top-20 -> top-5 reranker is optional for scientific ablation in W07."
+                ),
+                "measurement_status": PLANNING_ESTIMATE_LABEL,
             },
             "index_and_vector_store_comparison": [
                 {
                     "option": "Local in-memory / flat index (FAISS IndexFlatIP / NumPy exact cosine + rank_bm25)",
                     "retrieval_quality": "100% exact nearest-neighbor recall (no ANN quantization loss)",
                     "vietnamese_support": "Model-determined; full Unicode metadata filtering in Python",
-                    "latency": "<5 ms search over 3,000 vectors on CPU",
-                    "memory": "<50 MB for 3,000 x 768d float32 vectors",
+                    "latency": f"{PLANNING_ESTIMATE_LABEL}: sub-10ms class for <=2,000 vectors on local CPU",
+                    "memory": f"{PLANNING_ESTIMATE_LABEL}: <50 MB class for <=2,000 x 768d float32 vectors",
+                    "measurement_status": PLANNING_ESTIMATE_LABEL,
                     "installation_complexity": "Minimal (Pure Python / faiss-cpu)",
                     "deployment_complexity": "Zero daemon / zero server required",
                     "free_local_operation": True,
@@ -1278,8 +1335,9 @@ def build_w07_audit_payload(repo_root: Path = REPO_ROOT) -> dict[str, Any]:
                     "option": "PostgreSQL + pgvector (already integrated in apps/backend/prisma/schema.prisma & apps/ai-service/app/rag/retriever.py)",
                     "retrieval_quality": "Exact or HNSW vector search + SQL relational filtering by place_id/city",
                     "vietnamese_support": "Full UTF-8 + SQL metadata joins with canonical places",
-                    "latency": "~5-20 ms local DB query",
-                    "memory": "Managed by existing local PostgreSQL container",
+                    "latency": f"{PLANNING_ESTIMATE_LABEL}: local DB query class",
+                    "memory": f"{PLANNING_ESTIMATE_LABEL}: managed by existing local PostgreSQL container",
+                    "measurement_status": PLANNING_ESTIMATE_LABEL,
                     "installation_complexity": "Already present in repository stack",
                     "deployment_complexity": "Requires running PostgreSQL service (blocked in mandatory stateless CI)",
                     "free_local_operation": True,
@@ -1290,8 +1348,9 @@ def build_w07_audit_payload(repo_root: Path = REPO_ROOT) -> dict[str, Any]:
                     "option": "Qdrant (local or server)",
                     "retrieval_quality": "Equivalent to exact/HNSW vector search",
                     "vietnamese_support": "UTF-8 payload filtering",
-                    "latency": "~5-15 ms",
-                    "memory": "Additional container/process overhead",
+                    "latency": f"{PLANNING_ESTIMATE_LABEL}: local vector DB query class",
+                    "memory": f"{PLANNING_ESTIMATE_LABEL}: additional container/process overhead",
+                    "measurement_status": PLANNING_ESTIMATE_LABEL,
                     "installation_complexity": "Requires adding new client & server dependency not currently in stack",
                     "deployment_complexity": "Unnecessary extra infrastructure for <10,000 reviews when FAISS/NumPy (offline benchmark) and pgvector (app stack) already cover all needs",
                     "free_local_operation": True,
@@ -1301,13 +1360,15 @@ def build_w07_audit_payload(repo_root: Path = REPO_ROOT) -> dict[str, Any]:
             ],
         },
         "section_16_infrastructure_readiness": {
+            "measurement_hygiene_label": PLANNING_ESTIMATE_LABEL,
             "items": {
                 "cpu_only": {
                     "classification": "REQUIRED",
                     "purpose": "Run offline data pipelines, BM25, compact multilingual bi-encoders (<=135M params), FAISS/NumPy exact search, and deterministic evaluation tests.",
                     "minimum_requirement": "Standard developer laptop CPU (4+ cores, 8-16 GB RAM)",
                     "free_alternative": "Already available locally and in GitHub Actions CI",
-                    "approximate_workload": "<2 minutes to encode 2,000 short reviews with MiniLM/E5-small on CPU",
+                    "approximate_workload": f"{PLANNING_ESTIMATE_LABEL}: batch encoding 300-1,650 short reviews with compact bi-encoder on CPU",
+                    "measurement_status": PLANNING_ESTIMATE_LABEL,
                     "can_wait": False,
                 },
                 "local_gpu": {
@@ -1315,7 +1376,8 @@ def build_w07_audit_payload(repo_root: Path = REPO_ROOT) -> dict[str, Any]:
                     "purpose": "Accelerate larger embedding/reranker ablations (e.g., BGE-M3) if tested.",
                     "minimum_requirement": "None required now; CPU or free Colab T4 is sufficient",
                     "free_alternative": "CPU (for small/base models) or free Google Colab T4",
-                    "approximate_workload": "<30 seconds for 2,000 reviews",
+                    "approximate_workload": f"{PLANNING_ESTIMATE_LABEL}: optional batch embedding export",
+                    "measurement_status": PLANNING_ESTIMATE_LABEL,
                     "can_wait": True,
                 },
                 "google_colab": {
@@ -1323,15 +1385,17 @@ def build_w07_audit_payload(repo_root: Path = REPO_ROOT) -> dict[str, Any]:
                     "purpose": "Free T4 GPU fallback if benchmarking heavier 560M+ parameter bi-encoders/rerankers and exporting frozen embeddings.",
                     "minimum_requirement": "Standard free Google account",
                     "free_alternative": "Free Google Colab tier or local CPU with compact models",
-                    "approximate_workload": "One-time 10-minute batch embedding export if needed",
+                    "approximate_workload": f"{PLANNING_ESTIMATE_LABEL}: one-time batch embedding export if needed",
+                    "measurement_status": PLANNING_ESTIMATE_LABEL,
                     "can_wait": True,
                 },
                 "paid_gpu": {
                     "classification": "NOT_NEEDED",
-                    "purpose": "None for W07 corpus scale (1,200-3,000 reviews).",
+                    "purpose": "None for W07 corpus scale (300-1,650 reviews).",
                     "minimum_requirement": "N/A",
                     "free_alternative": "Local CPU / free Google Colab",
                     "approximate_workload": "0",
+                    "measurement_status": PLANNING_ESTIMATE_LABEL,
                     "can_wait": True,
                 },
                 "vps": {
@@ -1340,6 +1404,7 @@ def build_w07_audit_payload(repo_root: Path = REPO_ROOT) -> dict[str, Any]:
                     "minimum_requirement": "N/A",
                     "free_alternative": "Local workstation",
                     "approximate_workload": "0",
+                    "measurement_status": PLANNING_ESTIMATE_LABEL,
                     "can_wait": True,
                 },
                 "vector_db_server": {
@@ -1348,6 +1413,7 @@ def build_w07_audit_payload(repo_root: Path = REPO_ROOT) -> dict[str, Any]:
                     "minimum_requirement": "N/A",
                     "free_alternative": "Local FAISS / NumPy + existing pgvector schema",
                     "approximate_workload": "0",
+                    "measurement_status": PLANNING_ESTIMATE_LABEL,
                     "can_wait": True,
                 },
                 "redis": {
@@ -1356,6 +1422,7 @@ def build_w07_audit_payload(repo_root: Path = REPO_ROOT) -> dict[str, Any]:
                     "minimum_requirement": "N/A",
                     "free_alternative": "Local disk JSON/NPZ cache",
                     "approximate_workload": "0",
+                    "measurement_status": PLANNING_ESTIMATE_LABEL,
                     "can_wait": True,
                 },
                 "paid_embedding_api": {
@@ -1364,6 +1431,7 @@ def build_w07_audit_payload(repo_root: Path = REPO_ROOT) -> dict[str, Any]:
                     "minimum_requirement": "N/A",
                     "free_alternative": "Open-weight HuggingFace models (multilingual-e5-small, paraphrase-multilingual-MiniLM-L12-v2, vietnamese-bi-encoder)",
                     "approximate_workload": "0",
+                    "measurement_status": PLANNING_ESTIMATE_LABEL,
                     "can_wait": True,
                 },
                 "llm_api": {
@@ -1372,17 +1440,23 @@ def build_w07_audit_payload(repo_root: Path = REPO_ROOT) -> dict[str, Any]:
                     "minimum_requirement": "None now (NEW_LLM_PROVIDER_CALLS = 0)",
                     "free_alternative": "Deterministic extractive aspect & snippet synthesis from retrieved top-k reviews",
                     "approximate_workload": "0 calls now",
+                    "measurement_status": PLANNING_ESTIMATE_LABEL,
                     "can_wait": True,
                 },
-            }
+            },
         },
         "section_17_api_external_ai_firewall": {
             "NEW_LLM_PROVIDER_CALLS": 0,
+            "NEW_REVIEW_DATA_ACQUIRED": 0,
             "gemini_calls": 0,
             "openai_calls": 0,
             "claude_calls": 0,
+            "google_places_calls": 0,
+            "tripadvisor_calls": 0,
             "external_embedding_api_calls": 0,
             "paid_reranker_api_calls": 0,
+            "crawler_execution_count": 0,
+            "dataset_download_count": 0,
             "secrets_inspected_or_printed": False,
         },
         "section_19_decision_categories": {
@@ -1397,61 +1471,173 @@ def build_w07_audit_payload(repo_root: Path = REPO_ROOT) -> dict[str, Any]:
         },
         "section_20_review_data_acquisition_specification": {
             "crawling_performed_in_w07_0": False,
-            "target_cities": [
+            "NEW_REVIEW_DATA_ACQUIRED": 0,
+            "api_feasibility_corrections": {
+                "google_places": {
+                    "GOOGLE_PLACES_MAX_REVIEWS_PER_PLACE": GOOGLE_PLACES_MAX_REVIEWS_PER_PLACE,
+                    "GOOGLE_PLACES_OFFLINE_CORPUS_ROLE": GOOGLE_PLACES_OFFLINE_CORPUS_ROLE,
+                    "can_satisfy_10_to_15_reviews_per_poi_by_itself": False,
+                    "approved_as_primary_frozen_w07_corpus": False,
+                    "policy_and_technical_reasons": [
+                        "Google Places API returns at most 5 reviews per place (GOOGLE_PLACES_MAX_REVIEWS_PER_PLACE = 5) and therefore cannot satisfy a 10-15 reviews/POI target by itself.",
+                        "Google Maps Platform Places policies restrict pre-fetching, caching, and persistent offline storage of Places content except documented exceptions such as place IDs.",
+                    ],
+                    "permitted_later_consideration": [
+                        "live/runtime enrichment",
+                        "UI display",
+                        "place mapping",
+                    ],
+                },
+                "tripadvisor": {
+                    "TRIPADVISOR_CONTENT_API_ACADEMIC_CORPUS_ROLE": TRIPADVISOR_CONTENT_API_ACADEMIC_CORPUS_ROLE,
+                    "approved_as_primary_frozen_w07_corpus": False,
+                    "policy_and_technical_reasons": [
+                        "Current consumer Content API exposes only a small number of reviews per location.",
+                        "Tripadvisor states its Content API is intended for consumer-facing B2C applications.",
+                        "Academic research access is not supported under normal Content API eligibility.",
+                    ],
+                },
+            },
+            "acquisition_target_tiers": {
+                "scientific_minimum": {
+                    "tier_name": "Scientific Minimum",
+                    "role": "Minimum dataset allowed to begin W07 retrieval science",
+                    "min_canonical_pois": 60,
+                    "city_balance": "Balanced across all 3 thesis cities (~20 POIs/city: Hà Nội ~20, Đà Nẵng ~20, Hạ Long ~20)",
+                    "min_reviews_per_poi": 5,
+                    "min_total_usable_reviews": 300,
+                },
+                "preferred": {
+                    "tier_name": "Preferred",
+                    "role": "Recommended balanced benchmark target",
+                    "target_canonical_pois_range": "75-100",
+                    "city_and_category_balance": "Approximately balanced across Hà Nội, Đà Nẵng, Hạ Long and core POI categories",
+                    "target_reviews_per_poi_range": "8-12",
+                    "target_total_usable_reviews_range": "600-1,200",
+                },
+                "stretch": {
+                    "tier_name": "Stretch",
+                    "role": "Stretch target only — explicitly NOT a prerequisite for starting W07",
+                    "is_prerequisite_for_starting_w07": False,
+                    "target_canonical_pois_approx": 110,
+                    "target_reviews_per_poi_range": "10-15",
+                    "target_total_usable_reviews_range": "1,100-1,650",
+                },
+            },
+            "candidate_source_classes_ranked": [
                 {
-                    "city": "Hà Nội",
-                    "destination_slug": "ha-noi",
-                    "canonical_verified_pois_available": v2_by_slug["ha-noi"],
-                    "target_priority_pois": 35,
-                    "target_reviews_per_poi_range": "10-15 (minimum 5)",
-                    "expected_city_review_rows": "350-525",
+                    "tier": "Tier A",
+                    "classification": "PREFERRED_PRIMARY_SCIENTIFIC_CORPUS",
+                    "description": (
+                        "Public/research-permitted datasets containing review text, place/business identity, "
+                        "city/address and preferably coordinates, provenance, usage/license permitting research, "
+                        "and enough metadata for deterministic or audited mapping to GoMate canonical POIs."
+                    ),
                 },
                 {
-                    "city": "Đà Nẵng",
-                    "destination_slug": "da-nang",
-                    "canonical_verified_pois_available": v2_core_by_slug["da-nang"],
-                    "target_priority_pois": 45,
-                    "target_reviews_per_poi_range": "10-15 (minimum 5)",
-                    "expected_city_review_rows": "450-675",
+                    "tier": "Tier B",
+                    "classification": "ACCEPTABLE_PRIMARY_SCIENTIFIC_CORPUS",
+                    "description": (
+                        "Owner-curated or research-collected reviews where reuse rights are clear, provenance "
+                        "is recorded, source reference is retained, and exact canonical POI mapping is possible."
+                    ),
                 },
                 {
-                    "city": "Hạ Long",
-                    "destination_slug": "ha-long",
-                    "canonical_verified_pois_available": v2_by_slug["ha-long"],
-                    "target_priority_pois": 30,
-                    "target_reviews_per_poi_range": "10-15 (minimum 5)",
-                    "expected_city_review_rows": "300-450",
+                    "tier": "Tier C",
+                    "classification": "RUNTIME_ENRICHMENT_ONLY_NOT_PERSISTENT_FROZEN_CORPUS",
+                    "description": (
+                        "Official APIs usable for runtime enrichment but unsuitable as a persistent frozen "
+                        "research corpus under standard terms. Google Places belongs here unless storage/research "
+                        "rights are independently established."
+                    ),
+                },
+                {
+                    "tier": "Excluded",
+                    "classification": "FORBIDDEN_FOR_PRIMARY_POI_RAG_AUTHORITY",
+                    "excluded_categories": [
+                        "synthetic review generation for scientific evaluation",
+                        "unprovenanced scraped text",
+                        "datasets with no review text (e.g., ViHoRec ratings-only)",
+                        "anonymous text-only sentiment corpora as the primary POI-grounded RAG corpus",
+                    ],
                 },
             ],
-            "target_poi_types": [
-                "attraction / culture / temple / museum / nature / beach (~40% of selected POIs)",
-                "restaurant / cafe / market / nightlife (~35% of selected POIs)",
-                "hotel (~25% of selected POIs)",
+            "candidate_dataset_feasibility_queue": [
+                {
+                    "candidate_slot": "Candidate A",
+                    "dataset_id": "ThanThoai9x/vietnamese-food-images",
+                    "status": "PROMISING_BUT_NOT_YET_APPROVED",
+                    "reported_unique_places_approx": 1989,
+                    "indicated_public_metadata_fields": [
+                        "place_name",
+                        "address",
+                        "lat",
+                        "lng",
+                        "review_id",
+                        "review_rating",
+                        "text",
+                        "review_url",
+                        "crawled_at",
+                    ],
+                    "required_next_checks": [
+                        "gated access",
+                        "exact license/reuse terms",
+                        "Google-origin implications",
+                        "Hà Nội coverage",
+                        "Đà Nẵng coverage",
+                        "Hạ Long coverage",
+                        "number of text reviews",
+                        "number of unique POIs",
+                        "coordinate mapping rate to Freeze v2",
+                    ],
+                    "acquired_or_downloaded_in_w07_0": False,
+                },
+                {
+                    "candidate_slot": "Candidate B",
+                    "dataset_id": "pqthinh232/vietnamese-restaurant-review-sentiment-dataset",
+                    "status": "AUXILIARY_TEXT_DATA_ONLY",
+                    "reason": (
+                        "Large Vietnamese restaurant-review corpus, but currently exposed fields do not provide "
+                        "sufficient POI identity/location metadata for canonical POI RAG."
+                    ),
+                    "potential_use": [
+                        "linguistic robustness",
+                        "sentiment auxiliary experiment",
+                    ],
+                    "usable_for_authoritative_poi_grounded_retrieval": False,
+                    "acquired_or_downloaded_in_w07_0": False,
+                },
+                {
+                    "candidate_slot": "Candidate C",
+                    "dataset_id": "VLSP2018-ABSA-Restaurant",
+                    "status": "AUXILIARY_ABSA_DATASET",
+                    "potential_use": [
+                        "aspect extraction",
+                        "sentiment evaluation",
+                        "query/aspect vocabulary development",
+                    ],
+                    "usable_for_authoritative_poi_grounded_retrieval": False,
+                    "restriction_note": (
+                        "Do not use as canonical POI review corpus unless deterministic POI identity unexpectedly exists."
+                    ),
+                    "acquired_or_downloaded_in_w07_0": False,
+                },
             ],
-            "total_target_pois": "110 priority canonical POIs (range 90-150, deterministically pre-selected from gomate_places_freeze_v2.json by place_id)",
-            "target_reviews_per_poi": "10-15 reviews per POI (hard minimum >= 5 reviews per selected POI, balanced across positive, neutral, and critical sentiment)",
-            "expected_total_rows": "1,100 to 1,650 review rows (acceptable range 1,000-2,500 rows)",
-            "minimum_required_fields": [
-                "review_id (deterministic UUID)",
-                "poi_id (exact canonical place_id from gomate_places_freeze_v2.json)",
-                "osm_source_id (exact node/way/relation ID from gomate_places_freeze_v2.json)",
-                "city (ha-noi | da-nang | ha-long)",
-                "source (provider/dataset identifier)",
-                "source_review_id (upstream review identifier or hash)",
-                "rating (numeric, with explicit rating_scale_max e.g. 5.0 or 10.0)",
-                "review_text (non-empty UTF-8 review text, >= 15 words preferred)",
-                "language (vi | en | mixed_vi_en)",
-                "created_at (ISO-8601 date/timestamp or explicit null if unavailable upstream)",
-                "collected_at (ISO-8601 UTC collection timestamp)",
-                "provenance (license/source lineage classification)",
-            ],
-            "preferred_sources": [
-                "Official API-retrieved POI reviews tied directly to canonical coordinates/names (e.g., official Google Places API (New) / TripAdvisor Content API under free-tier credit with explicit tos/attribution compliance and POI-ID binding prior to collection)",
-                "Authoritative open/academic Vietnamese tourism review datasets ONLY if records contain real review text AND can be deterministically resolved to canonical Freeze v2 place_id via exact name + city + coordinate proximity",
-            ],
-            "acceptable_alternative_sources": [
-                "Structured human-curated / owner-collected field review corpus for the 110 pre-selected canonical Freeze v2 POIs (with explicit provenance manifest, collection timestamps, and verbatim user review text)",
-            ],
+            "canonical_mapping_requirements": {
+                "required_mapping_support": [
+                    "EXACT_MAPPING",
+                    "AUDITED_HIGH_CONFIDENCE_GEO_ENTITY_RESOLUTION",
+                ],
+                "preferred_mapping_evidence_hierarchy": [
+                    "1. exact upstream POI ID (e.g., OSM node/way/relation ID or Overture GERS ID)",
+                    "2. coordinates + normalized name + city/address",
+                    "3. manual verification for ambiguous cases",
+                ],
+                "name_only_automatic_linking_forbidden": True,
+                "required_canonical_foreign_key": "poi_id from data/curated/gomate_places_freeze_v2.json on every final review row",
+            },
+            "required_primary_corpus_schema_fields": SECTION_8_TARGET_CORPUS_SCHEMA_FIELDS,
+            "do_not_fabricate_missing_upstream_fields": True,
             "human_labeling_specification_after_corpus_freeze": {
                 "query_count": "40-60 frozen evaluation queries stratified across Hà Nội, Đà Nẵng, Hạ Long and all 11 query dimensions",
                 "labeling_protocol": "Graded relevance (0=irrelevant, 1=partially relevant, 2=highly relevant) over pooled top-k candidates from BM25 + Dense retrievers",
@@ -1471,7 +1657,6 @@ def render_w07_audit_markdown(payload: dict[str, Any]) -> str:
     s7 = payload["section_7_text_quality_audit"]
     s8 = payload["section_8_language_audit"]
     s9 = payload["section_9_rating_audit"]
-    s10 = payload["section_10_temporal_audit"]
     s12 = payload["section_12_synthetic_data_firewall"]
     s14 = payload["section_14_w07_evaluation_feasibility"]
     s15 = payload["section_15_technology_decision_matrix"]
@@ -1483,14 +1668,16 @@ def render_w07_audit_markdown(payload: dict[str, Any]) -> str:
     vh = s5["vihorec_rating_interactions"]
     cur = s5["quarantined_synthetic_reviews_curated"]
     cur_text = s7["quarantined_synthetic_reviews_curated_9_rows"]
+    api_corr = s20["api_feasibility_corrections"]
+    tiers = s20["acquisition_target_tiers"]
 
     lines = [
-        "# W07-0 — Data + RAG Readiness Audit Report",
+        "# W07-0 — Data + RAG Readiness Audit Report (Corrective 01)",
         "",
         "## 0. Gate & Lineage Metadata",
         "",
         f"- **Task ID:** `{payload['task_id']}`",
-        f"- **Previous Gate:** `{payload['previous_gate']} = {payload['previous_gate_decision']}`",
+        f"- **Previous Gate:** `{payload['previous_gate']}`",
         f"- **Authoritative Base Commit:** `develop@{payload['authoritative_base_commit']}`",
         f"- **W06 Closure Status:** `{payload['w06_status']}`",
         f"- **Next Gate:** `{payload['next_gate']}`",
@@ -1498,7 +1685,7 @@ def render_w07_audit_markdown(payload: dict[str, Any]) -> str:
         "",
         "---",
         "",
-        "## 1. Exact Data Inventory (Section 3)",
+        "## 1. Exact Data Inventory (Section 3 — Preserved Unchanged)",
         "",
         f"- **Real provenanced review text rows in repository:** `{s3['summary']['real_provenanced_review_text_rows']}`",
         f"- **Quarantined synthetic review text rows (`vietnam_travel_reviews.json` / `reviews_curated.json`):** `{s3['summary']['synthetic_review_text_rows']}`",
@@ -1606,37 +1793,41 @@ def render_w07_audit_markdown(payload: dict[str, Any]) -> str:
             "",
             "## 7. Proposed Retrieval Architecture & Technology Decision Matrix (Section 15)",
             "",
-            f"- **Lexical Baseline:** `{s15['lexical_baseline']['method']}`",
-            "- **Dense Multilingual/Vietnamese Shortlist (no large models downloaded in W07-0):**",
+            f"- **Measurement Hygiene (`{s15['measurement_hygiene_label']}`):** {s15['measurement_hygiene_note']}",
+            f"- **Winner Frozen in W07-0:** `{s15['winner_frozen_in_w07_0']}` (`{s15['candidate_status']}`)",
+            f"- **Lexical Baseline:** `{s15['lexical_baseline']['method']}` (`{s15['lexical_baseline']['measurement_status']}`)",
+            "- **Dense Multilingual/Vietnamese Provisional Shortlist (no large models downloaded in W07-0):**",
         ]
     )
     for cand in s15["dense_retrieval_candidate_families"]:
         lines.append(
-            f"  - `{cand['candidate_id']}` — {cand['family']} ({cand['vietnamese_support']}; {cand['cpu_latency_and_memory']})"
+            f"  - `{cand['candidate_id']}` — {cand['family']} ({cand['vietnamese_support']}; `{cand['cpu_latency_and_memory']}`)"
         )
     lines.extend(
         [
-            f"- **Hybrid Retrieval:** `{s15['hybrid_retrieval']['recommendation']}`",
-            f"- **Reranker Assessment:** `{s15['reranker_evaluation']['justified_at_target_scale']}` — {s15['reranker_evaluation']['analysis']}",
+            f"- **Hybrid Retrieval:** `{s15['hybrid_retrieval']['recommendation']}` (`{s15['hybrid_retrieval']['measurement_status']}`)",
+            f"- **Reranker Assessment:** `{s15['reranker_evaluation']['justified_at_target_scale']}` (`{s15['reranker_evaluation']['measurement_status']}`) — {s15['reranker_evaluation']['analysis']}",
             "- **Index / Vector Store Recommendation:**",
-            "  - **Offline Scientific Benchmark:** Local in-memory `FAISS IndexFlatIP` / exact NumPy cosine + `rank_bm25` (100% exact recall, zero server overhead, deterministic artifact hashes).",
-            "  - **Application Integration:** Existing `PostgreSQL + pgvector` (`documents` table in `schema.prisma`); `Qdrant` is `NOT_NEEDED`.",
+            f"  - **Offline Scientific Benchmark:** Local in-memory `FAISS IndexFlatIP` / exact NumPy cosine + `rank_bm25` (`{PLANNING_ESTIMATE_LABEL}`, 100% exact recall, zero server overhead, deterministic artifact hashes).",
+            f"  - **Application Integration:** Existing `PostgreSQL + pgvector` (`documents` table in `schema.prisma`; `{PLANNING_ESTIMATE_LABEL}`); `Qdrant` is `NOT_NEEDED`.",
             "",
             "---",
             "",
             "## 8. Infrastructure Readiness & Decision Categories (Sections 16, 17 & 19)",
             "",
-            "| Infrastructure Item | Classification | Purpose / Notes |",
-            "|---|---|---|",
+            "| Infrastructure Item | Classification | Measurement Hygiene | Purpose / Notes |",
+            "|---|---|---|---|",
         ]
     )
     for k, item in s16.items():
-        lines.append(f"| `{k}` | `{item['classification']}` | {item['purpose']} |")
+        lines.append(
+            f"| `{k}` | `{item['classification']}` | `{item['measurement_status']}` | {item['purpose']} |"
+        )
 
     lines.extend(
         [
             "",
-            "### Explicit Boolean Decision Flags (Section 19) & API Firewall (Section 17)",
+            "### Explicit Boolean Decision Flags (Section 19) & API / Acquisition Firewall (Section 17)",
             "",
             f"- `CURRENT_REVIEW_DATA_SUFFICIENT_FOR_W07 = {str(s19['CURRENT_REVIEW_DATA_SUFFICIENT_FOR_W07']).lower()}`",
             f"- `ADDITIONAL_REVIEW_DATA_REQUIRED = {str(s19['ADDITIONAL_REVIEW_DATA_REQUIRED']).lower()}`",
@@ -1647,20 +1838,72 @@ def render_w07_audit_markdown(payload: dict[str, Any]) -> str:
             f"- `PAID_EMBEDDING_API_REQUIRED = {str(s19['PAID_EMBEDDING_API_REQUIRED']).lower()}`",
             f"- `LLM_API_REQUIRED_NOW = {str(s19['LLM_API_REQUIRED_NOW']).lower()}`",
             f"- `NEW_LLM_PROVIDER_CALLS = {s17['NEW_LLM_PROVIDER_CALLS']}`",
+            f"- `NEW_REVIEW_DATA_ACQUIRED = {s17['NEW_REVIEW_DATA_ACQUIRED']}`",
             "",
             "---",
             "",
-            "## 9. Concrete Review Data Acquisition Specification & Required User Actions (Section 20)",
+            "## 9. Corrected Review Data Acquisition Specification & Feasibility Queue (Section 20 — Corrective 01)",
             "",
-            f"- **Target Priority Canonical POIs:** `{s20['total_target_pois']}`",
-            "  - **Hà Nội (`ha-noi`):** `35` POIs × `10–15` reviews/POI = `350–525` reviews",
-            "  - **Đà Nẵng (`da-nang`):** `45` POIs × `10–15` reviews/POI = `450–675` reviews",
-            "  - **Hạ Long (`ha-long`):** `30` POIs × `10–15` reviews/POI = `300–450` reviews",
-            f"- **POI Category Mix:** `{'; '.join(s20['target_poi_types'])}`",
-            f"- **Expected Total Rows:** `{s20['expected_total_rows']}`",
-            f"- **Minimum Required Fields:** `{', '.join(s20['minimum_required_fields'])}`",
-            "- **Preferred Sources:** Official POI-bound API review retrieval (e.g., Google Places API (New) / TripAdvisor Content API under free credit with explicit canonical `place_id` binding) or provenance-verified datasets deterministically linked to Freeze v2 `place_id`.",
-            "- **Acceptable Alternative Sources:** Structured owner-collected/curated verbatim review dataset for the 110 pre-selected Freeze v2 `place_id` targets with full provenance manifest, collection timestamps, and human relevance labels for `40–60` evaluation queries.",
+            "### 9.1 Official API Feasibility Corrections (Sections 2 & 3 of Corrective 01)",
+            "",
+            f"- **Google Places API:**",
+            f"  - `GOOGLE_PLACES_MAX_REVIEWS_PER_PLACE = {api_corr['google_places']['GOOGLE_PLACES_MAX_REVIEWS_PER_PLACE']}` (cannot satisfy a `10–15` reviews/POI target by itself).",
+            f"  - `GOOGLE_PLACES_OFFLINE_CORPUS_ROLE = {api_corr['google_places']['GOOGLE_PLACES_OFFLINE_CORPUS_ROLE']}` (Google Maps Platform Places policies restrict pre-fetching/caching/storage of Places content except documented exceptions such as place IDs; may be considered later for live/runtime enrichment, UI display, and place mapping, but must NOT automatically become the frozen scientific W07 corpus).",
+            f"- **Tripadvisor Content API:**",
+            f"  - `TRIPADVISOR_CONTENT_API_ACADEMIC_CORPUS_ROLE = {api_corr['tripadvisor']['TRIPADVISOR_CONTENT_API_ACADEMIC_CORPUS_ROLE']}` (exposes only a small number of reviews/location, intended for consumer-facing B2C apps, and academic research access is not supported under normal Content API eligibility; excluded as primary W07 scientific review-corpus acquisition plan).",
+            "",
+            "### 9.2 Three-Tier Corpus Acquisition Targets (Section 4 of Corrective 01)",
+            "",
+            "| Tier | Canonical POIs | City Balance | Reviews / POI | Total Usable Reviews | Role |",
+            "|---|---|---|---|---|---|",
+            f"| **Scientific Minimum** | `>= {tiers['scientific_minimum']['min_canonical_pois']}` | {tiers['scientific_minimum']['city_balance']} | `>= {tiers['scientific_minimum']['min_reviews_per_poi']}` | `>= {tiers['scientific_minimum']['min_total_usable_reviews']}` | {tiers['scientific_minimum']['role']} |",
+            f"| **Preferred** | `{tiers['preferred']['target_canonical_pois_range']}` | {tiers['preferred']['city_and_category_balance']} | `{tiers['preferred']['target_reviews_per_poi_range']}` | `{tiers['preferred']['target_total_usable_reviews_range']}` | {tiers['preferred']['role']} |",
+            f"| **Stretch** | `~{tiers['stretch']['target_canonical_pois_approx']}` | Balanced across 3 core cities | `{tiers['stretch']['target_reviews_per_poi_range']}` | `{tiers['stretch']['target_total_usable_reviews_range']}` | {tiers['stretch']['role']} |",
+            "",
+            "### 9.3 Ranked Candidate Source Classes (Section 5 of Corrective 01)",
+            "",
+        ]
+    )
+    for sc in s20["candidate_source_classes_ranked"]:
+        if "description" in sc:
+            lines.append(f"- **{sc['tier']} (`{sc['classification']}`):** {sc['description']}")
+        else:
+            lines.append(
+                f"- **{sc['tier']} (`{sc['classification']}`):** {'; '.join(sc['excluded_categories'])}."
+            )
+
+    lines.extend(
+        [
+            "",
+            "### 9.4 Candidate Dataset Feasibility Queue (Section 6 of Corrective 01 — Research Candidates Only)",
+            "",
+            "| Slot | Dataset | Status | Notes / Required Next Checks |",
+            "|---|---|---|---|",
+        ]
+    )
+    for cand in s20["candidate_dataset_feasibility_queue"]:
+        if "required_next_checks" in cand:
+            checks = ", ".join(cand["required_next_checks"])
+            fields = ", ".join(cand["indicated_public_metadata_fields"])
+            lines.append(
+                f"| **{cand['candidate_slot']}** | `{cand['dataset_id']}` | `{cand['status']}` | ~`{cand['reported_unique_places_approx']}` unique places; fields: `{fields}`. Next checks: {checks}. |"
+            )
+        else:
+            reason = cand.get("reason") or cand.get("restriction_note") or ""
+            uses = ", ".join(cand.get("potential_use", []))
+            lines.append(
+                f"| **{cand['candidate_slot']}** | `{cand['dataset_id']}` | `{cand['status']}` | {reason} Potential use: {uses}. |"
+            )
+
+    lines.extend(
+        [
+            "",
+            "### 9.5 Canonical POI Mapping Requirements & Target 17-Field Schema (Sections 7 & 8 of Corrective 01)",
+            "",
+            "- **Mapping Support Required:** `EXACT_MAPPING` or `AUDITED_HIGH_CONFIDENCE_GEO_ENTITY_RESOLUTION`.",
+            "- **Preferred Mapping Evidence Hierarchy:** (1) exact upstream POI ID; (2) coordinates + normalized name + city/address; (3) manual verification for ambiguous cases.",
+            "- **Strict Rule:** Name-only automatic linking is **forbidden** as scientific authority (`name_only_automatic_linking_forbidden = true`). Every final review row must carry canonical `poi_id` from `data/curated/gomate_places_freeze_v2.json`.",
+            f"- **Target 17 Schema Fields:** `{', '.join(s20['required_primary_corpus_schema_fields'])}` (do not fabricate missing upstream fields).",
             "",
         ]
     )

@@ -1,17 +1,17 @@
-# W07-0 — Data + RAG Readiness Audit Report
+# W07-0 — Data + RAG Readiness Audit Report (Corrective 01)
 
 ## 0. Gate & Lineage Metadata
 
-- **Task ID:** `W07-0-DATA-RAG-READINESS-AUDIT`
-- **Previous Gate:** `W06-SCIENTIFIC-CLOSURE-POSTMERGE-CHATGPT-AUDIT = PASS`
+- **Task ID:** `W07-0-DATA-RAG-READINESS-AUDIT-CORRECTIVE-01`
+- **Previous Gate:** `W07-DATA-RAG-READINESS-AUDIT-CHATGPT-AUDIT = SCIENTIFIC_AUDIT_ACCEPTED / ACQUISITION_PLAN_HOLD_CORRECTIVE`
 - **Authoritative Base Commit:** `develop@bdd4810de0bc03ef52c67cc112e09d5787a7ffad`
 - **W06 Closure Status:** `CLOSED_UNMODIFIED`
-- **Next Gate:** `W07-DATA-RAG-READINESS-AUDIT-CHATGPT-AUDIT`
-- **JSON Artifact Internal SHA256:** `c5728d6249a1f99c1f1f3309d041023562f7954cb8a739302edab7aa3298a58c`
+- **Next Gate:** `W07-DATA-RAG-READINESS-AUDIT-CORRECTIVE-01-CHATGPT-AUDIT`
+- **JSON Artifact Internal SHA256:** `7a951b5f93473998d4032aabfeaa250ac8e7ba2ea42cbdaf230389cd5fe3a6a9`
 
 ---
 
-## 1. Exact Data Inventory (Section 3)
+## 1. Exact Data Inventory (Section 3 — Preserved Unchanged)
 
 - **Real provenanced review text rows in repository:** `0`
 - **Quarantined synthetic review text rows (`vietnam_travel_reviews.json` / `reviews_curated.json`):** `9`
@@ -121,35 +121,37 @@
 
 ## 7. Proposed Retrieval Architecture & Technology Decision Matrix (Section 15)
 
-- **Lexical Baseline:** `BM25 (rank_bm25 / BM25Okapi with Vietnamese-aware tokenization & accent-preserving + accent-folded dual fields)`
-- **Dense Multilingual/Vietnamese Shortlist (no large models downloaded in W07-0):**
-  - `intfloat/multilingual-e5-small` — Multilingual E5 (118M params, 384d) (Strong multilingual retrieval alignment (query/passage prefix protocol); Fast on local CPU (~15-30 ms/query, <500 MB RAM))
-  - `sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2` — Multilingual MiniLM (118M params, 384d) (Solid baseline multilingual semantic similarity; Very fast on local CPU (<500 MB RAM))
-  - `bkai-foundation-models/vietnamese-bi-encoder` — PhoBERT-based Vietnamese Bi-Encoder (135M params, 768d) (Native Vietnamese segmentation & semantics; Fast on local CPU (~600 MB RAM); weaker on English/mixed queries)
-  - `BAAI/bge-m3` — BGE-M3 multilingual dense+sparse (568M params, 1024d) (High-accuracy Vietnamese + cross-lingual retrieval; Heavier on CPU (~2.2 GB RAM); best run on Colab/local GPU if benchmarked, optional for 1.5k-3k docs)
-- **Hybrid Retrieval:** `Evaluate RRF and convex score fusion over BM25 + top dense bi-encoder; particularly effective for Vietnamese queries mixing exact POI/food terms with semantic aspect intent.`
-- **Reranker Assessment:** `OPTIONAL_FOR_ABLATION` — For a 1,200-3,000 review corpus with poi_id/city metadata pre-filtering, bi-encoder + BM25 hybrid already retrieves from a small candidate pool (10-50 reviews per POI). A lightweight multilingual cross-encoder top-20 -> top-5 reranker is worth a scientific ablation in W07 only if CPU latency stays reasonable.
+- **Measurement Hygiene (`PLANNING_ESTIMATE_NOT_MEASURED`):** All latency, RAM, and workload figures in Section 15 and Section 16 are strictly labelled PLANNING_ESTIMATE_NOT_MEASURED and must NOT be cited as experimental W07 evidence.
+- **Winner Frozen in W07-0:** `False` (`PROVISIONAL_SHORTLIST_NO_WINNER_FROZEN`)
+- **Lexical Baseline:** `BM25 (rank_bm25 / BM25Okapi with Vietnamese-aware tokenization & accent-preserving + accent-folded dual fields)` (`PLANNING_ESTIMATE_NOT_MEASURED`)
+- **Dense Multilingual/Vietnamese Provisional Shortlist (no large models downloaded in W07-0):**
+  - `intfloat/multilingual-e5-small` — Multilingual E5 (118M params, 384d) (Strong multilingual retrieval alignment (query/passage prefix protocol); `PLANNING_ESTIMATE_NOT_MEASURED: compact local CPU bi-encoder (approx. <500 MB RAM class)`)
+  - `sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2` — Multilingual MiniLM (118M params, 384d) (Solid baseline multilingual semantic similarity; `PLANNING_ESTIMATE_NOT_MEASURED: compact local CPU bi-encoder (approx. <500 MB RAM class)`)
+  - `bkai-foundation-models/vietnamese-bi-encoder` — PhoBERT-based Vietnamese Bi-Encoder (135M params, 768d) (Native Vietnamese segmentation & semantics; `PLANNING_ESTIMATE_NOT_MEASURED: local CPU bi-encoder (approx. ~600 MB RAM class); weaker on English/mixed queries`)
+  - `BAAI/bge-m3` — BGE-M3 multilingual dense+sparse (568M params, 1024d) (High-accuracy Vietnamese + cross-lingual retrieval; `PLANNING_ESTIMATE_NOT_MEASURED: heavier model class (approx. ~2.2 GB RAM class); optional for 300-1,650 docs`)
+- **Hybrid Retrieval:** `Evaluate RRF and convex score fusion over BM25 + top dense bi-encoder; particularly effective for Vietnamese queries mixing exact POI/food terms with semantic aspect intent.` (`PLANNING_ESTIMATE_NOT_MEASURED`)
+- **Reranker Assessment:** `OPTIONAL_FOR_ABLATION` (`PLANNING_ESTIMATE_NOT_MEASURED`) — For a 300-1,650 review corpus with poi_id/city metadata pre-filtering, bi-encoder + BM25 hybrid already retrieves from a small candidate pool (5-15 reviews per POI). A lightweight multilingual cross-encoder top-20 -> top-5 reranker is optional for scientific ablation in W07.
 - **Index / Vector Store Recommendation:**
-  - **Offline Scientific Benchmark:** Local in-memory `FAISS IndexFlatIP` / exact NumPy cosine + `rank_bm25` (100% exact recall, zero server overhead, deterministic artifact hashes).
-  - **Application Integration:** Existing `PostgreSQL + pgvector` (`documents` table in `schema.prisma`); `Qdrant` is `NOT_NEEDED`.
+  - **Offline Scientific Benchmark:** Local in-memory `FAISS IndexFlatIP` / exact NumPy cosine + `rank_bm25` (`PLANNING_ESTIMATE_NOT_MEASURED`, 100% exact recall, zero server overhead, deterministic artifact hashes).
+  - **Application Integration:** Existing `PostgreSQL + pgvector` (`documents` table in `schema.prisma`; `PLANNING_ESTIMATE_NOT_MEASURED`); `Qdrant` is `NOT_NEEDED`.
 
 ---
 
 ## 8. Infrastructure Readiness & Decision Categories (Sections 16, 17 & 19)
 
-| Infrastructure Item | Classification | Purpose / Notes |
-|---|---|---|
-| `cpu_only` | `REQUIRED` | Run offline data pipelines, BM25, compact multilingual bi-encoders (<=135M params), FAISS/NumPy exact search, and deterministic evaluation tests. |
-| `local_gpu` | `OPTIONAL` | Accelerate larger embedding/reranker ablations (e.g., BGE-M3) if tested. |
-| `google_colab` | `OPTIONAL` | Free T4 GPU fallback if benchmarking heavier 560M+ parameter bi-encoders/rerankers and exporting frozen embeddings. |
-| `paid_gpu` | `NOT_NEEDED` | None for W07 corpus scale (1,200-3,000 reviews). |
-| `vps` | `NOT_NEEDED` | W07 retrieval evaluation and offline benchmarking run 100% locally. |
-| `vector_db_server` | `NOT_NEEDED` | In-memory FAISS/NumPy handles offline W07 scientific benchmarking; existing local PostgreSQL/pgvector handles app integration. |
-| `redis` | `NOT_NEEDED` | Not needed for W07 review corpus curation or offline retrieval benchmarking. |
-| `paid_embedding_api` | `NOT_NEEDED` | Open-weight multilingual/Vietnamese sentence-transformers run locally for free with higher reproducibility. |
-| `llm_api` | `OPTIONAL` | Not needed now (W07-0 and retrieval benchmarking are 100% offline/extractive). Only optional in a later synthesis stage if generative review summarization is evaluated alongside extractive aspect synthesis. |
+| Infrastructure Item | Classification | Measurement Hygiene | Purpose / Notes |
+|---|---|---|---|
+| `cpu_only` | `REQUIRED` | `PLANNING_ESTIMATE_NOT_MEASURED` | Run offline data pipelines, BM25, compact multilingual bi-encoders (<=135M params), FAISS/NumPy exact search, and deterministic evaluation tests. |
+| `local_gpu` | `OPTIONAL` | `PLANNING_ESTIMATE_NOT_MEASURED` | Accelerate larger embedding/reranker ablations (e.g., BGE-M3) if tested. |
+| `google_colab` | `OPTIONAL` | `PLANNING_ESTIMATE_NOT_MEASURED` | Free T4 GPU fallback if benchmarking heavier 560M+ parameter bi-encoders/rerankers and exporting frozen embeddings. |
+| `paid_gpu` | `NOT_NEEDED` | `PLANNING_ESTIMATE_NOT_MEASURED` | None for W07 corpus scale (300-1,650 reviews). |
+| `vps` | `NOT_NEEDED` | `PLANNING_ESTIMATE_NOT_MEASURED` | W07 retrieval evaluation and offline benchmarking run 100% locally. |
+| `vector_db_server` | `NOT_NEEDED` | `PLANNING_ESTIMATE_NOT_MEASURED` | In-memory FAISS/NumPy handles offline W07 scientific benchmarking; existing local PostgreSQL/pgvector handles app integration. |
+| `redis` | `NOT_NEEDED` | `PLANNING_ESTIMATE_NOT_MEASURED` | Not needed for W07 review corpus curation or offline retrieval benchmarking. |
+| `paid_embedding_api` | `NOT_NEEDED` | `PLANNING_ESTIMATE_NOT_MEASURED` | Open-weight multilingual/Vietnamese sentence-transformers run locally for free with higher reproducibility. |
+| `llm_api` | `OPTIONAL` | `PLANNING_ESTIMATE_NOT_MEASURED` | Not needed now (W07-0 and retrieval benchmarking are 100% offline/extractive). Only optional in a later synthesis stage if generative review summarization is evaluated alongside extractive aspect synthesis. |
 
-### Explicit Boolean Decision Flags (Section 19) & API Firewall (Section 17)
+### Explicit Boolean Decision Flags (Section 19) & API / Acquisition Firewall (Section 17)
 
 - `CURRENT_REVIEW_DATA_SUFFICIENT_FOR_W07 = false`
 - `ADDITIONAL_REVIEW_DATA_REQUIRED = true`
@@ -160,17 +162,46 @@
 - `PAID_EMBEDDING_API_REQUIRED = false`
 - `LLM_API_REQUIRED_NOW = false`
 - `NEW_LLM_PROVIDER_CALLS = 0`
+- `NEW_REVIEW_DATA_ACQUIRED = 0`
 
 ---
 
-## 9. Concrete Review Data Acquisition Specification & Required User Actions (Section 20)
+## 9. Corrected Review Data Acquisition Specification & Feasibility Queue (Section 20 — Corrective 01)
 
-- **Target Priority Canonical POIs:** `110 priority canonical POIs (range 90-150, deterministically pre-selected from gomate_places_freeze_v2.json by place_id)`
-  - **Hà Nội (`ha-noi`):** `35` POIs × `10–15` reviews/POI = `350–525` reviews
-  - **Đà Nẵng (`da-nang`):** `45` POIs × `10–15` reviews/POI = `450–675` reviews
-  - **Hạ Long (`ha-long`):** `30` POIs × `10–15` reviews/POI = `300–450` reviews
-- **POI Category Mix:** `attraction / culture / temple / museum / nature / beach (~40% of selected POIs); restaurant / cafe / market / nightlife (~35% of selected POIs); hotel (~25% of selected POIs)`
-- **Expected Total Rows:** `1,100 to 1,650 review rows (acceptable range 1,000-2,500 rows)`
-- **Minimum Required Fields:** `review_id (deterministic UUID), poi_id (exact canonical place_id from gomate_places_freeze_v2.json), osm_source_id (exact node/way/relation ID from gomate_places_freeze_v2.json), city (ha-noi | da-nang | ha-long), source (provider/dataset identifier), source_review_id (upstream review identifier or hash), rating (numeric, with explicit rating_scale_max e.g. 5.0 or 10.0), review_text (non-empty UTF-8 review text, >= 15 words preferred), language (vi | en | mixed_vi_en), created_at (ISO-8601 date/timestamp or explicit null if unavailable upstream), collected_at (ISO-8601 UTC collection timestamp), provenance (license/source lineage classification)`
-- **Preferred Sources:** Official POI-bound API review retrieval (e.g., Google Places API (New) / TripAdvisor Content API under free credit with explicit canonical `place_id` binding) or provenance-verified datasets deterministically linked to Freeze v2 `place_id`.
-- **Acceptable Alternative Sources:** Structured owner-collected/curated verbatim review dataset for the 110 pre-selected Freeze v2 `place_id` targets with full provenance manifest, collection timestamps, and human relevance labels for `40–60` evaluation queries.
+### 9.1 Official API Feasibility Corrections (Sections 2 & 3 of Corrective 01)
+
+- **Google Places API:**
+  - `GOOGLE_PLACES_MAX_REVIEWS_PER_PLACE = 5` (cannot satisfy a `10–15` reviews/POI target by itself).
+  - `GOOGLE_PLACES_OFFLINE_CORPUS_ROLE = NOT_APPROVED_PENDING_STORAGE_TERMS_REVIEW` (Google Maps Platform Places policies restrict pre-fetching/caching/storage of Places content except documented exceptions such as place IDs; may be considered later for live/runtime enrichment, UI display, and place mapping, but must NOT automatically become the frozen scientific W07 corpus).
+- **Tripadvisor Content API:**
+  - `TRIPADVISOR_CONTENT_API_ACADEMIC_CORPUS_ROLE = NOT_RECOMMENDED` (exposes only a small number of reviews/location, intended for consumer-facing B2C apps, and academic research access is not supported under normal Content API eligibility; excluded as primary W07 scientific review-corpus acquisition plan).
+
+### 9.2 Three-Tier Corpus Acquisition Targets (Section 4 of Corrective 01)
+
+| Tier | Canonical POIs | City Balance | Reviews / POI | Total Usable Reviews | Role |
+|---|---|---|---|---|---|
+| **Scientific Minimum** | `>= 60` | Balanced across all 3 thesis cities (~20 POIs/city: Hà Nội ~20, Đà Nẵng ~20, Hạ Long ~20) | `>= 5` | `>= 300` | Minimum dataset allowed to begin W07 retrieval science |
+| **Preferred** | `75-100` | Approximately balanced across Hà Nội, Đà Nẵng, Hạ Long and core POI categories | `8-12` | `600-1,200` | Recommended balanced benchmark target |
+| **Stretch** | `~110` | Balanced across 3 core cities | `10-15` | `1,100-1,650` | Stretch target only — explicitly NOT a prerequisite for starting W07 |
+
+### 9.3 Ranked Candidate Source Classes (Section 5 of Corrective 01)
+
+- **Tier A (`PREFERRED_PRIMARY_SCIENTIFIC_CORPUS`):** Public/research-permitted datasets containing review text, place/business identity, city/address and preferably coordinates, provenance, usage/license permitting research, and enough metadata for deterministic or audited mapping to GoMate canonical POIs.
+- **Tier B (`ACCEPTABLE_PRIMARY_SCIENTIFIC_CORPUS`):** Owner-curated or research-collected reviews where reuse rights are clear, provenance is recorded, source reference is retained, and exact canonical POI mapping is possible.
+- **Tier C (`RUNTIME_ENRICHMENT_ONLY_NOT_PERSISTENT_FROZEN_CORPUS`):** Official APIs usable for runtime enrichment but unsuitable as a persistent frozen research corpus under standard terms. Google Places belongs here unless storage/research rights are independently established.
+- **Excluded (`FORBIDDEN_FOR_PRIMARY_POI_RAG_AUTHORITY`):** synthetic review generation for scientific evaluation; unprovenanced scraped text; datasets with no review text (e.g., ViHoRec ratings-only); anonymous text-only sentiment corpora as the primary POI-grounded RAG corpus.
+
+### 9.4 Candidate Dataset Feasibility Queue (Section 6 of Corrective 01 — Research Candidates Only)
+
+| Slot | Dataset | Status | Notes / Required Next Checks |
+|---|---|---|---|
+| **Candidate A** | `ThanThoai9x/vietnamese-food-images` | `PROMISING_BUT_NOT_YET_APPROVED` | ~`1989` unique places; fields: `place_name, address, lat, lng, review_id, review_rating, text, review_url, crawled_at`. Next checks: gated access, exact license/reuse terms, Google-origin implications, Hà Nội coverage, Đà Nẵng coverage, Hạ Long coverage, number of text reviews, number of unique POIs, coordinate mapping rate to Freeze v2. |
+| **Candidate B** | `pqthinh232/vietnamese-restaurant-review-sentiment-dataset` | `AUXILIARY_TEXT_DATA_ONLY` | Large Vietnamese restaurant-review corpus, but currently exposed fields do not provide sufficient POI identity/location metadata for canonical POI RAG. Potential use: linguistic robustness, sentiment auxiliary experiment. |
+| **Candidate C** | `VLSP2018-ABSA-Restaurant` | `AUXILIARY_ABSA_DATASET` | Do not use as canonical POI review corpus unless deterministic POI identity unexpectedly exists. Potential use: aspect extraction, sentiment evaluation, query/aspect vocabulary development. |
+
+### 9.5 Canonical POI Mapping Requirements & Target 17-Field Schema (Sections 7 & 8 of Corrective 01)
+
+- **Mapping Support Required:** `EXACT_MAPPING` or `AUDITED_HIGH_CONFIDENCE_GEO_ENTITY_RESOLUTION`.
+- **Preferred Mapping Evidence Hierarchy:** (1) exact upstream POI ID; (2) coordinates + normalized name + city/address; (3) manual verification for ambiguous cases.
+- **Strict Rule:** Name-only automatic linking is **forbidden** as scientific authority (`name_only_automatic_linking_forbidden = true`). Every final review row must carry canonical `poi_id` from `data/curated/gomate_places_freeze_v2.json`.
+- **Target 17 Schema Fields:** `review_id, poi_id, upstream_place_id, city, source, source_review_id, rating, rating_scale_max, review_text, language, created_at, collected_at, source_ref / review_url, provenance, license_or_usage_class, mapping_method, mapping_confidence` (do not fabricate missing upstream fields).
