@@ -24,10 +24,15 @@ def _make_valid_review(
     rating: float = 5.0,
     **overrides: Any,
 ) -> dict[str, Any]:
+    default_upstream = (
+        "osm:way/37625751"
+        if poi_id == "698ee756-6062-5f47-955b-bdf458682e57"
+        else None
+    )
     row: dict[str, Any] = {
         "review_id": review_id,
         "poi_id": poi_id,
-        "upstream_place_id": "osm:way/37629144",
+        "upstream_place_id": default_upstream,
         "city": city,
         "source": "first_party_contributor_form_v1",
         "source_review_id": None,
@@ -55,46 +60,66 @@ def test_w07_a2_verifier_and_hashes_match() -> None:
     assert res["status"] == "PASS"
     assert (
         res["manifest_internal_sha256"]
-        == "1e7e59304c182cfe3f4a8518e18df2ab1dde3b9dee5850f081fc390f1d13cd8d"
+        == "b4be35d96ff503c61986674a6b3eb37b993484c0dc121434772184a2b089ed2b"
     )
     assert (
         res["manifest_file_lf_sha256"]
-        == "78b9b125f0b31c637f7a97b44cc2152f910bb28597f919e5a6f0a822bc942043"
+        == "3a065165d038f300f5dc422180fcaf3cef265ac1a100ea8e841daaba1a82d5d4"
     )
     assert (
         res["intake_status_internal_sha256"]
-        == "9368e7e50ae3e82828f688c1903d196fadcb9cec91ee97d2ad3d597f08c5abca"
+        == "4dd13bd7ad51ddfc3f501a11935f109928b2db8e9de52849da97d1a691ad2624"
     )
     assert (
         res["intake_status_file_lf_sha256"]
-        == "46756e8f9a068a187ff46518412a7672a0eab74357ce43e09db5cf54fa298da6"
+        == "69acd3bd814aa9ae166b2d715803ee227e47f3dd91aba05a4bd40dcffdee67ce"
     )
     assert (
         res["contributor_spec_md_lf_sha256"]
-        == "414f5a1994a9502dcaf22e1cd4b886fcea821750819efd5f23179ee7bcd6f9ac"
+        == "32bf0290f817fcab1d15a46e3c37e32902d7d617654b7a4eafc5198153fa4392"
     )
     assert res["CORPUS_SCIENTIFIC_MINIMUM_READY"] is False
     assert res["corpus_collection_status"] == "COLLECTION_IN_PROGRESS"
 
 
-def test_w07_a2_manifest_60_pois_city_and_category_balance() -> None:
+def test_w07_a2_manifest_60_pois_city_and_category_balance_and_source_derivation() -> None:
     manifest_path = REPO_ROOT / w07_a2.MANIFEST_60_JSON_RELPATH
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    freeze_path = REPO_ROOT / w07_a2.PLACES_FREEZE_RELPATH
+    freeze_by_id = {
+        str(p["place_id"]): p
+        for p in json.loads(freeze_path.read_text(encoding="utf-8"))
+    }
+
     pois = manifest["pois"]
+    # 3. 60 unique canonical POIs
     assert len(pois) == 60
     assert len({p["poi_id"] for p in pois}) == 60
+    # 1. Final city balance = 20/20/20
     assert manifest["summary_statistics"]["city_distribution"] == {
         "Hà Nội": 20,
         "Đà Nẵng": 20,
         "Hạ Long": 20,
     }
+    # 2. Final category balance = 21/21/6/9/3 global and 7/7/2/3/1 per city
     assert manifest["summary_statistics"]["category_group_distribution"] == {
-        "attractions_culture": 18,
-        "restaurants_cafes_markets": 18,
-        "hotels": 15,
-        "nature_beach": 6,
+        "attractions_culture": 21,
+        "restaurants_cafes_markets": 21,
+        "hotels": 6,
+        "nature_beach": 9,
         "other_tourism": 3,
     }
+    for city_name in ("Hà Nội", "Đà Nẵng", "Hạ Long"):
+        assert manifest["summary_statistics"]["per_city_category_group_distribution"][
+            city_name
+        ] == {
+            "attractions_culture": 7,
+            "restaurants_cafes_markets": 7,
+            "hotels": 2,
+            "nature_beach": 3,
+            "other_tourism": 1,
+        }
+
     for p in pois:
         for req_field in (
             "poi_id",
@@ -114,6 +139,135 @@ def test_w07_a2_manifest_60_pois_city_and_category_balance() -> None:
         assert p["target_review_count_min"] == 5
         assert p["target_review_count_preferred"] == 8
         assert p["osm_id"]
+        # 4. Every POI exists in gomate_places_freeze_v2.json
+        assert p["poi_id"] in freeze_by_id
+        raw = freeze_by_id[p["poi_id"]]
+        # 5. Every osm_id / source_ids in manifest is derived from gomate_places_freeze_v2.json
+        expected_osm, expected_overture, expected_source_ids = w07_a2._extract_source_ids(
+            raw
+        )
+        assert p["osm_id"] == expected_osm
+        assert p["overture_id"] == expected_overture
+        assert p["source_ids"] == expected_source_ids
+
+
+def test_w07_a2_example_upstream_place_id_matches_manifest_and_stale_rejected() -> None:
+    manifest = w07_a2.build_w07_target_60_pois_manifest(REPO_ROOT)
+    poi_by_id = {p["poi_id"]: p for p in manifest["pois"]}
+    example_row = w07_a2.build_example_review_row(manifest)
+
+    # 6. Example upstream_place_id is in manifest[poi_id].source_ids
+    assert example_row["poi_id"] == "698ee756-6062-5f47-955b-bdf458682e57"
+    assert example_row["upstream_place_id"] == "osm:way/37625751"
+    assert (
+        example_row["upstream_place_id"]
+        in poi_by_id[example_row["poi_id"]]["source_ids"]
+    )
+
+    spec_md = (REPO_ROOT / w07_a2.CONTRIBUTOR_SPEC_MD_RELPATH).read_text(encoding="utf-8")
+    assert "osm:way/37625751" in spec_md
+    assert "osm:way/37629144" not in spec_md
+
+    # Stale osm:way/37629144 must be rejected by validator
+    stale_row = _make_valid_review(
+        review_id="stale_upstream",
+        upstream_place_id="osm:way/37629144",
+    )
+    report = w07_a2.validate_review_rows([example_row, stale_row], manifest)
+    assert report["accepted_review_count"] == 1
+    assert report["rejected_review_count"] == 1
+    assert (
+        "UPSTREAM_PLACE_ID_NOT_IN_MANIFEST_SOURCE_IDS"
+        in report["rejected_rows"][0]["reasons"]
+    )
+
+
+def test_w07_a2_first_party_consent_enforcement() -> None:
+    manifest = w07_a2.build_w07_target_60_pois_manifest(REPO_ROOT)
+    rows = [
+        # 7. First-party consent without consent_record_id rejected
+        _make_valid_review(
+            review_id="missing_consent_owner",
+            license_or_usage_class="OWNER_FIRST_PARTY_CONSENT",
+            consent_record_id=None,
+            text="Đánh giá đóng góp trực tiếp nhưng bị thiếu mã consent_record_id.",
+        ),
+        _make_valid_review(
+            review_id="empty_consent_ccby",
+            license_or_usage_class="CC-BY-4.0_FIRST_PARTY_CONSENT",
+            consent_record_id="   ",
+            text="Đánh giá đóng góp theo giấy phép CC-BY-4.0 nhưng consent_record_id rỗng.",
+        ),
+        # 8. First-party consent with consent_record_id accepted
+        _make_valid_review(
+            review_id="valid_first_party_owner",
+            license_or_usage_class="OWNER_FIRST_PARTY_CONSENT",
+            consent_record_id="consent_w07_valid_0001",
+            text="Đánh giá đóng góp trực tiếp có đầy đủ mã đồng thuận hợp lệ.",
+        ),
+        # Public research-permitted source may keep consent_record_id = None
+        _make_valid_review(
+            review_id="valid_public_research",
+            source="approved_public_research_dataset_v1",
+            provenance="PUBLIC_RESEARCH_DATASET_EXPLICIT_LICENSE",
+            license_or_usage_class="PUBLIC_RESEARCH_PERMITTED_APPROVED",
+            mapping_method="EXACT_UPSTREAM_ID",
+            consent_record_id=None,
+            text="Đánh giá từ tập dữ liệu nghiên cứu công khai hợp lệ đã được phê duyệt.",
+        ),
+    ]
+    report = w07_a2.validate_review_rows(rows, manifest)
+    assert report["accepted_review_count"] == 2
+    assert report["rejected_review_count"] == 2
+    for rejected in report["rejected_rows"]:
+        assert "REJECT_MISSING_CONSENT_RECORD" in rejected["reasons"]
+
+
+def test_w07_a2_pii_firewall_in_review_text_and_readiness_exclusion() -> None:
+    manifest = w07_a2.build_w07_target_60_pois_manifest(REPO_ROOT)
+    # 9 & 10. Phone number and email address in review_text quarantined/rejected
+    pii_phone_row = _make_valid_review(
+        review_id="pii_phone_in_text",
+        text="Địa điểm rất đẹp, liên hệ hướng dẫn viên số 0912 345 678 để đặt vé nhanh.",
+    )
+    pii_email_row = _make_valid_review(
+        review_id="pii_email_in_text",
+        text="Không gian tuyệt vời, gửi ảnh cho tôi qua địa chỉ traveller.test@gmail.com nhé.",
+    )
+    pii_report = w07_a2.validate_review_rows([pii_phone_row, pii_email_row], manifest)
+    assert pii_report["accepted_review_count"] == 0
+    assert pii_report["rejected_review_count"] == 2
+    assert pii_report["quarantined_pii_count"] == 2
+    for rej in pii_report["rejected_rows"]:
+        assert "QUARANTINE_PII_REVIEW_TEXT" in rej["reasons"]
+
+    # 11. Quarantined PII review does not count toward accepted_review_count or CORPUS_SCIENTIFIC_MINIMUM_READY
+    rows: list[dict[str, Any]] = []
+    for poi in manifest["pois"]:
+        pid = poi["poi_id"]
+        city = poi["city"]
+        for r_idx in range(1, 6):
+            rows.append(
+                _make_valid_review(
+                    review_id=f"rev_{pid[:8]}_{r_idx}",
+                    poi_id=pid,
+                    city=city,
+                    text=(
+                        f"Trải nghiệm thực tế lần {r_idx} tại địa điểm {poi['name']} ở {city}: "
+                        f"không gian ấn tượng, dịch vụ chu đáo, đáng để ghé thăm trong hành trình."
+                    ),
+                    rating=float((r_idx % 5) + 1),
+                )
+            )
+    # Replace the 300th review with a PII-containing review
+    rows[-1]["review_text"] = (
+        "Trải nghiệm thực tế tại địa điểm nhưng để lộ số điện thoại 0987654321 trong bài viết."
+    )
+    near_full_report = w07_a2.validate_review_rows(rows, manifest)
+    assert near_full_report["accepted_review_count"] == 299
+    assert near_full_report["quarantined_pii_count"] == 1
+    assert near_full_report["pois_meeting_min_5_reviews_count"] == 59
+    assert near_full_report["CORPUS_SCIENTIFIC_MINIMUM_READY"] is False
 
 
 def test_w07_a2_validator_rejects_all_invalid_conditions() -> None:

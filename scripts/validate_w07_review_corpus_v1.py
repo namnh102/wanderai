@@ -1,18 +1,29 @@
 #!/usr/bin/env python3
-"""W07-A2 Canonical 60-POI Intake Manifest + Targeted Review Corpus Validator (v1).
+"""W07-A2 Canonical 60-POI Intake Manifest + Targeted Review Corpus Validator (v1, Corrective 01).
 
 Implements:
 1. Deterministic 60-POI target manifest (`data/evaluation/w07/w07_review_target_60_pois_v1.json`)
-   drawn from `data/curated/gomate_places_freeze_v2.json` with exact balance:
-   - Cities: Hà Nội = 20, Đà Nẵng = 20, Hạ Long = 20
-   - Category groups: attractions/culture = 18, restaurants/cafes/markets = 18,
-     hotels = 15, nature/beach = 6, other tourism = 3
-2. Primary review schema & deterministic offline validator (`validate_review_rows` /
-   `validate_review_jsonl_file`) enforcing all Section 5, 6, 7, 11, 12, 13, 15, 16, 17, 19, 20 rules.
-3. Acquisition & readiness status artifact (`data/evaluation/w07/w07_review_corpus_intake_status_v1.json`)
-   and contributor form specification (`docs/research/w07_review_contributor_form_spec.md`).
-4. Gitignored restricted intake files (`data/restricted/w07_reviews/w07_canonical_reviews_v1.jsonl`
-   and `data/restricted/w07_reviews/w07_contributor_intake_template_v1.csv`).
+   drawn from `data/curated/gomate_places_freeze_v2.json` with Corrective 01 final allocation:
+   - Per city (Hà Nội = 20, Đà Nẵng = 20, Hạ Long = 20):
+     - attractions/culture = 7
+     - restaurants/cafes/markets = 7
+     - hotels = 2
+     - nature/beach = 3
+     - other_tourism = 1
+   - Global (60 POIs):
+     - attractions/culture = 21
+     - restaurants/cafes/markets = 21
+     - hotels = 6
+     - nature/beach = 9
+     - other_tourism = 3
+2. Single-authority source-ID binding: all form examples, templates, and summary tables
+   derive `poi_id`, `osm_id`, `overture_id`, `source_ids`, coordinates, city, and category
+   programmatically from the committed manifest.
+3. Hardened first-party consent (`REJECT_MISSING_CONSENT_RECORD` when `consent_record_id` is
+   missing on first-party consent rows) and strict PII quarantine (`QUARANTINE_PII_REVIEW_TEXT`
+   when `review_text` contains an email address or phone number, preventing acceptance).
+4. Strengthened Vietnamese & English consent wording requiring that the contributor
+   personally visited or directly experienced the selected place/POI.
 5. Immutability checks on W06, W07-0, and W07-A1 artifacts.
 """
 
@@ -34,6 +45,7 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 MANIFEST_60_JSON_RELPATH = "data/evaluation/w07/w07_review_target_60_pois_v1.json"
 INTAKE_STATUS_JSON_RELPATH = "data/evaluation/w07/w07_review_corpus_intake_status_v1.json"
 CONTRIBUTOR_SPEC_MD_RELPATH = "docs/research/w07_review_contributor_form_spec.md"
+PLACES_FREEZE_RELPATH = "data/curated/gomate_places_freeze_v2.json"
 
 RESTRICTED_JSONL_RELPATH = "data/restricted/w07_reviews/w07_canonical_reviews_v1.jsonl"
 RESTRICTED_CSV_TEMPLATE_RELPATH = (
@@ -45,9 +57,11 @@ W07_0_AUDIT_JSON_RELPATH = "data/evaluation/w07/w07_data_rag_readiness_audit_v1.
 W07_A1_FEASIBILITY_JSON_RELPATH = "data/evaluation/w07/w07_review_corpus_feasibility_v1.json"
 
 AUTHORITATIVE_DEVELOP_BASE_SHA = "7a263ff289b79e198cfda94fea61e1c88dc86813"
-PREVIOUS_GATE = "W07-A1-REVIEW-CORPUS-FEASIBILITY-POSTMERGE-CHATGPT-AUDIT = PASS"
-PREVIOUS_GATE_DECISION = "PASS"
-NEXT_GATE = "W07-A2-CANONICAL-REVIEW-CORPUS-INTAKE-CHATGPT-AUDIT"
+PREVIOUS_GATE = (
+    "W07-A2-CANONICAL-REVIEW-CORPUS-INTAKE-CHATGPT-AUDIT = HOLD-CORRECTIVE"
+)
+PREVIOUS_GATE_DECISION = "HOLD-CORRECTIVE"
+NEXT_GATE = "W07-A2-CANONICAL-REVIEW-CORPUS-INTAKE-CORRECTIVE-01-CHATGPT-AUDIT"
 
 EXPECTED_W06_CLOSURE_INTERNAL_SHA256 = (
     "7dec87d9b318165ba5233d1470df8f12dfbe99449bceabb86dc2322aaab89e12"
@@ -88,6 +102,22 @@ CATEGORY_GROUP_MAP = {
     "entertainment": "other_tourism",
 }
 
+PER_CITY_CATEGORY_GROUP_QUOTAS = {
+    "attractions_culture": 7,
+    "restaurants_cafes_markets": 7,
+    "hotels": 2,
+    "nature_beach": 3,
+    "other_tourism": 1,
+}
+
+GLOBAL_CATEGORY_GROUP_QUOTAS = {
+    "attractions_culture": 21,
+    "restaurants_cafes_markets": 21,
+    "hotels": 6,
+    "nature_beach": 9,
+    "other_tourism": 3,
+}
+
 CITY_CANONICAL_NAMES = {
     "ha-noi": "Hà Nội",
     "da-nang": "Đà Nẵng",
@@ -109,83 +139,99 @@ CITY_VALID_ALIASES = {
     },
 }
 
-# Frozen 60 canonical POI IDs in deterministic order (20 Hà Nội, 20 Đà Nẵng, 20 Hạ Long)
+# Frozen 60 canonical POI IDs in deterministic order:
+# Each city (Hà Nội, Đà Nẵng, Hạ Long) has exactly:
+#   7 attractions_culture + 7 restaurants_cafes_markets + 2 hotels + 3 nature_beach + 1 other_tourism = 20 POIs
+# Global: 21 / 21 / 6 / 9 / 3 = 60 POIs.
 FROZEN_60_CANONICAL_POI_IDS: tuple[str, ...] = (
-    # Hà Nội — attractions/culture (6)
+    # Hà Nội — attractions/culture (7)
     "698ee756-6062-5f47-955b-bdf458682e57",  # Lăng Chủ tịch Hồ Chí Minh (attraction)
     "b799793b-fb40-5bc2-9e67-6af92caeabe9",  # Hoàng thành Thăng Long (culture)
     "0938eb59-ee1c-5879-a798-58b5fdd07bce",  # Nhà tù Hỏa Lò (culture)
     "44115e3a-6094-5bcd-b53c-0e3a596b3aff",  # Đền Ngọc Sơn (culture)
     "e3fe1f1a-f524-55cf-9d83-903e427d0ba4",  # Chùa Trấn Quốc (culture)
     "f0d424bd-f722-540f-8964-5e6fd8875b56",  # Bảo tàng Dân tộc học Việt Nam (culture)
-    # Hà Nội — restaurants/cafes/markets (6)
+    "cad64db8-cd74-58fe-ad94-329e0d8110e1",  # Nhà thờ Lớn (culture)
+    # Hà Nội — restaurants/cafes/markets (7)
     "afb3793b-7227-4645-a68a-3647c7468638",  # Sen Tây Hồ (restaurant)
     "acb22336-1124-49d5-a279-6357c2b2b445",  # Quán Ăn Ngon - Phan Bội Châu (restaurant)
     "5350dd97-2f75-45fc-9fc1-1979b08670f7",  # Pho 10 (restaurant)
     "b0641225-0f38-4bcc-9f4c-34f65fa50d45",  # Cửa Hàng Bánh Tôm Hồ Tây (restaurant)
     "5bd45eb7-a691-4426-9691-a5a00f38d1ad",  # Highlands Coffee (cafe)
     "4146f2b7-8289-4309-b7e6-60ba7de3470e",  # Cà Phê Nola (cafe)
-    # Hà Nội — hotels (5)
+    "a2fc15de-d609-4d4f-abf1-9779d57901a6",  # Cà Phê Kafa (cafe)
+    # Hà Nội — hotels (2)
     "5e92e89d-8524-4792-862a-6dfce0994862",  # Sheraton Hanoi (hotel)
     "9a96e0a0-e040-4e16-a3f2-682ca373dd8e",  # Somerset Grand Hanoi (hotel)
-    "ab78f751-d68d-4436-b42a-93587aa5a22a",  # Khách Sạn Little Hanoi (hotel)
-    "e5729e0c-08a4-41c4-ad37-ecbfaa244efc",  # Khách Sạn Golden Sunrise (hotel)
-    "6377c9e4-6376-4070-97fa-799c1cb45838",  # Royal Hotel (hotel)
-    # Hà Nội — nature/beach (2)
+    # Hà Nội — nature/beach (3)
     "766656bb-c7e0-555d-9963-d3132f0de086",  # Công viên Thống Nhất (nature)
     "1f9c2b46-e032-5cbc-a9dc-dc68c435c594",  # Công viên Thủ Lệ (nature)
+    "a2037ceb-201f-5c45-a596-af795a399e60",  # Công viên Lê-nin (nature)
     # Hà Nội — other tourism (1)
     "9b08dfe9-6f97-4d4b-94f6-f3548efd696c",  # Le Pub (nightlife)
-    # Đà Nẵng — attractions/culture (6)
+    # Đà Nẵng — attractions/culture (7)
     "9974ff88-5418-5867-ae49-1b72e0f0861f",  # Cầu Rồng (attraction)
     "6f758ad7-5685-57b5-9913-d28e15bdb7c5",  # Ngũ Hành Sơn (attraction)
     "a24d48ff-59d6-5e53-af77-36448e60d1cc",  # Bảo tàng Nghệ thuật Điêu khắc Chăm Đà Nẵng (culture)
     "5fc0994a-e578-4a25-b375-7f079e6dc3ba",  # Chùa Linh Ứng (temple)
     "2f389152-5676-54be-b812-a1d561b7df15",  # Cầu Sông Hàn (attraction)
     "cb6cce60-8270-5f43-b9f7-42de2d7d7da3",  # Bảo tàng Đà Nẵng (culture)
-    # Đà Nẵng — restaurants/cafes/markets (6)
+    "a302989c-08f1-5ca2-8022-a84c1a424018",  # Chợ Cồn (attraction)
+    # Đà Nẵng — restaurants/cafes/markets (7)
     "62a874a9-13e2-44d2-95b5-30e980b98965",  # Bánh Xèo Bà Dưỡng (restaurant)
     "61639da8-996a-43df-b6d3-928b6bdd70b9",  # My Quang Bà Mua (restaurant)
     "fd118580-b5da-467d-9873-0116ba435f37",  # Nhà hàng hải sản Bé Anh (restaurant)
     "9a2ca486-437d-4044-8541-d34d911d4fb4",  # Chợ Đêm Sơn Trà (market)
     "c2afbb07-aaf9-47c1-9877-d17e64422066",  # Chợ Bắc Mỹ An (market)
+    "7ff87c59-62f1-4509-95f4-e83796b9a35c",  # Vincom Plaza (market)
     "8ebf0429-fabb-4701-bbc1-cb2fea86d587",  # Ca Phe 83 (cafe)
-    # Đà Nẵng — hotels (5)
+    # Đà Nẵng — hotels (2)
     "4608034c-6c43-4d54-a542-ead8e23b1338",  # InterContinental Danang Sun Peninsula Resort (hotel)
     "a32ce1b4-126b-4544-b5ea-4a7edbab6a0a",  # Furama Resort (hotel)
-    "00fa371f-a082-49ed-977c-38ae5460849f",  # Hilton Da Nang (hotel)
-    "d7fface5-c0f4-4c9f-893a-5b9c66c74334",  # Haian Beach Hotel & Spa (hotel)
-    "19059ca2-6cee-4a42-bd3f-bd0c3fa65741",  # Brilliant Hotel (hotel)
-    # Đà Nẵng — nature/beach (2)
+    # Đà Nẵng — nature/beach (3)
     "2f202acf-c2bb-526a-9803-aaca142ffdad",  # Bãi biển Mỹ Khê (beach)
+    "49d739b9-e868-5391-9f80-bf9bed803b0f",  # Bãi tắm Non Nước (beach)
     "b5ea1253-6b6a-5f5a-b910-5ef18cd29c94",  # Ban Co Peak (nature)
     # Đà Nẵng — other tourism (1)
     "987f490f-b1c7-42cf-b92e-300d57fd8d5f",  # Sun World Bà Nà Hills (entertainment)
-    # Hạ Long — attractions/culture (6)
+    # Hạ Long — attractions/culture (7)
     "ade2140c-7945-4044-b99a-b1a028edce9e",  # Vịnh Hạ Long (attraction)
     "8f2b5a69-1293-4efe-8fc5-3a74193edd0f",  # Bảo tàng Quảng Ninh (museum)
     "9a979427-a0bb-421d-b75f-2a6ee79b120b",  # Động Thiên Cung (attraction)
     "9fbcb0b4-27bc-4482-a8e3-8be6e3c72677",  # Hang Đầu Gỗ (attraction)
     "77af14b6-85ac-4c91-873a-e7da27d555f4",  # Hang Luồn Cave Entrance (attraction)
+    "88652ea2-61a6-4022-85e5-84a0eb48d3f9",  # Hòn Đỉnh Hương (attraction)
     "871a6ee7-1d46-49bb-957a-ff50260b1f3b",  # Ha Long International Cruise Port (attraction)
-    # Hạ Long — restaurants/cafes/markets (6)
+    # Hạ Long — restaurants/cafes/markets (7)
     "b37d68ee-0cb3-49f0-a399-cac4c8e2732c",  # Nhà hàng Hồng Hạnh 3 (restaurant)
     "7d01af19-10bc-4679-8cfa-4396209dece4",  # Nhà hàng Ngọc Phương Nam 1 (restaurant)
     "065f8492-2ab3-4ea0-ae8f-9cc6f8c18ae5",  # Nhà hàng Buffet Sen Á Đông (restaurant)
     "96523873-1b85-4d2f-b85c-cb3f5593091b",  # Chợ Cái Dăm (market)
     "6215446b-2fdd-4014-aacf-23de6e45e264",  # Chợ Hạ Long II (market)
     "b57b3f7d-9704-44b0-8139-19bea1998391",  # Sữa chua trân châu Hạ Long cơ sở 00 (cafe)
-    # Hạ Long — hotels (5)
+    "85303289-9746-4a42-b0f0-a555ce2bfd0e",  # Highlands Coffee (cafe)
+    # Hạ Long — hotels (2)
     "75a3fbd1-a24e-43c6-820a-72f95ebc05c0",  # Vinpearl Ha Long resort (hotel)
     "9740c851-5b06-432c-a243-071ad0906494",  # Novotel Ha Long (hotel)
-    "80b93f9b-1a08-4a9c-9786-6b98d80b30bd",  # Khách sạn Mường Thanh Luxury Hạ Long Centre (hotel)
-    "512e972a-e67b-42af-bb8c-e2bc4fe9c4d0",  # Paradise Suites (hotel)
-    "55119cbc-b173-43e8-a603-a79f6dc25ae7",  # Halong Plaza Hotel (hotel)
-    # Hạ Long — nature/beach (2)
+    # Hạ Long — nature/beach (3)
     "708ee182-c879-477c-b920-516e2c99b0a6",  # Công viên Lán Bè (park)
+    "0931b06b-4563-4af0-a3a4-75f1ad8392ee",  # Vườn hoa (park)
     "8fe33554-7a07-4eb2-870f-8af643d8c728",  # Vườn hoa Thị trấn Trới (park)
     # Hạ Long — other tourism (1)
     "1a95430d-289d-4663-91b8-ae64ede4f9a4",  # Sunworld (entertainment)
+)
+
+DETERMINISTIC_SELECTION_RATIONALE = (
+    "Selected deterministically from REC-A core verified POIs in `data/curated/gomate_places_freeze_v2.json` "
+    "under the Corrective 01 quota (`7` attractions/culture, `7` restaurants/cafes/markets, `2` hotels, "
+    "`3` nature/beach, `1` other_tourism per city = `20` per city; `21 / 21 / 6 / 9 / 3 = 60` global). "
+    "Reducing hotels from 15 to 6 (2 per city) eliminates excessive overnight-stay contributor burden "
+    "while increasing day-visit landmarks (`attractions_culture` 18 -> 21, `restaurants_cafes_markets` "
+    "18 -> 21, `nature_beach` 6 -> 9) that domestic students and travelers have genuinely visited and "
+    "experienced first-hand. Within each city/category slice, POIs were chosen for: (1) stable Freeze v2 "
+    "canonical UUID and verified OSM/Overture source IDs, (2) high real-world visitor recognition, "
+    "(3) sub-category diversity across all 13 Freeze v2 raw categories, and (4) zero reliance on "
+    "availability of scraped online reviews."
 )
 
 REQUIRED_REVIEW_SCHEMA_FIELDS: tuple[str, ...] = (
@@ -224,13 +270,22 @@ FORBIDDEN_PII_FIELDS: tuple[str, ...] = (
     "account_handle",
 )
 
-APPROVED_LICENSE_OR_USAGE_CLASSES: frozenset[str] = frozenset(
+FIRST_PARTY_CONSENT_CLASSES: frozenset[str] = frozenset(
     {
-        "APPROVED",
         "OWNER_FIRST_PARTY_CONSENT",
         "CC-BY-4.0_FIRST_PARTY_CONSENT",
+    }
+)
+
+PUBLIC_PERMITTED_LICENSE_CLASSES: frozenset[str] = frozenset(
+    {
+        "APPROVED",
         "PUBLIC_RESEARCH_PERMITTED_APPROVED",
     }
+)
+
+APPROVED_LICENSE_OR_USAGE_CLASSES: frozenset[str] = (
+    FIRST_PARTY_CONSENT_CLASSES | PUBLIC_PERMITTED_LICENSE_CLASSES
 )
 
 SUPPORTED_MAPPING_METHODS: frozenset[str] = frozenset(
@@ -261,7 +316,7 @@ HTML_TAG_RE = re.compile(r"<[a-zA-Z/][^>]*>")
 URL_RE = re.compile(r"https?://\S+|www\.\S+", re.IGNORECASE)
 EMOJI_OR_PUNCT_ONLY_RE = re.compile(r"^[\W_]+$", re.UNICODE)
 EMAIL_RE = re.compile(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}")
-PHONE_RE = re.compile(r"(?:\+?84|0)\d{8,10}\b")
+PHONE_RE = re.compile(r"(?:\+?84|0)(?:[\s.\-]?\d){8,10}\b")
 
 CONSENT_TEXT_VI = (
     "Việc gửi đánh giá địa điểm là hoàn toàn tự nguyện phục vụ đồ án tốt nghiệp đại học "
@@ -269,9 +324,9 @@ CONSENT_TEXT_VI = (
     "số điện thoại, email hay tài khoản cá nhân trong bộ dữ liệu khoa học) và được sử dụng "
     "cho mục đích nghiên cứu, đánh giá thực nghiệm và trình diễn học thuật phi thương mại. "
     "Người đóng góp xác nhận không đưa thông tin cá nhân nhạy cảm vào nội dung, xác nhận "
-    "đây là trải nghiệm/nhận xét thật do chính mình tự viết (không sao chép từ Google Maps/"
-    "Tripadvisor và không dùng AI/LLM tạo sinh), và đồng ý cấp quyền tái sử dụng học thuật "
-    "phi thương mại cho dự án."
+    "bản thân đã trực tiếp đến/trải nghiệm địa điểm được chọn, tự viết đánh giá, không sao chép "
+    "từ Google Maps, Tripadvisor, Booking, Agoda hay Foody, không dùng AI (ChatGPT, Gemini, "
+    "Claude) để tạo hoặc viết lại nội dung, và đồng ý cấp quyền tái sử dụng học thuật phi thương mại cho dự án."
 )
 
 CONSENT_TEXT_EN = (
@@ -279,10 +334,11 @@ CONSENT_TEXT_EN = (
     "(GoMate / WanderAI). Your review will be strictly anonymized (no real name, phone number, "
     "email, or social handle will be stored in the scientific corpus) and may be used for "
     "research, benchmark evaluation, and academic demonstration. Please do not submit any "
-    "sensitive personal information. By checking the consent box, you confirm that this review "
-    "is your own original writing based on genuine experience/opinion (not copied from Google "
-    "Maps/Tripadvisor and not generated or paraphrased by an LLM) and grant permission for "
-    "academic, non-commercial project reuse."
+    "sensitive personal information. By checking the consent box, you confirm that you have "
+    "personally visited or directly experienced the selected place (and personally visited or "
+    "directly experienced the selected POI), that the review is your own original writing "
+    "(not copied from Google Maps, Tripadvisor, Booking, Agoda, or Foody, and not generated "
+    "or paraphrased by an AI/LLM), and that you grant permission for academic, non-commercial project reuse."
 )
 
 
@@ -357,9 +413,25 @@ def verify_prior_gates_immutability(repo_root: Path = REPO_ROOT) -> dict[str, st
     }
 
 
+def _extract_source_ids(src_poi: dict[str, Any]) -> tuple[str | None, str | None, list[str]]:
+    osm_id: str | None = None
+    overture_id: str | None = None
+    source_ids: list[str] = []
+    for s in src_poi.get("sources", []):
+        sname = s.get("source_name")
+        sid = str(s.get("source_id", ""))
+        if sname and sid:
+            source_ids.append(f"{sname}:{sid}")
+            if sname == "osm" and osm_id is None:
+                osm_id = sid
+            elif sname == "overture" and overture_id is None:
+                overture_id = sid
+    return osm_id, overture_id, sorted(source_ids)
+
+
 def build_w07_target_60_pois_manifest(repo_root: Path = REPO_ROOT) -> dict[str, Any]:
     verify_prior_gates_immutability(repo_root)
-    places_v2_path = repo_root / "data/curated/gomate_places_freeze_v2.json"
+    places_v2_path = repo_root / PLACES_FREEZE_RELPATH
     places_v2 = json.loads(places_v2_path.read_text(encoding="utf-8"))
     by_id = {p["place_id"]: p for p in places_v2}
 
@@ -376,18 +448,7 @@ def build_w07_target_60_pois_manifest(repo_root: Path = REPO_ROOT) -> dict[str, 
         cat = src_poi["category"]
         cat_group = CATEGORY_GROUP_MAP[cat]
 
-        osm_id: str | None = None
-        overture_id: str | None = None
-        source_ids: list[str] = []
-        for s in src_poi.get("sources", []):
-            sname = s.get("source_name")
-            sid = str(s.get("source_id", ""))
-            if sname and sid:
-                source_ids.append(f"{sname}:{sid}")
-                if sname == "osm" and osm_id is None:
-                    osm_id = sid
-                elif sname == "overture" and overture_id is None:
-                    overture_id = sid
+        osm_id, overture_id, source_ids = _extract_source_ids(src_poi)
 
         if not osm_id:
             raise ValueError(f"POI {poi_id} is missing osm_id")
@@ -406,7 +467,7 @@ def build_w07_target_60_pois_manifest(repo_root: Path = REPO_ROOT) -> dict[str, 
                 "address": src_poi.get("address"),
                 "osm_id": osm_id,
                 "overture_id": overture_id,
-                "source_ids": sorted(source_ids),
+                "source_ids": source_ids,
                 "target_review_count_min": 5,
                 "target_review_count_preferred": 8,
                 "collection_status": "COLLECTION_IN_PROGRESS_0_OF_5",
@@ -418,25 +479,34 @@ def build_w07_target_60_pois_manifest(repo_root: Path = REPO_ROOT) -> dict[str, 
     raw_cat_counts = dict(sorted(Counter(p["category"] for p in manifest_pois).items()))
     dual_source_count = sum(1 for p in manifest_pois if p["overture_id"] is not None)
 
+    per_city_group_breakdown: dict[str, dict[str, int]] = {}
+    for city_name in ("Hà Nội", "Đà Nẵng", "Hạ Long"):
+        c_groups = Counter(p["category_group"] for p in manifest_pois if p["city"] == city_name)
+        per_city_group_breakdown[city_name] = {
+            grp: c_groups[grp] for grp in PER_CITY_CATEGORY_GROUP_QUOTAS
+        }
+        if per_city_group_breakdown[city_name] != PER_CITY_CATEGORY_GROUP_QUOTAS:
+            raise ValueError(
+                f"Per-city category group mismatch in {city_name}: "
+                f"{per_city_group_breakdown[city_name]} != {PER_CITY_CATEGORY_GROUP_QUOTAS}"
+            )
+
     if city_counts != {"Hà Nội": 20, "Đà Nẵng": 20, "Hạ Long": 20}:
         raise ValueError(f"Invalid city balance: {dict(city_counts)}")
-    if group_counts != {
-        "attractions_culture": 18,
-        "restaurants_cafes_markets": 18,
-        "hotels": 15,
-        "nature_beach": 6,
-        "other_tourism": 3,
-    }:
-        raise ValueError(f"Invalid category group balance: {dict(group_counts)}")
+    if dict(group_counts) != GLOBAL_CATEGORY_GROUP_QUOTAS:
+        raise ValueError(f"Invalid global category group balance: {dict(group_counts)}")
 
     payload: dict[str, Any] = {
         "manifest_id": "w07_review_target_60_pois_v1",
-        "manifest_version": "1.0.0",
-        "task_id": "W07-A2",
+        "manifest_version": "1.1.0-corrective-01",
+        "task_id": "W07-A2-CORRECTIVE-01",
         "source_canonical_freeze": "data/curated/gomate_places_freeze_v2.json",
         "selection_policy": {
             "deterministic": True,
+            "deterministic_selection_rationale": DETERMINISTIC_SELECTION_RATIONALE,
             "total_canonical_pois": 60,
+            "per_city_category_group_quotas": dict(PER_CITY_CATEGORY_GROUP_QUOTAS),
+            "global_category_group_quotas": dict(GLOBAL_CATEGORY_GROUP_QUOTAS),
             "target_review_count_min_per_poi": 5,
             "target_review_count_preferred_per_poi": 8,
             "scientific_minimum_total_reviews": 300,
@@ -445,6 +515,12 @@ def build_w07_target_60_pois_manifest(repo_root: Path = REPO_ROOT) -> dict[str, 
             "entry_rule": (
                 "No review may enter the primary W07 scientific corpus unless its `poi_id` "
                 "is present in this frozen manifest."
+            ),
+            "single_source_id_authority_rule": (
+                "This committed manifest is the single authority for `poi_id`, `osm_id`, "
+                "`overture_id`, `source_ids`, coordinates, city, and category. All form "
+                "examples, templates, and summary tables must obtain upstream IDs "
+                "programmatically from this manifest."
             ),
             "mapping_rule": {
                 "primary_expected_mapping_method": "EXACT_PREBOUND_CANONICAL_POI",
@@ -461,6 +537,7 @@ def build_w07_target_60_pois_manifest(repo_root: Path = REPO_ROOT) -> dict[str, 
                 "Đà Nẵng": city_counts["Đà Nẵng"],
                 "Hạ Long": city_counts["Hạ Long"],
             },
+            "per_city_category_group_distribution": per_city_group_breakdown,
             "category_group_distribution": {
                 "attractions_culture": group_counts["attractions_culture"],
                 "restaurants_cafes_markets": group_counts["restaurants_cafes_markets"],
@@ -476,14 +553,65 @@ def build_w07_target_60_pois_manifest(repo_root: Path = REPO_ROOT) -> dict[str, 
     return payload
 
 
+def build_example_review_row(manifest_payload: dict[str, Any]) -> dict[str, Any]:
+    """Programmatically construct the canonical example review row from manifest_payload['pois'][0]."""
+    first_poi = manifest_payload["pois"][0]
+    osm_prefixed = f"osm:{first_poi['osm_id']}"
+    if osm_prefixed not in first_poi["source_ids"]:
+        raise ValueError(
+            f"Expected {osm_prefixed} in manifest source_ids {first_poi['source_ids']}"
+        )
+    return {
+        "review_id": "w07_rev_hn_0001",
+        "poi_id": first_poi["poi_id"],
+        "upstream_place_id": osm_prefixed,
+        "city": first_poi["city"],
+        "source": "first_party_contributor_form_v1",
+        "source_review_id": None,
+        "rating": 5.0,
+        "rating_scale_max": 5,
+        "review_text": (
+            "Không gian quảng trường Ba Đình và khu vực Lăng Bác rất trang nghiêm, "
+            "sạch sẽ, xếp hàng buổi sáng sớm khá nhanh và trật tự."
+        ),
+        "language": "vi",
+        "created_at": "2026-11-02",
+        "collected_at": "2026-11-02T09:00:00Z",
+        "source_ref": "gomate_w07_contributor_intake_v1#resp_0001",
+        "provenance": "FIRST_PARTY_ACADEMIC_CONTRIBUTOR_CONSENT_V1",
+        "license_or_usage_class": "OWNER_FIRST_PARTY_CONSENT",
+        "mapping_method": "EXACT_PREBOUND_CANONICAL_POI",
+        "mapping_confidence": 1.0,
+        "author_anonymous_id": "contrib_9f86d081884c",
+        "visit_period": "2025-10",
+        "consent_record_id": "consent_2026_0001",
+    }
+
+
+def render_manifest_poi_markdown_table(manifest_payload: dict[str, Any]) -> list[str]:
+    """Deterministically render the 60-POI markdown table directly from manifest_payload."""
+    lines = [
+        "| # | City | Category Group | Raw Category | `poi_id` | Name | `osm_id` | `overture_id` | Min Reviews |",
+        "|---:|---|---|---|---|---|---|---|---:|",
+    ]
+    for p in manifest_payload["pois"]:
+        ov = f"`{p['overture_id']}`" if p["overture_id"] else "`null`"
+        lines.append(
+            f"| {p['selection_rank']} | {p['city']} | `{p['category_group']}` | `{p['category']}` | "
+            f"`{p['poi_id']}` | {p['name']} | `{p['osm_id']}` | {ov} | {p['target_review_count_min']} |"
+        )
+    return lines
+
+
 def validate_review_rows(
     rows: list[dict[str, Any]],
     manifest_payload: dict[str, Any],
 ) -> dict[str, Any]:
-    """Validate candidate primary review rows against the frozen 60-POI manifest and Section 11-13 rules."""
+    """Validate candidate primary review rows against the frozen 60-POI manifest and Section 6, 7, 11-13 rules."""
     pois_by_id = {p["poi_id"]: p for p in manifest_payload["pois"]}
     accepted_rows: list[dict[str, Any]] = []
     rejected_rows: list[dict[str, Any]] = []
+    quarantined_pii_rows: list[dict[str, Any]] = []
     warnings: list[dict[str, Any]] = []
     duplicate_records: list[dict[str, Any]] = []
 
@@ -509,14 +637,18 @@ def validate_review_rows(
         if missing_keys:
             row_reasons.append(f"MISSING_SCHEMA_KEYS:{','.join(missing_keys)}")
 
-        # 2. Privacy / PII check (Section 19)
+        # 2. Privacy / PII check on schema fields (Section 7 & 19)
         present_pii_keys = [k for k in FORBIDDEN_PII_FIELDS if k in row and row[k] is not None]
         if present_pii_keys:
             row_reasons.append(f"FORBIDDEN_PII_FIELD_PRESENT:{','.join(present_pii_keys)}")
 
         anon_author = row.get("author_anonymous_id")
         if anon_author is not None:
-            if not isinstance(anon_author, str) or EMAIL_RE.search(anon_author) or PHONE_RE.search(anon_author):
+            if (
+                not isinstance(anon_author, str)
+                or EMAIL_RE.search(anon_author)
+                or PHONE_RE.search(anon_author)
+            ):
                 row_reasons.append("PII_IN_AUTHOR_ANONYMOUS_ID")
 
         # 3. Review ID check
@@ -529,11 +661,19 @@ def validate_review_rows(
                 {"row_index": idx, "review_id": review_id, "duplicate_type": "DUPLICATE_REVIEW_ID"}
             )
 
-        # 4. Canonical POI check
+        # 4. Canonical POI & upstream_place_id single-authority check (Section 4)
         poi_id = row.get("poi_id")
         target_poi = pois_by_id.get(poi_id) if isinstance(poi_id, str) else None
         if target_poi is None:
             row_reasons.append("UNKNOWN_CANONICAL_POI")
+        else:
+            upstream_pid = row.get("upstream_place_id")
+            if upstream_pid is not None:
+                if (
+                    not isinstance(upstream_pid, str)
+                    or upstream_pid not in target_poi["source_ids"]
+                ):
+                    row_reasons.append("UPSTREAM_PLACE_ID_NOT_IN_MANIFEST_SOURCE_IDS")
 
         # 5. City mismatch check
         city_val = row.get("city")
@@ -545,7 +685,7 @@ def validate_review_rows(
             if city_val.strip().lower() not in valid_aliases:
                 row_reasons.append(f"CITY_MISMATCH:expected={expected_city},got={city_val}")
 
-        # 6. Review text checks (Sections 11 & 12)
+        # 6. Review text checks + PII quarantine in review_text (Sections 7, 11, 12)
         review_text = row.get("review_text")
         norm_text = ""
         if not isinstance(review_text, str):
@@ -576,14 +716,25 @@ def validate_review_rows(
                             }
                         )
 
-                # Quality warnings (Section 12: flag short reviews, HTML, cross-POI duplicates)
+                # Section 7 PII firewall: if review_text contains email or phone number,
+                # classify as QUARANTINE_PII_REVIEW_TEXT and do NOT accept!
+                if EMAIL_RE.search(review_text) or PHONE_RE.search(review_text):
+                    row_reasons.append("QUARANTINE_PII_REVIEW_TEXT")
+                    quarantined_pii_rows.append(
+                        {
+                            "row_index": idx,
+                            "review_id": review_id if isinstance(review_id, str) else None,
+                            "poi_id": poi_id if isinstance(poi_id, str) else None,
+                            "classification": "QUARANTINE_PII_REVIEW_TEXT",
+                        }
+                    )
+
+                # Quality warnings (Section 12: flag short reviews and HTML remnants)
                 words = review_text.strip().split()
                 if len(review_text.strip()) < 20 or len(words) < 5:
                     row_warnings.append("SHORT_REVIEW_FLAGGED_FOR_MANUAL_REVIEW")
                 if HTML_TAG_RE.search(review_text) or "&nbsp;" in review_text:
                     row_warnings.append("HTML_OR_NOISE_REMNANTS")
-                if EMAIL_RE.search(review_text) or PHONE_RE.search(review_text):
-                    row_warnings.append("POTENTIAL_PII_IN_REVIEW_TEXT")
 
         # 7. Rating & rating scale validation
         rating = row.get("rating")
@@ -620,6 +771,7 @@ def validate_review_rows(
         source_ref = row.get("source_ref")
         collected_at = row.get("collected_at")
         license_cls = row.get("license_or_usage_class")
+        consent_record_id = row.get("consent_record_id")
 
         if not isinstance(source, str) or not source.strip():
             row_reasons.append("MISSING_SOURCE")
@@ -641,6 +793,18 @@ def validate_review_rows(
             or license_cls.strip() not in APPROVED_LICENSE_OR_USAGE_CLASSES
         ):
             row_reasons.append("MISSING_OR_UNAPPROVED_USAGE_LICENSE_CLASS")
+        elif license_cls.strip() in FIRST_PARTY_CONSENT_CLASSES:
+            # Section 6: Harden first-party consent
+            if not isinstance(consent_record_id, str) or not consent_record_id.strip():
+                row_reasons.append("REJECT_MISSING_CONSENT_RECORD")
+            if not isinstance(source, str) or not (
+                "contributor" in source.lower() or "first_party" in source.lower()
+            ):
+                row_reasons.append("FIRST_PARTY_SOURCE_MISMATCH")
+            if not isinstance(provenance, str) or not (
+                "first_party" in provenance.lower() or "contributor" in provenance.lower()
+            ):
+                row_reasons.append("FIRST_PARTY_PROVENANCE_MISMATCH")
 
         # 10. Mapping method & confidence validation (Section 6 & 11)
         mapping_method = row.get("mapping_method")
@@ -759,10 +923,10 @@ def validate_review_rows(
 
     scientific_minimum_ready = (
         len(accepted_rows) >= 300
-        and len(covered_pois) >= 60
-        and city_covered_pois["Hà Nội"] >= 20
-        and city_covered_pois["Đà Nẵng"] >= 20
-        and city_covered_pois["Hạ Long"] >= 20
+        and len(covered_pois) == 60
+        and city_covered_pois["Hà Nội"] == 20
+        and city_covered_pois["Đà Nẵng"] == 20
+        and city_covered_pois["Hạ Long"] == 20
         and len(pois_meeting_min_5) == 60
     )
 
@@ -774,6 +938,7 @@ def validate_review_rows(
         "total_input_rows": len(rows),
         "accepted_review_count": len(accepted_rows),
         "rejected_review_count": len(rejected_rows),
+        "quarantined_pii_count": len(quarantined_pii_rows),
         "warning_count": len(warnings),
         "duplicate_count": len(duplicate_records),
         "covered_poi_count": len(covered_pois),
@@ -803,13 +968,7 @@ def validate_review_rows(
                 "accepted_reviews": category_group_accepted_reviews[grp],
                 "target_reviews_min": target_cnt * 5,
             }
-            for grp, target_cnt in (
-                ("attractions_culture", 18),
-                ("restaurants_cafes_markets", 18),
-                ("hotels", 15),
-                ("nature_beach", 6),
-                ("other_tourism", 3),
-            )
+            for grp, target_cnt in GLOBAL_CATEGORY_GROUP_QUOTAS.items()
         },
         "source_distribution": source_dist,
         "language_distribution": lang_dist,
@@ -827,6 +986,7 @@ def validate_review_rows(
             else "PARTIAL_COLLECTION_NOT_SCIENTIFIC_FREEZE"
         ),
         "rejected_rows": rejected_rows,
+        "quarantined_pii_rows": quarantined_pii_rows,
         "warnings": warnings,
         "duplicates": duplicate_records,
     }
@@ -852,12 +1012,13 @@ def build_w07_a2_intake_status_payload(
     prior_shas = verify_prior_gates_immutability(repo_root)
     restricted_jsonl_path = repo_root / RESTRICTED_JSONL_RELPATH
     val_report = validate_review_jsonl_file(restricted_jsonl_path, manifest_payload)
+    example_row = build_example_review_row(manifest_payload)
 
     payload: dict[str, Any] = {
         "artifact_id": "w07_review_corpus_intake_status_v1",
-        "artifact_version": "1.0.0",
-        "task_id": "W07-A2",
-        "task_title": "CANONICAL 60-POI INTAKE + TARGETED REVIEW CORPUS ACQUISITION",
+        "artifact_version": "1.1.0-corrective-01",
+        "task_id": "W07-A2-CORRECTIVE-01",
+        "task_title": "CANONICAL 60-POI INTAKE + TARGETED REVIEW CORPUS ACQUISITION (CORRECTIVE 01)",
         "authority_and_gates": {
             "previous_gate": PREVIOUS_GATE,
             "previous_gate_decision": PREVIOUS_GATE_DECISION,
@@ -872,13 +1033,18 @@ def build_w07_a2_intake_status_payload(
             "manifest_path": MANIFEST_60_JSON_RELPATH,
             "manifest_sha256": manifest_payload["manifest_sha256"],
             "total_target_pois": 60,
+            "deterministic_selection_rationale": DETERMINISTIC_SELECTION_RATIONALE,
             "city_distribution": manifest_payload["summary_statistics"]["city_distribution"],
+            "per_city_category_group_distribution": manifest_payload["summary_statistics"][
+                "per_city_category_group_distribution"
+            ],
             "category_group_distribution": manifest_payload["summary_statistics"][
                 "category_group_distribution"
             ],
             "raw_category_distribution": manifest_payload["summary_statistics"][
                 "raw_category_distribution"
             ],
+            "canonical_example_review_row": example_row,
         },
         "primary_review_schema_spec": {
             "required_fields": list(REQUIRED_REVIEW_SCHEMA_FIELDS),
@@ -887,6 +1053,18 @@ def build_w07_a2_intake_status_payload(
             "primary_mapping_method": "EXACT_PREBOUND_CANONICAL_POI",
             "primary_mapping_confidence": 1.0,
             "post_hoc_name_only_mapping_allowed": False,
+            "first_party_consent_enforcement": {
+                "applicable_classes": sorted(FIRST_PARTY_CONSENT_CLASSES),
+                "consent_record_id_required": True,
+                "missing_consent_record_action": "REJECT_MISSING_CONSENT_RECORD",
+                "public_permitted_consent_record_id_nullable": True,
+            },
+            "pii_review_text_firewall": {
+                "email_or_phone_in_review_text_action": "QUARANTINE_PII_REVIEW_TEXT",
+                "accepted_into_scientific_corpus": False,
+                "counts_toward_scientific_minimum": False,
+                "auto_rewrite_or_redact_review_text": False,
+            },
         },
         "channel_a_public_research_permitted_acquisition_audit": {
             "sources_checked": [
@@ -915,13 +1093,14 @@ def build_w07_a2_intake_status_payload(
                     "note": "100% Hồ Chí Minh City (34,104 / 34,104 rows across 9 HCMC districts); 0 rows in Hà Nội, Đà Nẵng, or Hạ Long.",
                 },
                 {
-                    "source": "Google Maps / Tripadvisor / Booking / Foody public web pages",
+                    "source": "Google Maps / Tripadvisor / Booking / Agoda / Foody public web pages",
                     "research_reuse_status": "NOT_APPROVED_NO_SCRAPING",
                     "primary_review_text_rows_found": 0,
-                    "note": "Public visibility does not grant research dataset redistribution rights; scraping is strictly prohibited by Section 7 & 16.",
+                    "note": "Public visibility does not grant research dataset redistribution rights; scraping is strictly prohibited.",
                 },
             ],
             "PUBLIC_PRIMARY_REVIEWS_ACQUIRED": 0,
+            "NEW_PRIMARY_REVIEWS_ACQUIRED": 0,
         },
         "channel_b_contributor_intake_package": {
             "contributor_form_spec_path": CONTRIBUTOR_SPEC_MD_RELPATH,
@@ -932,7 +1111,7 @@ def build_w07_a2_intake_status_payload(
             "anonymization_rule": (
                 "External contributor identities (name, email, phone, handle) are never imported "
                 "into `w07_canonical_reviews_v1.jsonl`; only a deterministic salted hash "
-                "`author_anonymous_id = contrib_<sha256[:12]>` and `consent_record_id` are stored."
+                "`author_anonymous_id = contrib_<sha256[:12]>` and non-empty `consent_record_id` are stored."
             ),
         },
         "current_validation_and_readiness_summary": {
@@ -941,6 +1120,7 @@ def build_w07_a2_intake_status_payload(
             "CORPUS_SCIENTIFIC_MINIMUM_READY": val_report["CORPUS_SCIENTIFIC_MINIMUM_READY"],
             "accepted_review_count": val_report["accepted_review_count"],
             "rejected_review_count": val_report["rejected_review_count"],
+            "quarantined_pii_count": val_report["quarantined_pii_count"],
             "warning_count": val_report["warning_count"],
             "duplicate_count": val_report["duplicate_count"],
             "covered_poi_count": val_report["covered_poi_count"],
@@ -964,26 +1144,37 @@ def build_w07_a2_intake_status_payload(
                 "Đà Nẵng": {"pois_needing_reviews": 20, "reviews_needed_min": 100},
                 "Hạ Long": {"pois_needing_reviews": 20, "reviews_needed_min": 100},
             },
+            "category_group_gaps": {
+                "attractions_culture": {"pois_needing_reviews": 21, "reviews_needed_min": 105},
+                "restaurants_cafes_markets": {
+                    "pois_needing_reviews": 21,
+                    "reviews_needed_min": 105,
+                },
+                "hotels": {"pois_needing_reviews": 6, "reviews_needed_min": 30},
+                "nature_beach": {"pois_needing_reviews": 9, "reviews_needed_min": 45},
+                "other_tourism": {"pois_needing_reviews": 3, "reviews_needed_min": 15},
+            },
             "recommended_contributor_plan": {
                 "suggested_contributors_range": "30-50 contributors (students, alumni, local travelers)",
                 "suggested_reviews_per_contributor": (
                     "6-10 genuine reviews per contributor covering ONLY canonical POIs "
-                    "they have personally visited (e.g., 30 contributors x 10 reviews or "
-                    "50 contributors x 6 reviews = 300 genuine reviews)."
+                    "they have personally visited or directly experienced (e.g., 30 contributors x 10 "
+                    "reviews or 50 contributors x 6 reviews = 300 genuine reviews)."
                 ),
                 "strict_authenticity_rules": [
-                    "Do NOT copy reviews from Google Maps, Tripadvisor, Foody, or Booking.",
+                    "Contributor must have personally visited or directly experienced the selected POI.",
+                    "Do NOT copy reviews from Google Maps, Tripadvisor, Booking, Agoda, or Foody.",
                     "Do NOT invent a visit to a place never visited.",
                     "Do NOT use ChatGPT, Gemini, Claude, or any LLM to generate or paraphrase reviews.",
                 ],
             },
             "form_fields_required": [
                 "1. Canonical POI Selection (`[City] Name (Category) — poi_id`, chosen from the 60 frozen POIs)",
-                "2. Genuine Review Text (`review_text`, Vietnamese or English, recommended >= 20 chars / >= 5 words describing concrete aspects such as scenery, service, food/rooms, price, crowd)",
+                "2. Genuine Review Text (`review_text`, Vietnamese or English, recommended >= 20 chars / >= 5 words, zero email/phone PII)",
                 "3. Overall Rating (`rating`, integer/float 1 to 5 on `rating_scale_max = 5`)",
                 "4. Language (`vi`, `en`, or `mixed_vi_en`)",
                 "5. Visit Period (`visit_period`, optional, e.g., `2025-07` or `2026-Q1`)",
-                "6. Authorship & Academic Reuse Consent Checkbox (`consent_checkbox = true`, confirming genuine own writing and academic non-commercial reuse permission)",
+                "6. Personal Visit, Originality & Academic Reuse Consent Checkbox (`consent_record_id` recorded on submission)",
             ],
             "validation_command_after_intake": (
                 "python scripts/validate_w07_review_corpus_v1.py "
@@ -1001,6 +1192,7 @@ def build_w07_a2_intake_status_payload(
                 TRIPADVISOR_CONTENT_API_ACADEMIC_CORPUS_ROLE
             ),
             "LLM_GENERATED_PRIMARY_REVIEWS": 0,
+            "NEW_PRIMARY_REVIEWS_ACQUIRED": 0,
             "NEW_LLM_PROVIDER_CALLS": 0,
             "SCRAPING_EXECUTED": False,
             "gpu_required": False,
@@ -1018,6 +1210,7 @@ def render_contributor_form_spec_markdown(
     manifest_payload: dict[str, Any],
     status_payload: dict[str, Any],
 ) -> str:
+    example_row = build_example_review_row(manifest_payload)
     lines = [
         "# W07-A2 — Canonical 60-POI Contributor Review Form Specification & Intake Guide",
         "",
@@ -1025,7 +1218,7 @@ def render_contributor_form_spec_markdown(
         "",
         f"- **Previous Gate:** `{status_payload['authority_and_gates']['previous_gate']}`",
         f"- **Authoritative Base:** `develop@{status_payload['authority_and_gates']['authoritative_develop_base_sha']}`",
-        f"- **Target 60-POI Manifest:** `{MANIFEST_60_JSON_RELPATH}` (SHA256: `{manifest_payload['manifest_sha256']}`)",
+        f"- **Target 60-POI Manifest (Single Authority):** `{MANIFEST_60_JSON_RELPATH}` (SHA256: `{manifest_payload['manifest_sha256']}`)",
         f"- **Restricted Primary Corpus Path (gitignored):** `{RESTRICTED_JSONL_RELPATH}`",
         f"- **Restricted CSV Intake Template (gitignored):** `{RESTRICTED_CSV_TEMPLATE_RELPATH}`",
         f"- **Primary Acquisition Strategy:** `{PRIMARY_ACQUISITION_STRATEGY}`",
@@ -1033,7 +1226,7 @@ def render_contributor_form_spec_markdown(
         "",
         "---",
         "",
-        "## 1. Consent Language (Academic Graduation Project)",
+        "## 1. Consent Language (Academic Graduation Project — Corrective 01)",
         "",
         "### Vietnamese Consent Text (Displayed at Top of Form & Required Checkbox)",
         "",
@@ -1052,87 +1245,52 @@ def render_contributor_form_spec_markdown(
         "| # | Form Field | Schema Field Mapping | Type & Validation | Required |",
         "|---:|---|---|---|---|",
         "| 1 | **Canonical Place (`poi_id`)** | `poi_id` + `city` | Dropdown of the 60 frozen POIs formatted as `[City] Name (Category) — poi_id` | **Yes** |",
-        "| 2 | **Your Genuine Review (`review_text`)** | `review_text` | Paragraph text (`>= 20` characters and `>= 5` words recommended; describe real experience: atmosphere, service, food/rooms, price, tips) | **Yes** |",
+        "| 2 | **Your Genuine Review (`review_text`)** | `review_text` | Paragraph text (`>= 20` characters and `>= 5` words recommended; zero email/phone PII; describe real visit experience) | **Yes** |",
         "| 3 | **Overall Rating (`1–5`)** | `rating` (`rating_scale_max = 5`) | Linear scale `1` to `5` (`1 = Poor`, `5 = Excellent`) | **Yes** |",
         "| 4 | **Review Language** | `language` | Multiple choice: `vi` (Tiếng Việt), `en` (English), `mixed_vi_en` | **Yes** |",
         "| 5 | **Visit Period (Optional)** | `visit_period` | Short text (`YYYY-MM` or `YYYY-Q1..Q4`, e.g. `2025-08`) | Optional |",
-        "| 6 | **Originality & Academic Reuse Consent** | `license_or_usage_class = OWNER_FIRST_PARTY_CONSENT` | Required checkbox confirming: (a) genuine personal experience/opinion, (b) not copied from Google/Tripadvisor, (c) not LLM-generated, (d) anonymized academic reuse permitted | **Yes** |",
+        "| 6 | **Personal Visit, Originality & Academic Reuse Consent** | `license_or_usage_class = OWNER_FIRST_PARTY_CONSENT` + `consent_record_id` | Required checkbox confirming: (a) contributor personally visited or directly experienced the selected place/POI, (b) own writing not copied from Google Maps/Tripadvisor/Booking/Agoda/Foody, (c) not AI/LLM-generated, (d) anonymized academic reuse permitted | **Yes** |",
         "",
-        "### Strict Authenticity & Privacy Rules",
+        "### Strict Authenticity, Consent & PII Firewall Rules",
+        "- **Personal visit requirement:** Contributors must have **personally visited or directly experienced the selected POI** (`đã trực tiếp đến/trải nghiệm địa điểm`).",
+        "- **Mandatory consent record (`REJECT_MISSING_CONSENT_RECORD`):** Every first-party row (`OWNER_FIRST_PARTY_CONSENT` or `CC-BY-4.0_FIRST_PARTY_CONSENT`) must carry a non-empty `consent_record_id`, contributor `source`, and first-party `provenance`.",
         "- **No platform copying:** Contributors must **never** copy or translate reviews from Google Maps, Tripadvisor, Booking.com, Agoda, or Foody.",
-        "- **No fabricated visits:** Contributors must only review places from the 60-POI list that they have genuinely visited or experienced.",
         "- **Zero LLM generation (`LLM_GENERATED_PRIMARY_REVIEWS = 0`):** LLMs (ChatGPT, Gemini, Claude, etc.) must **never** be used to write, rewrite, or paraphrase reviews.",
-        "- **Strict Anonymization:** Do **not** collect phone numbers or sensitive personal data. If the form tool records a respondent identifier to prevent duplicate spam, convert it offline into `author_anonymous_id = contrib_<sha256_prefix>` before writing to `data/restricted/w07_reviews/w07_canonical_reviews_v1.jsonl`.",
+        "- **PII Quarantine (`QUARANTINE_PII_REVIEW_TEXT`):** Reviews containing an email address or phone number inside `review_text` are automatically quarantined/rejected (`QUARANTINE_PII_REVIEW_TEXT`), never rewritten automatically, and never counted toward `accepted_review_count` or `CORPUS_SCIENTIFIC_MINIMUM_READY`.",
         "",
         "---",
         "",
         "## 3. Primary Review JSONL Schema (`w07_canonical_reviews_v1.jsonl`)",
         "",
-        "Every accepted row in `data/restricted/w07_reviews/w07_canonical_reviews_v1.jsonl` must conform to this exact 17-field primary schema (plus 3 optional fields):",
+        "Every accepted row in `data/restricted/w07_reviews/w07_canonical_reviews_v1.jsonl` must conform to this exact 17-field primary schema (plus 3 optional fields), where `upstream_place_id` is derived programmatically from `manifest[poi_id].source_ids`:",
         "",
         "```json",
-        json.dumps(
-            {
-                "review_id": "w07_rev_hn_0001",
-                "poi_id": "698ee756-6062-5f47-955b-bdf458682e57",
-                "upstream_place_id": "osm:way/37629144",
-                "city": "Hà Nội",
-                "source": "first_party_contributor_form_v1",
-                "source_review_id": None,
-                "rating": 5.0,
-                "rating_scale_max": 5,
-                "review_text": "Không gian quảng trường Ba Đình và khu vực Lăng Bác rất trang nghiêm, sạch sẽ, xếp hàng buổi sáng sớm khá nhanh và trật tự.",
-                "language": "vi",
-                "created_at": "2026-11-02",
-                "collected_at": "2026-11-02T09:00:00Z",
-                "source_ref": "gomate_w07_contributor_intake_v1#resp_0001",
-                "provenance": "FIRST_PARTY_ACADEMIC_CONTRIBUTOR_CONSENT_V1",
-                "license_or_usage_class": "OWNER_FIRST_PARTY_CONSENT",
-                "mapping_method": "EXACT_PREBOUND_CANONICAL_POI",
-                "mapping_confidence": 1.0,
-                "author_anonymous_id": "contrib_9f86d081884c",
-                "visit_period": "2025-10",
-                "consent_record_id": "consent_2026_0001",
-            },
-            ensure_ascii=False,
-            indent=2,
-        ),
+        json.dumps(example_row, ensure_ascii=False, indent=2),
         "```",
         "",
         "---",
         "",
-        "## 4. Frozen 60 Canonical POIs (`20` Hà Nội, `20` Đà Nẵng, `20` Hạ Long)",
+        "## 4. Frozen 60 Canonical POIs (`20` Hà Nội, `20` Đà Nẵng, `20` Hạ Long; `21 / 21 / 6 / 9 / 3` Category Allocation)",
         "",
-        "| # | City | Category Group | Raw Category | `poi_id` | Name | `osm_id` | `overture_id` | Min Reviews |",
-        "|---:|---|---|---|---|---|---|---|---:|",
+        f"**Deterministic Selection Rationale:** {DETERMINISTIC_SELECTION_RATIONALE}",
+        "",
+        *render_manifest_poi_markdown_table(manifest_payload),
+        "",
+        "---",
+        "",
+        "## 5. Owner Action Pack (Low-Burden Collection Plan)",
+        "",
+        "- **Current Status:** `COLLECTION_IN_PROGRESS` (`0 / 300` primary reviews collected; `CORPUS_SCIENTIFIC_MINIMUM_READY = false`).",
+        "- **Remaining Gap to Scientific Minimum:** `300` reviews across `60` canonical POIs (`>= 5` reviews/POI: `100` Hà Nội, `100` Đà Nẵng, `100` Hạ Long; `105` attractions/culture, `105` restaurants/cafes/markets, `30` hotels, `45` nature/beach, `15` other tourism).",
+        "- **Recommended Low-Burden Distribution:**",
+        "  - Invite **30 to 50 contributors** (classmates, university students, local travelers).",
+        "  - Each contributor submits **6 to 10 genuine reviews** for POIs from the 60-POI table that they have personally visited or directly experienced in Hà Nội, Đà Nẵng, or Hạ Long.",
+        "  - Run offline validation after importing responses:",
+        "    ```bash",
+        "    python scripts/validate_w07_review_corpus_v1.py --validate-jsonl data/restricted/w07_reviews/w07_canonical_reviews_v1.jsonl",
+        "    ```",
+        "",
     ]
-
-    for p in manifest_payload["pois"]:
-        ov = f"`{p['overture_id']}`" if p["overture_id"] else "`null`"
-        lines.append(
-            f"| {p['selection_rank']} | {p['city']} | `{p['category_group']}` | `{p['category']}` | "
-            f"`{p['poi_id']}` | {p['name']} | `{p['osm_id']}` | {ov} | {p['target_review_count_min']} |"
-        )
-
-    lines.extend(
-        [
-            "",
-            "---",
-            "",
-            "## 5. Owner Action Pack (Low-Burden Collection Plan)",
-            "",
-            "- **Current Status:** `COLLECTION_IN_PROGRESS` (`0 / 300` primary reviews collected; `CORPUS_SCIENTIFIC_MINIMUM_READY = false`).",
-            "- **Remaining Gap to Scientific Minimum:** `300` reviews across `60` canonical POIs (`>= 5` reviews/POI: `100` Hà Nội, `100` Đà Nẵng, `100` Hạ Long).",
-            "- **Recommended Low-Burden Distribution:**",
-            "  - Invite **30 to 50 contributors** (classmates, university students, local travelers).",
-            "  - Each contributor submits **6 to 10 genuine reviews** for POIs from the 60-POI table that they have personally visited in Hà Nội, Đà Nẵng, or Hạ Long.",
-            "  - Run offline validation after importing responses:",
-            "    ```bash",
-            "    python scripts/validate_w07_review_corpus_v1.py --validate-jsonl data/restricted/w07_reviews/w07_canonical_reviews_v1.jsonl",
-            "    ```",
-            "",
-        ]
-    )
     return "\n".join(lines)
 
 
@@ -1159,13 +1317,14 @@ def initialize_restricted_intake_files(
                 "category_group",
                 "osm_id",
                 "overture_id",
+                "upstream_place_id",
                 "target_review_count_min",
                 "review_id",
                 "rating_1_to_5",
                 "language_vi_or_en",
                 "visit_period_optional",
                 "review_text",
-                "consent_confirmed_true",
+                "consent_record_id",
                 "author_anonymous_id",
             ]
         )
@@ -1180,13 +1339,14 @@ def initialize_restricted_intake_files(
                     p["category_group"],
                     p["osm_id"],
                     p["overture_id"] or "",
+                    f"osm:{p['osm_id']}",
                     p["target_review_count_min"],
                     "",
                     "",
                     "vi",
                     "",
                     "",
-                    "true",
+                    "",
                     "",
                 ]
             )
@@ -1251,6 +1411,12 @@ def verify_w07_a2_artifacts(repo_root: Path = REPO_ROOT) -> dict[str, Any]:
     if disk_md != expected_md.replace("\r\n", "\n"):
         raise ValueError("On-disk contributor form spec Markdown differs from deterministic build.")
 
+    # Verify example row upstream_place_id is in manifest[poi_id].source_ids
+    ex_row = disk_status["target_manifest_binding"]["canonical_example_review_row"]
+    manifest_by_id = {p["poi_id"]: p for p in disk_manifest["pois"]}
+    if ex_row["upstream_place_id"] not in manifest_by_id[ex_row["poi_id"]]["source_ids"]:
+        raise ValueError("Example review row upstream_place_id is not in manifest source_ids.")
+
     return {
         "status": "PASS",
         "manifest_path": MANIFEST_60_JSON_RELPATH,
@@ -1271,6 +1437,8 @@ def verify_w07_a2_artifacts(repo_root: Path = REPO_ROOT) -> dict[str, Any]:
 
 
 def main(argv: list[str] | None = None) -> int:
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8")
     parser = argparse.ArgumentParser(
         description="Generate, verify, or validate W07-A2 canonical 60-POI review corpus intake."
     )
@@ -1290,7 +1458,18 @@ def main(argv: list[str] | None = None) -> int:
         type=Path,
         help="Validate a JSONL review file against the frozen 60-POI manifest.",
     )
+    group.add_argument(
+        "--print-manifest-table",
+        action="store_true",
+        help="Print the 60-POI Markdown table directly from the committed manifest.",
+    )
     args = parser.parse_args(argv)
+
+    if args.print_manifest_table:
+        manifest_path = REPO_ROOT / MANIFEST_60_JSON_RELPATH
+        manifest_payload = json.loads(manifest_path.read_text(encoding="utf-8"))
+        print("\n".join(render_manifest_poi_markdown_table(manifest_payload)))
+        return 0
 
     if args.validate_jsonl is not None:
         manifest_payload = build_w07_target_60_pois_manifest(REPO_ROOT)
