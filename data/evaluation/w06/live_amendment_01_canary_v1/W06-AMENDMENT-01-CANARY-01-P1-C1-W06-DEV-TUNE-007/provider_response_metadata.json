@@ -1,0 +1,19 @@
+{
+  "finish_or_stop_reason": "PROVIDER_EXCEPTION:TIMEOUT",
+  "normalized_provider_metadata": {
+    "actual_http_request_count": 1,
+    "candidate_id": "C1",
+    "exception_classification": "TIMEOUT",
+    "exception_summary": "ServerError: 504 DEADLINE_EXCEEDED. {'error': {'code': 504, 'message': 'Deadline expired before operation could complete.', 'status': 'DEADLINE_EXCEEDED'}}",
+    "logical_generation_invocation_count": 1
+  },
+  "provider_response_received": false,
+  "raw_provider_metadata": {
+    "exception_summary": "ServerError: 504 DEADLINE_EXCEEDED. {'error': {'code': 504, 'message': 'Deadline expired before operation could complete.', 'status': 'DEADLINE_EXCEEDED'}}"
+  },
+  "raw_response_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "raw_text_length": 0,
+  "raw_text_non_empty": false,
+  "raw_text_present": true,
+  "returned_model_id": null
+}
