@@ -1,0 +1,1321 @@
+{
+  "manifest_id": "w07_review_target_60_pois_v1",
+  "manifest_version": "1.1.0-corrective-01",
+  "task_id": "W07-A2-CORRECTIVE-01",
+  "source_canonical_freeze": "data/curated/gomate_places_freeze_v2.json",
+  "selection_policy": {
+    "deterministic": true,
+    "deterministic_selection_rationale": "Selected deterministically from REC-A core verified POIs in `data/curated/gomate_places_freeze_v2.json` under the Corrective 01 quota (`7` attractions/culture, `7` restaurants/cafes/markets, `2` hotels, `3` nature/beach, `1` other_tourism per city = `20` per city; `21 / 21 / 6 / 9 / 3 = 60` global). Reducing hotels from 15 to 6 (2 per city) eliminates excessive overnight-stay contributor burden while increasing day-visit landmarks (`attractions_culture` 18 -> 21, `restaurants_cafes_markets` 18 -> 21, `nature_beach` 6 -> 9) that domestic students and travelers have genuinely visited and experienced first-hand. Within each city/category slice, POIs were chosen for: (1) stable Freeze v2 canonical UUID and verified OSM/Overture source IDs, (2) high real-world visitor recognition, (3) sub-category diversity across all 13 Freeze v2 raw categories, and (4) zero reliance on availability of scraped online reviews.",
+    "total_canonical_pois": 60,
+    "per_city_category_group_quotas": {
+      "attractions_culture": 7,
+      "restaurants_cafes_markets": 7,
+      "hotels": 2,
+      "nature_beach": 3,
+      "other_tourism": 1
+    },
+    "global_category_group_quotas": {
+      "attractions_culture": 21,
+      "restaurants_cafes_markets": 21,
+      "hotels": 6,
+      "nature_beach": 9,
+      "other_tourism": 3
+    },
+    "target_review_count_min_per_poi": 5,
+    "target_review_count_preferred_per_poi": 8,
+    "scientific_minimum_total_reviews": 300,
+    "preferred_total_reviews_for_60_pois": 480,
+    "preferred_tier_corpus_range": "75-100 POIs / 600-1200 reviews",
+    "entry_rule": "No review may enter the primary W07 scientific corpus unless its `poi_id` is present in this frozen manifest.",
+    "single_source_id_authority_rule": "This committed manifest is the single authority for `poi_id`, `osm_id`, `overture_id`, `source_ids`, coordinates, city, and category. All form examples, templates, and summary tables must obtain upstream IDs programmatically from this manifest.",
+    "mapping_rule": {
+      "primary_expected_mapping_method": "EXACT_PREBOUND_CANONICAL_POI",
+      "primary_expected_mapping_confidence": 1.0,
+      "post_hoc_name_only_mapping_allowed": false
+    }
+  },
+  "summary_statistics": {
+    "total_pois": 60,
+    "pois_with_osm_id": 60,
+    "pois_with_overture_id": 26,
+    "city_distribution": {
+      "Hà Nội": 20,
+      "Đà Nẵng": 20,
+      "Hạ Long": 20
+    },
+    "per_city_category_group_distribution": {
+      "Hà Nội": {
+        "attractions_culture": 7,
+        "restaurants_cafes_markets": 7,
+        "hotels": 2,
+        "nature_beach": 3,
+        "other_tourism": 1
+      },
+      "Đà Nẵng": {
+        "attractions_culture": 7,
+        "restaurants_cafes_markets": 7,
+        "hotels": 2,
+        "nature_beach": 3,
+        "other_tourism": 1
+      },
+      "Hạ Long": {
+        "attractions_culture": 7,
+        "restaurants_cafes_markets": 7,
+        "hotels": 2,
+        "nature_beach": 3,
+        "other_tourism": 1
+      }
+    },
+    "category_group_distribution": {
+      "attractions_culture": 21,
+      "restaurants_cafes_markets": 21,
+      "hotels": 6,
+      "nature_beach": 9,
+      "other_tourism": 3
+    },
+    "raw_category_distribution": {
+      "attraction": 11,
+      "beach": 2,
+      "cafe": 6,
+      "culture": 8,
+      "entertainment": 2,
+      "hotel": 6,
+      "market": 5,
+      "museum": 1,
+      "nature": 4,
+      "nightlife": 1,
+      "park": 3,
+      "restaurant": 10,
+      "temple": 1
+    }
+  },
+  "pois": [
+    {
+      "selection_rank": 1,
+      "poi_id": "698ee756-6062-5f47-955b-bdf458682e57",
+      "name": "Lăng Chủ tịch Hồ Chí Minh",
+      "city": "Hà Nội",
+      "destination_slug": "ha-noi",
+      "category": "attraction",
+      "category_group": "attractions_culture",
+      "latitude": 21.036762,
+      "longitude": 105.834692,
+      "address": "1 Đường Hùng Vương, Phường Ba Đình, Hà Nội",
+      "osm_id": "way/37625751",
+      "overture_id": null,
+      "source_ids": [
+        "osm:way/37625751"
+      ],
+      "target_review_count_min": 5,
+      "target_review_count_preferred": 8,
+      "collection_status": "COLLECTION_IN_PROGRESS_0_OF_5"
+    },
+    {
+      "selection_rank": 2,
+      "poi_id": "b799793b-fb40-5bc2-9e67-6af92caeabe9",
+      "name": "Hoàng thành Thăng Long",
+      "city": "Hà Nội",
+      "destination_slug": "ha-noi",
+      "category": "culture",
+      "category_group": "attractions_culture",
+      "latitude": 21.036289,
+      "longitude": 105.840442,
+      "address": "Phường Ba Đình, Hà Nội",
+      "osm_id": "relation/21425205",
+      "overture_id": null,
+      "source_ids": [
+        "osm:relation/21425205"
+      ],
+      "target_review_count_min": 5,
+      "target_review_count_preferred": 8,
+      "collection_status": "COLLECTION_IN_PROGRESS_0_OF_5"
+    },
+    {
+      "selection_rank": 3,
+      "poi_id": "0938eb59-ee1c-5879-a798-58b5fdd07bce",
+      "name": "Nhà tù Hỏa Lò",
+      "city": "Hà Nội",
+      "destination_slug": "ha-noi",
+      "category": "culture",
+      "category_group": "attractions_culture",
+      "latitude": 21.025376,
+      "longitude": 105.846427,
+      "address": "1 Phố Hỏa Lò, Hà Nội",
+      "osm_id": "way/340128580",
+      "overture_id": null,
+      "source_ids": [
+        "osm:way/340128580"
+      ],
+      "target_review_count_min": 5,
+      "target_review_count_preferred": 8,
+      "collection_status": "COLLECTION_IN_PROGRESS_0_OF_5"
+    },
+    {
+      "selection_rank": 4,
+      "poi_id": "44115e3a-6094-5bcd-b53c-0e3a596b3aff",
+      "name": "Đền Ngọc Sơn",
+      "city": "Hà Nội",
+      "destination_slug": "ha-noi",
+      "category": "culture",
+      "category_group": "attractions_culture",
+      "latitude": 21.03073,
+      "longitude": 105.852376,
+      "address": "Hà Nội",
+      "osm_id": "way/178995262",
+      "overture_id": null,
+      "source_ids": [
+        "osm:way/178995262"
+      ],
+      "target_review_count_min": 5,
+      "target_review_count_preferred": 8,
+      "collection_status": "COLLECTION_IN_PROGRESS_0_OF_5"
+    },
+    {
+      "selection_rank": 5,
+      "poi_id": "e3fe1f1a-f524-55cf-9d83-903e427d0ba4",
+      "name": "Chùa Trấn Quốc",
+      "city": "Hà Nội",
+      "destination_slug": "ha-noi",
+      "category": "culture",
+      "category_group": "attractions_culture",
+      "latitude": 21.0479,
+      "longitude": 105.83676,
+      "address": "Chùa Trấn Quốc, hanoi",
+      "osm_id": "way/220302249",
+      "overture_id": null,
+      "source_ids": [
+        "osm:way/220302249"
+      ],
+      "target_review_count_min": 5,
+      "target_review_count_preferred": 8,
+      "collection_status": "COLLECTION_IN_PROGRESS_0_OF_5"
+    },
+    {
+      "selection_rank": 6,
+      "poi_id": "f0d424bd-f722-540f-8964-5e6fd8875b56",
+      "name": "Bảo tàng Dân tộc học Việt Nam",
+      "city": "Hà Nội",
+      "destination_slug": "ha-noi",
+      "category": "culture",
+      "category_group": "attractions_culture",
+      "latitude": 21.040394,
+      "longitude": 105.798837,
+      "address": "Đường Nguyễn Văn Huyên, Quan Hoa, Cầu Giấy, Hà Nội",
+      "osm_id": "way/339936730",
+      "overture_id": "e55bab3c-c110-4ba6-a005-5c43986a6095",
+      "source_ids": [
+        "osm:way/339936730",
+        "overture:e55bab3c-c110-4ba6-a005-5c43986a6095"
+      ],
+      "target_review_count_min": 5,
+      "target_review_count_preferred": 8,
+      "collection_status": "COLLECTION_IN_PROGRESS_0_OF_5"
+    },
+    {
+      "selection_rank": 7,
+      "poi_id": "cad64db8-cd74-58fe-ad94-329e0d8110e1",
+      "name": "Nhà thờ Lớn",
+      "city": "Hà Nội",
+      "destination_slug": "ha-noi",
+      "category": "culture",
+      "category_group": "attractions_culture",
+      "latitude": 21.028659,
+      "longitude": 105.848851,
+      "address": "40 Nhà Chung, Hàng Trống, Hoàn Kiếm, Hà Nội",
+      "osm_id": "way/28912942",
+      "overture_id": null,
+      "source_ids": [
+        "osm:way/28912942"
+      ],
+      "target_review_count_min": 5,
+      "target_review_count_preferred": 8,
+      "collection_status": "COLLECTION_IN_PROGRESS_0_OF_5"
+    },
+    {
+      "selection_rank": 8,
+      "poi_id": "afb3793b-7227-4645-a68a-3647c7468638",
+      "name": "Sen Tây Hồ",
+      "city": "Hà Nội",
+      "destination_slug": "ha-noi",
+      "category": "restaurant",
+      "category_group": "restaurants_cafes_markets",
+      "latitude": 21.074149,
+      "longitude": 105.815469,
+      "address": "Sen Tây Hồ, hanoi",
+      "osm_id": "node/443000681",
+      "overture_id": "e8077687-eb1f-44ff-b544-9e7ae8ccdc1e",
+      "source_ids": [
+        "osm:node/443000681",
+        "overture:e8077687-eb1f-44ff-b544-9e7ae8ccdc1e"
+      ],
+      "target_review_count_min": 5,
+      "target_review_count_preferred": 8,
+      "collection_status": "COLLECTION_IN_PROGRESS_0_OF_5"
+    },
+    {
+      "selection_rank": 9,
+      "poi_id": "acb22336-1124-49d5-a279-6357c2b2b445",
+      "name": "Quán Ăn Ngon - Phan Bội Châu",
+      "city": "Hà Nội",
+      "destination_slug": "ha-noi",
+      "category": "restaurant",
+      "category_group": "restaurants_cafes_markets",
+      "latitude": 21.02626,
+      "longitude": 105.843304,
+      "address": "18 Phố Phan Bội Châu",
+      "osm_id": "node/721836715",
+      "overture_id": null,
+      "source_ids": [
+        "osm:node/721836715"
+      ],
+      "target_review_count_min": 5,
+      "target_review_count_preferred": 8,
+      "collection_status": "COLLECTION_IN_PROGRESS_0_OF_5"
+    },
+    {
+      "selection_rank": 10,
+      "poi_id": "5350dd97-2f75-45fc-9fc1-1979b08670f7",
+      "name": "Pho 10",
+      "city": "Hà Nội",
+      "destination_slug": "ha-noi",
+      "category": "restaurant",
+      "category_group": "restaurants_cafes_markets",
+      "latitude": 21.0304724,
+      "longitude": 105.8488474,
+      "address": "10 Phố Lý Quốc Sư",
+      "osm_id": "node/773601261",
+      "overture_id": "ff9a223f-952f-4d51-b7a9-b90998668554",
+      "source_ids": [
+        "osm:node/773601261",
+        "overture:ff9a223f-952f-4d51-b7a9-b90998668554"
+      ],
+      "target_review_count_min": 5,
+      "target_review_count_preferred": 8,
+      "collection_status": "COLLECTION_IN_PROGRESS_0_OF_5"
+    },
+    {
+      "selection_rank": 11,
+      "poi_id": "b0641225-0f38-4bcc-9f4c-34f65fa50d45",
+      "name": "Cửa Hàng Bánh Tôm Hồ Tây",
+      "city": "Hà Nội",
+      "destination_slug": "ha-noi",
+      "category": "restaurant",
+      "category_group": "restaurants_cafes_markets",
+      "latitude": 21.047321,
+      "longitude": 105.837626,
+      "address": "Cửa Hàng Bánh Tôm Hồ Tây, hanoi",
+      "osm_id": "node/310727632",
+      "overture_id": null,
+      "source_ids": [
+        "osm:node/310727632"
+      ],
+      "target_review_count_min": 5,
+      "target_review_count_preferred": 8,
+      "collection_status": "COLLECTION_IN_PROGRESS_0_OF_5"
+    },
+    {
+      "selection_rank": 12,
+      "poi_id": "5bd45eb7-a691-4426-9691-a5a00f38d1ad",
+      "name": "Highlands Coffee",
+      "city": "Hà Nội",
+      "destination_slug": "ha-noi",
+      "category": "cafe",
+      "category_group": "restaurants_cafes_markets",
+      "latitude": 21.011372,
+      "longitude": 105.849589,
+      "address": "Highlands Coffee, hanoi",
+      "osm_id": "node/442977691",
+      "overture_id": "e8f37b82-c15a-49d1-ad85-994b4b10f150",
+      "source_ids": [
+        "osm:node/442977691",
+        "overture:e8f37b82-c15a-49d1-ad85-994b4b10f150"
+      ],
+      "target_review_count_min": 5,
+      "target_review_count_preferred": 8,
+      "collection_status": "COLLECTION_IN_PROGRESS_0_OF_5"
+    },
+    {
+      "selection_rank": 13,
+      "poi_id": "4146f2b7-8289-4309-b7e6-60ba7de3470e",
+      "name": "Cà Phê Nola",
+      "city": "Hà Nội",
+      "destination_slug": "ha-noi",
+      "category": "cafe",
+      "category_group": "restaurants_cafes_markets",
+      "latitude": 21.034072,
+      "longitude": 105.853586,
+      "address": "Cà Phê Nola, hanoi",
+      "osm_id": "node/721836730",
+      "overture_id": null,
+      "source_ids": [
+        "osm:node/721836730"
+      ],
+      "target_review_count_min": 5,
+      "target_review_count_preferred": 8,
+      "collection_status": "COLLECTION_IN_PROGRESS_0_OF_5"
+    },
+    {
+      "selection_rank": 14,
+      "poi_id": "a2fc15de-d609-4d4f-abf1-9779d57901a6",
+      "name": "Cà Phê Kafa",
+      "city": "Hà Nội",
+      "destination_slug": "ha-noi",
+      "category": "cafe",
+      "category_group": "restaurants_cafes_markets",
+      "latitude": 21.037861,
+      "longitude": 105.801001,
+      "address": "118 Đường Nguyễn Khánh Toàn, Cầu Giấy, Cau Giay, Hà Nội",
+      "osm_id": "node/423736651",
+      "overture_id": null,
+      "source_ids": [
+        "osm:node/423736651"
+      ],
+      "target_review_count_min": 5,
+      "target_review_count_preferred": 8,
+      "collection_status": "COLLECTION_IN_PROGRESS_0_OF_5"
+    },
+    {
+      "selection_rank": 15,
+      "poi_id": "5e92e89d-8524-4792-862a-6dfce0994862",
+      "name": "Sheraton Hanoi",
+      "city": "Hà Nội",
+      "destination_slug": "ha-noi",
+      "category": "hotel",
+      "category_group": "hotels",
+      "latitude": 21.0597444,
+      "longitude": 105.8320123,
+      "address": "Hà Nội",
+      "osm_id": "node/922396410",
+      "overture_id": "80ceecb4-b812-4b29-a332-e22dc1a21fb8",
+      "source_ids": [
+        "osm:node/922396410",
+        "overture:80ceecb4-b812-4b29-a332-e22dc1a21fb8"
+      ],
+      "target_review_count_min": 5,
+      "target_review_count_preferred": 8,
+      "collection_status": "COLLECTION_IN_PROGRESS_0_OF_5"
+    },
+    {
+      "selection_rank": 16,
+      "poi_id": "9a96e0a0-e040-4e16-a3f2-682ca373dd8e",
+      "name": "Somerset Grand Hanoi",
+      "city": "Hà Nội",
+      "destination_slug": "ha-noi",
+      "category": "hotel",
+      "category_group": "hotels",
+      "latitude": 21.025833,
+      "longitude": 105.846367,
+      "address": "49 Phố Hai Bà Trưng, Trần Hưng Đạo, Hoàn Kiếm, Hà Nội",
+      "osm_id": "node/442033049",
+      "overture_id": "165cef5b-70ba-41d9-8314-4b54d979379d",
+      "source_ids": [
+        "osm:node/442033049",
+        "overture:165cef5b-70ba-41d9-8314-4b54d979379d"
+      ],
+      "target_review_count_min": 5,
+      "target_review_count_preferred": 8,
+      "collection_status": "COLLECTION_IN_PROGRESS_0_OF_5"
+    },
+    {
+      "selection_rank": 17,
+      "poi_id": "766656bb-c7e0-555d-9963-d3132f0de086",
+      "name": "Công viên Thống Nhất",
+      "city": "Hà Nội",
+      "destination_slug": "ha-noi",
+      "category": "nature",
+      "category_group": "nature_beach",
+      "latitude": 21.012508,
+      "longitude": 105.844525,
+      "address": "Lê Đại Hành, Hai Bà Trưng, Hà Nội",
+      "osm_id": "way/37933849",
+      "overture_id": null,
+      "source_ids": [
+        "osm:way/37933849"
+      ],
+      "target_review_count_min": 5,
+      "target_review_count_preferred": 8,
+      "collection_status": "COLLECTION_IN_PROGRESS_0_OF_5"
+    },
+    {
+      "selection_rank": 18,
+      "poi_id": "1f9c2b46-e032-5cbc-a9dc-dc68c435c594",
+      "name": "Công viên Thủ Lệ",
+      "city": "Hà Nội",
+      "destination_slug": "ha-noi",
+      "category": "nature",
+      "category_group": "nature_beach",
+      "latitude": 21.030741,
+      "longitude": 105.80664,
+      "address": "Đường Bưởi, Ngọc Khánh, Ba Đình, Hà Nội",
+      "osm_id": "way/28945667",
+      "overture_id": null,
+      "source_ids": [
+        "osm:way/28945667"
+      ],
+      "target_review_count_min": 5,
+      "target_review_count_preferred": 8,
+      "collection_status": "COLLECTION_IN_PROGRESS_0_OF_5"
+    },
+    {
+      "selection_rank": 19,
+      "poi_id": "a2037ceb-201f-5c45-a596-af795a399e60",
+      "name": "Công viên Lê-nin",
+      "city": "Hà Nội",
+      "destination_slug": "ha-noi",
+      "category": "nature",
+      "category_group": "nature_beach",
+      "latitude": 21.031782,
+      "longitude": 105.839584,
+      "address": "Công viên Lê-nin, hanoi",
+      "osm_id": "way/185540946",
+      "overture_id": "3421b671-b891-408e-943f-1278e1a46c94",
+      "source_ids": [
+        "osm:way/185540946",
+        "overture:3421b671-b891-408e-943f-1278e1a46c94"
+      ],
+      "target_review_count_min": 5,
+      "target_review_count_preferred": 8,
+      "collection_status": "COLLECTION_IN_PROGRESS_0_OF_5"
+    },
+    {
+      "selection_rank": 20,
+      "poi_id": "9b08dfe9-6f97-4d4b-94f6-f3548efd696c",
+      "name": "Le Pub",
+      "city": "Hà Nội",
+      "destination_slug": "ha-noi",
+      "category": "nightlife",
+      "category_group": "other_tourism",
+      "latitude": 21.033101,
+      "longitude": 105.8539305,
+      "address": "25 Hàng Bè, Phường Hoàn Kiếm, Hà Nội",
+      "osm_id": "node/969250576",
+      "overture_id": null,
+      "source_ids": [
+        "osm:node/969250576"
+      ],
+      "target_review_count_min": 5,
+      "target_review_count_preferred": 8,
+      "collection_status": "COLLECTION_IN_PROGRESS_0_OF_5"
+    },
+    {
+      "selection_rank": 21,
+      "poi_id": "9974ff88-5418-5867-ae49-1b72e0f0861f",
+      "name": "Cầu Rồng",
+      "city": "Đà Nẵng",
+      "destination_slug": "da-nang",
+      "category": "attraction",
+      "category_group": "attractions_culture",
+      "latitude": 16.0611683,
+      "longitude": 108.2278981,
+      "address": "Cầu Rồng, da_nang",
+      "osm_id": "way/694831926",
+      "overture_id": null,
+      "source_ids": [
+        "osm:way/694831926"
+      ],
+      "target_review_count_min": 5,
+      "target_review_count_preferred": 8,
+      "collection_status": "COLLECTION_IN_PROGRESS_0_OF_5"
+    },
+    {
+      "selection_rank": 22,
+      "poi_id": "6f758ad7-5685-57b5-9913-d28e15bdb7c5",
+      "name": "Ngũ Hành Sơn",
+      "city": "Đà Nẵng",
+      "destination_slug": "da-nang",
+      "category": "attraction",
+      "category_group": "attractions_culture",
+      "latitude": 16.0017096,
+      "longitude": 108.2596132,
+      "address": "Ngũ Hành Sơn, da_nang",
+      "osm_id": "relation/8552348",
+      "overture_id": null,
+      "source_ids": [
+        "osm:relation/8552348"
+      ],
+      "target_review_count_min": 5,
+      "target_review_count_preferred": 8,
+      "collection_status": "COLLECTION_IN_PROGRESS_0_OF_5"
+    },
+    {
+      "selection_rank": 23,
+      "poi_id": "a24d48ff-59d6-5e53-af77-36448e60d1cc",
+      "name": "Bảo tàng Nghệ thuật Điêu khắc Chăm Đà Nẵng",
+      "city": "Đà Nẵng",
+      "destination_slug": "da-nang",
+      "category": "culture",
+      "category_group": "attractions_culture",
+      "latitude": 16.0601964,
+      "longitude": 108.223168,
+      "address": "Đường Bạch Đằng",
+      "osm_id": "way/302872188",
+      "overture_id": null,
+      "source_ids": [
+        "osm:way/302872188"
+      ],
+      "target_review_count_min": 5,
+      "target_review_count_preferred": 8,
+      "collection_status": "COLLECTION_IN_PROGRESS_0_OF_5"
+    },
+    {
+      "selection_rank": 24,
+      "poi_id": "5fc0994a-e578-4a25-b375-7f079e6dc3ba",
+      "name": "Chùa Linh Ứng",
+      "city": "Đà Nẵng",
+      "destination_slug": "da-nang",
+      "category": "temple",
+      "category_group": "attractions_culture",
+      "latitude": 16.0042763,
+      "longitude": 108.2643746,
+      "address": null,
+      "osm_id": "way/1205388457",
+      "overture_id": "b9ad130e-8f19-4dcb-92a7-638573a3f62d",
+      "source_ids": [
+        "osm:way/1205388457",
+        "overture:b9ad130e-8f19-4dcb-92a7-638573a3f62d"
+      ],
+      "target_review_count_min": 5,
+      "target_review_count_preferred": 8,
+      "collection_status": "COLLECTION_IN_PROGRESS_0_OF_5"
+    },
+    {
+      "selection_rank": 25,
+      "poi_id": "2f389152-5676-54be-b812-a1d561b7df15",
+      "name": "Cầu Sông Hàn",
+      "city": "Đà Nẵng",
+      "destination_slug": "da-nang",
+      "category": "attraction",
+      "category_group": "attractions_culture",
+      "latitude": 16.0721398,
+      "longitude": 108.2268106,
+      "address": "Cầu Sông Hàn, da_nang",
+      "osm_id": "node/7276380289",
+      "overture_id": null,
+      "source_ids": [
+        "osm:node/7276380289"
+      ],
+      "target_review_count_min": 5,
+      "target_review_count_preferred": 8,
+      "collection_status": "COLLECTION_IN_PROGRESS_0_OF_5"
+    },
+    {
+      "selection_rank": 26,
+      "poi_id": "cb6cce60-8270-5f43-b9f7-42de2d7d7da3",
+      "name": "Bảo tàng Đà Nẵng",
+      "city": "Đà Nẵng",
+      "destination_slug": "da-nang",
+      "category": "culture",
+      "category_group": "attractions_culture",
+      "latitude": 16.0748319,
+      "longitude": 108.2239805,
+      "address": "42 Đường Trần Phú",
+      "osm_id": "way/1368599361",
+      "overture_id": null,
+      "source_ids": [
+        "osm:way/1368599361"
+      ],
+      "target_review_count_min": 5,
+      "target_review_count_preferred": 8,
+      "collection_status": "COLLECTION_IN_PROGRESS_0_OF_5"
+    },
+    {
+      "selection_rank": 27,
+      "poi_id": "a302989c-08f1-5ca2-8022-a84c1a424018",
+      "name": "Chợ Cồn",
+      "city": "Đà Nẵng",
+      "destination_slug": "da-nang",
+      "category": "attraction",
+      "category_group": "attractions_culture",
+      "latitude": 16.0681703,
+      "longitude": 108.2145338,
+      "address": "290 Đường Hùng Vương",
+      "osm_id": "way/204790989",
+      "overture_id": null,
+      "source_ids": [
+        "osm:way/204790989"
+      ],
+      "target_review_count_min": 5,
+      "target_review_count_preferred": 8,
+      "collection_status": "COLLECTION_IN_PROGRESS_0_OF_5"
+    },
+    {
+      "selection_rank": 28,
+      "poi_id": "62a874a9-13e2-44d2-95b5-30e980b98965",
+      "name": "Bánh Xèo Bà Dưỡng",
+      "city": "Đà Nẵng",
+      "destination_slug": "da-nang",
+      "category": "restaurant",
+      "category_group": "restaurants_cafes_markets",
+      "latitude": 16.0588034,
+      "longitude": 108.2160349,
+      "address": "23 Kiệt 280 Hoàng Diệu",
+      "osm_id": "node/4541527689",
+      "overture_id": "c732f0d5-911d-4d9f-93b2-51c886f4fe0b",
+      "source_ids": [
+        "osm:node/4541527689",
+        "overture:c732f0d5-911d-4d9f-93b2-51c886f4fe0b"
+      ],
+      "target_review_count_min": 5,
+      "target_review_count_preferred": 8,
+      "collection_status": "COLLECTION_IN_PROGRESS_0_OF_5"
+    },
+    {
+      "selection_rank": 29,
+      "poi_id": "61639da8-996a-43df-b6d3-928b6bdd70b9",
+      "name": "My Quang Bà Mua",
+      "city": "Đà Nẵng",
+      "destination_slug": "da-nang",
+      "category": "restaurant",
+      "category_group": "restaurants_cafes_markets",
+      "latitude": 16.055773,
+      "longitude": 108.2436587,
+      "address": "195/2 Đường Nguyễn Văn Thoại",
+      "osm_id": "node/7210857787",
+      "overture_id": "da92232b-8e79-4082-84b0-6a35263af4df",
+      "source_ids": [
+        "osm:node/7210857787",
+        "overture:da92232b-8e79-4082-84b0-6a35263af4df"
+      ],
+      "target_review_count_min": 5,
+      "target_review_count_preferred": 8,
+      "collection_status": "COLLECTION_IN_PROGRESS_0_OF_5"
+    },
+    {
+      "selection_rank": 30,
+      "poi_id": "fd118580-b5da-467d-9873-0116ba435f37",
+      "name": "Nhà hàng hải sản Bé Anh",
+      "city": "Đà Nẵng",
+      "destination_slug": "da-nang",
+      "category": "restaurant",
+      "category_group": "restaurants_cafes_markets",
+      "latitude": 16.0692319,
+      "longitude": 108.2429913,
+      "address": "Lô 14-15 Hồ Nghinh, Phước Mỹ, Sơn Trà, Đà Nẵng, 베트남",
+      "osm_id": "node/5485483822",
+      "overture_id": "df8dc91d-1790-4600-a518-31bec995467a",
+      "source_ids": [
+        "osm:node/5485483822",
+        "overture:df8dc91d-1790-4600-a518-31bec995467a"
+      ],
+      "target_review_count_min": 5,
+      "target_review_count_preferred": 8,
+      "collection_status": "COLLECTION_IN_PROGRESS_0_OF_5"
+    },
+    {
+      "selection_rank": 31,
+      "poi_id": "9a2ca486-437d-4044-8541-d34d911d4fb4",
+      "name": "Chợ Đêm Sơn Trà",
+      "city": "Đà Nẵng",
+      "destination_slug": "da-nang",
+      "category": "market",
+      "category_group": "restaurants_cafes_markets",
+      "latitude": 16.0606554,
+      "longitude": 108.2315292,
+      "address": "Cao Bá Quát",
+      "osm_id": "way/1556362196",
+      "overture_id": "a310c792-65d8-4115-9df6-ddf54babd1a8",
+      "source_ids": [
+        "osm:way/1556362196",
+        "overture:a310c792-65d8-4115-9df6-ddf54babd1a8"
+      ],
+      "target_review_count_min": 5,
+      "target_review_count_preferred": 8,
+      "collection_status": "COLLECTION_IN_PROGRESS_0_OF_5"
+    },
+    {
+      "selection_rank": 32,
+      "poi_id": "c2afbb07-aaf9-47c1-9877-d17e64422066",
+      "name": "Chợ Bắc Mỹ An",
+      "city": "Đà Nẵng",
+      "destination_slug": "da-nang",
+      "category": "market",
+      "category_group": "restaurants_cafes_markets",
+      "latitude": 16.0416775,
+      "longitude": 108.2424764,
+      "address": null,
+      "osm_id": "way/118614280",
+      "overture_id": "4d3dbac0-aae6-4960-8b89-d06c52fe21f5",
+      "source_ids": [
+        "osm:way/118614280",
+        "overture:4d3dbac0-aae6-4960-8b89-d06c52fe21f5"
+      ],
+      "target_review_count_min": 5,
+      "target_review_count_preferred": 8,
+      "collection_status": "COLLECTION_IN_PROGRESS_0_OF_5"
+    },
+    {
+      "selection_rank": 33,
+      "poi_id": "7ff87c59-62f1-4509-95f4-e83796b9a35c",
+      "name": "Vincom Plaza",
+      "city": "Đà Nẵng",
+      "destination_slug": "da-nang",
+      "category": "market",
+      "category_group": "restaurants_cafes_markets",
+      "latitude": 16.0713959,
+      "longitude": 108.230301,
+      "address": "910A Đường Ngô Quyền, Đà Nẵng",
+      "osm_id": "way/693393717",
+      "overture_id": "67b0a6b0-f6e8-477d-8517-ef73c56752f7",
+      "source_ids": [
+        "osm:way/693393717",
+        "overture:67b0a6b0-f6e8-477d-8517-ef73c56752f7"
+      ],
+      "target_review_count_min": 5,
+      "target_review_count_preferred": 8,
+      "collection_status": "COLLECTION_IN_PROGRESS_0_OF_5"
+    },
+    {
+      "selection_rank": 34,
+      "poi_id": "8ebf0429-fabb-4701-bbc1-cb2fea86d587",
+      "name": "Ca Phe 83",
+      "city": "Đà Nẵng",
+      "destination_slug": "da-nang",
+      "category": "cafe",
+      "category_group": "restaurants_cafes_markets",
+      "latitude": 16.0785765,
+      "longitude": 108.2193388,
+      "address": "Ca Phe 83, da_nang",
+      "osm_id": "node/729406392",
+      "overture_id": "1b27afcb-daa1-4977-bcd5-cc5327c08c64",
+      "source_ids": [
+        "osm:node/729406392",
+        "overture:1b27afcb-daa1-4977-bcd5-cc5327c08c64"
+      ],
+      "target_review_count_min": 5,
+      "target_review_count_preferred": 8,
+      "collection_status": "COLLECTION_IN_PROGRESS_0_OF_5"
+    },
+    {
+      "selection_rank": 35,
+      "poi_id": "4608034c-6c43-4d54-a542-ead8e23b1338",
+      "name": "InterContinental Danang Sun Peninsula Resort",
+      "city": "Đà Nẵng",
+      "destination_slug": "da-nang",
+      "category": "hotel",
+      "category_group": "hotels",
+      "latitude": 16.1211058,
+      "longitude": 108.3063202,
+      "address": "Bai Bac, Son Tra peninsula, Đà Nẵng",
+      "osm_id": "way/360113559",
+      "overture_id": "0d91068a-7ee8-4d97-ad32-a075a23d30fd",
+      "source_ids": [
+        "osm:way/360113559",
+        "overture:0d91068a-7ee8-4d97-ad32-a075a23d30fd"
+      ],
+      "target_review_count_min": 5,
+      "target_review_count_preferred": 8,
+      "collection_status": "COLLECTION_IN_PROGRESS_0_OF_5"
+    },
+    {
+      "selection_rank": 36,
+      "poi_id": "a32ce1b4-126b-4544-b5ea-4a7edbab6a0a",
+      "name": "Furama Resort",
+      "city": "Đà Nẵng",
+      "destination_slug": "da-nang",
+      "category": "hotel",
+      "category_group": "hotels",
+      "latitude": 16.0397373,
+      "longitude": 108.2513983,
+      "address": "105 Võ Nguyên Giáp, Ngũ Hành Sơn, Da Nang",
+      "osm_id": "way/485212452",
+      "overture_id": "82f95e1f-7bf8-40df-a3ed-6f92a4a847f3",
+      "source_ids": [
+        "osm:way/485212452",
+        "overture:82f95e1f-7bf8-40df-a3ed-6f92a4a847f3"
+      ],
+      "target_review_count_min": 5,
+      "target_review_count_preferred": 8,
+      "collection_status": "COLLECTION_IN_PROGRESS_0_OF_5"
+    },
+    {
+      "selection_rank": 37,
+      "poi_id": "2f202acf-c2bb-526a-9803-aaca142ffdad",
+      "name": "Bãi biển Mỹ Khê",
+      "city": "Đà Nẵng",
+      "destination_slug": "da-nang",
+      "category": "beach",
+      "category_group": "nature_beach",
+      "latitude": 16.07561,
+      "longitude": 108.254735,
+      "address": "Bãi biển Mỹ Khê, da_nang",
+      "osm_id": "relation/19000664",
+      "overture_id": null,
+      "source_ids": [
+        "osm:relation/19000664"
+      ],
+      "target_review_count_min": 5,
+      "target_review_count_preferred": 8,
+      "collection_status": "COLLECTION_IN_PROGRESS_0_OF_5"
+    },
+    {
+      "selection_rank": 38,
+      "poi_id": "49d739b9-e868-5391-9f80-bf9bed803b0f",
+      "name": "Bãi tắm Non Nước",
+      "city": "Đà Nẵng",
+      "destination_slug": "da-nang",
+      "category": "beach",
+      "category_group": "nature_beach",
+      "latitude": 16.0054851,
+      "longitude": 108.2690189,
+      "address": "Bãi tắm Non Nước, da_nang",
+      "osm_id": "way/1204900824",
+      "overture_id": null,
+      "source_ids": [
+        "osm:way/1204900824"
+      ],
+      "target_review_count_min": 5,
+      "target_review_count_preferred": 8,
+      "collection_status": "COLLECTION_IN_PROGRESS_0_OF_5"
+    },
+    {
+      "selection_rank": 39,
+      "poi_id": "b5ea1253-6b6a-5f5a-b910-5ef18cd29c94",
+      "name": "Ban Co Peak",
+      "city": "Đà Nẵng",
+      "destination_slug": "da-nang",
+      "category": "nature",
+      "category_group": "nature_beach",
+      "latitude": 16.1189286,
+      "longitude": 108.2720036,
+      "address": "Ban Co Peak, da_nang",
+      "osm_id": "node/1538334281",
+      "overture_id": null,
+      "source_ids": [
+        "osm:node/1538334281"
+      ],
+      "target_review_count_min": 5,
+      "target_review_count_preferred": 8,
+      "collection_status": "COLLECTION_IN_PROGRESS_0_OF_5"
+    },
+    {
+      "selection_rank": 40,
+      "poi_id": "987f490f-b1c7-42cf-b92e-300d57fd8d5f",
+      "name": "Sun World Bà Nà Hills",
+      "city": "Đà Nẵng",
+      "destination_slug": "da-nang",
+      "category": "entertainment",
+      "category_group": "other_tourism",
+      "latitude": 15.9956307,
+      "longitude": 107.9897217,
+      "address": null,
+      "osm_id": "way/359114064",
+      "overture_id": null,
+      "source_ids": [
+        "osm:way/359114064"
+      ],
+      "target_review_count_min": 5,
+      "target_review_count_preferred": 8,
+      "collection_status": "COLLECTION_IN_PROGRESS_0_OF_5"
+    },
+    {
+      "selection_rank": 41,
+      "poi_id": "ade2140c-7945-4044-b99a-b1a028edce9e",
+      "name": "Vịnh Hạ Long",
+      "city": "Hạ Long",
+      "destination_slug": "ha-long",
+      "category": "attraction",
+      "category_group": "attractions_culture",
+      "latitude": 20.9084384,
+      "longitude": 107.0682782,
+      "address": null,
+      "osm_id": "node/2707025319",
+      "overture_id": null,
+      "source_ids": [
+        "osm:node/2707025319"
+      ],
+      "target_review_count_min": 5,
+      "target_review_count_preferred": 8,
+      "collection_status": "COLLECTION_IN_PROGRESS_0_OF_5"
+    },
+    {
+      "selection_rank": 42,
+      "poi_id": "8f2b5a69-1293-4efe-8fc5-3a74193edd0f",
+      "name": "Bảo tàng Quảng Ninh",
+      "city": "Hạ Long",
+      "destination_slug": "ha-long",
+      "category": "museum",
+      "category_group": "attractions_culture",
+      "latitude": 20.9486771,
+      "longitude": 107.0975562,
+      "address": null,
+      "osm_id": "node/5395107122",
+      "overture_id": "bd078edf-ad58-4f6c-9016-adf65c90e5eb",
+      "source_ids": [
+        "osm:node/5395107122",
+        "overture:bd078edf-ad58-4f6c-9016-adf65c90e5eb"
+      ],
+      "target_review_count_min": 5,
+      "target_review_count_preferred": 8,
+      "collection_status": "COLLECTION_IN_PROGRESS_0_OF_5"
+    },
+    {
+      "selection_rank": 43,
+      "poi_id": "9a979427-a0bb-421d-b75f-2a6ee79b120b",
+      "name": "Động Thiên Cung",
+      "city": "Hạ Long",
+      "destination_slug": "ha-long",
+      "category": "attraction",
+      "category_group": "attractions_culture",
+      "latitude": 20.9126814,
+      "longitude": 107.0172114,
+      "address": null,
+      "osm_id": "node/4730928605",
+      "overture_id": null,
+      "source_ids": [
+        "osm:node/4730928605"
+      ],
+      "target_review_count_min": 5,
+      "target_review_count_preferred": 8,
+      "collection_status": "COLLECTION_IN_PROGRESS_0_OF_5"
+    },
+    {
+      "selection_rank": 44,
+      "poi_id": "9fbcb0b4-27bc-4482-a8e3-8be6e3c72677",
+      "name": "Hang Đầu Gỗ",
+      "city": "Hạ Long",
+      "destination_slug": "ha-long",
+      "category": "attraction",
+      "category_group": "attractions_culture",
+      "latitude": 20.9112131,
+      "longitude": 107.0186598,
+      "address": null,
+      "osm_id": "node/4730928606",
+      "overture_id": null,
+      "source_ids": [
+        "osm:node/4730928606"
+      ],
+      "target_review_count_min": 5,
+      "target_review_count_preferred": 8,
+      "collection_status": "COLLECTION_IN_PROGRESS_0_OF_5"
+    },
+    {
+      "selection_rank": 45,
+      "poi_id": "77af14b6-85ac-4c91-873a-e7da27d555f4",
+      "name": "Hang Luồn Cave Entrance",
+      "city": "Hạ Long",
+      "destination_slug": "ha-long",
+      "category": "attraction",
+      "category_group": "attractions_culture",
+      "latitude": 20.8530914,
+      "longitude": 107.094871,
+      "address": null,
+      "osm_id": "node/3560283504",
+      "overture_id": null,
+      "source_ids": [
+        "osm:node/3560283504"
+      ],
+      "target_review_count_min": 5,
+      "target_review_count_preferred": 8,
+      "collection_status": "COLLECTION_IN_PROGRESS_0_OF_5"
+    },
+    {
+      "selection_rank": 46,
+      "poi_id": "88652ea2-61a6-4022-85e5-84a0eb48d3f9",
+      "name": "Hòn Đỉnh Hương",
+      "city": "Hạ Long",
+      "destination_slug": "ha-long",
+      "category": "attraction",
+      "category_group": "attractions_culture",
+      "latitude": 20.9004906,
+      "longitude": 107.0159614,
+      "address": null,
+      "osm_id": "node/10821152105",
+      "overture_id": null,
+      "source_ids": [
+        "osm:node/10821152105"
+      ],
+      "target_review_count_min": 5,
+      "target_review_count_preferred": 8,
+      "collection_status": "COLLECTION_IN_PROGRESS_0_OF_5"
+    },
+    {
+      "selection_rank": 47,
+      "poi_id": "871a6ee7-1d46-49bb-957a-ff50260b1f3b",
+      "name": "Ha Long International Cruise Port",
+      "city": "Hạ Long",
+      "destination_slug": "ha-long",
+      "category": "attraction",
+      "category_group": "attractions_culture",
+      "latitude": 20.9532759,
+      "longitude": 107.0557052,
+      "address": null,
+      "osm_id": "node/7044140886",
+      "overture_id": "527ebd9f-445a-4059-a815-0d988c0925a2",
+      "source_ids": [
+        "osm:node/7044140886",
+        "overture:527ebd9f-445a-4059-a815-0d988c0925a2"
+      ],
+      "target_review_count_min": 5,
+      "target_review_count_preferred": 8,
+      "collection_status": "COLLECTION_IN_PROGRESS_0_OF_5"
+    },
+    {
+      "selection_rank": 48,
+      "poi_id": "b37d68ee-0cb3-49f0-a399-cac4c8e2732c",
+      "name": "Nhà hàng Hồng Hạnh 3",
+      "city": "Hạ Long",
+      "destination_slug": "ha-long",
+      "category": "restaurant",
+      "category_group": "restaurants_cafes_markets",
+      "latitude": 20.9566676,
+      "longitude": 107.0558474,
+      "address": "50 Đường Hạ Long",
+      "osm_id": "node/12998514201",
+      "overture_id": "92ed9717-ce41-4e8f-ab25-52e369cd88be",
+      "source_ids": [
+        "osm:node/12998514201",
+        "overture:92ed9717-ce41-4e8f-ab25-52e369cd88be"
+      ],
+      "target_review_count_min": 5,
+      "target_review_count_preferred": 8,
+      "collection_status": "COLLECTION_IN_PROGRESS_0_OF_5"
+    },
+    {
+      "selection_rank": 49,
+      "poi_id": "7d01af19-10bc-4679-8cfa-4396209dece4",
+      "name": "Nhà hàng Ngọc Phương Nam 1",
+      "city": "Hạ Long",
+      "destination_slug": "ha-long",
+      "category": "restaurant",
+      "category_group": "restaurants_cafes_markets",
+      "latitude": 20.9480089,
+      "longitude": 107.0233623,
+      "address": "Đỗ Sĩ Họa",
+      "osm_id": "node/12998531301",
+      "overture_id": "04dda4d2-9d22-4516-a651-73c774b61663",
+      "source_ids": [
+        "osm:node/12998531301",
+        "overture:04dda4d2-9d22-4516-a651-73c774b61663"
+      ],
+      "target_review_count_min": 5,
+      "target_review_count_preferred": 8,
+      "collection_status": "COLLECTION_IN_PROGRESS_0_OF_5"
+    },
+    {
+      "selection_rank": 50,
+      "poi_id": "065f8492-2ab3-4ea0-ae8f-9cc6f8c18ae5",
+      "name": "Nhà hàng Buffet Sen Á Đông",
+      "city": "Hạ Long",
+      "destination_slug": "ha-long",
+      "category": "restaurant",
+      "category_group": "restaurants_cafes_markets",
+      "latitude": 20.960357,
+      "longitude": 107.0627539,
+      "address": "1 Đường Hạ Long",
+      "osm_id": "node/12998779901",
+      "overture_id": "0772c46b-7aa9-40a0-b403-78dec2591927",
+      "source_ids": [
+        "osm:node/12998779901",
+        "overture:0772c46b-7aa9-40a0-b403-78dec2591927"
+      ],
+      "target_review_count_min": 5,
+      "target_review_count_preferred": 8,
+      "collection_status": "COLLECTION_IN_PROGRESS_0_OF_5"
+    },
+    {
+      "selection_rank": 51,
+      "poi_id": "96523873-1b85-4d2f-b85c-cb3f5593091b",
+      "name": "Chợ Cái Dăm",
+      "city": "Hạ Long",
+      "destination_slug": "ha-long",
+      "category": "market",
+      "category_group": "restaurants_cafes_markets",
+      "latitude": 20.955726,
+      "longitude": 107.0226526,
+      "address": null,
+      "osm_id": "way/674641659",
+      "overture_id": "9b6e3c9a-d263-4e5d-8ff7-7d7bddc1ffef",
+      "source_ids": [
+        "osm:way/674641659",
+        "overture:9b6e3c9a-d263-4e5d-8ff7-7d7bddc1ffef"
+      ],
+      "target_review_count_min": 5,
+      "target_review_count_preferred": 8,
+      "collection_status": "COLLECTION_IN_PROGRESS_0_OF_5"
+    },
+    {
+      "selection_rank": 52,
+      "poi_id": "6215446b-2fdd-4014-aacf-23de6e45e264",
+      "name": "Chợ Hạ Long II",
+      "city": "Hạ Long",
+      "destination_slug": "ha-long",
+      "category": "market",
+      "category_group": "restaurants_cafes_markets",
+      "latitude": 20.9582591,
+      "longitude": 107.0849932,
+      "address": null,
+      "osm_id": "way/673558390",
+      "overture_id": null,
+      "source_ids": [
+        "osm:way/673558390"
+      ],
+      "target_review_count_min": 5,
+      "target_review_count_preferred": 8,
+      "collection_status": "COLLECTION_IN_PROGRESS_0_OF_5"
+    },
+    {
+      "selection_rank": 53,
+      "poi_id": "b57b3f7d-9704-44b0-8139-19bea1998391",
+      "name": "Sữa chua trân châu Hạ Long cơ sở 00",
+      "city": "Hạ Long",
+      "destination_slug": "ha-long",
+      "category": "cafe",
+      "category_group": "restaurants_cafes_markets",
+      "latitude": 20.950604,
+      "longitude": 107.0419224,
+      "address": null,
+      "osm_id": "node/13009250202",
+      "overture_id": null,
+      "source_ids": [
+        "osm:node/13009250202"
+      ],
+      "target_review_count_min": 5,
+      "target_review_count_preferred": 8,
+      "collection_status": "COLLECTION_IN_PROGRESS_0_OF_5"
+    },
+    {
+      "selection_rank": 54,
+      "poi_id": "85303289-9746-4a42-b0f0-a555ce2bfd0e",
+      "name": "Highlands Coffee",
+      "city": "Hạ Long",
+      "destination_slug": "ha-long",
+      "category": "cafe",
+      "category_group": "restaurants_cafes_markets",
+      "latitude": 20.9547543,
+      "longitude": 107.0852853,
+      "address": "Trần Hưng Đạo",
+      "osm_id": "node/13183486704",
+      "overture_id": "6039522b-f82a-4a1d-88f3-09beca7172ab",
+      "source_ids": [
+        "osm:node/13183486704",
+        "overture:6039522b-f82a-4a1d-88f3-09beca7172ab"
+      ],
+      "target_review_count_min": 5,
+      "target_review_count_preferred": 8,
+      "collection_status": "COLLECTION_IN_PROGRESS_0_OF_5"
+    },
+    {
+      "selection_rank": 55,
+      "poi_id": "75a3fbd1-a24e-43c6-820a-72f95ebc05c0",
+      "name": "Vinpearl Ha Long resort",
+      "city": "Hạ Long",
+      "destination_slug": "ha-long",
+      "category": "hotel",
+      "category_group": "hotels",
+      "latitude": 20.941167,
+      "longitude": 107.0253612,
+      "address": null,
+      "osm_id": "node/4330722989",
+      "overture_id": "9ed3a2e3-60a3-4df0-acd8-83185f57a281",
+      "source_ids": [
+        "osm:node/4330722989",
+        "overture:9ed3a2e3-60a3-4df0-acd8-83185f57a281"
+      ],
+      "target_review_count_min": 5,
+      "target_review_count_preferred": 8,
+      "collection_status": "COLLECTION_IN_PROGRESS_0_OF_5"
+    },
+    {
+      "selection_rank": 56,
+      "poi_id": "9740c851-5b06-432c-a243-071ad0906494",
+      "name": "Novotel Ha Long",
+      "city": "Hạ Long",
+      "destination_slug": "ha-long",
+      "category": "hotel",
+      "category_group": "hotels",
+      "latitude": 20.9519692,
+      "longitude": 107.0419818,
+      "address": null,
+      "osm_id": "way/676720191",
+      "overture_id": "893209f5-1d13-479f-b7d7-6630b1f3fe57",
+      "source_ids": [
+        "osm:way/676720191",
+        "overture:893209f5-1d13-479f-b7d7-6630b1f3fe57"
+      ],
+      "target_review_count_min": 5,
+      "target_review_count_preferred": 8,
+      "collection_status": "COLLECTION_IN_PROGRESS_0_OF_5"
+    },
+    {
+      "selection_rank": 57,
+      "poi_id": "708ee182-c879-477c-b920-516e2c99b0a6",
+      "name": "Công viên Lán Bè",
+      "city": "Hạ Long",
+      "destination_slug": "ha-long",
+      "category": "park",
+      "category_group": "nature_beach",
+      "latitude": 20.9507823,
+      "longitude": 107.0879903,
+      "address": null,
+      "osm_id": "way/673096986",
+      "overture_id": null,
+      "source_ids": [
+        "osm:way/673096986"
+      ],
+      "target_review_count_min": 5,
+      "target_review_count_preferred": 8,
+      "collection_status": "COLLECTION_IN_PROGRESS_0_OF_5"
+    },
+    {
+      "selection_rank": 58,
+      "poi_id": "0931b06b-4563-4af0-a3a4-75f1ad8392ee",
+      "name": "Vườn hoa",
+      "city": "Hạ Long",
+      "destination_slug": "ha-long",
+      "category": "park",
+      "category_group": "nature_beach",
+      "latitude": 20.949184,
+      "longitude": 107.0829926,
+      "address": null,
+      "osm_id": "way/673096992",
+      "overture_id": null,
+      "source_ids": [
+        "osm:way/673096992"
+      ],
+      "target_review_count_min": 5,
+      "target_review_count_preferred": 8,
+      "collection_status": "COLLECTION_IN_PROGRESS_0_OF_5"
+    },
+    {
+      "selection_rank": 59,
+      "poi_id": "8fe33554-7a07-4eb2-870f-8af643d8c728",
+      "name": "Vườn hoa Thị trấn Trới",
+      "city": "Hạ Long",
+      "destination_slug": "ha-long",
+      "category": "park",
+      "category_group": "nature_beach",
+      "latitude": 21.0263443,
+      "longitude": 106.9934125,
+      "address": null,
+      "osm_id": "way/677419454",
+      "overture_id": null,
+      "source_ids": [
+        "osm:way/677419454"
+      ],
+      "target_review_count_min": 5,
+      "target_review_count_preferred": 8,
+      "collection_status": "COLLECTION_IN_PROGRESS_0_OF_5"
+    },
+    {
+      "selection_rank": 60,
+      "poi_id": "1a95430d-289d-4663-91b8-ae64ede4f9a4",
+      "name": "Sunworld",
+      "city": "Hạ Long",
+      "destination_slug": "ha-long",
+      "category": "entertainment",
+      "category_group": "other_tourism",
+      "latitude": 20.9521435,
+      "longitude": 107.0483086,
+      "address": null,
+      "osm_id": "relation/18623673",
+      "overture_id": null,
+      "source_ids": [
+        "osm:relation/18623673"
+      ],
+      "target_review_count_min": 5,
+      "target_review_count_preferred": 8,
+      "collection_status": "COLLECTION_IN_PROGRESS_0_OF_5"
+    }
+  ],
+  "manifest_sha256": "b4be35d96ff503c61986674a6b3eb37b993484c0dc121434772184a2b089ed2b"
+}
