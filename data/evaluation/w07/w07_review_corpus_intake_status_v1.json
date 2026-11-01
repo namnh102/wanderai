@@ -1,0 +1,260 @@
+{
+  "artifact_id": "w07_review_corpus_intake_status_v1",
+  "artifact_version": "1.0.0",
+  "task_id": "W07-A2",
+  "task_title": "CANONICAL 60-POI INTAKE + TARGETED REVIEW CORPUS ACQUISITION",
+  "authority_and_gates": {
+    "previous_gate": "W07-A1-REVIEW-CORPUS-FEASIBILITY-POSTMERGE-CHATGPT-AUDIT = PASS",
+    "previous_gate_decision": "PASS",
+    "authoritative_develop_base_sha": "7a263ff289b79e198cfda94fea61e1c88dc86813",
+    "next_gate": "W07-A2-CANONICAL-REVIEW-CORPUS-INTAKE-CHATGPT-AUDIT",
+    "w06_status": "CLOSED_IMMUTABLE",
+    "w07_0_status": "COMPLETE_IMMUTABLE",
+    "w07_a1_status": "COMPLETE_IMMUTABLE",
+    "w06_closure_internal_sha256": "7dec87d9b318165ba5233d1470df8f12dfbe99449bceabb86dc2322aaab89e12",
+    "w07_0_audit_internal_sha256": "7a951b5f93473998d4032aabfeaa250ac8e7ba2ea42cbdaf230389cd5fe3a6a9",
+    "w07_0_audit_file_lf_sha256": "2727cb23ea63af6eada16deba558a82f6329b13ebccb09133c32042466bd2b16",
+    "w07_a1_feasibility_internal_sha256": "6658b23c4f58f9dd05b7739e20eb7bd0543ed93f8dea76010e4ec3639eae6442",
+    "w07_a1_feasibility_file_lf_sha256": "1790ec89f6660217584db81f1983da88a5aa3d02e2b2190ad4d4d3672faa6c1b"
+  },
+  "target_manifest_binding": {
+    "manifest_path": "data/evaluation/w07/w07_review_target_60_pois_v1.json",
+    "manifest_sha256": "1e7e59304c182cfe3f4a8518e18df2ab1dde3b9dee5850f081fc390f1d13cd8d",
+    "total_target_pois": 60,
+    "city_distribution": {
+      "Hà Nội": 20,
+      "Đà Nẵng": 20,
+      "Hạ Long": 20
+    },
+    "category_group_distribution": {
+      "attractions_culture": 18,
+      "restaurants_cafes_markets": 18,
+      "hotels": 15,
+      "nature_beach": 6,
+      "other_tourism": 3
+    },
+    "raw_category_distribution": {
+      "attraction": 9,
+      "beach": 1,
+      "cafe": 4,
+      "culture": 7,
+      "entertainment": 2,
+      "hotel": 15,
+      "market": 4,
+      "museum": 1,
+      "nature": 3,
+      "nightlife": 1,
+      "park": 2,
+      "restaurant": 10,
+      "temple": 1
+    }
+  },
+  "primary_review_schema_spec": {
+    "required_fields": [
+      "review_id",
+      "poi_id",
+      "upstream_place_id",
+      "city",
+      "source",
+      "source_review_id",
+      "rating",
+      "rating_scale_max",
+      "review_text",
+      "language",
+      "created_at",
+      "collected_at",
+      "source_ref",
+      "provenance",
+      "license_or_usage_class",
+      "mapping_method",
+      "mapping_confidence"
+    ],
+    "optional_fields": [
+      "author_anonymous_id",
+      "visit_period",
+      "consent_record_id"
+    ],
+    "forbidden_pii_fields": [
+      "contributor_real_name",
+      "real_name",
+      "author_name",
+      "phone",
+      "phone_number",
+      "email",
+      "account_handle"
+    ],
+    "primary_mapping_method": "EXACT_PREBOUND_CANONICAL_POI",
+    "primary_mapping_confidence": 1.0,
+    "post_hoc_name_only_mapping_allowed": false
+  },
+  "channel_a_public_research_permitted_acquisition_audit": {
+    "sources_checked": [
+      {
+        "source": "gomate_places_freeze_v2.json (OpenStreetMap + Overture Maps)",
+        "research_reuse_status": "APPROVED_METADATA_ONLY",
+        "primary_review_text_rows_found": 0,
+        "note": "Provides canonical place_id, coordinates, category, and osm/overture IDs for all 60 POIs, but 0 user review texts."
+      },
+      {
+        "source": "MinhDS/ViHoRec (data/restricted/vihorec/)",
+        "research_reuse_status": "CC-BY-NC-4.0_RATINGS_ONLY",
+        "primary_review_text_rows_found": 0,
+        "note": "17,911 numeric hotel interactions; 0 user review texts."
+      },
+      {
+        "source": "phamluan/vn_msa_sar_v3 + VLSP2018-ABSA + pqthinh232 + mendeley:10.17632/dp8s59xnb7.1 + hienbm/tripadvisor_vietnam",
+        "research_reuse_status": "AUXILIARY_ONLY_UNMAPPABLE_TO_60_POIS",
+        "primary_review_text_rows_found": 0,
+        "note": "Place identities, addresses, and coordinates were stripped prior to release; 0 rows map to the 60 canonical POIs."
+      },
+      {
+        "source": "ThanThoai9x/vietnamese-food-images",
+        "research_reuse_status": "REJECTED_ZERO_GEOGRAPHIC_OVERLAP",
+        "primary_review_text_rows_found": 0,
+        "note": "100% Hồ Chí Minh City (34,104 / 34,104 rows across 9 HCMC districts); 0 rows in Hà Nội, Đà Nẵng, or Hạ Long."
+      },
+      {
+        "source": "Google Maps / Tripadvisor / Booking / Foody public web pages",
+        "research_reuse_status": "NOT_APPROVED_NO_SCRAPING",
+        "primary_review_text_rows_found": 0,
+        "note": "Public visibility does not grant research dataset redistribution rights; scraping is strictly prohibited by Section 7 & 16."
+      }
+    ],
+    "PUBLIC_PRIMARY_REVIEWS_ACQUIRED": 0
+  },
+  "channel_b_contributor_intake_package": {
+    "contributor_form_spec_path": "docs/research/w07_review_contributor_form_spec.md",
+    "restricted_jsonl_path": "data/restricted/w07_reviews/w07_canonical_reviews_v1.jsonl",
+    "restricted_csv_template_path": "data/restricted/w07_reviews/w07_contributor_intake_template_v1.csv",
+    "consent_text_vi": "Việc gửi đánh giá địa điểm là hoàn toàn tự nguyện phục vụ đồ án tốt nghiệp đại học (GoMate / WanderAI). Nội dung đánh giá sẽ được ẩn danh hoàn toàn (không lưu họ tên, số điện thoại, email hay tài khoản cá nhân trong bộ dữ liệu khoa học) và được sử dụng cho mục đích nghiên cứu, đánh giá thực nghiệm và trình diễn học thuật phi thương mại. Người đóng góp xác nhận không đưa thông tin cá nhân nhạy cảm vào nội dung, xác nhận đây là trải nghiệm/nhận xét thật do chính mình tự viết (không sao chép từ Google Maps/Tripadvisor và không dùng AI/LLM tạo sinh), và đồng ý cấp quyền tái sử dụng học thuật phi thương mại cho dự án.",
+    "consent_text_en": "Submission of this place review is completely voluntary for an academic graduation project (GoMate / WanderAI). Your review will be strictly anonymized (no real name, phone number, email, or social handle will be stored in the scientific corpus) and may be used for research, benchmark evaluation, and academic demonstration. Please do not submit any sensitive personal information. By checking the consent box, you confirm that this review is your own original writing based on genuine experience/opinion (not copied from Google Maps/Tripadvisor and not generated or paraphrased by an LLM) and grant permission for academic, non-commercial project reuse.",
+    "anonymization_rule": "External contributor identities (name, email, phone, handle) are never imported into `w07_canonical_reviews_v1.jsonl`; only a deterministic salted hash `author_anonymous_id = contrib_<sha256[:12]>` and `consent_record_id` are stored."
+  },
+  "current_validation_and_readiness_summary": {
+    "corpus_collection_status": "COLLECTION_IN_PROGRESS",
+    "freeze_status": "PARTIAL_COLLECTION_NOT_SCIENTIFIC_FREEZE",
+    "CORPUS_SCIENTIFIC_MINIMUM_READY": false,
+    "accepted_review_count": 0,
+    "rejected_review_count": 0,
+    "warning_count": 0,
+    "duplicate_count": 0,
+    "covered_poi_count": 0,
+    "pois_meeting_min_5_reviews_count": 0,
+    "remaining_reviews_needed_for_scientific_minimum": 300,
+    "remaining_pois_needing_reviews": 60,
+    "city_coverage": {
+      "Hà Nội": {
+        "target_pois": 20,
+        "covered_pois": 0,
+        "pois_meeting_min_5_reviews": 0,
+        "accepted_reviews": 0,
+        "target_reviews_min": 100,
+        "remaining_reviews_needed_min": 100
+      },
+      "Đà Nẵng": {
+        "target_pois": 20,
+        "covered_pois": 0,
+        "pois_meeting_min_5_reviews": 0,
+        "accepted_reviews": 0,
+        "target_reviews_min": 100,
+        "remaining_reviews_needed_min": 100
+      },
+      "Hạ Long": {
+        "target_pois": 20,
+        "covered_pois": 0,
+        "pois_meeting_min_5_reviews": 0,
+        "accepted_reviews": 0,
+        "target_reviews_min": 100,
+        "remaining_reviews_needed_min": 100
+      }
+    },
+    "category_group_coverage": {
+      "attractions_culture": {
+        "target_pois": 18,
+        "covered_pois": 0,
+        "accepted_reviews": 0,
+        "target_reviews_min": 90
+      },
+      "restaurants_cafes_markets": {
+        "target_pois": 18,
+        "covered_pois": 0,
+        "accepted_reviews": 0,
+        "target_reviews_min": 90
+      },
+      "hotels": {
+        "target_pois": 15,
+        "covered_pois": 0,
+        "accepted_reviews": 0,
+        "target_reviews_min": 75
+      },
+      "nature_beach": {
+        "target_pois": 6,
+        "covered_pois": 0,
+        "accepted_reviews": 0,
+        "target_reviews_min": 30
+      },
+      "other_tourism": {
+        "target_pois": 3,
+        "covered_pois": 0,
+        "accepted_reviews": 0,
+        "target_reviews_min": 15
+      }
+    },
+    "source_distribution": {}
+  },
+  "owner_action_pack": {
+    "status": "ACTION_REQUIRED_TO_REACH_300_REVIEWS",
+    "reviews_still_needed_min": 300,
+    "pois_still_under_5_reviews": 60,
+    "city_gaps": {
+      "Hà Nội": {
+        "pois_needing_reviews": 20,
+        "reviews_needed_min": 100
+      },
+      "Đà Nẵng": {
+        "pois_needing_reviews": 20,
+        "reviews_needed_min": 100
+      },
+      "Hạ Long": {
+        "pois_needing_reviews": 20,
+        "reviews_needed_min": 100
+      }
+    },
+    "recommended_contributor_plan": {
+      "suggested_contributors_range": "30-50 contributors (students, alumni, local travelers)",
+      "suggested_reviews_per_contributor": "6-10 genuine reviews per contributor covering ONLY canonical POIs they have personally visited (e.g., 30 contributors x 10 reviews or 50 contributors x 6 reviews = 300 genuine reviews).",
+      "strict_authenticity_rules": [
+        "Do NOT copy reviews from Google Maps, Tripadvisor, Foody, or Booking.",
+        "Do NOT invent a visit to a place never visited.",
+        "Do NOT use ChatGPT, Gemini, Claude, or any LLM to generate or paraphrase reviews."
+      ]
+    },
+    "form_fields_required": [
+      "1. Canonical POI Selection (`[City] Name (Category) — poi_id`, chosen from the 60 frozen POIs)",
+      "2. Genuine Review Text (`review_text`, Vietnamese or English, recommended >= 20 chars / >= 5 words describing concrete aspects such as scenery, service, food/rooms, price, crowd)",
+      "3. Overall Rating (`rating`, integer/float 1 to 5 on `rating_scale_max = 5`)",
+      "4. Language (`vi`, `en`, or `mixed_vi_en`)",
+      "5. Visit Period (`visit_period`, optional, e.g., `2025-07` or `2026-Q1`)",
+      "6. Authorship & Academic Reuse Consent Checkbox (`consent_checkbox = true`, confirming genuine own writing and academic non-commercial reuse permission)"
+    ],
+    "validation_command_after_intake": "python scripts/validate_w07_review_corpus_v1.py --validate-jsonl data/restricted/w07_reviews/w07_canonical_reviews_v1.jsonl"
+  },
+  "firewalls_and_infrastructure": {
+    "PRIMARY_ACQUISITION_STRATEGY": "HYBRID_TARGETED_COLLECTION",
+    "AUXILIARY_ABSA_DATASET": "phamluan/vn_msa_sar_v3",
+    "AUXILIARY_ABSA_ROLE": "AUXILIARY_ABSA_ONLY",
+    "AUXILIARY_ALLOWED_IN_PRIMARY_CORPUS": false,
+    "GOOGLE_PLACES_MAX_REVIEWS_PER_PLACE": 5,
+    "GOOGLE_PLACES_OFFLINE_CORPUS_ROLE": "NOT_APPROVED_PENDING_STORAGE_TERMS_REVIEW",
+    "TRIPADVISOR_CONTENT_API_ACADEMIC_CORPUS_ROLE": "NOT_RECOMMENDED",
+    "LLM_GENERATED_PRIMARY_REVIEWS": 0,
+    "NEW_LLM_PROVIDER_CALLS": 0,
+    "SCRAPING_EXECUTED": false,
+    "gpu_required": false,
+    "vps_required": false,
+    "vector_db_required_in_w07_a2": false,
+    "paid_api_required": false,
+    "proxy_required": false
+  },
+  "artifact_sha256": "9368e7e50ae3e82828f688c1903d196fadcb9cec91ee97d2ad3d597f08c5abca"
+}
