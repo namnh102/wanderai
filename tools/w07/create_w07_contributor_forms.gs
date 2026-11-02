@@ -4,22 +4,32 @@
  * Authority:
  *   Bound to W07-A2 Manifest SHA256: b4be35d96ff503c61986674a6b3eb37b993484c0dc121434772184a2b089ed2b
  *   Form Definition SHA256: 9c17cfc51c41295c8338b40544324454a36a7276bb2339edd3a0b59c88c6de8a
+ *   Generator Lifecycle Status: STATICALLY_VERIFIED_OWNER_RUNTIME_PREFLIGHT_REQUIRED
+ *   Required Owner Preflight Gate: OWNER_GOOGLE_FORMS_RUNTIME_PREFLIGHT
  *
  * IMPORTANT:
  *   - Owner utility ONLY. Never executed in CI.
+ *   - Static Python CI verification does NOT replace Owner Google account runtime preflight.
  *   - Does NOT store credentials or call any paid API.
  *   - Creates 3 city-specific Google Forms (Hà Nội, Đà Nẵng, Hạ Long), each containing
  *     exactly 20 canonical POIs rendered as human-readable <POI name>.
- *   - Configures privacy-first settings: Email collection OFF, Limit to 1 response OFF.
+ *   - Configures supported privacy-first settings:
+ *       setCollectEmail(false)
+ *       setLimitOneResponsePerUser(false)
+ *       setShowLinkToRespondAgain(true)
+ *   - Guards advanced responder publishing with supportsAdvancedResponderPermissions().
  *
  * Usage (in https://script.google.com):
  *   1. Create a new Apps Script project and paste this file into Code.gs.
  *   2. Select `createW07ContributorForms` and click Run.
- *   3. Copy the published Responder URLs from the Execution Log.
+ *   3. Inspect the Execution Log and complete the 10-step OWNER_GOOGLE_FORMS_RUNTIME_PREFLIGHT
+ *      in an incognito/private browser before distributing any link to contributors.
  */
 
 const W07_A2_MANIFEST_SHA256 = "b4be35d96ff503c61986674a6b3eb37b993484c0dc121434772184a2b089ed2b";
 const W07_FORM_VERSION = "1.0.0";
+const W07_GENERATOR_LIFECYCLE_STATUS = "STATICALLY_VERIFIED_OWNER_RUNTIME_PREFLIGHT_REQUIRED";
+const W07_OWNER_RUNTIME_PREFLIGHT_GATE = "OWNER_GOOGLE_FORMS_RUNTIME_PREFLIGHT";
 const W07_CONSENT_TEXT_VI = "Việc gửi đánh giá địa điểm là hoàn toàn tự nguyện phục vụ đồ án tốt nghiệp đại học (GoMate / WanderAI). Nội dung đánh giá sẽ được ẩn danh hoàn toàn (không lưu họ tên, số điện thoại, email hay tài khoản cá nhân trong bộ dữ liệu khoa học) và được sử dụng cho mục đích nghiên cứu, đánh giá thực nghiệm và trình diễn học thuật phi thương mại. Người đóng góp xác nhận không đưa thông tin cá nhân nhạy cảm vào nội dung, xác nhận bản thân đã trực tiếp đến/trải nghiệm địa điểm được chọn, tự viết đánh giá, không sao chép từ Google Maps, Tripadvisor, Booking, Agoda hay Foody, không dùng AI (ChatGPT, Gemini, Claude) để tạo hoặc viết lại nội dung, và đồng ý cấp quyền tái sử dụng học thuật phi thương mại cho dự án.";
 const W07_CONSENT_TEXT_EN = "Submission of this place review is completely voluntary for an academic graduation project (GoMate / WanderAI). Your review will be strictly anonymized (no real name, phone number, email, or social handle will be stored in the scientific corpus) and may be used for research, benchmark evaluation, and academic demonstration. Please do not submit any sensitive personal information. By checking the consent box, you confirm that you have personally visited or directly experienced the selected place (and personally visited or directly experienced the selected POI), that the review is your own original writing (not copied from Google Maps, Tripadvisor, Booking, Agoda, or Foody, and not generated or paraphrased by an AI/LLM), and that you grant permission for academic, non-commercial project reuse.";
 const W07_CONSENT_CHECKBOX_LABEL = "Tôi xác nhận đầy đủ 7 cam kết trên (đã trực tiếp đến địa điểm, tự viết 100%, không sao chép, không dùng AI, tự nguyện cấp quyền nghiên cứu học thuật ẩn danh) / I affirm all 7 statements above.";
@@ -124,7 +134,6 @@ function createW07ContributorForms() {
       "Manifest SHA256: " + W07_A2_MANIFEST_SHA256
     );
     form.setCollectEmail(false);
-    form.setRequireLogin(false);
     form.setLimitOneResponsePerUser(false);
     form.setShowLinkToRespondAgain(true);
 
@@ -170,12 +179,30 @@ function createW07ContributorForms() {
       .setChoices([consentItem.createChoice(W07_CONSENT_CHECKBOX_LABEL)])
       .setRequired(true);
 
+    // Guard advanced responder publishing by supportsAdvancedResponderPermissions()
+    const supportsAdvanced = (
+      typeof form.supportsAdvancedResponderPermissions === "function" &&
+      form.supportsAdvancedResponderPermissions() == true
+    );
+    let publishActionTaken = "NO_OP_ADVANCED_RESPONDER_PERMISSIONS_UNSUPPORTED";
+    if (supportsAdvanced) {
+      form.setPublished(true);
+      publishActionTaken = "form.setPublished(true)";
+    }
+
     const summary = {
+      form_title: spec.title,
       form_id: spec.form_id,
+      google_form_id: form.getId(),
       city: spec.city,
       poi_count: spec.pois.length,
       edit_url: form.getEditUrl(),
       published_url: form.getPublishedUrl(),
+      supportsAdvancedResponderPermissions: supportsAdvanced,
+      publish_action_taken: publishActionTaken,
+      collect_email_configuration: false,
+      limit_one_response_configuration: false,
+      show_link_to_respond_again_configuration: true,
       raw_csv_target: spec.raw_csv_default_relpath
     };
     results.push(summary);

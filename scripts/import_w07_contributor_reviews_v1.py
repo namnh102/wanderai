@@ -54,6 +54,14 @@ PREVIOUS_GATE = (
     "W07-A2-CANONICAL-REVIEW-CORPUS-INTAKE-POSTMERGE-CHATGPT-AUDIT = PASS"
 )
 NEXT_GATE = "W07-A3-CONTRIBUTOR-COLLECTION-LAUNCH-CHATGPT-AUDIT"
+CORRECTIVE_NEXT_GATE = (
+    "W07-A3-CONTRIBUTOR-COLLECTION-LAUNCH-CORRECTIVE-01-CHATGPT-AUDIT"
+)
+
+GENERATOR_LIFECYCLE_STATUS = (
+    "STATICALLY_VERIFIED_OWNER_RUNTIME_PREFLIGHT_REQUIRED"
+)
+OWNER_RUNTIME_PREFLIGHT_GATE = "OWNER_GOOGLE_FORMS_RUNTIME_PREFLIGHT"
 
 EXPECTED_A2_MANIFEST_INTERNAL_SHA256 = (
     "b4be35d96ff503c61986674a6b3eb37b993484c0dc121434772184a2b089ed2b"
@@ -485,22 +493,32 @@ def build_google_apps_script_source(form_def_payload: dict[str, Any]) -> str:
  * Authority:
  *   Bound to W07-A2 Manifest SHA256: {EXPECTED_A2_MANIFEST_INTERNAL_SHA256}
  *   Form Definition SHA256: {form_def_payload['artifact_sha256']}
+ *   Generator Lifecycle Status: {GENERATOR_LIFECYCLE_STATUS}
+ *   Required Owner Preflight Gate: {OWNER_RUNTIME_PREFLIGHT_GATE}
  *
  * IMPORTANT:
  *   - Owner utility ONLY. Never executed in CI.
+ *   - Static Python CI verification does NOT replace Owner Google account runtime preflight.
  *   - Does NOT store credentials or call any paid API.
  *   - Creates 3 city-specific Google Forms (Hà Nội, Đà Nẵng, Hạ Long), each containing
  *     exactly 20 canonical POIs rendered as human-readable <POI name>.
- *   - Configures privacy-first settings: Email collection OFF, Limit to 1 response OFF.
+ *   - Configures supported privacy-first settings:
+ *       setCollectEmail(false)
+ *       setLimitOneResponsePerUser(false)
+ *       setShowLinkToRespondAgain(true)
+ *   - Guards advanced responder publishing with supportsAdvancedResponderPermissions().
  *
  * Usage (in https://script.google.com):
  *   1. Create a new Apps Script project and paste this file into Code.gs.
  *   2. Select `createW07ContributorForms` and click Run.
- *   3. Copy the published Responder URLs from the Execution Log.
+ *   3. Inspect the Execution Log and complete the 10-step OWNER_GOOGLE_FORMS_RUNTIME_PREFLIGHT
+ *      in an incognito/private browser before distributing any link to contributors.
  */
 
 const W07_A2_MANIFEST_SHA256 = "{EXPECTED_A2_MANIFEST_INTERNAL_SHA256}";
 const W07_FORM_VERSION = "{FORM_PACKAGE_VERSION}";
+const W07_GENERATOR_LIFECYCLE_STATUS = "{GENERATOR_LIFECYCLE_STATUS}";
+const W07_OWNER_RUNTIME_PREFLIGHT_GATE = "{OWNER_RUNTIME_PREFLIGHT_GATE}";
 const W07_CONSENT_TEXT_VI = {consent_vi};
 const W07_CONSENT_TEXT_EN = {consent_en};
 const W07_CONSENT_CHECKBOX_LABEL = {checkbox_label};
@@ -520,7 +538,6 @@ function createW07ContributorForms() {{
       "Manifest SHA256: " + W07_A2_MANIFEST_SHA256
     );
     form.setCollectEmail(false);
-    form.setRequireLogin(false);
     form.setLimitOneResponsePerUser(false);
     form.setShowLinkToRespondAgain(true);
 
@@ -566,12 +583,30 @@ function createW07ContributorForms() {{
       .setChoices([consentItem.createChoice(W07_CONSENT_CHECKBOX_LABEL)])
       .setRequired(true);
 
+    // Guard advanced responder publishing by supportsAdvancedResponderPermissions()
+    const supportsAdvanced = (
+      typeof form.supportsAdvancedResponderPermissions === "function" &&
+      form.supportsAdvancedResponderPermissions() == true
+    );
+    let publishActionTaken = "NO_OP_ADVANCED_RESPONDER_PERMISSIONS_UNSUPPORTED";
+    if (supportsAdvanced) {{
+      form.setPublished(true);
+      publishActionTaken = "form.setPublished(true)";
+    }}
+
     const summary = {{
+      form_title: spec.title,
       form_id: spec.form_id,
+      google_form_id: form.getId(),
       city: spec.city,
       poi_count: spec.pois.length,
       edit_url: form.getEditUrl(),
       published_url: form.getPublishedUrl(),
+      supportsAdvancedResponderPermissions: supportsAdvanced,
+      publish_action_taken: publishActionTaken,
+      collect_email_configuration: false,
+      limit_one_response_configuration: false,
+      show_link_to_respond_again_configuration: true,
       raw_csv_target: spec.raw_csv_default_relpath
     }};
     results.push(summary);
@@ -624,6 +659,13 @@ def verify_form_definition_artifacts(repo_root: Path = REPO_ROOT) -> dict[str, A
             "Form definition artifact on disk is out of sync with build_form_definition_payload()."
         )
 
+    expected_gs = build_google_apps_script_source(expected_payload)
+    disk_gs = gs_path.read_text(encoding="utf-8")
+    if disk_gs != expected_gs:
+        raise ValueError("Apps Script generator on disk is out of sync with build_google_apps_script_source().")
+    if "setRequireLogin" in disk_gs or "requiresLogin" in disk_gs:
+        raise ValueError("Deprecated FormApp login API token detected in Apps Script generator.")
+
     city_counts = {
         cf["city"]: cf["poi_count"] for cf in disk_payload.get("city_forms", [])
     }
@@ -637,6 +679,8 @@ def verify_form_definition_artifacts(repo_root: Path = REPO_ROOT) -> dict[str, A
         "form_definition_file_lf_sha256": w07_a2.compute_lf_normalized_sha256(form_def_path),
         "apps_script_path": APPS_SCRIPT_RELPATH,
         "apps_script_lf_sha256": w07_a2.compute_lf_normalized_sha256(gs_path),
+        "generator_lifecycle_status": GENERATOR_LIFECYCLE_STATUS,
+        "owner_runtime_preflight_gate": OWNER_RUNTIME_PREFLIGHT_GATE,
         "manifest_internal_sha256": EXPECTED_A2_MANIFEST_INTERNAL_SHA256,
         "city_form_poi_counts": city_counts,
     }

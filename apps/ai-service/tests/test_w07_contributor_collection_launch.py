@@ -59,6 +59,18 @@ def test_w07_a3_three_forms_20_pois_and_no_poi_outside_manifest() -> None:
         res["form_definition_internal_sha256"]
         == "9c17cfc51c41295c8338b40544324454a36a7276bb2339edd3a0b59c88c6de8a"
     )
+    assert (
+        res["apps_script_lf_sha256"]
+        == "5e87dcf74d2bc4840792701bbd852c75781ef6ba938ac8c1eacad6d2a430be71"
+    )
+    assert (
+        res["generator_lifecycle_status"]
+        == "STATICALLY_VERIFIED_OWNER_RUNTIME_PREFLIGHT_REQUIRED"
+    )
+    assert (
+        res["owner_runtime_preflight_gate"]
+        == "OWNER_GOOGLE_FORMS_RUNTIME_PREFLIGHT"
+    )
 
     manifest = w07_a3_import.verify_and_load_a2_manifest(REPO_ROOT)
     manifest_ids = {p["poi_id"] for p in manifest["pois"]}
@@ -81,6 +93,39 @@ def test_w07_a3_three_forms_20_pois_and_no_poi_outside_manifest() -> None:
 
     assert len(seen_form_poi_ids) == 60
     assert seen_form_poi_ids == manifest_ids
+
+
+def test_w07_a3_google_apps_script_runtime_compatibility_and_no_deprecated_login_api() -> None:
+    """Corrective 01 Section 9 (1-6): Static regression checks on tools/w07/create_w07_contributor_forms.gs."""
+    gs_path = REPO_ROOT / w07_a3_import.APPS_SCRIPT_RELPATH
+    gs_text = gs_path.read_text(encoding="utf-8")
+
+    # 1 & 2. Deprecated login APIs must not appear anywhere in the generator
+    assert "setRequireLogin" not in gs_text
+    assert "requiresLogin" not in gs_text
+
+    # 3, 4, 5. Supported privacy and repeat-response settings must remain
+    assert "form.setCollectEmail(false);" in gs_text
+    assert "form.setLimitOneResponsePerUser(false);" in gs_text
+    assert "form.setShowLinkToRespondAgain(true);" in gs_text
+
+    # 6. Advanced publishing guarded by supportsAdvancedResponderPermissions
+    assert "form.supportsAdvancedResponderPermissions() == true" in gs_text
+    assert "if (supportsAdvanced) {\n      form.setPublished(true);" in gs_text
+
+    # Execution log records required diagnostic fields without credentials
+    for field in (
+        "form_title:",
+        "form_id:",
+        "google_form_id:",
+        "edit_url:",
+        "published_url:",
+        "supportsAdvancedResponderPermissions:",
+        "publish_action_taken:",
+        "collect_email_configuration:",
+        "limit_one_response_configuration:",
+    ):
+        assert field in gs_text
 
 
 def test_w07_a3_manifest_hash_binding_fails_closed_on_mismatch(
