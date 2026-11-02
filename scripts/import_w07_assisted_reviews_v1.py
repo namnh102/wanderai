@@ -425,7 +425,7 @@ def parse_strict_assisted_timestamp(raw_ts: str) -> tuple[str, str] | None:
         except ValueError:
             continue
 
-    # 2. ISO-8601 with explicit timezone offset (e.g. 2026-11-02T09:00:00+07:00)
+    # 2. ISO-8601 with explicit timezone offset
     if "T" in ts and (ts.endswith("Z") or "+" in ts[10:] or "-" in ts[10:]):
         iso_candidate = ts[:-1] + "+00:00" if ts.endswith("Z") else ts
         try:
