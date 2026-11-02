@@ -1,0 +1,1889 @@
+{
+  "artifact_id": "w07_contributor_collection_form_definition_v1",
+  "form_version": "1.0.0",
+  "task_id": "W07-A3",
+  "authoritative_develop_base_sha": "82d2a0567f98c5e2ca368d2a2760e1029b709a56",
+  "previous_gate": "W07-A2-CANONICAL-REVIEW-CORPUS-INTAKE-POSTMERGE-CHATGPT-AUDIT = PASS",
+  "next_gate": "W07-A3-CONTRIBUTOR-COLLECTION-LAUNCH-CHATGPT-AUDIT",
+  "manifest_sha_binding": {
+    "manifest_path": "data/evaluation/w07/w07_review_target_60_pois_v1.json",
+    "manifest_internal_sha256": "b4be35d96ff503c61986674a6b3eb37b993484c0dc121434772184a2b089ed2b",
+    "manifest_file_lf_sha256": "3a065165d038f300f5dc422180fcaf3cef265ac1a100ea8e841daaba1a82d5d4",
+    "fail_closed_on_mismatch": true
+  },
+  "collection_surface": {
+    "primary_platform": "Google Forms",
+    "total_city_forms": 3,
+    "pois_per_city_form": 20,
+    "total_canonical_pois": 60,
+    "response_granularity": "ONE_REVIEW_OF_ONE_POI_PER_FORM_SUBMISSION",
+    "repeat_submissions_allowed_for_other_visited_pois": true
+  },
+  "privacy_first_configuration": {
+    "email_collection": "OFF",
+    "require_google_sign_in_limit_1_response": false,
+    "prohibited_identity_fields": [
+      "real_name",
+      "email",
+      "phone",
+      "social_account",
+      "exact_home_address",
+      "student_id",
+      "national_id"
+    ],
+    "organizational_forced_identity_policy": "If organizational Google settings force email/name collection, raw CSV exports remain git-ignored under data/restricted/w07_reviews/raw_forms/ and all identity columns are stripped by scripts/import_w07_contributor_reviews_v1.py before any scientific record is constructed or written to w07_canonical_reviews_v1.jsonl."
+  },
+  "consent_specification": {
+    "consent_required_before_acceptance": true,
+    "consent_text_vi": "Việc gửi đánh giá địa điểm là hoàn toàn tự nguyện phục vụ đồ án tốt nghiệp đại học (GoMate / WanderAI). Nội dung đánh giá sẽ được ẩn danh hoàn toàn (không lưu họ tên, số điện thoại, email hay tài khoản cá nhân trong bộ dữ liệu khoa học) và được sử dụng cho mục đích nghiên cứu, đánh giá thực nghiệm và trình diễn học thuật phi thương mại. Người đóng góp xác nhận không đưa thông tin cá nhân nhạy cảm vào nội dung, xác nhận bản thân đã trực tiếp đến/trải nghiệm địa điểm được chọn, tự viết đánh giá, không sao chép từ Google Maps, Tripadvisor, Booking, Agoda hay Foody, không dùng AI (ChatGPT, Gemini, Claude) để tạo hoặc viết lại nội dung, và đồng ý cấp quyền tái sử dụng học thuật phi thương mại cho dự án.",
+    "consent_text_en": "Submission of this place review is completely voluntary for an academic graduation project (GoMate / WanderAI). Your review will be strictly anonymized (no real name, phone number, email, or social handle will be stored in the scientific corpus) and may be used for research, benchmark evaluation, and academic demonstration. Please do not submit any sensitive personal information. By checking the consent box, you confirm that you have personally visited or directly experienced the selected place (and personally visited or directly experienced the selected POI), that the review is your own original writing (not copied from Google Maps, Tripadvisor, Booking, Agoda, or Foody, and not generated or paraphrased by an AI/LLM), and that you grant permission for academic, non-commercial project reuse.",
+    "seven_mandatory_affirmations": [
+      "1. Tôi đã trực tiếp đến hoặc trực tiếp trải nghiệm địa điểm (POI) được chọn / I personally visited or directly experienced the selected POI.",
+      "2. Nội dung đánh giá là do chính tôi tự viết / The review is my own original writing.",
+      "3. Không sao chép từ Google Maps, Tripadvisor, Booking, Agoda, Foody hoặc người đánh giá khác / Not copied from Google Maps, Tripadvisor, Booking, Agoda, Foody, or another reviewer.",
+      "4. Không sử dụng ChatGPT, Gemini, Claude hoặc công cụ AI khác để viết hay diễn đạt lại / Not written or rephrased by ChatGPT, Gemini, Claude, or another AI.",
+      "5. Việc gửi đánh giá là hoàn toàn tự nguyện / Submission is completely voluntary.",
+      "6. Đồng ý cho phép sử dụng ẩn danh phục vụ nghiên cứu, đánh giá thực nghiệm và trình diễn học thuật phi thương mại / Permission granted for anonymized academic/non-commercial research, evaluation, and demo use.",
+      "7. Không đưa thông tin cá nhân nhạy cảm (số điện thoại, email, tên thật, tài khoản cá nhân) vào nội dung đánh giá / No sensitive personal information is included in the review text."
+    ],
+    "checkbox_option_label": "Tôi xác nhận đầy đủ 7 cam kết trên (đã trực tiếp đến địa điểm, tự viết 100%, không sao chép, không dùng AI, tự nguyện cấp quyền nghiên cứu học thuật ẩn danh) / I affirm all 7 statements above."
+  },
+  "city_forms": [
+    {
+      "form_id": "w07_form_hanoi_v1",
+      "form_version": "1.0.0",
+      "city": "Hà Nội",
+      "city_code": "hn",
+      "destination_slug": "ha-noi",
+      "form_title_vi": "[GoMate W07] Đánh giá địa điểm du lịch thực tế — Hà Nội (20 POI)",
+      "form_title_en": "[GoMate W07] Authentic Visited Place Review — Hà Nội (20 POIs)",
+      "raw_csv_default_relpath": "data/restricted/w07_reviews/raw_forms/hanoi_responses.csv",
+      "poi_count": 20,
+      "pois": [
+        {
+          "city_item_index": 1,
+          "selection_rank": 1,
+          "poi_id": "698ee756-6062-5f47-955b-bdf458682e57",
+          "name": "Lăng Chủ tịch Hồ Chí Minh",
+          "city": "Hà Nội",
+          "destination_slug": "ha-noi",
+          "category": "attraction",
+          "category_group": "attractions_culture",
+          "osm_id": "way/37625751",
+          "overture_id": null,
+          "source_ids": [
+            "osm:way/37625751"
+          ],
+          "dropdown_display_label": "Lăng Chủ tịch Hồ Chí Minh",
+          "dropdown_disambiguated_label": "Lăng Chủ tịch Hồ Chí Minh [attraction] — 698ee756-6062-5f47-955b-bdf458682e57"
+        },
+        {
+          "city_item_index": 2,
+          "selection_rank": 2,
+          "poi_id": "b799793b-fb40-5bc2-9e67-6af92caeabe9",
+          "name": "Hoàng thành Thăng Long",
+          "city": "Hà Nội",
+          "destination_slug": "ha-noi",
+          "category": "culture",
+          "category_group": "attractions_culture",
+          "osm_id": "relation/21425205",
+          "overture_id": null,
+          "source_ids": [
+            "osm:relation/21425205"
+          ],
+          "dropdown_display_label": "Hoàng thành Thăng Long",
+          "dropdown_disambiguated_label": "Hoàng thành Thăng Long [culture] — b799793b-fb40-5bc2-9e67-6af92caeabe9"
+        },
+        {
+          "city_item_index": 3,
+          "selection_rank": 3,
+          "poi_id": "0938eb59-ee1c-5879-a798-58b5fdd07bce",
+          "name": "Nhà tù Hỏa Lò",
+          "city": "Hà Nội",
+          "destination_slug": "ha-noi",
+          "category": "culture",
+          "category_group": "attractions_culture",
+          "osm_id": "way/340128580",
+          "overture_id": null,
+          "source_ids": [
+            "osm:way/340128580"
+          ],
+          "dropdown_display_label": "Nhà tù Hỏa Lò",
+          "dropdown_disambiguated_label": "Nhà tù Hỏa Lò [culture] — 0938eb59-ee1c-5879-a798-58b5fdd07bce"
+        },
+        {
+          "city_item_index": 4,
+          "selection_rank": 4,
+          "poi_id": "44115e3a-6094-5bcd-b53c-0e3a596b3aff",
+          "name": "Đền Ngọc Sơn",
+          "city": "Hà Nội",
+          "destination_slug": "ha-noi",
+          "category": "culture",
+          "category_group": "attractions_culture",
+          "osm_id": "way/178995262",
+          "overture_id": null,
+          "source_ids": [
+            "osm:way/178995262"
+          ],
+          "dropdown_display_label": "Đền Ngọc Sơn",
+          "dropdown_disambiguated_label": "Đền Ngọc Sơn [culture] — 44115e3a-6094-5bcd-b53c-0e3a596b3aff"
+        },
+        {
+          "city_item_index": 5,
+          "selection_rank": 5,
+          "poi_id": "e3fe1f1a-f524-55cf-9d83-903e427d0ba4",
+          "name": "Chùa Trấn Quốc",
+          "city": "Hà Nội",
+          "destination_slug": "ha-noi",
+          "category": "culture",
+          "category_group": "attractions_culture",
+          "osm_id": "way/220302249",
+          "overture_id": null,
+          "source_ids": [
+            "osm:way/220302249"
+          ],
+          "dropdown_display_label": "Chùa Trấn Quốc",
+          "dropdown_disambiguated_label": "Chùa Trấn Quốc [culture] — e3fe1f1a-f524-55cf-9d83-903e427d0ba4"
+        },
+        {
+          "city_item_index": 6,
+          "selection_rank": 6,
+          "poi_id": "f0d424bd-f722-540f-8964-5e6fd8875b56",
+          "name": "Bảo tàng Dân tộc học Việt Nam",
+          "city": "Hà Nội",
+          "destination_slug": "ha-noi",
+          "category": "culture",
+          "category_group": "attractions_culture",
+          "osm_id": "way/339936730",
+          "overture_id": "e55bab3c-c110-4ba6-a005-5c43986a6095",
+          "source_ids": [
+            "osm:way/339936730",
+            "overture:e55bab3c-c110-4ba6-a005-5c43986a6095"
+          ],
+          "dropdown_display_label": "Bảo tàng Dân tộc học Việt Nam",
+          "dropdown_disambiguated_label": "Bảo tàng Dân tộc học Việt Nam [culture] — f0d424bd-f722-540f-8964-5e6fd8875b56"
+        },
+        {
+          "city_item_index": 7,
+          "selection_rank": 7,
+          "poi_id": "cad64db8-cd74-58fe-ad94-329e0d8110e1",
+          "name": "Nhà thờ Lớn",
+          "city": "Hà Nội",
+          "destination_slug": "ha-noi",
+          "category": "culture",
+          "category_group": "attractions_culture",
+          "osm_id": "way/28912942",
+          "overture_id": null,
+          "source_ids": [
+            "osm:way/28912942"
+          ],
+          "dropdown_display_label": "Nhà thờ Lớn",
+          "dropdown_disambiguated_label": "Nhà thờ Lớn [culture] — cad64db8-cd74-58fe-ad94-329e0d8110e1"
+        },
+        {
+          "city_item_index": 8,
+          "selection_rank": 8,
+          "poi_id": "afb3793b-7227-4645-a68a-3647c7468638",
+          "name": "Sen Tây Hồ",
+          "city": "Hà Nội",
+          "destination_slug": "ha-noi",
+          "category": "restaurant",
+          "category_group": "restaurants_cafes_markets",
+          "osm_id": "node/443000681",
+          "overture_id": "e8077687-eb1f-44ff-b544-9e7ae8ccdc1e",
+          "source_ids": [
+            "osm:node/443000681",
+            "overture:e8077687-eb1f-44ff-b544-9e7ae8ccdc1e"
+          ],
+          "dropdown_display_label": "Sen Tây Hồ",
+          "dropdown_disambiguated_label": "Sen Tây Hồ [restaurant] — afb3793b-7227-4645-a68a-3647c7468638"
+        },
+        {
+          "city_item_index": 9,
+          "selection_rank": 9,
+          "poi_id": "acb22336-1124-49d5-a279-6357c2b2b445",
+          "name": "Quán Ăn Ngon - Phan Bội Châu",
+          "city": "Hà Nội",
+          "destination_slug": "ha-noi",
+          "category": "restaurant",
+          "category_group": "restaurants_cafes_markets",
+          "osm_id": "node/721836715",
+          "overture_id": null,
+          "source_ids": [
+            "osm:node/721836715"
+          ],
+          "dropdown_display_label": "Quán Ăn Ngon - Phan Bội Châu",
+          "dropdown_disambiguated_label": "Quán Ăn Ngon - Phan Bội Châu [restaurant] — acb22336-1124-49d5-a279-6357c2b2b445"
+        },
+        {
+          "city_item_index": 10,
+          "selection_rank": 10,
+          "poi_id": "5350dd97-2f75-45fc-9fc1-1979b08670f7",
+          "name": "Pho 10",
+          "city": "Hà Nội",
+          "destination_slug": "ha-noi",
+          "category": "restaurant",
+          "category_group": "restaurants_cafes_markets",
+          "osm_id": "node/773601261",
+          "overture_id": "ff9a223f-952f-4d51-b7a9-b90998668554",
+          "source_ids": [
+            "osm:node/773601261",
+            "overture:ff9a223f-952f-4d51-b7a9-b90998668554"
+          ],
+          "dropdown_display_label": "Pho 10",
+          "dropdown_disambiguated_label": "Pho 10 [restaurant] — 5350dd97-2f75-45fc-9fc1-1979b08670f7"
+        },
+        {
+          "city_item_index": 11,
+          "selection_rank": 11,
+          "poi_id": "b0641225-0f38-4bcc-9f4c-34f65fa50d45",
+          "name": "Cửa Hàng Bánh Tôm Hồ Tây",
+          "city": "Hà Nội",
+          "destination_slug": "ha-noi",
+          "category": "restaurant",
+          "category_group": "restaurants_cafes_markets",
+          "osm_id": "node/310727632",
+          "overture_id": null,
+          "source_ids": [
+            "osm:node/310727632"
+          ],
+          "dropdown_display_label": "Cửa Hàng Bánh Tôm Hồ Tây",
+          "dropdown_disambiguated_label": "Cửa Hàng Bánh Tôm Hồ Tây [restaurant] — b0641225-0f38-4bcc-9f4c-34f65fa50d45"
+        },
+        {
+          "city_item_index": 12,
+          "selection_rank": 12,
+          "poi_id": "5bd45eb7-a691-4426-9691-a5a00f38d1ad",
+          "name": "Highlands Coffee",
+          "city": "Hà Nội",
+          "destination_slug": "ha-noi",
+          "category": "cafe",
+          "category_group": "restaurants_cafes_markets",
+          "osm_id": "node/442977691",
+          "overture_id": "e8f37b82-c15a-49d1-ad85-994b4b10f150",
+          "source_ids": [
+            "osm:node/442977691",
+            "overture:e8f37b82-c15a-49d1-ad85-994b4b10f150"
+          ],
+          "dropdown_display_label": "Highlands Coffee",
+          "dropdown_disambiguated_label": "Highlands Coffee [cafe] — 5bd45eb7-a691-4426-9691-a5a00f38d1ad"
+        },
+        {
+          "city_item_index": 13,
+          "selection_rank": 13,
+          "poi_id": "4146f2b7-8289-4309-b7e6-60ba7de3470e",
+          "name": "Cà Phê Nola",
+          "city": "Hà Nội",
+          "destination_slug": "ha-noi",
+          "category": "cafe",
+          "category_group": "restaurants_cafes_markets",
+          "osm_id": "node/721836730",
+          "overture_id": null,
+          "source_ids": [
+            "osm:node/721836730"
+          ],
+          "dropdown_display_label": "Cà Phê Nola",
+          "dropdown_disambiguated_label": "Cà Phê Nola [cafe] — 4146f2b7-8289-4309-b7e6-60ba7de3470e"
+        },
+        {
+          "city_item_index": 14,
+          "selection_rank": 14,
+          "poi_id": "a2fc15de-d609-4d4f-abf1-9779d57901a6",
+          "name": "Cà Phê Kafa",
+          "city": "Hà Nội",
+          "destination_slug": "ha-noi",
+          "category": "cafe",
+          "category_group": "restaurants_cafes_markets",
+          "osm_id": "node/423736651",
+          "overture_id": null,
+          "source_ids": [
+            "osm:node/423736651"
+          ],
+          "dropdown_display_label": "Cà Phê Kafa",
+          "dropdown_disambiguated_label": "Cà Phê Kafa [cafe] — a2fc15de-d609-4d4f-abf1-9779d57901a6"
+        },
+        {
+          "city_item_index": 15,
+          "selection_rank": 15,
+          "poi_id": "5e92e89d-8524-4792-862a-6dfce0994862",
+          "name": "Sheraton Hanoi",
+          "city": "Hà Nội",
+          "destination_slug": "ha-noi",
+          "category": "hotel",
+          "category_group": "hotels",
+          "osm_id": "node/922396410",
+          "overture_id": "80ceecb4-b812-4b29-a332-e22dc1a21fb8",
+          "source_ids": [
+            "osm:node/922396410",
+            "overture:80ceecb4-b812-4b29-a332-e22dc1a21fb8"
+          ],
+          "dropdown_display_label": "Sheraton Hanoi",
+          "dropdown_disambiguated_label": "Sheraton Hanoi [hotel] — 5e92e89d-8524-4792-862a-6dfce0994862"
+        },
+        {
+          "city_item_index": 16,
+          "selection_rank": 16,
+          "poi_id": "9a96e0a0-e040-4e16-a3f2-682ca373dd8e",
+          "name": "Somerset Grand Hanoi",
+          "city": "Hà Nội",
+          "destination_slug": "ha-noi",
+          "category": "hotel",
+          "category_group": "hotels",
+          "osm_id": "node/442033049",
+          "overture_id": "165cef5b-70ba-41d9-8314-4b54d979379d",
+          "source_ids": [
+            "osm:node/442033049",
+            "overture:165cef5b-70ba-41d9-8314-4b54d979379d"
+          ],
+          "dropdown_display_label": "Somerset Grand Hanoi",
+          "dropdown_disambiguated_label": "Somerset Grand Hanoi [hotel] — 9a96e0a0-e040-4e16-a3f2-682ca373dd8e"
+        },
+        {
+          "city_item_index": 17,
+          "selection_rank": 17,
+          "poi_id": "766656bb-c7e0-555d-9963-d3132f0de086",
+          "name": "Công viên Thống Nhất",
+          "city": "Hà Nội",
+          "destination_slug": "ha-noi",
+          "category": "nature",
+          "category_group": "nature_beach",
+          "osm_id": "way/37933849",
+          "overture_id": null,
+          "source_ids": [
+            "osm:way/37933849"
+          ],
+          "dropdown_display_label": "Công viên Thống Nhất",
+          "dropdown_disambiguated_label": "Công viên Thống Nhất [nature] — 766656bb-c7e0-555d-9963-d3132f0de086"
+        },
+        {
+          "city_item_index": 18,
+          "selection_rank": 18,
+          "poi_id": "1f9c2b46-e032-5cbc-a9dc-dc68c435c594",
+          "name": "Công viên Thủ Lệ",
+          "city": "Hà Nội",
+          "destination_slug": "ha-noi",
+          "category": "nature",
+          "category_group": "nature_beach",
+          "osm_id": "way/28945667",
+          "overture_id": null,
+          "source_ids": [
+            "osm:way/28945667"
+          ],
+          "dropdown_display_label": "Công viên Thủ Lệ",
+          "dropdown_disambiguated_label": "Công viên Thủ Lệ [nature] — 1f9c2b46-e032-5cbc-a9dc-dc68c435c594"
+        },
+        {
+          "city_item_index": 19,
+          "selection_rank": 19,
+          "poi_id": "a2037ceb-201f-5c45-a596-af795a399e60",
+          "name": "Công viên Lê-nin",
+          "city": "Hà Nội",
+          "destination_slug": "ha-noi",
+          "category": "nature",
+          "category_group": "nature_beach",
+          "osm_id": "way/185540946",
+          "overture_id": "3421b671-b891-408e-943f-1278e1a46c94",
+          "source_ids": [
+            "osm:way/185540946",
+            "overture:3421b671-b891-408e-943f-1278e1a46c94"
+          ],
+          "dropdown_display_label": "Công viên Lê-nin",
+          "dropdown_disambiguated_label": "Công viên Lê-nin [nature] — a2037ceb-201f-5c45-a596-af795a399e60"
+        },
+        {
+          "city_item_index": 20,
+          "selection_rank": 20,
+          "poi_id": "9b08dfe9-6f97-4d4b-94f6-f3548efd696c",
+          "name": "Le Pub",
+          "city": "Hà Nội",
+          "destination_slug": "ha-noi",
+          "category": "nightlife",
+          "category_group": "other_tourism",
+          "osm_id": "node/969250576",
+          "overture_id": null,
+          "source_ids": [
+            "osm:node/969250576"
+          ],
+          "dropdown_display_label": "Le Pub",
+          "dropdown_disambiguated_label": "Le Pub [nightlife] — 9b08dfe9-6f97-4d4b-94f6-f3548efd696c"
+        }
+      ],
+      "question_definitions": [
+        {
+          "question_id": "poi_selection",
+          "title_vi": "1. Chọn địa điểm (POI) bạn đã trực tiếp đến trải nghiệm",
+          "title_en": "1. Select the place (POI) you personally visited",
+          "help_text_vi": "Chỉ chọn 1 địa điểm tại Hà Nội mà bạn đã thực sự ghé thăm. Mỗi lần gửi biểu mẫu tương ứng với 1 đánh giá cho 1 địa điểm.",
+          "field_type": "DROPDOWN",
+          "required": true,
+          "binds_to_schema_field": "poi_id",
+          "options": [
+            {
+              "display_label": "Lăng Chủ tịch Hồ Chí Minh",
+              "canonical_poi_id": "698ee756-6062-5f47-955b-bdf458682e57",
+              "osm_id": "way/37625751",
+              "category": "attraction"
+            },
+            {
+              "display_label": "Hoàng thành Thăng Long",
+              "canonical_poi_id": "b799793b-fb40-5bc2-9e67-6af92caeabe9",
+              "osm_id": "relation/21425205",
+              "category": "culture"
+            },
+            {
+              "display_label": "Nhà tù Hỏa Lò",
+              "canonical_poi_id": "0938eb59-ee1c-5879-a798-58b5fdd07bce",
+              "osm_id": "way/340128580",
+              "category": "culture"
+            },
+            {
+              "display_label": "Đền Ngọc Sơn",
+              "canonical_poi_id": "44115e3a-6094-5bcd-b53c-0e3a596b3aff",
+              "osm_id": "way/178995262",
+              "category": "culture"
+            },
+            {
+              "display_label": "Chùa Trấn Quốc",
+              "canonical_poi_id": "e3fe1f1a-f524-55cf-9d83-903e427d0ba4",
+              "osm_id": "way/220302249",
+              "category": "culture"
+            },
+            {
+              "display_label": "Bảo tàng Dân tộc học Việt Nam",
+              "canonical_poi_id": "f0d424bd-f722-540f-8964-5e6fd8875b56",
+              "osm_id": "way/339936730",
+              "category": "culture"
+            },
+            {
+              "display_label": "Nhà thờ Lớn",
+              "canonical_poi_id": "cad64db8-cd74-58fe-ad94-329e0d8110e1",
+              "osm_id": "way/28912942",
+              "category": "culture"
+            },
+            {
+              "display_label": "Sen Tây Hồ",
+              "canonical_poi_id": "afb3793b-7227-4645-a68a-3647c7468638",
+              "osm_id": "node/443000681",
+              "category": "restaurant"
+            },
+            {
+              "display_label": "Quán Ăn Ngon - Phan Bội Châu",
+              "canonical_poi_id": "acb22336-1124-49d5-a279-6357c2b2b445",
+              "osm_id": "node/721836715",
+              "category": "restaurant"
+            },
+            {
+              "display_label": "Pho 10",
+              "canonical_poi_id": "5350dd97-2f75-45fc-9fc1-1979b08670f7",
+              "osm_id": "node/773601261",
+              "category": "restaurant"
+            },
+            {
+              "display_label": "Cửa Hàng Bánh Tôm Hồ Tây",
+              "canonical_poi_id": "b0641225-0f38-4bcc-9f4c-34f65fa50d45",
+              "osm_id": "node/310727632",
+              "category": "restaurant"
+            },
+            {
+              "display_label": "Highlands Coffee",
+              "canonical_poi_id": "5bd45eb7-a691-4426-9691-a5a00f38d1ad",
+              "osm_id": "node/442977691",
+              "category": "cafe"
+            },
+            {
+              "display_label": "Cà Phê Nola",
+              "canonical_poi_id": "4146f2b7-8289-4309-b7e6-60ba7de3470e",
+              "osm_id": "node/721836730",
+              "category": "cafe"
+            },
+            {
+              "display_label": "Cà Phê Kafa",
+              "canonical_poi_id": "a2fc15de-d609-4d4f-abf1-9779d57901a6",
+              "osm_id": "node/423736651",
+              "category": "cafe"
+            },
+            {
+              "display_label": "Sheraton Hanoi",
+              "canonical_poi_id": "5e92e89d-8524-4792-862a-6dfce0994862",
+              "osm_id": "node/922396410",
+              "category": "hotel"
+            },
+            {
+              "display_label": "Somerset Grand Hanoi",
+              "canonical_poi_id": "9a96e0a0-e040-4e16-a3f2-682ca373dd8e",
+              "osm_id": "node/442033049",
+              "category": "hotel"
+            },
+            {
+              "display_label": "Công viên Thống Nhất",
+              "canonical_poi_id": "766656bb-c7e0-555d-9963-d3132f0de086",
+              "osm_id": "way/37933849",
+              "category": "nature"
+            },
+            {
+              "display_label": "Công viên Thủ Lệ",
+              "canonical_poi_id": "1f9c2b46-e032-5cbc-a9dc-dc68c435c594",
+              "osm_id": "way/28945667",
+              "category": "nature"
+            },
+            {
+              "display_label": "Công viên Lê-nin",
+              "canonical_poi_id": "a2037ceb-201f-5c45-a596-af795a399e60",
+              "osm_id": "way/185540946",
+              "category": "nature"
+            },
+            {
+              "display_label": "Le Pub",
+              "canonical_poi_id": "9b08dfe9-6f97-4d4b-94f6-f3548efd696c",
+              "osm_id": "node/969250576",
+              "category": "nightlife"
+            }
+          ]
+        },
+        {
+          "question_id": "rating",
+          "title_vi": "2. Điểm đánh giá tổng thể (1 = Rất tệ, 5 = Rất tốt)",
+          "title_en": "2. Overall rating (1 = Poor, 5 = Excellent)",
+          "help_text_vi": "Chọn số nguyên từ 1 đến 5 sao.",
+          "field_type": "LINEAR_SCALE_INTEGER",
+          "required": true,
+          "scale_min": 1,
+          "scale_max": 5,
+          "allowed_values": [
+            1,
+            2,
+            3,
+            4,
+            5
+          ],
+          "binds_to_schema_field": "rating"
+        },
+        {
+          "question_id": "review_text",
+          "title_vi": "3. Nội dung đánh giá thực tế của riêng bạn",
+          "title_en": "3. Your own authentic review",
+          "help_text_vi": "Hãy viết cảm nhận cụ thể của chính bạn về không gian, dịch vụ, trải nghiệm thực tế (khuyến nghị tối thiểu 1–3 câu, >= 20 ký tự và >= 5 từ). Không sao chép từ mạng, không dùng AI, và KHÔNG ghi số điện thoại hay email vào nội dung.",
+          "field_type": "PARAGRAPH_TEXT",
+          "required": true,
+          "binds_to_schema_field": "review_text"
+        },
+        {
+          "question_id": "visit_period",
+          "title_vi": "4. Thời điểm ghé thăm (Không bắt buộc)",
+          "title_en": "4. Visit period (Optional)",
+          "help_text_vi": "Định dạng gợi ý: YYYY-MM (ví dụ: 2025-08) hoặc YYYY-Q1..Q4 (ví dụ: 2025-Q3).",
+          "field_type": "SHORT_TEXT",
+          "required": false,
+          "suggested_formats": [
+            "YYYY-MM",
+            "YYYY-Q1",
+            "YYYY-Q2",
+            "YYYY-Q3",
+            "YYYY-Q4"
+          ],
+          "binds_to_schema_field": "visit_period"
+        },
+        {
+          "question_id": "consent",
+          "title_vi": "5. Cam kết tính xác thực và đồng thuận nghiên cứu học thuật",
+          "title_en": "5. Authenticity affirmation and academic research consent",
+          "help_text_vi": "Việc gửi đánh giá địa điểm là hoàn toàn tự nguyện phục vụ đồ án tốt nghiệp đại học (GoMate / WanderAI). Nội dung đánh giá sẽ được ẩn danh hoàn toàn (không lưu họ tên, số điện thoại, email hay tài khoản cá nhân trong bộ dữ liệu khoa học) và được sử dụng cho mục đích nghiên cứu, đánh giá thực nghiệm và trình diễn học thuật phi thương mại. Người đóng góp xác nhận không đưa thông tin cá nhân nhạy cảm vào nội dung, xác nhận bản thân đã trực tiếp đến/trải nghiệm địa điểm được chọn, tự viết đánh giá, không sao chép từ Google Maps, Tripadvisor, Booking, Agoda hay Foody, không dùng AI (ChatGPT, Gemini, Claude) để tạo hoặc viết lại nội dung, và đồng ý cấp quyền tái sử dụng học thuật phi thương mại cho dự án.",
+          "help_text_en": "Submission of this place review is completely voluntary for an academic graduation project (GoMate / WanderAI). Your review will be strictly anonymized (no real name, phone number, email, or social handle will be stored in the scientific corpus) and may be used for research, benchmark evaluation, and academic demonstration. Please do not submit any sensitive personal information. By checking the consent box, you confirm that you have personally visited or directly experienced the selected place (and personally visited or directly experienced the selected POI), that the review is your own original writing (not copied from Google Maps, Tripadvisor, Booking, Agoda, or Foody, and not generated or paraphrased by an AI/LLM), and that you grant permission for academic, non-commercial project reuse.",
+          "field_type": "CHECKBOX_REQUIRED",
+          "required": true,
+          "checkbox_option_label": "Tôi xác nhận đầy đủ 7 cam kết trên (đã trực tiếp đến địa điểm, tự viết 100%, không sao chép, không dùng AI, tự nguyện cấp quyền nghiên cứu học thuật ẩn danh) / I affirm all 7 statements above.",
+          "binds_to_schema_field": "consent_record_id"
+        }
+      ],
+      "consent_text": {
+        "vi": "Việc gửi đánh giá địa điểm là hoàn toàn tự nguyện phục vụ đồ án tốt nghiệp đại học (GoMate / WanderAI). Nội dung đánh giá sẽ được ẩn danh hoàn toàn (không lưu họ tên, số điện thoại, email hay tài khoản cá nhân trong bộ dữ liệu khoa học) và được sử dụng cho mục đích nghiên cứu, đánh giá thực nghiệm và trình diễn học thuật phi thương mại. Người đóng góp xác nhận không đưa thông tin cá nhân nhạy cảm vào nội dung, xác nhận bản thân đã trực tiếp đến/trải nghiệm địa điểm được chọn, tự viết đánh giá, không sao chép từ Google Maps, Tripadvisor, Booking, Agoda hay Foody, không dùng AI (ChatGPT, Gemini, Claude) để tạo hoặc viết lại nội dung, và đồng ý cấp quyền tái sử dụng học thuật phi thương mại cho dự án.",
+        "en": "Submission of this place review is completely voluntary for an academic graduation project (GoMate / WanderAI). Your review will be strictly anonymized (no real name, phone number, email, or social handle will be stored in the scientific corpus) and may be used for research, benchmark evaluation, and academic demonstration. Please do not submit any sensitive personal information. By checking the consent box, you confirm that you have personally visited or directly experienced the selected place (and personally visited or directly experienced the selected POI), that the review is your own original writing (not copied from Google Maps, Tripadvisor, Booking, Agoda, or Foody, and not generated or paraphrased by an AI/LLM), and that you grant permission for academic, non-commercial project reuse.",
+        "seven_mandatory_affirmations": [
+          "1. Tôi đã trực tiếp đến hoặc trực tiếp trải nghiệm địa điểm (POI) được chọn / I personally visited or directly experienced the selected POI.",
+          "2. Nội dung đánh giá là do chính tôi tự viết / The review is my own original writing.",
+          "3. Không sao chép từ Google Maps, Tripadvisor, Booking, Agoda, Foody hoặc người đánh giá khác / Not copied from Google Maps, Tripadvisor, Booking, Agoda, Foody, or another reviewer.",
+          "4. Không sử dụng ChatGPT, Gemini, Claude hoặc công cụ AI khác để viết hay diễn đạt lại / Not written or rephrased by ChatGPT, Gemini, Claude, or another AI.",
+          "5. Việc gửi đánh giá là hoàn toàn tự nguyện / Submission is completely voluntary.",
+          "6. Đồng ý cho phép sử dụng ẩn danh phục vụ nghiên cứu, đánh giá thực nghiệm và trình diễn học thuật phi thương mại / Permission granted for anonymized academic/non-commercial research, evaluation, and demo use.",
+          "7. Không đưa thông tin cá nhân nhạy cảm (số điện thoại, email, tên thật, tài khoản cá nhân) vào nội dung đánh giá / No sensitive personal information is included in the review text."
+        ],
+        "required_checkbox_label": "Tôi xác nhận đầy đủ 7 cam kết trên (đã trực tiếp đến địa điểm, tự viết 100%, không sao chép, không dùng AI, tự nguyện cấp quyền nghiên cứu học thuật ẩn danh) / I affirm all 7 statements above."
+      },
+      "response_schema": {
+        "one_response_equals": "ONE_REVIEW_OF_ONE_POI",
+        "allow_multiple_submissions_per_contributor": true,
+        "csv_columns_expected": [
+          "Timestamp",
+          "1. Chọn địa điểm (POI) bạn đã trực tiếp đến trải nghiệm",
+          "2. Điểm đánh giá tổng thể (1 = Rất tệ, 5 = Rất tốt)",
+          "3. Nội dung đánh giá thực tế của riêng bạn",
+          "4. Thời điểm ghé thăm (Không bắt buộc)",
+          "5. Cam kết tính xác thực và đồng thuận nghiên cứu học thuật"
+        ],
+        "programmatic_column_aliases": {
+          "timestamp": [
+            "Timestamp",
+            "Dấu thời gian",
+            "timestamp",
+            "created_at"
+          ],
+          "poi_selection": [
+            "1. Chọn địa điểm (POI) bạn đã trực tiếp đến trải nghiệm",
+            "poi_selection",
+            "poi_id",
+            "poi_name",
+            "Địa điểm (POI)"
+          ],
+          "rating": [
+            "2. Điểm đánh giá tổng thể (1 = Rất tệ, 5 = Rất tốt)",
+            "rating",
+            "Điểm đánh giá (1-5)"
+          ],
+          "review_text": [
+            "3. Nội dung đánh giá thực tế của riêng bạn",
+            "review_text",
+            "Nội dung đánh giá"
+          ],
+          "visit_period": [
+            "4. Thời điểm ghé thăm (Không bắt buộc)",
+            "visit_period",
+            "Thời điểm ghé thăm"
+          ],
+          "consent": [
+            "5. Cam kết tính xác thực và đồng thuận nghiên cứu học thuật",
+            "consent",
+            "consent_confirmed",
+            "Đồng ý cam kết học thuật"
+          ]
+        }
+      },
+      "manifest_sha_binding": "b4be35d96ff503c61986674a6b3eb37b993484c0dc121434772184a2b089ed2b"
+    },
+    {
+      "form_id": "w07_form_danang_v1",
+      "form_version": "1.0.0",
+      "city": "Đà Nẵng",
+      "city_code": "dn",
+      "destination_slug": "da-nang",
+      "form_title_vi": "[GoMate W07] Đánh giá địa điểm du lịch thực tế — Đà Nẵng (20 POI)",
+      "form_title_en": "[GoMate W07] Authentic Visited Place Review — Đà Nẵng (20 POIs)",
+      "raw_csv_default_relpath": "data/restricted/w07_reviews/raw_forms/danang_responses.csv",
+      "poi_count": 20,
+      "pois": [
+        {
+          "city_item_index": 1,
+          "selection_rank": 21,
+          "poi_id": "9974ff88-5418-5867-ae49-1b72e0f0861f",
+          "name": "Cầu Rồng",
+          "city": "Đà Nẵng",
+          "destination_slug": "da-nang",
+          "category": "attraction",
+          "category_group": "attractions_culture",
+          "osm_id": "way/694831926",
+          "overture_id": null,
+          "source_ids": [
+            "osm:way/694831926"
+          ],
+          "dropdown_display_label": "Cầu Rồng",
+          "dropdown_disambiguated_label": "Cầu Rồng [attraction] — 9974ff88-5418-5867-ae49-1b72e0f0861f"
+        },
+        {
+          "city_item_index": 2,
+          "selection_rank": 22,
+          "poi_id": "6f758ad7-5685-57b5-9913-d28e15bdb7c5",
+          "name": "Ngũ Hành Sơn",
+          "city": "Đà Nẵng",
+          "destination_slug": "da-nang",
+          "category": "attraction",
+          "category_group": "attractions_culture",
+          "osm_id": "relation/8552348",
+          "overture_id": null,
+          "source_ids": [
+            "osm:relation/8552348"
+          ],
+          "dropdown_display_label": "Ngũ Hành Sơn",
+          "dropdown_disambiguated_label": "Ngũ Hành Sơn [attraction] — 6f758ad7-5685-57b5-9913-d28e15bdb7c5"
+        },
+        {
+          "city_item_index": 3,
+          "selection_rank": 23,
+          "poi_id": "a24d48ff-59d6-5e53-af77-36448e60d1cc",
+          "name": "Bảo tàng Nghệ thuật Điêu khắc Chăm Đà Nẵng",
+          "city": "Đà Nẵng",
+          "destination_slug": "da-nang",
+          "category": "culture",
+          "category_group": "attractions_culture",
+          "osm_id": "way/302872188",
+          "overture_id": null,
+          "source_ids": [
+            "osm:way/302872188"
+          ],
+          "dropdown_display_label": "Bảo tàng Nghệ thuật Điêu khắc Chăm Đà Nẵng",
+          "dropdown_disambiguated_label": "Bảo tàng Nghệ thuật Điêu khắc Chăm Đà Nẵng [culture] — a24d48ff-59d6-5e53-af77-36448e60d1cc"
+        },
+        {
+          "city_item_index": 4,
+          "selection_rank": 24,
+          "poi_id": "5fc0994a-e578-4a25-b375-7f079e6dc3ba",
+          "name": "Chùa Linh Ứng",
+          "city": "Đà Nẵng",
+          "destination_slug": "da-nang",
+          "category": "temple",
+          "category_group": "attractions_culture",
+          "osm_id": "way/1205388457",
+          "overture_id": "b9ad130e-8f19-4dcb-92a7-638573a3f62d",
+          "source_ids": [
+            "osm:way/1205388457",
+            "overture:b9ad130e-8f19-4dcb-92a7-638573a3f62d"
+          ],
+          "dropdown_display_label": "Chùa Linh Ứng",
+          "dropdown_disambiguated_label": "Chùa Linh Ứng [temple] — 5fc0994a-e578-4a25-b375-7f079e6dc3ba"
+        },
+        {
+          "city_item_index": 5,
+          "selection_rank": 25,
+          "poi_id": "2f389152-5676-54be-b812-a1d561b7df15",
+          "name": "Cầu Sông Hàn",
+          "city": "Đà Nẵng",
+          "destination_slug": "da-nang",
+          "category": "attraction",
+          "category_group": "attractions_culture",
+          "osm_id": "node/7276380289",
+          "overture_id": null,
+          "source_ids": [
+            "osm:node/7276380289"
+          ],
+          "dropdown_display_label": "Cầu Sông Hàn",
+          "dropdown_disambiguated_label": "Cầu Sông Hàn [attraction] — 2f389152-5676-54be-b812-a1d561b7df15"
+        },
+        {
+          "city_item_index": 6,
+          "selection_rank": 26,
+          "poi_id": "cb6cce60-8270-5f43-b9f7-42de2d7d7da3",
+          "name": "Bảo tàng Đà Nẵng",
+          "city": "Đà Nẵng",
+          "destination_slug": "da-nang",
+          "category": "culture",
+          "category_group": "attractions_culture",
+          "osm_id": "way/1368599361",
+          "overture_id": null,
+          "source_ids": [
+            "osm:way/1368599361"
+          ],
+          "dropdown_display_label": "Bảo tàng Đà Nẵng",
+          "dropdown_disambiguated_label": "Bảo tàng Đà Nẵng [culture] — cb6cce60-8270-5f43-b9f7-42de2d7d7da3"
+        },
+        {
+          "city_item_index": 7,
+          "selection_rank": 27,
+          "poi_id": "a302989c-08f1-5ca2-8022-a84c1a424018",
+          "name": "Chợ Cồn",
+          "city": "Đà Nẵng",
+          "destination_slug": "da-nang",
+          "category": "attraction",
+          "category_group": "attractions_culture",
+          "osm_id": "way/204790989",
+          "overture_id": null,
+          "source_ids": [
+            "osm:way/204790989"
+          ],
+          "dropdown_display_label": "Chợ Cồn",
+          "dropdown_disambiguated_label": "Chợ Cồn [attraction] — a302989c-08f1-5ca2-8022-a84c1a424018"
+        },
+        {
+          "city_item_index": 8,
+          "selection_rank": 28,
+          "poi_id": "62a874a9-13e2-44d2-95b5-30e980b98965",
+          "name": "Bánh Xèo Bà Dưỡng",
+          "city": "Đà Nẵng",
+          "destination_slug": "da-nang",
+          "category": "restaurant",
+          "category_group": "restaurants_cafes_markets",
+          "osm_id": "node/4541527689",
+          "overture_id": "c732f0d5-911d-4d9f-93b2-51c886f4fe0b",
+          "source_ids": [
+            "osm:node/4541527689",
+            "overture:c732f0d5-911d-4d9f-93b2-51c886f4fe0b"
+          ],
+          "dropdown_display_label": "Bánh Xèo Bà Dưỡng",
+          "dropdown_disambiguated_label": "Bánh Xèo Bà Dưỡng [restaurant] — 62a874a9-13e2-44d2-95b5-30e980b98965"
+        },
+        {
+          "city_item_index": 9,
+          "selection_rank": 29,
+          "poi_id": "61639da8-996a-43df-b6d3-928b6bdd70b9",
+          "name": "My Quang Bà Mua",
+          "city": "Đà Nẵng",
+          "destination_slug": "da-nang",
+          "category": "restaurant",
+          "category_group": "restaurants_cafes_markets",
+          "osm_id": "node/7210857787",
+          "overture_id": "da92232b-8e79-4082-84b0-6a35263af4df",
+          "source_ids": [
+            "osm:node/7210857787",
+            "overture:da92232b-8e79-4082-84b0-6a35263af4df"
+          ],
+          "dropdown_display_label": "My Quang Bà Mua",
+          "dropdown_disambiguated_label": "My Quang Bà Mua [restaurant] — 61639da8-996a-43df-b6d3-928b6bdd70b9"
+        },
+        {
+          "city_item_index": 10,
+          "selection_rank": 30,
+          "poi_id": "fd118580-b5da-467d-9873-0116ba435f37",
+          "name": "Nhà hàng hải sản Bé Anh",
+          "city": "Đà Nẵng",
+          "destination_slug": "da-nang",
+          "category": "restaurant",
+          "category_group": "restaurants_cafes_markets",
+          "osm_id": "node/5485483822",
+          "overture_id": "df8dc91d-1790-4600-a518-31bec995467a",
+          "source_ids": [
+            "osm:node/5485483822",
+            "overture:df8dc91d-1790-4600-a518-31bec995467a"
+          ],
+          "dropdown_display_label": "Nhà hàng hải sản Bé Anh",
+          "dropdown_disambiguated_label": "Nhà hàng hải sản Bé Anh [restaurant] — fd118580-b5da-467d-9873-0116ba435f37"
+        },
+        {
+          "city_item_index": 11,
+          "selection_rank": 31,
+          "poi_id": "9a2ca486-437d-4044-8541-d34d911d4fb4",
+          "name": "Chợ Đêm Sơn Trà",
+          "city": "Đà Nẵng",
+          "destination_slug": "da-nang",
+          "category": "market",
+          "category_group": "restaurants_cafes_markets",
+          "osm_id": "way/1556362196",
+          "overture_id": "a310c792-65d8-4115-9df6-ddf54babd1a8",
+          "source_ids": [
+            "osm:way/1556362196",
+            "overture:a310c792-65d8-4115-9df6-ddf54babd1a8"
+          ],
+          "dropdown_display_label": "Chợ Đêm Sơn Trà",
+          "dropdown_disambiguated_label": "Chợ Đêm Sơn Trà [market] — 9a2ca486-437d-4044-8541-d34d911d4fb4"
+        },
+        {
+          "city_item_index": 12,
+          "selection_rank": 32,
+          "poi_id": "c2afbb07-aaf9-47c1-9877-d17e64422066",
+          "name": "Chợ Bắc Mỹ An",
+          "city": "Đà Nẵng",
+          "destination_slug": "da-nang",
+          "category": "market",
+          "category_group": "restaurants_cafes_markets",
+          "osm_id": "way/118614280",
+          "overture_id": "4d3dbac0-aae6-4960-8b89-d06c52fe21f5",
+          "source_ids": [
+            "osm:way/118614280",
+            "overture:4d3dbac0-aae6-4960-8b89-d06c52fe21f5"
+          ],
+          "dropdown_display_label": "Chợ Bắc Mỹ An",
+          "dropdown_disambiguated_label": "Chợ Bắc Mỹ An [market] — c2afbb07-aaf9-47c1-9877-d17e64422066"
+        },
+        {
+          "city_item_index": 13,
+          "selection_rank": 33,
+          "poi_id": "7ff87c59-62f1-4509-95f4-e83796b9a35c",
+          "name": "Vincom Plaza",
+          "city": "Đà Nẵng",
+          "destination_slug": "da-nang",
+          "category": "market",
+          "category_group": "restaurants_cafes_markets",
+          "osm_id": "way/693393717",
+          "overture_id": "67b0a6b0-f6e8-477d-8517-ef73c56752f7",
+          "source_ids": [
+            "osm:way/693393717",
+            "overture:67b0a6b0-f6e8-477d-8517-ef73c56752f7"
+          ],
+          "dropdown_display_label": "Vincom Plaza",
+          "dropdown_disambiguated_label": "Vincom Plaza [market] — 7ff87c59-62f1-4509-95f4-e83796b9a35c"
+        },
+        {
+          "city_item_index": 14,
+          "selection_rank": 34,
+          "poi_id": "8ebf0429-fabb-4701-bbc1-cb2fea86d587",
+          "name": "Ca Phe 83",
+          "city": "Đà Nẵng",
+          "destination_slug": "da-nang",
+          "category": "cafe",
+          "category_group": "restaurants_cafes_markets",
+          "osm_id": "node/729406392",
+          "overture_id": "1b27afcb-daa1-4977-bcd5-cc5327c08c64",
+          "source_ids": [
+            "osm:node/729406392",
+            "overture:1b27afcb-daa1-4977-bcd5-cc5327c08c64"
+          ],
+          "dropdown_display_label": "Ca Phe 83",
+          "dropdown_disambiguated_label": "Ca Phe 83 [cafe] — 8ebf0429-fabb-4701-bbc1-cb2fea86d587"
+        },
+        {
+          "city_item_index": 15,
+          "selection_rank": 35,
+          "poi_id": "4608034c-6c43-4d54-a542-ead8e23b1338",
+          "name": "InterContinental Danang Sun Peninsula Resort",
+          "city": "Đà Nẵng",
+          "destination_slug": "da-nang",
+          "category": "hotel",
+          "category_group": "hotels",
+          "osm_id": "way/360113559",
+          "overture_id": "0d91068a-7ee8-4d97-ad32-a075a23d30fd",
+          "source_ids": [
+            "osm:way/360113559",
+            "overture:0d91068a-7ee8-4d97-ad32-a075a23d30fd"
+          ],
+          "dropdown_display_label": "InterContinental Danang Sun Peninsula Resort",
+          "dropdown_disambiguated_label": "InterContinental Danang Sun Peninsula Resort [hotel] — 4608034c-6c43-4d54-a542-ead8e23b1338"
+        },
+        {
+          "city_item_index": 16,
+          "selection_rank": 36,
+          "poi_id": "a32ce1b4-126b-4544-b5ea-4a7edbab6a0a",
+          "name": "Furama Resort",
+          "city": "Đà Nẵng",
+          "destination_slug": "da-nang",
+          "category": "hotel",
+          "category_group": "hotels",
+          "osm_id": "way/485212452",
+          "overture_id": "82f95e1f-7bf8-40df-a3ed-6f92a4a847f3",
+          "source_ids": [
+            "osm:way/485212452",
+            "overture:82f95e1f-7bf8-40df-a3ed-6f92a4a847f3"
+          ],
+          "dropdown_display_label": "Furama Resort",
+          "dropdown_disambiguated_label": "Furama Resort [hotel] — a32ce1b4-126b-4544-b5ea-4a7edbab6a0a"
+        },
+        {
+          "city_item_index": 17,
+          "selection_rank": 37,
+          "poi_id": "2f202acf-c2bb-526a-9803-aaca142ffdad",
+          "name": "Bãi biển Mỹ Khê",
+          "city": "Đà Nẵng",
+          "destination_slug": "da-nang",
+          "category": "beach",
+          "category_group": "nature_beach",
+          "osm_id": "relation/19000664",
+          "overture_id": null,
+          "source_ids": [
+            "osm:relation/19000664"
+          ],
+          "dropdown_display_label": "Bãi biển Mỹ Khê",
+          "dropdown_disambiguated_label": "Bãi biển Mỹ Khê [beach] — 2f202acf-c2bb-526a-9803-aaca142ffdad"
+        },
+        {
+          "city_item_index": 18,
+          "selection_rank": 38,
+          "poi_id": "49d739b9-e868-5391-9f80-bf9bed803b0f",
+          "name": "Bãi tắm Non Nước",
+          "city": "Đà Nẵng",
+          "destination_slug": "da-nang",
+          "category": "beach",
+          "category_group": "nature_beach",
+          "osm_id": "way/1204900824",
+          "overture_id": null,
+          "source_ids": [
+            "osm:way/1204900824"
+          ],
+          "dropdown_display_label": "Bãi tắm Non Nước",
+          "dropdown_disambiguated_label": "Bãi tắm Non Nước [beach] — 49d739b9-e868-5391-9f80-bf9bed803b0f"
+        },
+        {
+          "city_item_index": 19,
+          "selection_rank": 39,
+          "poi_id": "b5ea1253-6b6a-5f5a-b910-5ef18cd29c94",
+          "name": "Ban Co Peak",
+          "city": "Đà Nẵng",
+          "destination_slug": "da-nang",
+          "category": "nature",
+          "category_group": "nature_beach",
+          "osm_id": "node/1538334281",
+          "overture_id": null,
+          "source_ids": [
+            "osm:node/1538334281"
+          ],
+          "dropdown_display_label": "Ban Co Peak",
+          "dropdown_disambiguated_label": "Ban Co Peak [nature] — b5ea1253-6b6a-5f5a-b910-5ef18cd29c94"
+        },
+        {
+          "city_item_index": 20,
+          "selection_rank": 40,
+          "poi_id": "987f490f-b1c7-42cf-b92e-300d57fd8d5f",
+          "name": "Sun World Bà Nà Hills",
+          "city": "Đà Nẵng",
+          "destination_slug": "da-nang",
+          "category": "entertainment",
+          "category_group": "other_tourism",
+          "osm_id": "way/359114064",
+          "overture_id": null,
+          "source_ids": [
+            "osm:way/359114064"
+          ],
+          "dropdown_display_label": "Sun World Bà Nà Hills",
+          "dropdown_disambiguated_label": "Sun World Bà Nà Hills [entertainment] — 987f490f-b1c7-42cf-b92e-300d57fd8d5f"
+        }
+      ],
+      "question_definitions": [
+        {
+          "question_id": "poi_selection",
+          "title_vi": "1. Chọn địa điểm (POI) bạn đã trực tiếp đến trải nghiệm",
+          "title_en": "1. Select the place (POI) you personally visited",
+          "help_text_vi": "Chỉ chọn 1 địa điểm tại Đà Nẵng mà bạn đã thực sự ghé thăm. Mỗi lần gửi biểu mẫu tương ứng với 1 đánh giá cho 1 địa điểm.",
+          "field_type": "DROPDOWN",
+          "required": true,
+          "binds_to_schema_field": "poi_id",
+          "options": [
+            {
+              "display_label": "Cầu Rồng",
+              "canonical_poi_id": "9974ff88-5418-5867-ae49-1b72e0f0861f",
+              "osm_id": "way/694831926",
+              "category": "attraction"
+            },
+            {
+              "display_label": "Ngũ Hành Sơn",
+              "canonical_poi_id": "6f758ad7-5685-57b5-9913-d28e15bdb7c5",
+              "osm_id": "relation/8552348",
+              "category": "attraction"
+            },
+            {
+              "display_label": "Bảo tàng Nghệ thuật Điêu khắc Chăm Đà Nẵng",
+              "canonical_poi_id": "a24d48ff-59d6-5e53-af77-36448e60d1cc",
+              "osm_id": "way/302872188",
+              "category": "culture"
+            },
+            {
+              "display_label": "Chùa Linh Ứng",
+              "canonical_poi_id": "5fc0994a-e578-4a25-b375-7f079e6dc3ba",
+              "osm_id": "way/1205388457",
+              "category": "temple"
+            },
+            {
+              "display_label": "Cầu Sông Hàn",
+              "canonical_poi_id": "2f389152-5676-54be-b812-a1d561b7df15",
+              "osm_id": "node/7276380289",
+              "category": "attraction"
+            },
+            {
+              "display_label": "Bảo tàng Đà Nẵng",
+              "canonical_poi_id": "cb6cce60-8270-5f43-b9f7-42de2d7d7da3",
+              "osm_id": "way/1368599361",
+              "category": "culture"
+            },
+            {
+              "display_label": "Chợ Cồn",
+              "canonical_poi_id": "a302989c-08f1-5ca2-8022-a84c1a424018",
+              "osm_id": "way/204790989",
+              "category": "attraction"
+            },
+            {
+              "display_label": "Bánh Xèo Bà Dưỡng",
+              "canonical_poi_id": "62a874a9-13e2-44d2-95b5-30e980b98965",
+              "osm_id": "node/4541527689",
+              "category": "restaurant"
+            },
+            {
+              "display_label": "My Quang Bà Mua",
+              "canonical_poi_id": "61639da8-996a-43df-b6d3-928b6bdd70b9",
+              "osm_id": "node/7210857787",
+              "category": "restaurant"
+            },
+            {
+              "display_label": "Nhà hàng hải sản Bé Anh",
+              "canonical_poi_id": "fd118580-b5da-467d-9873-0116ba435f37",
+              "osm_id": "node/5485483822",
+              "category": "restaurant"
+            },
+            {
+              "display_label": "Chợ Đêm Sơn Trà",
+              "canonical_poi_id": "9a2ca486-437d-4044-8541-d34d911d4fb4",
+              "osm_id": "way/1556362196",
+              "category": "market"
+            },
+            {
+              "display_label": "Chợ Bắc Mỹ An",
+              "canonical_poi_id": "c2afbb07-aaf9-47c1-9877-d17e64422066",
+              "osm_id": "way/118614280",
+              "category": "market"
+            },
+            {
+              "display_label": "Vincom Plaza",
+              "canonical_poi_id": "7ff87c59-62f1-4509-95f4-e83796b9a35c",
+              "osm_id": "way/693393717",
+              "category": "market"
+            },
+            {
+              "display_label": "Ca Phe 83",
+              "canonical_poi_id": "8ebf0429-fabb-4701-bbc1-cb2fea86d587",
+              "osm_id": "node/729406392",
+              "category": "cafe"
+            },
+            {
+              "display_label": "InterContinental Danang Sun Peninsula Resort",
+              "canonical_poi_id": "4608034c-6c43-4d54-a542-ead8e23b1338",
+              "osm_id": "way/360113559",
+              "category": "hotel"
+            },
+            {
+              "display_label": "Furama Resort",
+              "canonical_poi_id": "a32ce1b4-126b-4544-b5ea-4a7edbab6a0a",
+              "osm_id": "way/485212452",
+              "category": "hotel"
+            },
+            {
+              "display_label": "Bãi biển Mỹ Khê",
+              "canonical_poi_id": "2f202acf-c2bb-526a-9803-aaca142ffdad",
+              "osm_id": "relation/19000664",
+              "category": "beach"
+            },
+            {
+              "display_label": "Bãi tắm Non Nước",
+              "canonical_poi_id": "49d739b9-e868-5391-9f80-bf9bed803b0f",
+              "osm_id": "way/1204900824",
+              "category": "beach"
+            },
+            {
+              "display_label": "Ban Co Peak",
+              "canonical_poi_id": "b5ea1253-6b6a-5f5a-b910-5ef18cd29c94",
+              "osm_id": "node/1538334281",
+              "category": "nature"
+            },
+            {
+              "display_label": "Sun World Bà Nà Hills",
+              "canonical_poi_id": "987f490f-b1c7-42cf-b92e-300d57fd8d5f",
+              "osm_id": "way/359114064",
+              "category": "entertainment"
+            }
+          ]
+        },
+        {
+          "question_id": "rating",
+          "title_vi": "2. Điểm đánh giá tổng thể (1 = Rất tệ, 5 = Rất tốt)",
+          "title_en": "2. Overall rating (1 = Poor, 5 = Excellent)",
+          "help_text_vi": "Chọn số nguyên từ 1 đến 5 sao.",
+          "field_type": "LINEAR_SCALE_INTEGER",
+          "required": true,
+          "scale_min": 1,
+          "scale_max": 5,
+          "allowed_values": [
+            1,
+            2,
+            3,
+            4,
+            5
+          ],
+          "binds_to_schema_field": "rating"
+        },
+        {
+          "question_id": "review_text",
+          "title_vi": "3. Nội dung đánh giá thực tế của riêng bạn",
+          "title_en": "3. Your own authentic review",
+          "help_text_vi": "Hãy viết cảm nhận cụ thể của chính bạn về không gian, dịch vụ, trải nghiệm thực tế (khuyến nghị tối thiểu 1–3 câu, >= 20 ký tự và >= 5 từ). Không sao chép từ mạng, không dùng AI, và KHÔNG ghi số điện thoại hay email vào nội dung.",
+          "field_type": "PARAGRAPH_TEXT",
+          "required": true,
+          "binds_to_schema_field": "review_text"
+        },
+        {
+          "question_id": "visit_period",
+          "title_vi": "4. Thời điểm ghé thăm (Không bắt buộc)",
+          "title_en": "4. Visit period (Optional)",
+          "help_text_vi": "Định dạng gợi ý: YYYY-MM (ví dụ: 2025-08) hoặc YYYY-Q1..Q4 (ví dụ: 2025-Q3).",
+          "field_type": "SHORT_TEXT",
+          "required": false,
+          "suggested_formats": [
+            "YYYY-MM",
+            "YYYY-Q1",
+            "YYYY-Q2",
+            "YYYY-Q3",
+            "YYYY-Q4"
+          ],
+          "binds_to_schema_field": "visit_period"
+        },
+        {
+          "question_id": "consent",
+          "title_vi": "5. Cam kết tính xác thực và đồng thuận nghiên cứu học thuật",
+          "title_en": "5. Authenticity affirmation and academic research consent",
+          "help_text_vi": "Việc gửi đánh giá địa điểm là hoàn toàn tự nguyện phục vụ đồ án tốt nghiệp đại học (GoMate / WanderAI). Nội dung đánh giá sẽ được ẩn danh hoàn toàn (không lưu họ tên, số điện thoại, email hay tài khoản cá nhân trong bộ dữ liệu khoa học) và được sử dụng cho mục đích nghiên cứu, đánh giá thực nghiệm và trình diễn học thuật phi thương mại. Người đóng góp xác nhận không đưa thông tin cá nhân nhạy cảm vào nội dung, xác nhận bản thân đã trực tiếp đến/trải nghiệm địa điểm được chọn, tự viết đánh giá, không sao chép từ Google Maps, Tripadvisor, Booking, Agoda hay Foody, không dùng AI (ChatGPT, Gemini, Claude) để tạo hoặc viết lại nội dung, và đồng ý cấp quyền tái sử dụng học thuật phi thương mại cho dự án.",
+          "help_text_en": "Submission of this place review is completely voluntary for an academic graduation project (GoMate / WanderAI). Your review will be strictly anonymized (no real name, phone number, email, or social handle will be stored in the scientific corpus) and may be used for research, benchmark evaluation, and academic demonstration. Please do not submit any sensitive personal information. By checking the consent box, you confirm that you have personally visited or directly experienced the selected place (and personally visited or directly experienced the selected POI), that the review is your own original writing (not copied from Google Maps, Tripadvisor, Booking, Agoda, or Foody, and not generated or paraphrased by an AI/LLM), and that you grant permission for academic, non-commercial project reuse.",
+          "field_type": "CHECKBOX_REQUIRED",
+          "required": true,
+          "checkbox_option_label": "Tôi xác nhận đầy đủ 7 cam kết trên (đã trực tiếp đến địa điểm, tự viết 100%, không sao chép, không dùng AI, tự nguyện cấp quyền nghiên cứu học thuật ẩn danh) / I affirm all 7 statements above.",
+          "binds_to_schema_field": "consent_record_id"
+        }
+      ],
+      "consent_text": {
+        "vi": "Việc gửi đánh giá địa điểm là hoàn toàn tự nguyện phục vụ đồ án tốt nghiệp đại học (GoMate / WanderAI). Nội dung đánh giá sẽ được ẩn danh hoàn toàn (không lưu họ tên, số điện thoại, email hay tài khoản cá nhân trong bộ dữ liệu khoa học) và được sử dụng cho mục đích nghiên cứu, đánh giá thực nghiệm và trình diễn học thuật phi thương mại. Người đóng góp xác nhận không đưa thông tin cá nhân nhạy cảm vào nội dung, xác nhận bản thân đã trực tiếp đến/trải nghiệm địa điểm được chọn, tự viết đánh giá, không sao chép từ Google Maps, Tripadvisor, Booking, Agoda hay Foody, không dùng AI (ChatGPT, Gemini, Claude) để tạo hoặc viết lại nội dung, và đồng ý cấp quyền tái sử dụng học thuật phi thương mại cho dự án.",
+        "en": "Submission of this place review is completely voluntary for an academic graduation project (GoMate / WanderAI). Your review will be strictly anonymized (no real name, phone number, email, or social handle will be stored in the scientific corpus) and may be used for research, benchmark evaluation, and academic demonstration. Please do not submit any sensitive personal information. By checking the consent box, you confirm that you have personally visited or directly experienced the selected place (and personally visited or directly experienced the selected POI), that the review is your own original writing (not copied from Google Maps, Tripadvisor, Booking, Agoda, or Foody, and not generated or paraphrased by an AI/LLM), and that you grant permission for academic, non-commercial project reuse.",
+        "seven_mandatory_affirmations": [
+          "1. Tôi đã trực tiếp đến hoặc trực tiếp trải nghiệm địa điểm (POI) được chọn / I personally visited or directly experienced the selected POI.",
+          "2. Nội dung đánh giá là do chính tôi tự viết / The review is my own original writing.",
+          "3. Không sao chép từ Google Maps, Tripadvisor, Booking, Agoda, Foody hoặc người đánh giá khác / Not copied from Google Maps, Tripadvisor, Booking, Agoda, Foody, or another reviewer.",
+          "4. Không sử dụng ChatGPT, Gemini, Claude hoặc công cụ AI khác để viết hay diễn đạt lại / Not written or rephrased by ChatGPT, Gemini, Claude, or another AI.",
+          "5. Việc gửi đánh giá là hoàn toàn tự nguyện / Submission is completely voluntary.",
+          "6. Đồng ý cho phép sử dụng ẩn danh phục vụ nghiên cứu, đánh giá thực nghiệm và trình diễn học thuật phi thương mại / Permission granted for anonymized academic/non-commercial research, evaluation, and demo use.",
+          "7. Không đưa thông tin cá nhân nhạy cảm (số điện thoại, email, tên thật, tài khoản cá nhân) vào nội dung đánh giá / No sensitive personal information is included in the review text."
+        ],
+        "required_checkbox_label": "Tôi xác nhận đầy đủ 7 cam kết trên (đã trực tiếp đến địa điểm, tự viết 100%, không sao chép, không dùng AI, tự nguyện cấp quyền nghiên cứu học thuật ẩn danh) / I affirm all 7 statements above."
+      },
+      "response_schema": {
+        "one_response_equals": "ONE_REVIEW_OF_ONE_POI",
+        "allow_multiple_submissions_per_contributor": true,
+        "csv_columns_expected": [
+          "Timestamp",
+          "1. Chọn địa điểm (POI) bạn đã trực tiếp đến trải nghiệm",
+          "2. Điểm đánh giá tổng thể (1 = Rất tệ, 5 = Rất tốt)",
+          "3. Nội dung đánh giá thực tế của riêng bạn",
+          "4. Thời điểm ghé thăm (Không bắt buộc)",
+          "5. Cam kết tính xác thực và đồng thuận nghiên cứu học thuật"
+        ],
+        "programmatic_column_aliases": {
+          "timestamp": [
+            "Timestamp",
+            "Dấu thời gian",
+            "timestamp",
+            "created_at"
+          ],
+          "poi_selection": [
+            "1. Chọn địa điểm (POI) bạn đã trực tiếp đến trải nghiệm",
+            "poi_selection",
+            "poi_id",
+            "poi_name",
+            "Địa điểm (POI)"
+          ],
+          "rating": [
+            "2. Điểm đánh giá tổng thể (1 = Rất tệ, 5 = Rất tốt)",
+            "rating",
+            "Điểm đánh giá (1-5)"
+          ],
+          "review_text": [
+            "3. Nội dung đánh giá thực tế của riêng bạn",
+            "review_text",
+            "Nội dung đánh giá"
+          ],
+          "visit_period": [
+            "4. Thời điểm ghé thăm (Không bắt buộc)",
+            "visit_period",
+            "Thời điểm ghé thăm"
+          ],
+          "consent": [
+            "5. Cam kết tính xác thực và đồng thuận nghiên cứu học thuật",
+            "consent",
+            "consent_confirmed",
+            "Đồng ý cam kết học thuật"
+          ]
+        }
+      },
+      "manifest_sha_binding": "b4be35d96ff503c61986674a6b3eb37b993484c0dc121434772184a2b089ed2b"
+    },
+    {
+      "form_id": "w07_form_halong_v1",
+      "form_version": "1.0.0",
+      "city": "Hạ Long",
+      "city_code": "hl",
+      "destination_slug": "ha-long",
+      "form_title_vi": "[GoMate W07] Đánh giá địa điểm du lịch thực tế — Hạ Long (20 POI)",
+      "form_title_en": "[GoMate W07] Authentic Visited Place Review — Hạ Long (20 POIs)",
+      "raw_csv_default_relpath": "data/restricted/w07_reviews/raw_forms/halong_responses.csv",
+      "poi_count": 20,
+      "pois": [
+        {
+          "city_item_index": 1,
+          "selection_rank": 41,
+          "poi_id": "ade2140c-7945-4044-b99a-b1a028edce9e",
+          "name": "Vịnh Hạ Long",
+          "city": "Hạ Long",
+          "destination_slug": "ha-long",
+          "category": "attraction",
+          "category_group": "attractions_culture",
+          "osm_id": "node/2707025319",
+          "overture_id": null,
+          "source_ids": [
+            "osm:node/2707025319"
+          ],
+          "dropdown_display_label": "Vịnh Hạ Long",
+          "dropdown_disambiguated_label": "Vịnh Hạ Long [attraction] — ade2140c-7945-4044-b99a-b1a028edce9e"
+        },
+        {
+          "city_item_index": 2,
+          "selection_rank": 42,
+          "poi_id": "8f2b5a69-1293-4efe-8fc5-3a74193edd0f",
+          "name": "Bảo tàng Quảng Ninh",
+          "city": "Hạ Long",
+          "destination_slug": "ha-long",
+          "category": "museum",
+          "category_group": "attractions_culture",
+          "osm_id": "node/5395107122",
+          "overture_id": "bd078edf-ad58-4f6c-9016-adf65c90e5eb",
+          "source_ids": [
+            "osm:node/5395107122",
+            "overture:bd078edf-ad58-4f6c-9016-adf65c90e5eb"
+          ],
+          "dropdown_display_label": "Bảo tàng Quảng Ninh",
+          "dropdown_disambiguated_label": "Bảo tàng Quảng Ninh [museum] — 8f2b5a69-1293-4efe-8fc5-3a74193edd0f"
+        },
+        {
+          "city_item_index": 3,
+          "selection_rank": 43,
+          "poi_id": "9a979427-a0bb-421d-b75f-2a6ee79b120b",
+          "name": "Động Thiên Cung",
+          "city": "Hạ Long",
+          "destination_slug": "ha-long",
+          "category": "attraction",
+          "category_group": "attractions_culture",
+          "osm_id": "node/4730928605",
+          "overture_id": null,
+          "source_ids": [
+            "osm:node/4730928605"
+          ],
+          "dropdown_display_label": "Động Thiên Cung",
+          "dropdown_disambiguated_label": "Động Thiên Cung [attraction] — 9a979427-a0bb-421d-b75f-2a6ee79b120b"
+        },
+        {
+          "city_item_index": 4,
+          "selection_rank": 44,
+          "poi_id": "9fbcb0b4-27bc-4482-a8e3-8be6e3c72677",
+          "name": "Hang Đầu Gỗ",
+          "city": "Hạ Long",
+          "destination_slug": "ha-long",
+          "category": "attraction",
+          "category_group": "attractions_culture",
+          "osm_id": "node/4730928606",
+          "overture_id": null,
+          "source_ids": [
+            "osm:node/4730928606"
+          ],
+          "dropdown_display_label": "Hang Đầu Gỗ",
+          "dropdown_disambiguated_label": "Hang Đầu Gỗ [attraction] — 9fbcb0b4-27bc-4482-a8e3-8be6e3c72677"
+        },
+        {
+          "city_item_index": 5,
+          "selection_rank": 45,
+          "poi_id": "77af14b6-85ac-4c91-873a-e7da27d555f4",
+          "name": "Hang Luồn Cave Entrance",
+          "city": "Hạ Long",
+          "destination_slug": "ha-long",
+          "category": "attraction",
+          "category_group": "attractions_culture",
+          "osm_id": "node/3560283504",
+          "overture_id": null,
+          "source_ids": [
+            "osm:node/3560283504"
+          ],
+          "dropdown_display_label": "Hang Luồn Cave Entrance",
+          "dropdown_disambiguated_label": "Hang Luồn Cave Entrance [attraction] — 77af14b6-85ac-4c91-873a-e7da27d555f4"
+        },
+        {
+          "city_item_index": 6,
+          "selection_rank": 46,
+          "poi_id": "88652ea2-61a6-4022-85e5-84a0eb48d3f9",
+          "name": "Hòn Đỉnh Hương",
+          "city": "Hạ Long",
+          "destination_slug": "ha-long",
+          "category": "attraction",
+          "category_group": "attractions_culture",
+          "osm_id": "node/10821152105",
+          "overture_id": null,
+          "source_ids": [
+            "osm:node/10821152105"
+          ],
+          "dropdown_display_label": "Hòn Đỉnh Hương",
+          "dropdown_disambiguated_label": "Hòn Đỉnh Hương [attraction] — 88652ea2-61a6-4022-85e5-84a0eb48d3f9"
+        },
+        {
+          "city_item_index": 7,
+          "selection_rank": 47,
+          "poi_id": "871a6ee7-1d46-49bb-957a-ff50260b1f3b",
+          "name": "Ha Long International Cruise Port",
+          "city": "Hạ Long",
+          "destination_slug": "ha-long",
+          "category": "attraction",
+          "category_group": "attractions_culture",
+          "osm_id": "node/7044140886",
+          "overture_id": "527ebd9f-445a-4059-a815-0d988c0925a2",
+          "source_ids": [
+            "osm:node/7044140886",
+            "overture:527ebd9f-445a-4059-a815-0d988c0925a2"
+          ],
+          "dropdown_display_label": "Ha Long International Cruise Port",
+          "dropdown_disambiguated_label": "Ha Long International Cruise Port [attraction] — 871a6ee7-1d46-49bb-957a-ff50260b1f3b"
+        },
+        {
+          "city_item_index": 8,
+          "selection_rank": 48,
+          "poi_id": "b37d68ee-0cb3-49f0-a399-cac4c8e2732c",
+          "name": "Nhà hàng Hồng Hạnh 3",
+          "city": "Hạ Long",
+          "destination_slug": "ha-long",
+          "category": "restaurant",
+          "category_group": "restaurants_cafes_markets",
+          "osm_id": "node/12998514201",
+          "overture_id": "92ed9717-ce41-4e8f-ab25-52e369cd88be",
+          "source_ids": [
+            "osm:node/12998514201",
+            "overture:92ed9717-ce41-4e8f-ab25-52e369cd88be"
+          ],
+          "dropdown_display_label": "Nhà hàng Hồng Hạnh 3",
+          "dropdown_disambiguated_label": "Nhà hàng Hồng Hạnh 3 [restaurant] — b37d68ee-0cb3-49f0-a399-cac4c8e2732c"
+        },
+        {
+          "city_item_index": 9,
+          "selection_rank": 49,
+          "poi_id": "7d01af19-10bc-4679-8cfa-4396209dece4",
+          "name": "Nhà hàng Ngọc Phương Nam 1",
+          "city": "Hạ Long",
+          "destination_slug": "ha-long",
+          "category": "restaurant",
+          "category_group": "restaurants_cafes_markets",
+          "osm_id": "node/12998531301",
+          "overture_id": "04dda4d2-9d22-4516-a651-73c774b61663",
+          "source_ids": [
+            "osm:node/12998531301",
+            "overture:04dda4d2-9d22-4516-a651-73c774b61663"
+          ],
+          "dropdown_display_label": "Nhà hàng Ngọc Phương Nam 1",
+          "dropdown_disambiguated_label": "Nhà hàng Ngọc Phương Nam 1 [restaurant] — 7d01af19-10bc-4679-8cfa-4396209dece4"
+        },
+        {
+          "city_item_index": 10,
+          "selection_rank": 50,
+          "poi_id": "065f8492-2ab3-4ea0-ae8f-9cc6f8c18ae5",
+          "name": "Nhà hàng Buffet Sen Á Đông",
+          "city": "Hạ Long",
+          "destination_slug": "ha-long",
+          "category": "restaurant",
+          "category_group": "restaurants_cafes_markets",
+          "osm_id": "node/12998779901",
+          "overture_id": "0772c46b-7aa9-40a0-b403-78dec2591927",
+          "source_ids": [
+            "osm:node/12998779901",
+            "overture:0772c46b-7aa9-40a0-b403-78dec2591927"
+          ],
+          "dropdown_display_label": "Nhà hàng Buffet Sen Á Đông",
+          "dropdown_disambiguated_label": "Nhà hàng Buffet Sen Á Đông [restaurant] — 065f8492-2ab3-4ea0-ae8f-9cc6f8c18ae5"
+        },
+        {
+          "city_item_index": 11,
+          "selection_rank": 51,
+          "poi_id": "96523873-1b85-4d2f-b85c-cb3f5593091b",
+          "name": "Chợ Cái Dăm",
+          "city": "Hạ Long",
+          "destination_slug": "ha-long",
+          "category": "market",
+          "category_group": "restaurants_cafes_markets",
+          "osm_id": "way/674641659",
+          "overture_id": "9b6e3c9a-d263-4e5d-8ff7-7d7bddc1ffef",
+          "source_ids": [
+            "osm:way/674641659",
+            "overture:9b6e3c9a-d263-4e5d-8ff7-7d7bddc1ffef"
+          ],
+          "dropdown_display_label": "Chợ Cái Dăm",
+          "dropdown_disambiguated_label": "Chợ Cái Dăm [market] — 96523873-1b85-4d2f-b85c-cb3f5593091b"
+        },
+        {
+          "city_item_index": 12,
+          "selection_rank": 52,
+          "poi_id": "6215446b-2fdd-4014-aacf-23de6e45e264",
+          "name": "Chợ Hạ Long II",
+          "city": "Hạ Long",
+          "destination_slug": "ha-long",
+          "category": "market",
+          "category_group": "restaurants_cafes_markets",
+          "osm_id": "way/673558390",
+          "overture_id": null,
+          "source_ids": [
+            "osm:way/673558390"
+          ],
+          "dropdown_display_label": "Chợ Hạ Long II",
+          "dropdown_disambiguated_label": "Chợ Hạ Long II [market] — 6215446b-2fdd-4014-aacf-23de6e45e264"
+        },
+        {
+          "city_item_index": 13,
+          "selection_rank": 53,
+          "poi_id": "b57b3f7d-9704-44b0-8139-19bea1998391",
+          "name": "Sữa chua trân châu Hạ Long cơ sở 00",
+          "city": "Hạ Long",
+          "destination_slug": "ha-long",
+          "category": "cafe",
+          "category_group": "restaurants_cafes_markets",
+          "osm_id": "node/13009250202",
+          "overture_id": null,
+          "source_ids": [
+            "osm:node/13009250202"
+          ],
+          "dropdown_display_label": "Sữa chua trân châu Hạ Long cơ sở 00",
+          "dropdown_disambiguated_label": "Sữa chua trân châu Hạ Long cơ sở 00 [cafe] — b57b3f7d-9704-44b0-8139-19bea1998391"
+        },
+        {
+          "city_item_index": 14,
+          "selection_rank": 54,
+          "poi_id": "85303289-9746-4a42-b0f0-a555ce2bfd0e",
+          "name": "Highlands Coffee",
+          "city": "Hạ Long",
+          "destination_slug": "ha-long",
+          "category": "cafe",
+          "category_group": "restaurants_cafes_markets",
+          "osm_id": "node/13183486704",
+          "overture_id": "6039522b-f82a-4a1d-88f3-09beca7172ab",
+          "source_ids": [
+            "osm:node/13183486704",
+            "overture:6039522b-f82a-4a1d-88f3-09beca7172ab"
+          ],
+          "dropdown_display_label": "Highlands Coffee",
+          "dropdown_disambiguated_label": "Highlands Coffee [cafe] — 85303289-9746-4a42-b0f0-a555ce2bfd0e"
+        },
+        {
+          "city_item_index": 15,
+          "selection_rank": 55,
+          "poi_id": "75a3fbd1-a24e-43c6-820a-72f95ebc05c0",
+          "name": "Vinpearl Ha Long resort",
+          "city": "Hạ Long",
+          "destination_slug": "ha-long",
+          "category": "hotel",
+          "category_group": "hotels",
+          "osm_id": "node/4330722989",
+          "overture_id": "9ed3a2e3-60a3-4df0-acd8-83185f57a281",
+          "source_ids": [
+            "osm:node/4330722989",
+            "overture:9ed3a2e3-60a3-4df0-acd8-83185f57a281"
+          ],
+          "dropdown_display_label": "Vinpearl Ha Long resort",
+          "dropdown_disambiguated_label": "Vinpearl Ha Long resort [hotel] — 75a3fbd1-a24e-43c6-820a-72f95ebc05c0"
+        },
+        {
+          "city_item_index": 16,
+          "selection_rank": 56,
+          "poi_id": "9740c851-5b06-432c-a243-071ad0906494",
+          "name": "Novotel Ha Long",
+          "city": "Hạ Long",
+          "destination_slug": "ha-long",
+          "category": "hotel",
+          "category_group": "hotels",
+          "osm_id": "way/676720191",
+          "overture_id": "893209f5-1d13-479f-b7d7-6630b1f3fe57",
+          "source_ids": [
+            "osm:way/676720191",
+            "overture:893209f5-1d13-479f-b7d7-6630b1f3fe57"
+          ],
+          "dropdown_display_label": "Novotel Ha Long",
+          "dropdown_disambiguated_label": "Novotel Ha Long [hotel] — 9740c851-5b06-432c-a243-071ad0906494"
+        },
+        {
+          "city_item_index": 17,
+          "selection_rank": 57,
+          "poi_id": "708ee182-c879-477c-b920-516e2c99b0a6",
+          "name": "Công viên Lán Bè",
+          "city": "Hạ Long",
+          "destination_slug": "ha-long",
+          "category": "park",
+          "category_group": "nature_beach",
+          "osm_id": "way/673096986",
+          "overture_id": null,
+          "source_ids": [
+            "osm:way/673096986"
+          ],
+          "dropdown_display_label": "Công viên Lán Bè",
+          "dropdown_disambiguated_label": "Công viên Lán Bè [park] — 708ee182-c879-477c-b920-516e2c99b0a6"
+        },
+        {
+          "city_item_index": 18,
+          "selection_rank": 58,
+          "poi_id": "0931b06b-4563-4af0-a3a4-75f1ad8392ee",
+          "name": "Vườn hoa",
+          "city": "Hạ Long",
+          "destination_slug": "ha-long",
+          "category": "park",
+          "category_group": "nature_beach",
+          "osm_id": "way/673096992",
+          "overture_id": null,
+          "source_ids": [
+            "osm:way/673096992"
+          ],
+          "dropdown_display_label": "Vườn hoa",
+          "dropdown_disambiguated_label": "Vườn hoa [park] — 0931b06b-4563-4af0-a3a4-75f1ad8392ee"
+        },
+        {
+          "city_item_index": 19,
+          "selection_rank": 59,
+          "poi_id": "8fe33554-7a07-4eb2-870f-8af643d8c728",
+          "name": "Vườn hoa Thị trấn Trới",
+          "city": "Hạ Long",
+          "destination_slug": "ha-long",
+          "category": "park",
+          "category_group": "nature_beach",
+          "osm_id": "way/677419454",
+          "overture_id": null,
+          "source_ids": [
+            "osm:way/677419454"
+          ],
+          "dropdown_display_label": "Vườn hoa Thị trấn Trới",
+          "dropdown_disambiguated_label": "Vườn hoa Thị trấn Trới [park] — 8fe33554-7a07-4eb2-870f-8af643d8c728"
+        },
+        {
+          "city_item_index": 20,
+          "selection_rank": 60,
+          "poi_id": "1a95430d-289d-4663-91b8-ae64ede4f9a4",
+          "name": "Sunworld",
+          "city": "Hạ Long",
+          "destination_slug": "ha-long",
+          "category": "entertainment",
+          "category_group": "other_tourism",
+          "osm_id": "relation/18623673",
+          "overture_id": null,
+          "source_ids": [
+            "osm:relation/18623673"
+          ],
+          "dropdown_display_label": "Sunworld",
+          "dropdown_disambiguated_label": "Sunworld [entertainment] — 1a95430d-289d-4663-91b8-ae64ede4f9a4"
+        }
+      ],
+      "question_definitions": [
+        {
+          "question_id": "poi_selection",
+          "title_vi": "1. Chọn địa điểm (POI) bạn đã trực tiếp đến trải nghiệm",
+          "title_en": "1. Select the place (POI) you personally visited",
+          "help_text_vi": "Chỉ chọn 1 địa điểm tại Hạ Long mà bạn đã thực sự ghé thăm. Mỗi lần gửi biểu mẫu tương ứng với 1 đánh giá cho 1 địa điểm.",
+          "field_type": "DROPDOWN",
+          "required": true,
+          "binds_to_schema_field": "poi_id",
+          "options": [
+            {
+              "display_label": "Vịnh Hạ Long",
+              "canonical_poi_id": "ade2140c-7945-4044-b99a-b1a028edce9e",
+              "osm_id": "node/2707025319",
+              "category": "attraction"
+            },
+            {
+              "display_label": "Bảo tàng Quảng Ninh",
+              "canonical_poi_id": "8f2b5a69-1293-4efe-8fc5-3a74193edd0f",
+              "osm_id": "node/5395107122",
+              "category": "museum"
+            },
+            {
+              "display_label": "Động Thiên Cung",
+              "canonical_poi_id": "9a979427-a0bb-421d-b75f-2a6ee79b120b",
+              "osm_id": "node/4730928605",
+              "category": "attraction"
+            },
+            {
+              "display_label": "Hang Đầu Gỗ",
+              "canonical_poi_id": "9fbcb0b4-27bc-4482-a8e3-8be6e3c72677",
+              "osm_id": "node/4730928606",
+              "category": "attraction"
+            },
+            {
+              "display_label": "Hang Luồn Cave Entrance",
+              "canonical_poi_id": "77af14b6-85ac-4c91-873a-e7da27d555f4",
+              "osm_id": "node/3560283504",
+              "category": "attraction"
+            },
+            {
+              "display_label": "Hòn Đỉnh Hương",
+              "canonical_poi_id": "88652ea2-61a6-4022-85e5-84a0eb48d3f9",
+              "osm_id": "node/10821152105",
+              "category": "attraction"
+            },
+            {
+              "display_label": "Ha Long International Cruise Port",
+              "canonical_poi_id": "871a6ee7-1d46-49bb-957a-ff50260b1f3b",
+              "osm_id": "node/7044140886",
+              "category": "attraction"
+            },
+            {
+              "display_label": "Nhà hàng Hồng Hạnh 3",
+              "canonical_poi_id": "b37d68ee-0cb3-49f0-a399-cac4c8e2732c",
+              "osm_id": "node/12998514201",
+              "category": "restaurant"
+            },
+            {
+              "display_label": "Nhà hàng Ngọc Phương Nam 1",
+              "canonical_poi_id": "7d01af19-10bc-4679-8cfa-4396209dece4",
+              "osm_id": "node/12998531301",
+              "category": "restaurant"
+            },
+            {
+              "display_label": "Nhà hàng Buffet Sen Á Đông",
+              "canonical_poi_id": "065f8492-2ab3-4ea0-ae8f-9cc6f8c18ae5",
+              "osm_id": "node/12998779901",
+              "category": "restaurant"
+            },
+            {
+              "display_label": "Chợ Cái Dăm",
+              "canonical_poi_id": "96523873-1b85-4d2f-b85c-cb3f5593091b",
+              "osm_id": "way/674641659",
+              "category": "market"
+            },
+            {
+              "display_label": "Chợ Hạ Long II",
+              "canonical_poi_id": "6215446b-2fdd-4014-aacf-23de6e45e264",
+              "osm_id": "way/673558390",
+              "category": "market"
+            },
+            {
+              "display_label": "Sữa chua trân châu Hạ Long cơ sở 00",
+              "canonical_poi_id": "b57b3f7d-9704-44b0-8139-19bea1998391",
+              "osm_id": "node/13009250202",
+              "category": "cafe"
+            },
+            {
+              "display_label": "Highlands Coffee",
+              "canonical_poi_id": "85303289-9746-4a42-b0f0-a555ce2bfd0e",
+              "osm_id": "node/13183486704",
+              "category": "cafe"
+            },
+            {
+              "display_label": "Vinpearl Ha Long resort",
+              "canonical_poi_id": "75a3fbd1-a24e-43c6-820a-72f95ebc05c0",
+              "osm_id": "node/4330722989",
+              "category": "hotel"
+            },
+            {
+              "display_label": "Novotel Ha Long",
+              "canonical_poi_id": "9740c851-5b06-432c-a243-071ad0906494",
+              "osm_id": "way/676720191",
+              "category": "hotel"
+            },
+            {
+              "display_label": "Công viên Lán Bè",
+              "canonical_poi_id": "708ee182-c879-477c-b920-516e2c99b0a6",
+              "osm_id": "way/673096986",
+              "category": "park"
+            },
+            {
+              "display_label": "Vườn hoa",
+              "canonical_poi_id": "0931b06b-4563-4af0-a3a4-75f1ad8392ee",
+              "osm_id": "way/673096992",
+              "category": "park"
+            },
+            {
+              "display_label": "Vườn hoa Thị trấn Trới",
+              "canonical_poi_id": "8fe33554-7a07-4eb2-870f-8af643d8c728",
+              "osm_id": "way/677419454",
+              "category": "park"
+            },
+            {
+              "display_label": "Sunworld",
+              "canonical_poi_id": "1a95430d-289d-4663-91b8-ae64ede4f9a4",
+              "osm_id": "relation/18623673",
+              "category": "entertainment"
+            }
+          ]
+        },
+        {
+          "question_id": "rating",
+          "title_vi": "2. Điểm đánh giá tổng thể (1 = Rất tệ, 5 = Rất tốt)",
+          "title_en": "2. Overall rating (1 = Poor, 5 = Excellent)",
+          "help_text_vi": "Chọn số nguyên từ 1 đến 5 sao.",
+          "field_type": "LINEAR_SCALE_INTEGER",
+          "required": true,
+          "scale_min": 1,
+          "scale_max": 5,
+          "allowed_values": [
+            1,
+            2,
+            3,
+            4,
+            5
+          ],
+          "binds_to_schema_field": "rating"
+        },
+        {
+          "question_id": "review_text",
+          "title_vi": "3. Nội dung đánh giá thực tế của riêng bạn",
+          "title_en": "3. Your own authentic review",
+          "help_text_vi": "Hãy viết cảm nhận cụ thể của chính bạn về không gian, dịch vụ, trải nghiệm thực tế (khuyến nghị tối thiểu 1–3 câu, >= 20 ký tự và >= 5 từ). Không sao chép từ mạng, không dùng AI, và KHÔNG ghi số điện thoại hay email vào nội dung.",
+          "field_type": "PARAGRAPH_TEXT",
+          "required": true,
+          "binds_to_schema_field": "review_text"
+        },
+        {
+          "question_id": "visit_period",
+          "title_vi": "4. Thời điểm ghé thăm (Không bắt buộc)",
+          "title_en": "4. Visit period (Optional)",
+          "help_text_vi": "Định dạng gợi ý: YYYY-MM (ví dụ: 2025-08) hoặc YYYY-Q1..Q4 (ví dụ: 2025-Q3).",
+          "field_type": "SHORT_TEXT",
+          "required": false,
+          "suggested_formats": [
+            "YYYY-MM",
+            "YYYY-Q1",
+            "YYYY-Q2",
+            "YYYY-Q3",
+            "YYYY-Q4"
+          ],
+          "binds_to_schema_field": "visit_period"
+        },
+        {
+          "question_id": "consent",
+          "title_vi": "5. Cam kết tính xác thực và đồng thuận nghiên cứu học thuật",
+          "title_en": "5. Authenticity affirmation and academic research consent",
+          "help_text_vi": "Việc gửi đánh giá địa điểm là hoàn toàn tự nguyện phục vụ đồ án tốt nghiệp đại học (GoMate / WanderAI). Nội dung đánh giá sẽ được ẩn danh hoàn toàn (không lưu họ tên, số điện thoại, email hay tài khoản cá nhân trong bộ dữ liệu khoa học) và được sử dụng cho mục đích nghiên cứu, đánh giá thực nghiệm và trình diễn học thuật phi thương mại. Người đóng góp xác nhận không đưa thông tin cá nhân nhạy cảm vào nội dung, xác nhận bản thân đã trực tiếp đến/trải nghiệm địa điểm được chọn, tự viết đánh giá, không sao chép từ Google Maps, Tripadvisor, Booking, Agoda hay Foody, không dùng AI (ChatGPT, Gemini, Claude) để tạo hoặc viết lại nội dung, và đồng ý cấp quyền tái sử dụng học thuật phi thương mại cho dự án.",
+          "help_text_en": "Submission of this place review is completely voluntary for an academic graduation project (GoMate / WanderAI). Your review will be strictly anonymized (no real name, phone number, email, or social handle will be stored in the scientific corpus) and may be used for research, benchmark evaluation, and academic demonstration. Please do not submit any sensitive personal information. By checking the consent box, you confirm that you have personally visited or directly experienced the selected place (and personally visited or directly experienced the selected POI), that the review is your own original writing (not copied from Google Maps, Tripadvisor, Booking, Agoda, or Foody, and not generated or paraphrased by an AI/LLM), and that you grant permission for academic, non-commercial project reuse.",
+          "field_type": "CHECKBOX_REQUIRED",
+          "required": true,
+          "checkbox_option_label": "Tôi xác nhận đầy đủ 7 cam kết trên (đã trực tiếp đến địa điểm, tự viết 100%, không sao chép, không dùng AI, tự nguyện cấp quyền nghiên cứu học thuật ẩn danh) / I affirm all 7 statements above.",
+          "binds_to_schema_field": "consent_record_id"
+        }
+      ],
+      "consent_text": {
+        "vi": "Việc gửi đánh giá địa điểm là hoàn toàn tự nguyện phục vụ đồ án tốt nghiệp đại học (GoMate / WanderAI). Nội dung đánh giá sẽ được ẩn danh hoàn toàn (không lưu họ tên, số điện thoại, email hay tài khoản cá nhân trong bộ dữ liệu khoa học) và được sử dụng cho mục đích nghiên cứu, đánh giá thực nghiệm và trình diễn học thuật phi thương mại. Người đóng góp xác nhận không đưa thông tin cá nhân nhạy cảm vào nội dung, xác nhận bản thân đã trực tiếp đến/trải nghiệm địa điểm được chọn, tự viết đánh giá, không sao chép từ Google Maps, Tripadvisor, Booking, Agoda hay Foody, không dùng AI (ChatGPT, Gemini, Claude) để tạo hoặc viết lại nội dung, và đồng ý cấp quyền tái sử dụng học thuật phi thương mại cho dự án.",
+        "en": "Submission of this place review is completely voluntary for an academic graduation project (GoMate / WanderAI). Your review will be strictly anonymized (no real name, phone number, email, or social handle will be stored in the scientific corpus) and may be used for research, benchmark evaluation, and academic demonstration. Please do not submit any sensitive personal information. By checking the consent box, you confirm that you have personally visited or directly experienced the selected place (and personally visited or directly experienced the selected POI), that the review is your own original writing (not copied from Google Maps, Tripadvisor, Booking, Agoda, or Foody, and not generated or paraphrased by an AI/LLM), and that you grant permission for academic, non-commercial project reuse.",
+        "seven_mandatory_affirmations": [
+          "1. Tôi đã trực tiếp đến hoặc trực tiếp trải nghiệm địa điểm (POI) được chọn / I personally visited or directly experienced the selected POI.",
+          "2. Nội dung đánh giá là do chính tôi tự viết / The review is my own original writing.",
+          "3. Không sao chép từ Google Maps, Tripadvisor, Booking, Agoda, Foody hoặc người đánh giá khác / Not copied from Google Maps, Tripadvisor, Booking, Agoda, Foody, or another reviewer.",
+          "4. Không sử dụng ChatGPT, Gemini, Claude hoặc công cụ AI khác để viết hay diễn đạt lại / Not written or rephrased by ChatGPT, Gemini, Claude, or another AI.",
+          "5. Việc gửi đánh giá là hoàn toàn tự nguyện / Submission is completely voluntary.",
+          "6. Đồng ý cho phép sử dụng ẩn danh phục vụ nghiên cứu, đánh giá thực nghiệm và trình diễn học thuật phi thương mại / Permission granted for anonymized academic/non-commercial research, evaluation, and demo use.",
+          "7. Không đưa thông tin cá nhân nhạy cảm (số điện thoại, email, tên thật, tài khoản cá nhân) vào nội dung đánh giá / No sensitive personal information is included in the review text."
+        ],
+        "required_checkbox_label": "Tôi xác nhận đầy đủ 7 cam kết trên (đã trực tiếp đến địa điểm, tự viết 100%, không sao chép, không dùng AI, tự nguyện cấp quyền nghiên cứu học thuật ẩn danh) / I affirm all 7 statements above."
+      },
+      "response_schema": {
+        "one_response_equals": "ONE_REVIEW_OF_ONE_POI",
+        "allow_multiple_submissions_per_contributor": true,
+        "csv_columns_expected": [
+          "Timestamp",
+          "1. Chọn địa điểm (POI) bạn đã trực tiếp đến trải nghiệm",
+          "2. Điểm đánh giá tổng thể (1 = Rất tệ, 5 = Rất tốt)",
+          "3. Nội dung đánh giá thực tế của riêng bạn",
+          "4. Thời điểm ghé thăm (Không bắt buộc)",
+          "5. Cam kết tính xác thực và đồng thuận nghiên cứu học thuật"
+        ],
+        "programmatic_column_aliases": {
+          "timestamp": [
+            "Timestamp",
+            "Dấu thời gian",
+            "timestamp",
+            "created_at"
+          ],
+          "poi_selection": [
+            "1. Chọn địa điểm (POI) bạn đã trực tiếp đến trải nghiệm",
+            "poi_selection",
+            "poi_id",
+            "poi_name",
+            "Địa điểm (POI)"
+          ],
+          "rating": [
+            "2. Điểm đánh giá tổng thể (1 = Rất tệ, 5 = Rất tốt)",
+            "rating",
+            "Điểm đánh giá (1-5)"
+          ],
+          "review_text": [
+            "3. Nội dung đánh giá thực tế của riêng bạn",
+            "review_text",
+            "Nội dung đánh giá"
+          ],
+          "visit_period": [
+            "4. Thời điểm ghé thăm (Không bắt buộc)",
+            "visit_period",
+            "Thời điểm ghé thăm"
+          ],
+          "consent": [
+            "5. Cam kết tính xác thực và đồng thuận nghiên cứu học thuật",
+            "consent",
+            "consent_confirmed",
+            "Đồng ý cam kết học thuật"
+          ]
+        }
+      },
+      "manifest_sha_binding": "b4be35d96ff503c61986674a6b3eb37b993484c0dc121434772184a2b089ed2b"
+    }
+  ],
+  "artifact_sha256": "9c17cfc51c41295c8338b40544324454a36a7276bb2339edd3a0b59c88c6de8a"
+}
