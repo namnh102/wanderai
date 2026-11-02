@@ -2296,8 +2296,8 @@ def verify_public_source_evidence_receipts(
     coord_path = eff_restricted_dir / "zenodo_7967494" / "hotel_coordinate.csv"
     reviews_path = eff_restricted_dir / "zenodo_7967494" / "Reviews.csv"
 
-    raw_replay_verified = False
-    raw_replay_status = (
+    zenodo_raw_replay_verified = False
+    zenodo_raw_replay_status = (
         "RAW_SOURCE_FILES_ABSENT_IN_CLEAN_CHECKOUT_FROZEN_RECEIPT_VERIFIED_ONLY"
     )
 
@@ -2325,8 +2325,50 @@ def verify_public_source_evidence_receipts(
         if len(coord_rows) != 3910 or len(rev_rows) != 62887:
             raise ValueError("FAIL CLOSED: Local Zenodo 7967494 parsed row count mismatch.")
 
-        raw_replay_verified = True
-        raw_replay_status = "RAW_SOURCE_REPLAY_VERIFIED_FROM_LOCAL_RESTRICTED_FILES"
+        zenodo_raw_replay_verified = True
+        zenodo_raw_replay_status = (
+            "ZENODO_7967494_RAW_SOURCE_REPLAY_VERIFIED_FROM_LOCAL_RESTRICTED_FILES"
+        )
+
+    raw_replay_by_source: dict[str, str] = {}
+    for src in on_disk["source_receipts"]:
+        sid = src["source_id"]
+        local_rel = src.get("local_restricted_filename")
+        if sid == "zenodo:10.5281/zenodo.7967494":
+            raw_replay_by_source[sid] = (
+                "VERIFIED"
+                if zenodo_raw_replay_verified
+                else "RAW_SOURCE_FILES_ABSENT_IN_CLEAN_CHECKOUT"
+            )
+        elif not local_rel:
+            raw_replay_by_source[sid] = "NO_LOCAL_RAW_FILE"
+        else:
+            rel_parts = [p.strip() for p in str(local_rel).split(";") if p.strip()]
+            all_exist = True
+            for rel_p in rel_parts:
+                if restricted_sources_dir is not None:
+                    prefix = f"{RESTRICTED_PUBLIC_SOURCES_DIR_RELPATH}/"
+                    if rel_p.startswith(prefix):
+                        candidate_p = eff_restricted_dir / rel_p[len(prefix) :]
+                    else:
+                        candidate_p = eff_restricted_dir / Path(rel_p).name
+                else:
+                    candidate_p = repo_root / rel_p
+                if not candidate_p.exists():
+                    all_exist = False
+                    break
+            raw_replay_by_source[sid] = (
+                "NOT_REPLAYED_IN_C1A"
+                if all_exist
+                else "RAW_SOURCE_FILES_ABSENT_IN_CLEAN_CHECKOUT"
+            )
+
+    all_available_replay_verified = False
+    all_available_replay_status = (
+        "PARTIAL_RAW_REPLAY_VERIFICATION_ZENODO_7967494_ONLY"
+        if zenodo_raw_replay_verified
+        else "RAW_SOURCE_FILES_ABSENT_IN_CLEAN_CHECKOUT_FROZEN_RECEIPT_VERIFIED_ONLY"
+    )
 
     return {
         "status": "PASS",
@@ -2335,8 +2377,11 @@ def verify_public_source_evidence_receipts(
         "receipt_file_lf_sha256": w07_a2.compute_lf_normalized_sha256(receipt_path),
         "receipts_count": on_disk["receipts_count"],
         "SOURCE_EVIDENCE_RECEIPT_VERIFIED": True,
-        "RAW_SOURCE_REPLAY_VERIFIED": raw_replay_verified,
-        "raw_source_replay_status": raw_replay_status,
+        "ZENODO_7967494_RAW_SOURCE_REPLAY_VERIFIED": zenodo_raw_replay_verified,
+        "ZENODO_7967494_RAW_SOURCE_REPLAY_STATUS": zenodo_raw_replay_status,
+        "ALL_AVAILABLE_SOURCE_RAW_REPLAY_VERIFIED": all_available_replay_verified,
+        "all_available_source_raw_replay_status": all_available_replay_status,
+        "raw_replay_by_source": raw_replay_by_source,
     }
 
 

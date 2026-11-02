@@ -403,16 +403,32 @@ def test_w07_a4p_c1a_receipt_verifier_distinguishes_clean_checkout_from_local_ra
     )
     assert res_clean["status"] == "PASS"
     assert res_clean["SOURCE_EVIDENCE_RECEIPT_VERIFIED"] is True
-    assert res_clean["RAW_SOURCE_REPLAY_VERIFIED"] is False
+    assert res_clean["ZENODO_7967494_RAW_SOURCE_REPLAY_VERIFIED"] is False
     assert (
-        res_clean["raw_source_replay_status"]
+        res_clean["ZENODO_7967494_RAW_SOURCE_REPLAY_STATUS"]
         == "RAW_SOURCE_FILES_ABSENT_IN_CLEAN_CHECKOUT_FROZEN_RECEIPT_VERIFIED_ONLY"
     )
+    assert res_clean["ALL_AVAILABLE_SOURCE_RAW_REPLAY_VERIFIED"] is False
+    assert (
+        res_clean["all_available_source_raw_replay_status"]
+        == "RAW_SOURCE_FILES_ABSENT_IN_CLEAN_CHECKOUT_FROZEN_RECEIPT_VERIFIED_ONLY"
+    )
+    assert len(res_clean["raw_replay_by_source"]) == 18
+    assert (
+        res_clean["raw_replay_by_source"]["zenodo:10.5281/zenodo.7967494"]
+        == "RAW_SOURCE_FILES_ABSENT_IN_CLEAN_CHECKOUT"
+    )
+    assert (
+        res_clean["raw_replay_by_source"]["huggingface:phamluan/vn_msa_sar_v3"]
+        == "NO_LOCAL_RAW_FILE"
+    )
 
-    # 2. Default verification (passes receipt verification; if local files exist, verifies raw replay too):
+    # 2. Local workspace / default verification:
     res_default = w07_a4p.verify_public_source_evidence_receipts(REPO_ROOT)
     assert res_default["status"] == "PASS"
     assert res_default["SOURCE_EVIDENCE_RECEIPT_VERIFIED"] is True
+    assert res_default["ALL_AVAILABLE_SOURCE_RAW_REPLAY_VERIFIED"] is False
+    assert len(res_default["raw_replay_by_source"]) == 18
     coord_file = (
         REPO_ROOT
         / w07_a4p.RESTRICTED_PUBLIC_SOURCES_DIR_RELPATH
@@ -420,8 +436,22 @@ def test_w07_a4p_c1a_receipt_verifier_distinguishes_clean_checkout_from_local_ra
         / "hotel_coordinate.csv"
     )
     if coord_file.exists():
-        assert res_default["RAW_SOURCE_REPLAY_VERIFIED"] is True
+        assert res_default["ZENODO_7967494_RAW_SOURCE_REPLAY_VERIFIED"] is True
         assert (
-            res_default["raw_source_replay_status"]
-            == "RAW_SOURCE_REPLAY_VERIFIED_FROM_LOCAL_RESTRICTED_FILES"
+            res_default["ZENODO_7967494_RAW_SOURCE_REPLAY_STATUS"]
+            == "ZENODO_7967494_RAW_SOURCE_REPLAY_VERIFIED_FROM_LOCAL_RESTRICTED_FILES"
+        )
+        assert (
+            res_default["all_available_source_raw_replay_status"]
+            == "PARTIAL_RAW_REPLAY_VERIFICATION_ZENODO_7967494_ONLY"
+        )
+        assert (
+            res_default["raw_replay_by_source"]["zenodo:10.5281/zenodo.7967494"]
+            == "VERIFIED"
+        )
+        assert (
+            res_default["raw_replay_by_source"][
+                "huggingface:trungtrandinh/hotel_danang_vietnam"
+            ]
+            == "NOT_REPLAYED_IN_C1A"
         )
