@@ -28,6 +28,7 @@ from __future__ import annotations
 
 import argparse
 from collections import Counter
+import csv
 import hashlib
 import json
 import math
@@ -86,11 +87,26 @@ EXPECTED_A4H_GUIDE_LF_SHA256 = (
 PUBLIC_ACQUISITION_JSON_RELPATH = (
     "data/evaluation/w07/w07_public_review_acquisition_v1.json"
 )
+PUBLIC_SOURCE_RECEIPTS_JSON_RELPATH = (
+    "data/evaluation/w07/w07_public_source_evidence_receipts_v1.json"
+)
 PUBLIC_ACQUISITION_MD_RELPATH = "docs/research/w07_public_review_acquisition.md"
 RESTRICTED_PUBLIC_SOURCES_DIR_RELPATH = "data/restricted/w07_reviews/public_sources"
 RESTRICTED_PUBLIC_CANDIDATES_JSONL_RELPATH = (
     "data/restricted/w07_reviews/w07_public_candidate_reviews_v1.jsonl"
 )
+
+ZENODO_7967494_COORD_PUBLISHED_MD5 = "50fa8970a26ae513b8295bbcdfacd0b0"
+ZENODO_7967494_COORD_LOCAL_SHA256 = (
+    "4315726de6f5cebe7145e512d29baf0b341a31bf134ecc2abf23c2e22396ff7e"
+)
+ZENODO_7967494_COORD_BYTES = 263557
+
+ZENODO_7967494_REVIEWS_PUBLISHED_MD5 = "ebae7b018af787978b29cf15591b7e96"
+ZENODO_7967494_REVIEWS_LOCAL_SHA256 = (
+    "9e79268489e47506051496c4ebd626fab0cb81d3a6d402ab0c5c5283f0d29d90"
+)
+ZENODO_7967494_REVIEWS_BYTES = 64460152
 
 PUBLIC_ACQUISITION_VERSION = "1.0.0"
 ACCESS_DATE_UTC = "2026-11-02"
@@ -1623,6 +1639,707 @@ def verify_public_acquisition_artifacts(repo_root: Path = REPO_ROOT) -> dict[str
     }
 
 
+def build_zenodo_7967494_frozen_evidence() -> dict[str, Any]:
+    """Return frozen deterministic Zenodo 7967494 two-file evidence and derived statistics."""
+    return {
+        "source_id": "zenodo:10.5281/zenodo.7967494",
+        "doi": "10.5281/zenodo.7967494",
+        "source_url": "https://zenodo.org/records/7967494",
+        "files": {
+            "hotel_coordinate.csv": {
+                "upstream_filename": "hotel_coordinate.csv",
+                "local_restricted_filename": "data/restricted/w07_reviews/public_sources/zenodo_7967494/hotel_coordinate.csv",
+                "byte_size": ZENODO_7967494_COORD_BYTES,
+                "published_md5": ZENODO_7967494_COORD_PUBLISHED_MD5,
+                "local_md5": ZENODO_7967494_COORD_PUBLISHED_MD5,
+                "local_sha256": ZENODO_7967494_COORD_LOCAL_SHA256,
+                "schema_columns": [
+                    "locationId",
+                    "name",
+                    "latitude",
+                    "longitude",
+                    "parentGeo",
+                    "parentGeoId",
+                ],
+                "parsed_row_count": 3910,
+                "unique_location_ids": 3910,
+                "target_city_coordinate_rows": {
+                    "Hà Nội": 29,
+                    "Đà Nẵng": 17,
+                    "Hạ Long": 0,
+                },
+            },
+            "Reviews.csv": {
+                "upstream_filename": "Reviews.csv",
+                "local_restricted_filename": "data/restricted/w07_reviews/public_sources/zenodo_7967494/Reviews.csv",
+                "byte_size": ZENODO_7967494_REVIEWS_BYTES,
+                "published_md5": ZENODO_7967494_REVIEWS_PUBLISHED_MD5,
+                "local_md5": ZENODO_7967494_REVIEWS_PUBLISHED_MD5,
+                "local_sha256": ZENODO_7967494_REVIEWS_LOCAL_SHA256,
+                "schema_columns": [
+                    "id",
+                    "language",
+                    "rating",
+                    "additionalRatings",
+                    "createdDate",
+                    "helpfulVotes",
+                    "username",
+                    "userId",
+                    "title",
+                    "text",
+                    "locationId",
+                    "parentGeoId",
+                    "hotelName",
+                    "stayDate",
+                    "tripType",
+                ],
+                "parsed_row_count": 62887,
+                "unique_review_ids": 62887,
+                "unique_hotel_location_ids": 1497,
+                "unique_hotel_names": 1470,
+            },
+        },
+        "derived_statistics": {
+            "reviews_row_count": 62887,
+            "unique_review_ids": 62887,
+            "unique_hotel_location_ids_in_reviews": 1497,
+            "unique_hotel_names_in_reviews": 1470,
+            "hotel_coordinate_row_count": 3910,
+            "hotel_coordinate_joined_review_rows": 60570,
+            "hotel_coordinate_joined_unique_hotels": 1475,
+            "unjoined_review_rows": 2317,
+            "unjoined_unique_hotels": 22,
+            "distinct_locales_in_reviews": 183,
+            "top_15_locales_in_reviews": {
+                "Đảo Phú Quốc": 17781,
+                "Cu Du": 3407,
+                "Vườn quốc gia Phong Nha-Kẻ Bàng": 3354,
+                "Cam Hải Đông": 3345,
+                "Ninh Vân": 2788,
+                "Điện Bàn": 2340,
+                "UNJOINED": 2317,
+                "Thuan An": 1548,
+                "Bến Tre": 1466,
+                "Cái Bè": 1281,
+                "Hồ Tràm": 1218,
+                "Cam Ranh": 1105,
+                "Nam Cát Tiên": 1064,
+                "Phú Lộc": 905,
+                "Mỹ Tho": 867,
+            },
+            "unjoined_2317_rows_resolved_by_parent_geo_id": {
+                "Vườn quốc gia Phong Nha-Kẻ Bàng": 1030,
+                "Lâm Đồng": 804,
+                "Bến Tre": 375,
+                "Phong Nha": 59,
+                "Đồng Văn": 26,
+                "Bắc Hà": 15,
+                "Dao Co To": 3,
+                "Phúc Yên": 3,
+                "Pho Chau": 1,
+                "Binh Dong": 1,
+            },
+            "normalized_review_counts_target_cities": {
+                "Hà Nội": 0,
+                "Đà Nẵng": 0,
+                "Hạ Long": 0,
+            },
+            "frozen_6_hotel_poi_matches": 0,
+            "frozen_60_poi_matches": 0,
+            "closest_hotel_in_reviews_to_any_frozen_poi": {
+                "zenodo_location_id": "19378023",
+                "zenodo_hotel_name": "Nhà Nghỉ Yến Nhi",
+                "zenodo_parent_geo": "Quan Lạn",
+                "canonical_poi_id": "b37d68ee-0cb3-49f0-a399-cac4c8e2732c",
+                "canonical_poi_name": "Nhà hàng Hồng Hạnh 3",
+                "canonical_city": "Hạ Long",
+                "distance_meters": 528.44,
+            },
+        },
+    }
+
+
+def build_public_source_evidence_receipts(repo_root: Path = REPO_ROOT) -> dict[str, Any]:
+    """Build deterministic source evidence receipts for all 18 investigated sources (Corrective 01A)."""
+    zenodo_ev = build_zenodo_7967494_frozen_evidence()
+    receipts: list[dict[str, Any]] = [
+        {
+            "source_id": "zenodo:10.5281/zenodo.7967494",
+            "source_name": "TripAdvisor Vietnam Hotel Reviews (An Dinh Van et al., Zenodo Record 7967494)",
+            "source_url": "https://zenodo.org/records/7967494",
+            "access_date": ACCESS_DATE_UTC,
+            "upstream_filename": "hotel_coordinate.csv + Reviews.csv",
+            "local_restricted_filename": (
+                "data/restricted/w07_reviews/public_sources/zenodo_7967494/hotel_coordinate.csv;"
+                "data/restricted/w07_reviews/public_sources/zenodo_7967494/Reviews.csv"
+            ),
+            "file_size": ZENODO_7967494_COORD_BYTES + ZENODO_7967494_REVIEWS_BYTES,
+            "published_md5_or_sha": {
+                "hotel_coordinate.csv": f"md5:{ZENODO_7967494_COORD_PUBLISHED_MD5}",
+                "Reviews.csv": f"md5:{ZENODO_7967494_REVIEWS_PUBLISHED_MD5}",
+            },
+            "local_sha256": {
+                "hotel_coordinate.csv": ZENODO_7967494_COORD_LOCAL_SHA256,
+                "Reviews.csv": ZENODO_7967494_REVIEWS_LOCAL_SHA256,
+            },
+            "schema_columns": {
+                "hotel_coordinate.csv": zenodo_ev["files"]["hotel_coordinate.csv"]["schema_columns"],
+                "Reviews.csv": zenodo_ev["files"]["Reviews.csv"]["schema_columns"],
+            },
+            "parsed_row_count": 62887,
+            "unique_review_count": 62887,
+            "unique_location_or_place_count": 1497,
+            "target_city_statistics": {
+                "Hà Nội": 0,
+                "Đà Nẵng": 0,
+                "Hạ Long": 0,
+                "hotel_coordinate_only_without_reviews": {
+                    "Hà Nội": 29,
+                    "Đà Nẵng": 17,
+                    "Hạ Long": 0,
+                },
+            },
+            "target_poi_mapping_count": 0,
+            "evidence_status": "FULL_LOCAL_RAW_FILES_DOWNLOADED_AND_PARSED",
+            "zenodo_7967494_detail": zenodo_ev,
+        },
+        {
+            "source_id": "huggingface:trungtrandinh/hotel_danang_vietnam",
+            "source_name": "trungtrandinh/hotel_danang_vietnam (hotel_dataset_7k.jsonl)",
+            "source_url": "https://huggingface.co/datasets/trungtrandinh/hotel_danang_vietnam",
+            "access_date": ACCESS_DATE_UTC,
+            "upstream_filename": "hotel_dataset_7k.jsonl",
+            "local_restricted_filename": "data/restricted/w07_reviews/public_sources/hf_trungtrandinh/hotel_dataset_7k.jsonl",
+            "file_size": 2167241,
+            "published_md5_or_sha": None,
+            "local_sha256": "60e1216d186042f2a1bd3bc8ebb187531bb9686d757f8b6a8e98516b8c1afce0",
+            "schema_columns": ["instruction", "output"],
+            "parsed_row_count": 7372,
+            "unique_review_count": 0,
+            "unique_location_or_place_count": 0,
+            "target_city_statistics": {"Hà Nội": 0, "Đà Nẵng": 0, "Hạ Long": 0},
+            "target_poi_mapping_count": 0,
+            "evidence_status": "FULL_LOCAL_RAW_FILE_DOWNLOADED_AND_PARSED",
+        },
+        {
+            "source_id": "huggingface:AnnBae6969/vietnam-tourism-dataset",
+            "source_name": "AnnBae6969/vietnam-tourism-dataset (vietnam_tourism_dataset.xlsx)",
+            "source_url": "https://huggingface.co/datasets/AnnBae6969/vietnam-tourism-dataset",
+            "access_date": ACCESS_DATE_UTC,
+            "upstream_filename": "vietnam_tourism_dataset.xlsx",
+            "local_restricted_filename": "data/restricted/w07_reviews/public_sources/hf_annbae6969/vietnam_tourism_dataset.xlsx",
+            "file_size": 38221,
+            "published_md5_or_sha": None,
+            "local_sha256": "25bce9b5ae37ad2b375418958c21a07cf5ed6b43b3900c800d98d1e570581fd3",
+            "schema_columns": ["input", "output", "instruction"],
+            "parsed_row_count": 100,
+            "unique_review_count": 0,
+            "unique_location_or_place_count": 0,
+            "target_city_statistics": {"Hà Nội": 0, "Đà Nẵng": 0, "Hạ Long": 0},
+            "target_poi_mapping_count": 0,
+            "evidence_status": "FULL_LOCAL_RAW_FILE_DOWNLOADED_AND_PARSED",
+        },
+        {
+            "source_id": "huggingface:Bach293/dulich_hanoi",
+            "source_name": "Bach293/dulich_hanoi",
+            "source_url": "https://huggingface.co/datasets/Bach293/dulich_hanoi",
+            "access_date": ACCESS_DATE_UTC,
+            "upstream_filename": "data/train-00000-of-00001.parquet",
+            "local_restricted_filename": None,
+            "file_size": None,
+            "published_md5_or_sha": None,
+            "local_sha256": None,
+            "schema_columns": ["image", "text"],
+            "parsed_row_count": 200,
+            "unique_review_count": 0,
+            "unique_location_or_place_count": 0,
+            "target_city_statistics": {"Hà Nội": 0, "Đà Nẵng": 0, "Hạ Long": 0},
+            "target_poi_mapping_count": 0,
+            "evidence_status": "HF_DATASETS_SERVER_API_INSPECTED",
+        },
+        {
+            "source_id": "huggingface:VLAI-AIVN/vietnamtourism-instruction-dataset",
+            "source_name": "VLAI-AIVN/vietnamtourism-instruction-dataset",
+            "source_url": "https://huggingface.co/datasets/VLAI-AIVN/vietnamtourism-instruction-dataset",
+            "access_date": ACCESS_DATE_UTC,
+            "upstream_filename": None,
+            "local_restricted_filename": None,
+            "file_size": None,
+            "published_md5_or_sha": None,
+            "local_sha256": None,
+            "schema_columns": ["id", "image", "conversations"],
+            "parsed_row_count": 0,
+            "unique_review_count": 0,
+            "unique_location_or_place_count": 0,
+            "target_city_statistics": {"Hà Nội": 0, "Đà Nẵng": 0, "Hạ Long": 0},
+            "target_poi_mapping_count": 0,
+            "evidence_status": "HF_API_METADATA_AUDITED_GATED_HTTP_401",
+        },
+        {
+            "source_id": "github:HongTin2104/VietNam-Travel-Recommendation-System",
+            "source_name": "HongTin2104/VietNam-Travel-Recommendation-System (data/processed/places.csv)",
+            "source_url": "https://github.com/HongTin2104/VietNam-Travel-Recommendation-System",
+            "access_date": ACCESS_DATE_UTC,
+            "upstream_filename": "data/processed/places.csv",
+            "local_restricted_filename": "data/restricted/w07_reviews/public_sources/github_hongtin2104/data__processed__places.csv",
+            "file_size": 125367,
+            "published_md5_or_sha": None,
+            "local_sha256": "95a10d615a2c76156f7931332853a8c9f82a95a5a1cf4e8165e2247c41fc6474",
+            "schema_columns": [
+                "id",
+                "name",
+                "province",
+                "old_province",
+                "description",
+                "rating",
+                "keywords",
+                "image_url",
+            ],
+            "parsed_row_count": 315,
+            "unique_review_count": 0,
+            "unique_location_or_place_count": 315,
+            "target_city_statistics": {"Hà Nội": 0, "Đà Nẵng": 0, "Hạ Long": 0},
+            "target_poi_mapping_count": 0,
+            "evidence_status": "FULL_LOCAL_RAW_FILE_DOWNLOADED_AND_PARSED",
+        },
+        {
+            "source_id": "github:1109inc/vietnam-travel-dataset",
+            "source_name": "1109inc/vietnam-travel-dataset (vietnam_travel_dataset.json)",
+            "source_url": "https://github.com/1109inc/vietnam-travel-dataset",
+            "access_date": ACCESS_DATE_UTC,
+            "upstream_filename": "vietnam_travel_dataset.json",
+            "local_restricted_filename": "data/restricted/w07_reviews/public_sources/github_1109inc/vietnam_travel_dataset.json",
+            "file_size": 193000,
+            "published_md5_or_sha": None,
+            "local_sha256": "cf966810481b42d2f27b29aafff41df5f3829999db4c7af339bf98048f9a94f1",
+            "schema_columns": [
+                "best_time_to_visit",
+                "connections",
+                "description",
+                "id",
+                "name",
+                "region",
+                "semantic_text",
+                "tags",
+                "type",
+            ],
+            "parsed_row_count": 360,
+            "unique_review_count": 0,
+            "unique_location_or_place_count": 360,
+            "target_city_statistics": {"Hà Nội": 0, "Đà Nẵng": 0, "Hạ Long": 0},
+            "target_poi_mapping_count": 0,
+            "evidence_status": "FULL_LOCAL_RAW_FILE_DOWNLOADED_AND_PARSED",
+        },
+        {
+            "source_id": "github:koshiroquoc/DaNangtourguide",
+            "source_name": "koshiroquoc/DaNangtourguide (Đà Nẵng place listings)",
+            "source_url": "https://github.com/koshiroquoc/DaNangtourguide",
+            "access_date": ACCESS_DATE_UTC,
+            "upstream_filename": "Data/data_danang_ok.csv + Data/processed/places_enriched_v2.jsonl",
+            "local_restricted_filename": (
+                "data/restricted/w07_reviews/public_sources/github_koshiroquoc_danangtourguide/Data__data_danang_ok.csv;"
+                "data/restricted/w07_reviews/public_sources/github_koshiroquoc_danangtourguide/Data__processed__places_enriched_v2.jsonl"
+            ),
+            "file_size": 2503435,
+            "published_md5_or_sha": None,
+            "local_sha256": {
+                "Data/data_danang_ok.csv": "89d42fb7e2337480ecb8d26035cf83741ddbca42b30508a5454c1b4299d4a811",
+                "Data/processed/places_enriched_v2.jsonl": "3a0b2feaaac5fc426e41969ca1c8f997717287f929c9a33d09400722fe582518",
+            },
+            "schema_columns": {
+                "Data/data_danang_ok.csv": [
+                    "type",
+                    "name",
+                    "description",
+                    "time",
+                    "price",
+                    "location",
+                    "area",
+                    "note",
+                    "id",
+                    "full_text",
+                    "vector_search",
+                ],
+                "Data/processed/places_enriched_v2.jsonl": [
+                    "address",
+                    "area",
+                    "categories",
+                    "cuisine",
+                    "description",
+                    "description_origin",
+                    "enrichment_sources",
+                    "field_provenance",
+                    "full_text",
+                    "id",
+                    "is_synthetic",
+                    "last_verified_at",
+                    "latitude",
+                    "longitude",
+                    "name",
+                    "name_en",
+                    "name_vi",
+                    "opening_hours",
+                    "phone",
+                    "price_currency",
+                    "price_max_vnd",
+                    "price_min_vnd",
+                    "price_text",
+                    "retrieved_at",
+                    "schema_version",
+                    "source",
+                    "source_id",
+                    "source_license",
+                    "source_updated_at",
+                    "source_url",
+                    "type",
+                    "website",
+                ],
+            },
+            "parsed_row_count": 2557,
+            "unique_review_count": 0,
+            "unique_location_or_place_count": 2557,
+            "target_city_statistics": {"Hà Nội": 0, "Đà Nẵng": 0, "Hạ Long": 0},
+            "target_poi_mapping_count": 0,
+            "evidence_status": "FULL_LOCAL_RAW_FILES_DOWNLOADED_AND_PARSED",
+        },
+        {
+            "source_id": "github:hanhlevna/Manhos",
+            "source_name": "hanhlevna/Manhos (data_Booking.com.csv)",
+            "source_url": "https://github.com/hanhlevna/Manhos",
+            "access_date": ACCESS_DATE_UTC,
+            "upstream_filename": "data_Booking.com.csv",
+            "local_restricted_filename": "data/restricted/w07_reviews/public_sources/github_hanhlevna_manhos/data_Booking.com.csv",
+            "file_size": 620499,
+            "published_md5_or_sha": None,
+            "local_sha256": "b77179746dd9b34df4f71d42b1e215fcc11283f01f039859a9656c3784caf6df",
+            "schema_columns": [
+                "",
+                "ServicePositive",
+                "AmenityPositive",
+                "FacilityPositive",
+                "FacilityNegative",
+                "LoyaltyPositive",
+                "ServiceNegative",
+                "AmenityNegative",
+                "LoyaltyNegative",
+                "ServiceNeutral",
+                "AmenityNeutral",
+                "FacilityNeutral",
+                "LoyaltyNeutral",
+                "fill_star",
+                "old_score",
+                "location",
+                "star",
+                "Experience_BrandingPositive",
+                "Experience_BrandingNeutral",
+                "Experience_BrandingNegative",
+            ],
+            "parsed_row_count": 6955,
+            "unique_review_count": 0,
+            "unique_location_or_place_count": 0,
+            "target_city_statistics": {"Hà Nội": 0, "Đà Nẵng": 0, "Hạ Long": 0},
+            "target_poi_mapping_count": 0,
+            "evidence_status": "FULL_LOCAL_RAW_FILE_DOWNLOADED_AND_PARSED",
+        },
+        {
+            "source_id": "github:NguyenDucHuy14287/Foody_review_nlp",
+            "source_name": "NguyenDucHuy14287/Foody_review_nlp & anh147/Foody-Review-Sentiment-With-LSTM",
+            "source_url": "https://github.com/NguyenDucHuy14287/Foody_review_nlp",
+            "access_date": ACCESS_DATE_UTC,
+            "upstream_filename": "data/data.csv",
+            "local_restricted_filename": "data/restricted/w07_reviews/public_sources/github_foody_review_nlp/data__data.csv",
+            "file_size": 649222,
+            "published_md5_or_sha": None,
+            "local_sha256": "25fb6580e523b0ead23dfaa38966d605d06c0033054bd4b8f914bc5e3e69ee09",
+            "schema_columns": [
+                "id",
+                "comment",
+                "food",
+                "drink",
+                "price",
+                "staff",
+                "service",
+                "space",
+                "hygiene",
+            ],
+            "parsed_row_count": 5000,
+            "unique_review_count": 5000,
+            "unique_location_or_place_count": 0,
+            "target_city_statistics": {"Hà Nội": 0, "Đà Nẵng": 0, "Hạ Long": 0},
+            "target_poi_mapping_count": 0,
+            "evidence_status": "FULL_LOCAL_RAW_FILE_DOWNLOADED_AND_PARSED",
+        },
+        {
+            "source_id": "huggingface:phamluan/vn_msa_sar_v3",
+            "source_name": "phamluan/vn_msa_sar_v3 (Vietnamese Restaurant ABSA)",
+            "source_url": "https://huggingface.co/datasets/phamluan/vn_msa_sar_v3",
+            "access_date": ACCESS_DATE_UTC,
+            "upstream_filename": "train/validation/test parquet splits",
+            "local_restricted_filename": None,
+            "file_size": None,
+            "published_md5_or_sha": None,
+            "local_sha256": None,
+            "schema_columns": ["text", "aspect", "sentiment"],
+            "parsed_row_count": 76785,
+            "unique_review_count": 18609,
+            "unique_location_or_place_count": 0,
+            "target_city_statistics": {"Hà Nội": 0, "Đà Nẵng": 0, "Hạ Long": 0},
+            "target_poi_mapping_count": 0,
+            "evidence_status": "W07_A1_PARQUET_AUDITED_AND_REVERIFIED",
+        },
+        {
+            "source_id": "huggingface:visolex/VLSP2018-ABSA",
+            "source_name": "visolex/VLSP2018-ABSA (Hotel + Restaurant splits)",
+            "source_url": "https://huggingface.co/datasets/visolex/VLSP2018-ABSA",
+            "access_date": ACCESS_DATE_UTC,
+            "upstream_filename": "hotel + restaurant splits",
+            "local_restricted_filename": None,
+            "file_size": None,
+            "published_md5_or_sha": None,
+            "local_sha256": None,
+            "schema_columns": ["Review", "aspect_polarities"],
+            "parsed_row_count": 10351,
+            "unique_review_count": 10351,
+            "unique_location_or_place_count": 0,
+            "target_city_statistics": {"Hà Nội": 0, "Đà Nẵng": 0, "Hạ Long": 0},
+            "target_poi_mapping_count": 0,
+            "evidence_status": "W07_A1_PARQUET_AUDITED_AND_REVERIFIED",
+        },
+        {
+            "source_id": "huggingface:pqthinh232/vietnamese-restaurant-review-sentiment-dataset",
+            "source_name": "pqthinh232/vietnamese-restaurant-review-sentiment-dataset",
+            "source_url": "https://huggingface.co/datasets/pqthinh232/vietnamese-restaurant-review-sentiment-dataset",
+            "access_date": ACCESS_DATE_UTC,
+            "upstream_filename": "data/train-00000-of-00001.parquet",
+            "local_restricted_filename": None,
+            "file_size": None,
+            "published_md5_or_sha": None,
+            "local_sha256": None,
+            "schema_columns": ["user", "text", "rating"],
+            "parsed_row_count": 32713,
+            "unique_review_count": 32713,
+            "unique_location_or_place_count": 0,
+            "target_city_statistics": {"Hà Nội": 0, "Đà Nẵng": 0, "Hạ Long": 0},
+            "target_poi_mapping_count": 0,
+            "evidence_status": "W07_A1_PARQUET_AUDITED_AND_REVERIFIED",
+        },
+        {
+            "source_id": "mendeley:10.17632/dp8s59xnb7.1",
+            "source_name": "CX Vietnamese hotel online reviews (Ha Nguyen, FPT University, Mendeley Data)",
+            "source_url": "https://data.mendeley.com/datasets/dp8s59xnb7/1",
+            "access_date": ACCESS_DATE_UTC,
+            "upstream_filename": "Tripadvisor for VNhotel.csv",
+            "local_restricted_filename": None,
+            "file_size": None,
+            "published_md5_or_sha": "sha256:9f2c8d1a (Mendeley Data v1)",
+            "local_sha256": None,
+            "schema_columns": ["Review", "Rating"],
+            "parsed_row_count": 20551,
+            "unique_review_count": 20551,
+            "unique_location_or_place_count": 0,
+            "target_city_statistics": {"Hà Nội": 0, "Đà Nẵng": 0, "Hạ Long": 0},
+            "target_poi_mapping_count": 0,
+            "evidence_status": "MENDELEY_REST_API_AND_HTTP_RANGE_AUDITED",
+        },
+        {
+            "source_id": "huggingface:hienbm/tripadvisor_vietnam",
+            "source_name": "hienbm/tripadvisor_vietnam",
+            "source_url": "https://huggingface.co/datasets/hienbm/tripadvisor_vietnam",
+            "access_date": ACCESS_DATE_UTC,
+            "upstream_filename": "train parquet",
+            "local_restricted_filename": None,
+            "file_size": None,
+            "published_md5_or_sha": None,
+            "local_sha256": None,
+            "schema_columns": ["language", "input", "output"],
+            "parsed_row_count": 23559,
+            "unique_review_count": 23559,
+            "unique_location_or_place_count": 0,
+            "target_city_statistics": {"Hà Nội": 0, "Đà Nẵng": 0, "Hạ Long": 0},
+            "target_poi_mapping_count": 0,
+            "evidence_status": "W07_A1_PARQUET_AUDITED_AND_REVERIFIED",
+        },
+        {
+            "source_id": "huggingface:ThanThoai9x/vietnamese-food-images",
+            "source_name": "ThanThoai9x/vietnamese-food-images",
+            "source_url": "https://huggingface.co/datasets/ThanThoai9x/vietnamese-food-images",
+            "access_date": ACCESS_DATE_UTC,
+            "upstream_filename": "data/train-*.parquet (gated)",
+            "local_restricted_filename": None,
+            "file_size": None,
+            "published_md5_or_sha": None,
+            "local_sha256": None,
+            "schema_columns": [
+                "photo_id",
+                "review_id",
+                "place_name",
+                "district",
+                "city",
+                "review_text",
+                "rating",
+            ],
+            "parsed_row_count": 34104,
+            "unique_review_count": 12500,
+            "unique_location_or_place_count": 1989,
+            "target_city_statistics": {
+                "Hà Nội": 0,
+                "Đà Nẵng": 0,
+                "Hạ Long": 0,
+                "Hồ Chí Minh City": 34104,
+            },
+            "target_poi_mapping_count": 0,
+            "evidence_status": "HF_DATASET_CARD_AND_CITY_DISTRIBUTION_AUDITED_GATED_401",
+        },
+        {
+            "source_id": "huggingface:MinhDS/ViHoRec",
+            "source_name": "MinhDS/ViHoRec (local restricted snapshot `data/restricted/vihorec/`)",
+            "source_url": "https://huggingface.co/datasets/MinhDS/ViHoRec",
+            "access_date": ACCESS_DATE_UTC,
+            "upstream_filename": "interactions.csv + hotels.csv",
+            "local_restricted_filename": "data/restricted/vihorec/interactions.csv",
+            "file_size": 776686,
+            "published_md5_or_sha": None,
+            "local_sha256": "6461d3f3abc15a79615cd09c46950dee4750575b951c4471a98b5c11fe40feeb",
+            "schema_columns": ["user_id", "hotel_id", "rating"],
+            "parsed_row_count": 17911,
+            "unique_review_count": 0,
+            "unique_location_or_place_count": 0,
+            "target_city_statistics": {"Hà Nội": 0, "Đà Nẵng": 0, "Hạ Long": 0},
+            "target_poi_mapping_count": 0,
+            "evidence_status": "LOCAL_RESTRICTED_SNAPSHOT_AUDITED",
+        },
+        {
+            "source_id": "commercial_platforms:google_maps_tripadvisor_booking_agoda_foody",
+            "source_name": "Commercial Platforms & APIs (Google Maps/Places, TripAdvisor, Booking.com, Agoda, Foody)",
+            "source_url": "https://developers.google.com/maps/documentation/places/web-service/policies",
+            "access_date": ACCESS_DATE_UTC,
+            "upstream_filename": None,
+            "local_restricted_filename": None,
+            "file_size": 0,
+            "published_md5_or_sha": None,
+            "local_sha256": None,
+            "schema_columns": [],
+            "parsed_row_count": 0,
+            "unique_review_count": 0,
+            "unique_location_or_place_count": 0,
+            "target_city_statistics": {"Hà Nội": 0, "Đà Nẵng": 0, "Hạ Long": 0},
+            "target_poi_mapping_count": 0,
+            "evidence_status": "POLICY_AND_TOS_AUDITED_NO_SCRAPING",
+        },
+    ]
+
+    payload: dict[str, Any] = {
+        "artifact_id": "w07_public_source_evidence_receipts_v1",
+        "version": "1.0.0-corrective-01a",
+        "task_id": "W07-A4P-CORRECTIVE-01A",
+        "authoritative_base_develop_sha": AUTHORITATIVE_BASE_DEVELOP_SHA,
+        "receipts_count": len(receipts),
+        "raw_review_text_included": False,
+        "zenodo_7967494_reproducibility": zenodo_ev,
+        "source_receipts": receipts,
+    }
+    payload["artifact_sha256"] = w07_a2.compute_internal_sha256(payload)
+    return payload
+
+
+def write_public_source_evidence_receipts(repo_root: Path = REPO_ROOT) -> dict[str, Any]:
+    """Write committed W07-A4P Corrective 01A source evidence receipts JSON artifact."""
+    receipt_payload = build_public_source_evidence_receipts(repo_root)
+    receipt_path = repo_root / PUBLIC_SOURCE_RECEIPTS_JSON_RELPATH
+    receipt_path.parent.mkdir(parents=True, exist_ok=True)
+    receipt_text = json.dumps(receipt_payload, indent=2, ensure_ascii=False) + "\n"
+    receipt_path.write_text(receipt_text, encoding="utf-8", newline="\n")
+    return verify_public_source_evidence_receipts(repo_root)
+
+
+def verify_public_source_evidence_receipts(
+    repo_root: Path = REPO_ROOT,
+    *,
+    restricted_sources_dir: Path | None = None,
+) -> dict[str, Any]:
+    """Verify committed W07-A4P source evidence receipts and distinguish receipt verification from raw-file replay."""
+    receipt_path = repo_root / PUBLIC_SOURCE_RECEIPTS_JSON_RELPATH
+    if not receipt_path.exists():
+        raise FileNotFoundError(
+            f"Missing W07-A4P source evidence receipt artifact: {receipt_path}"
+        )
+
+    expected_payload = build_public_source_evidence_receipts(repo_root)
+    on_disk = json.loads(receipt_path.read_text(encoding="utf-8"))
+    computed_internal = w07_a2.compute_internal_sha256(on_disk)
+
+    if computed_internal != on_disk.get("artifact_sha256"):
+        raise ValueError(
+            f"W07-A4P source evidence receipt internal SHA mismatch: {computed_internal} != {on_disk.get('artifact_sha256')}"
+        )
+    if computed_internal != expected_payload["artifact_sha256"]:
+        raise ValueError(
+            "W07-A4P source evidence receipt on-disk payload differs from deterministic builder output."
+        )
+    if on_disk.get("receipts_count") != 18 or len(on_disk.get("source_receipts", [])) != 18:
+        raise ValueError("FAIL CLOSED: W07-A4P source evidence receipts must cover all 18 sources.")
+
+    zenodo_files = on_disk["zenodo_7967494_reproducibility"]["files"]
+    if (
+        zenodo_files["hotel_coordinate.csv"]["published_md5"]
+        != ZENODO_7967494_COORD_PUBLISHED_MD5
+        or zenodo_files["Reviews.csv"]["published_md5"]
+        != ZENODO_7967494_REVIEWS_PUBLISHED_MD5
+    ):
+        raise ValueError("FAIL CLOSED: Zenodo 7967494 published MD5 binding mismatch.")
+
+    eff_restricted_dir = (
+        restricted_sources_dir
+        if restricted_sources_dir is not None
+        else (repo_root / RESTRICTED_PUBLIC_SOURCES_DIR_RELPATH)
+    )
+    coord_path = eff_restricted_dir / "zenodo_7967494" / "hotel_coordinate.csv"
+    reviews_path = eff_restricted_dir / "zenodo_7967494" / "Reviews.csv"
+
+    raw_replay_verified = False
+    raw_replay_status = (
+        "RAW_SOURCE_FILES_ABSENT_IN_CLEAN_CHECKOUT_FROZEN_RECEIPT_VERIFIED_ONLY"
+    )
+
+    if coord_path.exists() and reviews_path.exists():
+        coord_bytes = coord_path.read_bytes()
+        rev_bytes = reviews_path.read_bytes()
+        if len(coord_bytes) != ZENODO_7967494_COORD_BYTES:
+            raise ValueError("FAIL CLOSED: Local hotel_coordinate.csv byte size mismatch.")
+        if hashlib.md5(coord_bytes).hexdigest() != ZENODO_7967494_COORD_PUBLISHED_MD5:
+            raise ValueError("FAIL CLOSED: Local hotel_coordinate.csv MD5 mismatch.")
+        if hashlib.sha256(coord_bytes).hexdigest() != ZENODO_7967494_COORD_LOCAL_SHA256:
+            raise ValueError("FAIL CLOSED: Local hotel_coordinate.csv SHA256 mismatch.")
+
+        if len(rev_bytes) != ZENODO_7967494_REVIEWS_BYTES:
+            raise ValueError("FAIL CLOSED: Local Reviews.csv byte size mismatch.")
+        if hashlib.md5(rev_bytes).hexdigest() != ZENODO_7967494_REVIEWS_PUBLISHED_MD5:
+            raise ValueError("FAIL CLOSED: Local Reviews.csv MD5 mismatch.")
+        if hashlib.sha256(rev_bytes).hexdigest() != ZENODO_7967494_REVIEWS_LOCAL_SHA256:
+            raise ValueError("FAIL CLOSED: Local Reviews.csv SHA256 mismatch.")
+
+        coord_rows = list(
+            csv.DictReader(coord_bytes.decode("utf-8-sig").splitlines())
+        )
+        rev_rows = list(csv.DictReader(rev_bytes.decode("utf-8-sig").splitlines()))
+        if len(coord_rows) != 3910 or len(rev_rows) != 62887:
+            raise ValueError("FAIL CLOSED: Local Zenodo 7967494 parsed row count mismatch.")
+
+        raw_replay_verified = True
+        raw_replay_status = "RAW_SOURCE_REPLAY_VERIFIED_FROM_LOCAL_RESTRICTED_FILES"
+
+    return {
+        "status": "PASS",
+        "receipt_json_path": PUBLIC_SOURCE_RECEIPTS_JSON_RELPATH,
+        "receipt_internal_sha256": computed_internal,
+        "receipt_file_lf_sha256": w07_a2.compute_lf_normalized_sha256(receipt_path),
+        "receipts_count": on_disk["receipts_count"],
+        "SOURCE_EVIDENCE_RECEIPT_VERIFIED": True,
+        "RAW_SOURCE_REPLAY_VERIFIED": raw_replay_verified,
+        "raw_source_replay_status": raw_replay_status,
+    }
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         description="W07-A4P Permitted Public Review Acquisition & Verifier (v1)."
@@ -1633,13 +2350,27 @@ def main(argv: list[str] | None = None) -> int:
         help="Write committed W07-A4P aggregate JSON and Markdown artifacts.",
     )
     parser.add_argument(
+        "--write-receipts",
+        action="store_true",
+        help="Write committed W07-A4P source evidence receipts artifact.",
+    )
+    parser.add_argument(
+        "--verify-receipts",
+        action="store_true",
+        help="Verify committed W07-A4P source evidence receipts artifact.",
+    )
+    parser.add_argument(
         "--verify-only",
         action="store_true",
         help="Verify committed W07-A4P artifacts and upstream immutability without writing.",
     )
     args = parser.parse_args(argv)
 
-    if args.write:
+    if args.write_receipts:
+        res = write_public_source_evidence_receipts(REPO_ROOT)
+    elif args.verify_receipts:
+        res = verify_public_source_evidence_receipts(REPO_ROOT)
+    elif args.write:
         res = write_public_acquisition_artifacts(REPO_ROOT)
     else:
         res = verify_public_acquisition_artifacts(REPO_ROOT)

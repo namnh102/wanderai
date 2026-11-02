@@ -337,3 +337,91 @@ def test_w07_a4p_markdown_and_json_deterministic_hashes_match() -> None:
         .replace("\r\n", "\n")
     )
     assert actual_md == expected_md
+
+
+def test_w07_a4p_c1a_source_evidence_receipts_existence_18_sources_and_zenodo_binding() -> None:
+    receipt_path = REPO_ROOT / w07_a4p.PUBLIC_SOURCE_RECEIPTS_JSON_RELPATH
+    assert receipt_path.exists()
+
+    on_disk = json.loads(receipt_path.read_text(encoding="utf-8"))
+    expected = w07_a4p.build_public_source_evidence_receipts(REPO_ROOT)
+
+    assert on_disk["receipts_count"] == 18
+    assert len(on_disk["source_receipts"]) == 18
+    assert on_disk["raw_review_text_included"] is False
+    assert (
+        w07_a2.compute_internal_sha256(on_disk)
+        == expected["artifact_sha256"]
+        == "929f7f55ebdec5387778c11080ae56db8cdf0204ac70bc11109bb59a601011c4"
+    )
+
+    z = on_disk["zenodo_7967494_reproducibility"]
+    assert (
+        z["files"]["hotel_coordinate.csv"]["published_md5"]
+        == "50fa8970a26ae513b8295bbcdfacd0b0"
+    )
+    assert (
+        z["files"]["hotel_coordinate.csv"]["local_sha256"]
+        == "4315726de6f5cebe7145e512d29baf0b341a31bf134ecc2abf23c2e22396ff7e"
+    )
+    assert z["files"]["hotel_coordinate.csv"]["byte_size"] == 263557
+
+    assert (
+        z["files"]["Reviews.csv"]["published_md5"]
+        == "ebae7b018af787978b29cf15591b7e96"
+    )
+    assert (
+        z["files"]["Reviews.csv"]["local_sha256"]
+        == "9e79268489e47506051496c4ebd626fab0cb81d3a6d402ab0c5c5283f0d29d90"
+    )
+    assert z["files"]["Reviews.csv"]["byte_size"] == 64460152
+
+    stats = z["derived_statistics"]
+    assert stats["reviews_row_count"] == 62887
+    assert stats["unique_review_ids"] == 62887
+    assert stats["unique_hotel_location_ids_in_reviews"] == 1497
+    assert stats["unique_hotel_names_in_reviews"] == 1470
+    assert stats["hotel_coordinate_row_count"] == 3910
+    assert stats["hotel_coordinate_joined_review_rows"] == 60570
+    assert stats["unjoined_review_rows"] == 2317
+    assert stats["normalized_review_counts_target_cities"] == {
+        "Hà Nội": 0,
+        "Đà Nẵng": 0,
+        "Hạ Long": 0,
+    }
+    assert stats["frozen_6_hotel_poi_matches"] == 0
+    assert stats["frozen_60_poi_matches"] == 0
+
+
+def test_w07_a4p_c1a_receipt_verifier_distinguishes_clean_checkout_from_local_raw_replay(
+    tmp_path: Path,
+) -> None:
+    # 1. Clean checkout simulation (restricted raw files absent):
+    res_clean = w07_a4p.verify_public_source_evidence_receipts(
+        REPO_ROOT,
+        restricted_sources_dir=tmp_path / "empty_restricted_sources",
+    )
+    assert res_clean["status"] == "PASS"
+    assert res_clean["SOURCE_EVIDENCE_RECEIPT_VERIFIED"] is True
+    assert res_clean["RAW_SOURCE_REPLAY_VERIFIED"] is False
+    assert (
+        res_clean["raw_source_replay_status"]
+        == "RAW_SOURCE_FILES_ABSENT_IN_CLEAN_CHECKOUT_FROZEN_RECEIPT_VERIFIED_ONLY"
+    )
+
+    # 2. Default verification (passes receipt verification; if local files exist, verifies raw replay too):
+    res_default = w07_a4p.verify_public_source_evidence_receipts(REPO_ROOT)
+    assert res_default["status"] == "PASS"
+    assert res_default["SOURCE_EVIDENCE_RECEIPT_VERIFIED"] is True
+    coord_file = (
+        REPO_ROOT
+        / w07_a4p.RESTRICTED_PUBLIC_SOURCES_DIR_RELPATH
+        / "zenodo_7967494"
+        / "hotel_coordinate.csv"
+    )
+    if coord_file.exists():
+        assert res_default["RAW_SOURCE_REPLAY_VERIFIED"] is True
+        assert (
+            res_default["raw_source_replay_status"]
+            == "RAW_SOURCE_REPLAY_VERIFIED_FROM_LOCAL_RESTRICTED_FILES"
+        )

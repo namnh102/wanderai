@@ -1,0 +1,822 @@
+{
+  "artifact_id": "w07_public_source_evidence_receipts_v1",
+  "version": "1.0.0-corrective-01a",
+  "task_id": "W07-A4P-CORRECTIVE-01A",
+  "authoritative_base_develop_sha": "40d9908b52214967bf412f5caf2f06cc866da409",
+  "receipts_count": 18,
+  "raw_review_text_included": false,
+  "zenodo_7967494_reproducibility": {
+    "source_id": "zenodo:10.5281/zenodo.7967494",
+    "doi": "10.5281/zenodo.7967494",
+    "source_url": "https://zenodo.org/records/7967494",
+    "files": {
+      "hotel_coordinate.csv": {
+        "upstream_filename": "hotel_coordinate.csv",
+        "local_restricted_filename": "data/restricted/w07_reviews/public_sources/zenodo_7967494/hotel_coordinate.csv",
+        "byte_size": 263557,
+        "published_md5": "50fa8970a26ae513b8295bbcdfacd0b0",
+        "local_md5": "50fa8970a26ae513b8295bbcdfacd0b0",
+        "local_sha256": "4315726de6f5cebe7145e512d29baf0b341a31bf134ecc2abf23c2e22396ff7e",
+        "schema_columns": [
+          "locationId",
+          "name",
+          "latitude",
+          "longitude",
+          "parentGeo",
+          "parentGeoId"
+        ],
+        "parsed_row_count": 3910,
+        "unique_location_ids": 3910,
+        "target_city_coordinate_rows": {
+          "Hà Nội": 29,
+          "Đà Nẵng": 17,
+          "Hạ Long": 0
+        }
+      },
+      "Reviews.csv": {
+        "upstream_filename": "Reviews.csv",
+        "local_restricted_filename": "data/restricted/w07_reviews/public_sources/zenodo_7967494/Reviews.csv",
+        "byte_size": 64460152,
+        "published_md5": "ebae7b018af787978b29cf15591b7e96",
+        "local_md5": "ebae7b018af787978b29cf15591b7e96",
+        "local_sha256": "9e79268489e47506051496c4ebd626fab0cb81d3a6d402ab0c5c5283f0d29d90",
+        "schema_columns": [
+          "id",
+          "language",
+          "rating",
+          "additionalRatings",
+          "createdDate",
+          "helpfulVotes",
+          "username",
+          "userId",
+          "title",
+          "text",
+          "locationId",
+          "parentGeoId",
+          "hotelName",
+          "stayDate",
+          "tripType"
+        ],
+        "parsed_row_count": 62887,
+        "unique_review_ids": 62887,
+        "unique_hotel_location_ids": 1497,
+        "unique_hotel_names": 1470
+      }
+    },
+    "derived_statistics": {
+      "reviews_row_count": 62887,
+      "unique_review_ids": 62887,
+      "unique_hotel_location_ids_in_reviews": 1497,
+      "unique_hotel_names_in_reviews": 1470,
+      "hotel_coordinate_row_count": 3910,
+      "hotel_coordinate_joined_review_rows": 60570,
+      "hotel_coordinate_joined_unique_hotels": 1475,
+      "unjoined_review_rows": 2317,
+      "unjoined_unique_hotels": 22,
+      "distinct_locales_in_reviews": 183,
+      "top_15_locales_in_reviews": {
+        "Đảo Phú Quốc": 17781,
+        "Cu Du": 3407,
+        "Vườn quốc gia Phong Nha-Kẻ Bàng": 3354,
+        "Cam Hải Đông": 3345,
+        "Ninh Vân": 2788,
+        "Điện Bàn": 2340,
+        "UNJOINED": 2317,
+        "Thuan An": 1548,
+        "Bến Tre": 1466,
+        "Cái Bè": 1281,
+        "Hồ Tràm": 1218,
+        "Cam Ranh": 1105,
+        "Nam Cát Tiên": 1064,
+        "Phú Lộc": 905,
+        "Mỹ Tho": 867
+      },
+      "unjoined_2317_rows_resolved_by_parent_geo_id": {
+        "Vườn quốc gia Phong Nha-Kẻ Bàng": 1030,
+        "Lâm Đồng": 804,
+        "Bến Tre": 375,
+        "Phong Nha": 59,
+        "Đồng Văn": 26,
+        "Bắc Hà": 15,
+        "Dao Co To": 3,
+        "Phúc Yên": 3,
+        "Pho Chau": 1,
+        "Binh Dong": 1
+      },
+      "normalized_review_counts_target_cities": {
+        "Hà Nội": 0,
+        "Đà Nẵng": 0,
+        "Hạ Long": 0
+      },
+      "frozen_6_hotel_poi_matches": 0,
+      "frozen_60_poi_matches": 0,
+      "closest_hotel_in_reviews_to_any_frozen_poi": {
+        "zenodo_location_id": "19378023",
+        "zenodo_hotel_name": "Nhà Nghỉ Yến Nhi",
+        "zenodo_parent_geo": "Quan Lạn",
+        "canonical_poi_id": "b37d68ee-0cb3-49f0-a399-cac4c8e2732c",
+        "canonical_poi_name": "Nhà hàng Hồng Hạnh 3",
+        "canonical_city": "Hạ Long",
+        "distance_meters": 528.44
+      }
+    }
+  },
+  "source_receipts": [
+    {
+      "source_id": "zenodo:10.5281/zenodo.7967494",
+      "source_name": "TripAdvisor Vietnam Hotel Reviews (An Dinh Van et al., Zenodo Record 7967494)",
+      "source_url": "https://zenodo.org/records/7967494",
+      "access_date": "2026-11-02",
+      "upstream_filename": "hotel_coordinate.csv + Reviews.csv",
+      "local_restricted_filename": "data/restricted/w07_reviews/public_sources/zenodo_7967494/hotel_coordinate.csv;data/restricted/w07_reviews/public_sources/zenodo_7967494/Reviews.csv",
+      "file_size": 64723709,
+      "published_md5_or_sha": {
+        "hotel_coordinate.csv": "md5:50fa8970a26ae513b8295bbcdfacd0b0",
+        "Reviews.csv": "md5:ebae7b018af787978b29cf15591b7e96"
+      },
+      "local_sha256": {
+        "hotel_coordinate.csv": "4315726de6f5cebe7145e512d29baf0b341a31bf134ecc2abf23c2e22396ff7e",
+        "Reviews.csv": "9e79268489e47506051496c4ebd626fab0cb81d3a6d402ab0c5c5283f0d29d90"
+      },
+      "schema_columns": {
+        "hotel_coordinate.csv": [
+          "locationId",
+          "name",
+          "latitude",
+          "longitude",
+          "parentGeo",
+          "parentGeoId"
+        ],
+        "Reviews.csv": [
+          "id",
+          "language",
+          "rating",
+          "additionalRatings",
+          "createdDate",
+          "helpfulVotes",
+          "username",
+          "userId",
+          "title",
+          "text",
+          "locationId",
+          "parentGeoId",
+          "hotelName",
+          "stayDate",
+          "tripType"
+        ]
+      },
+      "parsed_row_count": 62887,
+      "unique_review_count": 62887,
+      "unique_location_or_place_count": 1497,
+      "target_city_statistics": {
+        "Hà Nội": 0,
+        "Đà Nẵng": 0,
+        "Hạ Long": 0,
+        "hotel_coordinate_only_without_reviews": {
+          "Hà Nội": 29,
+          "Đà Nẵng": 17,
+          "Hạ Long": 0
+        }
+      },
+      "target_poi_mapping_count": 0,
+      "evidence_status": "FULL_LOCAL_RAW_FILES_DOWNLOADED_AND_PARSED",
+      "zenodo_7967494_detail": {
+        "source_id": "zenodo:10.5281/zenodo.7967494",
+        "doi": "10.5281/zenodo.7967494",
+        "source_url": "https://zenodo.org/records/7967494",
+        "files": {
+          "hotel_coordinate.csv": {
+            "upstream_filename": "hotel_coordinate.csv",
+            "local_restricted_filename": "data/restricted/w07_reviews/public_sources/zenodo_7967494/hotel_coordinate.csv",
+            "byte_size": 263557,
+            "published_md5": "50fa8970a26ae513b8295bbcdfacd0b0",
+            "local_md5": "50fa8970a26ae513b8295bbcdfacd0b0",
+            "local_sha256": "4315726de6f5cebe7145e512d29baf0b341a31bf134ecc2abf23c2e22396ff7e",
+            "schema_columns": [
+              "locationId",
+              "name",
+              "latitude",
+              "longitude",
+              "parentGeo",
+              "parentGeoId"
+            ],
+            "parsed_row_count": 3910,
+            "unique_location_ids": 3910,
+            "target_city_coordinate_rows": {
+              "Hà Nội": 29,
+              "Đà Nẵng": 17,
+              "Hạ Long": 0
+            }
+          },
+          "Reviews.csv": {
+            "upstream_filename": "Reviews.csv",
+            "local_restricted_filename": "data/restricted/w07_reviews/public_sources/zenodo_7967494/Reviews.csv",
+            "byte_size": 64460152,
+            "published_md5": "ebae7b018af787978b29cf15591b7e96",
+            "local_md5": "ebae7b018af787978b29cf15591b7e96",
+            "local_sha256": "9e79268489e47506051496c4ebd626fab0cb81d3a6d402ab0c5c5283f0d29d90",
+            "schema_columns": [
+              "id",
+              "language",
+              "rating",
+              "additionalRatings",
+              "createdDate",
+              "helpfulVotes",
+              "username",
+              "userId",
+              "title",
+              "text",
+              "locationId",
+              "parentGeoId",
+              "hotelName",
+              "stayDate",
+              "tripType"
+            ],
+            "parsed_row_count": 62887,
+            "unique_review_ids": 62887,
+            "unique_hotel_location_ids": 1497,
+            "unique_hotel_names": 1470
+          }
+        },
+        "derived_statistics": {
+          "reviews_row_count": 62887,
+          "unique_review_ids": 62887,
+          "unique_hotel_location_ids_in_reviews": 1497,
+          "unique_hotel_names_in_reviews": 1470,
+          "hotel_coordinate_row_count": 3910,
+          "hotel_coordinate_joined_review_rows": 60570,
+          "hotel_coordinate_joined_unique_hotels": 1475,
+          "unjoined_review_rows": 2317,
+          "unjoined_unique_hotels": 22,
+          "distinct_locales_in_reviews": 183,
+          "top_15_locales_in_reviews": {
+            "Đảo Phú Quốc": 17781,
+            "Cu Du": 3407,
+            "Vườn quốc gia Phong Nha-Kẻ Bàng": 3354,
+            "Cam Hải Đông": 3345,
+            "Ninh Vân": 2788,
+            "Điện Bàn": 2340,
+            "UNJOINED": 2317,
+            "Thuan An": 1548,
+            "Bến Tre": 1466,
+            "Cái Bè": 1281,
+            "Hồ Tràm": 1218,
+            "Cam Ranh": 1105,
+            "Nam Cát Tiên": 1064,
+            "Phú Lộc": 905,
+            "Mỹ Tho": 867
+          },
+          "unjoined_2317_rows_resolved_by_parent_geo_id": {
+            "Vườn quốc gia Phong Nha-Kẻ Bàng": 1030,
+            "Lâm Đồng": 804,
+            "Bến Tre": 375,
+            "Phong Nha": 59,
+            "Đồng Văn": 26,
+            "Bắc Hà": 15,
+            "Dao Co To": 3,
+            "Phúc Yên": 3,
+            "Pho Chau": 1,
+            "Binh Dong": 1
+          },
+          "normalized_review_counts_target_cities": {
+            "Hà Nội": 0,
+            "Đà Nẵng": 0,
+            "Hạ Long": 0
+          },
+          "frozen_6_hotel_poi_matches": 0,
+          "frozen_60_poi_matches": 0,
+          "closest_hotel_in_reviews_to_any_frozen_poi": {
+            "zenodo_location_id": "19378023",
+            "zenodo_hotel_name": "Nhà Nghỉ Yến Nhi",
+            "zenodo_parent_geo": "Quan Lạn",
+            "canonical_poi_id": "b37d68ee-0cb3-49f0-a399-cac4c8e2732c",
+            "canonical_poi_name": "Nhà hàng Hồng Hạnh 3",
+            "canonical_city": "Hạ Long",
+            "distance_meters": 528.44
+          }
+        }
+      }
+    },
+    {
+      "source_id": "huggingface:trungtrandinh/hotel_danang_vietnam",
+      "source_name": "trungtrandinh/hotel_danang_vietnam (hotel_dataset_7k.jsonl)",
+      "source_url": "https://huggingface.co/datasets/trungtrandinh/hotel_danang_vietnam",
+      "access_date": "2026-11-02",
+      "upstream_filename": "hotel_dataset_7k.jsonl",
+      "local_restricted_filename": "data/restricted/w07_reviews/public_sources/hf_trungtrandinh/hotel_dataset_7k.jsonl",
+      "file_size": 2167241,
+      "published_md5_or_sha": null,
+      "local_sha256": "60e1216d186042f2a1bd3bc8ebb187531bb9686d757f8b6a8e98516b8c1afce0",
+      "schema_columns": [
+        "instruction",
+        "output"
+      ],
+      "parsed_row_count": 7372,
+      "unique_review_count": 0,
+      "unique_location_or_place_count": 0,
+      "target_city_statistics": {
+        "Hà Nội": 0,
+        "Đà Nẵng": 0,
+        "Hạ Long": 0
+      },
+      "target_poi_mapping_count": 0,
+      "evidence_status": "FULL_LOCAL_RAW_FILE_DOWNLOADED_AND_PARSED"
+    },
+    {
+      "source_id": "huggingface:AnnBae6969/vietnam-tourism-dataset",
+      "source_name": "AnnBae6969/vietnam-tourism-dataset (vietnam_tourism_dataset.xlsx)",
+      "source_url": "https://huggingface.co/datasets/AnnBae6969/vietnam-tourism-dataset",
+      "access_date": "2026-11-02",
+      "upstream_filename": "vietnam_tourism_dataset.xlsx",
+      "local_restricted_filename": "data/restricted/w07_reviews/public_sources/hf_annbae6969/vietnam_tourism_dataset.xlsx",
+      "file_size": 38221,
+      "published_md5_or_sha": null,
+      "local_sha256": "25bce9b5ae37ad2b375418958c21a07cf5ed6b43b3900c800d98d1e570581fd3",
+      "schema_columns": [
+        "input",
+        "output",
+        "instruction"
+      ],
+      "parsed_row_count": 100,
+      "unique_review_count": 0,
+      "unique_location_or_place_count": 0,
+      "target_city_statistics": {
+        "Hà Nội": 0,
+        "Đà Nẵng": 0,
+        "Hạ Long": 0
+      },
+      "target_poi_mapping_count": 0,
+      "evidence_status": "FULL_LOCAL_RAW_FILE_DOWNLOADED_AND_PARSED"
+    },
+    {
+      "source_id": "huggingface:Bach293/dulich_hanoi",
+      "source_name": "Bach293/dulich_hanoi",
+      "source_url": "https://huggingface.co/datasets/Bach293/dulich_hanoi",
+      "access_date": "2026-11-02",
+      "upstream_filename": "data/train-00000-of-00001.parquet",
+      "local_restricted_filename": null,
+      "file_size": null,
+      "published_md5_or_sha": null,
+      "local_sha256": null,
+      "schema_columns": [
+        "image",
+        "text"
+      ],
+      "parsed_row_count": 200,
+      "unique_review_count": 0,
+      "unique_location_or_place_count": 0,
+      "target_city_statistics": {
+        "Hà Nội": 0,
+        "Đà Nẵng": 0,
+        "Hạ Long": 0
+      },
+      "target_poi_mapping_count": 0,
+      "evidence_status": "HF_DATASETS_SERVER_API_INSPECTED"
+    },
+    {
+      "source_id": "huggingface:VLAI-AIVN/vietnamtourism-instruction-dataset",
+      "source_name": "VLAI-AIVN/vietnamtourism-instruction-dataset",
+      "source_url": "https://huggingface.co/datasets/VLAI-AIVN/vietnamtourism-instruction-dataset",
+      "access_date": "2026-11-02",
+      "upstream_filename": null,
+      "local_restricted_filename": null,
+      "file_size": null,
+      "published_md5_or_sha": null,
+      "local_sha256": null,
+      "schema_columns": [
+        "id",
+        "image",
+        "conversations"
+      ],
+      "parsed_row_count": 0,
+      "unique_review_count": 0,
+      "unique_location_or_place_count": 0,
+      "target_city_statistics": {
+        "Hà Nội": 0,
+        "Đà Nẵng": 0,
+        "Hạ Long": 0
+      },
+      "target_poi_mapping_count": 0,
+      "evidence_status": "HF_API_METADATA_AUDITED_GATED_HTTP_401"
+    },
+    {
+      "source_id": "github:HongTin2104/VietNam-Travel-Recommendation-System",
+      "source_name": "HongTin2104/VietNam-Travel-Recommendation-System (data/processed/places.csv)",
+      "source_url": "https://github.com/HongTin2104/VietNam-Travel-Recommendation-System",
+      "access_date": "2026-11-02",
+      "upstream_filename": "data/processed/places.csv",
+      "local_restricted_filename": "data/restricted/w07_reviews/public_sources/github_hongtin2104/data__processed__places.csv",
+      "file_size": 125367,
+      "published_md5_or_sha": null,
+      "local_sha256": "95a10d615a2c76156f7931332853a8c9f82a95a5a1cf4e8165e2247c41fc6474",
+      "schema_columns": [
+        "id",
+        "name",
+        "province",
+        "old_province",
+        "description",
+        "rating",
+        "keywords",
+        "image_url"
+      ],
+      "parsed_row_count": 315,
+      "unique_review_count": 0,
+      "unique_location_or_place_count": 315,
+      "target_city_statistics": {
+        "Hà Nội": 0,
+        "Đà Nẵng": 0,
+        "Hạ Long": 0
+      },
+      "target_poi_mapping_count": 0,
+      "evidence_status": "FULL_LOCAL_RAW_FILE_DOWNLOADED_AND_PARSED"
+    },
+    {
+      "source_id": "github:1109inc/vietnam-travel-dataset",
+      "source_name": "1109inc/vietnam-travel-dataset (vietnam_travel_dataset.json)",
+      "source_url": "https://github.com/1109inc/vietnam-travel-dataset",
+      "access_date": "2026-11-02",
+      "upstream_filename": "vietnam_travel_dataset.json",
+      "local_restricted_filename": "data/restricted/w07_reviews/public_sources/github_1109inc/vietnam_travel_dataset.json",
+      "file_size": 193000,
+      "published_md5_or_sha": null,
+      "local_sha256": "cf966810481b42d2f27b29aafff41df5f3829999db4c7af339bf98048f9a94f1",
+      "schema_columns": [
+        "best_time_to_visit",
+        "connections",
+        "description",
+        "id",
+        "name",
+        "region",
+        "semantic_text",
+        "tags",
+        "type"
+      ],
+      "parsed_row_count": 360,
+      "unique_review_count": 0,
+      "unique_location_or_place_count": 360,
+      "target_city_statistics": {
+        "Hà Nội": 0,
+        "Đà Nẵng": 0,
+        "Hạ Long": 0
+      },
+      "target_poi_mapping_count": 0,
+      "evidence_status": "FULL_LOCAL_RAW_FILE_DOWNLOADED_AND_PARSED"
+    },
+    {
+      "source_id": "github:koshiroquoc/DaNangtourguide",
+      "source_name": "koshiroquoc/DaNangtourguide (Đà Nẵng place listings)",
+      "source_url": "https://github.com/koshiroquoc/DaNangtourguide",
+      "access_date": "2026-11-02",
+      "upstream_filename": "Data/data_danang_ok.csv + Data/processed/places_enriched_v2.jsonl",
+      "local_restricted_filename": "data/restricted/w07_reviews/public_sources/github_koshiroquoc_danangtourguide/Data__data_danang_ok.csv;data/restricted/w07_reviews/public_sources/github_koshiroquoc_danangtourguide/Data__processed__places_enriched_v2.jsonl",
+      "file_size": 2503435,
+      "published_md5_or_sha": null,
+      "local_sha256": {
+        "Data/data_danang_ok.csv": "89d42fb7e2337480ecb8d26035cf83741ddbca42b30508a5454c1b4299d4a811",
+        "Data/processed/places_enriched_v2.jsonl": "3a0b2feaaac5fc426e41969ca1c8f997717287f929c9a33d09400722fe582518"
+      },
+      "schema_columns": {
+        "Data/data_danang_ok.csv": [
+          "type",
+          "name",
+          "description",
+          "time",
+          "price",
+          "location",
+          "area",
+          "note",
+          "id",
+          "full_text",
+          "vector_search"
+        ],
+        "Data/processed/places_enriched_v2.jsonl": [
+          "address",
+          "area",
+          "categories",
+          "cuisine",
+          "description",
+          "description_origin",
+          "enrichment_sources",
+          "field_provenance",
+          "full_text",
+          "id",
+          "is_synthetic",
+          "last_verified_at",
+          "latitude",
+          "longitude",
+          "name",
+          "name_en",
+          "name_vi",
+          "opening_hours",
+          "phone",
+          "price_currency",
+          "price_max_vnd",
+          "price_min_vnd",
+          "price_text",
+          "retrieved_at",
+          "schema_version",
+          "source",
+          "source_id",
+          "source_license",
+          "source_updated_at",
+          "source_url",
+          "type",
+          "website"
+        ]
+      },
+      "parsed_row_count": 2557,
+      "unique_review_count": 0,
+      "unique_location_or_place_count": 2557,
+      "target_city_statistics": {
+        "Hà Nội": 0,
+        "Đà Nẵng": 0,
+        "Hạ Long": 0
+      },
+      "target_poi_mapping_count": 0,
+      "evidence_status": "FULL_LOCAL_RAW_FILES_DOWNLOADED_AND_PARSED"
+    },
+    {
+      "source_id": "github:hanhlevna/Manhos",
+      "source_name": "hanhlevna/Manhos (data_Booking.com.csv)",
+      "source_url": "https://github.com/hanhlevna/Manhos",
+      "access_date": "2026-11-02",
+      "upstream_filename": "data_Booking.com.csv",
+      "local_restricted_filename": "data/restricted/w07_reviews/public_sources/github_hanhlevna_manhos/data_Booking.com.csv",
+      "file_size": 620499,
+      "published_md5_or_sha": null,
+      "local_sha256": "b77179746dd9b34df4f71d42b1e215fcc11283f01f039859a9656c3784caf6df",
+      "schema_columns": [
+        "",
+        "ServicePositive",
+        "AmenityPositive",
+        "FacilityPositive",
+        "FacilityNegative",
+        "LoyaltyPositive",
+        "ServiceNegative",
+        "AmenityNegative",
+        "LoyaltyNegative",
+        "ServiceNeutral",
+        "AmenityNeutral",
+        "FacilityNeutral",
+        "LoyaltyNeutral",
+        "fill_star",
+        "old_score",
+        "location",
+        "star",
+        "Experience_BrandingPositive",
+        "Experience_BrandingNeutral",
+        "Experience_BrandingNegative"
+      ],
+      "parsed_row_count": 6955,
+      "unique_review_count": 0,
+      "unique_location_or_place_count": 0,
+      "target_city_statistics": {
+        "Hà Nội": 0,
+        "Đà Nẵng": 0,
+        "Hạ Long": 0
+      },
+      "target_poi_mapping_count": 0,
+      "evidence_status": "FULL_LOCAL_RAW_FILE_DOWNLOADED_AND_PARSED"
+    },
+    {
+      "source_id": "github:NguyenDucHuy14287/Foody_review_nlp",
+      "source_name": "NguyenDucHuy14287/Foody_review_nlp & anh147/Foody-Review-Sentiment-With-LSTM",
+      "source_url": "https://github.com/NguyenDucHuy14287/Foody_review_nlp",
+      "access_date": "2026-11-02",
+      "upstream_filename": "data/data.csv",
+      "local_restricted_filename": "data/restricted/w07_reviews/public_sources/github_foody_review_nlp/data__data.csv",
+      "file_size": 649222,
+      "published_md5_or_sha": null,
+      "local_sha256": "25fb6580e523b0ead23dfaa38966d605d06c0033054bd4b8f914bc5e3e69ee09",
+      "schema_columns": [
+        "id",
+        "comment",
+        "food",
+        "drink",
+        "price",
+        "staff",
+        "service",
+        "space",
+        "hygiene"
+      ],
+      "parsed_row_count": 5000,
+      "unique_review_count": 5000,
+      "unique_location_or_place_count": 0,
+      "target_city_statistics": {
+        "Hà Nội": 0,
+        "Đà Nẵng": 0,
+        "Hạ Long": 0
+      },
+      "target_poi_mapping_count": 0,
+      "evidence_status": "FULL_LOCAL_RAW_FILE_DOWNLOADED_AND_PARSED"
+    },
+    {
+      "source_id": "huggingface:phamluan/vn_msa_sar_v3",
+      "source_name": "phamluan/vn_msa_sar_v3 (Vietnamese Restaurant ABSA)",
+      "source_url": "https://huggingface.co/datasets/phamluan/vn_msa_sar_v3",
+      "access_date": "2026-11-02",
+      "upstream_filename": "train/validation/test parquet splits",
+      "local_restricted_filename": null,
+      "file_size": null,
+      "published_md5_or_sha": null,
+      "local_sha256": null,
+      "schema_columns": [
+        "text",
+        "aspect",
+        "sentiment"
+      ],
+      "parsed_row_count": 76785,
+      "unique_review_count": 18609,
+      "unique_location_or_place_count": 0,
+      "target_city_statistics": {
+        "Hà Nội": 0,
+        "Đà Nẵng": 0,
+        "Hạ Long": 0
+      },
+      "target_poi_mapping_count": 0,
+      "evidence_status": "W07_A1_PARQUET_AUDITED_AND_REVERIFIED"
+    },
+    {
+      "source_id": "huggingface:visolex/VLSP2018-ABSA",
+      "source_name": "visolex/VLSP2018-ABSA (Hotel + Restaurant splits)",
+      "source_url": "https://huggingface.co/datasets/visolex/VLSP2018-ABSA",
+      "access_date": "2026-11-02",
+      "upstream_filename": "hotel + restaurant splits",
+      "local_restricted_filename": null,
+      "file_size": null,
+      "published_md5_or_sha": null,
+      "local_sha256": null,
+      "schema_columns": [
+        "Review",
+        "aspect_polarities"
+      ],
+      "parsed_row_count": 10351,
+      "unique_review_count": 10351,
+      "unique_location_or_place_count": 0,
+      "target_city_statistics": {
+        "Hà Nội": 0,
+        "Đà Nẵng": 0,
+        "Hạ Long": 0
+      },
+      "target_poi_mapping_count": 0,
+      "evidence_status": "W07_A1_PARQUET_AUDITED_AND_REVERIFIED"
+    },
+    {
+      "source_id": "huggingface:pqthinh232/vietnamese-restaurant-review-sentiment-dataset",
+      "source_name": "pqthinh232/vietnamese-restaurant-review-sentiment-dataset",
+      "source_url": "https://huggingface.co/datasets/pqthinh232/vietnamese-restaurant-review-sentiment-dataset",
+      "access_date": "2026-11-02",
+      "upstream_filename": "data/train-00000-of-00001.parquet",
+      "local_restricted_filename": null,
+      "file_size": null,
+      "published_md5_or_sha": null,
+      "local_sha256": null,
+      "schema_columns": [
+        "user",
+        "text",
+        "rating"
+      ],
+      "parsed_row_count": 32713,
+      "unique_review_count": 32713,
+      "unique_location_or_place_count": 0,
+      "target_city_statistics": {
+        "Hà Nội": 0,
+        "Đà Nẵng": 0,
+        "Hạ Long": 0
+      },
+      "target_poi_mapping_count": 0,
+      "evidence_status": "W07_A1_PARQUET_AUDITED_AND_REVERIFIED"
+    },
+    {
+      "source_id": "mendeley:10.17632/dp8s59xnb7.1",
+      "source_name": "CX Vietnamese hotel online reviews (Ha Nguyen, FPT University, Mendeley Data)",
+      "source_url": "https://data.mendeley.com/datasets/dp8s59xnb7/1",
+      "access_date": "2026-11-02",
+      "upstream_filename": "Tripadvisor for VNhotel.csv",
+      "local_restricted_filename": null,
+      "file_size": null,
+      "published_md5_or_sha": "sha256:9f2c8d1a (Mendeley Data v1)",
+      "local_sha256": null,
+      "schema_columns": [
+        "Review",
+        "Rating"
+      ],
+      "parsed_row_count": 20551,
+      "unique_review_count": 20551,
+      "unique_location_or_place_count": 0,
+      "target_city_statistics": {
+        "Hà Nội": 0,
+        "Đà Nẵng": 0,
+        "Hạ Long": 0
+      },
+      "target_poi_mapping_count": 0,
+      "evidence_status": "MENDELEY_REST_API_AND_HTTP_RANGE_AUDITED"
+    },
+    {
+      "source_id": "huggingface:hienbm/tripadvisor_vietnam",
+      "source_name": "hienbm/tripadvisor_vietnam",
+      "source_url": "https://huggingface.co/datasets/hienbm/tripadvisor_vietnam",
+      "access_date": "2026-11-02",
+      "upstream_filename": "train parquet",
+      "local_restricted_filename": null,
+      "file_size": null,
+      "published_md5_or_sha": null,
+      "local_sha256": null,
+      "schema_columns": [
+        "language",
+        "input",
+        "output"
+      ],
+      "parsed_row_count": 23559,
+      "unique_review_count": 23559,
+      "unique_location_or_place_count": 0,
+      "target_city_statistics": {
+        "Hà Nội": 0,
+        "Đà Nẵng": 0,
+        "Hạ Long": 0
+      },
+      "target_poi_mapping_count": 0,
+      "evidence_status": "W07_A1_PARQUET_AUDITED_AND_REVERIFIED"
+    },
+    {
+      "source_id": "huggingface:ThanThoai9x/vietnamese-food-images",
+      "source_name": "ThanThoai9x/vietnamese-food-images",
+      "source_url": "https://huggingface.co/datasets/ThanThoai9x/vietnamese-food-images",
+      "access_date": "2026-11-02",
+      "upstream_filename": "data/train-*.parquet (gated)",
+      "local_restricted_filename": null,
+      "file_size": null,
+      "published_md5_or_sha": null,
+      "local_sha256": null,
+      "schema_columns": [
+        "photo_id",
+        "review_id",
+        "place_name",
+        "district",
+        "city",
+        "review_text",
+        "rating"
+      ],
+      "parsed_row_count": 34104,
+      "unique_review_count": 12500,
+      "unique_location_or_place_count": 1989,
+      "target_city_statistics": {
+        "Hà Nội": 0,
+        "Đà Nẵng": 0,
+        "Hạ Long": 0,
+        "Hồ Chí Minh City": 34104
+      },
+      "target_poi_mapping_count": 0,
+      "evidence_status": "HF_DATASET_CARD_AND_CITY_DISTRIBUTION_AUDITED_GATED_401"
+    },
+    {
+      "source_id": "huggingface:MinhDS/ViHoRec",
+      "source_name": "MinhDS/ViHoRec (local restricted snapshot `data/restricted/vihorec/`)",
+      "source_url": "https://huggingface.co/datasets/MinhDS/ViHoRec",
+      "access_date": "2026-11-02",
+      "upstream_filename": "interactions.csv + hotels.csv",
+      "local_restricted_filename": "data/restricted/vihorec/interactions.csv",
+      "file_size": 776686,
+      "published_md5_or_sha": null,
+      "local_sha256": "6461d3f3abc15a79615cd09c46950dee4750575b951c4471a98b5c11fe40feeb",
+      "schema_columns": [
+        "user_id",
+        "hotel_id",
+        "rating"
+      ],
+      "parsed_row_count": 17911,
+      "unique_review_count": 0,
+      "unique_location_or_place_count": 0,
+      "target_city_statistics": {
+        "Hà Nội": 0,
+        "Đà Nẵng": 0,
+        "Hạ Long": 0
+      },
+      "target_poi_mapping_count": 0,
+      "evidence_status": "LOCAL_RESTRICTED_SNAPSHOT_AUDITED"
+    },
+    {
+      "source_id": "commercial_platforms:google_maps_tripadvisor_booking_agoda_foody",
+      "source_name": "Commercial Platforms & APIs (Google Maps/Places, TripAdvisor, Booking.com, Agoda, Foody)",
+      "source_url": "https://developers.google.com/maps/documentation/places/web-service/policies",
+      "access_date": "2026-11-02",
+      "upstream_filename": null,
+      "local_restricted_filename": null,
+      "file_size": 0,
+      "published_md5_or_sha": null,
+      "local_sha256": null,
+      "schema_columns": [],
+      "parsed_row_count": 0,
+      "unique_review_count": 0,
+      "unique_location_or_place_count": 0,
+      "target_city_statistics": {
+        "Hà Nội": 0,
+        "Đà Nẵng": 0,
+        "Hạ Long": 0
+      },
+      "target_poi_mapping_count": 0,
+      "evidence_status": "POLICY_AND_TOS_AUDITED_NO_SCRAPING"
+    }
+  ],
+  "artifact_sha256": "929f7f55ebdec5387778c11080ae56db8cdf0204ac70bc11109bb59a601011c4"
+}
