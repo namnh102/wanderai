@@ -1,13 +1,14 @@
 {
   "artifact_id": "w07_first_party_collection_progress_v1",
-  "artifact_version": "1.0.0",
-  "task_id": "W07-A4H",
+  "artifact_version": "1.1.0-corrective-01",
+  "task_id": "W07-A4H-CORRECTIVE-01",
   "authoritative_develop_base_sha": "61e58f0fed2539971584c49cd7a2dac159554ff7",
   "previous_gates": [
     "W07-A3-CONTRIBUTOR-COLLECTION-LAUNCH-POSTMERGE-CHATGPT-AUDIT = PASS",
-    "W07-A3-OWNER-GOOGLE-FORMS-RUNTIME-PREFLIGHT-CHATGPT-AUDIT = PASS"
+    "W07-A3-OWNER-GOOGLE-FORMS-RUNTIME-PREFLIGHT-CHATGPT-AUDIT = PASS",
+    "W07-A4H-ASSISTED-FIRST-PARTY-COLLECTION-PIPELINE-CHATGPT-AUDIT = HOLD-CORRECTIVE"
   ],
-  "next_gate": "W07-A4H-ASSISTED-FIRST-PARTY-COLLECTION-PIPELINE-CHATGPT-AUDIT",
+  "next_gate": "W07-A4H-ASSISTED-FIRST-PARTY-COLLECTION-CORRECTIVE-01-CHATGPT-AUDIT",
   "manifest_sha_binding": {
     "manifest_path": "data/evaluation/w07/w07_review_target_60_pois_v1.json",
     "manifest_internal_sha256": "b4be35d96ff503c61986674a6b3eb37b993484c0dc121434772184a2b089ed2b",
@@ -20,6 +21,45 @@
     "apps_script_lf_sha256": "5e87dcf74d2bc4840792701bbd852c75781ef6ba938ac8c1eacad6d2a430be71",
     "a3_progress_path": "data/evaluation/w07/w07_review_collection_progress_v1.json",
     "a3_progress_internal_sha256": "a7eb47e50735a6f184f4ae717976b7a8bf7d1258a6d4763031c62fd691d38e70"
+  },
+  "assisted_contract_invariants": {
+    "template_column_count": 16,
+    "template_columns": [
+      "contributor_code",
+      "poi_id",
+      "city",
+      "rating",
+      "review_text",
+      "language",
+      "visit_period",
+      "collection_channel",
+      "capture_mode",
+      "review_text_approved",
+      "consent_confirmed",
+      "consent_timestamp",
+      "consent_evidence_type",
+      "consent_evidence_ref",
+      "collector_code",
+      "collected_at"
+    ],
+    "allowed_languages": [
+      "vi",
+      "en",
+      "mixed_vi_en"
+    ],
+    "implicit_language_default_allowed": false,
+    "missing_or_invalid_language_action": "REJECT_INVALID_OR_MISSING_LANGUAGE",
+    "timestamp_fail_closed": true,
+    "fixed_date_timestamp_fallback_allowed": false,
+    "created_at_semantics": "created_at = date review was collected/submitted into assisted intake (derived strictly from valid normalized collected_at; never claimed to be the visit date; visit_period remains separate)",
+    "immutable_provenance_fields": {
+      "source": "assisted_first_party",
+      "provenance": "FIRST_PARTY_ASSISTED_COLLECTION_CONSENT_V1",
+      "license_or_usage_class": "OWNER_FIRST_PARTY_CONSENT",
+      "mapping_method": "EXACT_PREBOUND_CANONICAL_POI",
+      "mapping_confidence": 1.0
+    },
+    "unexpected_non_identity_column_action": "REJECT_UNEXPECTED_INPUT_COLUMN"
   },
   "privacy_and_content_guarantee": {
     "raw_review_text_published_in_this_artifact": false,
@@ -80,6 +120,7 @@
     "remaining_reviews_to_300": 300
   },
   "provenance_distribution": {},
+  "language_distribution": {},
   "reviews_by_city": {
     "Hà Nội": 0,
     "Đà Nẵng": 0,
@@ -1860,5 +1901,5 @@
       "recruitment_action": "ACTIVE_HIGHEST_PRIORITY_ZERO_REVIEWS"
     }
   ],
-  "artifact_sha256": "70d03b0f0b0b97808f9e3157b2eb6b7293fb10a74dbc7f2c757912ccac365172"
+  "artifact_sha256": "b34e32af7aba9b5ee95d13f30781fbef3e15a4cb9b6a26c7b97fa1489f13ecdb"
 }

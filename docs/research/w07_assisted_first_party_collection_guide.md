@@ -1,14 +1,15 @@
-# W07-A4H — Assisted First-Party Review Collection Guide
+# W07-A4H — Assisted First-Party Review Collection Guide (Corrective 01)
 
 ## 0. Authority & Scope
 
 - **Previous Gates:**
   - `W07-A3-CONTRIBUTOR-COLLECTION-LAUNCH-POSTMERGE-CHATGPT-AUDIT = PASS`
   - `W07-A3-OWNER-GOOGLE-FORMS-RUNTIME-PREFLIGHT-CHATGPT-AUDIT = PASS`
+  - `W07-A4H-ASSISTED-FIRST-PARTY-COLLECTION-PIPELINE-CHATGPT-AUDIT = HOLD-CORRECTIVE`
 - **Authoritative Base:** `develop@61e58f0fed2539971584c49cd7a2dac159554ff7`
-- **Next Gate:** `W07-A4H-ASSISTED-FIRST-PARTY-COLLECTION-PIPELINE-CHATGPT-AUDIT`
+- **Next Gate:** `W07-A4H-ASSISTED-FIRST-PARTY-COLLECTION-CORRECTIVE-01-CHATGPT-AUDIT`
 - **Frozen 60-POI Manifest (Single Authority):** `data/evaluation/w07/w07_review_target_60_pois_v1.json` (`b4be35d96ff503c61986674a6b3eb37b993484c0dc121434772184a2b089ed2b`)
-- **Assisted Intake CSV Template:** `data/templates/w07_assisted_first_party_review_template_v1.csv`
+- **Assisted Intake CSV Template (16 columns):** `data/templates/w07_assisted_first_party_review_template_v1.csv`
 - **Assisted Candidate Output JSONL (gitignored):** `data/restricted/w07_reviews/w07_assisted_candidate_reviews_v1.jsonl`
 - **Optional Restricted Identity Map (gitignored):** `data/restricted/w07_reviews/contributors/contributor_identity_map.csv`
 - **Optional Restricted Consent Evidence Folder (gitignored):** `data/restricted/w07_reviews/consent_evidence/`
@@ -16,7 +17,7 @@
 
 ---
 
-## 1. Provenance Separation & No Fake Form Submissions
+## 1. Provenance Separation, Immutable Provenance Fields & No Fake Form Submissions
 
 `ASSISTED_FIRST_PARTY_COLLECTION` is a legitimate parallel first-party channel alongside W07-A3 Google Forms (`DIRECT_GOOGLE_FORM`).
 
@@ -25,11 +26,12 @@
 | **Google Forms (W07-A3)** | `first_party_contributor_form_v1` | `FIRST_PARTY_ACADEMIC_CONTRIBUTOR_CONSENT_V1` | `data/restricted/w07_reviews/w07_canonical_reviews_v1.jsonl` |
 | **Assisted Collection (W07-A4H)** | `assisted_first_party` | `FIRST_PARTY_ASSISTED_COLLECTION_CONSENT_V1` | `data/restricted/w07_reviews/w07_assisted_candidate_reviews_v1.jsonl` |
 
-### Strict Operational Rules
+### Strict Operational & Immutability Rules
 1. **Contributor must have personally visited/directly experienced the POI.**
 2. **Never submit assisted reviews into the Google Forms** pretending to originate from different browser sessions.
 3. **Never invent, rewrite, paraphrase with AI (ChatGPT/Gemini/Claude), or multiply one review into several reviews.**
-4. **Keep Google Forms candidate JSONL and Assisted candidate JSONL separate** (W07-A5 will perform controlled merge & deduplication).
+4. **Provenance fields are assigned internally and unconditionally by the importer:** `source = "assisted_first_party"`, `provenance = "FIRST_PARTY_ASSISTED_COLLECTION_CONSENT_V1"`, `license_or_usage_class = "OWNER_FIRST_PARTY_CONSENT"`, `mapping_method = "EXACT_PREBOUND_CANONICAL_POI"`, `mapping_confidence = 1.0`. Any unexpected non-identity column in the CSV (including `source`, `provenance`, `license_or_usage_class`, `mapping_method`, `mapping_confidence`, `review_id`, `consent_record_id`) is rejected with `REJECT_UNEXPECTED_INPUT_COLUMN`.
+5. **Keep Google Forms candidate JSONL and Assisted candidate JSONL separate** (W07-A5 will perform controlled merge & deduplication).
 
 ---
 
@@ -38,12 +40,12 @@
 1. **Ask contributor which target POIs they genuinely visited** from the 60 canonical POIs in Hà Nội, Đà Nẵng, or Hạ Long (see Section 8 table below).
 2. **Assign or reuse a pseudonymous `contributor_code`** (`W07C001`, `W07C002`, `W07C003`, ...). The same person **must** keep the same `contributor_code` across all POIs they review. One contributor may review multiple POIs they genuinely visited, but at most **one** review per `(contributor_code, poi_id)`.
 3. **Ask for their integer rating (`1` to `5`)** for each visited POI.
-4. **Collect their review verbatim** (via Zalo, Messenger, direct chat, in-person interview, or phone conversation).
+4. **Collect their review verbatim** (via Zalo, Messenger, direct chat, in-person interview, or phone conversation) and record the exact `language` of the **review text** (`vi`, `en`, or `mixed_vi_en` — based on the review text itself, NOT contributor nationality; never left blank).
 5. **Ask for optional `visit_period`** (`YYYY-MM` like `2025-08` or `YYYY-Q1..Q4` like `2025-Q3`).
 6. **Send the Vietnamese consent script** (Section 4 below).
-7. **Obtain explicit written/digital consent** (`"Tôi đồng ý"` or `"Đồng ý"`). Never infer consent from silence.
+7. **Obtain explicit written/digital consent** (`"Tôi đồng ý"` or `"Đồng ý"`) and record a valid ISO-8601 `consent_timestamp`. Never infer consent from silence.
 8. **If collector transcribed an oral review**, send the exact final text back to the contributor (Section 5 below) and wait for their explicit final-text approval before setting `review_text_approved = true`.
-9. **Enter one CSV row per POI** into your local copy `data/restricted/w07_reviews/raw_assisted/assisted_reviews.csv` (copied from `data/templates/w07_assisted_first_party_review_template_v1.csv`).
+9. **Enter one 16-column CSV row per POI** into your local copy `data/restricted/w07_reviews/raw_assisted/assisted_reviews.csv` (copied from `data/templates/w07_assisted_first_party_review_template_v1.csv`), recording a valid ISO-8601 `collected_at` timestamp.
 10. **Run the deterministic assisted importer:**
     ```bash
     python scripts/import_w07_assisted_reviews_v1.py --import-csv data/restricted/w07_reviews/raw_assisted/assisted_reviews.csv
@@ -81,31 +83,36 @@ When `capture_mode` is `COLLECTOR_TRANSCRIBED_VERBATIM` or `COLLECTOR_TRANSCRIBE
 
 ---
 
-## 6. Supported Values Reference (`w07_assisted_first_party_review_template_v1.csv`)
+## 6. Supported 16-Column Template Specification (`w07_assisted_first_party_review_template_v1.csv`)
 
-| Column | Required | Allowed / Expected Values |
-| :--- | :--- | :--- |
-| `contributor_code` | **Yes** | Pseudonymous code `W07C001`, `W07C002`, ... (`^W07C\d{3,6}$`). Never put real name, email, or phone. |
-| `poi_id` | **Yes** | Exact canonical UUID from the 60-POI manifest (do NOT use POI name). |
-| `city` | **Yes** | `Hà Nội`, `Đà Nẵng`, or `Hạ Long` (must match `manifest[poi_id].city`). |
-| `rating` | **Yes** | Integer `1`, `2`, `3`, `4`, or `5`. |
-| `review_text` | **Yes** | Authentic review text (`>= 20` chars and `>= 5` words recommended; zero phone/email PII). |
-| `visit_period` | Optional | `YYYY-MM` (e.g. `2025-08`) or `YYYY-Q1..Q4` (e.g. `2025-Q3`). |
-| `collection_channel` | **Yes** | `ZALO`, `MESSENGER`, `DIRECT_CHAT`, `IN_PERSON_INTERVIEW`, or `PHONE_WITH_WRITTEN_CONFIRMATION`. |
-| `capture_mode` | **Yes** | `CONTRIBUTOR_WRITTEN_VERBATIM`, `COLLECTOR_TRANSCRIBED_VERBATIM`, or `COLLECTOR_TRANSCRIBED_AND_CONTRIBUTOR_APPROVED`. (Forbidden modes `COLLECTOR_PARAPHRASED`, `AI_REWRITTEN`, `AI_GENERATED`, `COPIED_ONLINE_REVIEW` are rejected). |
-| `review_text_approved` | **Yes** | `true` (may be implied for `CONTRIBUTOR_WRITTEN_VERBATIM` when `consent_confirmed=true`; **explicit `true` mandatory** for transcription modes, otherwise rejected with `REJECT_TEXT_NOT_CONTRIBUTOR_APPROVED`). |
-| `consent_confirmed` | **Yes** | `true`, `Tôi đồng ý`, or `Đồng ý`. |
-| `consent_timestamp` | **Yes** | ISO-8601 or `YYYY-MM-DD HH:MM:SS` timestamp when consent was given. |
-| `consent_evidence_type` | **Yes** | `CHAT_WRITTEN_CONSENT`, `DIGITAL_TEXT_CONSENT`, or `IN_PERSON_WRITTEN_CONSENT`. (Verbal-only consent without written confirmation is rejected). |
-| `consent_evidence_ref` | **Yes** | Local reference token (e.g. `zalo_thread_w07c001_20261102_01`). Hashed with SHA-256 into `consent_record_id`; never published in the scientific JSONL. |
-| `collector_code` | **Yes** | Collector pseudonymous code (e.g. `OWNER_01`, `TEAM_01`). |
-| `collected_at` | **Yes** | ISO-8601 or `YYYY-MM-DD HH:MM:SS` timestamp when recorded into the template. |
+| # | Column | Required | Allowed / Expected Values |
+|---:|:---|:---|:---|
+| 1 | `contributor_code` | **Yes** | Pseudonymous code `W07C001`, `W07C002`, ... (`^W07C\d{3,6}$`). Never put real name, email, or phone. |
+| 2 | `poi_id` | **Yes** | Exact canonical UUID from the 60-POI manifest (do NOT use POI name). |
+| 3 | `city` | **Yes** | `Hà Nội`, `Đà Nẵng`, or `Hạ Long` (must match `manifest[poi_id].city`). |
+| 4 | `rating` | **Yes** | Integer `1`, `2`, `3`, `4`, or `5`. |
+| 5 | `review_text` | **Yes** | Authentic review text (`>= 20` chars and `>= 5` words recommended; zero phone/email PII). |
+| 6 | `language` | **Yes** | Exact review-text language: `vi`, `en`, or `mixed_vi_en`. Determined strictly from the **actual review text** (not contributor nationality). No implicit default to `vi`; blank or unsupported values are rejected with `REJECT_INVALID_OR_MISSING_LANGUAGE`. |
+| 7 | `visit_period` | Optional | `YYYY-MM` (e.g. `2025-08`) or `YYYY-Q1..Q4` (e.g. `2025-Q3`). Separate from `created_at` / `collected_at`. |
+| 8 | `collection_channel` | **Yes** | `ZALO`, `MESSENGER`, `DIRECT_CHAT`, `IN_PERSON_INTERVIEW`, or `PHONE_WITH_WRITTEN_CONFIRMATION`. |
+| 9 | `capture_mode` | **Yes** | `CONTRIBUTOR_WRITTEN_VERBATIM`, `COLLECTOR_TRANSCRIBED_VERBATIM`, or `COLLECTOR_TRANSCRIBED_AND_CONTRIBUTOR_APPROVED`. (Forbidden modes `COLLECTOR_PARAPHRASED`, `AI_REWRITTEN`, `AI_GENERATED`, `COPIED_ONLINE_REVIEW` are rejected). |
+| 10 | `review_text_approved` | **Yes** | `true` (may be implied for `CONTRIBUTOR_WRITTEN_VERBATIM` when `consent_confirmed=true`; **explicit `true` mandatory** for transcription modes, otherwise rejected with `REJECT_TEXT_NOT_CONTRIBUTOR_APPROVED`). |
+| 11 | `consent_confirmed` | **Yes** | `true`, `Tôi đồng ý`, or `Đồng ý`. |
+| 12 | `consent_timestamp` | **Yes** | Valid ISO-8601 or `YYYY-MM-DD HH:MM:SS` timestamp when consent was given. Fail-closed: missing -> `REJECT_MISSING_CONSENT_TIMESTAMP`; malformed -> `REJECT_INVALID_CONSENT_TIMESTAMP`. |
+| 13 | `consent_evidence_type` | **Yes** | `CHAT_WRITTEN_CONSENT`, `DIGITAL_TEXT_CONSENT`, or `IN_PERSON_WRITTEN_CONSENT`. (Verbal-only consent without written confirmation is rejected). |
+| 14 | `consent_evidence_ref` | **Yes** | Local reference token (e.g. `zalo_thread_w07c001_20261102_01`). Hashed with SHA-256 into `consent_record_id`; never published in the scientific JSONL. |
+| 15 | `collector_code` | **Yes** | Collector pseudonymous code (e.g. `OWNER_01`, `TEAM_01`). |
+| 16 | `collected_at` | **Yes** | Valid ISO-8601 or `YYYY-MM-DD HH:MM:SS` timestamp when recorded into the template. Fail-closed: missing -> `REJECT_MISSING_COLLECTED_AT`; malformed -> `REJECT_INVALID_COLLECTED_AT`. |
+
+### Timestamp & `created_at` Semantics
+- `created_at = date review was collected/submitted into assisted intake (derived strictly from valid normalized collected_at; never claimed to be the visit date; visit_period remains separate)`.
+- No fixed-date fallback (such as `2026-11-02` or `2026-11-02T00:00:00Z`) is ever used.
 
 ### Example Synthetic TEST FIXTURE Row (For Format Illustration Only — Do Not Import)
 
 ```csv
-contributor_code,poi_id,city,rating,review_text,visit_period,collection_channel,capture_mode,review_text_approved,consent_confirmed,consent_timestamp,consent_evidence_type,consent_evidence_ref,collector_code,collected_at
-W07C001,698ee756-6062-5f47-955b-bdf458682e57,Hà Nội,5,"TEST_FIXTURE_ONLY: Khu vực quảng trường Ba Đình rộng rãi, sạch sẽ, xếp hàng buổi sáng rất trật tự.",2025-10,ZALO,CONTRIBUTOR_WRITTEN_VERBATIM,true,Tôi đồng ý,2026-11-02T09:00:00Z,CHAT_WRITTEN_CONSENT,zalo_msg_w07c001_001,OWNER_01,2026-11-02T09:05:00Z
+contributor_code,poi_id,city,rating,review_text,language,visit_period,collection_channel,capture_mode,review_text_approved,consent_confirmed,consent_timestamp,consent_evidence_type,consent_evidence_ref,collector_code,collected_at
+W07C001,698ee756-6062-5f47-955b-bdf458682e57,Hà Nội,5,"TEST_FIXTURE_ONLY: Khu vực quảng trường Ba Đình rộng rãi, sạch sẽ, xếp hàng buổi sáng rất trật tự.",vi,2025-10,ZALO,CONTRIBUTOR_WRITTEN_VERBATIM,true,Tôi đồng ý,2026-11-02T09:00:00Z,CHAT_WRITTEN_CONSENT,zalo_msg_w07c001_001,OWNER_01,2026-11-02T09:05:00Z
 ```
 
 ---

@@ -1,22 +1,28 @@
 #!/usr/bin/env python3
-"""W07-A4H Assisted First-Party Review Collection Importer & Combined Pilot Progress Tracker (v1).
+"""W07-A4H Assisted First-Party Review Collection Importer & Combined Pilot Progress Tracker (v1, Corrective 01).
 
 Responsibilities:
 1. Verify upstream scientific immutability (W06, W07-0, W07-A1, W07-A2 60-POI manifest,
    and W07-A3 Google Forms definitions, Apps Script generator, and progress artifact).
-2. Deterministically import assisted first-party review CSV files modeled on
+2. Deterministically import assisted first-party review CSV files modeled on the 16-column
    `data/templates/w07_assisted_first_party_review_template_v1.csv` into
    `data/restricted/w07_reviews/w07_assisted_candidate_reviews_v1.jsonl` without
    modifying or overwriting the W07-A3 Google Forms corpus
    (`data/restricted/w07_reviews/w07_canonical_reviews_v1.jsonl`).
-3. Enforce distinct provenance (`FIRST_PARTY_ASSISTED_COLLECTION_CONSENT_V1` vs
-   Google Forms `FIRST_PARTY_ACADEMIC_CONTRIBUTOR_CONSENT_V1`), capture-mode rules,
-   mandatory final-text approval for transcribed reviews (`REJECT_TEXT_NOT_CONTRIBUTOR_APPROVED`),
-   written/digital consent evidence (`REJECT_UNSUPPORTED_CONSENT_EVIDENCE_TYPE`),
-   pseudonymous `contributor_code` (`W07C001`...), one-review-per-(contributor_code, poi_id)
-   uniqueness (`REJECT_DUPLICATE_CONTRIBUTOR_POI`), PII stripping & `QUARANTINE_PII_REVIEW_TEXT`,
-   AI/copied-online authenticity firewall, and `MANUAL_REVIEW_REQUIRED` quarantine for
-   suspicious near-duplicates.
+3. Corrective 01 Hardening:
+   - Strict `language` validation (`vi`, `en`, `mixed_vi_en`) with zero implicit `"vi"` default
+     (`REJECT_INVALID_OR_MISSING_LANGUAGE`).
+   - Fail-closed timestamp parsing for `consent_timestamp` and `collected_at` with zero fixed-date
+     fallback (`REJECT_MISSING_CONSENT_TIMESTAMP`, `REJECT_INVALID_CONSENT_TIMESTAMP`,
+     `REJECT_MISSING_COLLECTED_AT`, `REJECT_INVALID_COLLECTED_AT`).
+   - Explicit `created_at` semantics: `created_at = date review was collected/submitted into assisted intake`
+     (derived strictly from valid normalized `collected_at`, never claimed to be the visit date;
+     `visit_period` remains separate).
+   - Unconditional internal assignment of `source`, `provenance`, `license_or_usage_class`,
+     `mapping_method`, and `mapping_confidence` (never accepted from CSV input).
+   - Unexpected-column firewall (`REJECT_UNEXPECTED_INPUT_COLUMN`) rejecting any non-identity column
+     outside the 16 canonical template columns (including `source`, `provenance`,
+     `license_or_usage_class`, `mapping_method`, `mapping_confidence`, `review_id`, `consent_record_id`).
 4. Generate and verify the combined first-party progress artifact
    `data/evaluation/w07/w07_first_party_collection_progress_v1.json` across both
    first-party channels (`DIRECT_GOOGLE_FORM` + `ASSISTED_FIRST_PARTY_COLLECTION`).
@@ -26,6 +32,7 @@ from __future__ import annotations
 
 import argparse
 import csv
+import datetime as dt
 import hashlib
 import json
 import re
@@ -70,8 +77,9 @@ AUTHORITATIVE_DEVELOP_BASE_SHA = "61e58f0fed2539971584c49cd7a2dac159554ff7"
 PREVIOUS_GATES: tuple[str, ...] = (
     "W07-A3-CONTRIBUTOR-COLLECTION-LAUNCH-POSTMERGE-CHATGPT-AUDIT = PASS",
     "W07-A3-OWNER-GOOGLE-FORMS-RUNTIME-PREFLIGHT-CHATGPT-AUDIT = PASS",
+    "W07-A4H-ASSISTED-FIRST-PARTY-COLLECTION-PIPELINE-CHATGPT-AUDIT = HOLD-CORRECTIVE",
 )
-NEXT_GATE = "W07-A4H-ASSISTED-FIRST-PARTY-COLLECTION-PIPELINE-CHATGPT-AUDIT"
+NEXT_GATE = "W07-A4H-ASSISTED-FIRST-PARTY-COLLECTION-CORRECTIVE-01-CHATGPT-AUDIT"
 
 EXPECTED_A3_FORM_DEF_INTERNAL_SHA256 = (
     "9c17cfc51c41295c8338b40544324454a36a7276bb2339edd3a0b59c88c6de8a"
@@ -93,8 +101,14 @@ ASSISTED_LICENSE_OR_USAGE_CLASS = "OWNER_FIRST_PARTY_CONSENT"
 ASSISTED_MAPPING_METHOD = "EXACT_PREBOUND_CANONICAL_POI"
 ASSISTED_MAPPING_CONFIDENCE = 1.0
 
+CREATED_AT_SEMANTIC_DEFINITION = (
+    "created_at = date review was collected/submitted into assisted intake "
+    "(derived strictly from valid normalized collected_at; never claimed to be the visit date; "
+    "visit_period remains separate)"
+)
+
 CONSENT_PROTOCOL_VERSION = "W07_ASSISTED_CONSENT_V1"
-ASSISTED_IMPORTER_VERSION = "1.0.0"
+ASSISTED_IMPORTER_VERSION = "1.1.0-corrective-01"
 
 REQUIRED_TEMPLATE_COLUMNS: tuple[str, ...] = (
     "contributor_code",
@@ -102,6 +116,7 @@ REQUIRED_TEMPLATE_COLUMNS: tuple[str, ...] = (
     "city",
     "rating",
     "review_text",
+    "language",
     "visit_period",
     "collection_channel",
     "capture_mode",
@@ -112,6 +127,12 @@ REQUIRED_TEMPLATE_COLUMNS: tuple[str, ...] = (
     "consent_evidence_ref",
     "collector_code",
     "collected_at",
+)
+
+ALLOWED_LANGUAGE_VALUES: tuple[str, ...] = (
+    "vi",
+    "en",
+    "mixed_vi_en",
 )
 
 SUPPORTED_CAPTURE_MODES: tuple[str, ...] = (
@@ -287,7 +308,7 @@ def verify_upstream_a2_and_a3_immutability(repo_root: Path = REPO_ROOT) -> dict[
 
 
 def verify_assisted_template_csv(repo_root: Path = REPO_ROOT) -> dict[str, Any]:
-    """Verify the committed assisted CSV template has the exact 15 required columns and zero real reviews."""
+    """Verify the committed assisted CSV template has the exact 16 required columns and zero real reviews."""
     template_path = repo_root / ASSISTED_TEMPLATE_CSV_RELPATH
     if not template_path.exists():
         raise FileNotFoundError(f"Missing assisted template CSV: {template_path}")
@@ -318,6 +339,7 @@ def verify_assisted_template_csv(repo_root: Path = REPO_ROOT) -> dict[str, Any]:
     return {
         "template_path": ASSISTED_TEMPLATE_CSV_RELPATH,
         "template_lf_sha256": w07_a2.compute_lf_normalized_sha256(template_path),
+        "column_count": len(REQUIRED_TEMPLATE_COLUMNS),
         "columns": list(REQUIRED_TEMPLATE_COLUMNS),
         "data_row_count": len(data_rows),
     }
@@ -330,21 +352,94 @@ def _is_assisted_identity_column(col_name: str) -> bool:
     return any(pat in norm for pat in ASSISTED_IDENTITY_COLUMN_PATTERNS)
 
 
+def partition_assisted_input_columns(
+    raw_row: dict[str, Any],
+) -> tuple[dict[str, Any], list[str], list[str]]:
+    """Partition raw CSV row columns into `(canonical_sanitized, stripped_identity_cols, unexpected_cols)`.
+
+    Section 7 Unexpected-column firewall:
+    - Columns in the 16 `REQUIRED_TEMPLATE_COLUMNS` are retained in `canonical_sanitized`.
+    - Known accidental identity columns (`_is_assisted_identity_column`) are stripped and recorded in `stripped_identity_cols`.
+    - Any other column (such as `source`, `provenance`, `license_or_usage_class`, `mapping_method`,
+      `mapping_confidence`, `review_id`, `consent_record_id`, or unknown columns) is rejected via
+      `unexpected_cols` (`REJECT_UNEXPECTED_INPUT_COLUMN`) and never copied into `canonical_sanitized`.
+    """
+    canonical_set = set(REQUIRED_TEMPLATE_COLUMNS)
+    sanitized: dict[str, Any] = {}
+    stripped_identity: list[str] = []
+    unexpected: list[str] = []
+
+    for k, v in raw_row.items():
+        if k is None:
+            if v is not None and any(str(cell).strip() for cell in (v if isinstance(v, list) else [v])):
+                unexpected.append("<extra_unnamed_column>")
+            continue
+        k_clean = str(k).strip()
+        if k_clean in canonical_set:
+            sanitized[k_clean] = v
+        elif _is_assisted_identity_column(k_clean):
+            stripped_identity.append(k_clean)
+        else:
+            unexpected.append(k_clean)
+
+    return sanitized, stripped_identity, unexpected
+
+
 def strip_assisted_identity_columns(
     raw_row: dict[str, Any],
 ) -> tuple[dict[str, Any], list[str]]:
-    """Strip any contributor identity columns from an assisted CSV row before constructing scientific records."""
-    sanitized: dict[str, Any] = {}
-    stripped: list[str] = []
-    for k, v in raw_row.items():
-        if k is None:
+    """Strip known accidental identity columns and return `(canonical_sanitized, stripped_identity_cols)`."""
+    sanitized, stripped_identity, _ = partition_assisted_input_columns(raw_row)
+    return sanitized, stripped_identity
+
+
+def parse_strict_assisted_timestamp(raw_ts: str) -> tuple[str, str] | None:
+    """Strictly parse an assisted timestamp string into `(YYYY-MM-DD, YYYY-MM-DDTHH:MM:SSZ)`.
+
+    Section 4 & 5:
+    - Fail-closed on empty or malformed timestamps (returns `None`).
+    - Never uses any hard-coded date/time fallback.
+    """
+    ts = raw_ts.strip()
+    if not ts:
+        return None
+
+    # 1. Exact format candidates (without silent truncation of trailing garbage)
+    exact_formats = (
+        "%Y-%m-%dT%H:%M:%SZ",
+        "%Y-%m-%dT%H:%M:%S",
+        "%Y-%m-%d %H:%M:%S",
+        "%Y/%m/%d %H:%M:%S",
+        "%Y-%m-%d %H:%M",
+        "%Y/%m/%d %H:%M",
+        "%d/%m/%Y %H:%M:%S",
+        "%Y-%m-%d",
+    )
+    for fmt in exact_formats:
+        try:
+            parsed = dt.datetime.strptime(ts, fmt)
+            return (
+                parsed.strftime("%Y-%m-%d"),
+                parsed.strftime("%Y-%m-%dT%H:%M:%SZ"),
+            )
+        except ValueError:
             continue
-        k_clean = str(k).strip()
-        if _is_assisted_identity_column(k_clean):
-            stripped.append(k_clean)
-        else:
-            sanitized[k_clean] = v
-    return sanitized, stripped
+
+    # 2. ISO-8601 with explicit timezone offset (e.g. 2026-11-02T09:00:00+07:00)
+    if "T" in ts and (ts.endswith("Z") or "+" in ts[10:] or "-" in ts[10:]):
+        iso_candidate = ts[:-1] + "+00:00" if ts.endswith("Z") else ts
+        try:
+            parsed_tz = dt.datetime.fromisoformat(iso_candidate)
+            if parsed_tz.tzinfo is not None:
+                parsed_utc = parsed_tz.astimezone(dt.timezone.utc)
+                return (
+                    parsed_utc.strftime("%Y-%m-%d"),
+                    parsed_utc.strftime("%Y-%m-%dT%H:%M:%SZ"),
+                )
+        except ValueError:
+            return None
+
+    return None
 
 
 def normalize_contributor_code(raw_code: str) -> str | None:
@@ -357,6 +452,19 @@ def normalize_contributor_code(raw_code: str) -> str | None:
     if not CONTRIBUTOR_CODE_RE.match(val):
         return None
     return val
+
+
+def validate_language_value(raw_lang: str) -> str | None:
+    """Validate `language` strictly against `ALLOWED_LANGUAGE_VALUES` (`vi`, `en`, `mixed_vi_en`).
+
+    Sections 2 & 3:
+    - No automatic default to `"vi"`.
+    - Returns normalized allowed string if valid, else `None`.
+    """
+    val = raw_lang.strip().lower()
+    if val in ALLOWED_LANGUAGE_VALUES:
+        return val
+    return None
 
 
 def _is_explicit_consent_confirmed(raw_val: str) -> bool:
@@ -475,6 +583,7 @@ def generate_assisted_review_id(
     city_code: str,
     rating_str: str,
     review_text: str,
+    language: str,
     visit_period: str | None,
     capture_mode: str,
 ) -> str:
@@ -484,6 +593,7 @@ def generate_assisted_review_id(
         "city_code": city_code.strip().lower(),
         "contributor_code": contributor_code.strip().upper(),
         "importer_version": ASSISTED_IMPORTER_VERSION,
+        "language": language.strip().lower(),
         "poi_id": poi_id.strip().lower(),
         "rating": rating_str.strip(),
         "review_text_sha256": hashlib.sha256(review_text.encode("utf-8")).hexdigest(),
@@ -512,10 +622,21 @@ def convert_assisted_csv_row_to_candidate(
 ) -> tuple[dict[str, Any], list[str], list[str]]:
     """Convert one assisted CSV row into `(candidate_row, assisted_rejection_reasons, stripped_identity_cols)`.
 
-    Does NOT map POIs by name: `poi_id` must match an exact canonical UUID in `manifest_payload`.
+    Enforces Corrective 01 rules:
+    - Unexpected non-identity columns trigger `REJECT_UNEXPECTED_INPUT_COLUMN`.
+    - `language` must be explicitly `vi`, `en`, or `mixed_vi_en` (`REJECT_INVALID_OR_MISSING_LANGUAGE`).
+    - `consent_timestamp` and `collected_at` must be present and strictly parsable (`REJECT_MISSING_CONSENT_TIMESTAMP`,
+      `REJECT_INVALID_CONSENT_TIMESTAMP`, `REJECT_MISSING_COLLECTED_AT`, `REJECT_INVALID_COLLECTED_AT`).
+    - `source`, `provenance`, `license_or_usage_class`, `mapping_method`, and `mapping_confidence` are assigned
+      internally and unconditionally.
     """
-    sanitized, stripped_cols = strip_assisted_identity_columns(raw_row)
+    sanitized, stripped_cols, unexpected_cols = partition_assisted_input_columns(raw_row)
     reasons: list[str] = []
+
+    if unexpected_cols:
+        reasons.append("REJECT_UNEXPECTED_INPUT_COLUMN")
+        for ucol in sorted(set(unexpected_cols)):
+            reasons.append(f"REJECT_UNEXPECTED_INPUT_COLUMN:{ucol}")
 
     raw_contrib = str(sanitized.get("contributor_code") or "").strip()
     norm_contrib = normalize_contributor_code(raw_contrib)
@@ -555,6 +676,13 @@ def convert_assisted_csv_row_to_candidate(
         if "review_text" in sanitized and sanitized["review_text"] is not None
         else ""
     )
+
+    # Corrective 01 Sections 2 & 3: Strict language validation with zero default to "vi"
+    raw_language = str(sanitized.get("language") or "").strip()
+    validated_language = validate_language_value(raw_language)
+    if validated_language is None:
+        reasons.append("REJECT_INVALID_OR_MISSING_LANGUAGE")
+
     raw_visit_period = str(sanitized.get("visit_period") or "").strip()
     raw_channel = str(sanitized.get("collection_channel") or "").strip().upper()
     raw_capture_mode = str(sanitized.get("capture_mode") or "").strip().upper()
@@ -574,9 +702,6 @@ def convert_assisted_csv_row_to_candidate(
             "capture_mode",
             "consent_evidence_type",
             "consent_evidence_ref",
-            "source",
-            "provenance",
-            "license_or_usage_class",
         )
     )
     if any(tok in meta_lower for tok in FORBIDDEN_COPIED_ONLINE_SUBSTRINGS) or (
@@ -613,8 +738,23 @@ def convert_assisted_csv_row_to_candidate(
             f"REJECT_UNSUPPORTED_CONSENT_EVIDENCE_TYPE:{raw_evidence_type or 'EMPTY'}"
         )
 
+    # Corrective 01 Sections 4 & 5: Fail-closed timestamp parsing for consent_timestamp and collected_at
+    parsed_consent_ts: tuple[str, str] | None = None
     if not raw_consent_ts:
         reasons.append("REJECT_MISSING_CONSENT_TIMESTAMP")
+    else:
+        parsed_consent_ts = parse_strict_assisted_timestamp(raw_consent_ts)
+        if parsed_consent_ts is None:
+            reasons.append("REJECT_INVALID_CONSENT_TIMESTAMP")
+
+    parsed_collected_at: tuple[str, str] | None = None
+    if not raw_collected_at:
+        reasons.append("REJECT_MISSING_COLLECTED_AT")
+    else:
+        parsed_collected_at = parse_strict_assisted_timestamp(raw_collected_at)
+        if parsed_collected_at is None:
+            reasons.append("REJECT_INVALID_COLLECTED_AT")
+
     if not raw_evidence_ref:
         reasons.append("REJECT_MISSING_CONSENT_EVIDENCE_REF")
 
@@ -627,23 +767,19 @@ def convert_assisted_csv_row_to_candidate(
     if not text_approved_ok:
         reasons.append("REJECT_TEXT_NOT_CONTRIBUTOR_APPROVED")
 
-    created_date, collected_iso = w07_a3_import._normalize_timestamp_to_date_and_iso(
-        raw_collected_at or raw_consent_ts
+    # Derive created_at and collected_at strictly from valid parsed_collected_at (no fallback!)
+    created_date = parsed_collected_at[0] if parsed_collected_at is not None else ""
+    collected_iso = parsed_collected_at[1] if parsed_collected_at is not None else ""
+    effective_consent_iso = (
+        parsed_consent_ts[1] if parsed_consent_ts is not None else ""
     )
-    if not created_date:
-        created_date = "2026-11-02"
-    if not collected_iso:
-        collected_iso = "2026-11-02T00:00:00Z"
-
-    _, norm_consent_iso = w07_a3_import._normalize_timestamp_to_date_and_iso(raw_consent_ts)
-    effective_consent_ts = norm_consent_iso or raw_consent_ts
 
     can_build_consent_id = (
         consent_ok
         and norm_contrib is not None
         and target_poi is not None
         and raw_evidence_type in SUPPORTED_CONSENT_EVIDENCE_TYPES
-        and bool(raw_consent_ts)
+        and parsed_consent_ts is not None
         and bool(raw_evidence_ref)
         and text_approved_ok
     )
@@ -652,7 +788,7 @@ def convert_assisted_csv_row_to_candidate(
             consent_protocol_version=CONSENT_PROTOCOL_VERSION,
             contributor_code=norm_contrib or "INVALID",
             poi_id=raw_poi_id,
-            consent_timestamp=effective_consent_ts,
+            consent_timestamp=effective_consent_iso,
             consent_evidence_type=raw_evidence_type,
             consent_evidence_ref=raw_evidence_ref,
         )
@@ -667,46 +803,39 @@ def convert_assisted_csv_row_to_candidate(
         city_code=city_code,
         rating_str=raw_rating,
         review_text=raw_review_text,
+        language=validated_language or raw_language or "invalid_language",
         visit_period=raw_visit_period or None,
         capture_mode=raw_capture_mode or "UNKNOWN_MODE",
     )
-
-    source_val = str(sanitized.get("source") or ASSISTED_SOURCE_VALUE).strip()
-    provenance_val = str(
-        sanitized.get("provenance") or ASSISTED_PROVENANCE_CLASS
-    ).strip()
-    license_val = str(
-        sanitized.get("license_or_usage_class") or ASSISTED_LICENSE_OR_USAGE_CLASS
-    ).strip()
-
-    # Prevent labeling assisted rows as Google Forms submissions (Section 3 & 5)
-    if provenance_val == GOOGLE_FORMS_PROVENANCE_CLASS or "contributor_form" in source_val.lower():
-        reasons.append("REJECT_FAKE_GOOGLE_FORM_PROVENANCE_ON_ASSISTED_ROW")
 
     upstream_place_id = (
         f"osm:{target_poi['osm_id']}" if target_poi is not None else None
     )
 
+    # Corrective 01 Section 6: Assign source, provenance, license_or_usage_class, mapping_method,
+    # and mapping_confidence internally and unconditionally (never from CSV input).
     candidate_row: dict[str, Any] = {
         "review_id": review_id,
         "poi_id": raw_poi_id,
         "upstream_place_id": upstream_place_id,
-        "city": raw_city if target_poi is None else (
+        "city": raw_city
+        if target_poi is None
+        else (
             target_poi["city"]
             if raw_city.lower() in w07_a2.CITY_VALID_ALIASES[target_poi["city"]]
             else raw_city
         ),
-        "source": source_val,
+        "source": ASSISTED_SOURCE_VALUE,
         "source_review_id": None,
         "rating": parsed_rating,
         "rating_scale_max": 5,
         "review_text": raw_review_text,
-        "language": str(sanitized.get("language") or "vi").strip() or "vi",
+        "language": validated_language if validated_language is not None else raw_language,
         "created_at": created_date,
         "collected_at": collected_iso,
         "source_ref": f"w07_assisted_v1#{norm_contrib or 'unk'}#{review_id}",
-        "provenance": provenance_val,
-        "license_or_usage_class": license_val,
+        "provenance": ASSISTED_PROVENANCE_CLASS,
+        "license_or_usage_class": ASSISTED_LICENSE_OR_USAGE_CLASS,
         "mapping_method": ASSISTED_MAPPING_METHOD,
         "mapping_confidence": ASSISTED_MAPPING_CONFIDENCE,
         "author_anonymous_id": (
@@ -753,6 +882,24 @@ def validate_assisted_candidates(
         for r in pre_reasons + base_rejected_by_idx.get(idx, []):
             if r not in combined_reasons:
                 combined_reasons.append(r)
+
+        # Ensure language failures always surface REJECT_INVALID_OR_MISSING_LANGUAGE
+        lang_val = str(row.get("language") or "").strip()
+        if validate_language_value(lang_val) is None:
+            if "REJECT_INVALID_OR_MISSING_LANGUAGE" not in combined_reasons:
+                combined_reasons.append("REJECT_INVALID_OR_MISSING_LANGUAGE")
+
+        # Enforce immutable assisted provenance fields even if validate_assisted_candidates is called directly
+        if row.get("source") != ASSISTED_SOURCE_VALUE:
+            combined_reasons.append("REJECT_ASSISTED_SOURCE_IMMUTABILITY_VIOLATION")
+        if row.get("provenance") != ASSISTED_PROVENANCE_CLASS:
+            combined_reasons.append("REJECT_ASSISTED_PROVENANCE_IMMUTABILITY_VIOLATION")
+        if row.get("license_or_usage_class") != ASSISTED_LICENSE_OR_USAGE_CLASS:
+            combined_reasons.append("REJECT_ASSISTED_LICENSE_IMMUTABILITY_VIOLATION")
+        if row.get("mapping_method") != ASSISTED_MAPPING_METHOD or float(
+            row.get("mapping_confidence") or 0.0
+        ) != float(ASSISTED_MAPPING_CONFIDENCE):
+            combined_reasons.append("REJECT_ASSISTED_MAPPING_IMMUTABILITY_VIOLATION")
 
         rid = row.get("review_id")
         pid = str(row.get("poi_id") or "")
@@ -893,7 +1040,7 @@ def import_assisted_csv_files(
 
     Idempotency guarantee:
     - Existing valid rows in `output_jsonl_path` are loaded first.
-    - Incoming CSV rows with an identical `review_id` already present in `existing_rows_by_id`
+    - Incoming CSV rows with an identical `review_id` already present in `existing_ids`
       or earlier in the same import batch are skipped as idempotent duplicates.
     - All unique candidate rows are validated via `validate_assisted_candidates()`.
     - Only `accepted_rows` (excluding rejected, PII-quarantined, and `MANUAL_REVIEW_REQUIRED` rows)
@@ -917,6 +1064,7 @@ def import_assisted_csv_files(
     seen_incoming_ids: set[str] = set()
     idempotent_skipped_count = 0
     stripped_columns_seen: set[str] = set()
+    unexpected_columns_seen: set[str] = set()
 
     for csv_path in csv_paths:
         if not csv_path.exists():
@@ -928,6 +1076,8 @@ def import_assisted_csv_files(
                     str(v).strip() for v in raw_row.values() if v is not None
                 ):
                     continue
+                _, _, row_unexpected = partition_assisted_input_columns(raw_row)
+                unexpected_columns_seen.update(row_unexpected)
                 cand, pre_reasons, stripped_cols = convert_assisted_csv_row_to_candidate(
                     raw_row,
                     manifest_payload=manifest,
@@ -964,6 +1114,7 @@ def import_assisted_csv_files(
         "new_unique_candidates_processed": len(incoming_candidates),
         "idempotent_duplicate_rows_skipped": idempotent_skipped_count,
         "stripped_identity_columns": sorted(stripped_columns_seen),
+        "unexpected_input_columns_detected": sorted(unexpected_columns_seen),
         "accepted_review_count": val_res["accepted_review_count"],
         "rejected_review_count": val_res["rejected_review_count"],
         "manual_review_required_count": val_res["manual_review_required_count"],
@@ -1051,6 +1202,9 @@ def build_combined_first_party_progress_report(
     evidence_type_dist = dict(
         sorted(Counter(str(r.get("consent_evidence_type") or "UNKNOWN") for r in accepted_assisted_rows).items())
     )
+    language_dist = dict(
+        sorted(Counter(str(r.get("language") or "UNKNOWN") for r in combined_accepted).items())
+    )
     provenance_dist = dict(
         sorted(Counter(str(r.get("provenance") or "UNKNOWN") for r in combined_accepted).items())
     )
@@ -1064,8 +1218,8 @@ def build_combined_first_party_progress_report(
 
     payload: dict[str, Any] = {
         "artifact_id": "w07_first_party_collection_progress_v1",
-        "artifact_version": "1.0.0",
-        "task_id": "W07-A4H",
+        "artifact_version": ASSISTED_IMPORTER_VERSION,
+        "task_id": "W07-A4H-CORRECTIVE-01",
         "authoritative_develop_base_sha": AUTHORITATIVE_DEVELOP_BASE_SHA,
         "previous_gates": list(PREVIOUS_GATES),
         "next_gate": NEXT_GATE,
@@ -1081,6 +1235,24 @@ def build_combined_first_party_progress_report(
             "apps_script_lf_sha256": EXPECTED_A3_APPS_SCRIPT_LF_SHA256,
             "a3_progress_path": w07_a3_progress.PROGRESS_JSON_RELPATH,
             "a3_progress_internal_sha256": EXPECTED_A3_PROGRESS_INTERNAL_SHA256,
+        },
+        "assisted_contract_invariants": {
+            "template_column_count": len(REQUIRED_TEMPLATE_COLUMNS),
+            "template_columns": list(REQUIRED_TEMPLATE_COLUMNS),
+            "allowed_languages": list(ALLOWED_LANGUAGE_VALUES),
+            "implicit_language_default_allowed": False,
+            "missing_or_invalid_language_action": "REJECT_INVALID_OR_MISSING_LANGUAGE",
+            "timestamp_fail_closed": True,
+            "fixed_date_timestamp_fallback_allowed": False,
+            "created_at_semantics": CREATED_AT_SEMANTIC_DEFINITION,
+            "immutable_provenance_fields": {
+                "source": ASSISTED_SOURCE_VALUE,
+                "provenance": ASSISTED_PROVENANCE_CLASS,
+                "license_or_usage_class": ASSISTED_LICENSE_OR_USAGE_CLASS,
+                "mapping_method": ASSISTED_MAPPING_METHOD,
+                "mapping_confidence": ASSISTED_MAPPING_CONFIDENCE,
+            },
+            "unexpected_non_identity_column_action": "REJECT_UNEXPECTED_INPUT_COLUMN",
         },
         "privacy_and_content_guarantee": {
             "raw_review_text_published_in_this_artifact": False,
@@ -1143,6 +1315,7 @@ def build_combined_first_party_progress_report(
             ],
         },
         "provenance_distribution": provenance_dist,
+        "language_distribution": language_dist,
         "reviews_by_city": base_progress["reviews_by_city"],
         "reviews_by_category_group": base_progress["reviews_by_category_group"],
         "contributor_concentration_diagnostics": concentration,
@@ -1181,17 +1354,18 @@ def render_assisted_collection_guide_markdown(
 ) -> str:
     """Deterministically render `docs/research/w07_assisted_first_party_collection_guide.md`."""
     lines: list[str] = [
-        "# W07-A4H — Assisted First-Party Review Collection Guide",
+        "# W07-A4H — Assisted First-Party Review Collection Guide (Corrective 01)",
         "",
         "## 0. Authority & Scope",
         "",
         "- **Previous Gates:**",
         f"  - `{PREVIOUS_GATES[0]}`",
         f"  - `{PREVIOUS_GATES[1]}`",
+        f"  - `{PREVIOUS_GATES[2]}`",
         f"- **Authoritative Base:** `develop@{AUTHORITATIVE_DEVELOP_BASE_SHA}`",
         f"- **Next Gate:** `{NEXT_GATE}`",
         f"- **Frozen 60-POI Manifest (Single Authority):** `{w07_a2.MANIFEST_60_JSON_RELPATH}` (`{manifest_payload['manifest_sha256']}`)",
-        f"- **Assisted Intake CSV Template:** `{ASSISTED_TEMPLATE_CSV_RELPATH}`",
+        f"- **Assisted Intake CSV Template (16 columns):** `{ASSISTED_TEMPLATE_CSV_RELPATH}`",
         f"- **Assisted Candidate Output JSONL (gitignored):** `{ASSISTED_CANDIDATE_JSONL_RELPATH}`",
         f"- **Optional Restricted Identity Map (gitignored):** `{RESTRICTED_IDENTITY_MAP_RELPATH}`",
         f"- **Optional Restricted Consent Evidence Folder (gitignored):** `{RESTRICTED_CONSENT_EVIDENCE_DIR_RELPATH}/`",
@@ -1199,7 +1373,7 @@ def render_assisted_collection_guide_markdown(
         "",
         "---",
         "",
-        "## 1. Provenance Separation & No Fake Form Submissions",
+        "## 1. Provenance Separation, Immutable Provenance Fields & No Fake Form Submissions",
         "",
         "`ASSISTED_FIRST_PARTY_COLLECTION` is a legitimate parallel first-party channel alongside W07-A3 Google Forms (`DIRECT_GOOGLE_FORM`).",
         "",
@@ -1208,11 +1382,12 @@ def render_assisted_collection_guide_markdown(
         f"| **Google Forms (W07-A3)** | `first_party_contributor_form_v1` | `{GOOGLE_FORMS_PROVENANCE_CLASS}` | `{w07_a2.RESTRICTED_JSONL_RELPATH}` |",
         f"| **Assisted Collection (W07-A4H)** | `{ASSISTED_SOURCE_VALUE}` | `{ASSISTED_PROVENANCE_CLASS}` | `{ASSISTED_CANDIDATE_JSONL_RELPATH}` |",
         "",
-        "### Strict Operational Rules",
+        "### Strict Operational & Immutability Rules",
         "1. **Contributor must have personally visited/directly experienced the POI.**",
         "2. **Never submit assisted reviews into the Google Forms** pretending to originate from different browser sessions.",
         "3. **Never invent, rewrite, paraphrase with AI (ChatGPT/Gemini/Claude), or multiply one review into several reviews.**",
-        "4. **Keep Google Forms candidate JSONL and Assisted candidate JSONL separate** (W07-A5 will perform controlled merge & deduplication).",
+        "4. **Provenance fields are assigned internally and unconditionally by the importer:** `source = \"assisted_first_party\"`, `provenance = \"FIRST_PARTY_ASSISTED_COLLECTION_CONSENT_V1\"`, `license_or_usage_class = \"OWNER_FIRST_PARTY_CONSENT\"`, `mapping_method = \"EXACT_PREBOUND_CANONICAL_POI\"`, `mapping_confidence = 1.0`. Any unexpected non-identity column in the CSV (including `source`, `provenance`, `license_or_usage_class`, `mapping_method`, `mapping_confidence`, `review_id`, `consent_record_id`) is rejected with `REJECT_UNEXPECTED_INPUT_COLUMN`.",
+        "5. **Keep Google Forms candidate JSONL and Assisted candidate JSONL separate** (W07-A5 will perform controlled merge & deduplication).",
         "",
         "---",
         "",
@@ -1221,12 +1396,12 @@ def render_assisted_collection_guide_markdown(
         "1. **Ask contributor which target POIs they genuinely visited** from the 60 canonical POIs in Hà Nội, Đà Nẵng, or Hạ Long (see Section 8 table below).",
         "2. **Assign or reuse a pseudonymous `contributor_code`** (`W07C001`, `W07C002`, `W07C003`, ...). The same person **must** keep the same `contributor_code` across all POIs they review. One contributor may review multiple POIs they genuinely visited, but at most **one** review per `(contributor_code, poi_id)`.",
         "3. **Ask for their integer rating (`1` to `5`)** for each visited POI.",
-        "4. **Collect their review verbatim** (via Zalo, Messenger, direct chat, in-person interview, or phone conversation).",
+        "4. **Collect their review verbatim** (via Zalo, Messenger, direct chat, in-person interview, or phone conversation) and record the exact `language` of the **review text** (`vi`, `en`, or `mixed_vi_en` — based on the review text itself, NOT contributor nationality; never left blank).",
         "5. **Ask for optional `visit_period`** (`YYYY-MM` like `2025-08` or `YYYY-Q1..Q4` like `2025-Q3`).",
         "6. **Send the Vietnamese consent script** (Section 4 below).",
-        "7. **Obtain explicit written/digital consent** (`\"Tôi đồng ý\"` or `\"Đồng ý\"`). Never infer consent from silence.",
+        "7. **Obtain explicit written/digital consent** (`\"Tôi đồng ý\"` or `\"Đồng ý\"`) and record a valid ISO-8601 `consent_timestamp`. Never infer consent from silence.",
         "8. **If collector transcribed an oral review**, send the exact final text back to the contributor (Section 5 below) and wait for their explicit final-text approval before setting `review_text_approved = true`.",
-        "9. **Enter one CSV row per POI** into your local copy `data/restricted/w07_reviews/raw_assisted/assisted_reviews.csv` (copied from `data/templates/w07_assisted_first_party_review_template_v1.csv`).",
+        "9. **Enter one 16-column CSV row per POI** into your local copy `data/restricted/w07_reviews/raw_assisted/assisted_reviews.csv` (copied from `data/templates/w07_assisted_first_party_review_template_v1.csv`), recording a valid ISO-8601 `collected_at` timestamp.",
         "10. **Run the deterministic assisted importer:**",
         "    ```bash",
         "    python scripts/import_w07_assisted_reviews_v1.py --import-csv data/restricted/w07_reviews/raw_assisted/assisted_reviews.csv",
@@ -1264,31 +1439,36 @@ def render_assisted_collection_guide_markdown(
         "",
         "---",
         "",
-        "## 6. Supported Values Reference (`w07_assisted_first_party_review_template_v1.csv`)",
+        "## 6. Supported 16-Column Template Specification (`w07_assisted_first_party_review_template_v1.csv`)",
         "",
-        "| Column | Required | Allowed / Expected Values |",
-        "| :--- | :--- | :--- |",
-        "| `contributor_code` | **Yes** | Pseudonymous code `W07C001`, `W07C002`, ... (`^W07C\\d{3,6}$`). Never put real name, email, or phone. |",
-        "| `poi_id` | **Yes** | Exact canonical UUID from the 60-POI manifest (do NOT use POI name). |",
-        "| `city` | **Yes** | `Hà Nội`, `Đà Nẵng`, or `Hạ Long` (must match `manifest[poi_id].city`). |",
-        "| `rating` | **Yes** | Integer `1`, `2`, `3`, `4`, or `5`. |",
-        "| `review_text` | **Yes** | Authentic review text (`>= 20` chars and `>= 5` words recommended; zero phone/email PII). |",
-        "| `visit_period` | Optional | `YYYY-MM` (e.g. `2025-08`) or `YYYY-Q1..Q4` (e.g. `2025-Q3`). |",
-        "| `collection_channel` | **Yes** | `ZALO`, `MESSENGER`, `DIRECT_CHAT`, `IN_PERSON_INTERVIEW`, or `PHONE_WITH_WRITTEN_CONFIRMATION`. |",
-        "| `capture_mode` | **Yes** | `CONTRIBUTOR_WRITTEN_VERBATIM`, `COLLECTOR_TRANSCRIBED_VERBATIM`, or `COLLECTOR_TRANSCRIBED_AND_CONTRIBUTOR_APPROVED`. (Forbidden modes `COLLECTOR_PARAPHRASED`, `AI_REWRITTEN`, `AI_GENERATED`, `COPIED_ONLINE_REVIEW` are rejected). |",
-        "| `review_text_approved` | **Yes** | `true` (may be implied for `CONTRIBUTOR_WRITTEN_VERBATIM` when `consent_confirmed=true`; **explicit `true` mandatory** for transcription modes, otherwise rejected with `REJECT_TEXT_NOT_CONTRIBUTOR_APPROVED`). |",
-        "| `consent_confirmed` | **Yes** | `true`, `Tôi đồng ý`, or `Đồng ý`. |",
-        "| `consent_timestamp` | **Yes** | ISO-8601 or `YYYY-MM-DD HH:MM:SS` timestamp when consent was given. |",
-        "| `consent_evidence_type` | **Yes** | `CHAT_WRITTEN_CONSENT`, `DIGITAL_TEXT_CONSENT`, or `IN_PERSON_WRITTEN_CONSENT`. (Verbal-only consent without written confirmation is rejected). |",
-        "| `consent_evidence_ref` | **Yes** | Local reference token (e.g. `zalo_thread_w07c001_20261102_01`). Hashed with SHA-256 into `consent_record_id`; never published in the scientific JSONL. |",
-        "| `collector_code` | **Yes** | Collector pseudonymous code (e.g. `OWNER_01`, `TEAM_01`). |",
-        "| `collected_at` | **Yes** | ISO-8601 or `YYYY-MM-DD HH:MM:SS` timestamp when recorded into the template. |",
+        "| # | Column | Required | Allowed / Expected Values |",
+        "|---:|:---|:---|:---|",
+        "| 1 | `contributor_code` | **Yes** | Pseudonymous code `W07C001`, `W07C002`, ... (`^W07C\\d{3,6}$`). Never put real name, email, or phone. |",
+        "| 2 | `poi_id` | **Yes** | Exact canonical UUID from the 60-POI manifest (do NOT use POI name). |",
+        "| 3 | `city` | **Yes** | `Hà Nội`, `Đà Nẵng`, or `Hạ Long` (must match `manifest[poi_id].city`). |",
+        "| 4 | `rating` | **Yes** | Integer `1`, `2`, `3`, `4`, or `5`. |",
+        "| 5 | `review_text` | **Yes** | Authentic review text (`>= 20` chars and `>= 5` words recommended; zero phone/email PII). |",
+        "| 6 | `language` | **Yes** | Exact review-text language: `vi`, `en`, or `mixed_vi_en`. Determined strictly from the **actual review text** (not contributor nationality). No implicit default to `vi`; blank or unsupported values are rejected with `REJECT_INVALID_OR_MISSING_LANGUAGE`. |",
+        "| 7 | `visit_period` | Optional | `YYYY-MM` (e.g. `2025-08`) or `YYYY-Q1..Q4` (e.g. `2025-Q3`). Separate from `created_at` / `collected_at`. |",
+        "| 8 | `collection_channel` | **Yes** | `ZALO`, `MESSENGER`, `DIRECT_CHAT`, `IN_PERSON_INTERVIEW`, or `PHONE_WITH_WRITTEN_CONFIRMATION`. |",
+        "| 9 | `capture_mode` | **Yes** | `CONTRIBUTOR_WRITTEN_VERBATIM`, `COLLECTOR_TRANSCRIBED_VERBATIM`, or `COLLECTOR_TRANSCRIBED_AND_CONTRIBUTOR_APPROVED`. (Forbidden modes `COLLECTOR_PARAPHRASED`, `AI_REWRITTEN`, `AI_GENERATED`, `COPIED_ONLINE_REVIEW` are rejected). |",
+        "| 10 | `review_text_approved` | **Yes** | `true` (may be implied for `CONTRIBUTOR_WRITTEN_VERBATIM` when `consent_confirmed=true`; **explicit `true` mandatory** for transcription modes, otherwise rejected with `REJECT_TEXT_NOT_CONTRIBUTOR_APPROVED`). |",
+        "| 11 | `consent_confirmed` | **Yes** | `true`, `Tôi đồng ý`, or `Đồng ý`. |",
+        "| 12 | `consent_timestamp` | **Yes** | Valid ISO-8601 or `YYYY-MM-DD HH:MM:SS` timestamp when consent was given. Fail-closed: missing -> `REJECT_MISSING_CONSENT_TIMESTAMP`; malformed -> `REJECT_INVALID_CONSENT_TIMESTAMP`. |",
+        "| 13 | `consent_evidence_type` | **Yes** | `CHAT_WRITTEN_CONSENT`, `DIGITAL_TEXT_CONSENT`, or `IN_PERSON_WRITTEN_CONSENT`. (Verbal-only consent without written confirmation is rejected). |",
+        "| 14 | `consent_evidence_ref` | **Yes** | Local reference token (e.g. `zalo_thread_w07c001_20261102_01`). Hashed with SHA-256 into `consent_record_id`; never published in the scientific JSONL. |",
+        "| 15 | `collector_code` | **Yes** | Collector pseudonymous code (e.g. `OWNER_01`, `TEAM_01`). |",
+        "| 16 | `collected_at` | **Yes** | Valid ISO-8601 or `YYYY-MM-DD HH:MM:SS` timestamp when recorded into the template. Fail-closed: missing -> `REJECT_MISSING_COLLECTED_AT`; malformed -> `REJECT_INVALID_COLLECTED_AT`. |",
+        "",
+        "### Timestamp & `created_at` Semantics",
+        f"- `{CREATED_AT_SEMANTIC_DEFINITION}`.",
+        "- No fixed-date fallback (such as `2026-11-02` or `2026-11-02T00:00:00Z`) is ever used.",
         "",
         "### Example Synthetic TEST FIXTURE Row (For Format Illustration Only — Do Not Import)",
         "",
         "```csv",
         ",".join(REQUIRED_TEMPLATE_COLUMNS),
-        'W07C001,698ee756-6062-5f47-955b-bdf458682e57,Hà Nội,5,"TEST_FIXTURE_ONLY: Khu vực quảng trường Ba Đình rộng rãi, sạch sẽ, xếp hàng buổi sáng rất trật tự.",2025-10,ZALO,CONTRIBUTOR_WRITTEN_VERBATIM,true,Tôi đồng ý,2026-11-02T09:00:00Z,CHAT_WRITTEN_CONSENT,zalo_msg_w07c001_001,OWNER_01,2026-11-02T09:05:00Z',
+        'W07C001,698ee756-6062-5f47-955b-bdf458682e57,Hà Nội,5,"TEST_FIXTURE_ONLY: Khu vực quảng trường Ba Đình rộng rãi, sạch sẽ, xếp hàng buổi sáng rất trật tự.",vi,2025-10,ZALO,CONTRIBUTOR_WRITTEN_VERBATIM,true,Tôi đồng ý,2026-11-02T09:00:00Z,CHAT_WRITTEN_CONSENT,zalo_msg_w07c001_001,OWNER_01,2026-11-02T09:05:00Z',
         "```",
         "",
         "---",
