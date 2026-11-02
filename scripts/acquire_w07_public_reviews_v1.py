@@ -156,6 +156,20 @@ APPROVED_OPEN_LICENSES: frozenset[str] = frozenset(
     }
 )
 
+CONDITIONAL_NONCOMMERCIAL_ACADEMIC_LICENSES: frozenset[str] = frozenset(
+    {
+        "CC-BY-NC-4.0",
+    }
+)
+
+PERMITTED_CANDIDATE_LICENSES: frozenset[str] = (
+    APPROVED_OPEN_LICENSES | CONDITIONAL_NONCOMMERCIAL_ACADEMIC_LICENSES
+)
+
+SCIENTIFIC_OUTCOME_WORDING = (
+    "No suitable public review was found among the investigated sources under the frozen W07 rules."
+)
+
 GEO_HIGH_CONFIDENCE_MAX_DISTANCE_METERS = 150.0
 GEO_HIGH_CONFIDENCE_MIN_NAME_SIMILARITY = 0.60
 MAX_PUBLIC_REVIEWS_PER_POI_CAP = 10
@@ -514,6 +528,131 @@ def generate_public_review_id(
     return f"w07_prev_{digest[:16]}"
 
 
+def normalize_public_rating_fields(row: dict[str, Any]) -> dict[str, Any]:
+    """Normalize upstream rating and rating_scale_max without ever inferring scale=5 (Corrective B1).
+
+    Rules:
+    - Upstream provides rating and scale -> preserve both (never rescale to 1-5 in A4P).
+    - Rating exists but scale is unavailable -> rating_scale_max = None, quarantine as
+      `QUARANTINE_RATING_SCALE_UNKNOWN` before primary acceptance.
+    - Rating absent -> rating = None, rating_scale_max = None.
+    """
+    raw_rating = row.get("rating")
+    parsed_rating: float | None = None
+    if raw_rating is not None and str(raw_rating).strip() != "":
+        try:
+            parsed_rating = float(raw_rating)
+        except (TypeError, ValueError):
+            parsed_rating = None
+
+    raw_scale = row.get("rating_scale_max")
+    parsed_scale: int | None = None
+    if raw_scale is not None and str(raw_scale).strip() != "":
+        try:
+            parsed_scale = int(raw_scale)
+        except (TypeError, ValueError):
+            parsed_scale = None
+
+    if parsed_rating is None:
+        return {
+            "rating": None,
+            "rating_scale_max": None,
+            "quarantine_reason": None,
+            "rejection_reason": None,
+        }
+
+    if parsed_scale is None or parsed_scale <= 0:
+        return {
+            "rating": parsed_rating,
+            "rating_scale_max": None,
+            "quarantine_reason": "QUARANTINE_RATING_SCALE_UNKNOWN",
+            "rejection_reason": None,
+        }
+
+    if parsed_rating <= 0 or parsed_rating > parsed_scale:
+        return {
+            "rating": parsed_rating,
+            "rating_scale_max": parsed_scale,
+            "quarantine_reason": None,
+            "rejection_reason": "REJECT_INVALID_RATING_VALUE",
+        }
+
+    return {
+        "rating": parsed_rating,
+        "rating_scale_max": parsed_scale,
+        "quarantine_reason": None,
+        "rejection_reason": None,
+    }
+
+
+def resolve_public_source_locator(
+    row: dict[str, Any],
+    *,
+    source_id: str,
+    source_review_id: str | None,
+) -> dict[str, Any]:
+    """Resolve reproducible provenance locator (`source_ref`) without fabricating `source#index` (Corrective B2).
+
+    Accepted locators:
+    - Explicit upstream review URL (`https://...` / `http://...`), DOI locator (`doi:...`), or
+      explicit derived locator (`dataset:<source_id>#review_id:<source_review_id>`).
+    - Deterministic derived locator constructed from non-empty `source_id` + upstream `source_review_id`:
+      `dataset:<source_id>#review_id:<source_review_id>`.
+    Forbidden:
+    - Arbitrary index-only locator (`source#0`, `source#index`, etc.) with no stable upstream identity.
+    - Missing both upstream locator and stable `source_review_id` -> `QUARANTINE_PROVENANCE_LOCATOR_INSUFFICIENT`.
+    """
+    raw_ref = str(row.get("source_ref") or "").strip()
+    srid = (source_review_id or "").strip()
+    src = (source_id or "").strip()
+
+    if raw_ref:
+        # Reject index-only fabricated references such as "source#0" or "source#12"
+        if re.match(r"^[^#]+#\d+$", raw_ref):
+            return {
+                "accepted_locator": False,
+                "source_ref": None,
+                "locator_kind": "REJECTED_INDEX_ONLY_LOCATOR",
+                "quarantine_reason": "QUARANTINE_PROVENANCE_LOCATOR_INSUFFICIENT",
+            }
+        if (
+            raw_ref.startswith(("https://", "http://", "doi:"))
+            or "#review_id:" in raw_ref
+            or "#record_id:" in raw_ref
+        ):
+            return {
+                "accepted_locator": True,
+                "source_ref": raw_ref,
+                "locator_kind": (
+                    "DERIVED_INTERNAL_LOCATOR"
+                    if raw_ref.startswith("dataset:")
+                    else "EXPLICIT_UPSTREAM_LOCATOR"
+                ),
+                "quarantine_reason": None,
+            }
+        return {
+            "accepted_locator": False,
+            "source_ref": None,
+            "locator_kind": "REJECTED_UNVERIFIED_LOCATOR_FORMAT",
+            "quarantine_reason": "QUARANTINE_PROVENANCE_LOCATOR_INSUFFICIENT",
+        }
+
+    if src and srid:
+        return {
+            "accepted_locator": True,
+            "source_ref": f"dataset:{src}#review_id:{srid}",
+            "locator_kind": "DERIVED_INTERNAL_LOCATOR",
+            "quarantine_reason": None,
+        }
+
+    return {
+        "accepted_locator": False,
+        "source_ref": None,
+        "locator_kind": None,
+        "quarantine_reason": "QUARANTINE_PROVENANCE_LOCATOR_INSUFFICIENT",
+    }
+
+
 def evaluate_and_filter_public_candidates(
     raw_rows: list[dict[str, Any]],
     *,
@@ -524,15 +663,18 @@ def evaluate_and_filter_public_candidates(
 ) -> dict[str, Any]:
     """Evaluate raw public rows through license/reuse quarantine, POI mapping, deduplication, and schema normalization.
 
-    Enforces Sections 4, 5, 6, 7, 8, 9, 12, 13, 14:
+    Enforces Sections 4, 5, 6, 7, 8, 9, 12, 13, 14 and Corrective 01B (B1, B2, B3):
     - Ambiguous license/reuse -> `QUARANTINE_REUSE_UNCLEAR` (never accepted).
     - Disallowed/rejected source -> `REJECTED_SOURCE` (never accepted).
     - Synthetic/LLM/rewritten/translated row -> `REJECT_SYNTHETIC_OR_AI_PUBLIC_REVIEW`.
     - `NAME_ONLY_AUTOMATIC` or `UNMAPPABLE` -> rejected.
+    - Rating present with missing `rating_scale_max` -> `rating_scale_max = None` and quarantined as
+      `QUARANTINE_RATING_SCALE_UNKNOWN` (never infers 5).
+    - Missing reproducible provenance locator -> quarantined as `QUARANTINE_PROVENANCE_LOCATOR_INSUFFICIENT`
+      (never fabricates `source#index`).
     - Deduplicates by `source_review_id`, normalized `review_text`, and `(poi_id, normalized_review_text)`.
     - Never uses first-party provenance (`FIRST_PARTY_ASSISTED_COLLECTION_CONSENT_V1` / `FIRST_PARTY_ACADEMIC_CONTRIBUTOR_CONSENT_V1`)
       and never sets `consent_record_id`.
-    - Never fabricates missing upstream fields (`None` / `null` preserved).
     """
     unique_raw_rows, collapsed_multi_image_rows = deduplicate_public_raw_rows(raw_rows)
 
@@ -593,12 +735,19 @@ def evaluate_and_filter_public_candidates(
             )
             continue
 
-        # 3. Check ambiguous license / reuse rights -> QUARANTINE_REUSE_UNCLEAR (Section 8)
+        # 3. Check ambiguous license / reuse rights -> QUARANTINE_REUSE_UNCLEAR (Section 8 & Corrective B3)
+        license_token = raw_license.upper().split()[0] if raw_license else ""
         if (
             reuse_ambiguous
-            or not raw_license
-            or raw_license.upper() in {"UNSPECIFIED", "UNKNOWN", "UNSPECIFIED_ON_HF_CARD", "UNSPECIFIED_NO_LICENSE_FILE"}
-            or raw_license.upper().split()[0] not in APPROVED_OPEN_LICENSES
+            or not license_token
+            or license_token
+            in {
+                "UNSPECIFIED",
+                "UNKNOWN",
+                "UNSPECIFIED_ON_HF_CARD",
+                "UNSPECIFIED_NO_LICENSE_FILE",
+            }
+            or license_token not in PERMITTED_CANDIDATE_LICENSES
         ):
             quarantined_rows.append(
                 {
@@ -655,13 +804,54 @@ def evaluate_and_filter_public_candidates(
         poi_id = str(map_res["poi_id"])
         canonical_city = str(map_res["canonical_city"])
 
-        # 6. Deduplication (Section 9): source_review_id, normalized text, poi_id + normalized text
+        # 6. Rating & rating_scale_max validation without scale=5 inference (Corrective B1)
+        rating_res = normalize_public_rating_fields(row)
+        if rating_res["quarantine_reason"]:
+            quarantined_rows.append(
+                {
+                    "row_index": idx,
+                    "source": src_id,
+                    "poi_id": poi_id,
+                    "rating": rating_res["rating"],
+                    "rating_scale_max": rating_res["rating_scale_max"],
+                    "quarantine_reason": rating_res["quarantine_reason"],
+                }
+            )
+            continue
+        if rating_res["rejection_reason"]:
+            rejected_rows.append(
+                {
+                    "row_index": idx,
+                    "source": src_id,
+                    "poi_id": poi_id,
+                    "reasons": [rating_res["rejection_reason"]],
+                }
+            )
+            continue
+
+        # 7. Reproducible provenance locator validation (Corrective B2)
         srid = (
             str(row["source_review_id"]).strip()
             if row.get("source_review_id") is not None
             and str(row.get("source_review_id")).strip() != ""
             else None
         )
+        locator_res = resolve_public_source_locator(
+            row, source_id=src_id, source_review_id=srid
+        )
+        if not locator_res["accepted_locator"]:
+            quarantined_rows.append(
+                {
+                    "row_index": idx,
+                    "source": src_id,
+                    "poi_id": poi_id,
+                    "source_ref": locator_res["source_ref"],
+                    "quarantine_reason": locator_res["quarantine_reason"],
+                }
+            )
+            continue
+
+        # 8. Deduplication (Section 9): source_review_id, normalized text, poi_id + normalized text
         norm_text = _normalize_text_for_dedup(raw_text)
         dup_reasons: list[str] = []
         if srid and f"{src_id}:{srid}" in seen_source_review_ids:
@@ -681,7 +871,7 @@ def evaluate_and_filter_public_candidates(
             )
             continue
 
-        # 7. Coverage priority cap per POI (Section 12)
+        # 9. Coverage priority cap per POI (Section 12)
         if accepted_per_poi[poi_id] >= max_per_poi:
             rejected_rows.append(
                 {
@@ -693,7 +883,7 @@ def evaluate_and_filter_public_candidates(
             )
             continue
 
-        # 8. Provenance separation (Section 13): never allow first-party provenance or consent_record_id
+        # 10. Provenance separation (Section 13): never allow first-party provenance or consent_record_id
         requested_prov = str(
             row.get("provenance") or "PUBLIC_OPEN_LICENSED_DATASET_V1"
         ).strip()
@@ -701,27 +891,12 @@ def evaluate_and_filter_public_candidates(
             raise ValueError(
                 f"FAIL CLOSED: Public review cannot use first-party provenance class: {requested_prov}"
             )
+        if "consent_record_id" in row and row["consent_record_id"] is not None:
+            raise ValueError(
+                "FAIL CLOSED: Public review cannot carry a first-party consent_record_id."
+            )
         if requested_prov not in PUBLIC_PROVENANCE_CLASSES:
             requested_prov = "PUBLIC_OPEN_LICENSED_DATASET_V1"
-
-        # 9. Normalize schema without fabricating missing upstream values (Section 7)
-        raw_rating = row.get("rating")
-        parsed_rating: float | None = None
-        if raw_rating is not None and str(raw_rating).strip() != "":
-            try:
-                parsed_rating = float(raw_rating)
-            except (TypeError, ValueError):
-                parsed_rating = None
-
-        raw_scale = row.get("rating_scale_max")
-        parsed_scale: int | None = None
-        if raw_scale is not None and str(raw_scale).strip() != "":
-            try:
-                parsed_scale = int(raw_scale)
-            except (TypeError, ValueError):
-                parsed_scale = None
-        elif parsed_rating is not None:
-            parsed_scale = 5
 
         raw_lang = (
             str(row["language"]).strip().lower()
@@ -739,11 +914,6 @@ def evaluate_and_filter_public_candidates(
             and str(row.get("collected_at")).strip() != ""
             else None
         )
-        raw_source_ref = (
-            str(row["source_ref"]).strip()
-            if row.get("source_ref") is not None and str(row.get("source_ref")).strip() != ""
-            else f"{src_id}#{srid or idx}"
-        )
 
         rev_id = generate_public_review_id(
             source=src_id,
@@ -759,15 +929,15 @@ def evaluate_and_filter_public_candidates(
             "city": canonical_city,
             "source": src_id,
             "source_review_id": srid,
-            "rating": parsed_rating,
-            "rating_scale_max": parsed_scale,
+            "rating": rating_res["rating"],
+            "rating_scale_max": rating_res["rating_scale_max"],
             "review_text": raw_text,
             "language": raw_lang,
             "created_at": raw_created_at,
             "collected_at": raw_collected_at,
-            "source_ref": raw_source_ref,
+            "source_ref": locator_res["source_ref"],
             "provenance": requested_prov,
-            "license_or_usage_class": raw_license.upper().split()[0],
+            "license_or_usage_class": license_token,
             "mapping_method": map_res["mapping_method"],
             "mapping_confidence": map_res["mapping_confidence"],
         }
@@ -1017,6 +1187,9 @@ def build_investigated_source_manifests() -> list[dict[str, Any]]:
             "classification": "REJECTED_SOURCE",
             "quarantine_status": "QUARANTINE_REUSE_UNCLEAR",
             "original_rows": 200,
+            "review_relevant_row_count": 200,
+            "primary_csv_row_count": 299,
+            "broader_source_row_count": 2557,
             "unique_reviews": 0,
             "accepted": 0,
             "rejected": 0,
@@ -1029,7 +1202,12 @@ def build_investigated_source_manifests() -> list[dict[str, Any]]:
                 "NAME_ONLY_AUTOMATIC": 0,
                 "UNMAPPABLE": 0,
             },
-            "audit_notes": "Place guide listings (`type,name,description,time,price,location,area,note,id,full_text,vector_search`); 0 user reviews.",
+            "audit_notes": (
+                "Curated 200-place Đà Nẵng evaluation subset inspected for review text (`review_relevant_row_count = 200`), "
+                "`Data/data_danang_ok.csv` (`primary_csv_row_count = 299`), and `Data/processed/places_enriched_v2.jsonl` "
+                "(`broader_source_row_count = 2557`); place guide listings (`type,name,description,time,price,location,area,note,id,full_text,vector_search`) "
+                "contain 0 user reviews (`unique_reviews = 0`)."
+            ),
         },
         {
             "source_id": "github:hanhlevna/Manhos",
@@ -1238,8 +1416,15 @@ def build_investigated_source_manifests() -> list[dict[str, Any]]:
             "access_date": ACCESS_DATE_UTC,
             "discovered_in_stage": "W07-A1_REVERIFIED_IN_A4P",
             "license": "CC-BY-NC-4.0 (declared on HF card; upstream Google Maps ToS ambiguous)",
+            "license_compatibility": "LICENSE_CONDITIONALLY_COMPATIBLE_FOR_NONCOMMERCIAL_ACADEMIC_USE",
+            "source_scientifically_usable": False,
             "upstream_origin": "Google Maps restaurant review photos and text in 9 districts of Hồ Chí Minh City",
-            "research_reuse_assessment": "Rejected: 100.0% Hồ Chí Minh City (34,104 / 34,104 image rows across 1,989 HCMC places; 0 in Hà Nội, Đà Nẵng, or Hạ Long), manual gated access (HTTP 401), and ambiguous upstream Google Maps ToS.",
+            "research_reuse_assessment": (
+                "CC-BY-NC-4.0 declared on HF card (`LICENSE_CONDITIONALLY_COMPATIBLE_FOR_NONCOMMERCIAL_ACADEMIC_USE`), "
+                "but scientifically unusable (`source_scientifically_usable = false`): 100.0% Hồ Chí Minh City "
+                "(34,104 / 34,104 image rows across 1,989 HCMC places; 0 in Hà Nội, Đà Nẵng, or Hạ Long), "
+                "manual gated access (HTTP 401), and ambiguous upstream Google Maps ToS."
+            ),
             "download_or_crawl_mechanism": "Hugging Face dataset card & metadata inspection (manual gated parquet shards not bulk-downloaded).",
             "classification": "REJECTED_SOURCE",
             "quarantine_status": "QUARANTINE_REUSE_UNCLEAR",
@@ -1266,8 +1451,15 @@ def build_investigated_source_manifests() -> list[dict[str, Any]]:
             "access_date": ACCESS_DATE_UTC,
             "discovered_in_stage": "W07-A1_REVERIFIED_IN_A4P",
             "license": "CC-BY-NC-4.0",
+            "license_compatibility": "LICENSE_CONDITIONALLY_COMPATIBLE_FOR_NONCOMMERCIAL_ACADEMIC_USE",
+            "source_scientifically_usable": False,
             "upstream_origin": "Vietnamese hotel collaborative-filtering rating matrix and hotel metadata",
-            "research_reuse_assessment": "Valid for REC-B collaborative filtering ratings, but contains 0 user review text.",
+            "research_reuse_assessment": (
+                "CC-BY-NC-4.0 is conditionally compatible for non-commercial academic thesis use "
+                "(`LICENSE_CONDITIONALLY_COMPATIBLE_FOR_NONCOMMERCIAL_ACADEMIC_USE`), and valid for REC-B "
+                "collaborative filtering ratings, but scientifically unusable for the W07 review corpus "
+                "(`source_scientifically_usable = false`) because it contains 0 user review text."
+            ),
             "download_or_crawl_mechanism": "Local restricted snapshot inspection (`data/restricted/vihorec/`).",
             "classification": "REJECTED_SOURCE",
             "quarantine_status": None,
@@ -1284,7 +1476,7 @@ def build_investigated_source_manifests() -> list[dict[str, Any]]:
                 "NAME_ONLY_AUTOMATIC": 0,
                 "UNMAPPABLE": 0,
             },
-            "audit_notes": "Numeric user-hotel ratings only (`0` review text rows).",
+            "audit_notes": "Numeric user-hotel ratings only (`0` review text rows); `LICENSE_CONDITIONALLY_COMPATIBLE != SOURCE_SCIENTIFICALLY_USABLE`.",
         },
         {
             "source_id": "commercial_platforms:google_maps_tripadvisor_booking_agoda_foody",
@@ -1334,6 +1526,31 @@ def build_public_acquisition_report(repo_root: Path = REPO_ROOT) -> dict[str, An
     accepted_reviews = sum(s["accepted"] for s in source_manifests)
     rejected_reviews = sum(s["rejected"] for s in source_manifests)
     quarantined_reviews = sum(s["quarantined"] for s in source_manifests)
+
+    sources_with_quarantine_status = [
+        s["source_id"] for s in source_manifests if s["quarantine_status"] is not None
+    ]
+    review_bearing_quarantined_sources = [
+        {
+            "source_id": s["source_id"],
+            "quarantine_status": s["quarantine_status"],
+            "quarantined_unique_reviews": s["quarantined"],
+        }
+        for s in source_manifests
+        if s["quarantine_status"] is not None and s["quarantined"] > 0
+    ]
+    quarantined_unique_review_count = sum(
+        item["quarantined_unique_reviews"] for item in review_bearing_quarantined_sources
+    )
+    if quarantined_unique_review_count != quarantined_reviews:
+        raise ValueError(
+            f"Quarantined review count mismatch: {quarantined_unique_review_count} != {quarantined_reviews}"
+        )
+    if unique_reviews != accepted_reviews + rejected_reviews + quarantined_reviews:
+        raise ValueError(
+            "Global unique review accounting mismatch: "
+            f"{unique_reviews} != {accepted_reviews} + {rejected_reviews} + {quarantined_reviews}"
+        )
 
     reviews_by_city = {
         "Hà Nội": 0,
@@ -1417,7 +1634,9 @@ def build_public_acquisition_report(repo_root: Path = REPO_ROOT) -> dict[str, An
         "previous_accepted_gate": PREVIOUS_ACCEPTED_GATE,
         "next_gate": NEXT_GATE,
         "outcome_classification": "OUTCOME_C_ZERO_SUITABLE_PUBLIC_REVIEWS_FOUND",
+        "scientific_outcome_statement": SCIENTIFIC_OUTCOME_WORDING,
         "outcome_rationale": (
+            f"{SCIENTIFIC_OUTCOME_WORDING} "
             "Across 18 investigated public sources (10 newly discovered and audited in W07-A4P across Zenodo, "
             "Hugging Face, and GitHub plus 8 sources re-verified from W07-A1), 300,536 raw rows and 186,170 "
             "unique review texts were examined. Every source with real review text either: (a) stripped all "
@@ -1445,11 +1664,52 @@ def build_public_acquisition_report(repo_root: Path = REPO_ROOT) -> dict[str, An
             "public_provenance_classes": PUBLIC_PROVENANCE_CLASSES,
             "public_rows_have_first_party_consent_record_id": False,
         },
+        "candidate_integrity_policies": {
+            "rating_scale_policy": (
+                "Preserve upstream rating and rating_scale_max without rescaling in A4P; never default missing "
+                "rating_scale_max to 5; if rating is present without rating_scale_max, set rating_scale_max=None "
+                "and quarantine as QUARANTINE_RATING_SCALE_UNKNOWN."
+            ),
+            "source_locator_policy": (
+                "Require explicit upstream source_ref/url/doi or deterministic dataset:<source_id>#review_id:<source_review_id> "
+                "constructed from real source_id + stable upstream source_review_id; reject arbitrary source#index "
+                "fallbacks and quarantine as QUARANTINE_PROVENANCE_LOCATOR_INSUFFICIENT."
+            ),
+            "cc_by_nc_policy": (
+                "Classify CC-BY-NC-4.0 as LICENSE_CONDITIONALLY_COMPATIBLE_FOR_NONCOMMERCIAL_ACADEMIC_USE "
+                "(LICENSE_CONDITIONALLY_COMPATIBLE != SOURCE_SCIENTIFICALLY_USABLE); reject sources on concrete "
+                "empirical grounds (geography, stripped POI metadata, 0 review text, or upstream ToS ambiguity) "
+                "rather than treating CC-BY-NC-4.0 alone as universally forbidden."
+            ),
+            "koshiroquoc_row_count_reconciliation": {
+                "source_id": "github:koshiroquoc/DaNangtourguide",
+                "review_relevant_row_count": 200,
+                "primary_csv_row_count": 299,
+                "broader_source_row_count": 2557,
+                "unique_reviews": 0,
+            },
+        },
         "PUBLIC_REVIEWS_DISCOVERED": raw_discovered,
         "PUBLIC_UNIQUE_REVIEWS": unique_reviews,
         "PUBLIC_REVIEWS_ACCEPTED": accepted_reviews,
         "PUBLIC_REVIEWS_REJECTED": rejected_reviews,
         "PUBLIC_REVIEWS_QUARANTINED": quarantined_reviews,
+        "SOURCES_WITH_QUARANTINE_STATUS": len(sources_with_quarantine_status),
+        "REVIEW_BEARING_QUARANTINED_SOURCES": len(review_bearing_quarantined_sources),
+        "QUARANTINED_UNIQUE_REVIEW_COUNT": quarantined_unique_review_count,
+        "quarantine_reporting_summary": {
+            "sources_with_quarantine_status_count": len(sources_with_quarantine_status),
+            "sources_with_quarantine_status": sources_with_quarantine_status,
+            "review_bearing_quarantined_sources_count": len(
+                review_bearing_quarantined_sources
+            ),
+            "review_bearing_quarantined_sources": review_bearing_quarantined_sources,
+            "quarantined_unique_review_count": quarantined_unique_review_count,
+            "global_unique_review_accounting": (
+                f"{unique_reviews} = {accepted_reviews} (accepted) + "
+                f"{rejected_reviews} (rejected) + {quarantined_reviews} (quarantined)"
+            ),
+        },
         "PUBLIC_POIS_COVERED": 0,
         "REVIEWS_BY_CITY": reviews_by_city,
         "REVIEWS_BY_CATEGORY_GROUP": reviews_by_category_group,
@@ -1472,6 +1732,7 @@ def build_public_acquisition_report(repo_root: Path = REPO_ROOT) -> dict[str, An
         },
         "investigated_sources_count": len(source_manifests),
         "investigated_sources": source_manifests,
+        "NEW_SOURCE_DOWNLOADS": 0,
         "BULK_SCRAPING_EXECUTED": False,
         "LLM_GENERATED_PUBLIC_REVIEWS": 0,
         "NEW_LLM_PROVIDER_CALLS": 0,
@@ -1494,6 +1755,7 @@ def render_public_acquisition_markdown(report: dict[str, Any]) -> str:
         f"- **Next Gate:** `{report['next_gate']}`",
         f"- **Frozen W07-A2 60-POI Manifest SHA256:** `{report['upstream_immutability']['w07_a2_manifest_internal_sha256']}`",
         f"- **Outcome Classification:** `{report['outcome_classification']}`",
+        f"- **Scientific Outcome Statement:** {report['scientific_outcome_statement']}",
         "",
         "## 2. Executive Summary (Outcome C)",
         "",
@@ -1505,11 +1767,24 @@ def render_public_acquisition_markdown(report: dict[str, Any]) -> str:
         f"- `PUBLIC_REVIEWS_ACCEPTED`: `{report['PUBLIC_REVIEWS_ACCEPTED']}`",
         f"- `PUBLIC_REVIEWS_REJECTED`: `{report['PUBLIC_REVIEWS_REJECTED']}`",
         f"- `PUBLIC_REVIEWS_QUARANTINED`: `{report['PUBLIC_REVIEWS_QUARANTINED']}`",
+        f"- `SOURCES_WITH_QUARANTINE_STATUS`: `{report['SOURCES_WITH_QUARANTINE_STATUS']}`",
+        f"- `REVIEW_BEARING_QUARANTINED_SOURCES`: `{report['REVIEW_BEARING_QUARANTINED_SOURCES']}`",
+        f"- `QUARANTINED_UNIQUE_REVIEW_COUNT`: `{report['QUARANTINED_UNIQUE_REVIEW_COUNT']}`",
         f"- `PUBLIC_POIS_COVERED`: `{report['PUBLIC_POIS_COVERED']} / 60`",
+        f"- `NEW_SOURCE_DOWNLOADS`: `{report['NEW_SOURCE_DOWNLOADS']}`",
         f"- `BULK_SCRAPING_EXECUTED`: `{str(report['BULK_SCRAPING_EXECUTED']).lower()}`",
         f"- `LLM_GENERATED_PUBLIC_REVIEWS`: `{report['LLM_GENERATED_PUBLIC_REVIEWS']}`",
         f"- `NEW_LLM_PROVIDER_CALLS`: `{report['NEW_LLM_PROVIDER_CALLS']}`",
         f"- `CORPUS_SCIENTIFIC_MINIMUM_READY`: `{str(report['CORPUS_SCIENTIFIC_MINIMUM_READY']).lower()}`",
+        "",
+        "### 2.1 Global Accounting & Quarantine Semantics",
+        "",
+        f"- **Global Unique Review Equation:** `{report['PUBLIC_UNIQUE_REVIEWS']} = {report['PUBLIC_REVIEWS_ACCEPTED']} (accepted) + {report['PUBLIC_REVIEWS_REJECTED']} (rejected) + {report['PUBLIC_REVIEWS_QUARANTINED']} (quarantined)`",
+        f"- **Sources Carrying a Quarantine Status (`SOURCES_WITH_QUARANTINE_STATUS = {report['SOURCES_WITH_QUARANTINE_STATUS']}`):** 11 sources total (`8` zero-review or geography-rejected sources plus `3` review-bearing quarantined sources).",
+        f"- **Review-Bearing Quarantined Sources (`REVIEW_BEARING_QUARANTINED_SOURCES = {report['REVIEW_BEARING_QUARANTINED_SOURCES']}`, `QUARANTINED_UNIQUE_REVIEW_COUNT = {report['QUARANTINED_UNIQUE_REVIEW_COUNT']}`):**",
+        "  1. `huggingface:pqthinh232/vietnamese-restaurant-review-sentiment-dataset`: `32,713` quarantined unique reviews (`QUARANTINE_REUSE_UNCLEAR` + unmappable).",
+        "  2. `huggingface:hienbm/tripadvisor_vietnam`: `23,559` quarantined unique reviews (`QUARANTINE_REUSE_UNCLEAR` + unmappable).",
+        "  3. `github:NguyenDucHuy14287/Foody_review_nlp`: `5,000` quarantined unique reviews (`QUARANTINE_REUSE_UNCLEAR` + unmappable).",
         "",
         "## 3. Investigated Public Sources (18 Total: 10 New in W07-A4P + 8 Re-Verified from W07-A1)",
         "",
@@ -1538,11 +1813,18 @@ def render_public_acquisition_markdown(report: dict[str, Any]) -> str:
             "   - Consist of synthetic instruction-tuning hotel price/amenity templates (`7,000` rows), chatbot Q&A pairs (`100` rows), English image captions (`200` rows), or gated LLaVA VQA samples (`HTTP 401`), with `0` real first-hand visitor reviews and unspecified/restricted licenses.",
             "3. **Newly Discovered GitHub Repositories (`HongTin2104/VietNam-Travel-Recommendation-System`, `1109inc/vietnam-travel-dataset`, `koshiroquoc/DaNangtourguide`, `hanhlevna/Manhos`, `NguyenDucHuy14287/Foody_review_nlp`, `anh147/Foody-Review-Sentiment-With-LSTM`):**",
             "   - Either contain only editorial destination catalogs / numeric aspect counts (`0` review text) or unlicensed Foody.vn comment scrapes (`QUARANTINE_REUSE_UNCLEAR`) with `100%` missing restaurant names, addresses, cities, and coordinates.",
+            "   - For `github:koshiroquoc/DaNangtourguide`, row counts are explicitly reconciled across all three repository artifacts: `review_relevant_row_count = 200` (curated 200-place Đà Nẵng evaluation subset inspected for review text), `primary_csv_row_count = 299` (`Data/data_danang_ok.csv`), and `broader_source_row_count = 2557` (`Data/processed/places_enriched_v2.jsonl`), with `unique_reviews = 0` across all three.",
+            "4. **`CC-BY-NC-4.0` License Compatibility vs. Scientific Usability (`LICENSE_CONDITIONALLY_COMPATIBLE != SOURCE_SCIENTIFICALLY_USABLE`):**",
+            "   - `CC-BY-NC-4.0` is classified as `LICENSE_CONDITIONALLY_COMPATIBLE_FOR_NONCOMMERCIAL_ACADEMIC_USE` for non-commercial academic thesis research rather than universally forbidden.",
+            "   - `huggingface:MinhDS/ViHoRec` (`CC-BY-NC-4.0`) is conditionally license-compatible, but `source_scientifically_usable = false` for the W07 review corpus because it contains `17,911` numeric user-hotel ratings and `0` user review texts.",
+            "   - `huggingface:ThanThoai9x/vietnamese-food-images` (`CC-BY-NC-4.0` declared on HF card) is marked `source_scientifically_usable = false` because `100.0%` of its rows are in Hồ Chí Minh City (`0` in Hà Nội, Đà Nẵng, or Hạ Long), parquet access is manually gated (`HTTP 401`), and upstream Google Maps ToS provenance is ambiguous.",
             "",
-            "## 5. Mapping Hierarchy, Deduplication & Provenance Firewall",
+            "## 5. Mapping Hierarchy, Deduplication, Candidate Integrity & Provenance Firewall",
             "",
             "- **Allowed Mapping Methods:** `EXACT_UPSTREAM_ID`, `GEO_NAME_HIGH_CONFIDENCE` (`<= 150m` Haversine distance + normalized name similarity `>= 0.60`), `MANUAL_VERIFIED`.",
             "- **Rejected Mapping Methods:** `NAME_ONLY_AUTOMATIC`, `UNMAPPABLE`.",
+            "- **Rating Scale Integrity (Corrective B1):** Upstream `rating` and `rating_scale_max` are preserved without rescaling in A4P. Missing `rating_scale_max` is never defaulted to `5`; if `rating` exists without a valid `rating_scale_max`, `rating_scale_max` remains `None` and the row is quarantined as `QUARANTINE_RATING_SCALE_UNKNOWN` before primary acceptance.",
+            "- **Source Locator Provenance (Corrective B2):** Every accepted public candidate requires either an explicit upstream locator (`https://...`, `http://...`, `doi:...`, or `dataset:<source_id>#review_id:<source_review_id>`) or a deterministic internal locator `dataset:<source_id>#review_id:<source_review_id>` derived from a real `source_id` and stable upstream `source_review_id`. Index-only fallbacks (`source#0`) are rejected and quarantined as `QUARANTINE_PROVENANCE_LOCATOR_INSUFFICIENT`.",
             "- **Deduplication:** Collapses multi-photo rows sharing `(source, source_review_id)` before counting unique reviews, then deduplicates on `source_review_id`, normalized `review_text`, and `(poi_id, normalized_review_text)`.",
             "- **Human/Public Provenance Firewall:** Public reviews never receive `FIRST_PARTY_ASSISTED_COLLECTION_CONSENT_V1` or `FIRST_PARTY_ACADEMIC_CONTRIBUTOR_CONSENT_V1` and never carry a first-party `consent_record_id`.",
             "- **Restricted Storage Separation:** Public candidate output (`data/restricted/w07_reviews/w07_public_candidate_reviews_v1.jsonl`) is strictly isolated from Google Form (`w07_google_form_candidate_reviews_v1.jsonl`) and Assisted (`w07_assisted_candidate_reviews_v1.jsonl`) candidate corpora.",
@@ -1617,6 +1899,19 @@ def verify_public_acquisition_artifacts(repo_root: Path = REPO_ROOT) -> dict[str
         raise ValueError("FAIL CLOSED: LLM_GENERATED_PUBLIC_REVIEWS must be 0.")
     if on_disk.get("BULK_SCRAPING_EXECUTED") is not False:
         raise ValueError("FAIL CLOSED: BULK_SCRAPING_EXECUTED must be false.")
+    if on_disk.get("SOURCES_WITH_QUARANTINE_STATUS") != 11:
+        raise ValueError("FAIL CLOSED: SOURCES_WITH_QUARANTINE_STATUS must be 11.")
+    if on_disk.get("REVIEW_BEARING_QUARANTINED_SOURCES") != 3:
+        raise ValueError("FAIL CLOSED: REVIEW_BEARING_QUARANTINED_SOURCES must be 3.")
+    if on_disk.get("QUARANTINED_UNIQUE_REVIEW_COUNT") != 61272:
+        raise ValueError("FAIL CLOSED: QUARANTINED_UNIQUE_REVIEW_COUNT must be 61272.")
+    if (
+        on_disk.get("PUBLIC_UNIQUE_REVIEWS")
+        != on_disk.get("PUBLIC_REVIEWS_ACCEPTED", 0)
+        + on_disk.get("PUBLIC_REVIEWS_REJECTED", 0)
+        + on_disk.get("PUBLIC_REVIEWS_QUARANTINED", 0)
+    ):
+        raise ValueError("FAIL CLOSED: Global unique review accounting equation violated.")
 
     return {
         "status": "PASS",
@@ -1628,12 +1923,19 @@ def verify_public_acquisition_artifacts(repo_root: Path = REPO_ROOT) -> dict[str
         "public_acquisition_md_path": PUBLIC_ACQUISITION_MD_RELPATH,
         "public_acquisition_md_lf_sha256": w07_a2.compute_lf_normalized_sha256(md_path),
         "outcome_classification": on_disk["outcome_classification"],
+        "scientific_outcome_statement": on_disk["scientific_outcome_statement"],
         "PUBLIC_REVIEWS_DISCOVERED": on_disk["PUBLIC_REVIEWS_DISCOVERED"],
         "PUBLIC_UNIQUE_REVIEWS": on_disk["PUBLIC_UNIQUE_REVIEWS"],
         "PUBLIC_REVIEWS_ACCEPTED": on_disk["PUBLIC_REVIEWS_ACCEPTED"],
         "PUBLIC_REVIEWS_REJECTED": on_disk["PUBLIC_REVIEWS_REJECTED"],
         "PUBLIC_REVIEWS_QUARANTINED": on_disk["PUBLIC_REVIEWS_QUARANTINED"],
+        "SOURCES_WITH_QUARANTINE_STATUS": on_disk["SOURCES_WITH_QUARANTINE_STATUS"],
+        "REVIEW_BEARING_QUARANTINED_SOURCES": on_disk[
+            "REVIEW_BEARING_QUARANTINED_SOURCES"
+        ],
+        "QUARANTINED_UNIQUE_REVIEW_COUNT": on_disk["QUARANTINED_UNIQUE_REVIEW_COUNT"],
         "PUBLIC_POIS_COVERED": on_disk["PUBLIC_POIS_COVERED"],
+        "NEW_SOURCE_DOWNLOADS": on_disk["NEW_SOURCE_DOWNLOADS"],
         "CORPUS_SCIENTIFIC_MINIMUM_READY": on_disk["CORPUS_SCIENTIFIC_MINIMUM_READY"],
         "upstream_immutability": upstream_hashes,
     }

@@ -6,7 +6,8 @@
   "previous_accepted_gate": "W07-A4H-ASSISTED-FIRST-PARTY-COLLECTION-POSTMERGE-CHATGPT-AUDIT = PASS",
   "next_gate": "W07-A4P-PERMITTED-PUBLIC-REVIEW-ACQUISITION-CHATGPT-AUDIT",
   "outcome_classification": "OUTCOME_C_ZERO_SUITABLE_PUBLIC_REVIEWS_FOUND",
-  "outcome_rationale": "Across 18 investigated public sources (10 newly discovered and audited in W07-A4P across Zenodo, Hugging Face, and GitHub plus 8 sources re-verified from W07-A1), 300,536 raw rows and 186,170 unique review texts were examined. Every source with real review text either: (a) stripped all place names, coordinates, and cities prior to publication (`phamluan/vn_msa_sar_v3`, `VLSP2018-ABSA`, `mendeley:10.17632/dp8s59xnb7.1`, `pqthinh232`, `hienbm`, `Foody_review_nlp`), (b) contained zero geographic overlap with the 60 frozen POIs in Hà Nội, Đà Nẵng, and Hạ Long (`zenodo:10.5281/zenodo.7967494` with 62,887 TripAdvisor hotel reviews across 1,497 hotels in Phú Quốc, Phong Nha, Cam Ranh, etc., and `ThanThoai9x/vietnamese-food-images` with 100% Hồ Chí Minh City rows), or (c) lacked a valid reuse license (`QUARANTINE_REUSE_UNCLEAR`). Scientific provenance and mapping standards were preserved without compromise, yielding `PUBLIC_REVIEWS_ACCEPTED = 0`. First-party collection via W07-A3 Google Forms and W07-A4H Assisted Collection remains the sole primary source for the 60-POI / 300-review corpus.",
+  "scientific_outcome_statement": "No suitable public review was found among the investigated sources under the frozen W07 rules.",
+  "outcome_rationale": "No suitable public review was found among the investigated sources under the frozen W07 rules. Across 18 investigated public sources (10 newly discovered and audited in W07-A4P across Zenodo, Hugging Face, and GitHub plus 8 sources re-verified from W07-A1), 300,536 raw rows and 186,170 unique review texts were examined. Every source with real review text either: (a) stripped all place names, coordinates, and cities prior to publication (`phamluan/vn_msa_sar_v3`, `VLSP2018-ABSA`, `mendeley:10.17632/dp8s59xnb7.1`, `pqthinh232`, `hienbm`, `Foody_review_nlp`), (b) contained zero geographic overlap with the 60 frozen POIs in Hà Nội, Đà Nẵng, and Hạ Long (`zenodo:10.5281/zenodo.7967494` with 62,887 TripAdvisor hotel reviews across 1,497 hotels in Phú Quốc, Phong Nha, Cam Ranh, etc., and `ThanThoai9x/vietnamese-food-images` with 100% Hồ Chí Minh City rows), or (c) lacked a valid reuse license (`QUARANTINE_REUSE_UNCLEAR`). Scientific provenance and mapping standards were preserved without compromise, yielding `PUBLIC_REVIEWS_ACCEPTED = 0`. First-party collection via W07-A3 Google Forms and W07-A4H Assisted Collection remains the sole primary source for the 60-POI / 300-review corpus.",
   "upstream_immutability": {
     "w06_closure_internal_sha256": "7dec87d9b318165ba5233d1470df8f12dfbe99449bceabb86dc2322aaab89e12",
     "w07_0_audit_internal_sha256": "7a951b5f93473998d4032aabfeaa250ac8e7ba2ea42cbdaf230389cd5fe3a6a9",
@@ -39,11 +40,62 @@
     },
     "public_rows_have_first_party_consent_record_id": false
   },
+  "candidate_integrity_policies": {
+    "rating_scale_policy": "Preserve upstream rating and rating_scale_max without rescaling in A4P; never default missing rating_scale_max to 5; if rating is present without rating_scale_max, set rating_scale_max=None and quarantine as QUARANTINE_RATING_SCALE_UNKNOWN.",
+    "source_locator_policy": "Require explicit upstream source_ref/url/doi or deterministic dataset:<source_id>#review_id:<source_review_id> constructed from real source_id + stable upstream source_review_id; reject arbitrary source#index fallbacks and quarantine as QUARANTINE_PROVENANCE_LOCATOR_INSUFFICIENT.",
+    "cc_by_nc_policy": "Classify CC-BY-NC-4.0 as LICENSE_CONDITIONALLY_COMPATIBLE_FOR_NONCOMMERCIAL_ACADEMIC_USE (LICENSE_CONDITIONALLY_COMPATIBLE != SOURCE_SCIENTIFICALLY_USABLE); reject sources on concrete empirical grounds (geography, stripped POI metadata, 0 review text, or upstream ToS ambiguity) rather than treating CC-BY-NC-4.0 alone as universally forbidden.",
+    "koshiroquoc_row_count_reconciliation": {
+      "source_id": "github:koshiroquoc/DaNangtourguide",
+      "review_relevant_row_count": 200,
+      "primary_csv_row_count": 299,
+      "broader_source_row_count": 2557,
+      "unique_reviews": 0
+    }
+  },
   "PUBLIC_REVIEWS_DISCOVERED": 300536,
   "PUBLIC_UNIQUE_REVIEWS": 186170,
   "PUBLIC_REVIEWS_ACCEPTED": 0,
   "PUBLIC_REVIEWS_REJECTED": 124898,
   "PUBLIC_REVIEWS_QUARANTINED": 61272,
+  "SOURCES_WITH_QUARANTINE_STATUS": 11,
+  "REVIEW_BEARING_QUARANTINED_SOURCES": 3,
+  "QUARANTINED_UNIQUE_REVIEW_COUNT": 61272,
+  "quarantine_reporting_summary": {
+    "sources_with_quarantine_status_count": 11,
+    "sources_with_quarantine_status": [
+      "huggingface:trungtrandinh/hotel_danang_vietnam",
+      "huggingface:AnnBae6969/vietnam-tourism-dataset",
+      "huggingface:Bach293/dulich_hanoi",
+      "huggingface:VLAI-AIVN/vietnamtourism-instruction-dataset",
+      "github:1109inc/vietnam-travel-dataset",
+      "github:koshiroquoc/DaNangtourguide",
+      "github:hanhlevna/Manhos",
+      "github:NguyenDucHuy14287/Foody_review_nlp",
+      "huggingface:pqthinh232/vietnamese-restaurant-review-sentiment-dataset",
+      "huggingface:hienbm/tripadvisor_vietnam",
+      "huggingface:ThanThoai9x/vietnamese-food-images"
+    ],
+    "review_bearing_quarantined_sources_count": 3,
+    "review_bearing_quarantined_sources": [
+      {
+        "source_id": "github:NguyenDucHuy14287/Foody_review_nlp",
+        "quarantine_status": "QUARANTINE_REUSE_UNCLEAR",
+        "quarantined_unique_reviews": 5000
+      },
+      {
+        "source_id": "huggingface:pqthinh232/vietnamese-restaurant-review-sentiment-dataset",
+        "quarantine_status": "QUARANTINE_REUSE_UNCLEAR",
+        "quarantined_unique_reviews": 32713
+      },
+      {
+        "source_id": "huggingface:hienbm/tripadvisor_vietnam",
+        "quarantine_status": "QUARANTINE_REUSE_UNCLEAR",
+        "quarantined_unique_reviews": 23559
+      }
+    ],
+    "quarantined_unique_review_count": 61272,
+    "global_unique_review_accounting": "186170 = 0 (accepted) + 124898 (rejected) + 61272 (quarantined)"
+  },
   "PUBLIC_POIS_COVERED": 0,
   "REVIEWS_BY_CITY": {
     "Hà Nội": 0,
@@ -965,6 +1017,9 @@
       "classification": "REJECTED_SOURCE",
       "quarantine_status": "QUARANTINE_REUSE_UNCLEAR",
       "original_rows": 200,
+      "review_relevant_row_count": 200,
+      "primary_csv_row_count": 299,
+      "broader_source_row_count": 2557,
       "unique_reviews": 0,
       "accepted": 0,
       "rejected": 0,
@@ -977,7 +1032,7 @@
         "NAME_ONLY_AUTOMATIC": 0,
         "UNMAPPABLE": 0
       },
-      "audit_notes": "Place guide listings (`type,name,description,time,price,location,area,note,id,full_text,vector_search`); 0 user reviews."
+      "audit_notes": "Curated 200-place Đà Nẵng evaluation subset inspected for review text (`review_relevant_row_count = 200`), `Data/data_danang_ok.csv` (`primary_csv_row_count = 299`), and `Data/processed/places_enriched_v2.jsonl` (`broader_source_row_count = 2557`); place guide listings (`type,name,description,time,price,location,area,note,id,full_text,vector_search`) contain 0 user reviews (`unique_reviews = 0`)."
     },
     {
       "source_id": "github:hanhlevna/Manhos",
@@ -1183,8 +1238,10 @@
       "access_date": "2026-11-02",
       "discovered_in_stage": "W07-A1_REVERIFIED_IN_A4P",
       "license": "CC-BY-NC-4.0 (declared on HF card; upstream Google Maps ToS ambiguous)",
+      "license_compatibility": "LICENSE_CONDITIONALLY_COMPATIBLE_FOR_NONCOMMERCIAL_ACADEMIC_USE",
+      "source_scientifically_usable": false,
       "upstream_origin": "Google Maps restaurant review photos and text in 9 districts of Hồ Chí Minh City",
-      "research_reuse_assessment": "Rejected: 100.0% Hồ Chí Minh City (34,104 / 34,104 image rows across 1,989 HCMC places; 0 in Hà Nội, Đà Nẵng, or Hạ Long), manual gated access (HTTP 401), and ambiguous upstream Google Maps ToS.",
+      "research_reuse_assessment": "CC-BY-NC-4.0 declared on HF card (`LICENSE_CONDITIONALLY_COMPATIBLE_FOR_NONCOMMERCIAL_ACADEMIC_USE`), but scientifically unusable (`source_scientifically_usable = false`): 100.0% Hồ Chí Minh City (34,104 / 34,104 image rows across 1,989 HCMC places; 0 in Hà Nội, Đà Nẵng, or Hạ Long), manual gated access (HTTP 401), and ambiguous upstream Google Maps ToS.",
       "download_or_crawl_mechanism": "Hugging Face dataset card & metadata inspection (manual gated parquet shards not bulk-downloaded).",
       "classification": "REJECTED_SOURCE",
       "quarantine_status": "QUARANTINE_REUSE_UNCLEAR",
@@ -1211,8 +1268,10 @@
       "access_date": "2026-11-02",
       "discovered_in_stage": "W07-A1_REVERIFIED_IN_A4P",
       "license": "CC-BY-NC-4.0",
+      "license_compatibility": "LICENSE_CONDITIONALLY_COMPATIBLE_FOR_NONCOMMERCIAL_ACADEMIC_USE",
+      "source_scientifically_usable": false,
       "upstream_origin": "Vietnamese hotel collaborative-filtering rating matrix and hotel metadata",
-      "research_reuse_assessment": "Valid for REC-B collaborative filtering ratings, but contains 0 user review text.",
+      "research_reuse_assessment": "CC-BY-NC-4.0 is conditionally compatible for non-commercial academic thesis use (`LICENSE_CONDITIONALLY_COMPATIBLE_FOR_NONCOMMERCIAL_ACADEMIC_USE`), and valid for REC-B collaborative filtering ratings, but scientifically unusable for the W07 review corpus (`source_scientifically_usable = false`) because it contains 0 user review text.",
       "download_or_crawl_mechanism": "Local restricted snapshot inspection (`data/restricted/vihorec/`).",
       "classification": "REJECTED_SOURCE",
       "quarantine_status": null,
@@ -1229,7 +1288,7 @@
         "NAME_ONLY_AUTOMATIC": 0,
         "UNMAPPABLE": 0
       },
-      "audit_notes": "Numeric user-hotel ratings only (`0` review text rows)."
+      "audit_notes": "Numeric user-hotel ratings only (`0` review text rows); `LICENSE_CONDITIONALLY_COMPATIBLE != SOURCE_SCIENTIFICALLY_USABLE`."
     },
     {
       "source_id": "commercial_platforms:google_maps_tripadvisor_booking_agoda_foody",
@@ -1260,9 +1319,10 @@
       "audit_notes": "Zero scraping or API harvesting executed."
     }
   ],
+  "NEW_SOURCE_DOWNLOADS": 0,
   "BULK_SCRAPING_EXECUTED": false,
   "LLM_GENERATED_PUBLIC_REVIEWS": 0,
   "NEW_LLM_PROVIDER_CALLS": 0,
   "CORPUS_SCIENTIFIC_MINIMUM_READY": false,
-  "artifact_sha256": "a86ae37cbbce6091acabe2e4973c9d701dcdfe03d5b2fc2dbba381184850d183"
+  "artifact_sha256": "1ee567e59b7d4da8069f32d9734a9de95703d4955dd27cfa1db30f7a06422916"
 }

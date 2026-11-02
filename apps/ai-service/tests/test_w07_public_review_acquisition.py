@@ -455,3 +455,230 @@ def test_w07_a4p_c1a_receipt_verifier_distinguishes_clean_checkout_from_local_ra
             ]
             == "NOT_REPLAYED_IN_C1A"
         )
+
+
+def test_w07_a4p_c1b_rating_scale_never_fabricated_and_quarantines_unknown_scale() -> None:
+    manifest = w07_a3_import.verify_and_load_a2_manifest(REPO_ROOT)
+    poi0 = manifest["pois"][0]
+
+    # 1. rating = 8 with missing rating_scale_max -> never 8 / 5; quarantined as QUARANTINE_RATING_SCALE_UNKNOWN
+    res_unknown_scale = w07_a4p.evaluate_and_filter_public_candidates(
+        [
+            {
+                "source": "open_tourism_cc_by",
+                "source_classification": "APPROVED_PUBLIC_SOURCE",
+                "license_or_usage_class": "CC-BY-4.0",
+                "source_review_id": "rev_scale_missing_8",
+                "upstream_place_id": poi0["source_ids"][0],
+                "rating": 8,
+                "rating_scale_max": None,
+                "review_text": "Khách sạn sạch sẽ, nhân viên nhiệt tình và vị trí thuận tiện đi lại.",
+            }
+        ],
+        manifest_payload=manifest,
+    )
+    assert len(res_unknown_scale["accepted_candidates"]) == 0
+    assert len(res_unknown_scale["quarantined_rows"]) == 1
+    q_row = res_unknown_scale["quarantined_rows"][0]
+    assert q_row["quarantine_reason"] == "QUARANTINE_RATING_SCALE_UNKNOWN"
+    assert q_row["rating"] == 8
+    assert q_row["rating_scale_max"] is None
+    assert q_row["rating_scale_max"] != 5
+
+    # 2. Missing rating keeps rating = None and rating_scale_max = None
+    res_missing_rating = w07_a4p.evaluate_and_filter_public_candidates(
+        [
+            {
+                "source": "open_tourism_cc_by",
+                "source_classification": "APPROVED_PUBLIC_SOURCE",
+                "license_or_usage_class": "CC-BY-4.0",
+                "source_review_id": "rev_no_rating",
+                "upstream_place_id": poi0["source_ids"][0],
+                "rating": None,
+                "rating_scale_max": None,
+                "review_text": "Khu di tích lịch sử rất trang nghiêm và khuôn viên nhiều cây xanh.",
+            }
+        ],
+        manifest_payload=manifest,
+    )
+    assert len(res_missing_rating["accepted_candidates"]) == 1
+    acc_none = res_missing_rating["accepted_candidates"][0]
+    assert acc_none["rating"] is None
+    assert acc_none["rating_scale_max"] is None
+
+    # 3. Explicit rating + scale (e.g. 4 / 5 and 8 / 10) is preserved without rescaling in A4P
+    res_explicit_scales = w07_a4p.evaluate_and_filter_public_candidates(
+        [
+            {
+                "source": "open_tourism_cc_by",
+                "source_classification": "APPROVED_PUBLIC_SOURCE",
+                "license_or_usage_class": "CC-BY-4.0",
+                "source_review_id": "rev_scale_5",
+                "upstream_place_id": poi0["source_ids"][0],
+                "rating": 4,
+                "rating_scale_max": 5,
+                "review_text": "Không gian quảng trường rộng rãi, thoáng mát và rất sạch sẽ.",
+            },
+            {
+                "source": "open_tourism_cc_by",
+                "source_classification": "APPROVED_PUBLIC_SOURCE",
+                "license_or_usage_class": "CC-BY-4.0",
+                "source_review_id": "rev_scale_10",
+                "upstream_place_id": poi0["source_ids"][0],
+                "rating": 8,
+                "rating_scale_max": 10,
+                "review_text": "Trải nghiệm tham quan buổi sáng rất trật tự và ấn tượng.",
+            },
+        ],
+        manifest_payload=manifest,
+    )
+    assert len(res_explicit_scales["accepted_candidates"]) == 2
+    acc_5, acc_10 = res_explicit_scales["accepted_candidates"]
+    assert acc_5["rating"] == 4 and acc_5["rating_scale_max"] == 5
+    assert acc_10["rating"] == 8 and acc_10["rating_scale_max"] == 10
+
+
+def test_w07_a4p_c1b_source_locator_provenance_and_rejection_of_index_fallback() -> None:
+    manifest = w07_a3_import.verify_and_load_a2_manifest(REPO_ROOT)
+    poi0 = manifest["pois"][0]
+
+    # 1. Explicit upstream locator (https://... or doi:...) is preserved
+    res_explicit = w07_a4p.evaluate_and_filter_public_candidates(
+        [
+            {
+                "source": "zenodo:10.5281/zenodo.7967494",
+                "source_classification": "CONDITIONAL_SOURCE",
+                "license_or_usage_class": "CC-BY-4.0",
+                "source_review_id": "rev_explicit_url",
+                "source_ref": "https://zenodo.org/records/7967494#review_id=rev_explicit_url",
+                "upstream_place_id": poi0["source_ids"][0],
+                "review_text": "Khuôn viên di tích sạch đẹp, hướng dẫn viên thuyết minh rõ ràng.",
+            }
+        ],
+        manifest_payload=manifest,
+    )
+    assert len(res_explicit["accepted_candidates"]) == 1
+    assert (
+        res_explicit["accepted_candidates"][0]["source_ref"]
+        == "https://zenodo.org/records/7967494#review_id=rev_explicit_url"
+    )
+
+    # 2. Derived internal locator requires real source_id + stable source_review_id
+    res_derived = w07_a4p.evaluate_and_filter_public_candidates(
+        [
+            {
+                "source": "zenodo:10.5281/zenodo.7967494",
+                "source_classification": "CONDITIONAL_SOURCE",
+                "license_or_usage_class": "CC-BY-4.0",
+                "source_review_id": "715946950",
+                "upstream_place_id": poi0["source_ids"][0],
+                "review_text": "Điểm tham quan lịch sử quan trọng tại trung tâm thành phố Hà Nội.",
+            }
+        ],
+        manifest_payload=manifest,
+    )
+    assert len(res_derived["accepted_candidates"]) == 1
+    assert (
+        res_derived["accepted_candidates"][0]["source_ref"]
+        == "dataset:zenodo:10.5281/zenodo.7967494#review_id:715946950"
+    )
+
+    # 3. Row index alone or fabricated `source#0` is rejected and quarantined as QUARANTINE_PROVENANCE_LOCATOR_INSUFFICIENT
+    res_no_locator = w07_a4p.evaluate_and_filter_public_candidates(
+        [
+            {
+                "source": "open_tourism_cc_by",
+                "source_classification": "APPROVED_PUBLIC_SOURCE",
+                "license_or_usage_class": "CC-BY-4.0",
+                "source_review_id": None,
+                "source_ref": None,
+                "upstream_place_id": poi0["source_ids"][0],
+                "review_text": "Đánh giá không có mã định danh gốc hoặc liên kết truy xuất nguồn.",
+            },
+            {
+                "source": "open_tourism_cc_by",
+                "source_classification": "APPROVED_PUBLIC_SOURCE",
+                "license_or_usage_class": "CC-BY-4.0",
+                "source_review_id": None,
+                "source_ref": "open_tourism_cc_by#0",
+                "upstream_place_id": poi0["source_ids"][0],
+                "review_text": "Đánh giá chỉ dùng chỉ số dòng tạm thời làm định danh nguồn.",
+            },
+        ],
+        manifest_payload=manifest,
+    )
+    assert len(res_no_locator["accepted_candidates"]) == 0
+    assert len(res_no_locator["quarantined_rows"]) == 2
+    for q in res_no_locator["quarantined_rows"]:
+        assert (
+            q["quarantine_reason"]
+            == "QUARANTINE_PROVENANCE_LOCATOR_INSUFFICIENT"
+        )
+        assert q["source_ref"] is None
+
+
+def test_w07_a4p_c1b_forbids_consent_record_id_and_separates_cc_by_nc_and_quarantine_counts() -> None:
+    manifest = w07_a3_import.verify_and_load_a2_manifest(REPO_ROOT)
+    poi0 = manifest["pois"][0]
+
+    # Public rows must never carry first-party consent_record_id
+    with pytest.raises(
+        ValueError,
+        match="Public review cannot carry a first-party consent_record_id",
+    ):
+        w07_a4p.evaluate_and_filter_public_candidates(
+            [
+                {
+                    "source": "open_tourism_cc_by",
+                    "source_classification": "APPROVED_PUBLIC_SOURCE",
+                    "license_or_usage_class": "CC-BY-4.0",
+                    "source_review_id": "rev_with_consent_id",
+                    "consent_record_id": "consent_fp_001",
+                    "upstream_place_id": poi0["source_ids"][0],
+                    "review_text": "Khu di tích lịch sử rất trang nghiêm tại Hà Nội.",
+                }
+            ],
+            manifest_payload=manifest,
+        )
+
+    # CC-BY-NC-4.0 conditional compatibility vs scientific usability and quarantine count consistency
+    report = json.loads(
+        (REPO_ROOT / w07_a4p.PUBLIC_ACQUISITION_JSON_RELPATH).read_text(
+            encoding="utf-8"
+        )
+    )
+    assert (
+        report["scientific_outcome_statement"]
+        == "No suitable public review was found among the investigated sources under the frozen W07 rules."
+    )
+    assert report["SOURCES_WITH_QUARANTINE_STATUS"] == 11
+    assert report["REVIEW_BEARING_QUARANTINED_SOURCES"] == 3
+    assert report["QUARANTINED_UNIQUE_REVIEW_COUNT"] == 61272
+    assert (
+        report["PUBLIC_UNIQUE_REVIEWS"]
+        == report["PUBLIC_REVIEWS_ACCEPTED"]
+        + report["PUBLIC_REVIEWS_REJECTED"]
+        + report["PUBLIC_REVIEWS_QUARANTINED"]
+        == 186170
+    )
+
+    by_id = {s["source_id"]: s for s in report["investigated_sources"]}
+
+    # CC-BY-NC-4.0 sources distinguish conditional license compatibility from scientific usability
+    for nc_id in (
+        "huggingface:MinhDS/ViHoRec",
+        "huggingface:ThanThoai9x/vietnamese-food-images",
+    ):
+        src = by_id[nc_id]
+        assert (
+            src["license_compatibility"]
+            == "LICENSE_CONDITIONALLY_COMPATIBLE_FOR_NONCOMMERCIAL_ACADEMIC_USE"
+        )
+        assert src["source_scientifically_usable"] is False
+
+    # koshiroquoc row count disambiguation
+    koshiro = by_id["github:koshiroquoc/DaNangtourguide"]
+    assert koshiro["review_relevant_row_count"] == 200
+    assert koshiro["primary_csv_row_count"] == 299
+    assert koshiro["broader_source_row_count"] == 2557
+    assert koshiro["unique_reviews"] == 0
