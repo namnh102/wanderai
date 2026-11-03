@@ -1,10 +1,11 @@
 {
   "artifact_id": "w07_data_strategy_amendment_01_v1",
-  "version": "1.0.0",
-  "task_id": "W07-B0-DATA-STRATEGY-AMENDMENT-01",
+  "version": "1.1.0-corrective-01",
+  "task_id": "W07-B0-DATA-STRATEGY-AMENDMENT-01-CORRECTIVE-01",
   "authoritative_base_develop_sha": "8304a71ee01d3edac224de6dc3d75beb0427fe16",
   "previous_accepted_gate": "W07-A4P-POSTMERGE-CHATGPT-AUDIT = PASS",
-  "next_gate": "W07-B0-DATA-STRATEGY-AMENDMENT-01-CHATGPT-AUDIT",
+  "current_gate_status": "W07-B0-DATA-STRATEGY-AMENDMENT-01-CHATGPT-AUDIT = HOLD-CORRECTIVE-MINOR",
+  "next_gate": "W07-B0-CORRECTIVE-01-SOURCE-GOVERNANCE-CHATGPT-AUDIT",
   "W07_PRIMARY_CORPUS_STRATEGY": "EVIDENCE_GROUNDED_POI_KNOWLEDGE",
   "PRIMARY_W07_CORPUS": "OPEN_AND_OFFICIAL_POI_KNOWLEDGE",
   "FIRST_PARTY_REVIEW_COLLECTION_STATUS": "OPTIONAL_ENHANCEMENT_PENDING_RECRUITMENT",
@@ -13,6 +14,9 @@
   "SOCIAL_PLATFORM_ROLE": "DYNAMIC_FRESHNESS_LAYER_NOT_PRIMARY_CORPUS",
   "W07_RETRIEVAL_EXPERIMENT_STATUS": "NOT_STARTED",
   "W07_RAG_EXPERIMENT_STATUS": "NOT_STARTED",
+  "HIGH_AUTHORITY_DOES_NOT_IMPLY_REUSE_PERMISSION": true,
+  "RAW_TEXT_COMMIT_ALLOWED": true,
+  "OVERTURE_LICENSE_IS_THEME_AND_SOURCE_SPECIFIC": true,
   "frozen_a4p_closure_summary": {
     "PUBLIC_REVIEWS_DISCOVERED": 300536,
     "PUBLIC_UNIQUE_REVIEWS": 186170,
@@ -54,6 +58,107 @@
     "canonical_poi_identifiers_frozen": true,
     "every_primary_document_must_map_to_frozen_canonical_poi": true,
     "subset_coverage_permitted_if_justified_and_explicitly_reported": true
+  },
+  "source_authority_and_reuse_governance": {
+    "HIGH_AUTHORITY_DOES_NOT_IMPLY_REUSE_PERMISSION": true,
+    "orthogonal_dimensions_rule": "Source authority tier (TIER_A..TIER_D) and reuse/storage permission (OPEN_REUSABLE, RESEARCH_RESTRICTED, REFERENCE_ONLY, PROHIBITED) are strictly independent dimensions. A Tier A or Tier B official site may still have unclear or restrictive reuse/storage terms, while a Tier C open source may carry explicit open reuse rights.",
+    "two_gate_document_eligibility_rule": {
+      "formula": "PRIMARY_CORPUS_ELIGIBLE = CANONICAL_MAPPING_OK AND REUSE_STATUS_ALLOWED",
+      "gate_1_canonical_mapping": "Document must deterministically map to one of the 60 frozen canonical POIs in `data/evaluation/w07/w07_review_target_60_pois_v1.json` (`CANONICAL_MAPPING_OK = true`).",
+      "gate_2_reuse_storage_policy": "Document must have verified reuse/storage permission (`reuse_storage_class` in `{OPEN_REUSABLE, RESEARCH_RESTRICTED}` with explicit `reuse_evidence`, `attribution_requirement`, and `source_terms_checked_at`; `REUSE_STATUS_ALLOWED = true`).",
+      "auto_accept_tier_a_or_b_forbidden": true
+    },
+    "reuse_storage_classes": {
+      "OPEN_REUSABLE": {
+        "code": "OPEN_REUSABLE",
+        "primary_corpus_eligible_if_mapped": true,
+        "raw_text_storage_allowed": true,
+        "redistributable_in_git_allowed": true,
+        "description": "Explicit compatible license or reuse basis allows intended primary corpus text storage and redistribution in Git, subject to recorded attribution/share-alike obligations."
+      },
+      "RESEARCH_RESTRICTED": {
+        "code": "RESEARCH_RESTRICTED",
+        "primary_corpus_eligible_if_mapped": true,
+        "raw_text_storage_allowed": true,
+        "redistributable_in_git_allowed": false,
+        "description": "Permitted/justified only for internal academic research handling under documented constraints; raw content is stored only in git-ignored restricted storage (`data/restricted/`) and never redistributed in Git unless explicit permission allows it."
+      },
+      "REFERENCE_ONLY": {
+        "code": "REFERENCE_ONLY",
+        "primary_corpus_eligible_if_mapped": false,
+        "raw_text_storage_allowed": false,
+        "redistributable_in_git_allowed": false,
+        "description": "Useful authoritative source for factual verification/reference, but reuse/storage rights are insufficient for persistent primary corpus text. Only metadata (`source_url`, `publisher`, `source_title`, `retrieved_at`, `provenance_status`, and factual verification notes where allowed) may be retained; copied full raw text must never be committed."
+      },
+      "PROHIBITED": {
+        "code": "PROHIBITED",
+        "primary_corpus_eligible_if_mapped": false,
+        "raw_text_storage_allowed": false,
+        "redistributable_in_git_allowed": false,
+        "description": "Terms or license explicitly conflict with intended collection, storage, or research reuse; must not be ingested."
+      }
+    },
+    "raw_text_git_policy": {
+      "RAW_TEXT_COMMIT_ALLOWED": true,
+      "condition": "`RAW_TEXT_COMMIT_ALLOWED = true` ONLY when `reuse_storage_class == 'OPEN_REUSABLE'` and `redistributable_in_git == true` with verified `reuse_evidence`. Otherwise, keep raw text in git-ignored `data/restricted/` (if `RESEARCH_RESTRICTED`) or retain metadata only (`REFERENCE_ONLY`). No copyrighted or public webpage may be committed to Git merely because it is publicly accessible."
+    },
+    "source_specific_license_policies": {
+      "overture_maps": {
+        "OVERTURE_LICENSE_IS_THEME_AND_SOURCE_SPECIFIC": true,
+        "blanket_license_constant_forbidden": true,
+        "places_theme_possible_licenses": [
+          "CDLA-Permissive-2.0",
+          "Apache-2.0",
+          "CC0-1.0"
+        ],
+        "other_themes_note": "Other Overture themes may carry different license obligations such as ODbL-1.0.",
+        "b1_requirement": "At B1, inspect record-level Overture attribution/license metadata for the exact theme (`overture_theme`) and contributing source (`overture_contributing_source`) used; never assign one blanket Overture license to every record."
+      },
+      "openstreetmap": {
+        "license": "ODbL-1.0",
+        "policy": "OpenStreetMap data is governed by ODbL-1.0; record attribution (`© OpenStreetMap contributors, ODbL-1.0`) and share-alike obligations where applicable."
+      },
+      "wikidata": {
+        "license": "CC0-1.0",
+        "policy": "Wikidata structured data statements are licensed under CC0-1.0 (Public Domain Dedication)."
+      },
+      "wikimedia_wikipedia_wikivoyage_text": {
+        "collapsed_into_wikidata_cc0_forbidden": true,
+        "applicable_licenses": [
+          "CC-BY-SA-4.0",
+          "CC-BY-SA-3.0"
+        ],
+        "policy": "Wikipedia, Wikivoyage, and Wikimedia prose/text must NOT be collapsed into Wikidata CC0 semantics; text reuse must preserve the applicable Creative Commons Attribution-ShareAlike license, author/revision history link, and source-specific share-alike requirements."
+      }
+    },
+    "b1_source_decision_matrix_spec": {
+      "b1_source_inventory_populated_in_b0": false,
+      "required_evaluation_fields": [
+        "canonical_poi_mapping",
+        "authority_tier",
+        "publisher",
+        "source_url",
+        "source_type",
+        "license_or_reuse_evidence",
+        "reuse_storage_class",
+        "attribution_requirement",
+        "redistributable_in_git",
+        "raw_text_permitted",
+        "final_b1_decision"
+      ],
+      "allowed_decisions": [
+        "ACCEPT_PRIMARY_CORPUS",
+        "ACCEPT_RESTRICTED_RESEARCH_ONLY",
+        "REFERENCE_ONLY",
+        "REJECT"
+      ],
+      "decision_rules": {
+        "ACCEPT_PRIMARY_CORPUS": "`CANONICAL_MAPPING_OK == true` AND `reuse_storage_class == 'OPEN_REUSABLE'` with verified license/reuse evidence.",
+        "ACCEPT_RESTRICTED_RESEARCH_ONLY": "`CANONICAL_MAPPING_OK == true` AND `reuse_storage_class == 'RESEARCH_RESTRICTED'` (stored only in git-ignored `data/restricted/`).",
+        "REFERENCE_ONLY": "`CANONICAL_MAPPING_OK == true` AND `reuse_storage_class == 'REFERENCE_ONLY'` (metadata/verification reference only; no persistent raw text corpus storage).",
+        "REJECT": "`CANONICAL_MAPPING_OK == false` OR `reuse_storage_class == 'PROHIBITED'` OR missing/unverified reuse evidence."
+      }
+    }
   },
   "role_governance": {
     "first_party_reviews": {
@@ -195,6 +300,7 @@
   },
   "proposed_corpus_thresholds": {
     "replaces_former_300_review_threshold": true,
+    "provisional_until_b1_empirical_source_audit": true,
     "former_review_threshold_reference": "60 POIs x 5 reviews = 300 reviews (superseded for primary W07 gate)",
     "minimum_tier": {
       "min_canonical_pois": 30,
@@ -218,33 +324,34 @@
     "no_document_fabrication_rule": "Do not fabricate or synthetically pad documents merely to hit a numerical threshold; report exact empirical coverage per city and category."
   },
   "source_hierarchy": {
+    "HIGH_AUTHORITY_DOES_NOT_IMPLY_REUSE_PERMISSION": true,
     "tiers": [
       {
         "tier": "TIER_A",
         "rank": 1,
         "name": "Official POI / venue website",
-        "description": "Official website or digital publication operated by the attraction, museum, hotel, or venue."
+        "description": "Official website or digital publication operated by the attraction, museum, hotel, or venue. High factual authority, but requires explicit reuse/storage verification before primary corpus ingestion."
       },
       {
         "tier": "TIER_B",
         "rank": 2,
         "name": "Government / tourism-authority site",
-        "description": "National, provincial, or municipal tourism authority portals and heritage administration pages."
+        "description": "National, provincial, or municipal tourism authority portals and heritage administration pages. Requires explicit reuse/storage verification before primary corpus ingestion."
       },
       {
         "tier": "TIER_C",
         "rank": 3,
         "name": "Open-data / open-license geographic or tourism source",
-        "description": "OpenStreetMap (ODbL 1.0), Overture Maps (CDLA Permissive 2.0 / CC0 1.0), Wikidata (CC0), Wikimedia/Wikipedia/Wikivoyage (CC BY-SA)."
+        "description": "OpenStreetMap (ODbL-1.0), Overture Maps (theme- and source-specific: CDLA-Permissive-2.0 / Apache-2.0 / CC0-1.0 for Places; other themes may carry ODbL-1.0), Wikidata structured data (CC0-1.0), and Wikimedia/Wikipedia/Wikivoyage text (CC-BY-SA-4.0 / CC-BY-SA-3.0 with attribution/share-alike)."
       },
       {
         "tier": "TIER_D",
         "rank": 4,
         "name": "Other research-usable public source",
-        "description": "Publicly accessible travel/cultural reference documents with clear provenance and non-conflicting factual claims."
+        "description": "Publicly accessible travel/cultural reference documents with verified reuse rights, clear provenance, and non-conflicting factual claims."
       }
     ],
-    "conflict_resolution_rule": "Prefer higher authority tiers (TIER_A > TIER_B > TIER_C > TIER_D) when factual claims conflict; never treat low-authority social posts as canonical factual evidence."
+    "conflict_resolution_rule": "Prefer higher authority tiers (TIER_A > TIER_B > TIER_C > TIER_D) when factual claims conflict; never treat low-authority social posts as canonical factual evidence, and never treat authority tier alone as permission to store or redistribute raw text."
   },
   "schemas": {
     "document_schema_fields": [
@@ -259,6 +366,11 @@
       "language",
       "retrieved_at",
       "license_or_usage_class",
+      "reuse_storage_class",
+      "reuse_evidence",
+      "attribution_requirement",
+      "redistributable_in_git",
+      "source_terms_checked_at",
       "raw_text",
       "content_sha256",
       "provenance_status"
@@ -297,6 +409,12 @@
       "First-party review collection failed scientifically."
     ]
   },
+  "no_new_acquisition_at_b0": {
+    "NEW_WEB_DOCUMENT_DOWNLOADS": 0,
+    "NEW_SOCIAL_COLLECTION": 0,
+    "NEW_GOOGLE_MAPS_COLLECTION": 0,
+    "NEW_LLM_PROVIDER_CALLS": 0
+  },
   "infrastructure_requirements_at_b0": {
     "GPU_REQUIRED_NOW": false,
     "SERVER_REQUIRED_NOW": false,
@@ -323,5 +441,5 @@
     "w07_a4p_receipt_lf_sha256": "bc5c8ace3618d5a67d16bf9bd5c298c52f132fc8fe575bd1678730f31b0b1d49",
     "w07_a4p_md_lf_sha256": "ff6e8a3bd295910d149bd712512b025440d1ff74378c837bb0f9d05ece81885c"
   },
-  "artifact_sha256": "f9055e36562c8f7473ddb967b0176cc7dbe4b32426d0cc9ae124525ada973b02"
+  "artifact_sha256": "365b00607737f01f02753595f5ce65092e2622bfbe3a8bb4ed20e464daf7a12f"
 }

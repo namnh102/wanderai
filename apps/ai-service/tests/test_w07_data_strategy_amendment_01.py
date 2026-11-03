@@ -14,6 +14,30 @@ from scripts import (  # noqa: E402
 )
 
 
+def _sample_valid_open_reusable_doc() -> dict[str, object]:
+    return {
+        "document_id": "doc_poi01_osm_01",
+        "poi_id": "698ee756-6062-5f47-955b-bdf458682e57",
+        "city": "Hà Nội",
+        "source_type": "OPENLY_LICENSED_GEOGRAPHIC_OR_TOURISM_DATA",
+        "source_tier": "TIER_C",
+        "source_title": "Lăng Chủ tịch Hồ Chí Minh — OpenStreetMap Record",
+        "source_url": "https://www.openstreetmap.org/way/37625751",
+        "publisher": "OpenStreetMap Contributors",
+        "language": "vi",
+        "retrieved_at": "2026-10-07T09:52:02Z",
+        "license_or_usage_class": "ODbL-1.0",
+        "reuse_storage_class": "OPEN_REUSABLE",
+        "reuse_evidence": "OpenStreetMap ODbL 1.0 open database license permits storage, indexing, and redistribution with attribution.",
+        "attribution_requirement": "© OpenStreetMap contributors, licensed under ODbL 1.0",
+        "redistributable_in_git": True,
+        "source_terms_checked_at": "2026-11-03T16:15:00Z",
+        "raw_text": "Lăng Chủ tịch Hồ Chí Minh tại số 1 Đường Hùng Vương, Phường Ba Đình, Hà Nội.",
+        "content_sha256": "a" * 64,
+        "provenance_status": "VERIFIED_PUBLIC_OPEN_DATA",
+    }
+
+
 def test_w07_b0_verifier_passes_and_deterministic_hashes_match() -> None:
     res = w07_b0.verify_amendment_01_artifacts(REPO_ROOT)
     assert res["status"] == "PASS"
@@ -36,6 +60,15 @@ def test_w07_b0_verifier_passes_and_deterministic_hashes_match() -> None:
     )
     assert res["W07_RETRIEVAL_EXPERIMENT_STATUS"] == "NOT_STARTED"
     assert res["W07_RAG_EXPERIMENT_STATUS"] == "NOT_STARTED"
+    assert res["HIGH_AUTHORITY_DOES_NOT_IMPLY_REUSE_PERMISSION"] is True
+    assert res["RAW_TEXT_COMMIT_ALLOWED"] is True
+    assert res["OVERTURE_LICENSE_IS_THEME_AND_SOURCE_SPECIFIC"] is True
+    assert res["no_new_acquisition_at_b0"] == {
+        "NEW_WEB_DOCUMENT_DOWNLOADS": 0,
+        "NEW_SOCIAL_COLLECTION": 0,
+        "NEW_GOOGLE_MAPS_COLLECTION": 0,
+        "NEW_LLM_PROVIDER_CALLS": 0,
+    }
 
     expected = w07_b0.build_amendment_01_payload(REPO_ROOT)
     on_disk = json.loads(
@@ -70,7 +103,7 @@ def test_w07_b0_a4p_closure_and_strategy_transition_invariants() -> None:
     )
     assert (
         payload["next_gate"]
-        == "W07-B0-DATA-STRATEGY-AMENDMENT-01-CHATGPT-AUDIT"
+        == "W07-B0-CORRECTIVE-01-SOURCE-GOVERNANCE-CHATGPT-AUDIT"
     )
 
     a4p = payload["frozen_a4p_closure_summary"]
@@ -202,6 +235,7 @@ def test_w07_b0_research_questions_gt_policy_and_corpus_thresholds() -> None:
 
     thresh = payload["proposed_corpus_thresholds"]
     assert thresh["replaces_former_300_review_threshold"] is True
+    assert thresh["provisional_until_b1_empirical_source_audit"] is True
     assert thresh["minimum_tier"]["min_canonical_pois"] == 30
     assert thresh["minimum_tier"]["all_three_target_cities_required"] is True
     assert (
@@ -218,6 +252,161 @@ def test_w07_b0_research_questions_gt_policy_and_corpus_thresholds() -> None:
     assert thresh["preferred_tier"]["preferred_useful_chunks_max"] == 600
 
 
+def test_w07_b0_c1_tier_a_does_not_auto_imply_reuse_and_two_gate_rule_enforced() -> None:
+    base_doc = _sample_valid_open_reusable_doc()
+
+    # 1. Tier A official venue page with REFERENCE_ONLY -> NOT primary corpus eligible
+    tier_a_ref_only = {
+        **base_doc,
+        "source_tier": "TIER_A",
+        "source_type": "OFFICIAL_ATTRACTION_OR_VENUE_WEBSITES",
+        "license_or_usage_class": "ALL_RIGHTS_RESERVED_PUBLIC_WEBPAGE",
+        "reuse_storage_class": "REFERENCE_ONLY",
+        "reuse_evidence": "Official webpage has copyright notice without open redistribution license; reference metadata only.",
+        "redistributable_in_git": False,
+        "raw_text": None,
+    }
+    res_ref = w07_b0.evaluate_b1_source_candidate(tier_a_ref_only)
+    assert res_ref["authority_tier"] == "TIER_A"
+    assert res_ref["CANONICAL_MAPPING_OK"] is True
+    assert res_ref["REUSE_STATUS_ALLOWED"] is False
+    assert res_ref["PRIMARY_CORPUS_ELIGIBLE"] is False
+    assert res_ref["raw_text_permitted"] is False
+    assert res_ref["redistributable_in_git"] is False
+    assert res_ref["final_b1_decision"] == "REFERENCE_ONLY"
+    assert w07_b0.validate_candidate_poi_knowledge_document(tier_a_ref_only) == []
+
+    # 2. REFERENCE_ONLY attempting to store persistent raw_text or redistributable_in_git=True fails validation
+    tier_a_ref_with_raw_text = {
+        **tier_a_ref_only,
+        "raw_text": "Copied copyrighted text from official venue website.",
+        "redistributable_in_git": True,
+    }
+    ref_errs = w07_b0.validate_candidate_poi_knowledge_document(tier_a_ref_with_raw_text)
+    assert "REFERENCE_ONLY_CANNOT_STORE_PRIMARY_RAW_TEXT" in ref_errs
+    assert "REFERENCE_ONLY_RAW_TEXT_NOT_REDISTRIBUTABLE_IN_GIT" in ref_errs
+
+    # 3. PROHIBITED source (even Tier A) -> REJECT and cannot enter corpus
+    tier_a_prohibited = {
+        **base_doc,
+        "source_tier": "TIER_A",
+        "reuse_storage_class": "PROHIBITED",
+        "reuse_evidence": "Explicit anti-scraping and no-caching clause in terms of service.",
+        "redistributable_in_git": False,
+    }
+    res_prohib = w07_b0.evaluate_b1_source_candidate(tier_a_prohibited)
+    assert res_prohib["CANONICAL_MAPPING_OK"] is True
+    assert res_prohib["REUSE_STATUS_ALLOWED"] is False
+    assert res_prohib["PRIMARY_CORPUS_ELIGIBLE"] is False
+    assert res_prohib["final_b1_decision"] == "REJECT"
+    assert "PROHIBITED_SOURCE_CANNOT_ENTER_CORPUS" in (
+        w07_b0.validate_candidate_poi_knowledge_document(tier_a_prohibited)
+    )
+
+    # 4. OPEN_REUSABLE source with valid canonical POI mapping -> ACCEPT_PRIMARY_CORPUS
+    res_open = w07_b0.evaluate_b1_source_candidate(base_doc)
+    assert res_open["CANONICAL_MAPPING_OK"] is True
+    assert res_open["REUSE_STATUS_ALLOWED"] is True
+    assert res_open["PRIMARY_CORPUS_ELIGIBLE"] is True
+    assert res_open["raw_text_permitted"] is True
+    assert res_open["redistributable_in_git"] is True
+    assert res_open["final_b1_decision"] == "ACCEPT_PRIMARY_CORPUS"
+    assert w07_b0.validate_candidate_poi_knowledge_document(base_doc) == []
+
+    # 5. RESEARCH_RESTRICTED source with valid POI mapping -> ACCEPT_RESTRICTED_RESEARCH_ONLY (not redistributable in Git)
+    restricted_doc = {
+        **base_doc,
+        "reuse_storage_class": "RESEARCH_RESTRICTED",
+        "reuse_evidence": "Academic non-commercial research use permitted locally; Git redistribution not permitted.",
+        "redistributable_in_git": False,
+    }
+    res_rest = w07_b0.evaluate_b1_source_candidate(restricted_doc)
+    assert res_rest["CANONICAL_MAPPING_OK"] is True
+    assert res_rest["REUSE_STATUS_ALLOWED"] is True
+    assert res_rest["PRIMARY_CORPUS_ELIGIBLE"] is True
+    assert res_rest["raw_text_permitted"] is True
+    assert res_rest["redistributable_in_git"] is False
+    assert res_rest["final_b1_decision"] == "ACCEPT_RESTRICTED_RESEARCH_ONLY"
+    assert w07_b0.validate_candidate_poi_knowledge_document(restricted_doc) == []
+
+    # 6. Both gates required: OPEN_REUSABLE with unmapped poi_id -> REJECT
+    unmapped_open_doc = {
+        **base_doc,
+        "poi_id": "00000000-0000-0000-0000-000000000000",
+    }
+    res_unmapped = w07_b0.evaluate_b1_source_candidate(unmapped_open_doc)
+    assert res_unmapped["CANONICAL_MAPPING_OK"] is False
+    assert res_unmapped["REUSE_STATUS_ALLOWED"] is True
+    assert res_unmapped["PRIMARY_CORPUS_ELIGIBLE"] is False
+    assert res_unmapped["final_b1_decision"] == "REJECT"
+    assert "CANONICAL_POI_MAPPING_FAILED" in (
+        w07_b0.validate_candidate_poi_knowledge_document(unmapped_open_doc)
+    )
+
+
+def test_w07_b0_c1_overture_osm_wikidata_and_wikimedia_license_precision() -> None:
+    base_doc = _sample_valid_open_reusable_doc()
+
+    # 1. Blanket Overture license constant or missing theme/contributing_source is rejected
+    overture_blanket_doc = {
+        **base_doc,
+        "publisher": "Overture Maps Foundation",
+        "source_url": "https://overturemaps.org/places/08f4113853054fff030058024cb1c233",
+        "license_or_usage_class": "CDLA Permissive 2.0 / CC0",
+    }
+    ov_errs = w07_b0.validate_candidate_poi_knowledge_document(overture_blanket_doc)
+    assert "OVERTURE_BLANKET_OR_AMBIGUOUS_LICENSE_FORBIDDEN" in ov_errs
+    assert "OVERTURE_THEME_AND_CONTRIBUTING_SOURCE_REQUIRED" in ov_errs
+    ov_eval = w07_b0.evaluate_b1_source_candidate(overture_blanket_doc)
+    assert ov_eval["PRIMARY_CORPUS_ELIGIBLE"] is False
+    assert ov_eval["final_b1_decision"] == "REJECT"
+
+    # 2. Record-specific Overture Places record with explicit theme, contributing source, and single resolved license passes
+    overture_specific_doc = {
+        **base_doc,
+        "publisher": "Overture Maps Foundation",
+        "source_url": "https://overturemaps.org/places/08f4113853054fff030058024cb1c233",
+        "overture_theme": "places",
+        "overture_contributing_source": "meta_places",
+        "license_or_usage_class": "CDLA-Permissive-2.0",
+        "reuse_evidence": "Overture 2026-09-23.1 Places record source metadata specifies CDLA-Permissive-2.0.",
+        "attribution_requirement": "Overture Maps Foundation (Places theme, CDLA-Permissive-2.0)",
+    }
+    assert w07_b0.validate_candidate_poi_knowledge_document(overture_specific_doc) == []
+    ov_ok = w07_b0.evaluate_b1_source_candidate(overture_specific_doc)
+    assert ov_ok["PRIMARY_CORPUS_ELIGIBLE"] is True
+    assert ov_ok["final_b1_decision"] == "ACCEPT_PRIMARY_CORPUS"
+
+    # 3. Verify OSM, Wikidata, and Wikimedia policies in committed JSON
+    payload = json.loads(
+        (REPO_ROOT / w07_b0.AMENDMENT_JSON_RELPATH).read_text(encoding="utf-8")
+    )
+    src_pol = payload["source_authority_and_reuse_governance"][
+        "source_specific_license_policies"
+    ]
+    assert (
+        src_pol["overture_maps"]["OVERTURE_LICENSE_IS_THEME_AND_SOURCE_SPECIFIC"]
+        is True
+    )
+    assert src_pol["overture_maps"]["blanket_license_constant_forbidden"] is True
+    assert set(src_pol["overture_maps"]["places_theme_possible_licenses"]) == {
+        "CDLA-Permissive-2.0",
+        "Apache-2.0",
+        "CC0-1.0",
+    }
+    assert src_pol["openstreetmap"]["license"] == "ODbL-1.0"
+    assert src_pol["wikidata"]["license"] == "CC0-1.0"
+    assert (
+        src_pol["wikimedia_wikipedia_wikivoyage_text"][
+            "collapsed_into_wikidata_cc0_forbidden"
+        ]
+        is True
+    )
+    assert set(
+        src_pol["wikimedia_wikipedia_wikivoyage_text"]["applicable_licenses"]
+    ) == {"CC-BY-SA-4.0", "CC-BY-SA-3.0"}
+
+
 def test_w07_b0_schemas_hierarchy_method_guard_claims_and_infrastructure() -> None:
     payload = json.loads(
         (REPO_ROOT / w07_b0.AMENDMENT_JSON_RELPATH).read_text(encoding="utf-8")
@@ -229,31 +418,16 @@ def test_w07_b0_schemas_hierarchy_method_guard_claims_and_infrastructure() -> No
 
     doc_fields = payload["schemas"]["document_schema_fields"]
     chunk_fields = payload["schemas"]["chunk_schema_fields"]
-    assert len(doc_fields) == 14
+    assert len(doc_fields) == 19
     assert len(chunk_fields) == 8
-
-    valid_doc = {
-        "document_id": "doc_poi01_osm_01",
-        "poi_id": "698ee756-6062-5f47-955b-bdf458682e57",
-        "city": "Hà Nội",
-        "source_type": "OPENLY_LICENSED_GEOGRAPHIC_OR_TOURISM_DATA",
-        "source_tier": "TIER_C",
-        "source_title": "Lăng Chủ tịch Hồ Chí Minh — OpenStreetMap & Wikidata Record",
-        "source_url": "https://www.openstreetmap.org/way/37625751",
-        "publisher": "OpenStreetMap Contributors",
-        "language": "vi",
-        "retrieved_at": "2026-10-07T09:52:02Z",
-        "license_or_usage_class": "ODbL-1.0",
-        "raw_text": "Lăng Chủ tịch Hồ Chí Minh tại số 1 Đường Hùng Vương, Phường Ba Đình, Hà Nội.",
-        "content_sha256": "a" * 64,
-        "provenance_status": "VERIFIED_PUBLIC_OPEN_DATA",
-    }
-    assert w07_b0.validate_candidate_poi_knowledge_document(valid_doc) == []
-
-    invalid_doc = {**valid_doc, "source_tier": "TIER_SOCIAL"}
-    assert "INVALID_SOURCE_TIER:TIER_SOCIAL" in (
-        w07_b0.validate_candidate_poi_knowledge_document(invalid_doc)
-    )
+    for new_field in (
+        "reuse_storage_class",
+        "reuse_evidence",
+        "attribution_requirement",
+        "redistributable_in_git",
+        "source_terms_checked_at",
+    ):
+        assert new_field in doc_fields
 
     valid_chunk = {
         "chunk_id": "chunk_poi01_000",
