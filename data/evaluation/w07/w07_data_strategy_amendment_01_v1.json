@@ -1,0 +1,327 @@
+{
+  "artifact_id": "w07_data_strategy_amendment_01_v1",
+  "version": "1.0.0",
+  "task_id": "W07-B0-DATA-STRATEGY-AMENDMENT-01",
+  "authoritative_base_develop_sha": "8304a71ee01d3edac224de6dc3d75beb0427fe16",
+  "previous_accepted_gate": "W07-A4P-POSTMERGE-CHATGPT-AUDIT = PASS",
+  "next_gate": "W07-B0-DATA-STRATEGY-AMENDMENT-01-CHATGPT-AUDIT",
+  "W07_PRIMARY_CORPUS_STRATEGY": "EVIDENCE_GROUNDED_POI_KNOWLEDGE",
+  "PRIMARY_W07_CORPUS": "OPEN_AND_OFFICIAL_POI_KNOWLEDGE",
+  "FIRST_PARTY_REVIEW_COLLECTION_STATUS": "OPTIONAL_ENHANCEMENT_PENDING_RECRUITMENT",
+  "PUBLIC_REVIEW_ACQUISITION_STATUS": "CLOSED_NO_SUITABLE_PRIMARY_DATA",
+  "GOOGLE_MAPS_ROLE": "RUNTIME_ENRICHMENT_ONLY",
+  "SOCIAL_PLATFORM_ROLE": "DYNAMIC_FRESHNESS_LAYER_NOT_PRIMARY_CORPUS",
+  "W07_RETRIEVAL_EXPERIMENT_STATUS": "NOT_STARTED",
+  "W07_RAG_EXPERIMENT_STATUS": "NOT_STARTED",
+  "frozen_a4p_closure_summary": {
+    "PUBLIC_REVIEWS_DISCOVERED": 300536,
+    "PUBLIC_UNIQUE_REVIEWS": 186170,
+    "PUBLIC_REVIEWS_ACCEPTED": 0,
+    "PUBLIC_REVIEWS_REJECTED": 124898,
+    "PUBLIC_REVIEWS_QUARANTINED": 61272,
+    "PUBLIC_POIS_COVERED": 0,
+    "SOURCES_WITH_QUARANTINE_STATUS": 11,
+    "REVIEW_BEARING_QUARANTINED_SOURCES": 3,
+    "QUARANTINED_UNIQUE_REVIEW_COUNT": 61272,
+    "investigated_sources_count": 18,
+    "outcome_classification": "OUTCOME_C_ZERO_SUITABLE_PUBLIC_REVIEWS_FOUND",
+    "scientific_statement": "No suitable public review was found among the investigated sources under the frozen W07 rules.",
+    "broad_public_review_acquisition_reopened": false
+  },
+  "strategy_transition": {
+    "old_strategy": "POI-grounded review corpus -> retrieval -> RAG review summarization",
+    "new_strategy": "canonical POI knowledge corpus -> retrieval -> grounded POI RAG",
+    "amendment_rationale": "W07-A4P investigated 18 public sources comprising 300,536 raw rows and 186,170 unique public reviews, but zero reviews satisfied the combined frozen requirements for clear academic reuse/provenance and high-confidence mapping to the 60 canonical POIs in Hà Nội, Đà Nẵng, and Hạ Long. Continuing broad public-review acquisition has diminishing scientific value. Meanwhile, first-party review collection (W07-A3 Google Forms and W07-A4H Assisted Collection) remains scientifically valid, but human contributor recruitment volume cannot be made a blocking gate for the core W07 retrieval and RAG thesis experiments. Amending the primary W07 corpus to an evidence-grounded canonical POI knowledge corpus preserves strict provenance, avoids fabricated or AI-generated reviews, avoids unauthorized commercial scraping, and enables rigorous offline evaluation of BM25, Dense, and Hybrid RRF retrieval and grounded RAG citation.",
+    "avoids_prohibited_shortcuts": [
+      "No fabricated review data",
+      "No AI-generated review augmentation",
+      "No unauthorized commercial platform scraping",
+      "No lowering of provenance or entity-mapping standards"
+    ]
+  },
+  "core_scientific_corpus_definition": {
+    "PRIMARY_W07_CORPUS": "OPEN_AND_OFFICIAL_POI_KNOWLEDGE",
+    "W07_PRIMARY_CORPUS_STRATEGY": "EVIDENCE_GROUNDED_POI_KNOWLEDGE",
+    "eligible_evidence_classes": [
+      "OFFICIAL_TOURISM_AUTHORITY_PAGES",
+      "OFFICIAL_ATTRACTION_OR_VENUE_WEBSITES",
+      "GOVERNMENT_OR_LOCAL_TOURISM_PORTALS",
+      "OPENLY_LICENSED_GEOGRAPHIC_OR_TOURISM_DATA",
+      "OTHER_RESEARCH_USABLE_PUBLIC_DOCUMENTS_WITH_CLEAR_PROVENANCE"
+    ],
+    "canonical_poi_authority_path": "data/evaluation/w07/w07_review_target_60_pois_v1.json",
+    "canonical_poi_authority_internal_sha256": "b4be35d96ff503c61986674a6b3eb37b993484c0dc121434772184a2b089ed2b",
+    "canonical_poi_identifiers_frozen": true,
+    "every_primary_document_must_map_to_frozen_canonical_poi": true,
+    "subset_coverage_permitted_if_justified_and_explicitly_reported": true
+  },
+  "role_governance": {
+    "first_party_reviews": {
+      "status": "OPTIONAL_ENHANCEMENT_PENDING_RECRUITMENT",
+      "scientifically_failed": false,
+      "a3_google_forms_preserved": true,
+      "a4h_assisted_collection_preserved": true,
+      "blocking_for_core_w07_retrieval_or_rag": false,
+      "policy": "Genuine first-party reviews collected via W07-A3 or W07-A4H may be incorporated later as an optional supplementary layer without blocking primary POI-knowledge retrieval/RAG evaluation."
+    },
+    "public_reviews": {
+      "status": "CLOSED_NO_SUITABLE_PRIMARY_DATA",
+      "reopen_broad_acquisition": false,
+      "policy": "W07-A4P is closed with 0 accepted primary reviews; auxiliary anonymized ABSA datasets remain strictly separated from the primary POI corpus."
+    },
+    "google_maps": {
+      "role_code": "RUNTIME_ENRICHMENT_ONLY",
+      "detailed_role": "RUNTIME_POI_ENRICHMENT_ONLY",
+      "allowed_future_runtime_fields": [
+        "rating",
+        "user_rating_count",
+        "limited_provider_authorized_review_display",
+        "place_metadata",
+        "attribution_or_source_link"
+      ],
+      "used_as_primary_frozen_scientific_corpus": false,
+      "bulk_scraping_allowed": false
+    },
+    "social_platforms": {
+      "role_code": "DYNAMIC_FRESHNESS_LAYER_NOT_PRIMARY_CORPUS",
+      "detailed_role": "DYNAMIC_SOCIAL_FRESHNESS_LAYER",
+      "platforms": [
+        "TikTok",
+        "Facebook",
+        "Instagram",
+        "YouTube",
+        "social_posts_and_comments"
+      ],
+      "used_as_primary_w07_scientific_corpus": false,
+      "used_as_relevance_ground_truth": false,
+      "collected_in_b0": false,
+      "future_reserved_task_id": "SOCIAL-FRESHNESS-01",
+      "future_candidate_signals": [
+        "recent_mentions",
+        "trend_velocity",
+        "event_keywords",
+        "recent_content_count",
+        "engagement_signal",
+        "freshness_timestamp",
+        "source_urls"
+      ],
+      "future_use_cases": [
+        "trending_pois",
+        "recent_events",
+        "current_travel_interest",
+        "dynamic_homepage_hot_trending",
+        "supplementary_recommender_reranking_signal"
+      ]
+    },
+    "openclaw_and_jev_roadmap": {
+      "openclaw_implemented_in_b0": false,
+      "jev_implemented_in_b0": false,
+      "prerequisite_for_b0_or_b1": false,
+      "openclaw_future_role": "Future orchestration of approved fresh-data and source-refresh workflows after core retrieval/RAG is stable.",
+      "jev_future_role": "Future enhancement evaluated only where it provides measurable value to GoMate."
+    }
+  },
+  "research_questions": {
+    "RQ_W07_RETRIEVAL": {
+      "id": "RQ-W07-RETRIEVAL",
+      "question": "Which retrieval strategy most effectively retrieves relevant, provenance-grounded POI information for Vietnamese travel queries over the GoMate canonical POI knowledge corpus?",
+      "candidate_strategies_for_later_comparison": [
+        "BM25",
+        "Dense Retrieval",
+        "Hybrid RRF",
+        "Optional Reranking"
+      ],
+      "primary_metric": "NDCG@10",
+      "secondary_metrics": [
+        "Recall@K",
+        "MRR",
+        "HitRate@K",
+        "coverage"
+      ],
+      "experiment_status": "NOT_STARTED"
+    },
+    "RQ_W07_RAG": {
+      "id": "RQ-W07-RAG",
+      "question": "Can grounded generation using retrieved authoritative POI evidence answer travel questions with higher factual support and citation correctness than generation without retrieval?",
+      "evaluation_dimensions": [
+        "answer_correctness",
+        "groundedness",
+        "citation_correctness",
+        "unsupported_claim_rate",
+        "answer_completeness"
+      ],
+      "experiment_status": "NOT_STARTED"
+    }
+  },
+  "human_relevance_ground_truth_policy": {
+    "review_contributors_required_for_retrieval_gt": false,
+    "annotation_unit": "query <-> source chunk relevance",
+    "annotators": "Project researchers / team members following frozen annotation guidelines",
+    "separated_from_user_review_collection": true,
+    "social_signals_allowed_as_gt": false,
+    "labels_created_in_b0": 0
+  },
+  "baseline_poi_knowledge_inspection": {
+    "frozen_target_pois_total": 60,
+    "frozen_target_pois_in_freeze_v2": 60,
+    "frozen_target_pois_by_city": {
+      "Hà Nội": 20,
+      "Đà Nẵng": 20,
+      "Hạ Long": 20
+    },
+    "existing_local_poi_signals_on_60_pois": {
+      "pois_with_verified_osm_id": 60,
+      "pois_with_overture_gers_id": 26,
+      "pois_with_street_address": 41,
+      "pois_with_osm_website_tag": 15,
+      "pois_with_osm_wikidata_tag": 14,
+      "pois_with_osm_wikipedia_tag": 13,
+      "pois_with_osm_opening_hours_tag": 18,
+      "pois_with_osm_phone_tag": 16,
+      "pois_with_overture_or_external_link_by_city": {
+        "Hà Nội": 16,
+        "Đà Nẵng": 14,
+        "Hạ Long": 10
+      }
+    },
+    "freeze_v2_repository_inventory": {
+      "verified_osm_pois_total": 759,
+      "rec_a_core_3_city_pois": 622,
+      "overture_linked_pois_total": 247,
+      "non_review_rag_documents_in_freeze_v2_manifest": 1223,
+      "osm_metadata_documents_in_freeze_v2_manifest": 759,
+      "wikivoyage_destination_chunks_in_freeze_v2_manifest": 464
+    }
+  },
+  "proposed_corpus_thresholds": {
+    "replaces_former_300_review_threshold": true,
+    "former_review_threshold_reference": "60 POIs x 5 reviews = 300 reviews (superseded for primary W07 gate)",
+    "minimum_tier": {
+      "min_canonical_pois": 30,
+      "min_pois_per_city": 10,
+      "all_three_target_cities_required": true,
+      "target_cities": [
+        "Hà Nội",
+        "Đà Nẵng",
+        "Hạ Long"
+      ],
+      "min_independent_documents_per_poi_where_available": 2,
+      "min_useful_chunks_after_cleaning": 150
+    },
+    "preferred_tier": {
+      "preferred_canonical_pois_min": 45,
+      "preferred_canonical_pois_max": 60,
+      "preferred_independent_documents_per_poi": 3,
+      "preferred_useful_chunks_min": 300,
+      "preferred_useful_chunks_max": 600
+    },
+    "no_document_fabrication_rule": "Do not fabricate or synthetically pad documents merely to hit a numerical threshold; report exact empirical coverage per city and category."
+  },
+  "source_hierarchy": {
+    "tiers": [
+      {
+        "tier": "TIER_A",
+        "rank": 1,
+        "name": "Official POI / venue website",
+        "description": "Official website or digital publication operated by the attraction, museum, hotel, or venue."
+      },
+      {
+        "tier": "TIER_B",
+        "rank": 2,
+        "name": "Government / tourism-authority site",
+        "description": "National, provincial, or municipal tourism authority portals and heritage administration pages."
+      },
+      {
+        "tier": "TIER_C",
+        "rank": 3,
+        "name": "Open-data / open-license geographic or tourism source",
+        "description": "OpenStreetMap (ODbL 1.0), Overture Maps (CDLA Permissive 2.0 / CC0 1.0), Wikidata (CC0), Wikimedia/Wikipedia/Wikivoyage (CC BY-SA)."
+      },
+      {
+        "tier": "TIER_D",
+        "rank": 4,
+        "name": "Other research-usable public source",
+        "description": "Publicly accessible travel/cultural reference documents with clear provenance and non-conflicting factual claims."
+      }
+    ],
+    "conflict_resolution_rule": "Prefer higher authority tiers (TIER_A > TIER_B > TIER_C > TIER_D) when factual claims conflict; never treat low-authority social posts as canonical factual evidence."
+  },
+  "schemas": {
+    "document_schema_fields": [
+      "document_id",
+      "poi_id",
+      "city",
+      "source_type",
+      "source_tier",
+      "source_title",
+      "source_url",
+      "publisher",
+      "language",
+      "retrieved_at",
+      "license_or_usage_class",
+      "raw_text",
+      "content_sha256",
+      "provenance_status"
+    ],
+    "chunk_schema_fields": [
+      "chunk_id",
+      "document_id",
+      "poi_id",
+      "chunk_index",
+      "chunk_text",
+      "token_count",
+      "section_title",
+      "content_sha256"
+    ]
+  },
+  "method_drift_guard": {
+    "method_choices_frozen_in_b0": false,
+    "deferred_to_later_design_gates": [
+      "embedding_model",
+      "reranker",
+      "vector_db",
+      "chunk_size",
+      "bm25_implementation",
+      "llm_provider"
+    ]
+  },
+  "scientific_claims_policy": {
+    "allowed_claims": [
+      "Review-based W07 corpus construction was not feasible under the frozen constraints and available investigated sources.",
+      "The project therefore adopts an evidence-grounded POI knowledge corpus as the primary W07 retrieval corpus.",
+      "No suitable public review was found among the investigated sources under the frozen W07 rules."
+    ],
+    "forbidden_claims": [
+      "No usable tourism reviews exist anywhere.",
+      "Google Maps cannot be used.",
+      "First-party review collection failed scientifically."
+    ]
+  },
+  "infrastructure_requirements_at_b0": {
+    "GPU_REQUIRED_NOW": false,
+    "SERVER_REQUIRED_NOW": false,
+    "VECTOR_DB_SERVER_REQUIRED_NOW": false,
+    "PAID_EMBEDDING_API_REQUIRED_NOW": false,
+    "NEW_LLM_PROVIDER_CALLS": 0
+  },
+  "upstream_immutability": {
+    "w06_closure_internal_sha256": "7dec87d9b318165ba5233d1470df8f12dfbe99449bceabb86dc2322aaab89e12",
+    "w07_0_audit_internal_sha256": "7a951b5f93473998d4032aabfeaa250ac8e7ba2ea42cbdaf230389cd5fe3a6a9",
+    "w07_a1_feasibility_internal_sha256": "6658b23c4f58f9dd05b7739e20eb7bd0543ed93f8dea76010e4ec3639eae6442",
+    "w07_a2_manifest_internal_sha256": "b4be35d96ff503c61986674a6b3eb37b993484c0dc121434772184a2b089ed2b",
+    "w07_a2_intake_status_internal_sha256": "4dd13bd7ad51ddfc3f501a11935f109928b2db8e9de52849da97d1a691ad2624",
+    "w07_a3_form_definition_internal_sha256": "9c17cfc51c41295c8338b40544324454a36a7276bb2339edd3a0b59c88c6de8a",
+    "w07_a3_apps_script_lf_sha256": "5e87dcf74d2bc4840792701bbd852c75781ef6ba938ac8c1eacad6d2a430be71",
+    "w07_a3_progress_internal_sha256": "a7eb47e50735a6f184f4ae717976b7a8bf7d1258a6d4763031c62fd691d38e70",
+    "w07_a4h_template_lf_sha256": "747da9d0b0033ae5ca7649bf456fde59f79f895f1248985ab1f521b43ca42bd9",
+    "w07_a4h_progress_internal_sha256": "b34e32af7aba9b5ee95d13f30781fbef3e15a4cb9b6a26c7b97fa1489f13ecdb",
+    "w07_a4h_progress_lf_sha256": "79095ce10fbf50a838d9e1a607001d821413ced6e8d6e7ad5ac2fd6e7c6239d1",
+    "w07_a4h_guide_lf_sha256": "4e8e133c877ec748fd7bdc66b2f3b50ab72c46686018899b1758779d18409814",
+    "w07_a4p_report_internal_sha256": "1ee567e59b7d4da8069f32d9734a9de95703d4955dd27cfa1db30f7a06422916",
+    "w07_a4p_report_lf_sha256": "b1380683b5a55d92fe467203b912af86fd945a31bc9160c789c57c3e55ae04ea",
+    "w07_a4p_receipt_internal_sha256": "929f7f55ebdec5387778c11080ae56db8cdf0204ac70bc11109bb59a601011c4",
+    "w07_a4p_receipt_lf_sha256": "bc5c8ace3618d5a67d16bf9bd5c298c52f132fc8fe575bd1678730f31b0b1d49",
+    "w07_a4p_md_lf_sha256": "ff6e8a3bd295910d149bd712512b025440d1ff74378c837bb0f9d05ece81885c"
+  },
+  "artifact_sha256": "f9055e36562c8f7473ddb967b0176cc7dbe4b32426d0cc9ae124525ada973b02"
+}
