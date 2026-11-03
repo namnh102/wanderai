@@ -1,0 +1,258 @@
+{
+  "task_id": "W07-B1-FIX-01B-CONTROLLED-OSM-REINGESTION",
+  "receipt_version": "1.0.0",
+  "authoritative_develop_sha": "b4db0655070cd0b404891964d57241032e08ed84",
+  "previous_accepted_gate": "W07-B1-FIX-01A-POSTMERGE-CHATGPT-AUDIT = PASS",
+  "w07_b1_fix_01a_status": "CLOSED",
+  "W07_B1_FIX_01B_EXECUTION": "PASS",
+  "PDG_001_RENDERER_FIX_IMPLEMENTED": true,
+  "PDG_001_CONTROLLED_REINGESTION_VERIFIED": true,
+  "PDG_001_STATUS": "REINGESTION_VERIFIED_PENDING_CHATGPT_AUDIT",
+  "next_gate": "W07-B1-FIX-01B-CONTROLLED-REINGESTION-CHATGPT-AUDIT",
+  "before_counts": {
+    "TOTAL_DOCUMENTS_BEFORE": 1223,
+    "OSM_DOCUMENTS_BEFORE": 759,
+    "WIKIVOYAGE_DOCUMENTS_BEFORE": 464,
+    "unique_osm_document_ids": 759,
+    "duplicate_osm_document_ids": 0,
+    "unique_osm_place_ids": 759,
+    "duplicate_osm_place_ids": 0,
+    "null_place_id_osm_documents": 0,
+    "unverified_osm_documents": 0,
+    "quarantine_table_exists": true
+  },
+  "quarantine_baseline": {
+    "QUARANTINE_ROWS_BEFORE": 274,
+    "QUARANTINE_OSM_SUPERSEDED_ROWS_BEFORE": 207,
+    "superseded_reason": "osm_document_superseded_by_task_07_5_regeneration"
+  },
+  "embedding_preflight": {
+    "embedding_model": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
+    "dimension": 384,
+    "offline_cache_verified": true,
+    "HF_HUB_OFFLINE": "1",
+    "NEW_MODEL_DOWNLOADS": 0
+  },
+  "expected_generation_and_delta": {
+    "EXPECTED_OSM_DOCUMENTS": 759,
+    "MISSING_IN_DB": 0,
+    "UNEXPECTED_IN_DB": 0,
+    "EXPECTED_CHANGED_CONTENT_HASH_COUNT": 616,
+    "EXPECTED_UNCHANGED_CONTENT_HASH_COUNT": 143,
+    "EXPECTED_CONTENT_HASH_DUPLICATES": 0,
+    "CROSS_PAIR_HASH_COLLISION_COUNT": 0
+  },
+  "OSM_BEFORE_SEMANTIC_SHA256": "8d51be98c50265eae9866fbead7fa4add39a7173af2332c59610dd7f0981626d",
+  "WIKIVOYAGE_BEFORE_SHA256": "cb1bd4dcf65df35ccba4bee4861d7049b72cf3db8cf86a4868155841cd269811",
+  "run_1": {
+    "ingestion_result": {
+      "source": "OpenStreetMap",
+      "license": "ODbL 1.0",
+      "embedding_model": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
+      "verified_places": 759,
+      "documents_generated": 759,
+      "chunks_upserted": 759,
+      "stale_osm_documents_quarantined_and_removed": 616
+    },
+    "TOTAL_DOCUMENTS_AFTER_RUN1": 1223,
+    "OSM_DOCUMENTS_AFTER_RUN1": 759,
+    "WIKIVOYAGE_DOCUMENTS_AFTER_RUN1": 464,
+    "OSM_EXPECTED_STATE_MISMATCH_COUNT": 0,
+    "ACTUAL_CHANGED_CONTENT_HASH_COUNT": 616,
+    "ACTUAL_UNCHANGED_CONTENT_HASH_COUNT": 143,
+    "NEW_OSM_QUARANTINE_ROWS_RUN1": 616,
+    "QUARANTINE_REASON_VERIFIED": "osm_document_superseded_by_task_07_5_regeneration",
+    "WIKIVOYAGE_AFTER_RUN1_SHA256": "cb1bd4dcf65df35ccba4bee4861d7049b72cf3db8cf86a4868155841cd269811",
+    "QUARANTINE_ROWS_AFTER_RUN1": 890,
+    "QUARANTINE_OSM_SUPERSEDED_ROWS_AFTER_RUN1": 823
+  },
+  "target_60_verification": {
+    "TARGET_POI_DOCUMENTS": 60,
+    "TARGET_USEFUL_STRUCTURED_DOCUMENTS": 40,
+    "TARGET_LOW_INFORMATION_DOCUMENTS": 20,
+    "TARGET_CHANGED_CONTENT_HASH_COUNT": 58,
+    "TARGET_UNCHANGED_CONTENT_HASH_COUNT": 2,
+    "sample_before_after_evidence": [
+      {
+        "poi_id": "698ee756-6062-5f47-955b-bdf458682e57",
+        "poi_name": "Lăng Chủ tịch Hồ Chí Minh",
+        "city": "Hà Nội",
+        "old_content_hash": "1a7fe0d119b5c43d1ca8403e28c322388b0c22f64d5e9ae1373dc98057320bdd",
+        "new_content_hash": "ed67c282518e215e6a069e3bbd1eccd4043eeccb51c501869e9b695ecb5d7baf",
+        "fields_newly_surfaced": [
+          "address (addr:*)",
+          "opening_hours",
+          "wheelchair",
+          "wikidata",
+          "wikipedia"
+        ]
+      },
+      {
+        "poi_id": "f0d424bd-f722-540f-8964-5e6fd8875b56",
+        "poi_name": "Bảo tàng Dân tộc học Việt Nam",
+        "city": "Hà Nội",
+        "old_content_hash": "758fdf02d659396bed7ebe5e92877e21b6d2eb5ee550f4e4eb945d829a934aa3",
+        "new_content_hash": "0d97dc34504ee43d4fc38aeaabc583159ae55ba75f3f0a83a501c17d65251bd6",
+        "fields_newly_surfaced": [
+          "address (addr:*)",
+          "email",
+          "opening_hours",
+          "operator",
+          "phone",
+          "website",
+          "wikidata",
+          "wikipedia"
+        ]
+      },
+      {
+        "poi_id": "acb22336-1124-49d5-a279-6357c2b2b445",
+        "poi_name": "Quán Ăn Ngon - Phan Bội Châu",
+        "city": "Hà Nội",
+        "old_content_hash": "86dd5f83e4d8e2475538f5b2960b520f6429e58529ad4ccf48d834a678f23bc5",
+        "new_content_hash": "66d66f85d5bb064ffc00cb6c4aeeb8735a4f32634b6326a18d4d3a30ad82ed73",
+        "fields_newly_surfaced": [
+          "address (addr:*)",
+          "cuisine",
+          "opening_hours",
+          "phone",
+          "website"
+        ]
+      },
+      {
+        "poi_id": "9974ff88-5418-5867-ae49-1b72e0f0861f",
+        "poi_name": "Cầu Rồng",
+        "city": "Đà Nẵng",
+        "old_content_hash": "779bbb9c42bb7d3e90344920bcb01316ac138318d664005d5513b95a73964d35",
+        "new_content_hash": "1c86cdc9f2d7ed2ebe7d66442a922bccbb6ddcf50842537d884b51d632cd8a26",
+        "fields_newly_surfaced": [
+          "description",
+          "opening_hours",
+          "wikidata"
+        ]
+      },
+      {
+        "poi_id": "b37d68ee-0cb3-49f0-a399-cac4c8e2732c",
+        "poi_name": "Nhà hàng Hồng Hạnh 3",
+        "city": "Hạ Long",
+        "old_content_hash": "08603a8a29683b2a2842e54d1ee9e0e9dfbdecef66eefb258480b350b83516a1",
+        "new_content_hash": "74c21285e0c191a25cd43cb6add308fd2dbe7c2122cda836d81f528392ef122d",
+        "fields_newly_surfaced": [
+          "address (addr:*)",
+          "cuisine",
+          "phone",
+          "website"
+        ]
+      }
+    ]
+  },
+  "run_2": {
+    "ingestion_result": {
+      "source": "OpenStreetMap",
+      "license": "ODbL 1.0",
+      "embedding_model": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
+      "verified_places": 759,
+      "documents_generated": 759,
+      "chunks_upserted": 759,
+      "stale_osm_documents_quarantined_and_removed": 0
+    },
+    "TOTAL_DOCUMENTS_AFTER_RUN2": 1223,
+    "OSM_DOCUMENTS_AFTER_RUN2": 759,
+    "WIKIVOYAGE_DOCUMENTS_AFTER_RUN2": 464,
+    "OSM_AFTER_RUN1_SEMANTIC_SHA256": "276ea8c24f36f6d71329ee5efdccaffcdc6b67574ebc3ffdad36d26721b7fdf0",
+    "OSM_AFTER_RUN2_SEMANTIC_SHA256": "276ea8c24f36f6d71329ee5efdccaffcdc6b67574ebc3ffdad36d26721b7fdf0",
+    "RUN2_SEMANTIC_CHANGE_COUNT": 0,
+    "NEW_OSM_QUARANTINE_ROWS_RUN2": 0,
+    "WIKIVOYAGE_AFTER_RUN2_SHA256": "cb1bd4dcf65df35ccba4bee4861d7049b72cf3db8cf86a4868155841cd269811",
+    "QUARANTINE_ROWS_AFTER_RUN2": 890,
+    "QUARANTINE_OSM_SUPERSEDED_ROWS_AFTER_RUN2": 823
+  },
+  "duplicate_and_provenance_checks_after_run2": {
+    "duplicate_osm_document_ids": 0,
+    "duplicate_osm_place_ids": 0,
+    "null_place_id_osm_documents": 0,
+    "unverified_osm_documents": 0
+  },
+  "embedding_validity": {
+    "null_embedding_count_all": 0,
+    "null_embedding_count_osm": 0,
+    "distinct_vector_dims": [
+      384
+    ],
+    "OSM_EMBEDDING_MODEL_SET": [
+      "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
+    ],
+    "ALL_DOCUMENTS_EMBEDDING_MODEL_SET": [
+      "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
+    ],
+    "duplicate_content_hash_embedding_model_count": 0,
+    "hnsw_index_present": true
+  },
+  "retrieval_smoke": {
+    "status": "PASS",
+    "checks": [
+      {
+        "check_id": "SMOKE-01-CULTURE-HANOI",
+        "query": "Địa điểm nào thuộc Văn hóa ở Hà Nội?",
+        "source_filter": "osm",
+        "hits_returned": 5,
+        "top_hit_document_id": "osm-place-06d8683d-46d2-5f86-bf8d-4dc72dba37ec",
+        "top_hit_title": "Bảo tàng Lịch sử Quốc gia Việt Nam",
+        "top_hit_category": "culture",
+        "verified_fact_present": true
+      },
+      {
+        "check_id": "SMOKE-02-OPENING-HOURS-NESTED-TAG",
+        "query": "Giờ mở cửa của Lăng Chủ tịch Hồ Chí Minh là gì?",
+        "source_filter": "osm",
+        "hits_returned": 5,
+        "matched_document_id": "osm-place-698ee756-6062-5f47-955b-bdf458682e57",
+        "matched_title": "Lăng Chủ tịch Hồ Chí Minh",
+        "verified_fact_present": true
+      },
+      {
+        "check_id": "SMOKE-03-RESTAURANT-CUISINE-NESTED-TAG",
+        "query": "Nhà hàng ẩm thực Việt Nam tại Hà Nội Quán Ăn Ngon",
+        "source_filter": "osm",
+        "hits_returned": 3,
+        "matched_document_id": "osm-place-acb22336-1124-49d5-a279-6357c2b2b445",
+        "matched_title": "Quán Ăn Ngon - Phan Bội Châu",
+        "verified_fact_present": true
+      }
+    ]
+  },
+  "no_external_activity": {
+    "NEW_WEB_DOCUMENT_DOWNLOADS": 0,
+    "NEW_SOCIAL_COLLECTION": 0,
+    "NEW_GOOGLE_MAPS_COLLECTION": 0,
+    "NEW_LLM_PROVIDER_CALLS": 0,
+    "NEW_EXTERNAL_API_CALLS_FOR_CORPUS": 0,
+    "NEW_MODEL_DOWNLOADS": 0,
+    "SOCIAL_FRESHNESS_01_STATUS": "RESERVED"
+  },
+  "upstream_frozen_hashes": {
+    "w06_closure_internal_sha256": "7dec87d9b318165ba5233d1470df8f12dfbe99449bceabb86dc2322aaab89e12",
+    "w07_0_audit_internal_sha256": "7a951b5f93473998d4032aabfeaa250ac8e7ba2ea42cbdaf230389cd5fe3a6a9",
+    "w07_a1_feasibility_internal_sha256": "6658b23c4f58f9dd05b7739e20eb7bd0543ed93f8dea76010e4ec3639eae6442",
+    "w07_a2_manifest_internal_sha256": "b4be35d96ff503c61986674a6b3eb37b993484c0dc121434772184a2b089ed2b",
+    "w07_a2_intake_status_internal_sha256": "4dd13bd7ad51ddfc3f501a11935f109928b2db8e9de52849da97d1a691ad2624",
+    "w07_a3_form_definition_internal_sha256": "9c17cfc51c41295c8338b40544324454a36a7276bb2339edd3a0b59c88c6de8a",
+    "w07_a3_apps_script_lf_sha256": "5e87dcf74d2bc4840792701bbd852c75781ef6ba938ac8c1eacad6d2a430be71",
+    "w07_a3_progress_internal_sha256": "a7eb47e50735a6f184f4ae717976b7a8bf7d1258a6d4763031c62fd691d38e70",
+    "w07_a4h_template_lf_sha256": "747da9d0b0033ae5ca7649bf456fde59f79f895f1248985ab1f521b43ca42bd9",
+    "w07_a4h_progress_internal_sha256": "b34e32af7aba9b5ee95d13f30781fbef3e15a4cb9b6a26c7b97fa1489f13ecdb",
+    "w07_a4h_progress_lf_sha256": "79095ce10fbf50a838d9e1a607001d821413ced6e8d6e7ad5ac2fd6e7c6239d1",
+    "w07_a4h_guide_lf_sha256": "4e8e133c877ec748fd7bdc66b2f3b50ab72c46686018899b1758779d18409814",
+    "w07_a4p_report_internal_sha256": "1ee567e59b7d4da8069f32d9734a9de95703d4955dd27cfa1db30f7a06422916",
+    "w07_a4p_report_lf_sha256": "b1380683b5a55d92fe467203b912af86fd945a31bc9160c789c57c3e55ae04ea",
+    "w07_a4p_receipt_internal_sha256": "929f7f55ebdec5387778c11080ae56db8cdf0204ac70bc11109bb59a601011c4",
+    "w07_a4p_receipt_lf_sha256": "bc5c8ace3618d5a67d16bf9bd5c298c52f132fc8fe575bd1678730f31b0b1d49",
+    "w07_a4p_md_lf_sha256": "ff6e8a3bd295910d149bd712512b025440d1ff74378c837bb0f9d05ece81885c",
+    "w07_b0_amendment_internal_sha256": "365b00607737f01f02753595f5ce65092e2622bfbe3a8bb4ed20e464daf7a12f",
+    "w07_b0_amendment_lf_sha256": "896fb5f90bce36610f9e82e23f52e56e0f93d90ecb81f564b6a1360b8e4b3c94",
+    "w07_b0_md_lf_sha256": "0f1ef9fcb9500882ce3dbbbea148d2d592fbe7211eb1e91f86855d6ed08af585",
+    "w07_b1a_audit_internal_sha256": "27d6dae8fd3ec284ea92806080a044b6745fb30abdddc265297e0f9da1d1c5b2",
+    "w07_b1a_audit_lf_sha256": "433c722dd2f03946ab0a15830b53ef628d76937fa2e8e63a9939e73bb469e563",
+    "w07_b1a_md_lf_sha256": "130aca652c9b808a8b7e5fac50d070dd0c3f36a8e94f7693cfac8793643d0ac5"
+  },
+  "internal_sha256": "d12457f4921bb2feb764f49d353ba0d094c1ac11c978e8786c68dd3964182095"
+}
