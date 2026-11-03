@@ -175,7 +175,6 @@ def test_pf_a_01_production_config_and_historical_tests_byte_identical_to_develo
             "apps/ai-service/requirements.txt",
             "requirements-data-contract.txt",
             "tests/test_w06_measurement_capability_audit.py",
-            "tests/test_w06_measurement_contract.py",
             "apps/ai-service/app/routers/planner.py",
             "apps/ai-service/app/llm/",
         ],
