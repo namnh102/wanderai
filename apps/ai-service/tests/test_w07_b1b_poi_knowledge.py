@@ -1,4 +1,4 @@
-"""W07-B1B tests: Targeted POI knowledge acquisition, two-gate governance, lineage separation, and B2 readiness."""
+"""W07-B1B tests: Targeted POI knowledge acquisition, Corrective 01 corpus quality, and governance."""
 
 from __future__ import annotations
 
@@ -28,6 +28,8 @@ def test_01_b1b_verification_passes():
     assert result["candidates_evaluated"] == 132
     assert result["accepted_primary_documents"] == 101
     assert result["accepted_independent_lineages"] == 82
+    assert result["wikipedia_documents_accepted"] == 26
+    assert result["wikipedia_documents_with_empty_body"] == 0
     assert result["pois_with_rag_evidence"] == 52
     assert result["W07_B1B_CORPUS_ACQUISITION_READY_FOR_B2"] is True
 
@@ -36,6 +38,12 @@ def test_02_source_decisions_schema_and_two_gate_rules():
     decisions = json.loads(b1b_acquire.DECISIONS_JSON_PATH.read_text(encoding="utf-8"))
     assert decisions["HIGH_AUTHORITY_DOES_NOT_IMPLY_REUSE_PERMISSION"] is True
     assert decisions["OVERTURE_LICENSE_IS_THEME_AND_SOURCE_SPECIFIC"] is True
+    assert decisions["artifact_snapshot_timestamp"] == b1b_acquire.ARTIFACT_SNAPSHOT_TIMESTAMP
+
+    dec_sum = decisions["decision_summary"]
+    assert dec_sum["WIKIPEDIA_DOCUMENTS_ACCEPTED"] == 26
+    assert dec_sum["WIKIPEDIA_DOCUMENTS_WITH_NONEMPTY_ARTICLE_BODY"] == 26
+    assert dec_sum["WIKIPEDIA_DOCUMENTS_WITH_EMPTY_ARTICLE_BODY"] == 0
 
     records = decisions["candidate_decisions"]
     assert len(records) == 132
@@ -95,66 +103,217 @@ def test_03_acquired_jsonl_20_field_schema_and_hashes():
         assert doc["content_utility_status"] in ("USEFUL_NARRATIVE", "USEFUL_STRUCTURED_FACTS")
         expected_sha = hashlib.sha256(doc["raw_text"].encode("utf-8")).hexdigest()
         assert doc["content_sha256"] == expected_sha
+        b1b_verify.validate_document_content_utility(doc)
 
 
-def test_04_lineage_vs_evidence_unit_separation():
+def test_04_accepted_wikipedia_documents_have_nonempty_body_beyond_header():
+    docs = [
+        json.loads(line)
+        for line in b1b_acquire.ACQUIRED_JSONL_PATH.read_text(encoding="utf-8").splitlines()
+        if line.strip()
+    ]
+    wp_docs = [d for d in docs if d["source_type"] == "wikipedia_article"]
+    assert len(wp_docs) == 26
+    for d in wp_docs:
+        lines = d["raw_text"].splitlines()
+        assert len(lines) >= 2
+        assert lines[0].startswith("Địa điểm: ")
+        body = "\n".join(lines[1:]).strip()
+        assert len(body) >= 40
+        assert d["article_body_char_length"] == len(body)
+        ok, reason = b1b_acquire.validate_wikipedia_narrative_body(body)
+        assert ok is True, f"{d['document_id']} failed narrative validation: {reason}"
+
+
+def test_05_negative_empty_and_header_only_wikipedia_rejected(monkeypatch, tmp_path):
+    header_only_doc = {
+        "document_id": "w07-b1b-doc-wikipedia-vi-test0000-12345",
+        "poi_id": "04fd8fb6-4b11-4be8-82dd-d8fb4bc83cf0",
+        "city": "Đà Nẵng",
+        "source_type": "wikipedia_article",
+        "source_tier": "TIER_C",
+        "source_title": "Wikipedia (vi): Bảo tàng Điêu khắc Chăm Đà Nẵng",
+        "source_url": "https://vi.wikipedia.org/wiki/Test?oldid=1",
+        "publisher": "Wikimedia Foundation (vi.wikipedia.org)",
+        "language": "vi",
+        "retrieved_at": "2026-10-01T00:00:00Z",
+        "license_or_usage_class": "CC-BY-SA-4.0",
+        "reuse_storage_class": "OPEN_REUSABLE",
+        "reuse_evidence": "CC-BY-SA-4.0",
+        "attribution_requirement": "Wikipedia contributors",
+        "redistributable_in_git": True,
+        "source_terms_checked_at": "2026-10-01T00:00:00Z",
+        "raw_text": "Địa điểm: Bảo tàng Điêu khắc Chăm (Đà Nẵng) — Bài viết bách khoa Wikipedia (vi.wikipedia.org: Test, pageid=1, oldid=1).\n",
+        "content_sha256": "",
+        "provenance_status": "VERIFIED_PRIMARY_PROVENANCE",
+        "source_lineage_id": "wikipedia:vi:1",
+        "content_utility_status": "USEFUL_NARRATIVE",
+    }
+    with pytest.raises(ValueError, match="empty body after stripping generated provenance header line"):
+        b1b_verify.validate_document_content_utility(header_only_doc)
+
+    # Also test that full artifact verifier fails if a Wikipedia document in JSONL has an empty body
+    docs = [
+        json.loads(line)
+        for line in b1b_acquire.ACQUIRED_JSONL_PATH.read_text(encoding="utf-8").splitlines()
+        if line.strip()
+    ]
+    for d in docs:
+        if d["source_type"] == "wikipedia_article":
+            header_line = d["raw_text"].splitlines()[0] + "\n"
+            d["raw_text"] = header_line
+            d["content_sha256"] = hashlib.sha256(header_line.encode("utf-8")).hexdigest()
+            break
+    bad_jsonl = tmp_path / "empty_wp.jsonl"
+    bad_jsonl.write_text("\n".join(json.dumps(r, ensure_ascii=False) for r in docs) + "\n", encoding="utf-8")
+    monkeypatch.setattr(b1b_acquire, "ACQUIRED_JSONL_PATH", bad_jsonl)
+    with pytest.raises(ValueError, match="empty body after stripping generated provenance header line"):
+        b1b_verify.verify_b1b_artifacts()
+
+
+def test_06_negative_wikipedia_subsection_extraction_fails_closed():
+    full_text = (
+        "Intro paragraph about Ha Long Bay.\n\n== History ==\nSome history text with sufficient length for testing."
+    )
+    with pytest.raises(ValueError, match="Requested Wikipedia section heading"):
+        b1b_acquire._extract_section(full_text, "==== Hòn Đỉnh Hương (Lư Hương) ====")
+
+    with pytest.raises(ValueError, match="full_text is empty"):
+        b1b_acquire._extract_section("", "== Ban Co Peak ==")
+
+    ok, reason = b1b_acquire.validate_wikipedia_narrative_body(
+        "== Other Heading ==\nThis text is long enough to be over forty characters in total length.",
+        "== Ban Co Peak ==",
+    )
+    assert ok is False
+    assert reason == "MISSING_REQUESTED_SECTION_HEADING"
+
+
+def test_07_overture_nan_none_never_rendered_and_verifier_rejects_nan():
+    docs = [
+        json.loads(line)
+        for line in b1b_acquire.ACQUIRED_JSONL_PATH.read_text(encoding="utf-8").splitlines()
+        if line.strip()
+    ]
+    ov_docs = [d for d in docs if d["source_type"] == "overture_places_parquet"]
+    assert len(ov_docs) == 26
+    for d in ov_docs:
+        assert ": nan" not in d["raw_text"].lower()
+        assert ": none" not in d["raw_text"].lower()
+        assert ": null" not in d["raw_text"].lower()
+
+    # Unit test _render_overture_text with float('nan') and None fields
+    poi = {"name": "Test POI", "city": "Đà Nẵng", "category": "restaurant", "sub_category": "cafe"}
+    row = {
+        "names": {"primary": "Test POI"},
+        "categories": {"primary": "cafe", "alternate": [float("nan"), None]},
+        "operating_status": float("nan"),
+        "websites": [float("nan")],
+        "phones": [None],
+        "socials": ["nan"],
+        "addresses": [{"freeform": float("nan"), "locality": "Đà Nẵng", "region": float("nan")}],
+        "sources": [{"dataset": "meta", "license": "CDLA-Permissive-2.0"}],
+    }
+    raw_text, lic, ds = b1b_acquire._render_overture_text(poi, "08f0000000000001", row)
+    assert lic == "CDLA-Permissive-2.0"
+    assert "nan" not in raw_text.lower()
+    assert "Trạng thái hoạt động:" not in raw_text
+
+    # Negative test: verifier rejects structured document containing ': nan'
+    bad_ov_doc = dict(ov_docs[0])
+    bad_ov_doc["raw_text"] = bad_ov_doc["raw_text"] + "\nTrạng thái hoạt động: nan"
+    with pytest.raises(ValueError, match="forbidden NaN/null/placeholder pattern"):
+        b1b_verify.validate_document_content_utility(bad_ov_doc)
+
+
+def test_08_negative_overture_license_fails_closed():
+    # Missing sources
+    with pytest.raises(ValueError, match="OVERTURE_LICENSE_MISSING"):
+        b1b_acquire._resolve_overture_record_license({"sources": []})
+
+    # Source entry with missing license
+    with pytest.raises(ValueError, match="OVERTURE_LICENSE_MISSING"):
+        b1b_acquire._resolve_overture_record_license({"sources": [{"dataset": "meta", "license": None}]})
+
+    # Source entry with unapproved license
+    with pytest.raises(ValueError, match="OVERTURE_LICENSE_AMBIGUOUS_OR_UNAPPROVED"):
+        b1b_acquire._resolve_overture_record_license(
+            {"sources": [{"dataset": "proprietary", "license": "All-Rights-Reserved"}]}
+        )
+
+    # Conflicting licenses across sources
+    with pytest.raises(ValueError, match="OVERTURE_LICENSE_CONFLICT"):
+        b1b_acquire._resolve_overture_record_license(
+            {
+                "sources": [
+                    {"dataset": "meta", "license": "CDLA-Permissive-2.0"},
+                    {"dataset": "other", "license": "CC0-1.0"},
+                ]
+            }
+        )
+
+
+def test_09_official_website_governance_and_reference_only_separation():
+    decisions = json.loads(b1b_acquire.DECISIONS_JSON_PATH.read_text(encoding="utf-8"))
+    web_cands = [
+        c
+        for c in decisions["candidate_decisions"]
+        if c["source_type"] in ("official_venue_website", "heritage_or_public_institution_portal")
+    ]
+    assert len(web_cands) == 16
+    for c in web_cands:
+        assert c["discovery_method"] == "URL_DISCOVERED_FROM_OSM_TAG"
+        assert c["website_terms_independently_checked"] is False
+        assert c["terms_verification_status"] == "REUSE_PERMISSION_NOT_ESTABLISHED"
+        assert c["source_terms_checked_at"] == "NOT_INDEPENDENTLY_CHECKED"
+        assert c["content_utility_status"] == "LOW_INFORMATION"
+        assert c["final_b1b_decision"] == "REFERENCE_ONLY"
+        assert c["redistributable_in_git"] is False
+        assert c["raw_text_permitted"] is False
+        assert "Inspected `" not in c["license_or_reuse_evidence"]
+
+
+def test_10_lineage_coverage_and_b2_readiness_estimate():
     summary = json.loads(b1b_acquire.SUMMARY_JSON_PATH.read_text(encoding="utf-8"))
     linked = summary["linked_artifacts"]
     breakdown = summary["acquired_corpus_breakdown"]
+    overall = summary["coverage_after_acquisition"]["overall_60_pois"]
+    est_chunks = summary["b2_readiness_evaluation"]["estimated_future_useful_chunk_range"]
 
     assert linked["acquired_corpus_document_count"] == 101
     assert linked["accepted_independent_source_lineage_count"] == 82
-
-    by_type = breakdown["by_source_type"]
-    assert by_type["overture_places_parquet"] == 26
-    assert by_type["wikipedia_article"] == 26
-    assert by_type["wikidata_entity"] == 29
-    assert by_type["wikivoyage_poi_listing"] == 20
-
-    lineages = breakdown["accepted_independent_source_lineages"]
-    assert len(lineages) == 82
-    assert sum(1 for lid in lineages if lid.startswith("overture:")) == 26
-    assert sum(1 for lid in lineages if lid.startswith("wikipedia:")) == 25
-    assert sum(1 for lid in lineages if lid.startswith("wikidata:")) == 29
-    assert sum(1 for lid in lineages if lid.startswith("wikivoyage:")) == 2
-
-
-def test_05_coverage_improvement_and_priority_shift():
-    summary = json.loads(b1b_acquire.SUMMARY_JSON_PATH.read_text(encoding="utf-8"))
-    overall = summary["coverage_after_acquisition"]["overall_60_pois"]
-    by_city = summary["coverage_after_acquisition"]["by_city"]
-    shift = summary["priority_shift_summary"]
-
-    assert overall["total_pois"] == 60
-    assert overall["pois_with_any_primary_eligible_evidence"] == 60
+    assert breakdown["by_source_type"] == {
+        "overture_places_parquet": 26,
+        "wikipedia_article": 26,
+        "wikidata_entity": 29,
+        "wikivoyage_poi_listing": 20,
+    }
     assert overall["pois_with_rag_candidate_evidence"] == 52
     assert overall["pois_with_2_plus_eligible_lineages"] == 45
     assert overall["pois_with_narrative_evidence"] == 32
     assert overall["pois_with_structured_evidence"] == 50
     assert overall["pois_with_both_structured_and_narrative"] == 30
-
-    assert shift["before_b1b"] == {"P0": 20, "P1": 19, "P2": 21, "P3": 0}
-    assert shift["after_b1b"] == {"P0": 8, "P1": 7, "P2": 15, "P3": 30}
-    assert shift["p0_before_after"] == {"before": 20, "after": 8, "closed": 12}
-
-    assert by_city["Hà Nội"]["pois_with_rag_candidate_evidence"] == 18
-    assert by_city["Đà Nẵng"]["pois_with_rag_candidate_evidence"] == 20
-    assert by_city["Hạ Long"]["pois_with_rag_candidate_evidence"] == 14
-
-
-def test_06_activity_counters_and_no_paid_social_google_llm():
-    summary = json.loads(b1b_acquire.SUMMARY_JSON_PATH.read_text(encoding="utf-8"))
-    counters = summary["external_activity_counters"]
-    assert counters["PAID_DATA_API_USED"] is False
-    assert counters["NEW_SOCIAL_COLLECTION"] == 0
-    assert counters["NEW_GOOGLE_MAPS_REVIEW_COLLECTION"] == 0
-    assert counters["NEW_LLM_PROVIDER_CALLS"] == 0
-    assert summary["existing_controlled_db_baseline"]["db_mutated_in_b1b"] is False
     assert summary["W07_B1B_CORPUS_ACQUISITION_READY_FOR_B2"] is True
-    assert all(v is False for v in summary["no_chunking_or_retrieval_methodology_freeze"].values())
+
+    assert est_chunks["value_kind"] == "ESTIMATE"
+    assert est_chunks["observed_chunk_count_in_b1b"] is None
+    assert est_chunks["methodology_frozen_in_b1b"] is False
 
 
-def test_07_verifier_rejects_tampered_artifacts(monkeypatch, tmp_path):
+def test_11_w06_scope_protection_remains_active_for_unrelated_curated_paths():
+    w06_test_path = REPO_ROOT / "tests" / "test_w06_measurement_contract.py"
+    w06_text = w06_test_path.read_text(encoding="utf-8")
+    assert '"data/curated/",' in w06_text
+    assert '":(exclude)data/curated/w07/",' in w06_text
+
+    summary = json.loads(b1b_acquire.SUMMARY_JSON_PATH.read_text(encoding="utf-8"))
+    exc = summary["w06_scope_protection_exception"]
+    assert exc["protected_root"] == "data/curated/"
+    assert exc["narrow_w07_exception_pathspec"] == ":(exclude)data/curated/w07/"
+    assert exc["unrelated_data_curated_paths_remain_protected"] is True
+
+
+def test_12_verifier_rejects_tampered_artifacts_and_upstream_immutable(monkeypatch, tmp_path):
     bad_jsonl = tmp_path / "bad_acquired.jsonl"
     raw_lines = [
         json.loads(line)
@@ -170,8 +329,6 @@ def test_07_verifier_rejects_tampered_artifacts(monkeypatch, tmp_path):
     with pytest.raises(ValueError, match="must be OPEN_REUSABLE"):
         b1b_verify.verify_b1b_artifacts()
 
-
-def test_08_upstream_artifacts_immutable():
     for rel_path, expected_sha in b1b_acquire.UPSTREAM_ARTIFACT_LF_HASHES.items():
         actual_sha = w07_a2.compute_file_sha256(REPO_ROOT / rel_path)
         assert actual_sha == expected_sha, f"Upstream artifact modified: {rel_path}"

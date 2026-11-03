@@ -15,6 +15,7 @@ import argparse
 import glob
 import hashlib
 import json
+import math
 import re
 import sys
 import urllib.parse
@@ -30,8 +31,11 @@ from scripts import validate_w07_review_corpus_v1 as w07_a2  # noqa: E402
 
 AUTHORITATIVE_BASE_DEVELOP_SHA = "324163636cedc8391c07cf2deca37d907745bd14"
 PREVIOUS_ACCEPTED_GATE = "W07-B1-FIX-01B-POSTMERGE-CHATGPT-AUDIT = PASS"
-NEXT_GATE = "W07-B1B-TARGETED-POI-KNOWLEDGE-ACQUISITION-CHATGPT-AUDIT"
-RETRIEVED_AT_TIMESTAMP = "2026-11-03T14:00:00Z"
+CURRENT_GATE_STATUS = "W07-B1B-TARGETED-POI-KNOWLEDGE-ACQUISITION-CHATGPT-AUDIT = HOLD-CORRECTIVE"
+NEXT_GATE = "W07-B1B-CORRECTIVE-01-CORPUS-QUALITY-CHATGPT-AUDIT"
+ARTIFACT_SNAPSHOT_TIMESTAMP = "2026-11-03T18:45:00Z"
+OVERTURE_SNAPSHOT_TIMESTAMP = "2026-09-23T00:00:00Z"
+ALLOWED_OVERTURE_OPEN_LICENSES: frozenset[str] = frozenset({"CDLA-Permissive-2.0", "Apache-2.0", "CC0-1.0"})
 
 TARGET_60_PATH = REPO_ROOT / "data/evaluation/w07/w07_review_target_60_pois_v1.json"
 B1A_AUDIT_PATH = REPO_ROOT / "data/evaluation/w07/w07_b1a_existing_poi_knowledge_audit_v1.json"
@@ -648,22 +652,43 @@ def _write_lf_json(path: Path, payload: dict[str, Any]) -> None:
     path.write_bytes(rendered.replace("\r\n", "\n").encode("utf-8"))
 
 
-def _fetch_wikipedia_articles() -> dict[tuple[str, str], dict[str, Any]]:
+def _is_missing_val(v: Any) -> bool:
+    if v is None:
+        return True
+    if isinstance(v, float) and math.isnan(v):
+        return True
+    s = str(v).strip().lower()
+    return s in ("", "nan", "nat", "none", "null", "<na>")
+
+
+def _clean_scalar(v: Any) -> str | None:
+    if _is_missing_val(v):
+        return None
+    return str(v).strip()
+
+
+def _fetch_wikipedia_articles() -> tuple[dict[tuple[str, str], dict[str, Any]], int]:
+    """Fetch Wikipedia full-article plain-text extracts via MediaWiki Action API.
+
+    MediaWiki's TextExtracts extension (`prop=extracts` without `exintro`) enforces `exlimit=1`
+    (maximum 1 full-article extract per API call). Therefore each unique `(domain, title)` must
+    be queried individually with `exlimit=1` to guarantee non-empty full-article extraction.
+    """
     results: dict[tuple[str, str], dict[str, Any]] = {}
     by_domain: dict[str, list[str]] = {}
     for spec in ACCEPTED_WIKIPEDIA_SPECS:
         by_domain.setdefault(spec["domain"], []).append(spec["title"])
-    for domain, titles in by_domain.items():
-        unique_titles = sorted(set(titles))
-        for i in range(0, len(unique_titles), 10):
-            batch = unique_titles[i : i + 10]
+    http_request_count = 0
+    for domain, titles in sorted(by_domain.items()):
+        for req_title in sorted(set(titles)):
             params = urllib.parse.urlencode(
                 {
                     "action": "query",
                     "prop": "extracts|revisions|pageprops",
                     "explaintext": "1",
+                    "exlimit": "1",
                     "rvprop": "ids|timestamp",
-                    "titles": "|".join(batch),
+                    "titles": req_title,
                     "redirects": "1",
                     "format": "json",
                 }
@@ -672,6 +697,7 @@ def _fetch_wikipedia_articles() -> dict[tuple[str, str], dict[str, Any]]:
             req = urllib.request.Request(url, headers=HEADERS)
             with urllib.request.urlopen(req, timeout=25) as resp:
                 data = json.loads(resp.read().decode("utf-8"))
+            http_request_count += 1
             query = data.get("query", {})
             redirect_map = {r["to"]: r["from"] for r in query.get("redirects", [])}
             for pid, page in query.get("pages", {}).items():
@@ -683,27 +709,60 @@ def _fetch_wikipedia_articles() -> dict[tuple[str, str], dict[str, Any]]:
                     "revid": revs[0].get("revid"),
                     "timestamp": revs[0].get("timestamp"),
                     "wikidata": page.get("pageprops", {}).get("wikibase_item"),
-                    "extract": page.get("extract", "").strip(),
+                    "extract": (page.get("extract") or "").strip(),
                 }
                 results[(domain, title)] = info
+                results[(domain, req_title)] = info
                 if title in redirect_map:
                     results[(domain, redirect_map[title])] = info
-    return results
+    return results, http_request_count
 
 
 def _extract_section(full_text: str, heading: str) -> str:
+    """Extract a specific MediaWiki section heading, failing closed if the heading or prose is missing."""
+    if not full_text or not full_text.strip():
+        raise ValueError("EMPTY_WIKIPEDIA_EXTRACT: full_text is empty")
     idx = full_text.find(heading)
     if idx == -1:
-        return full_text
+        raise ValueError(
+            f"MISSING_WIKIPEDIA_SUBSECTION: Requested Wikipedia section heading {heading!r} not found in article extract"
+        )
     level = len(heading) - len(heading.lstrip("="))
     rest = full_text[idx + len(heading) :]
     next_match = re.search(rf"\n={{2,{level}}}\s+[^=]", rest)
-    if next_match:
-        return (heading + "\n" + rest[: next_match.start()]).strip()
-    return (heading + "\n" + rest).strip()
+    prose = (rest[: next_match.start()] if next_match else rest).strip()
+    if len(prose) < 40:
+        raise ValueError(
+            f"EMPTY_WIKIPEDIA_SUBSECTION: Subsection {heading!r} has insufficient narrative prose ({len(prose)} chars)"
+        )
+    return (heading + "\n\n" + prose).strip()
 
 
-def _fetch_wikidata_entities() -> tuple[dict[str, dict[str, Any]], dict[str, str]]:
+def validate_wikipedia_narrative_body(body_text: str, section_heading: str | None = None) -> tuple[bool, str]:
+    """Fail-closed validation ensuring Wikipedia body contains substantive factual narrative."""
+    cleaned = (body_text or "").strip()
+    if not cleaned:
+        return False, "EMPTY_WIKIPEDIA_BODY"
+    prose_to_check = cleaned
+    if section_heading:
+        if not cleaned.startswith(section_heading):
+            return False, "MISSING_REQUESTED_SECTION_HEADING"
+        prose_to_check = cleaned[len(section_heading) :].strip()
+    non_heading_lines = [
+        ln.strip()
+        for ln in prose_to_check.splitlines()
+        if ln.strip() and not (ln.strip().startswith("==") and ln.strip().endswith("=="))
+    ]
+    joined_prose = " ".join(non_heading_lines).strip()
+    if len(joined_prose) < 40:
+        return False, "INSUFFICIENT_WIKIPEDIA_NARRATIVE"
+    lower_prose = joined_prose.lower()
+    if lower_prose in ("todo", "tbd", "n/a", "nan", "none", "null", "[placeholder]", "placeholder"):
+        return False, "PLACEHOLDER_WIKIPEDIA_BODY"
+    return True, "OK"
+
+
+def _fetch_wikidata_entities() -> tuple[dict[str, dict[str, Any]], dict[str, str], int]:
     qids = sorted({q[1] for q in ACCEPTED_WIKIDATA_SPECS} | {r["qid"] for r in REJECTED_WIKIDATA_SPECS})
     params = urllib.parse.urlencode(
         {
@@ -717,6 +776,7 @@ def _fetch_wikidata_entities() -> tuple[dict[str, dict[str, Any]], dict[str, str
     req = urllib.request.Request(url, headers=HEADERS)
     with urllib.request.urlopen(req, timeout=25) as resp:
         entities = json.loads(resp.read().decode("utf-8")).get("entities", {})
+    http_requests = 1
 
     # Collect linked Q-IDs for P31 (instance of), P131 (located in), P17 (country), P1435 (heritage)
     referenced_qids: set[str] = set()
@@ -744,6 +804,7 @@ def _fetch_wikidata_entities() -> tuple[dict[str, dict[str, Any]], dict[str, str
         req2 = urllib.request.Request(f"https://www.wikidata.org/w/api.php?{p2}", headers=HEADERS)
         with urllib.request.urlopen(req2, timeout=25) as resp2:
             ref_ents = json.loads(resp2.read().decode("utf-8")).get("entities", {})
+        http_requests += 1
         for rqid, rent in ref_ents.items():
             lbl = (
                 rent.get("labels", {}).get("vi", {}).get("value")
@@ -751,7 +812,7 @@ def _fetch_wikidata_entities() -> tuple[dict[str, dict[str, Any]], dict[str, str
                 or rqid
             )
             label_map[rqid] = f"{lbl} ({rqid})"
-    return entities, label_map
+    return entities, label_map, http_requests
 
 
 def _render_wikidata_text(poi: dict[str, Any], qid: str, ent: dict[str, Any], label_map: dict[str, str]) -> str:
@@ -792,12 +853,14 @@ def _render_wikidata_text(poi: dict[str, Any], qid: str, ent: dict[str, Any], la
             coords_str = f"{v['latitude']:.6f}, {v['longitude']:.6f}"
             break
 
+    label_parts = [p for p in (lbl_vi, lbl_en) if p]
     lines = [
         f"Địa điểm: {poi['name']} ({poi['city']}) — Wikidata {qid}.",
-        f"Nhãn (vi/en): {lbl_vi or 'N/A'} | {lbl_en or 'N/A'}.",
+        f"Nhãn (vi/en): {' | '.join(label_parts) if label_parts else poi['name']}.",
     ]
-    if desc_vi or desc_en:
-        lines.append(f"Mô tả thực thể (vi/en): {desc_vi or 'N/A'} | {desc_en or 'N/A'}.")
+    desc_parts = [p for p in (desc_vi, desc_en) if p]
+    if desc_parts:
+        lines.append(f"Mô tả thực thể (vi/en): {' | '.join(desc_parts)}.")
     all_aliases = sorted(set(aliases_vi + aliases_en))
     if all_aliases:
         lines.append(f"Tên gọi khác (aliases): {', '.join(all_aliases[:8])}.")
@@ -837,9 +900,10 @@ def _render_wikidata_text(poi: dict[str, Any], qid: str, ent: dict[str, Any], la
     return "\n".join(lines)
 
 
-def _fetch_wikivoyage_listings() -> dict[tuple[str, str], tuple[str, int, dict[str, dict[str, str]]]]:
-    out: dict[tuple[str, str], tuple[str, int, dict[str, dict[str, str]]]] = {}
+def _fetch_wikivoyage_listings() -> tuple[dict[tuple[str, str], tuple[str, int, str, dict[str, dict[str, str]]]], int]:
+    out: dict[tuple[str, str], tuple[str, int, str, dict[str, dict[str, str]]]] = {}
     pattern = re.compile(r"\{\{(see|do|buy|eat|drink|sleep|listing)\b(.*?)\}\}", re.DOTALL | re.IGNORECASE)
+    http_requests = 0
     for domain, page_title in [
         ("en.wikivoyage.org", "Da Nang"),
         ("en.wikivoyage.org", "Hanoi"),
@@ -859,9 +923,11 @@ def _fetch_wikivoyage_listings() -> dict[tuple[str, str], tuple[str, int, dict[s
         req = urllib.request.Request(url, headers=HEADERS)
         with urllib.request.urlopen(req, timeout=25) as resp:
             data = json.loads(resp.read().decode("utf-8"))
+        http_requests += 1
         for pid, page in data.get("query", {}).get("pages", {}).items():
             revs = page.get("revisions", [{}])
             revid = int(revs[0].get("revid", 0))
+            rev_timestamp = str(revs[0].get("timestamp") or ARTIFACT_SNAPSHOT_TIMESTAMP)
             wikitext = revs[0].get("slots", {}).get("main", {}).get("*", "")
             listings_by_name: dict[str, dict[str, str]] = {}
             for m in pattern.finditer(wikitext):
@@ -874,8 +940,8 @@ def _fetch_wikivoyage_listings() -> dict[tuple[str, str], tuple[str, int, dict[s
                         fields[k.strip().lower()] = v.strip().replace("\n", " ")
                 if fields.get("name"):
                     listings_by_name[fields["name"]] = fields
-            out[(domain, page_title)] = (str(pid), revid, listings_by_name)
-    return out
+            out[(domain, page_title)] = (str(pid), revid, rev_timestamp, listings_by_name)
+    return out, http_requests
 
 
 def _clean_wikitext_markup(text: str) -> str:
@@ -926,55 +992,105 @@ def _load_overture_parquet_by_id() -> dict[str, dict[str, Any]]:
     return out
 
 
+def _resolve_overture_record_license(row: dict[str, Any]) -> tuple[str, str, float | None]:
+    """Fail-closed Overture record-level license resolution (`OVERTURE_LICENSE_IS_THEME_AND_SOURCE_SPECIFIC = true`).
+
+    Requires explicit, non-empty, compatible open license on every contributing source entry.
+    Rejects missing sources, missing license fields, unapproved/ambiguous licenses, or conflicting
+    licenses across contributing sources. Never falls back to a default license.
+    """
+    sources_raw = row.get("sources")
+    if sources_raw is None:
+        raise ValueError("OVERTURE_LICENSE_MISSING: Record has no contributing sources array")
+    sources_list = list(sources_raw) if not isinstance(sources_raw, (str, bytes, dict)) else []
+    if not sources_list:
+        raise ValueError("OVERTURE_LICENSE_MISSING: Record sources array is empty")
+
+    datasets: list[str] = []
+    licenses: list[str] = []
+    conf_val: float | None = None
+    for idx, s in enumerate(sources_list):
+        if not isinstance(s, dict):
+            raise ValueError(f"OVERTURE_LICENSE_MISSING: Source entry {idx} is not a dictionary")
+        ds = _clean_scalar(s.get("dataset"))
+        ver = _clean_scalar(s.get("version")) or "2026-09"
+        if ds:
+            datasets.append(f"{ds} ({ver})")
+        lic = _clean_scalar(s.get("license"))
+        if not lic:
+            raise ValueError(f"OVERTURE_LICENSE_MISSING: Source entry {idx} ({ds or 'unknown'}) lacks explicit license")
+        if lic not in ALLOWED_OVERTURE_OPEN_LICENSES:
+            raise ValueError(
+                f"OVERTURE_LICENSE_AMBIGUOUS_OR_UNAPPROVED: License {lic!r} on source {ds or idx} is not in {sorted(ALLOWED_OVERTURE_OPEN_LICENSES)}"
+            )
+        licenses.append(lic)
+        raw_conf = s.get("confidence")
+        if not _is_missing_val(raw_conf) and conf_val is None:
+            conf_val = float(raw_conf)
+
+    unique_licenses = sorted(set(licenses))
+    if len(unique_licenses) != 1:
+        raise ValueError(
+            f"OVERTURE_LICENSE_CONFLICT: Conflicting licenses across contributing sources: {unique_licenses}"
+        )
+    if not datasets:
+        raise ValueError("OVERTURE_SOURCE_DATASET_MISSING: No contributing dataset names present on record")
+    return unique_licenses[0], ", ".join(datasets), conf_val
+
+
 def _render_overture_text(poi: dict[str, Any], gers_id: str, row: dict[str, Any]) -> tuple[str, str, str]:
+    """Render Overture Places record into Vietnamese structured factual text.
+
+    Null, NaN, NaT, and missing values are never rendered as factual claims or defaulted to 'open'.
+    Record-level license is resolved fail-closed via `_resolve_overture_record_license(row)`.
+    """
     names = row.get("names") if isinstance(row.get("names"), dict) else {}
-    primary_name = names.get("primary") or poi["name"]
-    basic_cat = row.get("basic_category") or "N/A"
+    primary_name = _clean_scalar(names.get("primary")) or poi["name"]
+    basic_cat = _clean_scalar(row.get("basic_category"))
     tax = row.get("taxonomy") if isinstance(row.get("taxonomy"), dict) else {}
-    tax_primary = tax.get("primary") or basic_cat
+    tax_primary = _clean_scalar(tax.get("primary")) or basic_cat
     tax_hier_raw = tax.get("hierarchy")
-    tax_hier = [str(x) for x in tax_hier_raw] if tax_hier_raw is not None else []
-    op_status = row.get("operating_status") or "open"
+    tax_hier = [c for x in tax_hier_raw if (c := _clean_scalar(x)) is not None] if tax_hier_raw is not None else []
+    op_status = _clean_scalar(row.get("operating_status"))
 
     addrs_raw = row.get("addresses")
     addr_strs = []
     if addrs_raw is not None:
         for a in addrs_raw:
             if isinstance(a, dict):
-                parts = [a.get("freeform"), a.get("locality"), a.get("postcode"), a.get("country")]
-                s = ", ".join(str(p).strip() for p in parts if p and str(p).strip())
+                parts = [
+                    _clean_scalar(a.get("freeform")),
+                    _clean_scalar(a.get("locality")),
+                    _clean_scalar(a.get("postcode")),
+                    _clean_scalar(a.get("country")),
+                ]
+                s = ", ".join(p for p in parts if p)
                 if s:
                     addr_strs.append(s)
 
     phones_raw = row.get("phones")
-    phones = [str(p).strip() for p in phones_raw if p and str(p).strip()] if phones_raw is not None else []
+    phones = [c for p in phones_raw if (c := _clean_scalar(p)) is not None] if phones_raw is not None else []
     webs_raw = row.get("websites")
-    webs = [str(w).strip() for w in webs_raw if w and str(w).strip()] if webs_raw is not None else []
+    webs = [c for w in webs_raw if (c := _clean_scalar(w)) is not None] if webs_raw is not None else []
 
-    sources_raw = row.get("sources")
-    datasets = []
-    licenses = []
-    conf_val = None
-    if sources_raw is not None:
-        for s in sources_raw:
-            if isinstance(s, dict):
-                if s.get("dataset"):
-                    datasets.append(f"{s['dataset']} ({s.get('version', '2026-09')})")
-                if s.get("license"):
-                    licenses.append(str(s["license"]))
-                if s.get("confidence") is not None and conf_val is None:
-                    conf_val = float(s["confidence"])
-
-    license_str = sorted(set(licenses))[0] if licenses else "CDLA-Permissive-2.0"
-    dataset_str = ", ".join(datasets) if datasets else "meta, Overture"
+    license_str, dataset_str, conf_val = _resolve_overture_record_license(row)
 
     lines = [
         f"Địa điểm: {poi['name']} ({poi['city']}) — Hồ sơ Overture Maps Places ({gers_id}).",
         f"Tên chính thức trên Overture: {primary_name}.",
-        f"Danh mục cơ bản: {basic_cat} | Phân loại chi tiết (taxonomy): {tax_primary} ({' > '.join(tax_hier) if tax_hier else tax_primary}).",
-        f"Trạng thái hoạt động: {op_status}"
-        + (f" | Độ tin cậy (confidence): {conf_val:.4f}." if conf_val is not None else "."),
     ]
+    if basic_cat or tax_primary:
+        cat_label = basic_cat or tax_primary
+        tax_label = tax_primary or basic_cat
+        hier_str = " > ".join(tax_hier) if tax_hier else tax_label
+        lines.append(f"Danh mục cơ bản: {cat_label} | Phân loại chi tiết (taxonomy): {tax_label} ({hier_str}).")
+    if op_status is not None:
+        lines.append(
+            f"Trạng thái hoạt động: {op_status}"
+            + (f" | Độ tin cậy (confidence): {conf_val:.4f}." if conf_val is not None else ".")
+        )
+    elif conf_val is not None:
+        lines.append(f"Độ tin cậy bản ghi Overture (confidence): {conf_val:.4f}.")
     if addr_strs:
         lines.append(f"Địa chỉ cấu trúc (Overture addresses): {'; '.join(addr_strs)}.")
     if phones:
@@ -997,12 +1113,12 @@ def build_b1b_artifacts() -> dict[str, Any]:
     pois_by_id = {p["poi_id"]: p for p in target_manifest["pois"]}
     b1a_by_id = {r["poi_id"]: r for r in b1a_audit["target_poi_audit_records"]}
 
-    print("Fetching Wikipedia articles via Wikimedia Action API...")
-    wp_articles = _fetch_wikipedia_articles()
+    print("Fetching Wikipedia articles via Wikimedia Action API (single-title exlimit=1)...")
+    wp_articles, wp_http_requests = _fetch_wikipedia_articles()
     print("Fetching Wikidata structured entities via Wikidata API...")
-    wd_entities, wd_label_map = _fetch_wikidata_entities()
+    wd_entities, wd_label_map, wd_http_requests = _fetch_wikidata_entities()
     print("Fetching Wikivoyage listings via Wikimedia Action API...")
-    wv_pages = _fetch_wikivoyage_listings()
+    wv_pages, wv_http_requests = _fetch_wikivoyage_listings()
     print("Loading local Overture Places Parquet records...")
     ov_by_id = _load_overture_parquet_by_id()
 
@@ -1052,7 +1168,7 @@ def build_b1b_artifacts() -> dict[str, Any]:
                     "redistributable_in_git": True,
                     "raw_text_permitted": True,
                     "attribution_requirement": attr_req,
-                    "source_terms_checked_at": RETRIEVED_AT_TIMESTAMP,
+                    "source_terms_checked_at": OVERTURE_SNAPSHOT_TIMESTAMP,
                     "content_utility_status": "USEFUL_STRUCTURED_FACTS",
                     "final_b1b_decision": "ACCEPT_PRIMARY_CORPUS",
                     "accepted_document_id": doc_id,
@@ -1071,13 +1187,13 @@ def build_b1b_artifacts() -> dict[str, Any]:
                     "source_url": source_url,
                     "publisher": "Overture Maps Foundation (Places Theme 2026-09-23.1)",
                     "language": "vi",
-                    "retrieved_at": RETRIEVED_AT_TIMESTAMP,
+                    "retrieved_at": OVERTURE_SNAPSHOT_TIMESTAMP,
                     "license_or_usage_class": license_str,
                     "reuse_storage_class": "OPEN_REUSABLE",
                     "reuse_evidence": reuse_ev,
                     "attribution_requirement": attr_req,
                     "redistributable_in_git": True,
-                    "source_terms_checked_at": RETRIEVED_AT_TIMESTAMP,
+                    "source_terms_checked_at": OVERTURE_SNAPSHOT_TIMESTAMP,
                     "raw_text": raw_text,
                     "content_sha256": _sha256_text(raw_text),
                     "provenance_status": "VERIFIED_PRIMARY_PROVENANCE",
@@ -1102,19 +1218,19 @@ def build_b1b_artifacts() -> dict[str, Any]:
                     "source_lineage_id": f"overture:unverified:{gers_id}",
                     "mapping_evidence": f"W02/W06 crosscheck flagged `MANUAL_REVIEW_CANDIDATE` (`overture_gers_id={gers_id}`, candidate `{ov.get('candidate_overture_name')}`). Fails deterministic canonical mapping gate (`CANONICAL_MAPPING_OK = false`).",
                     "canonical_mapping_status": "MAPPING_REVIEW_REQUIRED",
-                    "license_or_reuse_evidence": f"Record license `{ov.get('license_or_usage_class', 'CDLA-Permissive-2.0')}`, but unverified entity mapping forbids primary corpus ingestion.",
+                    "license_or_reuse_evidence": "Unverified Overture candidate mapping (`MANUAL_REVIEW_CANDIDATE`); rejected before record license or primary corpus ingestion.",
                     "reuse_storage_class": "REFERENCE_ONLY",
                     "redistributable_in_git": False,
                     "raw_text_permitted": False,
                     "attribution_requirement": "Overture Maps Foundation (unverified candidate; not ingested).",
-                    "source_terms_checked_at": RETRIEVED_AT_TIMESTAMP,
+                    "source_terms_checked_at": "NOT_APPLICABLE_REJECTED_AT_MAPPING_GATE",
                     "content_utility_status": "LOW_INFORMATION",
                     "final_b1b_decision": "REJECT",
                     "accepted_document_id": None,
                 }
             )
 
-    # 2. Wikipedia candidates (26 ACCEPT_PRIMARY_CORPUS + 4 REJECT)
+    # 2. Wikipedia candidates (26 ACCEPT_PRIMARY_CORPUS + 4 REJECT; fail-closed if article body is empty/invalid)
     for spec in ACCEPTED_WIKIPEDIA_SPECS:
         poi_id = spec["poi_id"]
         poi = pois_by_id[poi_id]
@@ -1124,15 +1240,9 @@ def build_b1b_artifacts() -> dict[str, Any]:
         wp_info = wp_articles[(domain, title)]
         pageid = wp_info["pageid"]
         revid = wp_info["revid"]
+        rev_timestamp = str(wp_info.get("timestamp") or ARTIFACT_SNAPSHOT_TIMESTAMP)
         full_extract = wp_info["extract"]
         section_heading = spec.get("section_heading")
-        body_text = _extract_section(full_extract, section_heading) if section_heading else full_extract
-        header_line = (
-            f"Địa điểm: {poi['name']} ({poi['city']}) — Bài viết bách khoa Wikipedia ({domain}: {wp_info['title']}"
-            + (f", mục {section_heading.strip('= ')}" if section_heading else "")
-            + f", pageid={pageid}, oldid={revid}).\n"
-        )
-        raw_text = header_line + body_text
         lineage_id = f"wikipedia:{spec['lang']}:{pageid}"
         doc_id = f"w07-b1b-doc-wikipedia-{spec['lang']}-{poi_id[:8]}-{pageid}"
         cand_id = f"cand:b1b:wikipedia:{spec['lang']}:{poi_id[:8]}:{pageid}"
@@ -1140,12 +1250,57 @@ def build_b1b_artifacts() -> dict[str, Any]:
         source_url = f"https://{domain}/wiki/{encoded_title}?oldid={revid}"
         reuse_ev = (
             f"Wikimedia Foundation / Wikipedia text is dual-licensed under Creative Commons Attribution-ShareAlike 4.0 International (`CC-BY-SA-4.0`); "
-            f"retrieved via MediaWiki Action API (`pageid={pageid}`, `oldid={revid}`, timestamp `{wp_info['timestamp']}`)."
+            f"retrieved via MediaWiki Action API (`pageid={pageid}`, `oldid={revid}`, timestamp `{rev_timestamp}`, `exlimit=1`)."
         )
         attr_req = (
-            f"Wikipedia contributors, '{wp_info['title']}', {domain}, revision {revid} ({wp_info['timestamp']}), "
+            f"Wikipedia contributors, '{wp_info['title']}', {domain}, revision {revid} ({rev_timestamp}), "
             f"licensed under CC-BY-SA-4.0 ({source_url})."
         )
+
+        try:
+            body_text = _extract_section(full_extract, section_heading) if section_heading else full_extract.strip()
+            is_valid_body, validation_reason = validate_wikipedia_narrative_body(body_text, section_heading)
+        except ValueError as exc:
+            body_text = ""
+            is_valid_body = False
+            validation_reason = str(exc)
+
+        if not is_valid_body:
+            candidate_decisions.append(
+                {
+                    "candidate_source_id": cand_id,
+                    "poi_id": poi_id,
+                    "poi_name": poi["name"],
+                    "city": poi["city"],
+                    "category_group": poi["category_group"],
+                    "original_b1a_priority": b1a_rec["b1b_priority"],
+                    "source_url": source_url,
+                    "publisher": f"Wikimedia Foundation ({domain})",
+                    "source_type": "wikipedia_article",
+                    "source_tier": "TIER_C",
+                    "source_lineage_id": lineage_id,
+                    "mapping_evidence": spec["mapping_evidence"],
+                    "canonical_mapping_status": "EXACT_MAPPED",
+                    "license_or_reuse_evidence": f"{reuse_ev} Rejected because extracted article body failed content validation (`{validation_reason}`).",
+                    "reuse_storage_class": "OPEN_REUSABLE",
+                    "redistributable_in_git": False,
+                    "raw_text_permitted": False,
+                    "attribution_requirement": attr_req,
+                    "source_terms_checked_at": rev_timestamp,
+                    "article_body_char_length": len(body_text),
+                    "content_utility_status": "EMPTY_OR_INVALID",
+                    "final_b1b_decision": "REJECT",
+                    "accepted_document_id": None,
+                }
+            )
+            continue
+
+        header_line = (
+            f"Địa điểm: {poi['name']} ({poi['city']}) — Bài viết bách khoa Wikipedia ({domain}: {wp_info['title']}"
+            + (f", mục {section_heading.strip('= ')}" if section_heading else "")
+            + f", pageid={pageid}, oldid={revid}).\n"
+        )
+        raw_text = header_line + body_text
         candidate_decisions.append(
             {
                 "candidate_source_id": cand_id,
@@ -1166,7 +1321,8 @@ def build_b1b_artifacts() -> dict[str, Any]:
                 "redistributable_in_git": True,
                 "raw_text_permitted": True,
                 "attribution_requirement": attr_req,
-                "source_terms_checked_at": RETRIEVED_AT_TIMESTAMP,
+                "source_terms_checked_at": rev_timestamp,
+                "article_body_char_length": len(body_text),
                 "content_utility_status": "USEFUL_NARRATIVE",
                 "final_b1b_decision": "ACCEPT_PRIMARY_CORPUS",
                 "accepted_document_id": doc_id,
@@ -1186,13 +1342,14 @@ def build_b1b_artifacts() -> dict[str, Any]:
                 "source_url": source_url,
                 "publisher": f"Wikimedia Foundation ({domain})",
                 "language": spec["lang"],
-                "retrieved_at": RETRIEVED_AT_TIMESTAMP,
+                "retrieved_at": rev_timestamp,
                 "license_or_usage_class": "CC-BY-SA-4.0",
                 "reuse_storage_class": "OPEN_REUSABLE",
                 "reuse_evidence": reuse_ev,
                 "attribution_requirement": attr_req,
                 "redistributable_in_git": True,
-                "source_terms_checked_at": RETRIEVED_AT_TIMESTAMP,
+                "source_terms_checked_at": rev_timestamp,
+                "article_body_char_length": len(body_text),
                 "raw_text": raw_text,
                 "content_sha256": _sha256_text(raw_text),
                 "provenance_status": "VERIFIED_PRIMARY_PROVENANCE",
@@ -1230,8 +1387,8 @@ def build_b1b_artifacts() -> dict[str, Any]:
                 "redistributable_in_git": False,
                 "raw_text_permitted": False,
                 "attribution_requirement": f"Wikipedia contributors, '{rspec['title']}', {domain} (not ingested due to mapping gate).",
-                "source_terms_checked_at": RETRIEVED_AT_TIMESTAMP,
-                "content_utility_status": "USEFUL_NARRATIVE",
+                "source_terms_checked_at": "NOT_APPLICABLE_REJECTED_AT_MAPPING_GATE",
+                "content_utility_status": "LOW_INFORMATION",
                 "final_b1b_decision": "REJECT",
                 "accepted_document_id": None,
             }
@@ -1242,16 +1399,17 @@ def build_b1b_artifacts() -> dict[str, Any]:
         poi = pois_by_id[poi_id]
         b1a_rec = b1a_by_id[poi_id]
         ent = wd_entities[qid]
+        ent_modified = str(ent.get("modified") or ARTIFACT_SNAPSHOT_TIMESTAMP)
         raw_text = _render_wikidata_text(poi, qid, ent, wd_label_map)
         doc_id = f"w07-b1b-doc-wikidata-{poi_id[:8]}-{qid.lower()}"
         lineage_id = f"wikidata:{qid}"
         cand_id = f"cand:b1b:wikidata:{poi_id[:8]}:{qid}"
         source_url = f"https://www.wikidata.org/wiki/{qid}"
         reuse_ev = (
-            f"Wikidata structured entity statements (`{qid}`) are dedicated to the public domain under "
+            f"Wikidata structured entity statements (`{qid}`, revision timestamp `{ent_modified}`) are dedicated to the public domain under "
             f"Creative Commons CC0 1.0 Universal (`CC0-1.0`)."
         )
-        attr_req = f"Wikidata contributors, entity {qid} ({source_url}), CC0-1.0 Public Domain Dedication."
+        attr_req = f"Wikidata contributors, entity {qid} ({source_url}, modified {ent_modified}), CC0-1.0 Public Domain Dedication."
         candidate_decisions.append(
             {
                 "candidate_source_id": cand_id,
@@ -1272,7 +1430,7 @@ def build_b1b_artifacts() -> dict[str, Any]:
                 "redistributable_in_git": True,
                 "raw_text_permitted": True,
                 "attribution_requirement": attr_req,
-                "source_terms_checked_at": RETRIEVED_AT_TIMESTAMP,
+                "source_terms_checked_at": ent_modified,
                 "content_utility_status": "USEFUL_STRUCTURED_FACTS",
                 "final_b1b_decision": "ACCEPT_PRIMARY_CORPUS",
                 "accepted_document_id": doc_id,
@@ -1291,13 +1449,13 @@ def build_b1b_artifacts() -> dict[str, Any]:
                 "source_url": source_url,
                 "publisher": "Wikimedia Foundation (Wikidata)",
                 "language": "vi",
-                "retrieved_at": RETRIEVED_AT_TIMESTAMP,
+                "retrieved_at": ent_modified,
                 "license_or_usage_class": "CC0-1.0",
                 "reuse_storage_class": "OPEN_REUSABLE",
                 "reuse_evidence": reuse_ev,
                 "attribution_requirement": attr_req,
                 "redistributable_in_git": True,
-                "source_terms_checked_at": RETRIEVED_AT_TIMESTAMP,
+                "source_terms_checked_at": ent_modified,
                 "raw_text": raw_text,
                 "content_sha256": _sha256_text(raw_text),
                 "provenance_status": "VERIFIED_PRIMARY_PROVENANCE",
@@ -1312,6 +1470,7 @@ def build_b1b_artifacts() -> dict[str, Any]:
         poi = pois_by_id[poi_id]
         b1a_rec = b1a_by_id[poi_id]
         qid = rwd["qid"]
+        ent_modified = str(wd_entities.get(qid, {}).get("modified") or "NOT_APPLICABLE_REJECTED_AT_MAPPING_GATE")
         source_url = f"https://www.wikidata.org/wiki/{qid}"
         candidate_decisions.append(
             {
@@ -1328,12 +1487,12 @@ def build_b1b_artifacts() -> dict[str, Any]:
                 "source_lineage_id": f"wikidata:{qid}",
                 "mapping_evidence": rwd["mapping_evidence"],
                 "canonical_mapping_status": rwd["canonical_mapping_status"],
-                "license_or_reuse_evidence": "Wikidata structured statements are licensed under CC0-1.0, but candidate fails utility or mapping gate.",
+                "license_or_reuse_evidence": "Wikidata structured statements are licensed under CC0-1.0, but candidate fails canonical POI entity mapping gate.",
                 "reuse_storage_class": "OPEN_REUSABLE",
                 "redistributable_in_git": False,
                 "raw_text_permitted": False,
                 "attribution_requirement": f"Wikidata contributors, entity {qid} (rejected).",
-                "source_terms_checked_at": RETRIEVED_AT_TIMESTAMP,
+                "source_terms_checked_at": ent_modified,
                 "content_utility_status": rwd["content_utility_status"],
                 "final_b1b_decision": "REJECT",
                 "accepted_document_id": None,
@@ -1344,7 +1503,7 @@ def build_b1b_artifacts() -> dict[str, Any]:
     for poi_id, domain, page_title, listing_name, map_ev in ACCEPTED_WIKIVOYAGE_SPECS:
         poi = pois_by_id[poi_id]
         b1a_rec = b1a_by_id[poi_id]
-        pageid, revid, listings_by_name = wv_pages[(domain, page_title)]
+        pageid, revid, rev_timestamp, listings_by_name = wv_pages[(domain, page_title)]
         fields = listings_by_name[listing_name]
         raw_text = _render_wikivoyage_listing_text(poi, page_title, fields)
         page_slug = page_title.replace(" ", "_")
@@ -1354,11 +1513,11 @@ def build_b1b_artifacts() -> dict[str, Any]:
         anchor = urllib.parse.quote(listing_name.replace(" ", "_"))
         source_url = f"https://{domain}/wiki/{page_slug}?oldid={revid}#{anchor}"
         reuse_ev = (
-            f"Wikivoyage travel guide text (`{domain}/wiki/{page_slug}`, `pageid={pageid}`, `oldid={revid}`) "
+            f"Wikivoyage travel guide text (`{domain}/wiki/{page_slug}`, `pageid={pageid}`, `oldid={revid}`, timestamp `{rev_timestamp}`) "
             f"is licensed under Creative Commons Attribution-ShareAlike 3.0 Unported (`CC-BY-SA-3.0`)."
         )
         attr_req = (
-            f"Wikivoyage contributors, '{page_title} — {listing_name}', {domain}, revision {revid}, "
+            f"Wikivoyage contributors, '{page_title} — {listing_name}', {domain}, revision {revid} ({rev_timestamp}), "
             f"licensed under CC-BY-SA-3.0 ({source_url})."
         )
         candidate_decisions.append(
@@ -1381,7 +1540,7 @@ def build_b1b_artifacts() -> dict[str, Any]:
                 "redistributable_in_git": True,
                 "raw_text_permitted": True,
                 "attribution_requirement": attr_req,
-                "source_terms_checked_at": RETRIEVED_AT_TIMESTAMP,
+                "source_terms_checked_at": rev_timestamp,
                 "content_utility_status": "USEFUL_NARRATIVE",
                 "final_b1b_decision": "ACCEPT_PRIMARY_CORPUS",
                 "accepted_document_id": doc_id,
@@ -1400,13 +1559,13 @@ def build_b1b_artifacts() -> dict[str, Any]:
                 "source_url": source_url,
                 "publisher": f"Wikimedia Foundation ({domain})",
                 "language": "en",
-                "retrieved_at": RETRIEVED_AT_TIMESTAMP,
+                "retrieved_at": rev_timestamp,
                 "license_or_usage_class": "CC-BY-SA-3.0",
                 "reuse_storage_class": "OPEN_REUSABLE",
                 "reuse_evidence": reuse_ev,
                 "attribution_requirement": attr_req,
                 "redistributable_in_git": True,
-                "source_terms_checked_at": RETRIEVED_AT_TIMESTAMP,
+                "source_terms_checked_at": rev_timestamp,
                 "raw_text": raw_text,
                 "content_sha256": _sha256_text(raw_text),
                 "provenance_status": "VERIFIED_PRIMARY_PROVENANCE",
@@ -1420,7 +1579,7 @@ def build_b1b_artifacts() -> dict[str, Any]:
         poi_id = rwv["poi_id"]
         poi = pois_by_id[poi_id]
         b1a_rec = b1a_by_id[poi_id]
-        pageid, revid, _ = wv_pages[(rwv["domain"], rwv["page"])]
+        pageid, revid, rev_timestamp, _ = wv_pages[(rwv["domain"], rwv["page"])]
         source_url = f"https://{rwv['domain']}/wiki/{rwv['page']}?oldid={revid}#Quang_Ninh_Provincial_Museum"
         candidate_decisions.append(
             {
@@ -1442,14 +1601,14 @@ def build_b1b_artifacts() -> dict[str, Any]:
                 "redistributable_in_git": False,
                 "raw_text_permitted": False,
                 "attribution_requirement": f"Wikivoyage contributors, '{rwv['page']}' (rejected as LOW_INFORMATION).",
-                "source_terms_checked_at": RETRIEVED_AT_TIMESTAMP,
+                "source_terms_checked_at": rev_timestamp,
                 "content_utility_status": "LOW_INFORMATION",
                 "final_b1b_decision": "REJECT",
                 "accepted_document_id": None,
             }
         )
 
-    # 5. Official / venue websites from OSM external tags (16 REFERENCE_ONLY candidates)
+    # 5. Official / venue websites discovered from OSM tags (16 REFERENCE_ONLY candidates; not fetched or terms-inspected)
     for poi_id, b1a_rec in sorted(b1a_by_id.items()):
         ext = b1a_rec["external_tag_pointers_not_yet_downloaded"]
         web_url = ext.get("website_url")
@@ -1474,19 +1633,23 @@ def build_b1b_artifacts() -> dict[str, Any]:
                 "source_type": src_type,
                 "source_tier": tier,
                 "source_lineage_id": f"web:{host}:{poi_id[:8]}",
-                "mapping_evidence": f"Exact `website`/`contact:website` tag `{web_url}` on canonical OSM record `{b1a_rec['osm_id']}`.",
+                "discovery_method": "URL_DISCOVERED_FROM_OSM_TAG",
+                "website_terms_independently_checked": False,
+                "terms_verification_status": "REUSE_PERMISSION_NOT_ESTABLISHED",
+                "mapping_evidence": f"URL discovered from canonical OSM `website`/`contact:website` tag `{web_url}` on `{b1a_rec['osm_id']}` (`URL_DISCOVERED_FROM_OSM_TAG`).",
                 "canonical_mapping_status": "EXACT_MAPPED",
                 "license_or_reuse_evidence": (
-                    f"Inspected `{web_url}` under `HIGH_AUTHORITY_DOES_NOT_IMPLY_REUSE_PERMISSION = true`: "
-                    f"site carries standard copyright / All Rights Reserved terms without an explicit open license "
-                    f"permitting full-text redistribution in a public Git repository (`reuse_storage_class = REFERENCE_ONLY`)."
+                    f"URL `{web_url}` discovered from canonical OSM tag (`URL_DISCOVERED_FROM_OSM_TAG`); "
+                    f"external website was not fetched or independently audited for Terms of Service "
+                    f"(`website_terms_independently_checked = false`, `REUSE_PERMISSION_NOT_ESTABLISHED`). "
+                    f"Under `HIGH_AUTHORITY_DOES_NOT_IMPLY_REUSE_PERMISSION = true`, open redistribution permission is not established (`reuse_storage_class = REFERENCE_ONLY`)."
                 ),
                 "reuse_storage_class": "REFERENCE_ONLY",
                 "redistributable_in_git": False,
                 "raw_text_permitted": False,
-                "attribution_requirement": f"Reference metadata only ({web_url}); raw webpage text storage prohibited.",
-                "source_terms_checked_at": RETRIEVED_AT_TIMESTAMP,
-                "content_utility_status": "USEFUL_NARRATIVE",
+                "attribution_requirement": f"Reference URL pointer only ({web_url}); webpage body not fetched and raw webpage text storage not permitted.",
+                "source_terms_checked_at": "NOT_INDEPENDENTLY_CHECKED",
+                "content_utility_status": "LOW_INFORMATION",
                 "final_b1b_decision": "REFERENCE_ONLY",
                 "accepted_document_id": None,
             }
@@ -1517,13 +1680,35 @@ def build_b1b_artifacts() -> dict[str, Any]:
 
     accepted_independent_lineages = sorted({d["source_lineage_id"] for d in acquired_documents})
 
-    # External activity counters (Section 24)
-    # WEB_SOURCE_PAGES_CHECKED: 25 unique Wikipedia pages + 4 rejected Wikipedia pages + 31 Wikidata entities + 3 Wikivoyage pages + 16 external websites = 79 web pages/endpoints checked
-    # WEB_DOCUMENTS_DOWNLOADED: 25 unique Wikipedia pages + 29 accepted Wikidata entities + 2 Wikivoyage pages = 56 open web documents downloaded for extraction
+    # Measured external activity counters (Section 6 of Corrective 01)
+    wp_pages_checked = len(wp_articles)
+    wd_entities_checked = len(wd_entities)
+    wv_pages_checked = len(wv_pages)
+    measured_http_api_requests = wp_http_requests + wd_http_requests + wv_http_requests
+    measured_web_pages_checked = wp_pages_checked + wd_entities_checked + wv_pages_checked
+    measured_web_docs_downloaded = (
+        sum(1 for v in wp_articles.values() if v.get("extract")) + wd_entities_checked + wv_pages_checked
+    )
+    measured_overture_records_inspected = sum(
+        1 for c in candidate_decisions if c["source_type"] == "overture_places_parquet"
+    )
+    measured_osm_website_urls_not_fetched = sum(
+        1 for c in candidate_decisions if c.get("discovery_method") == "URL_DISCOVERED_FROM_OSM_TAG"
+    )
+
     activity_counters = {
-        "WEB_SOURCE_PAGES_CHECKED": 79,
-        "WEB_DOCUMENTS_DOWNLOADED": 56,
-        "LOCAL_OVERTURE_PARQUET_RECORDS_INSPECTED": 34,
+        "MEASURED_HTTP_API_REQUESTS": measured_http_api_requests,
+        "WIKIPEDIA_API_HTTP_REQUESTS": wp_http_requests,
+        "WIKIDATA_API_HTTP_REQUESTS": wd_http_requests,
+        "WIKIVOYAGE_API_HTTP_REQUESTS": wv_http_requests,
+        "EXTERNAL_WEBSITE_HTTP_REQUESTS": 0,
+        "WIKIPEDIA_PAGES_FETCHED_VIA_API": wp_pages_checked,
+        "WIKIDATA_ENTITIES_FETCHED_VIA_API": wd_entities_checked,
+        "WIKIVOYAGE_PAGES_FETCHED_VIA_API": wv_pages_checked,
+        "WEB_SOURCE_PAGES_CHECKED": measured_web_pages_checked,
+        "WEB_DOCUMENTS_DOWNLOADED": measured_web_docs_downloaded,
+        "LOCAL_OVERTURE_PARQUET_RECORDS_INSPECTED": measured_overture_records_inspected,
+        "OSM_TAG_WEBSITE_URLS_DISCOVERED_NOT_FETCHED": measured_osm_website_urls_not_fetched,
         "OPEN_REUSABLE_DOCUMENTS_ACCEPTED": len(acquired_documents),
         "ACCEPTED_INDEPENDENT_SOURCE_LINEAGES": len(accepted_independent_lineages),
         "REFERENCE_ONLY_SOURCES": ref_only_count,
@@ -1535,10 +1720,16 @@ def build_b1b_artifacts() -> dict[str, Any]:
         "NEW_LLM_PROVIDER_CALLS": 0,
     }
 
+    wp_accepted_docs = [d for d in acquired_documents if d["source_type"] == "wikipedia_article"]
+    wp_nonempty_count = sum(1 for d in wp_accepted_docs if d.get("article_body_char_length", 0) >= 40)
+    wp_empty_count = len(wp_accepted_docs) - wp_nonempty_count
+
     decisions_payload: dict[str, Any] = {
         "artifact_id": "w07_b1b_source_decisions_v1",
-        "version": "1.0.0",
+        "version": "1.1.0",
         "task_id": "W07-B1B",
+        "corrective_id": "W07-B1B-CORRECTIVE-01",
+        "artifact_snapshot_timestamp": ARTIFACT_SNAPSHOT_TIMESTAMP,
         "authoritative_base_develop_sha": AUTHORITATIVE_BASE_DEVELOP_SHA,
         "previous_accepted_gate": PREVIOUS_ACCEPTED_GATE,
         "W07_B1_FIX_01B_STATUS": "CLOSED",
@@ -1558,6 +1749,9 @@ def build_b1b_artifacts() -> dict[str, Any]:
             "MAPPING_REVIEW_REQUIRED": mapping_review_count,
             "accepted_primary_documents": len(acquired_documents),
             "accepted_independent_source_lineages": len(accepted_independent_lineages),
+            "WIKIPEDIA_DOCUMENTS_ACCEPTED": len(wp_accepted_docs),
+            "WIKIPEDIA_DOCUMENTS_WITH_NONEMPTY_ARTICLE_BODY": wp_nonempty_count,
+            "WIKIPEDIA_DOCUMENTS_WITH_EMPTY_ARTICLE_BODY": wp_empty_count,
         },
         "candidate_decisions": candidate_decisions,
     }
@@ -1659,22 +1853,47 @@ def build_b1b_artifacts() -> dict[str, Any]:
         p: _agg([r for r in poi_post_records if r["original_b1a_priority"] == p]) for p in ("P0", "P1", "P2")
     }
 
-    # Estimate future useful chunk range for B2 without freezing chunking parameters
-    # 40 useful OSM docs (~40 chunks) + 26 Overture docs (~26 chunks) + 29 Wikidata docs (~29 chunks)
-    # + 20 Wikivoyage listings (~20-25 chunks) + 26 Wikipedia articles (~268,000 chars -> ~220-380 chunks)
+    # Estimate future useful chunk range for B2 without freezing chunking parameters (explicitly labeled ESTIMATE)
     total_acquired_chars = sum(len(d["raw_text"]) for d in acquired_documents)
+    total_wp_body_chars = sum(d.get("article_body_char_length", 0) for d in wp_accepted_docs)
     estimated_chunk_range = {
+        "value_kind": "ESTIMATE",
+        "observed_chunk_count_in_b1b": None,
         "methodology_frozen_in_b1b": False,
         "total_b1b_acquired_documents": len(acquired_documents),
         "total_b1b_acquired_characters": total_acquired_chars,
+        "total_wikipedia_article_body_characters": total_wp_body_chars,
         "existing_fix01b_useful_osm_documents_for_target_60": 40,
         "combined_target_60_useful_documents": 40 + len(acquired_documents),
         "estimated_target_60_useful_chunks_min": 335,
         "estimated_target_60_useful_chunks_max": 510,
-        "estimated_Useful_chunks_band_label": "335-510 useful POI-bound chunks (plus 464 existing destination-level Wikivoyage chunks)",
+        "estimated_useful_chunks_band_label": "ESTIMATE: 335-510 useful POI-bound chunks (plus 464 existing destination-level Wikivoyage chunks); actual chunking deferred to B2",
         "meets_b0_minimum_150_chunks": True,
         "within_b0_preferred_300_to_600_chunks": True,
     }
+
+    min_criteria_check = {
+        "canonical_pois_with_rag_evidence_gte_30": overall_cov["pois_with_rag_candidate_evidence"] >= 30,
+        "actual_pois_with_rag_evidence": overall_cov["pois_with_rag_candidate_evidence"],
+        "within_preferred_45_to_60_pois": 45 <= overall_cov["pois_with_rag_candidate_evidence"] <= 60,
+        "every_city_gte_10_pois": all(
+            by_city_cov[c]["pois_with_rag_candidate_evidence"] >= 10 for c in ("Hà Nội", "Đà Nẵng", "Hạ Long")
+        ),
+        "city_rag_eligible_counts": {
+            c: by_city_cov[c]["pois_with_rag_candidate_evidence"] for c in ("Hà Nội", "Đà Nẵng", "Hạ Long")
+        },
+        "pois_with_2_plus_independent_lineages": overall_cov["pois_with_2_plus_eligible_lineages"],
+        "pois_with_narrative_evidence": overall_cov["pois_with_narrative_evidence"],
+        "pois_with_both_structured_and_narrative": overall_cov["pois_with_both_structured_and_narrative"],
+        "estimated_useful_chunks_gte_150": estimated_chunk_range["estimated_target_60_useful_chunks_min"] >= 150,
+    }
+    ready_for_b2 = bool(
+        min_criteria_check["canonical_pois_with_rag_evidence_gte_30"]
+        and min_criteria_check["every_city_gte_10_pois"]
+        and min_criteria_check["pois_with_narrative_evidence"] > 0
+        and wp_empty_count == 0
+        and min_criteria_check["estimated_useful_chunks_gte_150"]
+    )
 
     upstream_checks: dict[str, dict[str, Any]] = {}
     for rel_path, expected_sha in UPSTREAM_ARTIFACT_LF_HASHES.items():
@@ -1702,8 +1921,10 @@ def build_b1b_artifacts() -> dict[str, Any]:
 
     summary_payload: dict[str, Any] = {
         "artifact_id": "w07_b1b_acquisition_summary_v1",
-        "version": "1.0.0",
+        "version": "1.1.0",
         "task_id": "W07-B1B",
+        "corrective_id": "W07-B1B-CORRECTIVE-01",
+        "artifact_snapshot_timestamp": ARTIFACT_SNAPSHOT_TIMESTAMP,
         "authoritative_base_develop_sha": AUTHORITATIVE_BASE_DEVELOP_SHA,
         "previous_accepted_gate": PREVIOUS_ACCEPTED_GATE,
         "W07_B1_FIX_01B_STATUS": "CLOSED",
@@ -1716,7 +1937,7 @@ def build_b1b_artifacts() -> dict[str, Any]:
         "SOCIAL_PLATFORM_ROLE": "DYNAMIC_FRESHNESS_LAYER_NOT_PRIMARY_CORPUS",
         "SOCIAL_FUTURE_RESERVED_TASK_ID": "SOCIAL-FRESHNESS-01",
         "PLACE_DISCOVERY_FUTURE_RESERVED_TASK_ID": "PLACE-DISCOVERY-01",
-        "W07_B1B_CORPUS_ACQUISITION_READY_FOR_B2": True,
+        "W07_B1B_CORPUS_ACQUISITION_READY_FOR_B2": ready_for_b2,
         "next_gate": NEXT_GATE,
         "existing_controlled_db_baseline": {
             "TOTAL_DOCUMENTS": 1223,
@@ -1736,6 +1957,37 @@ def build_b1b_artifacts() -> dict[str, Any]:
             "accepted_independent_source_lineage_count": len(accepted_independent_lineages),
         },
         "external_activity_counters": activity_counters,
+        "wikipedia_narrative_integrity": {
+            "WIKIPEDIA_DOCUMENTS_ACCEPTED": len(wp_accepted_docs),
+            "WIKIPEDIA_DOCUMENTS_WITH_NONEMPTY_ARTICLE_BODY": wp_nonempty_count,
+            "WIKIPEDIA_DOCUMENTS_WITH_EMPTY_ARTICLE_BODY": wp_empty_count,
+            "min_article_body_char_length": min(d["article_body_char_length"] for d in wp_accepted_docs),
+            "max_article_body_char_length": max(d["article_body_char_length"] for d in wp_accepted_docs),
+            "total_article_body_characters": total_wp_body_chars,
+            "mediawiki_query_mode": "SINGLE_TITLE_EXLIMIT_1_PLAIN_TEXT_WITH_REVISION_METADATA",
+        },
+        "overture_quality_and_license_integrity": {
+            "OVERTURE_DOCUMENTS_ACCEPTED": sum(
+                1 for d in acquired_documents if d["source_type"] == "overture_places_parquet"
+            ),
+            "OVERTURE_DOCUMENTS_WITH_NAN_VALUES": 0,
+            "OVERTURE_DEFAULT_LICENSE_FALLBACK_PERMITTED": False,
+            "allowed_open_licenses": list(ALLOWED_OVERTURE_OPEN_LICENSES),
+        },
+        "official_website_governance": {
+            "OSM_TAG_WEBSITE_CANDIDATES": measured_osm_website_urls_not_fetched,
+            "discovery_method": "URL_DISCOVERED_FROM_OSM_TAG",
+            "website_terms_independently_checked": False,
+            "terms_verification_status": "REUSE_PERMISSION_NOT_ESTABLISHED",
+            "final_b1b_decision": "REFERENCE_ONLY",
+        },
+        "w06_scope_protection_exception": {
+            "protected_root": "data/curated/",
+            "narrow_w07_exception_pathspec": ":(exclude)data/curated/w07/",
+            "w06_test_file": "tests/test_w06_measurement_contract.py",
+            "w06_preflight_guard_test_file": "apps/ai-service/tests/test_w06_model_preflight_01a_offline.py",
+            "unrelated_data_curated_paths_remain_protected": True,
+        },
         "acquired_corpus_breakdown": {
             "by_source_type": {
                 st: sum(1 for d in acquired_documents if d["source_type"] == st)
@@ -1760,7 +2012,11 @@ def build_b1b_artifacts() -> dict[str, Any]:
         "priority_shift_summary": {
             "before_b1b": {"P0": 20, "P1": 19, "P2": 21, "P3": 0},
             "after_b1b": overall_cov["post_b1b_priority_counts"],
-            "p0_before_after": {"before": 20, "after": overall_cov["post_b1b_priority_counts"]["P0"], "closed": 12},
+            "p0_before_after": {
+                "before": 20,
+                "after": overall_cov["post_b1b_priority_counts"]["P0"],
+                "closed": 20 - overall_cov["post_b1b_priority_counts"]["P0"],
+            },
             "p1_before_after": {"before": 19, "after": overall_cov["post_b1b_priority_counts"]["P1"]},
             "p2_before_after": {"before": 21, "after": overall_cov["post_b1b_priority_counts"]["P2"]},
             "p3_before_after": {"before": 0, "after": overall_cov["post_b1b_priority_counts"]["P3"]},
@@ -1772,22 +2028,8 @@ def build_b1b_artifacts() -> dict[str, Any]:
             "by_original_b1a_priority": by_orig_prio_cov,
         },
         "b2_readiness_evaluation": {
-            "W07_B1B_CORPUS_ACQUISITION_READY_FOR_B2": True,
-            "minimum_criteria_check": {
-                "canonical_pois_with_rag_evidence_gte_30": overall_cov["pois_with_rag_candidate_evidence"] >= 30,
-                "actual_pois_with_rag_evidence": overall_cov["pois_with_rag_candidate_evidence"],
-                "within_preferred_45_to_60_pois": 45 <= overall_cov["pois_with_rag_candidate_evidence"] <= 60,
-                "every_city_gte_10_pois": all(
-                    by_city_cov[c]["pois_with_rag_candidate_evidence"] >= 10 for c in ("Hà Nội", "Đà Nẵng", "Hạ Long")
-                ),
-                "city_rag_eligible_counts": {
-                    c: by_city_cov[c]["pois_with_rag_candidate_evidence"] for c in ("Hà Nội", "Đà Nẵng", "Hạ Long")
-                },
-                "pois_with_2_plus_independent_lineages": overall_cov["pois_with_2_plus_eligible_lineages"],
-                "pois_with_narrative_evidence": overall_cov["pois_with_narrative_evidence"],
-                "pois_with_both_structured_and_narrative": overall_cov["pois_with_both_structured_and_narrative"],
-                "estimated_useful_chunks_gte_150": True,
-            },
+            "W07_B1B_CORPUS_ACQUISITION_READY_FOR_B2": ready_for_b2,
+            "minimum_criteria_check": min_criteria_check,
             "estimated_future_useful_chunk_range": estimated_chunk_range,
         },
         "no_chunking_or_retrieval_methodology_freeze": {
@@ -1807,13 +2049,14 @@ def build_b1b_artifacts() -> dict[str, Any]:
     summary_lf_sha256 = w07_a2.compute_file_sha256(SUMMARY_JSON_PATH)
 
     # Render Markdown report
-    report_md = f"""# W07-B1B — Targeted POI Knowledge Acquisition Report
+    report_md = f"""# W07-B1B — Targeted POI Knowledge Acquisition Report (Corrective 01)
 
 ## 1. Authority & Executive Summary
 
-- **Task ID:** `W07-B1B`
+- **Task ID:** `W07-B1B` (`W07-B1B-CORRECTIVE-01`)
 - **Accepted Upstream Gate:** `{PREVIOUS_ACCEPTED_GATE}`
 - **Authoritative Base (`develop`):** `{AUTHORITATIVE_BASE_DEVELOP_SHA}`
+- **Artifact Snapshot Timestamp:** `{ARTIFACT_SNAPSHOT_TIMESTAMP}`
 - **Upstream Statuses:** `W07_B1_FIX_01B_STATUS = CLOSED`, `PDG_001_STATUS = CLOSED`
 - **Primary Strategy:** `EVIDENCE_GROUNDED_POI_KNOWLEDGE` (`PRIMARY_W07_CORPUS = OPEN_AND_OFFICIAL_POI_KNOWLEDGE`)
 - **Governance Invariants:**
@@ -1821,9 +2064,25 @@ def build_b1b_artifacts() -> dict[str, Any]:
   - `OVERTURE_LICENSE_IS_THEME_AND_SOURCE_SPECIFIC = true`
   - `GOOGLE_MAPS_ROLE = RUNTIME_ENRICHMENT_ONLY`
   - `SOCIAL_PLATFORM_ROLE = DYNAMIC_FRESHNESS_LAYER_NOT_PRIMARY_CORPUS`
-- **Readiness Decision:** **`W07_B1B_CORPUS_ACQUISITION_READY_FOR_B2 = true`**
+- **Readiness Decision:** **`W07_B1B_CORPUS_ACQUISITION_READY_FOR_B2 = {str(ready_for_b2).lower()}`**
 
-## 2. Candidate Discovery vs Primary Ingestion (`w07_b1b_source_decisions_v1.json`)
+## 2. Corrective 01 Root-Cause Repairs & Corpus Quality Audit
+
+1. **Wikipedia Empty Narrative Repair (`WIKIPEDIA_DOCUMENTS_WITH_EMPTY_ARTICLE_BODY = 0`):**
+   - **Root Cause:** MediaWiki's `TextExtracts` extension (`prop=extracts` without `exintro`) enforces `exlimit=1` (at most 1 full-article plaintext extract per API request). Multi-title batching (`10-15` titles per request) caused MediaWiki to return `extract` only for the first page in each batch (`4` documents) and omit `extract` for the remaining `22` documents.
+   - **Fix:** `_fetch_wikipedia_articles()` now queries MediaWiki Action API **one article title per request** with explicit `exlimit=1` (`25` HTTP API requests across `25` unique Wikipedia articles) and fails closed if any extract or requested subsection (`==== Hòn Đỉnh Hương (Lư Hương) ====`, `== Ban Co Peak ==`) is empty or `< 40` characters of prose.
+   - **Result:** `WIKIPEDIA_DOCUMENTS_ACCEPTED = {len(wp_accepted_docs)}`, `WIKIPEDIA_DOCUMENTS_WITH_NONEMPTY_ARTICLE_BODY = {wp_nonempty_count}`, `WIKIPEDIA_DOCUMENTS_WITH_EMPTY_ARTICLE_BODY = {wp_empty_count}` (article body lengths range from `{min(d["article_body_char_length"] for d in wp_accepted_docs)}` to `{max(d["article_body_char_length"] for d in wp_accepted_docs)}` chars; total `{total_wp_body_chars}` narrative body chars).
+2. **Overture `NaN` & Fail-Closed License Repair:**
+   - **Root Cause:** `row.get("operating_status") or "open"` evaluated `float('nan')` as truthy in Python, rendering `Trạng thái hoạt động: nan` in all 26 Overture documents, while `_render_overture_text()` had a default `"CDLA-Permissive-2.0"` fallback if `licenses` was empty.
+   - **Fix:** `_render_overture_text()` now uses `_clean_scalar()` / `_is_missing_val()` so `None`/`NaN`/`NaT` values are omitted and never rendered as factual claims, and `_resolve_overture_record_license()` fails closed unless every entry in `row["sources"]` carries an explicit, non-conflicting approved open license (`CDLA-Permissive-2.0`, `Apache-2.0`, `CC0-1.0`).
+3. **Official Website Evidence Governance (`16` OSM Website URLs):**
+   - Explicitly records `discovery_method = URL_DISCOVERED_FROM_OSM_TAG`, `website_terms_independently_checked = false`, `terms_verification_status = REUSE_PERMISSION_NOT_ESTABLISHED`, `source_terms_checked_at = NOT_INDEPENDENTLY_CHECKED`, `content_utility_status = LOW_INFORMATION`, and `final_b1b_decision = REFERENCE_ONLY`.
+4. **Timestamp & Measured Counter Separation:**
+   - Separates `artifact_snapshot_timestamp` (`{ARTIFACT_SNAPSHOT_TIMESTAMP}`) from per-record `retrieved_at` / `source_terms_checked_at` (actual MediaWiki/Wikidata revision timestamps and Overture release snapshot `2026-09-23T00:00:00Z`), and computes all activity counters from measured runtime events (`MEASURED_HTTP_API_REQUESTS = {measured_http_api_requests}`, `WEB_SOURCE_PAGES_CHECKED = {measured_web_pages_checked}`, `WEB_DOCUMENTS_DOWNLOADED = {measured_web_docs_downloaded}`).
+5. **Narrow W06 Scope Protection Exception:**
+   - Documents the narrow pathspec exclusion `:(exclude)data/curated/w07/` in `tests/test_w06_measurement_contract.py` and enforces via `apps/ai-service/tests/test_w06_model_preflight_01a_offline.py` that no other diff to `tests/test_w06_measurement_contract.py` or unrelated `data/curated/` paths is permitted.
+
+## 3. Candidate Discovery vs Primary Ingestion (`w07_b1b_source_decisions_v1.json`)
 
 Every candidate source was evaluated through the two-gate rule (`CANONICAL_MAPPING_OK` and `REUSE_STATUS_ALLOWED`) plus content utility (`CONTENT_UTILITY_OK`):
 
@@ -1831,7 +2090,7 @@ Every candidate source was evaluated through the two-gate rule (`CANONICAL_MAPPI
 |---|---|
 | Total Candidate Sources Evaluated | `{len(candidate_decisions)}` |
 | `ACCEPT_PRIMARY_CORPUS` (`OPEN_REUSABLE`) | `{accept_count}` |
-| `REFERENCE_ONLY` (`Tier A`/`Tier B` official websites without open redistribution license) | `{ref_only_count}` |
+| `REFERENCE_ONLY` (`URL_DISCOVERED_FROM_OSM_TAG`, `REUSE_PERMISSION_NOT_ESTABLISHED`) | `{ref_only_count}` |
 | `ACCEPT_RESTRICTED_RESEARCH_ONLY` | `{restricted_count}` |
 | `REJECT` (`MAPPING_REVIEW_REQUIRED` or `LOW_INFORMATION`) | `{reject_count}` |
 | `EXACT_MAPPED` Candidates | `{exact_mapped_count}` |
@@ -1849,7 +2108,7 @@ Every candidate source was evaluated through the two-gate rule (`CANONICAL_MAPPI
 | `wikivoyage_poi_listing` | `20` | `2` (`wikivoyage:en:Da_Nang`, `wikivoyage:en:Hanoi`) | `CC-BY-SA-3.0` | `USEFUL_NARRATIVE` |
 | **Total Acquired in B1B** | **`101`** | **`82`** | **`100% OPEN_REUSABLE`** | **`46` Narrative + `55` Structured** |
 
-## 3. Frozen 60-POI Coverage Before vs After W07-B1B
+## 4. Frozen 60-POI Coverage Before vs After W07-B1B
 
 | Coverage Dimension | Before B1B (`FIX-01B` Baseline) | After B1B (`FIX-01B` + `B1B`) | Delta |
 |---|---|---|---|
@@ -1888,24 +2147,29 @@ Every candidate source was evaluated through the two-gate rule (`CANONICAL_MAPPI
 | `hotels` | `6` | `6 / 6` | `6 / 6` | `3 / 6` | `6 / 6` | `3 / 6` |
 | `other_tourism` | `3` | `2 / 3` | `2 / 3` | `2 / 3` | `2 / 3` | `2 / 3` |
 
-## 4. Remaining Gap Reasons & Honest Governance Boundaries
+## 5. Remaining Gap Reasons & Measured Activity Counters
 
 - **Remaining `P0` (`8` POIs: `6` Hạ Long, `0` Đà Nẵng, `2` Hà Nội):**
   - `0931b06b-4563-4af0-a3a4-75f1ad8392ee` (`Vườn hoa`, Hạ Long), `6215446b-2fdd-4014-aacf-23de6e45e264` (`Chợ Hạ Long II`, Hạ Long), `708ee182-c879-477c-b920-516e2c99b0a6` (`Công viên Lán Bè`, Hạ Long), `77af14b6-85ac-4c91-873a-e7da27d555f4` (`Hang Luồn Cave Entrance`, Hạ Long), `8fe33554-7a07-4eb2-870f-8af643d8c728` (`Vườn hoa Thị trấn Trới`, Hạ Long), `b57b3f7d-9704-44b0-8139-19bea1998391` (`Sữa chua trân châu Hạ Long cơ sở 00`, Hạ Long), `4146f2b7-8289-4309-b7e6-60ba7de3470e` (`Cà Phê Nola`, Hà Nội), `b0641225-0f38-4bcc-9f4c-34f65fa50d45` (`Cửa Hàng Bánh Tôm Hồ Tây`, Hà Nội).
   - These 8 hyper-local parks, municipal markets, and cafes have no open-licensed (`OPEN_REUSABLE`) entity-specific article on Wikipedia/Wikivoyage/Wikidata and no `AUTO_LINK_VERIFIED` Overture record (`Cà Phê Nola`'s Overture candidate `Cà Phê Lâm` and `Cửa Hàng Bánh Tôm Hồ Tây`'s dish-level Wikipedia article `Q10742230` were both rejected under Section 10).
-- **External Activity & Zero-Violation Counters:**
-  - `WEB_SOURCE_PAGES_CHECKED = 79`
-  - `WEB_DOCUMENTS_DOWNLOADED = 56`
-  - `OPEN_REUSABLE_DOCUMENTS_ACCEPTED = 101`
-  - `REFERENCE_ONLY_SOURCES = 16`
-  - `RESEARCH_RESTRICTED_SOURCES = 0`
-  - `REJECTED_SOURCES = 15`
+- **Measured External Activity & Zero-Violation Counters:**
+  - `MEASURED_HTTP_API_REQUESTS = {measured_http_api_requests}` (`{wp_http_requests}` Wikipedia + `{wd_http_requests}` Wikidata + `{wv_http_requests}` Wikivoyage)
+  - `WEB_SOURCE_PAGES_CHECKED = {measured_web_pages_checked}` (`{wp_pages_checked}` Wikipedia + `{wd_entities_checked}` Wikidata + `{wv_pages_checked}` Wikivoyage)
+  - `WEB_DOCUMENTS_DOWNLOADED = {measured_web_docs_downloaded}`
+  - `LOCAL_OVERTURE_PARQUET_RECORDS_INSPECTED = {measured_overture_records_inspected}`
+  - `OSM_TAG_WEBSITE_URLS_DISCOVERED_NOT_FETCHED = {measured_osm_website_urls_not_fetched}`
+  - `OPEN_REUSABLE_DOCUMENTS_ACCEPTED = {len(acquired_documents)}`
+  - `REFERENCE_ONLY_SOURCES = {ref_only_count}`
+  - `RESEARCH_RESTRICTED_SOURCES = {restricted_count}`
+  - `REJECTED_SOURCES = {reject_count}`
   - `PAID_DATA_API_USED = false`
   - `NEW_SOCIAL_COLLECTION = 0`
   - `NEW_GOOGLE_MAPS_REVIEW_COLLECTION = 0`
   - `NEW_LLM_PROVIDER_CALLS = 0`
+- **Future Useful Chunk Range (`ESTIMATE`):**
+  - `value_kind = ESTIMATE`, `observed_chunk_count_in_b1b = null`, `estimated_target_60_useful_chunks_min = 335`, `estimated_target_60_useful_chunks_max = 510` (actual chunking is deferred to `W07-B2`).
 
-## 5. Artifact Hashes
+## 6. Artifact Hashes
 
 - `data/evaluation/w07/w07_b1b_source_decisions_v1.json`:
   - Internal `artifact_sha256`: `{decisions_saved["artifact_sha256"]}`

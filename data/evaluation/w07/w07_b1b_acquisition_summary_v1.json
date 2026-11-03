@@ -1,7 +1,9 @@
 {
   "artifact_id": "w07_b1b_acquisition_summary_v1",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "task_id": "W07-B1B",
+  "corrective_id": "W07-B1B-CORRECTIVE-01",
+  "artifact_snapshot_timestamp": "2026-11-03T18:45:00Z",
   "authoritative_base_develop_sha": "324163636cedc8391c07cf2deca37d907745bd14",
   "previous_accepted_gate": "W07-B1-FIX-01B-POSTMERGE-CHATGPT-AUDIT = PASS",
   "W07_B1_FIX_01B_STATUS": "CLOSED",
@@ -15,7 +17,7 @@
   "SOCIAL_FUTURE_RESERVED_TASK_ID": "SOCIAL-FRESHNESS-01",
   "PLACE_DISCOVERY_FUTURE_RESERVED_TASK_ID": "PLACE-DISCOVERY-01",
   "W07_B1B_CORPUS_ACQUISITION_READY_FOR_B2": true,
-  "next_gate": "W07-B1B-TARGETED-POI-KNOWLEDGE-ACQUISITION-CHATGPT-AUDIT",
+  "next_gate": "W07-B1B-CORRECTIVE-01-CORPUS-QUALITY-CHATGPT-AUDIT",
   "existing_controlled_db_baseline": {
     "TOTAL_DOCUMENTS": 1223,
     "OSM_DOCUMENTS": 759,
@@ -26,17 +28,26 @@
   },
   "linked_artifacts": {
     "source_decisions_path": "data/evaluation/w07/w07_b1b_source_decisions_v1.json",
-    "source_decisions_internal_sha256": "0eafb594afcffe92c09d244e49153a268749f9a174981403d1c4d541d26e16a5",
-    "source_decisions_lf_sha256": "a43ee28bfa2064aadabe69a6dc84cbad4a61cd955eea2e065fa2c34b2d137b17",
+    "source_decisions_internal_sha256": "93e36923c0ec99fe7104340ca6802348bfad7264e9fa61e2877b754216914f77",
+    "source_decisions_lf_sha256": "8c19d922c0eadeec7e9bd35c5bf8527be12d8de4962c1c415680515908401c94",
     "acquired_corpus_jsonl_path": "data/curated/w07/poi_knowledge_acquired_v1.jsonl",
-    "acquired_corpus_jsonl_lf_sha256": "d8e925f94208fc0a2cb3edc01baa658bb10ce967c26745aeab6dab8d2f39875f",
+    "acquired_corpus_jsonl_lf_sha256": "bd201daffaf3eef899400ff243ffe47f52836f7984f930d65e0f444e38cdbc60",
     "acquired_corpus_document_count": 101,
     "accepted_independent_source_lineage_count": 82
   },
   "external_activity_counters": {
-    "WEB_SOURCE_PAGES_CHECKED": 79,
-    "WEB_DOCUMENTS_DOWNLOADED": 56,
+    "MEASURED_HTTP_API_REQUESTS": 30,
+    "WIKIPEDIA_API_HTTP_REQUESTS": 25,
+    "WIKIDATA_API_HTTP_REQUESTS": 2,
+    "WIKIVOYAGE_API_HTTP_REQUESTS": 3,
+    "EXTERNAL_WEBSITE_HTTP_REQUESTS": 0,
+    "WIKIPEDIA_PAGES_FETCHED_VIA_API": 25,
+    "WIKIDATA_ENTITIES_FETCHED_VIA_API": 31,
+    "WIKIVOYAGE_PAGES_FETCHED_VIA_API": 3,
+    "WEB_SOURCE_PAGES_CHECKED": 59,
+    "WEB_DOCUMENTS_DOWNLOADED": 59,
     "LOCAL_OVERTURE_PARQUET_RECORDS_INSPECTED": 34,
+    "OSM_TAG_WEBSITE_URLS_DISCOVERED_NOT_FETCHED": 16,
     "OPEN_REUSABLE_DOCUMENTS_ACCEPTED": 101,
     "ACCEPTED_INDEPENDENT_SOURCE_LINEAGES": 82,
     "REFERENCE_ONLY_SOURCES": 16,
@@ -46,6 +57,39 @@
     "NEW_SOCIAL_COLLECTION": 0,
     "NEW_GOOGLE_MAPS_REVIEW_COLLECTION": 0,
     "NEW_LLM_PROVIDER_CALLS": 0
+  },
+  "wikipedia_narrative_integrity": {
+    "WIKIPEDIA_DOCUMENTS_ACCEPTED": 26,
+    "WIKIPEDIA_DOCUMENTS_WITH_NONEMPTY_ARTICLE_BODY": 26,
+    "WIKIPEDIA_DOCUMENTS_WITH_EMPTY_ARTICLE_BODY": 0,
+    "min_article_body_char_length": 315,
+    "max_article_body_char_length": 55369,
+    "total_article_body_characters": 228661,
+    "mediawiki_query_mode": "SINGLE_TITLE_EXLIMIT_1_PLAIN_TEXT_WITH_REVISION_METADATA"
+  },
+  "overture_quality_and_license_integrity": {
+    "OVERTURE_DOCUMENTS_ACCEPTED": 26,
+    "OVERTURE_DOCUMENTS_WITH_NAN_VALUES": 0,
+    "OVERTURE_DEFAULT_LICENSE_FALLBACK_PERMITTED": false,
+    "allowed_open_licenses": [
+      "Apache-2.0",
+      "CDLA-Permissive-2.0",
+      "CC0-1.0"
+    ]
+  },
+  "official_website_governance": {
+    "OSM_TAG_WEBSITE_CANDIDATES": 16,
+    "discovery_method": "URL_DISCOVERED_FROM_OSM_TAG",
+    "website_terms_independently_checked": false,
+    "terms_verification_status": "REUSE_PERMISSION_NOT_ESTABLISHED",
+    "final_b1b_decision": "REFERENCE_ONLY"
+  },
+  "w06_scope_protection_exception": {
+    "protected_root": "data/curated/",
+    "narrow_w07_exception_pathspec": ":(exclude)data/curated/w07/",
+    "w06_test_file": "tests/test_w06_measurement_contract.py",
+    "w06_preflight_guard_test_file": "apps/ai-service/tests/test_w06_model_preflight_01a_offline.py",
+    "unrelated_data_curated_paths_remain_protected": true
   },
   "acquired_corpus_breakdown": {
     "by_source_type": {
@@ -388,14 +432,17 @@
       "estimated_useful_chunks_gte_150": true
     },
     "estimated_future_useful_chunk_range": {
+      "value_kind": "ESTIMATE",
+      "observed_chunk_count_in_b1b": null,
       "methodology_frozen_in_b1b": false,
       "total_b1b_acquired_documents": 101,
-      "total_b1b_acquired_characters": 77517,
+      "total_b1b_acquired_characters": 285287,
+      "total_wikipedia_article_body_characters": 228661,
       "existing_fix01b_useful_osm_documents_for_target_60": 40,
       "combined_target_60_useful_documents": 141,
       "estimated_target_60_useful_chunks_min": 335,
       "estimated_target_60_useful_chunks_max": 510,
-      "estimated_Useful_chunks_band_label": "335-510 useful POI-bound chunks (plus 464 existing destination-level Wikivoyage chunks)",
+      "estimated_useful_chunks_band_label": "ESTIMATE: 335-510 useful POI-bound chunks (plus 464 existing destination-level Wikivoyage chunks); actual chunking deferred to B2",
       "meets_b0_minimum_150_chunks": true,
       "within_b0_preferred_300_to_600_chunks": true
     }
@@ -2529,5 +2576,5 @@
       "unchanged": true
     }
   },
-  "artifact_sha256": "9442b0868a58d277bf5b968755ea4e5923e5b5eac345efcf2019e1e2e0ec86d6"
+  "artifact_sha256": "467de5bd9098e584d276fd94e577eaf1a4de77aacad6c3b76a55fa7c3baa0b5e"
 }

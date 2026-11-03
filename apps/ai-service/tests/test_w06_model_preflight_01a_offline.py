@@ -6,6 +6,7 @@ so mandatory CI executes it inside the ai-service job without polluting requirem
 ABSOLUTELY NO LIVE MODEL/API REQUESTS ARE MADE IN THIS TEST SUITE.
 All SDK calls use offline fake transports (httpx.MockTransport / httpx2.MockTransport).
 """
+
 import copy
 import json
 from pathlib import Path
@@ -184,6 +185,26 @@ def test_pf_a_01_production_config_and_historical_tests_byte_identical_to_develo
         check=True,
     )
     assert res.stdout.strip() == ""
+    contract_diff = subprocess.run(
+        [
+            "git",
+            "diff",
+            "-U0",
+            EXPECTED_BASE_DEVELOP_SHA,
+            "--",
+            "tests/test_w06_measurement_contract.py",
+        ],
+        cwd=REPO_ROOT,
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    changed_lines = [
+        line
+        for line in contract_diff.stdout.splitlines()
+        if (line.startswith("+") or line.startswith("-")) and not line.startswith("+++") and not line.startswith("---")
+    ]
+    assert changed_lines in ([], ['+            ":(exclude)data/curated/w07/",'])
     assert settings.PLANNER_MODEL == "gemini-3.5-flash"
 
 
@@ -312,7 +333,12 @@ def test_pf_a_08_identical_semantic_prompts_and_dual_schema_hashes_across_c1_c2_
         assert r1["user_prompt"] == r2["user_prompt"] == r3["user_prompt"]
         assert r1["system_prompt_sha256"] == r2["system_prompt_sha256"] == r3["system_prompt_sha256"]
         assert r1["user_prompt_sha256"] == r2["user_prompt_sha256"] == r3["user_prompt_sha256"]
-        assert r1["semantic_schema_sha256"] == r2["semantic_schema_sha256"] == r3["semantic_schema_sha256"] == SEMANTIC_SCHEMA_SHA256
+        assert (
+            r1["semantic_schema_sha256"]
+            == r2["semantic_schema_sha256"]
+            == r3["semantic_schema_sha256"]
+            == SEMANTIC_SCHEMA_SHA256
+        )
         assert (
             r1["common_generation_schema_sha256"]
             == r2["common_generation_schema_sha256"]
@@ -424,7 +450,9 @@ def test_pf_a_11_primary_parse_path_succeeds_and_verifies_wire_payloads_for_c1_c
             "object": "chat.completion",
             "created": 1760000000,
             "model": "gpt-6.1-sol",
-            "choices": [{"index": 0, "message": {"role": "assistant", "content": valid_json_str}, "finish_reason": "stop"}],
+            "choices": [
+                {"index": 0, "message": {"role": "assistant", "content": valid_json_str}, "finish_reason": "stop"}
+            ],
             "usage": {"prompt_tokens": 110, "completion_tokens": 230, "total_tokens": 340},
         },
         captured_bodies=o_bodies,
@@ -555,7 +583,9 @@ def test_pf_a_13_c1_google_preflight_record_and_request_omissions() -> None:
 
     # Check documentation provenance scopes
     scopes = {d.verification_scope for d in rec.documentation_provenance}
-    assert {"MODEL_ID", "STRUCTURED_OUTPUT", "SAMPLING", "THINKING_REASONING", "MAX_OUTPUT", "ENDPOINT"}.issubset(scopes)
+    assert {"MODEL_ID", "STRUCTURED_OUTPUT", "SAMPLING", "THINKING_REASONING", "MAX_OUTPUT", "ENDPOINT"}.issubset(
+        scopes
+    )
 
 
 def test_pf_a_14_c2_openai_preflight_record_honesty_boundary() -> None:
@@ -597,7 +627,9 @@ def test_pf_a_14_c2_openai_preflight_record_honesty_boundary() -> None:
     assert "top_k" not in req["config"]
 
     scopes = {d.verification_scope for d in rec.documentation_provenance}
-    assert {"MODEL_ID", "STRUCTURED_OUTPUT", "SAMPLING", "THINKING_REASONING", "MAX_OUTPUT", "ENDPOINT"}.issubset(scopes)
+    assert {"MODEL_ID", "STRUCTURED_OUTPUT", "SAMPLING", "THINKING_REASONING", "MAX_OUTPUT", "ENDPOINT"}.issubset(
+        scopes
+    )
 
 
 def test_pf_a_15_c3_anthropic_preflight_record_and_adaptive_thinking() -> None:
@@ -634,7 +666,9 @@ def test_pf_a_15_c3_anthropic_preflight_record_and_adaptive_thinking() -> None:
     assert "seed" not in req["config"]
 
     scopes = {d.verification_scope for d in rec.documentation_provenance}
-    assert {"MODEL_ID", "STRUCTURED_OUTPUT", "SAMPLING", "THINKING_REASONING", "MAX_OUTPUT", "ENDPOINT"}.issubset(scopes)
+    assert {"MODEL_ID", "STRUCTURED_OUTPUT", "SAMPLING", "THINKING_REASONING", "MAX_OUTPUT", "ENDPOINT"}.issubset(
+        scopes
+    )
 
 
 def test_pf_a_16_retry_zero_on_http_429_across_all_candidates() -> None:
@@ -746,7 +780,9 @@ def test_pf_a_19_malformed_response_single_attempt_and_raw_preserved() -> None:
         status_code=200,
         body_json={
             "modelVersion": "gemini-3.8-flash",
-            "candidates": [{"content": {"role": "model", "parts": [{"text": malformed}]}, "finishReason": "MAX_TOKENS"}],
+            "candidates": [
+                {"content": {"role": "model", "parts": [{"text": malformed}]}, "finishReason": "MAX_TOKENS"}
+            ],
         },
     )
     g_res = GooglePreflightAdapter().execute_offline_simulated_request(
@@ -765,7 +801,9 @@ def test_pf_a_19_malformed_response_single_attempt_and_raw_preserved() -> None:
             "object": "chat.completion",
             "created": 1760000000,
             "model": "gpt-6.1-sol",
-            "choices": [{"index": 0, "message": {"role": "assistant", "content": malformed}, "finish_reason": "length"}],
+            "choices": [
+                {"index": 0, "message": {"role": "assistant", "content": malformed}, "finish_reason": "length"}
+            ],
         },
     )
     o_res = OpenAIPreflightAdapter().execute_offline_simulated_request(
@@ -803,7 +841,9 @@ def test_pf_a_20_refusal_response_single_attempt_and_raw_preserved() -> None:
         status_code=200,
         body_json={
             "modelVersion": "gemini-3.8-flash",
-            "candidates": [{"content": {"role": "model", "parts": [{"text": "Cannot fulfill request."}]}, "finishReason": "SAFETY"}],
+            "candidates": [
+                {"content": {"role": "model", "parts": [{"text": "Cannot fulfill request."}]}, "finishReason": "SAFETY"}
+            ],
         },
     )
     g_res = GooglePreflightAdapter().execute_offline_simulated_request(
@@ -820,7 +860,13 @@ def test_pf_a_20_refusal_response_single_attempt_and_raw_preserved() -> None:
             "object": "chat.completion",
             "created": 1760000000,
             "model": "gpt-6.1-sol",
-            "choices": [{"index": 0, "message": {"role": "assistant", "content": None, "refusal": "I cannot assist with that."}, "finish_reason": "stop"}],
+            "choices": [
+                {
+                    "index": 0,
+                    "message": {"role": "assistant", "content": None, "refusal": "I cannot assist with that."},
+                    "finish_reason": "stop",
+                }
+            ],
         },
     )
     o_res = OpenAIPreflightAdapter().execute_offline_simulated_request(
@@ -876,7 +922,9 @@ def test_pf_a_21_wrong_returned_model_id_triggers_configuration_integrity_failur
             "object": "chat.completion",
             "created": 1760000000,
             "model": "gpt-4o-mini",
-            "choices": [{"index": 0, "message": {"role": "assistant", "content": valid_json_str}, "finish_reason": "stop"}],
+            "choices": [
+                {"index": 0, "message": {"role": "assistant", "content": valid_json_str}, "finish_reason": "stop"}
+            ],
         },
     )
     with pytest.raises(ConfigurationIntegrityError):

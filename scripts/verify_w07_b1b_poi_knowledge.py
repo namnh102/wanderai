@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
-"""W07-B1B — Offline Fail-Closed Verifier for Targeted POI Knowledge Acquisition."""
+"""W07-B1B — Offline Fail-Closed Verifier for Targeted POI Knowledge Acquisition (Corrective 01)."""
 
 from __future__ import annotations
 
 import argparse
 import hashlib
 import json
+import re
 import sys
 from pathlib import Path
 from typing import Any
@@ -76,6 +77,36 @@ ALLOWED_REUSE_CLASSES = {
     "PROHIBITED",
 }
 
+FORBIDDEN_RAW_TEXT_PATTERNS: tuple[re.Pattern[str], ...] = (
+    re.compile(r":\s*nan\b", re.IGNORECASE),
+    re.compile(r":\s*nat\b", re.IGNORECASE),
+    re.compile(r":\s*none\b", re.IGNORECASE),
+    re.compile(r":\s*null\b", re.IGNORECASE),
+    re.compile(r"^\s*(?:todo|tbd|n/a|placeholder)\s*$", re.IGNORECASE),
+)
+
+SUBSTANTIVE_STRUCTURED_PREFIXES: tuple[str, ...] = (
+    "Danh mục cơ bản:",
+    "Trạng thái hoạt động:",
+    "Độ tin cậy bản ghi Overture (confidence):",
+    "Địa chỉ cấu trúc (Overture addresses):",
+    "Số điện thoại liên hệ (Overture phones):",
+    "Liên kết website/trang thông tin (Overture websites):",
+    "Nguồn đóng góp bản ghi (Overture sources):",
+    "Mô tả thực thể (vi/en):",
+    "Tên gọi khác (aliases):",
+    "Phân loại thực thể (instance of P31):",
+    "Đơn vị hành chính (located in P131):",
+    "Quốc gia (country P17):",
+    "Tọa độ địa lý Wikidata (P625):",
+    "Danh hiệu di sản (heritage designation P1435):",
+    "Năm thành lập / khánh thành (P571/P1619):",
+    "Địa chỉ đường phố (P6375):",
+    "Mã bưu chính (P281):",
+    "Số tầng (P1101):",
+    "Website chính thức (P856):",
+)
+
 
 def _verify_internal_sha256(payload: dict[str, Any], label: str) -> None:
     expected = payload.get("artifact_sha256")
@@ -87,6 +118,82 @@ def _verify_internal_sha256(payload: dict[str, Any], label: str) -> None:
     actual = hashlib.sha256(canonical.encode("utf-8")).hexdigest()
     if actual != expected:
         raise ValueError(f"{label}: internal artifact_sha256 mismatch ({actual} != {expected})")
+
+
+def validate_document_content_utility(
+    doc: dict[str, Any],
+    *,
+    expected_section_heading: str | None = None,
+) -> None:
+    """Fail-closed content utility validator for an accepted primary corpus document."""
+    did = doc.get("document_id", "<unknown>")
+    raw_text = str(doc.get("raw_text") or "")
+    if not raw_text.strip():
+        raise ValueError(f"Document {did}: raw_text is empty")
+
+    for pat in FORBIDDEN_RAW_TEXT_PATTERNS:
+        if pat.search(raw_text):
+            raise ValueError(
+                f"Document {did}: raw_text contains forbidden NaN/null/placeholder pattern ({pat.pattern})"
+            )
+
+    lines = raw_text.splitlines()
+    if not lines or not lines[0].startswith("Địa điểm: "):
+        raise ValueError(f"Document {did}: missing generated provenance header line ('Địa điểm: ...')")
+
+    body_text = "\n".join(lines[1:]).strip()
+    body_lines = [line.strip() for line in lines[1:] if line.strip()]
+    if not body_text or not body_lines:
+        raise ValueError(f"Document {did}: empty body after stripping generated provenance header line")
+
+    source_type = doc.get("source_type")
+    utility = doc.get("content_utility_status")
+
+    if source_type == "wikipedia_article":
+        if utility != "USEFUL_NARRATIVE":
+            raise ValueError(f"Document {did}: wikipedia_article must have USEFUL_NARRATIVE, got {utility}")
+        ok, reason = b1b.validate_wikipedia_narrative_body(body_text, expected_section_heading)
+        if not ok:
+            raise ValueError(f"Document {did}: invalid Wikipedia narrative body ({reason})")
+        recorded_len = doc.get("article_body_char_length")
+        if recorded_len is not None and recorded_len != len(body_text):
+            raise ValueError(
+                f"Document {did}: article_body_char_length ({recorded_len}) != actual body length ({len(body_text)})"
+            )
+
+    elif source_type == "wikivoyage_poi_listing":
+        if utility != "USEFUL_NARRATIVE":
+            raise ValueError(f"Document {did}: wikivoyage_poi_listing must have USEFUL_NARRATIVE, got {utility}")
+        desc_lines = [
+            line.split("Mô tả du lịch chi tiết (Wikivoyage):", 1)[1].strip()
+            for line in body_lines
+            if line.startswith("Mô tả du lịch chi tiết (Wikivoyage):")
+        ]
+        if not desc_lines or len(desc_lines[0]) < 25:
+            raise ValueError(
+                f"Document {did}: Wikivoyage listing lacks genuine POI-specific narrative prose (>=25 chars)"
+            )
+        if re.fullmatch(r"(?:todo|tbd|n/a|none|null|nan|\W)+", desc_lines[0], flags=re.IGNORECASE):
+            raise ValueError(f"Document {did}: Wikivoyage narrative description is placeholder-only")
+
+    elif source_type in ("overture_places_parquet", "wikidata_entity"):
+        if utility != "USEFUL_STRUCTURED_FACTS":
+            raise ValueError(f"Document {did}: {source_type} must have USEFUL_STRUCTURED_FACTS, got {utility}")
+        substantive_facts = []
+        for line in body_lines:
+            for prefix in SUBSTANTIVE_STRUCTURED_PREFIXES:
+                if line.startswith(prefix):
+                    val = line[len(prefix) :].strip()
+                    if val and val.lower() not in ("nan", "nat", "none", "null", "n/a"):
+                        substantive_facts.append(val)
+        if not substantive_facts:
+            raise ValueError(f"Document {did}: structured document has 0 substantive sourced facts beyond name/header")
+        if source_type == "overture_places_parquet":
+            lic = doc.get("license_or_usage_class")
+            if lic not in b1b.ALLOWED_OVERTURE_OPEN_LICENSES:
+                raise ValueError(f"Document {did}: Overture document has unapproved license {lic!r}")
+    else:
+        raise ValueError(f"Document {did}: unsupported primary corpus source_type {source_type!r}")
 
 
 def verify_b1b_artifacts() -> dict[str, Any]:
@@ -112,6 +219,8 @@ def verify_b1b_artifacts() -> dict[str, Any]:
             raise ValueError(f"{name}: authoritative_base_develop_sha mismatch")
         if obj.get("previous_accepted_gate") != b1b.PREVIOUS_ACCEPTED_GATE:
             raise ValueError(f"{name}: previous_accepted_gate mismatch")
+        if obj.get("artifact_snapshot_timestamp") != b1b.ARTIFACT_SNAPSHOT_TIMESTAMP:
+            raise ValueError(f"{name}: artifact_snapshot_timestamp mismatch")
         if obj.get("W07_B1_FIX_01B_STATUS") != "CLOSED":
             raise ValueError(f"{name}: W07_B1_FIX_01B_STATUS must be CLOSED")
         if obj.get("PDG_001_STATUS") != "CLOSED":
@@ -134,6 +243,11 @@ def verify_b1b_artifacts() -> dict[str, Any]:
     if summary.get("next_gate") != b1b.NEXT_GATE:
         raise ValueError("summary: next_gate mismatch")
 
+    # Build lookup of expected Wikipedia section headings by (poi_id, lang)
+    wp_section_by_poi: dict[str, str | None] = {
+        spec["poi_id"]: spec.get("section_heading") for spec in b1b.ACCEPTED_WIKIPEDIA_SPECS
+    }
+
     # Verify candidate_decisions
     candidates = decisions.get("candidate_decisions", [])
     if not candidates:
@@ -154,6 +268,25 @@ def verify_b1b_artifacts() -> dict[str, Any]:
             raise ValueError(f"Candidate {cid} has invalid reuse_storage_class {c['reuse_storage_class']}")
         if c["final_b1b_decision"] not in ALLOWED_DECISIONS:
             raise ValueError(f"Candidate {cid} has invalid final_b1b_decision {c['final_b1b_decision']}")
+
+        # Section 5: Official website governance check
+        if c["source_type"] in ("official_venue_website", "heritage_or_public_institution_portal"):
+            if c.get("discovery_method") != "URL_DISCOVERED_FROM_OSM_TAG":
+                raise ValueError(f"Website candidate {cid} must have discovery_method=URL_DISCOVERED_FROM_OSM_TAG")
+            if c.get("website_terms_independently_checked") is not False:
+                raise ValueError(f"Website candidate {cid} must have website_terms_independently_checked=False")
+            if c.get("terms_verification_status") != "REUSE_PERMISSION_NOT_ESTABLISHED":
+                raise ValueError(
+                    f"Website candidate {cid} must have terms_verification_status=REUSE_PERMISSION_NOT_ESTABLISHED"
+                )
+            if c.get("source_terms_checked_at") != "NOT_INDEPENDENTLY_CHECKED":
+                raise ValueError(f"Website candidate {cid} must have source_terms_checked_at=NOT_INDEPENDENTLY_CHECKED")
+            if c.get("content_utility_status") == "USEFUL_NARRATIVE":
+                raise ValueError(f"Uninspected website candidate {cid} must not be marked USEFUL_NARRATIVE")
+            if c.get("final_b1b_decision") != "REFERENCE_ONLY":
+                raise ValueError(f"Website candidate {cid} must have final_b1b_decision=REFERENCE_ONLY")
+            if "Inspected `" in c.get("license_or_reuse_evidence", ""):
+                raise ValueError(f"Website candidate {cid} must not claim website terms were inspected")
 
         if c["final_b1b_decision"] == "ACCEPT_PRIMARY_CORPUS":
             if c["canonical_mapping_status"] != "EXACT_MAPPED":
@@ -183,6 +316,7 @@ def verify_b1b_artifacts() -> dict[str, Any]:
 
     seen_doc_ids = set()
     seen_hashes = set()
+    wp_docs_count = 0
     for d in docs:
         missing = [f for f in REQUIRED_DOCUMENT_FIELDS if f not in d or d[f] is None or d[f] == ""]
         if missing:
@@ -204,7 +338,27 @@ def verify_b1b_artifacts() -> dict[str, Any]:
             raise ValueError(f"Duplicate content_sha256 in JSONL: {computed_sha}")
         seen_hashes.add(computed_sha)
 
-    # Verify lineage vs evidence unit separation (Section 4)
+        expected_heading = wp_section_by_poi.get(d["poi_id"]) if d["source_type"] == "wikipedia_article" else None
+        validate_document_content_utility(d, expected_section_heading=expected_heading)
+        if d["source_type"] == "wikipedia_article":
+            wp_docs_count += 1
+
+    # Section 1: Wikipedia empty body check
+    dec_sum = decisions["decision_summary"]
+    if dec_sum.get("WIKIPEDIA_DOCUMENTS_ACCEPTED") != wp_docs_count or wp_docs_count != 26:
+        raise ValueError(f"Expected 26 accepted Wikipedia documents, got {wp_docs_count}")
+    if dec_sum.get("WIKIPEDIA_DOCUMENTS_WITH_NONEMPTY_ARTICLE_BODY") != 26:
+        raise ValueError("Expected WIKIPEDIA_DOCUMENTS_WITH_NONEMPTY_ARTICLE_BODY == 26")
+    if dec_sum.get("WIKIPEDIA_DOCUMENTS_WITH_EMPTY_ARTICLE_BODY") != 0:
+        raise ValueError("Expected WIKIPEDIA_DOCUMENTS_WITH_EMPTY_ARTICLE_BODY == 0")
+
+    wp_integrity = summary.get("wikipedia_narrative_integrity", {})
+    if wp_integrity.get("WIKIPEDIA_DOCUMENTS_WITH_EMPTY_ARTICLE_BODY") != 0:
+        raise ValueError("summary wikipedia_narrative_integrity must have 0 empty article bodies")
+    if wp_integrity.get("WIKIPEDIA_DOCUMENTS_WITH_NONEMPTY_ARTICLE_BODY") != 26:
+        raise ValueError("summary wikipedia_narrative_integrity must have 26 non-empty article bodies")
+
+    # Verify lineage vs evidence unit separation
     unique_lineages = {d["source_lineage_id"] for d in docs}
     if len(unique_lineages) >= len(docs):
         raise ValueError("Expected multiple Wikivoyage/Wikipedia extracts from same page to share source_lineage_id")
@@ -230,6 +384,8 @@ def verify_b1b_artifacts() -> dict[str, Any]:
         raise ValueError("NEW_GOOGLE_MAPS_REVIEW_COLLECTION must be 0")
     if counters["NEW_LLM_PROVIDER_CALLS"] != 0:
         raise ValueError("NEW_LLM_PROVIDER_CALLS must be 0")
+    if counters["EXTERNAL_WEBSITE_HTTP_REQUESTS"] != 0:
+        raise ValueError("EXTERNAL_WEBSITE_HTTP_REQUESTS must be 0")
     if counters["OPEN_REUSABLE_DOCUMENTS_ACCEPTED"] != len(docs):
         raise ValueError("OPEN_REUSABLE_DOCUMENTS_ACCEPTED mismatch")
     if counters["REFERENCE_ONLY_SOURCES"] != 16:
@@ -238,8 +394,16 @@ def verify_b1b_artifacts() -> dict[str, Any]:
         raise ValueError("Expected 0 RESEARCH_RESTRICTED_SOURCES")
     if counters["REJECTED_SOURCES"] != 15:
         raise ValueError("Expected 15 REJECTED_SOURCES")
+    if (
+        counters["WEB_SOURCE_PAGES_CHECKED"]
+        != counters["WIKIPEDIA_PAGES_FETCHED_VIA_API"]
+        + counters["WIKIDATA_ENTITIES_FETCHED_VIA_API"]
+        + counters["WIKIVOYAGE_PAGES_FETCHED_VIA_API"]
+    ):
+        raise ValueError("WEB_SOURCE_PAGES_CHECKED does not equal sum of measured API page/entity fetches")
 
-    # Verify coverage & readiness
+    # Recompute narrative & structured coverage directly from validated documents
+    validated_narrative_pois = {d["poi_id"] for d in docs if d["content_utility_status"] == "USEFUL_NARRATIVE"}
     ov_cov = summary["coverage_after_acquisition"]["overall_60_pois"]
     if ov_cov["total_pois"] != 60:
         raise ValueError("Expected 60 total POIs")
@@ -251,8 +415,10 @@ def verify_b1b_artifacts() -> dict[str, Any]:
         raise ValueError(
             f"Expected 45 POIs with >=2 eligible lineages, got {ov_cov['pois_with_2_plus_eligible_lineages']}"
         )
-    if ov_cov["pois_with_narrative_evidence"] != 32:
-        raise ValueError(f"Expected 32 POIs with narrative evidence, got {ov_cov['pois_with_narrative_evidence']}")
+    if ov_cov["pois_with_narrative_evidence"] != len(validated_narrative_pois) or len(validated_narrative_pois) != 32:
+        raise ValueError(
+            f"Expected 32 validated narrative POIs, got {ov_cov['pois_with_narrative_evidence']} vs {len(validated_narrative_pois)}"
+        )
     if ov_cov["pois_with_structured_evidence"] != 50:
         raise ValueError(f"Expected 50 POIs with structured evidence, got {ov_cov['pois_with_structured_evidence']}")
     if ov_cov["pois_with_both_structured_and_narrative"] != 30:
@@ -261,6 +427,11 @@ def verify_b1b_artifacts() -> dict[str, Any]:
         )
     if summary["W07_B1B_CORPUS_ACQUISITION_READY_FOR_B2"] is not True:
         raise ValueError("W07_B1B_CORPUS_ACQUISITION_READY_FOR_B2 must be True")
+
+    # Section 9: Verify future chunk range is explicitly labeled as ESTIMATE
+    est_chunks = summary["b2_readiness_evaluation"]["estimated_future_useful_chunk_range"]
+    if est_chunks.get("value_kind") != "ESTIMATE" or est_chunks.get("observed_chunk_count_in_b1b") is not None:
+        raise ValueError("estimated_future_useful_chunk_range must be explicitly labeled value_kind=ESTIMATE")
 
     # Verify no chunking/retrieval methodology frozen
     no_freeze = summary["no_chunking_or_retrieval_methodology_freeze"]
@@ -282,6 +453,8 @@ def verify_b1b_artifacts() -> dict[str, Any]:
         "candidates_evaluated": len(candidates),
         "accepted_primary_documents": len(docs),
         "accepted_independent_lineages": len(unique_lineages),
+        "wikipedia_documents_accepted": wp_docs_count,
+        "wikipedia_documents_with_empty_body": 0,
         "pois_with_rag_evidence": ov_cov["pois_with_rag_candidate_evidence"],
         "W07_B1B_CORPUS_ACQUISITION_READY_FOR_B2": summary["W07_B1B_CORPUS_ACQUISITION_READY_FOR_B2"],
     }
