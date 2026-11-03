@@ -567,9 +567,9 @@ def test_grounding_opening_hours_only_states_source_metadata():
     async def body(retriever, pool):
         async with pool.acquire() as c:
             row = await c.fetchrow("""
-                SELECT p.name, ps.raw_data->>'opening_hours' AS oh
+                SELECT p.name, COALESCE(ps.raw_data->'tags'->>'opening_hours', ps.raw_data->>'opening_hours') AS oh
                 FROM places p JOIN place_sources ps ON ps.place_id = p.id AND ps.source_name = 'osm'
-                WHERE ps.raw_data->>'opening_hours' IS NOT NULL
+                WHERE COALESCE(ps.raw_data->'tags'->>'opening_hours', ps.raw_data->>'opening_hours') IS NOT NULL
                   AND (SELECT count(*) FROM places p2 WHERE p2.name = p.name) = 1
                 ORDER BY p.name LIMIT 1""")
         assert row is not None
@@ -580,7 +580,9 @@ def test_grounding_opening_hours_only_states_source_metadata():
         async with pool.acquire() as c:
             bad = await c.fetchval("""
                 SELECT count(*) FROM documents d JOIN place_sources ps ON ps.place_id = d.place_id AND ps.source_name = 'osm'
-                WHERE d.source_name = 'osm' AND d.content LIKE '%Giờ mở cửa:%' AND ps.raw_data->>'opening_hours' IS NULL""")
+                WHERE d.source_name = 'osm'
+                  AND d.content LIKE '%Giờ mở cửa:%'
+                  AND COALESCE(ps.raw_data->'tags'->>'opening_hours', ps.raw_data->>'opening_hours') IS NULL""")
         assert bad == 0
 
     _db(body)
