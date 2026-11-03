@@ -46,12 +46,35 @@ FACT_FIELDS = (
 )
 
 
-def _tags(raw: Any) -> Dict[str, str]:
+def _coerce_raw_dict(raw: Any) -> Dict[str, Any]:
     if isinstance(raw, str):
         import json
 
-        raw = json.loads(raw)
-    return {k: str(v) for k, v in (raw or {}).items() if not k.startswith("_") and str(v).strip()}
+        try:
+            raw = json.loads(raw)
+        except Exception:
+            return {}
+    if not isinstance(raw, dict):
+        return {}
+    return raw
+
+
+def _tags(raw: Any) -> Dict[str, str]:
+    data = _coerce_raw_dict(raw)
+    if not data:
+        return {}
+    nested_tags = data.get("tags")
+    tag_source = nested_tags if isinstance(nested_tags, dict) else data
+    return {
+        str(k): str(v)
+        for k, v in tag_source.items()
+        if isinstance(k, str)
+        and not k.startswith("_")
+        and (nested_tags is tag_source or k != "tags")
+        and v is not None
+        and not isinstance(v, (dict, list))
+        and str(v).strip()
+    }
 
 
 def format_osm_address(tags: Dict[str, str]) -> str:
@@ -97,11 +120,11 @@ def build_osm_place_chunk(place: Dict[str, Any]) -> Optional[RAGChunk]:
         return None  # never ingest a place without verified provenance
     src = osm_sources[0]
     tags = _tags(src.get("raw_data"))
-    raw_data = src.get("raw_data") or {}
-    if isinstance(raw_data, str):
-        import json
-
-        raw_data = json.loads(raw_data)
+    raw_data = _coerce_raw_dict(src.get("raw_data"))
+    nested_raw_tags = raw_data.get("tags")
+    osm_base_ts = raw_data.get("_osm_base_timestamp")
+    if osm_base_ts is None and isinstance(nested_raw_tags, dict):
+        osm_base_ts = nested_raw_tags.get("_osm_base_timestamp")
 
     name = place["name"]
     category = place.get("category") or ""
@@ -134,7 +157,7 @@ def build_osm_place_chunk(place: Dict[str, Any]) -> Optional[RAGChunk]:
     lines.append(f"Nguồn: OpenStreetMap {src['source_id']}.")
     content = "\n".join(lines)
 
-    retrieved_at = _parse_ts(raw_data.get("_osm_base_timestamp")) or _parse_ts(src.get("created_at"))
+    retrieved_at = _parse_ts(osm_base_ts) or _parse_ts(src.get("created_at"))
     doc_id = f"osm-place-{place['id']}"
     return RAGChunk(
         chunk_id=doc_id,
@@ -155,7 +178,7 @@ def build_osm_place_chunk(place: Dict[str, Any]) -> Optional[RAGChunk]:
         metadata={
             "source_type": "osm_place",
             "source_id": src["source_id"],
-            "osm_base_timestamp": raw_data.get("_osm_base_timestamp"),
+            "osm_base_timestamp": osm_base_ts,
             "osm_tags_used": sorted(used),
         },
         retrieved_at=retrieved_at,

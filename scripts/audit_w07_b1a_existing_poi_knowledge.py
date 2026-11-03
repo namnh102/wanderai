@@ -390,6 +390,14 @@ def build_b1a_audit_payload(repo_root: Path = REPO_ROOT) -> dict[str, Any]:
         if shape == "nested_raw_data_tags":
             nested_tag_places_759 += 1
 
+        raw_osm_dict = osm_src.get("raw_data") or {}
+        if isinstance(raw_osm_dict, str):
+            raw_osm_dict = json.loads(raw_osm_dict)
+        legacy_flat_only_raw = (
+            {k: v for k, v in raw_osm_dict.items() if k != "tags"}
+            if isinstance(raw_osm_dict, dict)
+            else {}
+        )
         chunk_as_is = build_osm_place_chunk(
             {
                 "id": p["place_id"],
@@ -399,7 +407,13 @@ def build_b1a_audit_payload(repo_root: Path = REPO_ROOT) -> dict[str, Any]:
                 "destination_name": p.get("destination"),
                 "latitude": p.get("latitude"),
                 "longitude": p.get("longitude"),
-                "sources": p["sources"],
+                "sources": [
+                    {
+                        "source_name": "osm",
+                        "source_id": osm_src["source_id"],
+                        "raw_data": legacy_flat_only_raw,
+                    }
+                ],
             }
         )
         chunk_unwrapped = build_osm_place_chunk(

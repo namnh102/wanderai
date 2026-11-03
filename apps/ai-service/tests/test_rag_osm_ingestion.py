@@ -1,13 +1,20 @@
-"""TASK 07.5 tests: OSM place knowledge documents, provenance integrity, idempotency, isolation, grounding.
+"""TASK 07.5 & W07-B1-FIX-01A tests: OSM place knowledge documents, nested/flat tag rendering, provenance integrity, idempotency, isolation, grounding.
 
 Unit tests need no services. The DB tests use the same dev PostgreSQL as the other RAG tests and the real
 sentence-transformers model; they are skipped when the database is unreachable.
 """
 
 import asyncio
+import json
+from pathlib import Path
+import sys
 import uuid
 
 import pytest
+
+REPO_ROOT = Path(__file__).resolve().parents[3]
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
 
 from app.rag.embedder import SentenceTransformerEmbedder
 from app.rag.evaluate import FROZEN_QUERIES, GROUNDING_CULTURE_HANOI, opening_hours_query
@@ -16,10 +23,12 @@ from app.rag.osm_documents import (
     CATEGORY_LABEL_VI,
     OSM_ATTRIBUTION,
     OSM_LICENSE,
+    _tags,
     build_osm_place_chunk,
     format_osm_address,
 )
 from app.rag.retriever import RAGRetriever
+from scripts import audit_w07_b1a_existing_poi_knowledge as w07_b1a
 
 MODEL = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
 
@@ -67,6 +76,296 @@ def test_present_attributes_are_copied_verbatim():
     ):
         assert expected in c.content, expected
     assert c.metadata["osm_tags_used"] == sorted(["opening_hours", "website", "phone", "cuisine", "wheelchair", "wikidata"])
+
+
+def test_nested_raw_data_tags_renders_all_required_factual_fields():
+    """W07-B1-FIX-01A Sections 3, 6, 7: Nested `raw_data.tags` exposes all required factual fields verbatim."""
+    nested_raw_data = {
+        "id": 37625751,
+        "type": "way",
+        "_osm_base_timestamp": "2026-10-07T09:52:02Z",
+        "tags": {
+            "name": "Bảo tàng Dân tộc học Việt Nam",
+            "name:en": "Vietnam Museum of Ethnology",
+            "tourism": "museum",
+            "addr:housenumber": "1",
+            "addr:street": "Đường Nguyễn Văn Huyên",
+            "addr:district": "Quận Cầu Giấy",
+            "addr:city": "Hà Nội",
+            "opening_hours": "Tu-Su 08:30-17:30",
+            "contact:website": "https://www.vme.org.vn/",
+            "contact:phone": "+84 24 3756 2193",
+            "cuisine": "vietnamese;coffee_shop",
+            "wheelchair": "yes",
+            "operator": "Viện Hàn lâm Khoa học xã hội Việt Nam",
+            "wikidata": "Q1048345",
+            "wikipedia": "vi:Bảo tàng Dân tộc học Việt Nam",
+            "description:vi": "Bảo tàng trưng bày văn hóa 54 dân tộc Việt Nam",
+        },
+    }
+    chunk = build_osm_place_chunk(
+        _place(nested_raw_data, name="Bảo tàng Dân tộc học Việt Nam", category="culture")
+    )
+    assert chunk is not None
+    for expected in (
+        "Bảo tàng Dân tộc học Việt Nam (Vietnam Museum of Ethnology) thuộc nhóm văn hóa tại Hà Nội.",
+        "Loại OSM: tourism=museum.",
+        "Địa chỉ: 1 Đường Nguyễn Văn Huyên, Quận Cầu Giấy, Hà Nội.",
+        "Giờ mở cửa: Tu-Su 08:30-17:30.",
+        "Website: https://www.vme.org.vn/.",
+        "Điện thoại: +84 24 3756 2193.",
+        "Ẩm thực: vietnamese;coffee_shop.",
+        "Tiếp cận xe lăn: yes.",
+        "Đơn vị vận hành: Viện Hàn lâm Khoa học xã hội Việt Nam.",
+        "Wikipedia: vi:Bảo tàng Dân tộc học Việt Nam.",
+        "Wikidata: Q1048345.",
+        "Mô tả (OSM): Bảo tàng trưng bày văn hóa 54 dân tộc Việt Nam.",
+    ):
+        assert expected in chunk.content, expected
+    assert "tags" not in _tags(nested_raw_data)
+    assert chunk.metadata["osm_base_timestamp"] == "2026-10-07T09:52:02Z"
+    assert chunk.metadata["osm_tags_used"] == sorted(
+        [
+            "opening_hours",
+            "contact:website",
+            "contact:phone",
+            "cuisine",
+            "wheelchair",
+            "operator",
+            "wikipedia",
+            "wikidata",
+            "description:vi",
+        ]
+    )
+
+
+def test_flat_vs_nested_raw_data_equivalence():
+    """W07-B1-FIX-01A Section 8: Legacy flat `raw_data` and nested `raw_data.tags` render identical output."""
+    shared_tags = {
+        "name": "Quán Ăn Ngon",
+        "name:en": "Ngon Restaurant",
+        "amenity": "restaurant",
+        "addr:housenumber": "18",
+        "addr:street": "Phan Bội Châu",
+        "addr:district": "Quận Hoàn Kiếm",
+        "addr:city": "Hà Nội",
+        "opening_hours": "Mo-Su 06:30-22:00",
+        "website": "https://ngonhanoi.com.vn/",
+        "phone": "+84 24 3942 8162",
+        "cuisine": "vietnamese",
+        "wheelchair": "limited",
+        "operator": "Ngon Group",
+        "wikidata": "Q999999",
+        "wikipedia": "vi:Quán Ăn Ngon",
+        "description": "Nhà hàng ẩm thực truyền thống ba miền",
+    }
+    fixed_place_id = "28df83b5-b37f-55c9-bb07-cd366d14843d"
+    fixed_dest_id = "071e1382-7972-4dde-af61-dac9ef2c3c69"
+
+    flat_place = _place(
+        {**shared_tags, "_osm_base_timestamp": "2026-10-07T09:52:02Z"},
+        id=fixed_place_id,
+        destination_id=fixed_dest_id,
+        name="Quán Ăn Ngon",
+        category="restaurant",
+    )
+    nested_place = _place(
+        {
+            "id": 987654321,
+            "type": "node",
+            "_osm_base_timestamp": "2026-10-07T09:52:02Z",
+            "tags": dict(shared_tags),
+        },
+        id=fixed_place_id,
+        destination_id=fixed_dest_id,
+        name="Quán Ăn Ngon",
+        category="restaurant",
+    )
+
+    c_flat = build_osm_place_chunk(flat_place)
+    c_nested = build_osm_place_chunk(nested_place)
+
+    assert c_flat is not None and c_nested is not None
+    assert _tags(flat_place["sources"][0]["raw_data"]) == _tags(
+        nested_place["sources"][0]["raw_data"]
+    )
+    assert c_flat.content == c_nested.content
+    assert c_flat.content_hash == c_nested.content_hash
+    assert c_flat.chunk_id == c_nested.chunk_id == f"osm-place-{fixed_place_id}"
+    assert c_flat.document_id == c_nested.document_id == f"osm-place-{fixed_place_id}"
+    assert c_flat.metadata == c_nested.metadata
+    assert c_flat.retrieved_at == c_nested.retrieved_at
+
+
+def test_internal_metadata_filtering_and_malformed_raw_data_safety():
+    """W07-B1-FIX-01A Sections 3C & 4: Internal `_...` keys, envelope keys, and malformed inputs fail safely."""
+    # Nested tags with internal keys, None, whitespace, and nested objects
+    raw_with_internals = {
+        "id": 1001,
+        "type": "way",
+        "_internal_ provenance": "do_not_expose",
+        "tags": {
+            "_osm_internal_note": "secret",
+            "_ingest_helper": "skip",
+            "opening_hours": "Mo-Su 08:00-22:00",
+            "website": "   ",
+            "phone": None,
+            "nested_object": {"unexpected": 1},
+            "nested_list": ["a", "b"],
+        },
+    }
+    extracted = _tags(raw_with_internals)
+    assert extracted == {"opening_hours": "Mo-Su 08:00-22:00"}
+
+    # JSON string containing nested tags
+    assert _tags(json.dumps(raw_with_internals)) == {
+        "opening_hours": "Mo-Su 08:00-22:00"
+    }
+
+    # Malformed / non-dict inputs must never crash and must return empty or valid flat fallback
+    for malformed in (
+        None,
+        {},
+        "",
+        "{malformed json",
+        "[1, 2, 3]",
+        '"scalar string"',
+        12345,
+        ["not", "a", "dict"],
+        {"tags": None},
+        {"tags": "not-a-dict"},
+        {"tags": [1, 2, 3]},
+    ):
+        assert _tags(malformed) == {}
+        chunk = build_osm_place_chunk(_place(malformed))
+        assert chunk is not None
+        assert "None" not in chunk.content
+        assert "tags" not in chunk.content
+
+    # Flat raw_data where `tags` key is None or non-dict still preserves valid flat sibling tags
+    flat_with_null_tags = {
+        "tags": None,
+        "opening_hours": "07:00-21:00",
+        "website": "https://flat-fallback.example",
+    }
+    assert _tags(flat_with_null_tags) == {
+        "opening_hours": "07:00-21:00",
+        "website": "https://flat-fallback.example",
+    }
+
+
+def test_frozen_60_target_pois_and_759_repository_diagnostics():
+    """W07-B1-FIX-01A Sections 9, 10, 11, 15, 18: Verify 59/60 nested, 40/60 useful post-render, and 621/759 repo nested."""
+    places_v2 = json.loads(
+        (REPO_ROOT / "data/curated/gomate_places_freeze_v2.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    target_manifest = json.loads(
+        (
+            REPO_ROOT / "data/evaluation/w07/w07_review_target_60_pois_v1.json"
+        ).read_text(encoding="utf-8")
+    )
+    pois_60 = target_manifest["pois"]
+
+    assert len(places_v2) == 759
+    assert len(pois_60) == 60
+
+    # Repository-wide diagnostic: 621 / 759 Freeze v2 POIs have nested `raw_data.tags`
+    repo_nested_count = 0
+    for p in places_v2:
+        osm_src = next(s for s in p["sources"] if s["source_name"] == "osm")
+        rd = osm_src.get("raw_data") or {}
+        if isinstance(rd, dict) and isinstance(rd.get("tags"), dict):
+            repo_nested_count += 1
+    assert repo_nested_count == 621
+
+    # Frozen 60 target POIs diagnostic: 59 / 60 nested, 40 / 60 useful structured facts via repaired renderer
+    v2_by_id = {p["place_id"]: p for p in places_v2}
+    target_nested_count = 0
+    target_useful_post_render_count = 0
+    changed_hash_count = 0
+
+    for tp in pois_60:
+        pid = tp["poi_id"]
+        p = v2_by_id[pid]
+        osm_src = next(s for s in p["sources"] if s["source_name"] == "osm")
+        rd = osm_src.get("raw_data") or {}
+        if isinstance(rd, dict) and isinstance(rd.get("tags"), dict):
+            target_nested_count += 1
+
+        # Render directly through repaired build_osm_place_chunk using unmodified Freeze v2 place record
+        repaired_chunk = build_osm_place_chunk(
+            {
+                "id": pid,
+                "name": p["name"],
+                "category": p.get("category"),
+                "destination_id": None,
+                "destination_name": p.get("destination"),
+                "latitude": p.get("latitude"),
+                "longitude": p.get("longitude"),
+                "sources": p["sources"],
+            }
+        )
+        assert repaired_chunk is not None
+        assert repaired_chunk.chunk_id == f"osm-place-{pid}"
+        assert repaired_chunk.document_id == f"osm-place-{pid}"
+        assert repaired_chunk.place_id == pid
+        assert repaired_chunk.metadata["source_id"] == osm_src["source_id"]
+
+        # Compare against pre-fix flat-only rendering
+        flat_only_raw = (
+            {k: v for k, v in rd.items() if k != "tags"}
+            if isinstance(rd, dict)
+            else {}
+        )
+        legacy_chunk = build_osm_place_chunk(
+            {
+                "id": pid,
+                "name": p["name"],
+                "category": p.get("category"),
+                "destination_id": None,
+                "destination_name": p.get("destination"),
+                "latitude": p.get("latitude"),
+                "longitude": p.get("longitude"),
+                "sources": [
+                    {
+                        "source_name": "osm",
+                        "source_id": osm_src["source_id"],
+                        "raw_data": flat_only_raw,
+                    }
+                ],
+            }
+        )
+        assert legacy_chunk is not None
+        assert repaired_chunk.chunk_id == legacy_chunk.chunk_id
+        if repaired_chunk.content_hash != legacy_chunk.content_hash:
+            changed_hash_count += 1
+
+        has_rendered_address = "Địa chỉ:" in repaired_chunk.content
+        has_rendered_facts = len(repaired_chunk.metadata["osm_tags_used"]) > 0
+        if has_rendered_address or has_rendered_facts:
+            target_useful_post_render_count += 1
+
+    assert target_nested_count == 59
+    assert target_useful_post_render_count == 40
+    assert changed_hash_count > 0
+
+    # Verify frozen B1A and all upstream W06..W07-B0 artifacts remain untouched
+    b1a_res = w07_b1a.verify_b1a_audit_artifacts(REPO_ROOT)
+    assert b1a_res["status"] == "PASS"
+    assert (
+        b1a_res["audit_internal_sha256"]
+        == "27d6dae8fd3ec284ea92806080a044b6745fb30abdddc265297e0f9da1d1c5b2"
+    )
+    assert (
+        b1a_res["audit_file_lf_sha256"]
+        == "433c722dd2f03946ab0a15830b53ef628d76937fa2e8e63a9939e73bb469e563"
+    )
+    assert (
+        b1a_res["audit_md_lf_sha256"]
+        == "130aca652c9b808a8b7e5fac50d070dd0c3f36a8e94f7693cfac8793643d0ac5"
+    )
 
 
 def test_provenance_fields_complete_and_deterministic():
