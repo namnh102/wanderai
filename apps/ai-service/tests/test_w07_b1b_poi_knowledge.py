@@ -1,4 +1,4 @@
-"""W07-B1B tests: Targeted POI knowledge acquisition, Corrective 01 & Corrective 02 fact consistency and temporal provenance."""
+"""W07-B1B tests: Targeted POI knowledge acquisition, Corrective 01, 02 & 03 source ID binding, fact consistency, unverified fact handling, and temporal provenance."""
 
 from __future__ import annotations
 
@@ -41,6 +41,8 @@ def test_01_b1b_verification_passes():
     assert result["wikipedia_documents_with_empty_body"] == 0
     assert result["overture_records_audited"] == 26
     assert result["overture_documents_accepted"] == 23
+    assert result["osm_source_reference_mismatches_reconciled"] == 43
+    assert result["remaining_osm_source_reference_mismatches"] == 0
     assert result["pois_with_rag_evidence"] == 51
     assert result["W07_B1B_CORPUS_ACQUISITION_READY_FOR_B2"] is True
 
@@ -149,14 +151,14 @@ def test_05_negative_empty_and_header_only_wikipedia_rejected(monkeypatch, tmp_p
         "source_url": "https://vi.wikipedia.org/wiki/Test?oldid=1",
         "publisher": "Wikimedia Foundation (vi.wikipedia.org)",
         "language": "vi",
-        "retrieved_at": "2026-11-03T18:45:00Z",
+        "retrieved_at": b1b_acquire.UNKNOWN_HISTORICAL_RETRIEVAL_TIME,
         "source_published_or_updated_at": "2026-10-01T00:00:00Z",
         "license_or_usage_class": "CC-BY-SA-4.0",
         "reuse_storage_class": "OPEN_REUSABLE",
         "reuse_evidence": "CC-BY-SA-4.0",
         "attribution_requirement": "Wikipedia contributors",
         "redistributable_in_git": True,
-        "source_terms_checked_at": "2026-11-03T18:45:00Z",
+        "source_terms_checked_at": b1b_acquire.UNKNOWN_VERIFICATION_TIME,
         "artifact_snapshot_timestamp": "2026-11-03T18:45:00Z",
         "raw_text": "Địa điểm: Bảo tàng Điêu khắc Chăm (Đà Nẵng) — Bài viết bách khoa Wikipedia (vi.wikipedia.org: Test, pageid=1, oldid=1).\n",
         "content_sha256": "",
@@ -377,6 +379,8 @@ def test_13_fc001_and_fc002_conflicted_addresses_excluded_from_acquired_jsonl():
     assert "address" in fc002_docs[0]["suppressed_conflicted_fields"]
     assert "Địa chỉ cấu trúc (Overture addresses):" not in fc002_docs[0]["raw_text"]
     assert "vinpearl.com" in fc002_docs[0]["raw_text"]
+    assert b1b_acquire.UNVERIFIED_FACT_LABEL in fc002_docs[0]["raw_text"]
+    assert "vinpearl.com" not in fc002_docs[0]["answer_ready_confirmed_text"]
 
 
 def test_14_negative_verifier_rejects_conflicted_field_rendered_in_raw_text():
@@ -402,7 +406,6 @@ def test_15_negative_verifier_rejects_overture_record_with_all_substantive_field
         if line.strip()
     ]
     ov_doc = next(copy.deepcopy(d) for d in docs if d["source_type"] == "overture_places_parquet")
-    # Strip all substantive place attributes (address, phone, website), leaving only header/category/status/confidence/sources
     kept_lines = [
         line
         for line in ov_doc["raw_text"].splitlines()
@@ -412,6 +415,7 @@ def test_15_negative_verifier_rejects_overture_record_with_all_substantive_field
     ]
     ov_doc["raw_text"] = "\n".join(kept_lines)
     ov_doc["retained_substantive_fields"] = []
+    ov_doc["unverified_fields"] = []
     ov_doc["content_utility_status"] = "USEFUL_STRUCTURED_FACTS"
     with pytest.raises(
         ValueError,
@@ -429,11 +433,13 @@ def test_16_negative_verifier_rejects_unchecked_field_labeled_corroborated():
         if line.strip()
     ]
     tampered_decisions = copy.deepcopy(decisions)
-    # Mark an unchecked phone field as CORROBORATED with empty corroboration_sources
     rec0 = tampered_decisions["overture_fact_consistency_audit"]["records"][0]
     rec0["field_audit"]["phone"]["status"] = "CORROBORATED"
     rec0["field_audit"]["phone"]["corroboration_sources"] = []
-    with pytest.raises(ValueError, match="CORROBORATED field must have >=1 corroboration_sources"):
+    with pytest.raises(
+        ValueError,
+        match="UNVERIFIED_PROMOTED_TO_CORROBORATED|CORROBORATED field must have >=1 corroboration_sources",
+    ):
         b1b_verify.validate_overture_fact_consistency_audit(tampered_decisions, summary, docs)
 
 
@@ -458,8 +464,124 @@ def test_17_negative_temporal_provenance_rejects_conflated_or_fabricated_timesta
     with pytest.raises(ValueError, match="source_terms_checked_at .* must not equal source_published_or_updated_at"):
         b1b_verify.validate_temporal_provenance(bad_wp_terms, is_document=True)
 
-    # 3. Overture record fabricates an ISO retrieved_at when historical download time was not recorded
+    # 3. retrieved_at == artifact_snapshot_timestamp (conflated snapshot timestamp)
+    bad_wp_snapshot = copy.deepcopy(wp_doc)
+    bad_wp_snapshot["retrieved_at"] = bad_wp_snapshot["artifact_snapshot_timestamp"]
+    with pytest.raises(ValueError, match="retrieved_at .* must not equal artifact_snapshot_timestamp"):
+        b1b_verify.validate_temporal_provenance(bad_wp_snapshot, is_document=True)
+
+    # 4. Overture record fabricates an ISO retrieved_at when historical download time was not recorded
     bad_ov_fabricated = copy.deepcopy(ov_doc)
     bad_ov_fabricated["retrieved_at"] = "2026-10-01T12:00:00Z"
     with pytest.raises(ValueError, match="UNKNOWN_HISTORICAL_RETRIEVAL_TIME"):
         b1b_verify.validate_temporal_provenance(bad_ov_fabricated, is_document=True)
+
+    # 5. Wikimedia historical record fabricates an ISO retrieved_at without separate HTTP receipt
+    bad_wp_fabricated = copy.deepcopy(wp_doc)
+    bad_wp_fabricated["retrieved_at"] = "2026-11-03T18:10:00Z"
+    with pytest.raises(ValueError, match="UNKNOWN_HISTORICAL_RETRIEVAL_TIME"):
+        b1b_verify.validate_temporal_provenance(bad_wp_fabricated, is_document=True)
+
+
+def test_18_every_osm_reference_matches_canonical_poi_osm_id():
+    target_manifest = json.loads(b1b_acquire.TARGET_60_PATH.read_text(encoding="utf-8"))
+    canonical_osm_by_poi = {p["poi_id"]: p["osm_id"] for p in target_manifest["pois"]}
+    decisions = json.loads(b1b_acquire.DECISIONS_JSON_PATH.read_text(encoding="utf-8"))
+    docs = [
+        json.loads(line)
+        for line in b1b_acquire.ACQUIRED_JSONL_PATH.read_text(encoding="utf-8").splitlines()
+        if line.strip()
+    ]
+
+    # Verify full provenance binding passes
+    b1b_verify.validate_source_reference_binding(decisions, docs)
+
+    audit_records = decisions["overture_fact_consistency_audit"]["records"]
+    assert len(audit_records) == 26
+    osm_refs_checked = 0
+    for rec in audit_records:
+        pid = rec["poi_id"]
+        expected_osm = f"osm:{canonical_osm_by_poi[pid]}"
+        for fname, finfo in rec["field_audit"].items():
+            for ref in finfo["corroboration_sources"] + finfo["conflicting_sources"]:
+                if ref.startswith("osm:"):
+                    assert ref == expected_osm, f"Mismatched OSM reference on {pid}.{fname}: {ref} != {expected_osm}"
+                    osm_refs_checked += 1
+    assert osm_refs_checked > 0
+
+
+def test_19_negative_verifier_rejects_mismatched_osm_id_without_crosswalk():
+    decisions = json.loads(b1b_acquire.DECISIONS_JSON_PATH.read_text(encoding="utf-8"))
+    docs = [
+        json.loads(line)
+        for line in b1b_acquire.ACQUIRED_JSONL_PATH.read_text(encoding="utf-8").splitlines()
+        if line.strip()
+    ]
+    tampered_decisions = copy.deepcopy(decisions)
+    rec0 = tampered_decisions["overture_fact_consistency_audit"]["records"][0]
+    rec0["field_audit"]["coordinates"]["corroboration_sources"] = [
+        f"canonical_poi:{rec0['poi_id']}",
+        "osm:node/3929648836",
+    ]
+    with pytest.raises(ValueError, match="OSM_SOURCE_REFERENCE_MISMATCH"):
+        b1b_verify.validate_source_reference_binding(tampered_decisions, docs)
+
+
+def test_20_negative_verifier_rejects_unverified_arbitrary_source_string():
+    decisions = json.loads(b1b_acquire.DECISIONS_JSON_PATH.read_text(encoding="utf-8"))
+    docs = [
+        json.loads(line)
+        for line in b1b_acquire.ACQUIRED_JSONL_PATH.read_text(encoding="utf-8").splitlines()
+        if line.strip()
+    ]
+    tampered_decisions = copy.deepcopy(decisions)
+    rec0 = tampered_decisions["overture_fact_consistency_audit"]["records"][0]
+    rec0["field_audit"]["website"]["status"] = "CORROBORATED"
+    rec0["field_audit"]["website"]["corroboration_sources"] = ["official_resort_site:https://vinpearl.com"]
+    with pytest.raises(ValueError, match="UNVERIFIED_OR_ARBITRARY_SOURCE_REFERENCE"):
+        b1b_verify.validate_source_reference_binding(tampered_decisions, docs)
+
+
+def test_21_unverified_contact_address_website_explicitly_qualified_and_excluded_from_confirmed_text():
+    docs = [
+        json.loads(line)
+        for line in b1b_acquire.ACQUIRED_JSONL_PATH.read_text(encoding="utf-8").splitlines()
+        if line.strip()
+    ]
+    ov_docs = [d for d in docs if d["source_type"] == "overture_places_parquet"]
+    assert len(ov_docs) == 23
+
+    unverified_count = 0
+    for d in ov_docs:
+        raw_lines = d["raw_text"].splitlines()
+        confirmed_lines = d["answer_ready_confirmed_text"].splitlines()
+        for fname in ("address", "phone", "website"):
+            finfo = d["fact_consistency_audit"][fname]
+            prefix = b1b_verify.OVERTURE_FIELD_LINE_PREFIXES[fname]
+            matching_raw = [ln for ln in raw_lines if ln.startswith(prefix)]
+            matching_confirmed = [ln for ln in confirmed_lines if ln.startswith(prefix)]
+            if finfo["status"] == "UNVERIFIED":
+                unverified_count += 1
+                assert fname in d["unverified_fields"]
+                assert fname not in d["corroborated_fields"]
+                assert d["source_reported_unverified_values"][fname]["present_as_confirmed_fact"] is False
+                assert len(matching_raw) == 1
+                assert b1b_acquire.UNVERIFIED_FACT_LABEL in matching_raw[0]
+                assert "[CORROBORATED:" not in matching_raw[0]
+                assert len(matching_confirmed) == 0
+            elif finfo["status"] == "CORROBORATED":
+                assert fname in d["corroborated_fields"]
+                assert fname not in d["unverified_fields"]
+                assert len(matching_raw) == 1
+                assert "[CORROBORATED:" in matching_raw[0]
+                assert b1b_acquire.UNVERIFIED_FACT_LABEL not in matching_raw[0]
+                assert len(matching_confirmed) == 1
+    assert unverified_count > 0
+
+    # Negative test: stripping UNVERIFIED_FACT_LABEL from an UNVERIFIED phone/address/website line fails closed
+    doc_with_unverified = next(copy.deepcopy(d) for d in ov_docs if d["unverified_fields"])
+    doc_with_unverified["raw_text"] = doc_with_unverified["raw_text"].replace(
+        f" {b1b_acquire.UNVERIFIED_FACT_LABEL}", ""
+    )
+    with pytest.raises(ValueError, match="UNQUALIFIED_UNVERIFIED_FACT_IN_RAW_TEXT"):
+        b1b_verify.validate_document_content_utility(doc_with_unverified)

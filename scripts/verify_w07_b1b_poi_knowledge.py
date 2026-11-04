@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""W07-B1B — Offline Fail-Closed Verifier for Targeted POI Knowledge Acquisition (Corrective 02)."""
+"""W07-B1B — Offline Fail-Closed Verifier for Targeted POI Knowledge Acquisition (Corrective 03)."""
 
 from __future__ import annotations
 
@@ -16,6 +16,7 @@ if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
 from scripts import acquire_w07_b1b_poi_knowledge as b1b  # noqa: E402
+from scripts import audit_w07_b1a_existing_poi_knowledge as b1a_mod  # noqa: E402
 from scripts import validate_w07_review_corpus_v1 as w07_a2  # noqa: E402
 
 REQUIRED_CANDIDATE_FIELDS: tuple[str, ...] = (
@@ -141,6 +142,7 @@ SUBSTANTIVE_STRUCTURED_PREFIXES: tuple[str, ...] = (
 )
 
 ISO_UTC_RE = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$")
+OSM_ID_PATTERN = re.compile(r"\b((?:node|way|relation)/\d+)\b")
 
 
 def _verify_internal_sha256(payload: dict[str, Any], label: str) -> None:
@@ -156,7 +158,7 @@ def _verify_internal_sha256(payload: dict[str, Any], label: str) -> None:
 
 
 def validate_temporal_provenance(record: dict[str, Any], *, is_document: bool = True) -> None:
-    """Fail-closed temporal provenance validator enforcing 4 separated timestamp concepts."""
+    """Fail-closed temporal provenance validator enforcing 4 separated timestamp concepts (Corrective 03 Section 4)."""
     rid = record.get("document_id") or record.get("candidate_source_id") or "<unknown>"
     for key in (
         "retrieved_at",
@@ -178,7 +180,7 @@ def validate_temporal_provenance(record: dict[str, Any], *, is_document: bool = 
             f"Record {rid}: artifact_snapshot_timestamp ({snapshot_at!r}) != {b1b.ARTIFACT_SNAPSHOT_TIMESTAMP!r}"
         )
 
-    # Never conflate retrieved_at or source_terms_checked_at with source_published_or_updated_at
+    # Never conflate retrieved_at or source_terms_checked_at with source_published_or_updated_at or artifact_snapshot_timestamp
     if retrieved_at == published_at:
         raise ValueError(
             f"Record {rid}: retrieved_at ({retrieved_at!r}) must not equal source_published_or_updated_at ({published_at!r})"
@@ -186,6 +188,14 @@ def validate_temporal_provenance(record: dict[str, Any], *, is_document: bool = 
     if terms_checked_at == published_at:
         raise ValueError(
             f"Record {rid}: source_terms_checked_at ({terms_checked_at!r}) must not equal source_published_or_updated_at ({published_at!r})"
+        )
+    if retrieved_at == snapshot_at:
+        raise ValueError(
+            f"Record {rid}: retrieved_at ({retrieved_at!r}) must not equal artifact_snapshot_timestamp ({snapshot_at!r})"
+        )
+    if terms_checked_at == snapshot_at:
+        raise ValueError(
+            f"Record {rid}: source_terms_checked_at ({terms_checked_at!r}) must not equal artifact_snapshot_timestamp ({snapshot_at!r})"
         )
 
     source_type = record.get("source_type")
@@ -199,9 +209,9 @@ def validate_temporal_provenance(record: dict[str, Any], *, is_document: bool = 
                 f"Record {rid}: Overture record must use source_published_or_updated_at={b1b.OVERTURE_SNAPSHOT_TIMESTAMP!r}, got {published_at!r}"
             )
         allowed_ov_terms = (
-            (b1b.B1B_TERMS_CHECKED_AT,)
+            (b1b.UNKNOWN_VERIFICATION_TIME,)
             if is_document
-            else (b1b.B1B_TERMS_CHECKED_AT, "NOT_APPLICABLE_REJECTED_AT_MAPPING_GATE")
+            else (b1b.UNKNOWN_VERIFICATION_TIME, "NOT_APPLICABLE_REJECTED_AT_MAPPING_GATE")
         )
         if terms_checked_at not in allowed_ov_terms:
             raise ValueError(
@@ -209,13 +219,13 @@ def validate_temporal_provenance(record: dict[str, Any], *, is_document: bool = 
             )
     elif source_type in ("wikipedia_article", "wikidata_entity", "wikivoyage_poi_listing"):
         if is_document or record.get("final_b1b_decision") == "ACCEPT_PRIMARY_CORPUS":
-            if retrieved_at != b1b.B1B_API_RETRIEVED_AT:
+            if retrieved_at != b1b.UNKNOWN_HISTORICAL_RETRIEVAL_TIME:
                 raise ValueError(
-                    f"Record {rid}: Wikimedia API-fetched record must have retrieved_at={b1b.B1B_API_RETRIEVED_AT!r}, got {retrieved_at!r}"
+                    f"Record {rid}: Wikimedia historical record without separate HTTP timestamp receipt must have retrieved_at={b1b.UNKNOWN_HISTORICAL_RETRIEVAL_TIME!r}, got {retrieved_at!r}"
                 )
-            if terms_checked_at != b1b.B1B_TERMS_CHECKED_AT:
+            if terms_checked_at != b1b.UNKNOWN_VERIFICATION_TIME:
                 raise ValueError(
-                    f"Record {rid}: Wikimedia API-fetched record must have source_terms_checked_at={b1b.B1B_TERMS_CHECKED_AT!r}, got {terms_checked_at!r}"
+                    f"Record {rid}: Wikimedia historical record without separate verification receipt must have source_terms_checked_at={b1b.UNKNOWN_VERIFICATION_TIME!r}, got {terms_checked_at!r}"
                 )
             if not ISO_UTC_RE.match(published_at):
                 raise ValueError(
@@ -233,7 +243,7 @@ def validate_document_content_utility(
     *,
     expected_section_heading: str | None = None,
 ) -> None:
-    """Fail-closed content utility validator for an accepted primary corpus document."""
+    """Fail-closed content utility and unverified-fact qualification validator for an accepted primary corpus document."""
     did = doc.get("document_id", "<unknown>")
     raw_text = str(doc.get("raw_text") or "")
     if not raw_text.strip():
@@ -304,17 +314,81 @@ def validate_document_content_utility(
 
             suppressed = set(doc.get("suppressed_conflicted_fields") or [])
             audit_map = doc.get("fact_consistency_audit") or {}
+            corroborated_list = doc.get("corroborated_fields")
+            unverified_list = doc.get("unverified_fields")
+            unverified_vals = doc.get("source_reported_unverified_values")
+            confirmed_text = doc.get("answer_ready_confirmed_text")
+
+            if not isinstance(corroborated_list, list) or not isinstance(unverified_list, list):
+                raise ValueError(
+                    f"Document {did}: Overture document must include corroborated_fields and unverified_fields lists"
+                )
+            if not isinstance(unverified_vals, dict) or not isinstance(confirmed_text, str):
+                raise ValueError(
+                    f"Document {did}: Overture document must include source_reported_unverified_values and answer_ready_confirmed_text"
+                )
+
             for field_name, field_info in audit_map.items():
-                if isinstance(field_info, dict) and field_info.get("status") == "CONFLICTED":
+                if not isinstance(field_info, dict):
+                    continue
+                st = field_info.get("status")
+                prefix = OVERTURE_FIELD_LINE_PREFIXES.get(field_name)
+                matching_lines = [line for line in body_lines if prefix and line.startswith(prefix)]
+
+                if st == "CONFLICTED":
                     if field_name not in suppressed:
                         raise ValueError(
                             f"Document {did}: field {field_name!r} is marked CONFLICTED in fact_consistency_audit but missing from suppressed_conflicted_fields"
                         )
                     conflicted_val = str(field_info.get("overture_value") or "").strip()
-                    if conflicted_val and conflicted_val in raw_text:
+                    if conflicted_val and (conflicted_val in raw_text or conflicted_val in confirmed_text):
                         raise ValueError(
-                            f"Document {did}: CONFLICTED value {conflicted_val!r} for field {field_name!r} is still rendered in raw_text"
+                            f"Document {did}: CONFLICTED value {conflicted_val!r} for field {field_name!r} is still rendered in raw_text or answer_ready_confirmed_text"
                         )
+                elif st == "CORROBORATED":
+                    if field_name not in corroborated_list or field_name in unverified_list:
+                        raise ValueError(
+                            f"Document {did}: CORROBORATED field {field_name!r} mismatch in corroborated_fields/unverified_fields"
+                        )
+                    if prefix and matching_lines:
+                        if "[CORROBORATED:" not in matching_lines[0] or b1b.UNVERIFIED_FACT_LABEL in matching_lines[0]:
+                            raise ValueError(
+                                f"Document {did}: CORROBORATED field {field_name!r} line must carry [CORROBORATED: ...] and not UNVERIFIED label"
+                            )
+                elif st == "UNVERIFIED":
+                    if field_name not in unverified_list or field_name in corroborated_list:
+                        raise ValueError(
+                            f"Document {did}: UNVERIFIED field {field_name!r} must be in unverified_fields and not in corroborated_fields"
+                        )
+                    u_entry = unverified_vals.get(field_name)
+                    if (
+                        not isinstance(u_entry, dict)
+                        or u_entry.get("qualification_status") != "SOURCE_REPORTED_INDEPENDENTLY_UNVERIFIED"
+                        or u_entry.get("present_as_confirmed_fact") is not False
+                    ):
+                        raise ValueError(
+                            f"Document {did}: UNVERIFIED field {field_name!r} must have source_reported_unverified_values entry with present_as_confirmed_fact=False"
+                        )
+                    if field_name in ("address", "phone", "website"):
+                        if not matching_lines:
+                            raise ValueError(
+                                f"Document {did}: UNVERIFIED field {field_name!r} missing rendered line in raw_text"
+                            )
+                        if b1b.UNVERIFIED_FACT_LABEL not in matching_lines[0]:
+                            raise ValueError(
+                                f"Document {did}: UNQUALIFIED_UNVERIFIED_FACT_IN_RAW_TEXT: UNVERIFIED field {field_name!r} is rendered in raw_text without explicit {b1b.UNVERIFIED_FACT_LABEL!r} qualification"
+                            )
+                        if "[CORROBORATED:" in matching_lines[0]:
+                            raise ValueError(
+                                f"Document {did}: UNVERIFIED field {field_name!r} must never carry [CORROBORATED: ...] label"
+                            )
+                        if prefix and any(cline.strip().startswith(prefix) for cline in confirmed_text.splitlines()):
+                            raise ValueError(
+                                f"Document {did}: UNVERIFIED field {field_name!r} leaked into answer_ready_confirmed_text as confirmed fact"
+                            )
+                elif st == "MISSING":
+                    if matching_lines:
+                        raise ValueError(f"Document {did}: MISSING field {field_name!r} must be omitted from raw_text")
 
             for field_name in suppressed:
                 prefix = OVERTURE_FIELD_LINE_PREFIXES.get(field_name)
@@ -337,12 +411,239 @@ def validate_document_content_utility(
         raise ValueError(f"Document {did}: unsupported primary corpus source_type {source_type!r}")
 
 
+def validate_source_reference_binding(
+    decisions: dict[str, Any],
+    docs: list[dict[str, Any]],
+    *,
+    target_manifest: dict[str, Any] | None = None,
+    freeze_v2: list[dict[str, Any]] | None = None,
+    b1a_audit: dict[str, Any] | None = None,
+) -> None:
+    """Fail-closed machine-verifiable provenance binding validator (Corrective 03 Sections 1 & 2)."""
+    if target_manifest is None:
+        target_manifest = json.loads(b1b.TARGET_60_PATH.read_text(encoding="utf-8"))
+    if freeze_v2 is None:
+        freeze_v2 = json.loads((REPO_ROOT / "data/curated/gomate_places_freeze_v2.json").read_text(encoding="utf-8"))
+    if b1a_audit is None:
+        b1a_audit = json.loads(b1b.B1A_AUDIT_PATH.read_text(encoding="utf-8"))
+
+    target_pois = {p["poi_id"]: p for p in target_manifest["pois"]}
+    canonical_osm_by_poi = {p["poi_id"]: p["osm_id"] for p in target_manifest["pois"]}
+    b1a_by_poi = {r["poi_id"]: r for r in b1a_audit["target_poi_audit_records"]}
+
+    osm_tags_by_poi: dict[str, dict[str, Any]] = {}
+    for p in freeze_v2:
+        pid = p["place_id"]
+        if pid in target_pois:
+            osm_sources = [s for s in p.get("sources", []) if s.get("source_name") == "osm"]
+            tags, _ = b1a_mod._extract_osm_tags_and_shape(osm_sources[0]) if osm_sources else ({}, None)
+            osm_tags_by_poi[pid] = {
+                "place": p,
+                "tags": tags,
+                "has_addr": any(k.startswith("addr:") for k in tags),
+                "has_phone": bool(tags.get("phone") or tags.get("contact:phone")),
+                "has_web": bool(tags.get("website") or tags.get("contact:website") or p.get("website")),
+            }
+
+    wd_docs_by_poi_qid = {
+        (d["poi_id"], d["source_lineage_id"].split(":")[-1]): d
+        for d in docs
+        if d.get("source_type") == "wikidata_entity"
+    }
+    rejected_wd_by_poi_qid = {
+        (c["poi_id"], c["source_lineage_id"].split(":")[-1]): c
+        for c in decisions.get("candidate_decisions", [])
+        if c.get("source_type") == "wikidata_entity" and c.get("final_b1b_decision") == "REJECT"
+    }
+    wp_docs_by_poi_lineage = {
+        (d["poi_id"], d["source_lineage_id"]): d for d in docs if d.get("source_type") == "wikipedia_article"
+    }
+    wv_docs_by_poi = {d["poi_id"]: d for d in docs if d.get("source_type") == "wikivoyage_poi_listing"}
+
+    # 1. Check candidate mapping_evidence strings for any mismatched OSM ID
+    for cand in decisions.get("candidate_decisions", []):
+        cid = cand.get("candidate_source_id", "<unknown>")
+        pid = cand.get("poi_id")
+        if pid not in canonical_osm_by_poi:
+            raise ValueError(f"Candidate {cid} references unknown canonical poi_id {pid!r}")
+        expected_osm = canonical_osm_by_poi[pid]
+        map_ev = str(cand.get("mapping_evidence") or "")
+        for osm_match in OSM_ID_PATTERN.findall(map_ev):
+            if osm_match != expected_osm:
+                raise ValueError(
+                    f"OSM_SOURCE_REFERENCE_MISMATCH in candidate {cid} mapping_evidence: cited {osm_match!r} != canonical {expected_osm!r}"
+                )
+
+    # 2. Check all 26 Overture audit records and all 130 field evaluations
+    dec_audit = decisions.get("overture_fact_consistency_audit") or {}
+    audit_records = dec_audit.get("records") or []
+    for rec in audit_records:
+        pid = rec.get("poi_id")
+        gers_id = rec.get("overture_gers_id") or rec.get("gers_id")
+        if pid not in target_pois:
+            raise ValueError(f"Overture audit record {gers_id} references unknown canonical poi_id {pid!r}")
+        expected_osm = canonical_osm_by_poi[pid]
+        osm_info = osm_tags_by_poi.get(pid, {})
+        field_audit = rec.get("field_audit") or {}
+
+        for fname, finfo in field_audit.items():
+            st = finfo.get("status")
+            corr = finfo.get("corroboration_sources") or []
+            conf = finfo.get("conflicting_sources") or []
+            crosswalks = finfo.get("verified_alternate_osm_crosswalk") or {}
+
+            for list_name, ref_list in (("corroboration_sources", corr), ("conflicting_sources", conf)):
+                for ref in ref_list:
+                    if not isinstance(ref, str) or ":" not in ref:
+                        raise ValueError(
+                            f"UNVERIFIED_OR_ARBITRARY_SOURCE_REFERENCE in {gers_id}.{fname}.{list_name}: {ref!r}"
+                        )
+                    prefix, val = ref.split(":", 1)
+
+                    if prefix == "canonical_poi":
+                        if val != pid:
+                            raise ValueError(
+                                f"CANONICAL_POI_REFERENCE_MISMATCH in {gers_id}.{fname}.{list_name}: {ref!r} != canonical_poi:{pid}"
+                            )
+                        if (
+                            fname == "address"
+                            and list_name == "corroboration_sources"
+                            and not target_pois[pid].get("address")
+                        ):
+                            raise ValueError(
+                                f"UNSUPPORTED_CANONICAL_POI_ADDRESS in {gers_id}.{fname}.{list_name}: canonical_poi:{pid} has empty address"
+                            )
+
+                    elif prefix == "osm":
+                        if val != expected_osm:
+                            cw = crosswalks.get(ref) if isinstance(crosswalks, dict) else None
+                            if (
+                                not isinstance(cw, dict)
+                                or cw.get("canonical_poi_id") != pid
+                                or cw.get("canonical_osm_id") != expected_osm
+                                or cw.get("alternate_osm_id") != val
+                                or not str(cw.get("source_locator") or "").strip()
+                                or not str(cw.get("identity_evidence") or "").strip()
+                            ):
+                                raise ValueError(
+                                    f"OSM_SOURCE_REFERENCE_MISMATCH in {gers_id}.{fname}.{list_name}: {ref!r} does not match canonical osm:{expected_osm} and lacks verified_alternate_osm_crosswalk"
+                                )
+                        else:
+                            if (
+                                fname == "address"
+                                and list_name == "corroboration_sources"
+                                and not osm_info.get("has_addr")
+                            ):
+                                raise ValueError(
+                                    f"UNSUPPORTED_OSM_SOURCE_CLAIM in {gers_id}.{fname}.{list_name}: {ref!r} has no addr:* tags in gomate_places_freeze_v2.json"
+                                )
+                            if fname == "phone" and not osm_info.get("has_phone"):
+                                raise ValueError(
+                                    f"UNSUPPORTED_OSM_SOURCE_CLAIM in {gers_id}.{fname}.{list_name}: {ref!r} has no phone/contact:phone tag in gomate_places_freeze_v2.json"
+                                )
+                            if (
+                                fname == "website"
+                                and list_name == "corroboration_sources"
+                                and not osm_info.get("has_web")
+                            ):
+                                raise ValueError(
+                                    f"UNSUPPORTED_OSM_SOURCE_CLAIM in {gers_id}.{fname}.{list_name}: {ref!r} has no website/contact:website tag in gomate_places_freeze_v2.json"
+                                )
+
+                    elif prefix == "osm_website_pointer":
+                        b1a_web = (
+                            b1a_by_poi.get(pid, {})
+                            .get("external_tag_pointers_not_yet_downloaded", {})
+                            .get("website_url")
+                        )
+                        if not b1a_web or val != b1a_web:
+                            raise ValueError(
+                                f"UNVERIFIED_OSM_WEBSITE_POINTER in {gers_id}.{fname}.{list_name}: {ref!r} != {b1a_web!r}"
+                            )
+                        if list_name == "corroboration_sources" and not finfo.get("overture_value"):
+                            raise ValueError(
+                                f"UNSUPPORTED_CORROBORATION_ON_MISSING_VALUE in {gers_id}.{fname}: overture_value is null/empty"
+                            )
+
+                    elif prefix == "wikidata":
+                        if (pid, val) in wd_docs_by_poi_qid:
+                            wd_raw = wd_docs_by_poi_qid[(pid, val)]["raw_text"]
+                            if list_name == "corroboration_sources":
+                                req_wd_prefix = {
+                                    "coordinates": "Tọa độ địa lý Wikidata (P625):",
+                                    "address": "Địa chỉ đường phố (P6375):",
+                                    "category_taxonomy": "Phân loại thực thể (instance of P31):",
+                                    "website": "Website chính thức (P856):",
+                                }.get(fname)
+                                if not req_wd_prefix or req_wd_prefix not in wd_raw:
+                                    raise ValueError(
+                                        f"UNSUPPORTED_WIKIDATA_SOURCE_CLAIM in {gers_id}.{fname}.{list_name}: {ref!r} lacks {req_wd_prefix!r} in accepted Wikidata document"
+                                    )
+                        elif list_name == "conflicting_sources" and (pid, val) in rejected_wd_by_poi_qid:
+                            pass
+                        else:
+                            raise ValueError(
+                                f"UNBOUND_WIKIDATA_SOURCE_REFERENCE in {gers_id}.{fname}.{list_name}: {ref!r} not bound to canonical POI {pid}"
+                            )
+
+                    elif prefix == "wikipedia":
+                        if (pid, ref) not in wp_docs_by_poi_lineage:
+                            raise ValueError(
+                                f"UNBOUND_WIKIPEDIA_SOURCE_REFERENCE in {gers_id}.{fname}.{list_name}: {ref!r} not bound to canonical POI {pid}"
+                            )
+
+                    elif prefix == "wikivoyage":
+                        wv_doc = wv_docs_by_poi.get(pid)
+                        base_lineage = ref.split("#", 1)[0]
+                        if not wv_doc or wv_doc["source_lineage_id"] != base_lineage:
+                            raise ValueError(
+                                f"UNBOUND_WIKIVOYAGE_SOURCE_REFERENCE in {gers_id}.{fname}.{list_name}: {ref!r} not bound to canonical POI {pid}"
+                            )
+                        if list_name == "corroboration_sources":
+                            wv_raw = wv_doc["raw_text"]
+                            if fname == "address":
+                                if not any(
+                                    s in wv_raw
+                                    for s in ("Địa chỉ:", "Chỉ dẫn đường đi:", "Mô tả du lịch chi tiết (Wikivoyage):")
+                                ):
+                                    raise ValueError(
+                                        f"UNSUPPORTED_WIKIVOYAGE_SOURCE_CLAIM in {gers_id}.{fname}.{list_name}: {ref!r} lacks address/directions/prose in accepted Wikivoyage listing"
+                                    )
+                            else:
+                                req_wv_substr = {
+                                    "coordinates": "Tọa độ mục Wikivoyage:",
+                                    "category_taxonomy": "loại mục:",
+                                    "phone": "Điện thoại:",
+                                    "website": "Website liên kết:",
+                                }.get(fname)
+                                if not req_wv_substr or req_wv_substr not in wv_raw:
+                                    raise ValueError(
+                                        f"UNSUPPORTED_WIKIVOYAGE_SOURCE_CLAIM in {gers_id}.{fname}.{list_name}: {ref!r} lacks {req_wv_substr!r} in accepted Wikivoyage listing"
+                                    )
+
+                    elif prefix == "overture":
+                        if val != gers_id or list_name != "conflicting_sources":
+                            raise ValueError(
+                                f"INVALID_OVERTURE_SELF_REFERENCE in {gers_id}.{fname}.{list_name}: {ref!r}"
+                            )
+
+                    else:
+                        raise ValueError(
+                            f"UNVERIFIED_OR_ARBITRARY_SOURCE_REFERENCE in {gers_id}.{fname}.{list_name}: {ref!r} uses unapproved source prefix {prefix!r}"
+                        )
+
+            if st == "CORROBORATED" and len(corr) == 0:
+                raise ValueError(
+                    f"UNVERIFIED_PROMOTED_TO_CORROBORATED in {gers_id}.{fname}: CORROBORATED status requires >=1 machine-verified corroboration_sources"
+                )
+
+
 def validate_overture_fact_consistency_audit(
     decisions: dict[str, Any],
     summary: dict[str, Any],
     docs: list[dict[str, Any]],
 ) -> None:
-    """Fail-closed validator for the 26-record Overture fact-consistency audit and conflict handling."""
+    """Fail-closed validator for the 26-record Overture fact-consistency audit, source binding, and conflict handling."""
     dec_audit = decisions.get("overture_fact_consistency_audit")
     sum_audit = summary.get("overture_fact_consistency_audit") or summary.get(
         "overture_quality_and_license_integrity", {}
@@ -359,6 +660,28 @@ def validate_overture_fact_consistency_audit(
     audit_records = dec_audit.get("records")
     if not isinstance(audit_records, list) or len(audit_records) != 26:
         raise ValueError("decisions.overture_fact_consistency_audit.records must contain 26 records")
+
+    # Validate 43-item OSM source-reference reconciliation ledger
+    reconcil_sum = dec_audit.get("osm_source_reference_reconciliation_summary")
+    reconcil_ledger = dec_audit.get("osm_source_reference_reconciliation_ledger")
+    if not isinstance(reconcil_sum, dict) or not isinstance(reconcil_ledger, list):
+        raise ValueError("Missing osm_source_reference_reconciliation_summary or ledger in decisions JSON")
+    if len(reconcil_ledger) != 43 or reconcil_sum.get("OSM_SOURCE_REFERENCE_MISMATCHES_IDENTIFIED") != 43:
+        raise ValueError("Expected 43 reconciled OSM source-reference mismatches in ledger")
+    if reconcil_sum.get("AFFECTED_CANONICAL_POIS") != 10:
+        raise ValueError("Expected 10 affected canonical POIs in OSM reconciliation summary")
+    if (
+        reconcil_sum.get("TYPE_1_SAME_CANONICAL_OSM_ENTITY_CORRECTED", 0)
+        + reconcil_sum.get("TYPE_2_VERIFIED_ALTERNATE_OSM_ENTITY_CROSSWALK", 0)
+        + reconcil_sum.get("TYPE_3_UNSUPPORTED_OSM_REFERENCE_REMOVED", 0)
+        != 43
+    ):
+        raise ValueError("OSM reconciliation classification counts must sum to 43")
+    if reconcil_sum.get("REMAINING_OSM_SOURCE_REFERENCE_MISMATCHES") != 0:
+        raise ValueError("REMAINING_OSM_SOURCE_REFERENCE_MISMATCHES must be 0")
+
+    # Machine-verify all source bindings across candidate decisions and Overture field audits
+    validate_source_reference_binding(decisions, docs)
 
     ov_docs_by_poi = {d["poi_id"]: d for d in docs if d.get("source_type") == "overture_places_parquet"}
     all_raw_text = "\n".join(d.get("raw_text", "") for d in docs)
@@ -449,6 +772,10 @@ def validate_overture_fact_consistency_audit(
         raise ValueError(
             f"Overture audit field_status_counts mismatch: {dec_audit.get('field_status_counts')} != {status_counts}"
         )
+    if sum_audit.get("field_status_counts") != status_counts:
+        raise ValueError(
+            f"Summary Overture audit field_status_counts mismatch: {sum_audit.get('field_status_counts')} != {status_counts}"
+        )
 
     # Check FC-001 and FC-002 specifically in audit table
     fc001 = audit_by_poi.get("f0d424bd-f722-540f-8964-5e6fd8875b56")
@@ -506,7 +833,7 @@ def verify_b1b_artifacts() -> dict[str, Any]:
     if summary.get("next_gate") != b1b.NEXT_GATE:
         raise ValueError("summary: next_gate mismatch")
 
-    # Build lookup of expected Wikipedia section headings by (poi_id, lang)
+    # Build lookup of expected Wikipedia section headings by poi_id
     wp_section_by_poi: dict[str, str | None] = {
         spec["poi_id"]: spec.get("section_heading") for spec in b1b.ACCEPTED_WIKIPEDIA_SPECS
     }
@@ -534,7 +861,7 @@ def verify_b1b_artifacts() -> dict[str, Any]:
 
         validate_temporal_provenance(c, is_document=False)
 
-        # Section 5: Official website governance check
+        # Official website governance check
         if c["source_type"] in ("official_venue_website", "heritage_or_public_institution_portal"):
             if c.get("discovery_method") != "URL_DISCOVERED_FROM_OSM_TAG":
                 raise ValueError(f"Website candidate {cid} must have discovery_method=URL_DISCOVERED_FROM_OSM_TAG")
@@ -609,10 +936,10 @@ def verify_b1b_artifacts() -> dict[str, Any]:
         if d["source_type"] == "wikipedia_article":
             wp_docs_count += 1
 
-    # Section 1–3 (Corrective 02): Verify 26-record Overture fact-consistency audit
+    # Verify 26-record Overture fact-consistency audit and 43-item OSM source-binding reconciliation
     validate_overture_fact_consistency_audit(decisions, summary, docs)
 
-    # Section 1 (Corrective 01): Wikipedia empty body check
+    # Wikipedia empty body check
     dec_sum = decisions["decision_summary"]
     if dec_sum.get("WIKIPEDIA_DOCUMENTS_ACCEPTED") != wp_docs_count or wp_docs_count != 26:
         raise ValueError(f"Expected 26 accepted Wikipedia documents, got {wp_docs_count}")
@@ -627,7 +954,7 @@ def verify_b1b_artifacts() -> dict[str, Any]:
     if wp_integrity.get("WIKIPEDIA_DOCUMENTS_WITH_NONEMPTY_ARTICLE_BODY") != 26:
         raise ValueError("summary wikipedia_narrative_integrity must have 26 non-empty article bodies")
 
-    # Verify lineage vs evidence unit separation (post-Corrective-02 recomputed counts)
+    # Verify lineage vs evidence unit separation
     unique_lineages = {d["source_lineage_id"] for d in docs}
     if len(unique_lineages) >= len(docs):
         raise ValueError("Expected multiple Wikivoyage/Wikipedia extracts from same page to share source_lineage_id")
@@ -655,6 +982,8 @@ def verify_b1b_artifacts() -> dict[str, Any]:
         raise ValueError("NEW_LLM_PROVIDER_CALLS must be 0")
     if counters["EXTERNAL_WEBSITE_HTTP_REQUESTS"] != 0:
         raise ValueError("EXTERNAL_WEBSITE_HTTP_REQUESTS must be 0")
+    if counters.get("CORRECTIVE_03_NEW_HTTP_REQUESTS") != 0:
+        raise ValueError("CORRECTIVE_03_NEW_HTTP_REQUESTS must be 0")
     if counters["OPEN_REUSABLE_DOCUMENTS_ACCEPTED"] != len(docs):
         raise ValueError("OPEN_REUSABLE_DOCUMENTS_ACCEPTED mismatch")
     if counters["REFERENCE_ONLY_SOURCES"] != 16:
@@ -697,7 +1026,7 @@ def verify_b1b_artifacts() -> dict[str, Any]:
     if summary["W07_B1B_CORPUS_ACQUISITION_READY_FOR_B2"] is not True:
         raise ValueError("W07_B1B_CORPUS_ACQUISITION_READY_FOR_B2 must be True")
 
-    # Section 9: Verify future chunk range is explicitly labeled as ESTIMATE
+    # Verify future chunk range is explicitly labeled as ESTIMATE
     est_chunks = summary["b2_readiness_evaluation"]["estimated_future_useful_chunk_range"]
     if est_chunks.get("value_kind") != "ESTIMATE" or est_chunks.get("observed_chunk_count_in_b1b") is not None:
         raise ValueError("estimated_future_useful_chunk_range must be explicitly labeled value_kind=ESTIMATE")
@@ -726,6 +1055,8 @@ def verify_b1b_artifacts() -> dict[str, Any]:
         "wikipedia_documents_with_empty_body": 0,
         "overture_records_audited": 26,
         "overture_documents_accepted": len([d for d in docs if d["source_type"] == "overture_places_parquet"]),
+        "osm_source_reference_mismatches_reconciled": 43,
+        "remaining_osm_source_reference_mismatches": 0,
         "pois_with_rag_evidence": ov_cov["pois_with_rag_candidate_evidence"],
         "W07_B1B_CORPUS_ACQUISITION_READY_FOR_B2": summary["W07_B1B_CORPUS_ACQUISITION_READY_FOR_B2"],
     }

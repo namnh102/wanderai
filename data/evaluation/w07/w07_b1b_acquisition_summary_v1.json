@@ -1,12 +1,12 @@
 {
   "artifact_id": "w07_b1b_acquisition_summary_v1",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "task_id": "W07-B1B",
-  "corrective_id": "W07-B1B-CORRECTIVE-02",
+  "corrective_id": "W07-B1B-CORRECTIVE-03",
   "artifact_snapshot_timestamp": "2026-11-03T18:45:00Z",
   "authoritative_base_develop_sha": "324163636cedc8391c07cf2deca37d907745bd14",
   "previous_accepted_gate": "W07-B1-FIX-01B-POSTMERGE-CHATGPT-AUDIT = PASS",
-  "current_gate_status": "W07-B1B-CORRECTIVE-01-CORPUS-QUALITY-CHATGPT-AUDIT = HOLD-CORRECTIVE-02",
+  "current_gate_status": "W07-B1B-CORRECTIVE-02-FACT-CONSISTENCY-CHATGPT-AUDIT = HOLD-CORRECTIVE-03",
   "W07_B1_FIX_01B_STATUS": "CLOSED",
   "PDG_001_STATUS": "CLOSED",
   "W07_PRIMARY_CORPUS_STRATEGY": "EVIDENCE_GROUNDED_POI_KNOWLEDGE",
@@ -18,7 +18,7 @@
   "SOCIAL_FUTURE_RESERVED_TASK_ID": "SOCIAL-FRESHNESS-01",
   "PLACE_DISCOVERY_FUTURE_RESERVED_TASK_ID": "PLACE-DISCOVERY-01",
   "W07_B1B_CORPUS_ACQUISITION_READY_FOR_B2": true,
-  "next_gate": "W07-B1B-CORRECTIVE-02-FACT-CONSISTENCY-CHATGPT-AUDIT",
+  "next_gate": "W07-B1B-CORRECTIVE-03-SOURCE-BINDING-CHATGPT-AUDIT",
   "existing_controlled_db_baseline": {
     "TOTAL_DOCUMENTS": 1223,
     "OSM_DOCUMENTS": 759,
@@ -29,10 +29,10 @@
   },
   "linked_artifacts": {
     "source_decisions_path": "data/evaluation/w07/w07_b1b_source_decisions_v1.json",
-    "source_decisions_internal_sha256": "679cc9c64e12466e2ae59d88d63490e7f137d9357941d89780f81a96bb0efb53",
-    "source_decisions_lf_sha256": "2e551752e45cc0bdca0d725750d349777d3e3f4be74aaa50886335090baa524f",
+    "source_decisions_internal_sha256": "15264c290c9b6a964a331cd88d57a32b968362dcd457591408fe5f3c7e694046",
+    "source_decisions_lf_sha256": "edbec84b6161862d439ce2b5d9687b15bd181656b7fa8ff145a713f74afe1249",
     "acquired_corpus_jsonl_path": "data/curated/w07/poi_knowledge_acquired_v1.jsonl",
-    "acquired_corpus_jsonl_lf_sha256": "21f42ddcdfced86a5b55d19762c93c492a6ceb35902244fb54caab5bc39bcb01",
+    "acquired_corpus_jsonl_lf_sha256": "9b0ed36e060924057872a2e8fe9941940f7bc3455f2c9cad21cdc9a9c1141fda",
     "acquired_corpus_document_count": 97,
     "accepted_independent_source_lineage_count": 78
   },
@@ -41,6 +41,7 @@
     "WIKIPEDIA_API_HTTP_REQUESTS": 25,
     "WIKIDATA_API_HTTP_REQUESTS": 2,
     "WIKIVOYAGE_API_HTTP_REQUESTS": 3,
+    "CORRECTIVE_03_NEW_HTTP_REQUESTS": 0,
     "EXTERNAL_WEBSITE_HTTP_REQUESTS": 0,
     "WIKIPEDIA_PAGES_FETCHED_VIA_API": 25,
     "WIKIDATA_ENTITIES_FETCHED_VIA_API": 31,
@@ -69,11 +70,13 @@
     ],
     "overture_local_parquet_retrieved_at": "UNKNOWN_HISTORICAL_RETRIEVAL_TIME",
     "overture_source_published_or_updated_at": "2026-09-23T00:00:00Z",
-    "wikimedia_api_retrieved_at": "2026-11-03T18:45:00Z",
-    "b1b_source_terms_checked_at": "2026-11-03T18:45:00Z",
+    "wikimedia_api_retrieved_at": "UNKNOWN_HISTORICAL_RETRIEVAL_TIME",
+    "b1b_source_terms_checked_at": "UNKNOWN_VERIFICATION_TIME",
     "artifact_snapshot_timestamp": "2026-11-03T18:45:00Z",
     "records_with_retrieved_at_equal_to_source_published_at": 0,
-    "records_with_terms_checked_at_equal_to_source_published_at": 0
+    "records_with_terms_checked_at_equal_to_source_published_at": 0,
+    "records_with_retrieved_at_equal_to_artifact_snapshot_timestamp": 0,
+    "records_with_terms_checked_at_equal_to_artifact_snapshot_timestamp": 0
   },
   "wikipedia_narrative_integrity": {
     "WIKIPEDIA_DOCUMENTS_ACCEPTED": 26,
@@ -89,20 +92,31 @@
     "OVERTURE_DOCUMENTS_ACCEPTED": 23,
     "OVERTURE_DOCUMENTS_WITH_NAN_VALUES": 0,
     "OVERTURE_DOCUMENTS_WITH_CONFLICTED_CLAIMS_IN_RAW_TEXT": 0,
+    "OVERTURE_DOCUMENTS_WITH_UNQUALIFIED_UNVERIFIED_FACTS": 0,
     "OVERTURE_DEFAULT_LICENSE_FALLBACK_PERMITTED": false,
     "allowed_open_licenses": [
-      "CC0-1.0",
       "Apache-2.0",
+      "CC0-1.0",
       "CDLA-Permissive-2.0"
     ],
     "fact_consistency_summary": {
       "total_overture_records_audited": 26,
       "total_field_evaluations": 130,
       "field_status_counts": {
-        "CORROBORATED": 83,
+        "CORROBORATED": 74,
         "CONFLICTED": 16,
-        "UNVERIFIED": 19,
+        "UNVERIFIED": 28,
         "MISSING": 12
+      },
+      "osm_source_reference_reconciliation_summary": {
+        "OVERTURE_AUDITED_RECORDS": 26,
+        "OSM_SOURCE_REFERENCE_MISMATCHES_IDENTIFIED": 43,
+        "AFFECTED_CANONICAL_POIS": 10,
+        "TYPE_1_SAME_CANONICAL_OSM_ENTITY_CORRECTED": 40,
+        "TYPE_2_VERIFIED_ALTERNATE_OSM_ENTITY_CROSSWALK": 0,
+        "TYPE_3_UNSUPPORTED_OSM_REFERENCE_REMOVED": 3,
+        "REMAINING_OSM_SOURCE_REFERENCE_MISMATCHES": 0,
+        "REMAINING_UNVERIFIED_SOURCE_REFERENCES_IN_AUDIT": 0
       },
       "accepted_clean_records_no_conflicts": 12,
       "accepted_records_with_conflicted_fields_suppressed": 11,
@@ -124,7 +138,7 @@
           "overture_gers_id": "9ed3a2e3-60a3-4df0-acd8-83185f57a281",
           "suppressed_field": "address",
           "suppressed_value": "439 P. Lê Lợi, Hạ Long, 180000, VN",
-          "post_audit_decision": "ACCEPT_PRIMARY_CORPUS (address suppressed; corroborated Đảo Rều coordinates, hotel category, and official vinpearl.com website retained)"
+          "post_audit_decision": "ACCEPT_PRIMARY_CORPUS (address suppressed; corroborated Đảo Rều coordinates and hotel category retained; source-reported website qualified as UNVERIFIED)"
         }
       }
     }
@@ -484,7 +498,7 @@
       "observed_chunk_count_in_b1b": null,
       "methodology_frozen_in_b1b": false,
       "total_b1b_acquired_documents": 97,
-      "total_b1b_acquired_characters": 282482,
+      "total_b1b_acquired_characters": 288906,
       "total_wikipedia_article_body_characters": 228661,
       "existing_fix01b_useful_osm_documents_for_target_60": 40,
       "combined_target_60_useful_documents": 137,
@@ -2631,5 +2645,5 @@
       "unchanged": true
     }
   },
-  "artifact_sha256": "ec05c536e28738a304deaa7c136b94c376a7b45f1b248e4159d961ae9b9362b7"
+  "artifact_sha256": "ce64cd5c03b5ca5575fd4073531503c1e3651d34cf36a02e53ec34efc422cb43"
 }
