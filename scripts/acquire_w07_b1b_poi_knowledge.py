@@ -4341,36 +4341,172 @@ def build_b1b_artifacts(*, refresh_network: bool = False) -> dict[str, Any]:
     summary_saved = json.loads(SUMMARY_JSON_PATH.read_text(encoding="utf-8"))
     summary_lf_sha256 = w07_a2.compute_file_sha256(SUMMARY_JSON_PATH)
 
+    report_md = render_b1b_report_markdown(
+        target_manifest=target_manifest,
+        decisions_saved=decisions_saved,
+        summary_saved=summary_saved,
+        decisions_lf_sha256=decisions_lf_sha256,
+        acquired_jsonl_lf_sha256=acquired_jsonl_lf_sha256,
+        summary_lf_sha256=summary_lf_sha256,
+    )
+    REPORT_MD_PATH.parent.mkdir(parents=True, exist_ok=True)
+    REPORT_MD_PATH.write_bytes(report_md.replace("\r\n", "\n").encode("utf-8"))
+
+    return {
+        "decisions_internal_sha256": decisions_saved["artifact_sha256"],
+        "decisions_lf_sha256": decisions_lf_sha256,
+        "acquired_jsonl_lf_sha256": acquired_jsonl_lf_sha256,
+        "summary_internal_sha256": summary_saved["artifact_sha256"],
+        "summary_lf_sha256": summary_lf_sha256,
+        "report_lf_sha256": w07_a2.compute_file_sha256(REPORT_MD_PATH),
+    }
+
+
+def render_b1b_report_markdown(
+    target_manifest: dict[str, Any],
+    decisions_saved: dict[str, Any],
+    summary_saved: dict[str, Any],
+    *,
+    decisions_lf_sha256: str,
+    acquired_jsonl_lf_sha256: str,
+    summary_lf_sha256: str,
+) -> str:
+    """Deterministically render the W07-B1B research report directly from canonical JSON artifacts."""
+    poi_by_id: dict[str, dict[str, Any]] = {p["poi_id"]: p for p in target_manifest["pois"]}
+
+    ov_audit = decisions_saved["overture_fact_consistency_audit"]
+    overture_audit_records = ov_audit["records"]
+    field_status_totals = ov_audit["field_status_counts"]
+    osm_reconciliation_summary = ov_audit["osm_source_reference_reconciliation_summary"]
+    osm_reconciliation_ledger = ov_audit["osm_source_reference_reconciliation_ledger"]
+
     ov_table_rows = []
     for idx, rec in enumerate(overture_audit_records, 1):
+        canonical_poi = poi_by_id[rec["poi_id"]]
         f = rec["fields"]
         supp = ", ".join(f"`{s}`" for s in rec["suppressed_conflicted_fields"]) or "*(none)*"
         cid = f"`{rec['conflict_id']}`" if rec["conflict_id"] else "—"
         ov_table_rows.append(
-            f"| {idx} | `{rec['poi_id'][:8]}` ({rec['poi_name']}, {rec['city']}) | `{rec['overture_gers_id'][:8]}` | {cid} | "
+            f"| {idx} | `{rec['poi_id'][:8]}` ({canonical_poi['name']}, {canonical_poi['city']}) | `{rec['overture_gers_id'][:8]}` | {cid} | "
             f"`{f['coordinates']['status']}` | `{f['address']['status']}` | `{f['category_taxonomy']['status']}` | "
             f"`{f['phone']['status']}` | `{f['website']['status']}` | {supp} | "
             f"`{rec['post_audit_canonical_mapping_status']}` / `{rec['post_audit_content_utility_status']}` -> **`{rec['post_audit_final_b1b_decision']}`** |"
         )
     ov_table_md = "\n".join(ov_table_rows)
 
+    gers_by_poi = {rec["poi_id"]: rec["overture_gers_id"] for rec in overture_audit_records}
     osm_ledger_rows = []
-    for idx, rec in enumerate(OSM_SOURCE_REFERENCE_RECONCILIATION_LEDGER, 1):
-        gers_for_poi = OVERTURE_26_FACT_AUDIT_SPECS[rec["poi_id"]]["overture_gers_id"]
+    for idx, rec in enumerate(osm_reconciliation_ledger, 1):
+        canonical_poi = poi_by_id[rec["poi_id"]]
+        gers_for_poi = gers_by_poi[rec["poi_id"]]
         reconciled_ref = (
             f"osm:{rec['canonical_osm_id']}"
             if rec["classification"] == "TYPE_1_SAME_CANONICAL_OSM_ENTITY_CORRECTED"
             else "*(removed)*"
         )
         osm_ledger_rows.append(
-            f"| {idx} | `{rec['poi_id'][:8]}` ({rec['poi_name']}) | `{gers_for_poi[:8]}` | "
+            f"| {idx} | `{rec['poi_id'][:8]}` ({canonical_poi['name']}) | `{gers_for_poi[:8]}` | "
             f"`{rec['field_name']}` (`{rec['reference_list']}`) | `{rec['previous_osm_ref']}` | `osm:{rec['canonical_osm_id']}` | "
             f"`{rec['classification']}` | `{reconciled_ref}` | `{rec['status_before']}` -> **`{rec['status_after']}`** |"
         )
     osm_ledger_md = "\n".join(osm_ledger_rows)
 
-    # Render Markdown report
-    report_md = f"""# W07-B1B — Targeted POI Knowledge Acquisition Report (Corrective 03)
+    type3_vincom = poi_by_id["7ff87c59-62f1-4509-95f4-e83796b9a35c"]
+    type3_furama = poi_by_id["a32ce1b4-126b-4544-b5ea-4a7edbab6a0a"]
+    type3_sentayho = poi_by_id["afb3793b-7227-4645-a68a-3647c7468638"]
+
+    dec_sum = decisions_saved["decision_summary"]
+    total_candidates = dec_sum["total_candidates_evaluated"]
+    accept_count = dec_sum["ACCEPT_PRIMARY_CORPUS"]
+    ref_only_count = dec_sum["REFERENCE_ONLY"]
+    restricted_count = dec_sum["ACCEPT_RESTRICTED_RESEARCH_ONLY"]
+    reject_count = dec_sum["REJECT"]
+    exact_mapped_count = dec_sum["EXACT_MAPPED"]
+    mapping_review_count = dec_sum["MAPPING_REVIEW_REQUIRED"]
+    accepted_docs_count = dec_sum["accepted_primary_documents"]
+    accepted_lineages_count = dec_sum["accepted_independent_source_lineages"]
+
+    overall_cov = summary_saved["coverage_after_acquisition"]["overall_60_pois"]
+    by_city_cov = summary_saved["coverage_after_acquisition"]["by_city"]
+    ready_for_b2 = bool(summary_saved["W07_B1B_CORPUS_ACQUISITION_READY_FOR_B2"])
+
+    def _fmt_prio_city_split(prio: str) -> str:
+        return (
+            f"`{by_city_cov['Hà Nội']['post_b1b_priority_counts'][prio]}` Hà Nội, "
+            f"`{by_city_cov['Đà Nẵng']['post_b1b_priority_counts'][prio]}` Đà Nẵng, "
+            f"`{by_city_cov['Hạ Long']['post_b1b_priority_counts'][prio]}` Hạ Long"
+        )
+
+    def _fmt_cov_cell(num: int, den: int, *, bold: bool = False) -> str:
+        pct = (num / den) * 100.0
+        inner = f"`{num} / {den}` (`{pct:.1f}%`)"
+        return f"**{inner}**" if bold else inner
+
+    city_cov_rows = []
+    for city_name in ("Hà Nội", "Đà Nẵng", "Hạ Long"):
+        cc = by_city_cov[city_name]
+        tot = cc["total_pois"]
+        pc = cc["post_b1b_priority_counts"]
+        prio_str = f"`{pc['P0']} / {pc['P1']} / {pc['P2']} / {pc['P3']}`"
+        city_cov_rows.append(
+            f"| **{city_name}** | `{tot}` | "
+            f"{_fmt_cov_cell(cc['pois_with_rag_candidate_evidence'], tot, bold=True)} | "
+            f"{_fmt_cov_cell(cc['pois_with_2_plus_eligible_lineages'], tot)} | "
+            f"{_fmt_cov_cell(cc['pois_with_narrative_evidence'], tot)} | "
+            f"{_fmt_cov_cell(cc['pois_with_structured_evidence'], tot)} | "
+            f"{_fmt_cov_cell(cc['pois_with_both_structured_and_narrative'], tot)} | "
+            f"{prio_str} |"
+        )
+    tot_all = overall_cov["total_pois"]
+    opc = overall_cov["post_b1b_priority_counts"]
+    city_cov_rows.append(
+        f"| **Total** | **`{tot_all}`** | "
+        f"{_fmt_cov_cell(overall_cov['pois_with_rag_candidate_evidence'], tot_all, bold=True)} | "
+        f"{_fmt_cov_cell(overall_cov['pois_with_2_plus_eligible_lineages'], tot_all, bold=True)} | "
+        f"{_fmt_cov_cell(overall_cov['pois_with_narrative_evidence'], tot_all, bold=True)} | "
+        f"{_fmt_cov_cell(overall_cov['pois_with_structured_evidence'], tot_all, bold=True)} | "
+        f"{_fmt_cov_cell(overall_cov['pois_with_both_structured_and_narrative'], tot_all, bold=True)} | "
+        f"**`{opc['P0']} / {opc['P1']} / {opc['P2']} / {opc['P3']}`** |"
+    )
+    city_cov_table_md = "\n".join(city_cov_rows)
+
+    p0_ordered_ids = [
+        "0931b06b-4563-4af0-a3a4-75f1ad8392ee",
+        "6215446b-2fdd-4014-aacf-23de6e45e264",
+        "708ee182-c879-477c-b920-516e2c99b0a6",
+        "77af14b6-85ac-4c91-873a-e7da27d555f4",
+        "8fe33554-7a07-4eb2-870f-8af643d8c728",
+        "b57b3f7d-9704-44b0-8139-19bea1998391",
+        "c2afbb07-aaf9-47c1-9877-d17e64422066",
+        "4146f2b7-8289-4309-b7e6-60ba7de3470e",
+        "b0641225-0f38-4bcc-9f4c-34f65fa50d45",
+    ]
+    p0_entries = []
+    for pid in p0_ordered_ids:
+        p = poi_by_id[pid]
+        if pid == "c2afbb07-aaf9-47c1-9877-d17e64422066":
+            p0_entries.append(
+                f"`{pid}` (`{p['name']}`, {p['city']} — Overture `Chợ Bắc Mỹ An Online` rejected under `FC-006`)"
+            )
+        else:
+            p0_entries.append(f"`{pid}` (`{p['name']}`, {p['city']})")
+    p0_list_md = ", ".join(p0_entries)
+
+    counters = summary_saved["external_activity_counters"]
+    measured_http_api_requests = counters["MEASURED_HTTP_API_REQUESTS"]
+    wp_http_requests = counters["WIKIPEDIA_API_HTTP_REQUESTS"]
+    wd_http_requests = counters["WIKIDATA_API_HTTP_REQUESTS"]
+    wv_http_requests = counters["WIKIVOYAGE_API_HTTP_REQUESTS"]
+    corrective_03_new_http_requests = counters["CORRECTIVE_03_NEW_HTTP_REQUESTS"]
+    measured_web_pages_checked = counters["WEB_SOURCE_PAGES_CHECKED"]
+    wp_pages_checked = counters["WIKIPEDIA_PAGES_FETCHED_VIA_API"]
+    wd_entities_checked = counters["WIKIDATA_ENTITIES_FETCHED_VIA_API"]
+    wv_pages_checked = counters["WIKIVOYAGE_PAGES_FETCHED_VIA_API"]
+    measured_web_docs_downloaded = counters["WEB_DOCUMENTS_DOWNLOADED"]
+    measured_overture_records_inspected = counters["LOCAL_OVERTURE_PARQUET_RECORDS_INSPECTED"]
+    measured_osm_website_urls_not_fetched = counters["OSM_TAG_WEBSITE_URLS_DISCOVERED_NOT_FETCHED"]
+
+    return f"""# W07-B1B — Targeted POI Knowledge Acquisition Report (Corrective 03)
 
 ## 1. Authority & Executive Summary
 
@@ -4396,9 +4532,9 @@ def build_b1b_artifacts(*, refresh_network: bool = False) -> dict[str, Any]:
      - **Type 1 (`TYPE_1_SAME_CANONICAL_OSM_ENTITY_CORRECTED` = `{osm_reconciliation_summary["TYPE_1_SAME_CANONICAL_OSM_ENTITY_CORRECTED"]}`):** Same canonical OSM entity where the audit cited an outdated/alternate OSM ID -> corrected to exact `osm:<canonical_osm_id>` after verifying the canonical OSM record's tags in `gomate_places_freeze_v2.json` support the field comparison.
      - **Type 2 (`TYPE_2_VERIFIED_ALTERNATE_OSM_ENTITY_CROSSWALK` = `{osm_reconciliation_summary["TYPE_2_VERIFIED_ALTERNATE_OSM_ENTITY_CROSSWALK"]}`):** `0` references required an alternate OSM entity crosswalk.
      - **Type 3 (`TYPE_3_UNSUPPORTED_OSM_REFERENCE_REMOVED` = `{osm_reconciliation_summary["TYPE_3_UNSUPPORTED_OSM_REFERENCE_REMOVED"]}`):** Removed `3` unsupported OSM references and recomputed field status:
-       1. `7ff87c59-62f1-4509-95f4-e83796b9a35c` (`Vincom Plaza`, Hạ Long) `website`: Overture Parquet record `67b0a6b0-f6e8-477d-8517-ef73c56752f7` has `websites=None`; removed `osm:way/537517975` & `osm_website_pointer`, recomputed `CORROBORATED -> MISSING`.
-       2. `a32ce1b4-126b-4544-b5ea-4a7edbab6a0a` (`Furama Resort`, Đà Nẵng) `phone`: canonical `osm:way/485212452` has `phone=+84 236 3847888` (which does not match Overture's `+842363847333`); removed `osm:way/977276708`, retained `CORROBORATED` via `wikivoyage:en:Da_Nang#Furama_Resort` (`+84 5 1138 47333`).
-       3. `afb3793b-7227-4645-a68a-3647c7468638` (`Sen Tây Hồ`, Hà Nội) `address`: canonical `osm:node/443000681` has no `addr:*` tags; removed `osm:way/613491916`, recomputed `CORROBORATED -> UNVERIFIED`.
+       1. `{type3_vincom["poi_id"]}` (`{type3_vincom["name"]}`, {type3_vincom["city"]}) `website`: Overture Parquet record `67b0a6b0-f6e8-477d-8517-ef73c56752f7` has `websites=None`; removed `osm:way/537517975` & `osm_website_pointer`, recomputed `CORROBORATED -> MISSING`.
+       2. `{type3_furama["poi_id"]}` (`{type3_furama["name"]}`, {type3_furama["city"]}) `phone`: canonical `osm:way/485212452` has `phone=+84 236 3847888` (which does not match Overture's `+842363847333`); removed `osm:way/977276708`, retained `CORROBORATED` via `wikivoyage:en:Da_Nang#Furama_Resort` (`+84 5 1138 47333`).
+       3. `{type3_sentayho["poi_id"]}` (`{type3_sentayho["name"]}`, {type3_sentayho["city"]}) `address`: canonical `osm:node/443000681` has no `addr:*` tags; removed `osm:way/613491916`, recomputed `CORROBORATED -> UNVERIFIED`.
 2. **Machine-Verifiable Provenance Binding across All 130 Field Evaluations:**
    - Every reference in `corroboration_sources` and `conflicting_sources` (`canonical_poi:<id>`, `osm:<type>/<id>`, `wikidata:<qid>`, `wikipedia:<lang>:<pageid>`, `wikivoyage:en:<page>#<listing>`, `overture:<gers_id>`, `osm_website_pointer:<url>`) is now machine-verified against local frozen/committed artifacts.
    - Removed all unverified arbitrary string tokens (`official_resort_site:...`, `official_tourism_listing:...`, `official_museum_site:...`) and replaced or downgraded fields where committed sources did not corroborate the value (`74 CORROBORATED`, `16 CONFLICTED`, `28 UNVERIFIED`, `12 MISSING`).
@@ -4425,15 +4561,15 @@ def build_b1b_artifacts(*, refresh_network: bool = False) -> dict[str, Any]:
 
 | Metric | Value |
 |---|---|
-| Total Candidate Sources Evaluated | `{len(candidate_decisions)}` |
+| Total Candidate Sources Evaluated | `{total_candidates}` |
 | `ACCEPT_PRIMARY_CORPUS` (`OPEN_REUSABLE`) | `{accept_count}` |
 | `REFERENCE_ONLY` (`URL_DISCOVERED_FROM_OSM_TAG`, `REUSE_PERMISSION_NOT_ESTABLISHED`) | `{ref_only_count}` |
 | `ACCEPT_RESTRICTED_RESEARCH_ONLY` | `{restricted_count}` |
 | `REJECT` (`MAPPING_REVIEW_REQUIRED` or `LOW_INFORMATION`) | `{reject_count}` |
 | `EXACT_MAPPED` Candidates | `{exact_mapped_count}` |
 | `MAPPING_REVIEW_REQUIRED` Candidates | `{mapping_review_count}` |
-| Accepted Primary Corpus Documents (`evidence_unit_count`) | `{len(acquired_documents)}` |
-| Accepted Independent Source Lineages (`independent_source_lineage_count`) | `{len(accepted_independent_lineages)}` |
+| Accepted Primary Corpus Documents (`evidence_unit_count`) | `{accepted_docs_count}` |
+| Accepted Independent Source Lineages (`independent_source_lineage_count`) | `{accepted_lineages_count}` |
 
 ### Accepted Primary Documents by Source Type & License (`poi_knowledge_acquired_v1.jsonl`)
 
@@ -4461,30 +4597,27 @@ def build_b1b_artifacts(*, refresh_network: bool = False) -> dict[str, Any]:
 | Priority Band | Definition | Before B1B | After B1B (Corrective 03) |
 |---|---|---|---|
 | `P0` | `0` RAG-eligible evidence units (`NO_RAG_ELIGIBLE_EVIDENCE`) | `20` | **`{overall_cov["post_b1b_priority_counts"]["P0"]}`** (`{20 - overall_cov["post_b1b_priority_counts"]["P0"]}` closed) |
-| `P1` | `1` RAG-eligible lineage (`SINGLE_ELIGIBLE_LINEAGE_ONLY`) | `19` | **`{overall_cov["post_b1b_priority_counts"]["P1"]}`** (`2` Hà Nội, `4` Đà Nẵng, `3` Hạ Long) |
-| `P2` | `>=2` RAG-eligible lineages, structured only (`STRUCTURED_ONLY_NO_NARRATIVE`) | `21` | **`{overall_cov["post_b1b_priority_counts"]["P2"]}`** (`2` Hà Nội, `3` Đà Nẵng, `8` Hạ Long) |
-| `P3` | `>=2` RAG-eligible lineages with BOTH structured & narrative evidence | `0` | **`{overall_cov["post_b1b_priority_counts"]["P3"]}`** (`14` Hà Nội, `12` Đà Nẵng, `3` Hạ Long) |
+| `P1` | `1` RAG-eligible lineage (`SINGLE_ELIGIBLE_LINEAGE_ONLY`) | `19` | **`{overall_cov["post_b1b_priority_counts"]["P1"]}`** ({_fmt_prio_city_split("P1")}) |
+| `P2` | `>=2` RAG-eligible lineages, structured only (`STRUCTURED_ONLY_NO_NARRATIVE`) | `21` | **`{overall_cov["post_b1b_priority_counts"]["P2"]}`** ({_fmt_prio_city_split("P2")}) |
+| `P3` | `>=2` RAG-eligible lineages with BOTH structured & narrative evidence | `0` | **`{overall_cov["post_b1b_priority_counts"]["P3"]}`** ({_fmt_prio_city_split("P3")}) |
 
 ### Coverage by City
 
 | City | Target POIs | RAG-Candidate Eligible | `>=2` Eligible Lineages | Narrative Evidence | Useful Structured | Both Structured & Narrative | Post-B1B Priorities (`P0/P1/P2/P3`) |
 |---|---|---|---|---|---|---|---|
-| **Hà Nội** | `20` | **`18 / 20` (`90.0%`)** | `16 / 20` (`80.0%`) | `14 / 20` (`70.0%`) | `18 / 20` (`90.0%`) | `14 / 20` (`70.0%`) | `2 / 2 / 2 / 14` |
-| **Đà Nẵng** | `20` | **`19 / 20` (`95.0%`)** | `15 / 20` (`75.0%`) | `12 / 20` (`60.0%`) | `19 / 20` (`95.0%`) | `12 / 20` (`60.0%`) | `1 / 4 / 3 / 12` |
-| **Hạ Long** | `20` | **`14 / 20` (`70.0%`)** | `11 / 20` (`55.0%`) | `6 / 20` (`30.0%`) | `11 / 20` (`55.0%`) | `3 / 20` (`15.0%`) | `6 / 3 / 8 / 3` |
-| **Total** | **`60`** | **`51 / 60` (`85.0%`)** | **`42 / 60` (`70.0%`)** | **`32 / 60` (`53.3%`)** | **`48 / 60` (`80.0%`)** | **`29 / 60` (`48.3%`)** | **`9 / 9 / 13 / 29`** |
+{city_cov_table_md}
 
 ## 5. Remaining Gap Reasons & Measured Activity Counters
 
-- **Remaining `P0` (`9` POIs: `6` Hạ Long, `1` Đà Nẵng, `2` Hà Nội):**
-  - `0931b06b-4563-4af0-a3a4-75f1ad8392ee` (`Vườn hoa`, Hạ Long), `6215446b-2fdd-4014-aacf-23de6e45e264` (`Chợ Hạ Long II`, Hạ Long), `708ee182-c879-477c-b920-516e2c99b0a6` (`Công viên Lán Bè`, Hạ Long), `77af14b6-85ac-4c91-873a-e7da27d555f4` (`Hang Luồn Cave Entrance`, Hạ Long), `8fe33554-7a07-4eb2-870f-8af643d8c728` (`Vườn hoa Thị trấn Trới`, Hạ Long), `b57b3f7d-9704-44b0-8139-19bea1998391` (`Sữa chua trân châu Hạ Long cơ sở 00`, Hạ Long), `c2afbb07-aaf9-47c1-9877-d17e64422066` (`Chợ Bắc Mỹ An`, Đà Nẵng — Overture `Chợ Bắc Mỹ An Online` rejected under `FC-006`), `4146f2b7-8289-4309-b7e6-60ba7de3470e` (`Cà Phê Nola`, Hà Nội), `b0641225-0f38-4bcc-9f4c-34f65fa50d45` (`Cửa Hàng Bánh Tôm Hồ Tây`, Hà Nội).
+- **Remaining `P0` (`{opc["P0"]}` POIs: `{by_city_cov["Hạ Long"]["post_b1b_priority_counts"]["P0"]}` Hạ Long, `{by_city_cov["Đà Nẵng"]["post_b1b_priority_counts"]["P0"]}` Đà Nẵng, `{by_city_cov["Hà Nội"]["post_b1b_priority_counts"]["P0"]}` Hà Nội):**
+  - {p0_list_md}.
 - **Measured External Activity & Zero-Violation Counters:**
   - `MEASURED_HTTP_API_REQUESTS = {measured_http_api_requests}` (`{wp_http_requests}` Wikipedia + `{wd_http_requests}` Wikidata + `{wv_http_requests}` Wikivoyage; `CORRECTIVE_03_NEW_HTTP_REQUESTS = {corrective_03_new_http_requests}`)
   - `WEB_SOURCE_PAGES_CHECKED = {measured_web_pages_checked}` (`{wp_pages_checked}` Wikipedia + `{wd_entities_checked}` Wikidata + `{wv_pages_checked}` Wikivoyage)
   - `WEB_DOCUMENTS_DOWNLOADED = {measured_web_docs_downloaded}`
   - `LOCAL_OVERTURE_PARQUET_RECORDS_INSPECTED = {measured_overture_records_inspected}`
   - `OSM_TAG_WEBSITE_URLS_DISCOVERED_NOT_FETCHED = {measured_osm_website_urls_not_fetched}`
-  - `OPEN_REUSABLE_DOCUMENTS_ACCEPTED = {len(acquired_documents)}`
+  - `OPEN_REUSABLE_DOCUMENTS_ACCEPTED = {accepted_docs_count}`
   - `REFERENCE_ONLY_SOURCES = {ref_only_count}`
   - `RESEARCH_RESTRICTED_SOURCES = {restricted_count}`
   - `REJECTED_SOURCES = {reject_count}`
@@ -4506,23 +4639,38 @@ def build_b1b_artifacts(*, refresh_network: bool = False) -> dict[str, Any]:
   - Internal `artifact_sha256`: `{summary_saved["artifact_sha256"]}`
   - File LF SHA256: `{summary_lf_sha256}`
 """
+
+
+def render_report_from_committed_artifacts() -> str:
+    """Deterministically regenerate only the Markdown report from committed JSON/JSONL artifacts."""
+    target_manifest = json.loads(TARGET_60_PATH.read_text(encoding="utf-8"))
+    decisions_saved = json.loads(DECISIONS_JSON_PATH.read_text(encoding="utf-8"))
+    summary_saved = json.loads(SUMMARY_JSON_PATH.read_text(encoding="utf-8"))
+    decisions_lf_sha256 = w07_a2.compute_file_sha256(DECISIONS_JSON_PATH)
+    acquired_jsonl_lf_sha256 = w07_a2.compute_file_sha256(ACQUIRED_JSONL_PATH)
+    summary_lf_sha256 = w07_a2.compute_file_sha256(SUMMARY_JSON_PATH)
+    report_md = render_b1b_report_markdown(
+        target_manifest=target_manifest,
+        decisions_saved=decisions_saved,
+        summary_saved=summary_saved,
+        decisions_lf_sha256=decisions_lf_sha256,
+        acquired_jsonl_lf_sha256=acquired_jsonl_lf_sha256,
+        summary_lf_sha256=summary_lf_sha256,
+    )
     REPORT_MD_PATH.parent.mkdir(parents=True, exist_ok=True)
     REPORT_MD_PATH.write_bytes(report_md.replace("\r\n", "\n").encode("utf-8"))
-
-    return {
-        "decisions_internal_sha256": decisions_saved["artifact_sha256"],
-        "decisions_lf_sha256": decisions_lf_sha256,
-        "acquired_jsonl_lf_sha256": acquired_jsonl_lf_sha256,
-        "summary_internal_sha256": summary_saved["artifact_sha256"],
-        "summary_lf_sha256": summary_lf_sha256,
-        "report_lf_sha256": w07_a2.compute_file_sha256(REPORT_MD_PATH),
-    }
+    return w07_a2.compute_file_sha256(REPORT_MD_PATH)
 
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="W07-B1B Targeted POI Knowledge Acquisition Runner")
     parser.add_argument(
         "--verify-idempotency", action="store_true", help="Verify existing artifacts without duplicating documents"
+    )
+    parser.add_argument(
+        "--render-report-only",
+        action="store_true",
+        help="Deterministically regenerate Markdown report offline from committed JSON artifacts without touching corpus data",
     )
     parser.add_argument(
         "--refresh-network", action="store_true", help="Re-fetch Wikimedia APIs instead of using committed cache"
@@ -4535,6 +4683,11 @@ def main(argv: list[str] | None = None) -> int:
         doc_ids = [d["document_id"] for d in lines]
         assert len(doc_ids) == len(set(doc_ids)), "Duplicate document_ids found in JSONL"
         print(f"PASS: W07-B1B idempotency verified ({len(lines)} unique documents, 0 duplicates).")
+        return 0
+
+    if args.render_report_only:
+        report_sha = render_report_from_committed_artifacts()
+        print(json.dumps({"report_lf_sha256": report_sha}, indent=2))
         return 0
 
     hashes = build_b1b_artifacts(refresh_network=args.refresh_network)

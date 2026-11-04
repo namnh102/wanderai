@@ -1042,9 +1042,18 @@ def verify_b1b_artifacts() -> dict[str, Any]:
         if actual_sha != expected_sha:
             raise ValueError(f"Upstream artifact modified: {rel_path} ({actual_sha} != {expected_sha})")
 
-    # Verify report contains hashes
+    # Verify report contains hashes and matches JSON statistics & canonical POI manifest
     if decisions["artifact_sha256"] not in report_md or summary["artifact_sha256"] not in report_md:
         raise ValueError("Markdown report does not match JSON artifact hashes")
+    validate_markdown_report_consistency(
+        report_md=report_md,
+        target_manifest=target_manifest,
+        decisions=decisions,
+        summary=summary,
+        decisions_lf_sha256=linked["source_decisions_lf_sha256"],
+        acquired_jsonl_lf_sha256=linked["acquired_corpus_jsonl_lf_sha256"],
+        summary_lf_sha256=w07_a2.compute_file_sha256(b1b.SUMMARY_JSON_PATH),
+    )
 
     return {
         "status": "PASS",
@@ -1060,6 +1069,201 @@ def verify_b1b_artifacts() -> dict[str, Any]:
         "pois_with_rag_evidence": ov_cov["pois_with_rag_candidate_evidence"],
         "W07_B1B_CORPUS_ACQUISITION_READY_FOR_B2": summary["W07_B1B_CORPUS_ACQUISITION_READY_FOR_B2"],
     }
+
+
+def validate_markdown_report_consistency(
+    report_md: str,
+    target_manifest: dict[str, Any],
+    decisions: dict[str, Any],
+    summary: dict[str, Any],
+    *,
+    decisions_lf_sha256: str | None = None,
+    acquired_jsonl_lf_sha256: str | None = None,
+    summary_lf_sha256: str | None = None,
+) -> None:
+    """Validate that Markdown report POI cities, priority splits, and city coverage tables match committed JSON."""
+    full_poi_map: dict[str, dict[str, Any]] = {p["poi_id"]: p for p in target_manifest["pois"]}
+    prefix8_poi_map: dict[str, dict[str, Any]] = {p["poi_id"][:8]: p for p in target_manifest["pois"]}
+
+    # 1. Verify every full-UUID POI city label in the report matches the frozen 60-POI manifest
+    full_uuid_pattern = re.compile(
+        r"`([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})`\s*\(`([^`]+)`,\s*(Hà Nội|Đà Nẵng|Hạ Long)(?:\s*—[^)]*)?\)"
+    )
+    full_matches = full_uuid_pattern.findall(report_md)
+    if len(full_matches) < 12:
+        raise ValueError(
+            f"REPORT_POI_CITY_MISMATCH: Expected >=12 full-UUID POI city citations in report, found {len(full_matches)}"
+        )
+    for poi_id, cited_name, cited_city in full_matches:
+        if poi_id not in full_poi_map:
+            raise ValueError(f"REPORT_POI_CITY_MISMATCH: Unknown canonical poi_id {poi_id} in report")
+        canonical = full_poi_map[poi_id]
+        if cited_name != canonical["name"]:
+            raise ValueError(
+                f"REPORT_POI_CITY_MISMATCH: POI {poi_id} cited name '{cited_name}' != canonical '{canonical['name']}'"
+            )
+        if cited_city != canonical["city"]:
+            raise ValueError(
+                f"REPORT_POI_CITY_MISMATCH: POI {poi_id} ({cited_name}) cited city '{cited_city}' != canonical '{canonical['city']}'"
+            )
+
+    # 2. Verify every 8-char UUID prefix POI city label in the 26-record Overture table matches the frozen manifest
+    prefix8_pattern = re.compile(r"`([0-9a-f]{8})`\s*\(([^,)]+),\s*(Hà Nội|Đà Nẵng|Hạ Long)\)")
+    prefix_matches = prefix8_pattern.findall(report_md)
+    if len(prefix_matches) != 26:
+        raise ValueError(
+            f"REPORT_POI_CITY_MISMATCH: Expected 26 8-char POI city citations in Overture audit table, found {len(prefix_matches)}"
+        )
+    for prefix8, cited_name, cited_city in prefix_matches:
+        if prefix8 not in prefix8_poi_map:
+            raise ValueError(f"REPORT_POI_CITY_MISMATCH: Unknown 8-char POI prefix {prefix8} in report")
+        canonical = prefix8_poi_map[prefix8]
+        if cited_name != canonical["name"]:
+            raise ValueError(
+                f"REPORT_POI_CITY_MISMATCH: POI {prefix8} cited name '{cited_name}' != canonical '{canonical['name']}'"
+            )
+        if cited_city != canonical["city"]:
+            raise ValueError(
+                f"REPORT_POI_CITY_MISMATCH: POI {prefix8} ({cited_name}) cited city '{cited_city}' != canonical '{canonical['city']}'"
+            )
+
+    # 3. Verify summary coverage_after_acquisition.by_city matches recomputed poi_coverage_records
+    cov_records = summary.get("poi_coverage_records", [])
+    if len(cov_records) != 60:
+        raise ValueError(f"Expected 60 poi_coverage_records in summary, got {len(cov_records)}")
+    by_city = summary["coverage_after_acquisition"]["by_city"]
+    overall_cov = summary["coverage_after_acquisition"]["overall_60_pois"]
+
+    for city_name in ("Hà Nội", "Đà Nẵng", "Hạ Long"):
+        city_recs = [r for r in cov_records if r["city"] == city_name]
+        cc = by_city[city_name]
+        if cc["total_pois"] != len(city_recs):
+            raise ValueError(f"REPORT_CITY_COVERAGE_MISMATCH: {city_name} total_pois mismatch against records")
+        if cc["pois_with_2_plus_eligible_lineages"] != sum(
+            1 for r in city_recs if r["rag_candidate_eligible_lineage_count"] >= 2
+        ):
+            raise ValueError(
+                f"REPORT_ELIGIBLE_LINEAGE_COVERAGE_MISMATCH: {city_name} by_city 2+ lineages disagrees with poi_coverage_records"
+            )
+        for prio in ("P0", "P1", "P2", "P3"):
+            rec_prio_count = sum(1 for r in city_recs if r["post_b1b_priority"] == prio)
+            if cc["post_b1b_priority_counts"][prio] != rec_prio_count:
+                raise ValueError(
+                    f"REPORT_CITY_PRIORITY_TOTALS_MISMATCH: {city_name} {prio} by_city ({cc['post_b1b_priority_counts'][prio]}) != poi_coverage_records ({rec_prio_count})"
+                )
+
+    # 4. Verify Section 4 Priority Distribution Shift table (P1, P2, P3 city splits)
+    prio_shift_pattern = re.compile(
+        r"\|\s*`(P[123])`\s*\|[^|]+\|\s*`(\d+)`\s*\|\s*\*\*`(\d+)`\*\*\s*\(`(\d+)`\s*Hà Nội,\s*`(\d+)`\s*Đà Nẵng,\s*`(\d+)`\s*Hạ Long\)\s*\|"
+    )
+    prio_shift_matches = {m[0]: m[1:] for m in prio_shift_pattern.findall(report_md)}
+    for prio in ("P1", "P2", "P3"):
+        if prio not in prio_shift_matches:
+            raise ValueError(
+                f"REPORT_CITY_PRIORITY_TOTALS_MISMATCH: Missing or malformed {prio} row in Priority Distribution Shift table"
+            )
+        before_s, after_s, hn_s, dn_s, hl_s = prio_shift_matches[prio]
+        exp_before = summary["priority_shift_summary"]["before_b1b"][prio]
+        exp_after = overall_cov["post_b1b_priority_counts"][prio]
+        exp_hn = by_city["Hà Nội"]["post_b1b_priority_counts"][prio]
+        exp_dn = by_city["Đà Nẵng"]["post_b1b_priority_counts"][prio]
+        exp_hl = by_city["Hạ Long"]["post_b1b_priority_counts"][prio]
+        if int(before_s) != exp_before or int(after_s) != exp_after:
+            raise ValueError(
+                f"REPORT_CITY_PRIORITY_TOTALS_MISMATCH: {prio} total {before_s}->{after_s} != JSON {exp_before}->{exp_after}"
+            )
+        if (int(hn_s), int(dn_s), int(hl_s)) != (exp_hn, exp_dn, exp_hl):
+            raise ValueError(
+                f"REPORT_CITY_PRIORITY_TOTALS_MISMATCH: {prio} city split ({hn_s}, {dn_s}, {hl_s}) != JSON ({exp_hn}, {exp_dn}, {exp_hl})"
+            )
+
+    # 5. Verify Section 4 Coverage by City table rows (Hà Nội, Đà Nẵng, Hạ Long, Total)
+    city_row_pattern = re.compile(
+        r"\|\s*\*\*(Hà Nội|Đà Nẵng|Hạ Long|Total)\*\*\s*\|\s*(?:\*\*)?`(\d+)`(?:\*\*)?\s*\|\s*"
+        r"\*\*`(\d+)\s*/\s*(\d+)`\s*\(`([0-9.]+)%`\)\*\*\s*\|\s*"
+        r"(?:\*\*)?`(\d+)\s*/\s*(\d+)`\s*\(`([0-9.]+)%`\)(?:\*\*)?\s*\|\s*"
+        r"(?:\*\*)?`(\d+)\s*/\s*(\d+)`\s*\(`([0-9.]+)%`\)(?:\*\*)?\s*\|\s*"
+        r"(?:\*\*)?`(\d+)\s*/\s*(\d+)`\s*\(`([0-9.]+)%`\)(?:\*\*)?\s*\|\s*"
+        r"(?:\*\*)?`(\d+)\s*/\s*(\d+)`\s*\(`([0-9.]+)%`\)(?:\*\*)?\s*\|\s*"
+        r"(?:\*\*)?`(\d+)\s*/\s*(\d+)\s*/\s*(\d+)\s*/\s*(\d+)`(?:\*\*)?\s*\|"
+    )
+    parsed_city_rows = {m[0]: m[1:] for m in city_row_pattern.findall(report_md)}
+    for row_label in ("Hà Nội", "Đà Nẵng", "Hạ Long", "Total"):
+        if row_label not in parsed_city_rows:
+            raise ValueError(f"REPORT_CITY_COVERAGE_MISMATCH: Missing or malformed '{row_label}' row in Coverage by City table")
+        vals = parsed_city_rows[row_label]
+        (
+            tot_s,
+            rag_n,
+            rag_d,
+            rag_pct,
+            lin2_n,
+            lin2_d,
+            lin2_pct,
+            nar_n,
+            nar_d,
+            nar_pct,
+            str_n,
+            str_d,
+            str_pct,
+            both_n,
+            both_d,
+            both_pct,
+            p0_s,
+            p1_s,
+            p2_s,
+            p3_s,
+        ) = vals
+        exp = overall_cov if row_label == "Total" else by_city[row_label]
+        exp_tot = exp["total_pois"]
+        if int(tot_s) != exp_tot:
+            raise ValueError(f"REPORT_CITY_COVERAGE_MISMATCH: {row_label} total_pois {tot_s} != {exp_tot}")
+
+        # Check >=2 eligible lineages specifically
+        exp_lin2 = exp["pois_with_2_plus_eligible_lineages"]
+        exp_lin2_pct = f"{(exp_lin2 / exp_tot) * 100.0:.1f}"
+        if int(lin2_n) != exp_lin2 or int(lin2_d) != exp_tot or lin2_pct != exp_lin2_pct:
+            raise ValueError(
+                f"REPORT_ELIGIBLE_LINEAGE_COVERAGE_MISMATCH: {row_label} >=2 eligible lineages "
+                f"{lin2_n}/{lin2_d} ({lin2_pct}%) != JSON {exp_lin2}/{exp_tot} ({exp_lin2_pct}%)"
+            )
+
+        # Check other coverage columns
+        for col_name, n_s, d_s, pct_s, exp_key in (
+            ("RAG-Candidate Eligible", rag_n, rag_d, rag_pct, "pois_with_rag_candidate_evidence"),
+            ("Narrative Evidence", nar_n, nar_d, nar_pct, "pois_with_narrative_evidence"),
+            ("Useful Structured", str_n, str_d, str_pct, "pois_with_structured_evidence"),
+            ("Both Structured & Narrative", both_n, both_d, both_pct, "pois_with_both_structured_and_narrative"),
+        ):
+            exp_val = exp[exp_key]
+            exp_pct_s = f"{(exp_val / exp_tot) * 100.0:.1f}"
+            if int(n_s) != exp_val or int(d_s) != exp_tot or pct_s != exp_pct_s:
+                raise ValueError(
+                    f"REPORT_CITY_COVERAGE_MISMATCH: {row_label} {col_name} {n_s}/{d_s} ({pct_s}%) != JSON {exp_val}/{exp_tot} ({exp_pct_s}%)"
+                )
+
+        # Check P0/P1/P2/P3 priorities
+        ep = exp["post_b1b_priority_counts"]
+        if (int(p0_s), int(p1_s), int(p2_s), int(p3_s)) != (ep["P0"], ep["P1"], ep["P2"], ep["P3"]):
+            raise ValueError(
+                f"REPORT_CITY_PRIORITY_TOTALS_MISMATCH: {row_label} P0/P1/P2/P3 "
+                f"{p0_s}/{p1_s}/{p2_s}/{p3_s} != JSON {ep['P0']}/{ep['P1']}/{ep['P2']}/{ep['P3']}"
+            )
+
+    # 6. Verify deterministic report generator output matches report_md when LF hashes are provided
+    if decisions_lf_sha256 and acquired_jsonl_lf_sha256 and summary_lf_sha256:
+        expected_md = b1b.render_b1b_report_markdown(
+            target_manifest=target_manifest,
+            decisions_saved=decisions,
+            summary_saved=summary,
+            decisions_lf_sha256=decisions_lf_sha256,
+            acquired_jsonl_lf_sha256=acquired_jsonl_lf_sha256,
+            summary_lf_sha256=summary_lf_sha256,
+        )
+        if report_md.replace("\r\n", "\n") != expected_md.replace("\r\n", "\n"):
+            raise ValueError(
+                "REPORT_GENERATOR_DRIFT_DETECTED: Markdown report differs from deterministic generator output"
+            )
 
 
 def main(argv: list[str] | None = None) -> int:

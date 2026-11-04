@@ -585,3 +585,174 @@ def test_21_unverified_contact_address_website_explicitly_qualified_and_excluded
     )
     with pytest.raises(ValueError, match="UNQUALIFIED_UNVERIFIED_FACT_IN_RAW_TEXT"):
         b1b_verify.validate_document_content_utility(doc_with_unverified)
+
+
+def test_22_markdown_report_consistency_with_json_and_manifest():
+    target_manifest = json.loads(b1b_acquire.TARGET_60_PATH.read_text(encoding="utf-8"))
+    decisions = json.loads(b1b_acquire.DECISIONS_JSON_PATH.read_text(encoding="utf-8"))
+    summary = json.loads(b1b_acquire.SUMMARY_JSON_PATH.read_text(encoding="utf-8"))
+    report_md = b1b_acquire.REPORT_MD_PATH.read_text(encoding="utf-8")
+
+    b1b_verify.validate_markdown_report_consistency(
+        report_md,
+        target_manifest,
+        decisions,
+        summary,
+        decisions_lf_sha256=b1b_verify.w07_a2.compute_file_sha256(b1b_acquire.DECISIONS_JSON_PATH),
+        acquired_jsonl_lf_sha256=b1b_verify.w07_a2.compute_file_sha256(b1b_acquire.ACQUIRED_JSONL_PATH),
+        summary_lf_sha256=b1b_verify.w07_a2.compute_file_sha256(b1b_acquire.SUMMARY_JSON_PATH),
+    )
+
+    # DRIFT-01: Vincom Plaza (7ff87c59-62f1-4509-95f4-e83796b9a35c) must be Đà Nẵng, never Hạ Long
+    assert (
+        "`7ff87c59-62f1-4509-95f4-e83796b9a35c` (`Vincom Plaza`, Đà Nẵng)" in report_md
+    )
+    assert (
+        "`7ff87c59-62f1-4509-95f4-e83796b9a35c` (`Vincom Plaza`, Hạ Long)" not in report_md
+    )
+
+    # DRIFT-02: Priority Distribution Shift post-B1B city splits
+    assert (
+        "| `P1` | `1` RAG-eligible lineage (`SINGLE_ELIGIBLE_LINEAGE_ONLY`) | `19` | **`9`** (`2` Hà Nội, `3` Đà Nẵng, `4` Hạ Long) |"
+        in report_md
+    )
+    assert (
+        "| `P2` | `>=2` RAG-eligible lineages, structured only (`STRUCTURED_ONLY_NO_NARRATIVE`) | `21` | **`13`** (`2` Hà Nội, `4` Đà Nẵng, `7` Hạ Long) |"
+        in report_md
+    )
+
+    # DRIFT-03: Coverage by City table rows for Đà Nẵng and Hạ Long
+    assert (
+        "| **Đà Nẵng** | `20` | **`19 / 20` (`95.0%`)** | `16 / 20` (`80.0%`) | `12 / 20` (`60.0%`) | `19 / 20` (`95.0%`) | `12 / 20` (`60.0%`) | `1 / 3 / 4 / 12` |"
+        in report_md
+    )
+    assert (
+        "| **Hạ Long** | `20` | **`14 / 20` (`70.0%`)** | `10 / 20` (`50.0%`) | `6 / 20` (`30.0%`) | `11 / 20` (`55.0%`) | `3 / 20` (`15.0%`) | `6 / 4 / 7 / 3` |"
+        in report_md
+    )
+
+    # Deterministic generator output matches committed Markdown report byte-for-byte
+    rendered_md = b1b_acquire.render_b1b_report_markdown(
+        target_manifest=target_manifest,
+        decisions_saved=decisions,
+        summary_saved=summary,
+        decisions_lf_sha256=b1b_verify.w07_a2.compute_file_sha256(b1b_acquire.DECISIONS_JSON_PATH),
+        acquired_jsonl_lf_sha256=b1b_verify.w07_a2.compute_file_sha256(b1b_acquire.ACQUIRED_JSONL_PATH),
+        summary_lf_sha256=b1b_verify.w07_a2.compute_file_sha256(b1b_acquire.SUMMARY_JSON_PATH),
+    )
+    assert rendered_md == report_md
+
+
+def test_23_negative_report_verifier_rejects_wrong_poi_city_and_statistical_drifts(
+    monkeypatch, tmp_path
+):
+    target_manifest = json.loads(b1b_acquire.TARGET_60_PATH.read_text(encoding="utf-8"))
+    decisions = json.loads(b1b_acquire.DECISIONS_JSON_PATH.read_text(encoding="utf-8"))
+    summary = json.loads(b1b_acquire.SUMMARY_JSON_PATH.read_text(encoding="utf-8"))
+    report_md = b1b_acquire.REPORT_MD_PATH.read_text(encoding="utf-8")
+    decisions_sha = b1b_verify.w07_a2.compute_file_sha256(b1b_acquire.DECISIONS_JSON_PATH)
+    acquired_sha = b1b_verify.w07_a2.compute_file_sha256(b1b_acquire.ACQUIRED_JSONL_PATH)
+    summary_sha = b1b_verify.w07_a2.compute_file_sha256(b1b_acquire.SUMMARY_JSON_PATH)
+
+    # 1. Negative test: Report POI has the wrong city (DRIFT-01 in Type-3 bullet or Overture table)
+    drift_01_bullet = report_md.replace(
+        "`7ff87c59-62f1-4509-95f4-e83796b9a35c` (`Vincom Plaza`, Đà Nẵng)",
+        "`7ff87c59-62f1-4509-95f4-e83796b9a35c` (`Vincom Plaza`, Hạ Long)",
+    )
+    assert drift_01_bullet != report_md
+    with pytest.raises(ValueError, match="REPORT_POI_CITY_MISMATCH"):
+        b1b_verify.validate_markdown_report_consistency(
+            drift_01_bullet,
+            target_manifest,
+            decisions,
+            summary,
+            decisions_lf_sha256=decisions_sha,
+            acquired_jsonl_lf_sha256=acquired_sha,
+            summary_lf_sha256=summary_sha,
+        )
+
+    drift_01_table = report_md.replace(
+        "`7ff87c59` (Vincom Plaza, Đà Nẵng)",
+        "`7ff87c59` (Vincom Plaza, Hạ Long)",
+    )
+    assert drift_01_table != report_md
+    with pytest.raises(ValueError, match="REPORT_POI_CITY_MISMATCH"):
+        b1b_verify.validate_markdown_report_consistency(
+            drift_01_table,
+            target_manifest,
+            decisions,
+            summary,
+            decisions_lf_sha256=decisions_sha,
+            acquired_jsonl_lf_sha256=acquired_sha,
+            summary_lf_sha256=summary_sha,
+        )
+
+    # 2. Negative test: City-level P0/P1/P2/P3 totals in the report disagree with JSON (DRIFT-02 / DRIFT-03)
+    drift_02_priority_shift = report_md.replace(
+        "**`9`** (`2` Hà Nội, `3` Đà Nẵng, `4` Hạ Long)",
+        "**`9`** (`2` Hà Nội, `4` Đà Nẵng, `3` Hạ Long)",
+    )
+    assert drift_02_priority_shift != report_md
+    with pytest.raises(ValueError, match="REPORT_CITY_PRIORITY_TOTALS_MISMATCH"):
+        b1b_verify.validate_markdown_report_consistency(
+            drift_02_priority_shift,
+            target_manifest,
+            decisions,
+            summary,
+            decisions_lf_sha256=decisions_sha,
+            acquired_jsonl_lf_sha256=acquired_sha,
+            summary_lf_sha256=summary_sha,
+        )
+
+    drift_02_city_table_priority = report_md.replace(
+        "| **Đà Nẵng** | `20` | **`19 / 20` (`95.0%`)** | `16 / 20` (`80.0%`) | `12 / 20` (`60.0%`) | `19 / 20` (`95.0%`) | `12 / 20` (`60.0%`) | `1 / 3 / 4 / 12` |",
+        "| **Đà Nẵng** | `20` | **`19 / 20` (`95.0%`)** | `16 / 20` (`80.0%`) | `12 / 20` (`60.0%`) | `19 / 20` (`95.0%`) | `12 / 20` (`60.0%`) | `1 / 4 / 3 / 12` |",
+    )
+    assert drift_02_city_table_priority != report_md
+    with pytest.raises(ValueError, match="REPORT_CITY_PRIORITY_TOTALS_MISMATCH"):
+        b1b_verify.validate_markdown_report_consistency(
+            drift_02_city_table_priority,
+            target_manifest,
+            decisions,
+            summary,
+            decisions_lf_sha256=decisions_sha,
+            acquired_jsonl_lf_sha256=acquired_sha,
+            summary_lf_sha256=summary_sha,
+        )
+
+    # 3. Negative test: Eligible-lineage coverage values disagree with JSON (DRIFT-03)
+    drift_03_eligible_lineage = report_md.replace(
+        "| **Đà Nẵng** | `20` | **`19 / 20` (`95.0%`)** | `16 / 20` (`80.0%`) | `12 / 20` (`60.0%`) | `19 / 20` (`95.0%`) | `12 / 20` (`60.0%`) | `1 / 3 / 4 / 12` |",
+        "| **Đà Nẵng** | `20` | **`19 / 20` (`95.0%`)** | `15 / 20` (`75.0%`) | `12 / 20` (`60.0%`) | `19 / 20` (`95.0%`) | `12 / 20` (`60.0%`) | `1 / 3 / 4 / 12` |",
+    )
+    assert drift_03_eligible_lineage != report_md
+    with pytest.raises(ValueError, match="REPORT_ELIGIBLE_LINEAGE_COVERAGE_MISMATCH"):
+        b1b_verify.validate_markdown_report_consistency(
+            drift_03_eligible_lineage,
+            target_manifest,
+            decisions,
+            summary,
+            decisions_lf_sha256=decisions_sha,
+            acquired_jsonl_lf_sha256=acquired_sha,
+            summary_lf_sha256=summary_sha,
+        )
+
+    # 4. Negative test: Report generation / committed Markdown reintroduces drift relative to generator or via verify_b1b_artifacts
+    drift_04_generator = report_md + "\n<!-- drifted -->\n"
+    with pytest.raises(ValueError, match="REPORT_GENERATOR_DRIFT_DETECTED"):
+        b1b_verify.validate_markdown_report_consistency(
+            drift_04_generator,
+            target_manifest,
+            decisions,
+            summary,
+            decisions_lf_sha256=decisions_sha,
+            acquired_jsonl_lf_sha256=acquired_sha,
+            summary_lf_sha256=summary_sha,
+        )
+
+    drifted_md_path = tmp_path / "drifted_report.md"
+    drifted_md_path.write_text(drift_01_bullet, encoding="utf-8")
+    monkeypatch.setattr(b1b_verify.b1b, "REPORT_MD_PATH", drifted_md_path)
+    with pytest.raises(ValueError, match="REPORT_POI_CITY_MISMATCH"):
+        b1b_verify.verify_b1b_artifacts()
+

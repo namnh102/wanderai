@@ -24,7 +24,7 @@
      - **Type 1 (`TYPE_1_SAME_CANONICAL_OSM_ENTITY_CORRECTED` = `40`):** Same canonical OSM entity where the audit cited an outdated/alternate OSM ID -> corrected to exact `osm:<canonical_osm_id>` after verifying the canonical OSM record's tags in `gomate_places_freeze_v2.json` support the field comparison.
      - **Type 2 (`TYPE_2_VERIFIED_ALTERNATE_OSM_ENTITY_CROSSWALK` = `0`):** `0` references required an alternate OSM entity crosswalk.
      - **Type 3 (`TYPE_3_UNSUPPORTED_OSM_REFERENCE_REMOVED` = `3`):** Removed `3` unsupported OSM references and recomputed field status:
-       1. `7ff87c59-62f1-4509-95f4-e83796b9a35c` (`Vincom Plaza`, Hạ Long) `website`: Overture Parquet record `67b0a6b0-f6e8-477d-8517-ef73c56752f7` has `websites=None`; removed `osm:way/537517975` & `osm_website_pointer`, recomputed `CORROBORATED -> MISSING`.
+       1. `7ff87c59-62f1-4509-95f4-e83796b9a35c` (`Vincom Plaza`, Đà Nẵng) `website`: Overture Parquet record `67b0a6b0-f6e8-477d-8517-ef73c56752f7` has `websites=None`; removed `osm:way/537517975` & `osm_website_pointer`, recomputed `CORROBORATED -> MISSING`.
        2. `a32ce1b4-126b-4544-b5ea-4a7edbab6a0a` (`Furama Resort`, Đà Nẵng) `phone`: canonical `osm:way/485212452` has `phone=+84 236 3847888` (which does not match Overture's `+842363847333`); removed `osm:way/977276708`, retained `CORROBORATED` via `wikivoyage:en:Da_Nang#Furama_Resort` (`+84 5 1138 47333`).
        3. `afb3793b-7227-4645-a68a-3647c7468638` (`Sen Tây Hồ`, Hà Nội) `address`: canonical `osm:node/443000681` has no `addr:*` tags; removed `osm:way/613491916`, recomputed `CORROBORATED -> UNVERIFIED`.
 2. **Machine-Verifiable Provenance Binding across All 130 Field Evaluations:**
@@ -156,8 +156,8 @@
 | Priority Band | Definition | Before B1B | After B1B (Corrective 03) |
 |---|---|---|---|
 | `P0` | `0` RAG-eligible evidence units (`NO_RAG_ELIGIBLE_EVIDENCE`) | `20` | **`9`** (`11` closed) |
-| `P1` | `1` RAG-eligible lineage (`SINGLE_ELIGIBLE_LINEAGE_ONLY`) | `19` | **`9`** (`2` Hà Nội, `4` Đà Nẵng, `3` Hạ Long) |
-| `P2` | `>=2` RAG-eligible lineages, structured only (`STRUCTURED_ONLY_NO_NARRATIVE`) | `21` | **`13`** (`2` Hà Nội, `3` Đà Nẵng, `8` Hạ Long) |
+| `P1` | `1` RAG-eligible lineage (`SINGLE_ELIGIBLE_LINEAGE_ONLY`) | `19` | **`9`** (`2` Hà Nội, `3` Đà Nẵng, `4` Hạ Long) |
+| `P2` | `>=2` RAG-eligible lineages, structured only (`STRUCTURED_ONLY_NO_NARRATIVE`) | `21` | **`13`** (`2` Hà Nội, `4` Đà Nẵng, `7` Hạ Long) |
 | `P3` | `>=2` RAG-eligible lineages with BOTH structured & narrative evidence | `0` | **`29`** (`14` Hà Nội, `12` Đà Nẵng, `3` Hạ Long) |
 
 ### Coverage by City
@@ -165,8 +165,8 @@
 | City | Target POIs | RAG-Candidate Eligible | `>=2` Eligible Lineages | Narrative Evidence | Useful Structured | Both Structured & Narrative | Post-B1B Priorities (`P0/P1/P2/P3`) |
 |---|---|---|---|---|---|---|---|
 | **Hà Nội** | `20` | **`18 / 20` (`90.0%`)** | `16 / 20` (`80.0%`) | `14 / 20` (`70.0%`) | `18 / 20` (`90.0%`) | `14 / 20` (`70.0%`) | `2 / 2 / 2 / 14` |
-| **Đà Nẵng** | `20` | **`19 / 20` (`95.0%`)** | `15 / 20` (`75.0%`) | `12 / 20` (`60.0%`) | `19 / 20` (`95.0%`) | `12 / 20` (`60.0%`) | `1 / 4 / 3 / 12` |
-| **Hạ Long** | `20` | **`14 / 20` (`70.0%`)** | `11 / 20` (`55.0%`) | `6 / 20` (`30.0%`) | `11 / 20` (`55.0%`) | `3 / 20` (`15.0%`) | `6 / 3 / 8 / 3` |
+| **Đà Nẵng** | `20` | **`19 / 20` (`95.0%`)** | `16 / 20` (`80.0%`) | `12 / 20` (`60.0%`) | `19 / 20` (`95.0%`) | `12 / 20` (`60.0%`) | `1 / 3 / 4 / 12` |
+| **Hạ Long** | `20` | **`14 / 20` (`70.0%`)** | `10 / 20` (`50.0%`) | `6 / 20` (`30.0%`) | `11 / 20` (`55.0%`) | `3 / 20` (`15.0%`) | `6 / 4 / 7 / 3` |
 | **Total** | **`60`** | **`51 / 60` (`85.0%`)** | **`42 / 60` (`70.0%`)** | **`32 / 60` (`53.3%`)** | **`48 / 60` (`80.0%`)** | **`29 / 60` (`48.3%`)** | **`9 / 9 / 13 / 29`** |
 
 ## 5. Remaining Gap Reasons & Measured Activity Counters
