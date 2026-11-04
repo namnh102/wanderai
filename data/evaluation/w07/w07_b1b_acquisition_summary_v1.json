@@ -1,0 +1,2649 @@
+{
+  "artifact_id": "w07_b1b_acquisition_summary_v1",
+  "version": "1.3.0",
+  "task_id": "W07-B1B",
+  "corrective_id": "W07-B1B-CORRECTIVE-03",
+  "artifact_snapshot_timestamp": "2026-11-03T18:45:00Z",
+  "authoritative_base_develop_sha": "324163636cedc8391c07cf2deca37d907745bd14",
+  "previous_accepted_gate": "W07-B1-FIX-01B-POSTMERGE-CHATGPT-AUDIT = PASS",
+  "current_gate_status": "W07-B1B-CORRECTIVE-02-FACT-CONSISTENCY-CHATGPT-AUDIT = HOLD-CORRECTIVE-03",
+  "W07_B1_FIX_01B_STATUS": "CLOSED",
+  "PDG_001_STATUS": "CLOSED",
+  "W07_PRIMARY_CORPUS_STRATEGY": "EVIDENCE_GROUNDED_POI_KNOWLEDGE",
+  "PRIMARY_W07_CORPUS": "OPEN_AND_OFFICIAL_POI_KNOWLEDGE",
+  "HIGH_AUTHORITY_DOES_NOT_IMPLY_REUSE_PERMISSION": true,
+  "OVERTURE_LICENSE_IS_THEME_AND_SOURCE_SPECIFIC": true,
+  "GOOGLE_MAPS_ROLE": "RUNTIME_ENRICHMENT_ONLY",
+  "SOCIAL_PLATFORM_ROLE": "DYNAMIC_FRESHNESS_LAYER_NOT_PRIMARY_CORPUS",
+  "SOCIAL_FUTURE_RESERVED_TASK_ID": "SOCIAL-FRESHNESS-01",
+  "PLACE_DISCOVERY_FUTURE_RESERVED_TASK_ID": "PLACE-DISCOVERY-01",
+  "W07_B1B_CORPUS_ACQUISITION_READY_FOR_B2": true,
+  "next_gate": "W07-B1B-CORRECTIVE-03-SOURCE-BINDING-CHATGPT-AUDIT",
+  "existing_controlled_db_baseline": {
+    "TOTAL_DOCUMENTS": 1223,
+    "OSM_DOCUMENTS": 759,
+    "WIKIVOYAGE_DOCUMENTS": 464,
+    "TARGET_USEFUL_STRUCTURED_DOCUMENTS": 40,
+    "TARGET_LOW_INFORMATION_DOCUMENTS": 20,
+    "db_mutated_in_b1b": false
+  },
+  "linked_artifacts": {
+    "source_decisions_path": "data/evaluation/w07/w07_b1b_source_decisions_v1.json",
+    "source_decisions_internal_sha256": "15264c290c9b6a964a331cd88d57a32b968362dcd457591408fe5f3c7e694046",
+    "source_decisions_lf_sha256": "edbec84b6161862d439ce2b5d9687b15bd181656b7fa8ff145a713f74afe1249",
+    "acquired_corpus_jsonl_path": "data/curated/w07/poi_knowledge_acquired_v1.jsonl",
+    "acquired_corpus_jsonl_lf_sha256": "9b0ed36e060924057872a2e8fe9941940f7bc3455f2c9cad21cdc9a9c1141fda",
+    "acquired_corpus_document_count": 97,
+    "accepted_independent_source_lineage_count": 78
+  },
+  "external_activity_counters": {
+    "MEASURED_HTTP_API_REQUESTS": 30,
+    "WIKIPEDIA_API_HTTP_REQUESTS": 25,
+    "WIKIDATA_API_HTTP_REQUESTS": 2,
+    "WIKIVOYAGE_API_HTTP_REQUESTS": 3,
+    "CORRECTIVE_03_NEW_HTTP_REQUESTS": 0,
+    "EXTERNAL_WEBSITE_HTTP_REQUESTS": 0,
+    "WIKIPEDIA_PAGES_FETCHED_VIA_API": 25,
+    "WIKIDATA_ENTITIES_FETCHED_VIA_API": 31,
+    "WIKIVOYAGE_PAGES_FETCHED_VIA_API": 3,
+    "WEB_SOURCE_PAGES_CHECKED": 59,
+    "WEB_DOCUMENTS_DOWNLOADED": 59,
+    "LOCAL_OVERTURE_PARQUET_RECORDS_INSPECTED": 34,
+    "OSM_TAG_WEBSITE_URLS_DISCOVERED_NOT_FETCHED": 16,
+    "OPEN_REUSABLE_DOCUMENTS_ACCEPTED": 97,
+    "ACCEPTED_INDEPENDENT_SOURCE_LINEAGES": 78,
+    "REFERENCE_ONLY_SOURCES": 16,
+    "RESEARCH_RESTRICTED_SOURCES": 0,
+    "REJECTED_SOURCES": 19,
+    "PAID_DATA_API_USED": false,
+    "NEW_SOCIAL_COLLECTION": 0,
+    "NEW_GOOGLE_MAPS_REVIEW_COLLECTION": 0,
+    "NEW_LLM_PROVIDER_CALLS": 0
+  },
+  "temporal_provenance_integrity": {
+    "four_timestamp_fields_separated": true,
+    "fields": [
+      "retrieved_at",
+      "source_published_or_updated_at",
+      "source_terms_checked_at",
+      "artifact_snapshot_timestamp"
+    ],
+    "overture_local_parquet_retrieved_at": "UNKNOWN_HISTORICAL_RETRIEVAL_TIME",
+    "overture_source_published_or_updated_at": "2026-09-23T00:00:00Z",
+    "wikimedia_api_retrieved_at": "UNKNOWN_HISTORICAL_RETRIEVAL_TIME",
+    "b1b_source_terms_checked_at": "UNKNOWN_VERIFICATION_TIME",
+    "artifact_snapshot_timestamp": "2026-11-03T18:45:00Z",
+    "records_with_retrieved_at_equal_to_source_published_at": 0,
+    "records_with_terms_checked_at_equal_to_source_published_at": 0,
+    "records_with_retrieved_at_equal_to_artifact_snapshot_timestamp": 0,
+    "records_with_terms_checked_at_equal_to_artifact_snapshot_timestamp": 0
+  },
+  "wikipedia_narrative_integrity": {
+    "WIKIPEDIA_DOCUMENTS_ACCEPTED": 26,
+    "WIKIPEDIA_DOCUMENTS_WITH_NONEMPTY_ARTICLE_BODY": 26,
+    "WIKIPEDIA_DOCUMENTS_WITH_EMPTY_ARTICLE_BODY": 0,
+    "min_article_body_char_length": 315,
+    "max_article_body_char_length": 55369,
+    "total_article_body_characters": 228661,
+    "mediawiki_query_mode": "SINGLE_TITLE_EXLIMIT_1_PLAIN_TEXT_WITH_REVISION_METADATA"
+  },
+  "overture_quality_and_license_integrity": {
+    "OVERTURE_RECORDS_AUDITED": 26,
+    "OVERTURE_DOCUMENTS_ACCEPTED": 23,
+    "OVERTURE_DOCUMENTS_WITH_NAN_VALUES": 0,
+    "OVERTURE_DOCUMENTS_WITH_CONFLICTED_CLAIMS_IN_RAW_TEXT": 0,
+    "OVERTURE_DOCUMENTS_WITH_UNQUALIFIED_UNVERIFIED_FACTS": 0,
+    "OVERTURE_DEFAULT_LICENSE_FALLBACK_PERMITTED": false,
+    "allowed_open_licenses": [
+      "Apache-2.0",
+      "CC0-1.0",
+      "CDLA-Permissive-2.0"
+    ],
+    "fact_consistency_summary": {
+      "total_overture_records_audited": 26,
+      "total_field_evaluations": 130,
+      "field_status_counts": {
+        "CORROBORATED": 74,
+        "CONFLICTED": 16,
+        "UNVERIFIED": 28,
+        "MISSING": 12
+      },
+      "osm_source_reference_reconciliation_summary": {
+        "OVERTURE_AUDITED_RECORDS": 26,
+        "OSM_SOURCE_REFERENCE_MISMATCHES_IDENTIFIED": 43,
+        "AFFECTED_CANONICAL_POIS": 10,
+        "TYPE_1_SAME_CANONICAL_OSM_ENTITY_CORRECTED": 40,
+        "TYPE_2_VERIFIED_ALTERNATE_OSM_ENTITY_CROSSWALK": 0,
+        "TYPE_3_UNSUPPORTED_OSM_REFERENCE_REMOVED": 3,
+        "REMAINING_OSM_SOURCE_REFERENCE_MISMATCHES": 0,
+        "REMAINING_UNVERIFIED_SOURCE_REFERENCES_IN_AUDIT": 0
+      },
+      "accepted_clean_records_no_conflicts": 12,
+      "accepted_records_with_conflicted_fields_suppressed": 11,
+      "total_accepted_overture_records_after_audit": 23,
+      "downgraded_to_mapping_review_required_and_rejected": 2,
+      "downgraded_to_low_information_and_rejected": 1,
+      "confirmed_factual_conflicts_resolved": {
+        "FC-001": {
+          "poi_id": "f0d424bd-f722-540f-8964-5e6fd8875b56",
+          "poi_name": "Bảo tàng Dân tộc học Việt Nam",
+          "overture_gers_id": "e55bab3c-c110-4ba6-a005-5c43986a6095",
+          "suppressed_field": "address",
+          "suppressed_value": "1 Đường Trực Nguyên, Huyện Thường Tín, 13618, VN",
+          "post_audit_decision": "ACCEPT_PRIMARY_CORPUS (address suppressed; corroborated phone +84437562193 and website http://www.vme.org.vn/ retained)"
+        },
+        "FC-002": {
+          "poi_id": "75a3fbd1-a24e-43c6-820a-72f95ebc05c0",
+          "poi_name": "Vinpearl Ha Long resort",
+          "overture_gers_id": "9ed3a2e3-60a3-4df0-acd8-83185f57a281",
+          "suppressed_field": "address",
+          "suppressed_value": "439 P. Lê Lợi, Hạ Long, 180000, VN",
+          "post_audit_decision": "ACCEPT_PRIMARY_CORPUS (address suppressed; corroborated Đảo Rều coordinates and hotel category retained; source-reported website qualified as UNVERIFIED)"
+        }
+      }
+    }
+  },
+  "official_website_governance": {
+    "OSM_TAG_WEBSITE_CANDIDATES": 16,
+    "discovery_method": "URL_DISCOVERED_FROM_OSM_TAG",
+    "website_terms_independently_checked": false,
+    "terms_verification_status": "REUSE_PERMISSION_NOT_ESTABLISHED",
+    "final_b1b_decision": "REFERENCE_ONLY"
+  },
+  "w06_scope_protection_exception": {
+    "protected_root": "data/curated/",
+    "narrow_w07_exception_pathspec": ":(exclude)data/curated/w07/",
+    "w06_test_file": "tests/test_w06_measurement_contract.py",
+    "w06_preflight_guard_test_file": "apps/ai-service/tests/test_w06_model_preflight_01a_offline.py",
+    "unrelated_data_curated_paths_remain_protected": true
+  },
+  "acquired_corpus_breakdown": {
+    "by_source_type": {
+      "overture_places_parquet": 23,
+      "wikipedia_article": 26,
+      "wikidata_entity": 28,
+      "wikivoyage_poi_listing": 20
+    },
+    "by_content_utility": {
+      "USEFUL_NARRATIVE": 46,
+      "USEFUL_STRUCTURED_FACTS": 51,
+      "LOW_INFORMATION": 0,
+      "EMPTY_OR_INVALID": 0
+    },
+    "by_license": {
+      "CDLA-Permissive-2.0": 23,
+      "CC-BY-SA-4.0": 26,
+      "CC0-1.0": 28,
+      "CC-BY-SA-3.0": 20
+    },
+    "accepted_independent_source_lineages": [
+      "overture:04dda4d2-9d22-4516-a651-73c774b61663",
+      "overture:0772c46b-7aa9-40a0-b403-78dec2591927",
+      "overture:0d91068a-7ee8-4d97-ad32-a075a23d30fd",
+      "overture:165cef5b-70ba-41d9-8314-4b54d979379d",
+      "overture:1b27afcb-daa1-4977-bcd5-cc5327c08c64",
+      "overture:3421b671-b891-408e-943f-1278e1a46c94",
+      "overture:527ebd9f-445a-4059-a815-0d988c0925a2",
+      "overture:6039522b-f82a-4a1d-88f3-09beca7172ab",
+      "overture:67b0a6b0-f6e8-477d-8517-ef73c56752f7",
+      "overture:80ceecb4-b812-4b29-a332-e22dc1a21fb8",
+      "overture:82f95e1f-7bf8-40df-a3ed-6f92a4a847f3",
+      "overture:893209f5-1d13-479f-b7d7-6630b1f3fe57",
+      "overture:92ed9717-ce41-4e8f-ab25-52e369cd88be",
+      "overture:9ed3a2e3-60a3-4df0-acd8-83185f57a281",
+      "overture:a310c792-65d8-4115-9df6-ddf54babd1a8",
+      "overture:bd078edf-ad58-4f6c-9016-adf65c90e5eb",
+      "overture:c732f0d5-911d-4d9f-93b2-51c886f4fe0b",
+      "overture:da92232b-8e79-4082-84b0-6a35263af4df",
+      "overture:df8dc91d-1790-4600-a518-31bec995467a",
+      "overture:e55bab3c-c110-4ba6-a005-5c43986a6095",
+      "overture:e8077687-eb1f-44ff-b544-9e7ae8ccdc1e",
+      "overture:e8f37b82-c15a-49d1-ad85-994b4b10f150",
+      "overture:ff9a223f-952f-4d51-b7a9-b90998668554",
+      "wikidata:Q1048345",
+      "wikidata:Q10748770",
+      "wikidata:Q10752053",
+      "wikidata:Q10752058",
+      "wikidata:Q10752400",
+      "wikidata:Q10796763",
+      "wikidata:Q111402873",
+      "wikidata:Q111402972",
+      "wikidata:Q111402973",
+      "wikidata:Q111402985",
+      "wikidata:Q112182634",
+      "wikidata:Q117325492",
+      "wikidata:Q1359941",
+      "wikidata:Q16480040",
+      "wikidata:Q17068326",
+      "wikidata:Q190128",
+      "wikidata:Q1923783",
+      "wikidata:Q206219",
+      "wikidata:Q28449757",
+      "wikidata:Q3517494",
+      "wikidata:Q5004763",
+      "wikidata:Q5305270",
+      "wikidata:Q6755207",
+      "wikidata:Q6940790",
+      "wikidata:Q7560606",
+      "wikidata:Q864770",
+      "wikidata:Q874234",
+      "wikidata:Q944021",
+      "wikipedia:en:30765128",
+      "wikipedia:en:40245483",
+      "wikipedia:en:52681673",
+      "wikipedia:vi:143043",
+      "wikipedia:vi:15644",
+      "wikipedia:vi:17574",
+      "wikipedia:vi:19729999",
+      "wikipedia:vi:19770946",
+      "wikipedia:vi:2222566",
+      "wikipedia:vi:24613",
+      "wikipedia:vi:25334",
+      "wikipedia:vi:28445",
+      "wikipedia:vi:359401",
+      "wikipedia:vi:39566",
+      "wikipedia:vi:39872",
+      "wikipedia:vi:39895",
+      "wikipedia:vi:399768",
+      "wikipedia:vi:4483",
+      "wikipedia:vi:45425",
+      "wikipedia:vi:45931",
+      "wikipedia:vi:45977",
+      "wikipedia:vi:66503",
+      "wikipedia:vi:80901",
+      "wikipedia:vi:81069",
+      "wikipedia:vi:96734",
+      "wikivoyage:en:Da_Nang",
+      "wikivoyage:en:Hanoi"
+    ]
+  },
+  "priority_shift_summary": {
+    "before_b1b": {
+      "P0": 20,
+      "P1": 19,
+      "P2": 21,
+      "P3": 0
+    },
+    "after_b1b": {
+      "P0": 9,
+      "P1": 9,
+      "P2": 13,
+      "P3": 29
+    },
+    "p0_before_after": {
+      "before": 20,
+      "after": 9,
+      "closed": 11
+    },
+    "p1_before_after": {
+      "before": 19,
+      "after": 9
+    },
+    "p2_before_after": {
+      "before": 21,
+      "after": 13
+    },
+    "p3_before_after": {
+      "before": 0,
+      "after": 29
+    }
+  },
+  "coverage_after_acquisition": {
+    "overall_60_pois": {
+      "total_pois": 60,
+      "pois_with_any_primary_eligible_evidence": 60,
+      "pois_with_rag_candidate_evidence": 51,
+      "pois_with_2_plus_eligible_lineages": 42,
+      "pois_with_narrative_evidence": 32,
+      "pois_with_structured_evidence": 48,
+      "pois_with_both_structured_and_narrative": 29,
+      "post_b1b_priority_counts": {
+        "P0": 9,
+        "P1": 9,
+        "P2": 13,
+        "P3": 29
+      }
+    },
+    "by_city": {
+      "Hà Nội": {
+        "total_pois": 20,
+        "pois_with_any_primary_eligible_evidence": 20,
+        "pois_with_rag_candidate_evidence": 18,
+        "pois_with_2_plus_eligible_lineages": 16,
+        "pois_with_narrative_evidence": 14,
+        "pois_with_structured_evidence": 18,
+        "pois_with_both_structured_and_narrative": 14,
+        "post_b1b_priority_counts": {
+          "P0": 2,
+          "P1": 2,
+          "P2": 2,
+          "P3": 14
+        }
+      },
+      "Đà Nẵng": {
+        "total_pois": 20,
+        "pois_with_any_primary_eligible_evidence": 20,
+        "pois_with_rag_candidate_evidence": 19,
+        "pois_with_2_plus_eligible_lineages": 16,
+        "pois_with_narrative_evidence": 12,
+        "pois_with_structured_evidence": 19,
+        "pois_with_both_structured_and_narrative": 12,
+        "post_b1b_priority_counts": {
+          "P0": 1,
+          "P1": 3,
+          "P2": 4,
+          "P3": 12
+        }
+      },
+      "Hạ Long": {
+        "total_pois": 20,
+        "pois_with_any_primary_eligible_evidence": 20,
+        "pois_with_rag_candidate_evidence": 14,
+        "pois_with_2_plus_eligible_lineages": 10,
+        "pois_with_narrative_evidence": 6,
+        "pois_with_structured_evidence": 11,
+        "pois_with_both_structured_and_narrative": 3,
+        "post_b1b_priority_counts": {
+          "P0": 6,
+          "P1": 4,
+          "P2": 7,
+          "P3": 3
+        }
+      }
+    },
+    "by_category_group": {
+      "attractions_culture": {
+        "total_pois": 21,
+        "pois_with_any_primary_eligible_evidence": 21,
+        "pois_with_rag_candidate_evidence": 20,
+        "pois_with_2_plus_eligible_lineages": 15,
+        "pois_with_narrative_evidence": 17,
+        "pois_with_structured_evidence": 17,
+        "pois_with_both_structured_and_narrative": 14,
+        "post_b1b_priority_counts": {
+          "P0": 1,
+          "P1": 5,
+          "P2": 1,
+          "P3": 14
+        }
+      },
+      "restaurants_cafes_markets": {
+        "total_pois": 21,
+        "pois_with_any_primary_eligible_evidence": 21,
+        "pois_with_rag_candidate_evidence": 16,
+        "pois_with_2_plus_eligible_lineages": 13,
+        "pois_with_narrative_evidence": 3,
+        "pois_with_structured_evidence": 16,
+        "pois_with_both_structured_and_narrative": 3,
+        "post_b1b_priority_counts": {
+          "P0": 5,
+          "P1": 3,
+          "P2": 10,
+          "P3": 3
+        }
+      },
+      "nature_beach": {
+        "total_pois": 9,
+        "pois_with_any_primary_eligible_evidence": 9,
+        "pois_with_rag_candidate_evidence": 6,
+        "pois_with_2_plus_eligible_lineages": 6,
+        "pois_with_narrative_evidence": 6,
+        "pois_with_structured_evidence": 6,
+        "pois_with_both_structured_and_narrative": 6,
+        "post_b1b_priority_counts": {
+          "P0": 3,
+          "P1": 0,
+          "P2": 0,
+          "P3": 6
+        }
+      },
+      "hotels": {
+        "total_pois": 6,
+        "pois_with_any_primary_eligible_evidence": 6,
+        "pois_with_rag_candidate_evidence": 6,
+        "pois_with_2_plus_eligible_lineages": 6,
+        "pois_with_narrative_evidence": 4,
+        "pois_with_structured_evidence": 6,
+        "pois_with_both_structured_and_narrative": 4,
+        "post_b1b_priority_counts": {
+          "P0": 0,
+          "P1": 0,
+          "P2": 2,
+          "P3": 4
+        }
+      },
+      "other_tourism": {
+        "total_pois": 3,
+        "pois_with_any_primary_eligible_evidence": 3,
+        "pois_with_rag_candidate_evidence": 3,
+        "pois_with_2_plus_eligible_lineages": 2,
+        "pois_with_narrative_evidence": 2,
+        "pois_with_structured_evidence": 3,
+        "pois_with_both_structured_and_narrative": 2,
+        "post_b1b_priority_counts": {
+          "P0": 0,
+          "P1": 1,
+          "P2": 0,
+          "P3": 2
+        }
+      }
+    },
+    "by_original_b1a_priority": {
+      "P0": {
+        "total_pois": 20,
+        "pois_with_any_primary_eligible_evidence": 20,
+        "pois_with_rag_candidate_evidence": 11,
+        "pois_with_2_plus_eligible_lineages": 7,
+        "pois_with_narrative_evidence": 8,
+        "pois_with_structured_evidence": 8,
+        "pois_with_both_structured_and_narrative": 5,
+        "post_b1b_priority_counts": {
+          "P0": 9,
+          "P1": 4,
+          "P2": 2,
+          "P3": 5
+        }
+      },
+      "P1": {
+        "total_pois": 19,
+        "pois_with_any_primary_eligible_evidence": 19,
+        "pois_with_rag_candidate_evidence": 19,
+        "pois_with_2_plus_eligible_lineages": 16,
+        "pois_with_narrative_evidence": 16,
+        "pois_with_structured_evidence": 19,
+        "pois_with_both_structured_and_narrative": 16,
+        "post_b1b_priority_counts": {
+          "P0": 0,
+          "P1": 3,
+          "P2": 0,
+          "P3": 16
+        }
+      },
+      "P2": {
+        "total_pois": 21,
+        "pois_with_any_primary_eligible_evidence": 21,
+        "pois_with_rag_candidate_evidence": 21,
+        "pois_with_2_plus_eligible_lineages": 19,
+        "pois_with_narrative_evidence": 8,
+        "pois_with_structured_evidence": 21,
+        "pois_with_both_structured_and_narrative": 8,
+        "post_b1b_priority_counts": {
+          "P0": 0,
+          "P1": 2,
+          "P2": 11,
+          "P3": 8
+        }
+      }
+    }
+  },
+  "b2_readiness_evaluation": {
+    "W07_B1B_CORPUS_ACQUISITION_READY_FOR_B2": true,
+    "minimum_criteria_check": {
+      "canonical_pois_with_rag_evidence_gte_30": true,
+      "actual_pois_with_rag_evidence": 51,
+      "within_preferred_45_to_60_pois": true,
+      "every_city_gte_10_pois": true,
+      "city_rag_eligible_counts": {
+        "Hà Nội": 18,
+        "Đà Nẵng": 19,
+        "Hạ Long": 14
+      },
+      "pois_with_2_plus_independent_lineages": 42,
+      "pois_with_narrative_evidence": 32,
+      "pois_with_both_structured_and_narrative": 29,
+      "estimated_useful_chunks_gte_150": true
+    },
+    "estimated_future_useful_chunk_range": {
+      "value_kind": "ESTIMATE",
+      "observed_chunk_count_in_b1b": null,
+      "methodology_frozen_in_b1b": false,
+      "total_b1b_acquired_documents": 97,
+      "total_b1b_acquired_characters": 288906,
+      "total_wikipedia_article_body_characters": 228661,
+      "existing_fix01b_useful_osm_documents_for_target_60": 40,
+      "combined_target_60_useful_documents": 137,
+      "estimated_target_60_useful_chunks_min": 330,
+      "estimated_target_60_useful_chunks_max": 505,
+      "estimated_useful_chunks_band_label": "ESTIMATE: 330-505 useful POI-bound chunks (plus 464 existing destination-level Wikivoyage chunks); actual chunking deferred to B2",
+      "meets_b0_minimum_150_chunks": true,
+      "within_b0_preferred_300_to_600_chunks": true
+    }
+  },
+  "no_chunking_or_retrieval_methodology_freeze": {
+    "chunk_size_frozen": false,
+    "chunk_overlap_frozen": false,
+    "embedding_model_frozen": false,
+    "bm25_implementation_frozen": false,
+    "reranker_frozen": false,
+    "vector_db_mutated": false
+  },
+  "poi_coverage_records": [
+    {
+      "selection_rank": 1,
+      "poi_id": "698ee756-6062-5f47-955b-bdf458682e57",
+      "name": "Lăng Chủ tịch Hồ Chí Minh",
+      "city": "Hà Nội",
+      "category_group": "attractions_culture",
+      "original_b1a_priority": "P1",
+      "post_b1b_priority": "P3",
+      "osm_useful_structured_baseline": true,
+      "b1b_acquired_document_count": 3,
+      "b1b_acquired_document_ids": [
+        "w07-b1b-doc-wikidata-698ee756-q874234",
+        "w07-b1b-doc-wikipedia-vi-698ee756-359401",
+        "w07-b1b-doc-wikivoyage-en-698ee756"
+      ],
+      "total_rag_eligible_evidence_units": 4,
+      "rag_candidate_eligible_lineage_count": 4,
+      "rag_candidate_eligible_lineages": [
+        "osm:way/37625751",
+        "wikidata:Q874234",
+        "wikipedia:vi:359401",
+        "wikivoyage:en:Hanoi"
+      ],
+      "PRIMARY_CORPUS_ELIGIBLE": true,
+      "RAG_CANDIDATE_ELIGIBLE": true,
+      "has_useful_structured_evidence": true,
+      "has_narrative_evidence": true,
+      "has_both_structured_and_narrative": true,
+      "remaining_gap_reasons": []
+    },
+    {
+      "selection_rank": 2,
+      "poi_id": "b799793b-fb40-5bc2-9e67-6af92caeabe9",
+      "name": "Hoàng thành Thăng Long",
+      "city": "Hà Nội",
+      "category_group": "attractions_culture",
+      "original_b1a_priority": "P1",
+      "post_b1b_priority": "P3",
+      "osm_useful_structured_baseline": true,
+      "b1b_acquired_document_count": 3,
+      "b1b_acquired_document_ids": [
+        "w07-b1b-doc-wikidata-b799793b-q206219",
+        "w07-b1b-doc-wikipedia-vi-b799793b-15644",
+        "w07-b1b-doc-wikivoyage-en-b799793b"
+      ],
+      "total_rag_eligible_evidence_units": 4,
+      "rag_candidate_eligible_lineage_count": 4,
+      "rag_candidate_eligible_lineages": [
+        "osm:relation/21425205",
+        "wikidata:Q206219",
+        "wikipedia:vi:15644",
+        "wikivoyage:en:Hanoi"
+      ],
+      "PRIMARY_CORPUS_ELIGIBLE": true,
+      "RAG_CANDIDATE_ELIGIBLE": true,
+      "has_useful_structured_evidence": true,
+      "has_narrative_evidence": true,
+      "has_both_structured_and_narrative": true,
+      "remaining_gap_reasons": []
+    },
+    {
+      "selection_rank": 3,
+      "poi_id": "0938eb59-ee1c-5879-a798-58b5fdd07bce",
+      "name": "Nhà tù Hỏa Lò",
+      "city": "Hà Nội",
+      "category_group": "attractions_culture",
+      "original_b1a_priority": "P1",
+      "post_b1b_priority": "P3",
+      "osm_useful_structured_baseline": true,
+      "b1b_acquired_document_count": 3,
+      "b1b_acquired_document_ids": [
+        "w07-b1b-doc-wikidata-0938eb59-q1359941",
+        "w07-b1b-doc-wikipedia-vi-0938eb59-80901",
+        "w07-b1b-doc-wikivoyage-en-0938eb59"
+      ],
+      "total_rag_eligible_evidence_units": 4,
+      "rag_candidate_eligible_lineage_count": 4,
+      "rag_candidate_eligible_lineages": [
+        "osm:way/340128580",
+        "wikidata:Q1359941",
+        "wikipedia:vi:80901",
+        "wikivoyage:en:Hanoi"
+      ],
+      "PRIMARY_CORPUS_ELIGIBLE": true,
+      "RAG_CANDIDATE_ELIGIBLE": true,
+      "has_useful_structured_evidence": true,
+      "has_narrative_evidence": true,
+      "has_both_structured_and_narrative": true,
+      "remaining_gap_reasons": []
+    },
+    {
+      "selection_rank": 4,
+      "poi_id": "44115e3a-6094-5bcd-b53c-0e3a596b3aff",
+      "name": "Đền Ngọc Sơn",
+      "city": "Hà Nội",
+      "category_group": "attractions_culture",
+      "original_b1a_priority": "P1",
+      "post_b1b_priority": "P3",
+      "osm_useful_structured_baseline": true,
+      "b1b_acquired_document_count": 3,
+      "b1b_acquired_document_ids": [
+        "w07-b1b-doc-wikidata-44115e3a-q3517494",
+        "w07-b1b-doc-wikipedia-vi-44115e3a-25334",
+        "w07-b1b-doc-wikivoyage-en-44115e3a"
+      ],
+      "total_rag_eligible_evidence_units": 4,
+      "rag_candidate_eligible_lineage_count": 4,
+      "rag_candidate_eligible_lineages": [
+        "osm:way/178995262",
+        "wikidata:Q3517494",
+        "wikipedia:vi:25334",
+        "wikivoyage:en:Hanoi"
+      ],
+      "PRIMARY_CORPUS_ELIGIBLE": true,
+      "RAG_CANDIDATE_ELIGIBLE": true,
+      "has_useful_structured_evidence": true,
+      "has_narrative_evidence": true,
+      "has_both_structured_and_narrative": true,
+      "remaining_gap_reasons": []
+    },
+    {
+      "selection_rank": 5,
+      "poi_id": "e3fe1f1a-f524-55cf-9d83-903e427d0ba4",
+      "name": "Chùa Trấn Quốc",
+      "city": "Hà Nội",
+      "category_group": "attractions_culture",
+      "original_b1a_priority": "P1",
+      "post_b1b_priority": "P3",
+      "osm_useful_structured_baseline": true,
+      "b1b_acquired_document_count": 3,
+      "b1b_acquired_document_ids": [
+        "w07-b1b-doc-wikidata-e3fe1f1a-q864770",
+        "w07-b1b-doc-wikipedia-vi-e3fe1f1a-24613",
+        "w07-b1b-doc-wikivoyage-en-e3fe1f1a"
+      ],
+      "total_rag_eligible_evidence_units": 4,
+      "rag_candidate_eligible_lineage_count": 4,
+      "rag_candidate_eligible_lineages": [
+        "osm:way/220302249",
+        "wikidata:Q864770",
+        "wikipedia:vi:24613",
+        "wikivoyage:en:Hanoi"
+      ],
+      "PRIMARY_CORPUS_ELIGIBLE": true,
+      "RAG_CANDIDATE_ELIGIBLE": true,
+      "has_useful_structured_evidence": true,
+      "has_narrative_evidence": true,
+      "has_both_structured_and_narrative": true,
+      "remaining_gap_reasons": []
+    },
+    {
+      "selection_rank": 6,
+      "poi_id": "f0d424bd-f722-540f-8964-5e6fd8875b56",
+      "name": "Bảo tàng Dân tộc học Việt Nam",
+      "city": "Hà Nội",
+      "category_group": "attractions_culture",
+      "original_b1a_priority": "P2",
+      "post_b1b_priority": "P3",
+      "osm_useful_structured_baseline": true,
+      "b1b_acquired_document_count": 4,
+      "b1b_acquired_document_ids": [
+        "w07-b1b-doc-overture-f0d424bd-e55bab3c",
+        "w07-b1b-doc-wikidata-f0d424bd-q1048345",
+        "w07-b1b-doc-wikipedia-vi-f0d424bd-28445",
+        "w07-b1b-doc-wikivoyage-en-f0d424bd"
+      ],
+      "total_rag_eligible_evidence_units": 5,
+      "rag_candidate_eligible_lineage_count": 5,
+      "rag_candidate_eligible_lineages": [
+        "osm:way/339936730",
+        "overture:e55bab3c-c110-4ba6-a005-5c43986a6095",
+        "wikidata:Q1048345",
+        "wikipedia:vi:28445",
+        "wikivoyage:en:Hanoi"
+      ],
+      "PRIMARY_CORPUS_ELIGIBLE": true,
+      "RAG_CANDIDATE_ELIGIBLE": true,
+      "has_useful_structured_evidence": true,
+      "has_narrative_evidence": true,
+      "has_both_structured_and_narrative": true,
+      "remaining_gap_reasons": []
+    },
+    {
+      "selection_rank": 7,
+      "poi_id": "cad64db8-cd74-58fe-ad94-329e0d8110e1",
+      "name": "Nhà thờ Lớn",
+      "city": "Hà Nội",
+      "category_group": "attractions_culture",
+      "original_b1a_priority": "P1",
+      "post_b1b_priority": "P3",
+      "osm_useful_structured_baseline": true,
+      "b1b_acquired_document_count": 3,
+      "b1b_acquired_document_ids": [
+        "w07-b1b-doc-wikidata-cad64db8-q1923783",
+        "w07-b1b-doc-wikipedia-vi-cad64db8-45425",
+        "w07-b1b-doc-wikivoyage-en-cad64db8"
+      ],
+      "total_rag_eligible_evidence_units": 4,
+      "rag_candidate_eligible_lineage_count": 4,
+      "rag_candidate_eligible_lineages": [
+        "osm:way/28912942",
+        "wikidata:Q1923783",
+        "wikipedia:vi:45425",
+        "wikivoyage:en:Hanoi"
+      ],
+      "PRIMARY_CORPUS_ELIGIBLE": true,
+      "RAG_CANDIDATE_ELIGIBLE": true,
+      "has_useful_structured_evidence": true,
+      "has_narrative_evidence": true,
+      "has_both_structured_and_narrative": true,
+      "remaining_gap_reasons": []
+    },
+    {
+      "selection_rank": 8,
+      "poi_id": "afb3793b-7227-4645-a68a-3647c7468638",
+      "name": "Sen Tây Hồ",
+      "city": "Hà Nội",
+      "category_group": "restaurants_cafes_markets",
+      "original_b1a_priority": "P2",
+      "post_b1b_priority": "P2",
+      "osm_useful_structured_baseline": true,
+      "b1b_acquired_document_count": 1,
+      "b1b_acquired_document_ids": [
+        "w07-b1b-doc-overture-afb3793b-e8077687"
+      ],
+      "total_rag_eligible_evidence_units": 2,
+      "rag_candidate_eligible_lineage_count": 2,
+      "rag_candidate_eligible_lineages": [
+        "osm:node/443000681",
+        "overture:e8077687-eb1f-44ff-b544-9e7ae8ccdc1e"
+      ],
+      "PRIMARY_CORPUS_ELIGIBLE": true,
+      "RAG_CANDIDATE_ELIGIBLE": true,
+      "has_useful_structured_evidence": true,
+      "has_narrative_evidence": false,
+      "has_both_structured_and_narrative": false,
+      "remaining_gap_reasons": [
+        "STRUCTURED_ONLY_NO_NARRATIVE"
+      ]
+    },
+    {
+      "selection_rank": 9,
+      "poi_id": "acb22336-1124-49d5-a279-6357c2b2b445",
+      "name": "Quán Ăn Ngon - Phan Bội Châu",
+      "city": "Hà Nội",
+      "category_group": "restaurants_cafes_markets",
+      "original_b1a_priority": "P1",
+      "post_b1b_priority": "P3",
+      "osm_useful_structured_baseline": true,
+      "b1b_acquired_document_count": 1,
+      "b1b_acquired_document_ids": [
+        "w07-b1b-doc-wikivoyage-en-acb22336"
+      ],
+      "total_rag_eligible_evidence_units": 2,
+      "rag_candidate_eligible_lineage_count": 2,
+      "rag_candidate_eligible_lineages": [
+        "osm:node/721836715",
+        "wikivoyage:en:Hanoi"
+      ],
+      "PRIMARY_CORPUS_ELIGIBLE": true,
+      "RAG_CANDIDATE_ELIGIBLE": true,
+      "has_useful_structured_evidence": true,
+      "has_narrative_evidence": true,
+      "has_both_structured_and_narrative": true,
+      "remaining_gap_reasons": []
+    },
+    {
+      "selection_rank": 10,
+      "poi_id": "5350dd97-2f75-45fc-9fc1-1979b08670f7",
+      "name": "Pho 10",
+      "city": "Hà Nội",
+      "category_group": "restaurants_cafes_markets",
+      "original_b1a_priority": "P2",
+      "post_b1b_priority": "P3",
+      "osm_useful_structured_baseline": true,
+      "b1b_acquired_document_count": 2,
+      "b1b_acquired_document_ids": [
+        "w07-b1b-doc-overture-5350dd97-ff9a223f",
+        "w07-b1b-doc-wikivoyage-en-5350dd97"
+      ],
+      "total_rag_eligible_evidence_units": 3,
+      "rag_candidate_eligible_lineage_count": 3,
+      "rag_candidate_eligible_lineages": [
+        "osm:node/773601261",
+        "overture:ff9a223f-952f-4d51-b7a9-b90998668554",
+        "wikivoyage:en:Hanoi"
+      ],
+      "PRIMARY_CORPUS_ELIGIBLE": true,
+      "RAG_CANDIDATE_ELIGIBLE": true,
+      "has_useful_structured_evidence": true,
+      "has_narrative_evidence": true,
+      "has_both_structured_and_narrative": true,
+      "remaining_gap_reasons": []
+    },
+    {
+      "selection_rank": 11,
+      "poi_id": "b0641225-0f38-4bcc-9f4c-34f65fa50d45",
+      "name": "Cửa Hàng Bánh Tôm Hồ Tây",
+      "city": "Hà Nội",
+      "category_group": "restaurants_cafes_markets",
+      "original_b1a_priority": "P0",
+      "post_b1b_priority": "P0",
+      "osm_useful_structured_baseline": false,
+      "b1b_acquired_document_count": 0,
+      "b1b_acquired_document_ids": [],
+      "total_rag_eligible_evidence_units": 0,
+      "rag_candidate_eligible_lineage_count": 0,
+      "rag_candidate_eligible_lineages": [],
+      "PRIMARY_CORPUS_ELIGIBLE": true,
+      "RAG_CANDIDATE_ELIGIBLE": false,
+      "has_useful_structured_evidence": false,
+      "has_narrative_evidence": false,
+      "has_both_structured_and_narrative": false,
+      "remaining_gap_reasons": [
+        "NO_RAG_ELIGIBLE_EVIDENCE",
+        "SINGLE_SOURCE_LINEAGE_ONLY",
+        "NO_NARRATIVE_TEXT"
+      ]
+    },
+    {
+      "selection_rank": 12,
+      "poi_id": "5bd45eb7-a691-4426-9691-a5a00f38d1ad",
+      "name": "Highlands Coffee",
+      "city": "Hà Nội",
+      "category_group": "restaurants_cafes_markets",
+      "original_b1a_priority": "P2",
+      "post_b1b_priority": "P2",
+      "osm_useful_structured_baseline": true,
+      "b1b_acquired_document_count": 1,
+      "b1b_acquired_document_ids": [
+        "w07-b1b-doc-overture-5bd45eb7-e8f37b82"
+      ],
+      "total_rag_eligible_evidence_units": 2,
+      "rag_candidate_eligible_lineage_count": 2,
+      "rag_candidate_eligible_lineages": [
+        "osm:node/442977691",
+        "overture:e8f37b82-c15a-49d1-ad85-994b4b10f150"
+      ],
+      "PRIMARY_CORPUS_ELIGIBLE": true,
+      "RAG_CANDIDATE_ELIGIBLE": true,
+      "has_useful_structured_evidence": true,
+      "has_narrative_evidence": false,
+      "has_both_structured_and_narrative": false,
+      "remaining_gap_reasons": [
+        "STRUCTURED_ONLY_NO_NARRATIVE"
+      ]
+    },
+    {
+      "selection_rank": 13,
+      "poi_id": "4146f2b7-8289-4309-b7e6-60ba7de3470e",
+      "name": "Cà Phê Nola",
+      "city": "Hà Nội",
+      "category_group": "restaurants_cafes_markets",
+      "original_b1a_priority": "P0",
+      "post_b1b_priority": "P0",
+      "osm_useful_structured_baseline": false,
+      "b1b_acquired_document_count": 0,
+      "b1b_acquired_document_ids": [],
+      "total_rag_eligible_evidence_units": 0,
+      "rag_candidate_eligible_lineage_count": 0,
+      "rag_candidate_eligible_lineages": [],
+      "PRIMARY_CORPUS_ELIGIBLE": true,
+      "RAG_CANDIDATE_ELIGIBLE": false,
+      "has_useful_structured_evidence": false,
+      "has_narrative_evidence": false,
+      "has_both_structured_and_narrative": false,
+      "remaining_gap_reasons": [
+        "NO_RAG_ELIGIBLE_EVIDENCE",
+        "SINGLE_SOURCE_LINEAGE_ONLY",
+        "NO_NARRATIVE_TEXT"
+      ]
+    },
+    {
+      "selection_rank": 14,
+      "poi_id": "a2fc15de-d609-4d4f-abf1-9779d57901a6",
+      "name": "Cà Phê Kafa",
+      "city": "Hà Nội",
+      "category_group": "restaurants_cafes_markets",
+      "original_b1a_priority": "P1",
+      "post_b1b_priority": "P1",
+      "osm_useful_structured_baseline": true,
+      "b1b_acquired_document_count": 0,
+      "b1b_acquired_document_ids": [],
+      "total_rag_eligible_evidence_units": 1,
+      "rag_candidate_eligible_lineage_count": 1,
+      "rag_candidate_eligible_lineages": [
+        "osm:node/423736651"
+      ],
+      "PRIMARY_CORPUS_ELIGIBLE": true,
+      "RAG_CANDIDATE_ELIGIBLE": true,
+      "has_useful_structured_evidence": true,
+      "has_narrative_evidence": false,
+      "has_both_structured_and_narrative": false,
+      "remaining_gap_reasons": [
+        "SINGLE_ELIGIBLE_LINEAGE_ONLY",
+        "STRUCTURED_ONLY_NO_NARRATIVE"
+      ]
+    },
+    {
+      "selection_rank": 15,
+      "poi_id": "5e92e89d-8524-4792-862a-6dfce0994862",
+      "name": "Sheraton Hanoi",
+      "city": "Hà Nội",
+      "category_group": "hotels",
+      "original_b1a_priority": "P2",
+      "post_b1b_priority": "P3",
+      "osm_useful_structured_baseline": true,
+      "b1b_acquired_document_count": 3,
+      "b1b_acquired_document_ids": [
+        "w07-b1b-doc-overture-5e92e89d-80ceecb4",
+        "w07-b1b-doc-wikidata-5e92e89d-q117325492",
+        "w07-b1b-doc-wikivoyage-en-5e92e89d"
+      ],
+      "total_rag_eligible_evidence_units": 4,
+      "rag_candidate_eligible_lineage_count": 4,
+      "rag_candidate_eligible_lineages": [
+        "osm:node/922396410",
+        "overture:80ceecb4-b812-4b29-a332-e22dc1a21fb8",
+        "wikidata:Q117325492",
+        "wikivoyage:en:Hanoi"
+      ],
+      "PRIMARY_CORPUS_ELIGIBLE": true,
+      "RAG_CANDIDATE_ELIGIBLE": true,
+      "has_useful_structured_evidence": true,
+      "has_narrative_evidence": true,
+      "has_both_structured_and_narrative": true,
+      "remaining_gap_reasons": []
+    },
+    {
+      "selection_rank": 16,
+      "poi_id": "9a96e0a0-e040-4e16-a3f2-682ca373dd8e",
+      "name": "Somerset Grand Hanoi",
+      "city": "Hà Nội",
+      "category_group": "hotels",
+      "original_b1a_priority": "P2",
+      "post_b1b_priority": "P3",
+      "osm_useful_structured_baseline": true,
+      "b1b_acquired_document_count": 3,
+      "b1b_acquired_document_ids": [
+        "w07-b1b-doc-overture-9a96e0a0-165cef5b",
+        "w07-b1b-doc-wikidata-9a96e0a0-q111402985",
+        "w07-b1b-doc-wikivoyage-en-9a96e0a0"
+      ],
+      "total_rag_eligible_evidence_units": 4,
+      "rag_candidate_eligible_lineage_count": 4,
+      "rag_candidate_eligible_lineages": [
+        "osm:node/442033049",
+        "overture:165cef5b-70ba-41d9-8314-4b54d979379d",
+        "wikidata:Q111402985",
+        "wikivoyage:en:Hanoi"
+      ],
+      "PRIMARY_CORPUS_ELIGIBLE": true,
+      "RAG_CANDIDATE_ELIGIBLE": true,
+      "has_useful_structured_evidence": true,
+      "has_narrative_evidence": true,
+      "has_both_structured_and_narrative": true,
+      "remaining_gap_reasons": []
+    },
+    {
+      "selection_rank": 17,
+      "poi_id": "766656bb-c7e0-555d-9963-d3132f0de086",
+      "name": "Công viên Thống Nhất",
+      "city": "Hà Nội",
+      "category_group": "nature_beach",
+      "original_b1a_priority": "P1",
+      "post_b1b_priority": "P3",
+      "osm_useful_structured_baseline": true,
+      "b1b_acquired_document_count": 2,
+      "b1b_acquired_document_ids": [
+        "w07-b1b-doc-wikidata-766656bb-q10752058",
+        "w07-b1b-doc-wikipedia-vi-766656bb-45977"
+      ],
+      "total_rag_eligible_evidence_units": 3,
+      "rag_candidate_eligible_lineage_count": 3,
+      "rag_candidate_eligible_lineages": [
+        "osm:way/37933849",
+        "wikidata:Q10752058",
+        "wikipedia:vi:45977"
+      ],
+      "PRIMARY_CORPUS_ELIGIBLE": true,
+      "RAG_CANDIDATE_ELIGIBLE": true,
+      "has_useful_structured_evidence": true,
+      "has_narrative_evidence": true,
+      "has_both_structured_and_narrative": true,
+      "remaining_gap_reasons": []
+    },
+    {
+      "selection_rank": 18,
+      "poi_id": "1f9c2b46-e032-5cbc-a9dc-dc68c435c594",
+      "name": "Công viên Thủ Lệ",
+      "city": "Hà Nội",
+      "category_group": "nature_beach",
+      "original_b1a_priority": "P1",
+      "post_b1b_priority": "P3",
+      "osm_useful_structured_baseline": true,
+      "b1b_acquired_document_count": 2,
+      "b1b_acquired_document_ids": [
+        "w07-b1b-doc-wikidata-1f9c2b46-q944021",
+        "w07-b1b-doc-wikipedia-vi-1f9c2b46-96734"
+      ],
+      "total_rag_eligible_evidence_units": 3,
+      "rag_candidate_eligible_lineage_count": 3,
+      "rag_candidate_eligible_lineages": [
+        "osm:way/28945667",
+        "wikidata:Q944021",
+        "wikipedia:vi:96734"
+      ],
+      "PRIMARY_CORPUS_ELIGIBLE": true,
+      "RAG_CANDIDATE_ELIGIBLE": true,
+      "has_useful_structured_evidence": true,
+      "has_narrative_evidence": true,
+      "has_both_structured_and_narrative": true,
+      "remaining_gap_reasons": []
+    },
+    {
+      "selection_rank": 19,
+      "poi_id": "a2037ceb-201f-5c45-a596-af795a399e60",
+      "name": "Công viên Lê-nin",
+      "city": "Hà Nội",
+      "category_group": "nature_beach",
+      "original_b1a_priority": "P2",
+      "post_b1b_priority": "P3",
+      "osm_useful_structured_baseline": true,
+      "b1b_acquired_document_count": 4,
+      "b1b_acquired_document_ids": [
+        "w07-b1b-doc-overture-a2037ceb-3421b671",
+        "w07-b1b-doc-wikidata-a2037ceb-q10752053",
+        "w07-b1b-doc-wikipedia-vi-a2037ceb-45931",
+        "w07-b1b-doc-wikivoyage-en-a2037ceb"
+      ],
+      "total_rag_eligible_evidence_units": 5,
+      "rag_candidate_eligible_lineage_count": 5,
+      "rag_candidate_eligible_lineages": [
+        "osm:way/185540946",
+        "overture:3421b671-b891-408e-943f-1278e1a46c94",
+        "wikidata:Q10752053",
+        "wikipedia:vi:45931",
+        "wikivoyage:en:Hanoi"
+      ],
+      "PRIMARY_CORPUS_ELIGIBLE": true,
+      "RAG_CANDIDATE_ELIGIBLE": true,
+      "has_useful_structured_evidence": true,
+      "has_narrative_evidence": true,
+      "has_both_structured_and_narrative": true,
+      "remaining_gap_reasons": []
+    },
+    {
+      "selection_rank": 20,
+      "poi_id": "9b08dfe9-6f97-4d4b-94f6-f3548efd696c",
+      "name": "Le Pub",
+      "city": "Hà Nội",
+      "category_group": "other_tourism",
+      "original_b1a_priority": "P1",
+      "post_b1b_priority": "P1",
+      "osm_useful_structured_baseline": true,
+      "b1b_acquired_document_count": 0,
+      "b1b_acquired_document_ids": [],
+      "total_rag_eligible_evidence_units": 1,
+      "rag_candidate_eligible_lineage_count": 1,
+      "rag_candidate_eligible_lineages": [
+        "osm:node/969250576"
+      ],
+      "PRIMARY_CORPUS_ELIGIBLE": true,
+      "RAG_CANDIDATE_ELIGIBLE": true,
+      "has_useful_structured_evidence": true,
+      "has_narrative_evidence": false,
+      "has_both_structured_and_narrative": false,
+      "remaining_gap_reasons": [
+        "SINGLE_ELIGIBLE_LINEAGE_ONLY",
+        "STRUCTURED_ONLY_NO_NARRATIVE"
+      ]
+    },
+    {
+      "selection_rank": 21,
+      "poi_id": "9974ff88-5418-5867-ae49-1b72e0f0861f",
+      "name": "Cầu Rồng",
+      "city": "Đà Nẵng",
+      "category_group": "attractions_culture",
+      "original_b1a_priority": "P1",
+      "post_b1b_priority": "P3",
+      "osm_useful_structured_baseline": true,
+      "b1b_acquired_document_count": 3,
+      "b1b_acquired_document_ids": [
+        "w07-b1b-doc-wikidata-9974ff88-q5305270",
+        "w07-b1b-doc-wikipedia-vi-9974ff88-399768",
+        "w07-b1b-doc-wikivoyage-en-9974ff88"
+      ],
+      "total_rag_eligible_evidence_units": 4,
+      "rag_candidate_eligible_lineage_count": 4,
+      "rag_candidate_eligible_lineages": [
+        "osm:way/694831926",
+        "wikidata:Q5305270",
+        "wikipedia:vi:399768",
+        "wikivoyage:en:Da_Nang"
+      ],
+      "PRIMARY_CORPUS_ELIGIBLE": true,
+      "RAG_CANDIDATE_ELIGIBLE": true,
+      "has_useful_structured_evidence": true,
+      "has_narrative_evidence": true,
+      "has_both_structured_and_narrative": true,
+      "remaining_gap_reasons": []
+    },
+    {
+      "selection_rank": 22,
+      "poi_id": "6f758ad7-5685-57b5-9913-d28e15bdb7c5",
+      "name": "Ngũ Hành Sơn",
+      "city": "Đà Nẵng",
+      "category_group": "attractions_culture",
+      "original_b1a_priority": "P1",
+      "post_b1b_priority": "P3",
+      "osm_useful_structured_baseline": true,
+      "b1b_acquired_document_count": 3,
+      "b1b_acquired_document_ids": [
+        "w07-b1b-doc-wikidata-6f758ad7-q6755207",
+        "w07-b1b-doc-wikipedia-vi-6f758ad7-39895",
+        "w07-b1b-doc-wikivoyage-en-6f758ad7"
+      ],
+      "total_rag_eligible_evidence_units": 4,
+      "rag_candidate_eligible_lineage_count": 4,
+      "rag_candidate_eligible_lineages": [
+        "osm:relation/8552348",
+        "wikidata:Q6755207",
+        "wikipedia:vi:39895",
+        "wikivoyage:en:Da_Nang"
+      ],
+      "PRIMARY_CORPUS_ELIGIBLE": true,
+      "RAG_CANDIDATE_ELIGIBLE": true,
+      "has_useful_structured_evidence": true,
+      "has_narrative_evidence": true,
+      "has_both_structured_and_narrative": true,
+      "remaining_gap_reasons": []
+    },
+    {
+      "selection_rank": 23,
+      "poi_id": "a24d48ff-59d6-5e53-af77-36448e60d1cc",
+      "name": "Bảo tàng Nghệ thuật Điêu khắc Chăm Đà Nẵng",
+      "city": "Đà Nẵng",
+      "category_group": "attractions_culture",
+      "original_b1a_priority": "P1",
+      "post_b1b_priority": "P3",
+      "osm_useful_structured_baseline": true,
+      "b1b_acquired_document_count": 3,
+      "b1b_acquired_document_ids": [
+        "w07-b1b-doc-wikidata-a24d48ff-q6940790",
+        "w07-b1b-doc-wikipedia-vi-a24d48ff-143043",
+        "w07-b1b-doc-wikivoyage-en-a24d48ff"
+      ],
+      "total_rag_eligible_evidence_units": 4,
+      "rag_candidate_eligible_lineage_count": 4,
+      "rag_candidate_eligible_lineages": [
+        "osm:way/302872188",
+        "wikidata:Q6940790",
+        "wikipedia:vi:143043",
+        "wikivoyage:en:Da_Nang"
+      ],
+      "PRIMARY_CORPUS_ELIGIBLE": true,
+      "RAG_CANDIDATE_ELIGIBLE": true,
+      "has_useful_structured_evidence": true,
+      "has_narrative_evidence": true,
+      "has_both_structured_and_narrative": true,
+      "remaining_gap_reasons": []
+    },
+    {
+      "selection_rank": 24,
+      "poi_id": "5fc0994a-e578-4a25-b375-7f079e6dc3ba",
+      "name": "Chùa Linh Ứng",
+      "city": "Đà Nẵng",
+      "category_group": "attractions_culture",
+      "original_b1a_priority": "P2",
+      "post_b1b_priority": "P1",
+      "osm_useful_structured_baseline": true,
+      "b1b_acquired_document_count": 0,
+      "b1b_acquired_document_ids": [],
+      "total_rag_eligible_evidence_units": 1,
+      "rag_candidate_eligible_lineage_count": 1,
+      "rag_candidate_eligible_lineages": [
+        "osm:way/1205388457"
+      ],
+      "PRIMARY_CORPUS_ELIGIBLE": true,
+      "RAG_CANDIDATE_ELIGIBLE": true,
+      "has_useful_structured_evidence": true,
+      "has_narrative_evidence": false,
+      "has_both_structured_and_narrative": false,
+      "remaining_gap_reasons": [
+        "SINGLE_ELIGIBLE_LINEAGE_ONLY",
+        "STRUCTURED_ONLY_NO_NARRATIVE"
+      ]
+    },
+    {
+      "selection_rank": 25,
+      "poi_id": "2f389152-5676-54be-b812-a1d561b7df15",
+      "name": "Cầu Sông Hàn",
+      "city": "Đà Nẵng",
+      "category_group": "attractions_culture",
+      "original_b1a_priority": "P0",
+      "post_b1b_priority": "P3",
+      "osm_useful_structured_baseline": false,
+      "b1b_acquired_document_count": 2,
+      "b1b_acquired_document_ids": [
+        "w07-b1b-doc-wikidata-2f389152-q10752400",
+        "w07-b1b-doc-wikipedia-vi-2f389152-17574"
+      ],
+      "total_rag_eligible_evidence_units": 2,
+      "rag_candidate_eligible_lineage_count": 2,
+      "rag_candidate_eligible_lineages": [
+        "wikidata:Q10752400",
+        "wikipedia:vi:17574"
+      ],
+      "PRIMARY_CORPUS_ELIGIBLE": true,
+      "RAG_CANDIDATE_ELIGIBLE": true,
+      "has_useful_structured_evidence": true,
+      "has_narrative_evidence": true,
+      "has_both_structured_and_narrative": true,
+      "remaining_gap_reasons": []
+    },
+    {
+      "selection_rank": 26,
+      "poi_id": "cb6cce60-8270-5f43-b9f7-42de2d7d7da3",
+      "name": "Bảo tàng Đà Nẵng",
+      "city": "Đà Nẵng",
+      "category_group": "attractions_culture",
+      "original_b1a_priority": "P1",
+      "post_b1b_priority": "P1",
+      "osm_useful_structured_baseline": true,
+      "b1b_acquired_document_count": 0,
+      "b1b_acquired_document_ids": [],
+      "total_rag_eligible_evidence_units": 1,
+      "rag_candidate_eligible_lineage_count": 1,
+      "rag_candidate_eligible_lineages": [
+        "osm:way/1368599361"
+      ],
+      "PRIMARY_CORPUS_ELIGIBLE": true,
+      "RAG_CANDIDATE_ELIGIBLE": true,
+      "has_useful_structured_evidence": true,
+      "has_narrative_evidence": false,
+      "has_both_structured_and_narrative": false,
+      "remaining_gap_reasons": [
+        "SINGLE_ELIGIBLE_LINEAGE_ONLY",
+        "STRUCTURED_ONLY_NO_NARRATIVE"
+      ]
+    },
+    {
+      "selection_rank": 27,
+      "poi_id": "a302989c-08f1-5ca2-8022-a84c1a424018",
+      "name": "Chợ Cồn",
+      "city": "Đà Nẵng",
+      "category_group": "attractions_culture",
+      "original_b1a_priority": "P1",
+      "post_b1b_priority": "P3",
+      "osm_useful_structured_baseline": true,
+      "b1b_acquired_document_count": 2,
+      "b1b_acquired_document_ids": [
+        "w07-b1b-doc-wikidata-a302989c-q10748770",
+        "w07-b1b-doc-wikipedia-vi-a302989c-81069"
+      ],
+      "total_rag_eligible_evidence_units": 3,
+      "rag_candidate_eligible_lineage_count": 3,
+      "rag_candidate_eligible_lineages": [
+        "osm:way/204790989",
+        "wikidata:Q10748770",
+        "wikipedia:vi:81069"
+      ],
+      "PRIMARY_CORPUS_ELIGIBLE": true,
+      "RAG_CANDIDATE_ELIGIBLE": true,
+      "has_useful_structured_evidence": true,
+      "has_narrative_evidence": true,
+      "has_both_structured_and_narrative": true,
+      "remaining_gap_reasons": []
+    },
+    {
+      "selection_rank": 28,
+      "poi_id": "62a874a9-13e2-44d2-95b5-30e980b98965",
+      "name": "Bánh Xèo Bà Dưỡng",
+      "city": "Đà Nẵng",
+      "category_group": "restaurants_cafes_markets",
+      "original_b1a_priority": "P2",
+      "post_b1b_priority": "P2",
+      "osm_useful_structured_baseline": true,
+      "b1b_acquired_document_count": 1,
+      "b1b_acquired_document_ids": [
+        "w07-b1b-doc-overture-62a874a9-c732f0d5"
+      ],
+      "total_rag_eligible_evidence_units": 2,
+      "rag_candidate_eligible_lineage_count": 2,
+      "rag_candidate_eligible_lineages": [
+        "osm:node/4541527689",
+        "overture:c732f0d5-911d-4d9f-93b2-51c886f4fe0b"
+      ],
+      "PRIMARY_CORPUS_ELIGIBLE": true,
+      "RAG_CANDIDATE_ELIGIBLE": true,
+      "has_useful_structured_evidence": true,
+      "has_narrative_evidence": false,
+      "has_both_structured_and_narrative": false,
+      "remaining_gap_reasons": [
+        "STRUCTURED_ONLY_NO_NARRATIVE"
+      ]
+    },
+    {
+      "selection_rank": 29,
+      "poi_id": "61639da8-996a-43df-b6d3-928b6bdd70b9",
+      "name": "My Quang Bà Mua",
+      "city": "Đà Nẵng",
+      "category_group": "restaurants_cafes_markets",
+      "original_b1a_priority": "P2",
+      "post_b1b_priority": "P2",
+      "osm_useful_structured_baseline": true,
+      "b1b_acquired_document_count": 1,
+      "b1b_acquired_document_ids": [
+        "w07-b1b-doc-overture-61639da8-da92232b"
+      ],
+      "total_rag_eligible_evidence_units": 2,
+      "rag_candidate_eligible_lineage_count": 2,
+      "rag_candidate_eligible_lineages": [
+        "osm:node/7210857787",
+        "overture:da92232b-8e79-4082-84b0-6a35263af4df"
+      ],
+      "PRIMARY_CORPUS_ELIGIBLE": true,
+      "RAG_CANDIDATE_ELIGIBLE": true,
+      "has_useful_structured_evidence": true,
+      "has_narrative_evidence": false,
+      "has_both_structured_and_narrative": false,
+      "remaining_gap_reasons": [
+        "STRUCTURED_ONLY_NO_NARRATIVE"
+      ]
+    },
+    {
+      "selection_rank": 30,
+      "poi_id": "fd118580-b5da-467d-9873-0116ba435f37",
+      "name": "Nhà hàng hải sản Bé Anh",
+      "city": "Đà Nẵng",
+      "category_group": "restaurants_cafes_markets",
+      "original_b1a_priority": "P2",
+      "post_b1b_priority": "P2",
+      "osm_useful_structured_baseline": true,
+      "b1b_acquired_document_count": 1,
+      "b1b_acquired_document_ids": [
+        "w07-b1b-doc-overture-fd118580-df8dc91d"
+      ],
+      "total_rag_eligible_evidence_units": 2,
+      "rag_candidate_eligible_lineage_count": 2,
+      "rag_candidate_eligible_lineages": [
+        "osm:node/5485483822",
+        "overture:df8dc91d-1790-4600-a518-31bec995467a"
+      ],
+      "PRIMARY_CORPUS_ELIGIBLE": true,
+      "RAG_CANDIDATE_ELIGIBLE": true,
+      "has_useful_structured_evidence": true,
+      "has_narrative_evidence": false,
+      "has_both_structured_and_narrative": false,
+      "remaining_gap_reasons": [
+        "STRUCTURED_ONLY_NO_NARRATIVE"
+      ]
+    },
+    {
+      "selection_rank": 31,
+      "poi_id": "9a2ca486-437d-4044-8541-d34d911d4fb4",
+      "name": "Chợ Đêm Sơn Trà",
+      "city": "Đà Nẵng",
+      "category_group": "restaurants_cafes_markets",
+      "original_b1a_priority": "P2",
+      "post_b1b_priority": "P3",
+      "osm_useful_structured_baseline": true,
+      "b1b_acquired_document_count": 2,
+      "b1b_acquired_document_ids": [
+        "w07-b1b-doc-overture-9a2ca486-a310c792",
+        "w07-b1b-doc-wikivoyage-en-9a2ca486"
+      ],
+      "total_rag_eligible_evidence_units": 3,
+      "rag_candidate_eligible_lineage_count": 3,
+      "rag_candidate_eligible_lineages": [
+        "osm:way/1556362196",
+        "overture:a310c792-65d8-4115-9df6-ddf54babd1a8",
+        "wikivoyage:en:Da_Nang"
+      ],
+      "PRIMARY_CORPUS_ELIGIBLE": true,
+      "RAG_CANDIDATE_ELIGIBLE": true,
+      "has_useful_structured_evidence": true,
+      "has_narrative_evidence": true,
+      "has_both_structured_and_narrative": true,
+      "remaining_gap_reasons": []
+    },
+    {
+      "selection_rank": 32,
+      "poi_id": "c2afbb07-aaf9-47c1-9877-d17e64422066",
+      "name": "Chợ Bắc Mỹ An",
+      "city": "Đà Nẵng",
+      "category_group": "restaurants_cafes_markets",
+      "original_b1a_priority": "P0",
+      "post_b1b_priority": "P0",
+      "osm_useful_structured_baseline": false,
+      "b1b_acquired_document_count": 0,
+      "b1b_acquired_document_ids": [],
+      "total_rag_eligible_evidence_units": 0,
+      "rag_candidate_eligible_lineage_count": 0,
+      "rag_candidate_eligible_lineages": [],
+      "PRIMARY_CORPUS_ELIGIBLE": true,
+      "RAG_CANDIDATE_ELIGIBLE": false,
+      "has_useful_structured_evidence": false,
+      "has_narrative_evidence": false,
+      "has_both_structured_and_narrative": false,
+      "remaining_gap_reasons": [
+        "NO_RAG_ELIGIBLE_EVIDENCE",
+        "SINGLE_SOURCE_LINEAGE_ONLY",
+        "NO_NARRATIVE_TEXT"
+      ]
+    },
+    {
+      "selection_rank": 33,
+      "poi_id": "7ff87c59-62f1-4509-95f4-e83796b9a35c",
+      "name": "Vincom Plaza",
+      "city": "Đà Nẵng",
+      "category_group": "restaurants_cafes_markets",
+      "original_b1a_priority": "P2",
+      "post_b1b_priority": "P2",
+      "osm_useful_structured_baseline": true,
+      "b1b_acquired_document_count": 1,
+      "b1b_acquired_document_ids": [
+        "w07-b1b-doc-overture-7ff87c59-67b0a6b0"
+      ],
+      "total_rag_eligible_evidence_units": 2,
+      "rag_candidate_eligible_lineage_count": 2,
+      "rag_candidate_eligible_lineages": [
+        "osm:way/693393717",
+        "overture:67b0a6b0-f6e8-477d-8517-ef73c56752f7"
+      ],
+      "PRIMARY_CORPUS_ELIGIBLE": true,
+      "RAG_CANDIDATE_ELIGIBLE": true,
+      "has_useful_structured_evidence": true,
+      "has_narrative_evidence": false,
+      "has_both_structured_and_narrative": false,
+      "remaining_gap_reasons": [
+        "STRUCTURED_ONLY_NO_NARRATIVE"
+      ]
+    },
+    {
+      "selection_rank": 34,
+      "poi_id": "8ebf0429-fabb-4701-bbc1-cb2fea86d587",
+      "name": "Ca Phe 83",
+      "city": "Đà Nẵng",
+      "category_group": "restaurants_cafes_markets",
+      "original_b1a_priority": "P0",
+      "post_b1b_priority": "P1",
+      "osm_useful_structured_baseline": false,
+      "b1b_acquired_document_count": 1,
+      "b1b_acquired_document_ids": [
+        "w07-b1b-doc-overture-8ebf0429-1b27afcb"
+      ],
+      "total_rag_eligible_evidence_units": 1,
+      "rag_candidate_eligible_lineage_count": 1,
+      "rag_candidate_eligible_lineages": [
+        "overture:1b27afcb-daa1-4977-bcd5-cc5327c08c64"
+      ],
+      "PRIMARY_CORPUS_ELIGIBLE": true,
+      "RAG_CANDIDATE_ELIGIBLE": true,
+      "has_useful_structured_evidence": true,
+      "has_narrative_evidence": false,
+      "has_both_structured_and_narrative": false,
+      "remaining_gap_reasons": [
+        "SINGLE_ELIGIBLE_LINEAGE_ONLY",
+        "STRUCTURED_ONLY_NO_NARRATIVE"
+      ]
+    },
+    {
+      "selection_rank": 35,
+      "poi_id": "4608034c-6c43-4d54-a542-ead8e23b1338",
+      "name": "InterContinental Danang Sun Peninsula Resort",
+      "city": "Đà Nẵng",
+      "category_group": "hotels",
+      "original_b1a_priority": "P2",
+      "post_b1b_priority": "P3",
+      "osm_useful_structured_baseline": true,
+      "b1b_acquired_document_count": 4,
+      "b1b_acquired_document_ids": [
+        "w07-b1b-doc-overture-4608034c-0d91068a",
+        "w07-b1b-doc-wikidata-4608034c-q17068326",
+        "w07-b1b-doc-wikipedia-en-4608034c-40245483",
+        "w07-b1b-doc-wikivoyage-en-4608034c"
+      ],
+      "total_rag_eligible_evidence_units": 5,
+      "rag_candidate_eligible_lineage_count": 5,
+      "rag_candidate_eligible_lineages": [
+        "osm:way/360113559",
+        "overture:0d91068a-7ee8-4d97-ad32-a075a23d30fd",
+        "wikidata:Q17068326",
+        "wikipedia:en:40245483",
+        "wikivoyage:en:Da_Nang"
+      ],
+      "PRIMARY_CORPUS_ELIGIBLE": true,
+      "RAG_CANDIDATE_ELIGIBLE": true,
+      "has_useful_structured_evidence": true,
+      "has_narrative_evidence": true,
+      "has_both_structured_and_narrative": true,
+      "remaining_gap_reasons": []
+    },
+    {
+      "selection_rank": 36,
+      "poi_id": "a32ce1b4-126b-4544-b5ea-4a7edbab6a0a",
+      "name": "Furama Resort",
+      "city": "Đà Nẵng",
+      "category_group": "hotels",
+      "original_b1a_priority": "P2",
+      "post_b1b_priority": "P3",
+      "osm_useful_structured_baseline": true,
+      "b1b_acquired_document_count": 3,
+      "b1b_acquired_document_ids": [
+        "w07-b1b-doc-overture-a32ce1b4-82f95e1f",
+        "w07-b1b-doc-wikidata-a32ce1b4-q111402873",
+        "w07-b1b-doc-wikivoyage-en-a32ce1b4"
+      ],
+      "total_rag_eligible_evidence_units": 4,
+      "rag_candidate_eligible_lineage_count": 4,
+      "rag_candidate_eligible_lineages": [
+        "osm:way/485212452",
+        "overture:82f95e1f-7bf8-40df-a3ed-6f92a4a847f3",
+        "wikidata:Q111402873",
+        "wikivoyage:en:Da_Nang"
+      ],
+      "PRIMARY_CORPUS_ELIGIBLE": true,
+      "RAG_CANDIDATE_ELIGIBLE": true,
+      "has_useful_structured_evidence": true,
+      "has_narrative_evidence": true,
+      "has_both_structured_and_narrative": true,
+      "remaining_gap_reasons": []
+    },
+    {
+      "selection_rank": 37,
+      "poi_id": "2f202acf-c2bb-526a-9803-aaca142ffdad",
+      "name": "Bãi biển Mỹ Khê",
+      "city": "Đà Nẵng",
+      "category_group": "nature_beach",
+      "original_b1a_priority": "P1",
+      "post_b1b_priority": "P3",
+      "osm_useful_structured_baseline": true,
+      "b1b_acquired_document_count": 3,
+      "b1b_acquired_document_ids": [
+        "w07-b1b-doc-wikidata-2f202acf-q10796763",
+        "w07-b1b-doc-wikipedia-vi-2f202acf-66503",
+        "w07-b1b-doc-wikivoyage-en-2f202acf"
+      ],
+      "total_rag_eligible_evidence_units": 4,
+      "rag_candidate_eligible_lineage_count": 4,
+      "rag_candidate_eligible_lineages": [
+        "osm:relation/19000664",
+        "wikidata:Q10796763",
+        "wikipedia:vi:66503",
+        "wikivoyage:en:Da_Nang"
+      ],
+      "PRIMARY_CORPUS_ELIGIBLE": true,
+      "RAG_CANDIDATE_ELIGIBLE": true,
+      "has_useful_structured_evidence": true,
+      "has_narrative_evidence": true,
+      "has_both_structured_and_narrative": true,
+      "remaining_gap_reasons": []
+    },
+    {
+      "selection_rank": 38,
+      "poi_id": "49d739b9-e868-5391-9f80-bf9bed803b0f",
+      "name": "Bãi tắm Non Nước",
+      "city": "Đà Nẵng",
+      "category_group": "nature_beach",
+      "original_b1a_priority": "P0",
+      "post_b1b_priority": "P3",
+      "osm_useful_structured_baseline": false,
+      "b1b_acquired_document_count": 2,
+      "b1b_acquired_document_ids": [
+        "w07-b1b-doc-wikidata-49d739b9-q16480040",
+        "w07-b1b-doc-wikipedia-vi-49d739b9-2222566"
+      ],
+      "total_rag_eligible_evidence_units": 2,
+      "rag_candidate_eligible_lineage_count": 2,
+      "rag_candidate_eligible_lineages": [
+        "wikidata:Q16480040",
+        "wikipedia:vi:2222566"
+      ],
+      "PRIMARY_CORPUS_ELIGIBLE": true,
+      "RAG_CANDIDATE_ELIGIBLE": true,
+      "has_useful_structured_evidence": true,
+      "has_narrative_evidence": true,
+      "has_both_structured_and_narrative": true,
+      "remaining_gap_reasons": []
+    },
+    {
+      "selection_rank": 39,
+      "poi_id": "b5ea1253-6b6a-5f5a-b910-5ef18cd29c94",
+      "name": "Ban Co Peak",
+      "city": "Đà Nẵng",
+      "category_group": "nature_beach",
+      "original_b1a_priority": "P0",
+      "post_b1b_priority": "P3",
+      "osm_useful_structured_baseline": false,
+      "b1b_acquired_document_count": 2,
+      "b1b_acquired_document_ids": [
+        "w07-b1b-doc-wikidata-b5ea1253-q7560606",
+        "w07-b1b-doc-wikipedia-en-b5ea1253-30765128"
+      ],
+      "total_rag_eligible_evidence_units": 2,
+      "rag_candidate_eligible_lineage_count": 2,
+      "rag_candidate_eligible_lineages": [
+        "wikidata:Q7560606",
+        "wikipedia:en:30765128"
+      ],
+      "PRIMARY_CORPUS_ELIGIBLE": true,
+      "RAG_CANDIDATE_ELIGIBLE": true,
+      "has_useful_structured_evidence": true,
+      "has_narrative_evidence": true,
+      "has_both_structured_and_narrative": true,
+      "remaining_gap_reasons": []
+    },
+    {
+      "selection_rank": 40,
+      "poi_id": "987f490f-b1c7-42cf-b92e-300d57fd8d5f",
+      "name": "Sun World Bà Nà Hills",
+      "city": "Đà Nẵng",
+      "category_group": "other_tourism",
+      "original_b1a_priority": "P1",
+      "post_b1b_priority": "P3",
+      "osm_useful_structured_baseline": true,
+      "b1b_acquired_document_count": 3,
+      "b1b_acquired_document_ids": [
+        "w07-b1b-doc-wikidata-987f490f-q5004763",
+        "w07-b1b-doc-wikipedia-vi-987f490f-39872",
+        "w07-b1b-doc-wikivoyage-en-987f490f"
+      ],
+      "total_rag_eligible_evidence_units": 4,
+      "rag_candidate_eligible_lineage_count": 4,
+      "rag_candidate_eligible_lineages": [
+        "osm:way/359114064",
+        "wikidata:Q5004763",
+        "wikipedia:vi:39872",
+        "wikivoyage:en:Da_Nang"
+      ],
+      "PRIMARY_CORPUS_ELIGIBLE": true,
+      "RAG_CANDIDATE_ELIGIBLE": true,
+      "has_useful_structured_evidence": true,
+      "has_narrative_evidence": true,
+      "has_both_structured_and_narrative": true,
+      "remaining_gap_reasons": []
+    },
+    {
+      "selection_rank": 41,
+      "poi_id": "ade2140c-7945-4044-b99a-b1a028edce9e",
+      "name": "Vịnh Hạ Long",
+      "city": "Hạ Long",
+      "category_group": "attractions_culture",
+      "original_b1a_priority": "P1",
+      "post_b1b_priority": "P3",
+      "osm_useful_structured_baseline": true,
+      "b1b_acquired_document_count": 2,
+      "b1b_acquired_document_ids": [
+        "w07-b1b-doc-wikidata-ade2140c-q190128",
+        "w07-b1b-doc-wikipedia-vi-ade2140c-4483"
+      ],
+      "total_rag_eligible_evidence_units": 3,
+      "rag_candidate_eligible_lineage_count": 3,
+      "rag_candidate_eligible_lineages": [
+        "osm:node/2707025319",
+        "wikidata:Q190128",
+        "wikipedia:vi:4483"
+      ],
+      "PRIMARY_CORPUS_ELIGIBLE": true,
+      "RAG_CANDIDATE_ELIGIBLE": true,
+      "has_useful_structured_evidence": true,
+      "has_narrative_evidence": true,
+      "has_both_structured_and_narrative": true,
+      "remaining_gap_reasons": []
+    },
+    {
+      "selection_rank": 42,
+      "poi_id": "8f2b5a69-1293-4efe-8fc5-3a74193edd0f",
+      "name": "Bảo tàng Quảng Ninh",
+      "city": "Hạ Long",
+      "category_group": "attractions_culture",
+      "original_b1a_priority": "P0",
+      "post_b1b_priority": "P3",
+      "osm_useful_structured_baseline": false,
+      "b1b_acquired_document_count": 3,
+      "b1b_acquired_document_ids": [
+        "w07-b1b-doc-overture-8f2b5a69-bd078edf",
+        "w07-b1b-doc-wikidata-8f2b5a69-q112182634",
+        "w07-b1b-doc-wikipedia-vi-8f2b5a69-19729999"
+      ],
+      "total_rag_eligible_evidence_units": 3,
+      "rag_candidate_eligible_lineage_count": 3,
+      "rag_candidate_eligible_lineages": [
+        "overture:bd078edf-ad58-4f6c-9016-adf65c90e5eb",
+        "wikidata:Q112182634",
+        "wikipedia:vi:19729999"
+      ],
+      "PRIMARY_CORPUS_ELIGIBLE": true,
+      "RAG_CANDIDATE_ELIGIBLE": true,
+      "has_useful_structured_evidence": true,
+      "has_narrative_evidence": true,
+      "has_both_structured_and_narrative": true,
+      "remaining_gap_reasons": []
+    },
+    {
+      "selection_rank": 43,
+      "poi_id": "9a979427-a0bb-421d-b75f-2a6ee79b120b",
+      "name": "Động Thiên Cung",
+      "city": "Hạ Long",
+      "category_group": "attractions_culture",
+      "original_b1a_priority": "P0",
+      "post_b1b_priority": "P1",
+      "osm_useful_structured_baseline": false,
+      "b1b_acquired_document_count": 1,
+      "b1b_acquired_document_ids": [
+        "w07-b1b-doc-wikipedia-vi-9a979427-19770946"
+      ],
+      "total_rag_eligible_evidence_units": 1,
+      "rag_candidate_eligible_lineage_count": 1,
+      "rag_candidate_eligible_lineages": [
+        "wikipedia:vi:19770946"
+      ],
+      "PRIMARY_CORPUS_ELIGIBLE": true,
+      "RAG_CANDIDATE_ELIGIBLE": true,
+      "has_useful_structured_evidence": false,
+      "has_narrative_evidence": true,
+      "has_both_structured_and_narrative": false,
+      "remaining_gap_reasons": [
+        "SINGLE_ELIGIBLE_LINEAGE_ONLY"
+      ]
+    },
+    {
+      "selection_rank": 44,
+      "poi_id": "9fbcb0b4-27bc-4482-a8e3-8be6e3c72677",
+      "name": "Hang Đầu Gỗ",
+      "city": "Hạ Long",
+      "category_group": "attractions_culture",
+      "original_b1a_priority": "P0",
+      "post_b1b_priority": "P1",
+      "osm_useful_structured_baseline": false,
+      "b1b_acquired_document_count": 1,
+      "b1b_acquired_document_ids": [
+        "w07-b1b-doc-wikipedia-vi-9fbcb0b4-39566"
+      ],
+      "total_rag_eligible_evidence_units": 1,
+      "rag_candidate_eligible_lineage_count": 1,
+      "rag_candidate_eligible_lineages": [
+        "wikipedia:vi:39566"
+      ],
+      "PRIMARY_CORPUS_ELIGIBLE": true,
+      "RAG_CANDIDATE_ELIGIBLE": true,
+      "has_useful_structured_evidence": false,
+      "has_narrative_evidence": true,
+      "has_both_structured_and_narrative": false,
+      "remaining_gap_reasons": [
+        "SINGLE_ELIGIBLE_LINEAGE_ONLY"
+      ]
+    },
+    {
+      "selection_rank": 45,
+      "poi_id": "77af14b6-85ac-4c91-873a-e7da27d555f4",
+      "name": "Hang Luồn Cave Entrance",
+      "city": "Hạ Long",
+      "category_group": "attractions_culture",
+      "original_b1a_priority": "P0",
+      "post_b1b_priority": "P0",
+      "osm_useful_structured_baseline": false,
+      "b1b_acquired_document_count": 0,
+      "b1b_acquired_document_ids": [],
+      "total_rag_eligible_evidence_units": 0,
+      "rag_candidate_eligible_lineage_count": 0,
+      "rag_candidate_eligible_lineages": [],
+      "PRIMARY_CORPUS_ELIGIBLE": true,
+      "RAG_CANDIDATE_ELIGIBLE": false,
+      "has_useful_structured_evidence": false,
+      "has_narrative_evidence": false,
+      "has_both_structured_and_narrative": false,
+      "remaining_gap_reasons": [
+        "NO_RAG_ELIGIBLE_EVIDENCE",
+        "SINGLE_SOURCE_LINEAGE_ONLY",
+        "NO_NARRATIVE_TEXT"
+      ]
+    },
+    {
+      "selection_rank": 46,
+      "poi_id": "88652ea2-61a6-4022-85e5-84a0eb48d3f9",
+      "name": "Hòn Đỉnh Hương",
+      "city": "Hạ Long",
+      "category_group": "attractions_culture",
+      "original_b1a_priority": "P0",
+      "post_b1b_priority": "P1",
+      "osm_useful_structured_baseline": false,
+      "b1b_acquired_document_count": 1,
+      "b1b_acquired_document_ids": [
+        "w07-b1b-doc-wikipedia-vi-88652ea2-4483"
+      ],
+      "total_rag_eligible_evidence_units": 1,
+      "rag_candidate_eligible_lineage_count": 1,
+      "rag_candidate_eligible_lineages": [
+        "wikipedia:vi:4483"
+      ],
+      "PRIMARY_CORPUS_ELIGIBLE": true,
+      "RAG_CANDIDATE_ELIGIBLE": true,
+      "has_useful_structured_evidence": false,
+      "has_narrative_evidence": true,
+      "has_both_structured_and_narrative": false,
+      "remaining_gap_reasons": [
+        "SINGLE_ELIGIBLE_LINEAGE_ONLY"
+      ]
+    },
+    {
+      "selection_rank": 47,
+      "poi_id": "871a6ee7-1d46-49bb-957a-ff50260b1f3b",
+      "name": "Ha Long International Cruise Port",
+      "city": "Hạ Long",
+      "category_group": "attractions_culture",
+      "original_b1a_priority": "P2",
+      "post_b1b_priority": "P2",
+      "osm_useful_structured_baseline": true,
+      "b1b_acquired_document_count": 1,
+      "b1b_acquired_document_ids": [
+        "w07-b1b-doc-overture-871a6ee7-527ebd9f"
+      ],
+      "total_rag_eligible_evidence_units": 2,
+      "rag_candidate_eligible_lineage_count": 2,
+      "rag_candidate_eligible_lineages": [
+        "osm:node/7044140886",
+        "overture:527ebd9f-445a-4059-a815-0d988c0925a2"
+      ],
+      "PRIMARY_CORPUS_ELIGIBLE": true,
+      "RAG_CANDIDATE_ELIGIBLE": true,
+      "has_useful_structured_evidence": true,
+      "has_narrative_evidence": false,
+      "has_both_structured_and_narrative": false,
+      "remaining_gap_reasons": [
+        "STRUCTURED_ONLY_NO_NARRATIVE"
+      ]
+    },
+    {
+      "selection_rank": 48,
+      "poi_id": "b37d68ee-0cb3-49f0-a399-cac4c8e2732c",
+      "name": "Nhà hàng Hồng Hạnh 3",
+      "city": "Hạ Long",
+      "category_group": "restaurants_cafes_markets",
+      "original_b1a_priority": "P2",
+      "post_b1b_priority": "P2",
+      "osm_useful_structured_baseline": true,
+      "b1b_acquired_document_count": 1,
+      "b1b_acquired_document_ids": [
+        "w07-b1b-doc-overture-b37d68ee-92ed9717"
+      ],
+      "total_rag_eligible_evidence_units": 2,
+      "rag_candidate_eligible_lineage_count": 2,
+      "rag_candidate_eligible_lineages": [
+        "osm:node/12998514201",
+        "overture:92ed9717-ce41-4e8f-ab25-52e369cd88be"
+      ],
+      "PRIMARY_CORPUS_ELIGIBLE": true,
+      "RAG_CANDIDATE_ELIGIBLE": true,
+      "has_useful_structured_evidence": true,
+      "has_narrative_evidence": false,
+      "has_both_structured_and_narrative": false,
+      "remaining_gap_reasons": [
+        "STRUCTURED_ONLY_NO_NARRATIVE"
+      ]
+    },
+    {
+      "selection_rank": 49,
+      "poi_id": "7d01af19-10bc-4679-8cfa-4396209dece4",
+      "name": "Nhà hàng Ngọc Phương Nam 1",
+      "city": "Hạ Long",
+      "category_group": "restaurants_cafes_markets",
+      "original_b1a_priority": "P2",
+      "post_b1b_priority": "P2",
+      "osm_useful_structured_baseline": true,
+      "b1b_acquired_document_count": 1,
+      "b1b_acquired_document_ids": [
+        "w07-b1b-doc-overture-7d01af19-04dda4d2"
+      ],
+      "total_rag_eligible_evidence_units": 2,
+      "rag_candidate_eligible_lineage_count": 2,
+      "rag_candidate_eligible_lineages": [
+        "osm:node/12998531301",
+        "overture:04dda4d2-9d22-4516-a651-73c774b61663"
+      ],
+      "PRIMARY_CORPUS_ELIGIBLE": true,
+      "RAG_CANDIDATE_ELIGIBLE": true,
+      "has_useful_structured_evidence": true,
+      "has_narrative_evidence": false,
+      "has_both_structured_and_narrative": false,
+      "remaining_gap_reasons": [
+        "STRUCTURED_ONLY_NO_NARRATIVE"
+      ]
+    },
+    {
+      "selection_rank": 50,
+      "poi_id": "065f8492-2ab3-4ea0-ae8f-9cc6f8c18ae5",
+      "name": "Nhà hàng Buffet Sen Á Đông",
+      "city": "Hạ Long",
+      "category_group": "restaurants_cafes_markets",
+      "original_b1a_priority": "P2",
+      "post_b1b_priority": "P2",
+      "osm_useful_structured_baseline": true,
+      "b1b_acquired_document_count": 1,
+      "b1b_acquired_document_ids": [
+        "w07-b1b-doc-overture-065f8492-0772c46b"
+      ],
+      "total_rag_eligible_evidence_units": 2,
+      "rag_candidate_eligible_lineage_count": 2,
+      "rag_candidate_eligible_lineages": [
+        "osm:node/12998779901",
+        "overture:0772c46b-7aa9-40a0-b403-78dec2591927"
+      ],
+      "PRIMARY_CORPUS_ELIGIBLE": true,
+      "RAG_CANDIDATE_ELIGIBLE": true,
+      "has_useful_structured_evidence": true,
+      "has_narrative_evidence": false,
+      "has_both_structured_and_narrative": false,
+      "remaining_gap_reasons": [
+        "STRUCTURED_ONLY_NO_NARRATIVE"
+      ]
+    },
+    {
+      "selection_rank": 51,
+      "poi_id": "96523873-1b85-4d2f-b85c-cb3f5593091b",
+      "name": "Chợ Cái Dăm",
+      "city": "Hạ Long",
+      "category_group": "restaurants_cafes_markets",
+      "original_b1a_priority": "P2",
+      "post_b1b_priority": "P1",
+      "osm_useful_structured_baseline": true,
+      "b1b_acquired_document_count": 0,
+      "b1b_acquired_document_ids": [],
+      "total_rag_eligible_evidence_units": 1,
+      "rag_candidate_eligible_lineage_count": 1,
+      "rag_candidate_eligible_lineages": [
+        "osm:way/674641659"
+      ],
+      "PRIMARY_CORPUS_ELIGIBLE": true,
+      "RAG_CANDIDATE_ELIGIBLE": true,
+      "has_useful_structured_evidence": true,
+      "has_narrative_evidence": false,
+      "has_both_structured_and_narrative": false,
+      "remaining_gap_reasons": [
+        "SINGLE_ELIGIBLE_LINEAGE_ONLY",
+        "STRUCTURED_ONLY_NO_NARRATIVE"
+      ]
+    },
+    {
+      "selection_rank": 52,
+      "poi_id": "6215446b-2fdd-4014-aacf-23de6e45e264",
+      "name": "Chợ Hạ Long II",
+      "city": "Hạ Long",
+      "category_group": "restaurants_cafes_markets",
+      "original_b1a_priority": "P0",
+      "post_b1b_priority": "P0",
+      "osm_useful_structured_baseline": false,
+      "b1b_acquired_document_count": 0,
+      "b1b_acquired_document_ids": [],
+      "total_rag_eligible_evidence_units": 0,
+      "rag_candidate_eligible_lineage_count": 0,
+      "rag_candidate_eligible_lineages": [],
+      "PRIMARY_CORPUS_ELIGIBLE": true,
+      "RAG_CANDIDATE_ELIGIBLE": false,
+      "has_useful_structured_evidence": false,
+      "has_narrative_evidence": false,
+      "has_both_structured_and_narrative": false,
+      "remaining_gap_reasons": [
+        "NO_RAG_ELIGIBLE_EVIDENCE",
+        "SINGLE_SOURCE_LINEAGE_ONLY",
+        "NO_NARRATIVE_TEXT"
+      ]
+    },
+    {
+      "selection_rank": 53,
+      "poi_id": "b57b3f7d-9704-44b0-8139-19bea1998391",
+      "name": "Sữa chua trân châu Hạ Long cơ sở 00",
+      "city": "Hạ Long",
+      "category_group": "restaurants_cafes_markets",
+      "original_b1a_priority": "P0",
+      "post_b1b_priority": "P0",
+      "osm_useful_structured_baseline": false,
+      "b1b_acquired_document_count": 0,
+      "b1b_acquired_document_ids": [],
+      "total_rag_eligible_evidence_units": 0,
+      "rag_candidate_eligible_lineage_count": 0,
+      "rag_candidate_eligible_lineages": [],
+      "PRIMARY_CORPUS_ELIGIBLE": true,
+      "RAG_CANDIDATE_ELIGIBLE": false,
+      "has_useful_structured_evidence": false,
+      "has_narrative_evidence": false,
+      "has_both_structured_and_narrative": false,
+      "remaining_gap_reasons": [
+        "NO_RAG_ELIGIBLE_EVIDENCE",
+        "SINGLE_SOURCE_LINEAGE_ONLY",
+        "NO_NARRATIVE_TEXT"
+      ]
+    },
+    {
+      "selection_rank": 54,
+      "poi_id": "85303289-9746-4a42-b0f0-a555ce2bfd0e",
+      "name": "Highlands Coffee",
+      "city": "Hạ Long",
+      "category_group": "restaurants_cafes_markets",
+      "original_b1a_priority": "P2",
+      "post_b1b_priority": "P2",
+      "osm_useful_structured_baseline": true,
+      "b1b_acquired_document_count": 1,
+      "b1b_acquired_document_ids": [
+        "w07-b1b-doc-overture-85303289-6039522b"
+      ],
+      "total_rag_eligible_evidence_units": 2,
+      "rag_candidate_eligible_lineage_count": 2,
+      "rag_candidate_eligible_lineages": [
+        "osm:node/13183486704",
+        "overture:6039522b-f82a-4a1d-88f3-09beca7172ab"
+      ],
+      "PRIMARY_CORPUS_ELIGIBLE": true,
+      "RAG_CANDIDATE_ELIGIBLE": true,
+      "has_useful_structured_evidence": true,
+      "has_narrative_evidence": false,
+      "has_both_structured_and_narrative": false,
+      "remaining_gap_reasons": [
+        "STRUCTURED_ONLY_NO_NARRATIVE"
+      ]
+    },
+    {
+      "selection_rank": 55,
+      "poi_id": "75a3fbd1-a24e-43c6-820a-72f95ebc05c0",
+      "name": "Vinpearl Ha Long resort",
+      "city": "Hạ Long",
+      "category_group": "hotels",
+      "original_b1a_priority": "P0",
+      "post_b1b_priority": "P2",
+      "osm_useful_structured_baseline": false,
+      "b1b_acquired_document_count": 2,
+      "b1b_acquired_document_ids": [
+        "w07-b1b-doc-overture-75a3fbd1-9ed3a2e3",
+        "w07-b1b-doc-wikidata-75a3fbd1-q111402972"
+      ],
+      "total_rag_eligible_evidence_units": 2,
+      "rag_candidate_eligible_lineage_count": 2,
+      "rag_candidate_eligible_lineages": [
+        "overture:9ed3a2e3-60a3-4df0-acd8-83185f57a281",
+        "wikidata:Q111402972"
+      ],
+      "PRIMARY_CORPUS_ELIGIBLE": true,
+      "RAG_CANDIDATE_ELIGIBLE": true,
+      "has_useful_structured_evidence": true,
+      "has_narrative_evidence": false,
+      "has_both_structured_and_narrative": false,
+      "remaining_gap_reasons": [
+        "STRUCTURED_ONLY_NO_NARRATIVE"
+      ]
+    },
+    {
+      "selection_rank": 56,
+      "poi_id": "9740c851-5b06-432c-a243-071ad0906494",
+      "name": "Novotel Ha Long",
+      "city": "Hạ Long",
+      "category_group": "hotels",
+      "original_b1a_priority": "P0",
+      "post_b1b_priority": "P2",
+      "osm_useful_structured_baseline": false,
+      "b1b_acquired_document_count": 2,
+      "b1b_acquired_document_ids": [
+        "w07-b1b-doc-overture-9740c851-893209f5",
+        "w07-b1b-doc-wikidata-9740c851-q111402973"
+      ],
+      "total_rag_eligible_evidence_units": 2,
+      "rag_candidate_eligible_lineage_count": 2,
+      "rag_candidate_eligible_lineages": [
+        "overture:893209f5-1d13-479f-b7d7-6630b1f3fe57",
+        "wikidata:Q111402973"
+      ],
+      "PRIMARY_CORPUS_ELIGIBLE": true,
+      "RAG_CANDIDATE_ELIGIBLE": true,
+      "has_useful_structured_evidence": true,
+      "has_narrative_evidence": false,
+      "has_both_structured_and_narrative": false,
+      "remaining_gap_reasons": [
+        "STRUCTURED_ONLY_NO_NARRATIVE"
+      ]
+    },
+    {
+      "selection_rank": 57,
+      "poi_id": "708ee182-c879-477c-b920-516e2c99b0a6",
+      "name": "Công viên Lán Bè",
+      "city": "Hạ Long",
+      "category_group": "nature_beach",
+      "original_b1a_priority": "P0",
+      "post_b1b_priority": "P0",
+      "osm_useful_structured_baseline": false,
+      "b1b_acquired_document_count": 0,
+      "b1b_acquired_document_ids": [],
+      "total_rag_eligible_evidence_units": 0,
+      "rag_candidate_eligible_lineage_count": 0,
+      "rag_candidate_eligible_lineages": [],
+      "PRIMARY_CORPUS_ELIGIBLE": true,
+      "RAG_CANDIDATE_ELIGIBLE": false,
+      "has_useful_structured_evidence": false,
+      "has_narrative_evidence": false,
+      "has_both_structured_and_narrative": false,
+      "remaining_gap_reasons": [
+        "NO_RAG_ELIGIBLE_EVIDENCE",
+        "SINGLE_SOURCE_LINEAGE_ONLY",
+        "NO_NARRATIVE_TEXT"
+      ]
+    },
+    {
+      "selection_rank": 58,
+      "poi_id": "0931b06b-4563-4af0-a3a4-75f1ad8392ee",
+      "name": "Vườn hoa",
+      "city": "Hạ Long",
+      "category_group": "nature_beach",
+      "original_b1a_priority": "P0",
+      "post_b1b_priority": "P0",
+      "osm_useful_structured_baseline": false,
+      "b1b_acquired_document_count": 0,
+      "b1b_acquired_document_ids": [],
+      "total_rag_eligible_evidence_units": 0,
+      "rag_candidate_eligible_lineage_count": 0,
+      "rag_candidate_eligible_lineages": [],
+      "PRIMARY_CORPUS_ELIGIBLE": true,
+      "RAG_CANDIDATE_ELIGIBLE": false,
+      "has_useful_structured_evidence": false,
+      "has_narrative_evidence": false,
+      "has_both_structured_and_narrative": false,
+      "remaining_gap_reasons": [
+        "NO_RAG_ELIGIBLE_EVIDENCE",
+        "SINGLE_SOURCE_LINEAGE_ONLY",
+        "NO_NARRATIVE_TEXT"
+      ]
+    },
+    {
+      "selection_rank": 59,
+      "poi_id": "8fe33554-7a07-4eb2-870f-8af643d8c728",
+      "name": "Vườn hoa Thị trấn Trới",
+      "city": "Hạ Long",
+      "category_group": "nature_beach",
+      "original_b1a_priority": "P0",
+      "post_b1b_priority": "P0",
+      "osm_useful_structured_baseline": false,
+      "b1b_acquired_document_count": 0,
+      "b1b_acquired_document_ids": [],
+      "total_rag_eligible_evidence_units": 0,
+      "rag_candidate_eligible_lineage_count": 0,
+      "rag_candidate_eligible_lineages": [],
+      "PRIMARY_CORPUS_ELIGIBLE": true,
+      "RAG_CANDIDATE_ELIGIBLE": false,
+      "has_useful_structured_evidence": false,
+      "has_narrative_evidence": false,
+      "has_both_structured_and_narrative": false,
+      "remaining_gap_reasons": [
+        "NO_RAG_ELIGIBLE_EVIDENCE",
+        "SINGLE_SOURCE_LINEAGE_ONLY",
+        "NO_NARRATIVE_TEXT"
+      ]
+    },
+    {
+      "selection_rank": 60,
+      "poi_id": "1a95430d-289d-4663-91b8-ae64ede4f9a4",
+      "name": "Sunworld",
+      "city": "Hạ Long",
+      "category_group": "other_tourism",
+      "original_b1a_priority": "P0",
+      "post_b1b_priority": "P3",
+      "osm_useful_structured_baseline": false,
+      "b1b_acquired_document_count": 2,
+      "b1b_acquired_document_ids": [
+        "w07-b1b-doc-wikidata-1a95430d-q28449757",
+        "w07-b1b-doc-wikipedia-en-1a95430d-52681673"
+      ],
+      "total_rag_eligible_evidence_units": 2,
+      "rag_candidate_eligible_lineage_count": 2,
+      "rag_candidate_eligible_lineages": [
+        "wikidata:Q28449757",
+        "wikipedia:en:52681673"
+      ],
+      "PRIMARY_CORPUS_ELIGIBLE": true,
+      "RAG_CANDIDATE_ELIGIBLE": true,
+      "has_useful_structured_evidence": true,
+      "has_narrative_evidence": true,
+      "has_both_structured_and_narrative": true,
+      "remaining_gap_reasons": []
+    }
+  ],
+  "remaining_gap_list": [
+    {
+      "poi_id": "afb3793b-7227-4645-a68a-3647c7468638",
+      "name": "Sen Tây Hồ",
+      "city": "Hà Nội",
+      "category_group": "restaurants_cafes_markets",
+      "original_b1a_priority": "P2",
+      "post_b1b_priority": "P2",
+      "remaining_gap_reasons": [
+        "STRUCTURED_ONLY_NO_NARRATIVE"
+      ]
+    },
+    {
+      "poi_id": "b0641225-0f38-4bcc-9f4c-34f65fa50d45",
+      "name": "Cửa Hàng Bánh Tôm Hồ Tây",
+      "city": "Hà Nội",
+      "category_group": "restaurants_cafes_markets",
+      "original_b1a_priority": "P0",
+      "post_b1b_priority": "P0",
+      "remaining_gap_reasons": [
+        "NO_RAG_ELIGIBLE_EVIDENCE",
+        "SINGLE_SOURCE_LINEAGE_ONLY",
+        "NO_NARRATIVE_TEXT"
+      ]
+    },
+    {
+      "poi_id": "5bd45eb7-a691-4426-9691-a5a00f38d1ad",
+      "name": "Highlands Coffee",
+      "city": "Hà Nội",
+      "category_group": "restaurants_cafes_markets",
+      "original_b1a_priority": "P2",
+      "post_b1b_priority": "P2",
+      "remaining_gap_reasons": [
+        "STRUCTURED_ONLY_NO_NARRATIVE"
+      ]
+    },
+    {
+      "poi_id": "4146f2b7-8289-4309-b7e6-60ba7de3470e",
+      "name": "Cà Phê Nola",
+      "city": "Hà Nội",
+      "category_group": "restaurants_cafes_markets",
+      "original_b1a_priority": "P0",
+      "post_b1b_priority": "P0",
+      "remaining_gap_reasons": [
+        "NO_RAG_ELIGIBLE_EVIDENCE",
+        "SINGLE_SOURCE_LINEAGE_ONLY",
+        "NO_NARRATIVE_TEXT"
+      ]
+    },
+    {
+      "poi_id": "a2fc15de-d609-4d4f-abf1-9779d57901a6",
+      "name": "Cà Phê Kafa",
+      "city": "Hà Nội",
+      "category_group": "restaurants_cafes_markets",
+      "original_b1a_priority": "P1",
+      "post_b1b_priority": "P1",
+      "remaining_gap_reasons": [
+        "SINGLE_ELIGIBLE_LINEAGE_ONLY",
+        "STRUCTURED_ONLY_NO_NARRATIVE"
+      ]
+    },
+    {
+      "poi_id": "9b08dfe9-6f97-4d4b-94f6-f3548efd696c",
+      "name": "Le Pub",
+      "city": "Hà Nội",
+      "category_group": "other_tourism",
+      "original_b1a_priority": "P1",
+      "post_b1b_priority": "P1",
+      "remaining_gap_reasons": [
+        "SINGLE_ELIGIBLE_LINEAGE_ONLY",
+        "STRUCTURED_ONLY_NO_NARRATIVE"
+      ]
+    },
+    {
+      "poi_id": "5fc0994a-e578-4a25-b375-7f079e6dc3ba",
+      "name": "Chùa Linh Ứng",
+      "city": "Đà Nẵng",
+      "category_group": "attractions_culture",
+      "original_b1a_priority": "P2",
+      "post_b1b_priority": "P1",
+      "remaining_gap_reasons": [
+        "SINGLE_ELIGIBLE_LINEAGE_ONLY",
+        "STRUCTURED_ONLY_NO_NARRATIVE"
+      ]
+    },
+    {
+      "poi_id": "cb6cce60-8270-5f43-b9f7-42de2d7d7da3",
+      "name": "Bảo tàng Đà Nẵng",
+      "city": "Đà Nẵng",
+      "category_group": "attractions_culture",
+      "original_b1a_priority": "P1",
+      "post_b1b_priority": "P1",
+      "remaining_gap_reasons": [
+        "SINGLE_ELIGIBLE_LINEAGE_ONLY",
+        "STRUCTURED_ONLY_NO_NARRATIVE"
+      ]
+    },
+    {
+      "poi_id": "62a874a9-13e2-44d2-95b5-30e980b98965",
+      "name": "Bánh Xèo Bà Dưỡng",
+      "city": "Đà Nẵng",
+      "category_group": "restaurants_cafes_markets",
+      "original_b1a_priority": "P2",
+      "post_b1b_priority": "P2",
+      "remaining_gap_reasons": [
+        "STRUCTURED_ONLY_NO_NARRATIVE"
+      ]
+    },
+    {
+      "poi_id": "61639da8-996a-43df-b6d3-928b6bdd70b9",
+      "name": "My Quang Bà Mua",
+      "city": "Đà Nẵng",
+      "category_group": "restaurants_cafes_markets",
+      "original_b1a_priority": "P2",
+      "post_b1b_priority": "P2",
+      "remaining_gap_reasons": [
+        "STRUCTURED_ONLY_NO_NARRATIVE"
+      ]
+    },
+    {
+      "poi_id": "fd118580-b5da-467d-9873-0116ba435f37",
+      "name": "Nhà hàng hải sản Bé Anh",
+      "city": "Đà Nẵng",
+      "category_group": "restaurants_cafes_markets",
+      "original_b1a_priority": "P2",
+      "post_b1b_priority": "P2",
+      "remaining_gap_reasons": [
+        "STRUCTURED_ONLY_NO_NARRATIVE"
+      ]
+    },
+    {
+      "poi_id": "c2afbb07-aaf9-47c1-9877-d17e64422066",
+      "name": "Chợ Bắc Mỹ An",
+      "city": "Đà Nẵng",
+      "category_group": "restaurants_cafes_markets",
+      "original_b1a_priority": "P0",
+      "post_b1b_priority": "P0",
+      "remaining_gap_reasons": [
+        "NO_RAG_ELIGIBLE_EVIDENCE",
+        "SINGLE_SOURCE_LINEAGE_ONLY",
+        "NO_NARRATIVE_TEXT"
+      ]
+    },
+    {
+      "poi_id": "7ff87c59-62f1-4509-95f4-e83796b9a35c",
+      "name": "Vincom Plaza",
+      "city": "Đà Nẵng",
+      "category_group": "restaurants_cafes_markets",
+      "original_b1a_priority": "P2",
+      "post_b1b_priority": "P2",
+      "remaining_gap_reasons": [
+        "STRUCTURED_ONLY_NO_NARRATIVE"
+      ]
+    },
+    {
+      "poi_id": "8ebf0429-fabb-4701-bbc1-cb2fea86d587",
+      "name": "Ca Phe 83",
+      "city": "Đà Nẵng",
+      "category_group": "restaurants_cafes_markets",
+      "original_b1a_priority": "P0",
+      "post_b1b_priority": "P1",
+      "remaining_gap_reasons": [
+        "SINGLE_ELIGIBLE_LINEAGE_ONLY",
+        "STRUCTURED_ONLY_NO_NARRATIVE"
+      ]
+    },
+    {
+      "poi_id": "9a979427-a0bb-421d-b75f-2a6ee79b120b",
+      "name": "Động Thiên Cung",
+      "city": "Hạ Long",
+      "category_group": "attractions_culture",
+      "original_b1a_priority": "P0",
+      "post_b1b_priority": "P1",
+      "remaining_gap_reasons": [
+        "SINGLE_ELIGIBLE_LINEAGE_ONLY"
+      ]
+    },
+    {
+      "poi_id": "9fbcb0b4-27bc-4482-a8e3-8be6e3c72677",
+      "name": "Hang Đầu Gỗ",
+      "city": "Hạ Long",
+      "category_group": "attractions_culture",
+      "original_b1a_priority": "P0",
+      "post_b1b_priority": "P1",
+      "remaining_gap_reasons": [
+        "SINGLE_ELIGIBLE_LINEAGE_ONLY"
+      ]
+    },
+    {
+      "poi_id": "77af14b6-85ac-4c91-873a-e7da27d555f4",
+      "name": "Hang Luồn Cave Entrance",
+      "city": "Hạ Long",
+      "category_group": "attractions_culture",
+      "original_b1a_priority": "P0",
+      "post_b1b_priority": "P0",
+      "remaining_gap_reasons": [
+        "NO_RAG_ELIGIBLE_EVIDENCE",
+        "SINGLE_SOURCE_LINEAGE_ONLY",
+        "NO_NARRATIVE_TEXT"
+      ]
+    },
+    {
+      "poi_id": "88652ea2-61a6-4022-85e5-84a0eb48d3f9",
+      "name": "Hòn Đỉnh Hương",
+      "city": "Hạ Long",
+      "category_group": "attractions_culture",
+      "original_b1a_priority": "P0",
+      "post_b1b_priority": "P1",
+      "remaining_gap_reasons": [
+        "SINGLE_ELIGIBLE_LINEAGE_ONLY"
+      ]
+    },
+    {
+      "poi_id": "871a6ee7-1d46-49bb-957a-ff50260b1f3b",
+      "name": "Ha Long International Cruise Port",
+      "city": "Hạ Long",
+      "category_group": "attractions_culture",
+      "original_b1a_priority": "P2",
+      "post_b1b_priority": "P2",
+      "remaining_gap_reasons": [
+        "STRUCTURED_ONLY_NO_NARRATIVE"
+      ]
+    },
+    {
+      "poi_id": "b37d68ee-0cb3-49f0-a399-cac4c8e2732c",
+      "name": "Nhà hàng Hồng Hạnh 3",
+      "city": "Hạ Long",
+      "category_group": "restaurants_cafes_markets",
+      "original_b1a_priority": "P2",
+      "post_b1b_priority": "P2",
+      "remaining_gap_reasons": [
+        "STRUCTURED_ONLY_NO_NARRATIVE"
+      ]
+    },
+    {
+      "poi_id": "7d01af19-10bc-4679-8cfa-4396209dece4",
+      "name": "Nhà hàng Ngọc Phương Nam 1",
+      "city": "Hạ Long",
+      "category_group": "restaurants_cafes_markets",
+      "original_b1a_priority": "P2",
+      "post_b1b_priority": "P2",
+      "remaining_gap_reasons": [
+        "STRUCTURED_ONLY_NO_NARRATIVE"
+      ]
+    },
+    {
+      "poi_id": "065f8492-2ab3-4ea0-ae8f-9cc6f8c18ae5",
+      "name": "Nhà hàng Buffet Sen Á Đông",
+      "city": "Hạ Long",
+      "category_group": "restaurants_cafes_markets",
+      "original_b1a_priority": "P2",
+      "post_b1b_priority": "P2",
+      "remaining_gap_reasons": [
+        "STRUCTURED_ONLY_NO_NARRATIVE"
+      ]
+    },
+    {
+      "poi_id": "96523873-1b85-4d2f-b85c-cb3f5593091b",
+      "name": "Chợ Cái Dăm",
+      "city": "Hạ Long",
+      "category_group": "restaurants_cafes_markets",
+      "original_b1a_priority": "P2",
+      "post_b1b_priority": "P1",
+      "remaining_gap_reasons": [
+        "SINGLE_ELIGIBLE_LINEAGE_ONLY",
+        "STRUCTURED_ONLY_NO_NARRATIVE"
+      ]
+    },
+    {
+      "poi_id": "6215446b-2fdd-4014-aacf-23de6e45e264",
+      "name": "Chợ Hạ Long II",
+      "city": "Hạ Long",
+      "category_group": "restaurants_cafes_markets",
+      "original_b1a_priority": "P0",
+      "post_b1b_priority": "P0",
+      "remaining_gap_reasons": [
+        "NO_RAG_ELIGIBLE_EVIDENCE",
+        "SINGLE_SOURCE_LINEAGE_ONLY",
+        "NO_NARRATIVE_TEXT"
+      ]
+    },
+    {
+      "poi_id": "b57b3f7d-9704-44b0-8139-19bea1998391",
+      "name": "Sữa chua trân châu Hạ Long cơ sở 00",
+      "city": "Hạ Long",
+      "category_group": "restaurants_cafes_markets",
+      "original_b1a_priority": "P0",
+      "post_b1b_priority": "P0",
+      "remaining_gap_reasons": [
+        "NO_RAG_ELIGIBLE_EVIDENCE",
+        "SINGLE_SOURCE_LINEAGE_ONLY",
+        "NO_NARRATIVE_TEXT"
+      ]
+    },
+    {
+      "poi_id": "85303289-9746-4a42-b0f0-a555ce2bfd0e",
+      "name": "Highlands Coffee",
+      "city": "Hạ Long",
+      "category_group": "restaurants_cafes_markets",
+      "original_b1a_priority": "P2",
+      "post_b1b_priority": "P2",
+      "remaining_gap_reasons": [
+        "STRUCTURED_ONLY_NO_NARRATIVE"
+      ]
+    },
+    {
+      "poi_id": "75a3fbd1-a24e-43c6-820a-72f95ebc05c0",
+      "name": "Vinpearl Ha Long resort",
+      "city": "Hạ Long",
+      "category_group": "hotels",
+      "original_b1a_priority": "P0",
+      "post_b1b_priority": "P2",
+      "remaining_gap_reasons": [
+        "STRUCTURED_ONLY_NO_NARRATIVE"
+      ]
+    },
+    {
+      "poi_id": "9740c851-5b06-432c-a243-071ad0906494",
+      "name": "Novotel Ha Long",
+      "city": "Hạ Long",
+      "category_group": "hotels",
+      "original_b1a_priority": "P0",
+      "post_b1b_priority": "P2",
+      "remaining_gap_reasons": [
+        "STRUCTURED_ONLY_NO_NARRATIVE"
+      ]
+    },
+    {
+      "poi_id": "708ee182-c879-477c-b920-516e2c99b0a6",
+      "name": "Công viên Lán Bè",
+      "city": "Hạ Long",
+      "category_group": "nature_beach",
+      "original_b1a_priority": "P0",
+      "post_b1b_priority": "P0",
+      "remaining_gap_reasons": [
+        "NO_RAG_ELIGIBLE_EVIDENCE",
+        "SINGLE_SOURCE_LINEAGE_ONLY",
+        "NO_NARRATIVE_TEXT"
+      ]
+    },
+    {
+      "poi_id": "0931b06b-4563-4af0-a3a4-75f1ad8392ee",
+      "name": "Vườn hoa",
+      "city": "Hạ Long",
+      "category_group": "nature_beach",
+      "original_b1a_priority": "P0",
+      "post_b1b_priority": "P0",
+      "remaining_gap_reasons": [
+        "NO_RAG_ELIGIBLE_EVIDENCE",
+        "SINGLE_SOURCE_LINEAGE_ONLY",
+        "NO_NARRATIVE_TEXT"
+      ]
+    },
+    {
+      "poi_id": "8fe33554-7a07-4eb2-870f-8af643d8c728",
+      "name": "Vườn hoa Thị trấn Trới",
+      "city": "Hạ Long",
+      "category_group": "nature_beach",
+      "original_b1a_priority": "P0",
+      "post_b1b_priority": "P0",
+      "remaining_gap_reasons": [
+        "NO_RAG_ELIGIBLE_EVIDENCE",
+        "SINGLE_SOURCE_LINEAGE_ONLY",
+        "NO_NARRATIVE_TEXT"
+      ]
+    }
+  ],
+  "upstream_immutability": {
+    "data/evaluation/w06/w06_scientific_closure_v1.json": {
+      "expected_lf_sha256": "7b58fcc8c63a7e1391a4d5212ed08f57317bb4d81d9069a9513cfaf3c03398cc",
+      "actual_lf_sha256": "7b58fcc8c63a7e1391a4d5212ed08f57317bb4d81d9069a9513cfaf3c03398cc",
+      "unchanged": true
+    },
+    "data/evaluation/w07/w07_data_rag_readiness_audit_v1.json": {
+      "expected_lf_sha256": "2727cb23ea63af6eada16deba558a82f6329b13ebccb09133c32042466bd2b16",
+      "actual_lf_sha256": "2727cb23ea63af6eada16deba558a82f6329b13ebccb09133c32042466bd2b16",
+      "unchanged": true
+    },
+    "data/evaluation/w07/w07_review_target_60_pois_v1.json": {
+      "expected_lf_sha256": "3a065165d038f300f5dc422180fcaf3cef265ac1a100ea8e841daaba1a82d5d4",
+      "actual_lf_sha256": "3a065165d038f300f5dc422180fcaf3cef265ac1a100ea8e841daaba1a82d5d4",
+      "unchanged": true
+    },
+    "data/evaluation/w07/w07_review_corpus_feasibility_v1.json": {
+      "expected_lf_sha256": "1790ec89f6660217584db81f1983da88a5aa3d02e2b2190ad4d4d3672faa6c1b",
+      "actual_lf_sha256": "1790ec89f6660217584db81f1983da88a5aa3d02e2b2190ad4d4d3672faa6c1b",
+      "unchanged": true
+    },
+    "data/evaluation/w07/w07_review_collection_progress_v1.json": {
+      "expected_lf_sha256": "bbf789ae44c7dd9bbfbd4c5bdea923ded1ddbacc270ec7764e360e84bebe598a",
+      "actual_lf_sha256": "bbf789ae44c7dd9bbfbd4c5bdea923ded1ddbacc270ec7764e360e84bebe598a",
+      "unchanged": true
+    },
+    "data/evaluation/w07/w07_contributor_collection_form_definition_v1.json": {
+      "expected_lf_sha256": "1984d131fe41f5152731f0c77ad68e4b77c5a54df0718fa031ed4527d1e7340b",
+      "actual_lf_sha256": "1984d131fe41f5152731f0c77ad68e4b77c5a54df0718fa031ed4527d1e7340b",
+      "unchanged": true
+    },
+    "data/evaluation/w07/w07_first_party_collection_progress_v1.json": {
+      "expected_lf_sha256": "79095ce10fbf50a838d9e1a607001d821413ced6e8d6e7ad5ac2fd6e7c6239d1",
+      "actual_lf_sha256": "79095ce10fbf50a838d9e1a607001d821413ced6e8d6e7ad5ac2fd6e7c6239d1",
+      "unchanged": true
+    },
+    "data/evaluation/w07/w07_public_source_evidence_receipts_v1.json": {
+      "expected_lf_sha256": "bc5c8ace3618d5a67d16bf9bd5c298c52f132fc8fe575bd1678730f31b0b1d49",
+      "actual_lf_sha256": "bc5c8ace3618d5a67d16bf9bd5c298c52f132fc8fe575bd1678730f31b0b1d49",
+      "unchanged": true
+    },
+    "data/evaluation/w07/w07_public_review_acquisition_v1.json": {
+      "expected_lf_sha256": "b1380683b5a55d92fe467203b912af86fd945a31bc9160c789c57c3e55ae04ea",
+      "actual_lf_sha256": "b1380683b5a55d92fe467203b912af86fd945a31bc9160c789c57c3e55ae04ea",
+      "unchanged": true
+    },
+    "data/evaluation/w07/w07_data_strategy_amendment_01_v1.json": {
+      "expected_lf_sha256": "896fb5f90bce36610f9e82e23f52e56e0f93d90ecb81f564b6a1360b8e4b3c94",
+      "actual_lf_sha256": "896fb5f90bce36610f9e82e23f52e56e0f93d90ecb81f564b6a1360b8e4b3c94",
+      "unchanged": true
+    },
+    "docs/research/w07_data_strategy_amendment_01.md": {
+      "expected_lf_sha256": "0f1ef9fcb9500882ce3dbbbea148d2d592fbe7211eb1e91f86855d6ed08af585",
+      "actual_lf_sha256": "0f1ef9fcb9500882ce3dbbbea148d2d592fbe7211eb1e91f86855d6ed08af585",
+      "unchanged": true
+    },
+    "data/evaluation/w07/w07_b1a_existing_poi_knowledge_audit_v1.json": {
+      "expected_lf_sha256": "433c722dd2f03946ab0a15830b53ef628d76937fa2e8e63a9939e73bb469e563",
+      "actual_lf_sha256": "433c722dd2f03946ab0a15830b53ef628d76937fa2e8e63a9939e73bb469e563",
+      "unchanged": true
+    },
+    "docs/research/w07_b1a_existing_poi_knowledge_audit.md": {
+      "expected_lf_sha256": "130aca652c9b808a8b7e5fac50d070dd0c3f36a8e94f7693cfac8793643d0ac5",
+      "actual_lf_sha256": "130aca652c9b808a8b7e5fac50d070dd0c3f36a8e94f7693cfac8793643d0ac5",
+      "unchanged": true
+    },
+    "apps/ai-service/app/rag/osm_documents.py": {
+      "expected_lf_sha256": "99fa5f076fce698cd3d32bbb2f191f23456895f26c22b59d0db502a760386455",
+      "actual_lf_sha256": "99fa5f076fce698cd3d32bbb2f191f23456895f26c22b59d0db502a760386455",
+      "unchanged": true
+    },
+    "data/evaluation/w07/w07_b1_fix_01b_reingestion_v1.json": {
+      "expected_lf_sha256": "38516e31df5f35f7efed2c5a1c355a44778acfdaef8b5c29354c3d56a32bfc71",
+      "actual_lf_sha256": "38516e31df5f35f7efed2c5a1c355a44778acfdaef8b5c29354c3d56a32bfc71",
+      "unchanged": true
+    },
+    "docs/research/w07_b1_fix_01b_reingestion.md": {
+      "expected_lf_sha256": "9475ff03c4fb454fc6335332a557a7a9a101a78c14472d1b3225ee2f25f3d62c",
+      "actual_lf_sha256": "9475ff03c4fb454fc6335332a557a7a9a101a78c14472d1b3225ee2f25f3d62c",
+      "unchanged": true
+    }
+  },
+  "artifact_sha256": "ce64cd5c03b5ca5575fd4073531503c1e3651d34cf36a02e53ec34efc422cb43"
+}

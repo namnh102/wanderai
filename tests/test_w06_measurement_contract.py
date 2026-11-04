@@ -300,6 +300,7 @@ def test_w06_contract_19_production_behavior_unchanged(contract_doc: dict):
             "apps/backend/src/modules/trips/trips.service.ts",
             "apps/backend/src/modules/ai-proxy/ai-proxy.service.ts",
             "data/curated/",
+            ":(exclude)data/curated/w07/",
             "data/evaluation/planner/",
             "data/evaluation/w5/",
         ],
