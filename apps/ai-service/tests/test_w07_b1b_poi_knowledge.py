@@ -1,7 +1,8 @@
-"""W07-B1B tests: Targeted POI knowledge acquisition, Corrective 01 corpus quality, and governance."""
+"""W07-B1B tests: Targeted POI knowledge acquisition, Corrective 01 & Corrective 02 fact consistency and temporal provenance."""
 
 from __future__ import annotations
 
+import copy
 import hashlib
 import json
 from pathlib import Path
@@ -22,15 +23,25 @@ from scripts import (  # noqa: E402
 )
 
 
+def _resign(payload: dict) -> dict:
+    out = copy.deepcopy(payload)
+    out.pop("artifact_sha256", None)
+    canonical = json.dumps(out, ensure_ascii=False, indent=2, sort_keys=True)
+    out["artifact_sha256"] = hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+    return out
+
+
 def test_01_b1b_verification_passes():
     result = b1b_verify.verify_b1b_artifacts()
     assert result["status"] == "PASS"
     assert result["candidates_evaluated"] == 132
-    assert result["accepted_primary_documents"] == 101
-    assert result["accepted_independent_lineages"] == 82
+    assert result["accepted_primary_documents"] == 97
+    assert result["accepted_independent_lineages"] == 78
     assert result["wikipedia_documents_accepted"] == 26
     assert result["wikipedia_documents_with_empty_body"] == 0
-    assert result["pois_with_rag_evidence"] == 52
+    assert result["overture_records_audited"] == 26
+    assert result["overture_documents_accepted"] == 23
+    assert result["pois_with_rag_evidence"] == 51
     assert result["W07_B1B_CORPUS_ACQUISITION_READY_FOR_B2"] is True
 
 
@@ -59,6 +70,7 @@ def test_02_source_decisions_schema_and_two_gate_rules():
     for rec in records:
         for field in b1b_verify.REQUIRED_CANDIDATE_FIELDS:
             assert field in rec and rec[field] is not None and rec[field] != ""
+        b1b_verify.validate_temporal_provenance(rec, is_document=False)
         dec = rec["final_b1b_decision"]
         if dec == "ACCEPT_PRIMARY_CORPUS":
             assert rec["canonical_mapping_status"] == "EXACT_MAPPED"
@@ -83,11 +95,11 @@ def test_02_source_decisions_schema_and_two_gate_rules():
             )
 
 
-def test_03_acquired_jsonl_20_field_schema_and_hashes():
+def test_03_acquired_jsonl_schema_temporal_provenance_and_hashes():
     raw_lines = [
         line for line in b1b_acquire.ACQUIRED_JSONL_PATH.read_text(encoding="utf-8").splitlines() if line.strip()
     ]
-    assert len(raw_lines) == 101
+    assert len(raw_lines) == 97
 
     seen_doc_ids: set[str] = set()
     for line in raw_lines:
@@ -103,6 +115,7 @@ def test_03_acquired_jsonl_20_field_schema_and_hashes():
         assert doc["content_utility_status"] in ("USEFUL_NARRATIVE", "USEFUL_STRUCTURED_FACTS")
         expected_sha = hashlib.sha256(doc["raw_text"].encode("utf-8")).hexdigest()
         assert doc["content_sha256"] == expected_sha
+        b1b_verify.validate_temporal_provenance(doc, is_document=True)
         b1b_verify.validate_document_content_utility(doc)
 
 
@@ -136,13 +149,15 @@ def test_05_negative_empty_and_header_only_wikipedia_rejected(monkeypatch, tmp_p
         "source_url": "https://vi.wikipedia.org/wiki/Test?oldid=1",
         "publisher": "Wikimedia Foundation (vi.wikipedia.org)",
         "language": "vi",
-        "retrieved_at": "2026-10-01T00:00:00Z",
+        "retrieved_at": "2026-11-03T18:45:00Z",
+        "source_published_or_updated_at": "2026-10-01T00:00:00Z",
         "license_or_usage_class": "CC-BY-SA-4.0",
         "reuse_storage_class": "OPEN_REUSABLE",
         "reuse_evidence": "CC-BY-SA-4.0",
         "attribution_requirement": "Wikipedia contributors",
         "redistributable_in_git": True,
-        "source_terms_checked_at": "2026-10-01T00:00:00Z",
+        "source_terms_checked_at": "2026-11-03T18:45:00Z",
+        "artifact_snapshot_timestamp": "2026-11-03T18:45:00Z",
         "raw_text": "Địa điểm: Bảo tàng Điêu khắc Chăm (Đà Nẵng) — Bài viết bách khoa Wikipedia (vi.wikipedia.org: Test, pageid=1, oldid=1).\n",
         "content_sha256": "",
         "provenance_status": "VERIFIED_PRIMARY_PROVENANCE",
@@ -196,7 +211,7 @@ def test_07_overture_nan_none_never_rendered_and_verifier_rejects_nan():
         if line.strip()
     ]
     ov_docs = [d for d in docs if d["source_type"] == "overture_places_parquet"]
-    assert len(ov_docs) == 26
+    assert len(ov_docs) == 23
     for d in ov_docs:
         assert ": nan" not in d["raw_text"].lower()
         assert ": none" not in d["raw_text"].lower()
@@ -227,21 +242,17 @@ def test_07_overture_nan_none_never_rendered_and_verifier_rejects_nan():
 
 
 def test_08_negative_overture_license_fails_closed():
-    # Missing sources
     with pytest.raises(ValueError, match="OVERTURE_LICENSE_MISSING"):
         b1b_acquire._resolve_overture_record_license({"sources": []})
 
-    # Source entry with missing license
     with pytest.raises(ValueError, match="OVERTURE_LICENSE_MISSING"):
         b1b_acquire._resolve_overture_record_license({"sources": [{"dataset": "meta", "license": None}]})
 
-    # Source entry with unapproved license
     with pytest.raises(ValueError, match="OVERTURE_LICENSE_AMBIGUOUS_OR_UNAPPROVED"):
         b1b_acquire._resolve_overture_record_license(
             {"sources": [{"dataset": "proprietary", "license": "All-Rights-Reserved"}]}
         )
 
-    # Conflicting licenses across sources
     with pytest.raises(ValueError, match="OVERTURE_LICENSE_CONFLICT"):
         b1b_acquire._resolve_overture_record_license(
             {
@@ -280,19 +291,19 @@ def test_10_lineage_coverage_and_b2_readiness_estimate():
     overall = summary["coverage_after_acquisition"]["overall_60_pois"]
     est_chunks = summary["b2_readiness_evaluation"]["estimated_future_useful_chunk_range"]
 
-    assert linked["acquired_corpus_document_count"] == 101
-    assert linked["accepted_independent_source_lineage_count"] == 82
+    assert linked["acquired_corpus_document_count"] == 97
+    assert linked["accepted_independent_source_lineage_count"] == 78
     assert breakdown["by_source_type"] == {
-        "overture_places_parquet": 26,
+        "overture_places_parquet": 23,
         "wikipedia_article": 26,
-        "wikidata_entity": 29,
+        "wikidata_entity": 28,
         "wikivoyage_poi_listing": 20,
     }
-    assert overall["pois_with_rag_candidate_evidence"] == 52
-    assert overall["pois_with_2_plus_eligible_lineages"] == 45
+    assert overall["pois_with_rag_candidate_evidence"] == 51
+    assert overall["pois_with_2_plus_eligible_lineages"] == 42
     assert overall["pois_with_narrative_evidence"] == 32
-    assert overall["pois_with_structured_evidence"] == 50
-    assert overall["pois_with_both_structured_and_narrative"] == 30
+    assert overall["pois_with_structured_evidence"] == 48
+    assert overall["pois_with_both_structured_and_narrative"] == 29
     assert summary["W07_B1B_CORPUS_ACQUISITION_READY_FOR_B2"] is True
 
     assert est_chunks["value_kind"] == "ESTIMATE"
@@ -332,3 +343,123 @@ def test_12_verifier_rejects_tampered_artifacts_and_upstream_immutable(monkeypat
     for rel_path, expected_sha in b1b_acquire.UPSTREAM_ARTIFACT_LF_HASHES.items():
         actual_sha = w07_a2.compute_file_sha256(REPO_ROOT / rel_path)
         assert actual_sha == expected_sha, f"Upstream artifact modified: {rel_path}"
+
+
+def test_13_fc001_and_fc002_conflicted_addresses_excluded_from_acquired_jsonl():
+    docs = [
+        json.loads(line)
+        for line in b1b_acquire.ACQUIRED_JSONL_PATH.read_text(encoding="utf-8").splitlines()
+        if line.strip()
+    ]
+    all_raw = "\n".join(d["raw_text"] for d in docs)
+    assert "1 Đường Trực Nguyên, Huyện Thường Tín, 13618, VN" not in all_raw
+    assert "1 Đường Trực Nguyên" not in all_raw
+    assert "Huyện Thường Tín" not in all_raw
+    assert "439 P. Lê Lợi, Hạ Long, 180000, VN" not in all_raw
+    assert "439 P. Lê Lợi" not in all_raw
+
+    fc001_docs = [
+        d
+        for d in docs
+        if d["poi_id"] == "f0d424bd-f722-540f-8964-5e6fd8875b56" and d["source_type"] == "overture_places_parquet"
+    ]
+    assert len(fc001_docs) == 1
+    assert "address" in fc001_docs[0]["suppressed_conflicted_fields"]
+    assert "Địa chỉ cấu trúc (Overture addresses):" not in fc001_docs[0]["raw_text"]
+    assert "http://www.vme.org.vn/" in fc001_docs[0]["raw_text"]
+
+    fc002_docs = [
+        d
+        for d in docs
+        if d["poi_id"] == "75a3fbd1-a24e-43c6-820a-72f95ebc05c0" and d["source_type"] == "overture_places_parquet"
+    ]
+    assert len(fc002_docs) == 1
+    assert "address" in fc002_docs[0]["suppressed_conflicted_fields"]
+    assert "Địa chỉ cấu trúc (Overture addresses):" not in fc002_docs[0]["raw_text"]
+    assert "vinpearl.com" in fc002_docs[0]["raw_text"]
+
+
+def test_14_negative_verifier_rejects_conflicted_field_rendered_in_raw_text():
+    docs = [
+        json.loads(line)
+        for line in b1b_acquire.ACQUIRED_JSONL_PATH.read_text(encoding="utf-8").splitlines()
+        if line.strip()
+    ]
+    fc001_doc = next(
+        copy.deepcopy(d)
+        for d in docs
+        if d["poi_id"] == "f0d424bd-f722-540f-8964-5e6fd8875b56" and d["source_type"] == "overture_places_parquet"
+    )
+    fc001_doc["raw_text"] += "\nĐịa chỉ cấu trúc (Overture addresses): 1 Đường Trực Nguyên, Huyện Thường Tín, 13618, VN"
+    with pytest.raises(ValueError, match="CONFLICTED|suppressed conflicted field"):
+        b1b_verify.validate_document_content_utility(fc001_doc)
+
+
+def test_15_negative_verifier_rejects_overture_record_with_all_substantive_fields_suppressed():
+    docs = [
+        json.loads(line)
+        for line in b1b_acquire.ACQUIRED_JSONL_PATH.read_text(encoding="utf-8").splitlines()
+        if line.strip()
+    ]
+    ov_doc = next(copy.deepcopy(d) for d in docs if d["source_type"] == "overture_places_parquet")
+    # Strip all substantive place attributes (address, phone, website), leaving only header/category/status/confidence/sources
+    kept_lines = [
+        line
+        for line in ov_doc["raw_text"].splitlines()
+        if not line.startswith("Địa chỉ cấu trúc (Overture addresses):")
+        and not line.startswith("Số điện thoại liên hệ (Overture phones):")
+        and not line.startswith("Liên kết website/trang thông tin (Overture websites):")
+    ]
+    ov_doc["raw_text"] = "\n".join(kept_lines)
+    ov_doc["retained_substantive_fields"] = []
+    ov_doc["content_utility_status"] = "USEFUL_STRUCTURED_FACTS"
+    with pytest.raises(
+        ValueError,
+        match="all substantive place attributes suppressed/missing and must be downgraded to LOW_INFORMATION",
+    ):
+        b1b_verify.validate_document_content_utility(ov_doc)
+
+
+def test_16_negative_verifier_rejects_unchecked_field_labeled_corroborated():
+    decisions = json.loads(b1b_acquire.DECISIONS_JSON_PATH.read_text(encoding="utf-8"))
+    summary = json.loads(b1b_acquire.SUMMARY_JSON_PATH.read_text(encoding="utf-8"))
+    docs = [
+        json.loads(line)
+        for line in b1b_acquire.ACQUIRED_JSONL_PATH.read_text(encoding="utf-8").splitlines()
+        if line.strip()
+    ]
+    tampered_decisions = copy.deepcopy(decisions)
+    # Mark an unchecked phone field as CORROBORATED with empty corroboration_sources
+    rec0 = tampered_decisions["overture_fact_consistency_audit"]["records"][0]
+    rec0["field_audit"]["phone"]["status"] = "CORROBORATED"
+    rec0["field_audit"]["phone"]["corroboration_sources"] = []
+    with pytest.raises(ValueError, match="CORROBORATED field must have >=1 corroboration_sources"):
+        b1b_verify.validate_overture_fact_consistency_audit(tampered_decisions, summary, docs)
+
+
+def test_17_negative_temporal_provenance_rejects_conflated_or_fabricated_timestamps():
+    docs = [
+        json.loads(line)
+        for line in b1b_acquire.ACQUIRED_JSONL_PATH.read_text(encoding="utf-8").splitlines()
+        if line.strip()
+    ]
+    wp_doc = next(copy.deepcopy(d) for d in docs if d["source_type"] == "wikipedia_article")
+    ov_doc = next(copy.deepcopy(d) for d in docs if d["source_type"] == "overture_places_parquet")
+
+    # 1. retrieved_at == source_published_or_updated_at
+    bad_wp_retrieved = copy.deepcopy(wp_doc)
+    bad_wp_retrieved["retrieved_at"] = bad_wp_retrieved["source_published_or_updated_at"]
+    with pytest.raises(ValueError, match="retrieved_at .* must not equal source_published_or_updated_at"):
+        b1b_verify.validate_temporal_provenance(bad_wp_retrieved, is_document=True)
+
+    # 2. source_terms_checked_at == source_published_or_updated_at
+    bad_wp_terms = copy.deepcopy(wp_doc)
+    bad_wp_terms["source_terms_checked_at"] = bad_wp_terms["source_published_or_updated_at"]
+    with pytest.raises(ValueError, match="source_terms_checked_at .* must not equal source_published_or_updated_at"):
+        b1b_verify.validate_temporal_provenance(bad_wp_terms, is_document=True)
+
+    # 3. Overture record fabricates an ISO retrieved_at when historical download time was not recorded
+    bad_ov_fabricated = copy.deepcopy(ov_doc)
+    bad_ov_fabricated["retrieved_at"] = "2026-10-01T12:00:00Z"
+    with pytest.raises(ValueError, match="UNKNOWN_HISTORICAL_RETRIEVAL_TIME"):
+        b1b_verify.validate_temporal_provenance(bad_ov_fabricated, is_document=True)

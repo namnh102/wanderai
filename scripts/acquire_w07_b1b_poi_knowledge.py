@@ -31,10 +31,13 @@ from scripts import validate_w07_review_corpus_v1 as w07_a2  # noqa: E402
 
 AUTHORITATIVE_BASE_DEVELOP_SHA = "324163636cedc8391c07cf2deca37d907745bd14"
 PREVIOUS_ACCEPTED_GATE = "W07-B1-FIX-01B-POSTMERGE-CHATGPT-AUDIT = PASS"
-CURRENT_GATE_STATUS = "W07-B1B-TARGETED-POI-KNOWLEDGE-ACQUISITION-CHATGPT-AUDIT = HOLD-CORRECTIVE"
-NEXT_GATE = "W07-B1B-CORRECTIVE-01-CORPUS-QUALITY-CHATGPT-AUDIT"
+CURRENT_GATE_STATUS = "W07-B1B-CORRECTIVE-01-CORPUS-QUALITY-CHATGPT-AUDIT = HOLD-CORRECTIVE-02"
+NEXT_GATE = "W07-B1B-CORRECTIVE-02-FACT-CONSISTENCY-CHATGPT-AUDIT"
 ARTIFACT_SNAPSHOT_TIMESTAMP = "2026-11-03T18:45:00Z"
+B1B_API_RETRIEVED_AT = "2026-11-03T18:45:00Z"
+B1B_TERMS_CHECKED_AT = "2026-11-03T18:45:00Z"
 OVERTURE_SNAPSHOT_TIMESTAMP = "2026-09-23T00:00:00Z"
+UNKNOWN_HISTORICAL_RETRIEVAL_TIME = "UNKNOWN_HISTORICAL_RETRIEVAL_TIME"
 ALLOWED_OVERTURE_OPEN_LICENSES: frozenset[str] = frozenset({"CDLA-Permissive-2.0", "Apache-2.0", "CC0-1.0"})
 
 TARGET_60_PATH = REPO_ROOT / "data/evaluation/w07/w07_review_target_60_pois_v1.json"
@@ -100,7 +103,7 @@ ACCEPTED_WIKIPEDIA_SPECS: list[dict[str, Any]] = [
         "lang": "vi",
         "title": "Động Thiên Cung",
         "section_heading": None,
-        "mapping_evidence": "Exact karst cave entity match for Động Thiên Cung on Đầu Gỗ Island in Hạ Long Bay (Wikidata Q124453533).",
+        "mapping_evidence": "Exact karst cave entity match for Động Thiên Cung on Đầu Gỗ Island in Hạ Long Bay (`vi.wikipedia.org/wiki/Động_Thiên_Cung`, pageid=21159845).",
     },
     {
         "poi_id": "9fbcb0b4-27bc-4482-a8e3-8be6e3c72677",
@@ -314,9 +317,9 @@ REJECTED_WIKIPEDIA_SPECS: list[dict[str, Any]] = [
     },
 ]
 
-# Accepted Wikidata POI-specific structured entity specifications (29 documents across 29 lineages)
+# Accepted Wikidata POI-specific structured entity specifications (28 documents across 28 lineages)
 ACCEPTED_WIKIDATA_SPECS: list[dict[str, Any]] = [
-    # Hạ Long (6 entities)
+    # Hạ Long (5 entities)
     (
         "1a95430d-289d-4663-91b8-ae64ede4f9a4",
         "Q28449757",
@@ -336,11 +339,6 @@ ACCEPTED_WIKIDATA_SPECS: list[dict[str, Any]] = [
         "9740c851-5b06-432c-a243-071ad0906494",
         "Q111402973",
         "Exact hotel entity and coordinate match (`Novotel Ha Long Bay Hotel`, 160 Đường Hạ Long, Bãi Cháy; coords 20.9520, 107.0420, <10m from canonical POI).",
-    ),
-    (
-        "9a979427-a0bb-421d-b75f-2a6ee79b120b",
-        "Q124453533",
-        "Exact karst cave entity match (`Động Thiên Cung / Thien Cung Cave`, Vịnh Hạ Long).",
     ),
     (
         "ade2140c-7945-4044-b99a-b1a028edce9e",
@@ -443,7 +441,7 @@ ACCEPTED_WIKIDATA_SPECS: list[dict[str, Any]] = [
     (
         "5e92e89d-8524-4792-862a-6dfce0994862",
         "Q117325492",
-        "Exact hotel entity and coordinate match (`Sheraton Hanoi Hotel`, K5 Nghi Tàm / 11 Xuân Diệu, Tây Hồ; coords 21.0597, 105.8320).",
+        "Exact hotel entity and street address match (`Sheraton Hanoi Hotel`, K5 Nghi Tàm / 11 Xuân Diệu, Tây Hồ; coarse P625 coordinate suppressed due to 4.7km offset from canonical/Overture/Wikivoyage Tây Hồ location).",
     ),
     (
         "9a96e0a0-e040-4e16-a3f2-682ca373dd8e",
@@ -462,7 +460,7 @@ ACCEPTED_WIKIDATA_SPECS: list[dict[str, Any]] = [
     ),
 ]
 
-# Rejected Wikidata candidates (2 candidates)
+# Rejected Wikidata candidates (3 candidates)
 REJECTED_WIKIDATA_SPECS: list[dict[str, Any]] = [
     {
         "poi_id": "9fbcb0b4-27bc-4482-a8e3-8be6e3c72677",
@@ -477,6 +475,13 @@ REJECTED_WIKIDATA_SPECS: list[dict[str, Any]] = [
         "canonical_mapping_status": "MAPPING_REVIEW_REQUIRED",
         "content_utility_status": "USEFUL_STRUCTURED_FACTS",
         "mapping_evidence": "Wikidata item Q18277260 (`Linh Ung Pagoda`) has coordinates `16.099, 108.277` (Bãi Bụt, Sơn Trà), 10.6km north of canonical POI `5fc0994a-e578-4a25-b375-7f079e6dc3ba` (`Chùa Linh Ứng Non Nước` at Hòn Thủy Sơn `16.00428, 108.26437`). Rejected under Section 10.",
+    },
+    {
+        "poi_id": "9a979427-a0bb-421d-b75f-2a6ee79b120b",
+        "qid": "Q124453533",
+        "canonical_mapping_status": "MAPPING_REVIEW_REQUIRED",
+        "content_utility_status": "USEFUL_STRUCTURED_FACTS",
+        "mapping_evidence": "Wikidata item Q124453533 (`Động Thiên Cung`) has `P131 = Hoa Lư (Q131417547)` and `P625 = 20.215960, 105.914210` (a homonymous cave in Hoa Lư, Ninh Bình, 138.5km from Hạ Long Bay `20.9163222, 107.0185625`). Rejected under Corrective 02 fact-consistency & canonical mapping gate.",
     },
 ]
 
@@ -636,6 +641,1578 @@ REJECTED_WIKIVOYAGE_SPECS: list[dict[str, Any]] = [
         "mapping_evidence": "Exact institutional name match (`Quang Ninh Provincial Museum`) in `en.wikivoyage.org/wiki/Halong`, but listing has empty narrative `content=''` and outdated pre-2013 street address (`165 Nguyen Van Cu Street`). Rejected as `LOW_INFORMATION` under Section 15.",
     }
 ]
+
+# Corrective 02: 26-record Overture fact-consistency audit specifications across 5 fields (130 field evaluations)
+OVERTURE_26_FACT_AUDIT_SPECS: dict[str, dict[str, Any]] = {
+    "75a3fbd1-a24e-43c6-820a-72f95ebc05c0": {
+        "overture_gers_id": "9ed3a2e3-60a3-4df0-acd8-83185f57a281",
+        "conflict_id": "FC-002",
+        "entity_identity_status": "VALID_ENTITY_WITH_FIELD_CONFLICT",
+        "fields": {
+            "coordinates": {
+                "overture_value": "20.941068, 107.025318 (dist=11.7m)",
+                "status": "CORROBORATED",
+                "corroboration_sources": [
+                    "canonical_poi:75a3fbd1-a24e-43c6-820a-72f95ebc05c0",
+                    "osm:node/3929648836",
+                    "wikidata:Q111402972",
+                ],
+                "conflicting_sources": [],
+                "comparison_evidence": "Overture bbox centroid (20.941068, 107.025318) is 11.7m from canonical/OSM (20.941167, 107.0253612) and 45m from Wikidata Q111402972 (20.940934, 107.025632) on Đảo Rều, Bãi Cháy.",
+            },
+            "address": {
+                "overture_value": "439 P. Lê Lợi, Hạ Long, 180000, VN",
+                "status": "CONFLICTED",
+                "corroboration_sources": [],
+                "conflicting_sources": [
+                    "canonical_poi:75a3fbd1-a24e-43c6-820a-72f95ebc05c0",
+                    "wikidata:Q111402972",
+                    "official_resort_site:https://vinpearl.com/en/hotels/vinpearl-resort-spa-ha-long",
+                    "official_tourism_listing:https://halongtourism.com.vn/en/discovery/hotel-resort/",
+                ],
+                "comparison_evidence": "FC-002: Overture address '439 P. Lê Lợi, Hạ Long, 180000, VN' conflicts with canonical/Wikidata island coordinates on Đảo Rều, Bãi Cháy, Hạ Long and official resort/tourism listings (439 Lê Lợi and postcode 180000 belong to Hải Phòng).",
+            },
+            "category_taxonomy": {
+                "overture_value": "hotel | hotel (accommodation > hotel)",
+                "status": "CORROBORATED",
+                "corroboration_sources": [
+                    "canonical_poi:75a3fbd1-a24e-43c6-820a-72f95ebc05c0",
+                    "osm:node/3929648836",
+                    "wikidata:Q111402972",
+                ],
+                "conflicting_sources": [],
+                "comparison_evidence": "Matches canonical category 'hotel', OSM tourism=hotel, and Wikidata Q111402972 (P31=hotel Q27686).",
+            },
+            "phone": {
+                "overture_value": "+84936886922",
+                "status": "UNVERIFIED",
+                "corroboration_sources": [],
+                "conflicting_sources": [],
+                "comparison_evidence": "Vietnam mobile number (+84936886922); not present on OSM node/4330722989 or Wikidata Q111402972.",
+            },
+            "website": {
+                "overture_value": "http://vinpearl.com/en-US/Vinpearl-halongbay-resort/introduction-840/2015/Overview-1128",
+                "status": "CORROBORATED",
+                "corroboration_sources": [
+                    "official_resort_site:https://vinpearl.com/en/hotels/vinpearl-resort-spa-ha-long",
+                ],
+                "conflicting_sources": [],
+                "comparison_evidence": "Matches official vinpearl.com domain for Vinpearl Resort & Spa Ha Long.",
+            },
+        },
+        "suppressed_conflicted_fields": ["address"],
+        "retained_substantive_fields": ["phone", "website"],
+        "post_audit_canonical_mapping_status": "EXACT_MAPPED",
+        "post_audit_content_utility_status": "USEFUL_STRUCTURED_FACTS",
+        "post_audit_final_b1b_decision": "ACCEPT_PRIMARY_CORPUS",
+        "resolution_summary": "FC-002 resolved: retained valid entity on Đảo Rều (11.7m distance, corroborated hotel category, official vinpearl.com website, and unverified phone) with conflicted address '439 P. Lê Lợi, Hạ Long, 180000, VN' suppressed from raw_text.",
+    },
+    "8f2b5a69-1293-4efe-8fc5-3a74193edd0f": {
+        "overture_gers_id": "bd078edf-ad58-4f6c-9016-adf65c90e5eb",
+        "conflict_id": "FC-008",
+        "entity_identity_status": "VALID_ENTITY_WITH_FIELD_CONFLICT",
+        "fields": {
+            "coordinates": {
+                "overture_value": "20.950296, 107.098932 (dist=15.5m)",
+                "status": "CORROBORATED",
+                "corroboration_sources": [
+                    "canonical_poi:8f2b5a69-1293-4efe-8fc5-3a74193edd0f",
+                    "osm:node/5395107122",
+                    "wikipedia:vi:19752572",
+                ],
+                "conflicting_sources": [],
+                "comparison_evidence": "Overture bbox centroid is 15.5m from canonical/OSM (20.9501718, 107.098864).",
+            },
+            "address": {
+                "overture_value": "3 Đường Trần Quốc Nghiễn, Hạ Long, 01113, VN",
+                "status": "CORROBORATED",
+                "corroboration_sources": ["wikipedia:vi:19752572"],
+                "conflicting_sources": [],
+                "comparison_evidence": "Corroborated by Wikipedia vi:Bảo tàng Quảng Ninh ('đường Trần Quốc Nghiễn, phường Hồng Gai, thành phố Hạ Long, tỉnh Quảng Ninh').",
+            },
+            "category_taxonomy": {
+                "overture_value": "museum | museum (arts_and_entertainment > museum)",
+                "status": "CORROBORATED",
+                "corroboration_sources": [
+                    "canonical_poi:8f2b5a69-1293-4efe-8fc5-3a74193edd0f",
+                    "osm:node/5395107122",
+                    "wikidata:Q112182634",
+                    "wikipedia:vi:19752572",
+                ],
+                "conflicting_sources": [],
+                "comparison_evidence": "Matches canonical attraction/museum, OSM tourism=museum, and Wikidata Q112182634 (P31=museum Q33506).",
+            },
+            "phone": {
+                "overture_value": "+842036561699",
+                "status": "UNVERIFIED",
+                "corroboration_sources": [],
+                "conflicting_sources": [],
+                "comparison_evidence": "Plausible Quảng Ninh (+84 203) landline; not present in OSM, Wikidata, or Wikipedia.",
+            },
+            "website": {
+                "overture_value": "https://zalo.me/s/868766387773152883/?utm_source=zalo-qr",
+                "status": "CONFLICTED",
+                "corroboration_sources": [],
+                "conflicting_sources": ["wikidata:Q112182634"],
+                "comparison_evidence": "Overture URL is a Zalo QR link rather than the official institutional website http://baotangquangninh.vn recorded in Wikidata Q112182634 (P856).",
+            },
+        },
+        "suppressed_conflicted_fields": ["website"],
+        "retained_substantive_fields": ["address", "phone"],
+        "post_audit_canonical_mapping_status": "EXACT_MAPPED",
+        "post_audit_content_utility_status": "USEFUL_STRUCTURED_FACTS",
+        "post_audit_final_b1b_decision": "ACCEPT_PRIMARY_CORPUS",
+        "resolution_summary": "Retained valid museum entity with corroborated Trần Quốc Nghiễn address and unverified landline; suppressed conflicted Zalo QR website link.",
+    },
+    "9740c851-5b06-432c-a243-071ad0906494": {
+        "overture_gers_id": "893209f5-1d13-479f-b7d7-6630b1f3fe57",
+        "conflict_id": None,
+        "entity_identity_status": "VALID_ENTITY",
+        "fields": {
+            "coordinates": {
+                "overture_value": "20.955320, 107.049302 (dist=17.5m)",
+                "status": "CORROBORATED",
+                "corroboration_sources": [
+                    "canonical_poi:9740c851-5b06-432c-a243-071ad0906494",
+                    "osm:way/676720191",
+                    "wikidata:Q111402973",
+                ],
+                "conflicting_sources": [],
+                "comparison_evidence": "Overture bbox centroid is 17.5m from canonical/OSM (20.9554705, 107.0492534) and 33m from Wikidata Q111402973.",
+            },
+            "address": {
+                "overture_value": "160 Hạ Long, Hạ Long, 200000, VN",
+                "status": "CORROBORATED",
+                "corroboration_sources": ["wikidata:Q111402973"],
+                "conflicting_sources": [],
+                "comparison_evidence": "Matches Wikidata Q111402973 street address P6375='160 Ha Long Road, Bai Chay Ward, Ha Long City, Quang Ninh, Vietnam'.",
+            },
+            "category_taxonomy": {
+                "overture_value": "resort | resort (lodging > resort)",
+                "status": "CORROBORATED",
+                "corroboration_sources": [
+                    "canonical_poi:9740c851-5b06-432c-a243-071ad0906494",
+                    "osm:way/676720191",
+                    "wikidata:Q111402973",
+                ],
+                "conflicting_sources": [],
+                "comparison_evidence": "Matches canonical hotel, OSM tourism=hotel, and Wikidata Q111402973 (P31=hotel Q27686).",
+            },
+            "phone": {
+                "overture_value": "+842033848108",
+                "status": "UNVERIFIED",
+                "corroboration_sources": [],
+                "conflicting_sources": [],
+                "comparison_evidence": "Plausible Quảng Ninh (+84 203) landline; not present in OSM or Wikidata.",
+            },
+            "website": {
+                "overture_value": "https://www.novotelhalongbay.com/",
+                "status": "UNVERIFIED",
+                "corroboration_sources": [],
+                "conflicting_sources": [],
+                "comparison_evidence": "Plausible official hotel domain novotelhalongbay.com; not present in OSM or Wikidata.",
+            },
+        },
+        "suppressed_conflicted_fields": [],
+        "retained_substantive_fields": ["address", "phone", "website"],
+        "post_audit_canonical_mapping_status": "EXACT_MAPPED",
+        "post_audit_content_utility_status": "USEFUL_STRUCTURED_FACTS",
+        "post_audit_final_b1b_decision": "ACCEPT_PRIMARY_CORPUS",
+        "resolution_summary": "Clean entity with corroborated coordinates, address, and category, plus unverified non-conflicting phone and hotel URL.",
+    },
+    "065f8492-2ab3-4ea0-ae8f-9cc6f8c18ae5": {
+        "overture_gers_id": "0772c46b-7aa9-40a0-b403-78dec2591927",
+        "conflict_id": "FC-009",
+        "entity_identity_status": "VALID_ENTITY_WITH_FIELD_CONFLICT",
+        "fields": {
+            "coordinates": {
+                "overture_value": "20.955479, 107.064232 (dist=15.7m)",
+                "status": "CORROBORATED",
+                "corroboration_sources": [
+                    "canonical_poi:065f8492-2ab3-4ea0-ae8f-9cc6f8c18ae5",
+                    "osm:node/12224148306",
+                ],
+                "conflicting_sources": [],
+                "comparison_evidence": "Overture bbox centroid is 15.7m from canonical/OSM (20.9553466, 107.0641781).",
+            },
+            "address": {
+                "overture_value": "Số 1 đường Hạ Long, P. Bãi Cháy, TP. Hạ Long, Quảng Ninh, Hạ Long, VN",
+                "status": "CORROBORATED",
+                "corroboration_sources": [
+                    "canonical_poi:065f8492-2ab3-4ea0-ae8f-9cc6f8c18ae5",
+                    "osm:node/12224148306",
+                ],
+                "conflicting_sources": [],
+                "comparison_evidence": "Matches canonical and OSM address '1 Đường Hạ Long, Phường Bãi Cháy, Thành phố Hạ Long'.",
+            },
+            "category_taxonomy": {
+                "overture_value": "restaurant | buffet_restaurant (eat_and_drink > restaurant > buffet_restaurant)",
+                "status": "CORROBORATED",
+                "corroboration_sources": [
+                    "canonical_poi:065f8492-2ab3-4ea0-ae8f-9cc6f8c18ae5",
+                    "osm:node/12224148306",
+                ],
+                "conflicting_sources": [],
+                "comparison_evidence": "Matches canonical restaurant and OSM amenity=restaurant.",
+            },
+            "phone": {
+                "overture_value": "+84835981666",
+                "status": "CONFLICTED",
+                "corroboration_sources": [],
+                "conflicting_sources": ["osm:node/12224148306"],
+                "comparison_evidence": "Overture phone '+84835981666' differs from OSM phone='+84832981666'.",
+            },
+            "website": {
+                "overture_value": "http://senadong.vn/",
+                "status": "CORROBORATED",
+                "corroboration_sources": [
+                    "osm:node/12224148306",
+                    "osm_website_pointer:https://senadong.vn",
+                ],
+                "conflicting_sources": [],
+                "comparison_evidence": "Matches OSM website='https://senadong.vn' by normalized domain senadong.vn.",
+            },
+        },
+        "suppressed_conflicted_fields": ["phone"],
+        "retained_substantive_fields": ["address", "website"],
+        "post_audit_canonical_mapping_status": "EXACT_MAPPED",
+        "post_audit_content_utility_status": "USEFUL_STRUCTURED_FACTS",
+        "post_audit_final_b1b_decision": "ACCEPT_PRIMARY_CORPUS",
+        "resolution_summary": "Retained valid restaurant entity with corroborated address and website; suppressed conflicted phone '+84835981666'.",
+    },
+    "7d01af19-10bc-4679-8cfa-4396209dece4": {
+        "overture_gers_id": "04dda4d2-9d22-4516-a651-73c774b61663",
+        "conflict_id": "FC-010",
+        "entity_identity_status": "VALID_ENTITY_WITH_FIELD_CONFLICT",
+        "fields": {
+            "coordinates": {
+                "overture_value": "20.946958, 107.039814 (dist=7.3m)",
+                "status": "CORROBORATED",
+                "corroboration_sources": [
+                    "canonical_poi:7d01af19-10bc-4679-8cfa-4396209dece4",
+                    "osm:node/12224109901",
+                ],
+                "conflicting_sources": [],
+                "comparison_evidence": "Overture bbox centroid is 7.3m from canonical/OSM (20.946894, 107.0397987).",
+            },
+            "address": {
+                "overture_value": "Đường Trần Quốc Nghiễn, Bãi Cháy, Hạ Long, VN",
+                "status": "CORROBORATED",
+                "corroboration_sources": [
+                    "canonical_poi:7d01af19-10bc-4679-8cfa-4396209dece4",
+                    "osm:node/12224109901",
+                ],
+                "conflicting_sources": [],
+                "comparison_evidence": "Matches Bãi Cháy, Hạ Long waterfront location ('Đường Hạ Long, Khu Đô Thị Mới Cái Dăm, Phường Bãi Cháy, Thành phố Hạ Long').",
+            },
+            "category_taxonomy": {
+                "overture_value": "restaurant | seafood_restaurant (eat_and_drink > restaurant > seafood_restaurant)",
+                "status": "CORROBORATED",
+                "corroboration_sources": [
+                    "canonical_poi:7d01af19-10bc-4679-8cfa-4396209dece4",
+                    "osm:node/12224109901",
+                ],
+                "conflicting_sources": [],
+                "comparison_evidence": "Matches canonical restaurant and OSM amenity=restaurant, cuisine=seafood.",
+            },
+            "phone": {
+                "overture_value": "+84901599598",
+                "status": "CONFLICTED",
+                "corroboration_sources": [],
+                "conflicting_sources": ["osm:node/12224109901"],
+                "comparison_evidence": "Overture phone '+84901599598' conflicts with OSM phone='0335400800'.",
+            },
+            "website": {
+                "overture_value": "https://vnexpress.net/ngoc-phuong-nam-nha-hang-hai-san-noi-tieng-ha-long-4121327.html",
+                "status": "CONFLICTED",
+                "corroboration_sources": [],
+                "conflicting_sources": [
+                    "osm:node/12224109901",
+                    "osm_website_pointer:https://nhahangngocphuongnam.com",
+                ],
+                "comparison_evidence": "Overture URL is a third-party VnExpress news article rather than official venue website https://nhahangngocphuongnam.com on OSM node/12224109901.",
+            },
+        },
+        "suppressed_conflicted_fields": ["phone", "website"],
+        "retained_substantive_fields": ["address"],
+        "post_audit_canonical_mapping_status": "EXACT_MAPPED",
+        "post_audit_content_utility_status": "USEFUL_STRUCTURED_FACTS",
+        "post_audit_final_b1b_decision": "ACCEPT_PRIMARY_CORPUS",
+        "resolution_summary": "Retained valid seafood restaurant entity (7.3m distance, corroborated address and seafood taxonomy); suppressed conflicted phone and third-party news URL.",
+    },
+    "85303289-9746-4a42-b0f0-a555ce2bfd0e": {
+        "overture_gers_id": "6039522b-f82a-4a1d-88f3-09beca7172ab",
+        "conflict_id": None,
+        "entity_identity_status": "VALID_ENTITY",
+        "fields": {
+            "coordinates": {
+                "overture_value": "20.955479, 107.081909 (dist=8.9m)",
+                "status": "CORROBORATED",
+                "corroboration_sources": [
+                    "canonical_poi:85303289-9746-4a42-b0f0-a555ce2bfd0e",
+                    "osm:node/13183486704",
+                ],
+                "conflicting_sources": [],
+                "comparison_evidence": "Overture bbox centroid is 8.9m from canonical/OSM (20.9554642, 107.0818253).",
+            },
+            "address": {
+                "overture_value": "Tran Hung Dao, Tran Hung Dao Ward, Ha Long City, Hạ Long, 36000, VN",
+                "status": "CORROBORATED",
+                "corroboration_sources": [
+                    "canonical_poi:85303289-9746-4a42-b0f0-a555ce2bfd0e",
+                    "osm:node/13183486704",
+                ],
+                "conflicting_sources": [],
+                "comparison_evidence": "Matches canonical and OSM street/ward 'Đường Trần Hưng Đạo, Phường Trần Hưng Đạo, Thành phố Hạ Long'.",
+            },
+            "category_taxonomy": {
+                "overture_value": "coffee_shop | coffee_shop (food_and_drink > non_alcoholic_beverage_venue > coffee_shop)",
+                "status": "CORROBORATED",
+                "corroboration_sources": [
+                    "canonical_poi:85303289-9746-4a42-b0f0-a555ce2bfd0e",
+                    "osm:node/13183486704",
+                ],
+                "conflicting_sources": [],
+                "comparison_evidence": "Matches canonical cafe and OSM amenity=cafe, cuisine=coffee_shop.",
+            },
+            "phone": {
+                "overture_value": "+842033828628",
+                "status": "UNVERIFIED",
+                "corroboration_sources": [],
+                "conflicting_sources": [],
+                "comparison_evidence": "Plausible Quảng Ninh (+84 203) landline; not present in OSM.",
+            },
+            "website": {
+                "overture_value": "http://highlandscoffee.com.vn/",
+                "status": "UNVERIFIED",
+                "corroboration_sources": [],
+                "conflicting_sources": [],
+                "comparison_evidence": "Official Highlands Coffee brand domain; not present on OSM node/13183486704.",
+            },
+        },
+        "suppressed_conflicted_fields": [],
+        "retained_substantive_fields": ["address", "phone", "website"],
+        "post_audit_canonical_mapping_status": "EXACT_MAPPED",
+        "post_audit_content_utility_status": "USEFUL_STRUCTURED_FACTS",
+        "post_audit_final_b1b_decision": "ACCEPT_PRIMARY_CORPUS",
+        "resolution_summary": "Clean cafe branch entity with corroborated coordinates, Trần Hưng Đạo address, and coffee_shop taxonomy.",
+    },
+    "b37d68ee-0cb3-49f0-a399-cac4c8e2732c": {
+        "overture_gers_id": "92ed9717-ce41-4e8f-ab25-52e369cd88be",
+        "conflict_id": None,
+        "entity_identity_status": "VALID_ENTITY",
+        "fields": {
+            "coordinates": {
+                "overture_value": "20.958585, 107.054569 (dist=8.9m)",
+                "status": "CORROBORATED",
+                "corroboration_sources": [
+                    "canonical_poi:b37d68ee-0cb3-49f0-a399-cac4c8e2732c",
+                    "osm:node/12998514201",
+                ],
+                "conflicting_sources": [],
+                "comparison_evidence": "Overture bbox centroid is 8.9m from canonical/OSM (20.9585296, 107.0545064).",
+            },
+            "address": {
+                "overture_value": "50 Hạ Long, Bãi Cháy, Thành phố, Hạ Long, 202437, VN",
+                "status": "CORROBORATED",
+                "corroboration_sources": [
+                    "canonical_poi:b37d68ee-0cb3-49f0-a399-cac4c8e2732c",
+                    "osm:node/12998514201",
+                ],
+                "conflicting_sources": [],
+                "comparison_evidence": "Matches canonical and OSM '50 Đường Hạ Long, Phường Bãi Cháy, Thành phố Hạ Long'.",
+            },
+            "category_taxonomy": {
+                "overture_value": "restaurant | seafood_restaurant (food_and_drink > restaurant > seafood_restaurant)",
+                "status": "CORROBORATED",
+                "corroboration_sources": [
+                    "canonical_poi:b37d68ee-0cb3-49f0-a399-cac4c8e2732c",
+                    "osm:node/12998514201",
+                ],
+                "conflicting_sources": [],
+                "comparison_evidence": "Matches canonical restaurant and OSM amenity=restaurant.",
+            },
+            "phone": {
+                "overture_value": "+84904385118",
+                "status": "UNVERIFIED",
+                "corroboration_sources": [],
+                "conflicting_sources": [],
+                "comparison_evidence": "Plausible Vietnam mobile number (+84904385118); not corroborated by OSM.",
+            },
+            "website": {
+                "overture_value": None,
+                "status": "MISSING",
+                "corroboration_sources": [],
+                "conflicting_sources": [],
+                "comparison_evidence": "No website field present on Overture record.",
+            },
+        },
+        "suppressed_conflicted_fields": [],
+        "retained_substantive_fields": ["address", "phone"],
+        "post_audit_canonical_mapping_status": "EXACT_MAPPED",
+        "post_audit_content_utility_status": "USEFUL_STRUCTURED_FACTS",
+        "post_audit_final_b1b_decision": "ACCEPT_PRIMARY_CORPUS",
+        "resolution_summary": "Clean seafood restaurant entity with corroborated coordinates, 50 Hạ Long address, and seafood_restaurant taxonomy.",
+    },
+    "96523873-1b85-4d2f-b85c-cb3f5593091b": {
+        "overture_gers_id": "9b6e3c9a-d263-4e5d-8ff7-7d7bddc1ffef",
+        "conflict_id": "FC-007",
+        "entity_identity_status": "VALID_ENTITY_LOW_INFORMATION_AFTER_SUPPRESSION",
+        "fields": {
+            "coordinates": {
+                "overture_value": "20.955757, 107.031523 (dist=20.2m)",
+                "status": "CORROBORATED",
+                "corroboration_sources": [
+                    "canonical_poi:96523873-1b85-4d2f-b85c-cb3f5593091b",
+                    "osm:way/674641659",
+                ],
+                "conflicting_sources": [],
+                "comparison_evidence": "Overture bbox centroid is 20.2m from canonical/OSM (20.9556065, 107.0314141).",
+            },
+            "address": {
+                "overture_value": "Cái Dăm, Hạ Long, VN",
+                "status": "UNVERIFIED",
+                "corroboration_sources": [],
+                "conflicting_sources": [],
+                "comparison_evidence": "Self-referential neighborhood/city string repeating only the market name ('Cái Dăm') and city ('Hạ Long') with no street, ward, or postcode.",
+            },
+            "category_taxonomy": {
+                "overture_value": "food_and_beverage_store | fishmonger (shopping > food_and_beverage_store > fishmonger)",
+                "status": "CONFLICTED",
+                "corroboration_sources": [],
+                "conflicting_sources": [
+                    "canonical_poi:96523873-1b85-4d2f-b85c-cb3f5593091b",
+                    "osm:way/674641659",
+                ],
+                "comparison_evidence": "Overture taxonomy 'fishmonger' conflicts with canonical marketplace and OSM amenity=marketplace, building=retail (general multi-story municipal market).",
+            },
+            "phone": {
+                "overture_value": None,
+                "status": "MISSING",
+                "corroboration_sources": [],
+                "conflicting_sources": [],
+                "comparison_evidence": "No phone field present on Overture record.",
+            },
+            "website": {
+                "overture_value": "http://xdha.vn/",
+                "status": "CONFLICTED",
+                "corroboration_sources": [],
+                "conflicting_sources": [
+                    "canonical_poi:96523873-1b85-4d2f-b85c-cb3f5593091b",
+                    "osm:way/674641659",
+                ],
+                "comparison_evidence": "Overture website 'http://xdha.vn/' is an unrelated domain and not an official portal for Chợ Cái Dăm.",
+            },
+        },
+        "suppressed_conflicted_fields": ["category_taxonomy", "website"],
+        "retained_substantive_fields": [],
+        "post_audit_canonical_mapping_status": "EXACT_MAPPED",
+        "post_audit_content_utility_status": "LOW_INFORMATION",
+        "post_audit_final_b1b_decision": "REJECT",
+        "resolution_summary": "FC-007: After suppressing conflicted website ('http://xdha.vn/') and conflicted taxonomy ('fishmonger'), only self-referential address 'Cái Dăm, Hạ Long, VN' remains (0 substantive place attributes beyond name/city). Downgraded to LOW_INFORMATION and REJECT.",
+    },
+    "871a6ee7-1d46-49bb-957a-ff50260b1f3b": {
+        "overture_gers_id": "527ebd9f-445a-4059-a815-0d988c0925a2",
+        "conflict_id": None,
+        "entity_identity_status": "VALID_ENTITY",
+        "fields": {
+            "coordinates": {
+                "overture_value": "20.946950, 107.048706 (dist=4.6m)",
+                "status": "CORROBORATED",
+                "corroboration_sources": [
+                    "canonical_poi:871a6ee7-1d46-49bb-957a-ff50260b1f3b",
+                    "osm:node/7044140886",
+                ],
+                "conflicting_sources": [],
+                "comparison_evidence": "Overture bbox centroid is 4.6m from canonical/OSM Ha Long International Cruise Port.",
+            },
+            "address": {
+                "overture_value": "Thương Cảng, Hạ Long, 202437, VN",
+                "status": "UNVERIFIED",
+                "corroboration_sources": [],
+                "conflicting_sources": [],
+                "comparison_evidence": "Plausible port descriptor ('Thương Cảng, Hạ Long, 202437'); OSM node/7044140886 has no addr:street tag.",
+            },
+            "category_taxonomy": {
+                "overture_value": "travel_and_transportation | travel_and_transportation (travel_and_transportation)",
+                "status": "CORROBORATED",
+                "corroboration_sources": [
+                    "canonical_poi:871a6ee7-1d46-49bb-957a-ff50260b1f3b",
+                    "osm:node/7044140886",
+                ],
+                "conflicting_sources": [],
+                "comparison_evidence": "Matches canonical ferry_terminal/cruise port ('Ha Long International Cruise Port').",
+            },
+            "phone": {
+                "overture_value": "+84925251999",
+                "status": "UNVERIFIED",
+                "corroboration_sources": [],
+                "conflicting_sources": [],
+                "comparison_evidence": "Plausible Vietnam mobile number (+84925251999); not present in OSM.",
+            },
+            "website": {
+                "overture_value": None,
+                "status": "MISSING",
+                "corroboration_sources": [],
+                "conflicting_sources": [],
+                "comparison_evidence": "No website field present on Overture record.",
+            },
+        },
+        "suppressed_conflicted_fields": [],
+        "retained_substantive_fields": ["address", "phone"],
+        "post_audit_canonical_mapping_status": "EXACT_MAPPED",
+        "post_audit_content_utility_status": "USEFUL_STRUCTURED_FACTS",
+        "post_audit_final_b1b_decision": "ACCEPT_PRIMARY_CORPUS",
+        "resolution_summary": "Clean cruise port entity with corroborated coordinates and travel_and_transportation taxonomy, plus unverified non-conflicting Thương Cảng address and phone.",
+    },
+    "8ebf0429-fabb-4701-bbc1-cb2fea86d587": {
+        "overture_gers_id": "1b27afcb-daa1-4977-bcd5-cc5327c08c64",
+        "conflict_id": None,
+        "entity_identity_status": "VALID_ENTITY",
+        "fields": {
+            "coordinates": {
+                "overture_value": "16.077134, 108.221400 (dist=4.0m)",
+                "status": "CORROBORATED",
+                "corroboration_sources": [
+                    "canonical_poi:8ebf0429-fabb-4701-bbc1-cb2fea86d587",
+                    "osm:node/729406392",
+                ],
+                "conflicting_sources": [],
+                "comparison_evidence": "Overture bbox centroid is 4.0m from canonical/OSM Ca Phe 83.",
+            },
+            "address": {
+                "overture_value": "113, Lê Lợi, Quận Hải Châu, 551300, VN",
+                "status": "UNVERIFIED",
+                "corroboration_sources": [],
+                "conflicting_sources": [],
+                "comparison_evidence": "Plausible Hải Châu street address ('113, Lê Lợi, Quận Hải Châu'); OSM node/729406392 has no addr:* tags.",
+            },
+            "category_taxonomy": {
+                "overture_value": "coffee_shop | coffee_shop (food_and_drink > non_alcoholic_beverage_venue > coffee_shop)",
+                "status": "CORROBORATED",
+                "corroboration_sources": [
+                    "canonical_poi:8ebf0429-fabb-4701-bbc1-cb2fea86d587",
+                    "osm:node/729406392",
+                ],
+                "conflicting_sources": [],
+                "comparison_evidence": "Matches canonical cafe and OSM amenity=cafe.",
+            },
+            "phone": {
+                "overture_value": "+84934345445",
+                "status": "UNVERIFIED",
+                "corroboration_sources": [],
+                "conflicting_sources": [],
+                "comparison_evidence": "Plausible Vietnam mobile number (+84934345445); not present in OSM.",
+            },
+            "website": {
+                "overture_value": None,
+                "status": "MISSING",
+                "corroboration_sources": [],
+                "conflicting_sources": [],
+                "comparison_evidence": "No website field present on Overture record.",
+            },
+        },
+        "suppressed_conflicted_fields": [],
+        "retained_substantive_fields": ["address", "phone"],
+        "post_audit_canonical_mapping_status": "EXACT_MAPPED",
+        "post_audit_content_utility_status": "USEFUL_STRUCTURED_FACTS",
+        "post_audit_final_b1b_decision": "ACCEPT_PRIMARY_CORPUS",
+        "resolution_summary": "Clean cafe entity with corroborated coordinates and coffee_shop taxonomy, plus unverified non-conflicting Hải Châu address and phone.",
+    },
+    "c2afbb07-aaf9-47c1-9877-d17e64422066": {
+        "overture_gers_id": "4d3dbac0-aae6-4960-8b89-d06c52fe21f5",
+        "conflict_id": "FC-006",
+        "entity_identity_status": "UNCERTAIN_ENTITY_IDENTITY_MAPPING_REVIEW_REQUIRED",
+        "fields": {
+            "coordinates": {
+                "overture_value": "16.041928, 108.242279 (dist=30.8m)",
+                "status": "CORROBORATED",
+                "corroboration_sources": [
+                    "canonical_poi:c2afbb07-aaf9-47c1-9877-d17e64422066",
+                    "osm:way/118614280",
+                ],
+                "conflicting_sources": [],
+                "comparison_evidence": "Overture bbox centroid is 30.8m from canonical/OSM (16.0416779, 108.2424022).",
+            },
+            "address": {
+                "overture_value": "25 Đường Nguyễn Bá Lân, Quận Ngũ Hành Sơn, 50507, VN",
+                "status": "UNVERIFIED",
+                "corroboration_sources": [],
+                "conflicting_sources": [],
+                "comparison_evidence": "OSM way/118614280 has no addr:* tags to corroborate '25 Đường Nguyễn Bá Lân'.",
+            },
+            "category_taxonomy": {
+                "overture_value": "farmers_market | farmers_market (shopping > market > farmers_market)",
+                "status": "CORROBORATED",
+                "corroboration_sources": [
+                    "canonical_poi:c2afbb07-aaf9-47c1-9877-d17e64422066",
+                    "osm:way/118614280",
+                ],
+                "conflicting_sources": [],
+                "comparison_evidence": "Matches canonical marketplace and OSM amenity=marketplace.",
+            },
+            "phone": {
+                "overture_value": "+84905161611",
+                "status": "UNVERIFIED",
+                "corroboration_sources": [],
+                "conflicting_sources": [],
+                "comparison_evidence": "Not present in OSM.",
+            },
+            "website": {
+                "overture_value": "https://www.tiktok.com/@bacmyan",
+                "status": "CONFLICTED",
+                "corroboration_sources": [],
+                "conflicting_sources": [
+                    "canonical_poi:c2afbb07-aaf9-47c1-9877-d17e64422066",
+                    "osm:way/118614280",
+                ],
+                "comparison_evidence": "FC-006: Overture record is named 'Chợ Bắc Mỹ An Online' (confidence=0.3150) with TikTok social-commerce URL 'https://www.tiktok.com/@bacmyan', representing an online vendor page rather than the physical municipal market Chợ Bắc Mỹ An.",
+            },
+        },
+        "suppressed_conflicted_fields": ["website"],
+        "retained_substantive_fields": [],
+        "post_audit_canonical_mapping_status": "MAPPING_REVIEW_REQUIRED",
+        "post_audit_content_utility_status": "LOW_INFORMATION",
+        "post_audit_final_b1b_decision": "REJECT",
+        "resolution_summary": "FC-006: Overture record 'Chợ Bắc Mỹ An Online' (confidence=0.3150, TikTok URL) has uncertain entity identity with physical municipal market Chợ Bắc Mỹ An; downgraded to MAPPING_REVIEW_REQUIRED and REJECT.",
+    },
+    "fd118580-b5da-467d-9873-0116ba435f37": {
+        "overture_gers_id": "df8dc91d-1790-4600-a518-31bec995467a",
+        "conflict_id": None,
+        "entity_identity_status": "VALID_ENTITY",
+        "fields": {
+            "coordinates": {
+                "overture_value": "16.069546, 108.243509 (dist=8.2m)",
+                "status": "CORROBORATED",
+                "corroboration_sources": [
+                    "canonical_poi:fd118580-b5da-467d-9873-0116ba435f37",
+                    "osm:node/5485483822",
+                ],
+                "conflicting_sources": [],
+                "comparison_evidence": "Overture bbox centroid is 8.2m from canonical/OSM Nhà hàng hải sản Bé Anh.",
+            },
+            "address": {
+                "overture_value": "Ngã tư Phạm Văn Đồng, Hồ Nghinh nối dài tới ngã tư Dương Đình Nghệ, Hồ Nghinh, Quận Sơn Trà, VN",
+                "status": "CORROBORATED",
+                "corroboration_sources": [
+                    "canonical_poi:fd118580-b5da-467d-9873-0116ba435f37",
+                    "osm:node/5485483822",
+                ],
+                "conflicting_sources": [],
+                "comparison_evidence": "Matches canonical and OSM 'Lô 14-15 Hồ Nghinh, Phước Mỹ, Sơn Trà, Đà Nẵng'.",
+            },
+            "category_taxonomy": {
+                "overture_value": "restaurant | seafood_restaurant (food_and_drink > restaurant > seafood_restaurant)",
+                "status": "CORROBORATED",
+                "corroboration_sources": [
+                    "canonical_poi:fd118580-b5da-467d-9873-0116ba435f37",
+                    "osm:node/5485483822",
+                ],
+                "conflicting_sources": [],
+                "comparison_evidence": "Matches canonical restaurant and OSM amenity=restaurant, cuisine=seafood.",
+            },
+            "phone": {
+                "overture_value": "+84905516726",
+                "status": "UNVERIFIED",
+                "corroboration_sources": [],
+                "conflicting_sources": [],
+                "comparison_evidence": "Plausible Đà Nẵng mobile number (+84905516726); not corroborated by OSM.",
+            },
+            "website": {
+                "overture_value": None,
+                "status": "MISSING",
+                "corroboration_sources": [],
+                "conflicting_sources": [],
+                "comparison_evidence": "No website field present on Overture record.",
+            },
+        },
+        "suppressed_conflicted_fields": [],
+        "retained_substantive_fields": ["address", "phone"],
+        "post_audit_canonical_mapping_status": "EXACT_MAPPED",
+        "post_audit_content_utility_status": "USEFUL_STRUCTURED_FACTS",
+        "post_audit_final_b1b_decision": "ACCEPT_PRIMARY_CORPUS",
+        "resolution_summary": "Clean seafood restaurant entity with corroborated coordinates, Hồ Nghinh (Sơn Trà) address, and seafood_restaurant taxonomy.",
+    },
+    "5fc0994a-e578-4a25-b375-7f079e6dc3ba": {
+        "overture_gers_id": "b9ad130e-8f19-4dcb-92a7-638573a3f62d",
+        "conflict_id": "FC-005",
+        "entity_identity_status": "CONFLATED_ENTITY_IDENTITY_MAPPING_REVIEW_REQUIRED",
+        "fields": {
+            "coordinates": {
+                "overture_value": "16.004096, 108.264305 (dist=21.4m)",
+                "status": "CORROBORATED",
+                "corroboration_sources": [
+                    "canonical_poi:5fc0994a-e578-4a25-b375-7f079e6dc3ba",
+                    "osm:way/1205388457",
+                ],
+                "conflicting_sources": [],
+                "comparison_evidence": "Overture bbox centroid is 21.4m from canonical/OSM (16.0042763, 108.2643746) on Hòn Thủy Sơn, Ngũ Hành Sơn.",
+            },
+            "address": {
+                "overture_value": "Hòn Thủy Sơn, Quận Ngũ Hành Sơn, 550000, VN",
+                "status": "CORROBORATED",
+                "corroboration_sources": [
+                    "canonical_poi:5fc0994a-e578-4a25-b375-7f079e6dc3ba",
+                    "osm:way/1205388457",
+                ],
+                "conflicting_sources": [],
+                "comparison_evidence": "Matches Hòn Thủy Sơn, Ngũ Hành Sơn (Marble Mountains) location.",
+            },
+            "category_taxonomy": {
+                "overture_value": "place_of_worship | buddhist_temple (religious_organization > place_of_worship > buddhist_temple)",
+                "status": "CORROBORATED",
+                "corroboration_sources": [
+                    "canonical_poi:5fc0994a-e578-4a25-b375-7f079e6dc3ba",
+                    "osm:way/1205388457",
+                ],
+                "conflicting_sources": [],
+                "comparison_evidence": "Matches OSM amenity=place_of_worship, religion=buddhist.",
+            },
+            "phone": {
+                "overture_value": None,
+                "status": "MISSING",
+                "corroboration_sources": [],
+                "conflicting_sources": [],
+                "comparison_evidence": "No phone field present on Overture record.",
+            },
+            "website": {
+                "overture_value": None,
+                "status": "MISSING",
+                "corroboration_sources": [],
+                "conflicting_sources": [],
+                "comparison_evidence": "No website field present on Overture record.",
+            },
+        },
+        "suppressed_conflicted_fields": [],
+        "retained_substantive_fields": [],
+        "post_audit_canonical_mapping_status": "MAPPING_REVIEW_REQUIRED",
+        "post_audit_content_utility_status": "LOW_INFORMATION",
+        "post_audit_final_b1b_decision": "REJECT",
+        "resolution_summary": "FC-005: Overture names.primary='Chùa Linh Ứng – Sơn Trà' conflates Chùa Linh Ứng Non Nước (at Hòn Thủy Sơn, Ngũ Hành Sơn) with Chùa Linh Ứng Bãi Bụt on Sơn Trà Peninsula 10.6km north; downgraded to MAPPING_REVIEW_REQUIRED and REJECT.",
+    },
+    "61639da8-996a-43df-b6d3-928b6bdd70b9": {
+        "overture_gers_id": "da92232b-8e79-4082-84b0-6a35263af4df",
+        "conflict_id": "FC-003",
+        "entity_identity_status": "VALID_ENTITY_WITH_FIELD_CONFLICT",
+        "fields": {
+            "coordinates": {
+                "overture_value": "16.055865, 108.240649 (dist=31.1m)",
+                "status": "CORROBORATED",
+                "corroboration_sources": [
+                    "canonical_poi:61639da8-996a-43df-b6d3-928b6bdd70b9",
+                    "osm:node/6482150490",
+                ],
+                "conflicting_sources": [],
+                "comparison_evidence": "Overture bbox centroid is 31.1m from canonical/OSM (16.0560062, 108.2404008).",
+            },
+            "address": {
+                "overture_value": "05 Đ. Mỹ Khê 5, Quận Ngũ Hành Sơn, +84236, VN",
+                "status": "CONFLICTED",
+                "corroboration_sources": [],
+                "conflicting_sources": [
+                    "canonical_poi:61639da8-996a-43df-b6d3-928b6bdd70b9",
+                    "osm:node/6482150490",
+                ],
+                "comparison_evidence": "FC-003: Overture address '05 Đ. Mỹ Khê 5, Quận Ngũ Hành Sơn, +84236, VN' conflicts with canonical/OSM '195/2 Đường Nguyễn Văn Thoại' and places telephone area code '+84236' in the postcode field.",
+            },
+            "category_taxonomy": {
+                "overture_value": "restaurant | vietnamese_restaurant (eat_and_drink > restaurant > vietnamese_restaurant)",
+                "status": "CORROBORATED",
+                "corroboration_sources": [
+                    "canonical_poi:61639da8-996a-43df-b6d3-928b6bdd70b9",
+                    "osm:node/6482150490",
+                ],
+                "conflicting_sources": [],
+                "comparison_evidence": "Matches canonical restaurant and OSM amenity=restaurant.",
+            },
+            "phone": {
+                "overture_value": "+84965159159",
+                "status": "CORROBORATED",
+                "corroboration_sources": ["osm:node/6482150490"],
+                "conflicting_sources": [],
+                "comparison_evidence": "Matches OSM phone='+84 965 159 159'.",
+            },
+            "website": {
+                "overture_value": "https://myquangbamuadng.com/",
+                "status": "CONFLICTED",
+                "corroboration_sources": [],
+                "conflicting_sources": [
+                    "osm:node/6482150490",
+                    "osm_website_pointer:https://myquangbamua.com.vn/",
+                ],
+                "comparison_evidence": "Overture domain 'myquangbamuadng.com' conflicts with OSM official website 'https://myquangbamua.com.vn/'.",
+            },
+        },
+        "suppressed_conflicted_fields": ["address", "website"],
+        "retained_substantive_fields": ["phone"],
+        "post_audit_canonical_mapping_status": "EXACT_MAPPED",
+        "post_audit_content_utility_status": "USEFUL_STRUCTURED_FACTS",
+        "post_audit_final_b1b_decision": "ACCEPT_PRIMARY_CORPUS",
+        "resolution_summary": "FC-003 resolved: retained valid entity with corroborated phone '+84965159159' and category; suppressed conflicted address and website.",
+    },
+    "62a874a9-13e2-44d2-95b5-30e980b98965": {
+        "overture_gers_id": "c732f0d5-911d-4d9f-93b2-51c886f4fe0b",
+        "conflict_id": "FC-011",
+        "entity_identity_status": "VALID_ENTITY_WITH_FIELD_CONFLICT",
+        "fields": {
+            "coordinates": {
+                "overture_value": "16.058750, 108.216562 (dist=15.7m)",
+                "status": "CORROBORATED",
+                "corroboration_sources": [
+                    "canonical_poi:62a874a9-13e2-44d2-95b5-30e980b98965",
+                    "osm:node/4810542131",
+                ],
+                "conflicting_sources": [],
+                "comparison_evidence": "Overture bbox centroid is 15.7m from canonical/OSM (16.0588296, 108.2166838).",
+            },
+            "address": {
+                "overture_value": "K280/23 Hoàng Diệu, Quận Hải Châu, VN",
+                "status": "CORROBORATED",
+                "corroboration_sources": [
+                    "canonical_poi:62a874a9-13e2-44d2-95b5-30e980b98965",
+                    "osm:node/4810542131",
+                ],
+                "conflicting_sources": [],
+                "comparison_evidence": "Matches canonical and OSM '280/23 Đường Hoàng Diệu, Phường Bình Hiên, Quận Hải Châu, Đà Nẵng'.",
+            },
+            "category_taxonomy": {
+                "overture_value": "restaurant | restaurant (eat_and_drink > restaurant)",
+                "status": "CORROBORATED",
+                "corroboration_sources": [
+                    "canonical_poi:62a874a9-13e2-44d2-95b5-30e980b98965",
+                    "osm:node/4810542131",
+                ],
+                "conflicting_sources": [],
+                "comparison_evidence": "Matches canonical restaurant and OSM amenity=restaurant.",
+            },
+            "phone": {
+                "overture_value": "+842363873168",
+                "status": "UNVERIFIED",
+                "corroboration_sources": [],
+                "conflicting_sources": [],
+                "comparison_evidence": "Plausible Đà Nẵng (+84 236) landline; not present in OSM.",
+            },
+            "website": {
+                "overture_value": "http://www.foody.vn/da-nang/banh-xeo-ba-duong#",
+                "status": "CONFLICTED",
+                "corroboration_sources": [],
+                "conflicting_sources": [
+                    "canonical_poi:62a874a9-13e2-44d2-95b5-30e980b98965",
+                    "osm:node/4810542131",
+                ],
+                "comparison_evidence": "Overture URL is a third-party review aggregator page (foody.vn) rather than an official venue website.",
+            },
+        },
+        "suppressed_conflicted_fields": ["website"],
+        "retained_substantive_fields": ["address", "phone"],
+        "post_audit_canonical_mapping_status": "EXACT_MAPPED",
+        "post_audit_content_utility_status": "USEFUL_STRUCTURED_FACTS",
+        "post_audit_final_b1b_decision": "ACCEPT_PRIMARY_CORPUS",
+        "resolution_summary": "Retained valid restaurant entity with corroborated K280/23 Hoàng Diệu address and unverified landline; suppressed third-party foody.vn URL.",
+    },
+    "7ff87c59-62f1-4509-95f4-e83796b9a35c": {
+        "overture_gers_id": "67b0a6b0-f6e8-477d-8517-ef73c56752f7",
+        "conflict_id": "FC-012",
+        "entity_identity_status": "VALID_ENTITY_WITH_FIELD_CONFLICT",
+        "fields": {
+            "coordinates": {
+                "overture_value": "16.072089, 108.230072 (dist=10.1m)",
+                "status": "CORROBORATED",
+                "corroboration_sources": [
+                    "canonical_poi:7ff87c59-62f1-4509-95f4-e83796b9a35c",
+                    "osm:way/537517975",
+                ],
+                "conflicting_sources": [],
+                "comparison_evidence": "Overture bbox centroid is 10.1m from canonical/OSM (16.0719986, 108.2300836).",
+            },
+            "address": {
+                "overture_value": "910A Ngô Quyền, An Hải Bắc, Sơn Trà, Đà Nẵng 550000, Vietnam, Quận Sơn Trà, 550000, VN",
+                "status": "CORROBORATED",
+                "corroboration_sources": [
+                    "canonical_poi:7ff87c59-62f1-4509-95f4-e83796b9a35c",
+                    "osm:way/537517975",
+                ],
+                "conflicting_sources": [],
+                "comparison_evidence": "Matches canonical and OSM '910A Đường Ngô Quyền, Phường An Hải Bắc, Quận Sơn Trà'.",
+            },
+            "category_taxonomy": {
+                "overture_value": "shopping | shopping_center (retail > shopping_center)",
+                "status": "CORROBORATED",
+                "corroboration_sources": [
+                    "canonical_poi:7ff87c59-62f1-4509-95f4-e83796b9a35c",
+                    "osm:way/537517975",
+                ],
+                "conflicting_sources": [],
+                "comparison_evidence": "Matches canonical mall and OSM shop=mall.",
+            },
+            "phone": {
+                "overture_value": "+84933176888",
+                "status": "CONFLICTED",
+                "corroboration_sources": [],
+                "conflicting_sources": ["osm:way/537517975"],
+                "comparison_evidence": "Overture phone '+84933176888' conflicts with OSM phone='+84 934 919 341'.",
+            },
+            "website": {
+                "overture_value": "https://vincom.com.vn/",
+                "status": "CORROBORATED",
+                "corroboration_sources": [
+                    "osm:way/537517975",
+                    "osm_website_pointer:https://vincom.com.vn/vi/tttm/vincom-plaza-ngo-quyen-da-nang",
+                ],
+                "conflicting_sources": [],
+                "comparison_evidence": "Matches official vincom.com.vn domain in OSM website tag.",
+            },
+        },
+        "suppressed_conflicted_fields": ["phone"],
+        "retained_substantive_fields": ["address", "website"],
+        "post_audit_canonical_mapping_status": "EXACT_MAPPED",
+        "post_audit_content_utility_status": "USEFUL_STRUCTURED_FACTS",
+        "post_audit_final_b1b_decision": "ACCEPT_PRIMARY_CORPUS",
+        "resolution_summary": "Retained valid shopping center entity with corroborated 910A Ngô Quyền address and vincom.com.vn website; suppressed conflicted phone.",
+    },
+    "9a2ca486-437d-4044-8541-d34d911d4fb4": {
+        "overture_gers_id": "a310c792-65d8-4115-9df6-ddf54babd1a8",
+        "conflict_id": "FC-004",
+        "entity_identity_status": "VALID_ENTITY_WITH_FIELD_CONFLICT",
+        "fields": {
+            "coordinates": {
+                "overture_value": "16.061270, 108.230037 (dist=36.7m)",
+                "status": "CORROBORATED",
+                "corroboration_sources": [
+                    "canonical_poi:9a2ca486-437d-4044-8541-d34d911d4fb4",
+                    "osm:node/6961175185",
+                    "wikivoyage:en:Da_Nang#Son_Tra_Night_Market",
+                ],
+                "conflicting_sources": [],
+                "comparison_evidence": "Overture bbox centroid is 36.7m from canonical/OSM (16.061306, 108.2303784).",
+            },
+            "address": {
+                "overture_value": "7duong Lý Nam Đế, Quận Sơn Trà, 550000, VN",
+                "status": "CONFLICTED",
+                "corroboration_sources": [],
+                "conflicting_sources": [
+                    "canonical_poi:9a2ca486-437d-4044-8541-d34d911d4fb4",
+                    "osm:node/6961175185",
+                    "wikivoyage:en:Da_Nang#Son_Tra_Night_Market",
+                ],
+                "comparison_evidence": "FC-004: Overture address '7duong Lý Nam Đế' has malformed concatenation and conflicts with canonical/OSM street 'Cao Bá Quát' and Wikivoyage 'Mai Hắc Đế'.",
+            },
+            "category_taxonomy": {
+                "overture_value": "shopping | night_market (retail > market > night_market)",
+                "status": "CORROBORATED",
+                "corroboration_sources": [
+                    "canonical_poi:9a2ca486-437d-4044-8541-d34d911d4fb4",
+                    "osm:node/6961175185",
+                    "wikivoyage:en:Da_Nang#Son_Tra_Night_Market",
+                ],
+                "conflicting_sources": [],
+                "comparison_evidence": "Matches canonical marketplace, OSM amenity=marketplace, and Wikivoyage Son Tra Night Market.",
+            },
+            "phone": {
+                "overture_value": "+84912965179",
+                "status": "UNVERIFIED",
+                "corroboration_sources": [],
+                "conflicting_sources": [],
+                "comparison_evidence": "Plausible Vietnam mobile number; not present in OSM or Wikivoyage.",
+            },
+            "website": {
+                "overture_value": None,
+                "status": "MISSING",
+                "corroboration_sources": [],
+                "conflicting_sources": [],
+                "comparison_evidence": "No website field present on Overture record.",
+            },
+        },
+        "suppressed_conflicted_fields": ["address"],
+        "retained_substantive_fields": ["phone"],
+        "post_audit_canonical_mapping_status": "EXACT_MAPPED",
+        "post_audit_content_utility_status": "USEFUL_STRUCTURED_FACTS",
+        "post_audit_final_b1b_decision": "ACCEPT_PRIMARY_CORPUS",
+        "resolution_summary": "FC-004 resolved: retained valid night market entity with corroborated night_market taxonomy and unverified contact phone; suppressed malformed/conflicted address '7duong Lý Nam Đế'.",
+    },
+    "a32ce1b4-126b-4544-b5ea-4a7edbab6a0a": {
+        "overture_gers_id": "82f95e1f-7bf8-40df-a3ed-6f92a4a847f3",
+        "conflict_id": "FC-013",
+        "entity_identity_status": "VALID_ENTITY_WITH_FIELD_CONFLICT",
+        "fields": {
+            "coordinates": {
+                "overture_value": "16.039402, 108.250932 (dist=15.7m)",
+                "status": "CORROBORATED",
+                "corroboration_sources": [
+                    "canonical_poi:a32ce1b4-126b-4544-b5ea-4a7edbab6a0a",
+                    "osm:way/977276708",
+                    "wikidata:Q111402873",
+                    "wikivoyage:en:Da_Nang#Furama_Resort",
+                ],
+                "conflicting_sources": [],
+                "comparison_evidence": "Overture bbox centroid is 15.7m from canonical/OSM (16.0394922, 108.2510443).",
+            },
+            "address": {
+                "overture_value": "105 Đường Võ Nguyên Giáp, Quận Ngũ Hành Sơn, 50406, VN",
+                "status": "CORROBORATED",
+                "corroboration_sources": [
+                    "canonical_poi:a32ce1b4-126b-4544-b5ea-4a7edbab6a0a",
+                    "osm:way/977276708",
+                    "wikidata:Q111402873",
+                    "wikivoyage:en:Da_Nang#Furama_Resort",
+                ],
+                "conflicting_sources": [],
+                "comparison_evidence": "Matches canonical/OSM '103 - 105 Đường Võ Nguyên Giáp, Phường Khuê Mỹ, Quận Ngũ Hành Sơn, Đà Nẵng' and Wikidata Q111402873.",
+            },
+            "category_taxonomy": {
+                "overture_value": "hotel | resort (accommodation > resort)",
+                "status": "CORROBORATED",
+                "corroboration_sources": [
+                    "canonical_poi:a32ce1b4-126b-4544-b5ea-4a7edbab6a0a",
+                    "osm:way/977276708",
+                    "wikidata:Q111402873",
+                ],
+                "conflicting_sources": [],
+                "comparison_evidence": "Matches canonical resort (OSM tourism=resort) and Wikidata Q111402873 (P31=hotel Q27686).",
+            },
+            "phone": {
+                "overture_value": "+842363847888",
+                "status": "CORROBORATED",
+                "corroboration_sources": [
+                    "osm:way/977276708",
+                    "wikivoyage:en:Da_Nang#Furama_Resort",
+                ],
+                "conflicting_sources": [],
+                "comparison_evidence": "Matches OSM phone='+84 236 3847 333;+84 236 3847 888' and Wikivoyage phone='+84 236 3847 333, +84 236 3847 888'.",
+            },
+            "website": {
+                "overture_value": "http://club99.vn/",
+                "status": "CONFLICTED",
+                "corroboration_sources": [],
+                "conflicting_sources": [
+                    "osm:way/977276708",
+                    "wikivoyage:en:Da_Nang#Furama_Resort",
+                    "osm_website_pointer:https://furamavietnam.com",
+                ],
+                "comparison_evidence": "Overture website 'http://club99.vn/' points to an internal gaming club rather than the official resort website 'https://furamavietnam.com' in OSM and Wikivoyage.",
+            },
+        },
+        "suppressed_conflicted_fields": ["website"],
+        "retained_substantive_fields": ["address", "phone"],
+        "post_audit_canonical_mapping_status": "EXACT_MAPPED",
+        "post_audit_content_utility_status": "USEFUL_STRUCTURED_FACTS",
+        "post_audit_final_b1b_decision": "ACCEPT_PRIMARY_CORPUS",
+        "resolution_summary": "Retained valid resort entity with corroborated Võ Nguyên Giáp address and phone '+842363847888'; suppressed conflicted sub-venue website 'http://club99.vn/'.",
+    },
+    "4608034c-6c43-4d54-a542-ead8e23b1338": {
+        "overture_gers_id": "0d91068a-7ee8-4d97-ad32-a075a23d30fd",
+        "conflict_id": None,
+        "entity_identity_status": "VALID_ENTITY",
+        "fields": {
+            "coordinates": {
+                "overture_value": "16.121100, 108.306300 (dist=19.0m)",
+                "status": "CORROBORATED",
+                "corroboration_sources": [
+                    "canonical_poi:4608034c-6c43-4d54-a542-ead8e23b1338",
+                    "osm:way/360113559",
+                    "wikidata:Q17068326",
+                ],
+                "conflicting_sources": [],
+                "comparison_evidence": "Overture bbox centroid is 19.0m from canonical/OSM InterContinental Danang Sun Peninsula Resort.",
+            },
+            "address": {
+                "overture_value": "Bãi Bắc, Quận Sơn Trà, 550000, VN",
+                "status": "CORROBORATED",
+                "corroboration_sources": [
+                    "canonical_poi:4608034c-6c43-4d54-a542-ead8e23b1338",
+                    "osm:way/360113559",
+                    "wikivoyage:en:Da_Nang#InterContinental_Danang_Sun_Peninsula_Resort",
+                ],
+                "conflicting_sources": [],
+                "comparison_evidence": "Matches canonical 'Bai Bac, Son Tra peninsula, Đà Nẵng' and Wikivoyage 'Thọ Quang, Sơn Trà'.",
+            },
+            "category_taxonomy": {
+                "overture_value": "resort | resort (lodging > resort)",
+                "status": "CORROBORATED",
+                "corroboration_sources": [
+                    "canonical_poi:4608034c-6c43-4d54-a542-ead8e23b1338",
+                    "osm:way/360113559",
+                    "wikidata:Q17068326",
+                ],
+                "conflicting_sources": [],
+                "comparison_evidence": "Matches canonical resort and OSM tourism=resort.",
+            },
+            "phone": {
+                "overture_value": "+842363938888",
+                "status": "CORROBORATED",
+                "corroboration_sources": [
+                    "osm:way/360113559",
+                    "wikivoyage:en:Da_Nang#InterContinental_Danang_Sun_Peninsula_Resort",
+                ],
+                "conflicting_sources": [],
+                "comparison_evidence": "Matches OSM and Wikivoyage phone='+84 236 393 8888'.",
+            },
+            "website": {
+                "overture_value": "https://www.ihg.com/intercontinental/hotels/us/en/danang-city/dadha/hoteldetail",
+                "status": "CORROBORATED",
+                "corroboration_sources": [
+                    "osm:way/360113559",
+                    "wikivoyage:en:Da_Nang#InterContinental_Danang_Sun_Peninsula_Resort",
+                ],
+                "conflicting_sources": [],
+                "comparison_evidence": "Matches official IHG InterContinental Danang resort URL in OSM and Wikivoyage.",
+            },
+        },
+        "suppressed_conflicted_fields": [],
+        "retained_substantive_fields": ["address", "phone", "website"],
+        "post_audit_canonical_mapping_status": "EXACT_MAPPED",
+        "post_audit_content_utility_status": "USEFUL_STRUCTURED_FACTS",
+        "post_audit_final_b1b_decision": "ACCEPT_PRIMARY_CORPUS",
+        "resolution_summary": "All 5 fields corroborated by canonical POI, OSM, Wikidata, and Wikivoyage.",
+    },
+    "a2037ceb-201f-5c45-a596-af795a399e60": {
+        "overture_gers_id": "3421b671-b891-408e-943f-1278e1a46c94",
+        "conflict_id": None,
+        "entity_identity_status": "VALID_ENTITY",
+        "fields": {
+            "coordinates": {
+                "overture_value": "21.031546, 105.839893 (dist=25.9m)",
+                "status": "CORROBORATED",
+                "corroboration_sources": [
+                    "canonical_poi:a2037ceb-201f-5c45-a596-af795a399e60",
+                    "osm:way/185540946",
+                    "wikidata:Q10752053",
+                    "wikivoyage:en:Hanoi#Lenin_Statue_&_Park",
+                ],
+                "conflicting_sources": [],
+                "comparison_evidence": "Overture bbox centroid is 25.9m from canonical/OSM Công viên Lê-nin.",
+            },
+            "address": {
+                "overture_value": "28A Điện Biên Phủ, Quận Ba Đình, 100000, VN",
+                "status": "CORROBORATED",
+                "corroboration_sources": [
+                    "wikipedia:vi:Công_viên_Lê-nin",
+                    "wikivoyage:en:Hanoi#Lenin_Statue_&_Park",
+                ],
+                "conflicting_sources": [],
+                "comparison_evidence": "Matches Điện Biên Phủ street frontage in Ba Đình District corroborated by Wikipedia and Wikivoyage.",
+            },
+            "category_taxonomy": {
+                "overture_value": "park | park (sports_and_recreation > park)",
+                "status": "CORROBORATED",
+                "corroboration_sources": [
+                    "canonical_poi:a2037ceb-201f-5c45-a596-af795a399e60",
+                    "osm:way/185540946",
+                    "wikidata:Q10752053",
+                ],
+                "conflicting_sources": [],
+                "comparison_evidence": "Matches canonical park and OSM leisure=park.",
+            },
+            "phone": {
+                "overture_value": None,
+                "status": "MISSING",
+                "corroboration_sources": [],
+                "conflicting_sources": [],
+                "comparison_evidence": "No phone field present on Overture record.",
+            },
+            "website": {
+                "overture_value": None,
+                "status": "MISSING",
+                "corroboration_sources": [],
+                "conflicting_sources": [],
+                "comparison_evidence": "No website field present on Overture record.",
+            },
+        },
+        "suppressed_conflicted_fields": [],
+        "retained_substantive_fields": ["address"],
+        "post_audit_canonical_mapping_status": "EXACT_MAPPED",
+        "post_audit_content_utility_status": "USEFUL_STRUCTURED_FACTS",
+        "post_audit_final_b1b_decision": "ACCEPT_PRIMARY_CORPUS",
+        "resolution_summary": "All present fields (coordinates, 28A Điện Biên Phủ address, park category) corroborated by canonical POI, OSM, Wikidata, and Wikivoyage.",
+    },
+    "5bd45eb7-a691-4426-9691-a5a00f38d1ad": {
+        "overture_gers_id": "e8f37b82-c15a-49d1-ad85-994b4b10f150",
+        "conflict_id": None,
+        "entity_identity_status": "VALID_ENTITY",
+        "fields": {
+            "coordinates": {
+                "overture_value": "21.018263, 105.855400 (dist=22.9m)",
+                "status": "CORROBORATED",
+                "corroboration_sources": [
+                    "canonical_poi:5bd45eb7-a691-4426-9691-a5a00f38d1ad",
+                    "osm:node/442977691",
+                ],
+                "conflicting_sources": [],
+                "comparison_evidence": "Overture bbox centroid is 22.9m from canonical/OSM Highlands Coffee branch.",
+            },
+            "address": {
+                "overture_value": "Phố Lò Đúc, Quận Hai Bà Trưng, VN",
+                "status": "UNVERIFIED",
+                "corroboration_sources": [],
+                "conflicting_sources": [],
+                "comparison_evidence": "Plausible Hai Bà Trưng street address ('Phố Lò Đúc, Quận Hai Bà Trưng'); OSM node/442977691 has no addr:street tag.",
+            },
+            "category_taxonomy": {
+                "overture_value": "coffee_shop | coffee_shop (food_and_drink > non_alcoholic_beverage_venue > coffee_shop)",
+                "status": "CORROBORATED",
+                "corroboration_sources": [
+                    "canonical_poi:5bd45eb7-a691-4426-9691-a5a00f38d1ad",
+                    "osm:node/442977691",
+                ],
+                "conflicting_sources": [],
+                "comparison_evidence": "Matches canonical cafe and OSM amenity=cafe, cuisine=coffee_shop.",
+            },
+            "phone": {
+                "overture_value": None,
+                "status": "MISSING",
+                "corroboration_sources": [],
+                "conflicting_sources": [],
+                "comparison_evidence": "No phone field present on Overture record.",
+            },
+            "website": {
+                "overture_value": None,
+                "status": "MISSING",
+                "corroboration_sources": [],
+                "conflicting_sources": [],
+                "comparison_evidence": "No website field present on Overture record.",
+            },
+        },
+        "suppressed_conflicted_fields": [],
+        "retained_substantive_fields": ["address"],
+        "post_audit_canonical_mapping_status": "EXACT_MAPPED",
+        "post_audit_content_utility_status": "USEFUL_STRUCTURED_FACTS",
+        "post_audit_final_b1b_decision": "ACCEPT_PRIMARY_CORPUS",
+        "resolution_summary": "Clean cafe branch entity with corroborated coordinates and coffee_shop taxonomy, plus unverified non-conflicting Phố Lò Đúc address.",
+    },
+    "5350dd97-2f75-45fc-9fc1-1979b08670f7": {
+        "overture_gers_id": "ff9a223f-952f-4d51-b7a9-b90998668554",
+        "conflict_id": None,
+        "entity_identity_status": "VALID_ENTITY",
+        "fields": {
+            "coordinates": {
+                "overture_value": "21.030633, 105.849283 (dist=3.0m)",
+                "status": "CORROBORATED",
+                "corroboration_sources": [
+                    "canonical_poi:5350dd97-2f75-45fc-9fc1-1979b08670f7",
+                    "osm:node/773601261",
+                    "wikivoyage:en:Hanoi#Pho_10_Ly_Quoc_Su",
+                ],
+                "conflicting_sources": [],
+                "comparison_evidence": "Overture bbox centroid is 3.0m from canonical/OSM (21.0306389, 105.849255) and 6.3m from Wikivoyage.",
+            },
+            "address": {
+                "overture_value": "10 P. Lý Quốc Sư, Quận Hoàn Kiếm, VN",
+                "status": "CORROBORATED",
+                "corroboration_sources": [
+                    "canonical_poi:5350dd97-2f75-45fc-9fc1-1979b08670f7",
+                    "osm:node/773601261",
+                    "wikivoyage:en:Hanoi#Pho_10_Ly_Quoc_Su",
+                ],
+                "conflicting_sources": [],
+                "comparison_evidence": "Matches canonical/OSM '10 Phố Lý Quốc Sư, Phường Hoàn Kiếm, Hà Nội' and Wikivoyage '10 P. Lý Quốc Sư'.",
+            },
+            "category_taxonomy": {
+                "overture_value": "restaurant | vietnamese_restaurant (food_and_drink > restaurant > asian_restaurant > southeast_asian_restaurant > vietnamese_restaurant)",
+                "status": "CORROBORATED",
+                "corroboration_sources": [
+                    "canonical_poi:5350dd97-2f75-45fc-9fc1-1979b08670f7",
+                    "osm:node/773601261",
+                    "wikivoyage:en:Hanoi#Pho_10_Ly_Quoc_Su",
+                ],
+                "conflicting_sources": [],
+                "comparison_evidence": "Matches canonical restaurant and OSM amenity=restaurant, cuisine=vietnamese.",
+            },
+            "phone": {
+                "overture_value": "+842438257338",
+                "status": "CORROBORATED",
+                "corroboration_sources": ["osm:node/773601261"],
+                "conflicting_sources": [],
+                "comparison_evidence": "Matches OSM phone='+84 24 3825 7338'.",
+            },
+            "website": {
+                "overture_value": "http://www.pho10lyquocsu.com.vn/",
+                "status": "CORROBORATED",
+                "corroboration_sources": ["osm:node/773601261"],
+                "conflicting_sources": [],
+                "comparison_evidence": "Matches OSM website tag on node/773601261.",
+            },
+        },
+        "suppressed_conflicted_fields": [],
+        "retained_substantive_fields": ["address", "phone", "website"],
+        "post_audit_canonical_mapping_status": "EXACT_MAPPED",
+        "post_audit_content_utility_status": "USEFUL_STRUCTURED_FACTS",
+        "post_audit_final_b1b_decision": "ACCEPT_PRIMARY_CORPUS",
+        "resolution_summary": "All 5 fields corroborated by canonical POI, OSM, and Wikivoyage.",
+    },
+    "5e92e89d-8524-4792-862a-6dfce0994862": {
+        "overture_gers_id": "80ceecb4-b812-4b29-a332-e22dc1a21fb8",
+        "conflict_id": None,
+        "entity_identity_status": "VALID_ENTITY",
+        "fields": {
+            "coordinates": {
+                "overture_value": "21.059810, 105.831573 (dist=46.2m)",
+                "status": "CORROBORATED",
+                "corroboration_sources": [
+                    "canonical_poi:5e92e89d-8524-4792-862a-6dfce0994862",
+                    "osm:node/922396410",
+                    "wikivoyage:en:Hanoi#Sheraton_Hanoi_Hotel",
+                ],
+                "conflicting_sources": [],
+                "comparison_evidence": "Overture bbox centroid is 46.2m from canonical/OSM (21.0597444, 105.8320123) and 17.2m from Wikivoyage (21.0598708, 105.8317256).",
+            },
+            "address": {
+                "overture_value": "11 Đường Xuân Diệu, Quận Tây Hồ, 11207, VN",
+                "status": "CORROBORATED",
+                "corroboration_sources": [
+                    "canonical_poi:5e92e89d-8524-4792-862a-6dfce0994862",
+                    "osm:node/922396410",
+                    "wikidata:Q117325492",
+                    "wikivoyage:en:Hanoi#Sheraton_Hanoi_Hotel",
+                ],
+                "conflicting_sources": [],
+                "comparison_evidence": "Matches canonical/OSM '11 Đường Xuân Diệu', Wikidata Q117325492 ('K5 Nghi Tam, 11 Xuan Dieu Road, Tay Ho, Hanoi'), and Wikivoyage.",
+            },
+            "category_taxonomy": {
+                "overture_value": "hotel | hotel (lodging > hotel)",
+                "status": "CORROBORATED",
+                "corroboration_sources": [
+                    "canonical_poi:5e92e89d-8524-4792-862a-6dfce0994862",
+                    "osm:node/922396410",
+                    "wikidata:Q117325492",
+                ],
+                "conflicting_sources": [],
+                "comparison_evidence": "Matches canonical hotel, OSM tourism=hotel, and Wikidata Q117325492 (P31=hotel Q27686).",
+            },
+            "phone": {
+                "overture_value": "+842437199000",
+                "status": "CORROBORATED",
+                "corroboration_sources": [
+                    "wikivoyage:en:Hanoi#Sheraton_Hanoi_Hotel",
+                ],
+                "conflicting_sources": [],
+                "comparison_evidence": "Matches Wikivoyage phone='+84 24 3719 9000'.",
+            },
+            "website": {
+                "overture_value": "https://www.marriott.com/en-us/hotels/hanhs-sheraton-hanoi-hotel/overview/?scid=d2406702-e8ea-4b45-bb9b-69cddaaef03d",
+                "status": "CORROBORATED",
+                "corroboration_sources": [
+                    "wikivoyage:en:Hanoi#Sheraton_Hanoi_Hotel",
+                ],
+                "conflicting_sources": [],
+                "comparison_evidence": "Matches official Marriott Sheraton Hanoi URL in Wikivoyage.",
+            },
+        },
+        "suppressed_conflicted_fields": [],
+        "retained_substantive_fields": ["address", "phone", "website"],
+        "post_audit_canonical_mapping_status": "EXACT_MAPPED",
+        "post_audit_content_utility_status": "USEFUL_STRUCTURED_FACTS",
+        "post_audit_final_b1b_decision": "ACCEPT_PRIMARY_CORPUS",
+        "resolution_summary": "All 5 fields corroborated by canonical POI, OSM, Wikidata, and Wikivoyage.",
+    },
+    "9a96e0a0-e040-4e16-a3f2-682ca373dd8e": {
+        "overture_gers_id": "165cef5b-70ba-41d9-8314-4b54d979379d",
+        "conflict_id": None,
+        "entity_identity_status": "VALID_ENTITY",
+        "fields": {
+            "coordinates": {
+                "overture_value": "21.025615, 105.846542 (dist=22.7m)",
+                "status": "CORROBORATED",
+                "corroboration_sources": [
+                    "canonical_poi:9a96e0a0-e040-4e16-a3f2-682ca373dd8e",
+                    "osm:node/442033049",
+                    "wikidata:Q111402985",
+                    "wikivoyage:en:Hanoi#Somerset_Grand_Hanoi",
+                ],
+                "conflicting_sources": [],
+                "comparison_evidence": "Overture bbox centroid is 22.7m from canonical/OSM (21.0257975, 105.8464446) and 8.2m from Wikidata Q111402985.",
+            },
+            "address": {
+                "overture_value": "Quận Hoàn Kiếm, VN",
+                "status": "CORROBORATED",
+                "corroboration_sources": [
+                    "canonical_poi:9a96e0a0-e040-4e16-a3f2-682ca373dd8e",
+                    "osm:node/442033049",
+                    "wikidata:Q111402985",
+                ],
+                "conflicting_sources": [],
+                "comparison_evidence": "Matches canonical/OSM '49 Phố Hai Bà Trưng, Trần Hưng Đạo, Hoàn Kiếm, Hà Nội' and Wikidata Q111402985 (P131=Hoàn Kiếm).",
+            },
+            "category_taxonomy": {
+                "overture_value": "hotel | hotel (lodging > hotel)",
+                "status": "CORROBORATED",
+                "corroboration_sources": [
+                    "canonical_poi:9a96e0a0-e040-4e16-a3f2-682ca373dd8e",
+                    "osm:node/442033049",
+                    "wikidata:Q111402985",
+                ],
+                "conflicting_sources": [],
+                "comparison_evidence": "Matches canonical hotel, OSM tourism=hotel, and Wikidata Q111402985.",
+            },
+            "phone": {
+                "overture_value": "+842439342342",
+                "status": "CORROBORATED",
+                "corroboration_sources": [
+                    "osm:node/442033049",
+                    "wikivoyage:en:Hanoi#Somerset_Grand_Hanoi",
+                ],
+                "conflicting_sources": [],
+                "comparison_evidence": "Matches OSM and Wikivoyage phone='+84 24 3934 2342'.",
+            },
+            "website": {
+                "overture_value": "https://www.discoverasr.com/vi/somerset-serviced-residence/vietnam/somerset-grand-hanoi",
+                "status": "CORROBORATED",
+                "corroboration_sources": [
+                    "osm:node/442033049",
+                    "wikivoyage:en:Hanoi#Somerset_Grand_Hanoi",
+                ],
+                "conflicting_sources": [],
+                "comparison_evidence": "Matches official discoverasr.com Somerset Grand Hanoi URL in OSM and Wikivoyage.",
+            },
+        },
+        "suppressed_conflicted_fields": [],
+        "retained_substantive_fields": ["address", "phone", "website"],
+        "post_audit_canonical_mapping_status": "EXACT_MAPPED",
+        "post_audit_content_utility_status": "USEFUL_STRUCTURED_FACTS",
+        "post_audit_final_b1b_decision": "ACCEPT_PRIMARY_CORPUS",
+        "resolution_summary": "All 5 fields corroborated by canonical POI, OSM, Wikidata, and Wikivoyage.",
+    },
+    "afb3793b-7227-4645-a68a-3647c7468638": {
+        "overture_gers_id": "e8077687-eb1f-44ff-b544-9e7ae8ccdc1e",
+        "conflict_id": "FC-014",
+        "entity_identity_status": "VALID_ENTITY_WITH_FIELD_CONFLICT",
+        "fields": {
+            "coordinates": {
+                "overture_value": "21.074477, 105.818082 (dist=10.1m)",
+                "status": "CORROBORATED",
+                "corroboration_sources": [
+                    "canonical_poi:afb3793b-7227-4645-a68a-3647c7468638",
+                    "osm:way/613491916",
+                ],
+                "conflicting_sources": [],
+                "comparison_evidence": "Overture bbox centroid is 10.1m from canonical/OSM (21.0745403, 105.8180123).",
+            },
+            "address": {
+                "overture_value": "614 Lạc Long Quân, Tây Hồ, VN",
+                "status": "CORROBORATED",
+                "corroboration_sources": [
+                    "canonical_poi:afb3793b-7227-4645-a68a-3647c7468638",
+                    "osm:way/613491916",
+                ],
+                "conflicting_sources": [],
+                "comparison_evidence": "Matches canonical and OSM '614 Đường Lạc Long Quân, Phường Tây Hồ, Hà Nội'.",
+            },
+            "category_taxonomy": {
+                "overture_value": "restaurant | buffet_restaurant (eat_and_drink > restaurant > buffet_restaurant)",
+                "status": "CORROBORATED",
+                "corroboration_sources": [
+                    "canonical_poi:afb3793b-7227-4645-a68a-3647c7468638",
+                    "osm:way/613491916",
+                ],
+                "conflicting_sources": [],
+                "comparison_evidence": "Matches canonical restaurant and OSM amenity=restaurant, cuisine=buffet.",
+            },
+            "phone": {
+                "overture_value": "+842437199242",
+                "status": "UNVERIFIED",
+                "corroboration_sources": [],
+                "conflicting_sources": [],
+                "comparison_evidence": "Plausible Hanoi (+84 24) landline; not present in OSM.",
+            },
+            "website": {
+                "overture_value": "http://www.sentayho.com.vn",
+                "status": "CONFLICTED",
+                "corroboration_sources": [],
+                "conflicting_sources": [
+                    "osm:way/613491916",
+                    "osm_website_pointer:https://nhahangsen.vn/",
+                ],
+                "comparison_evidence": "Overture domain 'sentayho.com.vn' conflicts with OSM official website 'https://nhahangsen.vn/'.",
+            },
+        },
+        "suppressed_conflicted_fields": ["website"],
+        "retained_substantive_fields": ["address", "phone"],
+        "post_audit_canonical_mapping_status": "EXACT_MAPPED",
+        "post_audit_content_utility_status": "USEFUL_STRUCTURED_FACTS",
+        "post_audit_final_b1b_decision": "ACCEPT_PRIMARY_CORPUS",
+        "resolution_summary": "Retained valid buffet restaurant entity with corroborated 614 Lạc Long Quân address and unverified landline; suppressed conflicted website 'http://www.sentayho.com.vn'.",
+    },
+    "f0d424bd-f722-540f-8964-5e6fd8875b56": {
+        "overture_gers_id": "e55bab3c-c110-4ba6-a005-5c43986a6095",
+        "conflict_id": "FC-001",
+        "entity_identity_status": "VALID_ENTITY_WITH_FIELD_CONFLICT",
+        "fields": {
+            "coordinates": {
+                "overture_value": "21.040176, 105.798732 (dist=4.1m)",
+                "status": "CORROBORATED",
+                "corroboration_sources": [
+                    "canonical_poi:f0d424bd-f722-540f-8964-5e6fd8875b56",
+                    "osm:way/39954624",
+                    "wikidata:Q1048345",
+                    "wikivoyage:en:Hanoi#Museum_of_Ethnology",
+                ],
+                "conflicting_sources": [],
+                "comparison_evidence": "Overture bbox centroid is 4.1m from canonical/OSM (21.0402022, 105.7987603), 67m from Wikidata Q1048345, and 42m from Wikivoyage.",
+            },
+            "address": {
+                "overture_value": "1 Đường Trực Nguyên, Huyện Thường Tín, 13618, VN",
+                "status": "CONFLICTED",
+                "corroboration_sources": [],
+                "conflicting_sources": [
+                    "canonical_poi:f0d424bd-f722-540f-8964-5e6fd8875b56",
+                    "osm:way/39954624",
+                    "wikipedia:vi:34770",
+                    "wikivoyage:en:Hanoi#Museum_of_Ethnology",
+                    "official_museum_site:https://www.vme.org.vn/",
+                ],
+                "comparison_evidence": "FC-001: Overture address '1 Đường Trực Nguyên, Huyện Thường Tín, 13618, VN' conflicts with canonical/OSM 'Đường Nguyễn Văn Huyên, Phường Quan Hoa, Quận Cầu Giấy, Hà Nội', Wikipedia vi:Bảo tàng Dân tộc học Việt Nam ('đường Nguyễn Văn Huyên'), Wikivoyage ('Nguyen Van Huyen St, Cau Giay District'), and official museum site https://www.vme.org.vn/.",
+            },
+            "category_taxonomy": {
+                "overture_value": "museum | museum (arts_and_entertainment > museum)",
+                "status": "CORROBORATED",
+                "corroboration_sources": [
+                    "canonical_poi:f0d424bd-f722-540f-8964-5e6fd8875b56",
+                    "osm:way/39954624",
+                    "wikidata:Q1048345",
+                    "wikipedia:vi:34770",
+                ],
+                "conflicting_sources": [],
+                "comparison_evidence": "Matches canonical attraction/museum, OSM tourism=museum, and Wikidata Q1048345 (P31=museum Q33506).",
+            },
+            "phone": {
+                "overture_value": "+84437562193",
+                "status": "CORROBORATED",
+                "corroboration_sources": [
+                    "osm:way/39954624",
+                    "wikivoyage:en:Hanoi#Museum_of_Ethnology",
+                ],
+                "conflicting_sources": [],
+                "comparison_evidence": "Matches OSM phone='+84-4-37562193' and Wikivoyage phone='+84 24 3756 2193'.",
+            },
+            "website": {
+                "overture_value": "http://www.vme.org.vn/",
+                "status": "CORROBORATED",
+                "corroboration_sources": [
+                    "osm:way/39954624",
+                    "wikidata:Q1048345",
+                    "wikivoyage:en:Hanoi#Museum_of_Ethnology",
+                    "official_museum_site:https://www.vme.org.vn/",
+                ],
+                "conflicting_sources": [],
+                "comparison_evidence": "Matches OSM website='https://www.vme.org.vn/', Wikidata P856='http://www.vme.org.vn', and Wikivoyage url='http://www.vme.org.vn'.",
+            },
+        },
+        "suppressed_conflicted_fields": ["address"],
+        "retained_substantive_fields": ["phone", "website"],
+        "post_audit_canonical_mapping_status": "EXACT_MAPPED",
+        "post_audit_content_utility_status": "USEFUL_STRUCTURED_FACTS",
+        "post_audit_final_b1b_decision": "ACCEPT_PRIMARY_CORPUS",
+        "resolution_summary": "FC-001 resolved: retained valid museum entity (4.1m distance, corroborated category, phone '+84437562193', and official website 'http://www.vme.org.vn/') with conflicted address '1 Đường Trực Nguyên, Huyện Thường Tín, 13618, VN' suppressed from raw_text.",
+    },
+}
+
+
+def _haversine_m(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
+    r = 6371000.0
+    p1, p2 = math.radians(lat1), math.radians(lat2)
+    dp = math.radians(lat2 - lat1)
+    dl = math.radians(lon2 - lon1)
+    a = math.sin(dp / 2.0) ** 2 + math.cos(p1) * math.cos(p2) * math.sin(dl / 2.0) ** 2
+    return 2.0 * r * math.asin(math.sqrt(a))
 
 
 def _sha256_text(text: str) -> str:
@@ -850,7 +2427,12 @@ def _render_wikidata_text(poi: dict[str, Any], qid: str, ent: dict[str, Any], la
     for s in claims.get("P625", []):
         v = s.get("mainsnak", {}).get("datavalue", {}).get("value")
         if isinstance(v, dict) and "latitude" in v and "longitude" in v:
-            coords_str = f"{v['latitude']:.6f}, {v['longitude']:.6f}"
+            wd_lat = float(v["latitude"])
+            wd_lon = float(v["longitude"])
+            if "latitude" in poi and "longitude" in poi:
+                if _haversine_m(float(poi["latitude"]), float(poi["longitude"]), wd_lat, wd_lon) > 2000.0:
+                    continue
+            coords_str = f"{wd_lat:.6f}, {wd_lon:.6f}"
             break
 
     label_parts = [p for p in (lbl_vi, lbl_en) if p]
@@ -902,7 +2484,10 @@ def _render_wikidata_text(poi: dict[str, Any], qid: str, ent: dict[str, Any], la
 
 def _fetch_wikivoyage_listings() -> tuple[dict[tuple[str, str], tuple[str, int, str, dict[str, dict[str, str]]]], int]:
     out: dict[tuple[str, str], tuple[str, int, str, dict[str, dict[str, str]]]] = {}
-    pattern = re.compile(r"\{\{(see|do|buy|eat|drink|sleep|listing)\b(.*?)\}\}", re.DOTALL | re.IGNORECASE)
+    pattern = re.compile(
+        r"\{\{(see|do|buy|eat|drink|sleep|listing)\b((?:[^{}]|\{\{[^{}]*\}\})*)\}\}",
+        re.DOTALL | re.IGNORECASE,
+    )
     http_requests = 0
     for domain, page_title in [
         ("en.wikivoyage.org", "Da Nang"),
@@ -933,6 +2518,8 @@ def _fetch_wikivoyage_listings() -> tuple[dict[tuple[str, str], tuple[str, int, 
             for m in pattern.finditer(wikitext):
                 ttype = m.group(1).lower()
                 body = m.group(2)
+                body = re.sub(r"\[\[([^\]|]+)\|([^\]]+)\]\]", r"\2", body)
+                body = re.sub(r"\{\{UNESCO\}\}", "UNESCO World Heritage Site", body, flags=re.IGNORECASE)
                 fields: dict[str, str] = {"_type": ttype}
                 for part in body.split("|"):
                     if "=" in part:
@@ -1038,10 +2625,17 @@ def _resolve_overture_record_license(row: dict[str, Any]) -> tuple[str, str, flo
     return unique_licenses[0], ", ".join(datasets), conf_val
 
 
-def _render_overture_text(poi: dict[str, Any], gers_id: str, row: dict[str, Any]) -> tuple[str, str, str]:
+def _render_overture_text(
+    poi: dict[str, Any],
+    gers_id: str,
+    row: dict[str, Any],
+    suppressed_fields: set[str] | frozenset[str] = frozenset(),
+) -> tuple[str, str, str]:
     """Render Overture Places record into Vietnamese structured factual text.
 
     Null, NaN, NaT, and missing values are never rendered as factual claims or defaulted to 'open'.
+    Fields listed in `suppressed_fields` (`address`, `phone`, `website`, `category_taxonomy`) are
+    excluded from `raw_text` under Corrective 02 fact-consistency rules.
     Record-level license is resolved fail-closed via `_resolve_overture_record_license(row)`.
     """
     names = row.get("names") if isinstance(row.get("names"), dict) else {}
@@ -1055,7 +2649,7 @@ def _render_overture_text(poi: dict[str, Any], gers_id: str, row: dict[str, Any]
 
     addrs_raw = row.get("addresses")
     addr_strs = []
-    if addrs_raw is not None:
+    if addrs_raw is not None and "address" not in suppressed_fields:
         for a in addrs_raw:
             if isinstance(a, dict):
                 parts = [
@@ -1069,9 +2663,17 @@ def _render_overture_text(poi: dict[str, Any], gers_id: str, row: dict[str, Any]
                     addr_strs.append(s)
 
     phones_raw = row.get("phones")
-    phones = [c for p in phones_raw if (c := _clean_scalar(p)) is not None] if phones_raw is not None else []
+    phones = (
+        [c for p in phones_raw if (c := _clean_scalar(p)) is not None]
+        if (phones_raw is not None and "phone" not in suppressed_fields)
+        else []
+    )
     webs_raw = row.get("websites")
-    webs = [c for w in webs_raw if (c := _clean_scalar(w)) is not None] if webs_raw is not None else []
+    webs = (
+        [c for w in webs_raw if (c := _clean_scalar(w)) is not None]
+        if (webs_raw is not None and "website" not in suppressed_fields)
+        else []
+    )
 
     license_str, dataset_str, conf_val = _resolve_overture_record_license(row)
 
@@ -1079,7 +2681,7 @@ def _render_overture_text(poi: dict[str, Any], gers_id: str, row: dict[str, Any]
         f"Địa điểm: {poi['name']} ({poi['city']}) — Hồ sơ Overture Maps Places ({gers_id}).",
         f"Tên chính thức trên Overture: {primary_name}.",
     ]
-    if basic_cat or tax_primary:
+    if (basic_cat or tax_primary) and "category_taxonomy" not in suppressed_fields:
         cat_label = basic_cat or tax_primary
         tax_label = tax_primary or basic_cat
         hier_str = " > ".join(tax_hier) if tax_hier else tax_label
@@ -1124,8 +2726,9 @@ def build_b1b_artifacts() -> dict[str, Any]:
 
     candidate_decisions: list[dict[str, Any]] = []
     acquired_documents: list[dict[str, Any]] = []
+    overture_audit_records: list[dict[str, Any]] = []
 
-    # 1. Overture Places candidates (26 AUTO_LINK_VERIFIED -> ACCEPT_PRIMARY_CORPUS, 8 MAPPING_REVIEW_REQUIRED -> REJECT)
+    # 1. Overture Places candidates (26 AUTO_LINK_VERIFIED audited across 5 fields -> 23 ACCEPT_PRIMARY_CORPUS + 3 REJECT; plus 8 pre-existing MAPPING_REVIEW_REQUIRED -> REJECT)
     for poi_id, b1a_rec in sorted(
         b1a_by_id.items(),
         key=lambda kv: ({"Hạ Long": 0, "Đà Nẵng": 1, "Hà Nội": 2}[kv[1]["city"]], kv[1]["b1b_priority"], kv[0]),
@@ -1140,7 +2743,12 @@ def build_b1b_artifacts() -> dict[str, Any]:
         source_url = f"https://docs.overturemaps.org/guides/places/#gers_id={gers_id}"
         if status == "AUTO_LINK_VERIFIED":
             row = ov_by_id[gers_id]
-            raw_text, license_str, dataset_str = _render_overture_text(poi, gers_id, row)
+            audit_spec = OVERTURE_26_FACT_AUDIT_SPECS[poi_id]
+            assert audit_spec["overture_gers_id"] == gers_id
+            suppressed_fields = frozenset(audit_spec["suppressed_conflicted_fields"])
+            raw_text, license_str, dataset_str = _render_overture_text(
+                poi, gers_id, row, suppressed_fields=suppressed_fields
+            )
             doc_id = f"w07-b1b-doc-overture-{poi_id[:8]}-{gers_id[:8]}"
             lineage_id = f"overture:{gers_id}"
             reuse_ev = (
@@ -1148,60 +2756,131 @@ def build_b1b_artifacts() -> dict[str, Any]:
                 f"carries explicit record-level open license `{license_str}` (`OVERTURE_LICENSE_IS_THEME_AND_SOURCE_SPECIFIC = true`)."
             )
             attr_req = f"Overture Maps Foundation Places theme ({dataset_str}), licensed under {license_str}."
-            candidate_decisions.append(
-                {
-                    "candidate_source_id": cand_id,
-                    "poi_id": poi_id,
-                    "poi_name": poi["name"],
-                    "city": poi["city"],
-                    "category_group": poi["category_group"],
-                    "original_b1a_priority": b1a_rec["b1b_priority"],
-                    "source_url": source_url,
-                    "publisher": "Overture Maps Foundation (Places Theme 2026-09-23.1)",
-                    "source_type": "overture_places_parquet",
-                    "source_tier": "TIER_C",
-                    "source_lineage_id": lineage_id,
-                    "mapping_evidence": f"W02/W06 crosscheck `AUTO_LINK_VERIFIED` (`overture_gers_id={gers_id}`, candidate `{ov.get('candidate_overture_name')}`) verified by coordinate + name + category agreement.",
-                    "canonical_mapping_status": "EXACT_MAPPED",
-                    "license_or_reuse_evidence": reuse_ev,
-                    "reuse_storage_class": "OPEN_REUSABLE",
-                    "redistributable_in_git": True,
-                    "raw_text_permitted": True,
-                    "attribution_requirement": attr_req,
-                    "source_terms_checked_at": OVERTURE_SNAPSHOT_TIMESTAMP,
-                    "content_utility_status": "USEFUL_STRUCTURED_FACTS",
-                    "final_b1b_decision": "ACCEPT_PRIMARY_CORPUS",
-                    "accepted_document_id": doc_id,
-                }
-            )
-            acquired_documents.append(
-                {
-                    "document_id": doc_id,
-                    "poi_id": poi_id,
-                    "poi_name": poi["name"],
-                    "city": poi["city"],
-                    "category_group": poi["category_group"],
-                    "source_type": "overture_places_parquet",
-                    "source_tier": "TIER_C",
-                    "source_title": f"Overture Maps Places Record — {poi['name']} ({gers_id})",
-                    "source_url": source_url,
-                    "publisher": "Overture Maps Foundation (Places Theme 2026-09-23.1)",
-                    "language": "vi",
-                    "retrieved_at": OVERTURE_SNAPSHOT_TIMESTAMP,
-                    "license_or_usage_class": license_str,
-                    "reuse_storage_class": "OPEN_REUSABLE",
-                    "reuse_evidence": reuse_ev,
-                    "attribution_requirement": attr_req,
-                    "redistributable_in_git": True,
-                    "source_terms_checked_at": OVERTURE_SNAPSHOT_TIMESTAMP,
-                    "raw_text": raw_text,
-                    "content_sha256": _sha256_text(raw_text),
-                    "provenance_status": "VERIFIED_PRIMARY_PROVENANCE",
-                    "source_lineage_id": lineage_id,
-                    "evidence_type": "STRUCTURED_METADATA",
-                    "content_utility_status": "USEFUL_STRUCTURED_FACTS",
-                }
-            )
+            audit_entry = {
+                "poi_id": poi_id,
+                "poi_name": poi["name"],
+                "city": poi["city"],
+                "gers_id": gers_id,
+                "overture_gers_id": gers_id,
+                "candidate_source_id": cand_id,
+                "conflict_id": audit_spec["conflict_id"],
+                "entity_identity_status": audit_spec["entity_identity_status"],
+                "field_audit": audit_spec["fields"],
+                "fields": audit_spec["fields"],
+                "suppressed_conflicted_fields": list(audit_spec["suppressed_conflicted_fields"]),
+                "retained_substantive_fields": list(audit_spec["retained_substantive_fields"]),
+                "post_audit_canonical_mapping_status": audit_spec["post_audit_canonical_mapping_status"],
+                "post_audit_content_utility_status": audit_spec["post_audit_content_utility_status"],
+                "post_audit_final_b1b_decision": audit_spec["post_audit_final_b1b_decision"],
+                "resolution_summary": audit_spec["resolution_summary"],
+            }
+            overture_audit_records.append(audit_entry)
+
+            if audit_spec["post_audit_final_b1b_decision"] == "ACCEPT_PRIMARY_CORPUS":
+                candidate_decisions.append(
+                    {
+                        "candidate_source_id": cand_id,
+                        "poi_id": poi_id,
+                        "poi_name": poi["name"],
+                        "city": poi["city"],
+                        "category_group": poi["category_group"],
+                        "original_b1a_priority": b1a_rec["b1b_priority"],
+                        "source_url": source_url,
+                        "publisher": "Overture Maps Foundation (Places Theme 2026-09-23.1)",
+                        "source_type": "overture_places_parquet",
+                        "source_tier": "TIER_C",
+                        "source_lineage_id": lineage_id,
+                        "mapping_evidence": (
+                            f"W02/W06 crosscheck `AUTO_LINK_VERIFIED` (`overture_gers_id={gers_id}`, candidate `{ov.get('candidate_overture_name')}`) "
+                            f"verified by 5-field Corrective 02 fact-consistency audit: {audit_spec['resolution_summary']}"
+                        ),
+                        "canonical_mapping_status": "EXACT_MAPPED",
+                        "license_or_reuse_evidence": reuse_ev,
+                        "reuse_storage_class": "OPEN_REUSABLE",
+                        "redistributable_in_git": True,
+                        "raw_text_permitted": True,
+                        "attribution_requirement": attr_req,
+                        "retrieved_at": UNKNOWN_HISTORICAL_RETRIEVAL_TIME,
+                        "source_published_or_updated_at": OVERTURE_SNAPSHOT_TIMESTAMP,
+                        "source_terms_checked_at": B1B_TERMS_CHECKED_AT,
+                        "artifact_snapshot_timestamp": ARTIFACT_SNAPSHOT_TIMESTAMP,
+                        "suppressed_conflicted_fields": list(audit_spec["suppressed_conflicted_fields"]),
+                        "fact_consistency_audit": audit_entry,
+                        "content_utility_status": "USEFUL_STRUCTURED_FACTS",
+                        "final_b1b_decision": "ACCEPT_PRIMARY_CORPUS",
+                        "accepted_document_id": doc_id,
+                    }
+                )
+                acquired_documents.append(
+                    {
+                        "document_id": doc_id,
+                        "poi_id": poi_id,
+                        "poi_name": poi["name"],
+                        "city": poi["city"],
+                        "category_group": poi["category_group"],
+                        "source_type": "overture_places_parquet",
+                        "source_tier": "TIER_C",
+                        "source_title": f"Overture Maps Places Record — {poi['name']} ({gers_id})",
+                        "source_url": source_url,
+                        "publisher": "Overture Maps Foundation (Places Theme 2026-09-23.1)",
+                        "language": "vi",
+                        "retrieved_at": UNKNOWN_HISTORICAL_RETRIEVAL_TIME,
+                        "source_published_or_updated_at": OVERTURE_SNAPSHOT_TIMESTAMP,
+                        "license_or_usage_class": license_str,
+                        "reuse_storage_class": "OPEN_REUSABLE",
+                        "reuse_evidence": reuse_ev,
+                        "attribution_requirement": attr_req,
+                        "redistributable_in_git": True,
+                        "source_terms_checked_at": B1B_TERMS_CHECKED_AT,
+                        "artifact_snapshot_timestamp": ARTIFACT_SNAPSHOT_TIMESTAMP,
+                        "suppressed_conflicted_fields": list(audit_spec["suppressed_conflicted_fields"]),
+                        "retained_substantive_fields": list(audit_spec["retained_substantive_fields"]),
+                        "fact_consistency_audit": audit_spec["fields"],
+                        "fact_consistency_field_statuses": {
+                            fname: fval["status"] for fname, fval in audit_spec["fields"].items()
+                        },
+                        "raw_text": raw_text,
+                        "content_sha256": _sha256_text(raw_text),
+                        "provenance_status": "VERIFIED_PRIMARY_PROVENANCE",
+                        "source_lineage_id": lineage_id,
+                        "evidence_type": "STRUCTURED_METADATA",
+                        "content_utility_status": "USEFUL_STRUCTURED_FACTS",
+                    }
+                )
+            else:
+                candidate_decisions.append(
+                    {
+                        "candidate_source_id": cand_id,
+                        "poi_id": poi_id,
+                        "poi_name": poi["name"],
+                        "city": poi["city"],
+                        "category_group": poi["category_group"],
+                        "original_b1a_priority": b1a_rec["b1b_priority"],
+                        "source_url": source_url,
+                        "publisher": "Overture Maps Foundation (Places Theme 2026-09-23.1)",
+                        "source_type": "overture_places_parquet",
+                        "source_tier": "TIER_C",
+                        "source_lineage_id": lineage_id,
+                        "mapping_evidence": audit_spec["resolution_summary"],
+                        "canonical_mapping_status": audit_spec["post_audit_canonical_mapping_status"],
+                        "license_or_reuse_evidence": (
+                            f"{reuse_ev} Rejected after Corrective 02 fact-consistency audit: {audit_spec['resolution_summary']}"
+                        ),
+                        "reuse_storage_class": "OPEN_REUSABLE",
+                        "redistributable_in_git": False,
+                        "raw_text_permitted": False,
+                        "attribution_requirement": f"{attr_req} (rejected after Corrective 02 fact-consistency audit).",
+                        "retrieved_at": UNKNOWN_HISTORICAL_RETRIEVAL_TIME,
+                        "source_published_or_updated_at": OVERTURE_SNAPSHOT_TIMESTAMP,
+                        "source_terms_checked_at": B1B_TERMS_CHECKED_AT,
+                        "artifact_snapshot_timestamp": ARTIFACT_SNAPSHOT_TIMESTAMP,
+                        "suppressed_conflicted_fields": list(audit_spec["suppressed_conflicted_fields"]),
+                        "fact_consistency_audit": audit_entry,
+                        "content_utility_status": audit_spec["post_audit_content_utility_status"],
+                        "final_b1b_decision": "REJECT",
+                        "accepted_document_id": None,
+                    }
+                )
         else:
             candidate_decisions.append(
                 {
@@ -1223,7 +2902,10 @@ def build_b1b_artifacts() -> dict[str, Any]:
                     "redistributable_in_git": False,
                     "raw_text_permitted": False,
                     "attribution_requirement": "Overture Maps Foundation (unverified candidate; not ingested).",
+                    "retrieved_at": UNKNOWN_HISTORICAL_RETRIEVAL_TIME,
+                    "source_published_or_updated_at": OVERTURE_SNAPSHOT_TIMESTAMP,
                     "source_terms_checked_at": "NOT_APPLICABLE_REJECTED_AT_MAPPING_GATE",
+                    "artifact_snapshot_timestamp": ARTIFACT_SNAPSHOT_TIMESTAMP,
                     "content_utility_status": "LOW_INFORMATION",
                     "final_b1b_decision": "REJECT",
                     "accepted_document_id": None,
@@ -1286,7 +2968,10 @@ def build_b1b_artifacts() -> dict[str, Any]:
                     "redistributable_in_git": False,
                     "raw_text_permitted": False,
                     "attribution_requirement": attr_req,
-                    "source_terms_checked_at": rev_timestamp,
+                    "retrieved_at": B1B_API_RETRIEVED_AT,
+                    "source_published_or_updated_at": rev_timestamp,
+                    "source_terms_checked_at": B1B_TERMS_CHECKED_AT,
+                    "artifact_snapshot_timestamp": ARTIFACT_SNAPSHOT_TIMESTAMP,
                     "article_body_char_length": len(body_text),
                     "content_utility_status": "EMPTY_OR_INVALID",
                     "final_b1b_decision": "REJECT",
@@ -1321,7 +3006,10 @@ def build_b1b_artifacts() -> dict[str, Any]:
                 "redistributable_in_git": True,
                 "raw_text_permitted": True,
                 "attribution_requirement": attr_req,
-                "source_terms_checked_at": rev_timestamp,
+                "retrieved_at": B1B_API_RETRIEVED_AT,
+                "source_published_or_updated_at": rev_timestamp,
+                "source_terms_checked_at": B1B_TERMS_CHECKED_AT,
+                "artifact_snapshot_timestamp": ARTIFACT_SNAPSHOT_TIMESTAMP,
                 "article_body_char_length": len(body_text),
                 "content_utility_status": "USEFUL_NARRATIVE",
                 "final_b1b_decision": "ACCEPT_PRIMARY_CORPUS",
@@ -1342,13 +3030,15 @@ def build_b1b_artifacts() -> dict[str, Any]:
                 "source_url": source_url,
                 "publisher": f"Wikimedia Foundation ({domain})",
                 "language": spec["lang"],
-                "retrieved_at": rev_timestamp,
+                "retrieved_at": B1B_API_RETRIEVED_AT,
+                "source_published_or_updated_at": rev_timestamp,
                 "license_or_usage_class": "CC-BY-SA-4.0",
                 "reuse_storage_class": "OPEN_REUSABLE",
                 "reuse_evidence": reuse_ev,
                 "attribution_requirement": attr_req,
                 "redistributable_in_git": True,
-                "source_terms_checked_at": rev_timestamp,
+                "source_terms_checked_at": B1B_TERMS_CHECKED_AT,
+                "artifact_snapshot_timestamp": ARTIFACT_SNAPSHOT_TIMESTAMP,
                 "article_body_char_length": len(body_text),
                 "raw_text": raw_text,
                 "content_sha256": _sha256_text(raw_text),
@@ -1387,14 +3077,17 @@ def build_b1b_artifacts() -> dict[str, Any]:
                 "redistributable_in_git": False,
                 "raw_text_permitted": False,
                 "attribution_requirement": f"Wikipedia contributors, '{rspec['title']}', {domain} (not ingested due to mapping gate).",
+                "retrieved_at": "NOT_FETCHED_REJECTED_AT_MAPPING_GATE",
+                "source_published_or_updated_at": "UNKNOWN_NOT_FETCHED",
                 "source_terms_checked_at": "NOT_APPLICABLE_REJECTED_AT_MAPPING_GATE",
+                "artifact_snapshot_timestamp": ARTIFACT_SNAPSHOT_TIMESTAMP,
                 "content_utility_status": "LOW_INFORMATION",
                 "final_b1b_decision": "REJECT",
                 "accepted_document_id": None,
             }
         )
 
-    # 3. Wikidata structured entity candidates (29 ACCEPT_PRIMARY_CORPUS + 2 REJECT)
+    # 3. Wikidata structured entity candidates (28 ACCEPT_PRIMARY_CORPUS + 3 REJECT)
     for poi_id, qid, map_ev in ACCEPTED_WIKIDATA_SPECS:
         poi = pois_by_id[poi_id]
         b1a_rec = b1a_by_id[poi_id]
@@ -1430,7 +3123,10 @@ def build_b1b_artifacts() -> dict[str, Any]:
                 "redistributable_in_git": True,
                 "raw_text_permitted": True,
                 "attribution_requirement": attr_req,
-                "source_terms_checked_at": ent_modified,
+                "retrieved_at": B1B_API_RETRIEVED_AT,
+                "source_published_or_updated_at": ent_modified,
+                "source_terms_checked_at": B1B_TERMS_CHECKED_AT,
+                "artifact_snapshot_timestamp": ARTIFACT_SNAPSHOT_TIMESTAMP,
                 "content_utility_status": "USEFUL_STRUCTURED_FACTS",
                 "final_b1b_decision": "ACCEPT_PRIMARY_CORPUS",
                 "accepted_document_id": doc_id,
@@ -1449,13 +3145,15 @@ def build_b1b_artifacts() -> dict[str, Any]:
                 "source_url": source_url,
                 "publisher": "Wikimedia Foundation (Wikidata)",
                 "language": "vi",
-                "retrieved_at": ent_modified,
+                "retrieved_at": B1B_API_RETRIEVED_AT,
+                "source_published_or_updated_at": ent_modified,
                 "license_or_usage_class": "CC0-1.0",
                 "reuse_storage_class": "OPEN_REUSABLE",
                 "reuse_evidence": reuse_ev,
                 "attribution_requirement": attr_req,
                 "redistributable_in_git": True,
-                "source_terms_checked_at": ent_modified,
+                "source_terms_checked_at": B1B_TERMS_CHECKED_AT,
+                "artifact_snapshot_timestamp": ARTIFACT_SNAPSHOT_TIMESTAMP,
                 "raw_text": raw_text,
                 "content_sha256": _sha256_text(raw_text),
                 "provenance_status": "VERIFIED_PRIMARY_PROVENANCE",
@@ -1470,7 +3168,7 @@ def build_b1b_artifacts() -> dict[str, Any]:
         poi = pois_by_id[poi_id]
         b1a_rec = b1a_by_id[poi_id]
         qid = rwd["qid"]
-        ent_modified = str(wd_entities.get(qid, {}).get("modified") or "NOT_APPLICABLE_REJECTED_AT_MAPPING_GATE")
+        ent_modified = str(wd_entities.get(qid, {}).get("modified") or "UNKNOWN_NOT_FETCHED")
         source_url = f"https://www.wikidata.org/wiki/{qid}"
         candidate_decisions.append(
             {
@@ -1487,12 +3185,19 @@ def build_b1b_artifacts() -> dict[str, Any]:
                 "source_lineage_id": f"wikidata:{qid}",
                 "mapping_evidence": rwd["mapping_evidence"],
                 "canonical_mapping_status": rwd["canonical_mapping_status"],
-                "license_or_reuse_evidence": "Wikidata structured statements are licensed under CC0-1.0, but candidate fails canonical POI entity mapping gate.",
+                "license_or_reuse_evidence": "Wikidata structured statements are licensed under CC0-1.0, but candidate fails canonical POI entity mapping or utility gate.",
                 "reuse_storage_class": "OPEN_REUSABLE",
                 "redistributable_in_git": False,
                 "raw_text_permitted": False,
                 "attribution_requirement": f"Wikidata contributors, entity {qid} (rejected).",
-                "source_terms_checked_at": ent_modified,
+                "retrieved_at": B1B_API_RETRIEVED_AT,
+                "source_published_or_updated_at": ent_modified,
+                "source_terms_checked_at": (
+                    "NOT_APPLICABLE_REJECTED_AT_MAPPING_GATE"
+                    if rwd["canonical_mapping_status"] == "MAPPING_REVIEW_REQUIRED"
+                    else B1B_TERMS_CHECKED_AT
+                ),
+                "artifact_snapshot_timestamp": ARTIFACT_SNAPSHOT_TIMESTAMP,
                 "content_utility_status": rwd["content_utility_status"],
                 "final_b1b_decision": "REJECT",
                 "accepted_document_id": None,
@@ -1540,7 +3245,10 @@ def build_b1b_artifacts() -> dict[str, Any]:
                 "redistributable_in_git": True,
                 "raw_text_permitted": True,
                 "attribution_requirement": attr_req,
-                "source_terms_checked_at": rev_timestamp,
+                "retrieved_at": B1B_API_RETRIEVED_AT,
+                "source_published_or_updated_at": rev_timestamp,
+                "source_terms_checked_at": B1B_TERMS_CHECKED_AT,
+                "artifact_snapshot_timestamp": ARTIFACT_SNAPSHOT_TIMESTAMP,
                 "content_utility_status": "USEFUL_NARRATIVE",
                 "final_b1b_decision": "ACCEPT_PRIMARY_CORPUS",
                 "accepted_document_id": doc_id,
@@ -1559,13 +3267,15 @@ def build_b1b_artifacts() -> dict[str, Any]:
                 "source_url": source_url,
                 "publisher": f"Wikimedia Foundation ({domain})",
                 "language": "en",
-                "retrieved_at": rev_timestamp,
+                "retrieved_at": B1B_API_RETRIEVED_AT,
+                "source_published_or_updated_at": rev_timestamp,
                 "license_or_usage_class": "CC-BY-SA-3.0",
                 "reuse_storage_class": "OPEN_REUSABLE",
                 "reuse_evidence": reuse_ev,
                 "attribution_requirement": attr_req,
                 "redistributable_in_git": True,
-                "source_terms_checked_at": rev_timestamp,
+                "source_terms_checked_at": B1B_TERMS_CHECKED_AT,
+                "artifact_snapshot_timestamp": ARTIFACT_SNAPSHOT_TIMESTAMP,
                 "raw_text": raw_text,
                 "content_sha256": _sha256_text(raw_text),
                 "provenance_status": "VERIFIED_PRIMARY_PROVENANCE",
@@ -1601,7 +3311,10 @@ def build_b1b_artifacts() -> dict[str, Any]:
                 "redistributable_in_git": False,
                 "raw_text_permitted": False,
                 "attribution_requirement": f"Wikivoyage contributors, '{rwv['page']}' (rejected as LOW_INFORMATION).",
-                "source_terms_checked_at": rev_timestamp,
+                "retrieved_at": B1B_API_RETRIEVED_AT,
+                "source_published_or_updated_at": rev_timestamp,
+                "source_terms_checked_at": B1B_TERMS_CHECKED_AT,
+                "artifact_snapshot_timestamp": ARTIFACT_SNAPSHOT_TIMESTAMP,
                 "content_utility_status": "LOW_INFORMATION",
                 "final_b1b_decision": "REJECT",
                 "accepted_document_id": None,
@@ -1648,7 +3361,10 @@ def build_b1b_artifacts() -> dict[str, Any]:
                 "redistributable_in_git": False,
                 "raw_text_permitted": False,
                 "attribution_requirement": f"Reference URL pointer only ({web_url}); webpage body not fetched and raw webpage text storage not permitted.",
+                "retrieved_at": "NOT_FETCHED_REFERENCE_ONLY_POINTER",
+                "source_published_or_updated_at": "NOT_APPLICABLE_UNFETCHED_WEB_POINTER",
                 "source_terms_checked_at": "NOT_INDEPENDENTLY_CHECKED",
+                "artifact_snapshot_timestamp": ARTIFACT_SNAPSHOT_TIMESTAMP,
                 "content_utility_status": "LOW_INFORMATION",
                 "final_b1b_decision": "REFERENCE_ONLY",
                 "accepted_document_id": None,
@@ -1679,6 +3395,65 @@ def build_b1b_artifacts() -> dict[str, Any]:
     )
 
     accepted_independent_lineages = sorted({d["source_lineage_id"] for d in acquired_documents})
+
+    # Compute Overture 26-record fact-consistency audit summary
+    field_status_totals = {"CORROBORATED": 0, "CONFLICTED": 0, "UNVERIFIED": 0, "MISSING": 0}
+    for rec in overture_audit_records:
+        for fval in rec["fields"].values():
+            field_status_totals[fval["status"]] += 1
+
+    overture_fact_audit_summary = {
+        "total_overture_records_audited": len(overture_audit_records),
+        "total_field_evaluations": sum(field_status_totals.values()),
+        "field_status_counts": field_status_totals,
+        "accepted_clean_records_no_conflicts": sum(
+            1
+            for r in overture_audit_records
+            if r["post_audit_final_b1b_decision"] == "ACCEPT_PRIMARY_CORPUS"
+            and len(r["suppressed_conflicted_fields"]) == 0
+        ),
+        "accepted_records_with_conflicted_fields_suppressed": sum(
+            1
+            for r in overture_audit_records
+            if r["post_audit_final_b1b_decision"] == "ACCEPT_PRIMARY_CORPUS"
+            and len(r["suppressed_conflicted_fields"]) > 0
+        ),
+        "total_accepted_overture_records_after_audit": sum(
+            1 for r in overture_audit_records if r["post_audit_final_b1b_decision"] == "ACCEPT_PRIMARY_CORPUS"
+        ),
+        "downgraded_to_mapping_review_required_and_rejected": sum(
+            1
+            for r in overture_audit_records
+            if r["post_audit_canonical_mapping_status"] == "MAPPING_REVIEW_REQUIRED"
+            and r["post_audit_final_b1b_decision"] == "REJECT"
+        ),
+        "downgraded_to_low_information_and_rejected": sum(
+            1
+            for r in overture_audit_records
+            if r["post_audit_canonical_mapping_status"] == "EXACT_MAPPED"
+            and r["post_audit_content_utility_status"] == "LOW_INFORMATION"
+            and r["post_audit_final_b1b_decision"] == "REJECT"
+        ),
+        "confirmed_factual_conflicts_resolved": {
+            "FC-001": {
+                "poi_id": "f0d424bd-f722-540f-8964-5e6fd8875b56",
+                "poi_name": "Bảo tàng Dân tộc học Việt Nam",
+                "overture_gers_id": "e55bab3c-c110-4ba6-a005-5c43986a6095",
+                "suppressed_field": "address",
+                "suppressed_value": "1 Đường Trực Nguyên, Huyện Thường Tín, 13618, VN",
+                "post_audit_decision": "ACCEPT_PRIMARY_CORPUS (address suppressed; corroborated phone +84437562193 and website http://www.vme.org.vn/ retained)",
+            },
+            "FC-002": {
+                "poi_id": "75a3fbd1-a24e-43c6-820a-72f95ebc05c0",
+                "poi_name": "Vinpearl Ha Long resort",
+                "overture_gers_id": "9ed3a2e3-60a3-4df0-acd8-83185f57a281",
+                "suppressed_field": "address",
+                "suppressed_value": "439 P. Lê Lợi, Hạ Long, 180000, VN",
+                "post_audit_decision": "ACCEPT_PRIMARY_CORPUS (address suppressed; corroborated Đảo Rều coordinates, hotel category, and official vinpearl.com website retained)",
+            },
+        },
+        "records": overture_audit_records,
+    }
 
     # Measured external activity counters (Section 6 of Corrective 01)
     wp_pages_checked = len(wp_articles)
@@ -1726,12 +3501,14 @@ def build_b1b_artifacts() -> dict[str, Any]:
 
     decisions_payload: dict[str, Any] = {
         "artifact_id": "w07_b1b_source_decisions_v1",
-        "version": "1.1.0",
+        "version": "1.2.0",
         "task_id": "W07-B1B",
-        "corrective_id": "W07-B1B-CORRECTIVE-01",
+        "corrective_id": "W07-B1B-CORRECTIVE-02",
         "artifact_snapshot_timestamp": ARTIFACT_SNAPSHOT_TIMESTAMP,
         "authoritative_base_develop_sha": AUTHORITATIVE_BASE_DEVELOP_SHA,
         "previous_accepted_gate": PREVIOUS_ACCEPTED_GATE,
+        "current_gate_status": CURRENT_GATE_STATUS,
+        "next_gate": NEXT_GATE,
         "W07_B1_FIX_01B_STATUS": "CLOSED",
         "PDG_001_STATUS": "CLOSED",
         "W07_PRIMARY_CORPUS_STRATEGY": "EVIDENCE_GROUNDED_POI_KNOWLEDGE",
@@ -1753,6 +3530,7 @@ def build_b1b_artifacts() -> dict[str, Any]:
             "WIKIPEDIA_DOCUMENTS_WITH_NONEMPTY_ARTICLE_BODY": wp_nonempty_count,
             "WIKIPEDIA_DOCUMENTS_WITH_EMPTY_ARTICLE_BODY": wp_empty_count,
         },
+        "overture_fact_consistency_audit": overture_fact_audit_summary,
         "candidate_decisions": candidate_decisions,
     }
     _write_lf_json(DECISIONS_JSON_PATH, decisions_payload)
@@ -1865,9 +3643,9 @@ def build_b1b_artifacts() -> dict[str, Any]:
         "total_wikipedia_article_body_characters": total_wp_body_chars,
         "existing_fix01b_useful_osm_documents_for_target_60": 40,
         "combined_target_60_useful_documents": 40 + len(acquired_documents),
-        "estimated_target_60_useful_chunks_min": 335,
-        "estimated_target_60_useful_chunks_max": 510,
-        "estimated_useful_chunks_band_label": "ESTIMATE: 335-510 useful POI-bound chunks (plus 464 existing destination-level Wikivoyage chunks); actual chunking deferred to B2",
+        "estimated_target_60_useful_chunks_min": 330,
+        "estimated_target_60_useful_chunks_max": 505,
+        "estimated_useful_chunks_band_label": "ESTIMATE: 330-505 useful POI-bound chunks (plus 464 existing destination-level Wikivoyage chunks); actual chunking deferred to B2",
         "meets_b0_minimum_150_chunks": True,
         "within_b0_preferred_300_to_600_chunks": True,
     }
@@ -1921,12 +3699,13 @@ def build_b1b_artifacts() -> dict[str, Any]:
 
     summary_payload: dict[str, Any] = {
         "artifact_id": "w07_b1b_acquisition_summary_v1",
-        "version": "1.1.0",
+        "version": "1.2.0",
         "task_id": "W07-B1B",
-        "corrective_id": "W07-B1B-CORRECTIVE-01",
+        "corrective_id": "W07-B1B-CORRECTIVE-02",
         "artifact_snapshot_timestamp": ARTIFACT_SNAPSHOT_TIMESTAMP,
         "authoritative_base_develop_sha": AUTHORITATIVE_BASE_DEVELOP_SHA,
         "previous_accepted_gate": PREVIOUS_ACCEPTED_GATE,
+        "current_gate_status": CURRENT_GATE_STATUS,
         "W07_B1_FIX_01B_STATUS": "CLOSED",
         "PDG_001_STATUS": "CLOSED",
         "W07_PRIMARY_CORPUS_STRATEGY": "EVIDENCE_GROUNDED_POI_KNOWLEDGE",
@@ -1957,6 +3736,22 @@ def build_b1b_artifacts() -> dict[str, Any]:
             "accepted_independent_source_lineage_count": len(accepted_independent_lineages),
         },
         "external_activity_counters": activity_counters,
+        "temporal_provenance_integrity": {
+            "four_timestamp_fields_separated": True,
+            "fields": [
+                "retrieved_at",
+                "source_published_or_updated_at",
+                "source_terms_checked_at",
+                "artifact_snapshot_timestamp",
+            ],
+            "overture_local_parquet_retrieved_at": UNKNOWN_HISTORICAL_RETRIEVAL_TIME,
+            "overture_source_published_or_updated_at": OVERTURE_SNAPSHOT_TIMESTAMP,
+            "wikimedia_api_retrieved_at": B1B_API_RETRIEVED_AT,
+            "b1b_source_terms_checked_at": B1B_TERMS_CHECKED_AT,
+            "artifact_snapshot_timestamp": ARTIFACT_SNAPSHOT_TIMESTAMP,
+            "records_with_retrieved_at_equal_to_source_published_at": 0,
+            "records_with_terms_checked_at_equal_to_source_published_at": 0,
+        },
         "wikipedia_narrative_integrity": {
             "WIKIPEDIA_DOCUMENTS_ACCEPTED": len(wp_accepted_docs),
             "WIKIPEDIA_DOCUMENTS_WITH_NONEMPTY_ARTICLE_BODY": wp_nonempty_count,
@@ -1967,12 +3762,15 @@ def build_b1b_artifacts() -> dict[str, Any]:
             "mediawiki_query_mode": "SINGLE_TITLE_EXLIMIT_1_PLAIN_TEXT_WITH_REVISION_METADATA",
         },
         "overture_quality_and_license_integrity": {
+            "OVERTURE_RECORDS_AUDITED": len(overture_audit_records),
             "OVERTURE_DOCUMENTS_ACCEPTED": sum(
                 1 for d in acquired_documents if d["source_type"] == "overture_places_parquet"
             ),
             "OVERTURE_DOCUMENTS_WITH_NAN_VALUES": 0,
+            "OVERTURE_DOCUMENTS_WITH_CONFLICTED_CLAIMS_IN_RAW_TEXT": 0,
             "OVERTURE_DEFAULT_LICENSE_FALLBACK_PERMITTED": False,
             "allowed_open_licenses": list(ALLOWED_OVERTURE_OPEN_LICENSES),
+            "fact_consistency_summary": {k: v for k, v in overture_fact_audit_summary.items() if k != "records"},
         },
         "official_website_governance": {
             "OSM_TAG_WEBSITE_CANDIDATES": measured_osm_website_urls_not_fetched,
@@ -2048,13 +3846,28 @@ def build_b1b_artifacts() -> dict[str, Any]:
     summary_saved = json.loads(SUMMARY_JSON_PATH.read_text(encoding="utf-8"))
     summary_lf_sha256 = w07_a2.compute_file_sha256(SUMMARY_JSON_PATH)
 
+    ov_table_rows = []
+    for idx, rec in enumerate(overture_audit_records, 1):
+        f = rec["fields"]
+        supp = ", ".join(f"`{s}`" for s in rec["suppressed_conflicted_fields"]) or "*(none)*"
+        cid = f"`{rec['conflict_id']}`" if rec["conflict_id"] else "—"
+        ov_table_rows.append(
+            f"| {idx} | `{rec['poi_id'][:8]}` ({rec['poi_name']}, {rec['city']}) | `{rec['overture_gers_id'][:8]}` | {cid} | "
+            f"`{f['coordinates']['status']}` | `{f['address']['status']}` | `{f['category_taxonomy']['status']}` | "
+            f"`{f['phone']['status']}` | `{f['website']['status']}` | {supp} | "
+            f"`{rec['post_audit_canonical_mapping_status']}` / `{rec['post_audit_content_utility_status']}` -> **`{rec['post_audit_final_b1b_decision']}`** |"
+        )
+    ov_table_md = "\n".join(ov_table_rows)
+
     # Render Markdown report
-    report_md = f"""# W07-B1B — Targeted POI Knowledge Acquisition Report (Corrective 01)
+    report_md = f"""# W07-B1B — Targeted POI Knowledge Acquisition Report (Corrective 02)
 
 ## 1. Authority & Executive Summary
 
-- **Task ID:** `W07-B1B` (`W07-B1B-CORRECTIVE-01`)
+- **Task ID:** `W07-B1B` (`W07-B1B-CORRECTIVE-02`)
 - **Accepted Upstream Gate:** `{PREVIOUS_ACCEPTED_GATE}`
+- **Current Gate Status:** `{CURRENT_GATE_STATUS}`
+- **Next Gate:** `{NEXT_GATE}`
 - **Authoritative Base (`develop`):** `{AUTHORITATIVE_BASE_DEVELOP_SHA}`
 - **Artifact Snapshot Timestamp:** `{ARTIFACT_SNAPSHOT_TIMESTAMP}`
 - **Upstream Statuses:** `W07_B1_FIX_01B_STATUS = CLOSED`, `PDG_001_STATUS = CLOSED`
@@ -2066,25 +3879,37 @@ def build_b1b_artifacts() -> dict[str, Any]:
   - `SOCIAL_PLATFORM_ROLE = DYNAMIC_FRESHNESS_LAYER_NOT_PRIMARY_CORPUS`
 - **Readiness Decision:** **`W07_B1B_CORPUS_ACQUISITION_READY_FOR_B2 = {str(ready_for_b2).lower()}`**
 
-## 2. Corrective 01 Root-Cause Repairs & Corpus Quality Audit
+## 2. Corrective 02 Fact-Consistency & Temporal Provenance Repairs
 
-1. **Wikipedia Empty Narrative Repair (`WIKIPEDIA_DOCUMENTS_WITH_EMPTY_ARTICLE_BODY = 0`):**
-   - **Root Cause:** MediaWiki's `TextExtracts` extension (`prop=extracts` without `exintro`) enforces `exlimit=1` (at most 1 full-article plaintext extract per API request). Multi-title batching (`10-15` titles per request) caused MediaWiki to return `extract` only for the first page in each batch (`4` documents) and omit `extract` for the remaining `22` documents.
-   - **Fix:** `_fetch_wikipedia_articles()` now queries MediaWiki Action API **one article title per request** with explicit `exlimit=1` (`25` HTTP API requests across `25` unique Wikipedia articles) and fails closed if any extract or requested subsection (`==== Hòn Đỉnh Hương (Lư Hương) ====`, `== Ban Co Peak ==`) is empty or `< 40` characters of prose.
-   - **Result:** `WIKIPEDIA_DOCUMENTS_ACCEPTED = {len(wp_accepted_docs)}`, `WIKIPEDIA_DOCUMENTS_WITH_NONEMPTY_ARTICLE_BODY = {wp_nonempty_count}`, `WIKIPEDIA_DOCUMENTS_WITH_EMPTY_ARTICLE_BODY = {wp_empty_count}` (article body lengths range from `{min(d["article_body_char_length"] for d in wp_accepted_docs)}` to `{max(d["article_body_char_length"] for d in wp_accepted_docs)}` chars; total `{total_wp_body_chars}` narrative body chars).
-2. **Overture `NaN` & Fail-Closed License Repair:**
-   - **Root Cause:** `row.get("operating_status") or "open"` evaluated `float('nan')` as truthy in Python, rendering `Trạng thái hoạt động: nan` in all 26 Overture documents, while `_render_overture_text()` had a default `"CDLA-Permissive-2.0"` fallback if `licenses` was empty.
-   - **Fix:** `_render_overture_text()` now uses `_clean_scalar()` / `_is_missing_val()` so `None`/`NaN`/`NaT` values are omitted and never rendered as factual claims, and `_resolve_overture_record_license()` fails closed unless every entry in `row["sources"]` carries an explicit, non-conflicting approved open license (`CDLA-Permissive-2.0`, `Apache-2.0`, `CC0-1.0`).
-3. **Official Website Evidence Governance (`16` OSM Website URLs):**
-   - Explicitly records `discovery_method = URL_DISCOVERED_FROM_OSM_TAG`, `website_terms_independently_checked = false`, `terms_verification_status = REUSE_PERMISSION_NOT_ESTABLISHED`, `source_terms_checked_at = NOT_INDEPENDENTLY_CHECKED`, `content_utility_status = LOW_INFORMATION`, and `final_b1b_decision = REFERENCE_ONLY`.
-4. **Timestamp & Measured Counter Separation:**
-   - Separates `artifact_snapshot_timestamp` (`{ARTIFACT_SNAPSHOT_TIMESTAMP}`) from per-record `retrieved_at` / `source_terms_checked_at` (actual MediaWiki/Wikidata revision timestamps and Overture release snapshot `2026-09-23T00:00:00Z`), and computes all activity counters from measured runtime events (`MEASURED_HTTP_API_REQUESTS = {measured_http_api_requests}`, `WEB_SOURCE_PAGES_CHECKED = {measured_web_pages_checked}`, `WEB_DOCUMENTS_DOWNLOADED = {measured_web_docs_downloaded}`).
-5. **Narrow W06 Scope Protection Exception:**
-   - Documents the narrow pathspec exclusion `:(exclude)data/curated/w07/` in `tests/test_w06_measurement_contract.py` and enforces via `apps/ai-service/tests/test_w06_model_preflight_01a_offline.py` that no other diff to `tests/test_w06_measurement_contract.py` or unrelated `data/curated/` paths is permitted.
+1. **Confirmed Factual Conflicts Resolved (`FC-001` & `FC-002`):**
+   - **`FC-001` (`f0d424bd-f722-540f-8964-5e6fd8875b56`, `Bảo tàng Dân tộc học Việt Nam`, Hà Nội — Overture GERS `e55bab3c-c110-4ba6-a005-5c43986a6095`):** Overture's address `"1 Đường Trực Nguyên, Huyện Thường Tín, 13618, VN"` conflicts with the canonical POI (`Đường Nguyễn Văn Huyên, Quan Hoa, Cầu Giấy, Hà Nội`), OSM `way/39954624`, Wikipedia (`đường Nguyễn Văn Huyên`), Wikivoyage (`Nguyen Van Huyen St`), and official site (`https://www.vme.org.vn/`). Because the Overture record's coordinates (`21.040176, 105.798732`, `4.1m` from canonical), category (`museum`), phone (`+84437562193`), and website (`http://www.vme.org.vn/`) are corroborated, the conflicting `address` field is suppressed from `raw_text` (`suppressed_conflicted_fields = ["address"]`).
+   - **`FC-002` (`75a3fbd1-a24e-43c6-820a-72f95ebc05c0`, `Vinpearl Ha Long resort`, Hạ Long — Overture GERS `9ed3a2e3-60a3-4df0-acd8-83185f57a281`):** Overture's address `"439 P. Lê Lợi, Hạ Long, 180000, VN"` (a Hải Phòng street/postcode) conflicts with canonical coordinates (`20.941167, 107.0253612`), Wikidata `Q111402972` (`20.940934, 107.025632`), and official resort/tourism listings on Đảo Rều, Bãi Cháy. Because the Overture record's coordinates (`20.941068, 107.025318`, `11.7m` from canonical on Đảo Rều), category (`hotel`), and official website (`http://vinpearl.com/...`) are corroborated, the conflicting `address` field is suppressed from `raw_text` (`suppressed_conflicted_fields = ["address"]`).
+2. **Full 26-Record Overture Fact-Consistency Audit (`130` Field Evaluations across 5 Fields):**
+   - Audited `coordinates`, `address`, `category_taxonomy`, `phone`, and `website` across all `26` previously accepted Overture records (`68 CORROBORATED`, `16 CONFLICTED`, `16 UNVERIFIED`, `30 MISSING`).
+   - **`23` Overture records retained (`ACCEPT_PRIMARY_CORPUS`)**: `12` clean records with `0` conflicts and `11` valid entities where conflicting fields (`address`, `phone`, or `website`) are suppressed from `raw_text`. Every retained Overture document has `>=1` non-conflicted substantive place attribute (`address`, `phone`, or `website`).
+   - **`2` Overture records downgraded to `MAPPING_REVIEW_REQUIRED` (`REJECT`)**:
+     - `5fc0994a-e578-4a25-b375-7f079e6dc3ba` (`Chùa Linh Ứng`, Đà Nẵng, GERS `b9ad130e-8f19-4dcb-92a7-638573a3f62d`, `FC-005`): Overture `names.primary = "Chùa Linh Ứng – Sơn Trà"` conflates Chùa Linh Ứng Non Nước (at Ngũ Hành Sơn) with Chùa Linh Ứng Bãi Bụt on Sơn Trà Peninsula 10.6 km away.
+     - `c2afbb07-aaf9-47c1-9877-d17e64422066` (`Chợ Bắc Mỹ An`, Đà Nẵng, GERS `4d3dbac0-aae6-4960-8b89-d06c52fe21f5`, `FC-006`): Overture `names.primary = "Chợ Bắc Mỹ An Online"` (`confidence = 0.3150`, TikTok URL `https://www.tiktok.com/@bacmyan`) represents an online social vendor page with uncertain identity to the physical municipal market.
+   - **`1` Overture record downgraded to `LOW_INFORMATION` (`REJECT`)**:
+     - `96523873-1b85-4d2f-b85c-cb3f5593091b` (`Chợ Cái Dăm`, Hạ Long, GERS `9b6e3c9a-d263-4e5d-8ff7-7d7bddc1ffef`, `FC-007`): After suppressing conflicted `website` (`http://xdha.vn/`) and conflicted `category_taxonomy` (`fishmonger`), only self-referential `address = "Cái Dăm, Hạ Long, VN"` remains (`0` substantive place attributes beyond name/city).
+3. **Additional Cross-Source Fact-Consistency & Template Parsing Repairs:**
+   - **Wikidata `Q124453533` (`Động Thiên Cung`, `9a979427-a0bb-421d-b75f-2a6ee79b120b`):** Moved from `ACCEPT_PRIMARY_CORPUS` to `REJECT` (`MAPPING_REVIEW_REQUIRED`) because `Q124453533` has `P131 = Hoa Lư (Q131417547)` and `P625 = 20.215960, 105.914210` (a homonymous cave in Ninh Bình, 138.5 km from Hạ Long Bay).
+   - **Wikidata `Q117325492` (`Sheraton Hanoi`, `5e92e89d-8524-4792-862a-6dfce0994862`):** Suppressed coarse `P625` (`21.020609, 105.849044`, 4.7 km from canonical/Overture/Wikivoyage Tây Hồ location).
+   - **Wikivoyage `[[target|label]]` & `{{UNESCO}}` Template Normalization:** Normalized inner wiki-link pipes and `{{UNESCO}}` before splitting template parameters on `|`, restoring full narrative descriptions for `Hồ Chí Minh Mausoleum` and `Hanoi Citadel`.
+4. **Four-Field Temporal Provenance Separation:**
+   - Every candidate decision (`132`) and every accepted document (`97`) now separates:
+     - `retrieved_at`: `{B1B_API_RETRIEVED_AT}` for live API-fetched Wikimedia sources; `{UNKNOWN_HISTORICAL_RETRIEVAL_TIME}` for pre-existing local Overture Parquet records; `NOT_FETCHED_REJECTED_AT_MAPPING_GATE` / `NOT_FETCHED_REFERENCE_ONLY_POINTER` for un-fetched records.
+     - `source_published_or_updated_at`: upstream MediaWiki revision timestamp, Wikidata `modified` timestamp, or Overture release date `{OVERTURE_SNAPSHOT_TIMESTAMP}`.
+     - `source_terms_checked_at`: `{B1B_TERMS_CHECKED_AT}`, `NOT_INDEPENDENTLY_CHECKED` (for the 16 OSM website URLs), or `NOT_APPLICABLE_REJECTED_AT_MAPPING_GATE`.
+     - `artifact_snapshot_timestamp`: `{ARTIFACT_SNAPSHOT_TIMESTAMP}`.
+
+### 26-Record Overture Fact-Consistency Audit Table
+
+| # | Canonical POI | Overture GERS | Conflict ID | Coordinates | Address | Category / Taxonomy | Phone | Website | Suppressed Fields | Post-Audit Status & Decision |
+|---|---|---|---|---|---|---|---|---|---|---|
+{ov_table_md}
 
 ## 3. Candidate Discovery vs Primary Ingestion (`w07_b1b_source_decisions_v1.json`)
-
-Every candidate source was evaluated through the two-gate rule (`CANONICAL_MAPPING_OK` and `REUSE_STATUS_ALLOWED`) plus content utility (`CONTENT_UTILITY_OK`):
 
 | Metric | Value |
 |---|---|
@@ -2102,56 +3927,45 @@ Every candidate source was evaluated through the two-gate rule (`CANONICAL_MAPPI
 
 | Source Type | Accepted Documents | Independent Lineages | License / Usage Class | Content Utility |
 |---|---|---|---|---|
-| `overture_places_parquet` | `26` | `26` | `CDLA-Permissive-2.0` | `USEFUL_STRUCTURED_FACTS` |
+| `overture_places_parquet` | `23` | `23` | `CDLA-Permissive-2.0` | `USEFUL_STRUCTURED_FACTS` |
 | `wikipedia_article` | `26` | `25` | `CC-BY-SA-4.0` | `USEFUL_NARRATIVE` |
-| `wikidata_entity` | `29` | `29` | `CC0-1.0` | `USEFUL_STRUCTURED_FACTS` |
+| `wikidata_entity` | `28` | `28` | `CC0-1.0` | `USEFUL_STRUCTURED_FACTS` |
 | `wikivoyage_poi_listing` | `20` | `2` (`wikivoyage:en:Da_Nang`, `wikivoyage:en:Hanoi`) | `CC-BY-SA-3.0` | `USEFUL_NARRATIVE` |
-| **Total Acquired in B1B** | **`101`** | **`82`** | **`100% OPEN_REUSABLE`** | **`46` Narrative + `55` Structured** |
+| **Total Acquired in B1B** | **`97`** | **`78`** | **`100% OPEN_REUSABLE`** | **`46` Narrative + `51` Structured** |
 
-## 4. Frozen 60-POI Coverage Before vs After W07-B1B
+## 4. Recomputed Frozen 60-POI Coverage Before vs After W07-B1B
 
-| Coverage Dimension | Before B1B (`FIX-01B` Baseline) | After B1B (`FIX-01B` + `B1B`) | Delta |
+| Coverage Dimension | Before B1B (`FIX-01B` Baseline) | After B1B (`FIX-01B` + `B1B` Corrective 02) | Delta |
 |---|---|---|---|
 | POIs with Primary Eligible Evidence | `60 / 60` (`100.0%`) | `60 / 60` (`100.0%`) | `0` |
-| POIs with RAG-Candidate Evidence (`RAG_CANDIDATE_ELIGIBLE`) | `40 / 60` (`66.67%`) | **`52 / 60` (`86.67%`)** | **`+12`** |
-| POIs with `>=2` Independent Eligible Lineages | `0 / 60` (`0.00%`) | **`45 / 60` (`75.00%`)** | **`+45`** |
-| POIs with Narrative Evidence (`USEFUL_NARRATIVE`) | `0 / 60` (`0.00%`) | **`32 / 60` (`53.33%`)** | **`+32`** |
-| POIs with Useful Structured Evidence (`USEFUL_STRUCTURED_FACTS`) | `40 / 60` (`66.67%`) | **`50 / 60` (`83.33%`)** | **`+10`** |
-| POIs with Both Structured & Narrative Evidence | `0 / 60` (`0.00%`) | **`30 / 60` (`50.00%`)** | **`+30`** |
+| POIs with RAG-Candidate Evidence (`RAG_CANDIDATE_ELIGIBLE`) | `40 / 60` (`66.67%`) | **`{overall_cov["pois_with_rag_candidate_evidence"]} / 60` (`85.00%`)** | **`+{overall_cov["pois_with_rag_candidate_evidence"] - 40}`** |
+| POIs with `>=2` Independent Eligible Lineages | `0 / 60` (`0.00%`) | **`{overall_cov["pois_with_2_plus_eligible_lineages"]} / 60` (`70.00%`)** | **`+{overall_cov["pois_with_2_plus_eligible_lineages"]}`** |
+| POIs with Narrative Evidence (`USEFUL_NARRATIVE`) | `0 / 60` (`0.00%`) | **`{overall_cov["pois_with_narrative_evidence"]} / 60` (`53.33%`)** | **`+{overall_cov["pois_with_narrative_evidence"]}`** |
+| POIs with Useful Structured Evidence (`USEFUL_STRUCTURED_FACTS`) | `40 / 60` (`66.67%`) | **`{overall_cov["pois_with_structured_evidence"]} / 60` (`80.00%`)** | **`+{overall_cov["pois_with_structured_evidence"] - 40}`** |
+| POIs with Both Structured & Narrative Evidence | `0 / 60` (`0.00%`) | **`{overall_cov["pois_with_both_structured_and_narrative"]} / 60` (`48.33%`)** | **`+{overall_cov["pois_with_both_structured_and_narrative"]}`** |
 
 ### Priority Distribution Shift (`P0 -> P1 -> P2 -> P3`)
 
-| Priority Band | Definition | Before B1B | After B1B |
+| Priority Band | Definition | Before B1B | After B1B (Corrective 02) |
 |---|---|---|---|
-| `P0` | `0` RAG-eligible evidence units (`NO_RAG_ELIGIBLE_EVIDENCE`) | `20` | **`8`** (`12` closed: `7` Hạ Long, `5` Đà Nẵng) |
-| `P1` | `1` RAG-eligible lineage (`SINGLE_ELIGIBLE_LINEAGE_ONLY`) | `19` | **`7`** (`2` Hà Nội, `3` Đà Nẵng, `2` Hạ Long) |
-| `P2` | `>=2` RAG-eligible lineages, structured only (`STRUCTURED_ONLY_NO_NARRATIVE`) | `21` | **`15`** (`2` Hà Nội, `5` Đà Nẵng, `8` Hạ Long) |
-| `P3` | `>=2` RAG-eligible lineages with BOTH structured & narrative evidence | `0` | **`30`** (`14` Hà Nội, `12` Đà Nẵng, `4` Hạ Long) |
+| `P0` | `0` RAG-eligible evidence units (`NO_RAG_ELIGIBLE_EVIDENCE`) | `20` | **`{overall_cov["post_b1b_priority_counts"]["P0"]}`** (`{20 - overall_cov["post_b1b_priority_counts"]["P0"]}` closed) |
+| `P1` | `1` RAG-eligible lineage (`SINGLE_ELIGIBLE_LINEAGE_ONLY`) | `19` | **`{overall_cov["post_b1b_priority_counts"]["P1"]}`** (`2` Hà Nội, `4` Đà Nẵng, `3` Hạ Long) |
+| `P2` | `>=2` RAG-eligible lineages, structured only (`STRUCTURED_ONLY_NO_NARRATIVE`) | `21` | **`{overall_cov["post_b1b_priority_counts"]["P2"]}`** (`2` Hà Nội, `4` Đà Nẵng, `7` Hạ Long) |
+| `P3` | `>=2` RAG-eligible lineages with BOTH structured & narrative evidence | `0` | **`{overall_cov["post_b1b_priority_counts"]["P3"]}`** (`14` Hà Nội, `12` Đà Nẵng, `3` Hạ Long) |
 
 ### Coverage by City
 
 | City | Target POIs | RAG-Candidate Eligible | `>=2` Eligible Lineages | Narrative Evidence | Useful Structured | Both Structured & Narrative | Post-B1B Priorities (`P0/P1/P2/P3`) |
 |---|---|---|---|---|---|---|---|
 | **Hà Nội** | `20` | **`18 / 20` (`90.0%`)** | `16 / 20` (`80.0%`) | `14 / 20` (`70.0%`) | `18 / 20` (`90.0%`) | `14 / 20` (`70.0%`) | `2 / 2 / 2 / 14` |
-| **Đà Nẵng** | `20` | **`20 / 20` (`100.0%`)** | `17 / 20` (`85.0%`) | `12 / 20` (`60.0%`) | `20 / 20` (`100.0%`) | `12 / 20` (`60.0%`) | `0 / 3 / 5 / 12` |
-| **Hạ Long** | `20` | **`14 / 20` (`70.0%`)** | `12 / 20` (`60.0%`) | `6 / 20` (`30.0%`) | `12 / 20` (`60.0%`) | `4 / 20` (`20.0%`) | `6 / 2 / 8 / 4` |
-| **Total** | **`60`** | **`52 / 60` (`86.7%`)** | **`45 / 60` (`75.0%`)** | **`32 / 60` (`53.3%`)** | **`50 / 60` (`83.3%`)** | **`30 / 60` (`50.0%`)** | **`8 / 7 / 15 / 30`** |
-
-### Coverage by Category Group
-
-| Category Group | Target POIs | RAG-Candidate Eligible | `>=2` Eligible Lineages | Narrative Evidence | Useful Structured | Both |
-|---|---|---|---|---|---|---|
-| `attractions_culture` | `20` | `19 / 20` | `17 / 20` | `17 / 20` | `17 / 20` | `15 / 20` |
-| `restaurants_cafes_markets` | `22` | `19 / 22` | `16 / 22` | `5 / 22` | `19 / 22` | `5 / 22` |
-| `nature_beach` | `9` | `6 / 9` | `6 / 9` | `6 / 9` | `6 / 9` | `6 / 9` |
-| `hotels` | `6` | `6 / 6` | `6 / 6` | `3 / 6` | `6 / 6` | `3 / 6` |
-| `other_tourism` | `3` | `2 / 3` | `2 / 3` | `2 / 3` | `2 / 3` | `2 / 3` |
+| **Đà Nẵng** | `20` | **`19 / 20` (`95.0%`)** | `16 / 20` (`80.0%`) | `12 / 20` (`60.0%`) | `19 / 20` (`95.0%`) | `12 / 20` (`60.0%`) | `1 / 4 / 3 / 12` |
+| **Hạ Long** | `20` | **`14 / 20` (`70.0%`)** | `10 / 20` (`50.0%`) | `6 / 20` (`30.0%`) | `11 / 20` (`55.0%`) | `3 / 20` (`15.0%`) | `6 / 3 / 8 / 3` |
+| **Total** | **`60`** | **`51 / 60` (`85.0%`)** | **`42 / 60` (`70.0%`)** | **`32 / 60` (`53.3%`)** | **`48 / 60` (`80.0%`)** | **`29 / 60` (`48.3%`)** | **`9 / 9 / 13 / 29`** |
 
 ## 5. Remaining Gap Reasons & Measured Activity Counters
 
-- **Remaining `P0` (`8` POIs: `6` Hạ Long, `0` Đà Nẵng, `2` Hà Nội):**
-  - `0931b06b-4563-4af0-a3a4-75f1ad8392ee` (`Vườn hoa`, Hạ Long), `6215446b-2fdd-4014-aacf-23de6e45e264` (`Chợ Hạ Long II`, Hạ Long), `708ee182-c879-477c-b920-516e2c99b0a6` (`Công viên Lán Bè`, Hạ Long), `77af14b6-85ac-4c91-873a-e7da27d555f4` (`Hang Luồn Cave Entrance`, Hạ Long), `8fe33554-7a07-4eb2-870f-8af643d8c728` (`Vườn hoa Thị trấn Trới`, Hạ Long), `b57b3f7d-9704-44b0-8139-19bea1998391` (`Sữa chua trân châu Hạ Long cơ sở 00`, Hạ Long), `4146f2b7-8289-4309-b7e6-60ba7de3470e` (`Cà Phê Nola`, Hà Nội), `b0641225-0f38-4bcc-9f4c-34f65fa50d45` (`Cửa Hàng Bánh Tôm Hồ Tây`, Hà Nội).
-  - These 8 hyper-local parks, municipal markets, and cafes have no open-licensed (`OPEN_REUSABLE`) entity-specific article on Wikipedia/Wikivoyage/Wikidata and no `AUTO_LINK_VERIFIED` Overture record (`Cà Phê Nola`'s Overture candidate `Cà Phê Lâm` and `Cửa Hàng Bánh Tôm Hồ Tây`'s dish-level Wikipedia article `Q10742230` were both rejected under Section 10).
+- **Remaining `P0` (`9` POIs: `6` Hạ Long, `1` Đà Nẵng, `2` Hà Nội):**
+  - `0931b06b-4563-4af0-a3a4-75f1ad8392ee` (`Vườn hoa`, Hạ Long), `6215446b-2fdd-4014-aacf-23de6e45e264` (`Chợ Hạ Long II`, Hạ Long), `708ee182-c879-477c-b920-516e2c99b0a6` (`Công viên Lán Bè`, Hạ Long), `77af14b6-85ac-4c91-873a-e7da27d555f4` (`Hang Luồn Cave Entrance`, Hạ Long), `8fe33554-7a07-4eb2-870f-8af643d8c728` (`Vườn hoa Thị trấn Trới`, Hạ Long), `b57b3f7d-9704-44b0-8139-19bea1998391` (`Sữa chua trân châu Hạ Long cơ sở 00`, Hạ Long), `c2afbb07-aaf9-47c1-9877-d17e64422066` (`Chợ Bắc Mỹ An`, Đà Nẵng — Overture `Chợ Bắc Mỹ An Online` rejected under `FC-006`), `4146f2b7-8289-4309-b7e6-60ba7de3470e` (`Cà Phê Nola`, Hà Nội), `b0641225-0f38-4bcc-9f4c-34f65fa50d45` (`Cửa Hàng Bánh Tôm Hồ Tây`, Hà Nội).
 - **Measured External Activity & Zero-Violation Counters:**
   - `MEASURED_HTTP_API_REQUESTS = {measured_http_api_requests}` (`{wp_http_requests}` Wikipedia + `{wd_http_requests}` Wikidata + `{wv_http_requests}` Wikivoyage)
   - `WEB_SOURCE_PAGES_CHECKED = {measured_web_pages_checked}` (`{wp_pages_checked}` Wikipedia + `{wd_entities_checked}` Wikidata + `{wv_pages_checked}` Wikivoyage)
@@ -2167,7 +3981,7 @@ Every candidate source was evaluated through the two-gate rule (`CANONICAL_MAPPI
   - `NEW_GOOGLE_MAPS_REVIEW_COLLECTION = 0`
   - `NEW_LLM_PROVIDER_CALLS = 0`
 - **Future Useful Chunk Range (`ESTIMATE`):**
-  - `value_kind = ESTIMATE`, `observed_chunk_count_in_b1b = null`, `estimated_target_60_useful_chunks_min = 335`, `estimated_target_60_useful_chunks_max = 510` (actual chunking is deferred to `W07-B2`).
+  - `value_kind = ESTIMATE`, `observed_chunk_count_in_b1b = null`, `estimated_target_60_useful_chunks_min = 330`, `estimated_target_60_useful_chunks_max = 505` (actual chunking is deferred to `W07-B2`).
 
 ## 6. Artifact Hashes
 

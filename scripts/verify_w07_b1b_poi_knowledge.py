@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""W07-B1B — Offline Fail-Closed Verifier for Targeted POI Knowledge Acquisition (Corrective 01)."""
+"""W07-B1B — Offline Fail-Closed Verifier for Targeted POI Knowledge Acquisition (Corrective 02)."""
 
 from __future__ import annotations
 
@@ -36,7 +36,10 @@ REQUIRED_CANDIDATE_FIELDS: tuple[str, ...] = (
     "redistributable_in_git",
     "raw_text_permitted",
     "attribution_requirement",
+    "retrieved_at",
+    "source_published_or_updated_at",
     "source_terms_checked_at",
+    "artifact_snapshot_timestamp",
     "final_b1b_decision",
 )
 
@@ -51,12 +54,14 @@ REQUIRED_DOCUMENT_FIELDS: tuple[str, ...] = (
     "publisher",
     "language",
     "retrieved_at",
+    "source_published_or_updated_at",
     "license_or_usage_class",
     "reuse_storage_class",
     "reuse_evidence",
     "attribution_requirement",
     "redistributable_in_git",
     "source_terms_checked_at",
+    "artifact_snapshot_timestamp",
     "raw_text",
     "content_sha256",
     "provenance_status",
@@ -76,6 +81,34 @@ ALLOWED_REUSE_CLASSES = {
     "REFERENCE_ONLY",
     "PROHIBITED",
 }
+
+ALLOWED_FACT_AUDIT_STATUSES = {
+    "CORROBORATED",
+    "CONFLICTED",
+    "UNVERIFIED",
+    "MISSING",
+}
+
+REQUIRED_OVERTURE_AUDIT_FIELDS: tuple[str, ...] = (
+    "coordinates",
+    "address",
+    "category_taxonomy",
+    "phone",
+    "website",
+)
+
+OVERTURE_FIELD_LINE_PREFIXES: dict[str, str] = {
+    "address": "Địa chỉ cấu trúc (Overture addresses):",
+    "phone": "Số điện thoại liên hệ (Overture phones):",
+    "website": "Liên kết website/trang thông tin (Overture websites):",
+    "category_taxonomy": "Danh mục cơ bản:",
+}
+
+OVERTURE_SUBSTANTIVE_ATTRIBUTE_PREFIXES: tuple[str, ...] = (
+    "Địa chỉ cấu trúc (Overture addresses):",
+    "Số điện thoại liên hệ (Overture phones):",
+    "Liên kết website/trang thông tin (Overture websites):",
+)
 
 FORBIDDEN_RAW_TEXT_PATTERNS: tuple[re.Pattern[str], ...] = (
     re.compile(r":\s*nan\b", re.IGNORECASE),
@@ -107,6 +140,8 @@ SUBSTANTIVE_STRUCTURED_PREFIXES: tuple[str, ...] = (
     "Website chính thức (P856):",
 )
 
+ISO_UTC_RE = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$")
+
 
 def _verify_internal_sha256(payload: dict[str, Any], label: str) -> None:
     expected = payload.get("artifact_sha256")
@@ -118,6 +153,79 @@ def _verify_internal_sha256(payload: dict[str, Any], label: str) -> None:
     actual = hashlib.sha256(canonical.encode("utf-8")).hexdigest()
     if actual != expected:
         raise ValueError(f"{label}: internal artifact_sha256 mismatch ({actual} != {expected})")
+
+
+def validate_temporal_provenance(record: dict[str, Any], *, is_document: bool = True) -> None:
+    """Fail-closed temporal provenance validator enforcing 4 separated timestamp concepts."""
+    rid = record.get("document_id") or record.get("candidate_source_id") or "<unknown>"
+    for key in (
+        "retrieved_at",
+        "source_published_or_updated_at",
+        "source_terms_checked_at",
+        "artifact_snapshot_timestamp",
+    ):
+        val = record.get(key)
+        if not isinstance(val, str) or not val.strip():
+            raise ValueError(f"Record {rid}: missing or empty temporal provenance field {key!r}")
+
+    retrieved_at = record["retrieved_at"]
+    published_at = record["source_published_or_updated_at"]
+    terms_checked_at = record["source_terms_checked_at"]
+    snapshot_at = record["artifact_snapshot_timestamp"]
+
+    if snapshot_at != b1b.ARTIFACT_SNAPSHOT_TIMESTAMP:
+        raise ValueError(
+            f"Record {rid}: artifact_snapshot_timestamp ({snapshot_at!r}) != {b1b.ARTIFACT_SNAPSHOT_TIMESTAMP!r}"
+        )
+
+    # Never conflate retrieved_at or source_terms_checked_at with source_published_or_updated_at
+    if retrieved_at == published_at:
+        raise ValueError(
+            f"Record {rid}: retrieved_at ({retrieved_at!r}) must not equal source_published_or_updated_at ({published_at!r})"
+        )
+    if terms_checked_at == published_at:
+        raise ValueError(
+            f"Record {rid}: source_terms_checked_at ({terms_checked_at!r}) must not equal source_published_or_updated_at ({published_at!r})"
+        )
+
+    source_type = record.get("source_type")
+    if source_type == "overture_places_parquet":
+        if retrieved_at != b1b.UNKNOWN_HISTORICAL_RETRIEVAL_TIME:
+            raise ValueError(
+                f"Record {rid}: Overture local Parquet record must use retrieved_at={b1b.UNKNOWN_HISTORICAL_RETRIEVAL_TIME!r}, got {retrieved_at!r}"
+            )
+        if published_at != b1b.OVERTURE_SNAPSHOT_TIMESTAMP:
+            raise ValueError(
+                f"Record {rid}: Overture record must use source_published_or_updated_at={b1b.OVERTURE_SNAPSHOT_TIMESTAMP!r}, got {published_at!r}"
+            )
+        allowed_ov_terms = (
+            (b1b.B1B_TERMS_CHECKED_AT,)
+            if is_document
+            else (b1b.B1B_TERMS_CHECKED_AT, "NOT_APPLICABLE_REJECTED_AT_MAPPING_GATE")
+        )
+        if terms_checked_at not in allowed_ov_terms:
+            raise ValueError(
+                f"Record {rid}: Overture record must use source_terms_checked_at in {allowed_ov_terms!r}, got {terms_checked_at!r}"
+            )
+    elif source_type in ("wikipedia_article", "wikidata_entity", "wikivoyage_poi_listing"):
+        if is_document or record.get("final_b1b_decision") == "ACCEPT_PRIMARY_CORPUS":
+            if retrieved_at != b1b.B1B_API_RETRIEVED_AT:
+                raise ValueError(
+                    f"Record {rid}: Wikimedia API-fetched record must have retrieved_at={b1b.B1B_API_RETRIEVED_AT!r}, got {retrieved_at!r}"
+                )
+            if terms_checked_at != b1b.B1B_TERMS_CHECKED_AT:
+                raise ValueError(
+                    f"Record {rid}: Wikimedia API-fetched record must have source_terms_checked_at={b1b.B1B_TERMS_CHECKED_AT!r}, got {terms_checked_at!r}"
+                )
+            if not ISO_UTC_RE.match(published_at):
+                raise ValueError(
+                    f"Record {rid}: Wikimedia record source_published_or_updated_at must be ISO-8601 UTC revision timestamp, got {published_at!r}"
+                )
+    elif source_type in ("official_venue_website", "heritage_or_public_institution_portal"):
+        if terms_checked_at != "NOT_INDEPENDENTLY_CHECKED":
+            raise ValueError(
+                f"Record {rid}: uninspected website candidate must have source_terms_checked_at='NOT_INDEPENDENTLY_CHECKED'"
+            )
 
 
 def validate_document_content_utility(
@@ -188,12 +296,167 @@ def validate_document_content_utility(
                         substantive_facts.append(val)
         if not substantive_facts:
             raise ValueError(f"Document {did}: structured document has 0 substantive sourced facts beyond name/header")
+
         if source_type == "overture_places_parquet":
             lic = doc.get("license_or_usage_class")
             if lic not in b1b.ALLOWED_OVERTURE_OPEN_LICENSES:
                 raise ValueError(f"Document {did}: Overture document has unapproved license {lic!r}")
+
+            suppressed = set(doc.get("suppressed_conflicted_fields") or [])
+            audit_map = doc.get("fact_consistency_audit") or {}
+            for field_name, field_info in audit_map.items():
+                if isinstance(field_info, dict) and field_info.get("status") == "CONFLICTED":
+                    if field_name not in suppressed:
+                        raise ValueError(
+                            f"Document {did}: field {field_name!r} is marked CONFLICTED in fact_consistency_audit but missing from suppressed_conflicted_fields"
+                        )
+                    conflicted_val = str(field_info.get("overture_value") or "").strip()
+                    if conflicted_val and conflicted_val in raw_text:
+                        raise ValueError(
+                            f"Document {did}: CONFLICTED value {conflicted_val!r} for field {field_name!r} is still rendered in raw_text"
+                        )
+
+            for field_name in suppressed:
+                prefix = OVERTURE_FIELD_LINE_PREFIXES.get(field_name)
+                if prefix and any(line.startswith(prefix) for line in body_lines):
+                    raise ValueError(
+                        f"Document {did}: suppressed conflicted field {field_name!r} ({prefix}) is still rendered in raw_text"
+                    )
+
+            substantive_overture_lines = [
+                line
+                for line in body_lines
+                if any(line.startswith(prefix) for prefix in OVERTURE_SUBSTANTIVE_ATTRIBUTE_PREFIXES)
+            ]
+            retained_fields = doc.get("retained_substantive_fields")
+            if not substantive_overture_lines or (isinstance(retained_fields, list) and len(retained_fields) == 0):
+                raise ValueError(
+                    f"Document {did}: Overture document has all substantive place attributes suppressed/missing and must be downgraded to LOW_INFORMATION"
+                )
     else:
         raise ValueError(f"Document {did}: unsupported primary corpus source_type {source_type!r}")
+
+
+def validate_overture_fact_consistency_audit(
+    decisions: dict[str, Any],
+    summary: dict[str, Any],
+    docs: list[dict[str, Any]],
+) -> None:
+    """Fail-closed validator for the 26-record Overture fact-consistency audit and conflict handling."""
+    dec_audit = decisions.get("overture_fact_consistency_audit")
+    sum_audit = summary.get("overture_fact_consistency_audit") or summary.get(
+        "overture_quality_and_license_integrity", {}
+    ).get("fact_consistency_summary")
+    if not isinstance(dec_audit, dict) or not isinstance(sum_audit, dict):
+        raise ValueError("Missing overture_fact_consistency_audit in decisions or summary JSON")
+
+    for label, audit_obj in (("decisions", dec_audit), ("summary", sum_audit)):
+        if audit_obj.get("total_overture_records_audited") != 26:
+            raise ValueError(f"{label}: expected total_overture_records_audited == 26")
+        if audit_obj.get("total_field_evaluations") != 130:
+            raise ValueError(f"{label}: expected total_field_evaluations == 130")
+
+    audit_records = dec_audit.get("records")
+    if not isinstance(audit_records, list) or len(audit_records) != 26:
+        raise ValueError("decisions.overture_fact_consistency_audit.records must contain 26 records")
+
+    ov_docs_by_poi = {d["poi_id"]: d for d in docs if d.get("source_type") == "overture_places_parquet"}
+    all_raw_text = "\n".join(d.get("raw_text", "") for d in docs)
+
+    # Explicit FC-001 and FC-002 conflict suppression checks
+    for forbidden_str in (
+        "1 Đường Trực Nguyên",
+        "Huyện Thường Tín",
+        "13618",
+        "439 P. Lê Lợi",
+    ):
+        if forbidden_str in all_raw_text:
+            raise ValueError(f"Conflicted Overture address substring {forbidden_str!r} leaked into accepted raw_text")
+
+    status_counts = {"CORROBORATED": 0, "CONFLICTED": 0, "UNVERIFIED": 0, "MISSING": 0}
+    audit_by_poi: dict[str, dict[str, Any]] = {}
+
+    for rec in audit_records:
+        poi_id = rec.get("poi_id")
+        gers_id = rec.get("gers_id")
+        if not poi_id or not gers_id:
+            raise ValueError(f"Overture audit record missing poi_id or gers_id: {rec}")
+        audit_by_poi[poi_id] = rec
+        field_audit = rec.get("field_audit")
+        if not isinstance(field_audit, dict) or tuple(field_audit.keys()) != REQUIRED_OVERTURE_AUDIT_FIELDS:
+            raise ValueError(
+                f"Overture audit record {gers_id} must evaluate exact fields {REQUIRED_OVERTURE_AUDIT_FIELDS}"
+            )
+
+        suppressed = set(rec.get("suppressed_conflicted_fields") or [])
+        for fname, finfo in field_audit.items():
+            st = finfo.get("status")
+            if st not in ALLOWED_FACT_AUDIT_STATUSES:
+                raise ValueError(f"Overture audit {gers_id}.{fname}: invalid status {st!r}")
+            status_counts[st] += 1
+            if not str(finfo.get("comparison_evidence") or "").strip():
+                raise ValueError(f"Overture audit {gers_id}.{fname}: missing comparison_evidence")
+            corr = finfo.get("corroboration_sources")
+            conf = finfo.get("conflicting_sources")
+            if not isinstance(corr, list) or not isinstance(conf, list):
+                raise ValueError(f"Overture audit {gers_id}.{fname}: corroboration/conflicting_sources must be lists")
+
+            if st == "CORROBORATED":
+                if len(corr) == 0:
+                    raise ValueError(
+                        f"Overture audit {gers_id}.{fname}: CORROBORATED field must have >=1 corroboration_sources (never mark an unchecked value as CORROBORATED)"
+                    )
+                if len(conf) != 0:
+                    raise ValueError(
+                        f"Overture audit {gers_id}.{fname}: CORROBORATED field must not have conflicting_sources"
+                    )
+            elif st == "CONFLICTED":
+                if len(conf) == 0:
+                    raise ValueError(
+                        f"Overture audit {gers_id}.{fname}: CONFLICTED field must have >=1 conflicting_sources"
+                    )
+                if fname not in suppressed:
+                    raise ValueError(
+                        f"Overture audit {gers_id}.{fname}: CONFLICTED field must be listed in suppressed_conflicted_fields"
+                    )
+            elif st in ("UNVERIFIED", "MISSING"):
+                if len(corr) != 0:
+                    raise ValueError(
+                        f"Overture audit {gers_id}.{fname}: {st} field must have empty corroboration_sources"
+                    )
+
+        post_map = rec.get("post_audit_canonical_mapping_status")
+        post_util = rec.get("post_audit_content_utility_status")
+        post_dec = rec.get("post_audit_final_b1b_decision")
+        retained = rec.get("retained_substantive_fields") or []
+
+        if post_map != "EXACT_MAPPED" or post_util != "USEFUL_STRUCTURED_FACTS":
+            if post_dec != "REJECT":
+                raise ValueError(f"Overture audit {gers_id}: non-exact or non-useful record must have REJECT decision")
+            if poi_id in ov_docs_by_poi:
+                raise ValueError(f"Rejected Overture record {gers_id} ({poi_id}) must not appear in accepted JSONL")
+        else:
+            if len(retained) == 0:
+                raise ValueError(
+                    f"Overture audit {gers_id}: accepted record has 0 retained_substantive_fields and must be downgraded to LOW_INFORMATION"
+                )
+            if post_dec != "ACCEPT_PRIMARY_CORPUS":
+                raise ValueError(f"Overture audit {gers_id}: expected ACCEPT_PRIMARY_CORPUS")
+            if poi_id not in ov_docs_by_poi:
+                raise ValueError(f"Accepted Overture record {gers_id} ({poi_id}) missing from accepted JSONL")
+
+    if dec_audit.get("field_status_counts") != status_counts:
+        raise ValueError(
+            f"Overture audit field_status_counts mismatch: {dec_audit.get('field_status_counts')} != {status_counts}"
+        )
+
+    # Check FC-001 and FC-002 specifically in audit table
+    fc001 = audit_by_poi.get("f0d424bd-f722-540f-8964-5e6fd8875b56")
+    fc002 = audit_by_poi.get("75a3fbd1-a24e-43c6-820a-72f95ebc05c0")
+    if not fc001 or fc001["field_audit"]["address"]["status"] != "CONFLICTED":
+        raise ValueError("FC-001 (Vietnam Museum of Ethnology) address must be marked CONFLICTED")
+    if not fc002 or fc002["field_audit"]["address"]["status"] != "CONFLICTED":
+        raise ValueError("FC-002 (Vinpearl Resort & Spa Ha Long) address must be marked CONFLICTED")
 
 
 def verify_b1b_artifacts() -> dict[str, Any]:
@@ -269,6 +532,8 @@ def verify_b1b_artifacts() -> dict[str, Any]:
         if c["final_b1b_decision"] not in ALLOWED_DECISIONS:
             raise ValueError(f"Candidate {cid} has invalid final_b1b_decision {c['final_b1b_decision']}")
 
+        validate_temporal_provenance(c, is_document=False)
+
         # Section 5: Official website governance check
         if c["source_type"] in ("official_venue_website", "heritage_or_public_institution_portal"):
             if c.get("discovery_method") != "URL_DISCOVERED_FROM_OSM_TAG":
@@ -338,12 +603,16 @@ def verify_b1b_artifacts() -> dict[str, Any]:
             raise ValueError(f"Duplicate content_sha256 in JSONL: {computed_sha}")
         seen_hashes.add(computed_sha)
 
+        validate_temporal_provenance(d, is_document=True)
         expected_heading = wp_section_by_poi.get(d["poi_id"]) if d["source_type"] == "wikipedia_article" else None
         validate_document_content_utility(d, expected_section_heading=expected_heading)
         if d["source_type"] == "wikipedia_article":
             wp_docs_count += 1
 
-    # Section 1: Wikipedia empty body check
+    # Section 1–3 (Corrective 02): Verify 26-record Overture fact-consistency audit
+    validate_overture_fact_consistency_audit(decisions, summary, docs)
+
+    # Section 1 (Corrective 01): Wikipedia empty body check
     dec_sum = decisions["decision_summary"]
     if dec_sum.get("WIKIPEDIA_DOCUMENTS_ACCEPTED") != wp_docs_count or wp_docs_count != 26:
         raise ValueError(f"Expected 26 accepted Wikipedia documents, got {wp_docs_count}")
@@ -358,12 +627,12 @@ def verify_b1b_artifacts() -> dict[str, Any]:
     if wp_integrity.get("WIKIPEDIA_DOCUMENTS_WITH_NONEMPTY_ARTICLE_BODY") != 26:
         raise ValueError("summary wikipedia_narrative_integrity must have 26 non-empty article bodies")
 
-    # Verify lineage vs evidence unit separation
+    # Verify lineage vs evidence unit separation (post-Corrective-02 recomputed counts)
     unique_lineages = {d["source_lineage_id"] for d in docs}
     if len(unique_lineages) >= len(docs):
         raise ValueError("Expected multiple Wikivoyage/Wikipedia extracts from same page to share source_lineage_id")
-    if len(docs) != 101 or len(unique_lineages) != 82:
-        raise ValueError(f"Expected 101 documents and 82 unique lineages, got {len(docs)} and {len(unique_lineages)}")
+    if len(docs) != 97 or len(unique_lineages) != 78:
+        raise ValueError(f"Expected 97 documents and 78 unique lineages, got {len(docs)} and {len(unique_lineages)}")
 
     # Verify linked_artifacts hashes in summary
     linked = summary["linked_artifacts"]
@@ -392,8 +661,8 @@ def verify_b1b_artifacts() -> dict[str, Any]:
         raise ValueError("Expected 16 REFERENCE_ONLY_SOURCES")
     if counters["RESEARCH_RESTRICTED_SOURCES"] != 0:
         raise ValueError("Expected 0 RESEARCH_RESTRICTED_SOURCES")
-    if counters["REJECTED_SOURCES"] != 15:
-        raise ValueError("Expected 15 REJECTED_SOURCES")
+    if counters["REJECTED_SOURCES"] != 19:
+        raise ValueError(f"Expected 19 REJECTED_SOURCES, got {counters['REJECTED_SOURCES']}")
     if (
         counters["WEB_SOURCE_PAGES_CHECKED"]
         != counters["WIKIPEDIA_PAGES_FETCHED_VIA_API"]
@@ -407,23 +676,23 @@ def verify_b1b_artifacts() -> dict[str, Any]:
     ov_cov = summary["coverage_after_acquisition"]["overall_60_pois"]
     if ov_cov["total_pois"] != 60:
         raise ValueError("Expected 60 total POIs")
-    if ov_cov["pois_with_rag_candidate_evidence"] != 52:
+    if ov_cov["pois_with_rag_candidate_evidence"] != 51:
         raise ValueError(
-            f"Expected 52 POIs with RAG candidate evidence, got {ov_cov['pois_with_rag_candidate_evidence']}"
+            f"Expected 51 POIs with RAG candidate evidence, got {ov_cov['pois_with_rag_candidate_evidence']}"
         )
-    if ov_cov["pois_with_2_plus_eligible_lineages"] != 45:
+    if ov_cov["pois_with_2_plus_eligible_lineages"] != 42:
         raise ValueError(
-            f"Expected 45 POIs with >=2 eligible lineages, got {ov_cov['pois_with_2_plus_eligible_lineages']}"
+            f"Expected 42 POIs with >=2 eligible lineages, got {ov_cov['pois_with_2_plus_eligible_lineages']}"
         )
     if ov_cov["pois_with_narrative_evidence"] != len(validated_narrative_pois) or len(validated_narrative_pois) != 32:
         raise ValueError(
             f"Expected 32 validated narrative POIs, got {ov_cov['pois_with_narrative_evidence']} vs {len(validated_narrative_pois)}"
         )
-    if ov_cov["pois_with_structured_evidence"] != 50:
-        raise ValueError(f"Expected 50 POIs with structured evidence, got {ov_cov['pois_with_structured_evidence']}")
-    if ov_cov["pois_with_both_structured_and_narrative"] != 30:
+    if ov_cov["pois_with_structured_evidence"] != 48:
+        raise ValueError(f"Expected 48 POIs with structured evidence, got {ov_cov['pois_with_structured_evidence']}")
+    if ov_cov["pois_with_both_structured_and_narrative"] != 29:
         raise ValueError(
-            f"Expected 30 POIs with both structured and narrative, got {ov_cov['pois_with_both_structured_and_narrative']}"
+            f"Expected 29 POIs with both structured and narrative, got {ov_cov['pois_with_both_structured_and_narrative']}"
         )
     if summary["W07_B1B_CORPUS_ACQUISITION_READY_FOR_B2"] is not True:
         raise ValueError("W07_B1B_CORPUS_ACQUISITION_READY_FOR_B2 must be True")
@@ -455,6 +724,8 @@ def verify_b1b_artifacts() -> dict[str, Any]:
         "accepted_independent_lineages": len(unique_lineages),
         "wikipedia_documents_accepted": wp_docs_count,
         "wikipedia_documents_with_empty_body": 0,
+        "overture_records_audited": 26,
+        "overture_documents_accepted": len([d for d in docs if d["source_type"] == "overture_places_parquet"]),
         "pois_with_rag_evidence": ov_cov["pois_with_rag_candidate_evidence"],
         "W07_B1B_CORPUS_ACQUISITION_READY_FOR_B2": summary["W07_B1B_CORPUS_ACQUISITION_READY_FOR_B2"],
     }
