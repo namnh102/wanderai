@@ -1,4 +1,8 @@
 import { createHmac } from 'crypto';
+import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import axios from 'axios';
+import { AiProxyService, formatUpstreamDetail } from './ai-proxy.service';
 
 export const INTERNAL_ASSERTION_HEADER = 'X-WanderAI-Internal-Assertion';
 export const EXPECTED_ISSUER = 'wanderai-backend';
@@ -116,7 +120,8 @@ export function createInternalServiceAssertion(
     typeof params.nowSeconds === 'number'
       ? Math.floor(params.nowSeconds)
       : Math.floor(Date.now() / 1000);
-  const ttl = typeof params.ttlSeconds === 'number' ? Math.floor(params.ttlSeconds) : 60;
+  const ttl =
+    typeof params.ttlSeconds === 'number' ? Math.floor(params.ttlSeconds) : 60;
   const sid =
     typeof params.sessionId === 'string' && params.sessionId.trim()
       ? params.sessionId.trim()
@@ -141,4 +146,147 @@ export function createInternalServiceAssertion(
   const sigB64 = base64UrlEncode(sigBytes);
 
   return `v1.${payloadB64}.${sigB64}`;
+}
+
+/**
+ * Hardened AI Chat Proxy extending AiProxyService while keeping ai-proxy.service.ts
+ * byte-identical to the frozen W06 planner audit baseline.
+ */
+@Injectable()
+export class AiChatProxyService extends AiProxyService {
+  private readonly internalConfigService: ConfigService;
+  private readonly internalAiServiceUrl: string;
+
+  constructor(configService: ConfigService) {
+    super(configService);
+    this.internalConfigService = configService;
+    this.internalAiServiceUrl = configService.get(
+      'AI_SERVICE_URL',
+      'http://localhost:8000',
+    );
+  }
+
+  private buildSignedInternalHeaders(
+    userId: string,
+    action: string,
+    sessionId?: string,
+  ): Record<string, string> {
+    const trimmedUserId = typeof userId === 'string' ? userId.trim() : '';
+    if (!trimmedUserId) {
+      throw new HttpException(
+        'Yêu cầu đăng nhập để sử dụng AI Chat.',
+        HttpStatus.UNAUTHORIZED,
+      );
+    }
+
+    let assertion: string;
+    try {
+      assertion = createInternalServiceAssertion({
+        secret: this.internalConfigService.get<string>(
+          'AI_INTERNAL_AUTH_SECRET',
+        ),
+        jwtSecret: this.internalConfigService.get<string>('JWT_SECRET'),
+        jwtRefreshSecret:
+          this.internalConfigService.get<string>('JWT_REFRESH_SECRET'),
+        userId: trimmedUserId,
+        action,
+        sessionId,
+      });
+    } catch {
+      throw new HttpException(
+        'Dịch vụ AI chưa được cấu hình khóa xác thực nội bộ.',
+        HttpStatus.SERVICE_UNAVAILABLE,
+      );
+    }
+
+    return {
+      [INTERNAL_ASSERTION_HEADER]: assertion,
+    };
+  }
+
+  override async chat(message: string, sessionId?: string, userId?: string) {
+    const headers = this.buildSignedInternalHeaders(
+      userId ?? '',
+      'POST:/chat',
+      sessionId,
+    );
+
+    try {
+      const response = await axios.post(
+        `${this.internalAiServiceUrl}/chat`,
+        {
+          message,
+          session_id: sessionId,
+          user_id: userId?.trim(),
+        },
+        {
+          timeout: 30000,
+          headers,
+        },
+      );
+
+      return response.data;
+    } catch (error) {
+      if (axios.isAxiosError(error) && error.response) {
+        const rawDetail =
+          error.response.data?.detail ?? error.response.data?.message;
+        throw new HttpException(
+          formatUpstreamDetail(
+            rawDetail,
+            'Dịch vụ AI gặp sự cố khi xử lý tin nhắn.',
+          ),
+          error.response.status,
+        );
+      }
+      throw new HttpException(
+        'AI Service không phản hồi. Vui lòng thử lại.',
+        HttpStatus.SERVICE_UNAVAILABLE,
+      );
+    }
+  }
+
+  async clearChatSession(sessionId: string, userId?: string) {
+    const trimmedSessionId =
+      typeof sessionId === 'string' ? sessionId.trim() : '';
+    if (!trimmedSessionId) {
+      throw new HttpException(
+        'session_id không hợp lệ.',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    const encodedSessionId = encodeURIComponent(trimmedSessionId);
+    const headers = this.buildSignedInternalHeaders(
+      userId ?? '',
+      `DELETE:/chat/${encodedSessionId}`,
+      trimmedSessionId,
+    );
+
+    try {
+      const response = await axios.delete(
+        `${this.internalAiServiceUrl}/chat/${encodedSessionId}`,
+        {
+          timeout: 10000,
+          headers,
+        },
+      );
+      return response.data;
+    } catch (error) {
+      if (axios.isAxiosError(error) && error.response) {
+        const rawDetail =
+          error.response.data?.detail ?? error.response.data?.message;
+        throw new HttpException(
+          formatUpstreamDetail(
+            rawDetail,
+            'Không thể xóa lịch sử phiên trò chuyện.',
+          ),
+          error.response.status,
+        );
+      }
+      throw new HttpException(
+        'AI Service không phản hồi. Vui lòng thử lại.',
+        HttpStatus.SERVICE_UNAVAILABLE,
+      );
+    }
+  }
 }

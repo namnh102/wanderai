@@ -1,14 +1,6 @@
-import {
-  Injectable,
-  HttpException,
-  HttpStatus,
-} from '@nestjs/common';
+import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import axios from 'axios';
-import {
-  createInternalServiceAssertion,
-  INTERNAL_ASSERTION_HEADER,
-} from './internal-auth';
 
 /**
  * Flatten a FastAPI `detail` (string | Pydantic error list | object) into a single
@@ -20,11 +12,8 @@ export function formatUpstreamDetail(detail: unknown, fallback: string): string 
     const parts = detail
       .map((d: any) => {
         if (typeof d === 'string') return d;
-        const field = Array.isArray(d?.loc)
-          ? d.loc.filter((p: any) => p !== 'body').join('.')
-          : '';
-        const msg =
-          typeof d?.msg === 'string' ? d.msg.replace(/^Value error, /, '') : '';
+        const field = Array.isArray(d?.loc) ? d.loc.filter((p: any) => p !== 'body').join('.') : '';
+        const msg = typeof d?.msg === 'string' ? d.msg.replace(/^Value error, /, '') : '';
         return msg ? (field ? `${field}: ${msg}` : msg) : '';
       })
       .filter(Boolean);
@@ -38,127 +27,22 @@ export class AiProxyService {
   private aiServiceUrl: string;
 
   constructor(private configService: ConfigService) {
-    this.aiServiceUrl = this.configService.get(
-      'AI_SERVICE_URL',
-      'http://localhost:8000',
-    );
+    this.aiServiceUrl = this.configService.get('AI_SERVICE_URL', 'http://localhost:8000');
   }
 
-  private buildSignedInternalHeaders(
-    userId: string,
-    action: string,
-    sessionId?: string,
-  ): Record<string, string> {
-    const trimmedUserId = typeof userId === 'string' ? userId.trim() : '';
-    if (!trimmedUserId) {
-      throw new HttpException(
-        'Yêu cầu đăng nhập để sử dụng AI Chat.',
-        HttpStatus.UNAUTHORIZED,
-      );
-    }
-
-    let assertion: string;
-    try {
-      assertion = createInternalServiceAssertion({
-        secret: this.configService.get<string>('AI_INTERNAL_AUTH_SECRET'),
-        jwtSecret: this.configService.get<string>('JWT_SECRET'),
-        jwtRefreshSecret: this.configService.get<string>('JWT_REFRESH_SECRET'),
-        userId: trimmedUserId,
-        action,
-        sessionId,
-      });
-    } catch {
-      throw new HttpException(
-        'Dịch vụ AI chưa được cấu hình khóa xác thực nội bộ.',
-        HttpStatus.SERVICE_UNAVAILABLE,
-      );
-    }
-
-    return {
-      [INTERNAL_ASSERTION_HEADER]: assertion,
-    };
-  }
-
-  // Forward chat message đến FastAPI AI service kèm signed internal assertion
+  // Forward chat message đến FastAPI AI service
   async chat(message: string, sessionId?: string, userId?: string) {
-    const headers = this.buildSignedInternalHeaders(
-      userId ?? '',
-      'POST:/chat',
-      sessionId,
-    );
-
     try {
-      const response = await axios.post(
-        `${this.aiServiceUrl}/chat`,
-        {
-          message,
-          session_id: sessionId,
-          user_id: userId?.trim(),
-        },
-        {
-          timeout: 30000,
-          headers,
-        },
-      );
+      const response = await axios.post(`${this.aiServiceUrl}/chat`, {
+        message,
+        session_id: sessionId,
+        user_id: userId,
+      }, { timeout: 30000 });
 
       return response.data;
     } catch (error) {
       if (axios.isAxiosError(error) && error.response) {
-        const rawDetail =
-          error.response.data?.detail ?? error.response.data?.message;
-        throw new HttpException(
-          formatUpstreamDetail(
-            rawDetail,
-            'Dịch vụ AI gặp sự cố khi xử lý tin nhắn.',
-          ),
-          error.response.status,
-        );
-      }
-      throw new HttpException(
-        'AI Service không phản hồi. Vui lòng thử lại.',
-        HttpStatus.SERVICE_UNAVAILABLE,
-      );
-    }
-  }
-
-  // Xóa lịch sử phiên chat của chính user đã xác thực
-  async clearChatSession(sessionId: string, userId?: string) {
-    const trimmedSessionId =
-      typeof sessionId === 'string' ? sessionId.trim() : '';
-    if (!trimmedSessionId) {
-      throw new HttpException(
-        'session_id không hợp lệ.',
-        HttpStatus.BAD_REQUEST,
-      );
-    }
-
-    const encodedSessionId = encodeURIComponent(trimmedSessionId);
-    const headers = this.buildSignedInternalHeaders(
-      userId ?? '',
-      `DELETE:/chat/${encodedSessionId}`,
-      trimmedSessionId,
-    );
-
-    try {
-      const response = await axios.delete(
-        `${this.aiServiceUrl}/chat/${encodedSessionId}`,
-        {
-          timeout: 10000,
-          headers,
-        },
-      );
-      return response.data;
-    } catch (error) {
-      if (axios.isAxiosError(error) && error.response) {
-        const rawDetail =
-          error.response.data?.detail ?? error.response.data?.message;
-        throw new HttpException(
-          formatUpstreamDetail(
-            rawDetail,
-            'Không thể xóa lịch sử phiên trò chuyện.',
-          ),
-          error.response.status,
-        );
+        throw new HttpException(error.response.data, error.response.status);
       }
       throw new HttpException(
         'AI Service không phản hồi. Vui lòng thử lại.',
@@ -168,24 +52,15 @@ export class AiProxyService {
   }
 
   // Forward trip plan request đến FastAPI
-  async planTrip(
-    destination: string,
-    days: number,
-    budget?: number,
-    preferences?: string[],
-  ) {
+  async planTrip(destination: string, days: number, budget?: number, preferences?: string[]) {
     try {
-      const response = await axios.post(
-        `${this.aiServiceUrl}/planner`,
-        {
-          destination,
-          days,
-          budget: budget ?? 3000000,
-          style: 'adventure',
-          interests: preferences ?? [],
-        },
-        { timeout: 60000 },
-      );
+      const response = await axios.post(`${this.aiServiceUrl}/planner`, {
+        destination,
+        days,
+        budget: budget ?? 3000000,
+        style: 'adventure',
+        interests: preferences ?? [],
+      }, { timeout: 60000 });
 
       return response.data;
     } catch (error) {
@@ -264,10 +139,7 @@ export class AiProxyService {
     } catch (error) {
       if (axios.isAxiosError(error) && error.response) {
         throw new HttpException(
-          formatUpstreamDetail(
-            error.response.data?.detail,
-            'Lỗi từ AI Recommendation Service',
-          ),
+          formatUpstreamDetail(error.response.data?.detail, 'Lỗi từ AI Recommendation Service'),
           error.response.status,
         );
       }

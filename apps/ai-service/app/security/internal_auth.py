@@ -5,13 +5,13 @@ Direct public calls or spoofed body/query user_id values are rejected fail-close
 """
 
 import base64
+from dataclasses import dataclass
 import hashlib
 import hmac
 import json
 import os
 import time
-from dataclasses import dataclass
-from typing import Optional
+from typing import List, Optional
 
 from fastapi import Header, HTTPException, Request
 
@@ -61,6 +61,27 @@ class InternalPrincipal:
     bound_session_id: Optional[str] = None
 
 
+def get_internal_auth_secret() -> str:
+    """Resolve AI_INTERNAL_AUTH_SECRET from settings override or environment without mutating frozen W06 config.py."""
+    override = getattr(settings, "AI_INTERNAL_AUTH_SECRET", None)
+    if isinstance(override, str) and override.strip():
+        return override.strip()
+    return (os.environ.get("AI_INTERNAL_AUTH_SECRET") or "").strip()
+
+
+def get_cors_origins() -> List[str]:
+    """Resolve configured CORS origins from settings override or CORS_ORIGINS env var."""
+    raw = getattr(settings, "CORS_ORIGINS", None) or os.environ.get(
+        "CORS_ORIGINS", "http://localhost:3000"
+    )
+    origins = [
+        origin.strip()
+        for origin in str(raw).split(",")
+        if origin.strip() and origin.strip() != "*"
+    ]
+    return origins or ["http://localhost:3000"]
+
+
 def _b64url_encode(raw: bytes) -> str:
     return base64.urlsafe_b64encode(raw).rstrip(b"=").decode("ascii")
 
@@ -71,7 +92,7 @@ def _b64url_decode(encoded: str) -> bytes:
 
 
 def validate_internal_secret(raw_secret: Optional[str]) -> str:
-    """Validate that AI_INTERNAL_AUTH_SECRET is configured and strong."""
+    """Validate that AI_INTERNAL_AUTH_SECRET is configured, strong, and distinct from JWT secrets."""
     if not isinstance(raw_secret, str) or not raw_secret.strip():
         raise InternalAuthConfigError(
             "Invalid internal auth configuration: AI_INTERNAL_AUTH_SECRET is required."
@@ -264,7 +285,7 @@ async def require_internal_principal(
     try:
         return verify_internal_assertion(
             token=x_wanderai_internal_assertion,
-            secret=settings.AI_INTERNAL_AUTH_SECRET,
+            secret=get_internal_auth_secret(),
             expected_action=expected_action,
         )
     except InternalAuthConfigError as exc:

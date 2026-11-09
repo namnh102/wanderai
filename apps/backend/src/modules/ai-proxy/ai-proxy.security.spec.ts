@@ -2,8 +2,8 @@ import { HttpException, HttpStatus, UnauthorizedException } from '@nestjs/common
 import { ConfigService } from '@nestjs/config';
 import axios from 'axios';
 import { AiProxyController } from './ai-proxy.controller';
-import { AiProxyService } from './ai-proxy.service';
 import {
+  AiChatProxyService,
   createInternalServiceAssertion,
   INTERNAL_ASSERTION_HEADER,
   validateInternalAuthSecret,
@@ -19,7 +19,7 @@ describe('AI Proxy Security & Fail-Closed Contract (PROD-AI-RAG-04)', () => {
 
   let configMap: Record<string, string | undefined>;
   let configService: ConfigService;
-  let service: AiProxyService;
+  let service: AiChatProxyService;
   let controller: AiProxyController;
 
   beforeEach(() => {
@@ -34,7 +34,7 @@ describe('AI Proxy Security & Fail-Closed Contract (PROD-AI-RAG-04)', () => {
       get: jest.fn((key: string, defaultVal?: string) => configMap[key] ?? defaultVal),
     } as unknown as ConfigService;
 
-    service = new AiProxyService(configService);
+    service = new AiChatProxyService(configService);
     controller = new AiProxyController(service);
   });
 

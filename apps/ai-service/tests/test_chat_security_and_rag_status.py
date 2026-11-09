@@ -36,7 +36,7 @@ TEST_INTERNAL_SECRET = "prod-ai-rag-04-test-internal-secret-9876543210"
 
 @pytest.fixture(autouse=True)
 def _configure_internal_secret(monkeypatch):
-    monkeypatch.setattr(settings, "AI_INTERNAL_AUTH_SECRET", TEST_INTERNAL_SECRET)
+    monkeypatch.setenv("AI_INTERNAL_AUTH_SECRET", TEST_INTERNAL_SECRET)
     monkeypatch.setenv("JWT_SECRET", "different-jwt-secret-key-for-testing-12345")
     monkeypatch.setenv(
         "JWT_REFRESH_SECRET", "different-jwt-refresh-secret-for-testing-12345"
@@ -161,7 +161,7 @@ def test_internal_secret_fails_closed_when_missing_weak_or_reused(monkeypatch):
     reused_secret = "different-jwt-secret-key-for-testing-12345"
     headers = _signed_headers(user_id="user-alice", secret=TEST_INTERNAL_SECRET)
     monkeypatch.setenv("JWT_SECRET", reused_secret)
-    monkeypatch.setattr(settings, "AI_INTERNAL_AUTH_SECRET", reused_secret)
+    monkeypatch.setenv("AI_INTERNAL_AUTH_SECRET", reused_secret)
     res = client.post("/chat", json={"message": "Xin chào"}, headers=headers)
     assert res.status_code == 503
 
