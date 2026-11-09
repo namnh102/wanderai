@@ -6,8 +6,8 @@ provider; they are NOT evidence that a live Gemini reply is grounded.
 import asyncio
 from unittest.mock import AsyncMock, patch
 
-import pytest
 from fastapi.testclient import TestClient
+import pytest
 
 from app.main import app
 from app.prompts.system_prompt import (
@@ -19,8 +19,21 @@ from app.prompts.system_prompt import (
 )
 from app.rag.retriever import RAGRetriever
 from app.routers.chat import NO_CONTEXT_INSTRUCTION, build_grounded_message, retrieve_grounding
+from app.security.internal_auth import InternalPrincipal, require_internal_principal
 
 client = TestClient(app)
+
+
+@pytest.fixture(autouse=True)
+def _override_internal_principal():
+    app.dependency_overrides[require_internal_principal] = lambda: InternalPrincipal(
+        user_id="grounding-test-user"
+    )
+    try:
+        yield
+    finally:
+        app.dependency_overrides.pop(require_internal_principal, None)
+
 
 HANOI_CULTURE = "Địa điểm văn hóa ở Hà Nội"
 HCM_MUSEUM_HOURS = "Giờ mở cửa Bảo tàng Hồ Chí Minh"

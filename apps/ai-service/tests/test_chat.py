@@ -1,42 +1,79 @@
 from unittest.mock import AsyncMock, patch
 from fastapi.testclient import TestClient
+import pytest
+
 from app.main import app
+from app.security.internal_auth import InternalPrincipal, require_internal_principal
+from app.services.rag import RetrievalResult
 
 client = TestClient(app)
 
+
+@pytest.fixture(autouse=True)
+def _override_internal_principal():
+    app.dependency_overrides[require_internal_principal] = lambda: InternalPrincipal(
+        user_id="test-user-1"
+    )
+    try:
+        yield
+    finally:
+        app.dependency_overrides.pop(require_internal_principal, None)
+
+
 def test_chat_endpoint_mocked():
-    """Deterministic chat test with mocked LLM provider."""
+    """Deterministic chat test with mocked RAG retrieval and mocked LLM provider."""
     mock_result = {
         "response": "Xin chao! Toi la Wandy test mock.",
         "tool_calls": [
             {
                 "tool": "get_weather",
                 "args": {"lat": 16.0544, "lon": 108.2022},
-                "result": {"temp": 28, "condition": "Sunny"}
+                "result": {"temp": 28, "condition": "Sunny"},
             }
-        ]
+        ],
     }
+    empty_retrieval = RetrievalResult(
+        status="empty",
+        context="",
+        chunks=[],
+        sources=[],
+    )
 
-    with patch("app.routers.chat.gemini_provider.chat_with_tools", new_callable=AsyncMock) as mock_chat:
+    with (
+        patch(
+            "app.routers.chat.retrieve_grounding",
+            new=AsyncMock(return_value=empty_retrieval),
+        ),
+        patch(
+            "app.routers.chat.gemini_provider.chat_with_tools",
+            new_callable=AsyncMock,
+        ) as mock_chat,
+    ):
         mock_chat.return_value = mock_result
 
         response = client.post(
             "/chat",
-            json={"message": "Thoi tiet Da Nang the nao?", "session_id": "test-session-123"}
+            json={
+                "message": "Thoi tiet Da Nang the nao?",
+                "session_id": "test-session-123",
+            },
         )
 
         assert response.status_code == 200
         data = response.json()
         assert data["reply"] == "Xin chao! Toi la Wandy test mock."
         assert data["session_id"] == "test-session-123"
+        assert data["retrieval_status"] == "empty"
+        assert data["sources"] == []
         assert "get_weather" in data["tools_used"]
         assert len(data["tool_calls"]) == 1
         assert data["tool_calls"][0]["tool"] == "get_weather"
 
+
 def test_clear_chat_endpoint():
-    """Verify delete session history endpoint."""
+    """Verify delete session history endpoint passes authenticated owner user_id."""
     with patch("app.routers.chat.gemini_provider.clear_session") as mock_clear:
         response = client.delete("/chat/test-session-123")
         assert response.status_code == 200
         assert response.json()["message"] == "Chat history cleared"
-        mock_clear.assert_called_once_with("test-session-123")
+        mock_clear.assert_called_once_with("test-session-123", user_id="test-user-1")

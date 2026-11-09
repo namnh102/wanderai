@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -14,7 +15,9 @@ class FakeChatRepository extends ChatRepository {
   bool shouldFail = false;
   int failStatusCode = 503;
   int delayMs = 0;
+  Completer<ChatResponse>? pendingCompleter;
   final List<ChatRequest> sentRequests = [];
+  final List<String> clearedSessions = [];
   String nextReply = 'Xin chao, minh la Wandy!';
 
   FakeChatRepository() : super(Dio());
@@ -22,6 +25,9 @@ class FakeChatRepository extends ChatRepository {
   @override
   Future<ChatResponse> sendMessage(ChatRequest request) async {
     sentRequests.add(request);
+    if (pendingCompleter != null) {
+      return pendingCompleter!.future;
+    }
     if (delayMs > 0) {
       await Future.delayed(Duration(milliseconds: delayMs));
     }
@@ -40,6 +46,11 @@ class FakeChatRepository extends ChatRepository {
       reply: nextReply,
       sessionId: request.sessionId ?? 'session_123',
     );
+  }
+
+  @override
+  Future<void> clearSession(String sessionId) async {
+    clearedSessions.add(sessionId);
   }
 }
 
@@ -185,7 +196,7 @@ void main() {
       expect(fakeRepo.sentRequests[1].sessionId, 'session_123');
     });
 
-    test('Clear conversation resets messages and state', () async {
+    test('Clear conversation resets messages, sessionId, and syncs remote delete', () async {
       final fakeRepo = FakeChatRepository();
       final container = ProviderContainer(
         overrides: [
@@ -196,17 +207,16 @@ void main() {
       final notifier = container.read(chatProvider.notifier);
       await notifier.sendMessage('Tin nhan sap bi xoa');
       expect(container.read(chatProvider).messages.isNotEmpty, true);
+      expect(container.read(chatProvider).sessionId, 'session_123');
 
       notifier.clearConversation();
       expect(container.read(chatProvider).messages, isEmpty);
       expect(container.read(chatProvider).sessionId, isNull);
+      expect(fakeRepo.clearedSessions, ['session_123']);
     });
 
-    test('401 unauthorized error triggers logout on AuthNotifier', () async {
+    test('401 unauthorized error triggers logout on AuthNotifier and clears sessionId', () async {
       final fakeChatRepo = FakeChatRepository();
-      // Configure 401 error
-      fakeChatRepo.shouldFail = true;
-      fakeChatRepo.failStatusCode = 401;
       final fakeAuthRepo = FakeAuthRepository();
 
       final container = ProviderContainer(
@@ -216,17 +226,97 @@ void main() {
         ],
       );
 
-      // Verify initial auth state is initialized
       container.read(authProvider.notifier);
-
-      // Force fakeChatRepo to throw 401
       final notifier = container.read(chatProvider.notifier);
+
+      // Establish session first
+      await notifier.sendMessage('Tin nhan dau tien');
+      expect(container.read(chatProvider).sessionId, 'session_123');
+
+      // Configure 401 error on second call
+      fakeChatRepo.shouldFail = true;
+      fakeChatRepo.failStatusCode = 401;
       await notifier.sendMessage('Thử gọi khi token hết hạn');
 
       expect(container.read(chatProvider).hasError, true);
       expect(container.read(chatProvider).errorMessage, contains('het han'));
+      expect(container.read(chatProvider).sessionId, isNull);
       expect(fakeAuthRepo.loggedOut, true);
       expect(container.read(authProvider).status, AuthStatus.unauthenticated);
+    });
+
+    test('403 forbidden clears sessionId via clearSessionId=true so retry starts fresh', () async {
+      final fakeRepo = FakeChatRepository();
+      final container = ProviderContainer(
+        overrides: [
+          chatRepositoryProvider.overrideWithValue(fakeRepo),
+        ],
+      );
+
+      final notifier = container.read(chatProvider.notifier);
+      await notifier.sendMessage('Tin nhan 1');
+      expect(container.read(chatProvider).sessionId, 'session_123');
+
+      // Simulate 403 ownership mismatch
+      fakeRepo.shouldFail = true;
+      fakeRepo.failStatusCode = 403;
+      await notifier.sendMessage('Tin nhan bi 403');
+
+      final state = container.read(chatProvider);
+      expect(state.hasError, true);
+      expect(state.sessionId, isNull);
+      expect(state.errorMessage, contains('khong hop le'));
+    });
+
+    test('429 rate limit surfaces friendly message without assistant bubble', () async {
+      final fakeRepo = FakeChatRepository()
+        ..shouldFail = true
+        ..failStatusCode = 429;
+      final container = ProviderContainer(
+        overrides: [
+          chatRepositoryProvider.overrideWithValue(fakeRepo),
+        ],
+      );
+
+      final notifier = container.read(chatProvider.notifier);
+      await notifier.sendMessage('Hoi khi AI 429');
+
+      final state = container.read(chatProvider);
+      expect(state.hasError, true);
+      expect(state.errorMessage, contains('429'));
+      expect(state.messages.length, 1);
+      expect(state.messages.single.isUser, true);
+    });
+
+    test('Late in-flight response is dropped if session epoch advances during clear/logout', () async {
+      final completer = Completer<ChatResponse>();
+      final fakeRepo = FakeChatRepository()..pendingCompleter = completer;
+      final container = ProviderContainer(
+        overrides: [
+          chatRepositoryProvider.overrideWithValue(fakeRepo),
+        ],
+      );
+
+      final notifier = container.read(chatProvider.notifier);
+      final pendingSend = notifier.sendMessage('Tin nhan truoc khi logout');
+      expect(container.read(chatProvider).isLoading, true);
+
+      // User clears / logs out while request is still in-flight
+      notifier.resetForAuthTransition();
+      expect(container.read(chatProvider).messages, isEmpty);
+
+      // Now the stale request resolves
+      completer.complete(
+        const ChatResponse(
+          reply: 'Tin nhan cu khong duoc phep hien thi',
+          sessionId: 'stale_session_999',
+        ),
+      );
+      await pendingSend;
+
+      final afterState = container.read(chatProvider);
+      expect(afterState.messages, isEmpty);
+      expect(afterState.sessionId, isNull);
     });
   });
 

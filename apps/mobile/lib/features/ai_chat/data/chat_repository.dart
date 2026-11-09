@@ -31,4 +31,17 @@ class ChatRepository {
       error: 'Invalid response format from AI service',
     );
   }
+
+  /// Clear server-side chat history for [sessionId] via NestJS `DELETE /ai/chat/:sessionId`.
+  Future<void> clearSession(String sessionId) async {
+    final trimmed = sessionId.trim();
+    if (trimmed.isEmpty) return;
+    await _dio.delete(
+      '/ai/chat/${Uri.encodeComponent(trimmed)}',
+      options: Options(
+        sendTimeout: const Duration(seconds: 10),
+        receiveTimeout: const Duration(seconds: 10),
+      ),
+    );
+  }
 }

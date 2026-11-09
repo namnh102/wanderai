@@ -1,4 +1,12 @@
-import { Controller, Post, Body, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Delete,
+  Body,
+  Param,
+  UseGuards,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { AiProxyService } from './ai-proxy.service';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
@@ -15,7 +23,22 @@ export class AiProxyController {
   @Post('chat')
   @ApiOperation({ summary: 'Chat với AI Wandy' })
   async chat(@Body() body: ChatDto, @CurrentUser() user: any) {
-    return this.aiProxyService.chat(body.message, body.session_id, user?.id);
+    if (!user?.id) {
+      throw new UnauthorizedException('Yêu cầu đăng nhập để sử dụng AI Chat');
+    }
+    return this.aiProxyService.chat(body.message, body.session_id, user.id);
+  }
+
+  @Delete('chat/:sessionId')
+  @ApiOperation({ summary: 'Xóa lịch sử phiên chat AI của người dùng hiện tại' })
+  async clearChatSession(
+    @Param('sessionId') sessionId: string,
+    @CurrentUser() user: any,
+  ) {
+    if (!user?.id) {
+      throw new UnauthorizedException('Yêu cầu đăng nhập để xóa phiên chat');
+    }
+    return this.aiProxyService.clearChatSession(sessionId, user.id);
   }
 
   @Post('plan')
@@ -24,4 +47,3 @@ export class AiProxyController {
     return this.aiProxyService.planTrip(body.destination, body.days, body.budget);
   }
 }
-

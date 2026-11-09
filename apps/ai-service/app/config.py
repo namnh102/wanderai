@@ -15,6 +15,8 @@ class Settings(BaseSettings):
     CLOUDINARY_API_SECRET: str = ""
     WEATHER_API_URL: str = "https://api.open-meteo.com/v1"
     AI_PORT: int = 8000
+    AI_INTERNAL_AUTH_SECRET: str = ""
+    CORS_ORIGINS: str = "http://localhost:3000"
 
     class Config:
         env_file = ".env"
