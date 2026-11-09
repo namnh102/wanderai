@@ -5,14 +5,23 @@ import * as bcrypt from 'bcryptjs';
 import { PrismaService } from '../../prisma/prisma.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
+import {
+  getValidatedJwtConfig,
+  JwtTokenPayload,
+  ValidatedJwtConfig,
+} from './jwt-config';
 
 @Injectable()
 export class AuthService {
+  private readonly jwtConfig: ValidatedJwtConfig;
+
   constructor(
     private prisma: PrismaService,
     private jwtService: JwtService,
     private configService: ConfigService,
-  ) {}
+  ) {
+    this.jwtConfig = getValidatedJwtConfig(this.configService);
+  }
 
   // Đăng ký: validate → hash password → tạo user + profile → trả tokens
   async register(dto: RegisterDto) {
@@ -59,29 +68,53 @@ export class AuthService {
     return this.generateTokens(user.id, user.email);
   }
 
-  // Refresh token: verify → tạo cặp tokens mới
+  // Refresh token: verify signature/expiry/type → kiểm tra tài khoản active → tạo cặp tokens mới
   async refreshToken(refreshTokenStr: string) {
+    if (!refreshTokenStr || typeof refreshTokenStr !== 'string' || !refreshTokenStr.trim()) {
+      throw new UnauthorizedException('Refresh token không hợp lệ');
+    }
+
+    let payload: JwtTokenPayload;
     try {
-      const payload = this.jwtService.verify(refreshTokenStr, {
-        secret: this.configService.get('JWT_REFRESH_SECRET', 'wanderai-dev-refresh-secret-2026'),
+      payload = this.jwtService.verify<JwtTokenPayload>(refreshTokenStr, {
+        secret: this.jwtConfig.refreshSecret,
       });
-      return this.generateTokens(payload.sub, payload.email);
     } catch {
       throw new UnauthorizedException('Refresh token không hợp lệ');
     }
+
+    if (
+      !payload ||
+      typeof payload.sub !== 'string' ||
+      !payload.sub.trim() ||
+      payload.type !== 'refresh'
+    ) {
+      throw new UnauthorizedException('Refresh token không hợp lệ');
+    }
+
+    const user = await this.prisma.user.findUnique({
+      where: { id: payload.sub },
+    });
+
+    if (!user || user.deletedAt) {
+      throw new UnauthorizedException('Refresh token không hợp lệ');
+    }
+
+    return this.generateTokens(user.id, user.email);
   }
 
   // Tạo cặp access + refresh tokens
   private generateTokens(userId: string, email: string) {
-    const payload = { sub: userId, email };
+    const accessPayload: JwtTokenPayload = { sub: userId, email, type: 'access' };
+    const refreshPayload: JwtTokenPayload = { sub: userId, email, type: 'refresh' };
 
-    const accessToken = this.jwtService.sign(payload, {
-      secret: this.configService.get('JWT_SECRET', 'wanderai-dev-jwt-secret-2026'),
+    const accessToken = this.jwtService.sign(accessPayload, {
+      secret: this.jwtConfig.accessSecret,
       expiresIn: '15m',
     });
 
-    const refreshToken = this.jwtService.sign(payload, {
-      secret: this.configService.get('JWT_REFRESH_SECRET', 'wanderai-dev-refresh-secret-2026'),
+    const refreshToken = this.jwtService.sign(refreshPayload, {
+      secret: this.jwtConfig.refreshSecret,
       expiresIn: '7d',
     });
 

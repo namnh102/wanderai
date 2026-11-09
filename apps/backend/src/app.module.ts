@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { PrismaModule } from './prisma/prisma.module';
 import { AuthModule } from './modules/auth/auth.module';
+import { validateEnvironmentJwtConfig } from './modules/auth/jwt-config';
 import { UsersModule } from './modules/users/users.module';
 import { DestinationsModule } from './modules/destinations/destinations.module';
 import { TripsModule } from './modules/trips/trips.module';
@@ -13,7 +14,10 @@ import { HealthModule } from './modules/health/health.module';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true }),
+    ConfigModule.forRoot({
+      isGlobal: true,
+      validate: validateEnvironmentJwtConfig,
+    }),
     PrismaModule,
     HealthModule,
     AuthModule,

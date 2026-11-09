@@ -1,8 +1,13 @@
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { PassportStrategy } from '@nestjs/passport';
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../../../prisma/prisma.service';
+import { getValidatedJwtConfig, JwtTokenPayload } from '../jwt-config';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
@@ -10,28 +15,36 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     private configService: ConfigService,
     private prisma: PrismaService,
   ) {
+    const { accessSecret } = getValidatedJwtConfig(configService);
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
-      secretOrKey: configService.get<string>('JWT_SECRET') || 'super-secret',
+      secretOrKey: accessSecret,
     });
   }
 
-  async validate(payload: any) {
-    // Note: Assuming the User model exists in Prisma with id field
-    // Since Prisma schema isn't fully defined here, we wrap in try-catch
+  async validate(payload: JwtTokenPayload) {
+    if (!payload || typeof payload.sub !== 'string' || !payload.sub.trim()) {
+      throw new UnauthorizedException('Token không hợp lệ');
+    }
+
+    if (payload.type !== undefined && payload.type !== 'access') {
+      throw new UnauthorizedException('Token không hợp lệ');
+    }
+
+    let user: Awaited<ReturnType<PrismaService['user']['findUnique']>>;
     try {
-      const user = await this.prisma['user'].findUnique({
+      user = await this.prisma.user.findUnique({
         where: { id: payload.sub },
       });
-      
-      if (!user || user.deletedAt) {
-        throw new UnauthorizedException();
-      }
-      return user;
-    } catch (e) {
-      // Fallback if schema doesn't match perfectly yet
-      return { id: payload.sub, email: payload.email };
+    } catch {
+      throw new InternalServerErrorException('Không thể xác thực tài khoản lúc này');
     }
+
+    if (!user || user.deletedAt) {
+      throw new UnauthorizedException('Tài khoản không tồn tại hoặc đã bị vô hiệu hóa');
+    }
+
+    return user;
   }
 }
