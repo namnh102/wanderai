@@ -31,7 +31,7 @@ export class AuthController {
   @ApiOperation({ summary: 'Refresh access token' })
   @ApiResponse({ status: 200, description: 'Trả về tokens mới' })
   @ApiResponse({ status: 401, description: 'Refresh token không hợp lệ' })
-  async refresh(@Body() body: { refresh_token: string }) {
-    return this.authService.refreshToken(body.refresh_token);
+  async refresh(@Body() body: { refresh_token?: string }) {
+    return this.authService.refreshToken(body?.refresh_token ?? '');
   }
 }

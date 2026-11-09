@@ -33,6 +33,11 @@ jobs:
       - run: pnpm run typecheck
       - run: pnpm run lint:check
       - run: pnpm run build
+      - name: Backend unit and security tests (offline)
+        run: >
+          JWT_SECRET="test-access-$(node -e "process.stdout.write(require('crypto').randomBytes(24).toString('hex'))")"
+          JWT_REFRESH_SECRET="test-refresh-$(node -e "process.stdout.write(require('crypto').randomBytes(24).toString('hex'))")"
+          pnpm test
       # Backend e2e specs need PostgreSQL: BLOCKED_BY_ENVIRONMENT in mandatory CI.
 
   ai-service:
