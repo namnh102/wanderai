@@ -112,5 +112,29 @@ describe('AI Chat Proxy (e2e)', () => {
       expect(response.body.data.sources).toEqual([]);
       expect(Array.isArray(response.body.data.sources)).toBe(true);
     });
+
+    it('5. should reject unauthenticated DELETE /ai/chat/:sessionId with 401', async () => {
+      await request(app.getHttpServer())
+        .delete('/ai/chat/test-session-delete-1')
+        .expect(401);
+    });
+
+    it('6. should delegate authenticated DELETE /ai/chat/:sessionId to AiChatProxyService', async () => {
+      const clearSpy = jest
+        .spyOn(aiProxyService as any, 'clearSession')
+        .mockResolvedValueOnce({ status: 'cleared', session_id: 'test-session-delete-1' });
+
+      const response = await request(app.getHttpServer())
+        .delete('/ai/chat/test-session-delete-1')
+        .set('Authorization', `Bearer ${testUserToken}`)
+        .expect(200);
+
+      expect(response.body.success).toBe(true);
+      expect(response.body.data).toEqual({
+        status: 'cleared',
+        session_id: 'test-session-delete-1',
+      });
+      expect(clearSpy).toHaveBeenCalledWith('test-session-delete-1', expect.any(String));
+    });
   });
 });

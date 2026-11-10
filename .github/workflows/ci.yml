@@ -9,8 +9,8 @@ concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
-# Mandatory CI never calls Gemini/OpenAI and needs no PostgreSQL/Redis.
-# Tests that need those are listed explicitly as BLOCKED_BY_ENVIRONMENT below.
+# Mandatory CI never calls paid external LLM APIs (Gemini/OpenAI).
+# PostgreSQL 16 + PostGIS + pgvector is provisioned in CI for Backend E2E and AI-service RAG integration tests.
 
 jobs:
   backend:
@@ -18,8 +18,24 @@ jobs:
     defaults:
       run:
         working-directory: apps/backend
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/wanderai?schema=public
+      GEMINI_API_KEY: dummy-key-not-used-in-ci
     steps:
       - uses: actions/checkout@v4
+      - name: Start PostgreSQL 16 with PostGIS and pgvector
+        working-directory: .
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-16-postgis-3 postgresql-16-postgis-3-scripts postgresql-16-pgvector
+          sudo systemctl restart postgresql
+          for i in $(seq 1 30); do
+            pg_isready -h localhost -p 5432 && break
+            sleep 1
+          done
+          sudo -u postgres psql -c "ALTER USER postgres WITH PASSWORD 'postgres';"
+          sudo -u postgres psql -c "CREATE DATABASE wanderai;"
+          PGPASSWORD=postgres psql -h localhost -U postgres -d wanderai -v ON_ERROR_STOP=1 -f database/init.sql
       - uses: pnpm/action-setup@v4
         with:
           version: 10
@@ -28,8 +44,21 @@ jobs:
           node-version: 22
           cache: pnpm
           cache-dependency-path: apps/backend/pnpm-lock.yaml
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: apps/ai-service/requirements-dev.txt
+      - name: Install Python dependencies for seed and AI service
+        working-directory: .
+        run: pip install -r apps/ai-service/requirements-dev.txt
       - run: pnpm install --frozen-lockfile
       - run: pnpm exec prisma generate
+      - name: Apply Prisma migrations
+        run: pnpm exec prisma migrate deploy
+      - name: Seed deterministic CI database
+        working-directory: .
+        run: python scripts/seed_ci_database.py
       - run: pnpm run typecheck
       - run: pnpm run lint:check
       - run: pnpm run build
@@ -39,14 +68,44 @@ jobs:
           JWT_REFRESH_SECRET="test-refresh-$(node -e "process.stdout.write(require('crypto').randomBytes(24).toString('hex'))")"
           AI_INTERNAL_AUTH_SECRET="test-internal-$(node -e "process.stdout.write(require('crypto').randomBytes(24).toString('hex'))")"
           pnpm test
-      # Backend e2e specs need PostgreSQL: BLOCKED_BY_ENVIRONMENT in mandatory CI.
+      - name: Backend E2E integration tests (PostgreSQL + PostGIS + AI service)
+        run: |
+          export JWT_SECRET="test-access-$(node -e "process.stdout.write(require('crypto').randomBytes(24).toString('hex'))")"
+          export JWT_REFRESH_SECRET="test-refresh-$(node -e "process.stdout.write(require('crypto').randomBytes(24).toString('hex'))")"
+          export AI_INTERNAL_AUTH_SECRET="test-internal-$(node -e "process.stdout.write(require('crypto').randomBytes(24).toString('hex'))")"
+          export AI_SERVICE_URL="http://127.0.0.1:8000"
+          (cd ../ai-service && uvicorn app.main:app --host 127.0.0.1 --port 8000 >/tmp/ai-service-e2e.log 2>&1 &)
+          for i in $(seq 1 30); do
+            curl -sf http://127.0.0.1:8000/health >/dev/null && break
+            sleep 1
+          done
+          curl -sf http://127.0.0.1:8000/health
+          pnpm run test:e2e -- --runInBand
 
   ai-service:
     runs-on: ubuntu-latest
     env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/wanderai
       GEMINI_API_KEY: dummy-key-not-used-in-ci
+      REQUIRE_DB_TESTS: "1"
     steps:
       - uses: actions/checkout@v4
+      - name: Start PostgreSQL 16 with PostGIS and pgvector
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-16-postgis-3 postgresql-16-postgis-3-scripts postgresql-16-pgvector
+          sudo systemctl restart postgresql
+          for i in $(seq 1 30); do
+            pg_isready -h localhost -p 5432 && break
+            sleep 1
+          done
+          sudo -u postgres psql -c "ALTER USER postgres WITH PASSWORD 'postgres';"
+          sudo -u postgres psql -c "CREATE DATABASE wanderai;"
+          PGPASSWORD=postgres psql -h localhost -U postgres -d wanderai -v ON_ERROR_STOP=1 -f database/init.sql
+          for f in $(ls -1 apps/backend/prisma/migrations/*/migration.sql | sort); do
+            echo "Applying migration: $f"
+            PGPASSWORD=postgres psql -h localhost -U postgres -d wanderai -v ON_ERROR_STOP=1 -f "$f"
+          done
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
@@ -55,14 +114,13 @@ jobs:
       - run: pip install -r apps/ai-service/requirements-dev.txt
       - run: ruff check .
       - run: python scripts/export_openapi_ai.py --check
-      - name: AI service tests (offline)
+      - name: Seed deterministic CI database and ingest RAG documents
+        run: python scripts/seed_ci_database.py --include-rag-docs
+      - name: AI service unit, RAG, and grounding integration tests
         working-directory: apps/ai-service
         run: >
           AI_INTERNAL_AUTH_SECRET="test-internal-$(python -c "import secrets; print(secrets.token_hex(24))")"
           python -m pytest tests -q
-          --deselect tests/test_rag.py::test_rag_retrieval_da_nang_culinary
-          --deselect tests/test_grounding_contract.py::test_synthetic_documents_never_reach_the_provider
-        # The two deselected tests need PostgreSQL: BLOCKED_BY_ENVIRONMENT.
 
   mobile:
     runs-on: ubuntu-latest
@@ -93,7 +151,8 @@ jobs:
         run: python -m scripts.freeze_checksum --skip-missing-prefix=data/restricted/
       - name: Data / REC-A contract tests
         # Deselected tests are BLOCKED_BY_ENVIRONMENT: they need the git-ignored licensed
-        # ViHoRec files (covered above by the CLI step for every tracked artifact) or a live DB.
+        # ViHoRec files (covered above by the CLI step for every tracked artifact) or the
+        # 464 un-exported historical live Wikivoyage chunks (git_tracked_chunk_text_export_present=false).
         run: >
           python -m pytest tests -q
           --deselect tests/test_data02_contract.py::test_vihorec_integrity_pass
