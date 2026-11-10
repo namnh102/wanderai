@@ -764,3 +764,303 @@ def test_f01_companion_concurrent_same_owner_turns_succeed_and_cross_owner_rejec
             headers=bob_headers,
         )
         assert res_bob.status_code == 403
+
+
+def test_f01_edge_max_sessions_1_tombstone_eviction_rejects_stale_commit():
+    """F-01-EDGE (1): With max_sessions=1:
+    start S (in-flight) -> DELETE S -> create T (forcing eviction of S tombstone) ->
+    release stale S -> stale S commit is rejected fail-closed and T remains intact.
+    """
+    provider = GeminiProvider(max_sessions=1, session_ttl_seconds=3600)
+    empty_retrieval = RetrievalResult(
+        status="empty", context="", chunks=[], sources=[]
+    )
+    sid_s = "sess-edge-s"
+    sid_t = "sess-edge-t"
+
+    s_post_headers = _signed_headers(
+        user_id="user-alice", action="POST:/chat", session_id=sid_s
+    )
+    s_del_headers = _signed_headers(
+        user_id="user-alice", action=f"DELETE:/chat/{sid_s}", session_id=sid_s
+    )
+    t_post_headers = _signed_headers(
+        user_id="user-alice", action="POST:/chat", session_id=sid_t
+    )
+
+    s_entered = threading.Event()
+    s_release = threading.Event()
+
+    def controlled_generate(*, model, contents, config):
+        prompt_text = str(contents[-1].parts[0].text)
+        if "Tin nhắn của S" in prompt_text:
+            s_entered.set()
+            assert s_release.wait(timeout=5.0), "Timed out waiting to release S"
+            return _mock_gemini_text_response("Phản hồi S trễ")
+        return _mock_gemini_text_response("Phản hồi T hợp lệ")
+
+    with (
+        patch("app.routers.chat.gemini_provider", provider),
+        patch(
+            "app.routers.chat.retrieve_grounding",
+            new=AsyncMock(return_value=empty_retrieval),
+        ),
+        patch(
+            "app.llm.gemini._client.models.generate_content",
+            side_effect=controlled_generate,
+        ),
+    ):
+        with ThreadPoolExecutor(max_workers=1) as executor:
+            s_future = executor.submit(
+                client.post,
+                "/chat",
+                json={"message": "Tin nhắn của S", "session_id": sid_s},
+                headers=s_post_headers,
+            )
+            assert s_entered.wait(timeout=5.0), "S never entered model call"
+
+            # DELETE S while S is in-flight
+            res_del_s = client.delete(f"/chat/{sid_s}", headers=s_del_headers)
+            assert res_del_s.status_code == 200
+            assert sid_s not in provider._sessions
+            assert sid_s in provider._session_revisions
+            assert provider._session_revisions[sid_s].cleared is True
+
+            # Create T with max_sessions=1 -> forces eviction of S tombstone from _session_revisions
+            res_post_t = client.post(
+                "/chat",
+                json={"message": "Tin nhắn của T", "session_id": sid_t},
+                headers=t_post_headers,
+            )
+            assert res_post_t.status_code == 200
+            assert sid_s not in provider._session_revisions
+            assert sid_t in provider._sessions
+
+            # Release stale S; its generation entry is now missing (None) -> must fail closed
+            s_release.set()
+            res_post_s = s_future.result(timeout=5.0)
+
+        assert res_post_s.status_code == 200
+        assert sid_s not in provider._sessions
+        assert sid_s not in provider._session_revisions
+        assert sid_t in provider._sessions
+        assert len(provider._sessions[sid_t].history) == 2
+
+
+def test_f01_edge_aba_delete_evict_recreate_rejects_old_generation_while_new_generation_commits():
+    """F-01-EDGE (2) ABA scenario:
+    start old S -> DELETE S -> create T to evict S tombstone -> start new S on same session_id ->
+    old S finishes and is rejected across the ABA boundary -> new S finishes and commits cleanly.
+    """
+    provider = GeminiProvider(max_sessions=1, session_ttl_seconds=3600)
+    empty_retrieval = RetrievalResult(
+        status="empty", context="", chunks=[], sources=[]
+    )
+    sid_s = "sess-aba"
+    sid_t = "sess-evictor"
+
+    s_post_headers = _signed_headers(
+        user_id="user-alice", action="POST:/chat", session_id=sid_s
+    )
+    s_del_headers = _signed_headers(
+        user_id="user-alice", action=f"DELETE:/chat/{sid_s}", session_id=sid_s
+    )
+    t_post_headers = _signed_headers(
+        user_id="user-alice", action="POST:/chat", session_id=sid_t
+    )
+
+    s_old_entered = threading.Event()
+    s_old_release = threading.Event()
+    s_new_entered = threading.Event()
+    s_new_release = threading.Event()
+
+    def controlled_aba_generate(*, model, contents, config):
+        prompt_text = str(contents[-1].parts[0].text)
+        if "Tin nhắn S_old đã bị xóa" in prompt_text:
+            s_old_entered.set()
+            assert s_old_release.wait(timeout=5.0), "Timed out waiting for S_old release"
+            return _mock_gemini_text_response("Phản hồi của S_old")
+        if "Tin nhắn S_new thế hệ mới" in prompt_text:
+            s_new_entered.set()
+            assert s_new_release.wait(timeout=5.0), "Timed out waiting for S_new release"
+            return _mock_gemini_text_response("Phản hồi của S_new")
+        return _mock_gemini_text_response("Phản hồi của T")
+
+    with (
+        patch("app.routers.chat.gemini_provider", provider),
+        patch(
+            "app.routers.chat.retrieve_grounding",
+            new=AsyncMock(return_value=empty_retrieval),
+        ),
+        patch(
+            "app.llm.gemini._client.models.generate_content",
+            side_effect=controlled_aba_generate,
+        ),
+    ):
+        with ThreadPoolExecutor(max_workers=2) as executor:
+            # 1. Start old S (generation 1)
+            f_old = executor.submit(
+                client.post,
+                "/chat",
+                json={"message": "Tin nhắn S_old đã bị xóa", "session_id": sid_s},
+                headers=s_post_headers,
+            )
+            assert s_old_entered.wait(timeout=5.0), "S_old did not enter model call"
+
+            # 2. DELETE S (allocates tombstone generation 2)
+            res_del = client.delete(f"/chat/{sid_s}", headers=s_del_headers)
+            assert res_del.status_code == 200
+
+            # 3. Create T with max_sessions=1 to evict S tombstone from _session_revisions
+            res_t = client.post(
+                "/chat",
+                json={"message": "Tin nhắn T gây eviction", "session_id": sid_t},
+                headers=t_post_headers,
+            )
+            assert res_t.status_code == 200
+            assert sid_s not in provider._session_revisions
+
+            # 4. Start new S on the same session_id (allocates fresh generation > 1)
+            f_new = executor.submit(
+                client.post,
+                "/chat",
+                json={"message": "Tin nhắn S_new thế hệ mới", "session_id": sid_s},
+                headers=s_post_headers,
+            )
+            assert s_new_entered.wait(timeout=5.0), "S_new did not enter model call"
+            assert sid_s in provider._session_revisions
+            assert provider._session_revisions[sid_s].cleared is False
+
+            # 5. Release old S first -> must be rejected because its generation != new S generation
+            s_old_release.set()
+            res_old = f_old.result(timeout=5.0)
+            assert res_old.status_code == 200
+            assert sid_s not in provider._sessions
+
+            # 6. Release new S -> must commit cleanly
+            s_new_release.set()
+            res_new = f_new.result(timeout=5.0)
+            assert res_new.status_code == 200
+
+        assert sid_s in provider._sessions
+        assert len(provider._sessions[sid_s].history) == 2
+        stored_texts = [
+            part.text
+            for item in provider._sessions[sid_s].history
+            for part in (item.parts or [])
+            if getattr(part, "text", None)
+        ]
+        assert any("Tin nhắn S_new thế hệ mới" in t for t in stored_texts)
+        assert any("Phản hồi của S_new" in t for t in stored_texts)
+        assert not any("S_old" in t for t in stored_texts)
+
+
+def test_f01_edge_ttl_eviction_during_inflight_and_post_delete_tombstone_expiry_rejects_stale_commit():
+    """F-01-EDGE (3): Deterministic TTL eviction during in-flight requests (no sleeps):
+    Part A: Active session expires via TTL while an in-flight POST is running -> stale commit rejected.
+    Part B: Session is deleted via DELETE while POST is in-flight, and the DELETE tombstone
+            expires via TTL before the stale POST finishes -> stale commit rejected.
+    """
+    fake_now = [1000.0]
+    provider = GeminiProvider(
+        max_sessions=10,
+        session_ttl_seconds=60,
+        clock=lambda: fake_now[0],
+    )
+    empty_retrieval = RetrievalResult(
+        status="empty", context="", chunks=[], sources=[]
+    )
+
+    sid_active = "sess-ttl-active"
+    sid_deleted = "sess-ttl-deleted"
+    active_headers = _signed_headers(
+        user_id="user-alice", action="POST:/chat", session_id=sid_active
+    )
+    deleted_post_headers = _signed_headers(
+        user_id="user-alice", action="POST:/chat", session_id=sid_deleted
+    )
+    deleted_del_headers = _signed_headers(
+        user_id="user-alice",
+        action=f"DELETE:/chat/{sid_deleted}",
+        session_id=sid_deleted,
+    )
+
+    inflight_entered = threading.Event()
+    inflight_release = threading.Event()
+
+    def ttl_controlled_generate(*, model, contents, config):
+        prompt_text = str(contents[-1].parts[0].text)
+        if "Đang bay khi hết hạn TTL" in prompt_text:
+            inflight_entered.set()
+            assert inflight_release.wait(timeout=5.0), "Timed out waiting for TTL release"
+        return _mock_gemini_text_response("Phản hồi sau khi TTL hết hạn")
+
+    with (
+        patch("app.routers.chat.gemini_provider", provider),
+        patch(
+            "app.routers.chat.retrieve_grounding",
+            new=AsyncMock(return_value=empty_retrieval),
+        ),
+        patch(
+            "app.llm.gemini._client.models.generate_content",
+            side_effect=ttl_controlled_generate,
+        ),
+    ):
+        # Part A: Establish sid_active at t=1000.0
+        res1 = client.post(
+            "/chat",
+            json={"message": "Khởi tạo phiên", "session_id": sid_active},
+            headers=active_headers,
+        )
+        assert res1.status_code == 200
+        assert sid_active in provider._sessions
+
+        # Start Turn 2 at t=1010.0, then advance clock past TTL (t=1080.0) while in-flight
+        fake_now[0] = 1010.0
+        with ThreadPoolExecutor(max_workers=1) as executor:
+            f_active = executor.submit(
+                client.post,
+                "/chat",
+                json={"message": "Đang bay khi hết hạn TTL (Part A)", "session_id": sid_active},
+                headers=active_headers,
+            )
+            assert inflight_entered.wait(timeout=5.0)
+            fake_now[0] = 1080.0
+            inflight_release.set()
+            res_active_expired = f_active.result(timeout=5.0)
+
+        assert res_active_expired.status_code == 200
+        assert sid_active not in provider._sessions
+        assert sid_active not in provider._session_revisions
+
+        # Part B: Start in-flight POST on sid_deleted at t=2000.0, DELETE at t=2005.0,
+        # advance clock past TTL to t=2100.0 so tombstone expires, then release in-flight POST
+        inflight_entered.clear()
+        inflight_release.clear()
+        fake_now[0] = 2000.0
+
+        with ThreadPoolExecutor(max_workers=1) as executor:
+            f_deleted = executor.submit(
+                client.post,
+                "/chat",
+                json={"message": "Đang bay khi hết hạn TTL (Part B)", "session_id": sid_deleted},
+                headers=deleted_post_headers,
+            )
+            assert inflight_entered.wait(timeout=5.0)
+
+            fake_now[0] = 2005.0
+            res_del = client.delete(
+                f"/chat/{sid_deleted}",
+                headers=deleted_del_headers,
+            )
+            assert res_del.status_code == 200
+            assert sid_deleted in provider._session_revisions
+
+            # Advance fake clock past tombstone TTL (2005 + 60 < 2100)
+            fake_now[0] = 2100.0
+            inflight_release.set()
+            res_deleted_expired = f_deleted.result(timeout=5.0)
+
+        assert res_deleted_expired.status_code == 200
+        assert sid_deleted not in provider._sessions
+        assert sid_deleted not in provider._session_revisions

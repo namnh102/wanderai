@@ -8,7 +8,7 @@ from dataclasses import dataclass, field
 import json
 import threading
 import time
-from typing import Any, List, Optional
+from typing import Any, Callable, List, Optional
 
 from google.genai import types
 
@@ -44,15 +44,24 @@ class _SessionRecord:
     history: List[Any] = field(default_factory=list)
     updated_at: float = field(default_factory=time.monotonic)
     revision: int = 0
+    touch_seq: int = 0
 
 
 @dataclass
 class _SessionRevision:
-    """Bounded per-session clear/invalidation revision tracker to prevent DELETE vs in-flight POST resurrection."""
+    """Bounded per-session lifecycle generation tracker.
+
+    Each session lifecycle receives a strictly monotonic, non-reusable generation integer (> 0).
+    Commits fail closed whenever the entry is missing (evicted/expired), marked cleared, or has a
+    different generation than the one captured when the turn began (preventing ABA resurrection).
+    """
 
     owner_user_id: str
-    revision: int = 0
+    revision: int
     updated_at: float = field(default_factory=time.monotonic)
+    cleared: bool = False
+    in_flight_count: int = 0
+    touch_seq: int = 0
 
 
 def _tool_to_function_declaration(tool) -> types.FunctionDeclaration:
@@ -116,15 +125,27 @@ class GeminiProvider:
         self,
         max_sessions: int = MAX_ACTIVE_SESSIONS,
         session_ttl_seconds: int = DEFAULT_SESSION_TTL_SECONDS,
+        clock: Optional[Callable[[], float]] = None,
     ):
         self._sessions: dict[str, _SessionRecord] = {}
         self._session_revisions: dict[str, _SessionRevision] = {}
         self._lock = threading.RLock()
         self._max_sessions = max_sessions
         self._session_ttl_seconds = session_ttl_seconds
+        self._clock: Callable[[], float] = clock or time.monotonic
+        self._next_generation: int = 0
+        self._next_touch_seq: int = 0
+
+    def _allocate_generation_locked(self) -> int:
+        self._next_generation += 1
+        return self._next_generation
+
+    def _allocate_touch_seq_locked(self) -> int:
+        self._next_touch_seq += 1
+        return self._next_touch_seq
 
     def _evict_expired_and_overflow_locked(self, now: Optional[float] = None) -> None:
-        current = now if now is not None else time.monotonic()
+        current = now if now is not None else self._clock()
         expired_keys = [
             sid
             for sid, rec in self._sessions.items()
@@ -141,29 +162,38 @@ class GeminiProvider:
         ]
         for sid in expired_rev_keys:
             self._session_revisions.pop(sid, None)
+            self._sessions.pop(sid, None)
 
         while len(self._sessions) > self._max_sessions:
             oldest_sid = min(
                 self._sessions.keys(),
-                key=lambda k: self._sessions[k].updated_at,
+                key=lambda k: (
+                    self._sessions[k].updated_at,
+                    self._sessions[k].touch_seq,
+                ),
             )
             self._sessions.pop(oldest_sid, None)
+            self._session_revisions.pop(oldest_sid, None)
 
         while len(self._session_revisions) > self._max_sessions:
             oldest_rev_sid = min(
                 self._session_revisions.keys(),
-                key=lambda k: self._session_revisions[k].updated_at,
+                key=lambda k: (
+                    self._session_revisions[k].updated_at,
+                    self._session_revisions[k].touch_seq,
+                ),
             )
             self._session_revisions.pop(oldest_rev_sid, None)
+            self._sessions.pop(oldest_rev_sid, None)
 
     def _begin_turn(
         self,
         session_id: str,
         user_id: Optional[str],
     ) -> tuple[List[Any], int]:
-        """Authorize caller, snapshot existing history, and capture session clear-revision under lock."""
+        """Authorize caller, snapshot existing history, and bind turn to a non-reusable generation ID."""
         normalized_owner = (user_id or "").strip() or "__anonymous__"
-        now = time.monotonic()
+        now = self._clock()
         with self._lock:
             self._evict_expired_and_overflow_locked(now)
             record = self._sessions.get(session_id)
@@ -178,34 +208,71 @@ class GeminiProvider:
                     "Session belongs to a different authenticated user."
                 )
 
-            current_revision = (
-                rev_entry.revision
-                if rev_entry is not None
-                else (record.revision if record is not None else 0)
-            )
-            if rev_entry is None:
+            touch_seq = self._allocate_touch_seq_locked()
+            if rev_entry is None or rev_entry.cleared:
+                generation = (
+                    record.revision
+                    if (record is not None and rev_entry is None and record.revision > 0)
+                    else self._allocate_generation_locked()
+                )
                 rev_entry = _SessionRevision(
                     owner_user_id=normalized_owner,
-                    revision=current_revision,
+                    revision=generation,
                     updated_at=now,
+                    cleared=False,
+                    in_flight_count=1,
+                    touch_seq=touch_seq,
                 )
                 self._session_revisions[session_id] = rev_entry
+                if record is not None:
+                    record.revision = generation
+                    record.updated_at = now
+                    record.touch_seq = touch_seq
                 self._evict_expired_and_overflow_locked(now)
             else:
+                generation = rev_entry.revision
                 rev_entry.updated_at = now
+                rev_entry.in_flight_count += 1
+                rev_entry.touch_seq = touch_seq
+                if record is not None:
+                    record.updated_at = now
+                    record.touch_seq = touch_seq
 
             if record is not None:
-                record.updated_at = now
-                return list(record.history), current_revision
-            return [], current_revision
+                return list(record.history), generation
+            return [], generation
 
     def _authorize_and_snapshot_history(
         self,
         session_id: str,
         user_id: Optional[str],
     ) -> List[Any]:
-        history, _ = self._begin_turn(session_id, user_id)
-        return history
+        """Read-only history snapshot after enforcing TTL/capacity eviction and owner isolation."""
+        normalized_owner = (user_id or "").strip() or "__anonymous__"
+        now = self._clock()
+        with self._lock:
+            self._evict_expired_and_overflow_locked(now)
+            record = self._sessions.get(session_id)
+            rev_entry = self._session_revisions.get(session_id)
+
+            if record is not None and record.owner_user_id != normalized_owner:
+                raise SessionOwnershipError(
+                    "Session belongs to a different authenticated user."
+                )
+            if rev_entry is not None and rev_entry.owner_user_id != normalized_owner:
+                raise SessionOwnershipError(
+                    "Session belongs to a different authenticated user."
+                )
+
+            if record is not None:
+                touch_seq = self._allocate_touch_seq_locked()
+                record.updated_at = now
+                record.touch_seq = touch_seq
+                if rev_entry is not None and not rev_entry.cleared:
+                    rev_entry.updated_at = now
+                    rev_entry.touch_seq = touch_seq
+                return list(record.history)
+            return []
 
     def _cleanup_uncommitted_new_revision(
         self,
@@ -213,13 +280,14 @@ class GeminiProvider:
         expected_revision: int,
     ) -> None:
         with self._lock:
-            if session_id not in self._sessions:
-                rev_entry = self._session_revisions.get(session_id)
-                if (
-                    rev_entry is not None
-                    and rev_entry.revision == 0
-                    and expected_revision == 0
-                ):
+            rev_entry = self._session_revisions.get(session_id)
+            if (
+                rev_entry is not None
+                and not rev_entry.cleared
+                and rev_entry.revision == expected_revision
+            ):
+                rev_entry.in_flight_count = max(0, rev_entry.in_flight_count - 1)
+                if session_id not in self._sessions and rev_entry.in_flight_count == 0:
                     self._session_revisions.pop(session_id, None)
 
     def _commit_turn(
@@ -231,7 +299,7 @@ class GeminiProvider:
         expected_revision: Optional[int] = None,
     ) -> bool:
         normalized_owner = (user_id or "").strip() or "__anonymous__"
-        now = time.monotonic()
+        now = self._clock()
         with self._lock:
             self._evict_expired_and_overflow_locked(now)
             record = self._sessions.get(session_id)
@@ -246,30 +314,49 @@ class GeminiProvider:
                     "Session belongs to a different authenticated user."
                 )
 
-            current_revision = (
-                rev_entry.revision
-                if rev_entry is not None
-                else (record.revision if record is not None else 0)
-            )
-            if expected_revision is not None and expected_revision != current_revision:
-                return False
-
-            if rev_entry is None:
-                rev_entry = _SessionRevision(
-                    owner_user_id=normalized_owner,
-                    revision=current_revision,
-                    updated_at=now,
-                )
-                self._session_revisions[session_id] = rev_entry
-            else:
+            touch_seq = self._allocate_touch_seq_locked()
+            if expected_revision is not None:
+                if (
+                    not isinstance(expected_revision, int)
+                    or expected_revision <= 0
+                    or rev_entry is None
+                    or rev_entry.cleared
+                    or rev_entry.revision != expected_revision
+                    or (record is not None and record.revision != expected_revision)
+                ):
+                    return False
+                generation = expected_revision
                 rev_entry.updated_at = now
+                rev_entry.in_flight_count = max(0, rev_entry.in_flight_count - 1)
+                rev_entry.touch_seq = touch_seq
+            else:
+                if rev_entry is None or rev_entry.cleared:
+                    generation = (
+                        record.revision
+                        if (record is not None and record.revision > 0)
+                        else self._allocate_generation_locked()
+                    )
+                    rev_entry = _SessionRevision(
+                        owner_user_id=normalized_owner,
+                        revision=generation,
+                        updated_at=now,
+                        cleared=False,
+                        in_flight_count=0,
+                        touch_seq=touch_seq,
+                    )
+                    self._session_revisions[session_id] = rev_entry
+                else:
+                    generation = rev_entry.revision
+                    rev_entry.updated_at = now
+                    rev_entry.touch_seq = touch_seq
 
             if record is None:
                 record = _SessionRecord(
                     owner_user_id=normalized_owner,
                     history=[],
                     updated_at=now,
-                    revision=current_revision,
+                    revision=generation,
+                    touch_seq=touch_seq,
                 )
                 self._sessions[session_id] = record
 
@@ -278,7 +365,8 @@ class GeminiProvider:
             if len(record.history) > MAX_HISTORY_ITEMS:
                 record.history = record.history[-MAX_HISTORY_ITEMS:]
             record.updated_at = now
-            record.revision = current_revision
+            record.revision = generation
+            record.touch_seq = touch_seq
             self._evict_expired_and_overflow_locked(now)
             return True
 
@@ -472,7 +560,7 @@ class GeminiProvider:
             raise SessionOwnershipError(
                 "Authenticated user_id is required to clear a chat session."
             )
-        now = time.monotonic()
+        now = self._clock()
         with self._lock:
             self._evict_expired_and_overflow_locked(now)
             record = self._sessions.get(session_id)
@@ -487,17 +575,16 @@ class GeminiProvider:
                     "Session belongs to a different authenticated user."
                 )
 
-            base_revision = (
-                rev_entry.revision
-                if rev_entry is not None
-                else (record.revision if record is not None else 0)
-            )
-            next_revision = base_revision + 1
+            invalidated_generation = self._allocate_generation_locked()
+            touch_seq = self._allocate_touch_seq_locked()
             self._sessions.pop(session_id, None)
             self._session_revisions[session_id] = _SessionRevision(
                 owner_user_id=normalized_owner,
-                revision=next_revision,
+                revision=invalidated_generation,
                 updated_at=now,
+                cleared=True,
+                in_flight_count=0,
+                touch_seq=touch_seq,
             )
             self._evict_expired_and_overflow_locked(now)
 
