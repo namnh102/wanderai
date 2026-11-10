@@ -37,6 +37,7 @@ jobs:
         run: >
           JWT_SECRET="test-access-$(node -e "process.stdout.write(require('crypto').randomBytes(24).toString('hex'))")"
           JWT_REFRESH_SECRET="test-refresh-$(node -e "process.stdout.write(require('crypto').randomBytes(24).toString('hex'))")"
+          AI_INTERNAL_AUTH_SECRET="test-internal-$(node -e "process.stdout.write(require('crypto').randomBytes(24).toString('hex'))")"
           pnpm test
       # Backend e2e specs need PostgreSQL: BLOCKED_BY_ENVIRONMENT in mandatory CI.
 
@@ -57,6 +58,7 @@ jobs:
       - name: AI service tests (offline)
         working-directory: apps/ai-service
         run: >
+          AI_INTERNAL_AUTH_SECRET="test-internal-$(python -c "import secrets; print(secrets.token_hex(24))")"
           python -m pytest tests -q
           --deselect tests/test_rag.py::test_rag_retrieval_da_nang_culinary
           --deselect tests/test_grounding_contract.py::test_synthetic_documents_never_reach_the_provider

@@ -1,15 +1,16 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.routers import health, chat, planner, recommendations
+from app.routers import chat, health, planner, recommendations
+from app.security.internal_auth import get_cors_origins
 
 app = FastAPI(title="WanderAI AI Service")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=get_cors_origins(),
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "DELETE", "OPTIONS"],
+    allow_headers=["Content-Type", "Authorization", "X-WanderAI-Internal-Assertion"],
 )
 
 app.include_router(health.router)

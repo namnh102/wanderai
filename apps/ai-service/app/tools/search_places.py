@@ -1,8 +1,9 @@
 """Search Places Tool — Query DB that tu PostgreSQL"""
-from app.tools.base import BaseTool
-from app.config import settings
-from typing import Dict, Any
+from typing import Any, Dict
 import asyncpg
+
+from app.config import settings
+from app.tools.base import BaseTool
 
 
 class SearchPlacesTool(BaseTool):
@@ -33,23 +34,25 @@ class SearchPlacesTool(BaseTool):
 
         try:
             conn = await asyncpg.connect(settings.DATABASE_URL)
-            rows = await conn.fetch(
-                """
-                SELECT name, province, region, rating, review_count, cover_image
-                FROM destinations
-                WHERE deleted_at IS NULL
-                  AND (
-                    name ILIKE $1
-                    OR province ILIKE $1
-                    OR name_en ILIKE $1
-                  )
-                ORDER BY is_popular DESC, rating DESC
-                LIMIT $2
-                """,
-                f"%{destination}%",
-                limit,
-            )
-            await conn.close()
+            try:
+                rows = await conn.fetch(
+                    """
+                    SELECT name, province, region, rating, review_count, cover_image
+                    FROM destinations
+                    WHERE deleted_at IS NULL
+                      AND (
+                        name ILIKE $1
+                        OR province ILIKE $1
+                        OR name_en ILIKE $1
+                      )
+                    ORDER BY is_popular DESC, rating DESC
+                    LIMIT $2
+                    """,
+                    f"%{destination}%",
+                    limit,
+                )
+            finally:
+                await conn.close()
 
             places = [
                 {
@@ -64,16 +67,20 @@ class SearchPlacesTool(BaseTool):
             ]
 
             return {
+                "status": "OK",
+                "verified": True,
                 "destination": destination,
                 "count": len(places),
                 "places": places,
             }
 
-        except Exception as e:
-            # Fallback neu DB loi
+        except Exception:
             return {
+                "status": "DB_ERROR",
+                "verified": False,
                 "destination": destination,
-                "count": 0,
-                "places": [],
-                "note": f"DB error: {str(e)[:100]}",
+                "error": (
+                    "Verified place database is temporarily unavailable; "
+                    "do not claim that zero places exist."
+                ),
             }

@@ -1,23 +1,24 @@
-"""Chat Router — AI chat voi Function Calling that su"""
+"""Chat Router — AI chat voi Function Calling that su, fail-closed RAG/LLM va session isolation."""
+from typing import Any, List, Optional
 import uuid
-from fastapi import APIRouter
+
+from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
-from typing import Optional, List, Any
-from app.llm.gemini import gemini_provider
+
+from app.security.internal_auth import InternalPrincipal, require_internal_principal
+from app.services.chat_llm import LLMProviderError, SessionOwnershipError, gemini_provider
+from app.services.rag import RAGService, RetrievalResult, RetrievalStatus
+from app.tools.calculate_budget import CalculateBudgetTool
 from app.tools.get_weather import GetWeatherTool
 from app.tools.search_places import SearchPlacesTool
-from app.tools.calculate_budget import CalculateBudgetTool
-from app.tools.search_hotels import SearchHotelsTool
-from app.services.rag import RAGService
 
 router = APIRouter(prefix="/chat", tags=["Chat"])
 
-# Danh sach tools that - Gemini se tu quyet dinh khi nao dung
+# Production toolset excludes SearchHotelsTool because no verified hotel inventory is connected.
 _TOOLS = [
     GetWeatherTool(),
     SearchPlacesTool(),
     CalculateBudgetTool(),
-    SearchHotelsTool(),
 ]
 
 
@@ -38,27 +39,54 @@ class ChatResponse(BaseModel):
     session_id: str
     tools_used: List[str] = []
     tool_calls: List[ToolCallLog] = []
-    # Source URLs of the RAG documents that grounded this reply (OpenStreetMap / Wikivoyage); empty if none.
+    # Candidate source URLs retrieved from the RAG corpus (OpenStreetMap / Wikivoyage) for this query;
+    # these represent retrieved context candidates, NOT claim-level verified answer citations (W07 G5=HOLD).
     sources: List[str] = []
+    retrieval_status: RetrievalStatus = "ok"
 
 
 _rag_service: Optional[RAGService] = None
 
 
-async def retrieve_grounding(message: str):
-    """Retrieve verified knowledge (production retriever: no unsourced/synthetic documents).
-
-    Returns (context_text, source_urls). Never raises: retrieval problems degrade to an ungrounded reply.
-    """
+async def retrieve_grounding(message: str) -> RetrievalResult:
+    """Retrieve verified knowledge with explicit tri-state status (ok | empty | error)."""
     global _rag_service
     try:
         if _rag_service is None:
             _rag_service = RAGService()
-        context, chunks = await _rag_service.search_with_sources(message, top_k=4)
-    except Exception:  # noqa: BLE001
-        return "", []
-    sources = list(dict.fromkeys(c["source_url"] for c in chunks if c.get("source_url")))
-    return context, sources
+        return await _rag_service.retrieve_with_status(message, top_k=4)
+    except Exception as e:  # noqa: BLE001
+        return RetrievalResult(
+            status="error",
+            context="",
+            chunks=[],
+            sources=[],
+            error_type=type(e).__name__,
+        )
+
+
+def _normalize_retrieval_result(raw: Any) -> RetrievalResult:
+    """Normalize either RetrievalResult or legacy (context, sources) 2-tuple from test mocks."""
+    if isinstance(raw, RetrievalResult):
+        return raw
+    if isinstance(raw, tuple) and len(raw) == 2:
+        context, sources = raw
+        src_list = list(sources or [])
+        ctx_str = context or ""
+        status: RetrievalStatus = "ok" if (ctx_str or src_list) else "empty"
+        return RetrievalResult(
+            status=status,
+            context=ctx_str,
+            chunks=[],
+            sources=src_list,
+        )
+    return RetrievalResult(
+        status="error",
+        context="",
+        chunks=[],
+        sources=[],
+        error_type="InvalidRetrievalResultType",
+    )
 
 
 NO_CONTEXT_INSTRUCTION = (
@@ -78,18 +106,56 @@ def build_grounded_message(message: str, context: str) -> str:
 
 
 @router.post("", response_model=ChatResponse)
-async def chat(request: ChatRequest):
-    """Chat voi AI Wandy — co kha nang goi tools that su"""
+async def chat(
+    request: ChatRequest,
+    principal: InternalPrincipal = Depends(require_internal_principal),
+):
+    """Chat voi AI Wandy — yeu cau xac thuc noi bo, fail-closed khi RAG/LLM loi."""
+    if request.user_id is not None and request.user_id != principal.user_id:
+        raise HTTPException(
+            status_code=403,
+            detail="Request user_id does not match authenticated principal.",
+        )
 
-    session_id = request.session_id or str(uuid.uuid4())
+    normalized_req_sid = (request.session_id or "").strip()
+    normalized_bound_sid = (principal.bound_session_id or "").strip()
+    if normalized_req_sid != normalized_bound_sid:
+        raise HTTPException(
+            status_code=403,
+            detail="Request session_id does not match signed assertion session binding.",
+        )
 
-    context, sources = await retrieve_grounding(request.message)
+    session_id = normalized_req_sid or str(uuid.uuid4())
 
-    result = await gemini_provider.chat_with_tools(
-        message=build_grounded_message(request.message, context),
-        tools=_TOOLS,
-        session_id=session_id,
-    )
+    raw_grounding = await retrieve_grounding(request.message)
+    grounding = _normalize_retrieval_result(raw_grounding)
+
+    if grounding.status == "error":
+        raise HTTPException(
+            status_code=503,
+            detail="Kho dữ liệu tri thức du lịch tạm thời không khả dụng. Vui lòng thử lại sau.",
+        )
+
+    context = grounding.context if grounding.status == "ok" else ""
+    sources = list(grounding.sources) if grounding.status == "ok" else []
+
+    try:
+        result = await gemini_provider.chat_with_tools(
+            message=build_grounded_message(request.message, context),
+            tools=_TOOLS,
+            session_id=session_id,
+            user_id=principal.user_id,
+        )
+    except SessionOwnershipError as exc:
+        raise HTTPException(
+            status_code=403,
+            detail="Không có quyền truy cập phiên trò chuyện này.",
+        ) from exc
+    except LLMProviderError as exc:
+        raise HTTPException(
+            status_code=exc.status_code,
+            detail=exc.detail,
+        ) from exc
 
     reply = result["response"]
     raw_tool_calls = result.get("tool_calls", [])
@@ -110,11 +176,36 @@ async def chat(request: ChatRequest):
         tools_used=tools_used,
         tool_calls=tool_logs,
         sources=sources,
+        retrieval_status=grounding.status,
     )
 
 
 @router.delete("/{session_id}")
-async def clear_chat(session_id: str):
-    """Xoa lich su chat"""
-    gemini_provider.clear_session(session_id)
+async def clear_chat(
+    session_id: str,
+    user_id: Optional[str] = Query(default=None),
+    principal: InternalPrincipal = Depends(require_internal_principal),
+):
+    """Xoa lich su chat — chi cho phep chu so huu session xoa."""
+    if user_id is not None and user_id != principal.user_id:
+        raise HTTPException(
+            status_code=403,
+            detail="Query user_id does not match authenticated principal.",
+        )
+    normalized_path_sid = (session_id or "").strip()
+    normalized_bound_sid = (principal.bound_session_id or "").strip()
+    if not normalized_path_sid or normalized_bound_sid != normalized_path_sid:
+        raise HTTPException(
+            status_code=403,
+            detail="Path session_id does not match signed assertion session binding.",
+        )
+
+    try:
+        gemini_provider.clear_session(session_id, user_id=principal.user_id)
+    except SessionOwnershipError as exc:
+        raise HTTPException(
+            status_code=403,
+            detail="Không có quyền xóa phiên trò chuyện này.",
+        ) from exc
+
     return {"message": "Chat history cleared"}

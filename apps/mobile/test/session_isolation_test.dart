@@ -1,7 +1,11 @@
+import 'dart:async';
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:wanderai_mobile/core/router/app_router.dart';
+import 'package:wanderai_mobile/features/ai_chat/data/chat_models.dart';
+import 'package:wanderai_mobile/features/ai_chat/data/chat_repository.dart';
+import 'package:wanderai_mobile/features/ai_chat/providers/chat_provider.dart';
 import 'package:wanderai_mobile/features/auth/data/auth_models.dart';
 import 'package:wanderai_mobile/features/auth/data/auth_repository.dart';
 import 'package:wanderai_mobile/features/auth/providers/auth_provider.dart';
@@ -53,11 +57,32 @@ class _FakeProfileRepo extends ProfileRepository {
   }
 }
 
+class _FakeChatRepo extends ChatRepository {
+  final _Session session;
+  final List<ChatRequest> sentRequests = [];
+  Completer<ChatResponse>? pendingCompleter;
+  _FakeChatRepo(this.session) : super(Dio());
+
+  @override
+  Future<ChatResponse> sendMessage(ChatRequest request) async {
+    sentRequests.add(request);
+    if (pendingCompleter != null) {
+      return pendingCompleter!.future;
+    }
+    final user = session.userId ?? 'anon';
+    return ChatResponse(
+      reply: 'Reply for $user: ${request.message}',
+      sessionId: request.sessionId ?? 'sess_$user',
+      retrievalStatus: RetrievalStatus.empty,
+    );
+  }
+}
+
 Future<void> settle() => Future<void>.delayed(const Duration(milliseconds: 20));
 
 void main() {
-  group('G-01 profile state isolation across logout / account switch', () {
-    test('User A prefs never appear for User B', () async {
+  group('G-01 & PROD-AI-RAG-04 state isolation across logout / account switch', () {
+    test('User A prefs and AI chat history/sessionId never appear for User B', () async {
       final session = _Session()..userId = 'user-a';
       const userA = UserProfile(
         id: 'user-a',
@@ -75,10 +100,12 @@ void main() {
         preferences: TravelPreferences(interests: ['beach_island']),
       );
       final users = {'user-a': userA, 'user-b': userB};
+      final fakeChatRepo = _FakeChatRepo(session);
 
       final container = ProviderContainer(overrides: [
         authRepositoryProvider.overrideWithValue(_FakeAuthRepo(session, {'a@test': 'user-a', 'b@test': 'user-b'})),
         profileRepositoryProvider.overrideWithValue(_FakeProfileRepo(session, users)),
+        chatRepositoryProvider.overrideWithValue(fakeChatRepo),
       ]);
       addTearDown(container.dispose);
 
@@ -87,13 +114,16 @@ void main() {
       await settle();
       expect(container.read(authProvider).status, AuthStatus.authenticated);
 
-      // User A loads preferences.
+      // User A loads preferences and sends an AI chat message.
       container.read(profileProvider);
+      await container.read(chatProvider.notifier).sendMessage('Lịch trình riêng của User A');
       await settle();
       expect(container.read(profileProvider).user!.id, 'user-a');
       expect(container.read(profileProvider).formPreferences.interests, ['culture_history', 'food_cuisine']);
+      expect(container.read(chatProvider).sessionId, 'sess_user-a');
+      expect(container.read(chatProvider).messages.length, 2);
 
-      // Logout: A's state must be gone immediately.
+      // Logout: A's profile and chat state must be gone immediately.
       await container.read(authProvider.notifier).logout();
       await settle();
       final afterLogout = container.read(profileProvider);
@@ -103,7 +133,11 @@ void main() {
       expect(afterLogout.formPreferences.avoidances, isEmpty);
       expect(afterLogout.formPreferences.budgetMax, isNot(999));
 
-      // User B logs in: only B's data is visible.
+      final chatAfterLogout = container.read(chatProvider);
+      expect(chatAfterLogout.messages, isEmpty);
+      expect(chatAfterLogout.sessionId, isNull);
+
+      // User B logs in: only B's data is visible, and B's first chat does NOT send A's sessionId.
       expect(await container.read(authProvider.notifier).login('b@test', 'pw'), isTrue);
       await settle();
       container.read(profileProvider); // recreated lazily with B's session
@@ -114,6 +148,59 @@ void main() {
       expect(b.formPreferences.interests, isNot(contains('culture_history')));
       expect(b.formPreferences.avoidances, isEmpty);
       expect(b.formPreferences.budgetMin, 0);
+
+      await container.read(chatProvider.notifier).sendMessage('Xin chào từ User B');
+      final bChat = container.read(chatProvider);
+      expect(fakeChatRepo.sentRequests.last.sessionId, isNull);
+      expect(bChat.sessionId, 'sess_user-b');
+      expect(bChat.messages.any((m) => m.content.contains('User A')), isFalse);
+    });
+
+    test('In-flight chat request from User A resolving after logout/switch never leaks into User B', () async {
+      final session = _Session()..userId = 'user-a';
+      final users = {
+        'user-a': const UserProfile(id: 'user-a', email: 'a@test'),
+        'user-b': const UserProfile(id: 'user-b', email: 'b@test'),
+      };
+      final completerA = Completer<ChatResponse>();
+      final fakeChatRepo = _FakeChatRepo(session)..pendingCompleter = completerA;
+
+      final container = ProviderContainer(overrides: [
+        authRepositoryProvider.overrideWithValue(_FakeAuthRepo(session, {'a@test': 'user-a', 'b@test': 'user-b'})),
+        profileRepositoryProvider.overrideWithValue(_FakeProfileRepo(session, users)),
+        chatRepositoryProvider.overrideWithValue(fakeChatRepo),
+      ]);
+      addTearDown(container.dispose);
+
+      container.read(routerNotifierProvider);
+      await settle();
+
+      // User A starts an in-flight chat request
+      final inFlightFuture = container.read(chatProvider.notifier).sendMessage('Câu hỏi đang treo của User A');
+      expect(container.read(chatProvider).isLoading, isTrue);
+
+      // User A logs out and User B logs in while User A's request is still in-flight
+      await container.read(authProvider.notifier).logout();
+      await settle();
+      expect(await container.read(authProvider.notifier).login('b@test', 'pw'), isTrue);
+      await settle();
+
+      // Now User A's late response finally arrives
+      completerA.complete(
+        const ChatResponse(
+          reply: 'Phản hồi muộn của User A',
+          sessionId: 'sess_user-a_late',
+          retrievalStatus: RetrievalStatus.ok,
+          sources: ['https://www.openstreetmap.org/node/1'],
+        ),
+      );
+      await inFlightFuture;
+      await settle();
+
+      // User B's chat state must remain completely clean
+      final bChatState = container.read(chatProvider);
+      expect(bChatState.messages, isEmpty);
+      expect(bChatState.sessionId, isNull);
     });
   });
 

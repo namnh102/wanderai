@@ -2,13 +2,34 @@
 
 enum MessageRole { user, assistant }
 
+/// Tri-state RAG grounding status from FastAPI `/chat`.
+enum RetrievalStatus {
+  ok,
+  empty,
+  error;
+
+  static RetrievalStatus fromJsonValue(String? raw) {
+    switch (raw?.trim().toLowerCase()) {
+      case 'empty':
+        return RetrievalStatus.empty;
+      case 'error':
+        return RetrievalStatus.error;
+      case 'ok':
+      default:
+        return RetrievalStatus.ok;
+    }
+  }
+}
+
 class ChatMessage {
   final String id;
   final MessageRole role;
   final String content;
   final DateTime timestamp;
   final bool isError;
+  /// Candidate source URLs retrieved from the RAG corpus for the query (not claim-level verified answer citations).
   final List<String> sources;
+  final RetrievalStatus retrievalStatus;
 
   const ChatMessage({
     required this.id,
@@ -17,6 +38,7 @@ class ChatMessage {
     required this.timestamp,
     this.isError = false,
     this.sources = const [],
+    this.retrievalStatus = RetrievalStatus.ok,
   });
 
   bool get isUser => role == MessageRole.user;
@@ -29,6 +51,7 @@ class ChatMessage {
     DateTime? timestamp,
     bool? isError,
     List<String>? sources,
+    RetrievalStatus? retrievalStatus,
   }) {
     return ChatMessage(
       id: id ?? this.id,
@@ -37,6 +60,7 @@ class ChatMessage {
       timestamp: timestamp ?? this.timestamp,
       isError: isError ?? this.isError,
       sources: sources ?? this.sources,
+      retrievalStatus: retrievalStatus ?? this.retrievalStatus,
     );
   }
 }
@@ -51,9 +75,9 @@ class ChatRequest {
   });
 
   Map<String, dynamic> toJson() => {
-    'message': message,
-    if (sessionId != null) 'session_id': sessionId,
-  };
+        'message': message,
+        if (sessionId != null) 'session_id': sessionId,
+      };
 }
 
 class ChatResponse {
@@ -61,22 +85,32 @@ class ChatResponse {
   final String sessionId;
   final List<String> toolsUsed;
   final List<String> sources;
+  final RetrievalStatus retrievalStatus;
 
   const ChatResponse({
     required this.reply,
     required this.sessionId,
     this.toolsUsed = const [],
     this.sources = const [],
+    this.retrievalStatus = RetrievalStatus.ok,
   });
 
   factory ChatResponse.fromJson(Map<String, dynamic> json) {
     final toolsList = json['tools_used'] as List<dynamic>? ?? [];
     final sourcesList = json['sources'] as List<dynamic>? ?? [];
+    final status = RetrievalStatus.fromJsonValue(
+      json['retrieval_status'] as String?,
+    );
+    final parsedSources = status == RetrievalStatus.ok
+        ? sourcesList.map((e) => e.toString()).toList()
+        : const <String>[];
+
     return ChatResponse(
       reply: json['reply'] as String? ?? '',
       sessionId: json['session_id'] as String? ?? '',
       toolsUsed: toolsList.map((e) => e.toString()).toList(),
-      sources: sourcesList.map((e) => e.toString()).toList(),
+      sources: parsedSources,
+      retrievalStatus: status,
     );
   }
 }

@@ -79,6 +79,16 @@
             "title": "Reply",
             "type": "string"
           },
+          "retrieval_status": {
+            "default": "ok",
+            "enum": [
+              "ok",
+              "empty",
+              "error"
+            ],
+            "title": "Retrieval Status",
+            "type": "string"
+          },
           "session_id": {
             "title": "Session Id",
             "type": "string"
@@ -783,7 +793,7 @@
   "paths": {
     "/chat": {
       "post": {
-        "description": "Chat voi AI Wandy — co kha nang goi tools that su",
+        "description": "Chat voi AI Wandy — yeu cau xac thuc noi bo, fail-closed khi RAG/LLM loi.",
         "operationId": "chat_chat_post",
         "requestBody": {
           "content": {
@@ -825,7 +835,7 @@
     },
     "/chat/{session_id}": {
       "delete": {
-        "description": "Xoa lich su chat",
+        "description": "Xoa lich su chat — chi cho phep chu so huu session xoa.",
         "operationId": "clear_chat_chat__session_id__delete",
         "parameters": [
           {
@@ -835,6 +845,22 @@
             "schema": {
               "title": "Session Id",
               "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "user_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "User Id"
             }
           }
         ],

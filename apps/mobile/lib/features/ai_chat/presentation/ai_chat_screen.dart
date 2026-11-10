@@ -273,13 +273,47 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
                       color: isUser ? AppColors.onPrimary : AppColors.textPrimary,
                     ),
                   ),
-                  if (!isUser && message.sources.isNotEmpty)
+                  if (!isUser &&
+                      !message.isError &&
+                      message.retrievalStatus == RetrievalStatus.ok &&
+                      message.sources.isNotEmpty)
                     _buildSourcesSection(message.sources, cs),
+                  if (!isUser &&
+                      !message.isError &&
+                      message.retrievalStatus == RetrievalStatus.empty)
+                    _buildUngroundedNotice(),
                 ],
               ),
             ),
           ),
           if (isUser) const SizedBox(width: AppSpacing.sm),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildUngroundedNotice() {
+    return Padding(
+      padding: const EdgeInsets.only(top: AppSpacing.sm),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(
+            Icons.info_outline,
+            size: 12,
+            color: AppColors.textSecondary,
+          ),
+          const SizedBox(width: 4),
+          Flexible(
+            child: Text(
+              'Chưa có nguồn đối chiếu trực tiếp trong kho dữ liệu.',
+              style: AppTypography.bodyS.copyWith(
+                fontSize: 11,
+                fontStyle: FontStyle.italic,
+                color: AppColors.textSecondary,
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -308,11 +342,13 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
               color: AppColors.textSecondary,
             ),
             const SizedBox(width: 4),
-            Text(
-              'Nguồn tham khảo:',
-              style: AppTypography.label.copyWith(
-                fontSize: 11,
-                color: AppColors.textSecondary,
+            Flexible(
+              child: Text(
+                'Nguồn dữ liệu truy xuất (chưa đối chiếu từng chi tiết trả lời):',
+                style: AppTypography.label.copyWith(
+                  fontSize: 11,
+                  color: AppColors.textSecondary,
+                ),
               ),
             ),
           ],
@@ -397,7 +433,7 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
       }
       return uri.host.isNotEmpty ? uri.host : url;
     } catch (_) {
-      return 'Nguồn tham khảo';
+      return 'Nguồn dữ liệu truy xuất';
     }
   }
 
