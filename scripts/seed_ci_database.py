@@ -41,7 +41,7 @@ sys.path.insert(0, str(AI_SERVICE_DIR))
 
 DATABASE_URL = os.environ.get(
     "DATABASE_URL", "postgresql://postgres:postgres@localhost:5432/wanderai"
-)
+).split("?")[0]
 
 CANONICAL_DESTINATION_IDS: dict[str, str] = {
     "ha-noi": "071e1382-7972-4dde-af61-dac9ef2c3c69",
@@ -556,7 +556,7 @@ async def seed_database(include_rag_docs: bool = False) -> None:
         from app.rag.ingestion import WikivoyageIngester
         from app.rag.retriever import RAGRetriever
 
-        retriever = RAGRetriever(db_url=DATABASE_URL)
+        retriever = RAGRetriever(database_url=DATABASE_URL)
         ingester = WikivoyageIngester(retriever=retriever)
         try:
             osm_report = await ingester.ingest_canonical_places()
