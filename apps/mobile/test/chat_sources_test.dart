@@ -145,8 +145,11 @@ void main() {
       // Verify the reply content
       expect(find.text('Bảo tàng Hồ Chí Minh mở cửa từ thứ Ba đến Chủ Nhật.'), findsOneWidget);
 
-      // Verify the sources section header
-      expect(find.text('Nguồn tham khảo:'), findsOneWidget);
+      // Verify the sources section header explicitly states retrieved-context limitation (F-03)
+      expect(
+        find.text('Nguồn dữ liệu truy xuất (chưa đối chiếu từng chi tiết trả lời):'),
+        findsOneWidget,
+      );
 
       // Verify source chips labels formatted safely
       expect(find.textContaining('OpenStreetMap'), findsOneWidget);
@@ -183,7 +186,10 @@ void main() {
       expect(find.text('Xin chào, mình có thể giúp gì cho bạn?'), findsOneWidget);
 
       // Source section MUST NOT be rendered even if sources list was non-empty
-      expect(find.text('Nguồn tham khảo:'), findsNothing);
+      expect(
+        find.text('Nguồn dữ liệu truy xuất (chưa đối chiếu từng chi tiết trả lời):'),
+        findsNothing,
+      );
       expect(find.textContaining('OpenStreetMap'), findsNothing);
       // Ungrounded notice is rendered
       expect(find.textContaining('Chưa có nguồn đối chiếu trực tiếp'), findsOneWidget);
@@ -213,7 +219,10 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(tester.takeException(), isNull);
-      expect(find.text('Nguồn tham khảo:'), findsOneWidget);
+      expect(
+        find.text('Nguồn dữ liệu truy xuất (chưa đối chiếu từng chi tiết trả lời):'),
+        findsOneWidget,
+      );
     });
 
     testWidgets('8. Source chip is tappable without crash', (tester) async {

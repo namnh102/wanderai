@@ -342,11 +342,13 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
               color: AppColors.textSecondary,
             ),
             const SizedBox(width: 4),
-            Text(
-              'Nguồn tham khảo:',
-              style: AppTypography.label.copyWith(
-                fontSize: 11,
-                color: AppColors.textSecondary,
+            Flexible(
+              child: Text(
+                'Nguồn dữ liệu truy xuất (chưa đối chiếu từng chi tiết trả lời):',
+                style: AppTypography.label.copyWith(
+                  fontSize: 11,
+                  color: AppColors.textSecondary,
+                ),
               ),
             ),
           ],
@@ -431,7 +433,7 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
       }
       return uri.host.isNotEmpty ? uri.host : url;
     } catch (_) {
-      return 'Nguồn tham khảo';
+      return 'Nguồn dữ liệu truy xuất';
     }
   }
 

@@ -5,9 +5,11 @@
 4. Session ownership isolation, bounded capacity, TTL expiry & concurrency safety (A-06)
 """
 from concurrent.futures import ThreadPoolExecutor
+import threading
 import time
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock, patch
+import uuid
 
 from fastapi.testclient import TestClient
 import pytest
@@ -154,6 +156,106 @@ def test_spoofed_body_or_query_user_id_and_mismatched_session_id_are_rejected_40
         headers=del_headers,
     )
     assert res_spoof_del.status_code == 403
+
+
+def test_f02_exact_signed_sid_and_body_sid_binding_all_four_conditions():
+    """F-02 regression test:
+    1. (signed empty sid="", body nonempty session_id="sess-1") => 403
+    2. (signed nonempty sid="sess-1", body empty/omitted session_id) => 403
+    3. (signed nonempty sid="sess-1", body matching session_id="sess-1") => 200
+    4. (signed empty sid="", body empty/omitted session_id) => 200 with generated UUID
+    Plus DELETE with empty signed sid => 403.
+    """
+    provider = GeminiProvider()
+    empty_retrieval = RetrievalResult(
+        status="empty", context="", chunks=[], sources=[]
+    )
+
+    with (
+        patch("app.routers.chat.gemini_provider", provider),
+        patch(
+            "app.routers.chat.retrieve_grounding",
+            new=AsyncMock(return_value=empty_retrieval),
+        ),
+        patch(
+            "app.llm.gemini._client.models.generate_content",
+            return_value=SimpleNamespace(
+                candidates=[
+                    SimpleNamespace(
+                        content=SimpleNamespace(
+                            parts=[SimpleNamespace(text="Xin chào!", function_call=None)]
+                        )
+                    )
+                ]
+            ),
+        ),
+    ):
+        # Condition 1: signed sid="", body session_id="sess-1" => 403
+        headers_empty_sid = _signed_headers(
+            user_id="user-alice",
+            action="POST:/chat",
+            session_id="",
+        )
+        res_cond1 = client.post(
+            "/chat",
+            json={"message": "Xin chào", "session_id": "sess-1"},
+            headers=headers_empty_sid,
+        )
+        assert res_cond1.status_code == 403
+        assert "session_id" in res_cond1.json()["detail"]
+
+        # Condition 2a: signed sid="sess-1", body session_id omitted (None) => 403
+        headers_bound_sid = _signed_headers(
+            user_id="user-alice",
+            action="POST:/chat",
+            session_id="sess-1",
+        )
+        res_cond2_none = client.post(
+            "/chat",
+            json={"message": "Xin chào"},
+            headers=headers_bound_sid,
+        )
+        assert res_cond2_none.status_code == 403
+
+        # Condition 2b: signed sid="sess-1", body session_id="" => 403
+        res_cond2_empty = client.post(
+            "/chat",
+            json={"message": "Xin chào", "session_id": ""},
+            headers=headers_bound_sid,
+        )
+        assert res_cond2_empty.status_code == 403
+
+        # Condition 3: signed sid="sess-1", body session_id="sess-1" (exact match) => 200
+        res_cond3 = client.post(
+            "/chat",
+            json={"message": "Xin chào", "session_id": "sess-1"},
+            headers=headers_bound_sid,
+        )
+        assert res_cond3.status_code == 200
+        assert res_cond3.json()["session_id"] == "sess-1"
+
+        # Condition 4: signed sid="", body session_id omitted/empty (both empty) => 200 with generated UUID
+        res_cond4 = client.post(
+            "/chat",
+            json={"message": "Xin chào"},
+            headers=headers_empty_sid,
+        )
+        assert res_cond4.status_code == 200
+        generated_sid = res_cond4.json()["session_id"]
+        assert generated_sid and generated_sid != "sess-1"
+        uuid.UUID(generated_sid)
+
+        # Companion check: DELETE with empty signed sid => 403
+        del_headers_empty_sid = _signed_headers(
+            user_id="user-alice",
+            action="DELETE:/chat/sess-1",
+            session_id="",
+        )
+        res_del_empty_sid = client.delete(
+            "/chat/sess-1",
+            headers=del_headers_empty_sid,
+        )
+        assert res_del_empty_sid.status_code == 403
 
 
 def test_internal_secret_fails_closed_when_missing_weak_or_reused(monkeypatch):
@@ -489,3 +591,176 @@ def test_concurrent_cross_user_access_never_interleaves_or_overwrites_owner():
     assert "bob_unexpected_success" not in outcomes
     assert outcomes.count("bob_blocked") == 12
     assert provider._sessions["race-sess"].owner_user_id == "user-alice"
+
+
+def test_f01_delete_during_in_flight_post_does_not_recreate_cleared_session():
+    """F-01 deterministic barrier concurrency test:
+    1. User A establishes session S (Turn 1).
+    2. User A starts in-flight POST /chat (Turn 2) on S and enters mocked Gemini call.
+    3. While Turn 2 is inside Gemini, User A executes DELETE /chat/S (200 OK).
+    4. Release mocked Gemini call so Turn 2 finishes.
+    5. Assert Turn 2 completes without resurrecting S in provider._sessions (no restored history).
+    6. Subsequent Turn 3 by User A on S starts from clean empty history (only Turn 3 is stored).
+    """
+    provider = GeminiProvider()
+    empty_retrieval = RetrievalResult(
+        status="empty", context="", chunks=[], sources=[]
+    )
+    session_id = "sess-delete-race"
+    post_headers = _signed_headers(
+        user_id="user-alice", action="POST:/chat", session_id=session_id
+    )
+    delete_headers = _signed_headers(
+        user_id="user-alice",
+        action=f"DELETE:/chat/{session_id}",
+        session_id=session_id,
+    )
+
+    entered_model_event = threading.Event()
+    release_model_event = threading.Event()
+    call_counter = {"count": 0}
+
+    def controlled_generate_content(*, model, contents, config):
+        call_counter["count"] += 1
+        idx = call_counter["count"]
+        if idx == 2:
+            entered_model_event.set()
+            assert release_model_event.wait(timeout=5.0), "Timed out waiting for release_model_event"
+        return _mock_gemini_text_response(f"Phản hồi lượt {idx}")
+
+    with (
+        patch("app.routers.chat.gemini_provider", provider),
+        patch(
+            "app.routers.chat.retrieve_grounding",
+            new=AsyncMock(return_value=empty_retrieval),
+        ),
+        patch(
+            "app.llm.gemini._client.models.generate_content",
+            side_effect=controlled_generate_content,
+        ),
+    ):
+        # Step 1: Turn 1 establishes session S
+        res_turn1 = client.post(
+            "/chat",
+            json={"message": "Lượt 1 trước khi xóa", "session_id": session_id},
+            headers=post_headers,
+        )
+        assert res_turn1.status_code == 200
+        assert session_id in provider._sessions
+        assert len(provider._sessions[session_id].history) == 2
+
+        # Step 2: Start Turn 2 in background thread; it pauses inside generate_content
+        with ThreadPoolExecutor(max_workers=1) as executor:
+            inflight_future = executor.submit(
+                client.post,
+                "/chat",
+                json={"message": "Lượt 2 đang chạy thì bị xóa", "session_id": session_id},
+                headers=post_headers,
+            )
+
+            assert entered_model_event.wait(timeout=5.0), "In-flight POST never entered model call"
+
+            # Step 3: While Turn 2 is in-flight, User A clears session S
+            res_del = client.delete(
+                f"/chat/{session_id}",
+                headers=delete_headers,
+            )
+            assert res_del.status_code == 200
+            assert session_id not in provider._sessions
+
+            # Step 4: Release model call so Turn 2 finishes
+            release_model_event.set()
+            res_turn2 = inflight_future.result(timeout=5.0)
+
+        # Step 5: Turn 2 returns 200 (success without persistence) and MUST NOT recreate S
+        assert res_turn2.status_code == 200
+        assert session_id not in provider._sessions
+        assert provider._authorize_and_snapshot_history(session_id, "user-alice") == []
+
+        # Step 6: A subsequent Turn 3 after DELETE starts fresh with only Turn 3 (2 items: user + model)
+        res_turn3 = client.post(
+            "/chat",
+            json={"message": "Lượt 3 mới sau khi xóa", "session_id": session_id},
+            headers=post_headers,
+        )
+        assert res_turn3.status_code == 200
+        assert session_id in provider._sessions
+        assert len(provider._sessions[session_id].history) == 2
+        persisted_texts = [
+            part.text
+            for item in provider._sessions[session_id].history
+            for part in (item.parts or [])
+            if getattr(part, "text", None)
+        ]
+        assert any("Lượt 3 mới sau khi xóa" in t for t in persisted_texts)
+        assert not any("Lượt 1 trước khi xóa" in t for t in persisted_texts)
+        assert not any("Lượt 2 đang chạy thì bị xóa" in t for t in persisted_texts)
+
+
+def test_f01_companion_concurrent_same_owner_turns_succeed_and_cross_owner_rejected():
+    """F-01 companion concurrency test:
+    Normal concurrent non-deleted POST requests by the same owner on session S both succeed
+    and persist both turns without invalidating each other, while concurrent cross-owner
+    requests on S are rejected with 403.
+    """
+    provider = GeminiProvider()
+    empty_retrieval = RetrievalResult(
+        status="empty", context="", chunks=[], sources=[]
+    )
+    session_id = "sess-concurrent-same-owner"
+    alice_headers = _signed_headers(
+        user_id="user-alice", action="POST:/chat", session_id=session_id
+    )
+    bob_headers = _signed_headers(
+        user_id="user-bob", action="POST:/chat", session_id=session_id
+    )
+
+    both_entered = threading.Barrier(2, timeout=5.0)
+
+    def concurrent_generate_content(*, model, contents, config):
+        try:
+            both_entered.wait()
+        except threading.BrokenBarrierError:
+            pass
+        return _mock_gemini_text_response("Phản hồi đồng thời")
+
+    with (
+        patch("app.routers.chat.gemini_provider", provider),
+        patch(
+            "app.routers.chat.retrieve_grounding",
+            new=AsyncMock(return_value=empty_retrieval),
+        ),
+        patch(
+            "app.llm.gemini._client.models.generate_content",
+            side_effect=concurrent_generate_content,
+        ),
+    ):
+        with ThreadPoolExecutor(max_workers=2) as executor:
+            f1 = executor.submit(
+                client.post,
+                "/chat",
+                json={"message": "Alice câu 1", "session_id": session_id},
+                headers=alice_headers,
+            )
+            f2 = executor.submit(
+                client.post,
+                "/chat",
+                json={"message": "Alice câu 2", "session_id": session_id},
+                headers=alice_headers,
+            )
+            r1 = f1.result(timeout=5.0)
+            r2 = f2.result(timeout=5.0)
+
+        assert r1.status_code == 200
+        assert r2.status_code == 200
+        assert session_id in provider._sessions
+        # Both turns (2 user + 2 model = 4 items) are persisted
+        assert len(provider._sessions[session_id].history) == 4
+
+        # Cross-owner request on established session is still rejected with 403
+        res_bob = client.post(
+            "/chat",
+            json={"message": "Bob xâm nhập", "session_id": session_id},
+            headers=bob_headers,
+        )
+        assert res_bob.status_code == 403

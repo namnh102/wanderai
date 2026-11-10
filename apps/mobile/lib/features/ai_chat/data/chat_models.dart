@@ -27,6 +27,7 @@ class ChatMessage {
   final String content;
   final DateTime timestamp;
   final bool isError;
+  /// Candidate source URLs retrieved from the RAG corpus for the query (not claim-level verified answer citations).
   final List<String> sources;
   final RetrievalStatus retrievalStatus;
 

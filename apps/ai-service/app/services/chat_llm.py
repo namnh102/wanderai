@@ -43,6 +43,16 @@ class _SessionRecord:
     owner_user_id: str
     history: List[Any] = field(default_factory=list)
     updated_at: float = field(default_factory=time.monotonic)
+    revision: int = 0
+
+
+@dataclass
+class _SessionRevision:
+    """Bounded per-session clear/invalidation revision tracker to prevent DELETE vs in-flight POST resurrection."""
+
+    owner_user_id: str
+    revision: int = 0
+    updated_at: float = field(default_factory=time.monotonic)
 
 
 def _tool_to_function_declaration(tool) -> types.FunctionDeclaration:
@@ -108,6 +118,7 @@ class GeminiProvider:
         session_ttl_seconds: int = DEFAULT_SESSION_TTL_SECONDS,
     ):
         self._sessions: dict[str, _SessionRecord] = {}
+        self._session_revisions: dict[str, _SessionRevision] = {}
         self._lock = threading.RLock()
         self._max_sessions = max_sessions
         self._session_ttl_seconds = session_ttl_seconds
@@ -121,6 +132,15 @@ class GeminiProvider:
         ]
         for sid in expired_keys:
             self._sessions.pop(sid, None)
+            self._session_revisions.pop(sid, None)
+
+        expired_rev_keys = [
+            sid
+            for sid, rev in self._session_revisions.items()
+            if (current - rev.updated_at) > self._session_ttl_seconds
+        ]
+        for sid in expired_rev_keys:
+            self._session_revisions.pop(sid, None)
 
         while len(self._sessions) > self._max_sessions:
             oldest_sid = min(
@@ -129,24 +149,78 @@ class GeminiProvider:
             )
             self._sessions.pop(oldest_sid, None)
 
-    def _authorize_and_snapshot_history(
+        while len(self._session_revisions) > self._max_sessions:
+            oldest_rev_sid = min(
+                self._session_revisions.keys(),
+                key=lambda k: self._session_revisions[k].updated_at,
+            )
+            self._session_revisions.pop(oldest_rev_sid, None)
+
+    def _begin_turn(
         self,
         session_id: str,
         user_id: Optional[str],
-    ) -> List[Any]:
+    ) -> tuple[List[Any], int]:
+        """Authorize caller, snapshot existing history, and capture session clear-revision under lock."""
         normalized_owner = (user_id or "").strip() or "__anonymous__"
         now = time.monotonic()
         with self._lock:
             self._evict_expired_and_overflow_locked(now)
             record = self._sessions.get(session_id)
+            rev_entry = self._session_revisions.get(session_id)
+
+            if record is not None and record.owner_user_id != normalized_owner:
+                raise SessionOwnershipError(
+                    "Session belongs to a different authenticated user."
+                )
+            if rev_entry is not None and rev_entry.owner_user_id != normalized_owner:
+                raise SessionOwnershipError(
+                    "Session belongs to a different authenticated user."
+                )
+
+            current_revision = (
+                rev_entry.revision
+                if rev_entry is not None
+                else (record.revision if record is not None else 0)
+            )
+            if rev_entry is None:
+                rev_entry = _SessionRevision(
+                    owner_user_id=normalized_owner,
+                    revision=current_revision,
+                    updated_at=now,
+                )
+                self._session_revisions[session_id] = rev_entry
+                self._evict_expired_and_overflow_locked(now)
+            else:
+                rev_entry.updated_at = now
+
             if record is not None:
-                if record.owner_user_id != normalized_owner:
-                    raise SessionOwnershipError(
-                        "Session belongs to a different authenticated user."
-                    )
                 record.updated_at = now
-                return list(record.history)
-            return []
+                return list(record.history), current_revision
+            return [], current_revision
+
+    def _authorize_and_snapshot_history(
+        self,
+        session_id: str,
+        user_id: Optional[str],
+    ) -> List[Any]:
+        history, _ = self._begin_turn(session_id, user_id)
+        return history
+
+    def _cleanup_uncommitted_new_revision(
+        self,
+        session_id: str,
+        expected_revision: int,
+    ) -> None:
+        with self._lock:
+            if session_id not in self._sessions:
+                rev_entry = self._session_revisions.get(session_id)
+                if (
+                    rev_entry is not None
+                    and rev_entry.revision == 0
+                    and expected_revision == 0
+                ):
+                    self._session_revisions.pop(session_id, None)
 
     def _commit_turn(
         self,
@@ -154,30 +228,59 @@ class GeminiProvider:
         user_id: Optional[str],
         user_content: Any,
         model_content: Any,
-    ) -> None:
+        expected_revision: Optional[int] = None,
+    ) -> bool:
         normalized_owner = (user_id or "").strip() or "__anonymous__"
         now = time.monotonic()
         with self._lock:
             self._evict_expired_and_overflow_locked(now)
             record = self._sessions.get(session_id)
+            rev_entry = self._session_revisions.get(session_id)
+
+            if record is not None and record.owner_user_id != normalized_owner:
+                raise SessionOwnershipError(
+                    "Session belongs to a different authenticated user."
+                )
+            if rev_entry is not None and rev_entry.owner_user_id != normalized_owner:
+                raise SessionOwnershipError(
+                    "Session belongs to a different authenticated user."
+                )
+
+            current_revision = (
+                rev_entry.revision
+                if rev_entry is not None
+                else (record.revision if record is not None else 0)
+            )
+            if expected_revision is not None and expected_revision != current_revision:
+                return False
+
+            if rev_entry is None:
+                rev_entry = _SessionRevision(
+                    owner_user_id=normalized_owner,
+                    revision=current_revision,
+                    updated_at=now,
+                )
+                self._session_revisions[session_id] = rev_entry
+            else:
+                rev_entry.updated_at = now
+
             if record is None:
                 record = _SessionRecord(
                     owner_user_id=normalized_owner,
                     history=[],
                     updated_at=now,
+                    revision=current_revision,
                 )
                 self._sessions[session_id] = record
-            elif record.owner_user_id != normalized_owner:
-                raise SessionOwnershipError(
-                    "Session belongs to a different authenticated user."
-                )
 
             record.history.append(user_content)
             record.history.append(model_content)
             if len(record.history) > MAX_HISTORY_ITEMS:
                 record.history = record.history[-MAX_HISTORY_ITEMS:]
             record.updated_at = now
+            record.revision = current_revision
             self._evict_expired_and_overflow_locked(now)
+            return True
 
     async def chat(
         self,
@@ -207,7 +310,7 @@ class GeminiProvider:
             SessionOwnershipError: when session_id belongs to another user.
             LLMProviderError: when Gemini fails, times out, hits quota, or returns empty text.
         """
-        history_snapshot = self._authorize_and_snapshot_history(session_id, user_id)
+        history_snapshot, start_revision = self._begin_turn(session_id, user_id)
 
         try:
             gemini_tools = None
@@ -317,16 +420,27 @@ class GeminiProvider:
             model_turn = types.Content(
                 role="model", parts=[types.Part(text=final_text)]
             )
-            self._commit_turn(session_id, user_id, user_turn, model_turn)
+            persisted = self._commit_turn(
+                session_id,
+                user_id,
+                user_turn,
+                model_turn,
+                expected_revision=start_revision,
+            )
 
             return {
                 "response": final_text,
                 "tool_calls": tool_calls_log,
+                "persisted": persisted,
             }
 
-        except (SessionOwnershipError, LLMProviderError):
+        except SessionOwnershipError:
+            raise
+        except LLMProviderError:
+            self._cleanup_uncommitted_new_revision(session_id, start_revision)
             raise
         except Exception as e:
+            self._cleanup_uncommitted_new_revision(session_id, start_revision)
             msg = str(e).upper()
             if "RESOURCE_EXHAUSTED" in msg or "429" in msg or "QUOTA" in msg:
                 raise LLMProviderError(
@@ -362,13 +476,30 @@ class GeminiProvider:
         with self._lock:
             self._evict_expired_and_overflow_locked(now)
             record = self._sessions.get(session_id)
-            if record is None:
-                return
-            if record.owner_user_id != normalized_owner:
+            rev_entry = self._session_revisions.get(session_id)
+
+            if record is not None and record.owner_user_id != normalized_owner:
                 raise SessionOwnershipError(
                     "Session belongs to a different authenticated user."
                 )
+            if rev_entry is not None and rev_entry.owner_user_id != normalized_owner:
+                raise SessionOwnershipError(
+                    "Session belongs to a different authenticated user."
+                )
+
+            base_revision = (
+                rev_entry.revision
+                if rev_entry is not None
+                else (record.revision if record is not None else 0)
+            )
+            next_revision = base_revision + 1
             self._sessions.pop(session_id, None)
+            self._session_revisions[session_id] = _SessionRevision(
+                owner_user_id=normalized_owner,
+                revision=next_revision,
+                updated_at=now,
+            )
+            self._evict_expired_and_overflow_locked(now)
 
 
 # Singleton used by /chat router

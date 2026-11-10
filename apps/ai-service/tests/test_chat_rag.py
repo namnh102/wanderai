@@ -1,6 +1,7 @@
 """TASK 07.5: the live /chat path is grounded with retrieved verified documents (LLM mocked)."""
 from unittest.mock import AsyncMock, patch
 
+from fastapi import Request
 from fastapi.testclient import TestClient
 import pytest
 
@@ -13,9 +14,14 @@ client = TestClient(app)
 
 @pytest.fixture(autouse=True)
 def _override_internal_principal():
-    app.dependency_overrides[require_internal_principal] = lambda: InternalPrincipal(
-        user_id="test-user-1"
-    )
+    async def _bound_principal(request: Request) -> InternalPrincipal:
+        body = await request.json() if request.method == "POST" else {}
+        return InternalPrincipal(
+            user_id="test-user-1",
+            bound_session_id=body.get("session_id"),
+        )
+
+    app.dependency_overrides[require_internal_principal] = _bound_principal
     try:
         yield
     finally:

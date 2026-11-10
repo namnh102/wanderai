@@ -205,10 +205,14 @@ export class AiChatProxyService extends AiProxyService {
   }
 
   override async chat(message: string, sessionId?: string, userId?: string) {
+    const normalizedSessionId =
+      typeof sessionId === 'string' && sessionId.trim().length > 0
+        ? sessionId.trim()
+        : undefined;
     const headers = this.buildSignedInternalHeaders(
       userId ?? '',
       'POST:/chat',
-      sessionId,
+      normalizedSessionId,
     );
 
     try {
@@ -216,7 +220,7 @@ export class AiChatProxyService extends AiProxyService {
         `${this.internalAiServiceUrl}/chat`,
         {
           message,
-          session_id: sessionId,
+          session_id: normalizedSessionId,
           user_id: userId?.trim(),
         },
         {

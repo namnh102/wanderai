@@ -12,7 +12,8 @@ client = TestClient(app)
 @pytest.fixture(autouse=True)
 def _override_internal_principal():
     app.dependency_overrides[require_internal_principal] = lambda: InternalPrincipal(
-        user_id="test-user-1"
+        user_id="test-user-1",
+        bound_session_id="test-session-123",
     )
     try:
         yield

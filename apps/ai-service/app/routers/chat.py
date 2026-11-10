@@ -39,7 +39,8 @@ class ChatResponse(BaseModel):
     session_id: str
     tools_used: List[str] = []
     tool_calls: List[ToolCallLog] = []
-    # Source URLs of the RAG documents that grounded this reply (OpenStreetMap / Wikivoyage); empty if none.
+    # Candidate source URLs retrieved from the RAG corpus (OpenStreetMap / Wikivoyage) for this query;
+    # these represent retrieved context candidates, NOT claim-level verified answer citations (W07 G5=HOLD).
     sources: List[str] = []
     retrieval_status: RetrievalStatus = "ok"
 
@@ -116,17 +117,15 @@ async def chat(
             detail="Request user_id does not match authenticated principal.",
         )
 
-    if (
-        request.session_id
-        and principal.bound_session_id
-        and request.session_id != principal.bound_session_id
-    ):
+    normalized_req_sid = (request.session_id or "").strip()
+    normalized_bound_sid = (principal.bound_session_id or "").strip()
+    if normalized_req_sid != normalized_bound_sid:
         raise HTTPException(
             status_code=403,
             detail="Request session_id does not match signed assertion session binding.",
         )
 
-    session_id = request.session_id or principal.bound_session_id or str(uuid.uuid4())
+    session_id = normalized_req_sid or str(uuid.uuid4())
 
     raw_grounding = await retrieve_grounding(request.message)
     grounding = _normalize_retrieval_result(raw_grounding)
@@ -193,7 +192,9 @@ async def clear_chat(
             status_code=403,
             detail="Query user_id does not match authenticated principal.",
         )
-    if principal.bound_session_id and principal.bound_session_id != session_id:
+    normalized_path_sid = (session_id or "").strip()
+    normalized_bound_sid = (principal.bound_session_id or "").strip()
+    if not normalized_path_sid or normalized_bound_sid != normalized_path_sid:
         raise HTTPException(
             status_code=403,
             detail="Path session_id does not match signed assertion session binding.",
