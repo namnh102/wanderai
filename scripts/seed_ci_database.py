@@ -666,6 +666,7 @@ async def seed_database(include_rag_docs: bool = False) -> None:
                 chash = hashlib.sha256(wf["content"].encode("utf-8")).hexdigest()
                 wiki_chunks.append(
                     RAGChunk(
+                        chunk_id=wf["document_id"],
                         document_id=wf["document_id"],
                         place_id=None,
                         destination_id=wf["destination_id"],
