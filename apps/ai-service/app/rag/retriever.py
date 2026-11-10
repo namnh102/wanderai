@@ -51,7 +51,20 @@ class RAGRetriever:
         pool = await self.get_pool()
         conditions = ["embedding IS NOT NULL"]
         if not include_unverified:
-            conditions.append("source_name NOT IN ('synthetic', 'mock')")
+            conditions.append("source_name IN ('osm', 'wikivoyage')")
+            conditions.append("license NOT IN ('INTERNAL-CI-FIXTURE-ONLY', 'UNVERIFIED_LEGACY')")
+            conditions.append("source_url NOT LIKE 'urn:gomate:ci-fixture:%'")
+            conditions.append(
+                """(
+                    CASE
+                        WHEN metadata IS NOT NULL AND jsonb_typeof(metadata) = 'object' THEN
+                            COALESCE(metadata->>'is_ci_fixture', 'false') <> 'true'
+                            AND COALESCE(metadata->>'user_citable', 'true') <> 'false'
+                            AND COALESCE(metadata->>'legacy_migration_backfill', 'false') <> 'true'
+                        ELSE true
+                    END
+                )"""
+            )
             conditions.append(
                 "(place_id IS NULL OR EXISTS (SELECT 1 FROM place_sources ps WHERE ps.place_id = documents.place_id))"
             )

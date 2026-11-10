@@ -1,4 +1,7 @@
 -- Reverse 20261110000000_sync_schema_drift
+-- Preserves pre-existing trips columns ("currency", "interests", "travel_style") owned by
+-- 20261001083200_add_trip_context_fields and preserves all rows and base columns in "documents".
+
 DROP INDEX IF EXISTS "documents_embedding_hnsw_idx";
 DROP INDEX IF EXISTS "documents_destination_id_idx";
 DROP INDEX IF EXISTS "documents_source_name_idx";
@@ -23,8 +26,3 @@ ALTER TABLE "documents"
   DROP COLUMN IF EXISTS "document_id";
 
 DROP TABLE IF EXISTS "dataset_registry";
-
-ALTER TABLE "trips"
-  DROP COLUMN IF EXISTS "interests",
-  DROP COLUMN IF EXISTS "travel_style",
-  DROP COLUMN IF EXISTS "currency";

@@ -476,11 +476,27 @@ def test_embeddings_valid_and_no_duplicate_chunks():
             assert await c.fetchval("SELECT count(*) FROM documents WHERE embedding_model <> $1", MODEL) == 0
             assert await c.fetchval("SELECT count(*) - count(DISTINCT (content_hash, embedding_model)) FROM documents") == 0
             assert await c.fetchval("SELECT count(*) - count(DISTINCT document_id) FROM documents WHERE source_name = 'osm'") == 0
-            wiki_count = await c.fetchval("SELECT count(*) FROM documents WHERE source_name = 'wikivoyage'")
-            assert wiki_count >= 6
-            if os.environ.get("REQUIRE_HISTORICAL_464_WIKIVOYAGE") == "1":
-                assert wiki_count == 464
             assert await c.fetchval("SELECT count(*) FROM pg_indexes WHERE indexname = 'documents_embedding_hnsw_idx'") == 1
+
+    _db(body)
+
+
+def test_historical_464_wikivoyage_corpus_presence_regression():
+    """Historical corpus regression check separated from CI engineering fixture tests (C01-F04)."""
+
+    async def body(_r, pool):
+        async with pool.acquire() as c:
+            wiki_count = await c.fetchval("SELECT count(*) FROM documents WHERE source_name = 'wikivoyage'")
+        if os.environ.get("REQUIRE_HISTORICAL_464_WIKIVOYAGE") == "1":
+            assert wiki_count == 464
+            return
+        if wiki_count != 464:
+            pytest.skip(
+                "Requires 464 historical live-crawled Wikivoyage chunks "
+                "(git_tracked_chunk_text_export_present=false in w07_b1a_existing_poi_knowledge_audit_v1.json; "
+                "CI never fabricates Wikivoyage documents)"
+            )
+        assert wiki_count == 464
 
     _db(body)
 

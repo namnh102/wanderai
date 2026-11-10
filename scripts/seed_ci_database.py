@@ -1,47 +1,58 @@
 #!/usr/bin/env python3
 """Deterministic CI Database Bootstrap & RAG Ingestion for GoMate / WanderAI (PROD-CI-05).
 
-Seeds PostgreSQL (with PostGIS + pgvector) from repository-tracked deterministic artifacts
-so Backend E2E and AI-Service RAG/Grounding integration tests run reproducibly in CI
-without live external network/LLM calls or un-exported local Docker volumes:
-
-1. 13 canonical place_categories (10 seed + 3 curated categories with canonical UUIDs).
-2. 50 destinations from database/seed/destinations.json (with canonical UUIDs for
-   ha-noi, ha-long, and da-nang, and deterministic UUIDv5 for the remaining 47).
-3. 759 verified places + OSM/Overture place_sources from data/curated/gomate_places_freeze_v2.json
-   (293 Da Nang, 188 Ha Long, 145 Hanoi, 50 Hoi An, 50 Hue, 33 Nha Trang; rating=NULL, review_count=0).
-4. 11 unsourced canonical places from data/curated/places_canonical.json + 112 legacy unsourced
-   places from database/seed/places.json x2 (123 unsourced places -> 882 total places).
-5. 8 synthetic reviews (source='synthetic', trusted=false) from data/curated/reviews_curated.json
-   and 12 quarantined invalid OSM sources from data/manifests/osm-invalid-sources.json.
-6. Dataset governance rows in dataset_registry.
-7. When --include-rag-docs is passed:
-   - Generates and embeds all 759 verified OSM RAG documents via WikivoyageIngester.ingest_canonical_places().
-   - Inserts deterministic engineering Wikivoyage destination fixture chunks (CC BY-SA 3.0)
-     clearly separated from frozen W07 scientific evaluation artifacts.
+Fail-closed safety guarantees (CORRECTIVE-01 / C01-F01 & C01-F03):
+- Requires explicit CI_DATABASE_URL (zero fallback to DATABASE_URL or standard 'wanderai' dev DB).
+- Requires ALLOW_DESTRUCTIVE_CI_SEED=1 and CI=true (or GITHUB_ACTIONS=true).
+- Rejects production/staging/development runtime environment flags and non-loopback hosts.
+- Enforces target DB name matching ^wanderai_ci(_[a-z0-9_]+)?$ both in parsed DSN and via live
+  PostgreSQL `SELECT current_database()` BEFORE executing `TRUNCATE ... CASCADE`.
+- Never attributes synthetic CI engineering fixtures as Wikivoyage / CC BY-SA 3.0; any CI-only
+  RAG fixture chunks use `source_name='ci_fixture'`, `urn:gomate:ci-fixture:*`,
+  `license='INTERNAL-CI-FIXTURE-ONLY'`, and non-citable metadata isolated by RAGRetriever.
 """
 
 from __future__ import annotations
 
 import argparse
 import asyncio
+from collections.abc import Mapping
 from datetime import datetime, timezone
 import hashlib
+import ipaddress
 import json
 import os
 from pathlib import Path
+import re
 import sys
+from typing import Any
+from urllib.parse import urlsplit, urlunsplit
 import uuid
 
 import asyncpg
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 AI_SERVICE_DIR = REPO_ROOT / "apps" / "ai-service"
-sys.path.insert(0, str(AI_SERVICE_DIR))
+if str(AI_SERVICE_DIR) not in sys.path:
+    sys.path.insert(0, str(AI_SERVICE_DIR))
 
-DATABASE_URL = os.environ.get(
-    "DATABASE_URL", "postgresql://postgres:postgres@localhost:5432/wanderai"
-).split("?")[0]
+ALLOWED_CI_DB_PATTERN = re.compile(r"^wanderai_ci(_[a-z0-9_]+)?$")
+ALLOWED_LOOPBACK_HOSTS = frozenset({"localhost", "127.0.0.1", "::1"})
+FORBIDDEN_ENV_VALUES = frozenset({"production", "prod", "staging", "development", "dev"})
+ENV_INDICATOR_KEYS = ("NODE_ENV", "APP_ENV", "ENVIRONMENT", "DEPLOY_ENV")
+
+CI_FIXTURE_SOURCE_NAME = "ci_fixture"
+CI_FIXTURE_LICENSE = "INTERNAL-CI-FIXTURE-ONLY"
+CI_FIXTURE_URN_PREFIX = "urn:gomate:ci-fixture:"
+CI_FIXTURE_ATTRIBUTION = (
+    "GoMate internal CI engineering fixture — synthetic text, NOT Wikivoyage, "
+    "NOT for user citation or scientific evaluation."
+)
+
+
+class UnsafeSeedTargetError(RuntimeError):
+    """Raised when destructive CI seeding is invoked outside an explicit isolated CI database."""
+
 
 CANONICAL_DESTINATION_IDS: dict[str, str] = {
     "ha-noi": "071e1382-7972-4dde-af61-dac9ef2c3c69",
@@ -109,9 +120,203 @@ def _cat_uuid(name: str) -> uuid.UUID:
     return uuid.uuid5(uuid.NAMESPACE_DNS, f"wanderai.category.{name}")
 
 
-async def seed_database(include_rag_docs: bool = False) -> None:
-    conn = await asyncpg.connect(DATABASE_URL)
+def validate_ci_seed_environment(env: Mapping[str, str] | None = None) -> None:
+    """Fail closed unless explicit destructive CI flags are present and non-CI envs are absent."""
+    active_env = os.environ if env is None else env
+
+    if active_env.get("ALLOW_DESTRUCTIVE_CI_SEED") != "1":
+        raise UnsafeSeedTargetError(
+            "Refusing destructive CI seed: ALLOW_DESTRUCTIVE_CI_SEED='1' is required."
+        )
+
+    is_ci = str(active_env.get("CI", "")).lower() == "true"
+    is_gha = str(active_env.get("GITHUB_ACTIONS", "")).lower() == "true"
+    if not (is_ci or is_gha):
+        raise UnsafeSeedTargetError(
+            "Refusing destructive CI seed: CI='true' or GITHUB_ACTIONS='true' is required."
+        )
+
+    for key in ENV_INDICATOR_KEYS:
+        raw_val = active_env.get(key)
+        if raw_val is None or raw_val.strip() == "":
+            continue
+        normalized = raw_val.strip().lower()
+        if normalized in FORBIDDEN_ENV_VALUES or normalized not in {"ci", "test"}:
+            raise UnsafeSeedTargetError(
+                f"Refusing destructive CI seed: forbidden environment {key}={raw_val!r} "
+                "(only unset, 'ci', or 'test' is allowed)."
+            )
+
+
+def validate_ci_seed_dsn(raw_url: str | None) -> tuple[str, str]:
+    """Validate CI PostgreSQL DSN and return (clean_asyncpg_dsn, db_name)."""
+    if raw_url is None or not raw_url.strip():
+        raise UnsafeSeedTargetError(
+            "Refusing destructive CI seed: CI_DATABASE_URL is missing or empty "
+            "(fallback to DATABASE_URL / 'wanderai' is forbidden)."
+        )
+
+    parsed = urlsplit(raw_url.strip())
+    if parsed.scheme not in {"postgresql", "postgres"}:
+        raise UnsafeSeedTargetError(
+            f"Refusing destructive CI seed: unsupported URL scheme {parsed.scheme!r}."
+        )
+
+    hostname = (parsed.hostname or "").lower()
+    if hostname not in ALLOWED_LOOPBACK_HOSTS:
+        raise UnsafeSeedTargetError(
+            f"Refusing destructive CI seed: non-loopback host {parsed.hostname!r} is forbidden."
+        )
+
+    db_path = parsed.path.lstrip("/")
+    if not db_path or "/" in db_path:
+        raise UnsafeSeedTargetError(
+            f"Refusing destructive CI seed: invalid database path {parsed.path!r}."
+        )
+
+    if not ALLOWED_CI_DB_PATTERN.fullmatch(db_path):
+        raise UnsafeSeedTargetError(
+            f"Refusing destructive CI seed: target database {db_path!r} does not match "
+            f"dedicated CI pattern {ALLOWED_CI_DB_PATTERN.pattern!r}."
+        )
+
+    clean_dsn = urlunsplit((parsed.scheme, parsed.netloc, f"/{db_path}", "", ""))
+    return clean_dsn, db_path
+
+
+def resolve_verified_ci_seed_target(
+    ci_database_url: str | None = None,
+    env: Mapping[str, str] | None = None,
+) -> tuple[str, str]:
+    """Resolve and validate both environment and target CI DSN without any fallback."""
+    active_env = os.environ if env is None else env
+    validate_ci_seed_environment(active_env)
+    candidate_url = ci_database_url if ci_database_url is not None else active_env.get("CI_DATABASE_URL")
+    return validate_ci_seed_dsn(candidate_url)
+
+
+async def verify_live_ci_database_connection(
+    conn: Any, expected_db_name: str
+) -> dict[str, Any]:
+    """Verify live PostgreSQL session identity BEFORE executing TRUNCATE ... CASCADE."""
+    live_db = await conn.fetchval("SELECT current_database()")
+    if live_db != expected_db_name or not ALLOWED_CI_DB_PATTERN.fullmatch(str(live_db or "")):
+        raise UnsafeSeedTargetError(
+            f"Refusing destructive CI seed: live current_database()={live_db!r} "
+            f"does not match expected CI database {expected_db_name!r}."
+        )
+
+    in_recovery = await conn.fetchval("SELECT pg_is_in_recovery()")
+    if in_recovery is not False:
+        raise UnsafeSeedTargetError(
+            f"Refusing destructive CI seed: unexpected pg_is_in_recovery()={in_recovery!r}."
+        )
+
+    server_addr = await conn.fetchval("SELECT host(inet_server_addr())")
+    if server_addr is not None:
+        try:
+            ip_obj = ipaddress.ip_address(str(server_addr))
+        except ValueError as exc:
+            raise UnsafeSeedTargetError(
+                f"Refusing destructive CI seed: unparseable inet_server_addr()={server_addr!r}."
+            ) from exc
+        if not ip_obj.is_loopback:
+            raise UnsafeSeedTargetError(
+                f"Refusing destructive CI seed: live server address {server_addr!r} is not loopback."
+            )
+
+    return {
+        "current_database": live_db,
+        "in_recovery": in_recovery,
+        "server_addr": server_addr,
+    }
+
+
+def build_ci_engineering_fixture_chunks() -> list[Any]:
+    """Build synthetic CI engineering fixture chunks with explicit non-Wikivoyage provenance.
+
+    Note: Historical 464 live-crawled Wikivoyage chunks have git_tracked_chunk_text_export_present=false
+    (see data/evaluation/w07/w07_b1a_existing_poi_knowledge_audit_v1.json). These CI-only chunks
+    never impersonate Wikivoyage or CC BY-SA 3.0 and are excluded from production/user retrieval.
+    """
+    from app.rag.chunker import RAGChunk
+
+    fixtures_raw = [
+        {
+            "document_id": "ci-fixture-da-nang-overview-0",
+            "destination_id": str(_dest_uuid("da-nang")),
+            "source_url": f"{CI_FIXTURE_URN_PREFIX}da-nang-overview",
+            "title": "CI Engineering Fixture — Da Nang Overview",
+            "section_heading": "CI Synthetic Overview",
+            "topic": "ci_engineering_fixture",
+            "category": "attraction",
+            "content": (
+                "[INTERNAL CI FIXTURE — NOT WIKIVOYAGE] Synthetic engineering test document "
+                "for Da Nang pgvector plumbing validation only."
+            ),
+        },
+        {
+            "document_id": "ci-fixture-ha-noi-overview-0",
+            "destination_id": str(_dest_uuid("ha-noi")),
+            "source_url": f"{CI_FIXTURE_URN_PREFIX}ha-noi-overview",
+            "title": "CI Engineering Fixture — Ha Noi Overview",
+            "section_heading": "CI Synthetic Overview",
+            "topic": "ci_engineering_fixture",
+            "category": "culture",
+            "content": (
+                "[INTERNAL CI FIXTURE — NOT WIKIVOYAGE] Synthetic engineering test document "
+                "for Ha Noi pgvector plumbing validation only."
+            ),
+        },
+    ]
+
+    chunks: list[RAGChunk] = []
+    retrieved_ts = datetime(2026, 11, 10, 0, 0, 0, tzinfo=timezone.utc)
+    for item in fixtures_raw:
+        chash = hashlib.sha256(item["content"].encode("utf-8")).hexdigest()
+        chunks.append(
+            RAGChunk(
+                chunk_id=item["document_id"],
+                document_id=item["document_id"],
+                place_id=None,
+                destination_id=item["destination_id"],
+                source_name=CI_FIXTURE_SOURCE_NAME,
+                source_url=item["source_url"],
+                license=CI_FIXTURE_LICENSE,
+                attribution=CI_FIXTURE_ATTRIBUTION,
+                language="en",
+                title=item["title"],
+                section_heading=item["section_heading"],
+                topic=item["topic"],
+                category=item["category"],
+                content=item["content"],
+                content_hash=chash,
+                metadata={
+                    "fixture_type": "ci_engineering_fixture",
+                    "is_ci_fixture": True,
+                    "scientific_corpus": False,
+                    "user_citable": False,
+                },
+                retrieved_at=retrieved_ts,
+            )
+        )
+    return chunks
+
+
+async def seed_database(
+    include_rag_docs: bool = False,
+    ci_database_url: str | None = None,
+    env: Mapping[str, str] | None = None,
+) -> dict[str, Any]:
+    clean_dsn, expected_db_name = resolve_verified_ci_seed_target(
+        ci_database_url=ci_database_url,
+        env=env,
+    )
+
+    conn = await asyncpg.connect(clean_dsn)
     try:
+        live_identity = await verify_live_ci_database_connection(conn, expected_db_name)
+
         now = datetime.now(timezone.utc)
         seed_dir = REPO_ROOT / "database" / "seed"
         curated_dir = REPO_ROOT / "data" / "curated"
@@ -151,7 +356,7 @@ async def seed_database(include_rag_docs: bool = False) -> None:
         }
 
         async with conn.transaction():
-            # Clean existing domain tables for deterministic state
+            # Verified dedicated CI DB above — safe to reset domain tables deterministically
             await conn.execute(
                 """
                 TRUNCATE TABLE
@@ -545,18 +750,26 @@ async def seed_database(include_rag_docs: bool = False) -> None:
             "SELECT count(*) FROM place_sources WHERE source_name = 'osm'"
         )
         print(
-            f"[seed_ci_database] Seeded places={total_places}, verified_osm_sources={total_osm}"
+            f"[seed_ci_database] Verified target DB={live_identity['current_database']}; "
+            f"seeded places={total_places}, verified_osm_sources={total_osm}"
         )
 
     finally:
         await conn.close()
 
+    summary: dict[str, Any] = {
+        "database": expected_db_name,
+        "places": int(total_places),
+        "verified_osm_sources": int(total_osm),
+        "osm_rag_chunks": 0,
+        "ci_fixture_chunks": 0,
+    }
+
     if include_rag_docs:
-        from app.rag.chunker import RAGChunk
         from app.rag.ingestion import WikivoyageIngester
         from app.rag.retriever import RAGRetriever
 
-        retriever = RAGRetriever(database_url=DATABASE_URL)
+        retriever = RAGRetriever(database_url=clean_dsn)
         ingester = WikivoyageIngester(retriever=retriever)
         try:
             osm_report = await ingester.ingest_canonical_places()
@@ -565,145 +778,27 @@ async def seed_database(include_rag_docs: bool = False) -> None:
                 f"(upserted={osm_report['chunks_upserted']})"
             )
 
-            # Deterministic engineering Wikivoyage destination fixture chunks (CC BY-SA 3.0)
-            # Note: Historical 464 live-crawled Wikivoyage chunks have git_tracked_chunk_text_export_present=false
-            # (see data/evaluation/w07/w07_b1a_existing_poi_knowledge_audit_v1.json). These engineering
-            # fixtures provide verified CC BY-SA 3.0 Wikivoyage coverage for CI integration tests without
-            # mutating frozen scientific assets.
-            wiki_fixtures_raw = [
-                {
-                    "document_id": "wikivoyage_Da_Nang_Eat_0",
-                    "destination_id": str(_dest_uuid("da-nang")),
-                    "source_url": "https://en.wikivoyage.org/wiki/Da_Nang#Eat",
-                    "attribution": "Text is available under CC BY-SA 3.0 from Wikivoyage contributors (Da Nang).",
-                    "title": "Da Nang - Eat",
-                    "section_heading": "Eat",
-                    "topic": "culinary",
-                    "category": "restaurant",
-                    "content": (
-                        "Đà Nẵng có món ăn đặc trưng nào? Món ăn đặc trưng của Đà Nẵng bao gồm Mì Quảng, "
-                        "Bánh tráng cuốn thịt heo, Bún chả cá Đà Nẵng, Bánh xèo, Gỏi cá Nam Ô và hải sản tươi sống "
-                        "(Da Nang Eat / Culinary Guide)."
-                    ),
-                },
-                {
-                    "document_id": "wikivoyage_Da_Nang_See_0",
-                    "destination_id": str(_dest_uuid("da-nang")),
-                    "source_url": "https://en.wikivoyage.org/wiki/Da_Nang#See",
-                    "attribution": "Text is available under CC BY-SA 3.0 from Wikivoyage contributors (Da Nang).",
-                    "title": "Da Nang - See",
-                    "section_heading": "See",
-                    "topic": "sightseeing",
-                    "category": "attraction",
-                    "content": (
-                        "Da Nang (Đà Nẵng) sightseeing highlights include the Marble Mountains (Ngũ Hành Sơn), "
-                        "Son Tra Peninsula and Linh Ung Pagoda, the Dragon Bridge (Cầu Rồng) spanning the Han River, "
-                        "My Khe Beach (Bãi biển Mỹ Khê), and the Museum of Cham Sculpture."
-                    ),
-                },
-                {
-                    "document_id": "wikivoyage_Hanoi_See_0",
-                    "destination_id": str(_dest_uuid("ha-noi")),
-                    "source_url": "https://en.wikivoyage.org/wiki/Hanoi#See",
-                    "attribution": "Text is available under CC BY-SA 3.0 from Wikivoyage contributors (Hanoi).",
-                    "title": "Hanoi - See",
-                    "section_heading": "See",
-                    "topic": "sightseeing",
-                    "category": "culture",
-                    "content": (
-                        "Hanoi (Hà Nội) cultural and historic landmarks include Hoan Kiem Lake (Hồ Hoàn Kiếm), "
-                        "the Temple of Literature (Văn Miếu - Quốc Tử Giám), the Ho Chi Minh Mausoleum and "
-                        "Ho Chi Minh Museum (Bảo tàng Hồ Chí Minh), the Imperial Citadel of Thang Long, and the Old Quarter."
-                    ),
-                },
-                {
-                    "document_id": "wikivoyage_Hoi_An_See_0",
-                    "destination_id": str(_dest_uuid("hoi-an")),
-                    "source_url": "https://en.wikivoyage.org/wiki/Hoi_An#See",
-                    "attribution": "Text is available under CC BY-SA 3.0 from Wikivoyage contributors (Hoi An).",
-                    "title": "Hoi An - See",
-                    "section_heading": "See",
-                    "topic": "sightseeing",
-                    "category": "culture",
-                    "content": (
-                        "Hoi An (Hội An) Ancient Town is a UNESCO World Heritage trading port famous for the "
-                        "Japanese Covered Bridge (Chùa Cầu), historic merchant assembly halls, lantern-lit streets "
-                        "along the Thu Bon River, and An Bang Beach."
-                    ),
-                },
-                {
-                    "document_id": "wikivoyage_Hue_See_0",
-                    "destination_id": str(_dest_uuid("hue")),
-                    "source_url": "https://en.wikivoyage.org/wiki/Hue#See",
-                    "attribution": "Text is available under CC BY-SA 3.0 from Wikivoyage contributors (Hue).",
-                    "title": "Hue - See",
-                    "section_heading": "See",
-                    "topic": "sightseeing",
-                    "category": "culture",
-                    "content": (
-                        "Hue (Huế) Imperial City (Đại Nội Huế) along the Perfume River features the Nguyen Dynasty "
-                        "Citadel, Thien Mu Pagoda, and the royal tombs of Minh Mang, Khai Dinh, and Tu Duc."
-                    ),
-                },
-                {
-                    "document_id": "wikivoyage_Ha_Long_Bay_See_0",
-                    "destination_id": str(_dest_uuid("ha-long")),
-                    "source_url": "https://en.wikivoyage.org/wiki/Ha_Long_Bay#See",
-                    "attribution": "Text is available under CC BY-SA 3.0 from Wikivoyage contributors (Ha Long Bay).",
-                    "title": "Ha Long Bay - See",
-                    "section_heading": "See",
-                    "topic": "sightseeing",
-                    "category": "attraction",
-                    "content": (
-                        "Ha Long Bay (Vịnh Hạ Long) is a UNESCO World Heritage karst seascape in Quang Ninh province "
-                        "with limestone islands, Sung Sot Cave, Dau Go Cave, Ti Top Island, and Tuan Chau Marina."
-                    ),
-                },
-            ]
-
-            wiki_chunks: list[RAGChunk] = []
-            for wf in wiki_fixtures_raw:
-                chash = hashlib.sha256(wf["content"].encode("utf-8")).hexdigest()
-                wiki_chunks.append(
-                    RAGChunk(
-                        chunk_id=wf["document_id"],
-                        document_id=wf["document_id"],
-                        place_id=None,
-                        destination_id=wf["destination_id"],
-                        source_name="wikivoyage",
-                        source_url=wf["source_url"],
-                        license="CC BY-SA 3.0",
-                        attribution=wf["attribution"],
-                        language="en",
-                        title=wf["title"],
-                        section_heading=wf["section_heading"],
-                        topic=wf["topic"],
-                        category=wf["category"],
-                        content=wf["content"],
-                        content_hash=chash,
-                        metadata={
-                            "fixture_type": "ci_engineering_wikivoyage_fixture",
-                            "scientific_corpus": False,
-                        },
-                        retrieved_at=datetime.now(timezone.utc),
-                    )
-                )
-
-            saved_wiki = await retriever.insert_chunks(wiki_chunks)
+            fixture_chunks = build_ci_engineering_fixture_chunks()
+            saved_fixtures = await retriever.insert_chunks(fixture_chunks)
             print(
-                f"[seed_ci_database] Ingested engineering Wikivoyage RAG fixture chunks: {len(wiki_chunks)} "
-                f"(upserted={saved_wiki})"
+                f"[seed_ci_database] Ingested isolated CI engineering fixture chunks "
+                f"(source_name='{CI_FIXTURE_SOURCE_NAME}', non-citable): {len(fixture_chunks)} "
+                f"(upserted={saved_fixtures})"
             )
+            summary["osm_rag_chunks"] = int(osm_report["documents_generated"])
+            summary["ci_fixture_chunks"] = int(saved_fixtures)
         finally:
             await retriever.close()
 
+    return summary
+
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Seed CI PostgreSQL database.")
+    parser = argparse.ArgumentParser(description="Seed dedicated CI PostgreSQL database.")
     parser.add_argument(
         "--include-rag-docs",
         action="store_true",
-        help="Also generate and embed 759 OSM RAG documents + engineering Wikivoyage fixture chunks.",
+        help="Also generate and embed 759 verified OSM RAG documents + isolated non-citable CI fixture chunks.",
     )
     args = parser.parse_args()
     asyncio.run(seed_database(include_rag_docs=args.include_rag_docs))
