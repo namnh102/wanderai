@@ -871,12 +871,25 @@ class TestC01F03AndF04FixtureIsolationAndHistoricalGap:
 
                 # 3. RAGService + FastAPI POST /chat never expose or cite ci_fixture chunks
                 rag_svc = RAGService(retriever=retriever)
-                probe_text = fixture_rows[0]["content"]
-                rag_res = await rag_svc.retrieve_with_status(probe_text, top_k=5)
+                probe_query = (
+                    "Synthetic engineering test document for Da Nang pgvector plumbing validation"
+                )
+                # Confirm probe_query strongly matches ci_fixture when unverified opt-in is enabled
+                opt_in_probe = await retriever.search(
+                    probe_query,
+                    top_k=3,
+                    source_name="ci_fixture",
+                    min_similarity=0.7,
+                    include_unverified=True,
+                )
+                assert len(opt_in_probe) >= 1
+
+                rag_res = await rag_svc.retrieve_with_status(probe_query, top_k=5)
                 assert all(
                     not u.startswith("urn:gomate:ci-fixture:") for u in rag_res.sources
                 )
                 assert "[INTERNAL CI FIXTURE" not in rag_res.context
+                assert "[Source: ci_fixture" not in rag_res.context
 
                 async def _principal_override(request: Request) -> InternalPrincipal:
                     body = await request.json() if request.method == "POST" else {}
@@ -895,7 +908,7 @@ class TestC01F03AndF04FixtureIsolationAndHistoricalGap:
                         mock_llm.return_value = {"response": "ok", "tool_calls": []}
                         resp = test_client.post(
                             "/chat",
-                            json={"message": probe_text, "session_id": "fixture-iso-1"},
+                            json={"message": probe_query, "session_id": "fixture-iso-1"},
                         )
                     assert resp.status_code == 200
                     payload = resp.json()
@@ -905,6 +918,7 @@ class TestC01F03AndF04FixtureIsolationAndHistoricalGap:
                     )
                     sent_prompt = mock_llm.call_args.kwargs["message"]
                     assert "[INTERNAL CI FIXTURE" not in sent_prompt
+                    assert "[Source: ci_fixture" not in sent_prompt
                     assert "urn:gomate:ci-fixture:" not in sent_prompt
                 finally:
                     app.dependency_overrides.pop(require_internal_principal, None)
