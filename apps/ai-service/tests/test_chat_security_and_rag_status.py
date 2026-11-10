@@ -13,17 +13,17 @@ from fastapi.testclient import TestClient
 import pytest
 
 from app.config import settings
-from app.llm.gemini import (
-    SESSION_STORAGE_LIMITATION,
-    GeminiProvider,
-    LLMProviderError,
-    SessionOwnershipError,
-)
 from app.main import app
 from app.routers.chat import _TOOLS
 from app.security.internal_auth import (
     INTERNAL_ASSERTION_HEADER,
     create_internal_assertion,
+)
+from app.services.chat_llm import (
+    SESSION_STORAGE_LIMITATION,
+    GeminiProvider,
+    LLMProviderError,
+    SessionOwnershipError,
 )
 from app.services.rag import RAGService, RetrievalResult
 from app.tools.search_hotels import SearchHotelsTool

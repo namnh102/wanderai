@@ -5,8 +5,8 @@ import uuid
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
 
-from app.llm.gemini import LLMProviderError, SessionOwnershipError, gemini_provider
 from app.security.internal_auth import InternalPrincipal, require_internal_principal
+from app.services.chat_llm import LLMProviderError, SessionOwnershipError, gemini_provider
 from app.services.rag import RAGService, RetrievalResult, RetrievalStatus
 from app.tools.calculate_budget import CalculateBudgetTool
 from app.tools.get_weather import GetWeatherTool
