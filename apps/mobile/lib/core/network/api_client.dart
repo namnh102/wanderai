@@ -1,11 +1,23 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../constants/app_constants.dart';
 
-final apiClientProvider = Provider<Dio>((ref) {
+/// Builds a configured [Dio] client targeting the NestJS backend gateway.
+Dio createApiClient({
+  String? baseUrlOverride,
+  bool isReleaseMode = kReleaseMode,
+  bool isProfileMode = kProfileMode,
+}) {
+  final resolvedBaseUrl = AppConstants.resolveApiBaseUrl(
+    rawUrl: baseUrlOverride,
+    isReleaseMode: isReleaseMode,
+    isProfileMode: isProfileMode,
+  );
+
   final dio = Dio(BaseOptions(
-    baseUrl: AppConstants.apiBaseUrl,
+    baseUrl: resolvedBaseUrl,
     connectTimeout: const Duration(seconds: 15),
     receiveTimeout: const Duration(seconds: 15),
     headers: {'Content-Type': 'application/json'},
@@ -26,4 +38,8 @@ final apiClientProvider = Provider<Dio>((ref) {
   ));
 
   return dio;
+}
+
+final apiClientProvider = Provider<Dio>((ref) {
+  return createApiClient();
 });

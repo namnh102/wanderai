@@ -4,23 +4,17 @@ import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { TransformInterceptor } from './common/interceptors/transform.interceptor';
+import {
+  buildNestCorsOptions,
+  resolveNetworkConfig,
+} from './config/network.config';
 
 async function bootstrap() {
+  const networkConfig = resolveNetworkConfig(process.env);
   const app = await NestFactory.create(AppModule);
 
-  // CORS — cho phép Flutter web (localhost:4200) và mobile
-  app.enableCors({
-    origin: [
-      'http://localhost:4200',
-      'http://localhost:5000',
-      'http://localhost:3000',
-      'http://127.0.0.1:4200',
-      'http://127.0.0.1:5000',
-    ],
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
-    credentials: true,
-  });
+  // Explicit CORS allowlist with fail-closed wildcard rejection when credentials are enabled
+  app.enableCors(buildNestCorsOptions(networkConfig.corsOrigins));
 
   // Global pipes, filters, interceptors
   app.useGlobalPipes(
@@ -43,6 +37,10 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
 
-  await app.listen(3000);
+  if (networkConfig.host) {
+    await app.listen(networkConfig.port, networkConfig.host);
+  } else {
+    await app.listen(networkConfig.port);
+  }
 }
 bootstrap();
