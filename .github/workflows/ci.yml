@@ -74,13 +74,15 @@ jobs:
           export JWT_REFRESH_SECRET="test-refresh-$(node -e "process.stdout.write(require('crypto').randomBytes(24).toString('hex'))")"
           export AI_INTERNAL_AUTH_SECRET="test-internal-$(node -e "process.stdout.write(require('crypto').randomBytes(24).toString('hex'))")"
           export AI_SERVICE_URL="http://127.0.0.1:8000"
-          (cd ../ai-service && uvicorn app.main:app --host 127.0.0.1 --port 8000 >/tmp/ai-service-e2e.log 2>&1 &)
+          (cd ../ai-service && uvicorn app.main:app --host 127.0.0.1 --port 8000 >/tmp/ai-service-e2e.log 2>&1) &
+          UVICORN_PID=$!
+          trap 'kill "$UVICORN_PID" 2>/dev/null || true' EXIT
           for i in $(seq 1 30); do
             curl -sf http://127.0.0.1:8000/health >/dev/null && break
             sleep 1
           done
           curl -sf http://127.0.0.1:8000/health
-          pnpm exec jest --config ./test/jest-e2e.json --runInBand
+          pnpm exec jest --config ./test/jest-e2e.json --runInBand --forceExit
 
   ai-service:
     runs-on: ubuntu-latest

@@ -120,8 +120,14 @@ describe('AI Chat Proxy (e2e)', () => {
     });
 
     it('6. should delegate authenticated DELETE /ai/chat/:sessionId to AiChatProxyService', async () => {
+      const proxyWithClear = aiProxyService as unknown as {
+        clearChatSession: (
+          sessionId: string,
+          userId: string,
+        ) => Promise<{ status: string; session_id: string }>;
+      };
       const clearSpy = jest
-        .spyOn(aiProxyService as any, 'clearSession')
+        .spyOn(proxyWithClear, 'clearChatSession')
         .mockResolvedValueOnce({ status: 'cleared', session_id: 'test-session-delete-1' });
 
       const response = await request(app.getHttpServer())
