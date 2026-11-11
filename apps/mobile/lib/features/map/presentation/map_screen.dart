@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -38,6 +39,9 @@ class _MapScreenState extends ConsumerState<MapScreen>
   Timer? _pillDismissTimer;
   bool _showLocationPill = true;
   final TextEditingController _searchController = TextEditingController();
+  final GlobalKey _previewSheetKey = GlobalKey();
+  ScaffoldFeatureController<SnackBar, SnackBarClosedReason>?
+      _locationSnackBarController;
 
   @override
   void initState() {
@@ -144,6 +148,71 @@ class _MapScreenState extends ConsumerState<MapScreen>
     }
   }
 
+  /// Displays a floating GPS recovery SnackBar positioned safely above
+  /// [PlacePreviewSheet] and bottom map controls whenever a marker is selected,
+  /// preventing occlusion of the `Xem chi tiết` CTA.
+  void _showLocationErrorSnackBar(UserLocationState userLoc) {
+    if (!mounted) return;
+    final isDenied = userLoc.status == UserLocationStatus.denied;
+    final isUnavailable = userLoc.status == UserLocationStatus.unavailable;
+    if (!isDenied && !isUnavailable) return;
+
+    final String message;
+    if (isDenied &&
+        userLoc.permissionState == LocationPermissionState.deniedForever) {
+      message =
+          'Quyền vị trí đã bị từ chối vĩnh viễn. Vui lòng bật trong Cài đặt.';
+    } else {
+      message = userLoc.label ?? 'Không xác định được vị trí';
+    }
+
+    final hasSelectedPlace = ref.read(mapProvider).selectedPlace != null;
+    final mq = MediaQuery.of(context);
+    double bottomMargin = 80.0 + mq.padding.bottom;
+    if (hasSelectedPlace) {
+      final sheetBox =
+          _previewSheetKey.currentContext?.findRenderObject() as RenderBox?;
+      final sheetHeight =
+          sheetBox?.hasSize == true ? sheetBox!.size.height : 280.0;
+      final minAboveSheet = sheetHeight + 12.0;
+      final desiredAboveControls =
+          math.max(sheetHeight + 64.0, 396.0 + mq.padding.bottom);
+      final maxAllowed =
+          math.max(minAboveSheet, mq.size.height - mq.padding.top - 220.0);
+      bottomMargin = desiredAboveControls.clamp(minAboveSheet, maxAllowed);
+    }
+
+    final messenger = ScaffoldMessenger.of(context);
+    messenger.removeCurrentSnackBar();
+    late final ScaffoldFeatureController<SnackBar, SnackBarClosedReason>
+        controller;
+    controller = messenger.showSnackBar(
+      SnackBar(
+        key: const Key('map_location_error_snackbar'),
+        behavior: SnackBarBehavior.floating,
+        margin: EdgeInsets.fromLTRB(12, 0, 12, bottomMargin),
+        content: Text(message),
+        action: SnackBarAction(
+          label: 'Mở cài đặt',
+          onPressed: () {
+            if (isDenied) {
+              ref.read(userLocationProvider.notifier).openAppSettings();
+            } else {
+              ref.read(userLocationProvider.notifier).openLocationSettings();
+            }
+          },
+        ),
+        duration: const Duration(seconds: 6),
+      ),
+    );
+    _locationSnackBarController = controller;
+    controller.closed.then((_) {
+      if (_locationSnackBarController == controller) {
+        _locationSnackBarController = null;
+      }
+    });
+  }
+
   /// "Vị trí của tôi": explicit request. First tap asks for permission and a
   /// fix; later taps refresh the fix and recenter. The camera is only moved
   /// here, never on passive location updates.
@@ -152,40 +221,13 @@ class _MapScreenState extends ConsumerState<MapScreen>
     final pos = await ref.read(userLocationProvider.notifier).request();
     if (!mounted) return;
     if (pos == null) {
-      final userLoc = ref.read(userLocationProvider);
-      final label = userLoc.label ?? 'Không xác định được vị trí';
-      if (userLoc.status == UserLocationStatus.denied) {
-        ScaffoldMessenger.of(context)
-          ..hideCurrentSnackBar()
-          ..showSnackBar(
-            SnackBar(
-              content: Text(label),
-              action: SnackBarAction(
-                label: 'Mở cài đặt',
-                onPressed: () {
-                  ref.read(userLocationProvider.notifier).openAppSettings();
-                },
-              ),
-              duration: const Duration(seconds: 6),
-            ),
-          );
-      } else if (userLoc.status == UserLocationStatus.unavailable) {
-        ScaffoldMessenger.of(context)
-          ..hideCurrentSnackBar()
-          ..showSnackBar(
-            SnackBar(
-              content: Text(label),
-              action: SnackBarAction(
-                label: 'Mở cài đặt',
-                onPressed: () {
-                  ref.read(userLocationProvider.notifier).openLocationSettings();
-                },
-              ),
-              duration: const Duration(seconds: 6),
-            ),
-          );
-      }
+      _showLocationErrorSnackBar(ref.read(userLocationProvider));
       return;
+    }
+
+    if (_locationSnackBarController != null) {
+      ScaffoldMessenger.of(context).removeCurrentSnackBar();
+      _locationSnackBarController = null;
     }
 
     // Zoom policy: if zoomed out (< 14.0), zoom in to 15.0; if already >= 14.0, keep current zoom
@@ -230,6 +272,21 @@ class _MapScreenState extends ConsumerState<MapScreen>
         _searchController.clear();
       }
     });
+    // Reposition active GPS error SnackBar whenever PlacePreviewSheet opens/closes
+    // so `Xem chi tiết` is never occluded.
+    ref.listen<PlaceModel?>(
+      mapProvider.select((s) => s.selectedPlace),
+      (prev, next) {
+        if ((prev == null) != (next == null) &&
+            _locationSnackBarController != null) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted && _locationSnackBarController != null) {
+              _showLocationErrorSnackBar(ref.read(userLocationProvider));
+            }
+          });
+        }
+      },
+    );
 
     return Scaffold(
       body: Stack(
@@ -651,6 +708,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
               right: 0,
               bottom: 0,
               child: PlacePreviewSheet(
+                key: _previewSheetKey,
                 place: state.selectedPlace!,
                 distanceKm: distanceFromUserKm(
                   userPos,

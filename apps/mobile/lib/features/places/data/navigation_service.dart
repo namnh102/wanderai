@@ -1,9 +1,35 @@
 import 'package:flutter/foundation.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 /// Hint shown before external navigation opens.
 const String navigationHintText = 'Điều hướng sẽ mở ứng dụng bản đồ';
+
+/// Vietnamese error feedback shown when external link or map handoff fails.
+const String directionsOpenFailedText =
+    'Không thể mở ứng dụng bản đồ để chỉ đường.';
+const String externalLinkOpenFailedText =
+    'Không thể mở liên kết ngoài ứng dụng.';
+const String citationLinkOpenFailedText =
+    'Không thể mở liên kết nguồn tham khảo.';
+
+/// Scoped external URI schemes permitted by GoMate and declared in Android `<queries>`.
+const Set<String> allowedExternalSchemes = {'https', 'http', 'geo', 'tel'};
+
+bool isAllowedExternalUri(Uri uri) {
+  final scheme = uri.scheme.toLowerCase();
+  if (!allowedExternalSchemes.contains(scheme)) return false;
+  if ((scheme == 'https' || scheme == 'http') && uri.host.trim().isEmpty) {
+    return false;
+  }
+  if ((scheme == 'geo' || scheme == 'tel') &&
+      uri.path.trim().isEmpty &&
+      uri.query.trim().isEmpty) {
+    return false;
+  }
+  return true;
+}
 
 enum NavPlatform { web, android, ios, desktop }
 
@@ -80,14 +106,50 @@ List<Uri> directionsCandidates({
 
 typedef UriOpener = Future<bool> Function(Uri uri);
 
-Future<bool> _defaultOpen(Uri uri) async {
+/// Opens an external [uri] only if its scheme is in [allowedExternalSchemes].
+/// For `geo:` URIs, checks `canLaunchUrl` first so `openDirections` can fall
+/// back cleanly to Google Maps HTTPS when no native map app is installed.
+/// For `https`/`http`/`tel`, prefers `LaunchMode.externalApplication` and falls
+/// back to `LaunchMode.platformDefault` (e.g. Custom Tabs / system dialer).
+Future<bool> defaultOpenExternalUri(Uri uri) async {
+  if (!isAllowedExternalUri(uri)) return false;
   try {
-    if (!await canLaunchUrl(uri)) return false;
-    return await launchUrl(uri, mode: LaunchMode.externalApplication);
+    final scheme = uri.scheme.toLowerCase();
+    if (scheme == 'geo') {
+      if (!await canLaunchUrl(uri)) return false;
+      return await launchUrl(uri, mode: LaunchMode.externalApplication);
+    }
+    if (await canLaunchUrl(uri)) {
+      final opened = await launchUrl(uri, mode: LaunchMode.externalApplication);
+      if (opened) return true;
+    }
+    if (scheme == 'https' || scheme == 'http' || scheme == 'tel') {
+      return await launchUrl(uri, mode: LaunchMode.platformDefault);
+    }
+    return false;
   } catch (_) {
     return false;
   }
 }
+
+/// Parses and opens a raw external URL string using [opener] (or
+/// [defaultOpenExternalUri]). Returns `false` on malformed, disallowed, or
+/// unlaunchable URLs without throwing.
+Future<bool> openExternalUrlString(
+  String rawUrl, {
+  UriOpener? opener,
+}) async {
+  final trimmed = rawUrl.trim();
+  if (trimmed.isEmpty) return false;
+  final uri = Uri.tryParse(trimmed);
+  if (uri == null || !isAllowedExternalUri(uri)) return false;
+  return (opener ?? defaultOpenExternalUri)(uri);
+}
+
+/// Riverpod seam for external URI launching so screens can be deterministically
+/// tested for both success and failure states.
+final externalUriOpenerProvider =
+    Provider<UriOpener>((ref) => defaultOpenExternalUri);
 
 /// Unified "Chỉ đường" handler: hands the first openable candidate to the
 /// platform. Returns the URI opened, or `null` if none could be opened.
@@ -98,7 +160,7 @@ Future<Uri?> openDirections({
   NavPlatform? platform,
   UriOpener? opener,
 }) async {
-  final open = opener ?? _defaultOpen;
+  final open = opener ?? defaultOpenExternalUri;
   for (final uri in directionsCandidates(
     destLat: destLat,
     destLng: destLng,

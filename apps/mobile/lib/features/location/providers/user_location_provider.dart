@@ -23,16 +23,28 @@ class LocationFix {
   final double accuracyMeters;
   final DateTime timestamp;
 
+  /// True when the OS runtime grant is coarse/reduced-accuracy only
+  /// (e.g. Android 12+ "Approximate" permission without `ACCESS_FINE_LOCATION`).
+  /// Ensures coarse grants are never displayed as precise even if a mock or
+  /// fused provider reports a small numeric `accuracyMeters`.
+  final bool isApproximateGrant;
+
   const LocationFix({
     required this.position,
     required this.accuracyMeters,
     required this.timestamp,
+    this.isApproximateGrant = false,
   });
 
   double get latitude => position.latitude;
   double get longitude => position.longitude;
 
   LocationAccuracyQuality get quality {
+    if (isApproximateGrant) {
+      return accuracyMeters <= 200.0
+          ? LocationAccuracyQuality.approximate
+          : LocationAccuracyQuality.poor;
+    }
     if (accuracyMeters <= 50.0) return LocationAccuracyQuality.good;
     if (accuracyMeters <= 200.0) return LocationAccuracyQuality.approximate;
     return LocationAccuracyQuality.poor;
@@ -80,6 +92,15 @@ class GeolocatorLocationService implements LocationService {
 
   @override
   Future<LocationFix> currentFix() async {
+    bool isReducedAccuracy = false;
+    if (!kIsWeb) {
+      try {
+        final accStatus = await Geolocator.getLocationAccuracy();
+        isReducedAccuracy = accStatus == LocationAccuracyStatus.reduced;
+      } catch (_) {
+        // Platform does not expose LocationAccuracyStatus; rely on accuracyMeters.
+      }
+    }
     final p = await Geolocator.getCurrentPosition(
       locationSettings: const LocationSettings(
         accuracy: kIsWeb ? LocationAccuracy.medium : LocationAccuracy.high,
@@ -90,6 +111,7 @@ class GeolocatorLocationService implements LocationService {
       position: LatLng(p.latitude, p.longitude),
       accuracyMeters: p.accuracy,
       timestamp: p.timestamp,
+      isApproximateGrant: isReducedAccuracy,
     );
   }
 
@@ -150,6 +172,9 @@ class UserLocationState {
         if (quality == LocationAccuracyQuality.good) {
           return 'Đã xác định vị trí · ±$acc m';
         } else if (quality == LocationAccuracyQuality.approximate) {
+          if (fix!.isApproximateGrant && acc <= 50) {
+            return 'Vị trí ước lượng';
+          }
           return 'Vị trí ước lượng · ±$acc m';
         } else {
           return 'Vị trí chưa chính xác';
