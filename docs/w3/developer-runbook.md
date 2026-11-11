@@ -18,7 +18,7 @@ Copy `.env.example` from the repo root to `apps/backend/.env` and `apps/ai-servi
 
 | Variable | Read by | Requirement & Fail-Closed Behavior |
 |---|---|---|
-| `DATABASE_URL` | `backend` (Prisma), `ai-service` (SQLAlchemy / psycopg2) | **Required** for runtime, RAG retrieval, and DB-backed tests. Never point destructive CI scripts at the development `wanderai` database. |
+| `DATABASE_URL` | `backend` (Prisma), `ai-service` (`asyncpg` in `app/rag/retriever.py` & `app/tools/search_places.py`), `scripts/` (`asyncpg`) | **Required** for runtime, RAG retrieval (`asyncpg` pool; SQLAlchemy/`psycopg2` are **not** used by `ai-service`), and DB-backed tests. Never point destructive CI scripts at the development `wanderai` database. |
 | `JWT_SECRET`, `JWT_REFRESH_SECRET` (+ `JWT_EXPIRES_IN`, `JWT_REFRESH_EXPIRES_IN`) | `backend` (`jwt-config.ts`) | **Required (fail-closed at startup).** Each secret must be `>= 32` chars, have `>= 8` unique chars, reject placeholders/dev literals, and be strictly distinct from the other. |
 | `AI_INTERNAL_AUTH_SECRET` | `backend` (`internal-auth.ts`), `ai-service` (`internal_auth.py`) | **Required for AI Chat (fail-closed `503` if missing/weak).** Must match across `backend` and `ai-service`, be `>= 32` chars with `>= 8` unique chars, non-placeholder, and strictly distinct from both `JWT_SECRET` and `JWT_REFRESH_SECRET`. Signs `X-WanderAI-Internal-Assertion` (`v1.*` HMAC-SHA256). |
 | `AI_SERVICE_URL` | `backend` | **Required** (default `http://localhost:8000`). Keep FastAPI internal-only; never expose `:8000` publicly or to mobile clients. |
@@ -36,7 +36,8 @@ Authoritative Prisma schema and migrations live in `apps/backend/prisma/` (`sche
 cd apps/backend
 pnpm install --frozen-lockfile
 pnpm exec prisma generate
-pnpm exec prisma migrate deploy   # non-destructive migration apply
+pnpm exec prisma migrate status   # inspect pending migrations and target DB first
+pnpm exec prisma migrate deploy   # applies pending SQL migrations (can alter schema & data!)
 pnpm run typecheck
 pnpm run lint:check               # non-mutating (pnpm run lint auto-fixes!)
 pnpm test                         # unit & security specs (no DB needed)
@@ -44,6 +45,7 @@ pnpm run build
 pnpm start:dev                    # or from repo root: pnpm --dir apps/backend start:dev
 pnpm run test:e2e                 # requires isolated test PostgreSQL + internal FastAPI on AI_SERVICE_URL
 ```
+> **Migration safety & pre-flight requirements:** `prisma migrate deploy` skips interactive `migrate dev` resets, **but it is NOT inherently non-destructive** — pending `migration.sql` scripts can modify schemas, constraints, indexes, and existing table data. Before running `prisma migrate deploy` on any shared, research, or non-disposable database: (1) verify the active environment and exact target `DATABASE_URL` (host + database name), (2) inspect `pnpm exec prisma migrate status` and review the SQL and [`ROLLBACK_AND_RECOVERY.md`](../../apps/backend/prisma/migrations/20261110000000_sync_schema_drift/ROLLBACK_AND_RECOVERY.md), and (3) take a verified backup (`pg_dump`) with a confirmed roll-forward/recovery plan. **Never auto-run or manually execute migrations against a production database without explicit Project Owner authorization.**
 
 ### AI Service & Data Contracts (from repo root)
 ```bash
@@ -51,9 +53,25 @@ pip install -r apps/ai-service/requirements-dev.txt
 ruff check .
 python scripts/export_openapi_ai.py --check
 python -m scripts.freeze_checksum --skip-missing-prefix=data/restricted/
-python -m pytest tests -m "not live_llm" -k "not vihorec and not test_live_database_invariants" -q
+
+# Exact CI data-contract command (works on clean clones without git-ignored ViHoRec CSVs or live DB):
+python -m pytest tests -q \
+  --deselect tests/test_data02_contract.py::test_vihorec_integrity_pass \
+  --deselect tests/test_data02_contract.py::test_freeze_manifest_sha256_integrity \
+  --deselect tests/test_data03_danang_freeze_v2.py::test_freeze_v1_immutability \
+  --deselect tests/test_data03_danang_freeze_v2.py::test_freeze_v2_checksum_integrity \
+  --deselect tests/test_data03_danang_freeze_v2.py::test_live_database_invariants \
+  --deselect tests/test_data04_lineage_r1.py::test_assertion_14_freeze_v1_sha_integrity \
+  --deselect tests/test_freeze_checksum_compat.py::test_real_freeze_v1_verification_reports_statuses \
+  --deselect tests/test_reca_baseline.py::test_assertion_12_freeze_v1_and_v2_sha_integrity
+
+# Optional local convenience filter when restricted ViHoRec CSVs are present on disk:
+# python -m pytest tests -m "not live_llm" -k "not vihorec and not test_live_database_invariants" -q
+
+# AI service unit, RAG, and grounding suites:
 cd apps/ai-service && python -m pytest tests -q
 ```
+*(Note: `.github/workflows/ci.yml` uses `python -m pytest tests -q` with the 8 explicit `--deselect` flags above rather than `-m "not live_llm"`; opt-in live Gemini smoke files `test_chat_live.py` and `test_planner_live.py` in `apps/ai-service/tests/` are gated by `pytest.mark.skipif` unless `CHAT_LIVE_TEST=1` or `PLANNER_LIVE_TEST=1` is set.)*
 To run FastAPI locally for development (keep bound to loopback):
 ```bash
 cd apps/ai-service
@@ -105,16 +123,16 @@ Do not treat documentation or debug/emulator checks as production release sign-o
 
 ## GitHub Actions CI & Remaining Skipped/Deselected Tests
 `.github/workflows/ci.yml` actively runs four jobs on GitHub Actions (`backend`, `ai-service`, `mobile`, `data-contract`) on pushes and pull requests to `develop` and `main`, with **zero paid LLM API calls** (`GEMINI_API_KEY=dummy-key-not-used-in-ci`):
-- **`backend` job:** Provisions PostgreSQL 16 + `postgis` + `pgvector` (`wanderai_ci_test`), applies `database/init.sql` and `apps/backend/prisma/migrations` (`prisma migrate deploy`), seeds deterministic fixtures via `scripts/seed_ci_database.py`, starts internal FastAPI on `127.0.0.1:8000`, and runs `typecheck`, `lint:check`, `pnpm test` (unit/security specs), `pnpm run build`, and `pnpm run test:e2e` (all 13 E2E suites).
-- **`ai-service` job:** Provisions PostgreSQL 16 + `postgis` + `pgvector` (`wanderai_ci_test`), applies `init.sql` + Prisma migrations, runs `scripts/seed_ci_database.py --include-rag-docs`, checks `ruff`, OpenAPI drift (`export_openapi_ai.py --check`), CI seed/migration rollback safety (`test_prod_ci_05_corrective_safety.py`), and `pytest tests -q` (including PostgreSQL RAG retrieval and grounding contract suites such as `test_rag_retrieval_da_nang_culinary` and `test_synthetic_documents_never_reach_the_provider`).
+- **`backend` job:** Installs `postgresql-16-postgis-3`, `postgresql-16-postgis-3-scripts`, and `postgresql-16-pgvector` directly onto the `ubuntu-latest` runner via `apt-get` (`systemctl restart postgresql`), creates isolated database `wanderai_ci_test` on `localhost:5432`, applies `database/init.sql` and `apps/backend/prisma/migrations` (`prisma migrate deploy`), seeds deterministic fixtures via `scripts/seed_ci_database.py`, starts internal FastAPI on `127.0.0.1:8000`, and runs `typecheck`, `lint:check`, `pnpm run build`, `pnpm test` (unit/security specs), and `pnpm exec jest --config ./test/jest-e2e.json --runInBand --forceExit` (all 13 E2E suites).
+- **`ai-service` job:** Installs PostgreSQL 16 + `postgis` + `pgvector` directly onto the `ubuntu-latest` runner (`wanderai_ci_test` on `localhost:5432`), applies `database/init.sql` and sequential `apps/backend/prisma/migrations/*/migration.sql` files via `psql`, runs `scripts/seed_ci_database.py --include-rag-docs`, checks `ruff`, OpenAPI drift (`export_openapi_ai.py --check`), CI seed/migration rollback safety (`test_prod_ci_05_corrective_safety.py`), and `python -m pytest tests -q` (including `asyncpg` PostgreSQL RAG retrieval and grounding contract suites such as `test_rag_retrieval_da_nang_culinary` and `test_synthetic_documents_never_reach_the_provider`).
 - **`mobile` job:** Runs `flutter analyze` and `flutter test` across `apps/mobile`.
-- **`data-contract` job:** Runs offline freeze checksum verification (`--skip-missing-prefix=data/restricted/`) and root data/REC-A/W06/W07 contract suites (`-m "not live_llm"`).
+- **`data-contract` job:** Runs offline freeze checksum verification (`python -m scripts.freeze_checksum --skip-missing-prefix=data/restricted/`) followed by `python -m pytest tests -q` with 8 explicit `--deselect` flags for the 7 git-ignored restricted `ViHoRec` checksum tests and `test_live_database_invariants` (unlike local ad-hoc runs that may pass `-m "not live_llm"`).
 
 **Tests that remain intentionally deselected or skipped in CI:**
-1. **Licensed ViHoRec raw CSV checks (`7` root tests in `data-contract`):** `data/restricted/vihorec/` is git-ignored under dataset licensing terms.
-2. **`tests/test_data03_danang_freeze_v2.py::test_live_database_invariants`:** Deselected in the DB-less `data-contract` job (asserts full Freeze V2 corpus counts rather than compact CI fixtures).
+1. **Licensed ViHoRec raw CSV checks (`7` root tests `--deselect`ed in `data-contract`):** `data/restricted/vihorec/` is git-ignored under dataset licensing terms.
+2. **`tests/test_data03_danang_freeze_v2.py::test_live_database_invariants` (`1` root test `--deselect`ed in `data-contract`):** Requires a live Freeze V2 database load rather than the DB-less `data-contract` environment or compact CI fixtures.
 3. **`apps/ai-service/tests/test_rag_osm_ingestion.py` (`2` corpus-volume assertions expecting `>= 464` Wikivoyage chunks):** Skipped against lightweight CI fixtures (`C01-F04`), where `seed_ci_database.py` loads compact deterministic RAG fixtures instead of the full historical ingestion dump.
-4. **Historical W06 offline QA gate files (`qa_01`/`qa_02`) & `@pytest.mark.live_llm` suites:** Skipped unless running dedicated offline QA snapshots or explicitly authorized live LLM evaluations.
+4. **Historical W06 offline QA gate files (`qa_01`/`qa_02` via `conftest.py`) & opt-in live Gemini smoke files (`test_chat_live.py`, `test_planner_live.py` via `CHAT_LIVE_TEST=1` / `PLANNER_LIVE_TEST=1` `skipif` guards):** Skipped by default so standard local and CI runs never mutate historical QA snapshots or spend live LLM quota.
 
 ### CI Seed Safety Guard & Windows Docker Desktop NAT Limitation
 `scripts/seed_ci_database.py` executes `TRUNCATE ... CASCADE` and enforces multi-layer fail-closed guards before touching PostgreSQL:

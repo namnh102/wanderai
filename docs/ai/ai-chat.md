@@ -40,7 +40,7 @@ FastAPI AI Service (Internal Port 8000 — apps/ai-service)
   │
   ├─ security/internal_auth.py (require_internal_principal)
   │     └─ Verifies HMAC signature, TTL/skew (15s), action, user_id & session_id binding
-  ├─ routers/chat.py + services/rag.py (RAGService.retrieve_with_status)
+  ├─ routers/chat.py + services/rag.py -> rag/retriever.py (asyncpg + pgvector)
   │     └─ Governed SQL filter (GOVERNED_PRODUCTION_DOCUMENT_SQL); tri-state: ok | empty | error
   └─ services/chat_llm.py (GeminiProvider wrapping gemini-3.5-flash)
         ├─ Production tools ONLY: get_weather, search_places, calculate_budget
@@ -56,11 +56,16 @@ FastAPI AI Service (Internal Port 8000 — apps/ai-service)
 3. **Signed internal assertion:** `AiChatProxyService` signs header `X-WanderAI-Internal-Assertion` (`v1.<base64url(canonical_json)>.<base64url(hmac_sha256)>`) using `AI_INTERNAL_AUTH_SECRET` (`>= 32` chars, `>= 8` unique chars, distinct from `JWT_SECRET` and `JWT_REFRESH_SECRET`; fails closed with `503` if misconfigured).
 4. **FastAPI principal & session binding:** `require_internal_principal` verifies the HMAC signature, `iss`/`aud`, `exp`/`iat` (`60s` default TTL, `120s` max, `15s` clock skew), and exact `act`. `chat.py` rejects mismatched `body.user_id` or `session_id` with `403`.
 
-### 2. Fail-Closed Tri-State RAG Grounding (`retrieval_status`)
-`RAGService.retrieve_with_status(query, top_k=4)` queries PostgreSQL `documents` restricted by `GOVERNED_PRODUCTION_DOCUMENT_SQL` (requiring governed sources, `user_citable = TRUE`, and excluding `ci_fixture`, synthetic, or disallowed commercial rows):
-- **`retrieval_status = "error"` (Fail-Closed `503`):** If `DATABASE_URL` is missing or embedding/PostgreSQL retrieval fails, FastAPI aborts **before** calling Gemini and returns HTTP `503` (`"Kho dữ liệu tri thức du lịch tạm thời không khả dụng. Vui lòng thử lại sau."`).
-- **`retrieval_status = "empty"`:** If PostgreSQL is healthy but zero governed chunks match, FastAPI injects `NO_CONTEXT_INSTRUCTION` (forbidding fabricated addresses, opening hours, prices, phone numbers, or ratings), runs Gemini, and returns `sources: []` with `retrieval_status: "empty"`.
-- **`retrieval_status = "ok"`:** Injects numbered governed context chunks (`[1]..[n]`) + grounding rules and returns deduplicated `https://` `source_url` candidates in `sources` with `retrieval_status: "ok"`.
+### 2. Fail-Closed Tri-State RAG Grounding (`retrieval_status`) & `GOVERNED_PRODUCTION_DOCUMENT_SQL`
+`RAGService.retrieve_with_status(query, top_k=4)` queries PostgreSQL `documents` via `asyncpg` (`app/rag/retriever.py`) filtered by `GOVERNED_PRODUCTION_DOCUMENT_SQL`:
+- **Provenance & `user_citable` Predicate Semantics:**
+  - **Explicit rejection of `user_citable=false` and denylisted rows:** Rows with denylisted `source_name` values (blank, `ci_fixture`, `synthetic`, `mock`, `unverified_legacy`, `manual`, `test`, `fixture`, `unknown`, `google*`, `tripadvisor`, `facebook`, `tiktok`, `instagram`, `youtube`), `urn:gomate:ci-fixture:*` or non-`http(s)://` URLs, blank/restricted licenses, blank/placeholder `attribution`, non-object/non-null JSON `metadata`, or explicit `metadata` flags `user_citable = false` (`lower(metadata->>'user_citable') = 'false'`), `is_ci_fixture = true`, `legacy_migration_backfill = true`, `trusted = false`, `reuse_storage_class <> 'OPEN_REUSABLE'`, `provenance_status IN ('UNVERIFIED', 'REJECTED', 'QUARANTINED')`, or `governance_decision IN ('REJECT', 'HOLD', 'QUARANTINE')` are strictly **excluded**.
+  - **Omitted/`NULL` `user_citable` behavior:** Rows whose `metadata` is `NULL` or omits the `user_citable` key (`lower(COALESCE(metadata->>'user_citable', 'true')) <> 'false'`) **can still be accepted** if they satisfy all remaining SQL predicates — including `place_sources` linkage whenever `place_id IS NOT NULL` and one of the permitted source-family/license/domain branches (`osm`, `wikivoyage`, `wikipedia`, `wikidata`, `overture`, or the `official*`/`open_government`/`ACCEPT_PRIMARY_CORPUS` branch which additionally requires non-null object `metadata` with explicit `reuse_storage_class = 'OPEN_REUSABLE'` and non-empty `reuse_evidence`).
+  - **Governance eligibility vs scientific claim verification:** Satisfying `GOVERNED_PRODUCTION_DOCUMENT_SQL` (source-family, URL pattern, open license, attribution, and governance metadata) establishes **corpus-level retrieval eligibility only**; it does **not** guarantee that every factual claim in a retrieved chunk or generated answer has been scientifically verified (`W07` scientific protocol and gates `G1.5..G6` remain `HOLD`).
+- **Tri-State Outcomes:**
+  - **`retrieval_status = "error"` (Fail-Closed `503`):** If `DATABASE_URL` is missing or embedding/`asyncpg` PostgreSQL retrieval fails, FastAPI aborts **before** calling Gemini and returns HTTP `503` (`"Kho dữ liệu tri thức du lịch tạm thời không khả dụng. Vui lòng thử lại sau."`).
+  - **`retrieval_status = "empty"`:** If PostgreSQL is healthy but zero governed chunks match, FastAPI injects `NO_CONTEXT_INSTRUCTION` (forbidding fabricated addresses, opening hours, prices, phone numbers, or ratings), runs Gemini, and returns `sources: []` with `retrieval_status: "empty"`.
+  - **`retrieval_status = "ok"`:** Injects numbered governed context chunks (`[1]..[n]`) + grounding rules and returns deduplicated `https://` `source_url` candidates in `sources` with `retrieval_status: "ok"`.
 
 ### 3. Production Toolset & Synthetic Output Guard
 - Active production `_TOOLS` in `apps/ai-service/app/routers/chat.py` contains **only** three tools:

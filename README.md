@@ -61,7 +61,8 @@ cd apps/backend
 cp ../../.env.example .env      # Điền DATABASE_URL và 3 khóa bí mật >= 32 ký tự khác nhau
 pnpm install --frozen-lockfile
 pnpm exec prisma generate
-pnpm exec prisma migrate deploy # Áp dụng migrations từ apps/backend/prisma/migrations
+pnpm exec prisma migrate status # Kiểm tra trạng thái migration và đúng DATABASE_URL đích
+pnpm exec prisma migrate deploy # Áp dụng SQL migrations (có thể thay đổi schema & dữ liệu hiện có!)
 
 # Chỉ chạy trên DB dev mới tinh (chưa có dữ liệu):
 # pnpm exec prisma db seed      # Tạo destinations/categories ban đầu (không chạy lặp lại)
@@ -71,7 +72,9 @@ pnpm start:dev
 # → http://localhost:3000/api (Swagger)
 ```
 
-> **Cảnh báo an toàn dữ liệu:** Tuyệt đối không trỏ `scripts/seed_ci_database.py` vào database phát triển (`wanderai`). Script CI này thực hiện `TRUNCATE ... CASCADE` và được bảo vệ fail-closed chỉ dành riêng cho database kiểm thử cô lập `wanderai_ci_*`.
+> **Cảnh báo an toàn dữ liệu & migration:**
+> - `prisma migrate deploy` có thể thay đổi schema và dữ liệu hiện có: trước khi chạy trên bất kỳ DB dùng chung/nghiên cứu nào phải kiểm tra môi trường, `DATABASE_URL` đích, nội dung migration và phương án backup/recovery (`pg_dump` + [`ROLLBACK_AND_RECOVERY.md`](apps/backend/prisma/migrations/20261110000000_sync_schema_drift/ROLLBACK_AND_RECOVERY.md)). Không tự chạy migration trên production.
+> - Tuyệt đối không trỏ `scripts/seed_ci_database.py` vào database phát triển (`wanderai`). Script CI này thực hiện `TRUNCATE ... CASCADE` và được bảo vệ fail-closed chỉ dành riêng cho database kiểm thử cô lập `wanderai_ci_*`.
 
 ### 3. AI Service (`apps/ai-service`)
 

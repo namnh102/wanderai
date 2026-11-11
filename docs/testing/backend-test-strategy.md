@@ -27,7 +27,7 @@ Full NestJS application bootstrap against an isolated PostgreSQL 16 (`postgis`, 
 
 ### Isolated CI PostgreSQL (`wanderai_ci_test`)
 Backend E2E tests **do not** share the development database in CI. In [`.github/workflows/ci.yml`](../../.github/workflows/ci.yml) (`backend` job; see also [Developer Runbook](../w3/developer-runbook.md)):
-1. GitHub Actions provisions an ephemeral `postgres:16` service container with `postgresql-16-postgis-3` and `postgresql-16-pgvector` and dedicated database `wanderai_ci_test`.
+1. On the ephemeral `ubuntu-latest` GitHub Actions runner (not a Docker service container), the workflow installs `postgresql-16-postgis-3`, `postgresql-16-postgis-3-scripts`, and `postgresql-16-pgvector` directly via `apt-get`, restarts the host `postgresql` `systemd` service on `localhost:5432`, and creates the dedicated database `wanderai_ci_test`.
 2. CI applies `database/init.sql` followed by all migrations in `apps/backend/prisma/migrations` via `pnpm exec prisma migrate deploy`.
 3. CI loads deterministic engineering fixtures (`destinations`, verified/unverified `places`, `place_sources`) using `scripts/seed_ci_database.py`.
 4. Per-suite user mutations (`auth`, `preferences`, `trips`, `planner`, `ai-chat`) create unique timestamped `@wanderai.test` accounts and clean up created rows in `afterAll`.
