@@ -545,8 +545,18 @@ class TestC01F02MigrationAndRollbackSafety:
                     finally:
                         await retriever.close()
 
-                    # 6. Apply down.sql and verify trips columns + legacy documents survive intact
+                    # 6. Verify down.sql fails closed while post-migration embedding exists, then
+                    #    clear the temporary test vector and verify clean non-destructive rollback.
                     down_sql = (NEW_MIGRATION_DIR / "down.sql").read_text(encoding="utf-8")
+                    with pytest.raises(
+                        asyncpg.PostgresError,
+                        match=r"\[C02-F01 FAIL-CLOSED\].*documents\.embedding",
+                    ):
+                        await conn.execute(down_sql)
+                    await conn.execute(
+                        "UPDATE documents SET embedding = NULL WHERE id = $1",
+                        after_rows[0]["id"],
+                    )
                     await conn.execute(down_sql)
 
                     trip_after_down = await conn.fetchrow(
