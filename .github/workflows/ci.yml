@@ -125,7 +125,7 @@ jobs:
           CI_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/wanderai_ci_test
           ALLOW_DESTRUCTIVE_CI_SEED: "1"
         run: python scripts/seed_ci_database.py --include-rag-docs
-      - name: PROD-CI-05 Corrective-01 seed safety, migration compatibility & fixture isolation verification
+      - name: PROD-CI-05 Corrective-01/02 seed safety, migration rollback & governed source verification
         working-directory: apps/ai-service
         run: >
           AI_INTERNAL_AUTH_SECRET="test-internal-$(python -c "import secrets; print(secrets.token_hex(24))")"

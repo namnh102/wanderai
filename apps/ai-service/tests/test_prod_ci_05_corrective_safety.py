@@ -1,4 +1,4 @@
-"""PROD-CI-05 CORRECTIVE-01 Verification Suite (C01-F01, C01-F02, C01-F03, C01-F04).
+"""PROD-CI-05 CORRECTIVE-01 & CORRECTIVE-02 Verification Suite.
 
 Covers:
 - C01-F01 (P0): Fail-closed destructive CI seed guards (offline + live DB negative tests).
@@ -9,6 +9,13 @@ Covers:
   retrieval/citation isolation.
 - C01-F04 (P2): Transparent separation of engineering fixture tests from the missing 464
   historical live-crawled Wikivoyage corpus (`git_tracked_chunk_text_export_present=false`).
+- C02-F01 (P1): Non-destructive & fail-closed rollback (`down.sql` + `ROLLBACK_AND_RECOVERY.md`)
+  preserving pre-existing out-of-Prisma RAG enrichment columns/vectors (`source_name`,
+  `source_url`, `content_hash`, `embedding`, `license`) without fabricating provenance.
+- C02-F02 (P1): `RAGRetriever` governed source-family compatibility (Wikipedia, Wikidata,
+  Overture Maps, governance-verified `OPEN_REUSABLE` official/open-government sources) while
+  continuing to block `ci_fixture`, `synthetic`, `mock`, `unverified_legacy`, `user_citable=false`,
+  commercial/restricted platforms, and incomplete provenance/licensing.
 """
 
 from __future__ import annotations
@@ -34,7 +41,7 @@ if str(REPO_ROOT) not in sys.path:
 
 from app.main import app
 from app.rag.embedder import MockEmbedder
-from app.rag.retriever import RAGRetriever
+from app.rag.retriever import GOVERNED_PRODUCTION_DOCUMENT_SQL, RAGRetriever
 from app.security.internal_auth import InternalPrincipal, require_internal_principal
 from app.services.rag import RAGService
 from scripts import audit_w07_b1a_existing_poi_knowledge as w07_b1a
@@ -970,7 +977,7 @@ class TestC01F03AndF04FixtureIsolationAndHistoricalGap:
                                     embedding_model, metadata, embedding
                                 ) VALUES (
                                     $1::uuid, $2, 'wikivoyage', $3, $4,
-                                    'test', 'en', $5, $6, $7,
+                                    'Wikivoyage contributors', 'en', $5, $6, $7,
                                     $8, $9::jsonb, $10::vector
                                 )
                                 """,
@@ -997,6 +1004,874 @@ class TestC01F03AndF04FixtureIsolationAndHistoricalGap:
                         await conn.execute(
                             "DELETE FROM documents WHERE id = ANY($1::uuid[])",
                             rogue_ids,
+                        )
+            finally:
+                await retriever.close()
+
+        _run_db_test(_body)
+
+
+# ============================================================================
+# C02-F01 — Non-Destructive & Fail-Closed Document Rollback Safety
+# ============================================================================
+
+
+class TestC02F01PreEnrichedDocumentRollbackSafety:
+    """Static and live PostgreSQL tests proving pre-existing RAG columns & vectors never get dropped."""
+
+    def test_c02_f01_down_sql_and_recovery_runbook_static_invariants(self):
+        migration_sql = (NEW_MIGRATION_DIR / "migration.sql").read_text(encoding="utf-8")
+        down_sql = (NEW_MIGRATION_DIR / "down.sql").read_text(encoding="utf-8")
+        runbook_path = NEW_MIGRATION_DIR / "ROLLBACK_AND_RECOVERY.md"
+        assert runbook_path.is_file(), "ROLLBACK_AND_RECOVERY.md must exist alongside down.sql"
+        runbook_md = runbook_path.read_text(encoding="utf-8")
+
+        # 1. Ledger snapshot happens BEFORE CREATE TABLE dataset_registry and ALTER TABLE documents
+        ledger_pos = migration_sql.index('CREATE TABLE IF NOT EXISTS "_migration_20261110_schema_ledger"')
+        ds_pos = migration_sql.index('CREATE TABLE IF NOT EXISTS "dataset_registry"')
+        alter_docs_pos = migration_sql.index('ALTER TABLE "documents"')
+        assert ledger_pos < ds_pos < alter_docs_pos
+
+        # 2. down.sql must NOT contain static unguarded DROP COLUMN statements for pre-existing RAG columns
+        non_comment_down = "\n".join(
+            line for line in down_sql.splitlines() if not line.lstrip().startswith("--")
+        )
+        for protected_col in (
+            'DROP COLUMN IF EXISTS "source_name"',
+            'DROP COLUMN IF EXISTS "source_url"',
+            'DROP COLUMN IF EXISTS "content_hash"',
+            'DROP COLUMN IF EXISTS "embedding"',
+            'DROP COLUMN IF EXISTS "license"',
+        ):
+            assert protected_col not in non_comment_down
+
+        # 3. Fail-closed exceptions and ledger checks are enforced in down.sql & documented in runbook
+        assert "_migration_20261110_schema_ledger" in non_comment_down
+        assert "added_documents_columns" in non_comment_down
+        assert "[C02-F01 FAIL-CLOSED]" in non_comment_down
+        assert "ROLLBACK_AND_RECOVERY.md" in non_comment_down
+        assert "pg_dump" in runbook_md
+        assert "Roll-Forward" in runbook_md or "roll-forward" in runbook_md.lower()
+
+    def test_live_migration_and_rollback_preserves_preexisting_rag_enrichment_columns_and_data(
+        self,
+    ):
+        scratch_db = "wanderai_ci_mig_preenriched"
+
+        async def _body(admin_conn: asyncpg.Connection, base_dsn: str):
+            await _recreate_scratch_db(admin_conn, scratch_db)
+            target_dsn = f"{base_dsn}/{scratch_db}"
+            try:
+                conn = await asyncpg.connect(target_dsn)
+                try:
+                    # 1. Replay init.sql + 5 historical migrations
+                    await conn.execute(INIT_SQL_PATH.read_text(encoding="utf-8"))
+                    for mig_name in PRE_DRIFT_MIGRATIONS:
+                        await conn.execute(
+                            (MIGRATIONS_DIR / mig_name / "migration.sql").read_text(
+                                encoding="utf-8"
+                            )
+                        )
+
+                    # 2. Simulate out-of-Prisma RAG ingestion BEFORE 20261110000000_sync_schema_drift:
+                    #    pre-existing columns source_name, source_url, content_hash, embedding, license
+                    #    plus a pre-existing source_name index and populated vector data.
+                    await conn.execute(
+                        """
+                        ALTER TABLE "documents"
+                          ADD COLUMN "source_name" VARCHAR(50),
+                          ADD COLUMN "source_url" VARCHAR(500),
+                          ADD COLUMN "content_hash" VARCHAR(64),
+                          ADD COLUMN "embedding" vector(384),
+                          ADD COLUMN "license" VARCHAR(100);
+                        CREATE INDEX "documents_source_name_idx" ON "documents"("source_name");
+                        """
+                    )
+
+                    embedder = MockEmbedder(dimension=384)
+                    wv_id = uuid.UUID("00000000-0000-0000-0000-000000000101")
+                    wv_text = "Da Nang coastal culinary overview from pre-existing Wikivoyage ingestion"
+                    wv_hash = hashlib.sha256(wv_text.encode("utf-8")).hexdigest()
+                    wv_vec = embedder.embed_text(wv_text)
+                    wv_vec_sql = "[" + ",".join(str(x) for x in wv_vec) + "]"
+
+                    wp_id = uuid.UUID("00000000-0000-0000-0000-000000000102")
+                    wp_text = "Cau Rong architecture history from pre-existing Wikipedia ingestion"
+                    wp_hash = hashlib.sha256(wp_text.encode("utf-8")).hexdigest()
+                    wp_vec = embedder.embed_text(wp_text)
+                    wp_vec_sql = "[" + ",".join(str(x) for x in wp_vec) + "]"
+
+                    legacy_id = uuid.UUID("00000000-0000-0000-0000-000000000103")
+
+                    await conn.execute(
+                        """
+                        INSERT INTO "documents" (
+                            id, content, source, category, metadata,
+                            source_name, source_url, content_hash, embedding, license
+                        ) VALUES
+                        (
+                            $1, $2, 'external_rag_v1', 'eat',
+                            '{"section": "Eat", "ingested_by": "external_rag_pipeline"}'::jsonb,
+                            'wikivoyage', 'https://en.wikivoyage.org/wiki/Da_Nang',
+                            $3, $4::vector, 'CC BY-SA 3.0'
+                        ),
+                        (
+                            $5, $6, 'external_rag_v1', 'sightseeing',
+                            '{"lang": "vi", "embedding_model": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"}'::jsonb,
+                            'wikipedia', 'https://vi.wikipedia.org/wiki/C%E1%BA%A7u_R%E1%BB%93ng',
+                            $7, $8::vector, 'CC-BY-SA-4.0'
+                        ),
+                        (
+                            $9, 'Unenriched pre-existing note', 'legacy_memo', 'notes',
+                            '{"note": "raw"}'::jsonb,
+                            NULL, NULL, NULL, NULL, NULL
+                        )
+                        """,
+                        wv_id,
+                        wv_text,
+                        wv_hash,
+                        wv_vec_sql,
+                        wp_id,
+                        wp_text,
+                        wp_hash,
+                        wp_vec_sql,
+                        legacy_id,
+                    )
+
+                    async def _snapshot_enriched():
+                        rows = await conn.fetch(
+                            """
+                            SELECT id::text, content, source_name, source_url, content_hash,
+                                   license, metadata, embedding::text AS embedding_text
+                            FROM "documents"
+                            WHERE id IN ($1, $2)
+                            ORDER BY id
+                            """,
+                            wv_id,
+                            wp_id,
+                        )
+                        out = []
+                        for r in rows:
+                            meta = (
+                                json.loads(r["metadata"])
+                                if isinstance(r["metadata"], str)
+                                else r["metadata"]
+                            )
+                            vec_floats = [
+                                round(float(v), 6) for v in json.loads(r["embedding_text"])
+                            ]
+                            out.append(
+                                {
+                                    "id": r["id"],
+                                    "content": r["content"],
+                                    "source_name": r["source_name"],
+                                    "source_url": r["source_url"],
+                                    "content_hash": r["content_hash"],
+                                    "license": r["license"],
+                                    "metadata": meta,
+                                    "embedding_dim": len(vec_floats),
+                                    "embedding_head": vec_floats[:5],
+                                    "embedding_full": vec_floats,
+                                }
+                            )
+                        return out
+
+                    cols_before = {
+                        r["column_name"]
+                        for r in await conn.fetch(
+                            "SELECT column_name FROM information_schema.columns "
+                            "WHERE table_schema = 'public' AND table_name = 'documents'"
+                        )
+                    }
+                    assert {
+                        "source_name",
+                        "source_url",
+                        "content_hash",
+                        "embedding",
+                        "license",
+                    } <= cols_before
+                    assert "embedding_model" not in cols_before
+                    assert "title" not in cols_before
+
+                    before_enriched = await _snapshot_enriched()
+                    assert len(before_enriched) == 2
+
+                    # 3. Apply migration.sql (UP)
+                    up_sql = (NEW_MIGRATION_DIR / "migration.sql").read_text(encoding="utf-8")
+                    await conn.execute(up_sql)
+
+                    ledger = await conn.fetchrow(
+                        'SELECT * FROM "_migration_20261110_schema_ledger" '
+                        "WHERE migration_name = '20261110000000_sync_schema_drift'"
+                    )
+                    assert ledger is not None
+                    assert sorted(ledger["preexisting_documents_columns"]) == [
+                        "content_hash",
+                        "embedding",
+                        "license",
+                        "source_name",
+                        "source_url",
+                    ]
+                    assert "documents_source_name_idx" in ledger["preexisting_documents_indexes"]
+
+                    # Pre-enriched rows MUST keep exact provenance, vectors, and metadata (NOT marked unverified!)
+                    after_up_enriched = await _snapshot_enriched()
+                    assert after_up_enriched == before_enriched
+
+                    wv_model = await conn.fetchval(
+                        'SELECT embedding_model FROM "documents" WHERE id = $1', wv_id
+                    )
+                    wp_model = await conn.fetchval(
+                        'SELECT embedding_model FROM "documents" WHERE id = $1', wp_id
+                    )
+                    assert wv_model == "preexisting_external_embedding"
+                    assert (
+                        wp_model
+                        == "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
+                    )
+
+                    # Unenriched NULL row gets non-fabricated legacy sentinel
+                    legacy_after_up = await conn.fetchrow(
+                        'SELECT source_name, license, content_hash, metadata FROM "documents" WHERE id = $1',
+                        legacy_id,
+                    )
+                    assert legacy_after_up["source_name"] == "unverified_legacy"
+                    assert legacy_after_up["license"] == "UNVERIFIED_LEGACY"
+                    assert len(legacy_after_up["content_hash"]) == 64
+
+                    # 4. Apply down.sql (ROLLBACK): pre-existing RAG columns, index, and vectors MUST survive!
+                    down_sql = (NEW_MIGRATION_DIR / "down.sql").read_text(encoding="utf-8")
+                    await conn.execute(down_sql)
+
+                    cols_after_down = {
+                        r["column_name"]
+                        for r in await conn.fetch(
+                            "SELECT column_name FROM information_schema.columns "
+                            "WHERE table_schema = 'public' AND table_name = 'documents'"
+                        )
+                    }
+                    assert cols_after_down == cols_before
+                    assert {
+                        "source_name",
+                        "source_url",
+                        "content_hash",
+                        "embedding",
+                        "license",
+                    } <= cols_after_down
+
+                    src_idx_after_down = await conn.fetchval(
+                        "SELECT count(*) FROM pg_indexes "
+                        "WHERE schemaname = 'public' AND indexname = 'documents_source_name_idx'"
+                    )
+                    assert src_idx_after_down == 1
+
+                    after_down_enriched = await _snapshot_enriched()
+                    assert after_down_enriched == before_enriched
+                    assert await conn.fetchval('SELECT count(*) FROM "documents"') == 3
+
+                    # 5. Re-apply migration.sql (UP -> DOWN -> UP round-trip on pre-enriched DB)
+                    await conn.execute(up_sql)
+                    after_reup_enriched = await _snapshot_enriched()
+                    assert after_reup_enriched == before_enriched
+
+                    print(
+                        "[C02-F01-EVIDENCE-PREENRICHED] "
+                        + json.dumps(
+                            {
+                                "preexisting_rag_columns": sorted(
+                                    ledger["preexisting_documents_columns"]
+                                ),
+                                "added_columns_dropped_on_down": sorted(
+                                    ledger["added_documents_columns"]
+                                ),
+                                "cols_equal_before_and_after_down": cols_after_down
+                                == cols_before,
+                                "preexisting_index_preserved": int(src_idx_after_down) == 1,
+                                "enriched_rows_identical_after_up": after_up_enriched
+                                == before_enriched,
+                                "enriched_rows_identical_after_down": after_down_enriched
+                                == before_enriched,
+                                "enriched_rows_identical_after_reup": after_reup_enriched
+                                == before_enriched,
+                                "total_rows_preserved": 3,
+                            }
+                        )
+                    )
+                finally:
+                    await conn.close()
+            finally:
+                await _drop_scratch_db(admin_conn, scratch_db)
+
+        _run_db_test(_body)
+
+    def test_live_down_sql_fails_closed_when_newly_added_columns_hold_data_or_ledger_missing(
+        self,
+    ):
+        scratch_db = "wanderai_ci_mig_failclosed"
+
+        async def _body(admin_conn: asyncpg.Connection, base_dsn: str):
+            await _recreate_scratch_db(admin_conn, scratch_db)
+            target_dsn = f"{base_dsn}/{scratch_db}"
+            try:
+                conn = await asyncpg.connect(target_dsn)
+                try:
+                    await conn.execute(INIT_SQL_PATH.read_text(encoding="utf-8"))
+                    for mig_name in PRE_DRIFT_MIGRATIONS:
+                        await conn.execute(
+                            (MIGRATIONS_DIR / mig_name / "migration.sql").read_text(
+                                encoding="utf-8"
+                            )
+                        )
+
+                    up_sql = (NEW_MIGRATION_DIR / "migration.sql").read_text(encoding="utf-8")
+                    down_sql = (NEW_MIGRATION_DIR / "down.sql").read_text(encoding="utf-8")
+                    await conn.execute(up_sql)
+
+                    # Case 1: Post-migration RAG document populated into newly-added columns -> FAIL CLOSED
+                    doc_id = uuid.uuid4()
+                    embedder = MockEmbedder(dimension=384)
+                    vec_sql = (
+                        "["
+                        + ",".join(str(x) for x in embedder.embed_text("Post migration doc"))
+                        + "]"
+                    )
+                    chash = hashlib.sha256(b"Post migration doc").hexdigest()
+                    await conn.execute(
+                        """
+                        INSERT INTO "documents" (
+                            id, document_id, source_name, source_url, license, attribution,
+                            language, title, content, content_hash, embedding_model, embedding
+                        ) VALUES (
+                            $1, 'post-mig-1', 'wikipedia', 'https://en.wikipedia.org/wiki/Hue',
+                            'CC-BY-SA-4.0', 'Wikipedia contributors', 'en', 'Hue Imperial City',
+                            'Post migration doc', $2, 'mock-384', $3::vector
+                        )
+                        """,
+                        doc_id,
+                        chash,
+                        vec_sql,
+                    )
+
+                    with pytest.raises(
+                        asyncpg.PostgresError,
+                        match=r"\[C02-F01 FAIL-CLOSED\].*documents\.",
+                    ):
+                        await conn.execute(down_sql)
+
+                    # Verify zero data or column loss after blocked rollback
+                    preserved_doc = await conn.fetchrow(
+                        'SELECT title, source_name, embedding IS NOT NULL AS has_emb '
+                        'FROM "documents" WHERE id = $1',
+                        doc_id,
+                    )
+                    assert preserved_doc is not None
+                    assert preserved_doc["title"] == "Hue Imperial City"
+                    assert preserved_doc["source_name"] == "wikipedia"
+                    assert preserved_doc["has_emb"] is True
+
+                    # Case 2: Newly-created dataset_registry populated -> FAIL CLOSED
+                    await conn.execute('DELETE FROM "documents" WHERE id = $1', doc_id)
+                    await conn.execute(
+                        """
+                        INSERT INTO "dataset_registry" (
+                            dataset_name, dataset_source, license, restriction
+                        ) VALUES (
+                            'w07_curated_primary', 'wikimedia+overture', 'CC-BY-SA-4.0', 'OPEN_REUSABLE'
+                        )
+                        """
+                    )
+                    with pytest.raises(
+                        asyncpg.PostgresError,
+                        match=r"\[C02-F01 FAIL-CLOSED\].*dataset_registry",
+                    ):
+                        await conn.execute(down_sql)
+                    assert (
+                        await conn.fetchval('SELECT count(*) FROM "dataset_registry"') == 1
+                    )
+
+                    # Case 3: Missing ownership ledger -> FAIL CLOSED (refuses blind DROP COLUMN)
+                    await conn.execute('DELETE FROM "dataset_registry"')
+                    await conn.execute('DROP TABLE "_migration_20261110_schema_ledger"')
+                    with pytest.raises(
+                        asyncpg.PostgresError,
+                        match=r"\[C02-F01 FAIL-CLOSED\].*_migration_20261110_schema_ledger",
+                    ):
+                        await conn.execute(down_sql)
+
+                    cols_still_present = {
+                        r["column_name"]
+                        for r in await conn.fetch(
+                            "SELECT column_name FROM information_schema.columns "
+                            "WHERE table_schema = 'public' AND table_name = 'documents'"
+                        )
+                    }
+                    assert {
+                        "source_name",
+                        "source_url",
+                        "content_hash",
+                        "embedding",
+                        "license",
+                    } <= cols_still_present
+
+                    print(
+                        "[C02-F01-EVIDENCE-FAILCLOSED] "
+                        + json.dumps(
+                            {
+                                "populated_added_column_blocked": True,
+                                "populated_dataset_registry_blocked": True,
+                                "missing_ledger_blocked": True,
+                                "columns_preserved_after_all_aborts": True,
+                            }
+                        )
+                    )
+                finally:
+                    await conn.close()
+            finally:
+                await _drop_scratch_db(admin_conn, scratch_db)
+
+        _run_db_test(_body)
+
+
+# ============================================================================
+# C02-F02 — RAGRetriever Governed Source-Family Compatibility & Isolation
+# ============================================================================
+
+
+class TestC02F02RetrieverGovernedSourceCompatibility:
+    """Offline and live PostgreSQL tests for governed multi-source retrieval & fail-closed isolation."""
+
+    def test_c02_f02_retriever_sql_has_no_rigid_two_source_allowlist_offline(self):
+        # Verify the rigid ('osm', 'wikivoyage')-only filter is gone and governed predicates exist
+        assert "source_name IN ('osm', 'wikivoyage')" not in GOVERNED_PRODUCTION_DOCUMENT_SQL
+        for governed_family in (
+            "wikipedia",
+            "wikipedia_article",
+            "wikidata",
+            "wikidata_entity",
+            "overture",
+            "overture_places_parquet",
+            "official_tourism",
+            "open_government",
+        ):
+            assert governed_family in GOVERNED_PRODUCTION_DOCUMENT_SQL
+
+        for blocked_token in (
+            "ci_fixture",
+            "synthetic",
+            "mock",
+            "unverified_legacy",
+            "tripadvisor",
+            "google_maps",
+            "user_citable",
+            "is_ci_fixture",
+            "legacy_migration_backfill",
+            "OPEN_REUSABLE",
+            "reuse_evidence",
+        ):
+            assert blocked_token in GOVERNED_PRODUCTION_DOCUMENT_SQL
+
+        # Capture exact SQL emitted by RAGRetriever.search(..., include_unverified=False) offline
+        captured_queries: list[str] = []
+
+        class _FakeAcquire:
+            async def __aenter__(self):
+                return self
+
+            async def __aexit__(self, *_args):
+                return False
+
+            async def fetch(self, sql: str, *_params):
+                captured_queries.append(sql)
+                return []
+
+        class _FakePool:
+            def acquire(self):
+                return _FakeAcquire()
+
+            async def close(self):
+                return None
+
+        async def _run():
+            retriever = RAGRetriever(embedder=MockEmbedder(dimension=384))
+            retriever._pool = _FakePool()  # type: ignore[assignment]
+            await retriever.search("Dragon Bridge history", top_k=5, include_unverified=False)
+
+        asyncio.run(_run())
+        assert len(captured_queries) == 1
+        assert "source_name IN ('osm', 'wikivoyage')" not in captured_queries[0]
+        assert "wikipedia_article" in captured_queries[0]
+        assert "overture_places_parquet" in captured_queries[0]
+
+    def test_live_retriever_admits_governed_non_osm_wikivoyage_sources_with_valid_provenance(
+        self,
+    ):
+        async def _body(_admin_conn: asyncpg.Connection, _base_dsn: str):
+            retriever = RAGRetriever()
+            try:
+                pool = await retriever.get_pool()
+                pos_marker = (
+                    f"Governed open travel corpus verification {uuid.uuid4().hex[:10]}"
+                )
+                vec_str = (
+                    "["
+                    + ",".join(str(x) for x in retriever.embedder.embed_text(pos_marker))
+                    + "]"
+                )
+
+                inserted_doc_ids: list[str] = []
+                async with pool.acquire() as conn:
+                    verified_place_id = await conn.fetchval(
+                        """
+                        SELECT p.id::text
+                        FROM places p
+                        WHERE EXISTS (
+                            SELECT 1 FROM place_sources ps WHERE ps.place_id = p.id
+                        )
+                        LIMIT 1
+                        """
+                    )
+                    assert verified_place_id is not None
+
+                    governed_candidates = [
+                        {
+                            "doc_id": f"gov-pos-wikipedia-{uuid.uuid4().hex[:6]}",
+                            "source_name": "wikipedia_article",
+                            "source_url": "https://vi.wikipedia.org/wiki/C%E1%BA%A7u_R%E1%BB%93ng",
+                            "license": "CC-BY-SA-4.0",
+                            "attribution": "Wikipedia contributors",
+                            "place_id": None,
+                            "metadata": {
+                                "reuse_storage_class": "OPEN_REUSABLE",
+                                "provenance_status": "VERIFIED_PRIMARY_PROVENANCE",
+                            },
+                        },
+                        {
+                            "doc_id": f"gov-pos-wikidata-{uuid.uuid4().hex[:6]}",
+                            "source_name": "wikidata_entity",
+                            "source_url": "https://www.wikidata.org/wiki/Q10744292",
+                            "license": "CC0-1.0",
+                            "attribution": "Wikidata contributors",
+                            "place_id": None,
+                            "metadata": {
+                                "reuse_storage_class": "OPEN_REUSABLE",
+                                "provenance_status": "VERIFIED_PRIMARY_PROVENANCE",
+                            },
+                        },
+                        {
+                            "doc_id": f"gov-pos-overture-{uuid.uuid4().hex[:6]}",
+                            "source_name": "overture_places_parquet",
+                            "source_url": "https://docs.overturemaps.org/guides/places",
+                            "license": "CDLA-Permissive-2.0",
+                            "attribution": "Overture Maps Foundation",
+                            "place_id": verified_place_id,
+                            "metadata": {
+                                "reuse_storage_class": "OPEN_REUSABLE",
+                                "provenance_status": "VERIFIED_PRIMARY_PROVENANCE",
+                            },
+                        },
+                        {
+                            "doc_id": f"gov-pos-official-{uuid.uuid4().hex[:6]}",
+                            "source_name": "official_tourism",
+                            "source_url": "https://danangfantasticity.com/en/attractions/dragon-bridge",
+                            "license": "CC BY 4.0",
+                            "attribution": "Da Nang Department of Tourism",
+                            "place_id": None,
+                            "metadata": {
+                                "reuse_storage_class": "OPEN_REUSABLE",
+                                "reuse_evidence": "Explicit open CC BY 4.0 portal reuse notice verified",
+                            },
+                        },
+                    ]
+
+                    try:
+                        for item in governed_candidates:
+                            row_uuid = str(uuid.uuid4())
+                            inserted_doc_ids.append(row_uuid)
+                            content = f"{pos_marker} — verified record from {item['source_name']}"
+                            chash = hashlib.sha256(content.encode("utf-8")).hexdigest()
+                            await conn.execute(
+                                """
+                                INSERT INTO documents (
+                                    id, document_id, source_name, source_url, license,
+                                    attribution, place_id, language, title, content,
+                                    content_hash, embedding_model, metadata, embedding
+                                ) VALUES (
+                                    $1::uuid, $2, $3, $4, $5,
+                                    $6, $7::uuid, 'vi', $8, $9,
+                                    $10, $11, $12::jsonb, $13::vector
+                                )
+                                """,
+                                row_uuid,
+                                item["doc_id"],
+                                item["source_name"],
+                                item["source_url"],
+                                item["license"],
+                                item["attribution"],
+                                item["place_id"],
+                                pos_marker,
+                                content,
+                                chash,
+                                retriever.embedder.model_name,
+                                json.dumps(item["metadata"]),
+                                vec_str,
+                            )
+
+                        hits = await retriever.search(
+                            pos_marker,
+                            top_k=10,
+                            min_similarity=0.3,
+                            include_unverified=False,
+                        )
+                        matched = [h for h in hits if h["title"] == pos_marker]
+                        matched_sources = {h["source_name"] for h in matched}
+                        assert matched_sources == {
+                            "wikipedia_article",
+                            "wikidata_entity",
+                            "overture_places_parquet",
+                            "official_tourism",
+                        }
+
+                        # Verify RAGService.retrieve_with_status surfaces governed URLs cleanly
+                        rag_svc = RAGService(retriever=retriever)
+                        rag_res = await rag_svc.retrieve_with_status(pos_marker, top_k=10)
+                        assert rag_res.status == "ok"
+                        for item in governed_candidates:
+                            assert item["source_url"] in rag_res.sources
+
+                        print(
+                            "[C02-F02-EVIDENCE-POSITIVE] "
+                            + json.dumps(
+                                {
+                                    "retrieved_governed_sources": sorted(matched_sources),
+                                    "rag_service_status": rag_res.status,
+                                    "all_governed_urls_present": True,
+                                }
+                            )
+                        )
+                    finally:
+                        await conn.execute(
+                            "DELETE FROM documents WHERE id = ANY($1::uuid[])",
+                            inserted_doc_ids,
+                        )
+            finally:
+                await retriever.close()
+
+        _run_db_test(_body)
+
+    def test_live_retriever_rejects_unapproved_or_incomplete_provenance_and_ci_fixtures(
+        self,
+    ):
+        async def _body(_admin_conn: asyncpg.Connection, _base_dsn: str):
+            retriever = RAGRetriever()
+            try:
+                pool = await retriever.get_pool()
+                neg_marker = (
+                    f"Adversarial source governance probe {uuid.uuid4().hex[:10]}"
+                )
+                vec_str = (
+                    "["
+                    + ",".join(str(x) for x in retriever.embedder.embed_text(neg_marker))
+                    + "]"
+                )
+
+                negative_cases = [
+                    # 1-4: Denylisted fixture / synthetic / mock / legacy sources even with valid-looking URL/license
+                    (
+                        "ci_fixture_disguised_https",
+                        "ci_fixture",
+                        "https://example.org/fixture",
+                        "CC BY 4.0",
+                        "CI Bot",
+                        {"reuse_storage_class": "OPEN_REUSABLE", "reuse_evidence": "test"},
+                    ),
+                    (
+                        "synthetic_source",
+                        "synthetic",
+                        "https://example.org/synthetic",
+                        "CC0-1.0",
+                        "Synthetic Generator",
+                        {"reuse_storage_class": "OPEN_REUSABLE", "reuse_evidence": "test"},
+                    ),
+                    (
+                        "mock_source",
+                        "mock",
+                        "https://example.org/mock",
+                        "CC0-1.0",
+                        "Mock Generator",
+                        {"reuse_storage_class": "OPEN_REUSABLE", "reuse_evidence": "test"},
+                    ),
+                    (
+                        "unverified_legacy_source",
+                        "unverified_legacy",
+                        "https://en.wikipedia.org/wiki/Hue",
+                        "UNVERIFIED_LEGACY",
+                        "Legacy",
+                        {},
+                    ),
+                    # 5: Arbitrary external source NOT auto-trusted without governance approval
+                    (
+                        "unapproved_random_blog",
+                        "random_travel_blog",
+                        "https://travelblog.example.com/da-nang",
+                        "CC BY 4.0",
+                        "Random Blogger",
+                        {},
+                    ),
+                    # 6: Commercial/social platform blocked even if stamped OPEN_REUSABLE
+                    (
+                        "commercial_tripadvisor",
+                        "tripadvisor",
+                        "https://www.tripadvisor.com/Attraction_Review",
+                        "CC BY 4.0",
+                        "TripAdvisor",
+                        {
+                            "reuse_storage_class": "OPEN_REUSABLE",
+                            "reuse_evidence": "forged",
+                            "governance_decision": "ACCEPT_PRIMARY_CORPUS",
+                        },
+                    ),
+                    # 7: Wikipedia prose wrongly collapsed into CC0-1.0
+                    (
+                        "wikipedia_wrong_cc0_license",
+                        "wikipedia",
+                        "https://en.wikipedia.org/wiki/Dragon_Bridge_(Da_Nang)",
+                        "CC0-1.0",
+                        "Wikipedia contributors",
+                        {},
+                    ),
+                    # 8: Wikipedia source_name pointing to non-Wikipedia domain
+                    (
+                        "wikipedia_spoofed_domain",
+                        "wikipedia",
+                        "https://spoofed.example.com/wiki/Dragon_Bridge",
+                        "CC-BY-SA-4.0",
+                        "Wikipedia contributors",
+                        {},
+                    ),
+                    # 9: Overture blanket Multi-License (forbidden; must be theme/record-specific)
+                    (
+                        "overture_blanket_multilicense",
+                        "overture_places_parquet",
+                        "https://docs.overturemaps.org/guides/places",
+                        "Multi-License",
+                        "Overture Maps Foundation",
+                        {},
+                    ),
+                    # 10: Official source WITHOUT explicit OPEN_REUSABLE + reuse_evidence (never auto-trusted!)
+                    (
+                        "official_missing_reuse_proof",
+                        "official_tourism",
+                        "https://danangfantasticity.com/en/no-license-proof",
+                        "CC BY 4.0",
+                        "Official Portal",
+                        {},
+                    ),
+                    # 11: Official source with REFERENCE_ONLY storage class
+                    (
+                        "official_reference_only",
+                        "official_tourism",
+                        "https://danangfantasticity.com/en/reference-only",
+                        "CC BY 4.0",
+                        "Official Portal",
+                        {
+                            "reuse_storage_class": "REFERENCE_ONLY",
+                            "reuse_evidence": "Copyright reserved; metadata only",
+                        },
+                    ),
+                    # 12: Valid Wikipedia provenance explicitly marked user_citable=false
+                    (
+                        "wikipedia_not_user_citable",
+                        "wikipedia_article",
+                        "https://vi.wikipedia.org/wiki/Ng%C5%A9_H%C3%A0nh_S%C6%A1n",
+                        "CC-BY-SA-4.0",
+                        "Wikipedia contributors",
+                        {"user_citable": False},
+                    ),
+                    # 13: Valid Wikidata source missing required attribution
+                    (
+                        "wikidata_missing_attribution",
+                        "wikidata_entity",
+                        "https://www.wikidata.org/wiki/Q10744292",
+                        "CC0-1.0",
+                        "",
+                        {},
+                    ),
+                ]
+
+                inserted_ids: list[str] = []
+                async with pool.acquire() as conn:
+                    try:
+                        for label, src, s_url, lic, attr, meta in negative_cases:
+                            row_uuid = str(uuid.uuid4())
+                            inserted_ids.append(row_uuid)
+                            content = f"{neg_marker} — {label}"
+                            chash = hashlib.sha256(content.encode("utf-8")).hexdigest()
+                            await conn.execute(
+                                """
+                                INSERT INTO documents (
+                                    id, document_id, source_name, source_url, license,
+                                    attribution, language, title, content, content_hash,
+                                    embedding_model, metadata, embedding
+                                ) VALUES (
+                                    $1::uuid, $2, $3, $4, $5,
+                                    $6, 'en', $7, $8, $9,
+                                    $10, $11::jsonb, $12::vector
+                                )
+                                """,
+                                row_uuid,
+                                f"gov-neg-{label}",
+                                src,
+                                s_url,
+                                lic,
+                                attr,
+                                neg_marker,
+                                content,
+                                chash,
+                                retriever.embedder.model_name,
+                                json.dumps(meta),
+                                vec_str,
+                            )
+
+                        # Confirm dev/unverified mode sees all 13 rows via pgvector similarity
+                        dev_hits = await retriever.search(
+                            neg_marker,
+                            top_k=30,
+                            min_similarity=0.0,
+                            include_unverified=True,
+                        )
+                        dev_matched = [h for h in dev_hits if h["title"] == neg_marker]
+                        assert len(dev_matched) == len(negative_cases)
+
+                        # Production mode MUST reject every single one of the 13 invalid/unapproved rows
+                        prod_hits = await retriever.search(
+                            neg_marker,
+                            top_k=30,
+                            min_similarity=0.0,
+                            include_unverified=False,
+                        )
+                        prod_matched = [h for h in prod_hits if h["title"] == neg_marker]
+                        assert prod_matched == []
+
+                        rag_svc = RAGService(retriever=retriever)
+                        rag_res = await rag_svc.retrieve_with_status(neg_marker, top_k=10)
+                        negative_urls = {c[2] for c in negative_cases}
+                        assert negative_urls.isdisjoint(set(rag_res.sources))
+
+                        print(
+                            "[C02-F02-EVIDENCE-NEGATIVE] "
+                            + json.dumps(
+                                {
+                                    "adversarial_candidates_tested": len(negative_cases),
+                                    "dev_opt_in_matched": len(dev_matched),
+                                    "production_leaked": len(prod_matched),
+                                    "blocked_labels": [c[0] for c in negative_cases],
+                                }
+                            )
+                        )
+                    finally:
+                        await conn.execute(
+                            "DELETE FROM documents WHERE id = ANY($1::uuid[])",
+                            inserted_ids,
                         )
             finally:
                 await retriever.close()

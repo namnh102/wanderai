@@ -6,6 +6,117 @@ CREATE EXTENSION IF NOT EXISTS "postgis";
 -- Note: trips columns ("currency", "interests", "travel_style") were already added in
 -- historical migration 20261001083200_add_trip_context_fields and must not be re-owned here.
 
+-- Step 0: Record pre-migration schema ownership in "_migration_20261110_schema_ledger"
+-- BEFORE creating dataset_registry or adding columns/indexes to "documents".
+-- This guarantees down.sql never drops RAG enrichment columns or indexes that already
+-- existed prior to this migration (e.g. from out-of-Prisma ingestion pipelines).
+CREATE TABLE IF NOT EXISTS "_migration_20261110_schema_ledger" (
+    "migration_name" VARCHAR(100) PRIMARY KEY,
+    "dataset_registry_preexisted" BOOLEAN NOT NULL,
+    "preexisting_documents_columns" TEXT[] NOT NULL,
+    "added_documents_columns" TEXT[] NOT NULL,
+    "preexisting_nullable_columns" TEXT[] NOT NULL,
+    "preexisting_no_default_columns" TEXT[] NOT NULL,
+    "preexisting_column_defaults" JSONB NOT NULL DEFAULT '{}'::jsonb,
+    "preexisting_documents_indexes" TEXT[] NOT NULL,
+    "recorded_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+DO $$
+DECLARE
+  candidate_cols CONSTANT TEXT[] := ARRAY[
+    'document_id', 'source_name', 'source_url', 'license', 'attribution',
+    'destination_id', 'place_id', 'language', 'topic', 'section_heading',
+    'title', 'content_hash', 'embedding_model', 'retrieved_at', 'updated_at',
+    'embedding'
+  ];
+  candidate_idxs CONSTANT TEXT[] := ARRAY[
+    'documents_content_hash_embedding_model_key',
+    'documents_source_name_idx',
+    'documents_destination_id_idx',
+    'documents_embedding_hnsw_idx'
+  ];
+  pre_cols TEXT[];
+  add_cols TEXT[];
+  pre_null_cols TEXT[];
+  pre_nodef_cols TEXT[];
+  pre_col_defaults JSONB;
+  pre_idxs TEXT[];
+  ds_preexisted BOOLEAN;
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1
+    FROM "_migration_20261110_schema_ledger"
+    WHERE "migration_name" = '20261110000000_sync_schema_drift'
+  ) THEN
+    SELECT to_regclass(format('%I.dataset_registry', current_schema())) IS NOT NULL
+      INTO ds_preexisted;
+
+    SELECT COALESCE(array_agg(c.column_name ORDER BY c.column_name), ARRAY[]::TEXT[])
+      INTO pre_cols
+    FROM information_schema.columns c
+    WHERE c.table_schema = current_schema()
+      AND c.table_name = 'documents'
+      AND c.column_name = ANY(candidate_cols);
+
+    SELECT COALESCE(array_agg(col ORDER BY col), ARRAY[]::TEXT[])
+      INTO add_cols
+    FROM unnest(candidate_cols) AS col
+    WHERE NOT (col = ANY(pre_cols));
+
+    SELECT COALESCE(array_agg(c.column_name ORDER BY c.column_name), ARRAY[]::TEXT[])
+      INTO pre_null_cols
+    FROM information_schema.columns c
+    WHERE c.table_schema = current_schema()
+      AND c.table_name = 'documents'
+      AND c.column_name = ANY(pre_cols)
+      AND c.is_nullable = 'YES';
+
+    SELECT COALESCE(array_agg(c.column_name ORDER BY c.column_name), ARRAY[]::TEXT[])
+      INTO pre_nodef_cols
+    FROM information_schema.columns c
+    WHERE c.table_schema = current_schema()
+      AND c.table_name = 'documents'
+      AND c.column_name = ANY(pre_cols)
+      AND c.column_default IS NULL;
+
+    SELECT COALESCE(jsonb_object_agg(c.column_name, to_jsonb(c.column_default)), '{}'::jsonb)
+      INTO pre_col_defaults
+    FROM information_schema.columns c
+    WHERE c.table_schema = current_schema()
+      AND c.table_name = 'documents'
+      AND c.column_name = ANY(pre_cols)
+      AND c.column_default IS NOT NULL;
+
+    SELECT COALESCE(array_agg(i.indexname ORDER BY i.indexname), ARRAY[]::TEXT[])
+      INTO pre_idxs
+    FROM pg_indexes i
+    WHERE i.schemaname = current_schema()
+      AND i.tablename = 'documents'
+      AND i.indexname = ANY(candidate_idxs);
+
+    INSERT INTO "_migration_20261110_schema_ledger" (
+      "migration_name",
+      "dataset_registry_preexisted",
+      "preexisting_documents_columns",
+      "added_documents_columns",
+      "preexisting_nullable_columns",
+      "preexisting_no_default_columns",
+      "preexisting_column_defaults",
+      "preexisting_documents_indexes"
+    ) VALUES (
+      '20261110000000_sync_schema_drift',
+      ds_preexisted,
+      pre_cols,
+      add_cols,
+      pre_null_cols,
+      pre_nodef_cols,
+      pre_col_defaults,
+      pre_idxs
+    );
+  END IF;
+END $$;
+
 -- Create dataset_registry table defined in schema.prisma
 CREATE TABLE IF NOT EXISTS "dataset_registry" (
     "id" UUID NOT NULL DEFAULT gen_random_uuid(),
@@ -46,8 +157,8 @@ ALTER TABLE "documents"
   ADD COLUMN IF NOT EXISTS "updated_at" TIMESTAMPTZ,
   ADD COLUMN IF NOT EXISTS "embedding" vector(384);
 
--- Step 2: Safely backfill pre-existing / unbackfilled / duplicate legacy rows in "documents"
--- without deleting any rows and without stamping fake provenance.
+-- Step 2: Safely backfill unbackfilled/duplicate legacy rows in "documents" without deleting
+-- any rows, without stamping fake provenance, and without altering pre-enriched valid rows.
 DO $$
 DECLARE
   has_legacy_source_col BOOLEAN;
@@ -60,7 +171,9 @@ BEGIN
       AND column_name = 'source'
   ) INTO has_legacy_source_col;
 
-  -- 2a. Normalize rows lacking provenance, embedding_model, or a valid 64-hex content_hash.
+  -- 2a. Normalize ONLY rows lacking valid provenance (source_name / license) or lacking a
+  --     valid 64-hex content_hash. Pre-enriched rows that already carry valid source_name,
+  --     license, and 64-hex content_hash keep their provenance and metadata untouched.
   IF has_legacy_source_col THEN
     EXECUTE $sql$
       UPDATE "documents"
@@ -109,7 +222,7 @@ BEGIN
           WHEN "embedding_model" IS NULL OR btrim("embedding_model") = '' THEN
             CASE
               WHEN "embedding" IS NULL THEN 'unembedded_legacy'
-              ELSE 'unknown_preexisting_model'
+              ELSE 'preexisting_external_embedding'
             END
           ELSE "embedding_model"
         END,
@@ -128,7 +241,6 @@ BEGIN
         END
       WHERE "source_name" IS NULL OR btrim("source_name") = ''
          OR "license" IS NULL OR btrim("license") = ''
-         OR "embedding_model" IS NULL OR btrim("embedding_model") = ''
          OR "content_hash" IS NULL OR "content_hash" !~ '^[0-9a-fA-F]{64}$'
     $sql$;
   ELSE
@@ -174,7 +286,7 @@ BEGIN
         WHEN "embedding_model" IS NULL OR btrim("embedding_model") = '' THEN
           CASE
             WHEN "embedding" IS NULL THEN 'unembedded_legacy'
-            ELSE 'unknown_preexisting_model'
+            ELSE 'preexisting_external_embedding'
           END
         ELSE "embedding_model"
       END,
@@ -193,11 +305,11 @@ BEGIN
       END
     WHERE "source_name" IS NULL OR btrim("source_name") = ''
        OR "license" IS NULL OR btrim("license") = ''
-       OR "embedding_model" IS NULL OR btrim("embedding_model") = ''
        OR "content_hash" IS NULL OR "content_hash" !~ '^[0-9a-fA-F]{64}$';
   END IF;
 
-  -- 2b. Fill any remaining nullable auxiliary fields on otherwise-valid rows without altering provenance.
+  -- 2b. Fill remaining nullable auxiliary columns on pre-enriched valid rows without
+  --     altering their source_name, source_url, license, content_hash, embedding, or metadata.
   UPDATE "documents"
   SET
     "document_id" = COALESCE("document_id", ''),
@@ -205,6 +317,15 @@ BEGIN
     "attribution" = COALESCE("attribution", ''),
     "language" = COALESCE(NULLIF(btrim("language"), ''), 'und'),
     "title" = COALESCE("title", ''),
+    "embedding_model" = CASE
+      WHEN "embedding_model" IS NOT NULL AND btrim("embedding_model") <> '' THEN "embedding_model"
+      WHEN "metadata" IS NOT NULL
+           AND jsonb_typeof("metadata") = 'object'
+           AND COALESCE(btrim("metadata"->>'embedding_model'), '') <> ''
+        THEN btrim("metadata"->>'embedding_model')
+      WHEN "embedding" IS NULL THEN 'unembedded_legacy'
+      ELSE 'preexisting_external_embedding'
+    END,
     "retrieved_at" = COALESCE("retrieved_at", "created_at", CURRENT_TIMESTAMP),
     "updated_at" = COALESCE("updated_at", "created_at", CURRENT_TIMESTAMP)
   WHERE "document_id" IS NULL
@@ -212,6 +333,7 @@ BEGIN
      OR "attribution" IS NULL
      OR "language" IS NULL OR btrim("language") = ''
      OR "title" IS NULL
+     OR "embedding_model" IS NULL OR btrim("embedding_model") = ''
      OR "retrieved_at" IS NULL
      OR "updated_at" IS NULL;
 
