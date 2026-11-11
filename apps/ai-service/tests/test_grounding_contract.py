@@ -4,6 +4,7 @@ None of these tests call Gemini. They prove the prompt contract and the exact me
 provider; they are NOT evidence that a live Gemini reply is grounded.
 """
 import asyncio
+import os
 from unittest.mock import AsyncMock, patch
 
 from fastapi import Request
@@ -88,6 +89,8 @@ def _db(coro_fn):
         try:
             pool = await retriever.get_pool()
         except Exception as e:  # noqa: BLE001
+            if os.environ.get("REQUIRE_DB_TESTS") == "1":
+                raise
             pytest.skip(f"database unavailable: {e}")
         try:
             return await coro_fn(retriever, pool)

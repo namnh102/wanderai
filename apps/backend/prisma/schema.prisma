@@ -684,19 +684,19 @@ model AiMessage {
 model Document {
   id             String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   documentId     String    @default("") @map("document_id") @db.VarChar(255)
-  sourceName     String    @default("wikivoyage") @map("source_name") @db.VarChar(50)
+  sourceName     String    @default("unverified_legacy") @map("source_name") @db.VarChar(50)
   sourceUrl      String    @default("") @map("source_url") @db.VarChar(500)
-  license        String    @default("CC BY-SA 3.0") @db.VarChar(100)
+  license        String    @default("UNVERIFIED_LEGACY") @db.VarChar(100)
   attribution    String    @default("") @db.VarChar(255)
   destinationId  String?   @map("destination_id") @db.Uuid
   placeId        String?   @map("place_id") @db.Uuid
-  language       String    @default("en") @db.VarChar(10)
+  language       String    @default("und") @db.VarChar(10)
   topic          String?   @db.VarChar(100)
   sectionHeading String?   @map("section_heading") @db.VarChar(255)
   title          String    @default("") @db.VarChar(255)
   content        String
   contentHash    String    @map("content_hash") @db.VarChar(64)
-  embeddingModel String    @default("sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2") @map("embedding_model") @db.VarChar(100)
+  embeddingModel String    @default("unembedded_legacy") @map("embedding_model") @db.VarChar(100)
   category       String?   @db.VarChar(50)
   metadata       Json?
   retrievedAt    DateTime  @default(now()) @map("retrieved_at") @db.Timestamptz
