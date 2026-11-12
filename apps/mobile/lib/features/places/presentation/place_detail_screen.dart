@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:latlong2/latlong.dart';
-import 'package:url_launcher/url_launcher.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_radius.dart';
 import '../../../core/theme/app_spacing.dart';
@@ -56,25 +55,73 @@ IconData placeCategoryIcon(String? category) {
   }
 }
 
-Future<void> _openExternal(Uri uri) async {
-  try {
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
-    }
-  } catch (_) {
-    // Link could not be opened — ignore silently.
+void _showExternalErrorSnackBar(
+  BuildContext context,
+  String message, {
+  bool clearBottomCta = false,
+}) {
+  if (!context.mounted) return;
+  final bottomInset = MediaQuery.of(context).padding.bottom;
+  ScaffoldMessenger.of(context)
+    ..removeCurrentSnackBar()
+    ..showSnackBar(
+      SnackBar(
+        content: Text(message),
+        behavior: SnackBarBehavior.floating,
+        margin: EdgeInsets.fromLTRB(
+          16,
+          0,
+          16,
+          clearBottomCta ? 104 + bottomInset : 16,
+        ),
+      ),
+    );
+}
+
+Future<void> _openExternal(
+  BuildContext context,
+  WidgetRef ref,
+  String rawUrl, {
+  required bool clearBottomCta,
+}) async {
+  final opened = await openExternalUrlString(
+    rawUrl,
+    opener: ref.read(externalUriOpenerProvider),
+  );
+  if (!opened && context.mounted) {
+    _showExternalErrorSnackBar(
+      context,
+      externalLinkOpenFailedText,
+      clearBottomCta: clearBottomCta,
+    );
   }
 }
 
 /// Unified "Chỉ đường": external map/navigation app with the place's
 /// coordinates; the user's real position is the origin only when known.
-Future<void> _openDirections(PlaceModel p, LatLng? origin) async {
-  if (!p.hasCoordinates) return;
-  await openDirections(
+Future<void> _openDirections(
+  BuildContext context,
+  WidgetRef ref,
+  PlaceModel p,
+  LatLng? origin,
+) async {
+  if (!p.hasCoordinates) {
+    _showExternalErrorSnackBar(context, directionsOpenFailedText);
+    return;
+  }
+  final openedUri = await openDirections(
     destLat: p.latitude!,
     destLng: p.longitude!,
     origin: origin,
+    opener: ref.read(externalUriOpenerProvider),
   );
+  if (openedUri == null && context.mounted) {
+    _showExternalErrorSnackBar(
+      context,
+      directionsOpenFailedText,
+      clearBottomCta: true,
+    );
+  }
 }
 
 /// Place Detail screen — route `/places/:id`.
@@ -132,8 +179,13 @@ class PlaceDetailScreen extends ConsumerWidget {
             place: place,
             distanceKm:
                 distanceFromUserKm(user, place.latitude, place.longitude),
-            onOpenUrl: (url) => _openExternal(Uri.parse(url)),
-            onDirections: () => _openDirections(place, user),
+            onOpenUrl: (url) => _openExternal(
+              context,
+              ref,
+              url,
+              clearBottomCta: place.hasCoordinates,
+            ),
+            onDirections: () => _openDirections(context, ref, place, user),
           );
         },
       ),
