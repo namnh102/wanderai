@@ -2,71 +2,106 @@
 
 ## Overview
 
-The AI Chat system integrates the Flutter mobile client with Wandy (AI Travel Copilot) via a NestJS API gateway proxy and a Python FastAPI backend running Gemini with function calling tools.
+The AI Chat system connects the Flutter mobile client to **Wandy** (AI Travel Copilot) exclusively through the authenticated NestJS API gateway (`API_BASE_URL`), which signs short-lived HMAC-SHA256 internal assertions to the internal Python FastAPI service running fail-closed `pgvector` RAG retrieval and Gemini function calling. For HTTP request/response schemas and status codes, see [AI Chat API Contract](../api/ai-chat-api.md).
 
 ## Architecture
 
-```
-Flutter Mobile (Client)
+```text
+Flutter Mobile (Client — apps/mobile)
   │
   ├─ AiChatScreen (Presentation)
-  │     └─ Listens to ChatState (Riverpod)
+  │     ├─ Renders messages & retry actions
+  │     ├─ Shows candidate-source disclaimer only when retrieval_status == "ok"
+  │     └─ Shows ungrounded notice when retrieval_status == "empty"
   │
-  ├─ ChatNotifier (State Management)
-  │     ├─ Optimistically renders user bubble
-  │     ├─ Tracks active sessionId across turns
-  │     └─ Handles 401 token expiration -> triggers logout
+  ├─ ChatNotifier (State Management — Riverpod)
+  │     ├─ Optimistically renders user bubble & tracks active sessionId
+  │     ├─ Guards against stale responses via monotonic _sessionEpoch
+  │     ├─ Clears session locally & calls DELETE /ai/chat/:sessionId on clear
+  │     └─ Handles 401 -> logout(), 403 -> reset sessionId, 429/502/503 -> retryable error
   │
-  ├─ ChatRepository (Data Access)
-  │     └─ Uses Dio with 35s timeout
+  ├─ ChatRepository (Data Access — Dio bound to AppConstants.apiBaseUrl)
+  │     ├─ POST /ai/chat (35s send/receive timeout)
+  │     └─ DELETE /ai/chat/:sessionId (10s send/receive timeout)
   │
-  ▼  HTTP POST /ai/chat (Authorization: Bearer <access_token>)
-NestJS Backend (Port 3000)
+  ▼  HTTP POST /ai/chat | DELETE /ai/chat/:sessionId (Authorization: Bearer <access_token>)
+NestJS Backend (Port 3000 — apps/backend)
   │
-  ├─ JwtAuthGuard & CurrentUser (Auth verification)
+  ├─ JwtAuthGuard & CurrentUser (verifies active JWT user)
   ├─ ChatDto (class-validator validation)
-  ├─ AiProxyController & AiProxyService (Reverse proxy)
-  │     └─ Axios forward with 30s timeout
+  ├─ AiProxyController -> AiChatProxyService (src/modules/ai-proxy/internal-auth.ts)
+  │     ├─ Mints X-WanderAI-Internal-Assertion: v1.<payload_b64url>.<hmac_sha256_b64url>
+  │     │    (iss="wanderai-backend", aud="wanderai-ai-service", sub=user.id,
+  │     │     act="POST:/chat" | "DELETE:/chat/<encodedSid>", sid=sessionId, 60s TTL)
+  │     └─ Axios forward (30s timeout for POST /chat, 10s timeout for DELETE /chat/:sid)
   │
-  ▼  HTTP POST /chat
-FastAPI AI Service (Port 8000)
+  ▼  Internal HTTP POST /chat | DELETE /chat/{session_id} (X-WanderAI-Internal-Assertion)
+FastAPI AI Service (Internal Port 8000 — apps/ai-service)
   │
-  ├─ chat.py router
-  ├─ gemini.py provider (google-genai SDK, model: gemini-3.5-flash)
-  │     └─ Tools: get_weather, search_places, calculate_budget, search_hotels
-  └─ In-memory session history (per sessionId)
+  ├─ security/internal_auth.py (require_internal_principal)
+  │     └─ Verifies HMAC signature, TTL/skew (15s), action, user_id & session_id binding
+  ├─ routers/chat.py + services/rag.py -> rag/retriever.py (asyncpg + pgvector)
+  │     └─ Governed SQL filter (GOVERNED_PRODUCTION_DOCUMENT_SQL); tri-state: ok | empty | error
+  └─ services/chat_llm.py (GeminiProvider wrapping gemini-3.5-flash)
+        ├─ Production tools ONLY: get_weather, search_places, calculate_budget
+        ├─ Sanitizes synthetic/unverified tool payloads (_sanitize_tool_result_for_llm)
+        └─ Per-user bounded in-memory sessions + monotonic generation tokens
 ```
 
-## Request & Response Flow
+## Request, Grounding & Session Lifecycle
 
-1. **User input**: User types a question in Flutter and taps Send.
-2. **Local validation**: Non-empty check in Flutter; empty strings are rejected.
-3. **Optimistic update**: User bubble appears immediately; UI enters `ChatStatus.loading`.
-4. **Gateway call**: Flutter calls `POST http://localhost:3000/ai/chat` passing Bearer token and JSON `{message, session_id}`.
-5. **Gateway authentication**: NestJS `JwtAuthGuard` validates the JWT token.
-   - If missing/invalid -> returns `401 Unauthorized`.
-   - Flutter `ChatNotifier` intercepts 401 and calls `authProvider.notifier.logout()`, redirecting to `/login`.
-6. **Proxy forwarding**: NestJS forwards to `FastAPI:8000/chat`.
-7. **RAG Knowledge Grounding**: FastAPI `retrieve_grounding()` queries `RAGService` to retrieve relevant verified OpenStreetMap and Wikivoyage chunks.
-   - Verified chunks are prepended as grounding context along with a strict no-hallucination instruction.
-   - Distinct source URLs (OSM way/node links, Wikivoyage page links) are extracted as `sources`.
-8. **LLM & Tool Calling**: Gemini 3.5 Flash evaluates the grounded prompt and calls functions if necessary (weather, places, budget, hotels). The Wandy system prompt mandates using only facts present in context or tool results, specifying deterministic fallback phrases if missing.
-9. **Response Return**: FastAPI returns `{reply, session_id, tools_used, tool_calls, sources}`.
-10. **Gateway format**: NestJS wraps in `{success: true, data: {...}, timestamp: "..."}`.
-11. **State update & Source UI**: Flutter app receives response, appends assistant message with `sources`. If `sources` is non-empty, `AiChatScreen` renders a compact, secondary "Nguồn tham khảo:" section with interactive source chips linking to OpenStreetMap and Wikivoyage.
+### 1. Gateway Authentication & Internal HMAC Assertion
+1. **Mobile gateway call:** Flutter sends `POST {API_BASE_URL}/ai/chat` with `Authorization: Bearer <access_token>` and `{message, session_id}` (never calling FastAPI `:8000` directly).
+2. **JWT verification:** NestJS `JwtAuthGuard` authenticates the active user (`401` on missing/expired token or soft-deleted user).
+3. **Signed internal assertion:** `AiChatProxyService` signs header `X-WanderAI-Internal-Assertion` (`v1.<base64url(canonical_json)>.<base64url(hmac_sha256)>`) using `AI_INTERNAL_AUTH_SECRET` (`>= 32` chars, `>= 8` unique chars, distinct from `JWT_SECRET` and `JWT_REFRESH_SECRET`; fails closed with `503` if misconfigured).
+4. **FastAPI principal & session binding:** `require_internal_principal` verifies the HMAC signature, `iss`/`aud`, `exp`/`iat` (`60s` default TTL, `120s` max, `15s` clock skew), and exact `act`. `chat.py` rejects mismatched `body.user_id` or `session_id` with `403`.
+
+### 2. Fail-Closed Tri-State RAG Grounding (`retrieval_status`) & `GOVERNED_PRODUCTION_DOCUMENT_SQL`
+`RAGService.retrieve_with_status(query, top_k=4)` queries PostgreSQL `documents` via `asyncpg` (`app/rag/retriever.py`) filtered by `GOVERNED_PRODUCTION_DOCUMENT_SQL`:
+- **Provenance & `user_citable` Predicate Semantics:**
+  - **Explicit rejection of `user_citable=false` and denylisted rows:** Rows with denylisted `source_name` values (blank, `ci_fixture`, `synthetic`, `mock`, `unverified_legacy`, `manual`, `test`, `fixture`, `unknown`, `google*`, `tripadvisor`, `facebook`, `tiktok`, `instagram`, `youtube`), `urn:gomate:ci-fixture:*` or non-`http(s)://` URLs, blank/restricted licenses, blank/placeholder `attribution`, non-object/non-null JSON `metadata`, or explicit `metadata` flags `user_citable = false` (`lower(metadata->>'user_citable') = 'false'`), `is_ci_fixture = true`, `legacy_migration_backfill = true`, `trusted = false`, `reuse_storage_class <> 'OPEN_REUSABLE'`, `provenance_status IN ('UNVERIFIED', 'REJECTED', 'QUARANTINED')`, or `governance_decision IN ('REJECT', 'HOLD', 'QUARANTINE')` are strictly **excluded**.
+  - **Omitted/`NULL` `user_citable` behavior:** Rows whose `metadata` is `NULL` or omits the `user_citable` key (`lower(COALESCE(metadata->>'user_citable', 'true')) <> 'false'`) **can still be accepted** if they satisfy all remaining SQL predicates — including `place_sources` linkage whenever `place_id IS NOT NULL` and one of the permitted source-family/license/domain branches (`osm`, `wikivoyage`, `wikipedia`, `wikidata`, `overture`, or the `official*`/`open_government`/`ACCEPT_PRIMARY_CORPUS` branch which additionally requires non-null object `metadata` with explicit `reuse_storage_class = 'OPEN_REUSABLE'` and non-empty `reuse_evidence`).
+  - **Governance eligibility vs scientific claim verification:** Satisfying `GOVERNED_PRODUCTION_DOCUMENT_SQL` (source-family, URL pattern, open license, attribution, and governance metadata) establishes **corpus-level retrieval eligibility only**; it does **not** guarantee that every factual claim in a retrieved chunk or generated answer has been scientifically verified (`W07` scientific protocol and gates `G1.5..G6` remain `HOLD`).
+- **Tri-State Outcomes:**
+  - **`retrieval_status = "error"` (Fail-Closed `503`):** If `DATABASE_URL` is missing or embedding/`asyncpg` PostgreSQL retrieval fails, FastAPI aborts **before** calling Gemini and returns HTTP `503` (`"Kho dữ liệu tri thức du lịch tạm thời không khả dụng. Vui lòng thử lại sau."`).
+  - **`retrieval_status = "empty"`:** If PostgreSQL is healthy but zero governed chunks match, FastAPI injects `NO_CONTEXT_INSTRUCTION` (forbidding fabricated addresses, opening hours, prices, phone numbers, or ratings), runs Gemini, and returns `sources: []` with `retrieval_status: "empty"`.
+  - **`retrieval_status = "ok"`:** Injects numbered governed context chunks (`[1]..[n]`) + grounding rules and returns deduplicated `https://` `source_url` candidates in `sources` with `retrieval_status: "ok"`.
+
+### 3. Production Toolset & Synthetic Output Guard
+- Active production `_TOOLS` in `apps/ai-service/app/routers/chat.py` contains **only** three tools:
+  1. `get_weather` (`WeatherTool`)
+  2. `search_places` (`SearchPlacesTool`)
+  3. `calculate_budget` (`BudgetTool`)
+- `search_hotels` (`SearchHotelsTool`) is **excluded** from production `_TOOLS` because no verified live hotel inventory is connected.
+- `_sanitize_tool_result_for_llm` intercepts tool outputs marked `synthetic=True` or `verified=False` so synthetic fallback records cannot reach Gemini as factual data.
+- Missing/placeholder `GEMINI_API_KEY` or upstream Gemini failures fail closed (`503` unavailable, `429` rate limit, `502` upstream error) instead of returning mock text.
+
+### 4. Candidate Source UI Disclaimer & Scientific Factuality Boundary
+- When `retrieval_status == "ok"` and `sources` is non-empty, `AiChatScreen` renders `https://` source chips under the explicit disclaimer:
+  > `"Nguồn dữ liệu truy xuất (chưa đối chiếu từng chi tiết trả lời):"`
+- When `retrieval_status == "empty"`, `AiChatScreen` displays:
+  > `"Chưa có nguồn đối chiếu trực tiếp trong kho dữ liệu."`
+- **Important boundary:** `sources` are **retrieved corpus candidate URLs** from the RAG step, **not** claim-level verified citations for every sentence in `reply`. Scientific factuality and claim-attribution verification (`W07` gate `G5`) remain `HOLD` under W07 Scientific Protocol v1.0. Android 15 emulator smoke verified AI Chat transport/UI using an offline-stubbed LLM client (zero paid API calls) and is **not** a W07 scientific factuality `PASS`.
+
+### 5. Per-User Session Isolation & Concurrent `DELETE` Safety
+- `GeminiProvider` in `apps/ai-service/app/services/chat_llm.py` binds each `session_id` to `owner_user_id = principal.user_id`. Cross-user access or deletion raises `SessionOwnershipError` → HTTP `403`.
+- Clearing chat history calls `DELETE /ai/chat/:sessionId` → `DELETE /chat/{session_id}`, removing server history and incrementing `_sessionEpoch` on mobile.
+- Every session turn snapshots a monotonic, non-reusable lifecycle `generation` token (`_allocate_generation_locked`). If an in-flight `POST /chat` races with `DELETE`, TTL expiry, or capacity eviction (including same-`session_id` ABA recreation), `_commit_turn` detects the missing/changed generation under lock and skips persistence (`persisted=False`), returning the response without resurrecting deleted history.
 
 ## Timeout & Error Handling
 
-| Scenario | Handled By | Resulting User Message |
+| Scenario | Layer | Resulting Mobile Behavior / User Message |
 |---|---|---|
-| Request takes > 35s | Dio in Flutter | `AI phan hoi qua lau. Vui long thu lai.` |
-| Network disconnect | Dio in Flutter | `Khong the ket noi may chu. Vui long kiem tra mang.` |
-| Token expired / 401 | Flutter ChatNotifier | Log out user, redirect to `/login` |
-| Empty message | Flutter UI & Backend DTO | Rejected locally; 400 Bad Request if sent |
-| AI Service unavailable (503) | NestJS & Flutter | `Dich vu AI dang ban hoac qua tai. Vui long thu lai sau.` |
+| Client request exceeds `35s` (`POST`) / `10s` (`DELETE`) | Flutter Dio (`ChatNotifier`) | `AI phan hoi qua lau. Vui long thu lai.` |
+| Network unreachable / DNS / socket error | Flutter Dio (`ChatNotifier`) | `Khong the ket noi may chu. Vui long kiem tra mang.` |
+| Missing/expired JWT (`401`) | NestJS `JwtAuthGuard` + `ChatNotifier` | Calls `authProvider.notifier.logout()`, increments `_sessionEpoch`, clears `sessionId`, shows `Phien dang nhap het han. Vui long dang nhap lai.`, redirects to `/login` |
+| Cross-user session or mismatched assertion (`403`) | FastAPI `chat.py` / `chat_llm.py` + `ChatNotifier` | Resets `sessionId` so next retry starts a fresh session; shows `Phien tro chuyen khong hop le hoac da het quyen truy cap. Vui long thu lai.` |
+| Empty/invalid message or blank `sessionId` (`400`) | Flutter UI, NestJS `ChatDto`, FastAPI | Rejected locally; `Tin nhan khong hop le.` if `400` returned |
+| Gemini quota / rate limit (`429`) | FastAPI `LLMRateLimitError` → NestJS → Flutter | `He thong AI dang qua tai yeu cau (429). Vui long doi mot lat roi thu lai.` |
+| Upstream LLM error (`502`) or RAG/LLM/Auth-config/Timeout unavailable (`503`) | FastAPI / NestJS `AiChatProxyService` → Flutter | `Dich vu AI dang ban hoac qua tai. Vui long thu lai sau.` (retryable via `retryLastMessage`) |
 
 ## Conversation Memory & Limitations
 
-- **Current Session Memory**: In-memory only. The session preserves messages in Flutter state and on the FastAPI server by `session_id` for the duration of the current run.
-- **No Persistent Database Storage**: Messages are not yet saved into the PostgreSQL `ai_messages` or `ai_sessions` tables. This is intentional for TASK 03 to keep the MVP slice lightweight and will be implemented in a dedicated AI persistence milestone.
-- **Streaming**: Not currently supported by the backend proxy or FastAPI router. Standard buffered responses are used.
+- **Bounded In-Memory Session Store (`SESSION_STORAGE_LIMITATION = "in_memory_ephemeral_per_instance"`):** Sessions live in FastAPI process memory bounded by `MAX_ACTIVE_SESSIONS = 500`, `DEFAULT_SESSION_TTL_SECONDS = 3600` (1 hour), and `MAX_HISTORY_ITEMS = 40` (`20` user/model turns). Restarting FastAPI or scaling across multiple workers clears/does not share in-memory history.
+- **No Persistent PostgreSQL Chat History Yet:** Turns are intentionally not persisted to PostgreSQL chat tables in the current runtime slice.
+- **Buffered Responses Only:** Streaming (SSE/WebSocket) is not currently enabled on `/ai/chat` or `/chat`.
