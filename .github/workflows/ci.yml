@@ -15,7 +15,7 @@ concurrency:
 
 jobs:
   backend:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     defaults:
       run:
         working-directory: apps/backend
@@ -89,7 +89,7 @@ jobs:
           pnpm exec jest --config ./test/jest-e2e.json --runInBand --forceExit
 
   ai-service:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     env:
       DATABASE_URL: postgresql://postgres:postgres@localhost:5432/wanderai_ci_test
       GEMINI_API_KEY: dummy-key-not-used-in-ci
