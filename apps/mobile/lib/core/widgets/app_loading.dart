@@ -30,7 +30,14 @@ class AppLoading extends StatelessWidget {
           ),
           if (message != null) ...[
             const SizedBox(width: AppSpacing.sm),
-            Text(message!, style: AppTypography.bodyS),
+            Flexible(
+              child: Text(
+                message!,
+                style: AppTypography.bodyS,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
           ],
         ],
       );

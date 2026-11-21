@@ -103,6 +103,23 @@ class AppTheme {
           textStyle: AppTypography.button.copyWith(color: AppColors.primary),
         ),
       ),
+      appBarTheme: const AppBarTheme(
+        backgroundColor: AppColors.surface,
+        foregroundColor: AppColors.textPrimary,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        scrolledUnderElevation: 0.5,
+        titleTextStyle: AppTypography.h3,
+      ),
+      dividerTheme: const DividerThemeData(
+        color: AppColors.softBorder,
+        thickness: 1,
+        space: 1,
+      ),
+      snackBarTheme: const SnackBarThemeData(
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: AppRadius.mdRadius),
+      ),
       navigationBarTheme: NavigationBarThemeData(
         backgroundColor: AppColors.surface,
         indicatorColor: AppColors.primaryContainer,

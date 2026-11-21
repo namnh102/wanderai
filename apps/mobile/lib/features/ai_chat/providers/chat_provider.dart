@@ -231,6 +231,8 @@ final chatRepositoryProvider = Provider<ChatRepository>((ref) {
   return ChatRepository(dio);
 });
 
+final pendingChatPromptProvider = StateProvider<String?>((ref) => null);
+
 final chatProvider = StateNotifierProvider<ChatNotifier, ChatState>((ref) {
   final repo = ref.read(chatRepositoryProvider);
   return ChatNotifier(repo, ref);

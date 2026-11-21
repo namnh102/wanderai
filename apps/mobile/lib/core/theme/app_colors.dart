@@ -7,9 +7,20 @@ class AppColors {
 
   // ─── Brand Colors ───
   static const Color primary = Color(0xFF0F766E); // Teal-700
+  static const Color primaryDeep = Color(0xFF123B43); // UX V2 Deep Ocean Teal
   static const Color primaryContainer = Color(0xFFCCFBF1); // Teal-100
   static const Color onPrimary = Color(0xFFFFFFFF);
   static const Color onPrimaryContainer = Color(0xFF115E59); // Teal-800
+
+  // ─── UX V2 Editorial Accents ───
+  static const Color accentCoral = Color(0xFFF07B5A); // Warm Vietnamese coral/terracotta
+  static const Color accentCoralContainer = Color(0xFFFFEDE6);
+  static const Color onAccentCoral = Color(0xFF9A3412);
+  static const Color warmBackground = Color(0xFFF7F9F6); // Soft editorial warm stone
+  static const Color warmSurface = Color(0xFFFFFCF7);
+  static const Color softBorder = Color(0xFFE2E9E6);
+  static const Color aiSurfaceStart = Color(0xFFE6FFFA);
+  static const Color aiSurfaceEnd = Color(0xFFD5F5EE);
 
   // ─── Semantic Colors ───
   static const Color success = Color(0xFF15803D); // Green-700

@@ -21,7 +21,7 @@ class ResponsiveWrapper extends StatelessWidget {
   Widget build(BuildContext context) {
     return Align(
       alignment: Alignment.topCenter,
-      widthFactor: 1.0,
+      widthFactor: fillHeight ? null : 1.0,
       heightFactor: fillHeight ? null : 1.0,
       child: ConstrainedBox(
         constraints: BoxConstraints(maxWidth: maxWidth),
