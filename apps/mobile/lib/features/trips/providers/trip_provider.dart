@@ -51,7 +51,7 @@ class TripListNotifier extends StateNotifier<TripListState> {
     } catch (_) {
       state = state.copyWith(
         isLoading: false,
-        errorMessage: 'Khong the tai danh sach chuyen di',
+        errorMessage: 'Không thể tải danh sách chuyến đi',
       );
     }
   }
@@ -84,13 +84,13 @@ class TripListNotifier extends StateNotifier<TripListState> {
 
   String _mapError(DioException e) {
     if (e.response?.statusCode == 401) {
-      return 'Phien dang nhap het han. Vui long dang nhap lai.';
+      return 'Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.';
     }
     final data = e.response?.data;
     if (data is Map && data['message'] is String) {
       return data['message'] as String;
     }
-    return 'Loi ket noi den may chu. Vui long thu lai.';
+    return 'Lỗi kết nối đến máy chủ. Vui lòng thử lại.';
   }
 }
 
@@ -153,7 +153,7 @@ class TripDetailNotifier extends StateNotifier<TripDetailState> {
     } catch (_) {
       state = state.copyWith(
         isLoading: false,
-        errorMessage: 'Khong the tai chi tiet chuyen di',
+        errorMessage: 'Không thể tải chi tiết chuyến đi',
       );
     }
   }
@@ -220,7 +220,7 @@ class TripDetailNotifier extends StateNotifier<TripDetailState> {
     } catch (_) {
       state = state.copyWith(
         isGeneratingPlan: false,
-        planErrorMessage: 'Khong the tao lich trinh tu AI. Vui long thu lai.',
+        planErrorMessage: 'Không thể tạo lịch trình từ AI. Vui lòng thử lại.',
       );
       return null;
     }
@@ -252,7 +252,7 @@ class TripDetailNotifier extends StateNotifier<TripDetailState> {
     } catch (_) {
       state = state.copyWith(
         isLoading: false,
-        errorMessage: 'Loi khi luu lich trinh vao chuyen di',
+        errorMessage: 'Lỗi khi lưu lịch trình vào chuyến đi',
       );
       return false;
     }
@@ -264,16 +264,16 @@ class TripDetailNotifier extends StateNotifier<TripDetailState> {
 
   String _mapError(DioException e) {
     if (e.response?.statusCode == 403) {
-      return 'Ban khong co quyen truy cap chuyen di nay.';
+      return 'Bạn không có quyền truy cập chuyến đi này.';
     }
     if (e.response?.statusCode == 404) {
-      return 'Chuyen di khong ton tai hoac da bi xoa.';
+      return 'Chuyến đi không tồn tại hoặc đã bị xóa.';
     }
     final data = e.response?.data;
     if (data is Map && data['message'] is String) {
       return data['message'] as String;
     }
-    return 'Loi ket noi. Vui long thu lai.';
+    return 'Lỗi kết nối. Vui lòng thử lại.';
   }
 }
 

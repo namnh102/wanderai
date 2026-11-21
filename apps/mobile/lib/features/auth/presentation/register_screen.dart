@@ -41,7 +41,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     if (mounted) {
       setState(() => _loading = false);
       if (!ok) {
-        final errorMsg = ref.read(authProvider).errorMessage ?? 'Dang ky that bai.';
+        final errorMsg = ref.read(authProvider).errorMessage ?? 'Đăng ký thất bại.';
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(errorMsg),
@@ -58,7 +58,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Tao tai khoan')),
+      appBar: AppBar(title: const Text('Tạo tài khoản')),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
@@ -68,36 +68,36 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               children: [
                 TextFormField(
                   controller: _nameCtrl,
-                  decoration: const InputDecoration(labelText: 'Ho va ten', prefixIcon: Icon(Icons.person_outlined)),
-                  validator: (v) => (v == null || v.isEmpty) ? 'Vui long nhap ten' : null,
+                  decoration: const InputDecoration(labelText: 'Họ và tên', prefixIcon: Icon(Icons.person_outlined)),
+                  validator: (v) => (v == null || v.isEmpty) ? 'Vui lòng nhập tên' : null,
                 ),
                 const SizedBox(height: 16),
                 TextFormField(
                   controller: _emailCtrl,
                   keyboardType: TextInputType.emailAddress,
                   decoration: const InputDecoration(labelText: 'Email', prefixIcon: Icon(Icons.email_outlined)),
-                  validator: (v) => (v == null || !v.contains('@')) ? 'Email khong hop le' : null,
+                  validator: (v) => (v == null || !v.contains('@')) ? 'Email không hợp lệ' : null,
                 ),
                 const SizedBox(height: 16),
                 TextFormField(
                   controller: _passCtrl,
                   obscureText: _obscure,
                   decoration: InputDecoration(
-                    labelText: 'Mat khau',
+                    labelText: 'Mật khẩu',
                     prefixIcon: const Icon(Icons.lock_outlined),
                     suffixIcon: IconButton(
                       icon: Icon(_obscure ? Icons.visibility_off : Icons.visibility),
                       onPressed: () => setState(() => _obscure = !_obscure),
                     ),
                   ),
-                  validator: (v) => (v == null || v.length < 6) ? 'Mat khau it nhat 6 ky tu' : null,
+                  validator: (v) => (v == null || v.length < 6) ? 'Mật khẩu ít nhất 6 ký tự' : null,
                 ),
                 const SizedBox(height: 16),
                 TextFormField(
                   controller: _confirmCtrl,
                   obscureText: true,
-                  decoration: const InputDecoration(labelText: 'Xac nhan mat khau', prefixIcon: Icon(Icons.lock_outlined)),
-                  validator: (v) => v != _passCtrl.text ? 'Mat khau khong khop' : null,
+                  decoration: const InputDecoration(labelText: 'Xác nhận mật khẩu', prefixIcon: Icon(Icons.lock_outlined)),
+                  validator: (v) => v != _passCtrl.text ? 'Mật khẩu không khớp' : null,
                 ),
                 const SizedBox(height: 24),
                 SizedBox(
@@ -106,13 +106,13 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     onPressed: _loading ? null : _register,
                     child: _loading
                         ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                        : const Text('Dang ky'),
+                        : const Text('Đăng ký'),
                   ),
                 ),
                 const SizedBox(height: 16),
                 TextButton(
                   onPressed: () => context.go('/login'),
-                  child: const Text('Da co tai khoan? Dang nhap'),
+                  child: const Text('Đã có tài khoản? Đăng nhập'),
                 ),
               ],
             ),

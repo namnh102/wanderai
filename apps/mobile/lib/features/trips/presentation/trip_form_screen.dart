@@ -99,7 +99,7 @@ class _TripFormScreenState extends ConsumerState<TripFormScreen> {
 
     if (_startDate != null && _endDate != null && _endDate!.isBefore(_startDate!)) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Ngay ket thuc phai sau ngay bat dau')),
+        const SnackBar(content: Text('Ngày kết thúc phải sau ngày bắt đầu')),
       );
       return;
     }
@@ -128,7 +128,7 @@ class _TripFormScreenState extends ConsumerState<TripFormScreen> {
         if (created != null) {
           context.pop();
         } else {
-          final err = ref.read(tripListProvider).errorMessage ?? 'Loi tao chuyen di';
+          final err = ref.read(tripListProvider).errorMessage ?? 'Lỗi tạo chuyến đi';
           ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(err)));
         }
       }
@@ -156,7 +156,7 @@ class _TripFormScreenState extends ConsumerState<TripFormScreen> {
           ref.read(tripListProvider.notifier).loadTrips();
           context.pop();
         } else {
-          final err = ref.read(tripDetailProvider).errorMessage ?? 'Loi cap nhat';
+          final err = ref.read(tripDetailProvider).errorMessage ?? 'Lỗi cập nhật';
           ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(err)));
         }
       }
@@ -170,7 +170,7 @@ class _TripFormScreenState extends ConsumerState<TripFormScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(isEdit ? 'Chinh sua chuyen di' : 'Tao chuyen di moi'),
+        title: Text(isEdit ? 'Chỉnh sửa chuyến đi' : 'Tạo chuyến đi mới'),
       ),
       body: SafeArea(
         child: Form(
@@ -184,12 +184,12 @@ class _TripFormScreenState extends ConsumerState<TripFormScreen> {
               TextFormField(
                 controller: _titleController,
                 decoration: const InputDecoration(
-                  labelText: 'Ten chuyen di *',
-                  hintText: 'VD: Ha Giang mua hoa tam giac mach',
+                  labelText: 'Tên chuyến đi *',
+                  hintText: 'VD: Hà Giang mùa hoa tam giác mạch',
                   prefixIcon: Icon(Icons.title),
                 ),
                 validator: (v) =>
-                    (v == null || v.trim().isEmpty) ? 'Vui long nhap ten chuyen di' : null,
+                    (v == null || v.trim().isEmpty) ? 'Vui lòng nhập tên chuyến đi' : null,
               ),
               const SizedBox(height: 16),
 
@@ -202,7 +202,7 @@ class _TripFormScreenState extends ConsumerState<TripFormScreen> {
                       icon: const Icon(Icons.calendar_today, size: 16),
                       label: Text(
                         _startDate == null
-                            ? 'Ngay bat dau'
+                            ? 'Ngày bắt đầu'
                             : '${_startDate!.day}/${_startDate!.month}/${_startDate!.year}',
                         style: const TextStyle(fontSize: 12),
                       ),
@@ -215,7 +215,7 @@ class _TripFormScreenState extends ConsumerState<TripFormScreen> {
                       icon: const Icon(Icons.event, size: 16),
                       label: Text(
                         _endDate == null
-                            ? 'Ngay ket thuc'
+                            ? 'Ngày kết thúc'
                             : '${_endDate!.day}/${_endDate!.month}/${_endDate!.year}',
                         style: const TextStyle(fontSize: 12),
                       ),
@@ -234,14 +234,14 @@ class _TripFormScreenState extends ConsumerState<TripFormScreen> {
                       controller: _budgetController,
                       keyboardType: TextInputType.number,
                       decoration: const InputDecoration(
-                        labelText: 'Ngan sach uoc tinh',
+                        labelText: 'Ngân sách ước tính',
                         hintText: '5000000',
                         prefixIcon: Icon(Icons.payments_outlined),
                       ),
                       validator: (v) {
                         if (v == null || v.isEmpty) return null;
                         final n = int.tryParse(v);
-                        if (n == null || n < 0) return 'Ngan sach khong hop le';
+                        if (n == null || n < 0) return 'Ngân sách không hợp lệ';
                         return null;
                       },
                     ),
@@ -253,7 +253,7 @@ class _TripFormScreenState extends ConsumerState<TripFormScreen> {
                       initialValue: _currency,
                       isExpanded: true,
                       decoration: const InputDecoration(
-                        labelText: 'Tien te',
+                        labelText: 'Tiền tệ',
                         contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 12),
                       ),
                       items: const [
@@ -271,7 +271,7 @@ class _TripFormScreenState extends ConsumerState<TripFormScreen> {
 
               // Travel Style
               Text(
-                'Phong cach du lich',
+                'Phong cách du lịch',
                 style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
@@ -298,7 +298,7 @@ class _TripFormScreenState extends ConsumerState<TripFormScreen> {
 
               // Interests
               Text(
-                'So thich / Hoat dong',
+                'Sở thích / Hoạt động',
                 style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
@@ -332,8 +332,8 @@ class _TripFormScreenState extends ConsumerState<TripFormScreen> {
                 controller: _descriptionController,
                 maxLines: 3,
                 decoration: const InputDecoration(
-                  labelText: 'Mo ta / Ghi chu',
-                  hintText: 'Ke hoach chi tiet hoac luu y...',
+                  labelText: 'Mô tả / Ghi chú',
+                  hintText: 'Kế hoạch chi tiết hoặc lưu ý...',
                   alignLabelWithHint: true,
                 ),
               ),
@@ -355,7 +355,7 @@ class _TripFormScreenState extends ConsumerState<TripFormScreen> {
                         ),
                       )
                     : Text(
-                        isEdit ? 'Luu thay doi' : 'Tao chuyen di',
+                        isEdit ? 'Lưu thay đổi' : 'Tạo chuyến đi',
                         style: const TextStyle(fontWeight: FontWeight.bold),
                       ),
               ),

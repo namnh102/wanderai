@@ -186,8 +186,8 @@ void main() {
 
       await tester.pumpAndSettle();
 
-      expect(find.text('Tro ly Wandy AI'), findsOneWidget);
-      expect(find.text('Lap lich trinh bang AI'), findsOneWidget);
+      expect(find.text('Trợ lý Wandy AI'), findsOneWidget);
+      expect(find.text('Lập lịch trình bằng AI'), findsOneWidget);
       expect(find.byIcon(Icons.auto_awesome), findsWidgets);
     });
 
@@ -207,13 +207,13 @@ void main() {
 
       await tester.pumpAndSettle();
 
-      final aiButton = find.text('Lap lich trinh bang AI');
+      final aiButton = find.text('Lập lịch trình bằng AI');
       await tester.tap(aiButton);
       await tester.pumpAndSettle();
 
-      expect(find.text('Yeu cau them (tuy chon)'), findsOneWidget);
-      expect(find.text('Bat dau lap'), findsOneWidget);
-      expect(find.text('Huy'), findsOneWidget);
+      expect(find.text('Yêu cầu thêm (tùy chọn)'), findsOneWidget);
+      expect(find.text('Bắt đầu lập'), findsOneWidget);
+      expect(find.text('Hủy'), findsOneWidget);
     });
 
     testWidgets('3. Generates plan and displays preview modal with budget & overwrite warning',
@@ -240,32 +240,32 @@ void main() {
       await tester.pumpAndSettle();
 
       // Tap generate button
-      await tester.tap(find.text('Lap lich trinh bang AI'));
+      await tester.tap(find.text('Lập lịch trình bằng AI'));
       await tester.pumpAndSettle();
 
       // Confirm in dialog
-      await tester.tap(find.text('Bat dau lap'));
+      await tester.tap(find.text('Bắt đầu lập'));
       await tester.pumpAndSettle();
 
       expect(fakeRepo.planCalled, isTrue);
 
       // Verify Modal Content
-      expect(find.text('Lich trinh tu Wandy AI'), findsOneWidget);
+      expect(find.text('Lịch trình từ Wandy AI'), findsOneWidget);
       expect(find.text('Lich trinh 2 ngay kham pha Da Nang cuc chat cung Wandy.'), findsOneWidget);
-      expect(find.text('Chi phi uoc tinh:'), findsOneWidget);
+      expect(find.text('Chi phí ước tính:'), findsOneWidget);
       expect(find.text('1500000 VND'), findsOneWidget);
-      expect(find.text('Con du 500000 VND'), findsOneWidget);
+      expect(find.text('Còn dư 500000 VND'), findsOneWidget);
 
       // Overwrite warning is visible because trip already had 1 day
       expect(
-        find.text('Chuyen di da co 1 ngay. Ap dung se thay the toan bo lich trinh hien tai!'),
+        find.text('Chuyến đi đã có 1 ngày. Áp dụng sẽ thay thế toàn bộ lịch trình hiện tại!'),
         findsOneWidget,
       );
 
       // Day titles in preview
       expect(find.text('Ngay 1: Bien My Khe'), findsOneWidget);
       expect(find.text('Ngay 2: Son Tra'), findsOneWidget);
-      expect(find.text('Ap dung vao chuyen di'), findsOneWidget);
+      expect(find.text('Áp dụng vào chuyến đi'), findsOneWidget);
     });
 
     testWidgets('4. Confirming preview applies and saves bulk itinerary atomically',
@@ -292,19 +292,19 @@ void main() {
       await tester.pumpAndSettle();
 
       // Trigger generation
-      await tester.tap(find.text('Lap lich trinh bang AI'));
+      await tester.tap(find.text('Lập lịch trình bằng AI'));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Bat dau lap'));
+      await tester.tap(find.text('Bắt đầu lập'));
       await tester.pumpAndSettle();
 
       // Tap apply button
-      final applyButton = find.text('Ap dung vao chuyen di');
+      final applyButton = find.text('Áp dụng vào chuyến đi');
       expect(applyButton, findsOneWidget);
       await tester.tap(applyButton);
       await tester.pumpAndSettle();
 
       expect(fakeRepo.bulkSaveCalled, isTrue);
-      expect(find.text('Da ap dung lich trinh AI thanh cong!'), findsOneWidget);
+      expect(find.text('Đã áp dụng lịch trình AI thành công!'), findsOneWidget);
 
       // Verify that new itinerary is shown on screen
       expect(find.text('Ngay 1: Bien My Khe'), findsOneWidget);
@@ -331,9 +331,9 @@ void main() {
 
       await tester.pumpAndSettle();
 
-      await tester.tap(find.text('Lap lich trinh bang AI'));
+      await tester.tap(find.text('Lập lịch trình bằng AI'));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Bat dau lap'));
+      await tester.tap(find.text('Bắt đầu lập'));
       await tester.pumpAndSettle();
 
       expect(find.text('AI Planner error'), findsOneWidget);

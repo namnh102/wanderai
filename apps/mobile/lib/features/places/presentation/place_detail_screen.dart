@@ -14,6 +14,7 @@ import '../../../core/widgets/app_error_state.dart';
 import '../../../core/widgets/app_loading.dart';
 import '../../../core/widgets/rating_view.dart';
 import '../../../core/widgets/responsive_wrapper.dart';
+import '../../ai_chat/providers/chat_provider.dart';
 import '../../location/domain/geo_distance.dart';
 import '../../location/providers/user_location_provider.dart';
 import '../../map/data/place_model.dart';
@@ -142,7 +143,7 @@ class PlaceDetailScreen extends ConsumerWidget {
     final detail = ref.watch(placeDetailProvider(placeId));
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppColors.warmBackground,
       appBar: AppBar(
         backgroundColor: AppColors.surface,
         foregroundColor: AppColors.textPrimary,
@@ -186,6 +187,16 @@ class PlaceDetailScreen extends ConsumerWidget {
               clearBottomCta: place.hasCoordinates,
             ),
             onDirections: () => _openDirections(context, ref, place, user),
+            onEnableLocation: () =>
+                ref.read(userLocationProvider.notifier).request(),
+            onAskWandy: () {
+              final dest = place.destinationName;
+              final prompt = dest != null && dest.isNotEmpty
+                  ? 'Gợi ý thông tin và lịch trình ghé thăm ${place.name} tại $dest.'
+                  : 'Gợi ý thông tin và lịch trình ghé thăm ${place.name}.';
+              ref.read(pendingChatPromptProvider.notifier).state = prompt;
+              context.go('/ai');
+            },
           );
         },
       ),
@@ -202,6 +213,8 @@ class PlaceDetailView extends StatelessWidget {
   final double? distanceKm;
   final void Function(String url) onOpenUrl;
   final VoidCallback onDirections;
+  final VoidCallback? onEnableLocation;
+  final VoidCallback? onAskWandy;
 
   const PlaceDetailView({
     super.key,
@@ -209,6 +222,8 @@ class PlaceDetailView extends StatelessWidget {
     this.distanceKm,
     required this.onOpenUrl,
     required this.onDirections,
+    this.onEnableLocation,
+    this.onAskWandy,
   });
 
   @override
@@ -376,24 +391,50 @@ class PlaceDetailView extends StatelessWidget {
                                 fontFamily: 'monospace'),
                           ),
                           const SizedBox(height: AppSpacing.xs),
-                          Row(
-                            mainAxisSize: MainAxisSize.min,
+                          Wrap(
+                            spacing: AppSpacing.sm,
+                            runSpacing: AppSpacing.xs,
+                            crossAxisAlignment: WrapCrossAlignment.center,
                             children: [
-                              Icon(Icons.near_me,
-                                  size: 14,
-                                  color: distanceKm == null
-                                      ? AppColors.textTertiary
-                                      : AppColors.primary),
-                              const SizedBox(width: AppSpacing.xs),
-                              Text(
-                                distanceLabel(distanceKm),
-                                key: const Key('place_detail_distance'),
-                                style: AppTypography.bodyS.copyWith(
-                                    color: distanceKm == null
-                                        ? AppColors.textTertiary
-                                        : AppColors.primary,
-                                    fontWeight: FontWeight.w600),
+                              Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(Icons.near_me,
+                                      size: 14,
+                                      color: distanceKm == null
+                                          ? AppColors.textTertiary
+                                          : AppColors.primary),
+                                  const SizedBox(width: AppSpacing.xs),
+                                  Flexible(
+                                    child: Text(
+                                      distanceLabel(distanceKm),
+                                      key: const Key('place_detail_distance'),
+                                      style: AppTypography.bodyS.copyWith(
+                                          color: distanceKm == null
+                                              ? AppColors.textTertiary
+                                              : AppColors.primary,
+                                          fontWeight: FontWeight.w600),
+                                    ),
+                                  ),
+                                ],
                               ),
+                              if (distanceKm == null && onEnableLocation != null)
+                                InkWell(
+                                  key: const Key('place_detail_enable_location'),
+                                  onTap: onEnableLocation,
+                                  borderRadius: AppRadius.smRadius,
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 6, vertical: 2),
+                                    child: Text(
+                                      'Bật vị trí',
+                                      style: AppTypography.label.copyWith(
+                                        color: AppColors.primary,
+                                        decoration: TextDecoration.underline,
+                                      ),
+                                    ),
+                                  ),
+                                ),
                             ],
                           ),
                           const SizedBox(height: AppSpacing.sm),
@@ -444,7 +485,7 @@ class PlaceDetailView extends StatelessWidget {
           ),
 
           // ── Primary CTA ──
-          if (place.hasCoordinates)
+          if (place.hasCoordinates || onAskWandy != null)
             Container(
               width: double.infinity,
               padding: EdgeInsets.fromLTRB(
@@ -455,23 +496,67 @@ class PlaceDetailView extends StatelessWidget {
               ),
               decoration: const BoxDecoration(
                 color: AppColors.surface,
-                border: Border(top: BorderSide(color: AppColors.border)),
+                border: Border(top: BorderSide(color: AppColors.softBorder)),
               ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(
-                    navigationHintText,
-                    key: const Key('place_detail_nav_hint'),
-                    style: AppTypography.bodyS
-                        .copyWith(color: AppColors.textTertiary),
-                  ),
-                  const SizedBox(height: AppSpacing.xs),
-                  AppButton(
-                    key: const Key('place_detail_directions'),
-                    text: 'Chỉ đường',
-                    icon: Icons.directions,
-                    onPressed: onDirections,
+                  if (place.hasCoordinates) ...[
+                    Text(
+                      navigationHintText,
+                      key: const Key('place_detail_nav_hint'),
+                      style: AppTypography.bodyS
+                          .copyWith(color: AppColors.textTertiary),
+                    ),
+                    const SizedBox(height: AppSpacing.xs),
+                  ],
+                  LayoutBuilder(
+                    builder: (context, constraints) {
+                      final textScale = MediaQuery.textScalerOf(context).scale(1);
+                      final stackActions = place.hasCoordinates &&
+                          onAskWandy != null &&
+                          (constraints.maxWidth < 380 || textScale > 1.15);
+                      final wandyButton = onAskWandy == null
+                          ? null
+                          : AppButton(
+                              key: const Key('place_detail_ask_wandy'),
+                              text: 'Hỏi Wandy',
+                              icon: Icons.auto_awesome_outlined,
+                              variant: AppButtonVariant.secondary,
+                              onPressed: onAskWandy,
+                            );
+                      final directionsButton = place.hasCoordinates
+                          ? AppButton(
+                              key: const Key('place_detail_directions'),
+                              text: 'Chỉ đường',
+                              icon: Icons.directions,
+                              onPressed: onDirections,
+                            )
+                          : null;
+
+                      if (stackActions) {
+                        return Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            directionsButton!,
+                            const SizedBox(height: AppSpacing.xs),
+                            wandyButton!,
+                          ],
+                        );
+                      }
+
+                      if (wandyButton != null && directionsButton != null) {
+                        return Row(
+                          children: [
+                            Expanded(child: wandyButton),
+                            const SizedBox(width: AppSpacing.sm),
+                            Expanded(flex: 2, child: directionsButton),
+                          ],
+                        );
+                      }
+
+                      return directionsButton ?? wandyButton!;
+                    },
                   ),
                 ],
               ),
@@ -498,7 +583,14 @@ class _Section extends StatelessWidget {
         decoration: BoxDecoration(
           color: AppColors.surface,
           borderRadius: AppRadius.cardRadius,
-          border: Border.all(color: AppColors.border),
+          border: Border.all(color: AppColors.softBorder),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.primaryDeep.withValues(alpha: 0.04),
+              blurRadius: 10,
+              offset: const Offset(0, 3),
+            ),
+          ],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -507,7 +599,12 @@ class _Section extends StatelessWidget {
               children: [
                 Icon(icon, size: 18, color: AppColors.primary),
                 const SizedBox(width: AppSpacing.sm),
-                Text(title, style: AppTypography.h3.copyWith(fontSize: 15)),
+                Flexible(
+                  child: Text(
+                    title,
+                    style: AppTypography.h3.copyWith(fontSize: 15),
+                  ),
+                ),
               ],
             ),
             const SizedBox(height: AppSpacing.sm),

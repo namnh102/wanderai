@@ -28,6 +28,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
   Future<void> _init() async {
     final hasToken = await _repo.restoreSession();
+    if (!mounted) return;
     if (hasToken) {
       state = const AuthState.authenticated();
     } else {
@@ -60,6 +61,15 @@ class AuthNotifier extends StateNotifier<AuthState> {
   Future<void> logout() async {
     await _repo.logout();
     state = const AuthState.unauthenticated();
+  }
+
+  /// Syncs unauthenticated UI state after automatic 401 refresh failure.
+  void handleSessionExpired() {
+    if (state.status == AuthStatus.authenticated) {
+      state = const AuthState.unauthenticated(
+        errorMessage: 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.',
+      );
+    }
   }
 
   /// Map API/network errors to user-friendly Vietnamese messages.
@@ -98,5 +108,11 @@ final authRepositoryProvider = Provider<AuthRepository>((ref) {
 /// Riverpod provider for auth state — single source of truth.
 final authProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) {
   final repo = ref.read(authRepositoryProvider);
-  return AuthNotifier(repo);
+  final notifier = AuthNotifier(repo);
+  ref.listen<int>(authSessionExpiredSignalProvider, (prev, next) {
+    if (prev != next) {
+      notifier.handleSessionExpired();
+    }
+  });
+  return notifier;
 });

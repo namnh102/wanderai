@@ -59,7 +59,7 @@ void main() {
 
       expect(find.byType(TextFormField), findsNWidgets(2));
       expect(find.text('Email'), findsOneWidget);
-      expect(find.text('Dang nhap'), findsOneWidget);
+      expect(find.text('Đăng nhập'), findsOneWidget);
     });
 
     testWidgets('shows validation error for invalid email', (tester) async {
@@ -78,10 +78,10 @@ void main() {
       await tester.enterText(find.byType(TextFormField).last, '');
 
       // Tap login
-      await tester.tap(find.text('Dang nhap'));
+      await tester.tap(find.text('Đăng nhập'));
       await tester.pump();
 
-      expect(find.text('Email khong hop le'), findsOneWidget);
+      expect(find.text('Email không hợp lệ'), findsOneWidget);
     });
 
     testWidgets('shows validation error for short password', (tester) async {
@@ -98,10 +98,10 @@ void main() {
       await tester.enterText(find.byType(TextFormField).first, 'test@test.com');
       await tester.enterText(find.byType(TextFormField).last, '123');
 
-      await tester.tap(find.text('Dang nhap'));
+      await tester.tap(find.text('Đăng nhập'));
       await tester.pump();
 
-      expect(find.text('Mat khau it nhat 6 ky tu'), findsOneWidget);
+      expect(find.text('Mật khẩu ít nhất 6 ký tự'), findsOneWidget);
     });
   });
 
@@ -118,7 +118,7 @@ void main() {
       await tester.pump();
 
       expect(find.byType(TextFormField), findsNWidgets(4));
-      expect(find.text('Dang ky'), findsOneWidget);
+      expect(find.text('Đăng ký'), findsOneWidget);
     });
   });
 

@@ -18,7 +18,7 @@ class MapDestinationSelector extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 36,
+      height: 42,
       child: ListView(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -28,11 +28,26 @@ class MapDestinationSelector extends StatelessWidget {
               padding: const EdgeInsets.only(right: 8),
               child: ChoiceChip(
                 key: Key('map_destination_chip_${d.slug}'),
+                showCheckmark: false,
                 label: Text(d.label),
                 selected: selectedSlug == d.slug,
                 selectedColor: AppColors.primaryContainer,
                 backgroundColor: AppColors.surface,
-                visualDensity: VisualDensity.compact,
+                labelStyle: TextStyle(
+                  fontSize: 12.5,
+                  fontWeight: FontWeight.w600,
+                  color: selectedSlug == d.slug
+                      ? AppColors.primaryDeep
+                      : AppColors.textPrimary,
+                ),
+                side: BorderSide(
+                  color: selectedSlug == d.slug
+                      ? AppColors.primary
+                      : AppColors.softBorder,
+                ),
+                shape: const StadiumBorder(),
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                 onSelected: (_) => onSelected(d.slug),
               ),
             ),

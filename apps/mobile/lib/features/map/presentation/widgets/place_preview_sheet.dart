@@ -47,7 +47,7 @@ class PlacePreviewSheet extends StatelessWidget {
         decoration: BoxDecoration(
           color: AppColors.surface,
           borderRadius: AppRadius.sheetRadius,
-          border: Border.all(color: AppColors.border, width: 1),
+          border: Border.all(color: AppColors.softBorder, width: 1),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.12),
@@ -66,7 +66,7 @@ class PlacePreviewSheet extends StatelessWidget {
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: AppColors.border,
+                  color: AppColors.softBorder,
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),

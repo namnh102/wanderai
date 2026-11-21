@@ -429,7 +429,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
 
           // ─── Category filter (below destination chips) ───
           Positioned(
-            top: topInset + 106,
+            top: topInset + 112,
             left: 0,
             right: 0,
             child: ResponsiveWrapper(
@@ -472,7 +472,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
           // ─── Loading indicator ───
           if (state.status == MapLoadingStatus.loading)
             Positioned(
-              top: topInset + 160,
+              top: topInset + 168,
               left: 0,
               right: 0,
               child: Center(
@@ -481,10 +481,10 @@ class _MapScreenState extends ConsumerState<MapScreen>
                   decoration: BoxDecoration(
                     color: AppColors.surface,
                     borderRadius: AppRadius.pillRadius,
-                    border: Border.all(color: AppColors.border),
+                    border: Border.all(color: AppColors.softBorder),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.08),
+                        color: AppColors.primaryDeep.withValues(alpha: 0.08),
                         blurRadius: 8,
                       ),
                     ],
@@ -511,7 +511,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
           // ─── Empty state ───
           if (state.status == MapLoadingStatus.empty)
             Positioned(
-              top: topInset + 160,
+              top: topInset + 168,
               left: 40,
               right: 40,
               child: Center(
@@ -521,10 +521,10 @@ class _MapScreenState extends ConsumerState<MapScreen>
                   decoration: BoxDecoration(
                     color: AppColors.surface,
                     borderRadius: AppRadius.cardRadius,
-                    border: Border.all(color: AppColors.border),
+                    border: Border.all(color: AppColors.softBorder),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.1),
+                        color: AppColors.primaryDeep.withValues(alpha: 0.1),
                         blurRadius: 8,
                       ),
                     ],
@@ -556,7 +556,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
           // ─── Error state ───
           if (state.status == MapLoadingStatus.error)
             Positioned(
-              top: topInset + 160,
+              top: topInset + 168,
               left: 40,
               right: 40,
               child: Center(

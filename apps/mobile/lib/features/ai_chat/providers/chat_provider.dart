@@ -125,7 +125,7 @@ class ChatNotifier extends StateNotifier<ChatState> {
         }
         state = state.copyWith(
           status: ChatStatus.error,
-          errorMessage: 'Phien dang nhap het han. Vui long dang nhap lai.',
+          errorMessage: 'Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.',
           lastFailedMessage: trimmed,
           clearSessionId: true,
         );
@@ -156,7 +156,7 @@ class ChatNotifier extends StateNotifier<ChatState> {
       state = state.copyWith(
         status: ChatStatus.error,
         errorMessage:
-            'Co loi xay ra khi tro chuyen voi Wandy. Vui long thu lai.',
+            'Có lỗi xảy ra khi trò chuyện với Wandy. Vui lòng thử lại.',
         lastFailedMessage: trimmed,
       );
     }
@@ -201,28 +201,28 @@ class ChatNotifier extends StateNotifier<ChatState> {
     if (e.type == DioExceptionType.connectionTimeout ||
         e.type == DioExceptionType.sendTimeout ||
         e.type == DioExceptionType.receiveTimeout) {
-      return 'AI phan hoi qua lau. Vui long thu lai.';
+      return 'AI phản hồi quá lâu. Vui lòng thử lại.';
     }
     if (e.type == DioExceptionType.connectionError) {
-      return 'Khong the ket noi may chu. Vui long kiem tra mang.';
+      return 'Không thể kết nối máy chủ. Vui lòng kiểm tra mạng.';
     }
     final status = e.response?.statusCode;
     if (status == 401) {
-      return 'Phien dang nhap het han. Vui long dang nhap lai.';
+      return 'Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.';
     }
     if (status == 403) {
-      return 'Phien tro chuyen khong hop le hoac da het quyen truy cap. Vui long thu lai.';
+      return 'Phiên trò chuyện không hợp lệ hoặc đã hết quyền truy cập. Vui lòng thử lại.';
     }
     if (status == 400) {
-      return 'Tin nhan khong hop le.';
+      return 'Tin nhắn không hợp lệ.';
     }
     if (status == 429) {
-      return 'He thong AI dang qua tai yeu cau (429). Vui long doi mot lat roi thu lai.';
+      return 'Hệ thống AI đang quá tải yêu cầu (429). Vui lòng đợi một lát rồi thử lại.';
     }
     if (status == 503 || status == 502) {
-      return 'Dich vu AI dang ban hoac qua tai. Vui long thu lai sau.';
+      return 'Dịch vụ AI đang bận hoặc quá tải. Vui lòng thử lại sau.';
     }
-    return 'Co loi xay ra khi tro chuyen voi Wandy. Vui long thu lai.';
+    return 'Có lỗi xảy ra khi trò chuyện với Wandy. Vui lòng thử lại.';
   }
 }
 

@@ -239,7 +239,7 @@ void main() {
       await notifier.sendMessage('Thử gọi khi token hết hạn');
 
       expect(container.read(chatProvider).hasError, true);
-      expect(container.read(chatProvider).errorMessage, contains('het han'));
+      expect(container.read(chatProvider).errorMessage, contains('hết hạn'));
       expect(container.read(chatProvider).sessionId, isNull);
       expect(fakeAuthRepo.loggedOut, true);
       expect(container.read(authProvider).status, AuthStatus.unauthenticated);
@@ -265,7 +265,7 @@ void main() {
       final state = container.read(chatProvider);
       expect(state.hasError, true);
       expect(state.sessionId, isNull);
-      expect(state.errorMessage, contains('khong hop le'));
+      expect(state.errorMessage, contains('không hợp lệ'));
     });
 
     test('429 rate limit surfaces friendly message without assistant bubble', () async {

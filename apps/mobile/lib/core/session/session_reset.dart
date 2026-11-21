@@ -10,9 +10,17 @@ import '../../features/recommendations/providers/recommendation_provider.dart';
 /// PostgreSQL stays the single source of truth: invalidated providers simply
 /// re-fetch from the backend with the new session's token. No second store.
 void resetSessionScopedState(Ref ref) {
-  ref.invalidate(profileProvider);
-  ref.invalidate(recommendationProvider);
-  ref.invalidate(chatProvider);
-  ref.invalidate(homeProvider);
+  if (ref.exists(profileProvider)) {
+    ref.invalidate(profileProvider);
+  }
+  if (ref.exists(recommendationProvider)) {
+    ref.invalidate(recommendationProvider);
+  }
+  if (ref.exists(chatProvider)) {
+    ref.invalidate(chatProvider);
+  }
+  if (ref.exists(homeProvider)) {
+    ref.invalidate(homeProvider);
+  }
   ref.read(pendingChatPromptProvider.notifier).state = null;
 }
