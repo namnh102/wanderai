@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>GoMate UX V2 Wave A — Visual Mockups</title>
+<style>
+  :root {
+    --primary: #0F766E;
+    --primary-deep: #123B43;
+    --primary-soft: #CCFBF1;
+    --on-primary-soft: #115E59;
+    --bg: #F7F9F6;
+    --surface: #FFFFFF;
+    --warm-surface: #FFFCF7;
+    --coral: #F07B5A;
+    --coral-soft: #FFEDE6;
+    --coral-dark: #9A3412;
+    --text-1: #0F172A;
+    --text-2: #475569;
+    --text-3: #94A3B8;
+    --border: #E2E9E6;
+    --success: #15803D;
+    --success-soft: #DCFCE7;
+    --warn: #B45309;
+    --warn-soft: #FEF3C7;
+    --err: #B91C1C;
+    --err-soft: #FEE2E2;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background: #EAEEF0;
+    color: var(--text-1);
+    -webkit-font-smoothing: antialiased;
+  }
+  /* Phone frame */
+  .screen {
+    width: 390px;
+    height: 844px;
+    background: var(--bg);
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    border: 1px solid #CBD5E1;
+  }
+  .statusbar {
+    height: 36px;
+    padding: 8px 18px 0;
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    font-weight: 600;
+    background: var(--surface);
+    color: var(--text-1);
+  }
+  .appbar {
+    height: 52px;
+    padding: 0 16px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+  }
+  .brand-row { display: flex; align-items: center; gap: 10px; }
+  .logo-badge {
+    width: 32px; height: 32px; border-radius: 10px;
+    background: linear-gradient(135deg, var(--primary), var(--primary-deep));
+    color: white; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 15px;
+  }
+  .brand-text { font-size: 19px; font-weight: 800; color: var(--primary-deep); letter-spacing: -0.3px; }
+  .icon-btn {
+    width: 36px; height: 36px; border-radius: 10px; border: 1px solid var(--border);
+    background: var(--surface); display: flex; align-items: center; justify-content: center; color: var(--primary-deep); font-size: 16px;
+  }
+  .content { flex: 1; padding: 16px; overflow: hidden; display: flex; flex-direction: column; gap: 14px; }
+  .bottom-nav {
+    height: 66px; background: var(--surface); border-top: 1px solid var(--border);
+    display: flex; justify-content: space-around; align-items: center; padding: 4px 6px 8px; flex-shrink: 0;
+  }
+  .nav-item {
+    display: flex; flex-direction: column; align-items: center; gap: 3px; font-size: 11px; color: var(--text-2); font-weight: 500; min-width: 64px;
+  }
+  .nav-item.active { color: var(--primary); font-weight: 700; }
+  .nav-pill { padding: 3px 14px; border-radius: 999px; font-size: 15px; }
+  .nav-item.active .nav-pill { background: var(--primary-soft); color: var(--primary); }
+
+  /* UI pieces */
+  .eyebrow { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; color: var(--primary); }
+  .h1 { font-size: 22px; font-weight: 800; letter-spacing: -0.3px; color: var(--text-1); line-height: 1.25; }
+  .h2 { font-size: 17px; font-weight: 700; color: var(--text-1); letter-spacing: -0.2px; }
+  .sub { font-size: 13px; color: var(--text-2); line-height: 1.45; }
+  .search-bar {
+    height: 46px; background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
+    padding: 0 14px; display: flex; align-items: center; gap: 10px; color: var(--text-3); font-size: 13.5px;
+    box-shadow: 0 2px 6px rgba(18,59,67,0.04);
+  }
+  .wandy-card {
+    background: linear-gradient(135deg, #123B43 0%, #0F766E 100%);
+    color: white; border-radius: 18px; padding: 15px; display: flex; flex-direction: column; gap: 10px;
+    box-shadow: 0 8px 20px rgba(15, 118, 110, 0.16);
+  }
+  .wandy-top { display: flex; align-items: center; gap: 12px; }
+  .wandy-icon {
+    width: 42px; height: 42px; border-radius: 12px; background: rgba(255,255,255,0.16);
+    display: flex; align-items: center; justify-content: center; font-size: 19px; flex-shrink: 0;
+  }
+  .wandy-chips { display: flex; gap: 8px; flex-wrap: nowrap; }
+  .wandy-chip {
+    background: rgba(255,255,255,0.14); border: 1px solid rgba(255,255,255,0.22);
+    color: white; border-radius: 999px; padding: 6px 11px; font-size: 11.5px; font-weight: 600; white-space: nowrap;
+  }
+  .card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 12px 14px;
+  }
+  .sec-row { display: flex; justify-content: space-between; align-items: center; }
+  .sec-link { font-size: 12.5px; font-weight: 700; color: var(--primary); }
+  .h-scroll { display: flex; gap: 12px; overflow: hidden; }
+  .dest-card {
+    width: 158px; flex-shrink: 0; background: var(--surface); border: 1px solid var(--border);
+    border-radius: 16px; overflow: hidden;
+  }
+  .dest-art {
+    height: 92px; padding: 10px; display: flex; flex-direction: column; justify-content: space-between; color: white;
+    position: relative;
+  }
+  .art-central { background: linear-gradient(135deg, #0F766E, #115E59); }
+  .art-north { background: linear-gradient(135deg, #1E3A5F, #0F766E); }
+  .art-south { background: linear-gradient(135deg, #B45309, #F07B5A); }
+  .badge-coral {
+    align-self: flex-end; background: var(--coral); color: white; font-size: 10px; font-weight: 700;
+    padding: 3px 8px; border-radius: 999px;
+  }
+  .badge-region {
+    background: rgba(255,255,255,0.2); font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 6px; align-self: flex-start;
+  }
+  .dest-body { padding: 10px 11px; }
+  .dest-name { font-size: 14px; font-weight: 700; color: var(--text-1); }
+  .dest-meta { font-size: 11.5px; color: var(--text-2); margin-top: 2px; }
+  .place-row {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 10px 12px;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .place-thumb {
+    width: 52px; height: 52px; border-radius: 12px; background: var(--primary-soft); color: var(--primary);
+    display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0;
+  }
+  .pill-verified {
+    display: inline-flex; align-items: center; gap: 3px; background: var(--primary-soft); color: var(--on-primary-soft);
+    font-size: 10.5px; font-weight: 700; padding: 2px 7px; border-radius: 6px;
+  }
+  .btn-primary {
+    height: 46px; width: 100%; border-radius: 12px; background: var(--primary); color: white;
+    font-size: 14px; font-weight: 700; display: flex; align-items: center; justify-content: center; border: none;
+  }
+  .btn-soft {
+    height: 44px; padding: 0 14px; border-radius: 12px; background: var(--primary-soft); color: var(--on-primary-soft);
+    font-size: 13.5px; font-weight: 700; display: flex; align-items: center; justify-content: center; border: 1px solid #99F6E4;
+  }
+  .input-box {
+    height: 48px; border-radius: 12px; background: #F1F5F9; border: 1px solid var(--border);
+    padding: 0 14px; display: flex; align-items: center; gap: 10px; font-size: 14px; color: var(--text-1);
+  }
+  .board {
+    width: 920px; background: var(--bg); padding: 28px; border: 1px solid #CBD5E1;
+  }
+  .board-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 18px; }
+  .desktop {
+    width: 1440px; height: 900px; background: var(--bg); display: flex; flex-direction: column; overflow: hidden;
+  }
+</style>
+</head>
+<body>
+
+<!-- SCREEN 1: LOGIN V2 -->
+<section id="screen-01-login" class="screen">
+  <div class="statusbar"><span>9:41</span><span>5G · 100%</span></div>
+  <div class="content" style="justify-content: center; padding: 24px; gap: 18px;">
+    <div style="background: linear-gradient(135deg, #123B43, #0F766E); color: white; border-radius: 22px; padding: 22px;">
+      <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.8px; opacity: 0.8; font-weight: 700;">GoMate Vietnam</div>
+      <div style="font-size: 26px; font-weight: 800; margin-top: 6px; letter-spacing: -0.4px;">Chào mừng trở lại</div>
+      <div style="font-size: 13px; opacity: 0.9; margin-top: 6px; line-height: 1.45;">Khám phá địa điểm xác thực, gợi ý theo sở thích và trợ lý du lịch Wandy.</div>
+    </div>
+    <div class="card" style="padding: 18px; display: flex; flex-direction: column; gap: 14px;">
+      <div>
+        <div style="font-size: 12px; font-weight: 600; color: var(--text-2); margin-bottom: 6px;">Email</div>
+        <div class="input-box"><span>✉</span><span>minhanh@gomate.vn</span></div>
+      </div>
+      <div>
+        <div style="font-size: 12px; font-weight: 600; color: var(--text-2); margin-bottom: 6px;">Mật khẩu</div>
+        <div class="input-box" style="justify-content: space-between;"><span><span>🔒</span> ••••••••••••</span><span style="color: var(--text-3);">👁</span></div>
+      </div>
+      <div class="btn-primary">Đăng nhập</div>
+      <div style="text-align: center; font-size: 13px; color: var(--primary); font-weight: 600;">Chưa có tài khoản? Đăng ký ngay</div>
+    </div>
+    <div style="text-align: center; font-size: 11.5px; color: var(--text-3);">Dữ liệu địa điểm từ OpenStreetMap (ODbL) · Không bán dữ liệu cá nhân</div>
+  </div>
+</section>
+
+<!-- SCREEN 2: HOME / DISCOVER V2 -->
+<section id="screen-02-home" class="screen">
+  <div class="statusbar"><span>9:41</span><span>5G · 100%</span></div>
+  <div class="appbar">
+    <div class="brand-row"><div class="logo-badge">G</div><span class="brand-text">GoMate</span></div>
+    <div style="display: flex; gap: 8px;">
+      <div class="icon-btn">⚙</div>
+      <div class="icon-btn">👤</div>
+    </div>
+  </div>
+  <div class="content">
+    <div>
+      <div class="h1">Xin chào, Minh Anh 👋</div>
+      <div class="sub">Hôm nay bạn muốn khám phá miền nào của Việt Nam?</div>
+    </div>
+    <div class="search-bar"><span>🔍</span><span>Tìm địa điểm, món ăn, bảo tàng, quán cà phê...</span></div>
+    <div class="wandy-card">
+      <div class="wandy-top">
+        <div class="wandy-icon">✦</div>
+        <div>
+          <div style="font-size: 15.5px; font-weight: 700;">Wandy AI Copilot</div>
+          <div style="font-size: 12px; opacity: 0.9;">Hỏi về địa điểm, lịch trình & thời tiết</div>
+        </div>
+        <span style="margin-left: auto; font-size: 18px;">›</span>
+      </div>
+      <div class="wandy-chips">
+        <div class="wandy-chip">✦ Lịch trình Đà Nẵng 3N2Đ</div>
+        <div class="wandy-chip">✦ Cà phê Phố Cổ</div>
+      </div>
+    </div>
+    <div class="card" style="background: var(--warm-surface); display: flex; align-items: center; gap: 12px;">
+      <div class="place-thumb" style="width: 40px; height: 40px; border-radius: 10px; font-size: 18px;">✨</div>
+      <div style="flex: 1;">
+        <div style="font-size: 14.5px; font-weight: 700;">Gợi ý dành riêng cho bạn</div>
+        <div style="font-size: 12px; color: var(--text-2);">Dựa trên 3 sở thích: Ẩm thực, Văn hóa, Cà phê</div>
+      </div>
+      <span style="color: var(--primary); font-weight: 700;">›</span>
+    </div>
+    <div class="sec-row"><span class="h2">Điểm đến nổi bật</span><span class="sec-link">Xem tất cả (50) →</span></div>
+    <div class="h-scroll">
+      <div class="dest-card">
+        <div class="dest-art art-central"><span class="badge-coral">Nổi bật</span><span class="badge-region">Miền Trung</span></div>
+        <div class="dest-body"><div class="dest-name">Đà Nẵng</div><div class="dest-meta">123 địa điểm xác minh</div></div>
+      </div>
+      <div class="dest-card">
+        <div class="dest-art art-north"><span class="badge-coral">Nổi bật</span><span class="badge-region">Miền Bắc</span></div>
+        <div class="dest-body"><div class="dest-name">Hà Nội</div><div class="dest-meta">110 địa điểm xác minh</div></div>
+      </div>
+      <div class="dest-card">
+        <div class="dest-art art-south"><span class="badge-region">Di sản</span></div>
+        <div class="dest-body"><div class="dest-name">Hội An</div><div class="dest-meta">75 địa điểm xác minh</div></div>
+      </div>
+    </div>
+    <div class="sec-row"><span class="h2">Địa điểm gần bạn</span><span class="pill-verified">✓ GPS rõ</span></div>
+    <div class="place-row">
+      <div class="place-thumb">🏛</div>
+      <div style="flex: 1;">
+        <div style="font-size: 13.5px; font-weight: 700;">Bảo tàng Lịch sử Quốc gia</div>
+        <div style="font-size: 11.5px; color: var(--text-2); margin-top: 2px;">Hoàn Kiếm, Hà Nội · Chưa có đánh giá</div>
+      </div>
+      <span class="pill-verified">0.4 km</span>
+    </div>
+  </div>
+  <div class="bottom-nav">
+    <div class="nav-item active"><div class="nav-pill">🧭</div><span>Khám phá</span></div>
+    <div class="nav-item"><div class="nav-pill">🗺</div><span>Bản đồ</span></div>
+    <div class="nav-item"><div class="nav-pill">✦</div><span>Wandy</span></div>
+    <div class="nav-item"><div class="nav-pill">🧳</div><span>Chuyến đi</span></div>
+    <div class="nav-item"><div class="nav-pill">👤</div><span>Cá nhân</span></div>
+  </div>
+</section>
+
+<!-- SCREEN 3: MAP EXPLORE V2 -->
+<section id="screen-03-map" class="screen">
+  <div class="statusbar"><span>9:41</span><span>5G · 100%</span></div>
+  <div style="flex: 1; position: relative; background: linear-gradient(160deg, #D9ECE7 0%, #EEF4F0 50%, #DDE9EC 100%); padding: 14px; display: flex; flex-direction: column; gap: 10px;">
+    <div class="search-bar"><span>🔍</span><span style="color: var(--text-1);">Tìm địa điểm tại Hà Nội...</span></div>
+    <div style="display: flex; gap: 8px;">
+      <span style="background: var(--primary-soft); color: var(--on-primary-soft); border: 1px solid var(--primary); padding: 6px 12px; border-radius: 10px; font-size: 12px; font-weight: 700;">✓ Hà Nội</span>
+      <span style="background: white; border: 1px solid var(--border); padding: 6px 12px; border-radius: 10px; font-size: 12px; font-weight: 600;">Đà Nẵng</span>
+      <span style="background: white; border: 1px solid var(--border); padding: 6px 12px; border-radius: 10px; font-size: 12px; font-weight: 600;">Hạ Long</span>
+    </div>
+    <div style="display: flex; gap: 8px; overflow: hidden;">
+      <span style="background: var(--primary); color: white; padding: 6px 12px; border-radius: 999px; font-size: 12px; font-weight: 700;">✓ Tất cả</span>
+      <span style="background: white; border: 1px solid var(--border); padding: 6px 12px; border-radius: 999px; font-size: 12px; font-weight: 600;">🏛 Văn hóa</span>
+      <span style="background: white; border: 1px solid var(--border); padding: 6px 12px; border-radius: 999px; font-size: 12px; font-weight: 600;">🍜 Nhà hàng</span>
+      <span style="background: white; border: 1px solid var(--border); padding: 6px 12px; border-radius: 999px; font-size: 12px; font-weight: 600;">☕ Cà phê</span>
+    </div>
+    <div style="flex: 1; position: relative;">
+      <div style="position: absolute; top: 80px; left: 90px; background: #4F46E5; color: white; width: 34px; height: 34px; border-radius: 999px; border: 2px solid white; display: flex; align-items: center; justify-content: center; font-size: 15px; box-shadow: 0 3px 8px rgba(0,0,0,0.2);">🏛</div>
+      <div style="position: absolute; top: 140px; left: 195px; background: #0F766E; color: white; width: 42px; height: 42px; border-radius: 999px; border: 3px solid white; display: flex; align-items: center; justify-content: center; font-size: 18px; box-shadow: 0 4px 12px rgba(0,0,0,0.28);">☕</div>
+      <div style="position: absolute; top: 195px; left: 110px; background: #EA580C; color: white; width: 34px; height: 34px; border-radius: 999px; border: 2px solid white; display: flex; align-items: center; justify-content: center; font-size: 15px;">🍜</div>
+      <div style="position: absolute; bottom: 12px; left: 0; background: white; padding: 6px 12px; border-radius: 999px; border: 1px solid var(--border); font-size: 12px; font-weight: 700; color: var(--primary-deep);">📍 110 địa điểm xác minh</div>
+    </div>
+    <div class="card" style="padding: 14px; border-radius: 20px; box-shadow: 0 -4px 18px rgba(0,0,0,0.08); display: flex; flex-direction: column; gap: 8px;">
+      <div style="display: flex; justify-content: space-between; align-items: start;">
+        <div>
+          <div style="font-size: 16px; font-weight: 800;">324Coffee · Đà Nẵng</div>
+          <div style="font-size: 12px; color: var(--text-2); margin-top: 2px;">Cà phê · <span class="pill-verified">✓ Đã xác minh OSM</span></div>
+        </div>
+        <span style="color: var(--text-3); font-weight: 700;">✕</span>
+      </div>
+      <div style="font-size: 12.5px; color: var(--text-2);">☆ Chưa có đánh giá · Chưa có thông tin địa chỉ</div>
+      <div class="btn-primary" style="height: 40px;">Xem chi tiết →</div>
+    </div>
+  </div>
+  <div class="bottom-nav">
+    <div class="nav-item"><div class="nav-pill">🧭</div><span>Khám phá</span></div>
+    <div class="nav-item active"><div class="nav-pill">🗺</div><span>Bản đồ</span></div>
+    <div class="nav-item"><div class="nav-pill">✦</div><span>Wandy</span></div>
+    <div class="nav-item"><div class="nav-pill">🧳</div><span>Chuyến đi</span></div>
+    <div class="nav-item"><div class="nav-pill">👤</div><span>Cá nhân</span></div>
+  </div>
+</section>
+
+<!-- SCREEN 4: PLACE DETAIL V2 -->
+<section id="screen-04-place-detail" class="screen">
+  <div class="statusbar"><span>9:41</span><span>5G · 100%</span></div>
+  <div class="appbar">
+    <div style="display: flex; align-items: center; gap: 10px;"><span style="font-size: 18px;">←</span><span class="h2">Chi tiết địa điểm</span></div>
+    <div class="icon-btn">↗</div>
+  </div>
+  <div class="content">
+    <div style="background: linear-gradient(135deg, #123B43, #0F766E); color: white; border-radius: 18px; padding: 18px;">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <span style="background: rgba(255,255,255,0.16); padding: 4px 10px; border-radius: 8px; font-size: 11px; font-weight: 700;">🏛 Bảo tàng · Hà Nội</span>
+        <span style="background: var(--primary-soft); color: var(--on-primary-soft); padding: 4px 9px; border-radius: 8px; font-size: 11px; font-weight: 700;">✓ Đã xác minh</span>
+      </div>
+      <div style="font-size: 20px; font-weight: 800; margin-top: 12px; line-height: 1.25;">Bảo tàng Lịch sử Quốc gia Việt Nam</div>
+      <div style="font-size: 12.5px; opacity: 0.9; margin-top: 6px;">☆ Chưa có đánh giá · Khoảng cách 0.4 km</div>
+    </div>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+      <div class="card"><div class="eyebrow">📍 Địa chỉ OSM</div><div class="sub" style="margin-top: 4px; color: var(--text-1);">216 Trần Quang Khải, Hoàn Kiếm, Hà Nội</div></div>
+      <div class="card"><div class="eyebrow">🕒 Giờ mở cửa</div><div class="sub" style="margin-top: 4px;">Chưa có thông tin giờ mở cửa.</div></div>
+    </div>
+    <div class="card">
+      <div class="eyebrow">🔎 Nguồn dữ liệu xác minh</div>
+      <div class="sub" style="margin-top: 4px; color: var(--text-1);">OpenStreetMap (ODbL 1.0) · ID node/way đã kiểm chứng</div>
+    </div>
+    <div class="card" style="height: 118px; background: #E6F0EC; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;">
+      <span style="font-size: 22px;">📍</span>
+      <span style="font-size: 12px; font-weight: 600; color: var(--primary-deep);">21.02450, 105.85980</span>
+    </div>
+  </div>
+  <div style="padding: 12px 16px 20px; background: var(--surface); border-top: 1px solid var(--border); display: flex; gap: 10px;">
+    <div class="btn-soft" style="flex: 1;">+ Thêm chuyến đi</div>
+    <div class="btn-primary" style="flex: 1;">🧭 Chỉ đường</div>
+  </div>
+</section>
+
+<!-- SCREEN 5: WANDY COPILOT V2 -->
+<section id="screen-05-wandy" class="screen">
+  <div class="statusbar"><span>9:41</span><span>5G · 100%</span></div>
+  <div class="appbar">
+    <div class="brand-row">
+      <div class="logo-badge" style="border-radius: 999px;">✦</div>
+      <div><div style="font-size: 15px; font-weight: 800;">Wandy</div><div style="font-size: 11px; color: var(--text-2);">Trợ lý du lịch có dẫn nguồn</div></div>
+    </div>
+    <div class="icon-btn">🗑</div>
+  </div>
+  <div class="content">
+    <div style="align-self: flex-end; max-width: 82%; background: var(--primary); color: white; padding: 11px 14px; border-radius: 16px 16px 4px 16px; font-size: 13.5px;">
+      Gợi ý giúp mình 3 địa điểm buổi sáng ở Đà Nẵng kèm nguồn mở.
+    </div>
+    <div class="card" style="background: var(--surface); max-width: 92%; display: flex; flex-direction: column; gap: 8px;">
+      <div style="font-size: 13.5px; line-height: 1.5; color: var(--text-1);">
+        Dưới đây là 3 địa điểm đã xác minh trên OpenStreetMap tại Đà Nẵng bạn có thể ghé buổi sáng:
+        <br/>• <strong>Bảo tàng Điêu khắc Chăm</strong> (Văn hóa)
+        <br/>• <strong>324Coffee</strong> (Cà phê)
+        <br/>• <strong>Bãi biển Mỹ Khê</strong> (Thiên nhiên)
+      </div>
+      <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+        <span class="pill-verified">🔗 OpenStreetMap ODbL</span>
+        <span class="pill-verified">📍 Xem trên bản đồ</span>
+      </div>
+    </div>
+    <div style="background: var(--warn-soft); border: 1px solid #FDE68A; color: var(--warn); border-radius: 12px; padding: 10px 12px; font-size: 12px; line-height: 1.4;">
+      ⚠ <strong>Trạng thái fail-closed khi offline / thiếu khóa AI:</strong> hệ thống trả lỗi trung thực thay vì tự tạo câu trả lời giả.
+    </div>
+    <div style="margin-top: auto; display: flex; gap: 8px; align-items: center;">
+      <div class="input-box" style="flex: 1; background: white; border-radius: 999px; color: var(--text-3);">Hỏi Wandy về điểm đến, thời tiết...</div>
+      <div class="logo-badge" style="width: 44px; height: 44px; border-radius: 999px;">➤</div>
+    </div>
+  </div>
+  <div class="bottom-nav">
+    <div class="nav-item"><div class="nav-pill">🧭</div><span>Khám phá</span></div>
+    <div class="nav-item"><div class="nav-pill">🗺</div><span>Bản đồ</span></div>
+    <div class="nav-item active"><div class="nav-pill">✦</div><span>Wandy</span></div>
+    <div class="nav-item"><div class="nav-pill">🧳</div><span>Chuyến đi</span></div>
+    <div class="nav-item"><div class="nav-pill">👤</div><span>Cá nhân</span></div>
+  </div>
+</section>
+
+<!-- SCREEN 6: TRIPS OVERVIEW V2 -->
+<section id="screen-06-trips" class="screen">
+  <div class="statusbar"><span>9:41</span><span>5G · 100%</span></div>
+  <div class="appbar">
+    <span class="h2" style="font-size: 18px;">Chuyến đi của tôi</span>
+    <div class="btn-soft" style="height: 34px; padding: 0 12px; font-size: 12.5px;">+ Tạo mới</div>
+  </div>
+  <div class="content">
+    <div class="card" style="display: flex; flex-direction: column; gap: 10px; border-left: 4px solid var(--primary);">
+      <div style="display: flex; justify-content: space-between; align-items: start;">
+        <div>
+          <div style="font-size: 16px; font-weight: 800;">Đà Nẵng 3 ngày cuối tuần</div>
+          <div style="font-size: 12.5px; color: var(--primary); font-weight: 600; margin-top: 2px;">📍 Đà Nẵng</div>
+        </div>
+        <span style="background: var(--primary-soft); color: var(--on-primary-soft); padding: 3px 9px; border-radius: 999px; font-size: 11px; font-weight: 700;">Đã lên lịch</span>
+      </div>
+      <div style="display: flex; gap: 12px; font-size: 12px; color: var(--text-2);">
+        <span>📅 01/12 – 03/12/2026</span>
+        <span>💰 5.000.000 đ</span>
+      </div>
+      <div style="display: flex; gap: 8px;">
+        <div class="btn-soft" style="flex: 1; height: 38px; font-size: 12px;">✦ Lập lịch trình AI</div>
+        <div class="btn-soft" style="background: #F1F5F9; color: var(--text-1); border-color: var(--border); height: 38px; font-size: 12px;">🛡 An toàn chuyến đi</div>
+      </div>
+    </div>
+    <div class="card" style="background: var(--warm-surface); border-style: dashed; text-align: center; padding: 20px;">
+      <div style="font-size: 28px;">🧳</div>
+      <div style="font-size: 15px; font-weight: 700; margin-top: 6px;">Sẵn sàng cho hành trình mới?</div>
+      <div class="sub" style="margin-top: 4px;">Tạo chuyến đi và để Wandy gợi ý lịch trình theo ngân sách VND của bạn.</div>
+      <div class="btn-primary" style="margin-top: 14px; height: 42px;">+ Tạo chuyến đi mới</div>
+    </div>
+  </div>
+  <div class="bottom-nav">
+    <div class="nav-item"><div class="nav-pill">🧭</div><span>Khám phá</span></div>
+    <div class="nav-item"><div class="nav-pill">🗺</div><span>Bản đồ</span></div>
+    <div class="nav-item"><div class="nav-pill">✦</div><span>Wandy</span></div>
+    <div class="nav-item active"><div class="nav-pill">🧳</div><span>Chuyến đi</span></div>
+    <div class="nav-item"><div class="nav-pill">👤</div><span>Cá nhân</span></div>
+  </div>
+</section>
+
+<!-- SCREEN 7: PROFILE & SAFETY HUB (UX-V2-NAV-01 CANDIDATE) -->
+<section id="screen-07-profile" class="screen">
+  <div class="statusbar"><span>9:41</span><span>5G · 100%</span></div>
+  <div class="appbar"><span class="h2" style="font-size: 18px;">Cá nhân (Đề xuất V2)</span><span class="pill-verified">UX-V2-NAV-01</span></div>
+  <div class="content">
+    <div class="card" style="display: flex; align-items: center; gap: 12px;">
+      <div class="logo-badge" style="width: 48px; height: 48px; border-radius: 999px; font-size: 18px;">MA</div>
+      <div>
+        <div style="font-size: 16px; font-weight: 800;">Minh Anh</div>
+        <div style="font-size: 12px; color: var(--text-2);">minhanh@gomate.vn · Phong cách: Thoải mái</div>
+      </div>
+    </div>
+    <div class="card" style="border-color: #99F6E4; background: #F0FDFA; display: flex; flex-direction: column; gap: 8px;">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <span style="font-size: 15px; font-weight: 800; color: var(--primary-deep);">🛡 Trung tâm An toàn</span>
+        <span style="background: var(--warn-soft); color: var(--warn); font-size: 10.5px; font-weight: 700; padding: 2px 8px; border-radius: 999px;">Đang phát triển</span>
+      </div>
+      <div class="sub">Dễ truy cập từ Cá nhân & Chuyến đi. Trạng thái trung thực: chưa kích hoạt SOS/chia sẻ vị trí thực tế ở Wave A.</div>
+    </div>
+    <div class="card" style="display: flex; flex-direction: column; gap: 12px;">
+      <div style="display: flex; justify-content: space-between;"><span>🎨 Sở thích du lịch (REC-A)</span><span>›</span></div>
+      <div style="height: 1px; background: var(--border);"></div>
+      <div style="display: flex; justify-content: space-between;"><span>🔔 Cài đặt & quyền riêng tư</span><span>›</span></div>
+      <div style="height: 1px; background: var(--border);"></div>
+      <div style="display: flex; justify-content: space-between; color: var(--err); font-weight: 700;"><span>↩ Đăng xuất tài khoản</span><span>›</span></div>
+    </div>
+  </div>
+  <div class="bottom-nav">
+    <div class="nav-item"><div class="nav-pill">🧭</div><span>Khám phá</span></div>
+    <div class="nav-item"><div class="nav-pill">🗺</div><span>Bản đồ</span></div>
+    <div class="nav-item"><div class="nav-pill">✦</div><span>Wandy</span></div>
+    <div class="nav-item"><div class="nav-pill">🧳</div><span>Chuyến đi</span></div>
+    <div class="nav-item active"><div class="nav-pill">👤</div><span>Cá nhân</span></div>
+  </div>
+</section>
+
+<!-- BOARD 8: SIDE-BY-SIDE NAVIGATION V1 LOCKED VS V2 PROPOSED -->
+<section id="board-08-nav-compare" class="board">
+  <div class="eyebrow">Design Amendment Pending Owner Decision · UX-V2-NAV-01</div>
+  <div class="h1" style="margin-top: 4px;">So sánh Điều hướng Chính (5 Tabs): V1 Locked vs V2 Đề xuất</div>
+  <div class="sub" style="margin-top: 4px;">Wave A giữ nguyên V1 trong mã nguồn sản phẩm; chờ Owner duyệt trước khi mở khóa đổi router ở Wave B+.</div>
+  <div class="board-grid">
+    <div class="card" style="padding: 18px; display: flex; flex-direction: column; gap: 12px;">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <span class="h2">V1 — Production Locked</span>
+        <span style="background: #E2E8F0; color: #334155; font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 999px;">Đang chạy trong code</span>
+      </div>
+      <div class="sub">Tabs: <strong>Trang chủ / Bản đồ / Wandy AI / An toàn / Chuyến đi</strong></div>
+      <ul style="font-size: 12.5px; color: var(--text-2); padding-left: 18px; line-height: 1.65;">
+        <li>Tab 4 là <code>/safety</code> đang hiển thị placeholder “Tính năng đang phát triển...”.</li>
+        <li>Chưa có tab Hồ sơ / Cá nhân riêng; nút Sở thích & Đăng xuất nằm ở góc trên Home.</li>
+        <li>Nhãn tab 1 là “Trang chủ” thay vì “Khám phá”.</li>
+      </ul>
+      <div class="bottom-nav" style="border: 1px solid var(--border); border-radius: 14px; margin-top: auto;">
+        <div class="nav-item active"><div class="nav-pill">🧭</div><span>Trang chủ</span></div>
+        <div class="nav-item"><div class="nav-pill">🗺</div><span>Bản đồ</span></div>
+        <div class="nav-item"><div class="nav-pill">✦</div><span>Wandy AI</span></div>
+        <div class="nav-item"><div class="nav-pill">🛡</div><span>An toàn</span></div>
+        <div class="nav-item"><div class="nav-pill">🧳</div><span>Chuyến đi</span></div>
+      </div>
+    </div>
+    <div class="card" style="padding: 18px; border: 2px solid var(--primary); display: flex; flex-direction: column; gap: 12px;">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <span class="h2" style="color: var(--primary-deep);">V2 — UX-V2-NAV-01 (Đề xuất)</span>
+        <span class="pill-verified">Chờ Owner phê duyệt</span>
+      </div>
+      <div class="sub">Tabs: <strong>Khám phá / Bản đồ / Wandy / Chuyến đi / Cá nhân</strong></div>
+      <ul style="font-size: 12.5px; color: var(--text-2); padding-left: 18px; line-height: 1.65;">
+        <li>Tab 5 dành cho <strong>Cá nhân</strong> (Hồ sơ, Sở thích REC-A, Cài đặt, Đăng xuất, Trung tâm An toàn).</li>
+        <li><strong>Không xóa An toàn:</strong> đặt thẻ Trung tâm An toàn nổi bật trong <strong>Cá nhân</strong> & trong <strong>Chuyến đi</strong>, giữ route <code>/safety</code>.</li>
+        <li>Nhãn ngắn gọn hơn trên màn hình 360px tránh wrap chữ.</li>
+      </ul>
+      <div class="bottom-nav" style="border: 1px solid var(--border); border-radius: 14px; margin-top: auto;">
+        <div class="nav-item active"><div class="nav-pill">🧭</div><span>Khám phá</span></div>
+        <div class="nav-item"><div class="nav-pill">🗺</div><span>Bản đồ</span></div>
+        <div class="nav-item"><div class="nav-pill">✦</div><span>Wandy</span></div>
+        <div class="nav-item"><div class="nav-pill">🧳</div><span>Chuyến đi</span></div>
+        <div class="nav-item"><div class="nav-pill">👤</div><span>Cá nhân</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SCREEN 9: HOME DESKTOP RESPONSIVE V2 -->
+<section id="screen-09-desktop" class="desktop">
+  <div class="appbar" style="height: 64px; padding: 0 40px;">
+    <div class="brand-row"><div class="logo-badge">G</div><span class="brand-text">GoMate</span></div>
+    <div style="display: flex; gap: 28px; font-size: 14px; font-weight: 700; color: var(--text-2);">
+      <span style="color: var(--primary);">Khám phá</span><span>Bản đồ</span><span>Wandy</span><span>Chuyến đi</span><span>An toàn</span>
+    </div>
+    <div class="brand-row"><div class="icon-btn">⚙</div><span style="font-size: 13.5px; font-weight: 700;">Minh Anh</span></div>
+  </div>
+  <div style="width: 1000px; margin: 28px auto; display: flex; flex-direction: column; gap: 20px;">
+    <div style="display: grid; grid-template-columns: 1.3fr 1fr; gap: 20px; align-items: stretch;">
+      <div class="card" style="padding: 24px; display: flex; flex-direction: column; justify-content: space-between;">
+        <div>
+          <div class="h1" style="font-size: 28px;">Xin chào, Minh Anh 👋</div>
+          <div class="sub" style="margin-top: 6px; font-size: 15px;">Tìm địa điểm được xác minh hoặc bắt đầu hành trình cùng Wandy.</div>
+        </div>
+        <div class="search-bar" style="margin-top: 18px;"><span>🔍</span><span>Tìm địa điểm, món ăn, bảo tàng, quán cà phê tại Việt Nam...</span></div>
+      </div>
+      <div class="wandy-card" style="padding: 22px; justify-content: space-between;">
+        <div class="wandy-top"><div class="wandy-icon">✦</div><div><div style="font-size: 18px; font-weight: 800;">Wandy AI Copilot</div><div style="font-size: 13px; opacity: 0.9;">Hỏi địa điểm có dẫn nguồn OpenStreetMap</div></div></div>
+        <div class="wandy-chips"><div class="wandy-chip">✦ Lịch trình Đà Nẵng 3N2Đ</div><div class="wandy-chip">✦ Thời tiết Hà Nội</div></div>
+      </div>
+    </div>
+    <div class="sec-row"><span class="h2" style="font-size: 20px;">Điểm đến nổi bật</span><span class="sec-link">Lọc theo miền: Tất cả · Miền Bắc · Miền Trung · Miền Nam</span></div>
+    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px;">
+      <div class="dest-card" style="width: auto;"><div class="dest-art art-central"><span class="badge-coral">Nổi bật</span><span class="badge-region">Miền Trung</span></div><div class="dest-body"><div class="dest-name">Đà Nẵng</div><div class="dest-meta">123 địa điểm xác minh</div></div></div>
+      <div class="dest-card" style="width: auto;"><div class="dest-art art-north"><span class="badge-coral">Nổi bật</span><span class="badge-region">Miền Bắc</span></div><div class="dest-body"><div class="dest-name">Hà Nội</div><div class="dest-meta">110 địa điểm xác minh</div></div></div>
+      <div class="dest-card" style="width: auto;"><div class="dest-art art-south"><span class="badge-region">Miền Trung</span></div><div class="dest-body"><div class="dest-name">Hội An</div><div class="dest-meta">75 địa điểm xác minh</div></div></div>
+      <div class="dest-card" style="width: auto;"><div class="dest-art art-north"><span class="badge-coral">Nổi bật</span><span class="badge-region">Miền Bắc</span></div><div class="dest-body"><div class="dest-name">Hạ Long</div><div class="dest-meta">Quảng Ninh</div></div></div>
+    </div>
+    <div class="sec-row"><span class="h2" style="font-size: 20px;">Địa điểm đã xác minh nổi bật</span><span class="sec-link">Mở Bản đồ →</span></div>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+      <div class="place-row"><div class="place-thumb">🏛</div><div style="flex:1;"><div style="font-weight:700;">Bảo tàng Lịch sử Quốc gia Việt Nam</div><div class="sub">216 Trần Quang Khải, Hoàn Kiếm, Hà Nội</div></div><span class="pill-verified">✓ Đã xác minh</span></div>
+      <div class="place-row"><div class="place-thumb">☕</div><div style="flex:1;"><div style="font-weight:700;">324Coffee · Đà Nẵng</div><div class="sub">Chưa có thông tin địa chỉ · Chưa có đánh giá</div></div><span class="pill-verified">✓ Đã xác minh</span></div>
+    </div>
+  </div>
+</section>
+
+</body>
+</html>

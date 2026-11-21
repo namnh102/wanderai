@@ -30,11 +30,15 @@ class RatingView extends StatelessWidget {
             color: AppColors.textTertiary,
           ),
           const SizedBox(width: AppSpacing.xs),
-          Text(
-            'Chưa có đánh giá',
-            style: AppTypography.bodyS.copyWith(
-              color: AppColors.textTertiary,
-              fontSize: iconSize - 2,
+          Flexible(
+            child: Text(
+              'Chưa có đánh giá',
+              style: AppTypography.bodyS.copyWith(
+                color: AppColors.textTertiary,
+                fontSize: iconSize - 2,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
           ),
         ],

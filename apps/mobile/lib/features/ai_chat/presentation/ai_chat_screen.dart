@@ -22,6 +22,27 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
   final FocusNode _focusNode = FocusNode();
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _applyPendingPrompt();
+    });
+  }
+
+  void _applyPendingPrompt() {
+    if (!mounted) return;
+    final pending = ref.read(pendingChatPromptProvider);
+    if (pending != null && pending.trim().isNotEmpty) {
+      _textController.text = pending;
+      _textController.selection = TextSelection.fromPosition(
+        TextPosition(offset: _textController.text.length),
+      );
+      ref.read(pendingChatPromptProvider.notifier).state = null;
+      _focusNode.requestFocus();
+    }
+  }
+
+  @override
   void dispose() {
     _textController.dispose();
     _scrollController.dispose();
@@ -60,6 +81,13 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
     ref.listen<ChatState>(chatProvider, (prev, next) {
       if (prev?.messages.length != next.messages.length) {
         _scrollToBottom();
+      }
+    });
+
+    // Consume quick-action prompt handoff from Home / Discover when /ai is already mounted in ShellRoute
+    ref.listen<String?>(pendingChatPromptProvider, (prev, next) {
+      if (next != null && next.trim().isNotEmpty) {
+        _applyPendingPrompt();
       }
     });
 
