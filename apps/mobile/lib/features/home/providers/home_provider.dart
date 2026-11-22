@@ -263,6 +263,13 @@ class HomeNotifier extends StateNotifier<HomeState> {
     }
   }
 
+  /// Reset session-scoped home state on logout without triggering unauthenticated fetches.
+  void resetForLogout() {
+    _loadSeq++;
+    _nearbySeq++;
+    state = const HomeState(isLoading: false);
+  }
+
   void setRegion(HomeRegionFilter region) {
     if (state.selectedRegion == region) return;
     state = state.copyWith(selectedRegion: region);

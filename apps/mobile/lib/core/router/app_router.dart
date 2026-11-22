@@ -63,7 +63,10 @@ class RouterNotifier extends ChangeNotifier {
         if (previous?.status != next.status &&
             (previous?.status == AuthStatus.authenticated ||
                 next.status == AuthStatus.authenticated)) {
-          resetSessionScopedState(_ref);
+          resetSessionScopedState(
+            _ref,
+            isAuthenticated: next.status == AuthStatus.authenticated,
+          );
         }
         notifyListeners();
       },

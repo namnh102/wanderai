@@ -12,6 +12,8 @@ import 'package:wanderai_mobile/core/router/app_router.dart';
 import 'package:wanderai_mobile/features/auth/data/auth_repository.dart';
 import 'package:wanderai_mobile/features/auth/providers/auth_provider.dart';
 import 'package:wanderai_mobile/features/home/presentation/home_screen.dart';
+import 'package:wanderai_mobile/features/profile/providers/profile_provider.dart';
+import 'package:wanderai_mobile/features/trips/providers/trip_provider.dart';
 
 ResponseBody _jsonBody(int statusCode, Map<String, dynamic> body) {
   return ResponseBody.fromString(
@@ -111,6 +113,37 @@ class _PreLoginCheckAdapter implements HttpClientAdapter {
           'preferences': {'interests': <String>[]},
         },
       });
+    }
+    return _jsonBody(200, {'success': true, 'data': {}});
+  }
+
+  @override
+  void close({bool force = false}) {}
+}
+
+class _ControllableAuthAdapter implements HttpClientAdapter {
+  final Future<ResponseBody> Function(RequestOptions options)? onRequest;
+  final List<(String path, String? authHeader)> recordedRequests = [];
+  int refreshCalls = 0;
+  final List<Map<String, dynamic>> refreshPayloads = [];
+
+  _ControllableAuthAdapter({this.onRequest});
+
+  @override
+  Future<ResponseBody> fetch(
+    RequestOptions options,
+    Stream<Uint8List>? requestStream,
+    Future<void>? cancelFuture,
+  ) async {
+    recordedRequests.add((options.path, options.headers['Authorization'] as String?));
+    if (options.path == '/auth/refresh') {
+      refreshCalls++;
+      if (options.data is Map) {
+        refreshPayloads.add(Map<String, dynamic>.from(options.data as Map));
+      }
+    }
+    if (onRequest != null) {
+      return onRequest!(options);
     }
     return _jsonBody(200, {'success': true, 'data': {}});
   }
@@ -285,6 +318,470 @@ void main() {
       expect(container.read(authProvider).status, AuthStatus.unauthenticated);
       expect(find.byType(HomeScreen), findsNothing);
       expect(adapter.paths, isNot(contains('/users/me')));
+    });
+  });
+
+  group('PR #99 P1 JWT Session Isolation & Epoch Gating', () {
+    test(
+        'stale refresh success after logout never writes tokens back or retries under logged-out state',
+        () async {
+      SharedPreferences.setMockInitialValues({
+        'access_token': 'access-a',
+        'refresh_token': 'refresh-a',
+      });
+
+      final epoch = SessionEpochController();
+      final refreshGate = Completer<ResponseBody>();
+      var sessionExpiredCalls = 0;
+
+      final adapter = _ControllableAuthAdapter(
+        onRequest: (options) async {
+          if (options.path == '/auth/refresh') {
+            return refreshGate.future;
+          }
+          if (options.headers['Authorization'] == 'Bearer access-a') {
+            return _jsonBody(401, {'message': 'Expired access-a'});
+          }
+          return _jsonBody(200, {'success': true, 'data': {}});
+        },
+      );
+
+      final dio = createApiClient(
+        baseUrlOverride: 'http://localhost:3000/api/v1',
+        sessionEpoch: epoch,
+        onSessionExpired: () => sessionExpiredCalls++,
+      )..httpClientAdapter = adapter;
+
+      final requestFuture = dio.get<dynamic>('/users/me');
+      await Future<void>.delayed(const Duration(milliseconds: 20));
+      expect(adapter.refreshCalls, 1);
+
+      // Logout happens while /auth/refresh is in flight.
+      epoch.advance();
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('access_token');
+      await prefs.remove('refresh_token');
+
+      refreshGate.complete(
+        _jsonBody(200, {
+          'success': true,
+          'data': {
+            'access_token': 'fresh-a-late',
+            'refresh_token': 'fresh-refresh-a-late',
+          },
+        }),
+      );
+
+      await expectLater(
+        requestFuture,
+        throwsA(isA<DioException>().having((e) => e.type, 'type', DioExceptionType.cancel)),
+      );
+
+      expect(prefs.getString('access_token'), isNull);
+      expect(prefs.getString('refresh_token'), isNull);
+      expect(sessionExpiredCalls, 0);
+      expect(
+        adapter.recordedRequests.where((r) => r.$2 == 'Bearer fresh-a-late'),
+        isEmpty,
+      );
+    });
+
+    test(
+        'stale refresh 401 failure after logout never fires onSessionExpired',
+        () async {
+      SharedPreferences.setMockInitialValues({
+        'access_token': 'access-a',
+        'refresh_token': 'refresh-a',
+      });
+
+      final epoch = SessionEpochController();
+      final refreshGate = Completer<ResponseBody>();
+      var sessionExpiredCalls = 0;
+
+      final adapter = _ControllableAuthAdapter(
+        onRequest: (options) async {
+          if (options.path == '/auth/refresh') {
+            return refreshGate.future;
+          }
+          return _jsonBody(401, {'message': 'Expired'});
+        },
+      );
+
+      final dio = createApiClient(
+        baseUrlOverride: 'http://localhost:3000/api/v1',
+        sessionEpoch: epoch,
+        onSessionExpired: () => sessionExpiredCalls++,
+      )..httpClientAdapter = adapter;
+
+      final requestFuture = dio.get<dynamic>('/users/me');
+      await Future<void>.delayed(const Duration(milliseconds: 20));
+      expect(adapter.refreshCalls, 1);
+
+      epoch.advance();
+      refreshGate.complete(_jsonBody(401, {'message': 'Revoked'}));
+
+      await expectLater(
+        requestFuture,
+        throwsA(isA<DioException>().having((e) => e.type, 'type', DioExceptionType.cancel)),
+      );
+
+      expect(sessionExpiredCalls, 0);
+      expect(adapter.refreshCalls, 1);
+    });
+
+    test(
+        'Account A -> Account B switch while A refresh pending (both late 200 and late 401) never corrupts B tokens',
+        () async {
+      for (final lateFailure in [false, true]) {
+        SharedPreferences.setMockInitialValues({
+          'access_token': 'access-a',
+          'refresh_token': 'refresh-a',
+        });
+
+        final epoch = SessionEpochController();
+        final refreshGateA = Completer<ResponseBody>();
+        var sessionExpiredCalls = 0;
+
+        final adapter = _ControllableAuthAdapter(
+          onRequest: (options) async {
+            if (options.path == '/auth/refresh') {
+              return refreshGateA.future;
+            }
+            final auth = options.headers['Authorization'] as String?;
+            if (auth == 'Bearer access-b') {
+              return _jsonBody(200, {'success': true, 'data': {'account': 'B'}});
+            }
+            return _jsonBody(401, {'message': 'Expired A'});
+          },
+        );
+
+        final dio = createApiClient(
+          baseUrlOverride: 'http://localhost:3000/api/v1',
+          sessionEpoch: epoch,
+          onSessionExpired: () => sessionExpiredCalls++,
+        )..httpClientAdapter = adapter;
+
+        final requestA = dio.get<dynamic>('/users/me');
+        await Future<void>.delayed(const Duration(milliseconds: 20));
+        expect(adapter.refreshCalls, 1);
+
+        // Switch to Account B while A's refresh is still pending.
+        epoch.advance();
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('access_token', 'access-b');
+        await prefs.setString('refresh_token', 'refresh-b');
+
+        // Late A refresh finishes with either 200 fresh-a or 401 revoked.
+        refreshGateA.complete(
+          lateFailure
+              ? _jsonBody(401, {'message': 'Revoked A'})
+              : _jsonBody(200, {
+                  'success': true,
+                  'data': {
+                    'access_token': 'fresh-a',
+                    'refresh_token': 'fresh-refresh-a',
+                  },
+                }),
+        );
+
+        await expectLater(requestA, throwsA(isA<DioException>()));
+
+        expect(prefs.getString('access_token'), 'access-b');
+        expect(prefs.getString('refresh_token'), 'refresh-b');
+        expect(sessionExpiredCalls, 0);
+
+        final responseB = await dio.get<dynamic>('/users/me');
+        expect(responseB.statusCode, 200);
+        expect(adapter.recordedRequests.last, ('/users/me', 'Bearer access-b'));
+      }
+    });
+
+    test(
+        'delayed 401 from Account A arriving after switch to Account B does not trigger refresh or retry under B',
+        () async {
+      SharedPreferences.setMockInitialValues({
+        'access_token': 'access-a',
+        'refresh_token': 'refresh-a',
+      });
+
+      final epoch = SessionEpochController();
+      final responseGateA = Completer<ResponseBody>();
+      var sessionExpiredCalls = 0;
+
+      final adapter = _ControllableAuthAdapter(
+        onRequest: (options) async {
+          if (options.headers['Authorization'] == 'Bearer access-a') {
+            return responseGateA.future;
+          }
+          return _jsonBody(200, {'success': true, 'data': {'ok': true}});
+        },
+      );
+
+      final dio = createApiClient(
+        baseUrlOverride: 'http://localhost:3000/api/v1',
+        sessionEpoch: epoch,
+        onSessionExpired: () => sessionExpiredCalls++,
+      )..httpClientAdapter = adapter;
+
+      final requestA = dio.get<dynamic>('/users/me');
+      await Future<void>.delayed(const Duration(milliseconds: 20));
+
+      // Account B signs in while A's request is still in-flight on the wire.
+      epoch.advance();
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('access_token', 'access-b');
+      await prefs.setString('refresh_token', 'refresh-b');
+
+      // Server finally returns 401 to A's stale request.
+      responseGateA.complete(_jsonBody(401, {'message': 'A expired'}));
+
+      await expectLater(
+        requestA,
+        throwsA(isA<DioException>().having((e) => e.type, 'type', DioExceptionType.cancel)),
+      );
+
+      expect(adapter.refreshCalls, 0);
+      expect(sessionExpiredCalls, 0);
+      expect(prefs.getString('access_token'), 'access-b');
+      expect(prefs.getString('refresh_token'), 'refresh-b');
+      expect(
+        adapter.recordedRequests.where((r) => r.$2 == 'Bearer access-b'),
+        isEmpty,
+      );
+    });
+
+    test(
+        'transient refresh errors (connectionTimeout, connectionError, 503) keep tokens intact without logout; 403 invalidates',
+        () async {
+      for (final mode in ['timeout', 'connectionError', '503']) {
+        SharedPreferences.setMockInitialValues({
+          'access_token': 'expired-access',
+          'refresh_token': 'valid-refresh',
+        });
+
+        var sessionExpiredCalls = 0;
+        final adapter = _ControllableAuthAdapter(
+          onRequest: (options) async {
+            if (options.path == '/auth/refresh') {
+              if (mode == 'timeout') {
+                throw DioException(
+                  requestOptions: options,
+                  type: DioExceptionType.connectionTimeout,
+                );
+              }
+              if (mode == 'connectionError') {
+                throw DioException(
+                  requestOptions: options,
+                  type: DioExceptionType.connectionError,
+                );
+              }
+              return _jsonBody(503, {'message': 'Service temporarily unavailable'});
+            }
+            return _jsonBody(401, {'message': 'Access token expired'});
+          },
+        );
+
+        final container = ProviderContainer(
+          overrides: [
+            apiClientProvider.overrideWith((ref) {
+              final epoch = ref.read(sessionEpochControllerProvider);
+              return createApiClient(
+                baseUrlOverride: 'http://localhost:3000/api/v1',
+                sessionEpoch: epoch,
+                onSessionExpired: () {
+                  sessionExpiredCalls++;
+                  ref.read(authSessionExpiredSignalProvider.notifier).state++;
+                },
+              )..httpClientAdapter = adapter;
+            }),
+          ],
+        );
+        addTearDown(container.dispose);
+
+        expect(container.read(authProvider).status, AuthStatus.unknown);
+        await Future<void>.delayed(const Duration(milliseconds: 20));
+        expect(container.read(authProvider).status, AuthStatus.authenticated);
+
+        final dio = container.read(apiClientProvider);
+        await expectLater(() => dio.get<dynamic>('/users/me'), throwsA(isA<DioException>()));
+
+        final prefs = await SharedPreferences.getInstance();
+        expect(prefs.getString('access_token'), 'expired-access');
+        expect(prefs.getString('refresh_token'), 'valid-refresh');
+        expect(sessionExpiredCalls, 0);
+        expect(container.read(authProvider).status, AuthStatus.authenticated);
+      }
+
+      // Contrast with explicit 403 invalid refresh credential -> clears tokens and signals expiry.
+      SharedPreferences.setMockInitialValues({
+        'access_token': 'expired-access',
+        'refresh_token': 'forbidden-refresh',
+      });
+      var expired403 = 0;
+      final adapter403 = _ControllableAuthAdapter(
+        onRequest: (options) async {
+          if (options.path == '/auth/refresh') {
+            return _jsonBody(403, {'message': 'Refresh token forbidden'});
+          }
+          return _jsonBody(401, {'message': 'Access token expired'});
+        },
+      );
+      final dio403 = createApiClient(
+        baseUrlOverride: 'http://localhost:3000/api/v1',
+        onSessionExpired: () => expired403++,
+      )..httpClientAdapter = adapter403;
+
+      await expectLater(() => dio403.get<dynamic>('/users/me'), throwsA(isA<DioException>()));
+      final prefs403 = await SharedPreferences.getInstance();
+      expect(prefs403.getString('access_token'), isNull);
+      expect(prefs403.getString('refresh_token'), isNull);
+      expect(expired403, 1);
+    });
+
+    test(
+        'persistent 401 even after fresh token performs single refresh and at most one retry per request',
+        () async {
+      SharedPreferences.setMockInitialValues({
+        'access_token': 'expired-access',
+        'refresh_token': 'valid-refresh',
+      });
+
+      final adapter = _ControllableAuthAdapter(
+        onRequest: (options) async {
+          if (options.path == '/auth/refresh') {
+            return _jsonBody(200, {
+              'success': true,
+              'data': {
+                'access_token': 'fresh-access',
+                'refresh_token': 'fresh-refresh',
+              },
+            });
+          }
+          return _jsonBody(401, {'message': 'Still unauthorized'});
+        },
+      );
+
+      final dio = createApiClient(
+        baseUrlOverride: 'http://localhost:3000/api/v1',
+      )..httpClientAdapter = adapter;
+
+      await expectLater(() => dio.get<dynamic>('/users/me'), throwsA(isA<DioException>()));
+
+      expect(adapter.refreshCalls, 1);
+      final meRequests = adapter.recordedRequests.where((r) => r.$1 == '/users/me').toList();
+      expect(meRequests.length, 2);
+      expect(meRequests[0].$2, 'Bearer expired-access');
+      expect(meRequests[1].$2, 'Bearer fresh-access');
+    });
+
+    test(
+        'logout clears profile and trip providers with ZERO unauthenticated /users/me or /trips requests, then new login reloads under new session',
+        () async {
+      SharedPreferences.setMockInitialValues({
+        'access_token': 'access-a',
+        'refresh_token': 'refresh-a',
+      });
+
+      final adapter = _ControllableAuthAdapter(
+        onRequest: (options) async {
+          if (options.path == '/auth/login') {
+            final body = Map<String, dynamic>.from(options.data as Map);
+            expect(body['email'], 'b@test');
+            return _jsonBody(200, {
+              'success': true,
+              'data': {
+                'access_token': 'access-b',
+                'refresh_token': 'refresh-b',
+              },
+            });
+          }
+          final auth = options.headers['Authorization'] as String?;
+          if (options.path == '/users/me') {
+            if (auth == 'Bearer access-a') {
+              return _jsonBody(200, {
+                'success': true,
+                'data': {'id': 'user-a', 'email': 'a@test'},
+              });
+            }
+            if (auth == 'Bearer access-b') {
+              return _jsonBody(200, {
+                'success': true,
+                'data': {'id': 'user-b', 'email': 'b@test'},
+              });
+            }
+            return _jsonBody(401, {'message': 'Unauthorized /users/me'});
+          }
+          if (options.path == '/trips') {
+            if (auth == 'Bearer access-a') {
+              return _jsonBody(200, {
+                'success': true,
+                'data': {'items': <dynamic>[]},
+              });
+            }
+            if (auth == 'Bearer access-b') {
+              return _jsonBody(200, {
+                'success': true,
+                'data': {'items': <dynamic>[]},
+              });
+            }
+            return _jsonBody(401, {'message': 'Unauthorized /trips'});
+          }
+          return _jsonBody(200, {'success': true, 'data': {}});
+        },
+      );
+
+      final container = ProviderContainer(
+        overrides: [
+          apiClientProvider.overrideWith((ref) {
+            final epoch = ref.read(sessionEpochControllerProvider);
+            return createApiClient(
+              baseUrlOverride: 'http://localhost:3000/api/v1',
+              sessionEpoch: epoch,
+              onSessionExpired: () {
+                ref.read(authSessionExpiredSignalProvider.notifier).state++;
+              },
+            )..httpClientAdapter = adapter;
+          }),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      container.read(routerNotifierProvider);
+      await Future<void>.delayed(const Duration(milliseconds: 30));
+      expect(container.read(authProvider).status, AuthStatus.authenticated);
+
+      // Hydrate session-scoped providers as User A.
+      container.read(profileProvider);
+      container.read(tripListProvider);
+      await Future<void>.delayed(const Duration(milliseconds: 30));
+      expect(container.read(profileProvider).user?.id, 'user-a');
+
+      adapter.recordedRequests.clear();
+
+      // Logout must reset providers cleanly with zero /users/me or /trips fetches.
+      await container.read(authProvider.notifier).logout();
+      await Future<void>.delayed(const Duration(milliseconds: 30));
+
+      expect(container.read(authProvider).status, AuthStatus.unauthenticated);
+      expect(container.read(profileProvider).user, isNull);
+      expect(container.read(tripListProvider).trips, isEmpty);
+      expect(adapter.recordedRequests, isEmpty);
+
+      // Login as User B: invalidated providers reload under B's access token.
+      expect(
+        await container.read(authProvider.notifier).login('b@test', 'pw'),
+        isTrue,
+      );
+      await Future<void>.delayed(const Duration(milliseconds: 30));
+      expect(container.read(authProvider).status, AuthStatus.authenticated);
+
+      container.read(profileProvider);
+      await Future<void>.delayed(const Duration(milliseconds: 30));
+      expect(container.read(profileProvider).user?.id, 'user-b');
+      expect(
+        adapter.recordedRequests.where((r) => r.$1 == '/users/me' && r.$2 == 'Bearer access-b'),
+        hasLength(1),
+      );
     });
   });
 }

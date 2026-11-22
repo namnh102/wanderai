@@ -33,22 +33,33 @@ class TripListState {
 
 class TripListNotifier extends StateNotifier<TripListState> {
   final TripRepository _repo;
+  int _loadSeq = 0;
 
   TripListNotifier(this._repo) : super(const TripListState()) {
     loadTrips();
   }
 
+  /// Reset session-scoped trip list on logout without triggering `/trips`.
+  void resetForLogout() {
+    _loadSeq++;
+    state = const TripListState();
+  }
+
   Future<void> loadTrips() async {
+    final seq = ++_loadSeq;
     state = state.copyWith(isLoading: true, clearError: true);
     try {
       final list = await _repo.getMyTrips();
+      if (!mounted || seq != _loadSeq) return;
       state = state.copyWith(trips: list, isLoading: false, clearError: true);
     } on DioException catch (e) {
+      if (!mounted || seq != _loadSeq) return;
       state = state.copyWith(
         isLoading: false,
         errorMessage: _mapError(e),
       );
     } catch (_) {
+      if (!mounted || seq != _loadSeq) return;
       state = state.copyWith(
         isLoading: false,
         errorMessage: 'Không thể tải danh sách chuyến đi',
@@ -137,20 +148,31 @@ class TripDetailState {
 
 class TripDetailNotifier extends StateNotifier<TripDetailState> {
   final TripRepository _repo;
+  int _loadSeq = 0;
 
   TripDetailNotifier(this._repo) : super(const TripDetailState());
 
+  /// Reset session-scoped trip detail on logout.
+  void resetForLogout() {
+    _loadSeq++;
+    state = const TripDetailState();
+  }
+
   Future<void> loadTrip(String id) async {
+    final seq = ++_loadSeq;
     state = state.copyWith(isLoading: true, clearError: true);
     try {
       final detail = await _repo.getTripDetail(id);
+      if (!mounted || seq != _loadSeq) return;
       state = state.copyWith(trip: detail, isLoading: false, clearError: true);
     } on DioException catch (e) {
+      if (!mounted || seq != _loadSeq) return;
       state = state.copyWith(
         isLoading: false,
         errorMessage: _mapError(e),
       );
     } catch (_) {
+      if (!mounted || seq != _loadSeq) return;
       state = state.copyWith(
         isLoading: false,
         errorMessage: 'Không thể tải chi tiết chuyến đi',

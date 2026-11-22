@@ -56,6 +56,7 @@ class ProfileState {
 
 class ProfileNotifier extends StateNotifier<ProfileState> {
   final ProfileRepository _repo;
+  int _loadSeq = 0;
 
   ProfileNotifier(this._repo)
       : super(const ProfileState(
@@ -65,11 +66,21 @@ class ProfileNotifier extends StateNotifier<ProfileState> {
     loadProfile();
   }
 
+  /// Clear session-scoped profile state on logout without re-fetching `/users/me`.
+  void resetForLogout() {
+    _loadSeq++;
+    state = const ProfileState(
+      status: ProfileEditStatus.initialLoading,
+      formPreferences: TravelPreferences(),
+    );
+  }
+
   Future<void> loadProfile() async {
+    final seq = ++_loadSeq;
     state = state.copyWith(status: ProfileEditStatus.initialLoading, clearErrors: true);
     try {
       final user = await _repo.getProfile();
-      if (!mounted) return;
+      if (!mounted || seq != _loadSeq) return;
       final prefs = user.preferences ?? const TravelPreferences();
       state = state.copyWith(
         status: ProfileEditStatus.loaded,
@@ -78,13 +89,13 @@ class ProfileNotifier extends StateNotifier<ProfileState> {
         formPreferences: prefs,
       );
     } on DioException catch (e) {
-      if (!mounted) return;
+      if (!mounted || seq != _loadSeq) return;
       state = state.copyWith(
         status: ProfileEditStatus.networkError,
         errorMessage: _mapError(e),
       );
     } catch (e) {
-      if (!mounted) return;
+      if (!mounted || seq != _loadSeq) return;
       state = state.copyWith(
         status: ProfileEditStatus.networkError,
         errorMessage: 'Lỗi tải thông tin: $e',
