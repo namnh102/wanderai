@@ -274,7 +274,7 @@ async function run() {
     }
 
     // 3. Apply curated 60-pilot enrichment (only factual Wikimedia/OSM media & descriptions)
-    const pilotPath = resolveDataFile('data/curated/poi_enrichment_pilot_60_v1.json');
+    const pilotPath = resolveDataFile('data/enrichment/poi_enrichment_pilot_60_v1.json');
     if (fs.existsSync(pilotPath)) {
       const pilot = JSON.parse(fs.readFileSync(pilotPath, 'utf-8'));
       const items: Pilot60Item[] = Array.isArray(pilot?.items) ? pilot.items : [];

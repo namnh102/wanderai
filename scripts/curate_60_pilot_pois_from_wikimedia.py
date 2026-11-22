@@ -28,7 +28,7 @@ from urllib.request import Request, urlopen
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 DEFAULT_FREEZE_V2 = REPO_ROOT / "data" / "curated" / "gomate_places_freeze_v2.json"
-DEFAULT_OUTPUT = REPO_ROOT / "data" / "curated" / "poi_enrichment_pilot_60_v1.json"
+DEFAULT_OUTPUT = REPO_ROOT / "data" / "enrichment" / "poi_enrichment_pilot_60_v1.json"
 
 USER_AGENT = "GoMateTravelResearchBot/1.0 (https://github.com/namnh102/wanderai; academic-project)"
 

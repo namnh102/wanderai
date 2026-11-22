@@ -37,9 +37,9 @@ export class PlacesService {
     if (this.pilotMetaCache) return this.pilotMetaCache;
     const map = new Map<string, PilotEnrichmentMeta>();
     const candidatePaths = [
-      path.resolve(__dirname, '../../../../data/curated/poi_enrichment_pilot_60_v1.json'),
-      path.resolve(process.cwd(), 'data/curated/poi_enrichment_pilot_60_v1.json'),
-      path.resolve(process.cwd(), '../../data/curated/poi_enrichment_pilot_60_v1.json'),
+      path.resolve(__dirname, '../../../../data/enrichment/poi_enrichment_pilot_60_v1.json'),
+      path.resolve(process.cwd(), 'data/enrichment/poi_enrichment_pilot_60_v1.json'),
+      path.resolve(process.cwd(), '../../data/enrichment/poi_enrichment_pilot_60_v1.json'),
     ];
     for (const p of candidatePaths) {
       if (!fs.existsSync(p)) continue;

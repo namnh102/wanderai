@@ -28,7 +28,7 @@ Running the legacy product setup pipeline (`prisma/seed.ts` -> `prisma/import-cu
 
 ---
 
-## 2. Pilot `60` Core V2 POI Enrichment (`data/curated/poi_enrichment_pilot_60_v1.json`)
+## 2. Pilot `60` Core V2 POI Enrichment (`data/enrichment/poi_enrichment_pilot_60_v1.json`)
 
 Generated deterministically via `scripts/curate_60_pilot_pois_from_wikimedia.py` strictly from Freeze V2 OSM tags (`wikidata`, `wikipedia`, `wikimedia_commons`, `opening_hours`, `website`, `phone`) + public Wikimedia REST & MediaWiki APIs (license-checked via Commons `imageinfo extmetadata`):
 - **Scope:** `60` Core V2 POIs (`ha-noi: 20`, `da-nang: 20`, `ha-long: 20`)
