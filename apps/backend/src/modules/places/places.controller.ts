@@ -2,7 +2,7 @@ import { Controller, Get, Param, ParseUUIDPipe, Query, UseGuards } from '@nestjs
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { PlacesService } from './places.service';
 import { RecommendationQueryDto } from './dto/recommendation-query.dto';
-import { NearbyQueryDto, PlaceListQueryDto } from './dto/place-query.dto';
+import { NearbyQueryDto, PlaceListQueryDto, TrendingQueryDto } from './dto/place-query.dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 
@@ -28,6 +28,14 @@ export class PlacesController {
   @ApiOperation({ summary: 'Tìm kiếm địa điểm lân cận bằng tọa độ GPS (PostGIS)' })
   async findNearby(@Query() query: NearbyQueryDto) {
     return this.placesService.findNearby(query.lat, query.lng, query.radius, query.limit, query.verifiedOnly);
+  }
+
+  @Get('trending')
+  @ApiOperation({
+    summary: 'Địa điểm nổi bật dựa trên dữ liệu kiểm chứng, media, hành trình & đánh giá thật (không metric giả)',
+  })
+  async findTrending(@Query() query: TrendingQueryDto) {
+    return this.placesService.findTrending(query.limit, query.destinationId, query.category);
   }
 
   @Get('recommendations')

@@ -113,3 +113,24 @@ export class NearbyQueryDto {
   @IsBoolean({ message: 'verifiedOnly phải là true hoặc false' })
   verifiedOnly: boolean = true;
 }
+
+export class TrendingQueryDto {
+  @ApiPropertyOptional({ example: 10, default: 10, minimum: 1, maximum: 50 })
+  @Transform(toStrictInt(10))
+  @IsInt({ message: 'limit phải là số nguyên từ 1 đến 50' })
+  @Min(1, { message: 'limit phải là số nguyên từ 1 đến 50' })
+  @Max(50, { message: 'limit phải là số nguyên từ 1 đến 50' })
+  limit: number = 10;
+
+  @ApiPropertyOptional({ description: 'Lọc theo điểm đến (UUID)' })
+  @IsOptional()
+  @Transform(blankToUndefined)
+  @IsUUID('all', { message: 'destinationId phải là UUID hợp lệ' })
+  destinationId?: string;
+
+  @ApiPropertyOptional({ example: 'attraction' })
+  @IsOptional()
+  @Transform(blankToUndefined)
+  @IsString({ message: 'category phải là chuỗi' })
+  category?: string;
+}

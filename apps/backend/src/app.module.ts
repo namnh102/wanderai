@@ -11,6 +11,7 @@ import { ReviewsModule } from './modules/reviews/reviews.module';
 import { AiProxyModule } from './modules/ai-proxy/ai-proxy.module';
 import { PlacesModule } from './modules/places/places.module';
 import { HealthModule } from './modules/health/health.module';
+import { MatchesModule } from './modules/matches/matches.module';
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { HealthModule } from './modules/health/health.module';
     TripsModule,
     VideosModule,
     ReviewsModule,
+    MatchesModule,
     AiProxyModule,
   ],
   controllers: [],

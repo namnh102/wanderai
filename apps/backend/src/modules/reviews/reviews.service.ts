@@ -10,19 +10,35 @@ import { PrismaService } from '../../prisma/prisma.service';
 export class ReviewsService {
   constructor(private prisma: PrismaService) {}
 
+  private async _findVerifiedPlaceOrThrow(placeId: string) {
+    const place = await this.prisma.place.findUnique({
+      where: { id: placeId },
+      select: {
+        id: true,
+        deletedAt: true,
+        placeSources: { select: { id: true }, take: 1 },
+      },
+    });
+    if (!place || place.deletedAt || place.placeSources.length === 0) {
+      throw new NotFoundException(`Place ${placeId} không tồn tại`);
+    }
+    return place;
+  }
+
   // GET /reviews?placeId=...&page=1&limit=20
   async findByPlace(placeId: string, page = 1, limit = 20) {
-    const skip = (page - 1) * limit;
+    const safePage = Math.max(1, page);
+    const safeLimit = Math.min(Math.max(1, limit), 100);
+    const skip = (safePage - 1) * safeLimit;
 
-    // Kiểm tra place tồn tại
-    const place = await this.prisma.place.findUnique({ where: { id: placeId } });
-    if (!place) throw new NotFoundException(`Place ${placeId} không tồn tại`);
+    await this._findVerifiedPlaceOrThrow(placeId);
 
+    const where = { placeId, deletedAt: null, trusted: true };
     const [items, total] = await Promise.all([
       this.prisma.review.findMany({
-        where: { placeId, deletedAt: null },
+        where,
         skip,
-        take: limit,
+        take: safeLimit,
         orderBy: { createdAt: 'desc' },
         include: {
           user: {
@@ -31,17 +47,18 @@ export class ReviewsService {
               profile: { select: { displayName: true, avatar: true } },
             },
           },
+          aspects: true,
         },
       }),
-      this.prisma.review.count({ where: { placeId, deletedAt: null } }),
+      this.prisma.review.count({ where }),
     ]);
 
     return {
       items,
       total,
-      page,
-      limit,
-      totalPages: Math.ceil(total / limit),
+      page: safePage,
+      limit: safeLimit,
+      totalPages: Math.ceil(total / safeLimit),
     };
   }
 
@@ -56,25 +73,31 @@ export class ReviewsService {
       images?: string[];
     },
   ) {
-    // Validate rating
     if (data.rating < 1 || data.rating > 5) {
       throw new BadRequestException('Rating phải từ 1 đến 5');
     }
 
-    // Kiểm tra place tồn tại
-    const place = await this.prisma.place.findUnique({
-      where: { id: data.placeId },
-    });
-    if (!place) throw new NotFoundException(`Place ${data.placeId} không tồn tại`);
+    await this._findVerifiedPlaceOrThrow(data.placeId);
 
-    // Tạo review
+    let parsedVisitDate: Date | undefined;
+    if (data.visitDate) {
+      const dt = new Date(data.visitDate);
+      if (Number.isNaN(dt.getTime())) {
+        throw new BadRequestException('visitDate không hợp lệ');
+      }
+      parsedVisitDate = dt;
+    }
+
     const review = await this.prisma.review.create({
       data: {
         userId,
         placeId: data.placeId,
         rating: data.rating,
         content: data.content,
+        visitDate: parsedVisitDate,
         images: data.images ?? [],
+        source: 'user',
+        trusted: true,
       },
       include: {
         user: {
@@ -83,10 +106,10 @@ export class ReviewsService {
             profile: { select: { displayName: true, avatar: true } },
           },
         },
+        aspects: true,
       },
     });
 
-    // Cập nhật lại rating trung bình của place
     await this._updatePlaceRating(data.placeId);
 
     return review;
@@ -103,9 +126,10 @@ export class ReviewsService {
             profile: { select: { displayName: true, avatar: true } },
           },
         },
+        aspects: true,
       },
     });
-    if (!review || review.deletedAt) {
+    if (!review || review.deletedAt || !review.trusted) {
       throw new NotFoundException('Review không tồn tại');
     }
     return review;
@@ -113,20 +137,24 @@ export class ReviewsService {
 
   // GET /reviews/my — reviews của user hiện tại
   async findMyReviews(userId: string, page = 1, limit = 20) {
-    const skip = (page - 1) * limit;
+    const safePage = Math.max(1, page);
+    const safeLimit = Math.min(Math.max(1, limit), 100);
+    const skip = (safePage - 1) * safeLimit;
+    const where = { userId, deletedAt: null, trusted: true };
     const [items, total] = await Promise.all([
       this.prisma.review.findMany({
-        where: { userId, deletedAt: null },
+        where,
         skip,
-        take: limit,
+        take: safeLimit,
         orderBy: { createdAt: 'desc' },
         include: {
           place: { select: { id: true, name: true, coverImage: true } },
+          aspects: true,
         },
       }),
-      this.prisma.review.count({ where: { userId, deletedAt: null } }),
+      this.prisma.review.count({ where }),
     ]);
-    return { items, total, page, limit, totalPages: Math.ceil(total / limit) };
+    return { items, total, page: safePage, limit: safeLimit, totalPages: Math.ceil(total / safeLimit) };
   }
 
   // DELETE /reviews/:id (chỉ xóa của chính mình — soft delete)
@@ -144,16 +172,16 @@ export class ReviewsService {
       data: { deletedAt: new Date() },
     });
 
-    // Cập nhật lại rating place
     await this._updatePlaceRating(review.placeId);
 
     return { message: 'Đã xóa review thành công' };
   }
 
-  // Helper: tính lại rating trung bình của place
+  // Helper: chỉ tính rating trên các review trusted & chưa bị xóa;
+  // trả NULL (không bao giờ 0) khi chưa có review tin cậy nào.
   private async _updatePlaceRating(placeId: string) {
     const result = await this.prisma.review.aggregate({
-      where: { placeId, deletedAt: null },
+      where: { placeId, deletedAt: null, trusted: true },
       _avg: { rating: true },
       _count: { id: true },
     });
@@ -161,7 +189,7 @@ export class ReviewsService {
     await this.prisma.place.update({
       where: { id: placeId },
       data: {
-        rating: result._avg.rating ?? 0,
+        rating: result._count.id > 0 ? result._avg.rating : null,
         reviewCount: result._count.id,
       },
     });

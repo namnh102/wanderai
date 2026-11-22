@@ -1,0 +1,2335 @@
+{
+  "schema_version": "GOMATE_POI_PILOT_60_ENRICHMENT_V1",
+  "generated_at_utc": "2026-11-22T06:43:27.176014+00:00",
+  "source_policy": "OSM_OVERTURE_WIKIPEDIA_WIKIDATA_COMMONS_ONLY_ZERO_SCRAPING",
+  "no_fabricated_ratings_or_reviews": true,
+  "summary": {
+    "total_pilot_pois": 60,
+    "by_city": {
+      "ha-noi": 20,
+      "da-nang": 20,
+      "ha-long": 20
+    },
+    "with_cover_image": 48,
+    "with_description": 38,
+    "with_opening_hours": 17,
+    "total_images": 114,
+    "tiers": {
+      "media_and_article": 35,
+      "media_or_article": 16,
+      "osm_factual_only": 9
+    }
+  },
+  "items": [
+    {
+      "place_id": "f0d424bd-f722-540f-8964-5e6fd8875b56",
+      "name": "Bảo tàng Dân tộc học Việt Nam",
+      "destination_slug": "ha-noi",
+      "category": "culture",
+      "is_rec_a_core_v2": true,
+      "description": "Bảo tàng Dân tộc học Việt Nam là tổ chức sự nghiệp trực thuộc Viện Hàn lâm Khoa học xã hội Việt Nam, có chức năng nghiên cứu khoa học, sưu tầm, kiểm kê, bảo quản, phục chế hiện vật và tư liệu về các dân tộc; tổ chức trưng bày, trình diễn và những hình thức hoạt động khác nhằm giới thiệu, phổ biến và giáo dục về các giá trị lịch sử, văn hoá của các dân tộc trong và ngoài nước; cung cấp tư liệu nghiên cứu về các dân tộc cho các ngành; đào tạo cán bộ nghiên cứu, nghiệp vụ, quản lý về nhân học bảo tàng. Bảo tàng tọa lạc tại đường Nguyễn Văn Huyên, phường Nghĩa Đô, thành phố Hà Nội, cạnh đường Nguyễn Khánh Toàn và đối diện công viên Nghĩa Đô.",
+      "description_source_url": "https://vi.wikipedia.org/wiki/B%E1%BA%A3o_t%C3%A0ng_D%C3%A2n_t%E1%BB%99c_h%E1%BB%8Dc_Vi%E1%BB%87t_Nam",
+      "description_license": "CC BY-SA 4.0 (Wikipedia)",
+      "cover_image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/20/Betel_nut_kit_-_Vietnam_Museum_of_Ethnology_-_Hanoi%2C_Vietnam_-_DSC02556.JPG/960px-Betel_nut_kit_-_Vietnam_Museum_of_Ethnology_-_Hanoi%2C_Vietnam_-_DSC02556.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "images": [
+        "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/20/Betel_nut_kit_-_Vietnam_Museum_of_Ethnology_-_Hanoi%2C_Vietnam_-_DSC02556.JPG/960px-Betel_nut_kit_-_Vietnam_Museum_of_Ethnology_-_Hanoi%2C_Vietnam_-_DSC02556.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+        "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d0/Betel-nut_box%2C_shell_inlaid%2C_view_1_-_Vietnam_Museum_of_Ethnology_-_Hanoi%2C_Vietnam_-_DSC02489.JPG/960px-Betel-nut_box%2C_shell_inlaid%2C_view_1_-_Vietnam_Museum_of_Ethnology_-_Hanoi%2C_Vietnam_-_DSC02489.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+        "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/39/Betel-nut_box%2C_shell_inlaid%2C_view_2_-_Vietnam_Museum_of_Ethnology_-_Hanoi%2C_Vietnam_-_DSC02493.JPG/960px-Betel-nut_box%2C_shell_inlaid%2C_view_2_-_Vietnam_Museum_of_Ethnology_-_Hanoi%2C_Vietnam_-_DSC02493.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+        "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/f3/Dan_toc_hoc_1.jpg/960px-Dan_toc_hoc_1.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+      ],
+      "image_attributions": [
+        {
+          "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/20/Betel_nut_kit_-_Vietnam_Museum_of_Ethnology_-_Hanoi%2C_Vietnam_-_DSC02556.JPG/960px-Betel_nut_kit_-_Vietnam_Museum_of_Ethnology_-_Hanoi%2C_Vietnam_-_DSC02556.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "fullUrl": "https://upload.wikimedia.org/wikipedia/commons/2/20/Betel_nut_kit_-_Vietnam_Museum_of_Ethnology_-_Hanoi%2C_Vietnam_-_DSC02556.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+          "commonsPageUrl": "https://commons.wikimedia.org/wiki/File:Betel_nut_kit_-_Vietnam_Museum_of_Ethnology_-_Hanoi,_Vietnam_-_DSC02556.JPG",
+          "license": "CC0",
+          "artist": "Daderot",
+          "title": "File:Betel nut kit - Vietnam Museum of Ethnology - Hanoi, Vietnam - DSC02556.JPG"
+        },
+        {
+          "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d0/Betel-nut_box%2C_shell_inlaid%2C_view_1_-_Vietnam_Museum_of_Ethnology_-_Hanoi%2C_Vietnam_-_DSC02489.JPG/960px-Betel-nut_box%2C_shell_inlaid%2C_view_1_-_Vietnam_Museum_of_Ethnology_-_Hanoi%2C_Vietnam_-_DSC02489.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "fullUrl": "https://upload.wikimedia.org/wikipedia/commons/d/d0/Betel-nut_box%2C_shell_inlaid%2C_view_1_-_Vietnam_Museum_of_Ethnology_-_Hanoi%2C_Vietnam_-_DSC02489.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+          "commonsPageUrl": "https://commons.wikimedia.org/wiki/File:Betel-nut_box,_shell_inlaid,_view_1_-_Vietnam_Museum_of_Ethnology_-_Hanoi,_Vietnam_-_DSC02489.JPG",
+          "license": "CC0",
+          "artist": "Daderot",
+          "title": "File:Betel-nut box, shell inlaid, view 1 - Vietnam Museum of Ethnology - Hanoi, Vietnam - DSC02489.JPG"
+        },
+        {
+          "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/39/Betel-nut_box%2C_shell_inlaid%2C_view_2_-_Vietnam_Museum_of_Ethnology_-_Hanoi%2C_Vietnam_-_DSC02493.JPG/960px-Betel-nut_box%2C_shell_inlaid%2C_view_2_-_Vietnam_Museum_of_Ethnology_-_Hanoi%2C_Vietnam_-_DSC02493.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "fullUrl": "https://upload.wikimedia.org/wikipedia/commons/3/39/Betel-nut_box%2C_shell_inlaid%2C_view_2_-_Vietnam_Museum_of_Ethnology_-_Hanoi%2C_Vietnam_-_DSC02493.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+          "commonsPageUrl": "https://commons.wikimedia.org/wiki/File:Betel-nut_box,_shell_inlaid,_view_2_-_Vietnam_Museum_of_Ethnology_-_Hanoi,_Vietnam_-_DSC02493.JPG",
+          "license": "CC0",
+          "artist": "Daderot",
+          "title": "File:Betel-nut box, shell inlaid, view 2 - Vietnam Museum of Ethnology - Hanoi, Vietnam - DSC02493.JPG"
+        },
+        {
+          "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/f3/Dan_toc_hoc_1.jpg/960px-Dan_toc_hoc_1.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "fullUrl": "https://upload.wikimedia.org/wikipedia/commons/f/f3/Dan_toc_hoc_1.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+          "commonsPageUrl": "https://commons.wikimedia.org/wiki/File:Dan_toc_hoc_1.jpg",
+          "license": "CC BY-SA 3.0",
+          "artist": "vi:User:Rungbachduong",
+          "title": "File:Dan toc hoc 1.jpg"
+        }
+      ],
+      "opening_hours": "Tu-Su 08:30-17:30",
+      "website": "https://www.vme.org.vn/",
+      "phone": "+842437562193",
+      "osm_tags_used": {
+        "wikipedia": "vi:Bảo tàng Dân tộc học Việt Nam",
+        "wikidata": "Q1048345",
+        "wikimedia_commons": "Category:Vietnam Museum of Ethnology"
+      },
+      "enrichment_tier": "media_and_article"
+    },
+    {
+      "place_id": "dc6593cd-eefb-59a9-bbf3-1e69c944d5c3",
+      "name": "Bảo tàng Mỹ thuật Việt Nam",
+      "destination_slug": "ha-noi",
+      "category": "culture",
+      "is_rec_a_core_v2": true,
+      "description": "Bảo tàng Mỹ thuật Việt Nam là một trong những bảo tàng có vị trí quan trọng nhất trong việc lưu giữ kho tàng di sản văn hóa nghệ thuật của cộng đồng các dân tộc Việt Nam. Bảo tàng tọa lạc tại số 66 đường Nguyễn Thái Học, phường Ba Đình, thành phố Hà Nội, nằm đối diện phía sau Văn Miếu – Quốc Tử Giám.",
+      "description_source_url": "https://vi.wikipedia.org/wiki/B%E1%BA%A3o_t%C3%A0ng_M%E1%BB%B9_thu%E1%BA%ADt_Vi%E1%BB%87t_Nam",
+      "description_license": "CC BY-SA 4.0 (Wikipedia)",
+      "cover_image": "https://upload.wikimedia.org/wikipedia/commons/c/cd/Bao_tang_my_thuat.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+      "images": [
+        "https://upload.wikimedia.org/wikipedia/commons/c/cd/Bao_tang_my_thuat.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+        "https://upload.wikimedia.org/wikipedia/commons/7/71/C%C6%A1_s%E1%BB%9F_1_c%E1%BB%A7a_B%E1%BA%A3o_t%C3%A0ng_M%E1%BB%B9_thu%E1%BA%ADt_Vi%E1%BB%87t_Nam.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+        "https://thumb.wikimedia.org/wikipedia/commons/thumb/b/ba/Dancing_girl%2C_Champa_period%2C_9th-10th_cents.%2C_Museum_of_Fine_Arts%2C_Hanoi_%281%29_%2837785455544%29.jpg/960px-Dancing_girl%2C_Champa_period%2C_9th-10th_cents.%2C_Museum_of_Fine_Arts%2C_Hanoi_%281%29_%2837785455544%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+        "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/1f/Vietnam_National_Museum_of_Fine_Arts%2C_Hanoi%2C_Vietnam_-_20131030-03.JPG/960px-Vietnam_National_Museum_of_Fine_Arts%2C_Hanoi%2C_Vietnam_-_20131030-03.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+      ],
+      "image_attributions": [
+        {
+          "url": "https://upload.wikimedia.org/wikipedia/commons/c/cd/Bao_tang_my_thuat.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+          "fullUrl": "https://upload.wikimedia.org/wikipedia/commons/c/cd/Bao_tang_my_thuat.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+          "commonsPageUrl": "https://commons.wikimedia.org/wiki/File:Bao_tang_my_thuat.jpg",
+          "license": "Public domain",
+          "artist": "en:User:Chuoibk",
+          "title": "File:Bao tang my thuat.jpg"
+        },
+        {
+          "url": "https://upload.wikimedia.org/wikipedia/commons/7/71/C%C6%A1_s%E1%BB%9F_1_c%E1%BB%A7a_B%E1%BA%A3o_t%C3%A0ng_M%E1%BB%B9_thu%E1%BA%ADt_Vi%E1%BB%87t_Nam.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+          "fullUrl": "https://upload.wikimedia.org/wikipedia/commons/7/71/C%C6%A1_s%E1%BB%9F_1_c%E1%BB%A7a_B%E1%BA%A3o_t%C3%A0ng_M%E1%BB%B9_thu%E1%BA%ADt_Vi%E1%BB%87t_Nam.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+          "commonsPageUrl": "https://commons.wikimedia.org/wiki/File:C%C6%A1_s%E1%BB%9F_1_c%E1%BB%A7a_B%E1%BA%A3o_t%C3%A0ng_M%E1%BB%B9_thu%E1%BA%ADt_Vi%E1%BB%87t_Nam.png",
+          "license": "CC BY-SA 4.0",
+          "artist": "Tttrung",
+          "title": "File:Cơ sở 1 của Bảo tàng Mỹ thuật Việt Nam.png"
+        },
+        {
+          "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/b/ba/Dancing_girl%2C_Champa_period%2C_9th-10th_cents.%2C_Museum_of_Fine_Arts%2C_Hanoi_%281%29_%2837785455544%29.jpg/960px-Dancing_girl%2C_Champa_period%2C_9th-10th_cents.%2C_Museum_of_Fine_Arts%2C_Hanoi_%281%29_%2837785455544%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "fullUrl": "https://upload.wikimedia.org/wikipedia/commons/b/ba/Dancing_girl%2C_Champa_period%2C_9th-10th_cents.%2C_Museum_of_Fine_Arts%2C_Hanoi_%281%29_%2837785455544%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+          "commonsPageUrl": "https://commons.wikimedia.org/wiki/File:Dancing_girl,_Champa_period,_9th-10th_cents.,_Museum_of_Fine_Arts,_Hanoi_(1)_(37785455544).jpg",
+          "license": "CC BY 2.0",
+          "artist": "Richard Mortel from Riyadh, Saudi Arabia",
+          "title": "File:Dancing girl, Champa period, 9th-10th cents., Museum of Fine Arts, Hanoi (1) (37785455544).jpg"
+        },
+        {
+          "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/1f/Vietnam_National_Museum_of_Fine_Arts%2C_Hanoi%2C_Vietnam_-_20131030-03.JPG/960px-Vietnam_National_Museum_of_Fine_Arts%2C_Hanoi%2C_Vietnam_-_20131030-03.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "fullUrl": "https://upload.wikimedia.org/wikipedia/commons/1/1f/Vietnam_National_Museum_of_Fine_Arts%2C_Hanoi%2C_Vietnam_-_20131030-03.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+          "commonsPageUrl": "https://commons.wikimedia.org/wiki/File:Vietnam_National_Museum_of_Fine_Arts,_Hanoi,_Vietnam_-_20131030-03.JPG",
+          "license": "CC BY-SA 3.0",
+          "artist": "Smuconlaw .",
+          "title": "File:Vietnam National Museum of Fine Arts, Hanoi, Vietnam - 20131030-03.JPG"
+        }
+      ],
+      "opening_hours": "Mo-Su 08:30-17:00",
+      "website": "http://vnfam.vn/",
+      "phone": "+84 24 3823 3084;+84 32 666 5664",
+      "osm_tags_used": {
+        "wikipedia": "vi:Bảo tàng Mỹ thuật Việt Nam",
+        "wikidata": "Q3654706",
+        "wikimedia_commons": "Category:Vietnam National Museum of Fine Arts"
+      },
+      "enrichment_tier": "media_and_article"
+    },
+    {
+      "place_id": "ac3015e9-66aa-53b1-95f9-144aa6b32de9",
+      "name": "Bảo tàng Hà Nội",
+      "destination_slug": "ha-noi",
+      "category": "culture",
+      "is_rec_a_core_v2": true,
+      "description": "Bảo tàng Hà Nội, trước đây nằm ở số 5B phố Hàm Long, quận Hoàn Kiếm, Hà Nội, là nơi trưng bày giới thiệu về thủ đô Hà Nội từ khi dựng nước đến nay.",
+      "description_source_url": "https://vi.wikipedia.org/wiki/B%E1%BA%A3o_t%C3%A0ng_H%C3%A0_N%E1%BB%99i",
+      "description_license": "CC BY-SA 4.0 (Wikipedia)",
+      "cover_image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e4/Ceramic%2C_1st_-_3rd_centery%2C_at_Hanoi_Museum.JPG/960px-Ceramic%2C_1st_-_3rd_centery%2C_at_Hanoi_Museum.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "images": [
+        "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e4/Ceramic%2C_1st_-_3rd_centery%2C_at_Hanoi_Museum.JPG/960px-Ceramic%2C_1st_-_3rd_centery%2C_at_Hanoi_Museum.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+        "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/35/Cer%C3%A1mica_vietnamita_Guimet_08.JPG/960px-Cer%C3%A1mica_vietnamita_Guimet_08.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+        "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/f5/Coins%2C_Han_Dynasty%2C_Hanoi_Museum.JPG/960px-Coins%2C_Han_Dynasty%2C_Hanoi_Museum.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+        "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/22/Hanoi_Museum.jpg/960px-Hanoi_Museum.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+      ],
+      "image_attributions": [
+        {
+          "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e4/Ceramic%2C_1st_-_3rd_centery%2C_at_Hanoi_Museum.JPG/960px-Ceramic%2C_1st_-_3rd_centery%2C_at_Hanoi_Museum.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "fullUrl": "https://upload.wikimedia.org/wikipedia/commons/e/e4/Ceramic%2C_1st_-_3rd_centery%2C_at_Hanoi_Museum.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+          "commonsPageUrl": "https://commons.wikimedia.org/wiki/File:Ceramic,_1st_-_3rd_centery,_at_Hanoi_Museum.JPG",
+          "license": "Public domain",
+          "artist": "Daaé",
+          "title": "File:Ceramic, 1st - 3rd centery, at Hanoi Museum.JPG"
+        },
+        {
+          "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/35/Cer%C3%A1mica_vietnamita_Guimet_08.JPG/960px-Cer%C3%A1mica_vietnamita_Guimet_08.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "fullUrl": "https://upload.wikimedia.org/wikipedia/commons/3/35/Cer%C3%A1mica_vietnamita_Guimet_08.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+          "commonsPageUrl": "https://commons.wikimedia.org/wiki/File:Cer%C3%A1mica_vietnamita_Guimet_08.JPG",
+          "license": "CC BY-SA 4.0",
+          "artist": "Miguel Hermoso Cuesta",
+          "title": "File:Cerámica vietnamita Guimet 08.JPG"
+        },
+        {
+          "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/f5/Coins%2C_Han_Dynasty%2C_Hanoi_Museum.JPG/960px-Coins%2C_Han_Dynasty%2C_Hanoi_Museum.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "fullUrl": "https://upload.wikimedia.org/wikipedia/commons/f/f5/Coins%2C_Han_Dynasty%2C_Hanoi_Museum.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+          "commonsPageUrl": "https://commons.wikimedia.org/wiki/File:Coins,_Han_Dynasty,_Hanoi_Museum.JPG",
+          "license": "Public domain",
+          "artist": "Daaé",
+          "title": "File:Coins, Han Dynasty, Hanoi Museum.JPG"
+        },
+        {
+          "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/22/Hanoi_Museum.jpg/960px-Hanoi_Museum.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "fullUrl": "https://upload.wikimedia.org/wikipedia/commons/2/22/Hanoi_Museum.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+          "commonsPageUrl": "https://commons.wikimedia.org/wiki/File:Hanoi_Museum.jpg",
+          "license": "CC BY-SA 3.0",
+          "artist": "Grenouille vert",
+          "title": "File:Hanoi Museum.jpg"
+        }
+      ],
+      "opening_hours": "Tu-Su 08:00-11:30,13:30-17:00",
+      "website": "https://baotanghanoi.com.vn/",
+      "phone": "+84 978 509 935",
+      "osm_tags_used": {
+        "wikipedia": "vi:Bảo tàng Hà Nội",
+        "wikidata": "Q1835176",
+        "wikimedia_commons": "Category:Hanoi Museum"
+      },
+      "enrichment_tier": "media_and_article"
+    },
+    {
+      "place_id": "0938eb59-ee1c-5879-a798-58b5fdd07bce",
+      "name": "Nhà tù Hỏa Lò",
+      "destination_slug": "ha-noi",
+      "category": "culture",
+      "is_rec_a_core_v2": true,
+      "description": "Hỏa Lò Prison was a prison in Hanoi originally used by the French colonists in Indochina for political prisoners, and later by North Vietnam for U.S. prisoners of war during the Vietnam War. During this later period, it was known to American POWs as the \"Hanoi Hilton\". Following Operation Homecoming, the prison was used to incarcerate Vietnamese dissidents until its demolition between 1993 and 1994. Its gatehouse remains a museum.",
+      "description_source_url": "https://en.wikipedia.org/wiki/H%E1%BB%8Fa_L%C3%B2_Prison",
+      "description_license": "CC BY-SA 4.0 (Wikipedia)",
+      "cover_image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/eb/03687-Hanoi_%2832791895705%29.jpg/960px-03687-Hanoi_%2832791895705%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "images": [
+        "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/eb/03687-Hanoi_%2832791895705%29.jpg/960px-03687-Hanoi_%2832791895705%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+        "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/f1/03688-Hanoi_%2832791890785%29.jpg/960px-03688-Hanoi_%2832791890785%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+        "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/4c/03690-Hanoi_%2832411713580%29.jpg/960px-03690-Hanoi_%2832411713580%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+        "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/95/HanoiHilton.jpg/960px-HanoiHilton.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+      ],
+      "image_attributions": [
+        {
+          "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/eb/03687-Hanoi_%2832791895705%29.jpg/960px-03687-Hanoi_%2832791895705%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "fullUrl": "https://upload.wikimedia.org/wikipedia/commons/e/eb/03687-Hanoi_%2832791895705%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+          "commonsPageUrl": "https://commons.wikimedia.org/wiki/File:03687-Hanoi_(32791895705).jpg",
+          "license": "CC BY 2.0",
+          "artist": "xiquinhosilva",
+          "title": "File:03687-Hanoi (32791895705).jpg"
+        },
+        {
+          "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/f1/03688-Hanoi_%2832791890785%29.jpg/960px-03688-Hanoi_%2832791890785%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "fullUrl": "https://upload.wikimedia.org/wikipedia/commons/f/f1/03688-Hanoi_%2832791890785%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+          "commonsPageUrl": "https://commons.wikimedia.org/wiki/File:03688-Hanoi_(32791890785).jpg",
+          "license": "CC BY 2.0",
+          "artist": "xiquinhosilva",
+          "title": "File:03688-Hanoi (32791890785).jpg"
+        },
+        {
+          "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/4c/03690-Hanoi_%2832411713580%29.jpg/960px-03690-Hanoi_%2832411713580%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "fullUrl": "https://upload.wikimedia.org/wikipedia/commons/4/4c/03690-Hanoi_%2832411713580%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+          "commonsPageUrl": "https://commons.wikimedia.org/wiki/File:03690-Hanoi_(32411713580).jpg",
+          "license": "CC BY 2.0",
+          "artist": "xiquinhosilva",
+          "title": "File:03690-Hanoi (32411713580).jpg"
+        },
+        {
+          "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/95/HanoiHilton.jpg/960px-HanoiHilton.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "fullUrl": "https://upload.wikimedia.org/wikipedia/commons/9/95/HanoiHilton.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+          "commonsPageUrl": "https://commons.wikimedia.org/wiki/File:HanoiHilton.jpg",
+          "license": "Public domain",
+          "artist": null,
+          "title": "File:HanoiHilton.jpg"
+        }
+      ],
+      "opening_hours": "Mo-Su 08:00-17:00",
+      "website": null,
+      "phone": "+84 439342253",
+      "osm_tags_used": {
+        "wikipedia": "en:Hỏa Lò Prison",
+        "wikidata": "Q1359941",
+        "wikimedia_commons": "Category:Hanoi Hilton"
+      },
+      "enrichment_tier": "media_and_article"
+    },
+    {
+      "place_id": "fb8f1d59-838b-5b8f-9363-0541b1af42d8",
+      "name": "Bảo tàng Phụ nữ Việt Nam",
+      "destination_slug": "ha-noi",
+      "category": "culture",
+      "is_rec_a_core_v2": true,
+      "description": "The Vietnamese Women's Museum, is a museum established and operated by the Vietnam Women's Union, officially opened its doors to public in 1995. The four-storey building is in Hanoi, Ly Thuong Kiet Street, situated along the central Hoan Kiem Lake and old quarter.",
+      "description_source_url": "https://en.wikipedia.org/wiki/Vietnamese_Women's_Museum",
+      "description_license": "CC BY-SA 4.0 (Wikipedia)",
+      "cover_image": "https://upload.wikimedia.org/wikipedia/commons/1/14/Audio_guide.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+      "images": [
+        "https://upload.wikimedia.org/wikipedia/commons/1/14/Audio_guide.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+        "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/4c/B%E1%BA%A3o_t%C3%A0ng_Ph%E1%BB%A5_n%E1%BB%AF_Vi%E1%BB%87t_Nam.JPG/960px-B%E1%BA%A3o_t%C3%A0ng_Ph%E1%BB%A5_n%E1%BB%AF_Vi%E1%BB%87t_Nam.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+        "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e5/Everyday_objects_display_-_Vietnamese_Women%27s_Museum_-_Hanoi%2C_Vietnam_-_DSC04214.JPG/960px-Everyday_objects_display_-_Vietnamese_Women%27s_Museum_-_Hanoi%2C_Vietnam_-_DSC04214.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+        "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/35/Vietnamese_Women%27s_Museum%2C_Women%27s_Fashion_section.JPG/960px-Vietnamese_Women%27s_Museum%2C_Women%27s_Fashion_section.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+      ],
+      "image_attributions": [
+        {
+          "url": "https://upload.wikimedia.org/wikipedia/commons/1/14/Audio_guide.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+          "fullUrl": "https://upload.wikimedia.org/wikipedia/commons/1/14/Audio_guide.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+          "commonsPageUrl": "https://commons.wikimedia.org/wiki/File:Audio_guide.jpg",
+          "license": "CC BY-SA 4.0",
+          "artist": "VWMJP",
+          "title": "File:Audio guide.jpg"
+        },
+        {
+          "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/4c/B%E1%BA%A3o_t%C3%A0ng_Ph%E1%BB%A5_n%E1%BB%AF_Vi%E1%BB%87t_Nam.JPG/960px-B%E1%BA%A3o_t%C3%A0ng_Ph%E1%BB%A5_n%E1%BB%AF_Vi%E1%BB%87t_Nam.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "fullUrl": "https://upload.wikimedia.org/wikipedia/commons/4/4c/B%E1%BA%A3o_t%C3%A0ng_Ph%E1%BB%A5_n%E1%BB%AF_Vi%E1%BB%87t_Nam.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+          "commonsPageUrl": "https://commons.wikimedia.org/wiki/File:B%E1%BA%A3o_t%C3%A0ng_Ph%E1%BB%A5_n%E1%BB%AF_Vi%E1%BB%87t_Nam.JPG",
+          "license": "CC BY-SA 4.0",
+          "artist": "Bao Tang Phu Nu Viet Nam 36",
+          "title": "File:Bảo tàng Phụ nữ Việt Nam.JPG"
+        },
+        {
+          "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e5/Everyday_objects_display_-_Vietnamese_Women%27s_Museum_-_Hanoi%2C_Vietnam_-_DSC04214.JPG/960px-Everyday_objects_display_-_Vietnamese_Women%27s_Museum_-_Hanoi%2C_Vietnam_-_DSC04214.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "fullUrl": "https://upload.wikimedia.org/wikipedia/commons/e/e5/Everyday_objects_display_-_Vietnamese_Women%27s_Museum_-_Hanoi%2C_Vietnam_-_DSC04214.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+          "commonsPageUrl": "https://commons.wikimedia.org/wiki/File:Everyday_objects_display_-_Vietnamese_Women%27s_Museum_-_Hanoi,_Vietnam_-_DSC04214.JPG",
+          "license": "CC0",
+          "artist": "Daderot",
+          "title": "File:Everyday objects display - Vietnamese Women's Museum - Hanoi, Vietnam - DSC04214.JPG"
+        },
+        {
+          "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/35/Vietnamese_Women%27s_Museum%2C_Women%27s_Fashion_section.JPG/960px-Vietnamese_Women%27s_Museum%2C_Women%27s_Fashion_section.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "fullUrl": "https://upload.wikimedia.org/wikipedia/commons/3/35/Vietnamese_Women%27s_Museum%2C_Women%27s_Fashion_section.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+          "commonsPageUrl": "https://commons.wikimedia.org/wiki/File:Vietnamese_Women%27s_Museum,_Women%27s_Fashion_section.JPG",
+          "license": "CC BY-SA 3.0",
+          "artist": "Aumusee",
+          "title": "File:Vietnamese Women's Museum, Women's Fashion section.JPG"
+        }
+      ],
+      "opening_hours": "Mo-Su 08:00-17:00",
+      "website": "https://www.baotangphunu.org.vn/",
+      "phone": null,
+      "osm_tags_used": {
+        "wikipedia": "en:Vietnamese Women's Museum",
+        "wikidata": "Q10743287",
+        "wikimedia_commons": "Category:Vietnamese Women's Museum"
+      },
+      "enrichment_tier": "media_and_article"
+    },
+    {
+      "place_id": "89982921-9495-52a1-a2a1-204961327524",
+      "name": "Bảo tàng Hồ Chí Minh",
+      "destination_slug": "ha-noi",
+      "category": "culture",
+      "is_rec_a_core_v2": true,
+      "description": "Bảo tàng Hồ Chí Minh là bảo tàng ở Hà Nội tập trung chủ yếu vào việc trưng bày những hiện vật, tư liệu về cuộc đời và con người Hồ Chí Minh. Nằm trong khu vực có nhiều di tích như: Lăng Chủ tịch Hồ Chí Minh, Khu di tích Phủ Chủ tịch, Chùa Một Cột,... tạo thành một quần thể các di tích thu hút khách tham quan trong và ngoài nước. Bảo tàng tọa lạc tại số 19 phố Ngọc Hà, phường Đội Cấn, quận Ba Đình, thành phố Hà Nội, nằm phía sau Lăng Chủ tịch Hồ Chí Minh và cạnh công viên Bách Thảo. Bảo tàng Hồ Chí Minh là bảo tàng lớn và hiện đại nhất Việt Nam.",
+      "description_source_url": "https://vi.wikipedia.org/wiki/B%E1%BA%A3o_t%C3%A0ng_H%E1%BB%93_Ch%C3%AD_Minh",
+      "description_license": "CC BY-SA 4.0 (Wikipedia)",
+      "cover_image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e8/04253-Hanoi_%2831979410474%29.jpg/960px-04253-Hanoi_%2831979410474%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "images": [
+        "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e8/04253-Hanoi_%2831979410474%29.jpg/960px-04253-Hanoi_%2831979410474%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+        "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/68/04277-Hanoi_%2832668707552%29.jpg/960px-04277-Hanoi_%2832668707552%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+        "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/f1/A_dragon_emblem_in_the_Ho_Chi_Minh_Museum_in_2016.jpg/960px-A_dragon_emblem_in_the_Ho_Chi_Minh_Museum_in_2016.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+        "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d1/Ho_Chi_Minh_museum%2C_Hanoi_2.jpg/960px-Ho_Chi_Minh_museum%2C_Hanoi_2.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+      ],
+      "image_attributions": [
+        {
+          "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e8/04253-Hanoi_%2831979410474%29.jpg/960px-04253-Hanoi_%2831979410474%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "fullUrl": "https://upload.wikimedia.org/wikipedia/commons/e/e8/04253-Hanoi_%2831979410474%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+          "commonsPageUrl": "https://commons.wikimedia.org/wiki/File:04253-Hanoi_(31979410474).jpg",
+          "license": "CC BY 2.0",
+          "artist": "xiquinhosilva",
+          "title": "File:04253-Hanoi (31979410474).jpg"
+        },
+        {
+          "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/68/04277-Hanoi_%2832668707552%29.jpg/960px-04277-Hanoi_%2832668707552%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "fullUrl": "https://upload.wikimedia.org/wikipedia/commons/6/68/04277-Hanoi_%2832668707552%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+          "commonsPageUrl": "https://commons.wikimedia.org/wiki/File:04277-Hanoi_(32668707552).jpg",
+          "license": "CC BY 2.0",
+          "artist": "xiquinhosilva",
+          "title": "File:04277-Hanoi (32668707552).jpg"
+        },
+        {
+          "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/f1/A_dragon_emblem_in_the_Ho_Chi_Minh_Museum_in_2016.jpg/960px-A_dragon_emblem_in_the_Ho_Chi_Minh_Museum_in_2016.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "fullUrl": "https://upload.wikimedia.org/wikipedia/commons/f/f1/A_dragon_emblem_in_the_Ho_Chi_Minh_Museum_in_2016.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+          "commonsPageUrl": "https://commons.wikimedia.org/wiki/File:A_dragon_emblem_in_the_Ho_Chi_Minh_Museum_in_2016.jpg",
+          "license": "CC BY-SA 4.0",
+          "artist": "Cookie Nguyen",
+          "title": "File:A dragon emblem in the Ho Chi Minh Museum in 2016.jpg"
+        },
+        {
+          "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d1/Ho_Chi_Minh_museum%2C_Hanoi_2.jpg/960px-Ho_Chi_Minh_museum%2C_Hanoi_2.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "fullUrl": "https://upload.wikimedia.org/wikipedia/commons/d/d1/Ho_Chi_Minh_museum%2C_Hanoi_2.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+          "commonsPageUrl": "https://commons.wikimedia.org/wiki/File:Ho_Chi_Minh_museum,_Hanoi_2.jpg",
+          "license": "CC BY-SA 2.0",
+          "artist": "Aaron from san francisco, United States",
+          "title": "File:Ho Chi Minh museum, Hanoi 2.jpg"
+        }
+      ],
+      "opening_hours": "Tu-Th 08:00-11:30; Sa-Su 14:00-16:30",
+      "website": "https://baotanghochiminh.vn/",
+      "phone": "+84 24 3845 5435",
+      "osm_tags_used": {
+        "wikipedia": "vi:Bảo tàng Hồ Chí Minh",
+        "wikidata": "Q1055897",
+        "wikimedia_commons": "Category:Ho Chi Minh Museum"
+      },
+      "enrichment_tier": "media_and_article"
+    },
+    {
+      "place_id": "6c071d41-2f13-5b32-bfc4-0d1228075983",
+      "name": "Đền Voi Phục",
+      "destination_slug": "ha-noi",
+      "category": "culture",
+      "is_rec_a_core_v2": true,
+      "description": "Đền Voi Phục là một ngôi đền trong Thăng Long tứ trấn của thành Thăng Long xưa, gồm bốn ngôi thờ bảo lan. Đền tọa lạc tại số 362 phố Kim Mã, phường Giảng Võ, Thành phố Hà Nội, cạnh công viên Thủ Lệ, gần trường Đội Lê Duẩn và đối diện Trường Đại học Giao thông Vận tải.",
+      "description_source_url": "https://vi.wikipedia.org/wiki/%C4%90%E1%BB%81n_Voi_Ph%E1%BB%A5c",
+      "description_license": "CC BY-SA 4.0 (Wikipedia)",
+      "cover_image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/3b/Bia_k%E1%BB%B7_ni%E1%BB%87m%2C_%C4%91%E1%BB%81n_Voi_Ph%E1%BB%A5c%2C_H%C3%A0_N%E1%BB%99i_001.JPG/960px-Bia_k%E1%BB%B7_ni%E1%BB%87m%2C_%C4%91%E1%BB%81n_Voi_Ph%E1%BB%A5c%2C_H%C3%A0_N%E1%BB%99i_001.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "images": [
+        "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/3b/Bia_k%E1%BB%B7_ni%E1%BB%87m%2C_%C4%91%E1%BB%81n_Voi_Ph%E1%BB%A5c%2C_H%C3%A0_N%E1%BB%99i_001.JPG/960px-Bia_k%E1%BB%B7_ni%E1%BB%87m%2C_%C4%91%E1%BB%81n_Voi_Ph%E1%BB%A5c%2C_H%C3%A0_N%E1%BB%99i_001.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+        "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/1a/B%E1%BA%A3ng_nh%E1%BA%AFc_nh%E1%BB%9F%2C_%C4%91%E1%BB%81n_Voi_Ph%E1%BB%A5c%2C_H%C3%A0_N%E1%BB%99i_001.JPG/960px-B%E1%BA%A3ng_nh%E1%BA%AFc_nh%E1%BB%9F%2C_%C4%91%E1%BB%81n_Voi_Ph%E1%BB%A5c%2C_H%C3%A0_N%E1%BB%99i_001.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+        "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/64/C%E1%BB%95ng_ch%C3%ADnh_%C4%91%E1%BB%81n_Voi_Ph%E1%BB%A5c%2C_H%C3%A0_N%E1%BB%99i_001.JPG/960px-C%E1%BB%95ng_ch%C3%ADnh_%C4%91%E1%BB%81n_Voi_Ph%E1%BB%A5c%2C_H%C3%A0_N%E1%BB%99i_001.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+        "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/f2/C%E1%BB%95ng_ch%C3%ADnh_%C4%91%E1%BB%81n_Voi_Ph%E1%BB%A5c%2C_H%C3%A0_N%E1%BB%99i_004.JPG/960px-C%E1%BB%95ng_ch%C3%ADnh_%C4%91%E1%BB%81n_Voi_Ph%E1%BB%A5c%2C_H%C3%A0_N%E1%BB%99i_004.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+      ],
+      "image_attributions": [
+        {
+          "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/3b/Bia_k%E1%BB%B7_ni%E1%BB%87m%2C_%C4%91%E1%BB%81n_Voi_Ph%E1%BB%A5c%2C_H%C3%A0_N%E1%BB%99i_001.JPG/960px-Bia_k%E1%BB%B7_ni%E1%BB%87m%2C_%C4%91%E1%BB%81n_Voi_Ph%E1%BB%A5c%2C_H%C3%A0_N%E1%BB%99i_001.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "fullUrl": "https://upload.wikimedia.org/wikipedia/commons/3/3b/Bia_k%E1%BB%B7_ni%E1%BB%87m%2C_%C4%91%E1%BB%81n_Voi_Ph%E1%BB%A5c%2C_H%C3%A0_N%E1%BB%99i_001.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+          "commonsPageUrl": "https://commons.wikimedia.org/wiki/File:Bia_k%E1%BB%B7_ni%E1%BB%87m,_%C4%91%E1%BB%81n_Voi_Ph%E1%BB%A5c,_H%C3%A0_N%E1%BB%99i_001.JPG",
+          "license": "CC BY-SA 4.0",
+          "artist": "Phan Minh Tuấn",
+          "title": "File:Bia kỷ niệm, đền Voi Phục, Hà Nội 001.JPG"
+        },
+        {
+          "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/1a/B%E1%BA%A3ng_nh%E1%BA%AFc_nh%E1%BB%9F%2C_%C4%91%E1%BB%81n_Voi_Ph%E1%BB%A5c%2C_H%C3%A0_N%E1%BB%99i_001.JPG/960px-B%E1%BA%A3ng_nh%E1%BA%AFc_nh%E1%BB%9F%2C_%C4%91%E1%BB%81n_Voi_Ph%E1%BB%A5c%2C_H%C3%A0_N%E1%BB%99i_001.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "fullUrl": "https://upload.wikimedia.org/wikipedia/commons/1/1a/B%E1%BA%A3ng_nh%E1%BA%AFc_nh%E1%BB%9F%2C_%C4%91%E1%BB%81n_Voi_Ph%E1%BB%A5c%2C_H%C3%A0_N%E1%BB%99i_001.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+          "commonsPageUrl": "https://commons.wikimedia.org/wiki/File:B%E1%BA%A3ng_nh%E1%BA%AFc_nh%E1%BB%9F,_%C4%91%E1%BB%81n_Voi_Ph%E1%BB%A5c,_H%C3%A0_N%E1%BB%99i_001.JPG",
+          "license": "CC BY-SA 4.0",
+          "artist": "Phan Minh Tuấn",
+          "title": "File:Bảng nhắc nhở, đền Voi Phục, Hà Nội 001.JPG"
+        },
+        {
+          "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/64/C%E1%BB%95ng_ch%C3%ADnh_%C4%91%E1%BB%81n_Voi_Ph%E1%BB%A5c%2C_H%C3%A0_N%E1%BB%99i_001.JPG/960px-C%E1%BB%95ng_ch%C3%ADnh_%C4%91%E1%BB%81n_Voi_Ph%E1%BB%A5c%2C_H%C3%A0_N%E1%BB%99i_001.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "fullUrl": "https://upload.wikimedia.org/wikipedia/commons/6/64/C%E1%BB%95ng_ch%C3%ADnh_%C4%91%E1%BB%81n_Voi_Ph%E1%BB%A5c%2C_H%C3%A0_N%E1%BB%99i_001.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+          "commonsPageUrl": "https://commons.wikimedia.org/wiki/File:C%E1%BB%95ng_ch%C3%ADnh_%C4%91%E1%BB%81n_Voi_Ph%E1%BB%A5c,_H%C3%A0_N%E1%BB%99i_001.JPG",
+          "license": "CC BY-SA 4.0",
+          "artist": "Phan Minh Tuấn",
+          "title": "File:Cổng chính đền Voi Phục, Hà Nội 001.JPG"
+        },
+        {
+          "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/f2/C%E1%BB%95ng_ch%C3%ADnh_%C4%91%E1%BB%81n_Voi_Ph%E1%BB%A5c%2C_H%C3%A0_N%E1%BB%99i_004.JPG/960px-C%E1%BB%95ng_ch%C3%ADnh_%C4%91%E1%BB%81n_Voi_Ph%E1%BB%A5c%2C_H%C3%A0_N%E1%BB%99i_004.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "fullUrl": "https://upload.wikimedia.org/wikipedia/commons/f/f2/C%E1%BB%95ng_ch%C3%ADnh_%C4%91%E1%BB%81n_Voi_Ph%E1%BB%A5c%2C_H%C3%A0_N%E1%BB%99i_004.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+          "commonsPageUrl": "https://commons.wikimedia.org/wiki/File:C%E1%BB%95ng_ch%C3%ADnh_%C4%91%E1%BB%81n_Voi_Ph%E1%BB%A5c,_H%C3%A0_N%E1%BB%99i_004.JPG",
+          "license": "CC BY-SA 4.0",
+          "artist": "Phan Minh Tuấn",
+          "title": "File:Cổng chính đền Voi Phục, Hà Nội 004.JPG"
+        }
+      ],
+      "opening_hours": "Mo-Su 08:00-20:00",
+      "website": null,
+      "phone": null,
+      "osm_tags_used": {
+        "wikipedia": "vi:Đền Voi Phục",
+        "wikidata": "Q10841709",
+        "wikimedia_commons": "Category:Voi Phục Temple"
+      },
+      "enrichment_tier": "media_and_article"
+    },
+    {
+      "place_id": "44115e3a-6094-5bcd-b53c-0e3a596b3aff",
+      "name": "Đền Ngọc Sơn",
+      "destination_slug": "ha-noi",
+      "category": "culture",
+      "is_rec_a_core_v2": true,
+      "description": "Đền Ngọc Sơn là một ngôi đền thờ nằm trên đảo Ngọc của hồ Hoàn Kiếm ở Hà Nội, Việt Nam. Đây cũng là một di tích quốc gia đặc biệt của Việt Nam được xếp hạng đợt 4.",
+      "description_source_url": "https://vi.wikipedia.org/wiki/%C4%90%E1%BB%81n_Ng%E1%BB%8Dc_S%C6%A1n",
+      "description_license": "CC BY-SA 4.0 (Wikipedia)",
+      "cover_image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/fa/C%E1%BB%95ng_%C4%91%E1%BB%81n_Ng%E1%BB%8Dc_S%C6%A1n.jpg/960px-C%E1%BB%95ng_%C4%91%E1%BB%81n_Ng%E1%BB%8Dc_S%C6%A1n.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "images": [
+        "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/fa/C%E1%BB%95ng_%C4%91%E1%BB%81n_Ng%E1%BB%8Dc_S%C6%A1n.jpg/960px-C%E1%BB%95ng_%C4%91%E1%BB%81n_Ng%E1%BB%8Dc_S%C6%A1n.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+      ],
+      "image_attributions": [
+        {
+          "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/fa/C%E1%BB%95ng_%C4%91%E1%BB%81n_Ng%E1%BB%8Dc_S%C6%A1n.jpg/960px-C%E1%BB%95ng_%C4%91%E1%BB%81n_Ng%E1%BB%8Dc_S%C6%A1n.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "fullUrl": "https://upload.wikimedia.org/wikipedia/commons/f/fa/C%E1%BB%95ng_%C4%91%E1%BB%81n_Ng%E1%BB%8Dc_S%C6%A1n.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+          "commonsPageUrl": "https://commons.wikimedia.org/wiki/File:C%E1%BB%95ng_%C4%91%E1%BB%81n_Ng%E1%BB%8Dc_S%C6%A1n.jpg",
+          "license": "CC BY-SA 3.0",
+          "artist": "Bùi Thụy Đào Nguyên",
+          "title": "File:Cổng đền Ngọc Sơn.jpg"
+        }
+      ],
+      "opening_hours": "Mo-Fr 07:00-18:00",
+      "website": null,
+      "phone": null,
+      "osm_tags_used": {
+        "wikipedia": "vi:Đền Ngọc Sơn",
+        "wikidata": "Q3517494",
+        "wikimedia_commons": "Category:Temple of the Jade Mountain"
+      },
+      "enrichment_tier": "media_and_article"
+    },
+    {
+      "place_id": "698ee756-6062-5f47-955b-bdf458682e57",
+      "name": "Lăng Chủ tịch Hồ Chí Minh",
+      "destination_slug": "ha-noi",
+      "category": "attraction",
+      "is_rec_a_core_v2": true,
+      "description": "Lăng Chủ tịch Hồ Chí Minh, còn gọi là Lăng Hồ Chủ tịch, Lăng Bác, là nơi gìn giữ thi hài Chủ tịch Hồ Chí Minh. Lăng được chính thức khởi công ngày 2 tháng 9 năm 1973, tại vị trí lễ đài cũ giữa Quảng trường Ba Đình, nơi Chủ tịch Hồ Chí Minh từng chủ trì các cuộc gặp mặt quan trọng.",
+      "description_source_url": "https://vi.wikipedia.org/wiki/L%C4%83ng_Ch%E1%BB%A7_t%E1%BB%8Bch_H%E1%BB%93_Ch%C3%AD_Minh",
+      "description_license": "CC BY-SA 4.0 (Wikipedia)",
+      "cover_image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/25/04102-Hanoi_%2831979711710%29.jpg/960px-04102-Hanoi_%2831979711710%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "images": [
+        "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/25/04102-Hanoi_%2831979711710%29.jpg/960px-04102-Hanoi_%2831979711710%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+        "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/3b/04142-Hanoi_%2832317496486%29.jpg/960px-04142-Hanoi_%2832317496486%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+        "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/79/04242-Hanoi_%2832236511651%29.jpg/960px-04242-Hanoi_%2832236511651%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+        "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/0a/Ho_chi_minh_mausoleum.jpg/960px-Ho_chi_minh_mausoleum.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+      ],
+      "image_attributions": [
+        {
+          "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/25/04102-Hanoi_%2831979711710%29.jpg/960px-04102-Hanoi_%2831979711710%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "fullUrl": "https://upload.wikimedia.org/wikipedia/commons/2/25/04102-Hanoi_%2831979711710%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+          "commonsPageUrl": "https://commons.wikimedia.org/wiki/File:04102-Hanoi_(31979711710).jpg",
+          "license": "CC BY 2.0",
+          "artist": "xiquinhosilva",
+          "title": "File:04102-Hanoi (31979711710).jpg"
+        },
+        {
+          "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/3b/04142-Hanoi_%2832317496486%29.jpg/960px-04142-Hanoi_%2832317496486%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "fullUrl": "https://upload.wikimedia.org/wikipedia/commons/3/3b/04142-Hanoi_%2832317496486%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+          "commonsPageUrl": "https://commons.wikimedia.org/wiki/File:04142-Hanoi_(32317496486).jpg",
+          "license": "CC BY 2.0",
+          "artist": "xiquinhosilva",
+          "title": "File:04142-Hanoi (32317496486).jpg"
+        },
+        {
+          "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/79/04242-Hanoi_%2832236511651%29.jpg/960px-04242-Hanoi_%2832236511651%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "fullUrl": "https://upload.wikimedia.org/wikipedia/commons/7/79/04242-Hanoi_%2832236511651%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+          "commonsPageUrl": "https://commons.wikimedia.org/wiki/File:04242-Hanoi_(32236511651).jpg",
+          "license": "CC BY 2.0",
+          "artist": "xiquinhosilva",
+          "title": "File:04242-Hanoi (32236511651).jpg"
+        },
+        {
+          "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/0a/Ho_chi_minh_mausoleum.jpg/960px-Ho_chi_minh_mausoleum.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "fullUrl": "https://upload.wikimedia.org/wikipedia/commons/0/0a/Ho_chi_minh_mausoleum.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+          "commonsPageUrl": "https://commons.wikimedia.org/wiki/File:Ho_chi_minh_mausoleum.jpg",
+          "license": "CC BY-SA 2.0",
+          "artist": "Gregor Dodson",
+          "title": "File:Ho chi minh mausoleum.jpg"
+        }
+      ],
+      "opening_hours": "Tu-Th 07:30-10:30; Sa,Su 07:30-11:00",
+      "website": null,
+      "phone": null,
+      "osm_tags_used": {
+        "wikipedia": "vi:Lăng Chủ tịch Hồ Chí Minh",
+        "wikidata": "Q874234",
+        "wikimedia_commons": "Category:Ho Chi Minh Mausoleum"
+      },
+      "enrichment_tier": "media_and_article"
+    },
+    {
+      "place_id": "6775ce64-9699-5818-ad57-d86c84981f36",
+      "name": "Cung Văn hóa Lao động Hữu nghị Việt Xô",
+      "destination_slug": "ha-noi",
+      "category": "attraction",
+      "is_rec_a_core_v2": true,
+      "description": "Cung Văn hoá Lao động Hữu nghị Việt Xô là một cung văn hoá nằm tại 91 phố Trần Hưng Đạo, phường Cửa Nam, Hà Nội, Việt Nam là một công trình kiến trúc, văn hóa dành cho các buổi biểu diễn nghệ thuật, các hội nghị khoa học, triển lãm. Công trình được khởi công vào ngày 1 tháng 1 năm 1978 trên nền cũ của nhà Đấu Xảo Hà Nội vốn bị bom phá hủy trong Thế chiến lần thứ 2. Ngày 1 tháng 9 năm 1985, cung văn hoá này được hoàn thành. Nguồn tài chính xây dựng công trình do Hội đồng Trung ương các Công đoàn Liên Xô trước đây trao tặng nên được đặt tên là Cung Văn hoá Lao động Hữu nghị Việt Xô. Công trình được kiến trúc sư Liên Xô Isakovich thiết kế.",
+      "description_source_url": "https://vi.wikipedia.org/wiki/Cung_V%C4%83n_h%C3%B3a_Lao_%C4%91%E1%BB%99ng_H%E1%BB%AFu_ngh%E1%BB%8B_Vi%E1%BB%87t_X%C3%B4",
+      "description_license": "CC BY-SA 4.0 (Wikipedia)",
+      "cover_image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/7f/Cung_V%C4%83n_h%C3%B3a_H%E1%BB%AFu_ngh%E1%BB%8B_Vi%E1%BB%87t_-_X%C3%B4_12-Jun-22_11.jpg/960px-Cung_V%C4%83n_h%C3%B3a_H%E1%BB%AFu_ngh%E1%BB%8B_Vi%E1%BB%87t_-_X%C3%B4_12-Jun-22_11.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "images": [
+        "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/7f/Cung_V%C4%83n_h%C3%B3a_H%E1%BB%AFu_ngh%E1%BB%8B_Vi%E1%BB%87t_-_X%C3%B4_12-Jun-22_11.jpg/960px-Cung_V%C4%83n_h%C3%B3a_H%E1%BB%AFu_ngh%E1%BB%8B_Vi%E1%BB%87t_-_X%C3%B4_12-Jun-22_11.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+        "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e7/Cung_V%C4%83n_h%C3%B3a_H%E1%BB%AFu_ngh%E1%BB%8B_Vi%E1%BB%87t_-_X%C3%B4_12-Jun-22_12.jpg/960px-Cung_V%C4%83n_h%C3%B3a_H%E1%BB%AFu_ngh%E1%BB%8B_Vi%E1%BB%87t_-_X%C3%B4_12-Jun-22_12.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+        "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/f5/Cung_v%C4%83n_h%C3%B3a_H%E1%BB%AFu_ngh%E1%BB%8B_Vi%E1%BB%87t-X%C3%B4.jpg/960px-Cung_v%C4%83n_h%C3%B3a_H%E1%BB%AFu_ngh%E1%BB%8B_Vi%E1%BB%87t-X%C3%B4.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+      ],
+      "image_attributions": [
+        {
+          "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/7f/Cung_V%C4%83n_h%C3%B3a_H%E1%BB%AFu_ngh%E1%BB%8B_Vi%E1%BB%87t_-_X%C3%B4_12-Jun-22_11.jpg/960px-Cung_V%C4%83n_h%C3%B3a_H%E1%BB%AFu_ngh%E1%BB%8B_Vi%E1%BB%87t_-_X%C3%B4_12-Jun-22_11.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "fullUrl": "https://upload.wikimedia.org/wikipedia/commons/7/7f/Cung_V%C4%83n_h%C3%B3a_H%E1%BB%AFu_ngh%E1%BB%8B_Vi%E1%BB%87t_-_X%C3%B4_12-Jun-22_11.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+          "commonsPageUrl": "https://commons.wikimedia.org/wiki/File:Cung_V%C4%83n_h%C3%B3a_H%E1%BB%AFu_ngh%E1%BB%8B_Vi%E1%BB%87t_-_X%C3%B4_12-Jun-22_11.jpg",
+          "license": "CC BY-SA 4.0",
+          "artist": "Ltn12345",
+          "title": "File:Cung Văn hóa Hữu nghị Việt - Xô 12-Jun-22 11.jpg"
+        },
+        {
+          "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e7/Cung_V%C4%83n_h%C3%B3a_H%E1%BB%AFu_ngh%E1%BB%8B_Vi%E1%BB%87t_-_X%C3%B4_12-Jun-22_12.jpg/960px-Cung_V%C4%83n_h%C3%B3a_H%E1%BB%AFu_ngh%E1%BB%8B_Vi%E1%BB%87t_-_X%C3%B4_12-Jun-22_12.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "fullUrl": "https://upload.wikimedia.org/wikipedia/commons/e/e7/Cung_V%C4%83n_h%C3%B3a_H%E1%BB%AFu_ngh%E1%BB%8B_Vi%E1%BB%87t_-_X%C3%B4_12-Jun-22_12.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+          "commonsPageUrl": "https://commons.wikimedia.org/wiki/File:Cung_V%C4%83n_h%C3%B3a_H%E1%BB%AFu_ngh%E1%BB%8B_Vi%E1%BB%87t_-_X%C3%B4_12-Jun-22_12.jpg",
+          "license": "CC BY-SA 4.0",
+          "artist": "Ltn12345",
+          "title": "File:Cung Văn hóa Hữu nghị Việt - Xô 12-Jun-22 12.jpg"
+        },
+        {
+          "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/f5/Cung_v%C4%83n_h%C3%B3a_H%E1%BB%AFu_ngh%E1%BB%8B_Vi%E1%BB%87t-X%C3%B4.jpg/960px-Cung_v%C4%83n_h%C3%B3a_H%E1%BB%AFu_ngh%E1%BB%8B_Vi%E1%BB%87t-X%C3%B4.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "fullUrl": "https://upload.wikimedia.org/wikipedia/commons/f/f5/Cung_v%C4%83n_h%C3%B3a_H%E1%BB%AFu_ngh%E1%BB%8B_Vi%E1%BB%87t-X%C3%B4.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+          "commonsPageUrl": "https://commons.wikimedia.org/wiki/File:Cung_v%C4%83n_h%C3%B3a_H%E1%BB%AFu_ngh%E1%BB%8B_Vi%E1%BB%87t-X%C3%B4.jpg",
+          "license": "CC BY 2.0",
+          "artist": "thalling55",
+          "title": "File:Cung văn hóa Hữu nghị Việt-Xô.jpg"
+        }
+      ],
+      "opening_hours": null,
+      "website": "https://cungvanhoalaodonghuunghivietxo.vn/",
+      "phone": null,
+      "osm_tags_used": {
+        "wikipedia": "vi:Cung Văn hóa Lao động Hữu nghị Việt Xô",
+        "wikidata": "Q10751146",
+        "wikimedia_commons": "Category:Vietnam-Soviet Friendship Labor Cultural Palace"
+      },
+      "enrichment_tier": "media_and_article"
+    },
+    {
+      "place_id": "f66a0589-bfcf-53c9-8f49-fcce9e7bda64",
+      "name": "Bảo tàng Phòng không - Không quân",
+      "destination_slug": "ha-noi",
+      "category": "culture",
+      "is_rec_a_core_v2": true,
+      "description": "Bảo tàng Phòng không – Không quân trực thuộc Cục Chính trị, Quân chủng Phòng không – Không quân, Quân đội nhân dân Việt Nam, tiền thân là Phòng Truyền thống Bộ đội Phòng không thành lập năm 1958. Bảo tàng được xếp hạng Hai trong hệ thống bảo tàng tại Việt Nam. Bảo tàng được xây dựng vào năm 2004, khánh thành ngày 28 tháng 8 năm 2007, là nơi lưu giữ những hình ảnh, tư liệu, hiện vật minh chứng cho quá trình ra đời, xây dựng, chiến đấu, trưởng thành và chiến thắng của bộ đội Phòng không – Không quân Việt Nam. Bảo tàng tọa lạc tại 173C, Trường Chinh, Phương Liệt, Thanh Xuân, Hà Nội, Việt Nam.",
+      "description_source_url": "https://vi.wikipedia.org/wiki/B%E1%BA%A3o_t%C3%A0ng_Ph%C3%B2ng_kh%C3%B4ng_-_Kh%C3%B4ng_qu%C3%A2n_(Vi%E1%BB%87t_Nam)",
+      "description_license": "CC BY-SA 4.0 (Wikipedia)",
+      "cover_image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/7a/%E7%A9%BA%E5%86%9B%E5%8D%9A%E7%89%A9%E9%A6%86_-_panoramio.jpg/960px-%E7%A9%BA%E5%86%9B%E5%8D%9A%E7%89%A9%E9%A6%86_-_panoramio.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "images": [
+        "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/7a/%E7%A9%BA%E5%86%9B%E5%8D%9A%E7%89%A9%E9%A6%86_-_panoramio.jpg/960px-%E7%A9%BA%E5%86%9B%E5%8D%9A%E7%89%A9%E9%A6%86_-_panoramio.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+      ],
+      "image_attributions": [
+        {
+          "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/7a/%E7%A9%BA%E5%86%9B%E5%8D%9A%E7%89%A9%E9%A6%86_-_panoramio.jpg/960px-%E7%A9%BA%E5%86%9B%E5%8D%9A%E7%89%A9%E9%A6%86_-_panoramio.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "fullUrl": "https://upload.wikimedia.org/wikipedia/commons/7/7a/%E7%A9%BA%E5%86%9B%E5%8D%9A%E7%89%A9%E9%A6%86_-_panoramio.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+          "commonsPageUrl": "https://commons.wikimedia.org/wiki/File:%E7%A9%BA%E5%86%9B%E5%8D%9A%E7%89%A9%E9%A6%86_-_panoramio.jpg",
+          "license": "CC BY-SA 3.0",
+          "artist": "JtWang",
+          "title": "File:空军博物馆 - panoramio.jpg"
+        }
+      ],
+      "opening_hours": "Mo-Su 08:00-11:00,13:00-16:00; Fr off",
+      "website": null,
+      "phone": null,
+      "osm_tags_used": {
+        "wikipedia": "vi:Bảo tàng Phòng không - Không quân (Việt Nam)",
+        "wikidata": "Q7928536",
+        "wikimedia_commons": "Category:Vietnamese Air Force Museum in Hanoi"
+      },
+      "enrichment_tier": "media_and_article"
+    },
+    {
+      "place_id": "06d8683d-46d2-5f86-bf8d-4dc72dba37ec",
+      "name": "Bảo tàng Lịch sử Quốc gia Việt Nam",
+      "destination_slug": "ha-noi",
+      "category": "culture",
+      "is_rec_a_core_v2": true,
+      "description": "Bảo tàng Lịch sử Việt Nam, cùng với Bảo tàng Cách mạng Việt Nam là hai bảo tàng đã được sáp nhập thành Bảo tàng Lịch sử quốc gia, tọa lạc ở thành phố Hà Nội. Bảo tàng Lịch sử Việt Nam (cũ) là nơi lưu giữ những hiện vật, phản ánh các nền văn hóa, lịch sử dựng nước và giữ nước của người Việt Nam từ thuở ban đầu khai sáng đến ngày ra đời nước Việt Nam Dân chủ Cộng hòa. Viện bảo tàng có phong cách kiến trúc Đông Dương, nằm ở số 1 phố Tràng Tiền, Hoàn Kiếm, Hà Nội. Viện Bảo tàng mở cửa đón khách cả tuần, trừ thứ hai. Tại đây còn lưu giữ nhiều hiện vật quý như Trống đồng Đông Sơn, gốm Bát Tràng, tượng thần Shiva, cọc gỗ trong trận Bạch Đằng,...",
+      "description_source_url": "https://vi.wikipedia.org/wiki/B%E1%BA%A3o_t%C3%A0ng_L%E1%BB%8Bch_s%E1%BB%AD_qu%E1%BB%91c_gia_(Vi%E1%BB%87t_Nam)",
+      "description_license": "CC BY-SA 4.0 (Wikipedia)",
+      "cover_image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c2/03429-Hanoi_%2832800171462%29.jpg/960px-03429-Hanoi_%2832800171462%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "images": [
+        "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c2/03429-Hanoi_%2832800171462%29.jpg/960px-03429-Hanoi_%2832800171462%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+        "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/cb/03435-Hanoi_%2832953976695%29.jpg/960px-03435-Hanoi_%2832953976695%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+        "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/11/B%E1%BA%A3o_t%C3%A0ng_LSVN.jpg/960px-B%E1%BA%A3o_t%C3%A0ng_LSVN.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+        "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/6a/Vietnam_National_Museum_of_History%2C_Hanoi%2C_Vietnam.jpg/960px-Vietnam_National_Museum_of_History%2C_Hanoi%2C_Vietnam.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+      ],
+      "image_attributions": [
+        {
+          "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c2/03429-Hanoi_%2832800171462%29.jpg/960px-03429-Hanoi_%2832800171462%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "fullUrl": "https://upload.wikimedia.org/wikipedia/commons/c/c2/03429-Hanoi_%2832800171462%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+          "commonsPageUrl": "https://commons.wikimedia.org/wiki/File:03429-Hanoi_(32800171462).jpg",
+          "license": "CC BY 2.0",
+          "artist": "xiquinhosilva",
+          "title": "File:03429-Hanoi (32800171462).jpg"
+        },
+        {
+          "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/cb/03435-Hanoi_%2832953976695%29.jpg/960px-03435-Hanoi_%2832953976695%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "fullUrl": "https://upload.wikimedia.org/wikipedia/commons/c/cb/03435-Hanoi_%2832953976695%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+          "commonsPageUrl": "https://commons.wikimedia.org/wiki/File:03435-Hanoi_(32953976695).jpg",
+          "license": "CC BY 2.0",
+          "artist": "xiquinhosilva",
+          "title": "File:03435-Hanoi (32953976695).jpg"
+        },
+        {
+          "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/11/B%E1%BA%A3o_t%C3%A0ng_LSVN.jpg/960px-B%E1%BA%A3o_t%C3%A0ng_LSVN.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "fullUrl": "https://upload.wikimedia.org/wikipedia/commons/1/11/B%E1%BA%A3o_t%C3%A0ng_LSVN.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+          "commonsPageUrl": "https://commons.wikimedia.org/wiki/File:B%E1%BA%A3o_t%C3%A0ng_LSVN.jpg",
+          "license": "CC BY-SA 3.0",
+          "artist": "vi:User:Casablanca1911",
+          "title": "File:Bảo tàng LSVN.jpg"
+        },
+        {
+          "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/6a/Vietnam_National_Museum_of_History%2C_Hanoi%2C_Vietnam.jpg/960px-Vietnam_National_Museum_of_History%2C_Hanoi%2C_Vietnam.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "fullUrl": "https://upload.wikimedia.org/wikipedia/commons/6/6a/Vietnam_National_Museum_of_History%2C_Hanoi%2C_Vietnam.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+          "commonsPageUrl": "https://commons.wikimedia.org/wiki/File:Vietnam_National_Museum_of_History,_Hanoi,_Vietnam.jpg",
+          "license": "Public domain",
+          "artist": "Alistair Morrenger",
+          "title": "File:Vietnam National Museum of History, Hanoi, Vietnam.jpg"
+        }
+      ],
+      "opening_hours": "Mo off; Tu-Su 08:00-12:00,13:30-17:00",
+      "website": null,
+      "phone": null,
+      "osm_tags_used": {
+        "wikipedia": "vi:Bảo tàng Lịch sử Việt Nam",
+        "wikidata": "Q5370414",
+        "wikimedia_commons": "Category:National Museum of Vietnamese History"
+      },
+      "enrichment_tier": "media_and_article"
+    },
+    {
+      "place_id": "62093f68-3162-52cd-967a-4bf88aa9171f",
+      "name": "Đài tưởng niệm các Anh hùng liệt sĩ",
+      "destination_slug": "ha-noi",
+      "category": "culture",
+      "is_rec_a_core_v2": true,
+      "description": "The War Memorial in Hanoi is located across the Ba Đình Square, across the Ho Chi Minh Mausoleum and close to Hanoi Citadel. Designed by architect Lê Hiệp and constructed in 1993 in a fusion of traditional Vietnamese and modernist architecture, the memorial commemorates men and women who sacrificed themselves during the Vietnam War. The war is known by many names, e.g. as the American War in Vietnam. The memorial is a focal point for state functions, commemorating the war dead.",
+      "description_source_url": "https://en.wikipedia.org/wiki/Memorial_to_the_Revolutionary_Martyrs",
+      "description_license": "CC BY-SA 4.0 (Wikipedia)",
+      "cover_image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/13/Dai_tuong_niem_Bac_Son.JPG/960px-Dai_tuong_niem_Bac_Son.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "images": [
+        "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/13/Dai_tuong_niem_Bac_Son.JPG/960px-Dai_tuong_niem_Bac_Son.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+        "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/9f/Vietnam_War_Memorial_and_National_Assembly_Building.jpg/960px-Vietnam_War_Memorial_and_National_Assembly_Building.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+        "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/eb/Vietnam_War_Memorial_Hanoi_0335.JPG/960px-Vietnam_War_Memorial_Hanoi_0335.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+      ],
+      "image_attributions": [
+        {
+          "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/13/Dai_tuong_niem_Bac_Son.JPG/960px-Dai_tuong_niem_Bac_Son.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "fullUrl": "https://upload.wikimedia.org/wikipedia/commons/1/13/Dai_tuong_niem_Bac_Son.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+          "commonsPageUrl": "https://commons.wikimedia.org/wiki/File:Dai_tuong_niem_Bac_Son.JPG",
+          "license": "CC BY-SA 3.0",
+          "artist": "Rungbachduong",
+          "title": "File:Dai tuong niem Bac Son.JPG"
+        },
+        {
+          "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/9f/Vietnam_War_Memorial_and_National_Assembly_Building.jpg/960px-Vietnam_War_Memorial_and_National_Assembly_Building.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "fullUrl": "https://upload.wikimedia.org/wikipedia/commons/9/9f/Vietnam_War_Memorial_and_National_Assembly_Building.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+          "commonsPageUrl": "https://commons.wikimedia.org/wiki/File:Vietnam_War_Memorial_and_National_Assembly_Building.jpg",
+          "license": "CC BY-SA 4.0",
+          "artist": "Christophe95",
+          "title": "File:Vietnam War Memorial and National Assembly Building.jpg"
+        },
+        {
+          "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/eb/Vietnam_War_Memorial_Hanoi_0335.JPG/960px-Vietnam_War_Memorial_Hanoi_0335.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "fullUrl": "https://upload.wikimedia.org/wikipedia/commons/e/eb/Vietnam_War_Memorial_Hanoi_0335.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+          "commonsPageUrl": "https://commons.wikimedia.org/wiki/File:Vietnam_War_Memorial_Hanoi_0335.JPG",
+          "license": "CC BY-SA 3.0",
+          "artist": "Gryffindor",
+          "title": "File:Vietnam War Memorial Hanoi 0335.JPG"
+        }
+      ],
+      "opening_hours": null,
+      "website": null,
+      "phone": null,
+      "osm_tags_used": {
+        "wikipedia": "en:Memorial to the Revolutionary Martyrs",
+        "wikidata": "Q7928570",
+        "wikimedia_commons": "Category:Vietnam War Memorial, Hanoi"
+      },
+      "enrichment_tier": "media_and_article"
+    },
+    {
+      "place_id": "204b1369-5d51-5cad-a350-5c89e34944aa",
+      "name": "Chùa Quán Sứ",
+      "destination_slug": "ha-noi",
+      "category": "culture",
+      "is_rec_a_core_v2": true,
+      "description": "Quán Sứ Pagoda is a Buddhist temple located at 73 Quan Su Street, Hanoi, Vietnam. The temple is the headquarters of the Buddhist Sangha of Vietnam.",
+      "description_source_url": "https://en.wikipedia.org/wiki/Qu%C3%A1n_S%E1%BB%A9_Pagoda",
+      "description_license": "CC BY-SA 4.0 (Wikipedia)",
+      "cover_image": "https://upload.wikimedia.org/wikipedia/commons/4/40/At_Quan_Su_Pagoda_in_Vietnam_-_29447269255.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+      "images": [
+        "https://upload.wikimedia.org/wikipedia/commons/4/40/At_Quan_Su_Pagoda_in_Vietnam_-_29447269255.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+        "https://upload.wikimedia.org/wikipedia/commons/0/04/At_Quan_Su_Pagoda_in_Vietnam_-_29447269975.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+        "https://thumb.wikimedia.org/wikipedia/commons/thumb/b/ba/Autel_dans_la_pagode_des_Ambassadeurs_%28Hanoi%29_%284359941582%29.jpg/960px-Autel_dans_la_pagode_des_Ambassadeurs_%28Hanoi%29_%284359941582%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+        "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/ef/C%E1%BB%95ng_ch%C3%B9a_Qu%C3%A1n_S%E1%BB%A9.jpg/960px-C%E1%BB%95ng_ch%C3%B9a_Qu%C3%A1n_S%E1%BB%A9.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+      ],
+      "image_attributions": [
+        {
+          "url": "https://upload.wikimedia.org/wikipedia/commons/4/40/At_Quan_Su_Pagoda_in_Vietnam_-_29447269255.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+          "fullUrl": "https://upload.wikimedia.org/wikipedia/commons/4/40/At_Quan_Su_Pagoda_in_Vietnam_-_29447269255.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+          "commonsPageUrl": "https://commons.wikimedia.org/wiki/File:At_Quan_Su_Pagoda_in_Vietnam_-_29447269255.jpg",
+          "license": "CC BY-SA 2.0",
+          "artist": "Narendra Modi",
+          "title": "File:At Quan Su Pagoda in Vietnam - 29447269255.jpg"
+        },
+        {
+          "url": "https://upload.wikimedia.org/wikipedia/commons/0/04/At_Quan_Su_Pagoda_in_Vietnam_-_29447269975.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+          "fullUrl": "https://upload.wikimedia.org/wikipedia/commons/0/04/At_Quan_Su_Pagoda_in_Vietnam_-_29447269975.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+          "commonsPageUrl": "https://commons.wikimedia.org/wiki/File:At_Quan_Su_Pagoda_in_Vietnam_-_29447269975.jpg",
+          "license": "CC BY-SA 2.0",
+          "artist": "Narendra Modi",
+          "title": "File:At Quan Su Pagoda in Vietnam - 29447269975.jpg"
+        },
+        {
+          "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/b/ba/Autel_dans_la_pagode_des_Ambassadeurs_%28Hanoi%29_%284359941582%29.jpg/960px-Autel_dans_la_pagode_des_Ambassadeurs_%28Hanoi%29_%284359941582%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "fullUrl": "https://upload.wikimedia.org/wikipedia/commons/b/ba/Autel_dans_la_pagode_des_Ambassadeurs_%28Hanoi%29_%284359941582%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+          "commonsPageUrl": "https://commons.wikimedia.org/wiki/File:Autel_dans_la_pagode_des_Ambassadeurs_(Hanoi)_(4359941582).jpg",
+          "license": "CC BY 2.0",
+          "artist": "Jean-Pierre Dalbéra from Paris, France",
+          "title": "File:Autel dans la pagode des Ambassadeurs (Hanoi) (4359941582).jpg"
+        },
+        {
+          "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/ef/C%E1%BB%95ng_ch%C3%B9a_Qu%C3%A1n_S%E1%BB%A9.jpg/960px-C%E1%BB%95ng_ch%C3%B9a_Qu%C3%A1n_S%E1%BB%A9.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "fullUrl": "https://upload.wikimedia.org/wikipedia/commons/e/ef/C%E1%BB%95ng_ch%C3%B9a_Qu%C3%A1n_S%E1%BB%A9.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+          "commonsPageUrl": "https://commons.wikimedia.org/wiki/File:C%E1%BB%95ng_ch%C3%B9a_Qu%C3%A1n_S%E1%BB%A9.jpg",
+          "license": "CC BY 2.0",
+          "artist": "thalling55",
+          "title": "File:Cổng chùa Quán Sứ.jpg"
+        }
+      ],
+      "opening_hours": null,
+      "website": null,
+      "phone": null,
+      "osm_tags_used": {
+        "wikipedia": "en:Quán Sứ Pagoda",
+        "wikidata": "Q7273080",
+        "wikimedia_commons": "Category:Quán Sứ Temple"
+      },
+      "enrichment_tier": "media_and_article"
+    },
+    {
+      "place_id": "015e7408-de4d-5df7-88ef-cd266dc10277",
+      "name": "Bảo tàng Lịch sử Quốc gia Việt Nam",
+      "destination_slug": "ha-noi",
+      "category": "culture",
+      "is_rec_a_core_v2": true,
+      "description": "Viện Bảo tàng Cách mạng Việt Nam là nơi tái hiện lịch sử đấu tranh hàng trăm năm qua của nhân dân Việt Nam chống Pháp, chống Nhật, chống Mỹ, chống phong kiến, giành lại nền độc lập tự do cho Việt Nam. Bảo tàng tọa lạc tại số 25 phố Tông Đản, phường Tràng Tiền, quận Hoàn Kiếm, thành phố Hà Nội.",
+      "description_source_url": "https://vi.wikipedia.org/wiki/B%E1%BA%A3o_t%C3%A0ng_C%C3%A1ch_m%E1%BA%A1ng_Vi%E1%BB%87t_Nam",
+      "description_license": "CC BY-SA 4.0 (Wikipedia)",
+      "cover_image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/5d/Flag_presented_by_Comit%C3%A9_cubano_de_solidaridad_con_Viet-Nam_del_Sur.jpg/960px-Flag_presented_by_Comit%C3%A9_cubano_de_solidaridad_con_Viet-Nam_del_Sur.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "images": [
+        "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/5d/Flag_presented_by_Comit%C3%A9_cubano_de_solidaridad_con_Viet-Nam_del_Sur.jpg/960px-Flag_presented_by_Comit%C3%A9_cubano_de_solidaridad_con_Viet-Nam_del_Sur.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+        "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/91/Gift_from_Japan_Chivalry_Association_of_Traffic_and_Transport.jpg/960px-Gift_from_Japan_Chivalry_Association_of_Traffic_and_Transport.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+        "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/33/Machine_tag_presented_to_the_IV_National_Congress_of_the_Communist_Party_by_workers_of_Nam_%C4%90inh_Mechanical_Factory.jpg/960px-Machine_tag_presented_to_the_IV_National_Congress_of_the_Communist_Party_by_workers_of_Nam_%C4%90inh_Mechanical_Factory.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+        "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/92/Vietnam_Museum_of_Revolution.JPG/960px-Vietnam_Museum_of_Revolution.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+      ],
+      "image_attributions": [
+        {
+          "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/5d/Flag_presented_by_Comit%C3%A9_cubano_de_solidaridad_con_Viet-Nam_del_Sur.jpg/960px-Flag_presented_by_Comit%C3%A9_cubano_de_solidaridad_con_Viet-Nam_del_Sur.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "fullUrl": "https://upload.wikimedia.org/wikipedia/commons/5/5d/Flag_presented_by_Comit%C3%A9_cubano_de_solidaridad_con_Viet-Nam_del_Sur.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+          "commonsPageUrl": "https://commons.wikimedia.org/wiki/File:Flag_presented_by_Comit%C3%A9_cubano_de_solidaridad_con_Viet-Nam_del_Sur.jpg",
+          "license": "CC BY-SA 3.0",
+          "artist": "amenoc",
+          "title": "File:Flag presented by Comité cubano de solidaridad con Viet-Nam del Sur.jpg"
+        },
+        {
+          "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/91/Gift_from_Japan_Chivalry_Association_of_Traffic_and_Transport.jpg/960px-Gift_from_Japan_Chivalry_Association_of_Traffic_and_Transport.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "fullUrl": "https://upload.wikimedia.org/wikipedia/commons/9/91/Gift_from_Japan_Chivalry_Association_of_Traffic_and_Transport.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+          "commonsPageUrl": "https://commons.wikimedia.org/wiki/File:Gift_from_Japan_Chivalry_Association_of_Traffic_and_Transport.jpg",
+          "license": "CC BY-SA 3.0",
+          "artist": "amenoc",
+          "title": "File:Gift from Japan Chivalry Association of Traffic and Transport.jpg"
+        },
+        {
+          "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/33/Machine_tag_presented_to_the_IV_National_Congress_of_the_Communist_Party_by_workers_of_Nam_%C4%90inh_Mechanical_Factory.jpg/960px-Machine_tag_presented_to_the_IV_National_Congress_of_the_Communist_Party_by_workers_of_Nam_%C4%90inh_Mechanical_Factory.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "fullUrl": "https://upload.wikimedia.org/wikipedia/commons/3/33/Machine_tag_presented_to_the_IV_National_Congress_of_the_Communist_Party_by_workers_of_Nam_%C4%90inh_Mechanical_Factory.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+          "commonsPageUrl": "https://commons.wikimedia.org/wiki/File:Machine_tag_presented_to_the_IV_National_Congress_of_the_Communist_Party_by_workers_of_Nam_%C4%90inh_Mechanical_Factory.jpg",
+          "license": "CC BY-SA 3.0",
+          "artist": "amenoc",
+          "title": "File:Machine tag presented to the IV National Congress of the Communist Party by workers of Nam Đinh Mechanical Factory.jpg"
+        },
+        {
+          "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/92/Vietnam_Museum_of_Revolution.JPG/960px-Vietnam_Museum_of_Revolution.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "fullUrl": "https://upload.wikimedia.org/wikipedia/commons/9/92/Vietnam_Museum_of_Revolution.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+          "commonsPageUrl": "https://commons.wikimedia.org/wiki/File:Vietnam_Museum_of_Revolution.JPG",
+          "license": "Public domain",
+          "artist": "Rungbachduong",
+          "title": "File:Vietnam Museum of Revolution.JPG"
+        }
+      ],
+      "opening_hours": null,
+      "website": null,
+      "phone": null,
+      "osm_tags_used": {
+        "wikipedia": "vi:Bảo tàng Cách mạng Việt Nam",
+        "wikidata": "Q5370340",
+        "wikimedia_commons": "Category:Vietnam Museum of Revolution"
+      },
+      "enrichment_tier": "media_and_article"
+    },
+    {
+      "place_id": "f9c0b1c9-6925-5a33-b3ed-1c619a609a58",
+      "name": "Đền Quán Thánh",
+      "destination_slug": "ha-noi",
+      "category": "culture",
+      "is_rec_a_core_v2": true,
+      "description": "Đền Quán Thánh, tên chữ là Trấn Vũ Quán, có từ đời Lý Thái Tổ, thờ Huyền Thiên Trấn Vũ, là một trong bốn vị thần được lập đền thờ để trấn giữ bốn cửa ngõ thành Thăng Long khi xưa. Nơi đây cũng từng là một trong bốn Đạo quán lớn của Đạo giáo ở Thăng Long.",
+      "description_source_url": "https://vi.wikipedia.org/wiki/%C4%90%E1%BB%81n_Qu%C3%A1n_Th%C3%A1nh",
+      "description_license": "CC BY-SA 4.0 (Wikipedia)",
+      "cover_image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c0/Deutsch_Vietnamurlaub_2395a_JM_03.JPG/960px-Deutsch_Vietnamurlaub_2395a_JM_03.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "images": [
+        "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c0/Deutsch_Vietnamurlaub_2395a_JM_03.JPG/960px-Deutsch_Vietnamurlaub_2395a_JM_03.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+        "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/39/Entrance_to_Quan_Tanh_temple_%287360945292%29.jpg/960px-Entrance_to_Quan_Tanh_temple_%287360945292%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+        "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/67/Hanoi_-_Quan-Thanh-Tempel_0001.JPG/960px-Hanoi_-_Quan-Thanh-Tempel_0001.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+        "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/48/%C4%90%E1%BB%81n_Qu%C3%A1n_Th%C3%A1nh.JPG/960px-%C4%90%E1%BB%81n_Qu%C3%A1n_Th%C3%A1nh.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+      ],
+      "image_attributions": [
+        {
+          "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c0/Deutsch_Vietnamurlaub_2395a_JM_03.JPG/960px-Deutsch_Vietnamurlaub_2395a_JM_03.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "fullUrl": "https://upload.wikimedia.org/wikipedia/commons/c/c0/Deutsch_Vietnamurlaub_2395a_JM_03.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+          "commonsPageUrl": "https://commons.wikimedia.org/wiki/File:Deutsch_Vietnamurlaub_2395a_JM_03.JPG",
+          "license": "CC BY-SA 4.0",
+          "artist": "Thirunavukkarasye-Raveendran",
+          "title": "File:Deutsch Vietnamurlaub 2395a JM 03.JPG"
+        },
+        {
+          "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/39/Entrance_to_Quan_Tanh_temple_%287360945292%29.jpg/960px-Entrance_to_Quan_Tanh_temple_%287360945292%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "fullUrl": "https://upload.wikimedia.org/wikipedia/commons/3/39/Entrance_to_Quan_Tanh_temple_%287360945292%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+          "commonsPageUrl": "https://commons.wikimedia.org/wiki/File:Entrance_to_Quan_Tanh_temple_(7360945292).jpg",
+          "license": "CC BY 2.0",
+          "artist": "Francisco Anzola",
+          "title": "File:Entrance to Quan Tanh temple (7360945292).jpg"
+        },
+        {
+          "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/67/Hanoi_-_Quan-Thanh-Tempel_0001.JPG/960px-Hanoi_-_Quan-Thanh-Tempel_0001.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "fullUrl": "https://upload.wikimedia.org/wikipedia/commons/6/67/Hanoi_-_Quan-Thanh-Tempel_0001.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+          "commonsPageUrl": "https://commons.wikimedia.org/wiki/File:Hanoi_-_Quan-Thanh-Tempel_0001.JPG",
+          "license": "CC BY-SA 3.0",
+          "artist": "Stefan Fussan",
+          "title": "File:Hanoi - Quan-Thanh-Tempel 0001.JPG"
+        },
+        {
+          "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/48/%C4%90%E1%BB%81n_Qu%C3%A1n_Th%C3%A1nh.JPG/960px-%C4%90%E1%BB%81n_Qu%C3%A1n_Th%C3%A1nh.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "fullUrl": "https://upload.wikimedia.org/wikipedia/commons/4/48/%C4%90%E1%BB%81n_Qu%C3%A1n_Th%C3%A1nh.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+          "commonsPageUrl": "https://commons.wikimedia.org/wiki/File:%C4%90%E1%BB%81n_Qu%C3%A1n_Th%C3%A1nh.JPG",
+          "license": "CC BY-SA 3.0",
+          "artist": "Nguyễn Thanh Quang",
+          "title": "File:Đền Quán Thánh.JPG"
+        }
+      ],
+      "opening_hours": null,
+      "website": null,
+      "phone": null,
+      "osm_tags_used": {
+        "wikipedia": "vi:Đền Quán Thánh",
+        "wikidata": "Q5370148",
+        "wikimedia_commons": "Category:Quán Thánh Temple"
+      },
+      "enrichment_tier": "media_and_article"
+    },
+    {
+      "place_id": "4c76ded0-e7df-54f7-bc5d-87ceed138bb2",
+      "name": "Đền Kim Liên",
+      "destination_slug": "ha-noi",
+      "category": "culture",
+      "is_rec_a_core_v2": true,
+      "description": "Đền – đình Kim Liên, còn được gọi là đền Cao Sơn, là trấn phía nam trong tứ trấn của kinh thành Thăng Long xưa, gồm bốn ngôi đền: Đền Quán Thánh ; Đền Bạch Mã ; Đền Voi Phục ; Đền Kim Liên. So với ba ngôi đền kia thì đền Kim Liên được xây dựng muộn hơn.",
+      "description_source_url": "https://vi.wikipedia.org/wiki/%C4%90%E1%BB%81n_Kim_Li%C3%AAn",
+      "description_license": "CC BY-SA 4.0 (Wikipedia)",
+      "cover_image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/f3/Bia%C4%91%C3%A1_%C4%91%C3%ACnhKimLi%C3%AAn-HPIM2628.jpg/960px-Bia%C4%91%C3%A1_%C4%91%C3%ACnhKimLi%C3%AAn-HPIM2628.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "images": [
+        "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/f3/Bia%C4%91%C3%A1_%C4%91%C3%ACnhKimLi%C3%AAn-HPIM2628.jpg/960px-Bia%C4%91%C3%A1_%C4%91%C3%ACnhKimLi%C3%AAn-HPIM2628.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+        "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a2/Kim_Lien_shrine_2.JPG/960px-Kim_Lien_shrine_2.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+        "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e4/Kim_Lien_shrine_3.jpg/960px-Kim_Lien_shrine_3.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+      ],
+      "image_attributions": [
+        {
+          "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/f3/Bia%C4%91%C3%A1_%C4%91%C3%ACnhKimLi%C3%AAn-HPIM2628.jpg/960px-Bia%C4%91%C3%A1_%C4%91%C3%ACnhKimLi%C3%AAn-HPIM2628.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "fullUrl": "https://upload.wikimedia.org/wikipedia/commons/f/f3/Bia%C4%91%C3%A1_%C4%91%C3%ACnhKimLi%C3%AAn-HPIM2628.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+          "commonsPageUrl": "https://commons.wikimedia.org/wiki/File:Bia%C4%91%C3%A1_%C4%91%C3%ACnhKimLi%C3%AAn-HPIM2628.jpg",
+          "license": "CC BY-SA 3.0",
+          "artist": "Newone",
+          "title": "File:Biađá đìnhKimLiên-HPIM2628.jpg"
+        },
+        {
+          "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a2/Kim_Lien_shrine_2.JPG/960px-Kim_Lien_shrine_2.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "fullUrl": "https://upload.wikimedia.org/wikipedia/commons/a/a2/Kim_Lien_shrine_2.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+          "commonsPageUrl": "https://commons.wikimedia.org/wiki/File:Kim_Lien_shrine_2.JPG",
+          "license": "Public domain",
+          "artist": "Binh Giang",
+          "title": "File:Kim Lien shrine 2.JPG"
+        },
+        {
+          "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e4/Kim_Lien_shrine_3.jpg/960px-Kim_Lien_shrine_3.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "fullUrl": "https://upload.wikimedia.org/wikipedia/commons/e/e4/Kim_Lien_shrine_3.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+          "commonsPageUrl": "https://commons.wikimedia.org/wiki/File:Kim_Lien_shrine_3.jpg",
+          "license": "Public domain",
+          "artist": "Binh Giang",
+          "title": "File:Kim Lien shrine 3.jpg"
+        }
+      ],
+      "opening_hours": null,
+      "website": null,
+      "phone": null,
+      "osm_tags_used": {
+        "wikipedia": "vi:Đền Kim Liên",
+        "wikidata": "Q10840590",
+        "wikimedia_commons": "Category:Kim Lien shrine"
+      },
+      "enrichment_tier": "media_and_article"
+    },
+    {
+      "place_id": "cb4e11b7-3909-53a7-9023-c3bf5a79172d",
+      "name": "Đoan Môn",
+      "destination_slug": "ha-noi",
+      "category": "attraction",
+      "is_rec_a_core_v2": true,
+      "description": "Đoan Môn là cổng chính phía Nam vào Hoàng thành Thăng Long, được xây dựng vào thời nhà Lý, nhưng cổng Đoan Môn còn tồn tại ngày nay là do nhà Lê sơ xây dựng và được sửa sang, tu bổ dưới thời Nguyễn. Đây là một trong 5 công trình ở Thăng Long còn sót lại, là: Cột cờ Hà Nội, Cửa Bắc, Đoan Môn, nền Điện Kính Thiên và Văn Miếu - Quốc Tử Giám. Cổng Đoan Môn có hình chữ U, từ Đông sang Tây dài 46,5 m, có 5 vòm cổng, vòm cổng chính giữa dành cho vua đi, hai cổng tận cùng bên cạnh là Tả Đoan Môn và Hữu Đoan Môn. Cổng hiện nay còn nguyên vẹn. Hiện giờ, cửa là lối ra vào của Hoàng thành Thăng Long.",
+      "description_source_url": "https://vi.wikipedia.org/wiki/%C4%90oan_M%C3%B4n",
+      "description_license": "CC BY-SA 4.0 (Wikipedia)",
+      "cover_image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/15/03934-Hanoi_%2832573170290%29.jpg/960px-03934-Hanoi_%2832573170290%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "images": [
+        "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/15/03934-Hanoi_%2832573170290%29.jpg/960px-03934-Hanoi_%2832573170290%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+        "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/8a/04546-Hanoi_%2832206503032%29.jpg/960px-04546-Hanoi_%2832206503032%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+        "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/6f/04547-Hanoi_%2831545552143%29.jpg/960px-04547-Hanoi_%2831545552143%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+      ],
+      "image_attributions": [
+        {
+          "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/15/03934-Hanoi_%2832573170290%29.jpg/960px-03934-Hanoi_%2832573170290%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "fullUrl": "https://upload.wikimedia.org/wikipedia/commons/1/15/03934-Hanoi_%2832573170290%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+          "commonsPageUrl": "https://commons.wikimedia.org/wiki/File:03934-Hanoi_(32573170290).jpg",
+          "license": "CC BY 2.0",
+          "artist": "xiquinhosilva",
+          "title": "File:03934-Hanoi (32573170290).jpg"
+        },
+        {
+          "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/8a/04546-Hanoi_%2832206503032%29.jpg/960px-04546-Hanoi_%2832206503032%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "fullUrl": "https://upload.wikimedia.org/wikipedia/commons/8/8a/04546-Hanoi_%2832206503032%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+          "commonsPageUrl": "https://commons.wikimedia.org/wiki/File:04546-Hanoi_(32206503032).jpg",
+          "license": "CC BY 2.0",
+          "artist": "xiquinhosilva",
+          "title": "File:04546-Hanoi (32206503032).jpg"
+        },
+        {
+          "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/6f/04547-Hanoi_%2831545552143%29.jpg/960px-04547-Hanoi_%2831545552143%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "fullUrl": "https://upload.wikimedia.org/wikipedia/commons/6/6f/04547-Hanoi_%2831545552143%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+          "commonsPageUrl": "https://commons.wikimedia.org/wiki/File:04547-Hanoi_(31545552143).jpg",
+          "license": "CC BY 2.0",
+          "artist": "xiquinhosilva",
+          "title": "File:04547-Hanoi (31545552143).jpg"
+        }
+      ],
+      "opening_hours": null,
+      "website": null,
+      "phone": null,
+      "osm_tags_used": {
+        "wikipedia": "vi:Đoan Môn",
+        "wikidata": "Q20025612",
+        "wikimedia_commons": "Category:Đoan Môn Gate"
+      },
+      "enrichment_tier": "media_and_article"
+    },
+    {
+      "place_id": "54d4fe79-435e-5688-8a63-3aa322ed916c",
+      "name": "Tòa nhà trung tâm Bưu điện Hà Nội",
+      "destination_slug": "ha-noi",
+      "category": "attraction",
+      "is_rec_a_core_v2": true,
+      "description": "Bưu điện Hà Nội là một công trình nằm đối diện với hồ Hoàn Kiếm, Hà Nội, gồm ba tòa nhà bưu điện tọa lạc tại các phố Đinh Tiên Hoàng, Lê Thạch và Đinh Lễ, được xây dựng theo phong cách kiến trúc tân cổ điển và Art Deco.",
+      "description_source_url": "https://vi.wikipedia.org/wiki/B%C6%B0u_%C4%91i%E1%BB%87n_H%C3%A0_N%E1%BB%99i",
+      "description_license": "CC BY-SA 4.0 (Wikipedia)",
+      "cover_image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/32/04482-Hanoi_%2832954147035%29.jpg/960px-04482-Hanoi_%2832954147035%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "images": [
+        "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/32/04482-Hanoi_%2832954147035%29.jpg/960px-04482-Hanoi_%2832954147035%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+        "https://upload.wikimedia.org/wikipedia/commons/f/f9/Bi%E1%BB%83n_ch%E1%BB%AF_t%E1%BA%A1i_B%C6%B0u_%C4%91i%E1%BB%87n_H%C3%A0_N%E1%BB%99i.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+        "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/38/Building_Near_Hoan_Kiem_Lake_%289753174231%29.jpg/960px-Building_Near_Hoan_Kiem_Lake_%289753174231%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+      ],
+      "image_attributions": [
+        {
+          "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/32/04482-Hanoi_%2832954147035%29.jpg/960px-04482-Hanoi_%2832954147035%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "fullUrl": "https://upload.wikimedia.org/wikipedia/commons/3/32/04482-Hanoi_%2832954147035%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+          "commonsPageUrl": "https://commons.wikimedia.org/wiki/File:04482-Hanoi_(32954147035).jpg",
+          "license": "CC BY 2.0",
+          "artist": "xiquinhosilva",
+          "title": "File:04482-Hanoi (32954147035).jpg"
+        },
+        {
+          "url": "https://upload.wikimedia.org/wikipedia/commons/f/f9/Bi%E1%BB%83n_ch%E1%BB%AF_t%E1%BA%A1i_B%C6%B0u_%C4%91i%E1%BB%87n_H%C3%A0_N%E1%BB%99i.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+          "fullUrl": "https://upload.wikimedia.org/wikipedia/commons/f/f9/Bi%E1%BB%83n_ch%E1%BB%AF_t%E1%BA%A1i_B%C6%B0u_%C4%91i%E1%BB%87n_H%C3%A0_N%E1%BB%99i.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+          "commonsPageUrl": "https://commons.wikimedia.org/wiki/File:Bi%E1%BB%83n_ch%E1%BB%AF_t%E1%BA%A1i_B%C6%B0u_%C4%91i%E1%BB%87n_H%C3%A0_N%E1%BB%99i.jpg",
+          "license": "CC BY-SA 4.0",
+          "artist": "Nguyenmy2302",
+          "title": "File:Biển chữ tại Bưu điện Hà Nội.jpg"
+        },
+        {
+          "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/38/Building_Near_Hoan_Kiem_Lake_%289753174231%29.jpg/960px-Building_Near_Hoan_Kiem_Lake_%289753174231%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "fullUrl": "https://upload.wikimedia.org/wikipedia/commons/3/38/Building_Near_Hoan_Kiem_Lake_%289753174231%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+          "commonsPageUrl": "https://commons.wikimedia.org/wiki/File:Building_Near_Hoan_Kiem_Lake_(9753174231).jpg",
+          "license": "CC0",
+          "artist": "Gary Todd from Xinzheng, China",
+          "title": "File:Building Near Hoan Kiem Lake (9753174231).jpg"
+        }
+      ],
+      "opening_hours": null,
+      "website": null,
+      "phone": null,
+      "osm_tags_used": {
+        "wikipedia": "vi:Bưu điện Hà Nội",
+        "wikidata": "Q113457479",
+        "wikimedia_commons": "Category:Hanoi Post Office"
+      },
+      "enrichment_tier": "media_and_article"
+    },
+    {
+      "place_id": "ccc16d21-9212-5b42-aaa1-13929676fa11",
+      "name": "Tháp Rùa",
+      "destination_slug": "ha-noi",
+      "category": "culture",
+      "is_rec_a_core_v2": true,
+      "description": "Tháp Rùa là một ngọn tháp nhỏ nằm trên gò đảo giữa Hồ Hoàn Kiếm, lui về phía Nam hồ, Hà Nội, Việt Nam. Công trình kiến trúc này tuy nhỏ bé nhưng ẩn trong đó là những ý nghĩa lịch sử, dấu tích trường tồn với thời gian mà không một địa danh nào có thể thay thế được.",
+      "description_source_url": "https://vi.wikipedia.org/wiki/Th%C3%A1p_R%C3%B9a",
+      "description_license": "CC BY-SA 4.0 (Wikipedia)",
+      "cover_image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d9/04489-Hanoi_%2832954159775%29.jpg/960px-04489-Hanoi_%2832954159775%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "images": [
+        "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d9/04489-Hanoi_%2832954159775%29.jpg/960px-04489-Hanoi_%2832954159775%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+        "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/f8/All_the_colors_%2822480634069%29.jpg/960px-All_the_colors_%2822480634069%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+        "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/57/Anh_chup_thap_Rua.jpg/960px-Anh_chup_thap_Rua.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+        "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e0/Turtle_Tower_c2006.jpg/960px-Turtle_Tower_c2006.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+      ],
+      "image_attributions": [
+        {
+          "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d9/04489-Hanoi_%2832954159775%29.jpg/960px-04489-Hanoi_%2832954159775%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "fullUrl": "https://upload.wikimedia.org/wikipedia/commons/d/d9/04489-Hanoi_%2832954159775%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+          "commonsPageUrl": "https://commons.wikimedia.org/wiki/File:04489-Hanoi_(32954159775).jpg",
+          "license": "CC BY 2.0",
+          "artist": "xiquinhosilva",
+          "title": "File:04489-Hanoi (32954159775).jpg"
+        },
+        {
+          "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/f8/All_the_colors_%2822480634069%29.jpg/960px-All_the_colors_%2822480634069%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "fullUrl": "https://upload.wikimedia.org/wikipedia/commons/f/f8/All_the_colors_%2822480634069%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+          "commonsPageUrl": "https://commons.wikimedia.org/wiki/File:All_the_colors_(22480634069).jpg",
+          "license": "CC BY 2.0",
+          "artist": "cloud.shepherd",
+          "title": "File:All the colors (22480634069).jpg"
+        },
+        {
+          "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/57/Anh_chup_thap_Rua.jpg/960px-Anh_chup_thap_Rua.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "fullUrl": "https://upload.wikimedia.org/wikipedia/commons/5/57/Anh_chup_thap_Rua.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+          "commonsPageUrl": "https://commons.wikimedia.org/wiki/File:Anh_chup_thap_Rua.jpg",
+          "license": "CC BY-SA 4.0",
+          "artist": "CookieGMVN",
+          "title": "File:Anh chup thap Rua.jpg"
+        },
+        {
+          "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e0/Turtle_Tower_c2006.jpg/960px-Turtle_Tower_c2006.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "fullUrl": "https://upload.wikimedia.org/wikipedia/commons/e/e0/Turtle_Tower_c2006.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+          "commonsPageUrl": "https://commons.wikimedia.org/wiki/File:Turtle_Tower_c2006.jpg",
+          "license": "Public domain",
+          "artist": "\"Lilli Ann\"",
+          "title": "File:Turtle Tower c2006.jpg"
+        }
+      ],
+      "opening_hours": null,
+      "website": null,
+      "phone": null,
+      "osm_tags_used": {
+        "wikipedia": "vi:Tháp Rùa",
+        "wikidata": "Q1134533",
+        "wikimedia_commons": "Category:Turtle Tower"
+      },
+      "enrichment_tier": "media_and_article"
+    },
+    {
+      "place_id": "6f758ad7-5685-57b5-9913-d28e15bdb7c5",
+      "name": "Ngũ Hành Sơn",
+      "destination_slug": "da-nang",
+      "category": "attraction",
+      "is_rec_a_core_v2": true,
+      "description": "Ngũ Hành Sơn là một danh thắng gồm 6 ngọn núi đá vôi nhô lên trên một bãi cát ven biển, trên một diện tích khoảng 2 km² nằm cách trung tâm thành phố Đà Nẵng, Việt Nam khoảng 8 km về phía Đông Nam, ngay trên tuyến đường Đà Nẵng - Hội An; nay thuộcphường Ngũ Hành Sơn, thành phố Đà Nẵng. Ngũ Hành Sơn gồm các ngọn núi: Mộc Sơn, Thủy Sơn, Thổ Sơn, Kim Sơn và Hỏa Sơn.",
+      "description_source_url": "https://vi.wikipedia.org/wiki/Ng%C5%A9_H%C3%A0nh_S%C6%A1n",
+      "description_license": "CC BY-SA 4.0 (Wikipedia)",
+      "cover_image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/70/Marble_Mountains_View_3.JPG/960px-Marble_Mountains_View_3.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "images": [
+        "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/70/Marble_Mountains_View_3.JPG/960px-Marble_Mountains_View_3.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+      ],
+      "image_attributions": [
+        {
+          "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/70/Marble_Mountains_View_3.JPG/960px-Marble_Mountains_View_3.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "fullUrl": "https://upload.wikimedia.org/wikipedia/commons/7/70/Marble_Mountains_View_3.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+          "commonsPageUrl": "https://commons.wikimedia.org/wiki/File:Marble_Mountains_View_3.JPG",
+          "license": "CC BY-SA 3.0",
+          "artist": "Dragfyre",
+          "title": "File:Marble Mountains View 3.JPG"
+        }
+      ],
+      "opening_hours": null,
+      "website": "https://nguhanhson.org",
+      "phone": null,
+      "osm_tags_used": {
+        "wikipedia": "vi:Ngũ Hành Sơn",
+        "wikidata": "Q6755207"
+      },
+      "enrichment_tier": "media_and_article"
+    },
+    {
+      "place_id": "6ba877e0-3f1e-5790-8478-91c8e9d04d72",
+      "name": "Đèo Hải Vân",
+      "destination_slug": "da-nang",
+      "category": "attraction",
+      "is_rec_a_core_v2": true,
+      "description": "Đèo Hải Vân còn có tên là đèo Ải Vân hay đèo Mây, cao 500 m so với mực nước biển, dài 20 km, cắt ngang dãy dãy núi Bạch Mã nằm trên quốc lộ 1 ở ranh giới thành phố Huế và thành phố Đà Nẵng, Việt Nam.",
+      "description_source_url": "https://vi.wikipedia.org/wiki/%C4%90%C3%A8o_H%E1%BA%A3i_V%C3%A2n",
+      "description_license": "CC BY-SA 4.0 (Wikipedia)",
+      "cover_image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/fa/Hai_Van_Pass_under_fog%2C_Vietnam.jpg/960px-Hai_Van_Pass_under_fog%2C_Vietnam.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "images": [
+        "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/fa/Hai_Van_Pass_under_fog%2C_Vietnam.jpg/960px-Hai_Van_Pass_under_fog%2C_Vietnam.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+        "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/7f/Hai_Van_Pass.jpg/960px-Hai_Van_Pass.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+      ],
+      "image_attributions": [
+        {
+          "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/fa/Hai_Van_Pass_under_fog%2C_Vietnam.jpg/960px-Hai_Van_Pass_under_fog%2C_Vietnam.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "fullUrl": "https://upload.wikimedia.org/wikipedia/commons/f/fa/Hai_Van_Pass_under_fog%2C_Vietnam.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+          "commonsPageUrl": "https://commons.wikimedia.org/wiki/File:Hai_Van_Pass_under_fog,_Vietnam.jpg",
+          "license": "CC BY 4.0",
+          "artist": "Vyacheslav Argenberg",
+          "title": "File:Hai Van Pass under fog, Vietnam.jpg"
+        },
+        {
+          "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/7f/Hai_Van_Pass.jpg/960px-Hai_Van_Pass.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "fullUrl": "https://upload.wikimedia.org/wikipedia/commons/7/7f/Hai_Van_Pass.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+          "commonsPageUrl": "https://commons.wikimedia.org/wiki/File:Hai_Van_Pass.jpg",
+          "license": "CC BY 4.0",
+          "artist": "Andre Hospers",
+          "title": "File:Hai Van Pass.jpg"
+        }
+      ],
+      "opening_hours": null,
+      "website": null,
+      "phone": null,
+      "osm_tags_used": {
+        "wikipedia": "vi:Đèo Hải Vân",
+        "wikidata": "Q1477078"
+      },
+      "enrichment_tier": "media_and_article"
+    },
+    {
+      "place_id": "8d216c19-e685-4d5e-8bc9-b6d5b396dcc2",
+      "name": "Trú Vũ Trà Quán",
+      "destination_slug": "da-nang",
+      "category": "attraction",
+      "is_rec_a_core_v2": true,
+      "description": "Trú Vũ Trà Quán — традиционный чайный домик в северном вьетнамском стиле. Здесь можно насладиться чайной церемонией, любуясь облаками, бескрайним первобытным лесом и величественным видом на Французскую деревню. Построен с низкими квадратными столиками в д",
+      "description_source_url": null,
+      "description_license": "ODbL 1.0 (OpenStreetMap)",
+      "cover_image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/fe/B%C3%A0_N%C3%A0_Hills_Asian_Part_%2843718444680%29.jpg/960px-B%C3%A0_N%C3%A0_Hills_Asian_Part_%2843718444680%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "images": [
+        "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/fe/B%C3%A0_N%C3%A0_Hills_Asian_Part_%2843718444680%29.jpg/960px-B%C3%A0_N%C3%A0_Hills_Asian_Part_%2843718444680%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+        "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/4f/Vietnam%2C_Ba_Na_Hill%2C_Golden_Bridge_-_Laslovarga_%281%29.jpg/960px-Vietnam%2C_Ba_Na_Hill%2C_Golden_Bridge_-_Laslovarga_%281%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+      ],
+      "image_attributions": [
+        {
+          "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/fe/B%C3%A0_N%C3%A0_Hills_Asian_Part_%2843718444680%29.jpg/960px-B%C3%A0_N%C3%A0_Hills_Asian_Part_%2843718444680%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "fullUrl": "https://upload.wikimedia.org/wikipedia/commons/f/fe/B%C3%A0_N%C3%A0_Hills_Asian_Part_%2843718444680%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+          "commonsPageUrl": "https://commons.wikimedia.org/wiki/File:B%C3%A0_N%C3%A0_Hills_Asian_Part_(43718444680).jpg",
+          "license": "CC BY 2.0",
+          "artist": "Raita Futo from Tokyo, Japan",
+          "title": "File:Bà Nà Hills Asian Part (43718444680).jpg"
+        },
+        {
+          "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/4f/Vietnam%2C_Ba_Na_Hill%2C_Golden_Bridge_-_Laslovarga_%281%29.jpg/960px-Vietnam%2C_Ba_Na_Hill%2C_Golden_Bridge_-_Laslovarga_%281%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "fullUrl": "https://upload.wikimedia.org/wikipedia/commons/4/4f/Vietnam%2C_Ba_Na_Hill%2C_Golden_Bridge_-_Laslovarga_%281%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+          "commonsPageUrl": "https://commons.wikimedia.org/wiki/File:Vietnam,_Ba_Na_Hill,_Golden_Bridge_-_Laslovarga_(1).jpg",
+          "license": "CC BY-SA 4.0",
+          "artist": "Laslovarga",
+          "title": "File:Vietnam, Ba Na Hill, Golden Bridge - Laslovarga (1).jpg"
+        }
+      ],
+      "opening_hours": null,
+      "website": "https://sunworld.vn/vi/banahills/check-in/tru-vu-tra-quan",
+      "phone": null,
+      "osm_tags_used": {
+        "image": "https://sun-ecommerce-cdn.azureedge.net/ecommerce/service-sites/asset/SunWorldBaNaHill/swold/tru-vu-tra-quan/1b.jpg"
+      },
+      "enrichment_tier": "media_and_article"
+    },
+    {
+      "place_id": "a24d48ff-59d6-5e53-af77-36448e60d1cc",
+      "name": "Bảo tàng Nghệ thuật Điêu khắc Chăm Đà Nẵng",
+      "destination_slug": "da-nang",
+      "category": "culture",
+      "is_rec_a_core_v2": true,
+      "description": "Bảo tàng Điêu khắc Chăm Đà Nẵng, còn được gọi là Bảo tàng Chàm là bảo tàng sưu tầm, lưu giữ và trưng bày hiện vật Chăm quy mô nhất ở Việt Nam.",
+      "description_source_url": "https://vi.wikipedia.org/wiki/B%E1%BA%A3o_t%C3%A0ng_%C4%90i%C3%AAu_kh%E1%BA%AFc_Ch%C4%83m_%C4%90%C3%A0_N%E1%BA%B5ng",
+      "description_license": "CC BY-SA 4.0 (Wikipedia)",
+      "cover_image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/b/be/Le_mus%C3%A9e_Cham_%28Da_Nang%29_%284395751687%29.jpg/960px-Le_mus%C3%A9e_Cham_%28Da_Nang%29_%284395751687%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "images": [
+        "https://thumb.wikimedia.org/wikipedia/commons/thumb/b/be/Le_mus%C3%A9e_Cham_%28Da_Nang%29_%284395751687%29.jpg/960px-Le_mus%C3%A9e_Cham_%28Da_Nang%29_%284395751687%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+      ],
+      "image_attributions": [
+        {
+          "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/b/be/Le_mus%C3%A9e_Cham_%28Da_Nang%29_%284395751687%29.jpg/960px-Le_mus%C3%A9e_Cham_%28Da_Nang%29_%284395751687%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "fullUrl": "https://upload.wikimedia.org/wikipedia/commons/b/be/Le_mus%C3%A9e_Cham_%28Da_Nang%29_%284395751687%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+          "commonsPageUrl": "https://commons.wikimedia.org/wiki/File:Le_mus%C3%A9e_Cham_(Da_Nang)_(4395751687).jpg",
+          "license": "CC BY 2.0",
+          "artist": "Jean-Pierre Dalbéra from Paris, France",
+          "title": "File:Le musée Cham (Da Nang) (4395751687).jpg"
+        }
+      ],
+      "opening_hours": null,
+      "website": null,
+      "phone": null,
+      "osm_tags_used": {
+        "wikipedia": "vi:Bảo tàng Nghệ thuật điêu khắc Chăm Đà Nẵng",
+        "wikidata": "Q6940790"
+      },
+      "enrichment_tier": "media_and_article"
+    },
+    {
+      "place_id": "85e5b310-bc64-4f1f-a6d2-496af7c482f0",
+      "name": "Linh Phong Bảo Tháp",
+      "destination_slug": "da-nang",
+      "category": "attraction",
+      "is_rec_a_core_v2": true,
+      "description": "Linh Phong Bảo Tháp is a 9-level Buddhist stupa in the Spiritual Zone. Each level has white marble Shakyamuni Buddha statues facing four directions. Surrounded by Four Heavenly Kings statues and bronze bells at corners.",
+      "description_source_url": null,
+      "description_license": "ODbL 1.0 (OpenStreetMap)",
+      "cover_image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/10/84380-Da-Nang_%2848951898482%29.jpg/960px-84380-Da-Nang_%2848951898482%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "images": [
+        "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/10/84380-Da-Nang_%2848951898482%29.jpg/960px-84380-Da-Nang_%2848951898482%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+        "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c4/B%C3%A0_N%C3%A0_Hills_lizard_%2845535932651%29.jpg/960px-B%C3%A0_N%C3%A0_Hills_lizard_%2845535932651%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+      ],
+      "image_attributions": [
+        {
+          "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/10/84380-Da-Nang_%2848951898482%29.jpg/960px-84380-Da-Nang_%2848951898482%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "fullUrl": "https://upload.wikimedia.org/wikipedia/commons/1/10/84380-Da-Nang_%2848951898482%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+          "commonsPageUrl": "https://commons.wikimedia.org/wiki/File:84380-Da-Nang_(48951898482).jpg",
+          "license": "CC BY 2.0",
+          "artist": "xiquinhosilva",
+          "title": "File:84380-Da-Nang (48951898482).jpg"
+        },
+        {
+          "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c4/B%C3%A0_N%C3%A0_Hills_lizard_%2845535932651%29.jpg/960px-B%C3%A0_N%C3%A0_Hills_lizard_%2845535932651%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "fullUrl": "https://upload.wikimedia.org/wikipedia/commons/c/c4/B%C3%A0_N%C3%A0_Hills_lizard_%2845535932651%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+          "commonsPageUrl": "https://commons.wikimedia.org/wiki/File:B%C3%A0_N%C3%A0_Hills_lizard_(45535932651).jpg",
+          "license": "CC BY 2.0",
+          "artist": "Raita Futo from Tokyo, Japan",
+          "title": "File:Bà Nà Hills lizard (45535932651).jpg"
+        }
+      ],
+      "opening_hours": null,
+      "website": "https://sunworld.vn/vi/banahills/check-in/linh-phong-bao-thap",
+      "phone": null,
+      "osm_tags_used": {
+        "image": "https://sun-ecommerce-cdn.azureedge.net/ecommerce/service-sites/asset/SunWorldBaNaHill/swold/linh-phong-bao-thap/Linh-phong-bao-thap-004.jpg"
+      },
+      "enrichment_tier": "media_and_article"
+    },
+    {
+      "place_id": "9974ff88-5418-5867-ae49-1b72e0f0861f",
+      "name": "Cầu Rồng",
+      "destination_slug": "da-nang",
+      "category": "attraction",
+      "is_rec_a_core_v2": true,
+      "description": "Cầu Rồng là cây cầu thứ 6 và là cây cầu mới nhất bắc qua sông Hàn. Vì cây cầu có hình dáng giống một con rồng nên được gọi là Cầu Rồng",
+      "description_source_url": "https://vi.wikipedia.org/wiki/C%E1%BA%A7u_R%E1%BB%93ng",
+      "description_license": "CC BY-SA 4.0 (Wikipedia)",
+      "cover_image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/4a/C%E1%BA%A7u_R%E1%BB%93ng.jpg/960px-C%E1%BA%A7u_R%E1%BB%93ng.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "images": [
+        "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/4a/C%E1%BA%A7u_R%E1%BB%93ng.jpg/960px-C%E1%BA%A7u_R%E1%BB%93ng.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+      ],
+      "image_attributions": [
+        {
+          "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/4a/C%E1%BA%A7u_R%E1%BB%93ng.jpg/960px-C%E1%BA%A7u_R%E1%BB%93ng.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "fullUrl": "https://upload.wikimedia.org/wikipedia/commons/4/4a/C%E1%BA%A7u_R%E1%BB%93ng.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+          "commonsPageUrl": "https://commons.wikimedia.org/wiki/File:C%E1%BA%A7u_R%E1%BB%93ng.jpg",
+          "license": "CC BY-SA 3.0",
+          "artist": "Bùi Thụy Đào Nguyên",
+          "title": "File:Cầu Rồng.jpg"
+        }
+      ],
+      "opening_hours": "24/7",
+      "website": null,
+      "phone": null,
+      "osm_tags_used": {
+        "wikidata": "Q5305270"
+      },
+      "enrichment_tier": "media_and_article"
+    },
+    {
+      "place_id": "2f202acf-c2bb-526a-9803-aaca142ffdad",
+      "name": "Bãi biển Mỹ Khê",
+      "destination_slug": "da-nang",
+      "category": "beach",
+      "is_rec_a_core_v2": true,
+      "description": "Mỹ Khê là một bãi biển trung tâm ở Đà Nẵng, Việt Nam.",
+      "description_source_url": "https://vi.wikipedia.org/wiki/B%C3%A3i_bi%E1%BB%83n_M%E1%BB%B9_Kh%C3%AA",
+      "description_license": "CC BY-SA 4.0 (Wikipedia)",
+      "cover_image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c0/My_Khe_Beach%2C_Da_Nang%2C_Vietnam.jpg/960px-My_Khe_Beach%2C_Da_Nang%2C_Vietnam.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "images": [
+        "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c0/My_Khe_Beach%2C_Da_Nang%2C_Vietnam.jpg/960px-My_Khe_Beach%2C_Da_Nang%2C_Vietnam.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+      ],
+      "image_attributions": [
+        {
+          "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c0/My_Khe_Beach%2C_Da_Nang%2C_Vietnam.jpg/960px-My_Khe_Beach%2C_Da_Nang%2C_Vietnam.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "fullUrl": "https://upload.wikimedia.org/wikipedia/commons/c/c0/My_Khe_Beach%2C_Da_Nang%2C_Vietnam.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+          "commonsPageUrl": "https://commons.wikimedia.org/wiki/File:My_Khe_Beach,_Da_Nang,_Vietnam.jpg",
+          "license": "CC BY 2.0",
+          "artist": ". Ray in Manila",
+          "title": "File:My Khe Beach, Da Nang, Vietnam.jpg"
+        }
+      ],
+      "opening_hours": null,
+      "website": null,
+      "phone": null,
+      "osm_tags_used": {
+        "wikipedia": "vi:Bãi biển Mỹ Khê",
+        "wikidata": "Q10796763"
+      },
+      "enrichment_tier": "media_and_article"
+    },
+    {
+      "place_id": "acfc8be3-283e-5bc0-a290-594f859ba167",
+      "name": "Dragon's Head",
+      "destination_slug": "da-nang",
+      "category": "attraction",
+      "is_rec_a_core_v2": true,
+      "description": "The Dragon Bridge is a bridge with an arch-beam-wire combination steel structure in the shape of a dragon crossing the River Hàn in Da Nang, Vietnam. It is the world's largest dragon-shaped steel bridge.",
+      "description_source_url": "https://en.wikipedia.org/wiki/Dragon_Bridge_(Da_Nang)",
+      "description_license": "CC BY-SA 4.0 (Wikipedia)",
+      "cover_image": null,
+      "images": [],
+      "image_attributions": [],
+      "opening_hours": null,
+      "website": null,
+      "phone": null,
+      "osm_tags_used": {
+        "wikipedia": "en:Dragon_Bridge_(Da_Nang)"
+      },
+      "enrichment_tier": "media_or_article"
+    },
+    {
+      "place_id": "caeb4ed0-983e-5626-9a9b-7e964b43a04e",
+      "name": "Khu Văn hóa Tâm linh Đà Sơn",
+      "destination_slug": "da-nang",
+      "category": "attraction",
+      "is_rec_a_core_v2": true,
+      "description": "Complex is a developing spiritual site in Da Nang. It features a 65m stone statue of Buddha, carved directly from the mountain rock. It is a peaceful spot for prayer, meditation, and photography.",
+      "description_source_url": null,
+      "description_license": "ODbL 1.0 (OpenStreetMap)",
+      "cover_image": null,
+      "images": [],
+      "image_attributions": [],
+      "opening_hours": null,
+      "website": null,
+      "phone": "098 203 97 03",
+      "osm_tags_used": {},
+      "enrichment_tier": "media_or_article"
+    },
+    {
+      "place_id": "cb6cce60-8270-5f43-b9f7-42de2d7d7da3",
+      "name": "Bảo tàng Đà Nẵng",
+      "destination_slug": "da-nang",
+      "category": "culture",
+      "is_rec_a_core_v2": true,
+      "description": "Quảng Nam – Đà Nẵng là một tỉnh cũ nằm ở Duyên hải Nam Trung Bộ, Việt Nam. Địa giới hành chính tỉnh Quảng Nam – Đà Nẵng tương ứng với thành phố Đà Nẵng ngày nay.",
+      "description_source_url": "https://vi.wikipedia.org/wiki/Qu%E1%BA%A3ng_Nam_%E2%80%93_%C4%90%C3%A0_N%E1%BA%B5ng",
+      "description_license": "CC BY-SA 4.0 (Wikipedia)",
+      "cover_image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/77/Da_Nang_People%27s_Committee_building_in_2015_01.jpg/960px-Da_Nang_People%27s_Committee_building_in_2015_01.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "images": [
+        "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/77/Da_Nang_People%27s_Committee_building_in_2015_01.jpg/960px-Da_Nang_People%27s_Committee_building_in_2015_01.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+        "https://thumb.wikimedia.org/wikipedia/commons/thumb/b/b5/Da_Nang_People%27s_Committee_building_in_2015_02.jpg/960px-Da_Nang_People%27s_Committee_building_in_2015_02.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+      ],
+      "image_attributions": [
+        {
+          "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/77/Da_Nang_People%27s_Committee_building_in_2015_01.jpg/960px-Da_Nang_People%27s_Committee_building_in_2015_01.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "fullUrl": "https://upload.wikimedia.org/wikipedia/commons/7/77/Da_Nang_People%27s_Committee_building_in_2015_01.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+          "commonsPageUrl": "https://commons.wikimedia.org/wiki/File:Da_Nang_People%27s_Committee_building_in_2015_01.jpg",
+          "license": "CC BY-SA 4.0",
+          "artist": "Vuong Tri Binh",
+          "title": "File:Da Nang People's Committee building in 2015 01.jpg"
+        },
+        {
+          "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/b/b5/Da_Nang_People%27s_Committee_building_in_2015_02.jpg/960px-Da_Nang_People%27s_Committee_building_in_2015_02.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "fullUrl": "https://upload.wikimedia.org/wikipedia/commons/b/b5/Da_Nang_People%27s_Committee_building_in_2015_02.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+          "commonsPageUrl": "https://commons.wikimedia.org/wiki/File:Da_Nang_People%27s_Committee_building_in_2015_02.jpg",
+          "license": "CC BY-SA 4.0",
+          "artist": "Vuong Tri Binh",
+          "title": "File:Da Nang People's Committee building in 2015 02.jpg"
+        }
+      ],
+      "opening_hours": "08:00-17:00",
+      "website": null,
+      "phone": "+84 236 3886 236",
+      "osm_tags_used": {},
+      "enrichment_tier": "media_and_article"
+    },
+    {
+      "place_id": "41fca296-6254-5bb0-959e-ee6afe3cb8a5",
+      "name": "Nhà Trưng bày Hoàng Sa",
+      "destination_slug": "da-nang",
+      "category": "culture",
+      "is_rec_a_core_v2": true,
+      "description": null,
+      "description_source_url": null,
+      "description_license": null,
+      "cover_image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/09/Hoang_Sa_Exhibition_House%2C_Da_Nang.jpeg/960px-Hoang_Sa_Exhibition_House%2C_Da_Nang.jpeg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "images": [
+        "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/09/Hoang_Sa_Exhibition_House%2C_Da_Nang.jpeg/960px-Hoang_Sa_Exhibition_House%2C_Da_Nang.jpeg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+      ],
+      "image_attributions": [
+        {
+          "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/09/Hoang_Sa_Exhibition_House%2C_Da_Nang.jpeg/960px-Hoang_Sa_Exhibition_House%2C_Da_Nang.jpeg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "fullUrl": "https://upload.wikimedia.org/wikipedia/commons/0/09/Hoang_Sa_Exhibition_House%2C_Da_Nang.jpeg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+          "commonsPageUrl": "https://commons.wikimedia.org/wiki/File:Hoang_Sa_Exhibition_House,_Da_Nang.jpeg",
+          "license": "CC BY-SA 3.0",
+          "artist": "Linhcandng ( thảo luận )",
+          "title": "File:Hoang Sa Exhibition House, Da Nang.jpeg"
+        }
+      ],
+      "opening_hours": null,
+      "website": "https://nhatrungbayhoangsa.danang.gov.vn/",
+      "phone": null,
+      "osm_tags_used": {},
+      "enrichment_tier": "media_or_article"
+    },
+    {
+      "place_id": "408aaa5a-7e34-41eb-b39f-acfa4393fc5f",
+      "name": "Chùa Linh Ứng",
+      "destination_slug": "da-nang",
+      "category": "temple",
+      "is_rec_a_core_v2": true,
+      "description": "A prominent Buddhist pagoda of the Mahayana school, situated at an altitude of around 1,500 meters. It features a monumental 27-meter-tall statue of the seated Shakyamuni Buddha, a grand main hall, and panoramic views of the Ba Na mountains.",
+      "description_source_url": null,
+      "description_license": "ODbL 1.0 (OpenStreetMap)",
+      "cover_image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/da/Symbol_of_Linh_Ung_Pagoda_aerial_view_Ba_Na_Hills_Da_Nang_Vietnam.jpg/960px-Symbol_of_Linh_Ung_Pagoda_aerial_view_Ba_Na_Hills_Da_Nang_Vietnam.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "images": [
+        "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/da/Symbol_of_Linh_Ung_Pagoda_aerial_view_Ba_Na_Hills_Da_Nang_Vietnam.jpg/960px-Symbol_of_Linh_Ung_Pagoda_aerial_view_Ba_Na_Hills_Da_Nang_Vietnam.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+        "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/6d/84273-Da-Nang_%2848719933508%29.jpg/960px-84273-Da-Nang_%2848719933508%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+      ],
+      "image_attributions": [
+        {
+          "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/da/Symbol_of_Linh_Ung_Pagoda_aerial_view_Ba_Na_Hills_Da_Nang_Vietnam.jpg/960px-Symbol_of_Linh_Ung_Pagoda_aerial_view_Ba_Na_Hills_Da_Nang_Vietnam.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "fullUrl": "https://upload.wikimedia.org/wikipedia/commons/d/da/Symbol_of_Linh_Ung_Pagoda_aerial_view_Ba_Na_Hills_Da_Nang_Vietnam.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+          "commonsPageUrl": "https://commons.wikimedia.org/wiki/File:Symbol_of_Linh_Ung_Pagoda_aerial_view_Ba_Na_Hills_Da_Nang_Vietnam.jpg",
+          "license": "CC BY-SA 4.0",
+          "artist": "Vivu Vietnam",
+          "title": "File:Symbol of Linh Ung Pagoda aerial view Ba Na Hills Da Nang Vietnam.jpg"
+        },
+        {
+          "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/6d/84273-Da-Nang_%2848719933508%29.jpg/960px-84273-Da-Nang_%2848719933508%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "fullUrl": "https://upload.wikimedia.org/wikipedia/commons/6/6d/84273-Da-Nang_%2848719933508%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+          "commonsPageUrl": "https://commons.wikimedia.org/wiki/File:84273-Da-Nang_(48719933508).jpg",
+          "license": "CC BY 2.0",
+          "artist": "xiquinhosilva",
+          "title": "File:84273-Da-Nang (48719933508).jpg"
+        }
+      ],
+      "opening_hours": null,
+      "website": "https://sunworld.vn/vi/banahills/check-in/chua-linh-ung-ba-nahtml",
+      "phone": null,
+      "osm_tags_used": {},
+      "enrichment_tier": "media_and_article"
+    },
+    {
+      "place_id": "d361b05f-041a-47ef-add6-70560d1dc1e3",
+      "name": "Tượng Phật Quan Âm - Chùa Mỹ Khê",
+      "destination_slug": "da-nang",
+      "category": "temple",
+      "is_rec_a_core_v2": true,
+      "description": null,
+      "description_source_url": null,
+      "description_license": null,
+      "cover_image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/05/Statue_of_Guanyin_in_Da_Nang_1.jpg/960px-Statue_of_Guanyin_in_Da_Nang_1.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "images": [
+        "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/05/Statue_of_Guanyin_in_Da_Nang_1.jpg/960px-Statue_of_Guanyin_in_Da_Nang_1.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+        "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/88/Statue_of_Guanyin_in_Da_Nang_2.jpg/960px-Statue_of_Guanyin_in_Da_Nang_2.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+      ],
+      "image_attributions": [
+        {
+          "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/05/Statue_of_Guanyin_in_Da_Nang_1.jpg/960px-Statue_of_Guanyin_in_Da_Nang_1.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "fullUrl": "https://upload.wikimedia.org/wikipedia/commons/0/05/Statue_of_Guanyin_in_Da_Nang_1.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+          "commonsPageUrl": "https://commons.wikimedia.org/wiki/File:Statue_of_Guanyin_in_Da_Nang_1.jpg",
+          "license": "CC BY-SA 4.0",
+          "artist": "Christophe95",
+          "title": "File:Statue of Guanyin in Da Nang 1.jpg"
+        },
+        {
+          "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/88/Statue_of_Guanyin_in_Da_Nang_2.jpg/960px-Statue_of_Guanyin_in_Da_Nang_2.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "fullUrl": "https://upload.wikimedia.org/wikipedia/commons/8/88/Statue_of_Guanyin_in_Da_Nang_2.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+          "commonsPageUrl": "https://commons.wikimedia.org/wiki/File:Statue_of_Guanyin_in_Da_Nang_2.jpg",
+          "license": "CC BY-SA 4.0",
+          "artist": "Christophe95",
+          "title": "File:Statue of Guanyin in Da Nang 2.jpg"
+        }
+      ],
+      "opening_hours": "24/7",
+      "website": null,
+      "phone": "0236 3932 646",
+      "osm_tags_used": {},
+      "enrichment_tier": "media_or_article"
+    },
+    {
+      "place_id": "dccf4c8b-2526-5abc-8b7c-a9603d4537c9",
+      "name": "Tượng Phật Phước Lý",
+      "destination_slug": "da-nang",
+      "category": "attraction",
+      "is_rec_a_core_v2": true,
+      "description": "A 65-meter giant rock-cut Buddha statue located in the Da Son Spiritual Complex",
+      "description_source_url": null,
+      "description_license": "ODbL 1.0 (OpenStreetMap)",
+      "cover_image": null,
+      "images": [],
+      "image_attributions": [],
+      "opening_hours": null,
+      "website": null,
+      "phone": null,
+      "osm_tags_used": {},
+      "enrichment_tier": "media_or_article"
+    },
+    {
+      "place_id": "63c1729e-d5f1-479e-8678-d3c8dcc5ef76",
+      "name": "Thánh thất Cao Đài",
+      "destination_slug": "da-nang",
+      "category": "temple",
+      "is_rec_a_core_v2": true,
+      "description": null,
+      "description_source_url": null,
+      "description_license": null,
+      "cover_image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/56/Trung_H%C6%B0ng_B%E1%BB%ADu_T%C3%B2a_1.jpg/960px-Trung_H%C6%B0ng_B%E1%BB%ADu_T%C3%B2a_1.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "images": [
+        "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/56/Trung_H%C6%B0ng_B%E1%BB%ADu_T%C3%B2a_1.jpg/960px-Trung_H%C6%B0ng_B%E1%BB%ADu_T%C3%B2a_1.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+        "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/37/Trung_H%C6%B0ng_B%E1%BB%ADu_T%C3%B2a_2.jpg/960px-Trung_H%C6%B0ng_B%E1%BB%ADu_T%C3%B2a_2.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+      ],
+      "image_attributions": [
+        {
+          "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/56/Trung_H%C6%B0ng_B%E1%BB%ADu_T%C3%B2a_1.jpg/960px-Trung_H%C6%B0ng_B%E1%BB%ADu_T%C3%B2a_1.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "fullUrl": "https://upload.wikimedia.org/wikipedia/commons/5/56/Trung_H%C6%B0ng_B%E1%BB%ADu_T%C3%B2a_1.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+          "commonsPageUrl": "https://commons.wikimedia.org/wiki/File:Trung_H%C6%B0ng_B%E1%BB%ADu_T%C3%B2a_1.jpg",
+          "license": "CC BY-SA 4.0",
+          "artist": "Christophe95",
+          "title": "File:Trung Hưng Bửu Tòa 1.jpg"
+        },
+        {
+          "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/37/Trung_H%C6%B0ng_B%E1%BB%ADu_T%C3%B2a_2.jpg/960px-Trung_H%C6%B0ng_B%E1%BB%ADu_T%C3%B2a_2.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "fullUrl": "https://upload.wikimedia.org/wikipedia/commons/3/37/Trung_H%C6%B0ng_B%E1%BB%ADu_T%C3%B2a_2.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+          "commonsPageUrl": "https://commons.wikimedia.org/wiki/File:Trung_H%C6%B0ng_B%E1%BB%ADu_T%C3%B2a_2.jpg",
+          "license": "CC BY-SA 4.0",
+          "artist": "Christophe95",
+          "title": "File:Trung Hưng Bửu Tòa 2.jpg"
+        }
+      ],
+      "opening_hours": "24/7",
+      "website": null,
+      "phone": "+84 236 3829 463",
+      "osm_tags_used": {},
+      "enrichment_tier": "media_or_article"
+    },
+    {
+      "place_id": "84e15eae-e7b8-51a8-82f9-d71b55555191",
+      "name": "Queen Cobra",
+      "destination_slug": "da-nang",
+      "category": "attraction",
+      "is_rec_a_core_v2": true,
+      "description": null,
+      "description_source_url": null,
+      "description_license": null,
+      "cover_image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/b/b6/Sun_World_Asia_Park%2C_Da_Nang_%2849355618416%29.jpg/960px-Sun_World_Asia_Park%2C_Da_Nang_%2849355618416%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "images": [
+        "https://thumb.wikimedia.org/wikipedia/commons/thumb/b/b6/Sun_World_Asia_Park%2C_Da_Nang_%2849355618416%29.jpg/960px-Sun_World_Asia_Park%2C_Da_Nang_%2849355618416%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+        "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/7f/Sun_World_Asia_Park%2C_Da_Nang_%2849374206031%29.jpg/960px-Sun_World_Asia_Park%2C_Da_Nang_%2849374206031%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+      ],
+      "image_attributions": [
+        {
+          "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/b/b6/Sun_World_Asia_Park%2C_Da_Nang_%2849355618416%29.jpg/960px-Sun_World_Asia_Park%2C_Da_Nang_%2849355618416%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "fullUrl": "https://upload.wikimedia.org/wikipedia/commons/b/b6/Sun_World_Asia_Park%2C_Da_Nang_%2849355618416%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+          "commonsPageUrl": "https://commons.wikimedia.org/wiki/File:Sun_World_Asia_Park,_Da_Nang_(49355618416).jpg",
+          "license": "CC BY 2.0",
+          "artist": "Martin Lewison from Forest Hills, NY, U.S.A.",
+          "title": "File:Sun World Asia Park, Da Nang (49355618416).jpg"
+        },
+        {
+          "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/7f/Sun_World_Asia_Park%2C_Da_Nang_%2849374206031%29.jpg/960px-Sun_World_Asia_Park%2C_Da_Nang_%2849374206031%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "fullUrl": "https://upload.wikimedia.org/wikipedia/commons/7/7f/Sun_World_Asia_Park%2C_Da_Nang_%2849374206031%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+          "commonsPageUrl": "https://commons.wikimedia.org/wiki/File:Sun_World_Asia_Park,_Da_Nang_(49374206031).jpg",
+          "license": "CC BY 2.0",
+          "artist": "Martin Lewison from Forest Hills, NY, U.S.A.",
+          "title": "File:Sun World Asia Park, Da Nang (49374206031).jpg"
+        }
+      ],
+      "opening_hours": "Mo-Su 18:00-22:00",
+      "website": null,
+      "phone": null,
+      "osm_tags_used": {},
+      "enrichment_tier": "media_or_article"
+    },
+    {
+      "place_id": "413336ee-154d-4813-8aae-69e3cc00a303",
+      "name": "Nhà Bia",
+      "destination_slug": "da-nang",
+      "category": "culture",
+      "is_rec_a_core_v2": true,
+      "description": null,
+      "description_source_url": null,
+      "description_license": null,
+      "cover_image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/10/84380-Da-Nang_%2848951898482%29.jpg/960px-84380-Da-Nang_%2848951898482%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "images": [
+        "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/10/84380-Da-Nang_%2848951898482%29.jpg/960px-84380-Da-Nang_%2848951898482%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+        "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/15/B%C3%A0_N%C3%A0_Hills_Asian_Part_%2830594991907%29.jpg/960px-B%C3%A0_N%C3%A0_Hills_Asian_Part_%2830594991907%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+      ],
+      "image_attributions": [
+        {
+          "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/10/84380-Da-Nang_%2848951898482%29.jpg/960px-84380-Da-Nang_%2848951898482%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "fullUrl": "https://upload.wikimedia.org/wikipedia/commons/1/10/84380-Da-Nang_%2848951898482%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+          "commonsPageUrl": "https://commons.wikimedia.org/wiki/File:84380-Da-Nang_(48951898482).jpg",
+          "license": "CC BY 2.0",
+          "artist": "xiquinhosilva",
+          "title": "File:84380-Da-Nang (48951898482).jpg"
+        },
+        {
+          "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/15/B%C3%A0_N%C3%A0_Hills_Asian_Part_%2830594991907%29.jpg/960px-B%C3%A0_N%C3%A0_Hills_Asian_Part_%2830594991907%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "fullUrl": "https://upload.wikimedia.org/wikipedia/commons/1/15/B%C3%A0_N%C3%A0_Hills_Asian_Part_%2830594991907%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+          "commonsPageUrl": "https://commons.wikimedia.org/wiki/File:B%C3%A0_N%C3%A0_Hills_Asian_Part_(30594991907).jpg",
+          "license": "CC BY 2.0",
+          "artist": "Raita Futo from Tokyo, Japan",
+          "title": "File:Bà Nà Hills Asian Part (30594991907).jpg"
+        }
+      ],
+      "opening_hours": null,
+      "website": "https://sunworld.vn/vi/banahills/check-in/nha-bia",
+      "phone": null,
+      "osm_tags_used": {},
+      "enrichment_tier": "media_or_article"
+    },
+    {
+      "place_id": "59e2844c-91b5-4113-893c-48db7f5304b5",
+      "name": "Linh Phong Thiền Tự",
+      "destination_slug": "da-nang",
+      "category": "temple",
+      "is_rec_a_core_v2": true,
+      "description": "Linh Phong Thiền Tự is a Northern Vietnamese-style pagoda built entirely of ironwood (lim wood). It has an area of 650 m² including the front hall, rear sanctuary and garden courtyard. The grounds feature two side corridors with statues of Buddhas and the",
+      "description_source_url": null,
+      "description_license": "ODbL 1.0 (OpenStreetMap)",
+      "cover_image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/78/B%C3%A0_N%C3%A0_Hills_Asian_Part_%2830594988627%29.jpg/960px-B%C3%A0_N%C3%A0_Hills_Asian_Part_%2830594988627%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "images": [
+        "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/78/B%C3%A0_N%C3%A0_Hills_Asian_Part_%2830594988627%29.jpg/960px-B%C3%A0_N%C3%A0_Hills_Asian_Part_%2830594988627%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+        "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a1/B%C3%A0_N%C3%A0_Hills_Asian_Part_%2844810268994%29.jpg/960px-B%C3%A0_N%C3%A0_Hills_Asian_Part_%2844810268994%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+      ],
+      "image_attributions": [
+        {
+          "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/78/B%C3%A0_N%C3%A0_Hills_Asian_Part_%2830594988627%29.jpg/960px-B%C3%A0_N%C3%A0_Hills_Asian_Part_%2830594988627%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "fullUrl": "https://upload.wikimedia.org/wikipedia/commons/7/78/B%C3%A0_N%C3%A0_Hills_Asian_Part_%2830594988627%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+          "commonsPageUrl": "https://commons.wikimedia.org/wiki/File:B%C3%A0_N%C3%A0_Hills_Asian_Part_(30594988627).jpg",
+          "license": "CC BY 2.0",
+          "artist": "Raita Futo from Tokyo, Japan",
+          "title": "File:Bà Nà Hills Asian Part (30594988627).jpg"
+        },
+        {
+          "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a1/B%C3%A0_N%C3%A0_Hills_Asian_Part_%2844810268994%29.jpg/960px-B%C3%A0_N%C3%A0_Hills_Asian_Part_%2844810268994%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "fullUrl": "https://upload.wikimedia.org/wikipedia/commons/a/a1/B%C3%A0_N%C3%A0_Hills_Asian_Part_%2844810268994%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+          "commonsPageUrl": "https://commons.wikimedia.org/wiki/File:B%C3%A0_N%C3%A0_Hills_Asian_Part_(44810268994).jpg",
+          "license": "CC BY 2.0",
+          "artist": "Raita Futo from Tokyo, Japan",
+          "title": "File:Bà Nà Hills Asian Part (44810268994).jpg"
+        }
+      ],
+      "opening_hours": null,
+      "website": "https://sunworld.vn/vi/banahills/check-in/linh-phong-thien-tu-2",
+      "phone": null,
+      "osm_tags_used": {},
+      "enrichment_tier": "media_and_article"
+    },
+    {
+      "place_id": "d6ca6a75-717f-5094-bf89-34cba2e6a705",
+      "name": "Cầu Trần Thị Lý",
+      "destination_slug": "da-nang",
+      "category": "attraction",
+      "is_rec_a_core_v2": true,
+      "description": "Cầu Trần Thị Lý là cây cầu bắc qua sông Hàn ở thành phố Đà Nẵng, Việt Nam. Cây cầu này thay thế cho hai cây cầu cũ là Nguyễn Văn Trỗi và Trần Thị Lý. Cầu được khánh thành và đi vào hoạt động năm 2013.",
+      "description_source_url": "https://vi.wikipedia.org/wiki/C%E1%BA%A7u_Tr%E1%BA%A7n_Th%E1%BB%8B_L%C3%BD",
+      "description_license": "CC BY-SA 4.0 (Wikipedia)",
+      "cover_image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/aa/Red_Night_at_Tran_Thi_Ly_Bridge_%28Unsplash%29.jpg/960px-Red_Night_at_Tran_Thi_Ly_Bridge_%28Unsplash%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "images": [
+        "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/aa/Red_Night_at_Tran_Thi_Ly_Bridge_%28Unsplash%29.jpg/960px-Red_Night_at_Tran_Thi_Ly_Bridge_%28Unsplash%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+      ],
+      "image_attributions": [
+        {
+          "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/aa/Red_Night_at_Tran_Thi_Ly_Bridge_%28Unsplash%29.jpg/960px-Red_Night_at_Tran_Thi_Ly_Bridge_%28Unsplash%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "fullUrl": "https://upload.wikimedia.org/wikipedia/commons/a/aa/Red_Night_at_Tran_Thi_Ly_Bridge_%28Unsplash%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+          "commonsPageUrl": "https://commons.wikimedia.org/wiki/File:Red_Night_at_Tran_Thi_Ly_Bridge_(Unsplash).jpg",
+          "license": "CC0",
+          "artist": "Tu Nguyen wickylancaster",
+          "title": "File:Red Night at Tran Thi Ly Bridge (Unsplash).jpg"
+        }
+      ],
+      "opening_hours": "24/7",
+      "website": null,
+      "phone": null,
+      "osm_tags_used": {},
+      "enrichment_tier": "media_and_article"
+    },
+    {
+      "place_id": "f0f4b904-d335-52fd-83bd-c47ba2411c00",
+      "name": "Bảo tàng Mỹ thuật Đà Nẵng",
+      "destination_slug": "da-nang",
+      "category": "culture",
+      "is_rec_a_core_v2": true,
+      "description": null,
+      "description_source_url": null,
+      "description_license": null,
+      "cover_image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d8/B%E1%BA%A3o_t%C3%A0ng_M%E1%BB%B9_thu%E1%BA%ADt_%C4%90%C3%A0_N%E1%BA%B5ng.jpeg/960px-B%E1%BA%A3o_t%C3%A0ng_M%E1%BB%B9_thu%E1%BA%ADt_%C4%90%C3%A0_N%E1%BA%B5ng.jpeg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "images": [
+        "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d8/B%E1%BA%A3o_t%C3%A0ng_M%E1%BB%B9_thu%E1%BA%ADt_%C4%90%C3%A0_N%E1%BA%B5ng.jpeg/960px-B%E1%BA%A3o_t%C3%A0ng_M%E1%BB%B9_thu%E1%BA%ADt_%C4%90%C3%A0_N%E1%BA%B5ng.jpeg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+        "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/37/Trung_H%C6%B0ng_B%E1%BB%ADu_T%C3%B2a_2.jpg/960px-Trung_H%C6%B0ng_B%E1%BB%ADu_T%C3%B2a_2.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+      ],
+      "image_attributions": [
+        {
+          "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d8/B%E1%BA%A3o_t%C3%A0ng_M%E1%BB%B9_thu%E1%BA%ADt_%C4%90%C3%A0_N%E1%BA%B5ng.jpeg/960px-B%E1%BA%A3o_t%C3%A0ng_M%E1%BB%B9_thu%E1%BA%ADt_%C4%90%C3%A0_N%E1%BA%B5ng.jpeg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "fullUrl": "https://upload.wikimedia.org/wikipedia/commons/d/d8/B%E1%BA%A3o_t%C3%A0ng_M%E1%BB%B9_thu%E1%BA%ADt_%C4%90%C3%A0_N%E1%BA%B5ng.jpeg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+          "commonsPageUrl": "https://commons.wikimedia.org/wiki/File:B%E1%BA%A3o_t%C3%A0ng_M%E1%BB%B9_thu%E1%BA%ADt_%C4%90%C3%A0_N%E1%BA%B5ng.jpeg",
+          "license": "CC BY-SA 3.0",
+          "artist": "Linhcandng ( thảo luận )",
+          "title": "File:Bảo tàng Mỹ thuật Đà Nẵng.jpeg"
+        },
+        {
+          "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/37/Trung_H%C6%B0ng_B%E1%BB%ADu_T%C3%B2a_2.jpg/960px-Trung_H%C6%B0ng_B%E1%BB%ADu_T%C3%B2a_2.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "fullUrl": "https://upload.wikimedia.org/wikipedia/commons/3/37/Trung_H%C6%B0ng_B%E1%BB%ADu_T%C3%B2a_2.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+          "commonsPageUrl": "https://commons.wikimedia.org/wiki/File:Trung_H%C6%B0ng_B%E1%BB%ADu_T%C3%B2a_2.jpg",
+          "license": "CC BY-SA 4.0",
+          "artist": "Christophe95",
+          "title": "File:Trung Hưng Bửu Tòa 2.jpg"
+        }
+      ],
+      "opening_hours": null,
+      "website": "https://dnfam.vn/",
+      "phone": null,
+      "osm_tags_used": {},
+      "enrichment_tier": "media_or_article"
+    },
+    {
+      "place_id": "ade2140c-7945-4044-b99a-b1a028edce9e",
+      "name": "Vịnh Hạ Long",
+      "destination_slug": "ha-long",
+      "category": "attraction",
+      "is_rec_a_core_v2": true,
+      "description": "Vịnh Hạ Long là một vịnh nhỏ thuộc phần bờ tây vịnh Bắc Bộ tại khu vực biển Đông Bắc Việt Nam, bao gồm vùng biển đảo của khu vực đô thị Hạ Long thuộc thành phố Quảng Ninh.",
+      "description_source_url": "https://vi.wikipedia.org/wiki/V%E1%BB%8Bnh_H%E1%BA%A1_Long",
+      "description_license": "CC BY-SA 4.0 (Wikipedia)",
+      "cover_image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/2d/Halong_Bay_in_Vietnam.jpg/960px-Halong_Bay_in_Vietnam.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "images": [
+        "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/2d/Halong_Bay_in_Vietnam.jpg/960px-Halong_Bay_in_Vietnam.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+        "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e4/Halong_ensemble_%28colour_corrected%29.jpg/960px-Halong_ensemble_%28colour_corrected%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+      ],
+      "image_attributions": [
+        {
+          "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/2d/Halong_Bay_in_Vietnam.jpg/960px-Halong_Bay_in_Vietnam.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "fullUrl": "https://upload.wikimedia.org/wikipedia/commons/2/2d/Halong_Bay_in_Vietnam.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+          "commonsPageUrl": "https://commons.wikimedia.org/wiki/File:Halong_Bay_in_Vietnam.jpg",
+          "license": "CC BY-SA 3.0",
+          "artist": "Thomas Hirsch / User:Ravn",
+          "title": "File:Halong Bay in Vietnam.jpg"
+        },
+        {
+          "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e4/Halong_ensemble_%28colour_corrected%29.jpg/960px-Halong_ensemble_%28colour_corrected%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "fullUrl": "https://upload.wikimedia.org/wikipedia/commons/e/e4/Halong_ensemble_%28colour_corrected%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+          "commonsPageUrl": "https://commons.wikimedia.org/wiki/File:Halong_ensemble_(colour_corrected).jpg",
+          "license": "Public domain",
+          "artist": "Thierry Borie colour adjusted by Lycaon",
+          "title": "File:Halong ensemble (colour corrected).jpg"
+        }
+      ],
+      "opening_hours": null,
+      "website": null,
+      "phone": null,
+      "osm_tags_used": {
+        "wikipedia": "vi:Vịnh Hạ Long",
+        "wikidata": "Q190128"
+      },
+      "enrichment_tier": "media_and_article"
+    },
+    {
+      "place_id": "55b9c42a-bdaa-4683-9f90-17aa07382578",
+      "name": "G. X. Ti Tốp",
+      "destination_slug": "ha-long",
+      "category": "culture",
+      "is_rec_a_core_v2": true,
+      "description": "monument in Titov Island, Vietnam",
+      "description_source_url": "https://www.wikidata.org/wiki/Q107028423",
+      "description_license": "CC0 1.0 (Wikidata)",
+      "cover_image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/83/Halong_TitowIsland2.JPG/960px-Halong_TitowIsland2.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "images": [
+        "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/83/Halong_TitowIsland2.JPG/960px-Halong_TitowIsland2.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+      ],
+      "image_attributions": [
+        {
+          "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/83/Halong_TitowIsland2.JPG/960px-Halong_TitowIsland2.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "fullUrl": "https://upload.wikimedia.org/wikipedia/commons/8/83/Halong_TitowIsland2.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+          "commonsPageUrl": "https://commons.wikimedia.org/wiki/File:Halong_TitowIsland2.JPG",
+          "license": "CC BY-SA 4.0",
+          "artist": "Catatine",
+          "title": "File:Halong TitowIsland2.JPG"
+        }
+      ],
+      "opening_hours": null,
+      "website": null,
+      "phone": null,
+      "osm_tags_used": {
+        "wikipedia": "ru:Памятник Герману Титову (Вьетнам)",
+        "wikidata": "Q107028423"
+      },
+      "enrichment_tier": "media_and_article"
+    },
+    {
+      "place_id": "6fd65f90-8ca0-42ca-b089-0395bde03c3f",
+      "name": "Phi Long Thần Tốc",
+      "destination_slug": "ha-long",
+      "category": "attraction",
+      "is_rec_a_core_v2": true,
+      "description": "Dragon's Run is a steel roller coaster manufactured by Swiss engineers Bolliger & Mabillard and located at Dragon Park Ha Long in Vietnam. The coaster was relocated from Freestyle Music Park in Myrtle Beach, South Carolina, where it last operated as Time Machine. The ride originally opened to the public on April 15, 2008, under the name Led Zeppelin: The Ride as one of the main attractions at Hard Rock Park. As a result of financial difficulties, Hard Rock Park closed after five months of operation. The park re-opened in 2009 with new owners and a new name, but closed at the end of the season. All of the rides and attractions were removed from the grounds, and Dragon's Run was disassembled and shipped to Dragon Park Ha Long in Vietnam, where it reopened in 2017.",
+      "description_source_url": "https://en.wikipedia.org/wiki/Dragon's_Run",
+      "description_license": "CC BY-SA 4.0 (Wikipedia)",
+      "cover_image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/4d/LZTR_%28Majority%29_%283%29.JPG/960px-LZTR_%28Majority%29_%283%29.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "images": [
+        "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/4d/LZTR_%28Majority%29_%283%29.JPG/960px-LZTR_%28Majority%29_%283%29.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+      ],
+      "image_attributions": [
+        {
+          "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/4d/LZTR_%28Majority%29_%283%29.JPG/960px-LZTR_%28Majority%29_%283%29.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "fullUrl": "https://upload.wikimedia.org/wikipedia/commons/4/4d/LZTR_%28Majority%29_%283%29.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+          "commonsPageUrl": "https://commons.wikimedia.org/wiki/File:LZTR_(Majority)_(3).JPG",
+          "license": "CC BY-SA 3.0",
+          "artist": "Coasterman1234",
+          "title": "File:LZTR (Majority) (3).JPG"
+        }
+      ],
+      "opening_hours": null,
+      "website": null,
+      "phone": null,
+      "osm_tags_used": {
+        "wikidata": "Q28563538"
+      },
+      "enrichment_tier": "media_and_article"
+    },
+    {
+      "place_id": "b3dd2a06-982c-4c8b-9994-cce9c6ee325e",
+      "name": "Bến phà Tuần Châu",
+      "destination_slug": "ha-long",
+      "category": "attraction",
+      "is_rec_a_core_v2": true,
+      "description": null,
+      "description_source_url": null,
+      "description_license": null,
+      "cover_image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/8a/Ha_LOng_Seaplane_Terminal.jpg/960px-Ha_LOng_Seaplane_Terminal.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "images": [
+        "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/8a/Ha_LOng_Seaplane_Terminal.jpg/960px-Ha_LOng_Seaplane_Terminal.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+        "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/fe/VN-B469_Cessna_208B_Grand_Caravan_at_Ha_Long_seaplane_terminal.jpg/960px-VN-B469_Cessna_208B_Grand_Caravan_at_Ha_Long_seaplane_terminal.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+      ],
+      "image_attributions": [
+        {
+          "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/8a/Ha_LOng_Seaplane_Terminal.jpg/960px-Ha_LOng_Seaplane_Terminal.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "fullUrl": "https://upload.wikimedia.org/wikipedia/commons/8/8a/Ha_LOng_Seaplane_Terminal.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+          "commonsPageUrl": "https://commons.wikimedia.org/wiki/File:Ha_LOng_Seaplane_Terminal.jpg",
+          "license": "CC BY 2.0",
+          "artist": "kitmasterbloke",
+          "title": "File:Ha LOng Seaplane Terminal.jpg"
+        },
+        {
+          "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/fe/VN-B469_Cessna_208B_Grand_Caravan_at_Ha_Long_seaplane_terminal.jpg/960px-VN-B469_Cessna_208B_Grand_Caravan_at_Ha_Long_seaplane_terminal.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "fullUrl": "https://upload.wikimedia.org/wikipedia/commons/f/fe/VN-B469_Cessna_208B_Grand_Caravan_at_Ha_Long_seaplane_terminal.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+          "commonsPageUrl": "https://commons.wikimedia.org/wiki/File:VN-B469_Cessna_208B_Grand_Caravan_at_Ha_Long_seaplane_terminal.jpg",
+          "license": "CC BY 2.0",
+          "artist": "kitmasterbloke",
+          "title": "File:VN-B469 Cessna 208B Grand Caravan at Ha Long seaplane terminal.jpg"
+        }
+      ],
+      "opening_hours": null,
+      "website": "https://www.visithalongbay.com/transportation/cat-ba-island-ferry-timetables-tickets-travel-guide.html",
+      "phone": null,
+      "osm_tags_used": {},
+      "enrichment_tier": "media_or_article"
+    },
+    {
+      "place_id": "871a6ee7-1d46-49bb-957a-ff50260b1f3b",
+      "name": "Ha Long International Cruise Port",
+      "destination_slug": "ha-long",
+      "category": "attraction",
+      "is_rec_a_core_v2": true,
+      "description": null,
+      "description_source_url": null,
+      "description_license": null,
+      "cover_image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/02/Ha_long_bay_cruise_%E3%83%8F%E3%83%AD%E3%83%B3%E6%B9%BE%E3%82%AF%E3%83%AB%E3%83%BC%E3%82%BA_-_53164388410.jpg/960px-Ha_long_bay_cruise_%E3%83%8F%E3%83%AD%E3%83%B3%E6%B9%BE%E3%82%AF%E3%83%AB%E3%83%BC%E3%82%BA_-_53164388410.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "images": [
+        "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/02/Ha_long_bay_cruise_%E3%83%8F%E3%83%AD%E3%83%B3%E6%B9%BE%E3%82%AF%E3%83%AB%E3%83%BC%E3%82%BA_-_53164388410.jpg/960px-Ha_long_bay_cruise_%E3%83%8F%E3%83%AD%E3%83%B3%E6%B9%BE%E3%82%AF%E3%83%AB%E3%83%BC%E3%82%BA_-_53164388410.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+        "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/41/Ha_long_bay_cruise_%E3%83%8F%E3%83%AD%E3%83%B3%E6%B9%BE%E3%82%AF%E3%83%AB%E3%83%BC%E3%82%BA_-_53163384877.jpg/960px-Ha_long_bay_cruise_%E3%83%8F%E3%83%AD%E3%83%B3%E6%B9%BE%E3%82%AF%E3%83%AB%E3%83%BC%E3%82%BA_-_53163384877.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+      ],
+      "image_attributions": [
+        {
+          "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/02/Ha_long_bay_cruise_%E3%83%8F%E3%83%AD%E3%83%B3%E6%B9%BE%E3%82%AF%E3%83%AB%E3%83%BC%E3%82%BA_-_53164388410.jpg/960px-Ha_long_bay_cruise_%E3%83%8F%E3%83%AD%E3%83%B3%E6%B9%BE%E3%82%AF%E3%83%AB%E3%83%BC%E3%82%BA_-_53164388410.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "fullUrl": "https://upload.wikimedia.org/wikipedia/commons/0/02/Ha_long_bay_cruise_%E3%83%8F%E3%83%AD%E3%83%B3%E6%B9%BE%E3%82%AF%E3%83%AB%E3%83%BC%E3%82%BA_-_53164388410.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+          "commonsPageUrl": "https://commons.wikimedia.org/wiki/File:Ha_long_bay_cruise_%E3%83%8F%E3%83%AD%E3%83%B3%E6%B9%BE%E3%82%AF%E3%83%AB%E3%83%BC%E3%82%BA_-_53164388410.jpg",
+          "license": "CC BY-SA 2.0",
+          "artist": "nakashi",
+          "title": "File:Ha long bay cruise ハロン湾クルーズ - 53164388410.jpg"
+        },
+        {
+          "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/41/Ha_long_bay_cruise_%E3%83%8F%E3%83%AD%E3%83%B3%E6%B9%BE%E3%82%AF%E3%83%AB%E3%83%BC%E3%82%BA_-_53163384877.jpg/960px-Ha_long_bay_cruise_%E3%83%8F%E3%83%AD%E3%83%B3%E6%B9%BE%E3%82%AF%E3%83%AB%E3%83%BC%E3%82%BA_-_53163384877.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "fullUrl": "https://upload.wikimedia.org/wikipedia/commons/4/41/Ha_long_bay_cruise_%E3%83%8F%E3%83%AD%E3%83%B3%E6%B9%BE%E3%82%AF%E3%83%AB%E3%83%BC%E3%82%BA_-_53163384877.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+          "commonsPageUrl": "https://commons.wikimedia.org/wiki/File:Ha_long_bay_cruise_%E3%83%8F%E3%83%AD%E3%83%B3%E6%B9%BE%E3%82%AF%E3%83%AB%E3%83%BC%E3%82%BA_-_53163384877.jpg",
+          "license": "CC BY-SA 2.0",
+          "artist": "nakashi",
+          "title": "File:Ha long bay cruise ハロン湾クルーズ - 53163384877.jpg"
+        }
+      ],
+      "opening_hours": null,
+      "website": null,
+      "phone": null,
+      "osm_tags_used": {},
+      "enrichment_tier": "media_or_article"
+    },
+    {
+      "place_id": "9a979427-a0bb-421d-b75f-2a6ee79b120b",
+      "name": "Động Thiên Cung",
+      "destination_slug": "ha-long",
+      "category": "attraction",
+      "is_rec_a_core_v2": true,
+      "description": null,
+      "description_source_url": null,
+      "description_license": null,
+      "cover_image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/6c/Tp._H%E1%BA%A1_Long%2C_Qu%E1%BA%A3ng_Ninh%2C_Vietnam_-_panoramio.jpg/960px-Tp._H%E1%BA%A1_Long%2C_Qu%E1%BA%A3ng_Ninh%2C_Vietnam_-_panoramio.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "images": [
+        "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/6c/Tp._H%E1%BA%A1_Long%2C_Qu%E1%BA%A3ng_Ninh%2C_Vietnam_-_panoramio.jpg/960px-Tp._H%E1%BA%A1_Long%2C_Qu%E1%BA%A3ng_Ninh%2C_Vietnam_-_panoramio.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+        "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/64/Thien_Cung_Cave_%2832735760722%29.jpg/960px-Thien_Cung_Cave_%2832735760722%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+      ],
+      "image_attributions": [
+        {
+          "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/6c/Tp._H%E1%BA%A1_Long%2C_Qu%E1%BA%A3ng_Ninh%2C_Vietnam_-_panoramio.jpg/960px-Tp._H%E1%BA%A1_Long%2C_Qu%E1%BA%A3ng_Ninh%2C_Vietnam_-_panoramio.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "fullUrl": "https://upload.wikimedia.org/wikipedia/commons/6/6c/Tp._H%E1%BA%A1_Long%2C_Qu%E1%BA%A3ng_Ninh%2C_Vietnam_-_panoramio.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+          "commonsPageUrl": "https://commons.wikimedia.org/wiki/File:Tp._H%E1%BA%A1_Long,_Qu%E1%BA%A3ng_Ninh,_Vietnam_-_panoramio.jpg",
+          "license": "CC BY-SA 3.0",
+          "artist": "huxuejiang",
+          "title": "File:Tp. Hạ Long, Quảng Ninh, Vietnam - panoramio.jpg"
+        },
+        {
+          "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/64/Thien_Cung_Cave_%2832735760722%29.jpg/960px-Thien_Cung_Cave_%2832735760722%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "fullUrl": "https://upload.wikimedia.org/wikipedia/commons/6/64/Thien_Cung_Cave_%2832735760722%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+          "commonsPageUrl": "https://commons.wikimedia.org/wiki/File:Thien_Cung_Cave_(32735760722).jpg",
+          "license": "CC BY 2.0",
+          "artist": "xiquinhosilva from Cacau",
+          "title": "File:Thien Cung Cave (32735760722).jpg"
+        }
+      ],
+      "opening_hours": null,
+      "website": null,
+      "phone": null,
+      "osm_tags_used": {},
+      "enrichment_tier": "media_or_article"
+    },
+    {
+      "place_id": "b6649416-5a8d-43a3-80cf-42e0f1e4bca9",
+      "name": "Đài tưởng niệm Liệt sĩ Hạ Long",
+      "destination_slug": "ha-long",
+      "category": "culture",
+      "is_rec_a_core_v2": true,
+      "description": null,
+      "description_source_url": null,
+      "description_license": null,
+      "cover_image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/0d/B%E1%BA%A1ch_%C4%90%E1%BA%B1ng%2C_tp._H%E1%BA%A1_Long%2C_Qu%E1%BA%A3ng_Ninh%2C_Vietnam_-_panoramio.jpg/960px-B%E1%BA%A1ch_%C4%90%E1%BA%B1ng%2C_tp._H%E1%BA%A1_Long%2C_Qu%E1%BA%A3ng_Ninh%2C_Vietnam_-_panoramio.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "images": [
+        "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/0d/B%E1%BA%A1ch_%C4%90%E1%BA%B1ng%2C_tp._H%E1%BA%A1_Long%2C_Qu%E1%BA%A3ng_Ninh%2C_Vietnam_-_panoramio.jpg/960px-B%E1%BA%A1ch_%C4%90%E1%BA%B1ng%2C_tp._H%E1%BA%A1_Long%2C_Qu%E1%BA%A3ng_Ninh%2C_Vietnam_-_panoramio.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+      ],
+      "image_attributions": [
+        {
+          "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/0d/B%E1%BA%A1ch_%C4%90%E1%BA%B1ng%2C_tp._H%E1%BA%A1_Long%2C_Qu%E1%BA%A3ng_Ninh%2C_Vietnam_-_panoramio.jpg/960px-B%E1%BA%A1ch_%C4%90%E1%BA%B1ng%2C_tp._H%E1%BA%A1_Long%2C_Qu%E1%BA%A3ng_Ninh%2C_Vietnam_-_panoramio.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "fullUrl": "https://upload.wikimedia.org/wikipedia/commons/0/0d/B%E1%BA%A1ch_%C4%90%E1%BA%B1ng%2C_tp._H%E1%BA%A1_Long%2C_Qu%E1%BA%A3ng_Ninh%2C_Vietnam_-_panoramio.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+          "commonsPageUrl": "https://commons.wikimedia.org/wiki/File:B%E1%BA%A1ch_%C4%90%E1%BA%B1ng,_tp._H%E1%BA%A1_Long,_Qu%E1%BA%A3ng_Ninh,_Vietnam_-_panoramio.jpg",
+          "license": "CC BY 3.0",
+          "artist": "kimjongdae",
+          "title": "File:Bạch Đằng, tp. Hạ Long, Quảng Ninh, Vietnam - panoramio.jpg"
+        }
+      ],
+      "opening_hours": null,
+      "website": null,
+      "phone": null,
+      "osm_tags_used": {},
+      "enrichment_tier": "media_or_article"
+    },
+    {
+      "place_id": "8977e846-04cf-451c-9a2f-bb4c1ddf724f",
+      "name": "Vinpearl Ferry Terminal",
+      "destination_slug": "ha-long",
+      "category": "attraction",
+      "is_rec_a_core_v2": true,
+      "description": null,
+      "description_source_url": null,
+      "description_license": null,
+      "cover_image": null,
+      "images": [],
+      "image_attributions": [],
+      "opening_hours": null,
+      "website": null,
+      "phone": null,
+      "osm_tags_used": {},
+      "enrichment_tier": "osm_factual_only"
+    },
+    {
+      "place_id": "0ee36cb9-cfd6-4015-abb3-aa06f6066ebd",
+      "name": "Tượng đài đồng chí Vũ Văn Hiếu",
+      "destination_slug": "ha-long",
+      "category": "culture",
+      "is_rec_a_core_v2": true,
+      "description": null,
+      "description_source_url": null,
+      "description_license": null,
+      "cover_image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/0d/B%E1%BA%A1ch_%C4%90%E1%BA%B1ng%2C_tp._H%E1%BA%A1_Long%2C_Qu%E1%BA%A3ng_Ninh%2C_Vietnam_-_panoramio.jpg/960px-B%E1%BA%A1ch_%C4%90%E1%BA%B1ng%2C_tp._H%E1%BA%A1_Long%2C_Qu%E1%BA%A3ng_Ninh%2C_Vietnam_-_panoramio.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "images": [
+        "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/0d/B%E1%BA%A1ch_%C4%90%E1%BA%B1ng%2C_tp._H%E1%BA%A1_Long%2C_Qu%E1%BA%A3ng_Ninh%2C_Vietnam_-_panoramio.jpg/960px-B%E1%BA%A1ch_%C4%90%E1%BA%B1ng%2C_tp._H%E1%BA%A1_Long%2C_Qu%E1%BA%A3ng_Ninh%2C_Vietnam_-_panoramio.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+      ],
+      "image_attributions": [
+        {
+          "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/0d/B%E1%BA%A1ch_%C4%90%E1%BA%B1ng%2C_tp._H%E1%BA%A1_Long%2C_Qu%E1%BA%A3ng_Ninh%2C_Vietnam_-_panoramio.jpg/960px-B%E1%BA%A1ch_%C4%90%E1%BA%B1ng%2C_tp._H%E1%BA%A1_Long%2C_Qu%E1%BA%A3ng_Ninh%2C_Vietnam_-_panoramio.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "fullUrl": "https://upload.wikimedia.org/wikipedia/commons/0/0d/B%E1%BA%A1ch_%C4%90%E1%BA%B1ng%2C_tp._H%E1%BA%A1_Long%2C_Qu%E1%BA%A3ng_Ninh%2C_Vietnam_-_panoramio.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+          "commonsPageUrl": "https://commons.wikimedia.org/wiki/File:B%E1%BA%A1ch_%C4%90%E1%BA%B1ng,_tp._H%E1%BA%A1_Long,_Qu%E1%BA%A3ng_Ninh,_Vietnam_-_panoramio.jpg",
+          "license": "CC BY 3.0",
+          "artist": "kimjongdae",
+          "title": "File:Bạch Đằng, tp. Hạ Long, Quảng Ninh, Vietnam - panoramio.jpg"
+        }
+      ],
+      "opening_hours": null,
+      "website": null,
+      "phone": null,
+      "osm_tags_used": {},
+      "enrichment_tier": "media_or_article"
+    },
+    {
+      "place_id": "65562a67-84ff-44a0-990d-31917a2a9bd0",
+      "name": "Tháp Đồng Hồ",
+      "destination_slug": "ha-long",
+      "category": "attraction",
+      "is_rec_a_core_v2": true,
+      "description": null,
+      "description_source_url": null,
+      "description_license": null,
+      "cover_image": null,
+      "images": [],
+      "image_attributions": [],
+      "opening_hours": null,
+      "website": null,
+      "phone": null,
+      "osm_tags_used": {},
+      "enrichment_tier": "osm_factual_only"
+    },
+    {
+      "place_id": "e017ba7c-a9d6-40f2-8b6b-d2bcd4b12b2c",
+      "name": "Thay Cave",
+      "destination_slug": "ha-long",
+      "category": "attraction",
+      "is_rec_a_core_v2": true,
+      "description": null,
+      "description_source_url": null,
+      "description_license": null,
+      "cover_image": null,
+      "images": [],
+      "image_attributions": [],
+      "opening_hours": null,
+      "website": null,
+      "phone": null,
+      "osm_tags_used": {},
+      "enrichment_tier": "osm_factual_only"
+    },
+    {
+      "place_id": "bfe45852-9a6d-4915-8b6b-c0b62c6f2b97",
+      "name": "Senna Cruise",
+      "destination_slug": "ha-long",
+      "category": "attraction",
+      "is_rec_a_core_v2": true,
+      "description": null,
+      "description_source_url": null,
+      "description_license": null,
+      "cover_image": null,
+      "images": [],
+      "image_attributions": [],
+      "opening_hours": null,
+      "website": null,
+      "phone": null,
+      "osm_tags_used": {},
+      "enrichment_tier": "osm_factual_only"
+    },
+    {
+      "place_id": "34d89a3a-6272-4c3b-8c85-df92db91e3f6",
+      "name": "Old Hon Gai Ferry Terminal",
+      "destination_slug": "ha-long",
+      "category": "attraction",
+      "is_rec_a_core_v2": true,
+      "description": null,
+      "description_source_url": null,
+      "description_license": null,
+      "cover_image": null,
+      "images": [],
+      "image_attributions": [],
+      "opening_hours": null,
+      "website": null,
+      "phone": null,
+      "osm_tags_used": {},
+      "enrichment_tier": "osm_factual_only"
+    },
+    {
+      "place_id": "d707d786-f31d-405c-a5ba-d1b4b500c7ab",
+      "name": "Núi Sư Tử",
+      "destination_slug": "ha-long",
+      "category": "attraction",
+      "is_rec_a_core_v2": true,
+      "description": null,
+      "description_source_url": null,
+      "description_license": null,
+      "cover_image": null,
+      "images": [],
+      "image_attributions": [],
+      "opening_hours": null,
+      "website": null,
+      "phone": null,
+      "osm_tags_used": {},
+      "enrichment_tier": "osm_factual_only"
+    },
+    {
+      "place_id": "749168c6-43e1-40bc-886a-5c39fe5b5c74",
+      "name": "Nhạc nước",
+      "destination_slug": "ha-long",
+      "category": "attraction",
+      "is_rec_a_core_v2": true,
+      "description": null,
+      "description_source_url": null,
+      "description_license": null,
+      "cover_image": null,
+      "images": [],
+      "image_attributions": [],
+      "opening_hours": null,
+      "website": null,
+      "phone": null,
+      "osm_tags_used": {},
+      "enrichment_tier": "osm_factual_only"
+    },
+    {
+      "place_id": "317433c7-248e-4470-b4ee-fc7bee017aa3",
+      "name": "Legend Pearl",
+      "destination_slug": "ha-long",
+      "category": "attraction",
+      "is_rec_a_core_v2": true,
+      "description": null,
+      "description_source_url": null,
+      "description_license": null,
+      "cover_image": null,
+      "images": [],
+      "image_attributions": [],
+      "opening_hours": null,
+      "website": null,
+      "phone": null,
+      "osm_tags_used": {},
+      "enrichment_tier": "osm_factual_only"
+    },
+    {
+      "place_id": "88652ea2-61a6-4022-85e5-84a0eb48d3f9",
+      "name": "Hòn Đỉnh Hương",
+      "destination_slug": "ha-long",
+      "category": "attraction",
+      "is_rec_a_core_v2": true,
+      "description": null,
+      "description_source_url": null,
+      "description_license": null,
+      "cover_image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/f0/Halong_Bay_%2822725839858%29.jpg/960px-Halong_Bay_%2822725839858%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "images": [
+        "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/f0/Halong_Bay_%2822725839858%29.jpg/960px-Halong_Bay_%2822725839858%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+        "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/01/Halong_Bay_%2822736794658%29.jpg/960px-Halong_Bay_%2822736794658%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+      ],
+      "image_attributions": [
+        {
+          "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/f0/Halong_Bay_%2822725839858%29.jpg/960px-Halong_Bay_%2822725839858%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "fullUrl": "https://upload.wikimedia.org/wikipedia/commons/f/f0/Halong_Bay_%2822725839858%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+          "commonsPageUrl": "https://commons.wikimedia.org/wiki/File:Halong_Bay_(22725839858).jpg",
+          "license": "CC BY-SA 2.0",
+          "artist": "Sandra Cohen-Rose and Colin Rose from Montreal, Canada",
+          "title": "File:Halong Bay (22725839858).jpg"
+        },
+        {
+          "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/01/Halong_Bay_%2822736794658%29.jpg/960px-Halong_Bay_%2822736794658%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "fullUrl": "https://upload.wikimedia.org/wikipedia/commons/0/01/Halong_Bay_%2822736794658%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+          "commonsPageUrl": "https://commons.wikimedia.org/wiki/File:Halong_Bay_(22736794658).jpg",
+          "license": "CC BY-SA 2.0",
+          "artist": "Sandra Cohen-Rose and Colin Rose from Montreal, Canada",
+          "title": "File:Halong Bay (22736794658).jpg"
+        }
+      ],
+      "opening_hours": null,
+      "website": null,
+      "phone": null,
+      "osm_tags_used": {},
+      "enrichment_tier": "media_or_article"
+    },
+    {
+      "place_id": "58fcec2c-e8f1-4eb0-99b7-fdf2aa32a571",
+      "name": "Hòn Đầu Gỗ",
+      "destination_slug": "ha-long",
+      "category": "attraction",
+      "is_rec_a_core_v2": true,
+      "description": "Hang Đầu Gỗ là hang trên hòn Đầu Gỗ trong vịnh Hạ Long, thành phố Quảng Ninh, Việt Nam.",
+      "description_source_url": "https://vi.wikipedia.org/wiki/Hang_%C4%90%E1%BA%A7u_G%E1%BB%97",
+      "description_license": "CC BY-SA 4.0 (Wikipedia)",
+      "cover_image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/f7/Upper_Thi%C3%AAn_Cung_Grotto_-_panoramio.jpg/960px-Upper_Thi%C3%AAn_Cung_Grotto_-_panoramio.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "images": [
+        "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/f7/Upper_Thi%C3%AAn_Cung_Grotto_-_panoramio.jpg/960px-Upper_Thi%C3%AAn_Cung_Grotto_-_panoramio.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+      ],
+      "image_attributions": [
+        {
+          "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/f7/Upper_Thi%C3%AAn_Cung_Grotto_-_panoramio.jpg/960px-Upper_Thi%C3%AAn_Cung_Grotto_-_panoramio.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "fullUrl": "https://upload.wikimedia.org/wikipedia/commons/f/f7/Upper_Thi%C3%AAn_Cung_Grotto_-_panoramio.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+          "commonsPageUrl": "https://commons.wikimedia.org/wiki/File:Upper_Thi%C3%AAn_Cung_Grotto_-_panoramio.jpg",
+          "license": "CC BY-SA 3.0",
+          "artist": "sonpano",
+          "title": "File:Upper Thiên Cung Grotto - panoramio.jpg"
+        }
+      ],
+      "opening_hours": null,
+      "website": null,
+      "phone": null,
+      "osm_tags_used": {},
+      "enrichment_tier": "media_and_article"
+    },
+    {
+      "place_id": "62acf5fd-4bf0-4ec8-87ee-2e0bfc5a197e",
+      "name": "Hòn Gà chọi",
+      "destination_slug": "ha-long",
+      "category": "attraction",
+      "is_rec_a_core_v2": true,
+      "description": null,
+      "description_source_url": null,
+      "description_license": null,
+      "cover_image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/da/%E9%B1%BC%E5%90%90%E9%9B%BE_-_panoramio.jpg/960px-%E9%B1%BC%E5%90%90%E9%9B%BE_-_panoramio.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "images": [
+        "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/da/%E9%B1%BC%E5%90%90%E9%9B%BE_-_panoramio.jpg/960px-%E9%B1%BC%E5%90%90%E9%9B%BE_-_panoramio.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+        "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/cd/Kissing_Rocks%2C_Ha_Long_Bay%2C_Vietnam%2C_20240128_1254_3707.jpg/960px-Kissing_Rocks%2C_Ha_Long_Bay%2C_Vietnam%2C_20240128_1254_3707.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+      ],
+      "image_attributions": [
+        {
+          "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/da/%E9%B1%BC%E5%90%90%E9%9B%BE_-_panoramio.jpg/960px-%E9%B1%BC%E5%90%90%E9%9B%BE_-_panoramio.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "fullUrl": "https://upload.wikimedia.org/wikipedia/commons/d/da/%E9%B1%BC%E5%90%90%E9%9B%BE_-_panoramio.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+          "commonsPageUrl": "https://commons.wikimedia.org/wiki/File:%E9%B1%BC%E5%90%90%E9%9B%BE_-_panoramio.jpg",
+          "license": "CC BY-SA 3.0",
+          "artist": "huxuejiang",
+          "title": "File:鱼吐雾 - panoramio.jpg"
+        },
+        {
+          "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/cd/Kissing_Rocks%2C_Ha_Long_Bay%2C_Vietnam%2C_20240128_1254_3707.jpg/960px-Kissing_Rocks%2C_Ha_Long_Bay%2C_Vietnam%2C_20240128_1254_3707.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "fullUrl": "https://upload.wikimedia.org/wikipedia/commons/c/cd/Kissing_Rocks%2C_Ha_Long_Bay%2C_Vietnam%2C_20240128_1254_3707.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+          "commonsPageUrl": "https://commons.wikimedia.org/wiki/File:Kissing_Rocks,_Ha_Long_Bay,_Vietnam,_20240128_1254_3707.jpg",
+          "license": "CC BY 4.0",
+          "artist": "Jakub Hałun",
+          "title": "File:Kissing Rocks, Ha Long Bay, Vietnam, 20240128 1254 3707.jpg"
+        }
+      ],
+      "opening_hours": null,
+      "website": null,
+      "phone": null,
+      "osm_tags_used": {},
+      "enrichment_tier": "media_or_article"
+    },
+    {
+      "place_id": "205a8100-faa1-42f0-8fa7-8c46fd60bedc",
+      "name": "Hòn Bằng",
+      "destination_slug": "ha-long",
+      "category": "attraction",
+      "is_rec_a_core_v2": true,
+      "description": null,
+      "description_source_url": null,
+      "description_license": null,
+      "cover_image": null,
+      "images": [],
+      "image_attributions": [],
+      "opening_hours": null,
+      "website": null,
+      "phone": null,
+      "osm_tags_used": {},
+      "enrichment_tier": "osm_factual_only"
+    }
+  ]
+}

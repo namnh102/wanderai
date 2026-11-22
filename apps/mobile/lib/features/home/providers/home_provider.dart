@@ -11,6 +11,7 @@ class HomeState {
   final bool isLoading;
   final List<HomeDestinationItem> destinations;
   final List<PlaceModel> featuredPlaces;
+  final List<PlaceModel> trendingPlaces;
   final List<PlaceModel> nearbyPlaces;
   final bool isNearbyLoading;
   final bool hasNearbyLoaded;
@@ -26,6 +27,7 @@ class HomeState {
     this.isLoading = true,
     this.destinations = const [],
     this.featuredPlaces = const [],
+    this.trendingPlaces = const [],
     this.nearbyPlaces = const [],
     this.isNearbyLoading = false,
     this.hasNearbyLoaded = false,
@@ -50,6 +52,7 @@ class HomeState {
     bool? isLoading,
     List<HomeDestinationItem>? destinations,
     List<PlaceModel>? featuredPlaces,
+    List<PlaceModel>? trendingPlaces,
     List<PlaceModel>? nearbyPlaces,
     bool? isNearbyLoading,
     bool? hasNearbyLoaded,
@@ -67,6 +70,7 @@ class HomeState {
       isLoading: isLoading ?? this.isLoading,
       destinations: destinations ?? this.destinations,
       featuredPlaces: featuredPlaces ?? this.featuredPlaces,
+      trendingPlaces: trendingPlaces ?? this.trendingPlaces,
       nearbyPlaces: nearbyPlaces ?? this.nearbyPlaces,
       isNearbyLoading: isNearbyLoading ?? this.isNearbyLoading,
       hasNearbyLoaded: hasNearbyLoaded ?? this.hasNearbyLoaded,
@@ -126,6 +130,7 @@ class HomeNotifier extends StateNotifier<HomeState> {
     try {
       final destFuture = _dio.get('/destinations', queryParameters: {'limit': 50});
       final placesFuture = _loadFeaturedPlacesSoft();
+      final trendingFuture = _loadTrendingSoft();
       final profileFuture = _loadProfileSoft();
 
       final destResp = await destFuture;
@@ -143,6 +148,7 @@ class HomeNotifier extends StateNotifier<HomeState> {
         });
 
       final placesResult = await placesFuture;
+      final trendingResult = await trendingFuture;
       final profileResult = await profileFuture;
       if (!mounted || seq != _loadSeq) return;
 
@@ -150,6 +156,7 @@ class HomeNotifier extends StateNotifier<HomeState> {
         isLoading: false,
         destinations: parsedDestinations,
         featuredPlaces: placesResult.$1,
+        trendingPlaces: trendingResult,
         partialBannerMessage: placesResult.$2,
         userDisplayName: profileResult.$1,
         userInterests: profileResult.$2,
@@ -191,6 +198,21 @@ class HomeNotifier extends StateNotifier<HomeState> {
           errorMessage: msg,
         );
       }
+    }
+  }
+
+  Future<List<PlaceModel>> _loadTrendingSoft() async {
+    try {
+      final resp = await _dio.get('/places/trending', queryParameters: {'limit': 6});
+      final raw = resp.data;
+      final inner = raw is Map ? (raw['data'] ?? raw) : raw;
+      final items = inner is Map ? (inner['items'] as List? ?? const []) : const [];
+      return items
+          .whereType<Map<String, dynamic>>()
+          .map(PlaceModel.fromJson)
+          .toList();
+    } catch (_) {
+      return const <PlaceModel>[];
     }
   }
 
