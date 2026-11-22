@@ -21,13 +21,18 @@ class AuthState {
 /// Single source of truth for authentication.
 class AuthNotifier extends StateNotifier<AuthState> {
   final AuthRepository _repo;
+  final SessionEpochController _epoch;
 
-  AuthNotifier(this._repo) : super(const AuthState.unknown()) {
+  AuthNotifier(this._repo, {SessionEpochController? epochController})
+      : _epoch = epochController ?? SessionEpochController(),
+        super(const AuthState.unknown()) {
     _init();
   }
 
   Future<void> _init() async {
+    final initEpoch = _epoch.current;
     final hasToken = await _repo.restoreSession();
+    if (!mounted || _epoch.current != initEpoch) return;
     if (hasToken) {
       state = const AuthState.authenticated();
     } else {
@@ -36,30 +41,48 @@ class AuthNotifier extends StateNotifier<AuthState> {
   }
 
   Future<bool> login(String email, String password) async {
+    final attemptEpoch = _epoch.advance();
     try {
       await _repo.login(LoginRequest(email: email, password: password));
+      if (!mounted || _epoch.current != attemptEpoch) return false;
       state = const AuthState.authenticated();
       return true;
     } on DioException catch (e) {
+      if (!mounted || _epoch.current != attemptEpoch) return false;
       state = AuthState.unauthenticated(errorMessage: _mapError(e));
       return false;
     }
   }
 
   Future<bool> register(String name, String email, String password) async {
+    final attemptEpoch = _epoch.advance();
     try {
       await _repo.register(RegisterRequest(name: name, email: email, password: password));
+      if (!mounted || _epoch.current != attemptEpoch) return false;
       state = const AuthState.authenticated();
       return true;
     } on DioException catch (e) {
+      if (!mounted || _epoch.current != attemptEpoch) return false;
       state = AuthState.unauthenticated(errorMessage: _mapError(e));
       return false;
     }
   }
 
   Future<void> logout() async {
+    final logoutEpoch = _epoch.advance();
     await _repo.logout();
+    if (!mounted || _epoch.current != logoutEpoch) return;
     state = const AuthState.unauthenticated();
+  }
+
+  /// Syncs unauthenticated UI state after automatic 401/403 refresh failure.
+  void handleSessionExpired() {
+    if (state.status == AuthStatus.authenticated) {
+      _epoch.advance();
+      state = const AuthState.unauthenticated(
+        errorMessage: 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.',
+      );
+    }
   }
 
   /// Map API/network errors to user-friendly Vietnamese messages.
@@ -98,5 +121,12 @@ final authRepositoryProvider = Provider<AuthRepository>((ref) {
 /// Riverpod provider for auth state — single source of truth.
 final authProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) {
   final repo = ref.read(authRepositoryProvider);
-  return AuthNotifier(repo);
+  final epochController = ref.read(sessionEpochControllerProvider);
+  final notifier = AuthNotifier(repo, epochController: epochController);
+  ref.listen<int>(authSessionExpiredSignalProvider, (prev, next) {
+    if (prev != next) {
+      notifier.handleSessionExpired();
+    }
+  });
+  return notifier;
 });

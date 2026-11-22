@@ -317,9 +317,9 @@ void main() {
       await tester.pump();
       await tester.pumpAndSettle();
 
-      expect(find.text('Chuyen di cua toi'), findsOneWidget);
+      expect(find.text('Chuyến đi của tôi'), findsOneWidget);
       expect(find.text('Kham pha Da Nang 3 ngay'), findsOneWidget);
-      expect(find.text('Da len lich'), findsOneWidget);
+      expect(find.text('Đã lên lịch'), findsOneWidget);
     });
 
     testWidgets('2. Empty trips state renders illustration and create button', (tester) async {
@@ -334,8 +334,8 @@ void main() {
       await tester.pump();
       await tester.pumpAndSettle();
 
-      expect(find.text('Chua co chuyen di nao'), findsOneWidget);
-      expect(find.text('Tao chuyen di moi'), findsWidgets);
+      expect(find.text('Chưa có chuyến đi nào'), findsOneWidget);
+      expect(find.text('Tạo chuyến đi mới'), findsWidgets);
     });
 
     testWidgets('3. Create trip validation rejects empty title', (tester) async {
@@ -350,12 +350,12 @@ void main() {
       await tester.pump();
 
       // Ensure submit button is scrolled into view before tapping
-      await tester.ensureVisible(find.text('Tao chuyen di'));
+      await tester.ensureVisible(find.text('Tạo chuyến đi'));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Tao chuyen di'));
+      await tester.tap(find.text('Tạo chuyến đi'));
       await tester.pumpAndSettle();
 
-      expect(find.text('Vui long nhap ten chuyen di'), findsOneWidget);
+      expect(find.text('Vui lòng nhập tên chuyến đi'), findsOneWidget);
     });
 
     testWidgets('6 & 9. Trip detail renders overview and itinerary', (tester) async {
@@ -372,8 +372,8 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Chuyen di mau'), findsWidgets);
-      expect(find.text('Lich trinh chi tiet'), findsOneWidget);
-      expect(find.text('Ngay 1'), findsOneWidget);
+      expect(find.text('Lịch trình chi tiết'), findsOneWidget);
+      expect(find.text('Ngày 1'), findsOneWidget);
       expect(find.text('Tham quan Bao tang'), findsOneWidget);
     });
   });

@@ -58,9 +58,15 @@ class RouterNotifier extends ChangeNotifier {
     _ref.listen<AuthState>(
       authProvider,
       (previous, next) {
-        // G-01: never carry one user's preferences/recommendations into the next session.
-        if (previous?.status != next.status) {
-          resetSessionScopedState(_ref);
+        // G-01: never carry one user's preferences/recommendations into the next session,
+        // and never trigger session-scoped fetches during unauthenticated startup (unknown -> unauthenticated).
+        if (previous?.status != next.status &&
+            (previous?.status == AuthStatus.authenticated ||
+                next.status == AuthStatus.authenticated)) {
+          resetSessionScopedState(
+            _ref,
+            isAuthenticated: next.status == AuthStatus.authenticated,
+          );
         }
         notifyListeners();
       },
@@ -148,14 +154,25 @@ final appRouterProvider = Provider<GoRouter>((ref) {
   );
 });
 
-class _MainScaffold extends StatelessWidget {
+class _MainScaffold extends ConsumerWidget {
   final Widget child;
   const _MainScaffold({required this.child});
 
   static const _tabs = ['/', '/map', '/ai', '/safety', '/trips'];
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    // Avoid mounting authenticated tab screens (and triggering pre-login /users/me calls)
+    // before AuthNotifier finishes checking persisted tokens on startup.
+    final authStatus = ref.watch(authProvider.select((s) => s.status));
+    if (authStatus != AuthStatus.authenticated) {
+      return const Scaffold(
+        body: Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+
     final location = GoRouterState.of(context).uri.toString();
     final currentIndex = _tabs.indexOf(location).clamp(0, 4);
 

@@ -19,7 +19,7 @@ class AppConstants {
   /// Reference example for standard Android Emulator host loopback (not auto-selected).
   static const String androidEmulatorExampleApiBaseUrl = 'http://10.0.2.2:3000';
 
-  static const String appName = 'WanderAI';
+  static const String appName = 'GoMate';
   static const int pageSize = 20;
 
   static const Set<String> _disallowedReleaseHosts = {

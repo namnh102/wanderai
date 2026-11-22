@@ -10,6 +10,7 @@ import '../../../core/widgets/app_chip.dart';
 import '../../../core/widgets/app_empty_state.dart';
 import '../../../core/widgets/app_error_state.dart';
 import '../../../core/widgets/app_loading.dart';
+import '../../../core/widgets/app_state_banner.dart';
 import '../../../core/widgets/responsive_wrapper.dart';
 import '../../profile/data/profile_models.dart';
 import '../data/recommendation_models.dart';
@@ -44,6 +45,7 @@ class _RecommendationScreenState extends ConsumerState<RecommendationScreen> {
     final notifier = ref.read(recommendationProvider.notifier);
 
     return Scaffold(
+      backgroundColor: AppColors.warmBackground,
       appBar: AppBar(
         title: const Text('Gợi ý cho bạn'),
         actions: [
@@ -57,7 +59,7 @@ class _RecommendationScreenState extends ConsumerState<RecommendationScreen> {
         ],
       ),
       body: ResponsiveWrapper(
-        maxWidth: 800.0,
+        maxWidth: 960.0,
         child: Column(
           children: [
             _DestinationSelector(
@@ -133,14 +135,48 @@ class _ResultList extends StatelessWidget {
   Widget build(BuildContext context) {
     final items = result.recommendations;
     final cold = result.metadata.coldStart;
-    return ListView.separated(
-      padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.sm, AppSpacing.md, AppSpacing.xl),
-      itemCount: items.length + (cold ? 1 : 0),
-      separatorBuilder: (_, __) => const SizedBox(height: AppSpacing.sm),
-      itemBuilder: (context, index) {
-        if (cold && index == 0) return const _ColdStartNotice();
-        final item = items[index - (cold ? 1 : 0)];
-        return _RecommendationCard(item: item);
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final useTwoCols = constraints.maxWidth >= 680;
+        if (!useTwoCols) {
+          return ListView.separated(
+            padding: const EdgeInsets.fromLTRB(
+                AppSpacing.md, AppSpacing.sm, AppSpacing.md, AppSpacing.xl),
+            itemCount: items.length + (cold ? 1 : 0),
+            separatorBuilder: (_, __) => const SizedBox(height: AppSpacing.mdSmall),
+            itemBuilder: (context, index) {
+              if (cold && index == 0) return const _ColdStartNotice();
+              final item = items[index - (cold ? 1 : 0)];
+              return _RecommendationCard(item: item);
+            },
+          );
+        }
+
+        final rowCount = (items.length + 1) ~/ 2;
+        return ListView.separated(
+          padding: const EdgeInsets.fromLTRB(
+              AppSpacing.md, AppSpacing.sm, AppSpacing.md, AppSpacing.xl),
+          itemCount: rowCount + (cold ? 1 : 0),
+          separatorBuilder: (_, __) => const SizedBox(height: AppSpacing.mdSmall),
+          itemBuilder: (context, index) {
+            if (cold && index == 0) return const _ColdStartNotice();
+            final pairIdx = index - (cold ? 1 : 0);
+            final firstIdx = pairIdx * 2;
+            final secondIdx = firstIdx + 1;
+            return Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(child: _RecommendationCard(item: items[firstIdx])),
+                const SizedBox(width: AppSpacing.mdSmall),
+                Expanded(
+                  child: secondIdx < items.length
+                      ? _RecommendationCard(item: items[secondIdx])
+                      : const SizedBox.shrink(),
+                ),
+              ],
+            );
+          },
+        );
       },
     );
   }
@@ -152,29 +188,14 @@ class _ColdStartNotice extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return AppStateBanner(
       key: const Key('reco_cold_start_notice'),
-      padding: const EdgeInsets.all(AppSpacing.md),
-      decoration: BoxDecoration(
-        color: AppColors.primaryContainer.withValues(alpha: 0.6),
-        borderRadius: AppRadius.cardRadius,
-      ),
-      child: Row(
-        children: [
-          const Icon(Icons.info_outline, color: AppColors.primary),
-          const SizedBox(width: AppSpacing.sm),
-          const Expanded(
-            child: Text(
-              'Bạn chưa chọn sở thích nên đây là gợi ý đa dạng. Chọn sở thích để nhận gợi ý cá nhân hóa.',
-              style: AppTypography.bodyS,
-            ),
-          ),
-          TextButton(
-            onPressed: () => context.push('/profile/preferences'),
-            child: const Text('Chọn'),
-          ),
-        ],
-      ),
+      tone: AppStateBannerTone.info,
+      icon: Icons.auto_awesome_outlined,
+      message:
+          'Bạn chưa chọn sở thích nên đây là gợi ý đa dạng. Chọn sở thích để nhận gợi ý cá nhân hóa.',
+      actionLabel: 'Chọn',
+      onAction: () => context.push('/profile/preferences'),
     );
   }
 }
@@ -189,27 +210,51 @@ class _RecommendationCard extends StatelessWidget {
     final interests = item.matchedInterests.isNotEmpty
         ? item.matchedInterests
         : item.explanation.matchedInterests;
+    final catColor = AppColors.forCategory(item.category);
     return AppCard(
       key: Key('reco_item_${item.placeId}'),
+      elevated: true,
+      backgroundColor: AppColors.surface,
+      border: const BorderSide(color: AppColors.softBorder),
       onTap: () => context.push('/places/${item.placeId}'),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: catColor.withValues(alpha: 0.12),
+                  borderRadius: AppRadius.mdRadius,
+                ),
+                child: Icon(_categoryIcon(item.category), color: catColor, size: 20),
+              ),
+              const SizedBox(width: AppSpacing.mdSmall),
               Expanded(
-                child: Text(
-                  item.name,
-                  style: AppTypography.h3,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      item.name,
+                      style: AppTypography.h3.copyWith(fontSize: 16),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      categoryLabel(item.category),
+                      style: AppTypography.label.copyWith(color: catColor),
+                    ),
+                  ],
                 ),
               ),
+              const SizedBox(width: AppSpacing.xs),
               const Icon(Icons.chevron_right, color: AppColors.textSecondary),
             ],
           ),
-          const SizedBox(height: 2),
-          Text(categoryLabel(item.category), style: AppTypography.bodyS),
           if (item.explanation.text.isNotEmpty) ...[
             const SizedBox(height: AppSpacing.sm),
             Text(item.explanation.text, style: AppTypography.bodyM),
@@ -242,6 +287,36 @@ class _RecommendationCard extends StatelessWidget {
         ],
       ),
     );
+  }
+}
+
+IconData _categoryIcon(String category) {
+  switch (category.toLowerCase()) {
+    case 'attraction':
+      return Icons.attractions;
+    case 'restaurant':
+      return Icons.restaurant;
+    case 'hotel':
+      return Icons.hotel;
+    case 'temple':
+    case 'pagoda':
+      return Icons.temple_buddhist;
+    case 'beach':
+      return Icons.beach_access;
+    case 'museum':
+    case 'culture':
+      return Icons.museum;
+    case 'park':
+    case 'nature':
+      return Icons.park;
+    case 'market':
+      return Icons.store;
+    case 'cafe':
+      return Icons.local_cafe;
+    case 'entertainment':
+      return Icons.celebration;
+    default:
+      return Icons.place;
   }
 }
 

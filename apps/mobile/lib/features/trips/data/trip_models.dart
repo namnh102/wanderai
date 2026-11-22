@@ -386,7 +386,7 @@ class AiPlanDayModel {
     return AiPlanDayModel(
       dayNumber: json['dayNumber'] as int? ?? 1,
       date: json['date'] as String?,
-      title: json['title'] as String? ?? 'Ngay ${json['dayNumber'] ?? 1}',
+      title: json['title'] as String? ?? 'Ngày ${json['dayNumber'] ?? 1}',
       dayCost: json['dayCost'] as int? ?? 0,
       items: rawItems
           .map((i) => AiPlanItemModel.fromJson(i as Map<String, dynamic>))

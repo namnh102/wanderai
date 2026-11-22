@@ -1,5 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_radius.dart';
 
 /// Search bar overlay on the map.
 ///
@@ -64,9 +66,13 @@ class _MapSearchBarState extends State<MapSearchBar> {
     final theme = Theme.of(context);
 
     return Material(
-      elevation: 4,
-      borderRadius: BorderRadius.circular(28),
-      color: theme.colorScheme.surface,
+      elevation: 3,
+      shadowColor: AppColors.primaryDeep.withValues(alpha: 0.12),
+      shape: const RoundedRectangleBorder(
+        borderRadius: AppRadius.pillRadius,
+        side: BorderSide(color: AppColors.softBorder),
+      ),
+      color: AppColors.surface,
       child: TextField(
         controller: _controller,
         onChanged: _onChanged,
@@ -76,7 +82,7 @@ class _MapSearchBarState extends State<MapSearchBar> {
         },
         decoration: InputDecoration(
           hintText: 'Tìm địa điểm...',
-          prefixIcon: Icon(Icons.search, color: theme.colorScheme.primary),
+          prefixIcon: const Icon(Icons.search, color: AppColors.primary),
           suffixIcon: _controller.text.isNotEmpty
               ? IconButton(
                   icon: const Icon(Icons.clear, size: 20),
@@ -88,6 +94,8 @@ class _MapSearchBarState extends State<MapSearchBar> {
                 )
               : null,
           border: InputBorder.none,
+          enabledBorder: InputBorder.none,
+          focusedBorder: InputBorder.none,
           filled: false,
           contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         ),

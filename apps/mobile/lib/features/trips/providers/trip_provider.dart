@@ -33,25 +33,36 @@ class TripListState {
 
 class TripListNotifier extends StateNotifier<TripListState> {
   final TripRepository _repo;
+  int _loadSeq = 0;
 
   TripListNotifier(this._repo) : super(const TripListState()) {
     loadTrips();
   }
 
+  /// Reset session-scoped trip list on logout without triggering `/trips`.
+  void resetForLogout() {
+    _loadSeq++;
+    state = const TripListState();
+  }
+
   Future<void> loadTrips() async {
+    final seq = ++_loadSeq;
     state = state.copyWith(isLoading: true, clearError: true);
     try {
       final list = await _repo.getMyTrips();
+      if (!mounted || seq != _loadSeq) return;
       state = state.copyWith(trips: list, isLoading: false, clearError: true);
     } on DioException catch (e) {
+      if (!mounted || seq != _loadSeq) return;
       state = state.copyWith(
         isLoading: false,
         errorMessage: _mapError(e),
       );
     } catch (_) {
+      if (!mounted || seq != _loadSeq) return;
       state = state.copyWith(
         isLoading: false,
-        errorMessage: 'Khong the tai danh sach chuyen di',
+        errorMessage: 'Không thể tải danh sách chuyến đi',
       );
     }
   }
@@ -84,13 +95,13 @@ class TripListNotifier extends StateNotifier<TripListState> {
 
   String _mapError(DioException e) {
     if (e.response?.statusCode == 401) {
-      return 'Phien dang nhap het han. Vui long dang nhap lai.';
+      return 'Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.';
     }
     final data = e.response?.data;
     if (data is Map && data['message'] is String) {
       return data['message'] as String;
     }
-    return 'Loi ket noi den may chu. Vui long thu lai.';
+    return 'Lỗi kết nối đến máy chủ. Vui lòng thử lại.';
   }
 }
 
@@ -137,23 +148,34 @@ class TripDetailState {
 
 class TripDetailNotifier extends StateNotifier<TripDetailState> {
   final TripRepository _repo;
+  int _loadSeq = 0;
 
   TripDetailNotifier(this._repo) : super(const TripDetailState());
 
+  /// Reset session-scoped trip detail on logout.
+  void resetForLogout() {
+    _loadSeq++;
+    state = const TripDetailState();
+  }
+
   Future<void> loadTrip(String id) async {
+    final seq = ++_loadSeq;
     state = state.copyWith(isLoading: true, clearError: true);
     try {
       final detail = await _repo.getTripDetail(id);
+      if (!mounted || seq != _loadSeq) return;
       state = state.copyWith(trip: detail, isLoading: false, clearError: true);
     } on DioException catch (e) {
+      if (!mounted || seq != _loadSeq) return;
       state = state.copyWith(
         isLoading: false,
         errorMessage: _mapError(e),
       );
     } catch (_) {
+      if (!mounted || seq != _loadSeq) return;
       state = state.copyWith(
         isLoading: false,
-        errorMessage: 'Khong the tai chi tiet chuyen di',
+        errorMessage: 'Không thể tải chi tiết chuyến đi',
       );
     }
   }
@@ -220,7 +242,7 @@ class TripDetailNotifier extends StateNotifier<TripDetailState> {
     } catch (_) {
       state = state.copyWith(
         isGeneratingPlan: false,
-        planErrorMessage: 'Khong the tao lich trinh tu AI. Vui long thu lai.',
+        planErrorMessage: 'Không thể tạo lịch trình từ AI. Vui lòng thử lại.',
       );
       return null;
     }
@@ -252,7 +274,7 @@ class TripDetailNotifier extends StateNotifier<TripDetailState> {
     } catch (_) {
       state = state.copyWith(
         isLoading: false,
-        errorMessage: 'Loi khi luu lich trinh vao chuyen di',
+        errorMessage: 'Lỗi khi lưu lịch trình vào chuyến đi',
       );
       return false;
     }
@@ -264,16 +286,16 @@ class TripDetailNotifier extends StateNotifier<TripDetailState> {
 
   String _mapError(DioException e) {
     if (e.response?.statusCode == 403) {
-      return 'Ban khong co quyen truy cap chuyen di nay.';
+      return 'Bạn không có quyền truy cập chuyến đi này.';
     }
     if (e.response?.statusCode == 404) {
-      return 'Chuyen di khong ton tai hoac da bi xoa.';
+      return 'Chuyến đi không tồn tại hoặc đã bị xóa.';
     }
     final data = e.response?.data;
     if (data is Map && data['message'] is String) {
       return data['message'] as String;
     }
-    return 'Loi ket noi. Vui long thu lai.';
+    return 'Lỗi kết nối. Vui lòng thử lại.';
   }
 }
 

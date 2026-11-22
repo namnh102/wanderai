@@ -15,13 +15,13 @@ class TripListScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text(
-          'Chuyen di cua toi',
+          'Chuyến đi của tôi',
           style: TextStyle(fontWeight: FontWeight.w700),
         ),
         actions: [
           IconButton(
             icon: const Icon(Icons.add_circle_outline),
-            tooltip: 'Tao chuyen di moi',
+            tooltip: 'Tạo chuyến đi mới',
             onPressed: () => context.push('/trips/create'),
           ),
         ],
@@ -60,7 +60,7 @@ class TripListScreen extends ConsumerWidget {
               const SizedBox(height: 16),
               ElevatedButton(
                 onPressed: () => ref.read(tripListProvider.notifier).loadTrips(),
-                child: const Text('Thu lai'),
+                child: const Text('Thử lại'),
               ),
             ],
           ),
@@ -87,12 +87,12 @@ class TripListScreen extends ConsumerWidget {
               ),
               const SizedBox(height: 20),
               const Text(
-                'Chua co chuyen di nao',
+                'Chưa có chuyến đi nào',
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 8),
               Text(
-                'Hay bat dau len ke hoach cho chuyen du lich tiep theo cua ban ngay bay gio!',
+                'Hãy bắt đầu lên kế hoạch cho chuyến du lịch tiếp theo của bạn ngay bây giờ!',
                 textAlign: TextAlign.center,
                 style: TextStyle(fontSize: 14, color: cs.onSurfaceVariant),
               ),
@@ -100,7 +100,7 @@ class TripListScreen extends ConsumerWidget {
               ElevatedButton.icon(
                 onPressed: () => context.push('/trips/create'),
                 icon: const Icon(Icons.add),
-                label: const Text('Tao chuyen di moi'),
+                label: const Text('Tạo chuyến đi mới'),
               ),
             ],
           ),
@@ -220,22 +220,22 @@ class TripListScreen extends ConsumerWidget {
       case 'PLANNED':
         bg = cs.primaryContainer;
         fg = cs.onPrimaryContainer;
-        label = 'Da len lich';
+        label = 'Đã lên lịch';
         break;
       case 'ONGOING':
         bg = Colors.amber.shade100;
         fg = Colors.amber.shade900;
-        label = 'Dang di';
+        label = 'Đang đi';
         break;
       case 'COMPLETED':
         bg = Colors.green.shade100;
         fg = Colors.green.shade900;
-        label = 'Hoan thanh';
+        label = 'Hoàn thành';
         break;
       default:
         bg = cs.surfaceContainerHigh;
         fg = cs.onSurfaceVariant;
-        label = 'Ban nhap';
+        label = 'Bản nháp';
     }
 
     return Container(
