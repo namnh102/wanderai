@@ -263,7 +263,8 @@ describe("YouTube Update Ingestion, Deduplication & POI Grounding Gate", () => {
       .fn()
       .mockResolvedValueOnce(null)
       .mockResolvedValueOnce(storedRow)
-      .mockResolvedValueOnce(null);
+      .mockResolvedValueOnce(null)
+      .mockResolvedValueOnce(storedRow);
     const create = jest
       .fn()
       .mockResolvedValueOnce(storedRow)
@@ -366,6 +367,154 @@ describe("YouTube Update Ingestion, Deduplication & POI Grounding Gate", () => {
     });
     expect(r3.duplicate).toBe(true);
     expect(r3.receivedAt).toBe(r1.receivedAt);
+    expect(new Date(r3.lastReceivedAt).getTime()).toBeGreaterThanOrEqual(
+      new Date(r3.receivedAt).getTime(),
+    );
+  });
+
+  it("prevents concurrent P2002 race inversion so lastReceivedAt >= receivedAt and updatedAt >= receivedAt", async () => {
+    const rows = new Map<string, Record<string, unknown>>();
+    let candidateCalls = 0;
+    let releaseFirstRequest!: () => void;
+    const firstRequestPaused = new Promise<void>((resolve) => {
+      releaseFirstRequest = resolve;
+    });
+    let firstRequestEnteredLoad!: () => void;
+    const firstEnteredPromise = new Promise<void>((resolve) => {
+      firstRequestEnteredLoad = resolve;
+    });
+
+    const mockPrisma = {
+      place: {
+        findMany: jest.fn().mockImplementation(async () => {
+          candidateCalls += 1;
+          if (candidateCalls === 1) {
+            firstRequestEnteredLoad();
+            await firstRequestPaused;
+          }
+          return [
+            {
+              id: THAP_DONG_HO_CANDIDATE.id,
+              destinationId: HA_LONG_DESTINATION.id,
+              name: THAP_DONG_HO_CANDIDATE.name,
+              nameEn: null,
+              description:
+                "Cột Đồng Hồ (Tháp Đồng Hồ) nằm tại khu vực trung tâm thành phố Hạ Long.",
+              latitude: THAP_DONG_HO_CANDIDATE.latitude,
+              longitude: THAP_DONG_HO_CANDIDATE.longitude,
+              destination: {
+                id: HA_LONG_DESTINATION.id,
+                name: "Hạ Long",
+                slug: "ha-long",
+                province: "Quảng Ninh",
+              },
+              placeSources: [
+                {
+                  sourceName: "osm",
+                  sourceId: "way/674228542",
+                  rawData: {},
+                },
+              ],
+            },
+          ];
+        }),
+        findUnique: jest.fn().mockResolvedValue({
+          id: THAP_DONG_HO_CANDIDATE.id,
+          name: "Tháp Đồng Hồ",
+          deletedAt: null,
+          destinationId: HA_LONG_DESTINATION.id,
+          destination: {
+            id: HA_LONG_DESTINATION.id,
+            slug: "ha-long",
+            name: "Hạ Long",
+          },
+          _count: { placeSources: 1 },
+        }),
+      },
+      destination: {
+        findMany: jest.fn().mockResolvedValue([HA_LONG_DESTINATION]),
+      },
+      youtubePoiUpdate: {
+        findUnique: jest.fn().mockImplementation(async ({ where }) => {
+          return rows.get(where.dedupeKey) ?? null;
+        }),
+        create: jest.fn().mockImplementation(async ({ data }) => {
+          if (rows.has(data.dedupeKey)) {
+            throw new Prisma.PrismaClientKnownRequestError(
+              "Unique constraint failed",
+              { code: "P2002", clientVersion: "5.0.0" },
+            );
+          }
+          const created = { id: "race-row-1", ...data };
+          rows.set(data.dedupeKey, created);
+          return created;
+        }),
+        update: jest
+          .fn()
+          .mockImplementation(async ({ where, data }) => {
+            const current = rows.get(where.dedupeKey) as {
+              deliveryCount: number;
+              lastReceivedAt: Date;
+            };
+            const updated = {
+              ...current,
+              deliveryCount:
+                current.deliveryCount + (data.deliveryCount?.increment ?? 0),
+              lastReceivedAt: data.lastReceivedAt,
+            };
+            rows.set(where.dedupeKey, updated);
+            return updated;
+          }),
+        findMany: jest.fn().mockImplementation(async ({ where }) => {
+          if (where.placeId === THAP_DONG_HO_CANDIDATE.id) {
+            return [...rows.values()];
+          }
+          return [];
+        }),
+      },
+    } as unknown as PrismaService;
+
+    const mockConfig = {
+      get: jest.fn(() => undefined),
+    } as unknown as ConfigService;
+
+    const service = new YoutubeService(mockPrisma, mockConfig);
+    const eventPayload = {
+      videoId: "RaceInv0001",
+      channelId: "UC_HL_RACE",
+      title: "Tháp Đồng Hồ Hạ Long buổi tối",
+      publishedAt: "2026-11-24T12:00:00.000Z",
+    };
+
+    // Request A enters at T1 and pauses after findUnique miss
+    const reqAPromise = service.ingestJsonEvent(eventPayload);
+    await firstEnteredPromise;
+
+    // Advance clock >= 15ms so Request B enters at T2 > T1 and wins create()
+    await new Promise((r) => setTimeout(r, 15));
+    const reqBReceipt = await service.ingestJsonEvent(eventPayload);
+    expect(reqBReceipt.duplicate).toBe(false);
+
+    // Unblock Request A so it hits P2002 and recovers
+    releaseFirstRequest();
+    const reqAReceipt = await reqAPromise;
+    expect(reqAReceipt.duplicate).toBe(true);
+    expect(reqAReceipt.deliveryCount).toBe(2);
+    expect(reqAReceipt.receivedAt).toBe(reqBReceipt.receivedAt);
+    expect(new Date(reqAReceipt.lastReceivedAt).getTime()).toBeGreaterThanOrEqual(
+      new Date(reqAReceipt.receivedAt).getTime(),
+    );
+
+    const feed = await service.listGroundedUpdatesForPlace(
+      THAP_DONG_HO_CANDIDATE.id,
+      10,
+    );
+    expect(feed.items).toHaveLength(1);
+    const item = feed.items[0];
+    expect(item.deliveryLagMs).toBeGreaterThanOrEqual(item.ingestLatencyMs);
+    expect(new Date(item.updatedAt).getTime()).toBeGreaterThanOrEqual(
+      new Date(item.receivedAt).getTime(),
+    );
   });
 
   it("supports Hạ Long city-level fallback while keeping POI conflict gates fail-closed", () => {

@@ -328,13 +328,29 @@ export class YoutubeService {
 
   private async _recordDuplicateDelivery(
     dedupeKey: string,
-    now: Date,
+    existingRow?: YoutubePoiUpdate | null,
   ): Promise<YoutubePoiUpdate> {
+    const currentRow =
+      existingRow ??
+      (await this.prisma.youtubePoiUpdate.findUnique({
+        where: { dedupeKey },
+      }));
+    const nowMs = Date.now();
+    const safeLastReceivedAt = currentRow
+      ? new Date(
+          Math.max(
+            nowMs,
+            currentRow.receivedAt.getTime(),
+            currentRow.lastReceivedAt.getTime(),
+          ),
+        )
+      : new Date(nowMs);
+
     return this.prisma.youtubePoiUpdate.update({
       where: { dedupeKey },
       data: {
         deliveryCount: { increment: 1 },
-        lastReceivedAt: now,
+        lastReceivedAt: safeLastReceivedAt,
       },
     });
   }
@@ -387,10 +403,7 @@ export class YoutubeService {
       where: { dedupeKey },
     });
     if (existing) {
-      const updated = await this._recordDuplicateDelivery(
-        dedupeKey,
-        receivedAt,
-      );
+      const updated = await this._recordDuplicateDelivery(dedupeKey, existing);
       return this._toReceipt(updated, true);
     }
 
@@ -448,10 +461,7 @@ export class YoutubeService {
         err instanceof Prisma.PrismaClientKnownRequestError &&
         err.code === "P2002"
       ) {
-        const updated = await this._recordDuplicateDelivery(
-          dedupeKey,
-          receivedAt,
-        );
+        const updated = await this._recordDuplicateDelivery(dedupeKey);
         return this._toReceipt(updated, true);
       }
       throw err;
@@ -568,6 +578,7 @@ export class YoutubeService {
         where: {
           placeId,
           status: YoutubeUpdateStatus.LINKED,
+          scope: YoutubeUpdateScope.POI,
         },
         orderBy: [
           { publishedAt: "desc" },
@@ -595,8 +606,12 @@ export class YoutubeService {
     ]);
 
     const items = this._dedupeAndSerialize(poiRows, destinationMeta, safeLimit);
+    const poiVideoIds = new Set(items.map((item) => item.videoId));
+    const filteredCityRows = cityRows.filter(
+      (row) => !poiVideoIds.has(row.videoId),
+    );
     const cityFallbackItems = this._dedupeAndSerialize(
-      cityRows,
+      filteredCityRows,
       destinationMeta,
       safeLimit,
     );
@@ -660,12 +675,21 @@ export class YoutubeService {
                 YoutubeUpdateStatus.LINKED,
               ],
             };
+    const scopeWhere: Prisma.YoutubePoiUpdateWhereInput["scope"] =
+      scopeFilter === "CITY"
+        ? YoutubeUpdateScope.CITY
+        : scopeFilter === "POI"
+          ? YoutubeUpdateScope.POI
+          : {
+              in: [YoutubeUpdateScope.CITY, YoutubeUpdateScope.POI],
+            };
 
     const [itemRows, cityRows] = await Promise.all([
       this.prisma.youtubePoiUpdate.findMany({
         where: {
           destinationId: destination.id,
           status: statusWhere,
+          scope: scopeWhere,
         },
         orderBy: [
           { publishedAt: "desc" },
@@ -692,13 +716,32 @@ export class YoutubeService {
           }),
     ]);
 
+    const consistentItemRows = itemRows.filter(
+      (row) =>
+        (row.status === YoutubeUpdateStatus.LINKED &&
+          row.scope === YoutubeUpdateScope.POI) ||
+        (row.status === YoutubeUpdateStatus.LINKED_CITY &&
+          row.scope === YoutubeUpdateScope.CITY),
+    );
     const items = this._dedupeAndSerialize(
-      itemRows,
+      consistentItemRows,
       destinationMeta,
       safeLimit,
     );
+    const poiVideoIds = new Set(
+      consistentItemRows
+        .filter(
+          (row) =>
+            row.status === YoutubeUpdateStatus.LINKED &&
+            row.scope === YoutubeUpdateScope.POI,
+        )
+        .map((row) => row.videoId),
+    );
+    const filteredCityRows = cityRows.filter(
+      (row) => !poiVideoIds.has(row.videoId),
+    );
     const cityFallbackItems = this._dedupeAndSerialize(
-      cityRows,
+      filteredCityRows,
       destinationMeta,
       safeLimit,
     );

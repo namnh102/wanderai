@@ -28,6 +28,23 @@ const trimStringArray = ({ value }: { value: unknown }) =>
     ? value.map((item) => (typeof item === "string" ? item.trim() : item))
     : value;
 
+const transformOptionalCoordinate = ({ value }: { value: unknown }) => {
+  if (value === undefined || value === null) {
+    return undefined;
+  }
+  if (typeof value === "number") {
+    return value;
+  }
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    if (trimmed.length === 0) {
+      return undefined;
+    }
+    return Number(trimmed);
+  }
+  return Number.NaN;
+};
+
 export class IngestYoutubeEventDto {
   @ApiPropertyOptional({
     description:
@@ -133,7 +150,7 @@ export class IngestYoutubeEventDto {
     example: 20.95161,
   })
   @IsOptional()
-  @Type(() => Number)
+  @Transform(transformOptionalCoordinate)
   @IsNumber()
   @Min(-90)
   @Max(90)
@@ -144,7 +161,7 @@ export class IngestYoutubeEventDto {
     example: 107.0852,
   })
   @IsOptional()
-  @Type(() => Number)
+  @Transform(transformOptionalCoordinate)
   @IsNumber()
   @Min(-180)
   @Max(180)

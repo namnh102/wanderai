@@ -85,10 +85,12 @@ class InMemoryYoutubePrisma {
   private updates: StoredYoutubeUpdate[] = [];
   private seq = 1;
   public simulateFindUniqueMissOnce = false;
+  public onPlaceFindMany: (() => Promise<void>) | null = null;
 
   reset(): void {
     this.seq = 1;
     this.simulateFindUniqueMissOnce = false;
+    this.onPlaceFindMany = null;
     this.destinations = [
       {
         id: HA_LONG_DEST_ID,
@@ -182,6 +184,11 @@ class InMemoryYoutubePrisma {
 
   place = {
     findMany: async () => {
+      if (this.onPlaceFindMany) {
+        const hook = this.onPlaceFindMany;
+        this.onPlaceFindMany = null;
+        await hook();
+      }
       return this.places
         .filter((p) => p.deletedAt === null && p.placeSources.length > 0)
         .map((p) => {
@@ -274,7 +281,7 @@ class InMemoryYoutubePrisma {
         placeId?: string | null;
         destinationId?: string;
         status?: YoutubeUpdateStatus | { in: YoutubeUpdateStatus[] };
-        scope?: YoutubeUpdateScope;
+        scope?: YoutubeUpdateScope | { in: YoutubeUpdateScope[] };
       };
       take?: number;
     }) => {
@@ -288,8 +295,12 @@ class InMemoryYoutubePrisma {
         ) {
           return false;
         }
-        if (where.scope !== undefined && u.scope !== where.scope) {
-          return false;
+        if (where.scope !== undefined) {
+          if (typeof where.scope === "object" && "in" in where.scope) {
+            if (!where.scope.in.includes(u.scope)) return false;
+          } else if (u.scope !== where.scope) {
+            return false;
+          }
         }
         if (where.status !== undefined) {
           if (typeof where.status === "object" && "in" in where.status) {
@@ -700,6 +711,208 @@ describe("YoutubeModule HTTP Integration (M2-backend-youtube)", () => {
       .expect(404);
     expect(destAlias404.body.errorCode).toBe(
       YOUTUBE_ERROR_CODES.DESTINATION_NOT_FOUND,
+    );
+  });
+
+  it("normalizes blank coordinates to undefined and rejects invalid/partial coordinate inputs with 400", async () => {
+    // 1. Blank string coordinates do NOT coerce to (0, 0) -> links Tháp Đồng Hồ POI
+    const emptyCoordsRes = await http()
+      .post("/youtube/events")
+      .set("x-youtube-internal-secret", TEST_INTERNAL_SECRET)
+      .send({
+        videoId: "EmptyCoord1",
+        channelId: "UC_DTO",
+        title: "Tháp Đồng Hồ Hạ Long",
+        publishedAt: "2026-11-24T12:00:00Z",
+        latitude: "",
+        longitude: "",
+      })
+      .expect(200);
+    expect(emptyCoordsRes.body.data.status).toBe("LINKED");
+    expect(emptyCoordsRes.body.data.scope).toBe("POI");
+    expect(emptyCoordsRes.body.data.linkedPlaceId).toBe(THAP_DONG_HO_ID);
+
+    // 2. Whitespace string & null coordinates also normalize to undefined -> LINKED POI
+    const blankAndNullRes = await http()
+      .post("/youtube/events")
+      .set("x-youtube-internal-secret", TEST_INTERNAL_SECRET)
+      .send({
+        videoId: "BlankCoord2",
+        channelId: "UC_DTO",
+        title: "Tháp Đồng Hồ Hạ Long",
+        publishedAt: "2026-11-24T12:01:00Z",
+        latitude: "   ",
+        longitude: null,
+      })
+      .expect(200);
+    expect(blankAndNullRes.body.data.status).toBe("LINKED");
+    expect(blankAndNullRes.body.data.scope).toBe("POI");
+
+    // 3. Valid trimmed numeric string coordinates -> LINKED POI
+    const strCoordsRes = await http()
+      .post("/youtube/events")
+      .set("x-youtube-internal-secret", TEST_INTERNAL_SECRET)
+      .send({
+        videoId: "StrCoord003",
+        channelId: "UC_DTO",
+        title: "Tháp Đồng Hồ Hạ Long",
+        publishedAt: "2026-11-24T12:02:00Z",
+        latitude: " 20.95161 ",
+        longitude: " 107.08520 ",
+      })
+      .expect(200);
+    expect(strCoordsRes.body.data.status).toBe("LINKED");
+
+    // 4. Partial coordinates (one blank, one numeric) -> 400
+    await http()
+      .post("/youtube/events")
+      .set("x-youtube-internal-secret", TEST_INTERNAL_SECRET)
+      .send({
+        videoId: "PartialCrd4",
+        channelId: "UC_DTO",
+        title: "Tháp Đồng Hồ Hạ Long",
+        publishedAt: "2026-11-24T12:03:00Z",
+        latitude: "",
+        longitude: 107.0,
+      })
+      .expect(400);
+
+    // 5. Non-numeric string or boolean coordinates -> 400
+    await http()
+      .post("/youtube/events")
+      .set("x-youtube-internal-secret", TEST_INTERNAL_SECRET)
+      .send({
+        videoId: "BadStrCrd05",
+        channelId: "UC_DTO",
+        title: "Tháp Đồng Hồ Hạ Long",
+        publishedAt: "2026-11-24T12:04:00Z",
+        latitude: "abc",
+        longitude: 107.0,
+      })
+      .expect(400);
+
+    await http()
+      .post("/youtube/events")
+      .set("x-youtube-internal-secret", TEST_INTERNAL_SECRET)
+      .send({
+        videoId: "BoolCoord06",
+        channelId: "UC_DTO",
+        title: "Tháp Đồng Hồ Hạ Long",
+        publishedAt: "2026-11-24T12:05:00Z",
+        latitude: true,
+        longitude: false,
+      })
+      .expect(400);
+  });
+
+  it("prevents cross-scope videoId duplication between items and cityFallbackItems and handles concurrent P2002 race monotonically", async () => {
+    // 1. Ingest CrossScope1 as generic Hạ Long (CITY), then later updated to Tháp Đồng Hồ (POI)
+    const cityRes = await http()
+      .post("/youtube/events")
+      .set("x-youtube-internal-secret", TEST_INTERNAL_SECRET)
+      .send({
+        videoId: "CrossScope1",
+        channelId: "UC_HL_CROSS",
+        title: "Du lịch Hạ Long cuối tuần",
+        publishedAt: "2026-11-24T12:00:00Z",
+      })
+      .expect(200);
+    expect(cityRes.body.data.status).toBe("LINKED_CITY");
+
+    const poiRes = await http()
+      .post("/youtube/events")
+      .set("x-youtube-internal-secret", TEST_INTERNAL_SECRET)
+      .send({
+        videoId: "CrossScope1",
+        channelId: "UC_HL_CROSS",
+        title: "Tháp Đồng Hồ Hạ Long buổi tối",
+        publishedAt: "2026-11-24T12:00:00Z",
+        sourceUpdatedAt: "2026-11-24T12:05:00Z",
+      })
+      .expect(200);
+    expect(poiRes.body.data.status).toBe("LINKED");
+
+    const placeFeed = await http()
+      .get(`/places/${THAP_DONG_HO_ID}/youtube-updates`)
+      .expect(200);
+    expect(placeFeed.body.data.items.map((i: { videoId: string }) => i.videoId)).toEqual([
+      "CrossScope1",
+    ]);
+    expect(placeFeed.body.data.cityFallbackTotal).toBe(0);
+    expect(placeFeed.body.data.cityFallbackItems).toEqual([]);
+
+    const destFeed = await http()
+      .get("/destinations/ha-long/youtube-updates")
+      .expect(200);
+    expect(destFeed.body.data.items).toHaveLength(1);
+    expect(destFeed.body.data.items[0].scope).toBe("POI");
+    expect(destFeed.body.data.cityFallbackTotal).toBe(0);
+    expect(destFeed.body.data.cityFallbackItems).toEqual([]);
+
+    // Explicit ?scope=CITY still returns the CITY row
+    const destCityOnly = await http()
+      .get("/destinations/ha-long/youtube-updates?scope=CITY")
+      .expect(200);
+    expect(destCityOnly.body.data.items).toHaveLength(1);
+    expect(destCityOnly.body.data.items[0].scope).toBe("CITY");
+
+    // 2. Concurrent P2002 race inversion over HTTP: T1 < T2 where T2 creates first and T1 hits P2002
+    let releaseReqA!: () => void;
+    const reqAPaused = new Promise<void>((resolve) => {
+      releaseReqA = resolve;
+    });
+    let reqAEntered!: () => void;
+    const reqAEnteredPromise = new Promise<void>((resolve) => {
+      reqAEntered = resolve;
+    });
+    prisma.onPlaceFindMany = async () => {
+      reqAEntered();
+      await reqAPaused;
+    };
+
+    const racePayload = {
+      videoId: "HttpRace001",
+      channelId: "UC_HL_RACE",
+      title: "Tháp Đồng Hồ Hạ Long",
+      publishedAt: "2026-11-24T12:10:00Z",
+    };
+
+    const reqAPromise = http()
+      .post("/youtube/events")
+      .set("x-youtube-internal-secret", TEST_INTERNAL_SECRET)
+      .send(racePayload)
+      .expect(200)
+      .then((res) => res);
+    await reqAEnteredPromise;
+
+    await new Promise((r) => setTimeout(r, 15));
+    const reqBRes = await http()
+      .post("/youtube/events")
+      .set("x-youtube-internal-secret", TEST_INTERNAL_SECRET)
+      .send(racePayload)
+      .expect(200);
+    expect(reqBRes.body.data.duplicate).toBe(false);
+
+    releaseReqA();
+    const reqARes = await reqAPromise;
+    expect(reqARes.body.data.duplicate).toBe(true);
+    expect(reqARes.body.data.deliveryCount).toBe(2);
+    expect(
+      new Date(reqARes.body.data.lastReceivedAt).getTime(),
+    ).toBeGreaterThanOrEqual(new Date(reqARes.body.data.receivedAt).getTime());
+
+    const racePlaceFeed = await http()
+      .get(`/places/${THAP_DONG_HO_ID}/youtube-updates`)
+      .expect(200);
+    const raceItem = racePlaceFeed.body.data.items.find(
+      (i: { videoId: string }) => i.videoId === "HttpRace001",
+    );
+    expect(raceItem).toBeDefined();
+    expect(raceItem.deliveryLagMs).toBeGreaterThanOrEqual(
+      raceItem.ingestLatencyMs,
+    );
+    expect(new Date(raceItem.updatedAt).getTime()).toBeGreaterThanOrEqual(
+      new Date(raceItem.receivedAt).getTime(),
     );
   });
 });
