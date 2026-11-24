@@ -61,6 +61,8 @@ model User {
   notifications Notification[]
   sentMatches   Match[]  @relation("sender")
   receivedMatches Match[] @relation("receiver")
+  blockedUsers    UserBlock[] @relation("blocker")
+  blockedByUsers  UserBlock[] @relation("blocked")
   groupMembers  GroupMember[]
   messages      Message[]
   safetyContacts SafetyContact[]
@@ -78,9 +80,10 @@ model Profile {
   bio         String?
   phone       String?
   dateOfBirth DateTime? @map("date_of_birth") @db.Date
-  nationality String?
-  languages   String[] @default([])
-  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
+  nationality    String?
+  languages      String[] @default([])
+  isDiscoverable Boolean  @default(false) @map("is_discoverable")
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz
   updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -537,22 +540,39 @@ enum MatchStatus {
   PENDING
   ACCEPTED
   REJECTED
+  WITHDRAWN
 }
 
 model Match {
-  id         String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  senderId   String      @map("sender_id") @db.Uuid
-  receiverId String      @map("receiver_id") @db.Uuid
-  status     MatchStatus @default(PENDING)
-  score      Float?      // compatibility score 0-100
-  explanation String?    // AI explanation
-  createdAt  DateTime    @default(now()) @map("created_at") @db.Timestamptz
+  id          String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  senderId    String      @map("sender_id") @db.Uuid
+  receiverId  String      @map("receiver_id") @db.Uuid
+  status      MatchStatus @default(PENDING)
+  score       Float?      // compatibility score 0-100
+  explanation String?     // deterministic compatibility explanation
+  createdAt   DateTime    @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt   DateTime    @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
 
   sender   User @relation("sender", fields: [senderId], references: [id])
   receiver User @relation("receiver", fields: [receiverId], references: [id])
 
   @@unique([senderId, receiverId])
+  @@index([status])
   @@map("matches")
+}
+
+model UserBlock {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  blockerId String   @map("blocker_id") @db.Uuid
+  blockedId String   @map("blocked_id") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  blocker User @relation("blocker", fields: [blockerId], references: [id], onDelete: Cascade)
+  blocked User @relation("blocked", fields: [blockedId], references: [id], onDelete: Cascade)
+
+  @@unique([blockerId, blockedId])
+  @@index([blockedId])
+  @@map("user_blocks")
 }
 
 model Group {
