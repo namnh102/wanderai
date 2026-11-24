@@ -9,7 +9,16 @@ const _accessTokenKey = 'access_token';
 const _refreshTokenKey = 'refresh_token';
 const _retriedRefreshExtraKey = '_retriedAuthRefresh';
 const _requestEpochExtraKey = '_authSessionEpoch';
-const _publicAuthPaths = {'/auth/login', '/auth/register', '/auth/refresh'};
+const _publicAuthPaths = {
+  '/auth/login',
+  '/auth/register',
+  '/auth/refresh',
+  '/auth/forgot-password',
+  '/auth/reset-password',
+  '/auth/reset-password/validate',
+  '/auth/oauth/google',
+  '/auth/oauth/facebook',
+};
 
 /// Notifies listeners whenever automatic JWT refresh fails cleanly on 401/403.
 final authSessionExpiredSignalProvider = StateProvider<int>((ref) => 0);

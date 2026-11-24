@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">GoMate</string>
+    <!-- TODO(Owner): Replace with real Facebook App ID & Client Token before production release -->
+    <string name="facebook_app_id">0000000000000000</string>
+    <string name="facebook_client_token">00000000000000000000000000000000</string>
+    <string name="fb_login_protocol_scheme">fb0000000000000000</string>
+</resources>

@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -13,6 +14,8 @@ import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_empty_state.dart';
 import '../../../core/widgets/app_error_state.dart';
 import '../../../core/widgets/app_loading.dart';
+import '../../../core/widgets/app_state_banner.dart';
+import '../../../core/widgets/app_text_field.dart';
 import '../../../core/widgets/rating_view.dart';
 import '../../../core/widgets/responsive_wrapper.dart';
 import '../../ai_chat/providers/chat_provider.dart';
@@ -342,22 +345,18 @@ class PlaceDetailScreen extends ConsumerWidget {
                     }),
                   ),
                   const SizedBox(height: AppSpacing.xs),
-                  TextField(
+                  AppTextField(
                     key: const Key('review_content_input'),
                     controller: controller,
                     maxLines: 3,
                     enabled: !isSubmitting,
-                    decoration: const InputDecoration(
-                      hintText: 'Chia sẻ trải nghiệm thực tế của bạn...',
-                      border: OutlineInputBorder(),
-                    ),
+                    hintText: 'Chia sẻ trải nghiệm thực tế của bạn...',
                   ),
                   if (submitError != null) ...[
-                    const SizedBox(height: AppSpacing.xs),
-                    Text(
-                      submitError!,
-                      style:
-                          AppTypography.bodyS.copyWith(color: AppColors.error),
+                    const SizedBox(height: AppSpacing.sm),
+                    AppStateBanner(
+                      message: submitError!,
+                      tone: AppStateBannerTone.error,
                     ),
                   ],
                   const SizedBox(height: AppSpacing.md),
@@ -554,10 +553,19 @@ class PlaceDetailView extends StatelessWidget {
                           child: Container(
                             width: 256,
                             color: AppColors.surfaceContainer,
-                            child: Image.network(
-                              galleryUrls[idx],
+                            child: CachedNetworkImage(
+                              imageUrl: galleryUrls[idx],
                               fit: BoxFit.cover,
-                              errorBuilder: (_, __, ___) => Center(
+                              memCacheWidth: 512,
+                              memCacheHeight: 344,
+                              placeholder: (_, __) => Center(
+                                child: Icon(
+                                  placeCategoryIcon(place.categoryName),
+                                  size: 36,
+                                  color: catColor.withValues(alpha: 0.4),
+                                ),
+                              ),
+                              errorWidget: (_, __, ___) => Center(
                                 child: Icon(
                                   placeCategoryIcon(place.categoryName),
                                   size: 36,

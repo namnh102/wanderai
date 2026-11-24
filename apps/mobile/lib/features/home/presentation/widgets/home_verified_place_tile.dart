@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:latlong2/latlong.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -48,10 +49,17 @@ class HomeVerifiedPlaceTile extends StatelessWidget {
               color: catColor.withValues(alpha: 0.12),
               child: place.coverImage != null &&
                       place.coverImage!.startsWith('http')
-                  ? Image.network(
-                      place.coverImage!,
+                  ? CachedNetworkImage(
+                      imageUrl: place.coverImage!,
                       fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => Icon(
+                      memCacheWidth: 168,
+                      memCacheHeight: 168,
+                      placeholder: (_, __) => Icon(
+                        placeCategoryIcon(place.categoryName),
+                        color: catColor,
+                        size: 24,
+                      ),
+                      errorWidget: (_, __, ___) => Icon(
                         placeCategoryIcon(place.categoryName),
                         color: catColor,
                         size: 24,

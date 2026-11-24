@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/theme/app_spacing.dart';
+import '../../../core/widgets/app_button.dart';
+import '../../../core/widgets/app_state_banner.dart';
+import '../../../core/widgets/app_text_field.dart';
 import '../data/trip_models.dart';
 import '../providers/trip_provider.dart';
 
@@ -25,6 +29,7 @@ class _TripFormScreenState extends ConsumerState<TripFormScreen> {
   String? _travelStyle;
   final Set<String> _selectedInterests = {};
   bool _submitting = false;
+  String? _formError;
 
   static const _availableStyles = ['BACKPACKER', 'BUDGET', 'COMFORT', 'LUXURY'];
   static const _availableInterests = [
@@ -41,7 +46,8 @@ class _TripFormScreenState extends ConsumerState<TripFormScreen> {
     super.initState();
     final trip = widget.existingTrip;
     _titleController = TextEditingController(text: trip?.title ?? '');
-    _descriptionController = TextEditingController(text: trip?.description ?? '');
+    _descriptionController =
+        TextEditingController(text: trip?.description ?? '');
     _budgetController = TextEditingController(
       text: trip?.totalBudget != null ? trip!.totalBudget.toString() : '',
     );
@@ -73,7 +79,6 @@ class _TripFormScreenState extends ConsumerState<TripFormScreen> {
     if (picked != null) {
       setState(() {
         _startDate = picked;
-        // If end date is before new start date, push end date
         if (_endDate != null && _endDate!.isBefore(_startDate!)) {
           _endDate = _startDate;
         }
@@ -97,19 +102,23 @@ class _TripFormScreenState extends ConsumerState<TripFormScreen> {
   Future<void> _handleSubmit() async {
     if (!_formKey.currentState!.validate()) return;
 
-    if (_startDate != null && _endDate != null && _endDate!.isBefore(_startDate!)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Ngày kết thúc phải sau ngày bắt đầu')),
-      );
+    if (_startDate != null &&
+        _endDate != null &&
+        _endDate!.isBefore(_startDate!)) {
+      setState(() {
+        _formError = 'Ngày kết thúc phải sau ngày bắt đầu';
+      });
       return;
     }
 
-    setState(() => _submitting = true);
+    setState(() {
+      _submitting = true;
+      _formError = null;
+    });
 
     final budgetInt = int.tryParse(_budgetController.text.trim());
 
     if (widget.existingTrip == null) {
-      // Create mode
       final req = CreateTripRequest(
         title: _titleController.text.trim(),
         description: _descriptionController.text.trim(),
@@ -121,19 +130,19 @@ class _TripFormScreenState extends ConsumerState<TripFormScreen> {
         interests: _selectedInterests.toList(),
       );
 
-      final created =
-          await ref.read(tripListProvider.notifier).createTrip(req);
+      final created = await ref.read(tripListProvider.notifier).createTrip(req);
       if (mounted) {
         setState(() => _submitting = false);
         if (created != null) {
           context.pop();
         } else {
-          final err = ref.read(tripListProvider).errorMessage ?? 'Lỗi tạo chuyến đi';
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(err)));
+          setState(() {
+            _formError =
+                ref.read(tripListProvider).errorMessage ?? 'Lỗi tạo chuyến đi';
+          });
         }
       }
     } else {
-      // Edit mode
       final req = UpdateTripRequest(
         title: _titleController.text.trim(),
         description: _descriptionController.text.trim(),
@@ -152,12 +161,13 @@ class _TripFormScreenState extends ConsumerState<TripFormScreen> {
       if (mounted) {
         setState(() => _submitting = false);
         if (success) {
-          // Also refresh list
           ref.read(tripListProvider.notifier).loadTrips();
           context.pop();
         } else {
-          final err = ref.read(tripDetailProvider).errorMessage ?? 'Lỗi cập nhật';
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(err)));
+          setState(() {
+            _formError =
+                ref.read(tripDetailProvider).errorMessage ?? 'Lỗi cập nhật';
+          });
         }
       }
     }
@@ -180,190 +190,179 @@ class _TripFormScreenState extends ConsumerState<TripFormScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-              // Title
-              TextFormField(
-                controller: _titleController,
-                decoration: const InputDecoration(
+                if (_formError != null) ...[
+                  AppStateBanner(
+                    message: _formError!,
+                    tone: AppStateBannerTone.error,
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                ],
+                // Title
+                AppTextField(
+                  controller: _titleController,
+                  enabled: !_submitting,
                   labelText: 'Tên chuyến đi *',
                   hintText: 'VD: Hà Giang mùa hoa tam giác mạch',
-                  prefixIcon: Icon(Icons.title),
+                  prefixIcon: const Icon(Icons.title),
+                  validator: (v) => (v == null || v.trim().isEmpty)
+                      ? 'Vui lòng nhập tên chuyến đi'
+                      : null,
                 ),
-                validator: (v) =>
-                    (v == null || v.trim().isEmpty) ? 'Vui lòng nhập tên chuyến đi' : null,
-              ),
-              const SizedBox(height: 16),
+                const SizedBox(height: 16),
 
-              // Date pickers row
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton.icon(
-                      onPressed: _pickStartDate,
-                      icon: const Icon(Icons.calendar_today, size: 16),
-                      label: Text(
-                        _startDate == null
+                // Date pickers row
+                Row(
+                  children: [
+                    Expanded(
+                      child: AppButton(
+                        variant: AppButtonVariant.secondary,
+                        icon: Icons.calendar_today,
+                        text: _startDate == null
                             ? 'Ngày bắt đầu'
                             : '${_startDate!.day}/${_startDate!.month}/${_startDate!.year}',
-                        style: const TextStyle(fontSize: 12),
+                        onPressed: _submitting ? null : _pickStartDate,
                       ),
                     ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: OutlinedButton.icon(
-                      onPressed: _pickEndDate,
-                      icon: const Icon(Icons.event, size: 16),
-                      label: Text(
-                        _endDate == null
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: AppButton(
+                        variant: AppButtonVariant.secondary,
+                        icon: Icons.event,
+                        text: _endDate == null
                             ? 'Ngày kết thúc'
                             : '${_endDate!.day}/${_endDate!.month}/${_endDate!.year}',
-                        style: const TextStyle(fontSize: 12),
+                        onPressed: _submitting ? null : _pickEndDate,
                       ),
                     ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
+                  ],
+                ),
+                const SizedBox(height: 16),
 
-              // Budget & Currency
-              Row(
-                children: [
-                  Expanded(
-                    flex: 3,
-                    child: TextFormField(
-                      controller: _budgetController,
-                      keyboardType: TextInputType.number,
-                      decoration: const InputDecoration(
+                // Budget & Currency
+                Row(
+                  children: [
+                    Expanded(
+                      flex: 3,
+                      child: AppTextField(
+                        controller: _budgetController,
+                        enabled: !_submitting,
+                        keyboardType: TextInputType.number,
                         labelText: 'Ngân sách ước tính',
                         hintText: '5000000',
-                        prefixIcon: Icon(Icons.payments_outlined),
+                        prefixIcon: const Icon(Icons.payments_outlined),
+                        validator: (v) {
+                          if (v == null || v.isEmpty) return null;
+                          final n = int.tryParse(v);
+                          if (n == null || n < 0) return 'Ngân sách không hợp lệ';
+                          return null;
+                        },
                       ),
-                      validator: (v) {
-                        if (v == null || v.isEmpty) return null;
-                        final n = int.tryParse(v);
-                        if (n == null || n < 0) return 'Ngân sách không hợp lệ';
-                        return null;
-                      },
                     ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    flex: 2,
-                    child: DropdownButtonFormField<String>(
-                      initialValue: _currency,
-                      isExpanded: true,
-                      decoration: const InputDecoration(
-                        labelText: 'Tiền tệ',
-                        contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 12),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      flex: 2,
+                      child: DropdownButtonFormField<String>(
+                        initialValue: _currency,
+                        isExpanded: true,
+                        decoration: const InputDecoration(
+                          labelText: 'Tiền tệ',
+                          contentPadding: EdgeInsets.symmetric(
+                              horizontal: 10, vertical: 12),
+                        ),
+                        items: const [
+                          DropdownMenuItem(value: 'VND', child: Text('VND')),
+                          DropdownMenuItem(value: 'USD', child: Text('USD')),
+                        ],
+                        onChanged: _submitting
+                            ? null
+                            : (v) {
+                                if (v != null) setState(() => _currency = v);
+                              },
                       ),
-                      items: const [
-                        DropdownMenuItem(value: 'VND', child: Text('VND')),
-                        DropdownMenuItem(value: 'USD', child: Text('USD')),
-                      ],
-                      onChanged: (v) {
-                        if (v != null) setState(() => _currency = v);
-                      },
                     ),
+                  ],
+                ),
+                const SizedBox(height: 20),
+
+                // Travel Style
+                Text(
+                  'Phong cách du lịch',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: cs.onSurfaceVariant,
                   ),
-                ],
-              ),
-              const SizedBox(height: 20),
-
-              // Travel Style
-              Text(
-                'Phong cách du lịch',
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: cs.onSurfaceVariant,
                 ),
-              ),
-              const SizedBox(height: 8),
-              Wrap(
-                spacing: 8,
-                children: _availableStyles.map((style) {
-                  final isSelected = _travelStyle == style;
-                  return ChoiceChip(
-                    label: Text(style),
-                    selected: isSelected,
-                    onSelected: (selected) {
-                      setState(() {
-                        _travelStyle = selected ? style : null;
-                      });
-                    },
-                  );
-                }).toList(),
-              ),
-              const SizedBox(height: 20),
-
-              // Interests
-              Text(
-                'Sở thích / Hoạt động',
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: cs.onSurfaceVariant,
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 8,
+                  children: _availableStyles.map((style) {
+                    final isSelected = _travelStyle == style;
+                    return ChoiceChip(
+                      label: Text(style),
+                      selected: isSelected,
+                      onSelected: (selected) {
+                        setState(() {
+                          _travelStyle = selected ? style : null;
+                        });
+                      },
+                    );
+                  }).toList(),
                 ),
-              ),
-              const SizedBox(height: 8),
-              Wrap(
-                spacing: 8,
-                children: _availableInterests.map((interest) {
-                  final isSelected = _selectedInterests.contains(interest);
-                  return FilterChip(
-                    label: Text(interest),
-                    selected: isSelected,
-                    onSelected: (selected) {
-                      setState(() {
-                        if (selected) {
-                          _selectedInterests.add(interest);
-                        } else {
-                          _selectedInterests.remove(interest);
-                        }
-                      });
-                    },
-                  );
-                }).toList(),
-              ),
-              const SizedBox(height: 20),
+                const SizedBox(height: 20),
 
-              // Description
-              TextFormField(
-                controller: _descriptionController,
-                maxLines: 3,
-                decoration: const InputDecoration(
+                // Interests
+                Text(
+                  'Sở thích / Hoạt động',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: cs.onSurfaceVariant,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 8,
+                  children: _availableInterests.map((interest) {
+                    final isSelected = _selectedInterests.contains(interest);
+                    return FilterChip(
+                      label: Text(interest),
+                      selected: isSelected,
+                      onSelected: (selected) {
+                        setState(() {
+                          if (selected) {
+                            _selectedInterests.add(interest);
+                          } else {
+                            _selectedInterests.remove(interest);
+                          }
+                        });
+                      },
+                    );
+                  }).toList(),
+                ),
+                const SizedBox(height: 20),
+
+                // Description
+                AppTextField(
+                  controller: _descriptionController,
+                  enabled: !_submitting,
+                  maxLines: 3,
                   labelText: 'Mô tả / Ghi chú',
                   hintText: 'Kế hoạch chi tiết hoặc lưu ý...',
-                  alignLabelWithHint: true,
                 ),
-              ),
-              const SizedBox(height: 28),
+                const SizedBox(height: 28),
 
-              // Submit Button
-              ElevatedButton(
-                onPressed: _submitting ? null : _handleSubmit,
-                style: ElevatedButton.styleFrom(
-                  minimumSize: const Size.fromHeight(50),
+                // Submit Button
+                AppButton(
+                  text: isEdit ? 'Lưu thay đổi' : 'Tạo chuyến đi',
+                  isLoading: _submitting,
+                  onPressed: _submitting ? null : _handleSubmit,
                 ),
-                child: _submitting
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: Colors.white,
-                        ),
-                      )
-                    : Text(
-                        isEdit ? 'Lưu thay đổi' : 'Tạo chuyến đi',
-                        style: const TextStyle(fontWeight: FontWeight.bold),
-                      ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
-    ),
-  );
-}
+    );
+  }
 }

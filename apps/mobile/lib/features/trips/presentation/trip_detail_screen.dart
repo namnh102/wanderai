@@ -2,9 +2,34 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/theme/app_spacing.dart';
+import '../../../core/widgets/app_button.dart';
+import '../../../core/widgets/app_error_state.dart';
+import '../../../core/widgets/app_loading.dart';
+import '../../../core/widgets/app_text_field.dart';
 import '../data/trip_models.dart';
 import '../providers/trip_provider.dart';
 import 'trip_form_screen.dart';
+
+sealed class _SliverItineraryEntry {
+  const _SliverItineraryEntry();
+}
+
+class _DayHeaderEntry extends _SliverItineraryEntry {
+  final ItineraryModel day;
+  const _DayHeaderEntry(this.day);
+}
+
+class _EmptyDayEntry extends _SliverItineraryEntry {
+  final ItineraryModel day;
+  const _EmptyDayEntry(this.day);
+}
+
+class _DayItemEntry extends _SliverItineraryEntry {
+  final ItineraryItemModel item;
+  final bool isLastInDay;
+  const _DayItemEntry(this.item, {required this.isLastInDay});
+}
 
 class TripDetailScreen extends ConsumerStatefulWidget {
   final String tripId;
@@ -48,12 +73,11 @@ class _TripDetailScreenState extends ConsumerState<TripDetailScreen> {
             onPressed: () => Navigator.pop(ctx, false),
             child: const Text('Hủy'),
           ),
-          FilledButton(
+          AppButton(
+            text: 'Xóa',
+            variant: AppButtonVariant.danger,
+            isFullWidth: false,
             onPressed: () => Navigator.pop(ctx, true),
-            style: FilledButton.styleFrom(
-              backgroundColor: Theme.of(ctx).colorScheme.error,
-            ),
-            child: const Text('Xóa'),
           ),
         ],
       ),
@@ -89,12 +113,10 @@ class _TripDetailScreenState extends ConsumerState<TripDetailScreen> {
               'Wandy sẽ sử dụng thông tin chuyến đi (điểm đến, ngày, ngân sách, sở thích) để lên lịch trình tối ưu nhất.',
             ),
             const SizedBox(height: 12),
-            TextField(
+            AppTextField(
               controller: noteController,
-              decoration: const InputDecoration(
-                labelText: 'Yêu cầu thêm (tùy chọn)',
-                hintText: 'VD: Ưu tiên quán ăn ngon, chụp ảnh...',
-              ),
+              labelText: 'Yêu cầu thêm (tùy chọn)',
+              hintText: 'VD: Ưu tiên quán ăn ngon, chụp ảnh...',
             ),
           ],
         ),
@@ -103,21 +125,25 @@ class _TripDetailScreenState extends ConsumerState<TripDetailScreen> {
             onPressed: () => Navigator.pop(ctx, false),
             child: const Text('Hủy'),
           ),
-          FilledButton.icon(
+          AppButton(
+            text: 'Bắt đầu lập',
+            variant: AppButtonVariant.ai,
+            isFullWidth: false,
             onPressed: () => Navigator.pop(ctx, true),
-            icon: const Icon(Icons.auto_awesome, size: 16),
-            label: const Text('Bắt đầu lập'),
           ),
         ],
       ),
     );
 
+    final prompt = noteController.text.trim();
+    noteController.dispose();
+
     if (shouldProceed != true || !mounted) return;
 
-    final prompt = noteController.text.trim();
     final plan = await ref.read(tripDetailProvider.notifier).generateAiPlan(
-        widget.tripId,
-        prompt: prompt.isNotEmpty ? prompt : null);
+          widget.tripId,
+          prompt: prompt.isNotEmpty ? prompt : null,
+        );
 
     if (!mounted) return;
     if (plan != null) {
@@ -133,6 +159,113 @@ class _TripDetailScreenState extends ConsumerState<TripDetailScreen> {
     final cs = Theme.of(context).colorScheme;
     final trip = ref.read(tripDetailProvider).trip;
     final hasExistingItinerary = trip != null && trip.itineraries.isNotEmpty;
+
+    final previewEntries = <Widget>[
+      if (plan.overview.isNotEmpty)
+        Container(
+          padding: const EdgeInsets.all(12),
+          margin: const EdgeInsets.only(bottom: 12),
+          decoration: BoxDecoration(
+            color: cs.surfaceContainerLow,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Text(
+            plan.overview,
+            style: TextStyle(fontSize: 13, color: cs.onSurface),
+          ),
+        ),
+      Container(
+        padding: const EdgeInsets.all(12),
+        margin: const EdgeInsets.only(bottom: 12),
+        decoration: BoxDecoration(
+          color: plan.budgetAnalysis.isOverBudget
+              ? cs.errorContainer.withValues(alpha: 0.3)
+              : cs.primaryContainer.withValues(alpha: 0.2),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: plan.budgetAnalysis.isOverBudget ? cs.error : cs.primary,
+          ),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Chi phí ước tính:',
+                    style:
+                        TextStyle(fontSize: 12, color: cs.onSurfaceVariant),
+                  ),
+                  Text(
+                    '${plan.budgetAnalysis.estimatedCost} ${plan.budgetAnalysis.currency}',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                      color: plan.budgetAnalysis.isOverBudget
+                          ? cs.error
+                          : cs.primary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            if (plan.budgetAnalysis.totalBudget != null) ...[
+              const SizedBox(width: 8),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    'Ngân sách: ${plan.budgetAnalysis.totalBudget} ${plan.budgetAnalysis.currency}',
+                    style:
+                        TextStyle(fontSize: 12, color: cs.onSurfaceVariant),
+                  ),
+                  Text(
+                    plan.budgetAnalysis.isOverBudget
+                        ? 'Vượt ${-plan.budgetAnalysis.variance} VND'
+                        : 'Còn dư ${plan.budgetAnalysis.variance} VND',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      color: plan.budgetAnalysis.isOverBudget
+                          ? cs.error
+                          : cs.primary,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ],
+        ),
+      ),
+      if (hasExistingItinerary)
+        Container(
+          padding: const EdgeInsets.all(12),
+          margin: const EdgeInsets.only(bottom: 16),
+          decoration: BoxDecoration(
+            color: Colors.amber.withValues(alpha: 0.15),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.amber.shade700),
+          ),
+          child: Row(
+            children: [
+              Icon(Icons.warning_amber_rounded,
+                  color: Colors.amber.shade900, size: 20),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'Chuyến đi đã có ${trip.itineraries.length} ngày. Áp dụng sẽ thay thế toàn bộ lịch trình hiện tại!',
+                  style:
+                      TextStyle(fontSize: 12, color: Colors.amber.shade900),
+                ),
+              ),
+            ],
+          ),
+        ),
+    ];
+
+    final totalCount = previewEntries.length + plan.days.length;
 
     showModalBottomSheet(
       context: context,
@@ -198,190 +331,17 @@ class _TripDetailScreenState extends ConsumerState<TripDetailScreen> {
               ),
               const Divider(),
               Expanded(
-                child: ListView(
+                child: ListView.builder(
                   controller: scrollCtrl,
-                  children: [
-                    if (plan.overview.isNotEmpty)
-                      Container(
-                        padding: const EdgeInsets.all(12),
-                        margin: const EdgeInsets.only(bottom: 12),
-                        decoration: BoxDecoration(
-                          color: cs.surfaceContainerLow,
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Text(
-                          plan.overview,
-                          style: TextStyle(fontSize: 13, color: cs.onSurface),
-                        ),
-                      ),
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      margin: const EdgeInsets.only(bottom: 12),
-                      decoration: BoxDecoration(
-                        color: plan.budgetAnalysis.isOverBudget
-                            ? cs.errorContainer.withValues(alpha: 0.3)
-                            : cs.primaryContainer.withValues(alpha: 0.2),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: plan.budgetAnalysis.isOverBudget
-                              ? cs.error
-                              : cs.primary,
-                        ),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Chi phí ước tính:',
-                                  style: TextStyle(
-                                      fontSize: 12, color: cs.onSurfaceVariant),
-                                ),
-                                Text(
-                                  '${plan.budgetAnalysis.estimatedCost} ${plan.budgetAnalysis.currency}',
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 16,
-                                    color: plan.budgetAnalysis.isOverBudget
-                                        ? cs.error
-                                        : cs.primary,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          if (plan.budgetAnalysis.totalBudget != null) ...[
-                            const SizedBox(width: 8),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.end,
-                              children: [
-                                Text(
-                                  'Ngân sách: ${plan.budgetAnalysis.totalBudget} ${plan.budgetAnalysis.currency}',
-                                  style: TextStyle(
-                                      fontSize: 12, color: cs.onSurfaceVariant),
-                                ),
-                                Text(
-                                  plan.budgetAnalysis.isOverBudget
-                                      ? 'Vượt ${-plan.budgetAnalysis.variance} VND'
-                                      : 'Còn dư ${plan.budgetAnalysis.variance} VND',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.bold,
-                                    color: plan.budgetAnalysis.isOverBudget
-                                        ? cs.error
-                                        : cs.primary,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ],
-                      ),
-                    ),
-                    if (hasExistingItinerary)
-                      Container(
-                        padding: const EdgeInsets.all(12),
-                        margin: const EdgeInsets.only(bottom: 16),
-                        decoration: BoxDecoration(
-                          color: Colors.amber.withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: Colors.amber.shade700),
-                        ),
-                        child: Row(
-                          children: [
-                            Icon(Icons.warning_amber_rounded,
-                                color: Colors.amber.shade900, size: 20),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Text(
-                                'Chuyến đi đã có ${trip.itineraries.length} ngày. Áp dụng sẽ thay thế toàn bộ lịch trình hiện tại!',
-                                style: TextStyle(
-                                    fontSize: 12, color: Colors.amber.shade900),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ...plan.days.map((day) => Container(
-                          margin: const EdgeInsets.only(bottom: 12),
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: cs.surface,
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(
-                                color:
-                                    cs.outlineVariant.withValues(alpha: 0.5)),
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: Text(
-                                      day.title,
-                                      style: const TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 14),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Text(
-                                    '${day.dayCost} VND',
-                                    style: TextStyle(
-                                        fontSize: 12,
-                                        color: cs.primary,
-                                        fontWeight: FontWeight.bold),
-                                  ),
-                                ],
-                              ),
-                              const Divider(height: 16),
-                              ...day.items.map((item) => Padding(
-                                    padding:
-                                        const EdgeInsets.symmetric(vertical: 4),
-                                    child: Row(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          '${item.orderIndex}. ',
-                                          style: TextStyle(
-                                              fontWeight: FontWeight.bold,
-                                              color: cs.primary),
-                                        ),
-                                        Expanded(
-                                          child: Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: [
-                                              Text(
-                                                item.activity,
-                                                style: const TextStyle(
-                                                    fontWeight: FontWeight.w600,
-                                                    fontSize: 13),
-                                              ),
-                                              if (item.startTime != null)
-                                                Text(
-                                                  '${item.startTime} - ${item.estimatedCost} VND',
-                                                  style: TextStyle(
-                                                      fontSize: 11,
-                                                      color:
-                                                          cs.onSurfaceVariant),
-                                                ),
-                                            ],
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  )),
-                            ],
-                          ),
-                        )),
-                    const SizedBox(height: 20),
-                  ],
+                  padding: const EdgeInsets.only(bottom: 20),
+                  itemCount: totalCount,
+                  itemBuilder: (_, index) {
+                    if (index < previewEntries.length) {
+                      return previewEntries[index];
+                    }
+                    final day = plan.days[index - previewEntries.length];
+                    return _buildAiPreviewDayCard(day, cs);
+                  },
                 ),
               ),
               SafeArea(
@@ -390,15 +350,18 @@ class _TripDetailScreenState extends ConsumerState<TripDetailScreen> {
                   child: Row(
                     children: [
                       Expanded(
-                        child: OutlinedButton(
+                        child: AppButton(
+                          text: 'Hủy',
+                          variant: AppButtonVariant.secondary,
                           onPressed: () => Navigator.pop(ctx),
-                          child: const Text('Hủy'),
                         ),
                       ),
                       const SizedBox(width: 12),
                       Expanded(
                         flex: 2,
-                        child: FilledButton.icon(
+                        child: AppButton(
+                          text: 'Áp dụng vào chuyến đi',
+                          icon: Icons.check,
                           onPressed: () async {
                             Navigator.pop(ctx);
                             final success = await ref
@@ -423,8 +386,6 @@ class _TripDetailScreenState extends ConsumerState<TripDetailScreen> {
                               }
                             }
                           },
-                          icon: const Icon(Icons.check, size: 18),
-                          label: const Text('Áp dụng vào chuyến đi'),
                         ),
                       ),
                     ],
@@ -434,6 +395,74 @@ class _TripDetailScreenState extends ConsumerState<TripDetailScreen> {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildAiPreviewDayCard(AiPlanDayModel day, ColorScheme cs) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: cs.surface,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.5)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  day.title,
+                  style: const TextStyle(
+                      fontWeight: FontWeight.bold, fontSize: 14),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                '${day.dayCost} VND',
+                style: TextStyle(
+                    fontSize: 12,
+                    color: cs.primary,
+                    fontWeight: FontWeight.bold),
+              ),
+            ],
+          ),
+          const Divider(height: 16),
+          ...day.items.map((item) => Padding(
+                padding: const EdgeInsets.symmetric(vertical: 4),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '${item.orderIndex}. ',
+                      style: TextStyle(
+                          fontWeight: FontWeight.bold, color: cs.primary),
+                    ),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            item.activity,
+                            style: const TextStyle(
+                                fontWeight: FontWeight.w600, fontSize: 13),
+                          ),
+                          if (item.startTime != null)
+                            Text(
+                              '${item.startTime} - ${item.estimatedCost} VND',
+                              style: TextStyle(
+                                  fontSize: 11, color: cs.onSurfaceVariant),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              )),
+        ],
       ),
     );
   }
@@ -488,78 +517,90 @@ class _TripDetailScreenState extends ConsumerState<TripDetailScreen> {
                 ],
               ),
               const SizedBox(height: 10),
-              TextField(
+              AppTextField(
                 controller: activityController,
-                decoration: const InputDecoration(
-                  labelText: 'Hoạt động / Địa điểm *',
-                  hintText: 'VD: Tham quan Hồ Gươm',
-                ),
+                labelText: 'Hoạt động / Địa điểm *',
+                hintText: 'VD: Tham quan Hồ Gươm',
               ),
               const SizedBox(height: 10),
               Row(
                 children: [
                   Expanded(
-                    child: TextField(
+                    child: AppTextField(
                       controller: timeController,
-                      decoration: const InputDecoration(
-                        labelText: 'Thời gian',
-                        hintText: '09:00',
-                      ),
+                      labelText: 'Thời gian',
+                      hintText: '09:00',
                     ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
-                    child: TextField(
+                    child: AppTextField(
                       controller: costController,
                       keyboardType: TextInputType.number,
-                      decoration: const InputDecoration(
-                        labelText: 'Chi phí (VND)',
-                        hintText: '100000',
-                      ),
+                      labelText: 'Chi phí (VND)',
+                      hintText: '100000',
                     ),
                   ),
                 ],
               ),
               const SizedBox(height: 10),
-              TextField(
+              AppTextField(
                 controller: notesController,
-                decoration: const InputDecoration(
-                  labelText: 'Ghi chú',
-                  hintText: 'Lưu ý, địa chỉ...',
-                ),
+                labelText: 'Ghi chú',
+                hintText: 'Lưu ý, địa chỉ...',
               ),
               const SizedBox(height: 20),
-              SizedBox(
-                width: double.infinity,
-                child: FilledButton(
-                  onPressed: () async {
-                    final activity = activityController.text.trim();
-                    if (activity.isEmpty) return;
+              AppButton(
+                text: 'Thêm vào lịch trình',
+                onPressed: () async {
+                  final activity = activityController.text.trim();
+                  if (activity.isEmpty) return;
 
-                    final cost = int.tryParse(costController.text.trim());
-                    Navigator.pop(ctx);
+                  final cost = int.tryParse(costController.text.trim());
+                  Navigator.pop(ctx);
 
-                    await ref
-                        .read(tripDetailProvider.notifier)
-                        .addItineraryItem(
-                          widget.tripId,
-                          AddItineraryItemRequest(
-                            dayNumber: selectedDay,
-                            activity: activity,
-                            startTime: timeController.text.trim(),
-                            estimatedCost: cost,
-                            notes: notesController.text.trim(),
-                          ),
-                        );
-                  },
-                  child: const Text('Thêm vào lịch trình'),
-                ),
+                  await ref.read(tripDetailProvider.notifier).addItineraryItem(
+                        widget.tripId,
+                        AddItineraryItemRequest(
+                          dayNumber: selectedDay,
+                          activity: activity,
+                          startTime: timeController.text.trim(),
+                          estimatedCost: cost,
+                          notes: notesController.text.trim(),
+                        ),
+                      );
+                },
               ),
             ],
           ),
         ),
       ),
-    );
+    ).whenComplete(() {
+      activityController.dispose();
+      timeController.dispose();
+      costController.dispose();
+      notesController.dispose();
+    });
+  }
+
+  List<_SliverItineraryEntry> _flattenItineraries(List<ItineraryModel> days) {
+    final entries = <_SliverItineraryEntry>[];
+    for (final day in days) {
+      entries.add(_DayHeaderEntry(day));
+      if (day.items.isEmpty) {
+        entries.add(_EmptyDayEntry(day));
+      } else {
+        for (var i = 0; i < day.items.length; i++) {
+          entries.add(
+            _DayItemEntry(
+              day.items[i],
+              isLastInDay: i == day.items.length - 1,
+            ),
+          );
+        }
+      }
+    }
+    return entries;
   }
 
   @override
@@ -571,31 +612,20 @@ class _TripDetailScreenState extends ConsumerState<TripDetailScreen> {
       if (state.errorMessage != null) {
         return Scaffold(
           appBar: AppBar(),
-          body: Center(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Icons.error_outline, size: 48, color: cs.error),
-                const SizedBox(height: 12),
-                Text(state.errorMessage!),
-                const SizedBox(height: 12),
-                ElevatedButton(
-                  onPressed: () => ref
-                      .read(tripDetailProvider.notifier)
-                      .loadTrip(widget.tripId),
-                  child: const Text('Thử lại'),
-                ),
-              ],
-            ),
+          body: AppErrorState(
+            message: state.errorMessage!,
+            onRetry: () =>
+                ref.read(tripDetailProvider.notifier).loadTrip(widget.tripId),
           ),
         );
       }
       return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
+        body: AppLoading(message: 'Đang tải chi tiết chuyến đi...'),
       );
     }
 
     final trip = state.trip!;
+    final entries = _flattenItineraries(trip.itineraries);
 
     return Scaffold(
       appBar: AppBar(
@@ -624,194 +654,226 @@ class _TripDetailScreenState extends ConsumerState<TripDetailScreen> {
           ),
         ],
       ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          // Overview Card
-          Card(
-            elevation: 0,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-              side: BorderSide(color: cs.outlineVariant.withValues(alpha: 0.6)),
+      body: CustomScrollView(
+        slivers: [
+          SliverPadding(
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.md,
+              AppSpacing.md,
+              AppSpacing.md,
+              AppSpacing.sm,
             ),
-            child: Padding(
-              padding: const EdgeInsets.all(16),
+            sliver: SliverToBoxAdapter(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    trip.title,
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
+                  // Overview Card
+                  Card(
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      side: BorderSide(
+                          color: cs.outlineVariant.withValues(alpha: 0.6)),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            trip.title,
+                            style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          if (trip.description != null &&
+                              trip.description!.isNotEmpty) ...[
+                            const SizedBox(height: 8),
+                            Text(
+                              trip.description!,
+                              style: TextStyle(
+                                  fontSize: 14, color: cs.onSurfaceVariant),
+                            ),
+                          ],
+                          const Divider(height: 24),
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Expanded(
+                                child: _buildInfoColumn(
+                                  'Ngân sách',
+                                  trip.totalBudget != null
+                                      ? '${trip.totalBudget} ${trip.currency}'
+                                      : 'Chưa đặt',
+                                  Icons.payments_outlined,
+                                  cs,
+                                ),
+                              ),
+                              Expanded(
+                                child: _buildInfoColumn(
+                                  'Thời gian',
+                                  trip.startDate != null
+                                      ? '${trip.startDate!.day}/${trip.startDate!.month}'
+                                      : 'Chưa chọn',
+                                  Icons.calendar_today_outlined,
+                                  cs,
+                                ),
+                              ),
+                              Expanded(
+                                child: _buildInfoColumn(
+                                  'Phong cách',
+                                  trip.travelStyle ?? 'Tự do',
+                                  Icons.explore_outlined,
+                                  cs,
+                                ),
+                              ),
+                            ],
+                          ),
+                          if (trip.interests.isNotEmpty) ...[
+                            const SizedBox(height: 12),
+                            Wrap(
+                              spacing: 6,
+                              children: trip.interests
+                                  .map((tag) => Chip(
+                                        label: Text(tag,
+                                            style:
+                                                const TextStyle(fontSize: 11)),
+                                        visualDensity: VisualDensity.compact,
+                                      ))
+                                  .toList(),
+                            ),
+                          ],
+                        ],
+                      ),
                     ),
                   ),
-                  if (trip.description != null &&
-                      trip.description!.isNotEmpty) ...[
-                    const SizedBox(height: 8),
-                    Text(
-                      trip.description!,
-                      style:
-                          TextStyle(fontSize: 14, color: cs.onSurfaceVariant),
-                    ),
-                  ],
-                  const Divider(height: 24),
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(
-                        child: _buildInfoColumn(
-                          'Ngân sách',
-                          trip.totalBudget != null
-                              ? '${trip.totalBudget} ${trip.currency}'
-                              : 'Chưa đặt',
-                          Icons.payments_outlined,
-                          cs,
-                        ),
-                      ),
-                      Expanded(
-                        child: _buildInfoColumn(
-                          'Thời gian',
-                          trip.startDate != null
-                              ? '${trip.startDate!.day}/${trip.startDate!.month}'
-                              : 'Chưa chọn',
-                          Icons.calendar_today_outlined,
-                          cs,
-                        ),
-                      ),
-                      Expanded(
-                        child: _buildInfoColumn(
-                          'Phong cách',
-                          trip.travelStyle ?? 'Tự do',
-                          Icons.explore_outlined,
-                          cs,
-                        ),
-                      ),
-                    ],
-                  ),
-                  if (trip.interests.isNotEmpty) ...[
-                    const SizedBox(height: 12),
-                    Wrap(
-                      spacing: 6,
-                      children: trip.interests
-                          .map((tag) => Chip(
-                                label: Text(tag,
-                                    style: const TextStyle(fontSize: 11)),
-                                visualDensity: VisualDensity.compact,
-                              ))
-                          .toList(),
-                    ),
-                  ],
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(height: 16),
+                  const SizedBox(height: 16),
 
-          // AI Planning Action Card
-          Card(
-            elevation: 0,
-            color: cs.primaryContainer.withValues(alpha: 0.15),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-              side: BorderSide(color: cs.primary.withValues(alpha: 0.3)),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
+                  // AI Planning Action Card
+                  Card(
+                    elevation: 0,
+                    color: cs.primaryContainer.withValues(alpha: 0.15),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      side: BorderSide(color: cs.primary.withValues(alpha: 0.3)),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Icon(Icons.auto_awesome,
+                                  color: cs.primary, size: 20),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  'Trợ lý Wandy AI',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 15,
+                                    color: cs.primary,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            'Wandy sẽ tự động lập lịch trình chi tiết từng ngày dựa trên điểm đến, thời gian, ngân sách và sở thích.',
+                            style: TextStyle(
+                                fontSize: 13, color: cs.onSurfaceVariant),
+                          ),
+                          const SizedBox(height: 12),
+                          if (state.isGeneratingPlan)
+                            const AppLoading(
+                              isCompact: true,
+                              message: 'Wandy đang lên lịch trình tối ưu...',
+                            )
+                          else
+                            AppButton(
+                              text: 'Lập lịch trình bằng AI',
+                              variant: AppButtonVariant.ai,
+                              onPressed: _handleGenerateAiPlan,
+                            ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Itinerary Header
                   Row(
                     children: [
-                      Icon(Icons.auto_awesome, color: cs.primary, size: 20),
-                      const SizedBox(width: 8),
-                      Expanded(
+                      const Expanded(
                         child: Text(
-                          'Trợ lý Wandy AI',
+                          'Lịch trình chi tiết',
                           style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 15,
-                            color: cs.primary,
-                          ),
+                              fontSize: 17, fontWeight: FontWeight.bold),
                         ),
+                      ),
+                      TextButton.icon(
+                        onPressed: () => _showAddItineraryDialog(1),
+                        icon: const Icon(Icons.add, size: 18),
+                        label: const Text('Thêm hoạt động'),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 6),
-                  Text(
-                    'Wandy sẽ tự động lập lịch trình chi tiết từng ngày dựa trên điểm đến, thời gian, ngân sách và sở thích.',
-                    style: TextStyle(fontSize: 13, color: cs.onSurfaceVariant),
-                  ),
-                  const SizedBox(height: 12),
-                  if (state.isGeneratingPlan)
-                    Row(
-                      children: [
-                        const SizedBox(
-                          width: 18,
-                          height: 18,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Text(
-                            'Wandy đang lên lịch trình tối ưu...',
-                            style: TextStyle(fontSize: 13, color: cs.primary),
-                          ),
-                        ),
-                      ],
-                    )
-                  else
-                    SizedBox(
-                      width: double.infinity,
-                      child: FilledButton.icon(
-                        onPressed: _handleGenerateAiPlan,
-                        icon: const Icon(Icons.auto_awesome, size: 18),
-                        label: const Text('Lập lịch trình bằng AI'),
-                      ),
-                    ),
                 ],
               ),
             ),
           ),
-          const SizedBox(height: 16),
-
-          // Itinerary Header
-          Row(
-            children: [
-              const Expanded(
-                child: Text(
-                  'Lịch trình chi tiết',
-                  style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
-                ),
-              ),
-              TextButton.icon(
-                onPressed: () => _showAddItineraryDialog(1),
-                icon: const Icon(Icons.add, size: 18),
-                label: const Text('Thêm hoạt động'),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-
-          // Itinerary list
           if (trip.itineraries.isEmpty)
-            Card(
-              elevation: 0,
-              color: cs.surfaceContainerLow,
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12)),
-              child: const Padding(
-                padding: EdgeInsets.all(24),
-                child: Center(
-                  child: Text(
-                    'Chưa có lịch trình. Hãy nhấn "Thêm hoạt động" để bắt đầu!',
-                    textAlign: TextAlign.center,
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.md,
+                0,
+                AppSpacing.md,
+                AppSpacing.lg,
+              ),
+              sliver: SliverToBoxAdapter(
+                child: Card(
+                  elevation: 0,
+                  color: cs.surfaceContainerLow,
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12)),
+                  child: const Padding(
+                    padding: EdgeInsets.all(24),
+                    child: Center(
+                      child: Text(
+                        'Chưa có lịch trình. Hãy nhấn "Thêm hoạt động" để bắt đầu!',
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
                   ),
                 ),
               ),
             )
           else
-            ...trip.itineraries.map((day) => _buildDaySection(day, cs)),
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.md,
+                0,
+                AppSpacing.md,
+                AppSpacing.xl,
+              ),
+              sliver: SliverList.builder(
+                itemCount: entries.length,
+                itemBuilder: (context, index) {
+                  final entry = entries[index];
+                  switch (entry) {
+                    case _DayHeaderEntry(:final day):
+                      return _buildDayHeader(day, cs);
+                    case _EmptyDayEntry():
+                      return _buildEmptyDayCard(cs);
+                    case _DayItemEntry(:final item, :final isLastInDay):
+                      return _buildLazyItemCard(item, cs, isLastInDay);
+                  }
+                },
+              ),
+            ),
         ],
       ),
     );
@@ -842,61 +904,85 @@ class _TripDetailScreenState extends ConsumerState<TripDetailScreen> {
     );
   }
 
-  Widget _buildDaySection(ItineraryModel day, ColorScheme cs) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
+  Widget _buildDayHeader(ItineraryModel day, ColorScheme cs) {
+    final borderColor = cs.outlineVariant.withValues(alpha: 0.5);
+    return Container(
+      margin: const EdgeInsets.only(top: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      decoration: BoxDecoration(
+        color: cs.surfaceContainerLow,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(14)),
+        border: Border(
+          top: BorderSide(color: borderColor),
+          left: BorderSide(color: borderColor),
+          right: BorderSide(color: borderColor),
+        ),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              day.title != null && day.title!.isNotEmpty
+                  ? (day.title!.startsWith('Ngay') ||
+                          day.title!.startsWith('Ngày')
+                      ? day.title!
+                      : 'Ngày ${day.dayNumber}: ${day.title}')
+                  : 'Ngày ${day.dayNumber}',
+              style:
+                  const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+            ),
+          ),
+          TextButton(
+            onPressed: () => _showAddItineraryDialog(day.dayNumber),
+            style: TextButton.styleFrom(
+              visualDensity: VisualDensity.compact,
+              padding: EdgeInsets.zero,
+            ),
+            child: const Text('+ Hoạt động', style: TextStyle(fontSize: 12)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEmptyDayCard(ColorScheme cs) {
+    final borderColor = cs.outlineVariant.withValues(alpha: 0.5);
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: cs.surface,
+        borderRadius: const BorderRadius.vertical(bottom: Radius.circular(14)),
+        border: Border.all(color: borderColor),
+      ),
+      child: const Text('Chưa có hoạt động nào trong ngày này.'),
+    );
+  }
+
+  Widget _buildLazyItemCard(
+    ItineraryItemModel item,
+    ColorScheme cs,
+    bool isLastInDay,
+  ) {
+    final borderColor = cs.outlineVariant.withValues(alpha: 0.5);
+    final radius = isLastInDay
+        ? const BorderRadius.vertical(bottom: Radius.circular(14))
+        : BorderRadius.zero;
+    return Container(
+      margin: EdgeInsets.only(bottom: isLastInDay ? 12 : 0),
+      foregroundDecoration: BoxDecoration(
+        borderRadius: radius,
+        border: Border(
+          left: BorderSide(color: borderColor),
+          right: BorderSide(color: borderColor),
+          bottom: BorderSide(color: borderColor),
+        ),
+      ),
       child: Material(
         color: cs.surface,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(14),
-          side: BorderSide(color: cs.outlineVariant.withValues(alpha: 0.5)),
-        ),
+        borderRadius: radius,
         clipBehavior: Clip.antiAlias,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-              decoration: BoxDecoration(
-                color: cs.surfaceContainerLow,
-                borderRadius:
-                    const BorderRadius.vertical(top: Radius.circular(14)),
-              ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      day.title != null && day.title!.isNotEmpty
-                          ? (day.title!.startsWith('Ngay') ||
-                                  day.title!.startsWith('Ngày')
-                              ? day.title!
-                              : 'Ngày ${day.dayNumber}: ${day.title}')
-                          : 'Ngày ${day.dayNumber}',
-                      style: const TextStyle(
-                          fontWeight: FontWeight.bold, fontSize: 15),
-                    ),
-                  ),
-                  TextButton(
-                    onPressed: () => _showAddItineraryDialog(day.dayNumber),
-                    style: TextButton.styleFrom(
-                      visualDensity: VisualDensity.compact,
-                      padding: EdgeInsets.zero,
-                    ),
-                    child: const Text('+ Hoạt động',
-                        style: TextStyle(fontSize: 12)),
-                  ),
-                ],
-              ),
-            ),
-            if (day.items.isEmpty)
-              const Padding(
-                padding: EdgeInsets.all(16),
-                child: Text('Chưa có hoạt động nào trong ngày này.'),
-              )
-            else
-              ...day.items.map((item) => _buildItineraryItemRow(item, cs)),
-          ],
-        ),
+        child: _buildItineraryItemRow(item, cs),
       ),
     );
   }

@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../widgets/app_loading.dart';
 import '../widgets/responsive_wrapper.dart';
+import '../../features/auth/presentation/forgot_password_screen.dart';
 import '../../features/auth/presentation/login_screen.dart';
 import '../../features/auth/presentation/register_screen.dart';
+import '../../features/auth/presentation/reset_password_screen.dart';
 import '../../features/auth/providers/auth_provider.dart';
 import '../../features/home/presentation/home_screen.dart';
 import '../../features/ai_chat/presentation/ai_chat_screen.dart';
@@ -36,7 +39,10 @@ String? sanitizeInternalRedirect(String? raw) {
   if (parsed == null || parsed.hasScheme || parsed.hasAuthority) {
     return null;
   }
-  if (parsed.path == '/login' || parsed.path == '/register') {
+  if (parsed.path == '/login' ||
+      parsed.path == '/register' ||
+      parsed.path == '/forgot-password' ||
+      parsed.path == '/reset-password') {
     return null;
   }
   return trimmed;
@@ -80,12 +86,13 @@ class RouterNotifier extends ChangeNotifier {
     final isLoading = authState.status == AuthStatus.unknown;
     final path = state.uri.path;
     final isLoginRoute = path == '/login' || path == '/register';
+    final isResetRoute = path == '/forgot-password' || path == '/reset-password';
 
     // While loading auth state, don't redirect
     if (isLoading) return null;
 
     if (!isAuth) {
-      if (isLoginRoute) return null;
+      if (isLoginRoute || isResetRoute) return null;
 
       // Public place detail pages and explicit guest discovery routes are accessible pre-login.
       final isPublicPlaceDetail = path.startsWith('/places/');
@@ -160,6 +167,16 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         ),
       ),
       GoRoute(
+        path: '/forgot-password',
+        builder: (context, state) => const ForgotPasswordScreen(),
+      ),
+      GoRoute(
+        path: '/reset-password',
+        builder: (context, state) => ResetPasswordScreen(
+          initialToken: state.uri.queryParameters['token'],
+        ),
+      ),
+      GoRoute(
         path: '/trips/create',
         builder: (context, state) => const TripFormScreen(),
       ),
@@ -216,9 +233,7 @@ class _MainScaffold extends ConsumerWidget {
     final canRenderGuestTab = isGuestBrowse && (path == '/' || path == '/map');
     if (authStatus != AuthStatus.authenticated && !canRenderGuestTab) {
       return const Scaffold(
-        body: Center(
-          child: CircularProgressIndicator(),
-        ),
+        body: AppLoading(),
       );
     }
 

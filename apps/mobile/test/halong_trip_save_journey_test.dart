@@ -10,10 +10,12 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:wanderai_mobile/core/network/api_client.dart';
 import 'package:wanderai_mobile/core/router/app_router.dart';
 import 'package:wanderai_mobile/core/theme/app_theme.dart';
+import 'package:wanderai_mobile/core/widgets/app_state_banner.dart';
 import 'package:wanderai_mobile/features/auth/providers/auth_provider.dart';
 import 'package:wanderai_mobile/features/home/presentation/home_screen.dart';
 import 'package:wanderai_mobile/features/location/providers/user_location_provider.dart';
 import 'package:wanderai_mobile/features/map/data/place_model.dart';
+import 'package:wanderai_mobile/features/map/presentation/map_screen.dart';
 import 'package:wanderai_mobile/features/places/presentation/place_detail_screen.dart';
 import 'package:wanderai_mobile/features/trips/presentation/trip_detail_screen.dart';
 import 'package:wanderai_mobile/features/trips/presentation/trip_list_screen.dart';
@@ -63,12 +65,14 @@ class _InMemoryHalongBackendAdapter implements HttpClientAdapter {
   final List<(String method, String path, String? auth)> recordedCalls = [];
   final Map<String, Map<String, dynamic>> _tripsById = {};
   int failAddItineraryRemaining;
+  int failAddItineraryNetworkRemaining;
   int _tripSeq = 1;
   int _itemSeq = 1;
 
   _InMemoryHalongBackendAdapter({
     bool seedHaLongTrip = true,
     this.failAddItineraryRemaining = 0,
+    this.failAddItineraryNetworkRemaining = 0,
   }) {
     if (seedHaLongTrip) {
       _tripsById['trip-halong-001'] = {
@@ -309,6 +313,14 @@ class _InMemoryHalongBackendAdapter implements HttpClientAdapter {
     if (method == 'POST' && addItinMatch != null) {
       if (!_isAuthorized(options)) {
         return _json(401, {'message': 'Unauthorized'});
+      }
+      if (failAddItineraryNetworkRemaining > 0) {
+        failAddItineraryNetworkRemaining--;
+        throw DioException(
+          requestOptions: options,
+          type: DioExceptionType.connectionError,
+          message: 'Simulated offline network loss',
+        );
       }
       if (failAddItineraryRemaining > 0) {
         failAddItineraryRemaining--;
@@ -854,6 +866,136 @@ void main() {
         expect(backend.createTripCallCount, 1);
         expect(
           find.textContaining('Đã lưu "$_clockTowerPlaceName"'),
+          findsOneWidget,
+        );
+      },
+    );
+
+    testWidgets(
+      'Cancel-Login: guest on Tháp Đồng Hồ taps Lưu -> /login?redirect=... -> Hủy đăng nhập returns cleanly to Tháp Đồng Hồ in guest mode without creating trips',
+      (tester) async {
+        tester.view.physicalSize = const Size(390, 844);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(() {
+          tester.view.resetPhysicalSize();
+          tester.view.resetDevicePixelRatio();
+        });
+
+        SharedPreferences.setMockInitialValues({});
+        final backend = _InMemoryHalongBackendAdapter(seedHaLongTrip: false);
+        final container = _createAppContainer(backend);
+        addTearDown(container.dispose);
+
+        await tester.pumpWidget(
+          UncontrolledProviderScope(
+            container: container,
+            child: MaterialApp.router(
+              theme: AppTheme.lightTheme,
+              routerConfig: container.read(appRouterProvider),
+            ),
+          ),
+        );
+        await _pumpFrames(tester, 6);
+
+        // Guest browses to Tháp Đồng Hồ
+        await tester.tap(find.byKey(const Key('login_guest_explore_button')));
+        await tester.pumpAndSettle(const Duration(milliseconds: 100));
+        container.read(appRouterProvider).go('/places/$_clockTowerPlaceId');
+        await tester.pumpAndSettle(const Duration(milliseconds: 100));
+        expect(find.byType(PlaceDetailScreen), findsOneWidget);
+
+        // Tap Lưu -> /login?redirect=/places/65562a67-...
+        await tester.tap(find.byKey(const Key('place_detail_save_to_trip')));
+        await tester.pumpAndSettle(const Duration(milliseconds: 100));
+        expect(find.byKey(const Key('login_cancel_button')), findsOneWidget);
+
+        // Cancel login -> back on Tháp Đồng Hồ in guest mode
+        await tester.ensureVisible(find.byKey(const Key('login_cancel_button')));
+        await tester.tap(find.byKey(const Key('login_cancel_button')));
+        await tester.pumpAndSettle(const Duration(milliseconds: 100));
+
+        expect(find.byType(PlaceDetailScreen), findsOneWidget);
+        expect(container.read(postLoginRedirectProvider), isNull);
+        expect(container.read(guestBrowseModeProvider), isTrue);
+        expect(container.read(authProvider).status, AuthStatus.unauthenticated);
+        expect(backend.createTripCallCount, 0);
+        expect(find.byKey(const Key('login_error_banner')), findsNothing);
+
+        // Back button from PlaceDetailScreen navigates to Map cleanly (not bounced to /login)
+        await tester.tap(find.byKey(const Key('place_detail_back')));
+        await tester.pumpAndSettle(const Duration(milliseconds: 100));
+        expect(find.byType(MapScreen), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'Network-Loss-When-Saving: DioException.connectionError renders warning AppStateBanner, preserves _createdPendingTrip, and retry saves without duplicating POST /trips',
+      (tester) async {
+        tester.view.physicalSize = const Size(390, 844);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(() {
+          tester.view.resetPhysicalSize();
+          tester.view.resetDevicePixelRatio();
+        });
+
+        SharedPreferences.setMockInitialValues({
+          'access_token': _validAccessToken,
+          'refresh_token': _validRefreshToken,
+        });
+        final backend = _InMemoryHalongBackendAdapter(
+          seedHaLongTrip: false,
+          failAddItineraryNetworkRemaining: 1,
+        );
+        final container = _createAppContainer(backend);
+        addTearDown(container.dispose);
+
+        await tester.pumpWidget(
+          UncontrolledProviderScope(
+            container: container,
+            child: MaterialApp.router(
+              theme: AppTheme.lightTheme,
+              routerConfig: container.read(appRouterProvider),
+            ),
+          ),
+        );
+        await _pumpFrames(tester, 6);
+
+        container.read(appRouterProvider).push('/places/$_clockTowerPlaceId');
+        await _pumpFrames(tester, 6);
+
+        await tester.tap(find.byKey(const Key('place_detail_save_to_trip')));
+        await _pumpFrames(tester, 6);
+
+        await tester.enterText(
+          find.byKey(const Key('trip_picker_new_title_input')),
+          'Chuyến Hạ Long Mất Mạng',
+        );
+        await _pumpFrames(tester, 2);
+
+        // Attempt 1: POST /trips succeeds, POST /trips/trip-created-1/itinerary throws connectionError
+        await tester.tap(find.byKey(const Key('trip_picker_confirm_save')));
+        await _pumpFrames(tester, 6);
+
+        expect(backend.createTripCallCount, 1);
+        final bannerFinder = find.byKey(const Key('save_place_error_banner'));
+        expect(bannerFinder, findsOneWidget);
+        final banner = tester.widget<AppStateBanner>(bannerFinder);
+        expect(banner.tone, AppStateBannerTone.warning);
+        expect(find.textContaining('Mất kết nối mạng'), findsOneWidget);
+        expect(
+          find.byKey(const Key('trip_picker_item_trip-created-1')),
+          findsOneWidget,
+        );
+
+        // Retry via banner action "Thử lại" -> reuses trip-created-1 without calling POST /trips again
+        await tester.tap(find.text('Thử lại'));
+        await _pumpFrames(tester, 6);
+
+        expect(backend.createTripCallCount, 1);
+        expect(
+          find.textContaining(
+            'Đã lưu "$_clockTowerPlaceName" vào "Chuyến Hạ Long Mất Mạng"',
+          ),
           findsOneWidget,
         );
       },

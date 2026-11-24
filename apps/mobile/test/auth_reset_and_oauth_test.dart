@@ -1,0 +1,642 @@
+import 'dart:convert';
+import 'dart:typed_data';
+
+import 'package:dio/dio.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:wanderai_mobile/app/app.dart';
+import 'package:wanderai_mobile/core/network/api_client.dart';
+import 'package:wanderai_mobile/core/network/api_error.dart';
+import 'package:wanderai_mobile/core/router/app_router.dart';
+import 'package:wanderai_mobile/core/theme/app_theme.dart';
+import 'package:wanderai_mobile/core/widgets/app_state_banner.dart';
+import 'package:wanderai_mobile/features/auth/data/auth_social_port.dart';
+import 'package:wanderai_mobile/features/auth/presentation/forgot_password_screen.dart';
+import 'package:wanderai_mobile/features/auth/presentation/login_screen.dart';
+import 'package:wanderai_mobile/features/auth/presentation/reset_password_screen.dart';
+import 'package:wanderai_mobile/features/auth/providers/auth_provider.dart';
+import 'package:wanderai_mobile/features/places/presentation/place_detail_screen.dart';
+
+const _clockTowerId = '65562a67-84ff-44a0-990d-31917a2a9bd0';
+const _haLongDestId = '4eec2f30-b67d-4221-b754-8fcc7bb1160e';
+
+class _FakeAuthSocialPort implements AuthSocialPort {
+  SocialAuthResult googleResult =
+      const SocialAuthSuccess('google-id-token-valid');
+  SocialAuthResult facebookResult =
+      const SocialAuthSuccess('facebook-access-token-valid');
+  int signOutCalls = 0;
+
+  @override
+  Future<SocialAuthResult> signInWithGoogle() async => googleResult;
+
+  @override
+  Future<SocialAuthResult> signInWithFacebook() async => facebookResult;
+
+  @override
+  Future<void> signOutAll() async {
+    signOutCalls++;
+  }
+}
+
+class _AuthContractBackendAdapter implements HttpClientAdapter {
+  final List<(String method, String path, Map<String, dynamic>? body)> calls =
+      [];
+
+  String? overrideGoogleErrorCode;
+  int? overrideGoogleStatusCode;
+  String? overrideFacebookErrorCode;
+  int? overrideFacebookStatusCode;
+
+  @override
+  Future<ResponseBody> fetch(
+    RequestOptions options,
+    Stream<Uint8List>? requestStream,
+    Future<void>? cancelFuture,
+  ) async {
+    final method = options.method.toUpperCase();
+    final path = options.path;
+    final body = options.data is Map
+        ? Map<String, dynamic>.from(options.data as Map)
+        : null;
+    calls.add((method, path, body));
+
+    if (method == 'POST' && path == '/auth/forgot-password') {
+      return _json(200, {
+        'success': true,
+        'data': {
+          'sent': true,
+          'expiresInMinutes': 30,
+          'message':
+              'Nếu email tồn tại trong hệ thống, chúng tôi đã gửi hướng dẫn đặt lại mật khẩu.',
+        },
+      });
+    }
+
+    if (method == 'GET' && path == '/auth/reset-password/validate') {
+      final token = options.queryParameters['token']?.toString() ?? '';
+      if (token == 'valid-tok') {
+        return _json(200, {
+          'success': true,
+          'data': {
+            'valid': true,
+            'expiresAt': '2026-11-25T10:00:00.000Z',
+          },
+        });
+      }
+      if (token == 'expired-tok') {
+        return _json(410, {
+          'success': false,
+          'statusCode': 410,
+          'errorCode': 'RESET_TOKEN_EXPIRED',
+          'message': 'Liên kết đặt lại mật khẩu đã hết hạn.',
+        });
+      }
+      if (token == 'used-tok') {
+        return _json(410, {
+          'success': false,
+          'statusCode': 410,
+          'errorCode': 'RESET_TOKEN_USED',
+          'message': 'Liên kết đặt lại mật khẩu đã được sử dụng.',
+        });
+      }
+      return _json(400, {
+        'success': false,
+        'statusCode': 400,
+        'errorCode': 'RESET_TOKEN_INVALID',
+        'message': 'Liên kết đặt lại mật khẩu không hợp lệ.',
+      });
+    }
+
+    if (method == 'POST' && path == '/auth/reset-password') {
+      final token = body?['token']?.toString() ?? '';
+      if (token == 'valid-tok') {
+        return _json(200, {
+          'success': true,
+          'data': {
+            'reset': true,
+            'message': 'Đặt lại mật khẩu thành công.',
+          },
+        });
+      }
+      return _json(400, {
+        'success': false,
+        'statusCode': 400,
+        'errorCode': 'RESET_TOKEN_INVALID',
+        'message': 'Liên kết đặt lại mật khẩu không hợp lệ.',
+      });
+    }
+
+    if (method == 'POST' && path == '/auth/oauth/google') {
+      if (overrideGoogleErrorCode != null) {
+        return _json(overrideGoogleStatusCode ?? 400, {
+          'success': false,
+          'statusCode': overrideGoogleStatusCode ?? 400,
+          'errorCode': overrideGoogleErrorCode,
+          'message': overrideGoogleErrorCode == 'OAUTH_EMAIL_UNAVAILABLE'
+              ? 'Tài khoản Google chưa cung cấp email.'
+              : 'Mã xác thực Google không hợp lệ.',
+        });
+      }
+      return _json(200, {
+        'success': true,
+        'data': {
+          'access_token': 'oauth-google-access',
+          'refresh_token': 'oauth-google-refresh',
+        },
+      });
+    }
+
+    if (method == 'POST' && path == '/auth/oauth/facebook') {
+      if (overrideFacebookErrorCode != null) {
+        return _json(overrideFacebookStatusCode ?? 502, {
+          'success': false,
+          'statusCode': overrideFacebookStatusCode ?? 502,
+          'errorCode': overrideFacebookErrorCode,
+          'message': 'Không thể xác thực với Facebook lúc này.',
+        });
+      }
+      return _json(200, {
+        'success': true,
+        'data': {
+          'access_token': 'oauth-fb-access',
+          'refresh_token': 'oauth-fb-refresh',
+        },
+      });
+    }
+
+    if (method == 'GET' && path == '/places/$_clockTowerId') {
+      return _json(200, {
+        'success': true,
+        'data': {
+          'id': _clockTowerId,
+          'name': 'Tháp Đồng Hồ',
+          'latitude': 20.9516105,
+          'longitude': 107.0851999,
+          'isVerified': true,
+          'category': {'name': 'attraction'},
+          'destination': {
+            'id': _haLongDestId,
+            'name': 'Hạ Long',
+            'slug': 'ha-long',
+          },
+        },
+      });
+    }
+
+    if (method == 'GET' && path == '/destinations') {
+      return _json(200, {
+        'success': true,
+        'data': {'items': []},
+      });
+    }
+
+    if (method == 'GET' && path == '/places') {
+      return _json(200, {
+        'success': true,
+        'data': {'items': [], 'total': 0},
+      });
+    }
+
+    if (method == 'GET' && path == '/places/trending') {
+      return _json(200, {
+        'success': true,
+        'data': {'items': []},
+      });
+    }
+
+    if (method == 'GET' && path == '/users/me') {
+      return _json(200, {
+        'success': true,
+        'data': {'id': 'u1', 'email': 'u@gomate.vn'},
+      });
+    }
+
+    return _json(404, {'message': 'Unhandled $method $path'});
+  }
+
+  ResponseBody _json(int code, Map<String, dynamic> payload) {
+    return ResponseBody.fromString(
+      jsonEncode(payload),
+      code,
+      headers: {
+        Headers.contentTypeHeader: ['application/json'],
+      },
+    );
+  }
+
+  @override
+  void close({bool force = false}) {}
+}
+
+ProviderContainer _createContainer(
+  _AuthContractBackendAdapter backend,
+  _FakeAuthSocialPort socialPort,
+) {
+  return ProviderContainer(
+    overrides: [
+      authSocialPortProvider.overrideWithValue(socialPort),
+      apiClientProvider.overrideWith((ref) {
+        final epoch = ref.read(sessionEpochControllerProvider);
+        return createApiClient(
+          baseUrlOverride: 'http://localhost:3000',
+          sessionEpoch: epoch,
+          onSessionExpired: () {
+            ref.read(authSessionExpiredSignalProvider.notifier).state++;
+          },
+        )..httpClientAdapter = backend;
+      }),
+    ],
+  );
+}
+
+Future<void> _pump(WidgetTester tester, [int count = 6]) async {
+  for (var i = 0; i < count; i++) {
+    await tester.pump(const Duration(milliseconds: 50));
+  }
+}
+
+void main() {
+  group('Deep-link normalization & public auth path guard', () {
+    test('normalizeAuthDeepLink maps wanderai:// and https reset-password URIs',
+        () {
+      expect(
+        normalizeAuthDeepLink(
+          Uri.parse('wanderai://reset-password?token=abc123'),
+        ),
+        '/reset-password?token=abc123',
+      );
+      expect(
+        normalizeAuthDeepLink(
+          Uri.parse('wanderai://app/reset-password?token=xyz789'),
+        ),
+        '/reset-password?token=xyz789',
+      );
+      expect(
+        normalizeAuthDeepLink(
+          Uri.parse('https://app.gomate.vn/reset-password?token=webtok'),
+        ),
+        '/reset-password?token=webtok',
+      );
+      expect(
+        normalizeAuthDeepLink(Uri.parse('wanderai://unknown-host')),
+        isNull,
+      );
+    });
+
+    test(
+        '401 from /auth/oauth/google does not trigger /auth/refresh single-flight',
+        () async {
+      SharedPreferences.setMockInitialValues({'refresh_token': 'stale-ref'});
+      final backend = _AuthContractBackendAdapter()
+        ..overrideGoogleStatusCode = 401
+        ..overrideGoogleErrorCode = 'OAUTH_TOKEN_INVALID';
+      final dio = createApiClient(baseUrlOverride: 'http://localhost:3000')
+        ..httpClientAdapter = backend;
+
+      await expectLater(
+        () => dio.post('/auth/oauth/google', data: {'idToken': 'bad'}),
+        throwsA(isA<DioException>()),
+      );
+
+      expect(
+        backend.calls.where((c) => c.$2 == '/auth/refresh'),
+        isEmpty,
+      );
+    });
+
+    test('ApiErrorDetails extracts errorCode and network loss flags', () {
+      final req = RequestOptions(path: '/auth/reset-password');
+      final netErr = DioException(
+        requestOptions: req,
+        type: DioExceptionType.connectionError,
+      );
+      expect(ApiErrorDetails.fromDioException(netErr).isNetworkError, isTrue);
+
+      final apiErr = DioException(
+        requestOptions: req,
+        type: DioExceptionType.badResponse,
+        response: Response(
+          requestOptions: req,
+          statusCode: 410,
+          data: {
+            'errorCode': 'RESET_TOKEN_EXPIRED',
+            'message': 'Liên kết đặt lại mật khẩu đã hết hạn.',
+          },
+        ),
+      );
+      final parsed = ApiErrorDetails.fromDioException(apiErr);
+      expect(parsed.statusCode, 410);
+      expect(parsed.errorCode, 'RESET_TOKEN_EXPIRED');
+      expect(parsed.message, 'Liên kết đặt lại mật khẩu đã hết hạn.');
+      expect(parsed.isNetworkError, isFalse);
+    });
+  });
+
+  group('ForgotPassword & ResetPassword flows', () {
+    testWidgets(
+        'Happy path: Login -> ForgotPassword -> ResetPassword?token=valid-tok -> Login',
+        (tester) async {
+      SharedPreferences.setMockInitialValues({});
+      final backend = _AuthContractBackendAdapter();
+      final socialPort = _FakeAuthSocialPort();
+      final container = _createContainer(backend, socialPort);
+      addTearDown(container.dispose);
+
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: MaterialApp.router(
+            theme: AppTheme.lightTheme,
+            routerConfig: container.read(appRouterProvider),
+          ),
+        ),
+      );
+      await _pump(tester, 6);
+      expect(find.byType(LoginScreen), findsOneWidget);
+
+      await tester
+          .tap(find.byKey(const Key('login_forgot_password_button')));
+      await _pump(tester, 6);
+      expect(find.byType(ForgotPasswordScreen), findsOneWidget);
+
+      await tester.enterText(
+        find.byKey(const Key('forgot_email_input')),
+        'traveler@gomate.vn',
+      );
+      await tester.tap(find.byKey(const Key('forgot_submit_button')));
+      await _pump(tester, 6);
+
+      expect(
+        backend.calls.where((c) => c.$2 == '/auth/forgot-password'),
+        hasLength(1),
+      );
+      expect(find.byKey(const Key('forgot_result_banner')), findsOneWidget);
+      expect(find.textContaining('Nếu email tồn tại'), findsOneWidget);
+
+      // Navigate via deep-link target `/reset-password?token=valid-tok`
+      container.read(appRouterProvider).go('/reset-password?token=valid-tok');
+      await _pump(tester, 6);
+      expect(find.byType(ResetPasswordScreen), findsOneWidget);
+      expect(
+        backend.calls.where((c) => c.$2 == '/auth/reset-password/validate'),
+        hasLength(1),
+      );
+
+      await tester.enterText(
+        find.byKey(const Key('reset_password_input')),
+        'NewPass123!',
+      );
+      await tester.enterText(
+        find.byKey(const Key('reset_confirm_password_input')),
+        'NewPass123!',
+      );
+      await tester.tap(find.byKey(const Key('reset_submit_button')));
+      await _pump(tester, 6);
+
+      expect(
+        backend.calls.where((c) => c.$2 == '/auth/reset-password'),
+        hasLength(1),
+      );
+      expect(find.byKey(const Key('reset_status_banner')), findsOneWidget);
+      expect(find.byKey(const Key('reset_go_login_button')), findsOneWidget);
+
+      await tester.tap(find.byKey(const Key('reset_go_login_button')));
+      await _pump(tester, 6);
+      expect(find.byType(LoginScreen), findsOneWidget);
+    });
+
+    testWidgets(
+        'Expired link (RESET_TOKEN_EXPIRED) shows error banner + CTA to request new link',
+        (tester) async {
+      SharedPreferences.setMockInitialValues({});
+      final backend = _AuthContractBackendAdapter();
+      final container = _createContainer(backend, _FakeAuthSocialPort());
+      addTearDown(container.dispose);
+
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: MaterialApp.router(
+            theme: AppTheme.lightTheme,
+            routerConfig: container.read(appRouterProvider),
+          ),
+        ),
+      );
+      await _pump(tester, 4);
+
+      container.read(appRouterProvider).go('/reset-password?token=expired-tok');
+      await _pump(tester, 6);
+
+      expect(find.byKey(const Key('reset_status_banner')), findsOneWidget);
+      expect(find.textContaining('hết hạn'), findsOneWidget);
+      expect(find.byKey(const Key('reset_submit_button')), findsNothing);
+
+      await tester.tap(find.byKey(const Key('reset_request_new_button')));
+      await _pump(tester, 6);
+      expect(find.byType(ForgotPasswordScreen), findsOneWidget);
+    });
+
+    testWidgets(
+        'Used link (RESET_TOKEN_USED) and invalid link (RESET_TOKEN_INVALID) block password form',
+        (tester) async {
+      SharedPreferences.setMockInitialValues({});
+      final backend = _AuthContractBackendAdapter();
+      final container = _createContainer(backend, _FakeAuthSocialPort());
+      addTearDown(container.dispose);
+
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: MaterialApp.router(
+            theme: AppTheme.lightTheme,
+            routerConfig: container.read(appRouterProvider),
+          ),
+        ),
+      );
+      await _pump(tester, 4);
+
+      container.read(appRouterProvider).go('/reset-password?token=used-tok');
+      await _pump(tester, 6);
+      expect(find.byKey(const Key('reset_status_banner')), findsOneWidget);
+      expect(find.textContaining('đã được sử dụng'), findsOneWidget);
+      expect(find.byKey(const Key('reset_submit_button')), findsNothing);
+
+      container.read(appRouterProvider).go('/reset-password?token=bad-tok');
+      await _pump(tester, 6);
+      expect(find.byKey(const Key('reset_status_banner')), findsOneWidget);
+      expect(find.textContaining('không hợp lệ'), findsOneWidget);
+      expect(find.byKey(const Key('reset_submit_button')), findsNothing);
+    });
+  });
+
+  group('Google & Facebook OAuth flows (Success / Cancelled / Error)', () {
+    testWidgets(
+        'Google success persists tokens, clears guest mode, and honors redirect to Tháp Đồng Hồ',
+        (tester) async {
+      SharedPreferences.setMockInitialValues({});
+      final backend = _AuthContractBackendAdapter();
+      final socialPort = _FakeAuthSocialPort()
+        ..googleResult = const SocialAuthSuccess('google-tok-ok');
+      final container = _createContainer(backend, socialPort);
+      addTearDown(container.dispose);
+
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: MaterialApp.router(
+            theme: AppTheme.lightTheme,
+            routerConfig: container.read(appRouterProvider),
+          ),
+        ),
+      );
+      await _pump(tester, 4);
+
+      container.read(guestBrowseModeProvider.notifier).state = true;
+      container.read(appRouterProvider).go(
+          '/login?redirect=${Uri.encodeComponent('/places/$_clockTowerId')}');
+      await _pump(tester, 6);
+
+      await tester.ensureVisible(find.byKey(const Key('login_google_button')));
+      await tester.tap(find.byKey(const Key('login_google_button')));
+      await _pump(tester, 8);
+
+      expect(
+        backend.calls.where((c) => c.$2 == '/auth/oauth/google'),
+        hasLength(1),
+      );
+      expect(container.read(authProvider).status, AuthStatus.authenticated);
+      expect(container.read(guestBrowseModeProvider), isFalse);
+      expect(find.byType(PlaceDetailScreen), findsOneWidget);
+
+      final prefs = await SharedPreferences.getInstance();
+      expect(prefs.getString('access_token'), 'oauth-google-access');
+    });
+
+    testWidgets(
+        'Google cancelled does NOT call backend or render error banner',
+        (tester) async {
+      SharedPreferences.setMockInitialValues({});
+      final backend = _AuthContractBackendAdapter();
+      final socialPort = _FakeAuthSocialPort()
+        ..googleResult = const SocialAuthCancelled();
+      final container = _createContainer(backend, socialPort);
+      addTearDown(container.dispose);
+
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: MaterialApp.router(
+            theme: AppTheme.lightTheme,
+            routerConfig: container.read(appRouterProvider),
+          ),
+        ),
+      );
+      await _pump(tester, 6);
+
+      await tester.ensureVisible(find.byKey(const Key('login_google_button')));
+      await tester.tap(find.byKey(const Key('login_google_button')));
+      await _pump(tester, 6);
+
+      expect(
+        backend.calls.where((c) => c.$2 == '/auth/oauth/google'),
+        isEmpty,
+      );
+      expect(container.read(authProvider).status, AuthStatus.unauthenticated);
+      expect(find.byKey(const Key('login_error_banner')), findsNothing);
+    });
+
+    testWidgets(
+        'Google provider & backend OAUTH_EMAIL_UNAVAILABLE error shows AppStateBanner',
+        (tester) async {
+      SharedPreferences.setMockInitialValues({});
+      final backend = _AuthContractBackendAdapter()
+        ..overrideGoogleStatusCode = 400
+        ..overrideGoogleErrorCode = 'OAUTH_EMAIL_UNAVAILABLE';
+      final socialPort = _FakeAuthSocialPort();
+      final container = _createContainer(backend, socialPort);
+      addTearDown(container.dispose);
+
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: MaterialApp.router(
+            theme: AppTheme.lightTheme,
+            routerConfig: container.read(appRouterProvider),
+          ),
+        ),
+      );
+      await _pump(tester, 6);
+
+      await tester.ensureVisible(find.byKey(const Key('login_google_button')));
+      await tester.tap(find.byKey(const Key('login_google_button')));
+      await _pump(tester, 6);
+
+      final bannerFinder = find.byKey(const Key('login_error_banner'));
+      expect(bannerFinder, findsOneWidget);
+      final banner = tester.widget<AppStateBanner>(bannerFinder);
+      expect(banner.tone, AppStateBannerTone.error);
+      expect(find.textContaining('email'), findsWidgets);
+      expect(container.read(authProvider).status, AuthStatus.unauthenticated);
+
+      // SDK failure without calling backend
+      socialPort.googleResult = const SocialAuthFailure(
+        'Google SDK bị gián đoạn',
+        errorCode: 'OAUTH_PROVIDER_ERROR',
+      );
+      await tester.tap(find.byKey(const Key('login_google_button')));
+      await _pump(tester, 6);
+      expect(find.text('Google SDK bị gián đoạn'), findsOneWidget);
+    });
+
+    testWidgets('Facebook success, cancelled, and 502 error flows',
+        (tester) async {
+      SharedPreferences.setMockInitialValues({});
+      final backend = _AuthContractBackendAdapter();
+      final socialPort = _FakeAuthSocialPort();
+      final container = _createContainer(backend, socialPort);
+      addTearDown(container.dispose);
+
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: MaterialApp.router(
+            theme: AppTheme.lightTheme,
+            routerConfig: container.read(appRouterProvider),
+          ),
+        ),
+      );
+      await _pump(tester, 6);
+
+      // 1. Cancelled
+      socialPort.facebookResult = const SocialAuthCancelled();
+      await tester.ensureVisible(find.byKey(const Key('login_facebook_button')));
+      await tester.tap(find.byKey(const Key('login_facebook_button')));
+      await _pump(tester, 6);
+      expect(
+        backend.calls.where((c) => c.$2 == '/auth/oauth/facebook'),
+        isEmpty,
+      );
+      expect(find.byKey(const Key('login_error_banner')), findsNothing);
+
+      // 2. Backend 502 OAUTH_PROVIDER_ERROR
+      socialPort.facebookResult = const SocialAuthSuccess('fb-tok');
+      backend.overrideFacebookStatusCode = 502;
+      backend.overrideFacebookErrorCode = 'OAUTH_PROVIDER_ERROR';
+      await tester.tap(find.byKey(const Key('login_facebook_button')));
+      await _pump(tester, 6);
+      expect(find.byKey(const Key('login_error_banner')), findsOneWidget);
+      expect(find.textContaining('Facebook'), findsWidgets);
+
+      // 3. Success
+      backend.overrideFacebookErrorCode = null;
+      await tester.tap(find.byKey(const Key('login_facebook_button')));
+      await _pump(tester, 6);
+      expect(container.read(authProvider).status, AuthStatus.authenticated);
+      final prefs = await SharedPreferences.getInstance();
+      expect(prefs.getString('access_token'), 'oauth-fb-access');
+    });
+  });
+}

@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../../core/network/api_error.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radius.dart';
@@ -10,6 +11,8 @@ import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_loading.dart';
+import '../../../../core/widgets/app_state_banner.dart';
+import '../../../../core/widgets/app_text_field.dart';
 import '../../../../core/widgets/responsive_wrapper.dart';
 import '../../../map/data/place_model.dart';
 import '../../../trips/data/trip_models.dart';
@@ -48,6 +51,7 @@ class _SavePlaceToTripSheetState extends ConsumerState<_SavePlaceToTripSheet> {
   int _selectedDay = 1;
   bool _saving = false;
   String? _errorText;
+  AppStateBannerTone _errorTone = AppStateBannerTone.error;
   late final TextEditingController _newTitleCtrl;
 
   @override
@@ -63,7 +67,10 @@ class _SavePlaceToTripSheetState extends ConsumerState<_SavePlaceToTripSheet> {
       if (!mounted) return;
       await ref.read(tripListProvider.notifier).loadTrips();
       if (!mounted) return;
-      _syncDefaultSelection(ref.read(tripListProvider).trips);
+      final tripState = ref.read(tripListProvider);
+      if (tripState.errorMessage == null || tripState.trips.isNotEmpty) {
+        _syncDefaultSelection(tripState.trips);
+      }
     });
   }
 
@@ -117,6 +124,7 @@ class _SavePlaceToTripSheetState extends ConsumerState<_SavePlaceToTripSheet> {
         if (rawTitle.isEmpty) {
           setState(() {
             _saving = false;
+            _errorTone = AppStateBannerTone.error;
             _errorText = 'Vui lòng nhập tên chuyến đi mới.';
           });
           return;
@@ -130,10 +138,14 @@ class _SavePlaceToTripSheetState extends ConsumerState<_SavePlaceToTripSheet> {
                 );
         if (createdTrip == null) {
           if (!mounted) return;
+          final tripState = ref.read(tripListProvider);
           setState(() {
             _saving = false;
-            _errorText = ref.read(tripListProvider).errorMessage ??
-                'Không thể tạo chuyến đi mới.';
+            _errorTone = tripState.isOfflineError
+                ? AppStateBannerTone.warning
+                : AppStateBannerTone.error;
+            _errorText =
+                tripState.errorMessage ?? 'Không thể tạo chuyến đi mới.';
           });
           return;
         }
@@ -157,6 +169,7 @@ class _SavePlaceToTripSheetState extends ConsumerState<_SavePlaceToTripSheet> {
         if (targetTrip == null) {
           setState(() {
             _saving = false;
+            _errorTone = AppStateBannerTone.error;
             _errorText = 'Vui lòng chọn một chuyến đi.';
           });
           return;
@@ -181,11 +194,15 @@ class _SavePlaceToTripSheetState extends ConsumerState<_SavePlaceToTripSheet> {
         );
       }
 
-      await ref.read(tripListProvider.notifier).loadTrips();
-      if (ref.exists(tripDetailProvider) &&
-          ref.read(tripDetailProvider).trip?.id == targetTrip.id) {
-        await ref.read(tripDetailProvider.notifier).loadTrip(targetTrip.id);
-      }
+      // Guard post-save cache refreshes so a network blip after item creation
+      // never causes a false error or duplicate itinerary item on retry.
+      try {
+        await ref.read(tripListProvider.notifier).loadTrips();
+        if (ref.exists(tripDetailProvider) &&
+            ref.read(tripDetailProvider).trip?.id == targetTrip.id) {
+          await ref.read(tripDetailProvider.notifier).loadTrip(targetTrip.id);
+        }
+      } catch (_) {}
 
       if (!mounted) return;
       Navigator.of(context).pop(targetTrip);
@@ -198,22 +215,87 @@ class _SavePlaceToTripSheetState extends ConsumerState<_SavePlaceToTripSheet> {
         context.go('/login?redirect=${Uri.encodeComponent(redirect)}');
         return;
       }
-      final data = e.response?.data;
-      final serverMsg = (data is Map && data['message'] is String)
-          ? data['message'] as String
-          : null;
+      final details = ApiErrorDetails.fromDioException(e);
       setState(() {
         _saving = false;
-        _errorText =
-            serverMsg ?? 'Không thể lưu địa điểm vào chuyến đi lúc này.';
+        if (details.isNetworkError) {
+          _errorTone = AppStateBannerTone.warning;
+          _errorText =
+              'Mất kết nối mạng khi lưu. Chuyến đi đã chọn vẫn được giữ lại — hãy bấm Thử lại khi có mạng.';
+        } else if (details.isTransientServerError) {
+          _errorTone = AppStateBannerTone.warning;
+          _errorText = details.message ??
+              'Máy chủ tạm thời gián đoạn. Vui lòng bấm Thử lại.';
+        } else {
+          _errorTone = AppStateBannerTone.error;
+          _errorText = details.message ??
+              'Không thể lưu địa điểm vào chuyến đi lúc này.';
+        }
       });
     } catch (_) {
       if (!mounted) return;
       setState(() {
         _saving = false;
+        _errorTone = AppStateBannerTone.error;
         _errorText = 'Không thể lưu địa điểm vào chuyến đi lúc này.';
       });
     }
+  }
+
+  Widget _buildTripList(List<TripModel> trips) {
+    final listView = ListView.separated(
+      shrinkWrap: trips.length <= 4,
+      physics: trips.length <= 4
+          ? const NeverScrollableScrollPhysics()
+          : const ClampingScrollPhysics(),
+      itemCount: trips.length,
+      separatorBuilder: (_, __) => const SizedBox(height: AppSpacing.xs),
+      itemBuilder: (context, index) {
+        final trip = trips[index];
+        final isSelected = _selectedTripId == trip.id;
+        return Material(
+          color: isSelected
+              ? AppColors.primaryContainer.withValues(alpha: 0.35)
+              : AppColors.surface,
+          shape: RoundedRectangleBorder(
+            borderRadius: AppRadius.mdRadius,
+            side: BorderSide(
+              color: isSelected ? AppColors.primary : AppColors.softBorder,
+              width: isSelected ? 1.5 : 1,
+            ),
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: ListTile(
+            key: Key('trip_picker_item_${trip.id}'),
+            dense: true,
+            onTap: _saving
+                ? null
+                : () => setState(() => _selectedTripId = trip.id),
+            leading: Icon(
+              isSelected
+                  ? Icons.radio_button_checked
+                  : Icons.radio_button_off,
+              color: isSelected ? AppColors.primary : AppColors.textTertiary,
+            ),
+            title: Text(
+              trip.title,
+              style: AppTypography.label.copyWith(fontWeight: FontWeight.w700),
+            ),
+            subtitle: trip.destinationName != null
+                ? Text(trip.destinationName!, style: AppTypography.bodyS)
+                : null,
+          ),
+        );
+      },
+    );
+
+    if (trips.length > 4) {
+      return ConstrainedBox(
+        constraints: const BoxConstraints(maxHeight: 260),
+        child: listView,
+      );
+    }
+    return listView;
   }
 
   @override
@@ -233,6 +315,8 @@ class _SavePlaceToTripSheetState extends ConsumerState<_SavePlaceToTripSheet> {
       _selectedTripId = trips.first.id;
     }
 
+    final initialLoadFailed =
+        tripState.errorMessage != null && trips.isEmpty && !tripState.isLoading;
     final maxHeight = MediaQuery.of(context).size.height * 0.82;
 
     return ResponsiveWrapper(
@@ -313,178 +397,139 @@ class _SavePlaceToTripSheetState extends ConsumerState<_SavePlaceToTripSheet> {
                           message: 'Đang tải danh sách chuyến đi...',
                         ),
                       )
-                    : Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          if (trips.isNotEmpty) ...[
-                            Wrap(
-                              spacing: AppSpacing.sm,
-                              runSpacing: AppSpacing.xs,
-                              alignment: WrapAlignment.spaceBetween,
-                              crossAxisAlignment: WrapCrossAlignment.center,
-                              children: [
-                                Text(
-                                  _createNewMode
-                                      ? 'Tạo chuyến đi mới'
-                                      : 'Chọn chuyến đi của bạn',
-                                  style: AppTypography.label.copyWith(
-                                    fontWeight: FontWeight.w700,
-                                  ),
-                                ),
-                                TextButton.icon(
-                                  key: const Key(
-                                    'trip_picker_new_trip_toggle',
-                                  ),
-                                  style: TextButton.styleFrom(
-                                    minimumSize: Size.zero,
-                                    tapTargetSize:
-                                        MaterialTapTargetSize.shrinkWrap,
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 8,
-                                      vertical: 6,
-                                    ),
-                                  ),
-                                  onPressed: _saving
-                                      ? null
-                                      : () => setState(
-                                            () => _createNewMode =
-                                                !_createNewMode,
-                                          ),
-                                  icon: Icon(
-                                    _createNewMode
-                                        ? Icons.list_alt_outlined
-                                        : Icons.add_circle_outline,
-                                    size: 16,
-                                  ),
-                                  label: Text(
-                                    _createNewMode
-                                        ? 'Chọn chuyến sẵn có'
-                                        : 'Tạo chuyến mới',
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: AppSpacing.xs),
-                          ],
-                          if (_createNewMode || trips.isEmpty) ...[
-                            if (trips.isEmpty)
-                              Padding(
-                                padding: const EdgeInsets.only(
-                                  bottom: AppSpacing.sm,
-                                ),
-                                child: Text(
-                                  'Bạn chưa có chuyến đi nào. Nhập tên chuyến đi bên dưới để tạo và lưu ngay địa điểm này.',
-                                  style: AppTypography.bodyS.copyWith(
-                                    color: AppColors.textSecondary,
-                                  ),
-                                ),
-                              ),
-                            TextField(
-                              key: const Key('trip_picker_new_title_input'),
-                              controller: _newTitleCtrl,
-                              enabled: !_saving,
-                              decoration: const InputDecoration(
-                                labelText: 'Tên chuyến đi mới',
-                                prefixIcon: Icon(Icons.luggage_outlined),
-                                border: OutlineInputBorder(),
-                              ),
-                            ),
-                          ] else ...[
-                            for (final trip in trips)
-                              Padding(
-                                padding: const EdgeInsets.only(
-                                  bottom: AppSpacing.xs,
-                                ),
-                                child: Material(
-                                  color: _selectedTripId == trip.id
-                                      ? AppColors.primaryContainer
-                                          .withValues(alpha: 0.35)
-                                      : AppColors.surface,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: AppRadius.mdRadius,
-                                    side: BorderSide(
-                                      color: _selectedTripId == trip.id
-                                          ? AppColors.primary
-                                          : AppColors.softBorder,
-                                      width:
-                                          _selectedTripId == trip.id ? 1.5 : 1,
-                                    ),
-                                  ),
-                                  clipBehavior: Clip.antiAlias,
-                                  child: ListTile(
-                                    key: Key('trip_picker_item_${trip.id}'),
-                                    dense: true,
-                                    onTap: _saving
-                                        ? null
-                                        : () => setState(
-                                              () => _selectedTripId = trip.id,
-                                            ),
-                                    leading: Icon(
-                                      _selectedTripId == trip.id
-                                          ? Icons.radio_button_checked
-                                          : Icons.radio_button_off,
-                                      color: _selectedTripId == trip.id
-                                          ? AppColors.primary
-                                          : AppColors.textTertiary,
-                                    ),
-                                    title: Text(
-                                      trip.title,
+                    : initialLoadFailed
+                        ? AppStateBanner(
+                            key: const Key('save_place_load_error_banner'),
+                            message: tripState.errorMessage!,
+                            tone: tripState.isOfflineError
+                                ? AppStateBannerTone.warning
+                                : AppStateBannerTone.error,
+                            actionLabel: 'Thử lại',
+                            onAction: () =>
+                                ref.read(tripListProvider.notifier).loadTrips(),
+                          )
+                        : Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              if (trips.isNotEmpty) ...[
+                                Wrap(
+                                  spacing: AppSpacing.sm,
+                                  runSpacing: AppSpacing.xs,
+                                  alignment: WrapAlignment.spaceBetween,
+                                  crossAxisAlignment: WrapCrossAlignment.center,
+                                  children: [
+                                    Text(
+                                      _createNewMode
+                                          ? 'Tạo chuyến đi mới'
+                                          : 'Chọn chuyến đi của bạn',
                                       style: AppTypography.label.copyWith(
                                         fontWeight: FontWeight.w700,
                                       ),
                                     ),
-                                    subtitle: trip.destinationName != null
-                                        ? Text(
-                                            trip.destinationName!,
-                                            style: AppTypography.bodyS,
-                                          )
-                                        : null,
+                                    TextButton.icon(
+                                      key: const Key(
+                                        'trip_picker_new_trip_toggle',
+                                      ),
+                                      style: TextButton.styleFrom(
+                                        minimumSize: Size.zero,
+                                        tapTargetSize:
+                                            MaterialTapTargetSize.shrinkWrap,
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 8,
+                                          vertical: 6,
+                                        ),
+                                      ),
+                                      onPressed: _saving
+                                          ? null
+                                          : () => setState(
+                                                () => _createNewMode =
+                                                    !_createNewMode,
+                                              ),
+                                      icon: Icon(
+                                        _createNewMode
+                                            ? Icons.list_alt_outlined
+                                            : Icons.add_circle_outline,
+                                        size: 16,
+                                      ),
+                                      label: Text(
+                                        _createNewMode
+                                            ? 'Chọn chuyến sẵn có'
+                                            : 'Tạo chuyến mới',
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: AppSpacing.xs),
+                              ],
+                              if (_createNewMode || trips.isEmpty) ...[
+                                if (trips.isEmpty)
+                                  Padding(
+                                    padding: const EdgeInsets.only(
+                                      bottom: AppSpacing.sm,
+                                    ),
+                                    child: Text(
+                                      'Bạn chưa có chuyến đi nào. Nhập tên chuyến đi bên dưới để tạo và lưu ngay địa điểm này.',
+                                      style: AppTypography.bodyS.copyWith(
+                                        color: AppColors.textSecondary,
+                                      ),
+                                    ),
                                   ),
+                                AppTextField(
+                                  key: const Key('trip_picker_new_title_input'),
+                                  controller: _newTitleCtrl,
+                                  enabled: !_saving,
+                                  labelText: 'Tên chuyến đi mới',
+                                  prefixIcon:
+                                      const Icon(Icons.luggage_outlined),
                                 ),
-                              ),
-                          ],
-                          const SizedBox(height: AppSpacing.md),
-                          Wrap(
-                            spacing: AppSpacing.sm,
-                            crossAxisAlignment: WrapCrossAlignment.center,
-                            children: [
-                              Text(
-                                'Thêm vào ngày:',
-                                style: AppTypography.label.copyWith(
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                              DropdownButton<int>(
-                                key: const Key('trip_picker_day_dropdown'),
-                                value: _selectedDay,
-                                items: List.generate(
-                                  14,
-                                  (i) => DropdownMenuItem(
-                                    value: i + 1,
-                                    child: Text('Ngày ${i + 1}'),
+                              ] else
+                                _buildTripList(trips),
+                              const SizedBox(height: AppSpacing.md),
+                              Wrap(
+                                spacing: AppSpacing.sm,
+                                crossAxisAlignment: WrapCrossAlignment.center,
+                                children: [
+                                  Text(
+                                    'Thêm vào ngày:',
+                                    style: AppTypography.label.copyWith(
+                                      fontWeight: FontWeight.w600,
+                                    ),
                                   ),
-                                ),
-                                onChanged: _saving
-                                    ? null
-                                    : (val) {
-                                        if (val != null) {
-                                          setState(() => _selectedDay = val);
-                                        }
-                                      },
+                                  DropdownButton<int>(
+                                    key: const Key('trip_picker_day_dropdown'),
+                                    value: _selectedDay,
+                                    items: List.generate(
+                                      14,
+                                      (i) => DropdownMenuItem(
+                                        value: i + 1,
+                                        child: Text('Ngày ${i + 1}'),
+                                      ),
+                                    ),
+                                    onChanged: _saving
+                                        ? null
+                                        : (val) {
+                                            if (val != null) {
+                                              setState(
+                                                  () => _selectedDay = val);
+                                            }
+                                          },
+                                  ),
+                                ],
                               ),
+                              if (_errorText != null) ...[
+                                const SizedBox(height: AppSpacing.sm),
+                                AppStateBanner(
+                                  key: const Key('save_place_error_banner'),
+                                  message: _errorText!,
+                                  tone: _errorTone,
+                                  actionLabel: 'Thử lại',
+                                  onAction: _saving
+                                      ? null
+                                      : () => _handleSave(trips),
+                                ),
+                              ],
                             ],
                           ),
-                          if (_errorText != null) ...[
-                            const SizedBox(height: AppSpacing.xs),
-                            Text(
-                              _errorText!,
-                              style: AppTypography.bodyS.copyWith(
-                                color: AppColors.error,
-                              ),
-                            ),
-                          ],
-                        ],
-                      ),
               ),
             ),
             SafeArea(
@@ -496,20 +541,20 @@ class _SavePlaceToTripSheetState extends ConsumerState<_SavePlaceToTripSheet> {
                   AppSpacing.md,
                   AppSpacing.md,
                 ),
-                child: SizedBox(
-                  width: double.infinity,
-                  child: AppButton(
-                    key: const Key('trip_picker_confirm_save'),
-                    text: _saving
-                        ? 'Đang lưu...'
-                        : (_createNewMode || trips.isEmpty
-                            ? 'Tạo chuyến & Lưu'
-                            : 'Lưu'),
-                    icon: Icons.bookmark_added_outlined,
-                    onPressed: (tripState.isLoading && trips.isEmpty) || _saving
-                        ? null
-                        : () => _handleSave(trips),
-                  ),
+                child: AppButton(
+                  key: const Key('trip_picker_confirm_save'),
+                  text: _saving
+                      ? 'Đang lưu...'
+                      : (_createNewMode || trips.isEmpty
+                          ? 'Tạo chuyến & Lưu'
+                          : 'Lưu'),
+                  icon: Icons.bookmark_added_outlined,
+                  isLoading: _saving,
+                  onPressed: (tripState.isLoading && trips.isEmpty) ||
+                          initialLoadFailed ||
+                          _saving
+                      ? null
+                      : () => _handleSave(trips),
                 ),
               ),
             ),

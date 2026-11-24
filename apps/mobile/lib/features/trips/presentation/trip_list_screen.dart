@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_spacing.dart';
+import '../../../core/widgets/app_empty_state.dart';
+import '../../../core/widgets/app_error_state.dart';
+import '../../../core/widgets/app_loading.dart';
 import '../data/trip_models.dart';
 import '../providers/trip_provider.dart';
 
@@ -40,71 +45,33 @@ class TripListScreen extends ConsumerWidget {
     ColorScheme cs,
   ) {
     if (state.isLoading && state.trips.isEmpty) {
-      return const Center(child: CircularProgressIndicator());
+      return const AppLoading(message: 'Đang tải danh sách chuyến đi...');
     }
 
     if (state.errorMessage != null && state.trips.isEmpty) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(Icons.error_outline, size: 48, color: cs.error),
-              const SizedBox(height: 16),
-              Text(
-                state.errorMessage!,
-                textAlign: TextAlign.center,
-                style: TextStyle(color: cs.onSurface),
-              ),
-              const SizedBox(height: 16),
-              ElevatedButton(
-                onPressed: () =>
-                    ref.read(tripListProvider.notifier).loadTrips(),
-                child: const Text('Thử lại'),
-              ),
-            ],
-          ),
-        ),
+      return AppErrorState(
+        title: state.isOfflineError
+            ? 'Không có kết nối mạng'
+            : 'Không thể tải dữ liệu',
+        message: state.errorMessage!,
+        onRetry: () => ref.read(tripListProvider.notifier).loadTrips(),
       );
     }
 
     if (state.isEmpty) {
-      return Center(
-        child: SingleChildScrollView(
+      return LayoutBuilder(
+        builder: (context, constraints) => SingleChildScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.all(32),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 80,
-                height: 80,
-                decoration: BoxDecoration(
-                  color: cs.primary.withValues(alpha: 0.12),
-                  shape: BoxShape.circle,
-                ),
-                child:
-                    Icon(Icons.luggage_outlined, size: 40, color: cs.primary),
-              ),
-              const SizedBox(height: 20),
-              const Text(
-                'Chưa có chuyến đi nào',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Hãy bắt đầu lên kế hoạch cho chuyến du lịch tiếp theo của bạn ngay bây giờ!',
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 14, color: cs.onSurfaceVariant),
-              ),
-              const SizedBox(height: 24),
-              ElevatedButton.icon(
-                onPressed: () => context.push('/trips/create'),
-                icon: const Icon(Icons.add),
-                label: const Text('Tạo chuyến đi mới'),
-              ),
-            ],
+          child: ConstrainedBox(
+            constraints: BoxConstraints(minHeight: constraints.maxHeight),
+            child: AppEmptyState(
+              icon: Icons.luggage_outlined,
+              title: 'Chưa có chuyến đi nào',
+              description:
+                  'Hãy bắt đầu lên kế hoạch cho chuyến du lịch tiếp theo của bạn ngay bây giờ!',
+              actionLabel: 'Tạo chuyến đi mới',
+              onAction: () => context.push('/trips/create'),
+            ),
           ),
         ),
       );
@@ -112,18 +79,17 @@ class TripListScreen extends ConsumerWidget {
 
     return ListView.builder(
       physics: const AlwaysScrollableScrollPhysics(),
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppSpacing.md),
       itemCount: state.trips.length,
       itemBuilder: (context, index) {
         final trip = state.trips[index];
-        return _buildTripCard(context, ref, trip, cs);
+        return _buildTripCard(context, trip, cs);
       },
     );
   }
 
   Widget _buildTripCard(
     BuildContext context,
-    WidgetRef ref,
     TripModel trip,
     ColorScheme cs,
   ) {
@@ -226,13 +192,13 @@ class TripListScreen extends ConsumerWidget {
         label = 'Đã lên lịch';
         break;
       case 'ONGOING':
-        bg = Colors.amber.shade100;
-        fg = Colors.amber.shade900;
+        bg = AppColors.warningContainer;
+        fg = AppColors.warning;
         label = 'Đang đi';
         break;
       case 'COMPLETED':
-        bg = Colors.green.shade100;
-        fg = Colors.green.shade900;
+        bg = AppColors.successContainer;
+        fg = AppColors.success;
         label = 'Hoàn thành';
         break;
       default:
