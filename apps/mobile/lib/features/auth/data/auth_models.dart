@@ -72,12 +72,16 @@ class ResetTokenValidationResult {
   final DateTime? expiresAt;
   final String? errorCode;
   final String? message;
+  final bool isNetworkError;
+  final bool isTransientError;
 
   const ResetTokenValidationResult({
     required this.valid,
     this.expiresAt,
     this.errorCode,
     this.message,
+    this.isNetworkError = false,
+    this.isTransientError = false,
   });
 
   factory ResetTokenValidationResult.fromJson(Map<String, dynamic> json) {

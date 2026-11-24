@@ -89,7 +89,15 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
+  void clearError() {
+    if (state.status == AuthStatus.unauthenticated &&
+        state.errorMessage != null) {
+      state = const AuthState.unauthenticated();
+    }
+  }
+
   Future<bool> login(String email, String password) async {
+    clearError();
     final attemptEpoch = _epoch.advance();
     try {
       await _repo.login(LoginRequest(email: email, password: password));
@@ -104,6 +112,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
   }
 
   Future<bool> register(String name, String email, String password) async {
+    clearError();
     final attemptEpoch = _epoch.advance();
     try {
       await _repo.register(
@@ -128,6 +137,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
   Future<AuthActionResult> _signInWithProvider(
     SocialAuthProvider provider,
   ) async {
+    clearError();
     final port = _socialPort;
     if (port == null) {
       return const AuthActionResult.error(
@@ -214,11 +224,14 @@ class AuthNotifier extends StateNotifier<AuthState> {
         valid: false,
         errorCode: details.errorCode,
         message: _mapError(e),
+        isNetworkError: details.isNetworkError,
+        isTransientError: details.isOfflineOrTransient,
       );
     } catch (_) {
       return const ResetTokenValidationResult(
         valid: false,
         message: 'Không thể kiểm tra liên kết đặt lại mật khẩu.',
+        isTransientError: true,
       );
     }
   }

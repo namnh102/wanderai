@@ -96,13 +96,19 @@ class _JwtAuthInterceptor extends Interceptor {
     final originEpoch = _sessionEpoch.current;
     options.extra[_requestEpochExtraKey] = originEpoch;
 
-    final prefs = await SharedPreferences.getInstance();
-    if (_isStale(originEpoch)) {
-      handler.reject(_staleSessionException(options));
-      return;
+    String? token;
+    try {
+      final prefs = await SharedPreferences.getInstance()
+          .timeout(const Duration(seconds: 2));
+      if (_isStale(originEpoch)) {
+        handler.reject(_staleSessionException(options));
+        return;
+      }
+      token = prefs.getString(_accessTokenKey);
+    } catch (_) {
+      // Widget tests without SharedPreferences mock or unavailable plugin store.
     }
 
-    final token = prefs.getString(_accessTokenKey);
     if (token != null && token.isNotEmpty) {
       options.headers['Authorization'] = 'Bearer $token';
     }

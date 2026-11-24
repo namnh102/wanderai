@@ -109,7 +109,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final effectiveRedirect =
         widget.redirectPath ?? ref.watch(postLoginRedirectProvider);
     final authError = ref.watch(authProvider.select((s) => s.errorMessage));
-    final displayedError = _inlineError ?? authError;
+    final displayedError = _isBusy ? null : (_inlineError ?? authError);
 
     return Scaffold(
       body: SafeArea(

@@ -28,6 +28,7 @@ import '../data/review_repository.dart';
 import '../providers/place_detail_provider.dart';
 import 'widgets/place_mini_map.dart';
 import 'widgets/save_place_to_trip_sheet.dart';
+import 'widgets/youtube_freshness_section.dart';
 
 /// Vietnamese label for a stored category key.
 String placeCategoryLabel(String category) {
@@ -287,6 +288,15 @@ class PlaceDetailScreen extends ConsumerWidget {
               _openReviewSheet(context, ref, place);
             },
             onSaveToTrip: () => _handleSaveToTrip(context, ref, place),
+            youtubeFreshnessSection: YoutubeFreshnessSection(
+              place: place,
+              onOpenUrl: (url) => _openExternal(
+                context,
+                ref,
+                url,
+                clearBottomCta: place.hasCoordinates,
+              ),
+            ),
           );
         },
       ),
@@ -438,6 +448,7 @@ class PlaceDetailView extends StatelessWidget {
   final VoidCallback? onAskWandy;
   final VoidCallback? onWriteReview;
   final VoidCallback? onSaveToTrip;
+  final Widget? youtubeFreshnessSection;
 
   const PlaceDetailView({
     super.key,
@@ -449,6 +460,7 @@ class PlaceDetailView extends StatelessWidget {
     this.onAskWandy,
     this.onWriteReview,
     this.onSaveToTrip,
+    this.youtubeFreshnessSection,
   });
 
   @override
@@ -831,6 +843,7 @@ class PlaceDetailView extends StatelessWidget {
                         : const _Unavailable(
                             'Địa điểm này chưa được xác minh nguồn dữ liệu.'),
                   ),
+                  if (youtubeFreshnessSection != null) youtubeFreshnessSection!,
                   const SizedBox(height: AppSpacing.md),
                 ],
               ),

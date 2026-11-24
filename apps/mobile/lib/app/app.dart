@@ -6,6 +6,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/router/app_router.dart';
 import '../core/theme/app_theme.dart';
 
+const _allowedResetHosts = <String>{
+  'app.gomate.vn',
+  'gomate.vn',
+  'www.gomate.vn',
+};
+
 /// Normalizes incoming custom-scheme or HTTPS deep links into in-app GoRouter
 /// locations (for example `wanderai://reset-password?token=abc` ->
 /// `/reset-password?token=abc`). Returns `null` for unsupported links.
@@ -13,12 +19,16 @@ String? normalizeAuthDeepLink(Uri uri) {
   final scheme = uri.scheme.toLowerCase();
   final host = uri.host.toLowerCase();
   final path = uri.path;
+  final normalizedPath = path.length > 1 && path.endsWith('/')
+      ? path.substring(0, path.length - 1)
+      : path;
 
   final isCustomReset = scheme == 'wanderai' &&
-      (host == 'reset-password' ||
-          (host == 'app' && path.startsWith('/reset-password')));
-  final isHttpsReset =
-      (scheme == 'https' || scheme == 'http') && path == '/reset-password';
+      ((host == 'reset-password' && (path.isEmpty || path == '/')) ||
+          (host == 'app' && normalizedPath == '/reset-password'));
+  final isHttpsReset = scheme == 'https' &&
+      _allowedResetHosts.contains(host) &&
+      normalizedPath == '/reset-password';
 
   if (isCustomReset || isHttpsReset) {
     final token = uri.queryParameters['token']?.trim();

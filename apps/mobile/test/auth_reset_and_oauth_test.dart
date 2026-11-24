@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
 
@@ -27,10 +28,12 @@ class _FakeAuthSocialPort implements AuthSocialPort {
       const SocialAuthSuccess('google-id-token-valid');
   SocialAuthResult facebookResult =
       const SocialAuthSuccess('facebook-access-token-valid');
+  Future<SocialAuthResult> Function()? onGoogleSignIn;
   int signOutCalls = 0;
 
   @override
-  Future<SocialAuthResult> signInWithGoogle() async => googleResult;
+  Future<SocialAuthResult> signInWithGoogle() async =>
+      onGoogleSignIn != null ? await onGoogleSignIn!() : googleResult;
 
   @override
   Future<SocialAuthResult> signInWithFacebook() async => facebookResult;
@@ -49,6 +52,8 @@ class _AuthContractBackendAdapter implements HttpClientAdapter {
   int? overrideGoogleStatusCode;
   String? overrideFacebookErrorCode;
   int? overrideFacebookStatusCode;
+  bool failNextValidateWithNetwork = false;
+  bool failNextLoginWithInvalidCredentials = false;
 
   @override
   Future<ResponseBody> fetch(
@@ -63,6 +68,25 @@ class _AuthContractBackendAdapter implements HttpClientAdapter {
         : null;
     calls.add((method, path, body));
 
+    if (method == 'POST' && path == '/auth/login') {
+      if (failNextLoginWithInvalidCredentials) {
+        failNextLoginWithInvalidCredentials = false;
+        return _json(401, {
+          'success': false,
+          'statusCode': 401,
+          'errorCode': 'INVALID_CREDENTIALS',
+          'message': 'Email hoặc mật khẩu không đúng.',
+        });
+      }
+      return _json(200, {
+        'success': true,
+        'data': {
+          'access_token': 'login-access',
+          'refresh_token': 'login-refresh',
+        },
+      });
+    }
+
     if (method == 'POST' && path == '/auth/forgot-password') {
       return _json(200, {
         'success': true,
@@ -76,6 +100,14 @@ class _AuthContractBackendAdapter implements HttpClientAdapter {
     }
 
     if (method == 'GET' && path == '/auth/reset-password/validate') {
+      if (failNextValidateWithNetwork) {
+        failNextValidateWithNetwork = false;
+        throw DioException(
+          requestOptions: options,
+          type: DioExceptionType.connectionError,
+          message: 'Socket closed',
+        );
+      }
       final token = options.queryParameters['token']?.toString() ?? '';
       if (token == 'valid-tok') {
         return _json(200, {
@@ -281,7 +313,37 @@ void main() {
         '/reset-password?token=webtok',
       );
       expect(
+        normalizeAuthDeepLink(
+          Uri.parse('wanderai://app/reset-password/?token=trail'),
+        ),
+        '/reset-password?token=trail',
+      );
+      expect(
         normalizeAuthDeepLink(Uri.parse('wanderai://unknown-host')),
+        isNull,
+      );
+      expect(
+        normalizeAuthDeepLink(
+          Uri.parse('wanderai://app/reset-password-evil?token=x'),
+        ),
+        isNull,
+      );
+      expect(
+        normalizeAuthDeepLink(
+          Uri.parse('wanderai://reset-password/extra?token=x'),
+        ),
+        isNull,
+      );
+      expect(
+        normalizeAuthDeepLink(
+          Uri.parse('http://app.gomate.vn/reset-password?token=x'),
+        ),
+        isNull,
+      );
+      expect(
+        normalizeAuthDeepLink(
+          Uri.parse('https://evil.example.com/reset-password?token=x'),
+        ),
         isNull,
       );
     });
@@ -637,6 +699,100 @@ void main() {
       expect(container.read(authProvider).status, AuthStatus.authenticated);
       final prefs = await SharedPreferences.getInstance();
       expect(prefs.getString('access_token'), 'oauth-fb-access');
+    });
+
+    testWidgets(
+        'ResetPasswordScreen offers explicit retry on transient network error and recovers',
+        (tester) async {
+      SharedPreferences.setMockInitialValues({});
+      final backend = _AuthContractBackendAdapter()
+        ..failNextValidateWithNetwork = true;
+      final container = _createContainer(backend, _FakeAuthSocialPort());
+      addTearDown(container.dispose);
+
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: MaterialApp.router(
+            theme: AppTheme.lightTheme,
+            routerConfig: container.read(appRouterProvider),
+          ),
+        ),
+      );
+      await _pump(tester, 4);
+
+      container.read(appRouterProvider).go('/reset-password?token=valid-tok');
+      await _pump(tester, 6);
+
+      final bannerFinder = find.byKey(const Key('reset_status_banner'));
+      expect(bannerFinder, findsOneWidget);
+      expect(
+        tester.widget<AppStateBanner>(bannerFinder).tone,
+        AppStateBannerTone.warning,
+      );
+      expect(
+        find.byKey(const Key('reset_retry_validate_button')),
+        findsOneWidget,
+      );
+      expect(find.byKey(const Key('reset_submit_button')), findsNothing);
+
+      await tester.tap(find.byKey(const Key('reset_retry_validate_button')));
+      await _pump(tester, 6);
+
+      expect(find.byKey(const Key('reset_submit_button')), findsOneWidget);
+      expect(
+        find.byKey(const Key('reset_retry_validate_button')),
+        findsNothing,
+      );
+    });
+
+    testWidgets(
+        'LoginScreen clears stale inline error banner immediately when Google OAuth starts',
+        (tester) async {
+      SharedPreferences.setMockInitialValues({});
+      final backend = _AuthContractBackendAdapter()
+        ..failNextLoginWithInvalidCredentials = true;
+      final pendingGoogle = Completer<SocialAuthResult>();
+      final socialPort = _FakeAuthSocialPort()
+        ..onGoogleSignIn = () => pendingGoogle.future;
+      final container = _createContainer(backend, socialPort);
+      addTearDown(container.dispose);
+
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: MaterialApp.router(
+            theme: AppTheme.lightTheme,
+            routerConfig: container.read(appRouterProvider),
+          ),
+        ),
+      );
+      await _pump(tester, 6);
+
+      await tester.enterText(
+        find.byKey(const Key('login_email_input')),
+        'traveler@gomate.vn',
+      );
+      await tester.enterText(
+        find.byKey(const Key('login_password_input')),
+        'wrongpass',
+      );
+      await tester.tap(find.byKey(const Key('login_submit_button')));
+      await _pump(tester, 6);
+
+      expect(find.byKey(const Key('login_error_banner')), findsOneWidget);
+
+      await tester.ensureVisible(find.byKey(const Key('login_google_button')));
+      await tester.tap(find.byKey(const Key('login_google_button')));
+      await _pump(tester, 2);
+
+      // While OAuth SDK is still pending, stale email error must already be gone.
+      expect(find.byKey(const Key('login_error_banner')), findsNothing);
+      expect(container.read(authProvider).errorMessage, isNull);
+
+      pendingGoogle.complete(const SocialAuthCancelled());
+      await _pump(tester, 6);
+      expect(find.byKey(const Key('login_error_banner')), findsNothing);
     });
   });
 }

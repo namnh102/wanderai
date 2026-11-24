@@ -25,6 +25,7 @@ import 'package:wanderai_mobile/features/location/providers/user_location_provid
 import 'package:wanderai_mobile/features/map/data/place_model.dart';
 import 'package:wanderai_mobile/features/map/providers/map_provider.dart';
 import 'package:wanderai_mobile/features/places/presentation/place_detail_screen.dart';
+import 'package:wanderai_mobile/features/places/providers/place_detail_provider.dart';
 import 'package:wanderai_mobile/features/trips/presentation/trip_detail_screen.dart';
 import 'package:wanderai_mobile/features/trips/presentation/trip_list_screen.dart';
 
@@ -32,6 +33,14 @@ const _outDirDefine = String.fromEnvironment(
   'SCREENSHOT_OUT_DIR',
   defaultValue: '',
 );
+
+String get _effectiveOutDir {
+  if (_outDirDefine.isNotEmpty) return _outDirDefine;
+  if (Platform.environment['CAPTURE_SCREENSHOTS'] == 'true') {
+    return Platform.environment['SCREENSHOT_OUT_DIR'] ?? '';
+  }
+  return '';
+}
 
 const _haLongDestId = '4eec2f30-b67d-4221-b754-8fcc7bb1160e';
 const _haNoiDestId = '11111111-1111-4111-8111-111111111111';
@@ -562,6 +571,52 @@ class _ScreenshotBackendAdapter implements HttpClientAdapter {
       return _json(200, {'success': true, 'data': _clockTowerJson});
     }
 
+    if (method == 'GET' && path == '/places/$_clockTowerId/youtube-updates') {
+      return _json(200, {
+        'success': true,
+        'data': {
+          'placeId': _clockTowerId,
+          'placeName': _clockTowerName,
+          'destinationId': _haLongDestId,
+          'destinationSlug': 'ha-long',
+          'destinationName': 'Hạ Long',
+          'governanceRole': 'DYNAMIC_SOCIAL_FRESHNESS_LAYER',
+          'notPrimaryFactualCorpus': true,
+          'serverDeliveredAt': '2026-11-25T01:49:30.000Z',
+          'realtimeSlaMaxLatencyMs': 300000,
+          'total': 1,
+          'items': [
+            {
+              'id': 'yt-thap-dong-ho-1',
+              'placeId': _clockTowerId,
+              'destinationId': _haLongDestId,
+              'destinationSlug': 'ha-long',
+              'scope': 'POI',
+              'source': 'youtube',
+              'channelId': 'UC_HALONG_TRAVEL',
+              'channelTitle': 'Hạ Long Explorer',
+              'videoId': 'hlClockTower2026',
+              'videoUrl': 'https://www.youtube.com/watch?v=hlClockTower2026',
+              'title': 'Toàn cảnh Tháp Đồng Hồ Hạ Long lung linh về đêm',
+              'description': 'Cập nhật thực tế tại ngã 5 Bến Đoan, Hạ Long.',
+              'tags': ['ha-long', 'thap-dong-ho'],
+              'publishedAt': '2026-11-25T01:49:15.000Z',
+              'receivedAt': '2026-11-25T01:49:27.000Z',
+              'updatedAt': '2026-11-25T01:49:20.000Z',
+              'sourceUpdatedAt': '2026-11-25T01:49:20.000Z',
+              'lastReceivedAt': '2026-11-25T01:49:27.000Z',
+              'ingestLatencyMs': 12000,
+              'deliveryLagMs': 12000,
+              'groundingBasis': 'EXPLICIT_POI_REF_AND_TEXT_MATCH',
+              'groundingEvidence': {'matched': true},
+            },
+          ],
+          'cityFallbackTotal': 0,
+          'cityFallbackItems': [],
+        },
+      });
+    }
+
     if (method == 'GET' && path == '/users/me') {
       return _json(200, {
         'success': true,
@@ -611,6 +666,9 @@ ProviderContainer _createContainer(_ScreenshotBackendAdapter backend) {
     overrides: [
       authSocialPortProvider.overrideWithValue(_NoopSocialPort()),
       locationServiceProvider.overrideWithValue(_PassiveLocationService()),
+      youtubeClockProvider.overrideWithValue(
+        () => DateTime.utc(2026, 11, 25, 1, 50, 0),
+      ),
       apiClientProvider.overrideWith((ref) {
         final epoch = ref.read(sessionEpochControllerProvider);
         return createApiClient(
@@ -741,26 +799,26 @@ void main() {
           '/login?redirect=${Uri.encodeComponent('/places/$_clockTowerId')}');
       await _pump(tester, 6);
       expect(find.byType(LoginScreen), findsOneWidget);
-      await _capture(tester, shotKey, _outDirDefine, '01_login.png');
+      await _capture(tester, shotKey, _effectiveOutDir, '01_login.png');
 
       // 2. RegisterScreen
       container.read(appRouterProvider).go(
           '/register?redirect=${Uri.encodeComponent('/places/$_clockTowerId')}');
       await _pump(tester, 6);
       expect(find.byType(RegisterScreen), findsOneWidget);
-      await _capture(tester, shotKey, _outDirDefine, '02_register.png');
+      await _capture(tester, shotKey, _effectiveOutDir, '02_register.png');
 
       // 10. ForgotPasswordScreen
       container.read(appRouterProvider).go('/forgot-password');
       await _pump(tester, 6);
       expect(find.byType(ForgotPasswordScreen), findsOneWidget);
-      await _capture(tester, shotKey, _outDirDefine, '10_forgot_password.png');
+      await _capture(tester, shotKey, _effectiveOutDir, '10_forgot_password.png');
 
       // 11. ResetPasswordScreen (validated token)
       container.read(appRouterProvider).go('/reset-password?token=valid-tok');
       await _pump(tester, 6);
       expect(find.byType(ResetPasswordScreen), findsOneWidget);
-      await _capture(tester, shotKey, _outDirDefine, '11_reset_password.png');
+      await _capture(tester, shotKey, _effectiveOutDir, '11_reset_password.png');
 
       await tester.pumpWidget(const SizedBox.shrink());
       container.dispose();
@@ -796,7 +854,7 @@ void main() {
       );
       await _pump(tester, 8);
       expect(find.byType(HomeScreen), findsOneWidget);
-      await _capture(tester, shotKey, _outDirDefine, '03_home_halong.png');
+      await _capture(tester, shotKey, _effectiveOutDir, '03_home_halong.png');
 
       // 4. DestinationPlacesSheet for Hạ Long
       final haLongCard = find.byKey(const Key('home_dest_ha-long'));
@@ -805,7 +863,7 @@ void main() {
       await tester.tap(haLongCard);
       await _pump(tester, 8);
       await _capture(
-          tester, shotKey, _outDirDefine, '04_destination_places_halong.png');
+          tester, shotKey, _effectiveOutDir, '04_destination_places_halong.png');
 
       Navigator.of(tester
               .element(find.byKey(const Key('destination_places_search_bar'))))
@@ -820,21 +878,32 @@ void main() {
       final clockModel = PlaceModel.fromJson(backend._clockTowerJson);
       container.read(mapProvider.notifier).selectPlace(clockModel);
       await _pump(tester, 6);
-      await _capture(tester, shotKey, _outDirDefine, '05_map_place_preview.png');
+      await _capture(tester, shotKey, _effectiveOutDir, '05_map_place_preview.png');
 
-      // 6. PlaceDetailScreen for Tháp Đồng Hồ
+      // 6. PlaceDetailScreen for Tháp Đồng Hồ (top view + scrolled YouTube freshness view)
       container.read(appRouterProvider).push('/places/$_clockTowerId');
       await _pump(tester, 8);
       expect(find.byType(PlaceDetailScreen), findsOneWidget);
       await _capture(
-          tester, shotKey, _outDirDefine, '06_place_detail_thap_dong_ho.png');
+          tester, shotKey, _effectiveOutDir, '06_place_detail_thap_dong_ho.png');
+
+      final ytSection = find.byKey(const Key('place_youtube_freshness_section'));
+      await tester.ensureVisible(ytSection);
+      await _pump(tester, 4);
+      expect(find.text('Thời gian thực'), findsOneWidget);
+      await _capture(
+        tester,
+        shotKey,
+        _effectiveOutDir,
+        '06b_place_detail_youtube_freshness.png',
+      );
 
       // 7. SavePlaceToTripSheet
       await tester.tap(find.byKey(const Key('place_detail_save_to_trip')));
       await _pump(tester, 8);
       expect(find.byKey(const Key('save_place_to_trip_sheet')), findsOneWidget);
       await _capture(
-          tester, shotKey, _outDirDefine, '07_save_place_to_trip.png');
+          tester, shotKey, _effectiveOutDir, '07_save_place_to_trip.png');
 
       Navigator.of(
               tester.element(find.byKey(const Key('save_place_to_trip_sheet'))))
@@ -845,13 +914,13 @@ void main() {
       container.read(appRouterProvider).go('/trips');
       await _pump(tester, 8);
       expect(find.byType(TripListScreen), findsOneWidget);
-      await _capture(tester, shotKey, _outDirDefine, '08_trip_list.png');
+      await _capture(tester, shotKey, _effectiveOutDir, '08_trip_list.png');
 
       // 9. TripDetailScreen
       await tester.tap(find.byKey(const Key('trip_card_trip-halong-001')));
       await _pump(tester, 8);
       expect(find.byType(TripDetailScreen), findsOneWidget);
-      await _capture(tester, shotKey, _outDirDefine, '09_trip_detail.png');
+      await _capture(tester, shotKey, _effectiveOutDir, '09_trip_detail.png');
 
       // Drain flutter_cache_manager's 10s cleanup timer before test exit.
       await tester.pumpWidget(const SizedBox.shrink());

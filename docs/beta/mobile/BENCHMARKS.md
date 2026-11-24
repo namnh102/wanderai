@@ -10,7 +10,7 @@
 
 Captured deterministically via `test/screenshots_thap_dong_ho_test.dart`:
 - **Before (`10126b1`)**: 9 PNGs in `docs/beta/mobile/screenshots/before/`
-- **After (`feat/beta-mobile-ux-auth-youtube`)**: 11 PNGs in `docs/beta/mobile/screenshots/after/`
+- **After (`feat/beta-mobile-ux-auth-youtube`)**: 12 PNGs in `docs/beta/mobile/screenshots/after/`
 
 | # | Screen / Flow | Before (`390×844`) | After (`390×844`) | Key UX Changes |
 |---|---------------|--------------------|-------------------|----------------|
@@ -20,9 +20,10 @@ Captured deterministically via `test/screenshots_thap_dong_ho_test.dart`:
 | 04 | Destination Places Sheet | `before/04_destination_places_halong.png` | `after/04_destination_places_halong.png` | `CachedNetworkImage` tiles, initial `limit: 20` + scroll-near-bottom page 2+ pagination |
 | 05 | Map & Place Preview | `before/05_map_place_preview.png` | `after/05_map_place_preview.png` | Shared `AppLoading` & `AppStateBanner` map error banner |
 | 06 | Place Detail (`Tháp Đồng Hồ`) | `before/06_place_detail_thap_dong_ho.png` | `after/06_place_detail_thap_dong_ho.png` | `CachedNetworkImage`, `AppTextField` review input, `AppStateBanner` error state |
+| 06b | Place Detail — YouTube Freshness (`Tháp Đồng Hồ`) | — (M4 new) | `after/06b_place_detail_youtube_freshness.png` | `YoutubeFreshnessSection` (`DYNAMIC_SOCIAL_FRESHNESS_LAYER`), 5 mandated fields, measured source-to-app latency & `"Thời gian thực"` badge |
 | 07 | Save Place to Trip Sheet | `before/07_save_place_to_trip.png` | `after/07_save_place_to_trip.png` | Lazy `ListView.separated`, `AppTextField`, offline `AppStateBanner(warning)` + retry keeping pending trip |
 | 08 | Trip List | `before/08_trip_list.png` | `after/08_trip_list.png` | Unified `AppLoading`, `AppErrorState`, `AppEmptyState`, `AppButton` |
-| 09 | Trip Detail (25 itinerary items) | `before/09_trip_detail.png` | `after/09_trip_detail.png` | Lazy `CustomScrollView` + `SliverList.builder`, unified `AppTextField`/`AppButton`/`AppLoading`/`AppErrorState` |
+| 09 | Trip Detail (36 itinerary items) | `before/09_trip_detail.png` | `after/09_trip_detail.png` | Lazy `CustomScrollView` + `SliverList.builder`, unified `AppTextField`/`AppButton`/`AppLoading`/`AppErrorState` |
 | 10 | Forgot Password | — (new) | `after/10_forgot_password.png` | Dedicated email reset request screen (`/forgot-password`) |
 | 11 | Reset Password | — (new) | `after/11_reset_password.png` | Deep-link token validation & password reset (`/reset-password?token=...`) |
 
@@ -38,7 +39,7 @@ flutter test test/screenshots_thap_dong_ho_test.dart
 
 ## 2. `--profile` Performance Benchmark (`GoMate_W3_Test`)
 
-Measured in `--profile` mode via `integration_test/perf_benchmark_test.dart` + `test_driver/perf_driver.dart` using in-process `apiClientProvider` fixtures (24 Hạ Long POIs, 12 Trips, 25 Itinerary Items in `TripDetail`):
+Measured in `--profile` mode via `integration_test/perf_benchmark_test.dart` + `test_driver/perf_driver.dart` using in-process `apiClientProvider` fixtures (40 Hạ Long POIs, 35 Trips, 36 Itinerary Items in `TripDetail`):
 
 - **Before (`10126b1`)**: `docs/beta/mobile/benchmarks/before_perf.json` (`capturedAt: 2026-11-24T20:29:45.188794Z`)
 - **After (`feat/beta-mobile-ux-auth-youtube`)**: `docs/beta/mobile/benchmarks/after_perf.json` (`capturedAt: 2026-11-24T20:32:30.802028Z`)

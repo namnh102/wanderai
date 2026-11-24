@@ -29,6 +29,7 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
 
   bool _validating = false;
   bool _tokenInvalid = false;
+  bool _validationTransientError = false;
   bool _submitting = false;
   bool _resetDone = false;
   String? _bannerMessage;
@@ -55,6 +56,7 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
       _tokenCtrl.text = nextToken;
       _resetDone = false;
       _tokenInvalid = false;
+      _validationTransientError = false;
       _bannerMessage = null;
       _validateToken(nextToken);
     }
@@ -72,6 +74,7 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
     setState(() {
       _validating = true;
       _tokenInvalid = false;
+      _validationTransientError = false;
       _bannerMessage = null;
     });
 
@@ -81,10 +84,21 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
     setState(() {
       _validating = false;
       if (!result.valid) {
-        _tokenInvalid = true;
-        _bannerTone = AppStateBannerTone.error;
-        _bannerMessage =
-            result.message ?? 'Liên kết đặt lại mật khẩu không hợp lệ.';
+        final isTransient = (result.isNetworkError || result.isTransientError) &&
+            result.errorCode == null;
+        if (isTransient) {
+          _validationTransientError = true;
+          _tokenInvalid = false;
+          _bannerTone = AppStateBannerTone.warning;
+          _bannerMessage = result.message ??
+              'Không thể kiểm tra liên kết đặt lại mật khẩu lúc này.';
+        } else {
+          _tokenInvalid = true;
+          _validationTransientError = false;
+          _bannerTone = AppStateBannerTone.error;
+          _bannerMessage =
+              result.message ?? 'Liên kết đặt lại mật khẩu không hợp lệ.';
+        }
       }
     });
   }
@@ -165,14 +179,24 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
                             key: const Key('reset_status_banner'),
                             message: _bannerMessage!,
                             tone: _bannerTone,
-                            actionLabel:
-                                _tokenInvalid ? 'Gửi lại liên kết' : null,
-                            onAction: _tokenInvalid
-                                ? () => context.go('/forgot-password')
-                                : null,
+                            actionLabel: _validationTransientError
+                                ? 'Thử lại'
+                                : (_tokenInvalid ? 'Gửi lại liên kết' : null),
+                            onAction: _validationTransientError
+                                ? () => _validateToken(_tokenCtrl.text)
+                                : (_tokenInvalid
+                                    ? () => context.go('/forgot-password')
+                                    : null),
                           ),
                         ],
-                        if (_tokenInvalid) ...[
+                        if (_validationTransientError) ...[
+                          const SizedBox(height: AppSpacing.lg),
+                          AppButton(
+                            key: const Key('reset_retry_validate_button'),
+                            text: 'Thử lại kiểm tra liên kết',
+                            onPressed: () => _validateToken(_tokenCtrl.text),
+                          ),
+                        ] else if (_tokenInvalid) ...[
                           const SizedBox(height: AppSpacing.lg),
                           AppButton(
                             key: const Key('reset_request_new_button'),
