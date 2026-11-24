@@ -27,6 +27,7 @@ describe('Auth Recovery & OAuth (e2e)', () => {
   const suffix = Date.now();
   const resetEmail = `e2e_reset_${suffix}@wanderai.test`;
   const oauthEmail = `e2e_oauth_${suffix}@wanderai.test`;
+  const trimmedEmail = `e2e_trimmed+${suffix}@wanderai.test`;
 
   beforeAll(async () => {
     mailTransport = new InMemoryTestMailTransport();
@@ -68,7 +69,7 @@ describe('Auth Recovery & OAuth (e2e)', () => {
   });
 
   afterAll(async () => {
-    for (const email of [resetEmail, oauthEmail]) {
+    for (const email of [resetEmail, oauthEmail, trimmedEmail]) {
       const user = await prisma.user.findUnique({ where: { email } });
       if (user) {
         await prisma.user.delete({ where: { id: user.id } });
@@ -150,5 +151,47 @@ describe('Auth Recovery & OAuth (e2e)', () => {
 
     expect(fbRes.body.data.user.id).toBe(googleRes.body.data.user.id);
     expect(fbRes.body.data.user.providers).toEqual(['facebook', 'google']);
+  });
+
+  it('trims padded email/name across register, forgot-password, and login and rejects whitespace-only name', async () => {
+    await request(app.getHttpServer())
+      .post('/auth/register')
+      .send({
+        email: 'valid@example.com',
+        password: 'E2ETrimPass123!',
+        name: '   ',
+      })
+      .expect(400);
+
+    await request(app.getHttpServer())
+      .post('/auth/register')
+      .send({
+        email: `  ${trimmedEmail.toUpperCase()}  `,
+        password: 'E2ETrimPass123!',
+        name: '  Alice Nguyen  ',
+      })
+      .expect(201);
+
+    const created = await prisma.user.findUnique({
+      where: { email: trimmedEmail },
+      include: { profile: true },
+    });
+    expect(created).not.toBeNull();
+    expect(created!.email).toBe(trimmedEmail);
+    expect(created!.profile?.displayName).toBe('Alice Nguyen');
+
+    await request(app.getHttpServer())
+      .post('/auth/forgot-password')
+      .send({ email: `  ${trimmedEmail.toUpperCase()}  ` })
+      .expect(200);
+    expect(mailTransport.getLastMessageFor(trimmedEmail)?.to).toBe(trimmedEmail);
+
+    await request(app.getHttpServer())
+      .post('/auth/login')
+      .send({
+        email: `  ${trimmedEmail.toUpperCase()}  `,
+        password: 'E2ETrimPass123!',
+      })
+      .expect(200);
   });
 });

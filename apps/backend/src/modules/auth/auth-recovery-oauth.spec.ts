@@ -1200,4 +1200,171 @@ describe('M1-backend-auth — Password Reset, OAuth, Error Codes & Refresh DTO',
       );
     });
   });
+
+  describe('5. DTO Whitespace Trimming & OAuth Race Hardening', () => {
+    it('trims email and name on register, forgot-password, and login without trimming passwords', async () => {
+      const regRes = await request(app.getHttpServer())
+        .post('/auth/register')
+        .send({
+          email: '  Alice+Test@Example.COM  ',
+          password: 'Password123!',
+          name: '  Alice Nguyen  ',
+        })
+        .expect(201);
+
+      expect(regRes.body).toMatchObject({
+        success: true,
+        data: {
+          access_token: expect.any(String),
+          refresh_token: expect.any(String),
+        },
+      });
+
+      const storedUser = await prisma.user.findUnique({
+        where: { email: 'alice+test@example.com' },
+        include: { profile: true },
+      });
+      expect(storedUser).not.toBeNull();
+      expect(storedUser!.email).toBe('alice+test@example.com');
+      expect(storedUser!.profile?.displayName).toBe('Alice Nguyen');
+
+      // Duplicate check still triggers after trimming email
+      const dupRes = await request(app.getHttpServer())
+        .post('/auth/register')
+        .send({
+          email: '  ALICE+TEST@example.com ',
+          password: 'Password123!',
+          name: 'Alice Duplicate',
+        })
+        .expect(400);
+      expect(dupRes.body.errorCode).toBe(AUTH_ERROR_CODES.EMAIL_ALREADY_EXISTS);
+
+      // Forgot-password with padded mixed-case email delivers reset mail to canonical address
+      const forgotRes = await request(app.getHttpServer())
+        .post('/auth/forgot-password')
+        .send({ email: '  ALICE+Test@example.com  ' })
+        .expect(200);
+      expect(forgotRes.body.data.sent).toBe(true);
+
+      const resetMail = mailTransport.getLastMessageFor(
+        'alice+test@example.com',
+      );
+      expect(resetMail).toBeDefined();
+      expect(resetMail!.to).toBe('alice+test@example.com');
+
+      // Login with padded mixed-case email succeeds
+      await request(app.getHttpServer())
+        .post('/auth/login')
+        .send({
+          email: '  alice+test@EXAMPLE.com  ',
+          password: 'Password123!',
+        })
+        .expect(200);
+
+      // Passwords must NOT be trimmed
+      await request(app.getHttpServer())
+        .post('/auth/login')
+        .send({
+          email: '  alice+test@EXAMPLE.com  ',
+          password: ' Password123! ',
+        })
+        .expect(401);
+    });
+
+    it('rejects whitespace-only name and whitespace-only tokens with 400', async () => {
+      await request(app.getHttpServer())
+        .post('/auth/register')
+        .send({
+          email: 'valid@example.com',
+          password: 'password123',
+          name: '   ',
+        })
+        .expect(400);
+
+      expect(prisma.users.size).toBe(0);
+
+      await request(app.getHttpServer())
+        .post('/auth/refresh')
+        .send({ refresh_token: '   ' })
+        .expect(400);
+
+      await request(app.getHttpServer())
+        .post('/auth/reset-password')
+        .send({ token: '   ', newPassword: 'ValidPassword123!' })
+        .expect(400);
+
+      await request(app.getHttpServer())
+        .post('/auth/oauth/google')
+        .send({ idToken: '   ' })
+        .expect(400);
+
+      await request(app.getHttpServer())
+        .post('/auth/oauth/facebook')
+        .send({ accessToken: '   ' })
+        .expect(400);
+
+      expect(mockGoogleVerifier.verifyIdToken).not.toHaveBeenCalled();
+      expect(mockFacebookVerifier.verifyAccessToken).not.toHaveBeenCalled();
+    });
+
+    it('handles secondary P2002 race inside OAuth user creation fallback cleanly', async () => {
+      const existing = await prisma.user.create({
+        data: {
+          email: 'race.oauth@wanderai.test',
+          passwordHash: null,
+          isVerified: true,
+          profile: { create: { displayName: 'Race User' } },
+        },
+        include: { profile: true, oauthAccounts: true },
+      });
+
+      // Simulate user.create losing a race (P2002) and subsequent oAuthAccount.create also losing a race (P2002)
+      const txSpy = jest
+        .spyOn(prisma, '$transaction')
+        .mockImplementationOnce(async () => {
+          throw Object.assign(new Error('Unique constraint on email'), {
+            code: 'P2002',
+          });
+        })
+        .mockImplementationOnce(async () => {
+          await prisma.oAuthAccount.create({
+            data: {
+              userId: existing.id,
+              provider: OAuthProvider.GOOGLE,
+              providerUserId: 'google-race-sub',
+              email: 'race.oauth@wanderai.test',
+            },
+          });
+          throw Object.assign(new Error('Unique constraint on provider'), {
+            code: 'P2002',
+          });
+        });
+
+      const findByEmailSpy = jest
+        .spyOn(prisma.user, 'findUnique')
+        .mockResolvedValueOnce(null)
+        .mockResolvedValueOnce(existing);
+
+      mockGoogleVerifier.verifyIdToken.mockResolvedValueOnce({
+        provider: OAuthProvider.GOOGLE,
+        providerUserId: 'google-race-sub',
+        email: 'race.oauth@wanderai.test',
+        emailVerified: true,
+        name: 'Race User',
+      });
+
+      const res = await request(app.getHttpServer())
+        .post('/auth/oauth/google')
+        .send({ idToken: 'race-google-token' })
+        .expect(200);
+
+      expect(res.body.data.user).toMatchObject({
+        id: existing.id,
+        email: 'race.oauth@wanderai.test',
+        providers: ['google'],
+      });
+      expect(txSpy).toHaveBeenCalledTimes(2);
+      expect(findByEmailSpy).toHaveBeenCalled();
+    });
+  });
 });

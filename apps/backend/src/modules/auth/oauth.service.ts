@@ -178,27 +178,14 @@ export class OAuthService {
         });
       }
 
-      try {
-        return await this.linkProviderToExistingUser(
-          existingByEmail,
-          identity.provider,
-          identity.providerUserId,
-          normalizedEmail,
-          fallbackDisplayName,
-          identity.avatarUrl ?? null,
-        );
-      } catch (error) {
-        if (isPrismaUniqueError(error)) {
-          const refetched = await this.prisma.user.findUnique({
-            where: { id: existingByEmail.id },
-            include: OAUTH_USER_INCLUDE,
-          });
-          if (refetched && !refetched.deletedAt) {
-            return refetched;
-          }
-        }
-        throw error;
-      }
+      return this.linkProviderWithUniqueRetry(
+        existingByEmail,
+        identity.provider,
+        identity.providerUserId,
+        normalizedEmail,
+        fallbackDisplayName,
+        identity.avatarUrl ?? null,
+      );
     }
 
     try {
@@ -249,7 +236,7 @@ export class OAuthService {
           include: OAUTH_USER_INCLUDE,
         });
         if (retriedByEmail && !retriedByEmail.deletedAt) {
-          return this.linkProviderToExistingUser(
+          return this.linkProviderWithUniqueRetry(
             retriedByEmail,
             identity.provider,
             identity.providerUserId,
@@ -257,6 +244,37 @@ export class OAuthService {
             fallbackDisplayName,
             identity.avatarUrl ?? null,
           );
+        }
+      }
+      throw error;
+    }
+  }
+
+  private async linkProviderWithUniqueRetry(
+    existingUser: UserWithProfileAndProviders,
+    provider: OAuthProvider,
+    providerUserId: string,
+    email: string,
+    displayName: string,
+    avatarUrl: string | null,
+  ): Promise<UserWithProfileAndProviders> {
+    try {
+      return await this.linkProviderToExistingUser(
+        existingUser,
+        provider,
+        providerUserId,
+        email,
+        displayName,
+        avatarUrl,
+      );
+    } catch (error) {
+      if (isPrismaUniqueError(error)) {
+        const refetched = await this.prisma.user.findUnique({
+          where: { id: existingUser.id },
+          include: OAUTH_USER_INCLUDE,
+        });
+        if (refetched && !refetched.deletedAt) {
+          return refetched;
         }
       }
       throw error;
