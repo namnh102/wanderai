@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -42,6 +43,7 @@ class _SavePlaceToTripSheet extends ConsumerStatefulWidget {
 
 class _SavePlaceToTripSheetState extends ConsumerState<_SavePlaceToTripSheet> {
   String? _selectedTripId;
+  TripModel? _createdPendingTrip;
   bool _createNewMode = false;
   int _selectedDay = 1;
   bool _saving = false;
@@ -110,7 +112,7 @@ class _SavePlaceToTripSheetState extends ConsumerState<_SavePlaceToTripSheet> {
 
     try {
       TripModel? targetTrip;
-      if (_createNewMode || trips.isEmpty) {
+      if (_createNewMode || (trips.isEmpty && _createdPendingTrip == null)) {
         final rawTitle = _newTitleCtrl.text.trim();
         if (rawTitle.isEmpty) {
           setState(() {
@@ -119,13 +121,14 @@ class _SavePlaceToTripSheetState extends ConsumerState<_SavePlaceToTripSheet> {
           });
           return;
         }
-        targetTrip = await ref.read(tripListProvider.notifier).createTrip(
-              CreateTripRequest(
-                title: rawTitle,
-                destinationId: widget.place.destinationId,
-              ),
-            );
-        if (targetTrip == null) {
+        final createdTrip =
+            await ref.read(tripListProvider.notifier).createTrip(
+                  CreateTripRequest(
+                    title: rawTitle,
+                    destinationId: widget.place.destinationId,
+                  ),
+                );
+        if (createdTrip == null) {
           if (!mounted) return;
           setState(() {
             _saving = false;
@@ -134,11 +137,23 @@ class _SavePlaceToTripSheetState extends ConsumerState<_SavePlaceToTripSheet> {
           });
           return;
         }
+        if (!mounted) return;
+        // Retain newly created trip.id immediately so any subsequent failure in
+        // addItineraryItem will reuse this exact trip on retry instead of duplicating.
+        setState(() {
+          _createdPendingTrip = createdTrip;
+          _selectedTripId = createdTrip.id;
+          _createNewMode = false;
+        });
+        targetTrip = createdTrip;
       } else {
         targetTrip = trips
-            .where((t) => t.id == _selectedTripId)
-            .cast<TripModel?>()
-            .firstWhere((t) => t != null, orElse: () => null);
+                .where((t) => t.id == _selectedTripId)
+                .cast<TripModel?>()
+                .firstWhere((t) => t != null, orElse: () => null) ??
+            (_createdPendingTrip?.id == _selectedTripId
+                ? _createdPendingTrip
+                : null);
         if (targetTrip == null) {
           setState(() {
             _saving = false;
@@ -157,6 +172,14 @@ class _SavePlaceToTripSheetState extends ConsumerState<_SavePlaceToTripSheet> {
               notes: widget.place.hasAddress ? widget.place.address : null,
             ),
           );
+
+      if (kDebugMode) {
+        debugPrint(
+          '[GoMate][SaveToTrip] saved place_id=${widget.place.id} '
+          'name="${widget.place.name}" -> trip_id=${targetTrip.id} '
+          'title="${targetTrip.title}" day=$_selectedDay',
+        );
+      }
 
       await ref.read(tripListProvider.notifier).loadTrips();
       if (ref.exists(tripDetailProvider) &&
@@ -196,7 +219,12 @@ class _SavePlaceToTripSheetState extends ConsumerState<_SavePlaceToTripSheet> {
   @override
   Widget build(BuildContext context) {
     final tripState = ref.watch(tripListProvider);
-    final trips = tripState.trips;
+    final trips = <TripModel>[
+      if (_createdPendingTrip != null &&
+          !tripState.trips.any((t) => t.id == _createdPendingTrip!.id))
+        _createdPendingTrip!,
+      ...tripState.trips,
+    ];
     if (!tripState.isLoading &&
         trips.isNotEmpty &&
         !_createNewMode &&

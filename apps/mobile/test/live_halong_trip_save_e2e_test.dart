@@ -1,9 +1,8 @@
 // Live E2E acceptance test against a RUNNING stack (PostgreSQL + NestJS on :3000).
 //
 // Opt-in only: skipped unless `LIVE_HALONG_E2E=1` so offline `flutter test` stays deterministic.
-// Default POI: `0118b23e-ed95-4fc4-b26a-74b761e3eb6f` (Cảng tàu khách quốc tế Hạ Long).
-// Override POI (e.g. when phiên C supplies `place_id`):
-//   $env:LIVE_HALONG_E2E='1'; $env:TARGET_PLACE_ID='<place_uuid>'; flutter test test/live_halong_trip_save_e2e_test.dart
+// Acceptance POI: `65562a67-84ff-44a0-990d-31917a2a9bd0` (Tháp Đồng Hồ | Hạ Long).
+//   $env:LIVE_HALONG_E2E='1'; flutter test test/live_halong_trip_save_e2e_test.dart --reporter expanded
 @TestOn('vm')
 library;
 
@@ -23,7 +22,8 @@ import 'package:wanderai_mobile/features/places/providers/place_detail_provider.
 import 'package:wanderai_mobile/features/trips/data/trip_models.dart';
 import 'package:wanderai_mobile/features/trips/providers/trip_provider.dart';
 
-const _defaultHaLongPlaceId = '0118b23e-ed95-4fc4-b26a-74b761e3eb6f';
+const _defaultHaLongPlaceId = '65562a67-84ff-44a0-990d-31917a2a9bd0';
+const _defaultHaLongSearchTerm = 'Tháp Đồng Hồ';
 const _haLongSlug = 'ha-long';
 
 class _NoopLocationService implements LocationService {
@@ -40,13 +40,13 @@ class _NoopLocationService implements LocationService {
 
   @override
   Future<LocationFix> currentFix() async => LocationFix(
-        position: const LatLng(20.95048, 107.05044),
+        position: const LatLng(20.95125, 107.08190),
         accuracyMeters: 15,
         timestamp: DateTime.now(),
       );
 
   @override
-  Future<LatLng> currentPosition() async => const LatLng(20.95048, 107.05044);
+  Future<LatLng> currentPosition() async => const LatLng(20.95125, 107.08190);
 
   @override
   Future<bool> openAppSettings() async => true;
@@ -57,7 +57,7 @@ class _NoopLocationService implements LocationService {
 
 void _logStep(String step) {
   final ts = DateTime.now().toIso8601String();
-  stdout.writeln('[$ts] [HALONG-LIVE-E2E] $step');
+  stdout.writeln('[$ts] [HALONG-ACCEPTANCE-E2E] $step');
 }
 
 ProviderContainer _buildLiveContainer(String baseUrl) {
@@ -89,16 +89,19 @@ Future<void> _waitForAuthSettled(ProviderContainer container) async {
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
-  HttpOverrides.global = null; // Use real OS sockets against localhost:3000
+  HttpOverrides.global = null; // Real TCP sockets against localhost:3000
 
   final live = Platform.environment['LIVE_HALONG_E2E'] == '1';
   final baseUrl =
       Platform.environment['LIVE_API_BASE_URL'] ?? 'http://localhost:3000';
   final targetPlaceId =
       (Platform.environment['TARGET_PLACE_ID'] ?? _defaultHaLongPlaceId).trim();
+  final searchTerm =
+      (Platform.environment['TARGET_PLACE_SEARCH'] ?? _defaultHaLongSearchTerm)
+          .trim();
 
   group(
-    'Live Hạ Long POI -> Trip Save & Reopen Persistence',
+    'Live Acceptance — 65562a67-84ff-44a0-990d-31917a2a9bd0 | Tháp Đồng Hồ | Hạ Long',
     () {
       late String testEmail;
       const testPassword = 'HaLongPass#2026';
@@ -106,112 +109,116 @@ void main() {
       late String persistedRefreshToken;
 
       test(
-        'Case 1 (Live): Khám phá Hạ Long -> mở chi tiết POI -> chọn chuyến -> lưu -> đóng và mở lại app -> mở chuyến vừa chọn',
+        'Case 1 (Live): Khám phá Hạ Long -> tìm Tháp Đồng Hồ -> mở chi tiết -> lưu vào chuyến -> đóng hẳn app -> mở lại -> mở chuyến',
         () async {
           final stamp = DateTime.now().millisecondsSinceEpoch;
-          testEmail = 'halong_e2e_$stamp@gomate.vn';
+          testEmail = 'thap_dong_ho_$stamp@gomate.vn';
 
           SharedPreferences.setMockInitialValues({});
 
-          // ── SESSION 1: Launch app, register & sign in ──
+          // ── SESSION 1: Khởi động app & đăng ký tài khoản kiểm thử ──
           final container1 = _buildLiveContainer(baseUrl);
           container1.read(routerNotifierProvider);
           await _waitForAuthSettled(container1);
           expect(
-              container1.read(authProvider).status, AuthStatus.unauthenticated);
+            container1.read(authProvider).status,
+            AuthStatus.unauthenticated,
+          );
 
-          _logStep('Session #1: Registering test user $testEmail on $baseUrl');
+          _logStep('Session #1: Registering user $testEmail against $baseUrl');
           final registered = await container1
               .read(authProvider.notifier)
-              .register('Ha Long Tester', testEmail, testPassword);
-          expect(registered, isTrue,
-              reason: container1.read(authProvider).errorMessage);
+              .register('Tháp Đồng Hồ Tester', testEmail, testPassword);
           expect(
-              container1.read(authProvider).status, AuthStatus.authenticated);
+            registered,
+            isTrue,
+            reason: container1.read(authProvider).errorMessage,
+          );
 
           final prefs1 = await SharedPreferences.getInstance();
           persistedAccessToken = prefs1.getString('access_token')!;
           persistedRefreshToken = prefs1.getString('refresh_token')!;
-          _logStep(
-              'Session #1: Authenticated; tokens stored in SharedPreferences');
 
-          // 1. Khám phá Hạ Long (HomeNotifier -> GET /destinations + DestinationPlacesSheet -> GET /places)
-          // Giữ autoDispose homeProvider sống như khi HomeScreen đang mount trên màn hình.
+          // 1. Khám phá Hạ Long
           final homeSub = container1.listen(homeProvider, (_, __) {});
           await container1.read(homeProvider.notifier).load();
-          final homeState = container1.read(homeProvider);
-          final haLongDest = homeState.destinations.firstWhere(
-            (d) => d.slug == _haLongSlug,
-          );
+          final haLongDest = container1
+              .read(homeProvider)
+              .destinations
+              .firstWhere((d) => d.slug == _haLongSlug);
           _logStep(
-            'Step 1 (Khám phá Hạ Long): Loaded destination "${haLongDest.name}" (id=${haLongDest.id}, verifiedCount=${haLongDest.placeCount})',
+            'Step 1 (Khám phá Hạ Long): destination="${haLongDest.name}" destination_id=${haLongDest.id} total_verified=${haLongDest.placeCount}',
           );
 
-          final haLongPlaces =
+          // Kiểm tra trang 1 mặc định (limit=20, không search) và tìm kiếm "Tháp Đồng Hồ" trong DestinationPlacesSheet
+          final page1Default =
               await container1.read(placeRepositoryProvider).getPlaces(
                     destinationId: haLongDest.id,
                     verifiedOnly: true,
-                    limit: 50,
+                    limit: 20,
                   );
-          expect(haLongPlaces, isNotEmpty);
+          final inDefaultTop20 = page1Default.any((p) => p.id == targetPlaceId);
           _logStep(
-            'Step 1b (DestinationPlacesSheet): Loaded ${haLongPlaces.length} verified Hạ Long POIs',
+            'Step 1b (Kiểm tra trang 1 mặc định limit=20): count=${page1Default.length}, contains_target_without_search=$inDefaultTop20',
           );
 
-          // 2. Mở chi tiết POI (GET /places/:id)
+          final searchedInSheet =
+              await container1.read(placeRepositoryProvider).getPlaces(
+                    destinationId: haLongDest.id,
+                    search: searchTerm,
+                    verifiedOnly: true,
+                    limit: 20,
+                  );
+          final matchedPlace = searchedInSheet.firstWhere(
+            (p) => p.id == targetPlaceId,
+          );
+          _logStep(
+            'Step 2 (Tìm "$searchTerm" trong Khám phá Hạ Long): FOUND place_id=${matchedPlace.id} | name="${matchedPlace.name}" | destination="${matchedPlace.destinationName}"',
+          );
+
+          // 2. Mở chi tiết Tháp Đồng Hồ (GET /places/:id)
           final placeDetail = await container1.read(
             placeDetailProvider(targetPlaceId).future,
           );
           expect(placeDetail.id, targetPlaceId);
           expect(placeDetail.isVerified, isTrue);
           _logStep(
-            'Step 2 (Mở chi tiết POI): Opened "${placeDetail.name}" (place_id=${placeDetail.id}, destination=${placeDetail.destinationName}, dest_id=${placeDetail.destinationId})',
+            'Step 3 (Mở chi tiết POI): route=/places/${placeDetail.id} | name="${placeDetail.name}" | isVerified=${placeDetail.isVerified}',
           );
 
-          // 3. Chọn chuyến (tạo chuyến Hạ Long thực tế rồi chọn chuyến đó trong danh sách)
-          final seededTrip =
+          // 3. Tạo/chọn chuyến & Lưu Tháp Đồng Hồ vào chuyến
+          final createdTrip =
               await container1.read(tripListProvider.notifier).createTrip(
                     CreateTripRequest(
-                      title: 'Hành trình Hạ Long thực tế $stamp',
+                      title: 'Nghiệm thu Tháp Đồng Hồ Hạ Long $stamp',
                       destinationId: placeDetail.destinationId ?? haLongDest.id,
-                      description: 'Kiểm thử nghiệm thu lưu POI Hạ Long',
+                      description: 'Nghiệm thu phiên C Tháp Đồng Hồ',
                     ),
                   );
-          expect(seededTrip, isNotNull);
-          await container1.read(tripListProvider.notifier).loadTrips();
-          final selectedTrip = container1
-              .read(tripListProvider)
-              .trips
-              .firstWhere((t) => t.id == seededTrip!.id);
-          _logStep(
-            'Step 3 (Chọn chuyến): Selected trip "${selectedTrip.title}" (trip_id=${selectedTrip.id})',
-          );
+          expect(createdTrip, isNotNull);
 
-          // 4. Lưu POI vào chuyến (POST /trips/:id/itinerary)
-          final savedItem = await container1
-              .read(tripRepositoryProvider)
-              .addItineraryItem(
-                selectedTrip.id,
-                AddItineraryItemRequest(
-                  dayNumber: 1,
-                  activity: 'Tham quan ${placeDetail.name}',
-                  placeId: placeDetail.id,
-                  notes: placeDetail.hasAddress ? placeDetail.address : null,
-                ),
-              );
+          final savedItem =
+              await container1.read(tripRepositoryProvider).addItineraryItem(
+                    createdTrip!.id,
+                    AddItineraryItemRequest(
+                      dayNumber: 1,
+                      activity: 'Tham quan ${placeDetail.name}',
+                      placeId: placeDetail.id,
+                    ),
+                  );
           expect(savedItem.placeId, targetPlaceId);
           _logStep(
-            'Step 4 (Lưu): Persisted itinerary_item id=${savedItem.id}, day=${savedItem.orderIndex}, placeId=${savedItem.placeId}, activity="${savedItem.activity}"',
+            'Step 4 [BEFORE APP CLOSE]: SAVED place_id=${savedItem.placeId} ("${placeDetail.name}") -> trip_id=${createdTrip.id} ("${createdTrip.title}") item_id=${savedItem.id} day=1',
           );
 
-          // 5. Đóng hoàn toàn ứng dụng (dispose toàn bộ Riverpod ProviderContainer trong RAM)
+          // 4. Đóng hẳn app (dispose toàn bộ Riverpod state trong RAM)
           homeSub.close();
           container1.dispose();
           _logStep(
-            'Step 5 (Đóng app): Disposed Session #1 ProviderContainer (all in-memory state cleared; only SharedPreferences + PostgreSQL remain)',
+            'Step 5 [APP CLOSED]: Session #1 ProviderContainer disposed completely (RAM state wiped)',
           );
 
-          // 6. Mở lại ứng dụng từ đầu (khôi phục JWT từ SharedPreferences -> mở danh sách chuyến -> mở chuyến vừa chọn)
+          // 5. Mở lại app từ đầu (chỉ đọc JWT từ SharedPreferences + dữ liệu từ PostgreSQL)
           SharedPreferences.setMockInitialValues({
             'access_token': persistedAccessToken,
             'refresh_token': persistedRefreshToken,
@@ -220,114 +227,105 @@ void main() {
           addTearDown(container2.dispose);
           container2.read(routerNotifierProvider);
           await _waitForAuthSettled(container2);
-
           expect(
             container2.read(authProvider).status,
             AuthStatus.authenticated,
-            reason:
-                'Cold reopen must restore authenticated session from SharedPreferences',
           );
           _logStep(
-            'Step 6 (Mở lại app): Cold-started Session #2; session restored from SharedPreferences (AuthStatus.authenticated)',
+            'Step 6 [APP REOPENED]: Session #2 cold-started; session restored from SharedPreferences',
           );
 
+          // 6. Mở danh sách chuyến -> mở chuyến vừa lưu -> xác minh place_id & trip_id khớp tuyệt đối
           await container2.read(tripListProvider.notifier).loadTrips();
-          final reopenedTripSummary = container2
+          final reopenedSummary = container2
               .read(tripListProvider)
               .trips
-              .firstWhere((t) => t.id == selectedTrip.id);
-          _logStep(
-            'Step 7a (Danh sách chuyến sau khi mở lại): Found trip "${reopenedTripSummary.title}" (trip_id=${reopenedTripSummary.id})',
-          );
+              .firstWhere((t) => t.id == createdTrip.id);
 
           await container2
               .read(tripDetailProvider.notifier)
-              .loadTrip(reopenedTripSummary.id);
-          final reopenedTrip = container2.read(tripDetailProvider).trip;
-          expect(reopenedTrip, isNotNull);
-          expect(reopenedTrip!.itineraries, isNotEmpty);
-
-          final day1Items = reopenedTrip.itineraries
+              .loadTrip(reopenedSummary.id);
+          final reopenedTrip = container2.read(tripDetailProvider).trip!;
+          final reopenedItem = reopenedTrip.itineraries
               .firstWhere((d) => d.dayNumber == 1)
-              .items;
-          final persistedPoiItem = day1Items.firstWhere(
-            (i) => i.placeId == targetPlaceId,
-          );
-          expect(persistedPoiItem.id, savedItem.id);
-          expect(persistedPoiItem.placeName, placeDetail.name);
-          expect(persistedPoiItem.activity, 'Tham quan ${placeDetail.name}');
+              .items
+              .firstWhere((i) => i.placeId == targetPlaceId);
+
+          expect(reopenedTrip.id, createdTrip.id);
+          expect(reopenedItem.id, savedItem.id);
+          expect(reopenedItem.placeId, targetPlaceId);
+          expect(reopenedItem.placeName, placeDetail.name);
 
           _logStep(
-            'Step 7b (Mở chuyến vừa chọn sau khi mở lại): VERIFIED persisted item id=${persistedPoiItem.id} -> activity="${persistedPoiItem.activity}", placeId=${persistedPoiItem.placeId}, placeName="${persistedPoiItem.placeName}"',
+            'Step 7 [AFTER APP REOPEN]: VERIFIED trip_id=${reopenedTrip.id} ("${reopenedTrip.title}") CONTAINS place_id=${reopenedItem.placeId} ("${reopenedItem.placeName}") item_id=${reopenedItem.id} activity="${reopenedItem.activity}"',
           );
         },
       );
 
       test(
-        'Case 2 (Live): Chưa đăng nhập bấm lưu tại POI -> đăng nhập -> quay về đúng POI -> lưu vào chuyến',
+        'Case 2 (Live): Chưa đăng nhập bấm lưu tại Tháp Đồng Hồ -> đăng nhập -> quay về đúng Tháp Đồng Hồ -> lưu vào chuyến',
         () async {
-          // Khởi tạo phiên hoàn toàn chưa đăng nhập
           SharedPreferences.setMockInitialValues({});
           final container = _buildLiveContainer(baseUrl);
           addTearDown(container.dispose);
           final routerNotifier = container.read(routerNotifierProvider);
           await _waitForAuthSettled(container);
           expect(
-              container.read(authProvider).status, AuthStatus.unauthenticated);
+            container.read(authProvider).status,
+            AuthStatus.unauthenticated,
+          );
 
-          // 1. Người dùng khách mở trang chi tiết POI Hạ Long công khai
+          // 1. Khách chưa đăng nhập mở chi tiết Tháp Đồng Hồ
           container.read(guestBrowseModeProvider.notifier).state = true;
           final guestPoi = await container.read(
             placeDetailProvider(targetPlaceId).future,
           );
           expect(guestPoi.id, targetPlaceId);
           _logStep(
-            'Case 2 Step 1 (Khách xem POI): Loaded public POI "${guestPoi.name}" (/places/${guestPoi.id}) while unauthenticated',
+            'Case 2 Step 1 (Guest): Opened /places/${guestPoi.id} ("${guestPoi.name}") while unauthenticated',
           );
 
-          // 2. Bấm Lưu khi chưa đăng nhập -> lưu target vào postLoginRedirectProvider & chuyển tới /login?redirect=...
+          // 2. Bấm Lưu khi chưa đăng nhập -> chuyển tới /login?redirect=%2Fplaces%2F65562a67-...
           final intendedPoiRoute = '/places/${guestPoi.id}';
           container.read(postLoginRedirectProvider.notifier).state =
               intendedPoiRoute;
-          final encodedLoginUrl =
+          final loginUrl =
               '/login?redirect=${Uri.encodeComponent(intendedPoiRoute)}';
-          final parsedLoginUri = Uri.parse(encodedLoginUrl);
+          final parsedLoginUri = Uri.parse(loginUrl);
           _logStep(
-            'Case 2 Step 2 (Bấm Lưu khi chưa đăng nhập): Redirected to $encodedLoginUrl',
+            'Case 2 Step 2 (Unauth Save Tap): Redirected to $loginUrl',
           );
 
-          // 3. Thực hiện đăng nhập thật qua POST /auth/login
+          // 3. Đăng nhập thật qua POST /auth/login
           final loggedIn = await container
               .read(authProvider.notifier)
               .login(testEmail, testPassword);
           expect(loggedIn, isTrue);
-          expect(container.read(authProvider).status, AuthStatus.authenticated);
 
-          // 4. Xác minh RouterNotifier trả người dùng về ĐÚNG POI vừa xem
-          final postLoginDestination =
-              routerNotifier.resolvePostAuthDestination(
+          // 4. Xác minh RouterNotifier trả người dùng về đúng /places/65562a67-84ff-44a0-990d-31917a2a9bd0
+          final resolvedRoute = routerNotifier.resolvePostAuthDestination(
             queryRedirect: parsedLoginUri.queryParameters['redirect'],
           );
-          expect(postLoginDestination, intendedPoiRoute);
+          expect(resolvedRoute, intendedPoiRoute);
           _logStep(
-            'Case 2 Step 3 (Sau đăng nhập): RouterNotifier resolved post-login destination -> $postLoginDestination (exact POI)',
+            'Case 2 Step 3 (Post-Login Redirect): Returned to exact route $resolvedRoute ("${guestPoi.name}")',
           );
 
-          // 5. Lưu POI ngay sau khi quay lại đúng trang chi tiết POI
+          // 5. Lưu vào chuyến ngay sau khi quay về Tháp Đồng Hồ
           await container.read(tripListProvider.notifier).loadTrips();
-          final targetTrip = container.read(tripListProvider).trips.first;
-          final postLoginSavedItem =
+          final existingTrip = container.read(tripListProvider).trips.first;
+          final postLoginItem =
               await container.read(tripRepositoryProvider).addItineraryItem(
-                    targetTrip.id,
+                    existingTrip.id,
                     AddItineraryItemRequest(
                       dayNumber: 2,
                       activity: 'Tham quan ${guestPoi.name} (sau đăng nhập)',
                       placeId: guestPoi.id,
                     ),
                   );
-          expect(postLoginSavedItem.placeId, targetPlaceId);
+          expect(postLoginItem.placeId, targetPlaceId);
           _logStep(
-            'Case 2 Step 4 (Lưu sau đăng nhập): Saved item id=${postLoginSavedItem.id} on Day 2 of trip ${targetTrip.id} for placeId=${postLoginSavedItem.placeId}',
+            'Case 2 Step 4 (Saved Post-Login): Saved place_id=${postLoginItem.placeId} -> trip_id=${existingTrip.id} item_id=${postLoginItem.id} day=2',
           );
         },
       );

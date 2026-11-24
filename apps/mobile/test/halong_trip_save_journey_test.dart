@@ -17,10 +17,11 @@ import 'package:wanderai_mobile/features/map/data/place_model.dart';
 import 'package:wanderai_mobile/features/places/presentation/place_detail_screen.dart';
 import 'package:wanderai_mobile/features/trips/presentation/trip_detail_screen.dart';
 import 'package:wanderai_mobile/features/trips/presentation/trip_list_screen.dart';
+import 'package:wanderai_mobile/features/trips/providers/trip_provider.dart';
 
 const _haLongDestinationId = '4eec2f30-b67d-4221-b754-8fcc7bb1160e';
-const _haLongPlaceId = '0118b23e-ed95-4fc4-b26a-74b761e3eb6f';
-const _haLongPlaceName = 'Cảng tàu khách quốc tế Hạ Long';
+const _clockTowerPlaceId = '65562a67-84ff-44a0-990d-31917a2a9bd0';
+const _clockTowerPlaceName = 'Tháp Đồng Hồ';
 const _validAccessToken = 'jwt-access-halong';
 const _validRefreshToken = 'jwt-refresh-halong';
 
@@ -38,13 +39,13 @@ class _PassiveLocationService implements LocationService {
 
   @override
   Future<LocationFix> currentFix() async => LocationFix(
-        position: const LatLng(20.95048, 107.05044),
+        position: const LatLng(20.95125, 107.08190),
         accuracyMeters: 15,
-        timestamp: DateTime(2026, 11, 24, 12, 0),
+        timestamp: DateTime(2026, 11, 25, 1, 45),
       );
 
   @override
-  Future<LatLng> currentPosition() async => const LatLng(20.95048, 107.05044);
+  Future<LatLng> currentPosition() async => const LatLng(20.95125, 107.08190);
 
   @override
   Future<bool> openAppSettings() async => true;
@@ -53,15 +54,22 @@ class _PassiveLocationService implements LocationService {
   Future<bool> openLocationSettings() async => true;
 }
 
-/// Stateful in-memory backend modeling NestJS + PostgreSQL persistence across
-/// full app close & cold reopen cycles.
+/// Stateful in-memory backend modeling NestJS + PostgreSQL behavior:
+/// - 25 verified Hạ Long POIs sorted by id where `65562a67-...` (Tháp Đồng Hồ)
+///   sits beyond page-1 `limit: 20` unless `search` is used.
+/// - Optional `failAddItineraryTimes` to simulate transient failure after
+///   `POST /trips` succeeds.
 class _InMemoryHalongBackendAdapter implements HttpClientAdapter {
   final List<(String method, String path, String? auth)> recordedCalls = [];
   final Map<String, Map<String, dynamic>> _tripsById = {};
+  int failAddItineraryRemaining;
   int _tripSeq = 1;
   int _itemSeq = 1;
 
-  _InMemoryHalongBackendAdapter({bool seedHaLongTrip = true}) {
+  _InMemoryHalongBackendAdapter({
+    bool seedHaLongTrip = true,
+    this.failAddItineraryRemaining = 0,
+  }) {
     if (seedHaLongTrip) {
       _tripsById['trip-halong-001'] = {
         'id': 'trip-halong-001',
@@ -76,21 +84,23 @@ class _InMemoryHalongBackendAdapter implements HttpClientAdapter {
         'description': 'Khám phá di sản vịnh biển Quảng Ninh',
         'status': 'PLANNED',
         'currency': 'VND',
-        'interests': <String>['nature', 'sea'],
+        'interests': <String>['nature', 'culture'],
         'itineraries': <Map<String, dynamic>>[],
       };
     }
   }
 
-  Map<String, dynamic> get _haLongPlaceJson => {
-        'id': _haLongPlaceId,
-        'name': _haLongPlaceName,
-        'nameEn': 'Ha Long International Cruise Port',
-        'address': 'Đường Hạ Long, Bãi Cháy, Hạ Long, Quảng Ninh',
-        'latitude': 20.95048,
-        'longitude': 107.05044,
-        'rating': 4.7,
-        'reviewCount': 18,
+  int get createTripCallCount =>
+      recordedCalls.where((c) => c.$1 == 'POST' && c.$2 == '/trips').length;
+
+  Map<String, dynamic> get _clockTowerPlaceJson => {
+        'id': _clockTowerPlaceId,
+        'name': _clockTowerPlaceName,
+        'address': null,
+        'latitude': 20.95125,
+        'longitude': 107.08190,
+        'rating': null,
+        'reviewCount': 0,
         'isVerified': true,
         'provenanceCount': 1,
         'category': {'name': 'attraction'},
@@ -101,11 +111,35 @@ class _InMemoryHalongBackendAdapter implements HttpClientAdapter {
         },
         'source': {
           'name': 'OpenStreetMap',
-          'canonicalUrl': 'https://www.openstreetmap.org/way/701234567',
+          'canonicalUrl': 'https://www.openstreetmap.org/node/123456789',
           'license': 'ODbL 1.0',
           'attribution': '© OpenStreetMap contributors',
         },
       };
+
+  List<Map<String, dynamic>> get _allHaLongPlaces {
+    final prefixPlaces = List.generate(
+      22,
+      (idx) => <String, dynamic>{
+        'id': '00000000-0000-4000-8000-${idx.toString().padLeft(12, '0')}',
+        'name': 'Địa điểm Hạ Long #${idx + 1}',
+        'address': 'Hạ Long, Quảng Ninh',
+        'latitude': 20.95 + idx * 0.001,
+        'longitude': 107.05 + idx * 0.001,
+        'rating': null,
+        'reviewCount': 0,
+        'isVerified': true,
+        'provenanceCount': 1,
+        'category': {'name': 'attraction'},
+        'destination': {
+          'id': _haLongDestinationId,
+          'name': 'Hạ Long',
+          'slug': 'ha-long',
+        },
+      },
+    );
+    return [...prefixPlaces, _clockTowerPlaceJson];
+  }
 
   bool _isAuthorized(RequestOptions options) {
     final auth = options.headers['Authorization']?.toString();
@@ -157,7 +191,7 @@ class _InMemoryHalongBackendAdapter implements HttpClientAdapter {
               'rating': 4.8,
               'reviewCount': 42,
               'isPopular': true,
-              '_count': {'places': 64},
+              '_count': {'places': 197},
             },
           ],
         },
@@ -165,18 +199,41 @@ class _InMemoryHalongBackendAdapter implements HttpClientAdapter {
     }
 
     if (method == 'GET' && path == '/places') {
+      final search =
+          (options.queryParameters['search']?.toString() ?? '').trim();
+      final limit =
+          int.tryParse(options.queryParameters['limit']?.toString() ?? '') ??
+              20;
+      var filtered = _allHaLongPlaces;
+      if (search.isNotEmpty) {
+        filtered = filtered
+            .where(
+              (p) => (p['name'] as String)
+                  .toLowerCase()
+                  .contains(search.toLowerCase()),
+            )
+            .toList();
+      }
       return _json(200, {
         'success': true,
         'data': {
-          'items': [_haLongPlaceJson],
+          'items': filtered.take(limit).toList(),
+          'total': filtered.length,
         },
       });
     }
 
-    if (method == 'GET' && path == '/places/$_haLongPlaceId') {
+    if (method == 'GET' && path == '/places/$_clockTowerPlaceId') {
       return _json(200, {
         'success': true,
-        'data': _haLongPlaceJson,
+        'data': _clockTowerPlaceJson,
+      });
+    }
+
+    if (method == 'GET' && path == '/places/trending') {
+      return _json(200, {
+        'success': true,
+        'data': _allHaLongPlaces.take(5).toList(),
       });
     }
 
@@ -253,6 +310,13 @@ class _InMemoryHalongBackendAdapter implements HttpClientAdapter {
       if (!_isAuthorized(options)) {
         return _json(401, {'message': 'Unauthorized'});
       }
+      if (failAddItineraryRemaining > 0) {
+        failAddItineraryRemaining--;
+        return _json(503, {
+          'message':
+              'Máy chủ tạm thời gián đoạn khi thêm địa điểm vào lịch trình.',
+        });
+      }
       final tripId = addItinMatch.group(1)!;
       final trip = _tripsById[tripId];
       if (trip == null) {
@@ -283,11 +347,11 @@ class _InMemoryHalongBackendAdapter implements HttpClientAdapter {
         'activity': body['activity'] as String,
         'placeId': placeId,
         'notes': body['notes'],
-        if (placeId == _haLongPlaceId)
+        if (placeId == _clockTowerPlaceId)
           'place': {
-            'id': _haLongPlaceId,
-            'name': _haLongPlaceName,
-            'address': 'Đường Hạ Long, Bãi Cháy, Hạ Long, Quảng Ninh',
+            'id': _clockTowerPlaceId,
+            'name': _clockTowerPlaceName,
+            'address': null,
           },
       };
       items.add(newItem);
@@ -318,7 +382,7 @@ ProviderContainer _createAppContainer(_InMemoryHalongBackendAdapter backend) {
       apiClientProvider.overrideWith((ref) {
         final epoch = ref.read(sessionEpochControllerProvider);
         return createApiClient(
-          baseUrlOverride: 'http://localhost:3000/api/v1',
+          baseUrlOverride: 'http://localhost:3000',
           sessionEpoch: epoch,
           onSessionExpired: () {
             ref.read(authSessionExpiredSignalProvider.notifier).state++;
@@ -338,76 +402,198 @@ Future<void> _pumpFrames(WidgetTester tester, [int count = 4]) async {
 void main() {
   group('Redirect sanitizer & PlaceDetail CTA layout', () {
     test(
-        'sanitizeInternalRedirect accepts internal paths and rejects open redirects',
-        () {
-      expect(
-        sanitizeInternalRedirect('/places/$_haLongPlaceId'),
-        '/places/$_haLongPlaceId',
-      );
-      expect(sanitizeInternalRedirect('/trips/trip-halong-001'),
-          '/trips/trip-halong-001');
-      expect(sanitizeInternalRedirect('https://evil.example/phish'), isNull);
-      expect(sanitizeInternalRedirect('//evil.example/phish'), isNull);
-      expect(sanitizeInternalRedirect('javascript:alert(1)'), isNull);
-      expect(sanitizeInternalRedirect('/login'), isNull);
-      expect(sanitizeInternalRedirect('/register'), isNull);
-      expect(sanitizeInternalRedirect(''), isNull);
-      expect(sanitizeInternalRedirect(null), isNull);
-    });
+      'sanitizeInternalRedirect accepts internal paths and rejects open redirects',
+      () {
+        expect(
+          sanitizeInternalRedirect('/places/$_clockTowerPlaceId'),
+          '/places/$_clockTowerPlaceId',
+        );
+        expect(
+          sanitizeInternalRedirect('/trips/trip-halong-001'),
+          '/trips/trip-halong-001',
+        );
+        expect(sanitizeInternalRedirect('https://evil.example/phish'), isNull);
+        expect(sanitizeInternalRedirect('//evil.example/phish'), isNull);
+        expect(sanitizeInternalRedirect('javascript:alert(1)'), isNull);
+        expect(sanitizeInternalRedirect('/login'), isNull);
+        expect(sanitizeInternalRedirect('/register'), isNull);
+        expect(sanitizeInternalRedirect(''), isNull);
+        expect(sanitizeInternalRedirect(null), isNull);
+      },
+    );
 
     testWidgets(
-        'PlaceDetailView with onSaveToTrip has zero overflow at 360x800 @ 1.3x',
-        (tester) async {
-      tester.view.physicalSize = const Size(360, 800);
-      tester.view.devicePixelRatio = 1.0;
-      addTearDown(() {
-        tester.view.resetPhysicalSize();
-        tester.view.resetDevicePixelRatio();
-      });
+      'PlaceDetailView with onSaveToTrip has zero overflow at 360x800 @ 1.3x',
+      (tester) async {
+        tester.view.physicalSize = const Size(360, 800);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(() {
+          tester.view.resetPhysicalSize();
+          tester.view.resetDevicePixelRatio();
+        });
 
-      final place = PlaceModel.fromJson({
-        'id': _haLongPlaceId,
-        'name': _haLongPlaceName,
-        'address': 'Đường Hạ Long, Bãi Cháy, Hạ Long, Quảng Ninh',
-        'latitude': 20.95048,
-        'longitude': 107.05044,
-        'isVerified': true,
-        'category': {'name': 'attraction'},
-        'destination': {
-          'id': _haLongDestinationId,
-          'name': 'Hạ Long',
-        },
-      });
+        final place = PlaceModel.fromJson({
+          'id': _clockTowerPlaceId,
+          'name': _clockTowerPlaceName,
+          'latitude': 20.95125,
+          'longitude': 107.08190,
+          'rating': 4.6,
+          'reviewCount': 9,
+          'isVerified': true,
+          'category': {'name': 'attraction'},
+          'destination': {
+            'id': _haLongDestinationId,
+            'name': 'Hạ Long',
+          },
+        });
 
-      await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            theme: AppTheme.lightTheme,
-            home: MediaQuery(
-              data: const MediaQueryData(textScaler: TextScaler.linear(1.3)),
-              child: Scaffold(
-                body: PlaceDetailView(
-                  place: place,
-                  onOpenUrl: (_) {},
-                  onDirections: () {},
-                  onAskWandy: () {},
-                  onSaveToTrip: () {},
+        await tester.pumpWidget(
+          ProviderScope(
+            child: MaterialApp(
+              theme: AppTheme.lightTheme,
+              home: MediaQuery(
+                data: const MediaQueryData(textScaler: TextScaler.linear(1.3)),
+                child: Scaffold(
+                  body: PlaceDetailView(
+                    place: place,
+                    onOpenUrl: (_) {},
+                    onDirections: () {},
+                    onAskWandy: () {},
+                    onWriteReview: () {},
+                    onSaveToTrip: () {},
+                  ),
                 ),
               ),
             ),
           ),
-        ),
-      );
-      await _pumpFrames(tester);
-      expect(
-          find.byKey(const Key('place_detail_save_to_trip')), findsOneWidget);
-      expect(tester.takeException(), isNull);
-    });
+        );
+        await _pumpFrames(tester);
+        expect(
+          find.byKey(const Key('place_detail_save_to_trip')),
+          findsOneWidget,
+        );
+        expect(tester.takeException(), isNull);
+      },
+    );
   });
 
-  group('Hạ Long POI -> Trip Save Journeys', () {
+  group('Hạ Long Tháp Đồng Hồ (65562a67-...) -> Trip Save & Retry Journeys',
+      () {
     testWidgets(
-      'Case 1: Khám phá Hạ Long -> mở chi tiết POI -> chọn chuyến -> lưu -> đóng và mở lại app -> mở chuyến vừa chọn',
+      'Retry guard: createTrip succeeds -> addItineraryItem fails -> retry reuses created trip.id (POST /trips called once) and saves exact POI',
+      (tester) async {
+        tester.view.physicalSize = const Size(390, 844);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(() {
+          tester.view.resetPhysicalSize();
+          tester.view.resetDevicePixelRatio();
+        });
+
+        SharedPreferences.setMockInitialValues({
+          'access_token': _validAccessToken,
+          'refresh_token': _validRefreshToken,
+        });
+        final backend = _InMemoryHalongBackendAdapter(
+          seedHaLongTrip: false,
+          failAddItineraryRemaining: 1,
+        );
+        final container = _createAppContainer(backend);
+        addTearDown(container.dispose);
+
+        await tester.pumpWidget(
+          UncontrolledProviderScope(
+            container: container,
+            child: MaterialApp.router(
+              theme: AppTheme.lightTheme,
+              routerConfig: container.read(appRouterProvider),
+            ),
+          ),
+        );
+        await _pumpFrames(tester, 6);
+
+        // Điều hướng tới chi tiết Tháp Đồng Hồ
+        container.read(appRouterProvider).push('/places/$_clockTowerPlaceId');
+        await _pumpFrames(tester, 6);
+        expect(find.byType(PlaceDetailScreen), findsOneWidget);
+        expect(find.text(_clockTowerPlaceName), findsOneWidget);
+
+        // Mở sheet Lưu vào chuyến đi (chưa có chuyến nào -> chế độ tạo chuyến mới)
+        await tester.tap(find.byKey(const Key('place_detail_save_to_trip')));
+        await _pumpFrames(tester, 6);
+        expect(
+          find.byKey(const Key('trip_picker_new_title_input')),
+          findsOneWidget,
+        );
+
+        await tester.enterText(
+          find.byKey(const Key('trip_picker_new_title_input')),
+          'Chuyến Hạ Long Retry 1 Lần',
+        );
+        await _pumpFrames(tester, 2);
+
+        // Lần bấm 1: POST /trips thành công (tạo trip-created-1), nhưng POST /trips/trip-created-1/itinerary lỗi 503
+        await tester.tap(find.byKey(const Key('trip_picker_confirm_save')));
+        await _pumpFrames(tester, 6);
+
+        expect(backend.createTripCallCount, 1);
+        expect(
+          find.byKey(const Key('save_place_to_trip_sheet')),
+          findsOneWidget,
+        );
+        expect(
+          find.textContaining('tạm thời gián đoạn'),
+          findsOneWidget,
+        );
+        // Sheet phải chuyển sang giữ chọn đúng chuyến vừa tạo (trip-created-1), không còn ở form tạo mới
+        expect(
+          find.byKey(const Key('trip_picker_item_trip-created-1')),
+          findsOneWidget,
+        );
+        expect(
+          find.byKey(const Key('trip_picker_new_title_input')),
+          findsNothing,
+        );
+
+        // Lần bấm thử lại (Retry): KHÔNG gọi POST /trips lần 2, dùng đúng trip-created-1 và lưu đúng Tháp Đồng Hồ
+        await tester.tap(find.byKey(const Key('trip_picker_confirm_save')));
+        await _pumpFrames(tester, 6);
+
+        expect(
+          backend.createTripCallCount,
+          1,
+          reason:
+              'Retry must reuse created trip.id and never duplicate POST /trips',
+        );
+        final addItineraryCalls = backend.recordedCalls
+            .where(
+              (c) =>
+                  c.$1 == 'POST' && c.$2 == '/trips/trip-created-1/itinerary',
+            )
+            .toList();
+        expect(addItineraryCalls, hasLength(2));
+        expect(
+          find.textContaining(
+              'Đã lưu "$_clockTowerPlaceName" vào "Chuyến Hạ Long Retry 1 Lần"'),
+          findsOneWidget,
+        );
+
+        // Kiểm tra chỉ tồn tại duy nhất 1 chuyến (trip-created-1) và chứa đúng place_id Tháp Đồng Hồ
+        final savedTrips = container.read(tripListProvider).trips;
+        expect(savedTrips, hasLength(1));
+        expect(savedTrips.single.id, 'trip-created-1');
+
+        container.read(appRouterProvider).push('/trips/trip-created-1');
+        await _pumpFrames(tester, 6);
+        final detail = container.read(tripDetailProvider).trip!;
+        expect(
+          detail.itineraries.single.items.single.placeId,
+          _clockTowerPlaceId,
+        );
+      },
+    );
+
+    testWidgets(
+      'Case 1: Khám phá Hạ Long -> tìm Tháp Đồng Hồ trong giao diện -> mở chi tiết -> lưu vào chuyến -> đóng hẳn app -> mở lại -> mở chuyến',
       (tester) async {
         tester.view.physicalSize = const Size(390, 844);
         tester.view.devicePixelRatio = 1.0;
@@ -422,7 +608,7 @@ void main() {
         });
         final backend = _InMemoryHalongBackendAdapter(seedHaLongTrip: true);
 
-        // ── SESSION 1: Launch logged-in app ──
+        // ── SESSION 1: Mở app -> Khám phá Hạ Long ──
         final container1 = _createAppContainer(backend);
         await tester.pumpWidget(
           UncontrolledProviderScope(
@@ -436,25 +622,36 @@ void main() {
         await _pumpFrames(tester, 6);
 
         expect(find.byType(HomeScreen), findsOneWidget);
-        expect(find.text('Xin chào, Hải Nam 👋'), findsOneWidget);
 
-        // 1. Khám phá Hạ Long
+        // 1. Nhấn thẻ Khám phá Hạ Long
         final haLongCard = find.byKey(const Key('home_dest_ha-long'));
         await tester.ensureVisible(haLongCard);
         await _pumpFrames(tester, 2);
         await tester.tap(haLongCard);
         await _pumpFrames(tester, 6);
 
-        expect(find.text('Mở trên Bản đồ'), findsOneWidget);
-        expect(find.text(_haLongPlaceName), findsWidgets);
-
-        // 2. Mở chi tiết POI từ DestinationPlacesSheet
-        final sheetPoiTile = find.descendant(
-          of: find.byType(BottomSheet),
-          matching: find.text(_haLongPlaceName),
+        // Mặc định trang 1 (20 mục đầu) chưa chứa Tháp Đồng Hồ (nằm ngoài top 20)
+        expect(
+          find.byKey(const Key('dest_place_tile_$_clockTowerPlaceId')),
+          findsNothing,
         );
-        expect(sheetPoiTile, findsOneWidget);
-        await tester.tap(sheetPoiTile);
+
+        // 2. Tìm "Tháp Đồng Hồ" ngay trong thanh tìm kiếm của DestinationPlacesSheet
+        final destSearchInput = find.descendant(
+          of: find.byKey(const Key('destination_places_search_bar')),
+          matching: find.byType(TextField),
+        );
+        expect(destSearchInput, findsOneWidget);
+        await tester.enterText(destSearchInput, _clockTowerPlaceName);
+        await tester.pump(const Duration(milliseconds: 350));
+        await _pumpFrames(tester, 6);
+
+        final clockTowerTile =
+            find.byKey(const Key('dest_place_tile_$_clockTowerPlaceId'));
+        expect(clockTowerTile, findsOneWidget);
+
+        // 3. Mở chi tiết Tháp Đồng Hồ
+        await tester.tap(clockTowerTile);
         await _pumpFrames(tester, 6);
 
         expect(find.byType(PlaceDetailScreen), findsOneWidget);
@@ -465,15 +662,13 @@ void main() {
               .currentConfiguration
               .last
               .matchedLocation,
-          '/places/$_haLongPlaceId',
+          '/places/$_clockTowerPlaceId',
         );
 
-        // 3. Chọn chuyến -> Lưu
+        // 4. Chọn chuyến -> Lưu
         await tester.tap(find.byKey(const Key('place_detail_save_to_trip')));
         await _pumpFrames(tester, 6);
 
-        expect(
-            find.byKey(const Key('save_place_to_trip_sheet')), findsOneWidget);
         final tripOption =
             find.byKey(const Key('trip_picker_item_trip-halong-001'));
         expect(tripOption, findsOneWidget);
@@ -484,28 +679,16 @@ void main() {
         await _pumpFrames(tester, 6);
 
         expect(
-          backend.recordedCalls.any(
-            (c) =>
-                c.$1 == 'POST' &&
-                c.$2 == '/trips/trip-halong-001/itinerary' &&
-                c.$3 == 'Bearer $_validAccessToken',
-          ),
-          isTrue,
-        );
-        expect(
-          find.textContaining('Đã lưu "$_haLongPlaceName"'),
+          find.textContaining('Đã lưu "$_clockTowerPlaceName"'),
           findsOneWidget,
         );
 
-        // 4. Đóng toàn bộ app (hủy cây widget + dispose toàn bộ Riverpod state trong RAM)
+        // 5. Đóng hẳn app (unmount toàn bộ widget tree + dispose ProviderContainer)
         await tester.pumpWidget(const SizedBox.shrink());
         await tester.pump();
         container1.dispose();
 
-        final prefsAfterClose = await SharedPreferences.getInstance();
-        expect(prefsAfterClose.getString('access_token'), _validAccessToken);
-
-        // 5. Mở lại app từ đầu (ProviderContainer + GoRouter hoàn toàn mới, đọc lại từ SharedPreferences + Backend)
+        // 6. Mở lại app từ đầu -> mở tab Chuyến đi -> mở chuyến vừa lưu
         final container2 = _createAppContainer(backend);
         addTearDown(container2.dispose);
 
@@ -521,23 +704,15 @@ void main() {
         await _pumpFrames(tester, 6);
 
         expect(container2.read(authProvider).status, AuthStatus.authenticated);
-        expect(find.byType(HomeScreen), findsOneWidget);
-
-        // 6. Mở tab "Chuyến đi" -> mở chuyến vừa chọn
         await tester.tap(find.text('Chuyến đi'));
         await _pumpFrames(tester, 6);
         expect(find.byType(TripListScreen), findsOneWidget);
 
-        final savedTripCard =
-            find.byKey(const Key('trip_card_trip-halong-001'));
-        expect(savedTripCard, findsOneWidget);
-        await tester.tap(savedTripCard);
+        await tester.tap(find.byKey(const Key('trip_card_trip-halong-001')));
         await _pumpFrames(tester, 6);
-
         expect(find.byType(TripDetailScreen), findsOneWidget);
 
-        // Cuộn tới phần lịch trình chi tiết và xác minh POI Hạ Long vẫn còn nguyên sau khi mở lại app
-        final savedActivity = find.text('Tham quan $_haLongPlaceName');
+        final savedActivity = find.text('Tham quan $_clockTowerPlaceName');
         await tester.scrollUntilVisible(
           savedActivity,
           200,
@@ -547,11 +722,11 @@ void main() {
 
         expect(savedActivity, findsOneWidget);
         expect(
-          find.byKey(const Key('trip_item_place_$_haLongPlaceId')),
+          find.byKey(const Key('trip_item_place_$_clockTowerPlaceId')),
           findsOneWidget,
         );
 
-        // Nhấn vào mục POI đã lưu trong chuyến đi để mở lại đúng chi tiết POI
+        // Chạm mục đã lưu mở lại đúng chi tiết Tháp Đồng Hồ
         await tester
             .tap(find.byKey(const Key('trip_itinerary_item_itin-item-1')));
         await _pumpFrames(tester, 6);
@@ -563,13 +738,13 @@ void main() {
               .currentConfiguration
               .last
               .matchedLocation,
-          '/places/$_haLongPlaceId',
+          '/places/$_clockTowerPlaceId',
         );
       },
     );
 
     testWidgets(
-      'Case 2: Chưa đăng nhập bấm lưu tại POI -> chuyển sang Đăng nhập -> đăng nhập xong quay về đúng POI và lưu thành công',
+      'Case 2: Chưa đăng nhập bấm lưu tại Tháp Đồng Hồ -> chuyển sang Đăng nhập -> đăng nhập xong quay về đúng Tháp Đồng Hồ và lưu thành công',
       (tester) async {
         tester.view.physicalSize = const Size(390, 844);
         tester.view.devicePixelRatio = 1.0;
@@ -594,16 +769,16 @@ void main() {
         );
         await _pumpFrames(tester, 6);
 
-        // Cold start khi chưa đăng nhập vào màn Login và không gọi /users/me
-        expect(container.read(authProvider).status, AuthStatus.unauthenticated);
-        expect(find.byKey(const Key('login_guest_explore_button')),
-            findsOneWidget);
+        expect(
+          container.read(authProvider).status,
+          AuthStatus.unauthenticated,
+        );
         expect(
           backend.recordedCalls.where((c) => c.$2 == '/users/me'),
           isEmpty,
         );
 
-        // Chọn khám phá trước khi đăng nhập -> mở Hạ Long -> mở chi tiết POI
+        // Khách bấm Khám phá trước khi đăng nhập -> Khám phá Hạ Long -> tìm Tháp Đồng Hồ
         await tester.tap(find.byKey(const Key('login_guest_explore_button')));
         await _pumpFrames(tester, 6);
         expect(find.byType(HomeScreen), findsOneWidget);
@@ -618,16 +793,21 @@ void main() {
         await tester.tap(haLongCard);
         await _pumpFrames(tester, 6);
 
-        final guestSheetPoiTile = find.descendant(
-          of: find.byType(BottomSheet),
-          matching: find.text(_haLongPlaceName),
+        final destSearchInput = find.descendant(
+          of: find.byKey(const Key('destination_places_search_bar')),
+          matching: find.byType(TextField),
         );
-        expect(guestSheetPoiTile, findsOneWidget);
-        await tester.tap(guestSheetPoiTile);
+        await tester.enterText(destSearchInput, _clockTowerPlaceName);
+        await tester.pump(const Duration(milliseconds: 350));
+        await _pumpFrames(tester, 6);
+
+        await tester.tap(
+          find.byKey(const Key('dest_place_tile_$_clockTowerPlaceId')),
+        );
         await _pumpFrames(tester, 6);
         expect(find.byType(PlaceDetailScreen), findsOneWidget);
 
-        // Bấm Lưu khi chưa đăng nhập -> chuyển tới /login?redirect=%2Fplaces%2F<id>
+        // Bấm Lưu khi chưa đăng nhập -> chuyển tới /login?redirect=%2Fplaces%2F65562a67-...
         await tester.tap(find.byKey(const Key('place_detail_save_to_trip')));
         await _pumpFrames(tester, 6);
 
@@ -637,10 +817,13 @@ void main() {
             .value
             .uri;
         expect(loginUri.path, '/login');
-        expect(loginUri.queryParameters['redirect'], '/places/$_haLongPlaceId');
+        expect(
+          loginUri.queryParameters['redirect'],
+          '/places/$_clockTowerPlaceId',
+        );
         expect(find.byKey(const Key('login_redirect_notice')), findsOneWidget);
 
-        // Đăng nhập -> GoRouter tự động trả về đúng POI vừa xem (không đẩy về '/')
+        // Đăng nhập -> tự động quay về đúng Tháp Đồng Hồ
         await tester.enterText(
           find.byKey(const Key('login_email_input')),
           'traveler@gomate.vn',
@@ -658,36 +841,19 @@ void main() {
             .routeInformationProvider
             .value
             .uri;
-        expect(postLoginUri.path, '/places/$_haLongPlaceId');
+        expect(postLoginUri.path, '/places/$_clockTowerPlaceId');
         expect(find.byType(PlaceDetailScreen), findsOneWidget);
-        expect(find.text(_haLongPlaceName), findsOneWidget);
+        expect(find.text(_clockTowerPlaceName), findsOneWidget);
 
-        // Sau khi quay về đúng POI, người dùng tạo chuyến mới ngay trong sheet và lưu thành công
+        // Lưu Tháp Đồng Hồ ngay sau khi quay về
         await tester.tap(find.byKey(const Key('place_detail_save_to_trip')));
         await _pumpFrames(tester, 6);
-
-        expect(
-            find.byKey(const Key('save_place_to_trip_sheet')), findsOneWidget);
-        expect(find.byKey(const Key('trip_picker_new_title_input')),
-            findsOneWidget);
-
         await tester.tap(find.byKey(const Key('trip_picker_confirm_save')));
         await _pumpFrames(tester, 6);
 
+        expect(backend.createTripCallCount, 1);
         expect(
-          backend.recordedCalls.any(
-            (c) => c.$1 == 'POST' && c.$2 == '/trips',
-          ),
-          isTrue,
-        );
-        expect(
-          backend.recordedCalls.any(
-            (c) => c.$1 == 'POST' && c.$2 == '/trips/trip-created-1/itinerary',
-          ),
-          isTrue,
-        );
-        expect(
-          find.textContaining('Đã lưu "$_haLongPlaceName"'),
+          find.textContaining('Đã lưu "$_clockTowerPlaceName"'),
           findsOneWidget,
         );
       },

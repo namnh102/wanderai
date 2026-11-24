@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -18,9 +19,22 @@ class _TripDetailScreenState extends ConsumerState<TripDetailScreen> {
   @override
   void initState() {
     super.initState();
-    Future.microtask(
-      () => ref.read(tripDetailProvider.notifier).loadTrip(widget.tripId),
-    );
+    Future.microtask(() async {
+      await ref.read(tripDetailProvider.notifier).loadTrip(widget.tripId);
+      if (!mounted) return;
+      final loaded = ref.read(tripDetailProvider).trip;
+      if (kDebugMode && loaded != null) {
+        final placeIds = loaded.itineraries
+            .expand((d) => d.items)
+            .map((i) => i.placeId)
+            .whereType<String>()
+            .toList();
+        debugPrint(
+          '[GoMate][TripDetail] opened trip_id=${loaded.id} '
+          'title="${loaded.title}" place_ids=$placeIds',
+        );
+      }
+    });
   }
 
   Future<void> _handleDelete() async {

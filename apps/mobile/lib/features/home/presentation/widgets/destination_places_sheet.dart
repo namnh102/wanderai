@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -9,6 +10,7 @@ import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_empty_state.dart';
 import '../../../../core/widgets/app_error_state.dart';
 import '../../../../core/widgets/app_loading.dart';
+import '../../../../core/widgets/app_search_bar.dart';
 import '../../../../core/widgets/responsive_wrapper.dart';
 import '../../../location/providers/user_location_provider.dart';
 import '../../../map/data/destination_model.dart';
@@ -18,7 +20,8 @@ import '../../data/home_models.dart';
 import 'home_verified_place_tile.dart';
 
 /// Opens a destination preview sheet loading verified places from `GET /places`
-/// so every destination card on Home provides real interactive discovery.
+/// (with destination-scoped search) so every destination card on Home provides
+/// real interactive discovery across the entire destination catalog.
 Future<void> showDestinationPlacesSheet(
   BuildContext context, {
   required HomeDestinationItem destination,
@@ -44,6 +47,10 @@ class _DestinationPlacesSheet extends ConsumerStatefulWidget {
 
 class _DestinationPlacesSheetState
     extends ConsumerState<_DestinationPlacesSheet> {
+  final TextEditingController _searchCtrl = TextEditingController();
+  Timer? _debounce;
+  int _loadSeq = 0;
+  String _activeSearch = '';
   bool _loading = true;
   String? _error;
   List<PlaceModel> _places = const [];
@@ -54,9 +61,33 @@ class _DestinationPlacesSheetState
     _load();
   }
 
-  Future<void> _load() async {
+  @override
+  void dispose() {
+    _debounce?.cancel();
+    _searchCtrl.dispose();
+    super.dispose();
+  }
+
+  void _onSearchChanged(String value) {
+    setState(() {});
+    _debounce?.cancel();
+    final trimmed = value.trim();
+    if (trimmed.isEmpty) {
+      _load(search: '');
+      return;
+    }
+    _debounce = Timer(
+      const Duration(milliseconds: 300),
+      () => _load(search: trimmed),
+    );
+  }
+
+  Future<void> _load({String? search}) async {
     if (!mounted) return;
+    final query = (search ?? _activeSearch).trim();
+    final seq = ++_loadSeq;
     setState(() {
+      _activeSearch = query;
       _loading = true;
       _error = null;
     });
@@ -64,18 +95,20 @@ class _DestinationPlacesSheetState
       final repo = ref.read(placeRepositoryProvider);
       final items = await repo.getPlaces(
         destinationId: widget.destination.id,
+        search: query.isEmpty ? null : query,
         verifiedOnly: true,
         limit: 20,
       );
-      if (!mounted) return;
+      if (!mounted || seq != _loadSeq) return;
       setState(() {
         _places = items;
         _loading = false;
       });
     } catch (_) {
-      if (!mounted) return;
+      if (!mounted || seq != _loadSeq) return;
       setState(() {
-        _error = 'Không thể tải danh sách địa điểm của ${widget.destination.name}.';
+        _error =
+            'Không thể tải danh sách địa điểm của ${widget.destination.name}.';
         _loading = false;
       });
     }
@@ -98,13 +131,16 @@ class _DestinationPlacesSheetState
   @override
   Widget build(BuildContext context) {
     final userPos = ref.watch(userLocationProvider).position;
-    final maxHeight = MediaQuery.of(context).size.height * 0.78;
+    final maxHeight = MediaQuery.of(context).size.height * 0.84;
 
     return ResponsiveWrapper(
       maxWidth: 640.0,
       fillHeight: false,
       child: Container(
         constraints: BoxConstraints(maxHeight: maxHeight),
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom,
+        ),
         decoration: const BoxDecoration(
           color: AppColors.surface,
           borderRadius: AppRadius.sheetRadius,
@@ -129,7 +165,7 @@ class _DestinationPlacesSheetState
                 AppSpacing.md,
                 AppSpacing.mdSmall,
                 AppSpacing.sm,
-                AppSpacing.sm,
+                AppSpacing.xs,
               ),
               child: Row(
                 children: [
@@ -169,22 +205,52 @@ class _DestinationPlacesSheetState
                 child: Text(
                   widget.destination.description!,
                   style: AppTypography.bodyM,
-                  maxLines: 3,
+                  maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
-            const Divider(),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.md,
+                0,
+                AppSpacing.md,
+                AppSpacing.sm,
+              ),
+              child: AppSearchBar(
+                key: const Key('destination_places_search_bar'),
+                controller: _searchCtrl,
+                hintText: 'Tìm địa điểm tại ${widget.destination.name}...',
+                onChanged: _onSearchChanged,
+                onSubmitted: (q) {
+                  _debounce?.cancel();
+                  _load(search: q);
+                },
+                onClear: () {
+                  _searchCtrl.clear();
+                  _onSearchChanged('');
+                },
+              ),
+            ),
+            const Divider(height: 1),
             Expanded(
               child: _loading
                   ? const AppLoading(message: 'Đang tải địa điểm xác minh...')
                   : _error != null
-                      ? AppErrorState(message: _error!, onRetry: _load)
+                      ? AppErrorState(
+                          message: _error!,
+                          onRetry: () => _load(search: _activeSearch),
+                        )
                       : _places.isEmpty
-                          ? const AppEmptyState(
-                              icon: Icons.location_searching_outlined,
-                              title: 'Chưa có địa điểm xác minh',
-                              description:
-                                  'Chưa có địa điểm từ nguồn OpenStreetMap cho điểm đến này.',
+                          ? AppEmptyState(
+                              icon: _activeSearch.isNotEmpty
+                                  ? Icons.search_off_rounded
+                                  : Icons.location_searching_outlined,
+                              title: _activeSearch.isNotEmpty
+                                  ? 'Không tìm thấy địa điểm'
+                                  : 'Chưa có địa điểm xác minh',
+                              description: _activeSearch.isNotEmpty
+                                  ? 'Chưa có địa điểm xác minh phù hợp với "$_activeSearch" tại ${widget.destination.name}.'
+                                  : 'Chưa có địa điểm từ nguồn OpenStreetMap cho điểm đến này.',
                             )
                           : ListView.separated(
                               padding: const EdgeInsets.all(AppSpacing.md),
@@ -194,6 +260,7 @@ class _DestinationPlacesSheetState
                               itemBuilder: (ctx, idx) {
                                 final place = _places[idx];
                                 return HomeVerifiedPlaceTile(
+                                  key: Key('dest_place_tile_${place.id}'),
                                   place: place,
                                   userPosition: userPos,
                                   onTap: () {
