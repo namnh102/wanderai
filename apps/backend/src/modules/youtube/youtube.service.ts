@@ -5,9 +5,15 @@ import {
   NotFoundException,
 } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
-import { Prisma, YoutubePoiUpdate, YoutubeUpdateStatus } from "@prisma/client";
+import {
+  Prisma,
+  YoutubePoiUpdate,
+  YoutubeUpdateScope,
+  YoutubeUpdateStatus,
+} from "@prisma/client";
 import * as fs from "fs";
 import * as path from "path";
+import { YOUTUBE_ERROR_CODES } from "../../common/constants/youtube-error-codes";
 import { PrismaService } from "../../prisma/prisma.service";
 import { osmAddress } from "../places/osm-tags";
 import { IngestYoutubeEventDto } from "./dto/youtube-update.dto";
@@ -17,9 +23,14 @@ import {
   extractVerifiedAliasesFromDescription,
   NormalizedYoutubeEventInput,
   parseYoutubeAtomFeed,
+  VerifiedDestinationCandidate,
   VerifiedPlaceCandidate,
   verifyWebSubSignature,
 } from "./youtube-grounding";
+
+const UUID_REGEX =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const DEFAULT_REALTIME_SLA_MAX_LATENCY_MS = 300_000;
 
 export interface YoutubeIngestionReceipt {
   id: string;
@@ -32,9 +43,36 @@ export interface YoutubeIngestionReceipt {
   receivedAt: string;
   lastReceivedAt: string;
   status: YoutubeUpdateStatus;
+  scope: YoutubeUpdateScope;
   linkedPlaceId: string | null;
+  destinationId: string | null;
   groundingBasis: string | null;
   decisionReason: string;
+  groundingEvidence: unknown;
+}
+
+export interface YoutubeSerializedUpdateItem {
+  id: string;
+  placeId: string | null;
+  destinationId: string | null;
+  destinationSlug: string | null;
+  scope: "POI" | "CITY";
+  source: "youtube";
+  channelId: string;
+  channelTitle: string | null;
+  videoId: string;
+  videoUrl: string;
+  title: string;
+  description: string | null;
+  tags: string[];
+  publishedAt: string;
+  receivedAt: string;
+  updatedAt: string;
+  sourceUpdatedAt: string | null;
+  lastReceivedAt: string;
+  ingestLatencyMs: number;
+  deliveryLagMs: number;
+  groundingBasis: string | null;
   groundingEvidence: unknown;
 }
 
@@ -115,7 +153,10 @@ export class YoutubeService {
       expectedToken.trim() &&
       verifyToken !== expectedToken.trim()
     ) {
-      throw new ForbiddenException("Invalid hub.verify_token");
+      throw new ForbiddenException({
+        message: "Invalid hub.verify_token",
+        errorCode: YOUTUBE_ERROR_CODES.YOUTUBE_EVENT_UNAUTHORIZED,
+      });
     }
 
     return challenge;
@@ -127,6 +168,12 @@ export class YoutubeService {
   ): Promise<{ processedCount: number; results: YoutubeIngestionReceipt[] }> {
     const secret = this.configService.get<string>("YOUTUBE_WEBSUB_SECRET");
     verifyWebSubSignature(rawXml, signatureHeader, secret);
+
+    if (!rawXml || !rawXml.trim()) {
+      throw new BadRequestException(
+        "Expected Atom XML body (Content-Type: application/atom+xml or text/xml)",
+      );
+    }
 
     const entries = parseYoutubeAtomFeed(rawXml);
     const results: YoutubeIngestionReceipt[] = [];
@@ -199,29 +246,31 @@ export class YoutubeService {
         deletedAt: null,
         placeSources: { some: {} },
       },
-      select: {
-        id: true,
-        name: true,
-        nameEn: true,
-        description: true,
-        latitude: true,
-        longitude: true,
-        destination: {
-          select: {
-            name: true,
-            slug: true,
-            province: true,
+        select: {
+          id: true,
+          destinationId: true,
+          name: true,
+          nameEn: true,
+          description: true,
+          latitude: true,
+          longitude: true,
+          destination: {
+            select: {
+              id: true,
+              name: true,
+              slug: true,
+              province: true,
+            },
+          },
+          placeSources: {
+            select: {
+              sourceName: true,
+              sourceId: true,
+              rawData: true,
+            },
           },
         },
-        placeSources: {
-          select: {
-            sourceName: true,
-            sourceId: true,
-            rawData: true,
-          },
-        },
-      },
-    });
+      });
 
     return rows.map((r) => {
       const osmSource = r.placeSources.find((s) => s.sourceName === "osm");
@@ -232,6 +281,7 @@ export class YoutubeService {
         r.description ?? pilotDescriptions.get(r.id) ?? null;
       return {
         id: r.id,
+        destinationId: r.destination?.id ?? r.destinationId,
         name: r.name,
         nameEn: r.nameEn,
         address: factualAddress,
@@ -256,6 +306,26 @@ export class YoutubeService {
     });
   }
 
+  private async _loadVerifiedDestinations(): Promise<
+    VerifiedDestinationCandidate[]
+  > {
+    if (!this.prisma.destination?.findMany) {
+      return [];
+    }
+    return this.prisma.destination.findMany({
+      where: { deletedAt: null },
+      select: {
+        id: true,
+        name: true,
+        nameEn: true,
+        slug: true,
+        province: true,
+        latitude: true,
+        longitude: true,
+      },
+    });
+  }
+
   private async _recordDuplicateDelivery(
     dedupeKey: string,
     now: Date,
@@ -273,6 +343,14 @@ export class YoutubeService {
     row: YoutubePoiUpdate,
     duplicate: boolean,
   ): YoutubeIngestionReceipt {
+    const resolvedScope =
+      row.scope ??
+      (row.status === YoutubeUpdateStatus.LINKED
+        ? YoutubeUpdateScope.POI
+        : row.status === YoutubeUpdateStatus.LINKED_CITY
+          ? YoutubeUpdateScope.CITY
+          : YoutubeUpdateScope.NONE);
+
     return {
       id: row.id,
       dedupeKey: row.dedupeKey,
@@ -284,7 +362,9 @@ export class YoutubeService {
       receivedAt: row.receivedAt.toISOString(),
       lastReceivedAt: row.lastReceivedAt.toISOString(),
       status: row.status,
+      scope: resolvedScope,
       linkedPlaceId: row.placeId,
+      destinationId: row.destinationId ?? null,
       groundingBasis: row.groundingBasis,
       decisionReason: row.decisionReason,
       groundingEvidence: row.groundingEvidence,
@@ -314,9 +394,24 @@ export class YoutubeService {
       return this._toReceipt(updated, true);
     }
 
-    const candidates = await this._loadVerifiedPlaceCandidates();
-    const decision = evaluatePoiGrounding(event, candidates);
+    const [candidates, destinations] = await Promise.all([
+      this._loadVerifiedPlaceCandidates(),
+      this._loadVerifiedDestinations(),
+    ]);
+    const decision = evaluatePoiGrounding(event, candidates, destinations);
     const canonicalVideoUrl = `https://www.youtube.com/watch?v=${event.videoId}`;
+    const prismaStatus =
+      decision.status === "LINKED"
+        ? YoutubeUpdateStatus.LINKED
+        : decision.status === "LINKED_CITY"
+          ? YoutubeUpdateStatus.LINKED_CITY
+          : YoutubeUpdateStatus.UNLINKED_NO_BASIS;
+    const prismaScope =
+      decision.scope === "POI"
+        ? YoutubeUpdateScope.POI
+        : decision.scope === "CITY"
+          ? YoutubeUpdateScope.CITY
+          : YoutubeUpdateScope.NONE;
 
     try {
       const created = await this.prisma.youtubePoiUpdate.create({
@@ -336,11 +431,10 @@ export class YoutubeService {
           receivedAt,
           lastReceivedAt: receivedAt,
           deliveryCount: 1,
-          status:
-            decision.status === "LINKED"
-              ? YoutubeUpdateStatus.LINKED
-              : YoutubeUpdateStatus.UNLINKED_NO_BASIS,
+          status: prismaStatus,
+          scope: prismaScope,
           placeId: decision.placeId,
+          destinationId: decision.destinationId,
           groundingBasis: decision.groundingBasis,
           decisionReason: decision.decisionReason,
           groundingEvidence:
@@ -364,6 +458,79 @@ export class YoutubeService {
     }
   }
 
+  private _getRealtimeSlaMaxLatencyMs(): number {
+    const raw = this.configService.get<string | number>(
+      "YOUTUBE_REALTIME_SLA_MAX_LATENCY_MS",
+    );
+    const parsed = Number(raw);
+    if (Number.isFinite(parsed) && parsed > 0) {
+      return Math.floor(parsed);
+    }
+    return DEFAULT_REALTIME_SLA_MAX_LATENCY_MS;
+  }
+
+  private _serializeUpdateItem(
+    row: YoutubePoiUpdate,
+    destinationMeta: { id: string | null; slug: string | null },
+  ): YoutubeSerializedUpdateItem {
+    const updatedAtDate =
+      row.sourceUpdatedAt ?? row.lastReceivedAt ?? row.receivedAt;
+    const isCity =
+      row.scope === YoutubeUpdateScope.CITY ||
+      row.status === YoutubeUpdateStatus.LINKED_CITY;
+    const ingestLatencyMs = Math.max(
+      0,
+      row.receivedAt.getTime() - row.publishedAt.getTime(),
+    );
+    const deliveryLagMs = Math.max(
+      0,
+      row.lastReceivedAt.getTime() - row.publishedAt.getTime(),
+    );
+
+    return {
+      id: row.id,
+      placeId: isCity ? null : (row.placeId ?? null),
+      destinationId: row.destinationId ?? destinationMeta.id ?? null,
+      destinationSlug: destinationMeta.slug ?? null,
+      scope: isCity ? "CITY" : "POI",
+      source: "youtube",
+      channelId: row.channelId,
+      channelTitle: row.channelTitle,
+      videoId: row.videoId,
+      videoUrl: row.videoUrl,
+      title: row.title,
+      description: row.description,
+      tags: row.tags,
+      publishedAt: row.publishedAt.toISOString(),
+      receivedAt: row.receivedAt.toISOString(),
+      updatedAt: updatedAtDate.toISOString(),
+      sourceUpdatedAt: row.sourceUpdatedAt
+        ? row.sourceUpdatedAt.toISOString()
+        : null,
+      lastReceivedAt: row.lastReceivedAt.toISOString(),
+      ingestLatencyMs,
+      deliveryLagMs,
+      groundingBasis: row.groundingBasis,
+      groundingEvidence: row.groundingEvidence,
+    };
+  }
+
+  private _dedupeAndSerialize(
+    rows: YoutubePoiUpdate[],
+    destinationMeta: { id: string | null; slug: string | null },
+    safeLimit: number,
+  ): YoutubeSerializedUpdateItem[] {
+    const seenVideoIds = new Set<string>();
+    const items: YoutubeSerializedUpdateItem[] = [];
+    for (const row of rows) {
+      if (seenVideoIds.has(row.videoId)) continue;
+      seenVideoIds.add(row.videoId);
+      items.push(this._serializeUpdateItem(row, destinationMeta));
+      if (items.length >= safeLimit) break;
+    }
+    return items;
+  }
+
   async listGroundedUpdatesForPlace(placeId: string, limit: number = 10) {
     const safeLimit = Math.min(Math.max(1, limit), 50);
     const place = await this.prisma.place.findUnique({
@@ -372,58 +539,184 @@ export class YoutubeService {
         id: true,
         name: true,
         deletedAt: true,
+        destinationId: true,
+        destination: {
+          select: {
+            id: true,
+            slug: true,
+            name: true,
+          },
+        },
         _count: { select: { placeSources: true } },
       },
     });
     if (!place || place.deletedAt || place._count.placeSources === 0) {
-      throw new NotFoundException(
-        `Verified place with ID "${placeId}" not found`,
-      );
-    }
-
-    const rows = await this.prisma.youtubePoiUpdate.findMany({
-      where: {
-        placeId,
-        status: YoutubeUpdateStatus.LINKED,
-      },
-      orderBy: [
-        { publishedAt: "desc" },
-        { sourceUpdatedAt: "desc" },
-        { receivedAt: "desc" },
-      ],
-      take: safeLimit * 3,
-    });
-
-    // Deduplicate revisions by videoId while keeping latest revision per video
-    const seenVideoIds = new Set<string>();
-    const items = [];
-    for (const row of rows) {
-      if (seenVideoIds.has(row.videoId)) continue;
-      seenVideoIds.add(row.videoId);
-      items.push({
-        id: row.id,
-        videoId: row.videoId,
-        videoUrl: row.videoUrl,
-        channelId: row.channelId,
-        channelTitle: row.channelTitle,
-        title: row.title,
-        description: row.description,
-        tags: row.tags,
-        publishedAt: row.publishedAt.toISOString(),
-        receivedAt: row.receivedAt.toISOString(),
-        groundingBasis: row.groundingBasis,
-        groundingEvidence: row.groundingEvidence,
+      throw new NotFoundException({
+        message: `Verified place with ID "${placeId}" not found`,
+        errorCode: YOUTUBE_ERROR_CODES.PLACE_NOT_FOUND,
       });
-      if (items.length >= safeLimit) break;
     }
+
+    const destinationId = place.destination?.id ?? place.destinationId ?? null;
+    const destinationMeta = {
+      id: destinationId,
+      slug: place.destination?.slug ?? null,
+    };
+
+    const [poiRows, cityRows] = await Promise.all([
+      this.prisma.youtubePoiUpdate.findMany({
+        where: {
+          placeId,
+          status: YoutubeUpdateStatus.LINKED,
+        },
+        orderBy: [
+          { publishedAt: "desc" },
+          { sourceUpdatedAt: "desc" },
+          { receivedAt: "desc" },
+        ],
+        take: safeLimit * 3,
+      }),
+      destinationId
+        ? this.prisma.youtubePoiUpdate.findMany({
+            where: {
+              destinationId,
+              status: YoutubeUpdateStatus.LINKED_CITY,
+              scope: YoutubeUpdateScope.CITY,
+              placeId: null,
+            },
+            orderBy: [
+              { publishedAt: "desc" },
+              { sourceUpdatedAt: "desc" },
+              { receivedAt: "desc" },
+            ],
+            take: safeLimit * 3,
+          })
+        : Promise.resolve([]),
+    ]);
+
+    const items = this._dedupeAndSerialize(poiRows, destinationMeta, safeLimit);
+    const cityFallbackItems = this._dedupeAndSerialize(
+      cityRows,
+      destinationMeta,
+      safeLimit,
+    );
 
     return {
       placeId: place.id,
       placeName: place.name,
+      destinationId,
+      destinationSlug: place.destination?.slug ?? null,
+      destinationName: place.destination?.name ?? null,
       governanceRole: "DYNAMIC_SOCIAL_FRESHNESS_LAYER",
       notPrimaryFactualCorpus: true,
+      serverDeliveredAt: new Date().toISOString(),
+      realtimeSlaMaxLatencyMs: this._getRealtimeSlaMaxLatencyMs(),
       total: items.length,
       items,
+      cityFallbackTotal: cityFallbackItems.length,
+      cityFallbackItems,
+    };
+  }
+
+  async listGroundedUpdatesForDestination(
+    idOrSlug: string,
+    limit: number = 10,
+    scopeFilter?: "POI" | "CITY",
+  ) {
+    const safeLimit = Math.min(Math.max(1, limit), 50);
+    const trimmed = idOrSlug.trim();
+    const isUuid = UUID_REGEX.test(trimmed);
+
+    const destination = await this.prisma.destination.findUnique({
+      where: isUuid ? { id: trimmed } : { slug: trimmed.toLowerCase() },
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+        deletedAt: true,
+      },
+    });
+
+    if (!destination || destination.deletedAt) {
+      throw new NotFoundException({
+        message: `Destination "${idOrSlug}" not found`,
+        errorCode: YOUTUBE_ERROR_CODES.DESTINATION_NOT_FOUND,
+      });
+    }
+
+    const destinationMeta = {
+      id: destination.id,
+      slug: destination.slug,
+    };
+
+    const statusWhere: Prisma.YoutubePoiUpdateWhereInput["status"] =
+      scopeFilter === "CITY"
+        ? YoutubeUpdateStatus.LINKED_CITY
+        : scopeFilter === "POI"
+          ? YoutubeUpdateStatus.LINKED
+          : {
+              in: [
+                YoutubeUpdateStatus.LINKED_CITY,
+                YoutubeUpdateStatus.LINKED,
+              ],
+            };
+
+    const [itemRows, cityRows] = await Promise.all([
+      this.prisma.youtubePoiUpdate.findMany({
+        where: {
+          destinationId: destination.id,
+          status: statusWhere,
+        },
+        orderBy: [
+          { publishedAt: "desc" },
+          { sourceUpdatedAt: "desc" },
+          { receivedAt: "desc" },
+        ],
+        take: safeLimit * 3,
+      }),
+      scopeFilter === "POI"
+        ? Promise.resolve([])
+        : this.prisma.youtubePoiUpdate.findMany({
+            where: {
+              destinationId: destination.id,
+              status: YoutubeUpdateStatus.LINKED_CITY,
+              scope: YoutubeUpdateScope.CITY,
+              placeId: null,
+            },
+            orderBy: [
+              { publishedAt: "desc" },
+              { sourceUpdatedAt: "desc" },
+              { receivedAt: "desc" },
+            ],
+            take: safeLimit * 3,
+          }),
+    ]);
+
+    const items = this._dedupeAndSerialize(
+      itemRows,
+      destinationMeta,
+      safeLimit,
+    );
+    const cityFallbackItems = this._dedupeAndSerialize(
+      cityRows,
+      destinationMeta,
+      safeLimit,
+    );
+
+    return {
+      placeId: null,
+      placeName: null,
+      destinationId: destination.id,
+      destinationSlug: destination.slug,
+      destinationName: destination.name,
+      governanceRole: "DYNAMIC_SOCIAL_FRESHNESS_LAYER",
+      notPrimaryFactualCorpus: true,
+      serverDeliveredAt: new Date().toISOString(),
+      realtimeSlaMaxLatencyMs: this._getRealtimeSlaMaxLatencyMs(),
+      total: items.length,
+      items,
+      cityFallbackTotal: cityFallbackItems.length,
+      cityFallbackItems,
     };
   }
 }

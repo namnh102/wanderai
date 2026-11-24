@@ -1,14 +1,17 @@
 import { BadRequestException, UnauthorizedException } from "@nestjs/common";
 import * as crypto from "crypto";
+import { YOUTUBE_ERROR_CODES } from "../../common/constants/youtube-error-codes";
 import {
   EXPLICIT_TZ_ISO_REGEX,
   YOUTUBE_VIDEO_ID_REGEX,
 } from "./dto/youtube-update.dto";
 
 export const MAX_COORDINATE_MATCH_METERS = 250;
+export const MAX_CITY_COORDINATE_MATCH_METERS = 50_000;
 
 export interface VerifiedPlaceCandidate {
   id: string;
+  destinationId: string;
   name: string;
   nameEn: string | null;
   address: string | null;
@@ -23,6 +26,16 @@ export interface VerifiedPlaceCandidate {
     canonicalUrl: string | null;
   }>;
   verifiedAliases: string[];
+}
+
+export interface VerifiedDestinationCandidate {
+  id: string;
+  name: string;
+  nameEn: string | null;
+  slug: string;
+  province: string | null;
+  latitude: number | null;
+  longitude: number | null;
 }
 
 export interface NormalizedYoutubeEventInput {
@@ -41,8 +54,10 @@ export interface NormalizedYoutubeEventInput {
 }
 
 export interface GroundingDecision {
-  status: "LINKED" | "UNLINKED_NO_BASIS";
+  status: "LINKED" | "LINKED_CITY" | "UNLINKED_NO_BASIS";
+  scope: "POI" | "CITY" | "NONE";
   placeId: string | null;
+  destinationId: string | null;
   groundingBasis: string | null;
   decisionReason: string;
   groundingEvidence: Record<string, unknown>;
@@ -269,9 +284,175 @@ function destinationContextTermsForPlace(
   return [...terms].filter((t) => t.length >= 3);
 }
 
+function evaluateDestinationCityFallback(
+  event: NormalizedYoutubeEventInput,
+  foldedCorpus: string,
+  mentionedSlugs: string[],
+  hasCoords: boolean,
+  verifiedDestinations: VerifiedDestinationCandidate[],
+): GroundingDecision | null {
+  if (verifiedDestinations.length === 0) {
+    return null;
+  }
+
+  if (mentionedSlugs.length > 1) {
+    return {
+      status: "UNLINKED_NO_BASIS",
+      scope: "NONE",
+      placeId: null,
+      destinationId: null,
+      groundingBasis: null,
+      decisionReason: "conflicting_city_mention",
+      groundingEvidence: {
+        dataGovernanceRole: "DYNAMIC_SOCIAL_FRESHNESS_LAYER",
+        notPrimaryFactualCorpus: true,
+        mentionedDestinations: mentionedSlugs,
+        eventCoordinates: hasCoords
+          ? { latitude: event.latitude, longitude: event.longitude }
+          : null,
+      },
+    };
+  }
+
+  const matchedDestinations: Array<{
+    dest: VerifiedDestinationCandidate;
+    matchedTerms: string[];
+  }> = [];
+
+  for (const dest of verifiedDestinations) {
+    const terms = new Set<string>();
+    for (const raw of [dest.name, dest.nameEn, dest.province]) {
+      if (raw && raw.trim().length >= 3) {
+        const folded = foldVietnamese(raw);
+        if (folded.length >= 3) {
+          terms.add(folded);
+        }
+      }
+    }
+    const slugAsWords = foldVietnamese(dest.slug.replace(/-/g, " "));
+    if (slugAsWords.length >= 3) {
+      terms.add(slugAsWords);
+    }
+    const known = KNOWN_VIETNAM_DESTINATION_GROUPS.find(
+      (g) => g.canonicalSlug === dest.slug,
+    );
+    if (known) {
+      for (const t of known.terms) {
+        terms.add(t);
+      }
+    }
+
+    const matchedTerms = [...terms].filter((t) =>
+      containsWholePhrase(foldedCorpus, t),
+    );
+    const matchesSlug = mentionedSlugs.includes(dest.slug);
+
+    if (matchesSlug || matchedTerms.length > 0) {
+      matchedDestinations.push({ dest, matchedTerms });
+    }
+  }
+
+  if (matchedDestinations.length === 0) {
+    return null;
+  }
+
+  if (matchedDestinations.length > 1) {
+    return {
+      status: "UNLINKED_NO_BASIS",
+      scope: "NONE",
+      placeId: null,
+      destinationId: null,
+      groundingBasis: null,
+      decisionReason: "ambiguous_destination_match",
+      groundingEvidence: {
+        dataGovernanceRole: "DYNAMIC_SOCIAL_FRESHNESS_LAYER",
+        notPrimaryFactualCorpus: true,
+        candidateDestinationIds: matchedDestinations.map((m) => m.dest.id),
+        mentionedDestinations: mentionedSlugs,
+      },
+    };
+  }
+
+  const winner = matchedDestinations[0];
+  const dest = winner.dest;
+
+  if (mentionedSlugs.some((s) => s !== dest.slug)) {
+    return {
+      status: "UNLINKED_NO_BASIS",
+      scope: "NONE",
+      placeId: null,
+      destinationId: null,
+      groundingBasis: null,
+      decisionReason: "conflicting_city_mention",
+      groundingEvidence: {
+        dataGovernanceRole: "DYNAMIC_SOCIAL_FRESHNESS_LAYER",
+        notPrimaryFactualCorpus: true,
+        candidateDestinationId: dest.id,
+        mentionedDestinations: mentionedSlugs,
+      },
+    };
+  }
+
+  let distanceMeters: number | null = null;
+  if (hasCoords && dest.latitude !== null && dest.longitude !== null) {
+    distanceMeters =
+      Math.round(
+        haversineMeters(
+          event.latitude as number,
+          event.longitude as number,
+          dest.latitude,
+          dest.longitude,
+        ) * 10,
+      ) / 10;
+    if (distanceMeters > MAX_CITY_COORDINATE_MATCH_METERS) {
+      return {
+        status: "UNLINKED_NO_BASIS",
+        scope: "NONE",
+        placeId: null,
+        destinationId: null,
+        groundingBasis: null,
+        decisionReason: "coordinate_conflict_with_destination",
+        groundingEvidence: {
+          dataGovernanceRole: "DYNAMIC_SOCIAL_FRESHNESS_LAYER",
+          notPrimaryFactualCorpus: true,
+          candidateDestinationId: dest.id,
+          candidateDestinationSlug: dest.slug,
+          distanceMeters,
+          maxAllowedMeters: MAX_CITY_COORDINATE_MATCH_METERS,
+          mentionedDestinations: mentionedSlugs,
+          eventCoordinates: {
+            latitude: event.latitude,
+            longitude: event.longitude,
+          },
+        },
+      };
+    }
+  }
+
+  return {
+    status: "LINKED_CITY",
+    scope: "CITY",
+    placeId: null,
+    destinationId: dest.id,
+    groundingBasis: "UNIQUE_DESTINATION_CONTEXT_FALLBACK",
+    decisionReason: "verified_destination_city_fallback_passed",
+    groundingEvidence: {
+      dataGovernanceRole: "DYNAMIC_SOCIAL_FRESHNESS_LAYER",
+      notPrimaryFactualCorpus: true,
+      matchedDestinationId: dest.id,
+      matchedDestinationName: dest.name,
+      destinationSlug: dest.slug,
+      matchedContextTerms: winner.matchedTerms,
+      mentionedDestinations: mentionedSlugs,
+      distanceMeters,
+    },
+  };
+}
+
 export function evaluatePoiGrounding(
   event: NormalizedYoutubeEventInput,
   verifiedCandidates: VerifiedPlaceCandidate[],
+  verifiedDestinations: VerifiedDestinationCandidate[] = [],
 ): GroundingDecision {
   const rawCorpus = [event.title, event.description ?? "", ...event.tags]
     .filter(Boolean)
@@ -282,20 +463,7 @@ export function evaluatePoiGrounding(
 
   const hasCoords =
     typeof event.latitude === "number" && typeof event.longitude === "number";
-
-  if (verifiedCandidates.length === 0) {
-    return {
-      status: "UNLINKED_NO_BASIS",
-      placeId: null,
-      groundingBasis: null,
-      decisionReason: "no_verified_poi_candidates",
-      groundingEvidence: {
-        dataGovernanceRole: "DYNAMIC_SOCIAL_FRESHNESS_LAYER",
-        notPrimaryFactualCorpus: true,
-        videoId: event.videoId,
-      },
-    };
-  }
+  const mentionedSlugs = detectMentionedDestinationSlugs(foldedCorpus);
 
   if (event.candidatePlaceId) {
     const targetExists = verifiedCandidates.some(
@@ -304,7 +472,9 @@ export function evaluatePoiGrounding(
     if (!targetExists) {
       return {
         status: "UNLINKED_NO_BASIS",
+        scope: "NONE",
         placeId: null,
+        destinationId: null,
         groundingBasis: null,
         decisionReason: "target_place_unverified_or_missing",
         groundingEvidence: {
@@ -316,7 +486,31 @@ export function evaluatePoiGrounding(
     }
   }
 
-  const mentionedSlugs = detectMentionedDestinationSlugs(foldedCorpus);
+  if (verifiedCandidates.length === 0) {
+    const cityFallback = evaluateDestinationCityFallback(
+      event,
+      foldedCorpus,
+      mentionedSlugs,
+      hasCoords,
+      verifiedDestinations,
+    );
+    if (cityFallback) {
+      return cityFallback;
+    }
+    return {
+      status: "UNLINKED_NO_BASIS",
+      scope: "NONE",
+      placeId: null,
+      destinationId: null,
+      groundingBasis: null,
+      decisionReason: "no_verified_poi_candidates",
+      groundingEvidence: {
+        dataGovernanceRole: "DYNAMIC_SOCIAL_FRESHNESS_LAYER",
+        notPrimaryFactualCorpus: true,
+        videoId: event.videoId,
+      },
+    };
+  }
 
   interface ScoredMatch {
     candidate: VerifiedPlaceCandidate;
@@ -462,6 +656,24 @@ export function evaluatePoiGrounding(
   }
 
   if (passing.length === 0) {
+    if (
+      !sawCoordConflict &&
+      !sawCityConflict &&
+      !sawNameOnlyWithoutContext &&
+      !event.candidatePlaceId
+    ) {
+      const cityFallback = evaluateDestinationCityFallback(
+        event,
+        foldedCorpus,
+        mentionedSlugs,
+        hasCoords,
+        verifiedDestinations,
+      );
+      if (cityFallback) {
+        return cityFallback;
+      }
+    }
+
     let reason = "no_poi_name_or_coordinate_match";
     if (sawCoordConflict) {
       reason = "coordinate_conflict_with_poi";
@@ -472,7 +684,9 @@ export function evaluatePoiGrounding(
     }
     return {
       status: "UNLINKED_NO_BASIS",
+      scope: "NONE",
       placeId: null,
+      destinationId: null,
       groundingBasis: null,
       decisionReason: reason,
       groundingEvidence: {
@@ -505,7 +719,9 @@ export function evaluatePoiGrounding(
     if (tiedTier && tiedDistance) {
       return {
         status: "UNLINKED_NO_BASIS",
+        scope: "NONE",
         placeId: null,
+        destinationId: null,
         groundingBasis: null,
         decisionReason: "ambiguous_multiple_poi_candidates",
         groundingEvidence: {
@@ -520,7 +736,9 @@ export function evaluatePoiGrounding(
   const winner = passing[0];
   return {
     status: "LINKED",
+    scope: "POI",
     placeId: winner.candidate.id,
+    destinationId: winner.candidate.destinationId,
     groundingBasis: winner.basis,
     decisionReason: "verified_poi_grounding_passed",
     groundingEvidence: {
@@ -528,6 +746,7 @@ export function evaluatePoiGrounding(
       notPrimaryFactualCorpus: true,
       matchedPlaceId: winner.candidate.id,
       matchedPlaceName: winner.candidate.name,
+      destinationId: winner.candidate.destinationId,
       destinationSlug: winner.candidate.destinationSlug,
       matchedPhrases: winner.matchedPhrases,
       matchedContextTerms: winner.matchedContextTerms,
@@ -566,29 +785,35 @@ export function verifyWebSubSignature(
   signatureHeader: string | undefined,
   secret: string | undefined,
 ): void {
-  if (!secret || !secret.trim()) {
+  const trimmedSecret = secret?.trim();
+  if (!trimmedSecret) {
     return;
   }
   if (!signatureHeader || !signatureHeader.includes("=")) {
-    throw new UnauthorizedException(
-      "Missing or malformed X-Hub-Signature header",
-    );
+    throw new UnauthorizedException({
+      message: "Missing or malformed X-Hub-Signature header",
+      errorCode: YOUTUBE_ERROR_CODES.YOUTUBE_EVENT_UNAUTHORIZED,
+    });
   }
   const [algoRaw, providedHex] = signatureHeader.trim().split("=", 2);
   const algo = algoRaw.toLowerCase();
   if (algo !== "sha1" && algo !== "sha256") {
-    throw new UnauthorizedException(
-      `Unsupported WebSub signature algorithm: ${algo}`,
-    );
+    throw new UnauthorizedException({
+      message: `Unsupported WebSub signature algorithm: ${algo}`,
+      errorCode: YOUTUBE_ERROR_CODES.YOUTUBE_EVENT_UNAUTHORIZED,
+    });
   }
   const expectedHex = crypto
-    .createHmac(algo, secret)
+    .createHmac(algo, trimmedSecret)
     .update(rawBody, "utf8")
     .digest("hex");
   const a = Buffer.from(expectedHex, "utf8");
   const b = Buffer.from(providedHex.toLowerCase(), "utf8");
   if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) {
-    throw new UnauthorizedException("Invalid WebSub X-Hub-Signature digest");
+    throw new UnauthorizedException({
+      message: "Invalid WebSub X-Hub-Signature digest",
+      errorCode: YOUTUBE_ERROR_CODES.YOUTUBE_EVENT_UNAUTHORIZED,
+    });
   }
 }
 

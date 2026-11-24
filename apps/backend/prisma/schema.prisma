@@ -167,8 +167,9 @@ model Destination {
   updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz
   deletedAt   DateTime? @map("deleted_at") @db.Timestamptz
 
-  places      Place[]
-  trips       Trip[]
+  places         Place[]
+  trips          Trip[]
+  youtubeUpdates YoutubePoiUpdate[]
 
   @@map("destinations")
 }
@@ -756,7 +757,14 @@ model Document {
 
 enum YoutubeUpdateStatus {
   LINKED
+  LINKED_CITY
   UNLINKED_NO_BASIS
+}
+
+enum YoutubeUpdateScope {
+  POI
+  CITY
+  NONE
 }
 
 model YoutubePoiUpdate {
@@ -777,15 +785,19 @@ model YoutubePoiUpdate {
   lastReceivedAt    DateTime            @default(now()) @map("last_received_at") @db.Timestamptz
   deliveryCount     Int                 @default(1) @map("delivery_count")
   status            YoutubeUpdateStatus @default(UNLINKED_NO_BASIS)
+  scope             YoutubeUpdateScope  @default(NONE)
   placeId           String?             @map("place_id") @db.Uuid
+  destinationId     String?             @map("destination_id") @db.Uuid
   groundingBasis    String?             @map("grounding_basis") @db.VarChar(100)
   decisionReason    String              @map("decision_reason") @db.VarChar(120)
   groundingEvidence Json?               @map("grounding_evidence")
   rawPayload        Json?               @map("raw_payload")
 
   place             Place?              @relation(fields: [placeId], references: [id], onDelete: SetNull)
+  destination       Destination?        @relation(fields: [destinationId], references: [id], onDelete: SetNull)
 
   @@index([placeId, status, publishedAt(sort: Desc)])
+  @@index([destinationId, status, scope, publishedAt(sort: Desc)])
   @@index([videoId, publishedAt(sort: Desc)])
   @@map("youtube_poi_updates")
 }

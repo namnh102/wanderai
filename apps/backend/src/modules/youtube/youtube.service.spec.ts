@@ -1,24 +1,54 @@
 import {
   BadRequestException,
+  ExecutionContext,
   ForbiddenException,
+  NotFoundException,
   UnauthorizedException,
 } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
-import { Prisma, YoutubeUpdateStatus } from "@prisma/client";
+import {
+  Prisma,
+  YoutubeUpdateScope,
+  YoutubeUpdateStatus,
+} from "@prisma/client";
 import * as crypto from "crypto";
+import { YOUTUBE_ERROR_CODES } from "../../common/constants/youtube-error-codes";
 import { PrismaService } from "../../prisma/prisma.service";
+import { YoutubeInternalSecretGuard } from "./guards/youtube-internal-secret.guard";
 import {
   computeYoutubeDedupeKey,
   evaluatePoiGrounding,
   extractVerifiedAliasesFromDescription,
   parseYoutubeAtomFeed,
+  VerifiedDestinationCandidate,
   VerifiedPlaceCandidate,
   verifyWebSubSignature,
 } from "./youtube-grounding";
 import { YoutubeService } from "./youtube.service";
 
+const HA_LONG_DESTINATION: VerifiedDestinationCandidate = {
+  id: "11111111-1111-4111-8111-111111111111",
+  name: "Hạ Long",
+  nameEn: "Ha Long",
+  slug: "ha-long",
+  province: "Quảng Ninh",
+  latitude: 20.95,
+  longitude: 107.08,
+};
+
+const PHU_QUOC_DESTINATION: VerifiedDestinationCandidate = {
+  id: "22222222-2222-4222-8222-222222222222",
+  name: "Phú Quốc",
+  nameEn: "Phu Quoc",
+  slug: "phu-quoc",
+  province: "Kiên Giang",
+  latitude: 10.227,
+  longitude: 103.957,
+};
+
 const THAP_DONG_HO_CANDIDATE: VerifiedPlaceCandidate = {
   id: "65562a67-84ff-44a0-990d-31917a2a9bd0",
+  destinationId: HA_LONG_DESTINATION.id,
   name: "Tháp Đồng Hồ",
   nameEn: null,
   address: null,
@@ -220,7 +250,9 @@ describe("YouTube Update Ingestion, Deduplication & POI Grounding Gate", () => {
       lastReceivedAt: firstReceived,
       deliveryCount: 1,
       status: YoutubeUpdateStatus.LINKED,
+      scope: YoutubeUpdateScope.POI,
       placeId: THAP_DONG_HO_CANDIDATE.id,
+      destinationId: HA_LONG_DESTINATION.id,
       groundingBasis: "UNIQUE_NAME_AND_DESTINATION_CONTEXT",
       decisionReason: "verified_poi_grounding_passed",
       groundingEvidence: {},
@@ -252,6 +284,7 @@ describe("YouTube Update Ingestion, Deduplication & POI Grounding Gate", () => {
         findMany: jest.fn().mockResolvedValue([
           {
             id: THAP_DONG_HO_CANDIDATE.id,
+            destinationId: HA_LONG_DESTINATION.id,
             name: THAP_DONG_HO_CANDIDATE.name,
             nameEn: null,
             description:
@@ -259,6 +292,7 @@ describe("YouTube Update Ingestion, Deduplication & POI Grounding Gate", () => {
             latitude: THAP_DONG_HO_CANDIDATE.latitude,
             longitude: THAP_DONG_HO_CANDIDATE.longitude,
             destination: {
+              id: HA_LONG_DESTINATION.id,
               name: "Hạ Long",
               slug: "ha-long",
               province: "Quảng Ninh",
@@ -272,6 +306,9 @@ describe("YouTube Update Ingestion, Deduplication & POI Grounding Gate", () => {
             ],
           },
         ]),
+      },
+      destination: {
+        findMany: jest.fn().mockResolvedValue([HA_LONG_DESTINATION]),
       },
       youtubePoiUpdate: {
         findUnique,
@@ -329,5 +366,266 @@ describe("YouTube Update Ingestion, Deduplication & POI Grounding Gate", () => {
     });
     expect(r3.duplicate).toBe(true);
     expect(r3.receivedAt).toBe(r1.receivedAt);
+  });
+
+  it("supports Hạ Long city-level fallback while keeping POI conflict gates fail-closed", () => {
+    const destinations = [HA_LONG_DESTINATION, PHU_QUOC_DESTINATION];
+
+    // Generic Hạ Long vlog -> LINKED_CITY
+    const cityFallback = evaluatePoiGrounding(
+      {
+        videoId: "GenericHL02",
+        channelId: "UC_HL_FOOD",
+        title: "Ăn hải sản Hạ Long 2 ngày 1 đêm",
+        description: "Kinh nghiệm du lịch tự túc Quảng Ninh",
+        tags: ["halong"],
+        publishedAt: new Date("2026-11-24T12:00:00Z"),
+        latitude: 20.955,
+        longitude: 107.09,
+      },
+      [THAP_DONG_HO_CANDIDATE],
+      destinations,
+    );
+    expect(cityFallback.status).toBe("LINKED_CITY");
+    expect(cityFallback.scope).toBe("CITY");
+    expect(cityFallback.placeId).toBeNull();
+    expect(cityFallback.destinationId).toBe(HA_LONG_DESTINATION.id);
+    expect(cityFallback.groundingBasis).toBe(
+      "UNIQUE_DESTINATION_CONTEXT_FALLBACK",
+    );
+    expect(cityFallback.decisionReason).toBe(
+      "verified_destination_city_fallback_passed",
+    );
+
+    // Multi-city conflict fails closed
+    const multiCity = evaluatePoiGrounding(
+      {
+        videoId: "MultiCity01",
+        channelId: "UC_TRAVEL",
+        title: "So sánh du lịch Hạ Long và Phú Quốc",
+        description: "Hành trình từ Quảng Ninh tới Kiên Giang",
+        tags: [],
+        publishedAt: new Date("2026-11-24T12:00:00Z"),
+      },
+      [THAP_DONG_HO_CANDIDATE],
+      destinations,
+    );
+    expect(multiCity.status).toBe("UNLINKED_NO_BASIS");
+    expect(multiCity.scope).toBe("NONE");
+    expect(multiCity.destinationId).toBeNull();
+    expect(multiCity.decisionReason).toBe("conflicting_city_mention");
+
+    // Destination coordinate conflict (> 50km) fails closed
+    const farCoords = evaluatePoiGrounding(
+      {
+        videoId: "CityFar0001",
+        channelId: "UC_TRAVEL",
+        title: "Kinh nghiệm du lịch Hạ Long",
+        description: "Gắn nhầm tọa độ GPS cách trung tâm hơn 50km",
+        tags: [],
+        publishedAt: new Date("2026-11-24T12:00:00Z"),
+        latitude: 21.0285,
+        longitude: 105.8542,
+      },
+      [THAP_DONG_HO_CANDIDATE],
+      destinations,
+    );
+    expect(farCoords.status).toBe("UNLINKED_NO_BASIS");
+    expect(farCoords.scope).toBe("NONE");
+    expect(farCoords.destinationId).toBeNull();
+    expect(farCoords.decisionReason).toBe("coordinate_conflict_with_destination");
+
+    // Existing POI coordinate conflict must NOT fall back to LINKED_CITY
+    const poiCoordConflict = evaluatePoiGrounding(
+      {
+        videoId: "TDHBadCoord",
+        channelId: "UC_VLOG",
+        title: "Tháp Đồng Hồ Hạ Long",
+        description: "Quay tại đảo Tuần Châu",
+        tags: [],
+        publishedAt: new Date("2026-11-24T12:00:00Z"),
+        latitude: 20.91656,
+        longitude: 106.98958,
+      },
+      [THAP_DONG_HO_CANDIDATE],
+      destinations,
+    );
+    expect(poiCoordConflict.status).toBe("UNLINKED_NO_BASIS");
+    expect(poiCoordConflict.scope).toBe("NONE");
+    expect(poiCoordConflict.decisionReason).toBe("coordinate_conflict_with_poi");
+
+    // Existing unverified candidatePlaceId must NOT fall back to LINKED_CITY
+    const unverifiedTarget = evaluatePoiGrounding(
+      {
+        videoId: "TDHUnverif1",
+        channelId: "UC_VLOG",
+        title: "Địa điểm chưa xác minh tại Hạ Long",
+        tags: [],
+        publishedAt: new Date("2026-11-24T12:00:00Z"),
+        candidatePlaceId: "99999999-9999-4999-8999-999999999999",
+      },
+      [THAP_DONG_HO_CANDIDATE],
+      destinations,
+    );
+    expect(unverifiedTarget.status).toBe("UNLINKED_NO_BASIS");
+    expect(unverifiedTarget.scope).toBe("NONE");
+    expect(unverifiedTarget.decisionReason).toBe(
+      "target_place_unverified_or_missing",
+    );
+  });
+
+  it("serializes 5-field contract, latency metrics, cityFallbackItems, and throws canonical errorCodes on 404", async () => {
+    const published = new Date("2026-11-24T12:00:00.000Z");
+    const sourceUpdated = new Date("2026-11-24T12:00:05.000Z");
+    const received = new Date("2026-11-24T12:00:12.000Z");
+    const lastReceived = new Date("2026-11-24T12:01:00.000Z");
+
+    const poiRow = {
+      id: "poi-row-1",
+      dedupeKey: "yt:video:PoiItem0001:2026-11-24T12:00:05.000Z",
+      videoId: "PoiItem0001",
+      channelId: "UC_HL",
+      channelTitle: "Hạ Long TV",
+      videoUrl: "https://www.youtube.com/watch?v=PoiItem0001",
+      title: "Tháp Đồng Hồ Hạ Long",
+      description: "Check-in buổi tối",
+      tags: ["halong"],
+      latitude: 20.95161,
+      longitude: 107.0852,
+      publishedAt: published,
+      sourceUpdatedAt: sourceUpdated,
+      receivedAt: received,
+      lastReceivedAt: lastReceived,
+      deliveryCount: 2,
+      status: YoutubeUpdateStatus.LINKED,
+      scope: YoutubeUpdateScope.POI,
+      placeId: THAP_DONG_HO_CANDIDATE.id,
+      destinationId: HA_LONG_DESTINATION.id,
+      groundingBasis: "NAME_AND_COORDINATE_CORROBORATION",
+      decisionReason: "verified_poi_grounding_passed",
+      groundingEvidence: {},
+      rawPayload: {},
+    };
+
+    const cityRow = {
+      ...poiRow,
+      id: "city-row-1",
+      dedupeKey: "yt:video:CityItem001:2026-11-24T12:00:00.000Z",
+      videoId: "CityItem001",
+      videoUrl: "https://www.youtube.com/watch?v=CityItem001",
+      title: "Ẩm thực Hạ Long",
+      sourceUpdatedAt: null,
+      status: YoutubeUpdateStatus.LINKED_CITY,
+      scope: YoutubeUpdateScope.CITY,
+      placeId: null,
+      groundingBasis: "UNIQUE_DESTINATION_CONTEXT_FALLBACK",
+      decisionReason: "verified_destination_city_fallback_passed",
+    };
+
+    const mockPrisma = {
+      place: {
+        findUnique: jest.fn().mockResolvedValue({
+          id: THAP_DONG_HO_CANDIDATE.id,
+          name: "Tháp Đồng Hồ",
+          deletedAt: null,
+          destinationId: HA_LONG_DESTINATION.id,
+          destination: {
+            id: HA_LONG_DESTINATION.id,
+            slug: "ha-long",
+            name: "Hạ Long",
+          },
+          _count: { placeSources: 1 },
+        }),
+      },
+      destination: {
+        findUnique: jest.fn().mockResolvedValue(null),
+      },
+      youtubePoiUpdate: {
+        findMany: jest
+          .fn()
+          .mockResolvedValueOnce([poiRow])
+          .mockResolvedValueOnce([cityRow]),
+      },
+    } as unknown as PrismaService;
+
+    const mockConfig = {
+      get: jest.fn((key: string) =>
+        key === "YOUTUBE_REALTIME_SLA_MAX_LATENCY_MS" ? "300000" : undefined,
+      ),
+    } as unknown as ConfigService;
+
+    const service = new YoutubeService(mockPrisma, mockConfig);
+    const placeFeed = await service.listGroundedUpdatesForPlace(
+      THAP_DONG_HO_CANDIDATE.id,
+      10,
+    );
+
+    expect(placeFeed.destinationId).toBe(HA_LONG_DESTINATION.id);
+    expect(placeFeed.destinationSlug).toBe("ha-long");
+    expect(placeFeed.destinationName).toBe("Hạ Long");
+    expect(placeFeed.realtimeSlaMaxLatencyMs).toBe(300000);
+    expect(placeFeed.serverDeliveredAt).toBeTruthy();
+    expect(placeFeed.total).toBe(1);
+    expect(placeFeed.cityFallbackTotal).toBe(1);
+
+    const item = placeFeed.items[0];
+    expect(item.placeId).toBe(THAP_DONG_HO_CANDIDATE.id);
+    expect(item.source).toBe("youtube");
+    expect(item.publishedAt).toBe("2026-11-24T12:00:00.000Z");
+    expect(item.receivedAt).toBe("2026-11-24T12:00:12.000Z");
+    expect(item.updatedAt).toBe("2026-11-24T12:00:05.000Z");
+    expect(item.ingestLatencyMs).toBe(12000);
+    expect(item.deliveryLagMs).toBe(60000);
+    expect(item.scope).toBe("POI");
+
+    const cityItem = placeFeed.cityFallbackItems[0];
+    expect(cityItem.placeId).toBeNull();
+    expect(cityItem.source).toBe("youtube");
+    expect(cityItem.scope).toBe("CITY");
+    expect(cityItem.updatedAt).toBe("2026-11-24T12:01:00.000Z");
+
+    await expect(
+      service.listGroundedUpdatesForDestination("unknown-slug", 10),
+    ).rejects.toThrow(NotFoundException);
+  });
+
+  it("enforces YoutubeInternalSecretGuard using timingSafeEqual when configured", () => {
+    const makeCtx = (headers: Record<string, string | undefined>) =>
+      ({
+        switchToHttp: () => ({
+          getRequest: () => ({ headers }),
+        }),
+      }) as unknown as ExecutionContext;
+
+    const openGuard = new YoutubeInternalSecretGuard({
+      get: () => "",
+    } as unknown as ConfigService);
+    expect(openGuard.canActivate(makeCtx({}))).toBe(true);
+
+    const strictGuard = new YoutubeInternalSecretGuard({
+      get: (k: string) =>
+        k === "YOUTUBE_EVENTS_INTERNAL_SECRET" ? "super-secret-token" : "",
+    } as unknown as ConfigService);
+
+    expect(
+      strictGuard.canActivate(
+        makeCtx({ "x-youtube-internal-secret": "super-secret-token" }),
+      ),
+    ).toBe(true);
+
+    try {
+      strictGuard.canActivate(
+        makeCtx({ "x-youtube-internal-secret": "wrong-token" }),
+      );
+      fail("Expected UnauthorizedException");
+    } catch (err) {
+      expect(err).toBeInstanceOf(UnauthorizedException);
+      const response = (err as UnauthorizedException).getResponse() as {
+        errorCode?: string;
+      };
+      expect(response.errorCode).toBe(
+        YOUTUBE_ERROR_CODES.YOUTUBE_EVENT_UNAUTHORIZED,
+      );
+    }
   });
 });

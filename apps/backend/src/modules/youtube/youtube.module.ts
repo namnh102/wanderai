@@ -6,17 +6,23 @@ import {
 } from "@nestjs/common";
 import * as express from "express";
 import { PrismaModule } from "../../prisma/prisma.module";
+import { YoutubeInternalSecretGuard } from "./guards/youtube-internal-secret.guard";
 import {
   RawXmlRequest,
   YoutubeController,
+  YoutubeDestinationUpdatesController,
   YoutubePlaceUpdatesController,
 } from "./youtube.controller";
 import { YoutubeService } from "./youtube.service";
 
 @Module({
   imports: [PrismaModule],
-  controllers: [YoutubeController, YoutubePlaceUpdatesController],
-  providers: [YoutubeService],
+  controllers: [
+    YoutubeController,
+    YoutubePlaceUpdatesController,
+    YoutubeDestinationUpdatesController,
+  ],
+  providers: [YoutubeService, YoutubeInternalSecretGuard],
   exports: [YoutubeService],
 })
 export class YoutubeModule implements NestModule {

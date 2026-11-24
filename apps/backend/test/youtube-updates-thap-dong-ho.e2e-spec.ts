@@ -2,6 +2,7 @@ import { INestApplication, ValidationPipe } from "@nestjs/common";
 import { Test, TestingModule } from "@nestjs/testing";
 import * as request from "supertest";
 import { AppModule } from "../src/app.module";
+import { YOUTUBE_ERROR_CODES } from "../src/common/constants/youtube-error-codes";
 import { HttpExceptionFilter } from "../src/common/filters/http-exception.filter";
 import { TransformInterceptor } from "../src/common/interceptors/transform.interceptor";
 import { PrismaService } from "../src/prisma/prisma.service";
@@ -16,6 +17,7 @@ describe("YouTube Update Receiver Integration (Tháp Đồng Hồ POI fixture)",
   let prisma: PrismaService;
   let createdThapDongHoInTest = false;
   let createdHaLongDestId: string | null = null;
+  let haLongDestId = "";
   let unverifiedLegacyPlaceId = "";
   const testDedupePrefixes = [
     "yt:video:TDHWebSub01:",
@@ -24,6 +26,7 @@ describe("YouTube Update Receiver Integration (Tháp Đồng Hồ POI fixture)",
     "yt:video:TDHNoCity01:",
     "yt:video:TDHBadCoord:",
     "yt:video:TDHUnverif1:",
+    "yt:video:TDHHaLong01:",
   ];
 
   const http = () => request(app.getHttpServer());
@@ -65,6 +68,7 @@ describe("YouTube Update Receiver Integration (Tháp Đồng Hồ POI fixture)",
       });
       createdHaLongDestId = haLong.id;
     }
+    haLongDestId = haLong.id;
 
     const existingThap = await prisma.place.findUnique({
       where: { id: THAP_DONG_HO_ID },
@@ -379,14 +383,47 @@ describe("YouTube Update Receiver Integration (Tháp Đồng Hồ POI fixture)",
       "target_place_unverified_or_missing",
     );
 
-    // Truy vấn danh sách bài đã gắn cho Tháp Đồng Hồ: chỉ trả về đúng 2 video đủ căn cứ
+    // Case E: Video chung toàn Hạ Long (không nhắc POI) -> fallback LINKED_CITY ở cấp thành phố
+    const cityFallbackRes = await http()
+      .post("/youtube/events")
+      .send({
+        videoId: "TDHHaLong01",
+        channelId: "UCGeneric",
+        title: "Ăn hải sản Hạ Long 2 ngày 1 đêm",
+        description: "Kinh nghiệm du lịch tự túc Quảng Ninh",
+        publishedAt: "2026-11-24T16:20:00Z",
+      })
+      .expect(200);
+    expect(cityFallbackRes.body.data.status).toBe("LINKED_CITY");
+    expect(cityFallbackRes.body.data.scope).toBe("CITY");
+    expect(cityFallbackRes.body.data.linkedPlaceId).toBeNull();
+    expect(cityFallbackRes.body.data.destinationId).toBe(haLongDestId);
+
+    // Truy vấn danh sách bài đã gắn cho Tháp Đồng Hồ: chỉ trả về đúng 2 video POI đủ căn cứ + cityFallbackItems
     const listRes = await http()
       .get(`/places/${THAP_DONG_HO_ID}/youtube-updates?limit=10`)
       .expect(200);
     const listData = listRes.body.data;
     expect(listData.placeId).toBe(THAP_DONG_HO_ID);
+    expect(listData.destinationId).toBe(haLongDestId);
+    expect(listData.destinationSlug).toBe("ha-long");
     expect(listData.governanceRole).toBe("DYNAMIC_SOCIAL_FRESHNESS_LAYER");
     expect(listData.notPrimaryFactualCorpus).toBe(true);
+    expect(listData.realtimeSlaMaxLatencyMs).toBeGreaterThan(0);
+    expect(Date.parse(listData.serverDeliveredAt)).not.toBeNaN();
+
+    for (const item of listData.items) {
+      expect(item.placeId).toBe(THAP_DONG_HO_ID);
+      expect(item.source).toBe("youtube");
+      expect(item.publishedAt).toBeTruthy();
+      expect(item.receivedAt).toBeTruthy();
+      expect(item.updatedAt).toBeTruthy();
+      expect(item.scope).toBe("POI");
+      expect(item.destinationId).toBe(haLongDestId);
+      expect(item.destinationSlug).toBe("ha-long");
+      expect(item.ingestLatencyMs).toBeGreaterThanOrEqual(0);
+      expect(item.deliveryLagMs).toBeGreaterThanOrEqual(0);
+    }
 
     const returnedVideoIds = listData.items.map(
       (x: { videoId: string }) => x.videoId,
@@ -397,10 +434,43 @@ describe("YouTube Update Receiver Integration (Tháp Đồng Hồ POI fixture)",
     expect(returnedVideoIds).not.toContain("TDHNoCity01");
     expect(returnedVideoIds).not.toContain("TDHBadCoord");
     expect(returnedVideoIds).not.toContain("TDHUnverif1");
+    expect(returnedVideoIds).not.toContain("TDHHaLong01");
 
-    // Địa điểm chưa xác minh nguồn phải trả 404 khi truy vấn public endpoint
-    await http()
+    expect(listData.cityFallbackTotal).toBeGreaterThanOrEqual(1);
+    const cityFallbackIds = listData.cityFallbackItems.map(
+      (x: { videoId: string }) => x.videoId,
+    );
+    expect(cityFallbackIds).toContain("TDHHaLong01");
+    const cityFallbackItem = listData.cityFallbackItems.find(
+      (x: { videoId: string }) => x.videoId === "TDHHaLong01",
+    );
+    expect(cityFallbackItem.placeId).toBeNull();
+    expect(cityFallbackItem.source).toBe("youtube");
+    expect(cityFallbackItem.scope).toBe("CITY");
+    expect(cityFallbackItem.updatedAt).toBeTruthy();
+
+    // Truy vấn endpoint cấp thành phố Hạ Long
+    const destListRes = await http()
+      .get("/destinations/ha-long/youtube-updates?limit=10")
+      .expect(200);
+    expect(destListRes.body.data.placeId).toBeNull();
+    expect(destListRes.body.data.destinationId).toBe(haLongDestId);
+    expect(destListRes.body.data.destinationSlug).toBe("ha-long");
+    expect(destListRes.body.data.cityFallbackTotal).toBeGreaterThanOrEqual(1);
+
+    const missingDestRes = await http()
+      .get("/destinations/unknown-destination-slug/youtube-updates")
+      .expect(404);
+    expect(missingDestRes.body.errorCode).toBe(
+      YOUTUBE_ERROR_CODES.DESTINATION_NOT_FOUND,
+    );
+
+    // Địa điểm chưa xác minh nguồn phải trả 404 PLACE_NOT_FOUND khi truy vấn public endpoint
+    const unverifiedRes = await http()
       .get(`/places/${unverifiedLegacyPlaceId}/youtube-updates`)
       .expect(404);
+    expect(unverifiedRes.body.errorCode).toBe(
+      YOUTUBE_ERROR_CODES.PLACE_NOT_FOUND,
+    );
   });
 });

@@ -1,8 +1,9 @@
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
-import { Type } from "class-transformer";
+import { Transform, Type } from "class-transformer";
 import {
   ArrayMaxSize,
   IsArray,
+  IsIn,
   IsInt,
   IsISO8601,
   IsNotEmpty,
@@ -19,6 +20,14 @@ import {
 export const YOUTUBE_VIDEO_ID_REGEX = /^[A-Za-z0-9_-]{11}$/;
 export const EXPLICIT_TZ_ISO_REGEX = /(?:Z|[+-]\d{2}:\d{2})$/;
 
+const trimStringValue = ({ value }: { value: unknown }) =>
+  typeof value === "string" ? value.trim() : value;
+
+const trimStringArray = ({ value }: { value: unknown }) =>
+  Array.isArray(value)
+    ? value.map((item) => (typeof item === "string" ? item.trim() : item))
+    : value;
+
 export class IngestYoutubeEventDto {
   @ApiPropertyOptional({
     description:
@@ -26,6 +35,7 @@ export class IngestYoutubeEventDto {
     example: "yt-feed-entry-thap-dong-ho-001",
   })
   @IsOptional()
+  @Transform(trimStringValue)
   @IsString()
   @MaxLength(200)
   eventId?: string;
@@ -34,6 +44,7 @@ export class IngestYoutubeEventDto {
     description: "Mã video YouTube 11 ký tự chuẩn",
     example: "dQw4w9WgXcQ",
   })
+  @Transform(trimStringValue)
   @IsString()
   @Matches(YOUTUBE_VIDEO_ID_REGEX, {
     message: "videoId must be a valid 11-character YouTube video ID",
@@ -44,6 +55,7 @@ export class IngestYoutubeEventDto {
     description: "Mã kênh YouTube phát hành video",
     example: "UC_x5XG1OV2P6uZZ5FSM9Ttw",
   })
+  @Transform(trimStringValue)
   @IsString()
   @IsNotEmpty()
   @MaxLength(64)
@@ -54,6 +66,7 @@ export class IngestYoutubeEventDto {
     example: "Quảng Ninh Travel Official",
   })
   @IsOptional()
+  @Transform(trimStringValue)
   @IsString()
   @MaxLength(255)
   channelTitle?: string;
@@ -62,6 +75,7 @@ export class IngestYoutubeEventDto {
     description: "Tiêu đề bài đăng / video YouTube",
     example: "Check-in Tháp Đồng Hồ Hạ Long buổi tối rực rỡ",
   })
+  @Transform(trimStringValue)
   @IsString()
   @IsNotEmpty()
   @MaxLength(500)
@@ -73,6 +87,7 @@ export class IngestYoutubeEventDto {
       "Hành trình dạo quanh vòng xuyến Cột Đồng Hồ bên cạnh Vincom Plaza Hạ Long, Quảng Ninh.",
   })
   @IsOptional()
+  @Transform(trimStringValue)
   @IsString()
   @MaxLength(10000)
   description?: string;
@@ -82,6 +97,7 @@ export class IngestYoutubeEventDto {
     type: [String],
   })
   @IsOptional()
+  @Transform(trimStringArray)
   @IsArray()
   @ArrayMaxSize(50)
   @IsString({ each: true })
@@ -155,4 +171,15 @@ export class YoutubePlaceUpdatesQueryDto {
   @Min(1)
   @Max(50)
   limit: number = 10;
+}
+
+export class YoutubeDestinationUpdatesQueryDto extends YoutubePlaceUpdatesQueryDto {
+  @ApiPropertyOptional({
+    description: "Lọc theo phạm vi gắn (POI hoặc CITY)",
+    enum: ["POI", "CITY"],
+  })
+  @IsOptional()
+  @Transform(trimStringValue)
+  @IsIn(["POI", "CITY"])
+  scope?: "POI" | "CITY";
 }

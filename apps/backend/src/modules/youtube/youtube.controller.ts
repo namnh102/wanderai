@@ -1,5 +1,4 @@
 import {
-  BadRequestException,
   Body,
   Controller,
   Get,
@@ -12,13 +11,16 @@ import {
   Query,
   Req,
   Res,
+  UseGuards,
 } from "@nestjs/common";
 import { ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
 import { Request, Response } from "express";
 import {
   IngestYoutubeEventDto,
+  YoutubeDestinationUpdatesQueryDto,
   YoutubePlaceUpdatesQueryDto,
 } from "./dto/youtube-update.dto";
+import { YoutubeInternalSecretGuard } from "./guards/youtube-internal-secret.guard";
 import { YoutubeService } from "./youtube.service";
 
 export interface RawXmlRequest extends Request {
@@ -50,11 +52,12 @@ export class YoutubeController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary:
-      "Nhận đẩy cập nhật Atom XML từ YouTube WebSub, khử trùng lặp, lưu giờ đăng/giờ nhận và chỉ gắn POI khi có căn cứ",
+      "Nhận đẩy cập nhật Atom XML từ YouTube WebSub, khử trùng lặp, lưu giờ đăng/giờ nhận và chỉ gắn POI/thành phố khi có căn cứ",
   })
   async receiveWebSubFeed(
     @Req() req: RawXmlRequest,
     @Headers("x-hub-signature") signatureHeader?: string,
+    @Headers("x-hub-signature-256") signature256Header?: string,
   ) {
     const xmlBody =
       typeof req.rawBodyText === "string"
@@ -62,19 +65,18 @@ export class YoutubeController {
         : typeof req.body === "string"
           ? req.body
           : "";
-    if (!xmlBody) {
-      throw new BadRequestException(
-        "Expected Atom XML body (Content-Type: application/atom+xml or text/xml)",
-      );
-    }
-    return this.youtubeService.ingestAtomWebhook(xmlBody, signatureHeader);
+    return this.youtubeService.ingestAtomWebhook(
+      xmlBody,
+      signatureHeader ?? signature256Header,
+    );
   }
 
   @Post("events")
+  @UseGuards(YoutubeInternalSecretGuard)
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary:
-      "Nhận sự kiện cập nhật YouTube dạng JSON, khử trùng lặp sự kiện, lưu giờ đăng/giờ nhận UTC và kiểm chứng căn cứ gắn POI",
+      "Nhận sự kiện cập nhật YouTube dạng JSON, khử trùng lặp sự kiện, lưu giờ đăng/giờ nhận UTC và kiểm chứng căn cứ gắn POI/thành phố",
   })
   async ingestEvent(@Body() dto: IngestYoutubeEventDto) {
     return this.youtubeService.ingestJsonEvent(dto);
@@ -94,6 +96,22 @@ export class YoutubeController {
       query.limit,
     );
   }
+
+  @Get("destinations/:idOrSlug/updates")
+  @ApiOperation({
+    summary:
+      "Lấy danh sách bài/video YouTube theo điểm đến (UUID hoặc slug, hỗ trợ fallback cấp thành phố)",
+  })
+  async getUpdatesForDestination(
+    @Param("idOrSlug") idOrSlug: string,
+    @Query() query: YoutubeDestinationUpdatesQueryDto,
+  ) {
+    return this.youtubeService.listGroundedUpdatesForDestination(
+      idOrSlug,
+      query.limit,
+      query.scope,
+    );
+  }
 }
 
 @ApiTags("Places")
@@ -111,5 +129,27 @@ export class YoutubePlaceUpdatesController {
     @Query() query: YoutubePlaceUpdatesQueryDto,
   ) {
     return this.youtubeService.listGroundedUpdatesForPlace(id, query.limit);
+  }
+}
+
+@ApiTags("Destinations")
+@Controller("destinations")
+export class YoutubeDestinationUpdatesController {
+  constructor(private readonly youtubeService: YoutubeService) {}
+
+  @Get(":idOrSlug/youtube-updates")
+  @ApiOperation({
+    summary:
+      "Lấy các cập nhật YouTube (tầng độ tươi xã hội) theo điểm đến hoặc thành phố",
+  })
+  async getDestinationYoutubeUpdates(
+    @Param("idOrSlug") idOrSlug: string,
+    @Query() query: YoutubeDestinationUpdatesQueryDto,
+  ) {
+    return this.youtubeService.listGroundedUpdatesForDestination(
+      idOrSlug,
+      query.limit,
+      query.scope,
+    );
   }
 }
