@@ -5,6 +5,7 @@ import { run } from 'node:test';
 import { spec as SpecReporter } from 'node:test/reporters';
 import { parseCliArgs } from './lib/cli_args.mjs';
 import { startMockServer } from './lib/mock_server.mjs';
+import { runFlutterTestsOnce } from './lib/mobile_contract_verifier.mjs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -29,7 +30,8 @@ Options:
   --repo-root=<path>         Repository root for W07 SHA-256 & git checks
   --mobile-dir=<path>        Flutter mobile directory (default: <repo-root>/apps/mobile)
   --w07-prep-dir=<path>      Sibling w07_offline_retrieval_prep path
-  --run-flutter              Execute "flutter test" inside --mobile-dir
+  --run-flutter              Execute "flutter test" once in --mode=self-test
+  --skip-flutter             Skip automatic "flutter test" in --mode=live
   --youtube-secret=<secret>  x-youtube-internal-secret header value
   --websub-secret=<secret>   YOUTUBE_WEBSUB_SECRET HMAC signing key
   --report=<path>            Write JSON summary report to file
@@ -66,13 +68,32 @@ async function main() {
     }
 
     process.env.E2E_MODE = options.mode;
+    process.env.E2E_TIER = options.tier;
     process.env.E2E_BASE_URL = targetBaseUrl;
     process.env.E2E_REPO_ROOT = options.repoRoot;
     process.env.E2E_MOBILE_DIR = options.mobileDir;
     process.env.E2E_W07_PREP_DIR = options.w07PrepDir;
+    process.env.E2E_W07_PREP_DIR_EXPLICIT = options.w07PrepDirExplicit ? '1' : '0';
     process.env.E2E_RUN_FLUTTER = options.runFlutter ? '1' : '0';
+    process.env.E2E_SKIP_FLUTTER = options.skipFlutter ? '1' : '0';
+    process.env.E2E_SHOULD_RUN_FLUTTER = options.shouldRunFlutter ? '1' : '0';
     process.env.E2E_YOUTUBE_SECRET = options.youtubeSecret;
     process.env.E2E_WEBSUB_SECRET = options.websubSecret;
+
+    if (options.shouldRunFlutter) {
+      console.log(`[run_e2e] Running flutter test once in ${options.mobileDir}...`);
+      const flutterResult = runFlutterTestsOnce(options.mobileDir, { mode: options.mode });
+      process.env.E2E_FLUTTER_TEST_RESULT = JSON.stringify(flutterResult);
+      console.log(
+        `[run_e2e] flutter test exit=${flutterResult.exitCode} passed=${flutterResult.passedCount} skipped=${flutterResult.skippedCount} files=${flutterResult.testedFiles}`,
+      );
+      if (flutterResult.exitCode !== 0) {
+        console.error(`[run_e2e] flutter test failed:\n${flutterResult.stdoutTail}`);
+        process.exit(1);
+      }
+    } else {
+      process.env.E2E_FLUTTER_TEST_RESULT = JSON.stringify({ executed: false });
+    }
 
     const files =
       options.tier === 'all'

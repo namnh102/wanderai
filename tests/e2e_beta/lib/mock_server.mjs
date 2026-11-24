@@ -577,12 +577,12 @@ export async function startMockServer({
     };
   }
 
-  function upsertYoutubeEvent(normalized) {
+  function upsertYoutubeEvent(normalized, nowMs = Date.now()) {
     const dedupeKey = normalized.eventId?.trim()
       ? `yt:event:${normalized.eventId.trim()}`
       : `yt:video:${normalized.videoId}:${(normalized.sourceUpdatedAt || normalized.publishedAt).toISOString()}`;
 
-    const nowIso = new Date().toISOString();
+    const nowIso = new Date(nowMs).toISOString();
     const existing = state.youtubeUpdatesByDedupeKey.get(dedupeKey);
     if (existing) {
       existing.deliveryCount += 1;
@@ -613,7 +613,7 @@ export async function startMockServer({
     const decision = evaluateGrounding(normalized);
     const publishedIso = normalized.publishedAt.toISOString();
     const sourceUpdatedIso = normalized.sourceUpdatedAt ? normalized.sourceUpdatedAt.toISOString() : null;
-    const receivedMs = Date.now();
+    const receivedMs = nowMs;
     const ingestLatencyMs = Math.max(0, receivedMs - normalized.publishedAt.getTime());
 
     const record = {
@@ -697,6 +697,30 @@ export async function startMockServer({
       groundingBasis: r.groundingBasis,
       groundingEvidence: r.groundingEvidence,
     };
+  }
+
+  function sortAndDedupeYoutube(records, limit) {
+    const sorted = [...records].sort(
+      (a, b) =>
+        Date.parse(b.publishedAt) - Date.parse(a.publishedAt) ||
+        Date.parse(b.receivedAt) - Date.parse(a.receivedAt),
+    );
+    const seenVideoIds = new Set();
+    const deduped = [];
+    for (const r of sorted) {
+      if (seenVideoIds.has(r.videoId)) continue;
+      seenVideoIds.add(r.videoId);
+      deduped.push(r);
+      if (deduped.length >= limit) break;
+    }
+    return deduped.map(toPublicYoutubeItem);
+  }
+
+  function resolveEffectiveNowMs(req) {
+    const rawNow = req.headers['x-e2e-test-now'];
+    if (!rawNow) return Date.now();
+    const parsed = Date.parse(String(rawNow));
+    return Number.isFinite(parsed) ? parsed : Date.now();
   }
 
   async function readRawBody(req) {
@@ -1095,10 +1119,13 @@ export async function startMockServer({
         );
       }
       const limit = Math.min(50, Math.max(1, Number(reqUrl.searchParams.get('limit') || 10)));
-      const items = [...state.youtubeUpdatesByDedupeKey.values()]
-        .filter((u) => u.destinationId === dest.id && u.scope === 'CITY')
-        .slice(0, limit)
-        .map(toPublicYoutubeItem);
+      const nowMs = resolveEffectiveNowMs(req);
+      const items = sortAndDedupeYoutube(
+        [...state.youtubeUpdatesByDedupeKey.values()].filter(
+          (u) => u.destinationId === dest.id && u.scope === 'CITY',
+        ),
+        limit,
+      );
 
       return sendSuccess(res, 200, {
         destinationId: dest.id,
@@ -1106,7 +1133,7 @@ export async function startMockServer({
         destinationName: dest.name,
         governanceRole: 'DYNAMIC_SOCIAL_FRESHNESS_LAYER',
         notPrimaryFactualCorpus: true,
-        serverDeliveredAt: new Date().toISOString(),
+        serverDeliveredAt: new Date(nowMs).toISOString(),
         realtimeSlaMaxLatencyMs: 300000,
         total: items.length,
         items,
@@ -1161,14 +1188,19 @@ export async function startMockServer({
         return sendError(res, 404, 'PLACE_NOT_FOUND', 'Place not found or unverified', reqPath);
       }
       const limit = Math.min(50, Math.max(1, Number(reqUrl.searchParams.get('limit') || 10)));
-      const poiItems = [...state.youtubeUpdatesByDedupeKey.values()]
-        .filter((u) => u.scope === 'POI' && u.placeId === place.id)
-        .slice(0, limit)
-        .map(toPublicYoutubeItem);
-      const cityFallbackItems = [...state.youtubeUpdatesByDedupeKey.values()]
-        .filter((u) => u.scope === 'CITY' && u.destinationId === place.destinationId)
-        .slice(0, limit)
-        .map(toPublicYoutubeItem);
+      const nowMs = resolveEffectiveNowMs(req);
+      const poiItems = sortAndDedupeYoutube(
+        [...state.youtubeUpdatesByDedupeKey.values()].filter(
+          (u) => u.scope === 'POI' && u.placeId === place.id,
+        ),
+        limit,
+      );
+      const cityFallbackItems = sortAndDedupeYoutube(
+        [...state.youtubeUpdatesByDedupeKey.values()].filter(
+          (u) => u.scope === 'CITY' && u.destinationId === place.destinationId,
+        ),
+        limit,
+      );
 
       return sendSuccess(res, 200, {
         placeId: place.id,
@@ -1178,7 +1210,7 @@ export async function startMockServer({
         destinationName: place.destination.name,
         governanceRole: 'DYNAMIC_SOCIAL_FRESHNESS_LAYER',
         notPrimaryFactualCorpus: true,
-        serverDeliveredAt: new Date().toISOString(),
+        serverDeliveredAt: new Date(nowMs).toISOString(),
         realtimeSlaMaxLatencyMs: 300000,
         total: poiItems.length,
         items: poiItems,
@@ -1325,7 +1357,8 @@ export async function startMockServer({
       if (parsed.error) {
         return sendError(res, parsed.error.status, 'VALIDATION_ERROR', parsed.error.message, reqPath);
       }
-      const results = parsed.entries.map((e) => upsertYoutubeEvent(e));
+      const nowMs = resolveEffectiveNowMs(req);
+      const results = parsed.entries.map((e) => upsertYoutubeEvent(e, nowMs));
       return sendSuccess(res, 200, { processedCount: results.length, results });
     }
 
@@ -1382,20 +1415,23 @@ export async function startMockServer({
         return sendError(res, 400, 'VALIDATION_ERROR', 'Invalid sourceUpdatedAt', reqPath);
       }
 
-      const receipt = upsertYoutubeEvent({
-        eventId: dto.eventId,
-        videoId: dto.videoId,
-        channelId: dto.channelId,
-        channelTitle: dto.channelTitle || null,
-        title: String(dto.title).trim(),
-        description: dto.description ? String(dto.description).trim() : null,
-        tags: Array.isArray(dto.tags) ? dto.tags : [],
-        publishedAt: new Date(dto.publishedAt),
-        sourceUpdatedAt,
-        latitude: hasLat ? dto.latitude : null,
-        longitude: hasLon ? dto.longitude : null,
-        candidatePlaceId: dto.candidatePlaceId || null,
-      });
+      const receipt = upsertYoutubeEvent(
+        {
+          eventId: dto.eventId,
+          videoId: dto.videoId,
+          channelId: dto.channelId,
+          channelTitle: dto.channelTitle || null,
+          title: String(dto.title).trim(),
+          description: dto.description ? String(dto.description).trim() : null,
+          tags: Array.isArray(dto.tags) ? dto.tags : [],
+          publishedAt: new Date(dto.publishedAt),
+          sourceUpdatedAt,
+          latitude: hasLat ? dto.latitude : null,
+          longitude: hasLon ? dto.longitude : null,
+          candidatePlaceId: dto.candidatePlaceId || null,
+        },
+        resolveEffectiveNowMs(req),
+      );
       return sendSuccess(res, 200, receipt);
     }
 

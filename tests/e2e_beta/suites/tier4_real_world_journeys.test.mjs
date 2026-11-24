@@ -6,9 +6,11 @@ import path from 'node:path';
 import { getRuntimeConfig } from '../lib/cli_args.mjs';
 import {
   HttpClient,
+  fetchResetToken,
   loginUser,
   registerAndLogin,
   registerUser,
+  resolveHaLongDestination,
 } from '../lib/http_client.mjs';
 import {
   assertErrorEnvelope,
@@ -16,17 +18,16 @@ import {
   assertYoutubeContainerContract,
   assertYoutubeFiveFields,
 } from '../lib/assertions.mjs';
+import { withFaultProxy } from '../lib/fault_proxy.mjs';
 import {
   detectBetaMobileTree,
-  evaluateAuthOutcomeMatrix,
-  evaluateYoutubeFreshnessUi,
-  getMobileContractSpec,
-  parsePngDimensions,
-  runFlutterTestsIfRequested,
-  sanitizeInternalRedirect,
-  simulateSavePlaceFlow,
+  getFlutterTestResult,
+  verifyBetaDartDeliverables,
+  verifyPerfBenchmarkArtifacts,
+  verifyScreenshots,
 } from '../lib/mobile_contract_verifier.mjs';
 import {
+  fetchDbStats,
   verifyDbStatsIsolation,
   verifyFactualPlaceUnchanged,
   verifyFreezeChecksum,
@@ -45,38 +46,24 @@ const FIXTURE = JSON.parse(
 
 const cfg = getRuntimeConfig();
 const client = new HttpClient(cfg.baseUrl);
-const mobileSpec = getMobileContractSpec();
 
 function uniqueEmail(prefix) {
   return `${prefix}.${crypto.randomUUID().slice(0, 8)}@gomate.vn`;
 }
 
-async function fetchResetToken(email) {
-  if (cfg.mode === 'self-test') {
-    const outbox = await client.get('/_test/mail-outbox', { query: { email } });
-    const data = assertSuccessEnvelope(outbox, 200);
-    assert.ok(data.items.length > 0);
-    return data.items.at(-1).rawToken;
-  }
-  if (process.env.E2E_TEST_RESET_TOKEN) return process.env.E2E_TEST_RESET_TOKEN;
-  if (process.env.E2E_MAIL_OUTBOX_URL) {
-    const res = await new HttpClient(process.env.E2E_MAIL_OUTBOX_URL).get('/', { query: { email } });
-    if (res.json?.token) return res.json.token;
-    if (res.json?.data?.items?.length) return res.json.data.items.at(-1).rawToken;
-  }
-  throw new Error('Live mode reset test requires E2E_MAIL_OUTBOX_URL or E2E_TEST_RESET_TOKEN');
+function uniqueVideoId(prefix = 'v') {
+  const cleanPrefix = prefix.replace(/[^A-Za-z0-9_-]/g, '').slice(0, 3) || 'v';
+  const suffix = crypto.randomUUID().replace(/-/g, '').slice(0, 11 - cleanPrefix.length);
+  return `${cleanPrefix}${suffix}`;
 }
 
 describe('Tier 4 — Real-World Application Journeys (6 E2E Scenarios: T4-01..T4-06)', () => {
   test('T4-01: Guest discovery -> Tháp Đồng Hồ 5-field realtime YouTube -> auth redirect -> trip save -> cold reload -> W07 audit', async () => {
     const beforePlace = assertSuccessEnvelope(await client.get(`/places/${FIXTURE.poi.id}`), 200);
-    const beforeStats =
-      cfg.mode === 'self-test'
-        ? assertSuccessEnvelope(await client.get('/_test/db-stats'), 200)
-        : null;
+    const beforeStats = await fetchDbStats(client, cfg);
 
     // 1. Ingest fresh Thap Dong Ho YouTube update (45s ago)
-    const freshVid = `t401${crypto.randomUUID().replace(/-/g, '').slice(0, 7)}`;
+    const freshVid = uniqueVideoId('41');
     const ytReceipt = assertSuccessEnvelope(
       await client.post(
         '/youtube/events',
@@ -91,11 +78,10 @@ describe('Tier 4 — Real-World Application Journeys (6 E2E Scenarios: T4-01..T4
     );
     assert.equal(ytReceipt.status, 'LINKED');
     assert.equal(ytReceipt.linkedPlaceId, FIXTURE.poi.id);
+    assert.ok(ytReceipt.ingestLatencyMs >= 0 && ytReceipt.ingestLatencyMs <= 300000);
 
     // 2. Guest discovery flow (public endpoints, zero /users/me calls)
-    const dests = assertSuccessEnvelope(await client.get('/destinations'), 200);
-    const haLong = dests.items.find((d) => d.slug === 'ha-long');
-    assert.ok(haLong);
+    const haLong = await resolveHaLongDestination(client);
     const search = assertSuccessEnvelope(
       await client.get('/places', {
         query: { destinationId: haLong.id, search: 'Tháp Đồng Hồ', verifiedOnly: true },
@@ -104,33 +90,28 @@ describe('Tier 4 — Real-World Application Journeys (6 E2E Scenarios: T4-01..T4
     );
     assert.ok(search.items.some((p) => p.id === FIXTURE.poi.id));
 
-    // 3. Inspect PlaceDetail + YouTube 5-field & "Thời gian thực"
+    // 3. Inspect PlaceDetail + YouTube 5-field & SLA <= 300000ms
     const ytData = assertSuccessEnvelope(
       await client.get(`/places/${FIXTURE.poi.id}/youtube-updates`, { query: { limit: 50 } }),
       200,
     );
     assertYoutubeContainerContract(ytData);
     const freshItem = ytData.items.find((i) => i.videoId === freshVid);
-    assertYoutubeFiveFields(freshItem, 'POI');
-    const uiYt = evaluateYoutubeFreshnessUi(
-      { ...ytData, items: [freshItem] },
-      { clientRenderedAtMs: Date.now() },
-    );
-    assert.equal(uiYt.poiItems[0].badgeLabel, 'Thời gian thực');
+    assert.ok(freshItem, 'Freshly ingested item must be present in youtube-updates');
+    assertYoutubeFiveFields(freshItem, 'POI', { maxIngestLatencyMs: 300000 });
+    assert.ok(freshItem.ingestLatencyMs <= ytData.realtimeSlaMaxLatencyMs);
 
     // 4. Redirect to /login?redirect=/places/:id -> login -> save to trip
-    const redirectTarget = `/places/${FIXTURE.poi.id}`;
-    assert.equal(sanitizeInternalRedirect(redirectTarget), redirectTarget);
+    const routerText = fs.readFileSync(
+      path.join(cfg.mobileDir, 'lib/core/router/app_router.dart'),
+      'utf8',
+    );
+    assert.ok(routerText.includes('sanitizeInternalRedirect') && routerText.includes('resolvePostAuthDestination'));
     const auth = await registerAndLogin(client, {
       email: uniqueEmail('halong.journey1'),
       password: 'Password123!',
       name: 'Journey 1 Traveler',
     });
-    const loginUi = await evaluateAuthOutcomeMatrix({
-      outcome: 'Success',
-      redirectPath: redirectTarget,
-    });
-    assert.equal(loginUi.navigatedTo, redirectTarget);
 
     // 5. Save Tháp Đồng Hồ & cold reload verification
     const authed = client.withToken(auth.accessToken);
@@ -160,95 +141,72 @@ describe('Tier 4 — Real-World Application Journeys (6 E2E Scenarios: T4-01..T4
     // 6. Governance audit
     const afterPlace = assertSuccessEnvelope(await client.get(`/places/${FIXTURE.poi.id}`), 200);
     verifyFactualPlaceUnchanged(beforePlace, afterPlace);
-    if (beforeStats) {
-      const afterStats = assertSuccessEnvelope(await client.get('/_test/db-stats'), 200);
-      verifyDbStatsIsolation(beforeStats, afterStats);
-    }
+    const afterStats = await fetchDbStats(client, cfg);
+    verifyDbStatsIsolation(beforeStats, afterStats);
     const freeze = verifyFreezeChecksum(cfg.repoRoot);
     assert.equal(freeze.freezeSha256, FIXTURE.w07Checksums.freezeV2Sha256);
   });
 
-  test('T4-02: Guest Cancel-Login return -> re-attempt Save -> transient 503 recovery (_createdPendingTrip, 1 trip)', async () => {
-    // 1-2. Guest taps Save -> taps "Hủy đăng nhập" -> returns in guest mode with zero error banners
-    const cancelState = await evaluateAuthOutcomeMatrix({
-      outcome: 'Cancelled',
-      redirectPath: `/places/${FIXTURE.poi.id}`,
-    });
-    assert.equal(cancelState.navigatedTo, `/places/${FIXTURE.poi.id}`);
-    assert.equal(cancelState.guestBrowseMode, true);
-    assert.equal(cancelState.banner, null);
-    assert.equal(cancelState.postLoginRedirect, null);
+  test('T4-02: Guest Cancel-Login return -> re-attempt Save -> real HTTP 503 recovery (_createdPendingTrip, 1 trip)', async () => {
+    const haLong = await resolveHaLongDestination(client);
+    const routerText = fs.readFileSync(
+      path.join(cfg.mobileDir, 'lib/core/router/app_router.dart'),
+      'utf8',
+    );
+    assert.ok(routerText.includes('isPublicPlaceDetail') && routerText.includes('guestBrowseModeProvider'));
+    if (cfg.mode === 'live' || detectBetaMobileTree(cfg.mobileDir)) {
+      verifyBetaDartDeliverables(cfg.mobileDir, cfg.repoRoot, {
+        requireScreenshots: true,
+        requireM4Youtube: cfg.mode === 'live',
+      });
+    }
 
-    // 3-4. User logs in, starts creating "Hạ Long Recovery", 1st itinerary POST hits 503, retry succeeds
     const auth = await registerAndLogin(client, {
       email: uniqueEmail('halong.journey2'),
       password: 'Password123!',
       name: 'Journey 2 Traveler',
     });
-    const authed = client.withToken(auth.accessToken);
-    let injectTransient503 = true;
 
-    const saveFlow = await simulateSavePlaceFlow({
-      newTripTitle: 'Hạ Long Recovery',
-      dayNumber: 1,
-      placeId: FIXTURE.poi.id,
-      createTripFn: async ({ title }) => {
+    await withFaultProxy(
+      cfg.baseUrl,
+      [{ method: 'POST', pathPrefix: '/trips/', remaining: 1 }],
+      async ({ proxyClient, getStats }) => {
+        const proxyAuthed = proxyClient.withToken(auth.accessToken);
         const trip = assertSuccessEnvelope(
-          await authed.post('/trips', { title, destinationId: FIXTURE.destinations.haLong.id }),
+          await proxyAuthed.post('/trips', { title: 'Hạ Long Recovery', destinationId: haLong.id }),
           201,
         );
-        return { ok: true, tripId: trip.id };
+
+        const firstTry = await proxyAuthed.post(`/trips/${trip.id}/itinerary`, {
+          dayNumber: 1,
+          activity: 'Tham quan Tháp Đồng Hồ',
+          placeId: FIXTURE.poi.id,
+        });
+        assertErrorEnvelope(firstTry, 503, 'SERVICE_UNAVAILABLE', '/trips/');
+
+        const retryTry = await proxyAuthed.post(`/trips/${trip.id}/itinerary`, {
+          dayNumber: 1,
+          activity: 'Tham quan Tháp Đồng Hồ',
+          placeId: FIXTURE.poi.id,
+        });
+        assertSuccessEnvelope(retryTry, 201);
+
+        assert.equal(getStats().interceptedCount, 1);
+        const trips = assertSuccessEnvelope(await proxyAuthed.get('/trips'), 200);
+        const matching = trips.filter((t) => t.title === 'Hạ Long Recovery');
+        assert.equal(matching.length, 1);
       },
-      addItineraryFn: async ({ tripId, dayNumber, placeId }) => {
-        if (injectTransient503) {
-          injectTransient503 = false;
-          if (cfg.mode === 'self-test') {
-            const err = await authed.post(
-              `/trips/${tripId}/itinerary`,
-              { dayNumber, activity: 'Tham quan Tháp Đồng Hồ', placeId },
-              { headers: { 'x-e2e-inject-status': '503' } },
-            );
-            assertErrorEnvelope(err, 503, null, '/trips/');
-          }
-          return { ok: false, status: 503, networkError: true };
-        }
-        assertSuccessEnvelope(
-          await authed.post(`/trips/${tripId}/itinerary`, {
-            dayNumber,
-            activity: 'Tham quan Tháp Đồng Hồ',
-            placeId,
-          }),
-          201,
-        );
-        return { ok: true };
-      },
-    });
-
-    const firstTry = await saveFlow.attempt();
-    assert.equal(firstTry.saved, false);
-    assert.equal(firstTry.banner.tone, 'warning');
-    assert.ok(firstTry.createdPendingTripId);
-
-    const retryTry = await saveFlow.attempt();
-    assert.equal(retryTry.saved, true);
-    assert.equal(retryTry.createTripCalls, 1);
-
-    // 5. Verify exactly 1 trip created
-    const trips = assertSuccessEnvelope(await authed.get('/trips'), 200);
-    const matching = trips.filter((t) => t.title === 'Hạ Long Recovery');
-    assert.equal(matching.length, 1);
+    );
   });
 
-  test('T4-03: City-level Hạ Long fallback + duplicate replay + stale >300s ("Cập nhật gần đây") + Phú Quốc reject + R4', async () => {
+  test('T4-03: City-level Hạ Long fallback + duplicate replay + stale >300s + Phú Quốc reject + R4', async () => {
     if (cfg.mode === 'self-test') {
       assertSuccessEnvelope(await client.post('/_test/reset', {}), 200);
     }
-    const beforeStats =
-      cfg.mode === 'self-test'
-        ? assertSuccessEnvelope(await client.get('/_test/db-stats'), 200)
-        : null;
+    const beforePlace = assertSuccessEnvelope(await client.get(`/places/${FIXTURE.poi.id}`), 200);
+    const beforeStats = await fetchDbStats(client, cfg);
 
-    const staleCityVid = `t403${crypto.randomUUID().replace(/-/g, '').slice(0, 7)}`;
+    const staleCityVid = uniqueVideoId('43');
     const staleEvent = {
       eventId: `t403-city-${crypto.randomUUID()}`,
       videoId: staleCityVid,
@@ -272,10 +230,11 @@ describe('Tier 4 — Real-World Application Journeys (6 E2E Scenarios: T4-01..T4
     assert.equal(first.status, 'LINKED_CITY');
     assert.equal(first.scope, 'CITY');
     assert.equal(first.linkedPlaceId, null);
+    assert.ok(first.ingestLatencyMs > 300000);
     assert.equal(second.duplicate, true);
     assert.equal(second.deliveryCount, 2);
 
-    const phuQuocVid = `pq403${crypto.randomUUID().replace(/-/g, '').slice(0, 6)}`;
+    const phuQuocVid = uniqueVideoId('pq4');
     const conflict = assertSuccessEnvelope(
       await client.post(
         '/youtube/events',
@@ -304,23 +263,17 @@ describe('Tier 4 — Real-World Application Journeys (6 E2E Scenarios: T4-01..T4
       await client.get(`/places/${FIXTURE.poi.id}/youtube-updates`, { query: { limit: 50 } }),
       200,
     );
+    assertYoutubeContainerContract(placeUpdates);
     assert.ok(!placeUpdates.items.some((i) => i.videoId === phuQuocVid));
+    const staleItem = placeUpdates.cityFallbackItems.find((i) => i.videoId === staleCityVid);
+    assert.ok(staleItem, 'Stale city update must appear in cityFallbackItems');
+    assertYoutubeFiveFields(staleItem, 'CITY');
+    assert.ok(staleItem.ingestLatencyMs > placeUpdates.realtimeSlaMaxLatencyMs);
 
-    const cityOnlySnapshot = {
-      ...placeUpdates,
-      items: [],
-      cityFallbackItems: placeUpdates.cityFallbackItems.filter((i) => i.videoId === staleCityVid),
-    };
-    const ui = evaluateYoutubeFreshnessUi(cityOnlySnapshot, { clientRenderedAtMs: Date.now() });
-    assert.equal(ui.primarySection, 'CITY_FALLBACK');
-    assert.equal(ui.showCityFallbackBanner, true);
-    assert.equal(ui.cityFallbackItems[0].placeId, null);
-    assert.equal(ui.cityFallbackItems[0].badgeLabel, 'Cập nhật gần đây');
-
-    if (beforeStats) {
-      const afterStats = assertSuccessEnvelope(await client.get('/_test/db-stats'), 200);
-      verifyDbStatsIsolation(beforeStats, afterStats);
-    }
+    const afterPlace = assertSuccessEnvelope(await client.get(`/places/${FIXTURE.poi.id}`), 200);
+    verifyFactualPlaceUnchanged(beforePlace, afterPlace);
+    const afterStats = await fetchDbStats(client, cfg);
+    verifyDbStatsIsolation(beforeStats, afterStats);
     const freeze = verifyFreezeChecksum(cfg.repoRoot);
     assert.equal(freeze.freezeSha256, FIXTURE.w07Checksums.freezeV2Sha256);
   });
@@ -330,17 +283,22 @@ describe('Tier 4 — Real-World Application Journeys (6 E2E Scenarios: T4-01..T4
     await registerUser(client, { email, password: 'InitialPassword123!', name: 'Reset Journey' });
 
     assertSuccessEnvelope(await client.post('/auth/forgot-password', { email }), 200);
-    const t1 = await fetchResetToken(email);
+    const t1 = await fetchResetToken(client, cfg, email);
 
     assertSuccessEnvelope(await client.post('/auth/forgot-password', { email }), 200);
-    const t2 = await fetchResetToken(email);
+    const t2 = await fetchResetToken(client, cfg, email);
     assert.notEqual(t1, t2);
 
     const t1Attempt = await client.post('/auth/reset-password', {
       token: t1,
       newPassword: 'ResetPassword999!',
     });
-    assertErrorEnvelope(t1Attempt, [400, 410], null, '/auth/reset-password');
+    assertErrorEnvelope(
+      t1Attempt,
+      [400, 410],
+      ['RESET_TOKEN_USED', 'RESET_TOKEN_INVALID'],
+      '/auth/reset-password',
+    );
 
     assertSuccessEnvelope(
       await client.post('/auth/reset-password', { token: t2, newPassword: 'ResetPassword999!' }),
@@ -376,40 +334,34 @@ describe('Tier 4 — Real-World Application Journeys (6 E2E Scenarios: T4-01..T4
     assert.ok(fetched.itineraries[0].items.some((i) => i.placeId === FIXTURE.poi.id));
   });
 
-  test('T4-05: Social OAuth Matrix (FB cancel -> FB OAUTH_EMAIL_UNAVAILABLE -> Google success -> /users/me -> save -> logout)', async () => {
-    // 1. Facebook Cancelled
-    let backendCalls = 0;
-    const cancelRes = await evaluateAuthOutcomeMatrix({
-      outcome: 'Cancelled',
-      redirectPath: '/login',
-      callBackendOAuth: async () => {
-        backendCalls += 1;
-      },
-    });
-    assert.equal(backendCalls, 0);
-    assert.equal(cancelRes.banner, null);
+  test('T4-05: Social OAuth Matrix (FB OAUTH_EMAIL_UNAVAILABLE -> Google success -> /users/me -> save -> logout)', async () => {
+    const haLong = await resolveHaLongDestination(client);
+    if (cfg.mode === 'live' || detectBetaMobileTree(cfg.mobileDir)) {
+      verifyBetaDartDeliverables(cfg.mobileDir, cfg.repoRoot, {
+        requireScreenshots: true,
+        requireM4Youtube: cfg.mode === 'live',
+      });
+    }
 
-    // 2. Facebook OAUTH_EMAIL_UNAVAILABLE
+    // 1. Facebook OAUTH_EMAIL_UNAVAILABLE
     const fbErr = await client.post('/auth/oauth/facebook', { accessToken: 'no-email-journey5' });
     assertErrorEnvelope(fbErr, 400, 'OAUTH_EMAIL_UNAVAILABLE', '/auth/oauth/facebook');
-    const errUi = await evaluateAuthOutcomeMatrix({
-      outcome: 'Error',
-      callBackendOAuth: async () => fbErr,
-    });
-    assert.equal(errUi.banner.tone, 'error');
-    assert.equal(errUi.banner.errorCode, 'OAUTH_EMAIL_UNAVAILABLE');
 
-    // 3. Google Success
+    // 2. Google Success
     const gEmail = uniqueEmail('journey5.google');
     const gRes = await client.post('/auth/oauth/google', { idToken: `valid-email:${gEmail}` });
     const gData = assertSuccessEnvelope(gRes, 200);
-    assert.ok(gData.user.providers.includes('google'));
+    assert.ok(Array.isArray(gData.user.providers) && gData.user.providers.includes('google'));
 
-    // 4. /users/me + Save trip
+    // 3. /users/me + Save trip
     const authed = client.withToken(gData.access_token);
     const me = assertSuccessEnvelope(await authed.get('/users/me'), 200);
+    assert.equal(me.id, gData.user.id);
     assert.equal(me.email, gEmail);
-    const trip = assertSuccessEnvelope(await authed.post('/trips', { title: 'OAuth Journey Trip' }), 201);
+    const trip = assertSuccessEnvelope(
+      await authed.post('/trips', { title: 'OAuth Journey Trip', destinationId: haLong.id }),
+      201,
+    );
     assertSuccessEnvelope(
       await authed.post(`/trips/${trip.id}/itinerary`, {
         dayNumber: 1,
@@ -419,37 +371,35 @@ describe('Tier 4 — Real-World Application Journeys (6 E2E Scenarios: T4-01..T4
       201,
     );
 
-    // 5. Logout cleanup check (unauthenticated client gets 401 on /users/me)
+    // 4. Logout cleanup check (unauthenticated client gets 401 on /users/me)
     const loggedOutRes = await client.get('/users/me');
     assertErrorEnvelope(loggedOutRes, 401, null, '/users/me');
   });
 
   test('T4-06: Full Acceptance & Release Readiness (390x844 screenshots + perf timing + WebSub/JSON YouTube + R4 audit)', async () => {
-    // 1. Screenshot / mobile artifacts check
-    const screenshotDir = path.join(
-      cfg.repoRoot,
-      mobileSpec.betaRequiredDeliverables.screenshotDirRelativeToRepo,
-    );
-    if (detectBetaMobileTree(cfg.mobileDir) && fs.existsSync(screenshotDir)) {
-      const pngs = fs.readdirSync(screenshotDir).filter((f) => f.endsWith('.png'));
-      assert.ok(pngs.length > 0);
-      for (const f of pngs) {
-        const dims = parsePngDimensions(path.join(screenshotDir, f));
-        assert.equal(dims.width, 390);
-        assert.equal(dims.height, 844);
-      }
+    // 1. Screenshot / Beta mobile deliverables check
+    if (cfg.mode === 'live' || detectBetaMobileTree(cfg.mobileDir)) {
+      assert.equal(detectBetaMobileTree(cfg.mobileDir), true);
+      const ss = verifyScreenshots(cfg.repoRoot, { requireFiles: true });
+      assert.ok(ss.beforeCount > 0 && ss.afterCount > 0);
+      verifyPerfBenchmarkArtifacts(cfg.mobileDir, cfg.repoRoot);
+      verifyBetaDartDeliverables(cfg.mobileDir, cfg.repoRoot, {
+        requireScreenshots: true,
+        requireM4Youtube: cfg.mode === 'live',
+      });
     }
 
-    // 2. Perf benchmark / Flutter test check (if --run-flutter) + API latency measurement
+    // 2. Perf benchmark / cached Flutter test check + API latency measurement
+    const haLong = await resolveHaLongDestination(client);
     const perfList = await client.get('/places', {
-      query: { destinationId: FIXTURE.destinations.haLong.id, limit: 20 },
+      query: { destinationId: haLong.id, limit: 20 },
     });
     assertSuccessEnvelope(perfList, 200);
     assert.ok(perfList.durationMs >= 0);
-    runFlutterTestsIfRequested(cfg.mobileDir, cfg.runFlutter);
+    getFlutterTestResult(cfg.mobileDir, { requireExecuted: cfg.shouldRunFlutter });
 
     // 3. WebSub + JSON ingestion for Tháp Đồng Hồ + SLA check
-    const vid = `t406${crypto.randomUUID().replace(/-/g, '').slice(0, 7)}`;
+    const vid = uniqueVideoId('46');
     const xml = buildYoutubeAtomFeed([
       {
         videoId: vid,
@@ -473,6 +423,7 @@ describe('Tier 4 — Real-World Application Journeys (6 E2E Scenarios: T4-01..T4
       200,
     );
     assert.equal(webRes.results[0].status, 'LINKED');
+    assert.ok(webRes.results[0].ingestLatencyMs >= 0 && webRes.results[0].ingestLatencyMs <= 300000);
 
     const updates = assertSuccessEnvelope(
       await client.get(`/places/${FIXTURE.poi.id}/youtube-updates`, { query: { limit: 50 } }),
@@ -480,17 +431,18 @@ describe('Tier 4 — Real-World Application Journeys (6 E2E Scenarios: T4-01..T4
     );
     assertYoutubeContainerContract(updates);
     const item = updates.items.find((i) => i.videoId === vid);
-    assertYoutubeFiveFields(item, 'POI');
-    const ui = evaluateYoutubeFreshnessUi(
-      { ...updates, items: [item] },
-      { clientRenderedAtMs: Date.now() },
-    );
-    assert.equal(ui.poiItems[0].badgeLabel, 'Thời gian thực');
+    assert.ok(item, 'Release-check WebSub item must be present in youtube-updates');
+    assertYoutubeFiveFields(item, 'POI', { maxIngestLatencyMs: 300000 });
+    assert.ok(item.ingestLatencyMs <= updates.realtimeSlaMaxLatencyMs);
 
     // 4. Strict R4 Governance Audit
     const checksums = verifyFreezeChecksum(cfg.repoRoot);
     assert.equal(checksums.freezeSha256, FIXTURE.w07Checksums.freezeV2Sha256);
-    const clean = verifyProtectedPathsClean(cfg.repoRoot, cfg.w07PrepDir);
+    const requireW07Prep = cfg.mode === 'live' || cfg.w07PrepDirExplicit;
+    const clean = verifyProtectedPathsClean(cfg.repoRoot, cfg.w07PrepDir, { requireW07Prep });
     assert.equal(clean.dirtyLines.length, 0);
+    if (requireW07Prep || fs.existsSync(cfg.w07PrepDir)) {
+      assert.equal(clean.w07PrepVerified, true);
+    }
   });
 });

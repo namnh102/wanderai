@@ -6,9 +6,11 @@ import path from 'node:path';
 import { getRuntimeConfig } from '../lib/cli_args.mjs';
 import {
   HttpClient,
+  fetchResetToken,
   loginUser,
   registerAndLogin,
   registerUser,
+  resolveHaLongDestination,
 } from '../lib/http_client.mjs';
 import {
   assertErrorEnvelope,
@@ -16,17 +18,17 @@ import {
   assertYoutubeContainerContract,
   assertYoutubeFiveFields,
 } from '../lib/assertions.mjs';
+import { withFaultProxy } from '../lib/fault_proxy.mjs';
 import {
   detectBetaMobileTree,
-  evaluateAuthOutcomeMatrix,
-  evaluateYoutubeFreshnessUi,
-  getMobileContractSpec,
-  parsePngDimensions,
-  sanitizeInternalRedirect,
-  simulateSavePlaceFlow,
+  verifyBetaDartDeliverables,
+  verifyPerfBenchmarkArtifacts,
+  verifyScreenshots,
 } from '../lib/mobile_contract_verifier.mjs';
 import {
+  fetchDbStats,
   verifyDbStatsIsolation,
+  verifyFactualPlaceUnchanged,
   verifyFreezeChecksum,
 } from '../lib/w07_governance_verifier.mjs';
 import {
@@ -42,34 +44,24 @@ const FIXTURE = JSON.parse(
 
 const cfg = getRuntimeConfig();
 const client = new HttpClient(cfg.baseUrl);
-const mobileSpec = getMobileContractSpec();
 
 function uniqueEmail(prefix) {
   return `${prefix}.${crypto.randomUUID().slice(0, 8)}@gomate.vn`;
 }
 
-async function fetchResetToken(email) {
-  if (cfg.mode === 'self-test') {
-    const outbox = await client.get('/_test/mail-outbox', { query: { email } });
-    const data = assertSuccessEnvelope(outbox, 200);
-    assert.ok(data.items.length > 0);
-    return data.items.at(-1).rawToken;
-  }
-  if (process.env.E2E_TEST_RESET_TOKEN) return process.env.E2E_TEST_RESET_TOKEN;
-  if (process.env.E2E_MAIL_OUTBOX_URL) {
-    const res = await new HttpClient(process.env.E2E_MAIL_OUTBOX_URL).get('/', { query: { email } });
-    if (res.json?.token) return res.json.token;
-    if (res.json?.data?.items?.length) return res.json.data.items.at(-1).rawToken;
-  }
-  throw new Error('Live mode reset test requires E2E_MAIL_OUTBOX_URL or E2E_TEST_RESET_TOKEN');
+function uniqueVideoId(prefix = 'v') {
+  const cleanPrefix = prefix.replace(/[^A-Za-z0-9_-]/g, '').slice(0, 3) || 'v';
+  const suffix = crypto.randomUUID().replace(/-/g, '').slice(0, 11 - cleanPrefix.length);
+  return `${cleanPrefix}${suffix}`;
 }
 
 describe('Tier 3 — Cross-Feature Pairwise Combinations (12 Tests: T3-01..T3-12)', () => {
   test('T3-01 (F3+F4+F2): Guest search Hạ Long -> Tháp Đồng Hồ -> redirect login -> save -> reload persists', async () => {
+    const haLong = await resolveHaLongDestination(client);
     const searchRes = assertSuccessEnvelope(
       await client.get('/places', {
         query: {
-          destinationId: FIXTURE.destinations.haLong.id,
+          destinationId: haLong.id,
           search: 'Tháp Đồng Hồ',
           verifiedOnly: true,
         },
@@ -78,20 +70,21 @@ describe('Tier 3 — Cross-Feature Pairwise Combinations (12 Tests: T3-01..T3-12
     );
     assert.ok(searchRes.items.some((p) => p.id === FIXTURE.poi.id));
 
-    const target = `/places/${FIXTURE.poi.id}`;
-    assert.equal(sanitizeInternalRedirect(target), target);
+    const routerText = fs.readFileSync(
+      path.join(cfg.mobileDir, 'lib/core/router/app_router.dart'),
+      'utf8',
+    );
+    assert.ok(routerText.includes('sanitizeInternalRedirect') && routerText.includes('resolvePostAuthDestination'));
 
     const auth = await registerAndLogin(client, {
       email: uniqueEmail('t3.01'),
       password: 'Password123!',
       name: 'T3-01 Traveler',
     });
-    const ui = await evaluateAuthOutcomeMatrix({ outcome: 'Success', redirectPath: target });
-    assert.equal(ui.navigatedTo, target);
 
     const authed = client.withToken(auth.accessToken);
     const trip = assertSuccessEnvelope(
-      await authed.post('/trips', { title: 'Hạ Long T3-01', destinationId: FIXTURE.destinations.haLong.id }),
+      await authed.post('/trips', { title: 'Hạ Long T3-01', destinationId: haLong.id }),
       201,
     );
     assertSuccessEnvelope(
@@ -111,32 +104,40 @@ describe('Tier 3 — Cross-Feature Pairwise Combinations (12 Tests: T3-01..T3-12
   });
 
   test('T3-02 (F2+F9+F4+F3): Guest views realtime YouTube 5-field update -> Cancel-Login returns to guest PlaceDetail', async () => {
+    const vid = uniqueVideoId('32');
     const evt = buildGroundedThapDongHoEvent({
       publishedAt: isoWithOffsetSeconds(-30_000, 'Z'),
-      videoId: `t302${crypto.randomUUID().replace(/-/g, '').slice(0, 7)}`,
+      videoId: vid,
     });
-    assertSuccessEnvelope(
+    const receipt = assertSuccessEnvelope(
       await client.post('/youtube/events', evt, {
         headers: { 'x-youtube-internal-secret': cfg.youtubeSecret },
       }),
       200,
     );
+    assert.ok(receipt.ingestLatencyMs >= 0 && receipt.ingestLatencyMs <= 300000);
 
     const updates = assertSuccessEnvelope(
-      await client.get(`/places/${FIXTURE.poi.id}/youtube-updates`),
+      await client.get(`/places/${FIXTURE.poi.id}/youtube-updates`, { query: { limit: 50 } }),
       200,
     );
-    assertYoutubeFiveFields(updates.items[0], 'POI');
-    const uiBefore = evaluateYoutubeFreshnessUi(updates, { clientRenderedAtMs: Date.now() });
-    assert.equal(uiBefore.poiItems[0].badgeLabel, 'Thời gian thực');
+    assertYoutubeContainerContract(updates);
+    const matched = updates.items.find((i) => i.videoId === vid);
+    assert.ok(matched, 'Newly ingested POI event must appear in youtube-updates');
+    assertYoutubeFiveFields(matched, 'POI', { maxIngestLatencyMs: 300000 });
+    assert.ok(matched.ingestLatencyMs <= updates.realtimeSlaMaxLatencyMs);
 
-    const cancelUi = await evaluateAuthOutcomeMatrix({
-      outcome: 'Cancelled',
-      redirectPath: `/places/${FIXTURE.poi.id}`,
-    });
-    assert.equal(cancelUi.navigatedTo, `/places/${FIXTURE.poi.id}`);
-    assert.equal(cancelUi.guestBrowseMode, true);
-    assert.equal(cancelUi.banner, null);
+    const routerText = fs.readFileSync(
+      path.join(cfg.mobileDir, 'lib/core/router/app_router.dart'),
+      'utf8',
+    );
+    assert.ok(routerText.includes('isPublicPlaceDetail') && routerText.includes('guestBrowseModeProvider'));
+    if (cfg.mode === 'live' || detectBetaMobileTree(cfg.mobileDir)) {
+      verifyBetaDartDeliverables(cfg.mobileDir, cfg.repoRoot, {
+        requireScreenshots: true,
+        requireM4Youtube: cfg.mode === 'live',
+      });
+    }
   });
 
   test('T3-03 (F8+F9): City fallback banner transitions to primary POI update once POI YouTube event arrives', async () => {
@@ -144,61 +145,112 @@ describe('Tier 3 — Cross-Feature Pairwise Combinations (12 Tests: T3-01..T3-12
       assertSuccessEnvelope(await client.post('/_test/reset', {}), 200);
     }
 
+    const haLong = await resolveHaLongDestination(client);
+    const placesData = assertSuccessEnvelope(
+      await client.get('/places', {
+        query: { destinationId: haLong.id, verifiedOnly: true, limit: 50 },
+      }),
+      200,
+    );
+
+    let targetPoi = null;
+    for (const candidate of placesData.items) {
+      if (typeof candidate.latitude !== 'number' || typeof candidate.longitude !== 'number') {
+        continue;
+      }
+      const yt = assertSuccessEnvelope(
+        await client.get(`/places/${candidate.id}/youtube-updates`, { query: { limit: 50 } }),
+        200,
+      );
+      if (Array.isArray(yt.items) && yt.items.length === 0) {
+        targetPoi = candidate;
+        break;
+      }
+    }
+    assert.ok(
+      targetPoi,
+      'Could not find a clean verified Hạ Long POI with 0 POI-level YouTube items for T3-03',
+    );
+
+    const cityVid = uniqueVideoId('c3');
     const cityEvent = {
       eventId: `t303-city-${crypto.randomUUID()}`,
-      videoId: `c3${crypto.randomUUID().replace(/-/g, '').slice(0, 9)}`,
+      videoId: cityVid,
       channelId: 'UC_T303',
       title: 'Khám phá Vịnh Hạ Long Quảng Ninh buổi sáng',
       publishedAt: isoWithOffsetSeconds(-40_000, '+07:00'),
     };
-    assertSuccessEnvelope(
+    const cityReceipt = assertSuccessEnvelope(
       await client.post('/youtube/events', cityEvent, {
         headers: { 'x-youtube-internal-secret': cfg.youtubeSecret },
       }),
       200,
     );
+    assert.equal(cityReceipt.status, 'LINKED_CITY');
+    assert.equal(cityReceipt.scope, 'CITY');
+    assert.equal(cityReceipt.linkedPlaceId, null);
 
     const beforePoi = assertSuccessEnvelope(
-      await client.get(`/places/${FIXTURE.poi.id}/youtube-updates`),
+      await client.get(`/places/${targetPoi.id}/youtube-updates`, { query: { limit: 50 } }),
       200,
     );
-    if (cfg.mode === 'self-test') {
-      assert.equal(beforePoi.items.length, 0);
-    }
-    const uiBefore = evaluateYoutubeFreshnessUi(
-      { ...beforePoi, items: cfg.mode === 'self-test' ? beforePoi.items : [] },
-      { clientRenderedAtMs: Date.now() },
+    assert.equal(beforePoi.items.length, 0, 'Before POI ingestion, targetPoi must have 0 POI items');
+    assert.equal(beforePoi.total, 0);
+    assert.ok(
+      beforePoi.cityFallbackItems.some(
+        (i) => i.videoId === cityVid && i.placeId === null && i.scope === 'CITY',
+      ),
+      'Before POI ingestion, cityFallbackItems must contain the new Hạ Long city event',
     );
-    assert.equal(uiBefore.primarySection, 'CITY_FALLBACK');
-    assert.equal(uiBefore.showCityFallbackBanner, true);
 
-    const poiEvent = buildGroundedThapDongHoEvent({
+    const poiVid = uniqueVideoId('p3');
+    const poiEvent = {
       eventId: `t303-poi-${crypto.randomUUID()}`,
-      videoId: `p3${crypto.randomUUID().replace(/-/g, '').slice(0, 9)}`,
-    });
-    assertSuccessEnvelope(
+      videoId: poiVid,
+      channelId: 'UC_T303_POI',
+      channelTitle: 'Hạ Long Review',
+      title: `Khám phá ${targetPoi.name} Hạ Long`,
+      description: `Check-in tại ${targetPoi.name}, thành phố Hạ Long, Quảng Ninh.`,
+      tags: [targetPoi.name, 'Hạ Long', 'Quảng Ninh'],
+      publishedAt: isoWithOffsetSeconds(-25_000, '+07:00'),
+      latitude: targetPoi.latitude,
+      longitude: targetPoi.longitude,
+      candidatePlaceId: targetPoi.id,
+    };
+    const poiReceipt = assertSuccessEnvelope(
       await client.post('/youtube/events', poiEvent, {
         headers: { 'x-youtube-internal-secret': cfg.youtubeSecret },
       }),
       200,
     );
+    assert.equal(poiReceipt.status, 'LINKED');
+    assert.equal(poiReceipt.scope, 'POI');
+    assert.equal(poiReceipt.linkedPlaceId, targetPoi.id);
 
     const afterPoi = assertSuccessEnvelope(
-      await client.get(`/places/${FIXTURE.poi.id}/youtube-updates`, { query: { limit: 50 } }),
+      await client.get(`/places/${targetPoi.id}/youtube-updates`, { query: { limit: 50 } }),
       200,
     );
-    const uiAfter = evaluateYoutubeFreshnessUi(afterPoi, { clientRenderedAtMs: Date.now() });
-    assert.equal(uiAfter.primarySection, 'POI');
-    assert.equal(uiAfter.showCityFallbackBanner, false);
-    assert.ok(uiAfter.poiItems.some((i) => i.placeId === FIXTURE.poi.id));
-    assert.ok(uiAfter.cityFallbackItems.some((i) => i.placeId === null && i.scope === 'CITY'));
+    assert.ok(
+      afterPoi.items.some(
+        (i) => i.videoId === poiVid && i.placeId === targetPoi.id && i.scope === 'POI',
+      ),
+      'After POI ingestion, items must contain the new POI-scoped event',
+    );
+    assert.ok(
+      afterPoi.cityFallbackItems.some(
+        (i) => i.videoId === cityVid && i.placeId === null && i.scope === 'CITY',
+      ),
+      'City fallback items must still retain the Hạ Long city event',
+    );
   });
 
   test('T3-04 (F6+F3+F4): Forgot password -> Reset -> Login with redirect -> Save Tháp Đồng Hồ', async () => {
+    const haLong = await resolveHaLongDestination(client);
     const email = uniqueEmail('reset.save');
     await registerUser(client, { email, password: 'OldPassword123!', name: 'T3-04 User' });
     assertSuccessEnvelope(await client.post('/auth/forgot-password', { email }), 200);
-    const token = await fetchResetToken(email);
+    const token = await fetchResetToken(client, cfg, email);
 
     assertSuccessEnvelope(
       await client.post('/auth/reset-password', { token, newPassword: 'NewPassword789!' }),
@@ -213,7 +265,10 @@ describe('Tier 3 — Cross-Feature Pairwise Combinations (12 Tests: T3-01..T3-12
       200,
     );
     const authed = client.withToken(newLogin.access_token);
-    const trip = assertSuccessEnvelope(await authed.post('/trips', { title: 'T3-04 Trip' }), 201);
+    const trip = assertSuccessEnvelope(
+      await authed.post('/trips', { title: 'T3-04 Trip', destinationId: haLong.id }),
+      201,
+    );
     assertSuccessEnvelope(
       await authed.post(`/trips/${trip.id}/itinerary`, {
         dayNumber: 1,
@@ -225,17 +280,23 @@ describe('Tier 3 — Cross-Feature Pairwise Combinations (12 Tests: T3-01..T3-12
   });
 
   test('T3-05 (F7+F3+F4): Google OAuth login -> /users/me -> save Tháp Đồng Hồ under OAuth user', async () => {
+    const haLong = await resolveHaLongDestination(client);
     const email = uniqueEmail('t305.oauth');
     const oauth = assertSuccessEnvelope(
       await client.post('/auth/oauth/google', { idToken: `valid-email:${email}` }),
       200,
     );
+    assert.ok(Array.isArray(oauth.user.providers) && oauth.user.providers.includes('google'));
+
     const authed = client.withToken(oauth.access_token);
     const me = assertSuccessEnvelope(await authed.get('/users/me'), 200);
+    assert.equal(me.id, oauth.user.id);
     assert.equal(me.email, email);
-    assert.ok(me.providers.includes('google'));
 
-    const trip = assertSuccessEnvelope(await authed.post('/trips', { title: 'OAuth Trip' }), 201);
+    const trip = assertSuccessEnvelope(
+      await authed.post('/trips', { title: 'OAuth Trip', destinationId: haLong.id }),
+      201,
+    );
     assertSuccessEnvelope(
       await authed.post(`/trips/${trip.id}/itinerary`, {
         dayNumber: 1,
@@ -264,76 +325,63 @@ describe('Tier 3 — Cross-Feature Pairwise Combinations (12 Tests: T3-01..T3-12
     });
     assertErrorEnvelope(invalidReset, 400, 'RESET_TOKEN_INVALID', '/auth/reset-password');
 
-    for (const errRes of [invalidCreds, noEmail, invalidReset]) {
-      const ui = await evaluateAuthOutcomeMatrix({
-        outcome: 'Error',
-        currentInput: { email: 'keep@gomate.vn' },
-        callBackendOAuth: async () => errRes,
+    const bannerText = fs.readFileSync(
+      path.join(cfg.mobileDir, 'lib/core/widgets/app_state_banner.dart'),
+      'utf8',
+    );
+    assert.ok(bannerText.includes('AppStateBannerTone'));
+    if (cfg.mode === 'live' || detectBetaMobileTree(cfg.mobileDir)) {
+      verifyBetaDartDeliverables(cfg.mobileDir, cfg.repoRoot, {
+        requireScreenshots: true,
+        requireM4Youtube: cfg.mode === 'live',
       });
-      assert.equal(ui.banner.tone, 'error');
-      assert.equal(ui.currentInput.email, 'keep@gomate.vn');
     }
   });
 
-  test('T3-07 (F1+F4+F2): Network 503 during save -> AppStateBanner(warning) -> retry creates 0 duplicate trips', async () => {
+  test('T3-07 (F1+F4+F2): Real HTTP 503 during save -> retry creates 0 duplicate trips', async () => {
+    const haLong = await resolveHaLongDestination(client);
     const auth = await registerAndLogin(client, {
       email: uniqueEmail('t3.07'),
       password: 'Password123!',
       name: 'T3-07 User',
     });
-    const authed = client.withToken(auth.accessToken);
-    let failOnce = true;
 
-    const flow = await simulateSavePlaceFlow({
-      newTripTitle: 'T3-07 Trip',
-      dayNumber: 1,
-      placeId: FIXTURE.poi.id,
-      createTripFn: async ({ title }) => {
-        const trip = assertSuccessEnvelope(await authed.post('/trips', { title }), 201);
-        return { ok: true, tripId: trip.id };
-      },
-      addItineraryFn: async ({ tripId, dayNumber, placeId }) => {
-        if (failOnce) {
-          failOnce = false;
-          if (cfg.mode === 'self-test') {
-            const err = await authed.post(
-              `/trips/${tripId}/itinerary`,
-              { dayNumber, activity: 'Tham quan Tháp Đồng Hồ', placeId },
-              { headers: { 'x-e2e-inject-status': '503' } },
-            );
-            assertErrorEnvelope(err, 503, null, '/trips/');
-          }
-          return { ok: false, status: 503, networkError: true };
-        }
-        assertSuccessEnvelope(
-          await authed.post(`/trips/${tripId}/itinerary`, {
-            dayNumber,
-            activity: 'Tham quan Tháp Đồng Hồ',
-            placeId,
-          }),
+    await withFaultProxy(
+      cfg.baseUrl,
+      [{ method: 'POST', pathPrefix: '/trips/', remaining: 1 }],
+      async ({ proxyClient, getStats }) => {
+        const proxyAuthed = proxyClient.withToken(auth.accessToken);
+        const trip = assertSuccessEnvelope(
+          await proxyAuthed.post('/trips', { title: 'T3-07 Trip', destinationId: haLong.id }),
           201,
         );
-        return { ok: true };
+
+        const firstTry = await proxyAuthed.post(`/trips/${trip.id}/itinerary`, {
+          dayNumber: 1,
+          activity: 'Tham quan Tháp Đồng Hồ',
+          placeId: FIXTURE.poi.id,
+        });
+        assertErrorEnvelope(firstTry, 503, 'SERVICE_UNAVAILABLE', '/trips/');
+
+        const retryTry = await proxyAuthed.post(`/trips/${trip.id}/itinerary`, {
+          dayNumber: 1,
+          activity: 'Tham quan Tháp Đồng Hồ',
+          placeId: FIXTURE.poi.id,
+        });
+        assertSuccessEnvelope(retryTry, 201);
+
+        assert.equal(getStats().interceptedCount, 1);
+        const trips = assertSuccessEnvelope(await proxyAuthed.get('/trips'), 200);
+        assert.equal(trips.filter((t) => t.title === 'T3-07 Trip').length, 1);
       },
-    });
-
-    const first = await flow.attempt();
-    assert.equal(first.banner.tone, 'warning');
-    const second = await flow.attempt();
-    assert.equal(second.saved, true);
-    assert.equal(second.createTripCalls, 1);
-
-    const trips = assertSuccessEnvelope(await authed.get('/trips'), 200);
-    assert.equal(trips.length, 1);
+    );
   });
 
   test('T3-08 (F8+F9+F10): Duplicate WebSub + JSON replay keeps 1 row, 5 fields, documents/place_sources untouched & W07 intact', async () => {
-    const beforeStats =
-      cfg.mode === 'self-test'
-        ? assertSuccessEnvelope(await client.get('/_test/db-stats'), 200)
-        : null;
+    const beforePlace = assertSuccessEnvelope(await client.get(`/places/${FIXTURE.poi.id}`), 200);
+    const beforeStats = await fetchDbStats(client, cfg);
 
-    const vid = `t308${crypto.randomUUID().replace(/-/g, '').slice(0, 7)}`;
+    const vid = uniqueVideoId('38');
     const pubIso = isoWithOffsetSeconds(-25_000, 'Z');
     const xml = buildYoutubeAtomFeed([
       {
@@ -384,42 +432,43 @@ describe('Tier 3 — Cross-Feature Pairwise Combinations (12 Tests: T3-01..T3-12
     assert.equal(updates.items.filter((i) => i.videoId === vid).length, 1);
     assertYoutubeFiveFields(updates.items.find((i) => i.videoId === vid), 'POI');
 
-    if (beforeStats) {
-      const afterStats = assertSuccessEnvelope(await client.get('/_test/db-stats'), 200);
-      verifyDbStatsIsolation(beforeStats, afterStats);
-    }
+    const afterPlace = assertSuccessEnvelope(await client.get(`/places/${FIXTURE.poi.id}`), 200);
+    verifyFactualPlaceUnchanged(beforePlace, afterPlace);
+    const afterStats = await fetchDbStats(client, cfg);
+    verifyDbStatsIsolation(beforeStats, afterStats);
     const freeze = verifyFreezeChecksum(cfg.repoRoot);
     assert.equal(freeze.freezeSha256, FIXTURE.w07Checksums.freezeV2Sha256);
   });
 
   test('T3-09 (F2+F5): Profile perf timing & 390x844 screenshot artifact contract for Hạ Long + Tháp Đồng Hồ', async () => {
+    const haLong = await resolveHaLongDestination(client);
     const listRes = await client.get('/places', {
-      query: { destinationId: FIXTURE.destinations.haLong.id, limit: 20 },
+      query: { destinationId: haLong.id, limit: 20 },
     });
     const detailRes = await client.get(`/places/${FIXTURE.poi.id}`);
     assertSuccessEnvelope(listRes, 200);
     assertSuccessEnvelope(detailRes, 200);
     assert.ok(listRes.durationMs >= 0 && detailRes.durationMs >= 0);
 
-    const dir = path.join(cfg.repoRoot, mobileSpec.betaRequiredDeliverables.screenshotDirRelativeToRepo);
-    if (detectBetaMobileTree(cfg.mobileDir) && fs.existsSync(dir)) {
-      const pngs = fs.readdirSync(dir).filter((f) => f.endsWith('.png'));
-      assert.ok(pngs.length > 0);
-      for (const f of pngs) {
-        const dims = parsePngDimensions(path.join(dir, f));
-        assert.equal(dims.width, 390);
-        assert.equal(dims.height, 844);
-      }
+    if (cfg.mode === 'live' || detectBetaMobileTree(cfg.mobileDir)) {
+      assert.equal(detectBetaMobileTree(cfg.mobileDir), true);
+      const ss = verifyScreenshots(cfg.repoRoot, { requireFiles: true });
+      assert.ok(ss.count > 0);
+      verifyPerfBenchmarkArtifacts(cfg.mobileDir, cfg.repoRoot);
     }
   });
 
   test('T3-10 (F3+F7+F2): Session switch (User A OAuth -> logout -> User B local) isolates trips & enforces 403', async () => {
+    const haLong = await resolveHaLongDestination(client);
     const userA = assertSuccessEnvelope(
       await client.post('/auth/oauth/google', { idToken: `valid-email:${uniqueEmail('userA')}` }),
       200,
     );
     const clientA = client.withToken(userA.access_token);
-    const tripA = assertSuccessEnvelope(await clientA.post('/trips', { title: 'Trip A Private' }), 201);
+    const tripA = assertSuccessEnvelope(
+      await clientA.post('/trips', { title: 'Trip A Private', destinationId: haLong.id }),
+      201,
+    );
 
     const userB = await registerAndLogin(client, {
       email: uniqueEmail('userB'),
@@ -435,7 +484,7 @@ describe('Tier 3 — Cross-Feature Pairwise Combinations (12 Tests: T3-01..T3-12
   });
 
   test('T3-11 (F2+F8+F9): Đà Nẵng YouTube event never leaks into Tháp Đồng Hồ or Hạ Long city fallback', async () => {
-    const daNangVid = `dn${crypto.randomUUID().replace(/-/g, '').slice(0, 9)}`;
+    const daNangVid = uniqueVideoId('dn');
     assertSuccessEnvelope(
       await client.post(
         '/youtube/events',
@@ -470,10 +519,10 @@ describe('Tier 3 — Cross-Feature Pairwise Combinations (12 Tests: T3-01..T3-12
       await client.post('/auth/oauth/facebook', { accessToken: `valid-email:${email}` }),
       200,
     );
-    assert.ok(fb.user.providers.includes('facebook'));
+    assert.ok(Array.isArray(fb.user.providers) && fb.user.providers.includes('facebook'));
 
     assertSuccessEnvelope(await client.post('/auth/forgot-password', { email }), 200);
-    const token = await fetchResetToken(email);
+    const token = await fetchResetToken(client, cfg, email);
     assertSuccessEnvelope(
       await client.post('/auth/reset-password', { token, newPassword: 'SetPassword123!' }),
       200,
@@ -487,12 +536,14 @@ describe('Tier 3 — Cross-Feature Pairwise Combinations (12 Tests: T3-01..T3-12
       await client.withToken(localLogin.access_token).get('/users/me'),
       200,
     );
-    assert.ok(me.providers.includes('facebook'));
+    assert.equal(me.id, fb.user.id);
+    assert.equal(me.email, email);
 
     const fbAgain = assertSuccessEnvelope(
       await client.post('/auth/oauth/facebook', { accessToken: `valid-email:${email}` }),
       200,
     );
     assert.equal(fbAgain.user.id, me.id);
+    assert.ok(Array.isArray(fbAgain.user.providers) && fbAgain.user.providers.includes('facebook'));
   });
 });

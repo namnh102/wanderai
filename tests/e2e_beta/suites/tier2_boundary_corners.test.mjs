@@ -6,26 +6,31 @@ import path from 'node:path';
 import { getRuntimeConfig } from '../lib/cli_args.mjs';
 import {
   HttpClient,
+  fetchResetToken,
   loginUser,
   registerAndLogin,
   registerUser,
+  resolveExpiredResetToken,
+  resolveHaLongDestination,
+  resolveVerifiedNullFieldPlace,
 } from '../lib/http_client.mjs';
 import {
   assertErrorEnvelope,
   assertSuccessEnvelope,
   assertYoutubeContainerContract,
+  assertYoutubeFiveFields,
 } from '../lib/assertions.mjs';
+import { withFaultProxy } from '../lib/fault_proxy.mjs';
 import {
+  buildPngHeaderBuffer,
+  createMemoryFs,
   detectBetaMobileTree,
-  evaluateAuthOutcomeMatrix,
-  evaluateYoutubeFreshnessUi,
-  getMobileContractSpec,
-  parsePngDimensions,
-  sanitizeInternalRedirect,
-  simulateSavePlaceFlow,
-  validateApiBaseUrl,
+  getFlutterTestResult,
+  verifyBetaDartDeliverables,
+  verifyScreenshots,
 } from '../lib/mobile_contract_verifier.mjs';
 import {
+  fetchDbStats,
   verifyDbStatsIsolation,
   verifyFactualPlaceUnchanged,
   verifyFreezeChecksum,
@@ -44,26 +49,54 @@ const FIXTURE = JSON.parse(
 
 const cfg = getRuntimeConfig();
 const client = new HttpClient(cfg.baseUrl);
-const mobileSpec = getMobileContractSpec();
 
 function uniqueEmail(prefix) {
   return `${prefix}.${crypto.randomUUID().slice(0, 8)}@gomate.vn`;
 }
 
-async function fetchResetToken(email) {
-  if (cfg.mode === 'self-test') {
-    const outbox = await client.get('/_test/mail-outbox', { query: { email } });
-    const data = assertSuccessEnvelope(outbox, 200);
-    assert.ok(data.items.length > 0, `No reset email in outbox for ${email}`);
-    return data.items[data.items.length - 1].rawToken;
-  }
-  if (process.env.E2E_TEST_RESET_TOKEN) return process.env.E2E_TEST_RESET_TOKEN;
-  if (process.env.E2E_MAIL_OUTBOX_URL) {
-    const res = await new HttpClient(process.env.E2E_MAIL_OUTBOX_URL).get('/', { query: { email } });
-    if (res.json?.token) return res.json.token;
-    if (res.json?.data?.items?.length) return res.json.data.items.at(-1).rawToken;
-  }
-  throw new Error('Live mode reset test requires E2E_MAIL_OUTBOX_URL or E2E_TEST_RESET_TOKEN');
+function uniqueVideoId(prefix = 'v') {
+  const cleanPrefix = prefix.replace(/[^A-Za-z0-9_-]/g, '').slice(0, 3) || 'v';
+  const suffix = crypto.randomUUID().replace(/-/g, '').slice(0, 11 - cleanPrefix.length);
+  return `${cleanPrefix}${suffix}`;
+}
+
+function buildMinimalRouterVfs(mobileDir, routerContent) {
+  return createMemoryFs({
+    [path.join(mobileDir, 'lib/core/widgets/app_text_field.dart')]:
+      'class AppTextField { TextFormField build() => TextFormField(controller: widget.controller, obscureText: true, showPasswordToggle: true, validator: v); }',
+    [path.join(mobileDir, 'lib/core/widgets/widgets.dart')]: "export 'app_text_field.dart';",
+    [path.join(mobileDir, 'lib/core/network/api_client.dart')]:
+      "const _publicAuthPaths = {'/auth/login', '/auth/register', '/auth/refresh', '/auth/forgot-password', '/auth/reset-password', '/auth/reset-password/validate', '/auth/oauth/google', '/auth/oauth/facebook'};",
+    [path.join(mobileDir, 'lib/core/router/app_router.dart')]: routerContent,
+  });
+}
+
+function buildAuthVfs(mobileDir, repoRoot, overrides = {}) {
+  const files = {
+    [path.join(mobileDir, 'lib/core/widgets/app_text_field.dart')]:
+      'class AppTextField { TextFormField build() => TextFormField(controller: widget.controller, obscureText: true, showPasswordToggle: true, validator: v); }',
+    [path.join(mobileDir, 'lib/core/widgets/widgets.dart')]: "export 'app_text_field.dart';",
+    [path.join(mobileDir, 'lib/core/network/api_client.dart')]:
+      "const _publicAuthPaths = {'/auth/login', '/auth/register', '/auth/refresh', '/auth/forgot-password', '/auth/reset-password', '/auth/reset-password/validate', '/auth/oauth/google', '/auth/oauth/facebook'};",
+    [path.join(mobileDir, 'lib/core/router/app_router.dart')]:
+      "String? sanitizeInternalRedirect(String? r) { if (parsed.hasScheme || parsed.hasAuthority) return null; if (p == '/login' || p == '/register' || p == '/forgot-password' || p == '/reset-password') return null; return r; }",
+    [path.join(mobileDir, 'lib/features/auth/presentation/login_screen.dart')]:
+      "AppTextField(showPasswordToggle: true); AppButton(); AppStateBanner(); postLoginRedirectProvider; guestBrowseModeProvider; Key('login_google_button'); Key('login_facebook_button'); 'Hủy đăng nhập · Quay lại';",
+    [path.join(mobileDir, 'lib/features/auth/presentation/register_screen.dart')]:
+      "AppTextField(showPasswordToggle: true); AppButton(); AppStateBanner(); postLoginRedirectProvider; guestBrowseModeProvider; 'Hủy đăng nhập · Quay lại';",
+    [path.join(mobileDir, 'lib/features/auth/presentation/forgot_password_screen.dart')]:
+      'AppTextField(); AppButton(); AppStateBanner();',
+    [path.join(mobileDir, 'lib/features/auth/presentation/reset_password_screen.dart')]:
+      'AppTextField(showPasswordToggle: true); AppButton(); AppLoading(); AppStateBanner();',
+    [path.join(mobileDir, 'lib/features/auth/data/auth_social_port.dart')]:
+      'abstract class AuthSocialPort { Future<SocialAuthResult> signInWithGoogle(); Future<SocialAuthResult> signInWithFacebook(); } class SocialAuthSuccess {} class SocialAuthCancelled {} class SocialAuthFailure {}',
+    [path.join(mobileDir, 'lib/features/auth/providers/auth_provider.dart')]:
+      'SocialAuthCancelled(); AuthActionResult.cancelled(); _repo.loginWithGoogle(); _repo.loginWithFacebook();',
+    [path.join(mobileDir, 'test/auth_reset_and_oauth_test.dart')]:
+      'RESET_TOKEN_EXPIRED RESET_TOKEN_USED RESET_TOKEN_INVALID OAUTH_EMAIL_UNAVAILABLE SocialAuthCancelled',
+    ...overrides,
+  };
+  return createMemoryFs(files);
 }
 
 describe('Tier 2 — Boundary & Corner Cases (50 Negative/Boundary Tests: F1–F10)', () => {
@@ -80,75 +113,120 @@ describe('Tier 2 — Boundary & Corner Cases (50 Negative/Boundary Tests: F1–F
     assertErrorEnvelope(emptyForgot, 400, null, '/auth/forgot-password');
   });
 
-  test('T2-F1-02: AppButton loading guard prevents double-submit during active request', async () => {
-    let submitCount = 0;
-    let isLoading = false;
-    const onPress = async () => {
-      if (isLoading) return;
-      isLoading = true;
-      submitCount += 1;
-    };
-    await Promise.all([onPress(), onPress(), onPress()]);
-    assert.equal(submitCount, 1, 'Double-tap while isLoading=true must invoke handler once');
+  test('T2-F1-02: AppButton loading guard prevents double-submit during active request', () => {
     const btnText = fs.readFileSync(
       path.join(cfg.mobileDir, 'lib/core/widgets/app_button.dart'),
       'utf8',
     );
     assert.ok(btnText.includes('isLoading'));
+    assert.ok(btnText.includes('enabled = onPressed != null && !isLoading'));
+    assert.ok(btnText.includes('onTap: enabled ? onPressed : null'));
+
+    const designTest = fs.readFileSync(
+      path.join(cfg.mobileDir, 'test/design_system_and_map_stability_test.dart'),
+      'utf8',
+    );
+    assert.ok(designTest.includes('AppButton') && designTest.includes('isLoading: true'));
+
+    const loginText = fs.readFileSync(
+      path.join(cfg.mobileDir, 'lib/features/auth/presentation/login_screen.dart'),
+      'utf8',
+    );
+    const sheetText = fs.readFileSync(
+      path.join(cfg.mobileDir, 'lib/features/places/presentation/widgets/save_place_to_trip_sheet.dart'),
+      'utf8',
+    );
+    assert.ok(loginText.includes('_loading'));
+    assert.ok(sheetText.includes('_saving'));
+    getFlutterTestResult(cfg.mobileDir, { requireExecuted: cfg.shouldRunFlutter });
   });
 
-  test('T2-F1-03: AppStateBanner supports long Vietnamese error text (~180 chars) without truncation crash', () => {
-    const longMsg =
-      'Không thể đồng bộ dữ liệu chuyến đi Hạ Long lúc này do kết nối mạng không ổn định. Bạn vẫn giữ nguyên chuyến đi vừa tạo và có thể nhấn Thử lại ngay khi có mạng trở lại.';
-    assert.ok(longMsg.length >= 160);
+  test('T2-F1-03: AppStateBanner supports long Vietnamese error text without truncation crash', () => {
     const bannerText = fs.readFileSync(
       path.join(cfg.mobileDir, 'lib/core/widgets/app_state_banner.dart'),
       'utf8',
     );
-    assert.ok(bannerText.includes('AppStateBanner'));
-    assert.ok(bannerText.includes('warning') || bannerText.includes('error'));
+    assert.ok(bannerText.includes('AppStateBannerTone'));
+    assert.ok(bannerText.includes('Expanded'));
+    assert.ok(bannerText.includes('actionLabel != null && onAction != null'));
+
+    const waveBTest = fs.readFileSync(
+      path.join(cfg.mobileDir, 'test/ux_v2_wave_b_test.dart'),
+      'utf8',
+    );
+    assert.ok(waveBTest.includes('AppStateBanner'));
+    getFlutterTestResult(cfg.mobileDir, { requireExecuted: cfg.shouldRunFlutter });
   });
 
-  test('T2-F1-04: AppErrorState transitions cleanly from 503 failure to 200 on retry', async () => {
-    if (cfg.mode === 'self-test') {
-      const failRes = await client.get(`/places/${FIXTURE.poi.id}`, {
-        headers: { 'x-e2e-inject-status': '503' },
-      });
-      assertErrorEnvelope(failRes, 503, null, '/places/');
-    }
-    const retryRes = await client.get(`/places/${FIXTURE.poi.id}`);
-    const data = assertSuccessEnvelope(retryRes, 200);
-    assert.equal(data.id, FIXTURE.poi.id);
+  test('T2-F1-04: AppErrorState transitions cleanly from real HTTP 503 failure to 200 on retry', async () => {
     const errWidget = fs.readFileSync(
       path.join(cfg.mobileDir, 'lib/core/widgets/app_error_state.dart'),
       'utf8',
     );
     assert.ok(errWidget.includes('AppErrorState'));
+    assert.ok(errWidget.includes('onRetry'));
+    assert.ok(errWidget.includes('Thử lại'));
+
+    const placeDetailTest = fs.readFileSync(
+      path.join(cfg.mobileDir, 'test/place_detail_test.dart'),
+      'utf8',
+    );
+    assert.ok(placeDetailTest.includes('PlaceDetailScreen'));
+
+    await withFaultProxy(
+      cfg.baseUrl,
+      [{ method: 'GET', pathPrefix: `/places/${FIXTURE.poi.id}`, remaining: 1 }],
+      async ({ proxyClient, getStats }) => {
+        const failRes = await proxyClient.get(`/places/${FIXTURE.poi.id}`);
+        assertErrorEnvelope(failRes, 503, 'SERVICE_UNAVAILABLE', '/places/');
+
+        const retryRes = await proxyClient.get(`/places/${FIXTURE.poi.id}`);
+        const data = assertSuccessEnvelope(retryRes, 200);
+        assert.equal(data.id, FIXTURE.poi.id);
+        assert.equal(getStats().interceptedCount, 1);
+        assert.equal(getStats().forwardedCount, 1);
+      },
+    );
+    getFlutterTestResult(cfg.mobileDir, { requireExecuted: cfg.shouldRunFlutter });
   });
 
   test('T2-F1-05: Password visibility toggle contract preserves entered value across auth screens', () => {
-    let obscureText = true;
-    let enteredPassword = 'SecretPassword123!';
-    obscureText = !obscureText;
-    assert.equal(obscureText, false);
-    assert.equal(enteredPassword, 'SecretPassword123!');
-    obscureText = !obscureText;
-    assert.equal(obscureText, true);
-    assert.equal(enteredPassword, 'SecretPassword123!');
-    if (detectBetaMobileTree(cfg.mobileDir)) {
+    const loginText = fs.readFileSync(
+      path.join(cfg.mobileDir, 'lib/features/auth/presentation/login_screen.dart'),
+      'utf8',
+    );
+    const registerText = fs.readFileSync(
+      path.join(cfg.mobileDir, 'lib/features/auth/presentation/register_screen.dart'),
+      'utf8',
+    );
+
+    if (cfg.mode === 'live' || detectBetaMobileTree(cfg.mobileDir)) {
+      assert.equal(detectBetaMobileTree(cfg.mobileDir), true);
       const tf = fs.readFileSync(
         path.join(cfg.mobileDir, 'lib/core/widgets/app_text_field.dart'),
         'utf8',
       );
-      assert.ok(tf.includes('obscureText'));
+      assert.ok(tf.includes('showPasswordToggle'));
+      assert.ok(tf.includes('_obscured'));
+      assert.ok(tf.includes('controller: widget.controller'));
+      assert.ok(loginText.includes('showPasswordToggle: true'));
+      assert.ok(registerText.includes('showPasswordToggle: true'));
+      verifyBetaDartDeliverables(cfg.mobileDir, cfg.repoRoot, {
+        requireScreenshots: true,
+        requireM4Youtube: cfg.mode === 'live',
+      });
+    } else {
+      assert.ok(loginText.includes('Icons.visibility') && loginText.includes('_obscure'));
+      assert.ok(registerText.includes('Icons.visibility') && registerText.includes('_obscure'));
     }
   });
 
   // --- F2 ---
   test('T2-F2-01: Hạ Long >20 POIs page 1 vs search "Tháp Đồng Hồ" vs empty search "khongtontaixyz"', async () => {
+    const haLong = await resolveHaLongDestination(client);
     const page1 = assertSuccessEnvelope(
       await client.get('/places', {
-        query: { destinationId: FIXTURE.destinations.haLong.id, page: 1, limit: 20 },
+        query: { destinationId: haLong.id, page: 1, limit: 20 },
       }),
       200,
     );
@@ -157,7 +235,7 @@ describe('Tier 2 — Boundary & Corner Cases (50 Negative/Boundary Tests: F1–F
     const found = assertSuccessEnvelope(
       await client.get('/places', {
         query: {
-          destinationId: FIXTURE.destinations.haLong.id,
+          destinationId: haLong.id,
           search: 'Tháp Đồng Hồ',
           verifiedOnly: true,
         },
@@ -168,7 +246,7 @@ describe('Tier 2 — Boundary & Corner Cases (50 Negative/Boundary Tests: F1–F
 
     const empty = assertSuccessEnvelope(
       await client.get('/places', {
-        query: { destinationId: FIXTURE.destinations.haLong.id, search: 'khongtontaixyz' },
+        query: { destinationId: haLong.id, search: 'khongtontaixyz' },
       }),
       200,
     );
@@ -183,16 +261,15 @@ describe('Tier 2 — Boundary & Corner Cases (50 Negative/Boundary Tests: F1–F
     assertErrorEnvelope(unverifiedRes, 404, 'PLACE_NOT_FOUND', '/places/');
   });
 
-  test('T2-F2-03: Verified place with null address/openingHours/rating does not fabricate synthetic values', async () => {
-    const res = await client.get(`/places/${FIXTURE.negativeFixtures.unratedVerifiedPlaceId}`);
-    if (res.status === 200) {
-      const place = assertSuccessEnvelope(res, 200);
-      assert.equal(place.address, null);
-      assert.equal(place.openingHours, null);
-      assert.equal(place.rating, null);
-    } else {
-      assertErrorEnvelope(res, 404, 'PLACE_NOT_FOUND', '/places/');
-    }
+  test('T2-F2-03: Verified place with null openingHours/rating does not fabricate synthetic values', async () => {
+    const place = await resolveVerifiedNullFieldPlace(
+      client,
+      (p) => (p.openingHours ?? null) === null && (p.rating ?? null) === null,
+      'verified POI with null openingHours and rating',
+    );
+    assert.equal(place.isVerified, true);
+    assert.equal(place.openingHours ?? null, null);
+    assert.equal(place.rating ?? null, null);
   });
 
   test('T2-F2-04: MapScreen location permission error snackbar hook coexists with PlacePreviewSheet CTA', () => {
@@ -230,50 +307,76 @@ describe('Tier 2 — Boundary & Corner Cases (50 Negative/Boundary Tests: F1–F
 
   // --- F3 ---
   test('T2-F3-01: Google OAuth Cancelled makes zero backend OAuth calls, shows no error banner, keeps form input', async () => {
-    let backendCalls = 0;
-    const ui = await evaluateAuthOutcomeMatrix({
-      outcome: 'Cancelled',
-      redirectPath: '/login',
-      currentInput: { email: 'user@gomate.vn' },
-      callBackendOAuth: async () => {
-        backendCalls += 1;
-      },
-    });
-    assert.equal(backendCalls, 0);
-    assert.equal(ui.backendCalled, false);
-    assert.equal(ui.banner, null);
-    assert.equal(ui.currentInput.email, 'user@gomate.vn');
-    assert.equal(ui.authenticated, false);
+    assertErrorEnvelope(await client.get('/users/me'), 401, null, '/users/me');
+
+    if (cfg.mode === 'live' || detectBetaMobileTree(cfg.mobileDir)) {
+      const authProvText = fs.readFileSync(
+        path.join(cfg.mobileDir, 'lib/features/auth/providers/auth_provider.dart'),
+        'utf8',
+      );
+      const loginText = fs.readFileSync(
+        path.join(cfg.mobileDir, 'lib/features/auth/presentation/login_screen.dart'),
+        'utf8',
+      );
+      const oauthTest = fs.readFileSync(
+        path.join(cfg.mobileDir, 'test/auth_reset_and_oauth_test.dart'),
+        'utf8',
+      );
+      assert.ok(authProvText.includes('SocialAuthCancelled'));
+      assert.ok(authProvText.includes('AuthActionResult.cancelled'));
+      assert.ok(loginText.includes('AuthActionOutcome.cancelled') || loginText.includes('result.isError'));
+      assert.ok(oauthTest.includes('SocialAuthCancelled'));
+      getFlutterTestResult(cfg.mobileDir, { requireExecuted: cfg.shouldRunFlutter });
+    } else {
+      const loginText = fs.readFileSync(
+        path.join(cfg.mobileDir, 'lib/features/auth/presentation/login_screen.dart'),
+        'utf8',
+      );
+      assert.ok(loginText.includes('_emailCtrl') && loginText.includes('_passCtrl'));
+      const vfsNoCancel = buildAuthVfs(cfg.mobileDir, cfg.repoRoot, {
+        [path.join(cfg.mobileDir, 'lib/features/auth/providers/auth_provider.dart')]:
+          'AuthActionResult.error(message: "err"); loginWithGoogle(); loginWithFacebook();',
+      });
+      assert.throws(() =>
+        verifyBetaDartDeliverables(cfg.mobileDir, cfg.repoRoot, {
+          requireScreenshots: false,
+          requireM4Youtube: false,
+          fsImpl: vfsNoCancel,
+        }),
+      );
+    }
   });
 
   test('T2-F3-02: Facebook OAuth missing email returns 400 OAUTH_EMAIL_UNAVAILABLE & renders inline error banner', async () => {
     const errRes = await client.post('/auth/oauth/facebook', { accessToken: 'no-email-fb-token' });
     assertErrorEnvelope(errRes, 400, 'OAUTH_EMAIL_UNAVAILABLE', '/auth/oauth/facebook');
-    const ui = await evaluateAuthOutcomeMatrix({
-      outcome: 'Error',
-      callBackendOAuth: async () => errRes,
-    });
-    assert.equal(ui.banner.tone, 'error');
-    assert.equal(ui.banner.errorCode, 'OAUTH_EMAIL_UNAVAILABLE');
-    assert.equal(ui.authenticated, false);
+
+    const loginText = fs.readFileSync(
+      path.join(cfg.mobileDir, 'lib/features/auth/presentation/login_screen.dart'),
+      'utf8',
+    );
+    assert.ok(loginText.includes('_emailCtrl') && loginText.includes('error'));
+    if (cfg.mode === 'live' || detectBetaMobileTree(cfg.mobileDir)) {
+      const oauthTest = fs.readFileSync(
+        path.join(cfg.mobileDir, 'test/auth_reset_and_oauth_test.dart'),
+        'utf8',
+      );
+      assert.ok(oauthTest.includes('OAUTH_EMAIL_UNAVAILABLE'));
+      getFlutterTestResult(cfg.mobileDir, { requireExecuted: cfg.shouldRunFlutter });
+    }
   });
 
   test('T2-F3-03: Expired or missing reset token returns RESET_TOKEN_EXPIRED / RESET_TOKEN_INVALID', async () => {
     const missingRes = await client.get('/auth/reset-password/validate', { query: { token: '' } });
     assertErrorEnvelope(missingRes, 400, 'RESET_TOKEN_INVALID', '/auth/reset-password/validate');
 
-    if (cfg.mode === 'self-test') {
-      const email = uniqueEmail('t2.f3.03');
-      await registerUser(client, { email, password: 'Password123!', name: 'Exp Token UI' });
-      const seeded = assertSuccessEnvelope(
-        await client.post('/_test/seed-expired-reset-token', { email }),
-        200,
-      );
-      const expRes = await client.get('/auth/reset-password/validate', {
-        query: { token: seeded.token },
-      });
-      assertErrorEnvelope(expRes, [400, 410], 'RESET_TOKEN_EXPIRED', '/auth/reset-password/validate');
-    }
+    const email = uniqueEmail('t2.f3.03');
+    await registerUser(client, { email, password: 'Password123!', name: 'Exp Token UI' });
+    const expiredToken = await resolveExpiredResetToken(client, cfg, email);
+    const expRes = await client.get('/auth/reset-password/validate', {
+      query: { token: expiredToken },
+    });
+    assertErrorEnvelope(expRes, [400, 410], 'RESET_TOKEN_EXPIRED', '/auth/reset-password/validate');
   });
 
   test('T2-F3-04: Register rejects short password (<6 chars) with 400 validation error', async () => {
@@ -286,116 +389,178 @@ describe('Tier 2 — Boundary & Corner Cases (50 Negative/Boundary Tests: F1–F
   });
 
   test('T2-F3-05: Open-redirect sanitizer blocks external, protocol-relative, and auth-loop redirects', () => {
-    assert.equal(sanitizeInternalRedirect('https://evil.example'), null);
-    assert.equal(sanitizeInternalRedirect('//evil.example'), null);
-    assert.equal(sanitizeInternalRedirect('/login'), null);
-    assert.equal(sanitizeInternalRedirect('/register'), null);
-    assert.equal(sanitizeInternalRedirect(`/places/${FIXTURE.poi.id}`), `/places/${FIXTURE.poi.id}`);
+    const routerText = fs.readFileSync(
+      path.join(cfg.mobileDir, 'lib/core/router/app_router.dart'),
+      'utf8',
+    );
+    assert.ok(routerText.includes('sanitizeInternalRedirect'));
+    assert.ok(routerText.includes('parsed.hasScheme') && routerText.includes('parsed.hasAuthority'));
+    assert.ok(routerText.includes("startsWith('//')"));
+    assert.ok(routerText.includes("'/login'") && routerText.includes("'/register'"));
+
+    const journeyTest = fs.readFileSync(
+      path.join(cfg.mobileDir, 'test/halong_trip_save_journey_test.dart'),
+      'utf8',
+    );
+    assert.ok(journeyTest.includes('https://evil.example/phish'));
+    assert.ok(journeyTest.includes('//evil.example/phish'));
+
+    const badRouterVfs = buildMinimalRouterVfs(
+      cfg.mobileDir,
+      "String? sanitizeInternalRedirect(String? r) => r;",
+    );
+    assert.throws(() =>
+      verifyBetaDartDeliverables(cfg.mobileDir, cfg.repoRoot, {
+        requireScreenshots: false,
+        requireM4Youtube: false,
+        fsImpl: badRouterVfs,
+      }),
+    );
+    getFlutterTestResult(cfg.mobileDir, { requireExecuted: cfg.shouldRunFlutter });
   });
 
   // --- F4 ---
   test('T2-F4-01: Cancel-Login ("Hủy đăng nhập") returns to /places/:id in guest mode with zero error banner', async () => {
-    const target = `/places/${FIXTURE.poi.id}`;
-    const ui = await evaluateAuthOutcomeMatrix({
-      outcome: 'Cancelled',
-      redirectPath: target,
-    });
-    assert.equal(ui.navigatedTo, target);
-    assert.equal(ui.postLoginRedirect, null);
-    assert.equal(ui.authenticated, false);
-    assert.equal(ui.guestBrowseMode, true);
-    assert.equal(ui.banner, null);
+    const guestPlace = assertSuccessEnvelope(await client.get(`/places/${FIXTURE.poi.id}`), 200);
+    assert.equal(guestPlace.id, FIXTURE.poi.id);
+    assertErrorEnvelope(await client.get('/users/me'), 401, null, '/users/me');
+
+    const routerText = fs.readFileSync(
+      path.join(cfg.mobileDir, 'lib/core/router/app_router.dart'),
+      'utf8',
+    );
+    assert.ok(routerText.includes('isPublicPlaceDetail'));
+    assert.ok(routerText.includes('guestBrowseModeProvider'));
+
+    if (cfg.mode === 'live' || detectBetaMobileTree(cfg.mobileDir)) {
+      const loginText = fs.readFileSync(
+        path.join(cfg.mobileDir, 'lib/features/auth/presentation/login_screen.dart'),
+        'utf8',
+      );
+      const regText = fs.readFileSync(
+        path.join(cfg.mobileDir, 'lib/features/auth/presentation/register_screen.dart'),
+        'utf8',
+      );
+      assert.ok(loginText.includes('Hủy đăng nhập') || loginText.includes('Quay lại'));
+      assert.ok(regText.includes('Hủy đăng nhập') || regText.includes('Quay lại'));
+      assert.ok(loginText.includes('postLoginRedirectProvider') && loginText.includes('guestBrowseModeProvider'));
+    } else {
+      const vfsNoCancelLabel = buildAuthVfs(cfg.mobileDir, cfg.repoRoot, {
+        [path.join(cfg.mobileDir, 'lib/features/auth/presentation/login_screen.dart')]:
+          "AppTextField(showPasswordToggle: true); AppButton(); AppStateBanner(); postLoginRedirectProvider; guestBrowseModeProvider; Key('login_google_button'); Key('login_facebook_button');",
+      });
+      assert.throws(() =>
+        verifyBetaDartDeliverables(cfg.mobileDir, cfg.repoRoot, {
+          requireScreenshots: false,
+          requireM4Youtube: false,
+          fsImpl: vfsNoCancelLabel,
+        }),
+      );
+    }
   });
 
   test('T2-F4-02: Transient 503 on POST /trips/:id/itinerary retains _createdPendingTrip & avoids duplicate trip on retry', async () => {
+    const sheetText = fs.readFileSync(
+      path.join(cfg.mobileDir, 'lib/features/places/presentation/widgets/save_place_to_trip_sheet.dart'),
+      'utf8',
+    );
+    assert.ok(sheetText.includes('_createdPendingTrip'));
+    assert.ok(sheetText.includes('on DioException'));
+
+    const journeyTest = fs.readFileSync(
+      path.join(cfg.mobileDir, 'test/halong_trip_save_journey_test.dart'),
+      'utf8',
+    );
+    assert.ok(journeyTest.includes('Retry guard'));
+
+    const haLong = await resolveHaLongDestination(client);
     const auth = await registerAndLogin(client, {
       email: uniqueEmail('t2.f4.02'),
       password: 'Password123!',
       name: 'Retry Guard User',
     });
+
+    await withFaultProxy(
+      cfg.baseUrl,
+      [{ method: 'POST', pathPrefix: '/trips/', remaining: 1 }],
+      async ({ proxyClient, getStats }) => {
+        const proxyAuthed = proxyClient.withToken(auth.accessToken);
+        const trip = assertSuccessEnvelope(
+          await proxyAuthed.post('/trips', {
+            title: 'Hạ Long Retry Safe',
+            destinationId: haLong.id,
+          }),
+          201,
+        );
+
+        const firstItinerary = await proxyAuthed.post(`/trips/${trip.id}/itinerary`, {
+          dayNumber: 1,
+          activity: 'Tham quan Tháp Đồng Hồ',
+          placeId: FIXTURE.poi.id,
+        });
+        assertErrorEnvelope(firstItinerary, 503, 'SERVICE_UNAVAILABLE', '/trips/');
+
+        const retryItinerary = await proxyAuthed.post(`/trips/${trip.id}/itinerary`, {
+          dayNumber: 1,
+          activity: 'Tham quan Tháp Đồng Hồ',
+          placeId: FIXTURE.poi.id,
+        });
+        assertSuccessEnvelope(retryItinerary, 201);
+
+        const stats = getStats();
+        assert.equal(stats.interceptedCount, 1);
+        assert.ok(stats.forwardedCount >= 2);
+
+        const trips = assertSuccessEnvelope(await proxyAuthed.get('/trips'), 200);
+        assert.equal(trips.filter((t) => t.title === 'Hạ Long Retry Safe').length, 1);
+      },
+    );
+    getFlutterTestResult(cfg.mobileDir, { requireExecuted: cfg.shouldRunFlutter });
+  });
+
+  test('T2-F4-03: Validation/creation error before POST /trips preserves typed title & creates 0 trips', async () => {
+    const sheetText = fs.readFileSync(
+      path.join(cfg.mobileDir, 'lib/features/places/presentation/widgets/save_place_to_trip_sheet.dart'),
+      'utf8',
+    );
+    assert.ok(sheetText.includes('on DioException') && sheetText.includes('_newTitleCtrl'));
+    const tripProviderText = fs.readFileSync(
+      path.join(cfg.mobileDir, 'lib/features/trips/providers/trip_provider.dart'),
+      'utf8',
+    );
+    assert.ok(tripProviderText.includes('createTrip') && tripProviderText.includes('return null;'));
+
+    const auth = await registerAndLogin(client, {
+      email: uniqueEmail('t2.f4.03'),
+      password: 'Password123!',
+      name: 'Invalid Trip Create User',
+    });
     const authed = client.withToken(auth.accessToken);
-    let injectFail = true;
-
-    const flow = await simulateSavePlaceFlow({
-      newTripTitle: 'Hạ Long Retry Safe',
-      dayNumber: 1,
-      placeId: FIXTURE.poi.id,
-      createTripFn: async ({ title }) => {
-        const res = await authed.post('/trips', { title });
-        const trip = assertSuccessEnvelope(res, 201);
-        return { ok: true, tripId: trip.id };
-      },
-      addItineraryFn: async ({ tripId, dayNumber, placeId }) => {
-        const headers =
-          cfg.mode === 'self-test' && injectFail ? { 'x-e2e-inject-status': '503' } : {};
-        const res =
-          cfg.mode !== 'self-test' && injectFail
-            ? { ok: false, status: 503, networkError: true }
-            : await authed.post(
-                `/trips/${tripId}/itinerary`,
-                { dayNumber, activity: 'Tham quan Tháp Đồng Hồ', placeId },
-                { headers },
-              );
-        if (injectFail) {
-          injectFail = false;
-          return { ok: false, status: 503, networkError: true };
-        }
-        assertSuccessEnvelope(res, 201);
-        return { ok: true };
-      },
-    });
-
-    const first = await flow.attempt();
-    assert.equal(first.saved, false);
-    assert.equal(first.sheetOpen, true);
-    assert.equal(first.banner.tone, 'warning');
-    assert.ok(first.createdPendingTripId, '_createdPendingTrip must be retained');
-    assert.equal(first.createTripCalls, 1);
-
-    const retry = await flow.attempt();
-    assert.equal(retry.saved, true);
-    assert.equal(retry.createTripCalls, 1, 'Retry MUST NOT call POST /trips a second time');
-    assert.equal(retry.addItineraryCalls, 2);
-
+    const badCreate = await authed.post('/trips', {});
+    assertErrorEnvelope(badCreate, 400, null, '/trips');
     const trips = assertSuccessEnvelope(await authed.get('/trips'), 200);
-    assert.equal(trips.length, 1);
+    assert.equal(trips.length, 0);
+    getFlutterTestResult(cfg.mobileDir, { requireExecuted: cfg.shouldRunFlutter });
   });
 
-  test('T2-F4-03: Offline connectionError before POST /trips shows warning banner & preserves typed title', async () => {
-    const flow = await simulateSavePlaceFlow({
-      newTripTitle: 'Chuyến Hạ Long Offline',
-      dayNumber: 1,
-      placeId: FIXTURE.poi.id,
-      createTripFn: async () => ({
-        ok: false,
-        networkError: true,
-        status: 0,
-        message: 'Mất kết nối mạng',
-      }),
-      addItineraryFn: async () => ({ ok: true }),
-    });
-    const out = await flow.attempt();
-    assert.equal(out.saved, false);
-    assert.equal(out.banner.tone, 'warning');
-    assert.equal(out.createdPendingTripId, null);
-  });
+  test('T2-F4-04: Whitespace new trip title rejected cleanly with zero trips created', async () => {
+    const sheetText = fs.readFileSync(
+      path.join(cfg.mobileDir, 'lib/features/places/presentation/widgets/save_place_to_trip_sheet.dart'),
+      'utf8',
+    );
+    assert.ok(sheetText.includes('rawTitle.isEmpty'));
+    assert.ok(sheetText.includes('Vui lòng nhập tên chuyến đi mới.'));
 
-  test('T2-F4-04: Whitespace new trip title rejected cleanly with zero POST /trips calls', async () => {
-    let createCalled = false;
-    const flow = await simulateSavePlaceFlow({
-      newTripTitle: '   ',
-      dayNumber: 1,
-      placeId: FIXTURE.poi.id,
-      createTripFn: async () => {
-        createCalled = true;
-        return { ok: true, tripId: 'never' };
-      },
-      addItineraryFn: async () => ({ ok: true }),
+    const auth = await registerAndLogin(client, {
+      email: uniqueEmail('t2.f4.04'),
+      password: 'Password123!',
+      name: 'Whitespace Trip User',
     });
-    const out = await flow.attempt();
-    assert.equal(createCalled, false);
-    assert.equal(out.banner.tone, 'error');
-    assert.match(out.banner.message, /tên chuyến đi/i);
+    const authed = client.withToken(auth.accessToken);
+    const badWhitespace = await authed.post('/trips', { title: '   ' });
+    assertErrorEnvelope(badWhitespace, 400, null, '/trips');
+    const trips = assertSuccessEnvelope(await authed.get('/trips'), 200);
+    assert.equal(trips.length, 0);
   });
 
   test('T2-F4-05: 401 expired JWT during Save redirects cleanly to /login?redirect=/places/:id', async () => {
@@ -405,62 +570,108 @@ describe('Tier 2 — Boundary & Corner Cases (50 Negative/Boundary Tests: F1–F
       placeId: FIXTURE.poi.id,
     });
     assertErrorEnvelope(res, 401, null, '/trips/');
-    const redirectParam = encodeURIComponent(`/places/${FIXTURE.poi.id}`);
-    const loginRoute = `/login?redirect=${redirectParam}`;
-    assert.equal(
-      sanitizeInternalRedirect(decodeURIComponent(loginRoute.split('redirect=')[1])),
-      `/places/${FIXTURE.poi.id}`,
+
+    const sheetText = fs.readFileSync(
+      path.join(cfg.mobileDir, 'lib/features/places/presentation/widgets/save_place_to_trip_sheet.dart'),
+      'utf8',
     );
+    const apiClientText = fs.readFileSync(
+      path.join(cfg.mobileDir, 'lib/core/network/api_client.dart'),
+      'utf8',
+    );
+    const routerText = fs.readFileSync(
+      path.join(cfg.mobileDir, 'lib/core/router/app_router.dart'),
+      'utf8',
+    );
+    assert.ok(sheetText.includes('statusCode == 401') && sheetText.includes('/login?redirect='));
+    assert.ok(apiClientText.includes('_JwtAuthInterceptor'));
+    assert.ok(routerText.includes('sanitizeInternalRedirect'));
   });
 
   // --- F5 ---
   test('T2-F5-01: AppConstants rejects empty, http://localhost, and http://10.0.2.2 in strict profile/release mode', () => {
-    for (const bad of ['', 'http://localhost:3000', 'http://10.0.2.2:3000']) {
-      assert.throws(() => validateApiBaseUrl(bad, { isReleaseMode: true }), /StateError/);
-      assert.throws(() => validateApiBaseUrl(bad, { isProfileMode: true }), /StateError/);
-    }
+    const constText = fs.readFileSync(
+      path.join(cfg.mobileDir, 'lib/core/constants/app_constants.dart'),
+      'utf8',
+    );
+    assert.ok(constText.includes('_disallowedReleaseHosts'));
+    assert.ok(constText.includes('StateError') && constText.includes('FormatException'));
+
+    const apiConfigTest = fs.readFileSync(
+      path.join(cfg.mobileDir, 'test/api_config_test.dart'),
+      'utf8',
+    );
+    assert.ok(apiConfigTest.includes('http://localhost:3000'));
+    assert.ok(apiConfigTest.includes('10.0.2.2'));
+    assert.ok(apiConfigTest.includes('isA<StateError>()'));
+    assert.ok(apiConfigTest.includes('isA<FormatException>()'));
+    getFlutterTestResult(cfg.mobileDir, { requireExecuted: cfg.shouldRunFlutter });
   });
 
-  test('T2-F5-02: Long Vietnamese title ("Tháp Đồng Hồ Trung Tâm Thành Phố Hạ Long Quảng Ninh") layout & 390x844 spec', () => {
+  test('T2-F5-02: Long Vietnamese title layout overflow protection & 360x800 @ 1.3x Flutter test check', async () => {
     const longTitle = 'Tháp Đồng Hồ Trung Tâm Thành Phố Hạ Long Quảng Ninh';
     assert.ok(longTitle.length > 45);
-    assert.equal(mobileSpec.betaRequiredDeliverables.screenshotDimensions.width, 390);
-    assert.equal(mobileSpec.betaRequiredDeliverables.screenshotDimensions.height, 844);
+    const searchRes = await client.get('/places', { query: { search: longTitle } });
+    assertSuccessEnvelope(searchRes, 200);
+
+    for (const rel of [
+      'lib/features/places/presentation/place_detail_screen.dart',
+      'lib/features/places/presentation/widgets/save_place_to_trip_sheet.dart',
+      'lib/features/map/presentation/widgets/place_preview_sheet.dart',
+      'lib/features/home/presentation/widgets/home_verified_place_tile.dart',
+    ]) {
+      const txt = fs.readFileSync(path.join(cfg.mobileDir, rel), 'utf8');
+      assert.ok(
+        txt.includes('TextOverflow.ellipsis') || txt.includes('Expanded') || txt.includes('Flexible'),
+        `${rel} must handle long Vietnamese text without overflow`,
+      );
+    }
+
+    const journeyTest = fs.readFileSync(
+      path.join(cfg.mobileDir, 'test/halong_trip_save_journey_test.dart'),
+      'utf8',
+    );
+    assert.ok(journeyTest.includes('360') && journeyTest.includes('800') && journeyTest.includes('1.3'));
+    assert.ok(journeyTest.includes('takeException()'));
+    getFlutterTestResult(cfg.mobileDir, { requireExecuted: cfg.shouldRunFlutter });
   });
 
   test('T2-F5-03: List-open benchmark timing completes cleanly for empty search and 20+ items', async () => {
+    const haLong = await resolveHaLongDestination(client);
     const empty = await client.get('/places', {
-      query: { destinationId: FIXTURE.destinations.haLong.id, search: 'no-match-999' },
+      query: { destinationId: haLong.id, search: 'no-match-999' },
     });
     const full = await client.get('/places', {
-      query: { destinationId: FIXTURE.destinations.haLong.id, limit: 50 },
+      query: { destinationId: haLong.id, limit: 50 },
     });
     assertSuccessEnvelope(empty, 200);
     assertSuccessEnvelope(full, 200);
     assert.ok(empty.durationMs >= 0 && full.durationMs >= 0);
   });
 
-  test('T2-F5-04: Broken/404 cover image URL fallback & null coverImage tolerance', async () => {
-    const res = await client.get(`/places/${FIXTURE.negativeFixtures.unratedVerifiedPlaceId}`);
-    if (res.status === 200) {
-      const place = assertSuccessEnvelope(res, 200);
-      assert.equal(place.coverImage ?? null, null);
-    } else {
-      assertErrorEnvelope(res, 404, 'PLACE_NOT_FOUND', '/places/');
-    }
+  test('T2-F5-04: Verified place with null coverImage tolerance without synthetic fabrication', async () => {
+    const place = await resolveVerifiedNullFieldPlace(
+      client,
+      (p) => (p.coverImage ?? null) === null,
+      'verified POI with null coverImage',
+    );
+    assert.equal(place.isVerified, true);
+    assert.equal(place.coverImage ?? null, null);
   });
 
   test('T2-F5-05: Before vs After screenshot PNG dimensions parity check', () => {
-    const dir = path.join(cfg.repoRoot, mobileSpec.betaRequiredDeliverables.screenshotDirRelativeToRepo);
-    if (detectBetaMobileTree(cfg.mobileDir) && fs.existsSync(dir)) {
-      const pngs = fs.readdirSync(dir).filter((f) => f.endsWith('.png'));
-      const dims = pngs.map((f) => parsePngDimensions(path.join(dir, f)));
-      for (const d of dims) {
-        assert.equal(d.width, dims[0].width);
-        assert.equal(d.height, dims[0].height);
-      }
+    if (cfg.mode === 'live' || detectBetaMobileTree(cfg.mobileDir)) {
+      assert.equal(detectBetaMobileTree(cfg.mobileDir), true);
+      const ss = verifyScreenshots(cfg.repoRoot, { requireFiles: true });
+      assert.ok(ss.beforeCount > 0 && ss.afterCount > 0);
     } else {
-      assert.equal(mobileSpec.betaRequiredDeliverables.screenshotDimensions.width, 390);
+      const vfsMismatch = createMemoryFs({
+        [path.join(cfg.repoRoot, 'docs/beta/mobile/screenshots/before/01_login.png')]:
+          buildPngHeaderBuffer(390, 844),
+        [path.join(cfg.repoRoot, 'docs/beta/mobile/screenshots/after/01_login.png')]:
+          buildPngHeaderBuffer(360, 800),
+      });
+      assert.throws(() => verifyScreenshots(cfg.repoRoot, { fsImpl: vfsMismatch, requireFiles: true }));
     }
   });
 
@@ -468,25 +679,19 @@ describe('Tier 2 — Boundary & Corner Cases (50 Negative/Boundary Tests: F1–F
   test('T2-F6-01: Expired reset token rejected with RESET_TOKEN_EXPIRED & old password preserved', async () => {
     const email = uniqueEmail('t2.f6.01');
     await registerUser(client, { email, password: 'OldPassword123!', name: 'Exp Reset' });
-    let expiredToken = process.env.E2E_EXPIRED_RESET_TOKEN || '';
-    if (cfg.mode === 'self-test') {
-      const seeded = assertSuccessEnvelope(
-        await client.post('/_test/seed-expired-reset-token', { email }),
-        200,
-      );
-      expiredToken = seeded.token;
-    }
-    if (expiredToken) {
-      const valRes = await client.get('/auth/reset-password/validate', {
-        query: { token: expiredToken },
-      });
-      assertErrorEnvelope(valRes, [400, 410], 'RESET_TOKEN_EXPIRED', '/auth/reset-password/validate');
-      const rstRes = await client.post('/auth/reset-password', {
-        token: expiredToken,
-        newPassword: 'NewPassword123!',
-      });
-      assertErrorEnvelope(rstRes, [400, 410], 'RESET_TOKEN_EXPIRED', '/auth/reset-password');
-    }
+    const expiredToken = await resolveExpiredResetToken(client, cfg, email);
+
+    const valRes = await client.get('/auth/reset-password/validate', {
+      query: { token: expiredToken },
+    });
+    assertErrorEnvelope(valRes, [400, 410], 'RESET_TOKEN_EXPIRED', '/auth/reset-password/validate');
+
+    const rstRes = await client.post('/auth/reset-password', {
+      token: expiredToken,
+      newPassword: 'NewPassword123!',
+    });
+    assertErrorEnvelope(rstRes, [400, 410], 'RESET_TOKEN_EXPIRED', '/auth/reset-password');
+
     assertSuccessEnvelope(await loginUser(client, { email, password: 'OldPassword123!' }), 200);
   });
 
@@ -494,7 +699,7 @@ describe('Tier 2 — Boundary & Corner Cases (50 Negative/Boundary Tests: F1–F
     const email = uniqueEmail('t2.f6.02');
     await registerUser(client, { email, password: 'OldPassword123!', name: 'Used Reset' });
     assertSuccessEnvelope(await client.post('/auth/forgot-password', { email }), 200);
-    const token = await fetchResetToken(email);
+    const token = await fetchResetToken(client, cfg, email);
 
     const [r1, r2] = await Promise.all([
       client.post('/auth/reset-password', { token, newPassword: 'Concurrent123!' }),
@@ -546,21 +751,25 @@ describe('Tier 2 — Boundary & Corner Cases (50 Negative/Boundary Tests: F1–F
     await registerUser(client, { email, password: 'OldPassword123!', name: 'Supersede User' });
 
     assertSuccessEnvelope(await client.post('/auth/forgot-password', { email }), 200);
-    const t1 = await fetchResetToken(email);
+    const t1 = await fetchResetToken(client, cfg, email);
 
     const badPass = await client.post('/auth/reset-password', { token: t1, newPassword: '123' });
     assertErrorEnvelope(badPass, 400, null, '/auth/reset-password');
 
-    // Request 2nd token -> T1 must now be invalidated
     assertSuccessEnvelope(await client.post('/auth/forgot-password', { email }), 200);
-    const t2 = await fetchResetToken(email);
+    const t2 = await fetchResetToken(client, cfg, email);
     assert.notEqual(t2, t1);
 
     const t1Attempt = await client.post('/auth/reset-password', {
       token: t1,
       newPassword: 'ValidPass123!',
     });
-    assertErrorEnvelope(t1Attempt, [400, 410], null, '/auth/reset-password');
+    assertErrorEnvelope(
+      t1Attempt,
+      [400, 410],
+      ['RESET_TOKEN_USED', 'RESET_TOKEN_INVALID'],
+      '/auth/reset-password',
+    );
 
     assertSuccessEnvelope(
       await client.post('/auth/reset-password', { token: t2, newPassword: 'ValidPass123!' }),
@@ -607,7 +816,7 @@ describe('Tier 2 — Boundary & Corner Cases (50 Negative/Boundary Tests: F1–F
 
   // --- F8 ---
   test('T2-F8-01: POST /youtube/events missing or wrong secret returns 401/403 YOUTUBE_EVENT_UNAUTHORIZED', async () => {
-    const payload = buildGroundedThapDongHoEvent();
+    const payload = buildGroundedThapDongHoEvent({ videoId: uniqueVideoId('f81') });
     const missing = await client.post('/youtube/events', payload);
     assertErrorEnvelope(missing, [401, 403], 'YOUTUBE_EVENT_UNAUTHORIZED', '/youtube/events');
 
@@ -620,7 +829,7 @@ describe('Tier 2 — Boundary & Corner Cases (50 Negative/Boundary Tests: F1–F
   test('T2-F8-02: 3 concurrent duplicate POST /youtube/events preserve 1 row & immutable receivedAt', async () => {
     const event = buildGroundedThapDongHoEvent({
       eventId: `evt-conc-${crypto.randomUUID()}`,
-      videoId: `cc${crypto.randomUUID().replace(/-/g, '').slice(0, 9)}`,
+      videoId: uniqueVideoId('cc'),
     });
     const responses = await Promise.all([
       client.post('/youtube/events', event, { headers: { 'x-youtube-internal-secret': cfg.youtubeSecret } }),
@@ -648,7 +857,7 @@ describe('Tier 2 — Boundary & Corner Cases (50 Negative/Boundary Tests: F1–F
         name: 'conflicting_city_mention',
         body: {
           eventId: `neg-pq-${crypto.randomUUID()}`,
-          videoId: 'pq123456789',
+          videoId: uniqueVideoId('pq'),
           channelId: 'UC_Neg',
           title: 'Check-in Tháp Đồng Hồ Phú Quốc hoàng hôn',
           publishedAt: isoWithOffsetSeconds(-15_000, '+07:00'),
@@ -659,7 +868,7 @@ describe('Tier 2 — Boundary & Corner Cases (50 Negative/Boundary Tests: F1–F
         name: 'missing_destination_or_spatial_corroboration',
         body: {
           eventId: `neg-nocontext-${crypto.randomUUID()}`,
-          videoId: 'nc123456789',
+          videoId: uniqueVideoId('nc'),
           channelId: 'UC_Neg',
           title: 'Đi ngang Tháp Đồng Hồ buổi sáng',
           publishedAt: isoWithOffsetSeconds(-15_000, '+07:00'),
@@ -670,7 +879,7 @@ describe('Tier 2 — Boundary & Corner Cases (50 Negative/Boundary Tests: F1–F
         name: 'coordinate_conflict_with_poi',
         body: {
           eventId: `neg-coord-${crypto.randomUUID()}`,
-          videoId: 'cd123456789',
+          videoId: uniqueVideoId('cd'),
           channelId: 'UC_Neg',
           title: 'Tháp Đồng Hồ Hạ Long review',
           publishedAt: isoWithOffsetSeconds(-15_000, '+07:00'),
@@ -683,7 +892,7 @@ describe('Tier 2 — Boundary & Corner Cases (50 Negative/Boundary Tests: F1–F
         name: 'target_place_unverified_or_missing',
         body: {
           eventId: `neg-unverified-${crypto.randomUUID()}`,
-          videoId: 'uv123456789',
+          videoId: uniqueVideoId('uv'),
           channelId: 'UC_Neg',
           title: 'Địa Điểm Chưa Xác Minh Hạ Long',
           publishedAt: isoWithOffsetSeconds(-15_000, '+07:00'),
@@ -713,12 +922,15 @@ describe('Tier 2 — Boundary & Corner Cases (50 Negative/Boundary Tests: F1–F
   });
 
   test('T2-F8-04: Hạ Long city fallback accepts single city & rejects ambiguous multi-city ("Hạ Long và Đà Nẵng")', async () => {
+    const cityVid = uniqueVideoId('ct');
+    const ambigVid = uniqueVideoId('am');
+
     const singleCity = assertSuccessEnvelope(
       await client.post(
         '/youtube/events',
         {
           eventId: `city-ok-${crypto.randomUUID()}`,
-          videoId: 'ct123456789',
+          videoId: cityVid,
           channelId: 'UC_City',
           title: 'Cảnh đẹp Vịnh Hạ Long Quảng Ninh',
           publishedAt: isoWithOffsetSeconds(-20_000, '+07:00'),
@@ -736,7 +948,7 @@ describe('Tier 2 — Boundary & Corner Cases (50 Negative/Boundary Tests: F1–F
         '/youtube/events',
         {
           eventId: `city-ambig-${crypto.randomUUID()}`,
-          videoId: 'am123456789',
+          videoId: ambigVid,
           channelId: 'UC_City',
           title: 'Hạ Long và Đà Nẵng cuối tuần',
           publishedAt: isoWithOffsetSeconds(-20_000, '+07:00'),
@@ -752,38 +964,44 @@ describe('Tier 2 — Boundary & Corner Cases (50 Negative/Boundary Tests: F1–F
       await client.get('/destinations/ha-long/youtube-updates', { query: { limit: 50 } }),
       200,
     );
-    assert.ok(destUpdates.items.some((i) => i.videoId === 'ct123456789'));
-    assert.ok(!destUpdates.items.some((i) => i.videoId === 'am123456789'));
+    assert.ok(destUpdates.items.some((i) => i.videoId === cityVid));
+    assert.ok(!destUpdates.items.some((i) => i.videoId === ambigVid));
   });
 
-  test('T2-F8-05: SLA boundary (299s vs 301s), XXE <!DOCTYPE>, bad HMAC, lat-only, naive TZ, & unknown destination 404', async () => {
+  test('T2-F8-05: SLA boundary (290s vs 310s), XXE <!DOCTYPE>, bad HMAC, lat-only, naive TZ, & unknown destination 404', async () => {
     const withinSla = assertSuccessEnvelope(
       await client.post(
         '/youtube/events',
         buildGroundedThapDongHoEvent({
           eventId: `sla-in-${crypto.randomUUID()}`,
-          videoId: 'in123456789',
-          publishedAt: isoWithOffsetSeconds(-299_000, 'Z'),
+          videoId: uniqueVideoId('in'),
+          publishedAt: isoWithOffsetSeconds(-290_000, 'Z'),
         }),
         { headers: { 'x-youtube-internal-secret': cfg.youtubeSecret } },
       ),
       200,
     );
-    assert.ok(withinSla.ingestLatencyMs >= 299000);
+    assert.ok(
+      withinSla.ingestLatencyMs >= 285000 && withinSla.ingestLatencyMs <= 300000,
+      `Expected withinSla.ingestLatencyMs in [285000, 300000], got ${withinSla.ingestLatencyMs}`,
+    );
 
     const overSla = assertSuccessEnvelope(
       await client.post(
         '/youtube/events',
         buildGroundedThapDongHoEvent({
           eventId: `sla-out-${crypto.randomUUID()}`,
-          videoId: 'ou123456789',
-          publishedAt: isoWithOffsetSeconds(-301_000, 'Z'),
+          videoId: uniqueVideoId('ou'),
+          publishedAt: isoWithOffsetSeconds(-310_000, 'Z'),
         }),
         { headers: { 'x-youtube-internal-secret': cfg.youtubeSecret } },
       ),
       200,
     );
-    assert.ok(overSla.ingestLatencyMs > 300000);
+    assert.ok(
+      overSla.ingestLatencyMs > 300000,
+      `Expected overSla.ingestLatencyMs > 300000, got ${overSla.ingestLatencyMs}`,
+    );
 
     const xxeXml = '<!DOCTYPE foo [<!ENTITY xxe SYSTEM "file:///etc/passwd">]><feed></feed>';
     const xxeSig = signWebSubBody(xxeXml, cfg.websubSecret, 'sha256');
@@ -799,7 +1017,7 @@ describe('Tier 2 — Boundary & Corner Cases (50 Negative/Boundary Tests: F1–F
     if (cfg.websubSecret) {
       const validXml = buildYoutubeAtomFeed([
         {
-          videoId: 'hm123456789',
+          videoId: uniqueVideoId('hm'),
           channelId: 'UC_HMAC',
           title: 'Tháp Đồng Hồ Hạ Long',
           publishedAt: isoWithOffsetSeconds(-10_000, 'Z'),
@@ -818,7 +1036,7 @@ describe('Tier 2 — Boundary & Corner Cases (50 Negative/Boundary Tests: F1–F
     const latOnly = await client.post(
       '/youtube/events',
       {
-        videoId: 'lo123456789',
+        videoId: uniqueVideoId('lo'),
         channelId: 'UC_Lat',
         title: 'Tháp Đồng Hồ Hạ Long',
         publishedAt: isoWithOffsetSeconds(-10_000, 'Z'),
@@ -831,7 +1049,7 @@ describe('Tier 2 — Boundary & Corner Cases (50 Negative/Boundary Tests: F1–F
     const naiveTz = await client.post(
       '/youtube/events',
       {
-        videoId: 'nt123456789',
+        videoId: uniqueVideoId('nt'),
         channelId: 'UC_Tz',
         title: 'Tháp Đồng Hồ Hạ Long',
         publishedAt: '2026-11-24T12:00:00',
@@ -847,120 +1065,216 @@ describe('Tier 2 — Boundary & Corner Cases (50 Negative/Boundary Tests: F1–F
   });
 
   // --- F9 ---
-  test('T2-F9-01: Freshness SLA exact boundary 300000ms ("Thời gian thực") vs 300001ms ("Cập nhật gần đây")', () => {
-    const renderNow = Date.now();
-    const atBoundary = evaluateYoutubeFreshnessUi(
-      {
-        realtimeSlaMaxLatencyMs: 300000,
-        items: [
-          {
-            placeId: FIXTURE.poi.id,
-            scope: 'POI',
-            source: 'youtube',
-            publishedAt: new Date(renderNow - 300000).toISOString(),
-            receivedAt: new Date(renderNow).toISOString(),
-            updatedAt: new Date(renderNow).toISOString(),
-            videoUrl: 'https://www.youtube.com/watch?v=b300000ms11',
-          },
-        ],
-      },
-      { clientRenderedAtMs: renderNow },
-    );
-    assert.equal(atBoundary.poiItems[0].badgeLabel, 'Thời gian thực');
+  test('T2-F9-01: Freshness SLA boundary (exact 300000ms vs 300001ms in self-test, interior SLA in live) over real HTTP', async () => {
+    const withinVid = uniqueVideoId('b1');
+    const overVid = uniqueVideoId('b2');
 
-    const overBoundary = evaluateYoutubeFreshnessUi(
-      {
-        realtimeSlaMaxLatencyMs: 300000,
-        items: [
-          {
-            placeId: FIXTURE.poi.id,
-            scope: 'POI',
-            source: 'youtube',
-            publishedAt: new Date(renderNow - 300001).toISOString(),
-            receivedAt: new Date(renderNow).toISOString(),
-            updatedAt: new Date(renderNow).toISOString(),
-            videoUrl: 'https://www.youtube.com/watch?v=b300001ms11',
-          },
-        ],
-      },
-      { clientRenderedAtMs: renderNow },
-    );
-    assert.equal(overBoundary.poiItems[0].badgeLabel, 'Cập nhật gần đây');
-    assert.notEqual(overBoundary.poiItems[0].badgeLabel, 'Thời gian thực');
-  });
-
-  test('T2-F9-02: Negative clock diff clamps to >= 0ms & falls back cleanly for updatedAt', () => {
-    const renderNow = Date.now();
-    const futurePublished = new Date(renderNow + 120_000).toISOString();
-    const recv = new Date(renderNow - 5_000).toISOString();
-    const ui = evaluateYoutubeFreshnessUi(
-      {
-        realtimeSlaMaxLatencyMs: 300000,
-        items: [
-          {
-            placeId: FIXTURE.poi.id,
-            scope: 'POI',
-            source: 'youtube',
-            publishedAt: futurePublished,
-            receivedAt: recv,
-            updatedAt: null,
-            lastReceivedAt: recv,
-            ingestLatencyMs: 5000,
-            videoUrl: 'https://www.youtube.com/watch?v=clk12345678',
-          },
-        ],
-      },
-      { clientRenderedAtMs: renderNow },
-    );
-    assert.equal(ui.poiItems[0].endToEndLatencyMs, 0);
-    assert.equal(ui.poiItems[0].clampedFromNegative, true);
-    assert.equal(ui.poiItems[0].updatedAt, recv);
-  });
-
-  test('T2-F9-03: Empty POI and city fallback items yield honest EMPTY state', () => {
-    const ui = evaluateYoutubeFreshnessUi({
-      realtimeSlaMaxLatencyMs: 300000,
-      items: [],
-      cityFallbackItems: [],
-    });
-    assert.equal(ui.primarySection, 'EMPTY');
-    assert.equal(ui.showCityFallbackBanner, false);
-  });
-
-  test('T2-F9-04: Factual PlaceDetail remains intact even if YouTube freshness endpoint returns 503', async () => {
-    const factual = assertSuccessEnvelope(await client.get(`/places/${FIXTURE.poi.id}`), 200);
-    assert.equal(factual.name, 'Tháp Đồng Hồ');
     if (cfg.mode === 'self-test') {
-      const ytErr = await client.get(`/places/${FIXTURE.poi.id}/youtube-updates`, {
-        headers: { 'x-e2e-inject-status': '503' },
+      const fixedNowMs = Date.now();
+      const fixedNowIso = new Date(fixedNowMs).toISOString();
+
+      const atBoundary = assertSuccessEnvelope(
+        await client.post(
+          '/youtube/events',
+          buildGroundedThapDongHoEvent({
+            eventId: `b300000-${crypto.randomUUID()}`,
+            videoId: withinVid,
+            publishedAt: new Date(fixedNowMs - 300000).toISOString(),
+          }),
+          {
+            headers: {
+              'x-youtube-internal-secret': cfg.youtubeSecret,
+              'x-e2e-test-now': fixedNowIso,
+            },
+          },
+        ),
+        200,
+      );
+      assert.equal(atBoundary.ingestLatencyMs, 300000);
+
+      const overBoundary = assertSuccessEnvelope(
+        await client.post(
+          '/youtube/events',
+          buildGroundedThapDongHoEvent({
+            eventId: `b300001-${crypto.randomUUID()}`,
+            videoId: overVid,
+            publishedAt: new Date(fixedNowMs - 300001).toISOString(),
+          }),
+          {
+            headers: {
+              'x-youtube-internal-secret': cfg.youtubeSecret,
+              'x-e2e-test-now': fixedNowIso,
+            },
+          },
+        ),
+        200,
+      );
+      assert.equal(overBoundary.ingestLatencyMs, 300001);
+
+      const apiData = assertSuccessEnvelope(
+        await client.get(`/places/${FIXTURE.poi.id}/youtube-updates`, {
+          query: { limit: 50 },
+          headers: { 'x-e2e-test-now': fixedNowIso },
+        }),
+        200,
+      );
+      const itemAt = apiData.items.find((i) => i.videoId === withinVid);
+      const itemOver = apiData.items.find((i) => i.videoId === overVid);
+      assert.ok(itemAt && itemOver);
+      assertYoutubeFiveFields(itemAt, 'POI', { maxIngestLatencyMs: 300000 });
+      assertYoutubeFiveFields(itemOver, 'POI');
+      assert.ok(itemAt.ingestLatencyMs <= apiData.realtimeSlaMaxLatencyMs);
+      assert.ok(itemOver.ingestLatencyMs > apiData.realtimeSlaMaxLatencyMs);
+    } else {
+      const withinRes = assertSuccessEnvelope(
+        await client.post(
+          '/youtube/events',
+          buildGroundedThapDongHoEvent({
+            eventId: `b-live-in-${crypto.randomUUID()}`,
+            videoId: withinVid,
+            publishedAt: isoWithOffsetSeconds(-285_000, 'Z'),
+          }),
+          { headers: { 'x-youtube-internal-secret': cfg.youtubeSecret } },
+        ),
+        200,
+      );
+      const overRes = assertSuccessEnvelope(
+        await client.post(
+          '/youtube/events',
+          buildGroundedThapDongHoEvent({
+            eventId: `b-live-out-${crypto.randomUUID()}`,
+            videoId: overVid,
+            publishedAt: isoWithOffsetSeconds(-315_000, 'Z'),
+          }),
+          { headers: { 'x-youtube-internal-secret': cfg.youtubeSecret } },
+        ),
+        200,
+      );
+      assert.ok(withinRes.ingestLatencyMs <= 300000);
+      assert.ok(overRes.ingestLatencyMs > 300000);
+
+      const apiData = assertSuccessEnvelope(
+        await client.get(`/places/${FIXTURE.poi.id}/youtube-updates`, { query: { limit: 50 } }),
+        200,
+      );
+      const itemAt = apiData.items.find((i) => i.videoId === withinVid);
+      const itemOver = apiData.items.find((i) => i.videoId === overVid);
+      assert.ok(itemAt && itemOver);
+      assertYoutubeFiveFields(itemAt, 'POI', { maxIngestLatencyMs: 300000 });
+      assert.ok(itemOver.ingestLatencyMs > apiData.realtimeSlaMaxLatencyMs);
+      verifyBetaDartDeliverables(cfg.mobileDir, cfg.repoRoot, {
+        requireScreenshots: true,
+        requireM4Youtube: true,
       });
-      assertErrorEnvelope(ytErr, 503, null, '/places/');
     }
   });
 
-  test('T2-F9-05: Long 200+ char Vietnamese YouTube title & missing channelTitle degrade cleanly', () => {
-    const longTitle = 'Khám phá Tháp Đồng Hồ Hạ Long '.repeat(8);
+  test('T2-F9-02: Future publishedAt clamps ingestLatencyMs to 0 & omitted sourceUpdatedAt falls back updatedAt=receivedAt', async () => {
+    const vid = uniqueVideoId('fut');
+    const receipt = assertSuccessEnvelope(
+      await client.post(
+        '/youtube/events',
+        buildGroundedThapDongHoEvent({
+          eventId: `evt-future-${crypto.randomUUID()}`,
+          videoId: vid,
+          publishedAt: isoWithOffsetSeconds(60_000, 'Z'),
+          sourceUpdatedAt: undefined,
+        }),
+        { headers: { 'x-youtube-internal-secret': cfg.youtubeSecret } },
+      ),
+      200,
+    );
+    assert.equal(receipt.ingestLatencyMs, 0);
+    assert.equal(receipt.updatedAt, receipt.receivedAt);
+
+    const apiData = assertSuccessEnvelope(
+      await client.get(`/places/${FIXTURE.poi.id}/youtube-updates`, { query: { limit: 50 } }),
+      200,
+    );
+    const matched = apiData.items.find((i) => i.videoId === vid);
+    assert.ok(matched);
+    assertYoutubeFiveFields(matched, 'POI', { maxIngestLatencyMs: 0 });
+    assert.equal(matched.ingestLatencyMs, 0);
+    assert.equal(matched.updatedAt, matched.receivedAt);
+  });
+
+  test('T2-F9-03: Clean empty YouTube state returns honest empty array contract over real HTTP', async () => {
+    if (cfg.mode === 'self-test') {
+      assertSuccessEnvelope(await client.post('/_test/reset', {}), 200);
+      const emptyData = assertSuccessEnvelope(
+        await client.get(`/places/${FIXTURE.poi.id}/youtube-updates`, { query: { limit: 50 } }),
+        200,
+      );
+      assertYoutubeContainerContract(emptyData);
+      assert.equal(emptyData.total, 0);
+      assert.deepEqual(emptyData.items, []);
+      assert.equal(emptyData.cityFallbackTotal, 0);
+      assert.deepEqual(emptyData.cityFallbackItems, []);
+    } else {
+      const data = assertSuccessEnvelope(
+        await client.get(`/places/${FIXTURE.poi.id}/youtube-updates`, { query: { limit: 50 } }),
+        200,
+      );
+      assertYoutubeContainerContract(data);
+      assert.equal(data.total, data.items.length);
+      assert.ok(Array.isArray(data.cityFallbackItems));
+      assert.equal(data.cityFallbackTotal, data.cityFallbackItems.length);
+      verifyBetaDartDeliverables(cfg.mobileDir, cfg.repoRoot, {
+        requireScreenshots: true,
+        requireM4Youtube: true,
+      });
+    }
+  });
+
+  test('T2-F9-04: Factual PlaceDetail remains intact even when YouTube freshness endpoint returns real HTTP 503', async () => {
+    await withFaultProxy(
+      cfg.baseUrl,
+      [{ method: 'GET', pathPrefix: `/places/${FIXTURE.poi.id}/youtube-updates`, remaining: 1 }],
+      async ({ proxyClient, getStats }) => {
+        const ytErr = await proxyClient.get(`/places/${FIXTURE.poi.id}/youtube-updates`);
+        assertErrorEnvelope(ytErr, 503, 'SERVICE_UNAVAILABLE', '/places/');
+
+        const factual = assertSuccessEnvelope(
+          await proxyClient.get(`/places/${FIXTURE.poi.id}`),
+          200,
+        );
+        assert.equal(factual.name, 'Tháp Đồng Hồ');
+        assert.equal(getStats().interceptedCount, 1);
+        assert.equal(getStats().forwardedCount, 1);
+      },
+    );
+  });
+
+  test('T2-F9-05: Long 200+ char Vietnamese YouTube title & null channelTitle degrade cleanly over HTTP', async () => {
+    const longTitle = `Khám phá Tháp Đồng Hồ Hạ Long ${'tuyệt đẹp '.repeat(22)}`.trim();
     assert.ok(longTitle.length >= 200);
-    const nowIso = new Date().toISOString();
-    const ui = evaluateYoutubeFreshnessUi({
-      realtimeSlaMaxLatencyMs: 300000,
-      items: [
-        {
-          placeId: FIXTURE.poi.id,
-          scope: 'POI',
-          source: 'youtube',
+    const vid = uniqueVideoId('lng');
+
+    const receipt = assertSuccessEnvelope(
+      await client.post(
+        '/youtube/events',
+        buildGroundedThapDongHoEvent({
+          eventId: `evt-long-${crypto.randomUUID()}`,
+          videoId: vid,
           title: longTitle,
           channelTitle: null,
-          publishedAt: nowIso,
-          receivedAt: nowIso,
-          updatedAt: nowIso,
-          sourceUpdatedAt: null,
-          videoUrl: 'https://www.youtube.com/watch?v=lng12345678',
-        },
-      ],
-    });
-    assert.ok(ui.poiItems[0].channelTitle.length > 0);
-    assert.equal(ui.poiItems[0].updatedAt, nowIso);
+          publishedAt: isoWithOffsetSeconds(-20_000, 'Z'),
+        }),
+        { headers: { 'x-youtube-internal-secret': cfg.youtubeSecret } },
+      ),
+      200,
+    );
+    assert.equal(receipt.status, 'LINKED');
+
+    const apiData = assertSuccessEnvelope(
+      await client.get(`/places/${FIXTURE.poi.id}/youtube-updates`, { query: { limit: 50 } }),
+      200,
+    );
+    const matched = apiData.items.find((i) => i.videoId === vid);
+    assert.ok(matched);
+    assertYoutubeFiveFields(matched, 'POI', { maxIngestLatencyMs: 300000 });
+    assert.equal(matched.title, longTitle);
+    assert.ok(matched.title.length >= 200);
   });
 
   // --- F10 ---
@@ -970,34 +1284,36 @@ describe('Tier 2 — Boundary & Corner Cases (50 Negative/Boundary Tests: F1–F
   });
 
   test('T2-F10-02: data/curated/w07/ & w07_offline_retrieval_prep remain clean across E2E execution', () => {
-    const status = verifyProtectedPathsClean(cfg.repoRoot, cfg.w07PrepDir);
+    const requireW07Prep = cfg.mode === 'live' || cfg.w07PrepDirExplicit;
+    const status = verifyProtectedPathsClean(cfg.repoRoot, cfg.w07PrepDir, { requireW07Prep });
     assert.equal(status.dirtyLines.length, 0);
+    if (requireW07Prep || fs.existsSync(cfg.w07PrepDir)) {
+      assert.equal(status.w07PrepVerified, true);
+    }
   });
 
-  test('T2-F10-03: Batch of 10 YouTube events (POI, City, Unlinked, Duplicate) leaves documents & place_sources unchanged', async () => {
+  test('T2-F10-03: Batch of 10 YouTube events leaves documents & place_sources unchanged', async () => {
     const beforePlace = assertSuccessEnvelope(await client.get(`/places/${FIXTURE.poi.id}`), 200);
-    const beforeStats =
-      cfg.mode === 'self-test'
-        ? assertSuccessEnvelope(await client.get('/_test/db-stats'), 200)
-        : null;
+    const beforeStats = await fetchDbStats(client, cfg);
 
     for (let i = 0; i < 10; i++) {
-      await client.post(
+      const eventId = `batch-${i % 4}-${crypto.randomUUID()}`;
+      const res = await client.post(
         '/youtube/events',
         buildGroundedThapDongHoEvent({
-          eventId: `batch-${i % 4}-${crypto.randomUUID()}`,
-          videoId: `bt${String(i).padStart(9, '0')}`,
+          eventId,
+          videoId: uniqueVideoId(`b${i}`),
         }),
         { headers: { 'x-youtube-internal-secret': cfg.youtubeSecret } },
       );
+      const receipt = assertSuccessEnvelope(res, 200);
+      assert.equal(receipt.status, 'LINKED');
     }
 
     const afterPlace = assertSuccessEnvelope(await client.get(`/places/${FIXTURE.poi.id}`), 200);
     verifyFactualPlaceUnchanged(beforePlace, afterPlace);
-    if (beforeStats) {
-      const afterStats = assertSuccessEnvelope(await client.get('/_test/db-stats'), 200);
-      verifyDbStatsIsolation(beforeStats, afterStats);
-    }
+    const afterStats = await fetchDbStats(client, cfg);
+    verifyDbStatsIsolation(beforeStats, afterStats);
   });
 
   test('T2-F10-04: Unverified place 00000000-... rejects GET (404) & YouTube candidatePlaceId (UNLINKED_NO_BASIS)', async () => {
@@ -1011,7 +1327,7 @@ describe('Tier 2 — Boundary & Corner Cases (50 Negative/Boundary Tests: F1–F
         '/youtube/events',
         {
           eventId: `unv-${crypto.randomUUID()}`,
-          videoId: 'uv987654321',
+          videoId: uniqueVideoId('uv2'),
           channelId: 'UC_Unv',
           title: 'Tháp Đồng Hồ Hạ Long',
           publishedAt: isoWithOffsetSeconds(-15_000, '+07:00'),

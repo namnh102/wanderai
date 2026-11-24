@@ -3,6 +3,8 @@ import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
+import { HttpClient } from './http_client.mjs';
+import { assertSuccessEnvelope } from './assertions.mjs';
 
 export const EXPECTED_FREEZE_V2_SHA256 =
   'F7517938598E3923906763F8F31334A500EE88BC06232F2992D38E2FCB28A444';
@@ -49,7 +51,11 @@ export function verifyFreezeChecksum(repoRoot) {
   };
 }
 
-export function verifyProtectedPathsClean(repoRoot, w07PrepDir) {
+export function verifyProtectedPathsClean(
+  repoRoot,
+  w07PrepDir,
+  { requireW07Prep = false } = {},
+) {
   const gitCheck = spawnSync(
     'git',
     [
@@ -90,6 +96,13 @@ export function verifyProtectedPathsClean(repoRoot, w07PrepDir) {
   assert.equal(gitDiff.status, 0, `git diff failed: ${gitDiff.stderr}`);
   assert.equal(gitDiff.stdout.trim(), '', `Expected empty git diff on W07 paths`);
 
+  if (requireW07Prep) {
+    assert.ok(
+      w07PrepDir && fs.existsSync(w07PrepDir),
+      `Required w07_offline_retrieval_prep missing at ${w07PrepDir}`,
+    );
+  }
+
   let w07PrepVerified = false;
   let w07PrepEntries = [];
   if (w07PrepDir && fs.existsSync(w07PrepDir)) {
@@ -105,6 +118,21 @@ export function verifyProtectedPathsClean(repoRoot, w07PrepDir) {
       hasExpectedMarker,
       `w07_offline_retrieval_prep missing expected marker files: ${w07PrepEntries.join(', ')}`,
     );
+    if (fs.existsSync(path.join(w07PrepDir, '.git'))) {
+      const prepGit = spawnSync('git', ['-C', w07PrepDir, 'status', '--porcelain'], {
+        encoding: 'utf8',
+      });
+      assert.equal(prepGit.status, 0, `git status failed on ${w07PrepDir}: ${prepGit.stderr}`);
+      const prepDirty = prepGit.stdout
+        .split(/\r?\n/)
+        .map((l) => l.trim())
+        .filter(Boolean);
+      assert.equal(
+        prepDirty.length,
+        0,
+        `w07_offline_retrieval_prep must have zero modifications: ${prepDirty.join('; ')}`,
+      );
+    }
     w07PrepVerified = true;
   }
 
@@ -114,6 +142,41 @@ export function verifyProtectedPathsClean(repoRoot, w07PrepDir) {
     w07PrepVerified,
     w07PrepEntriesCount: w07PrepEntries.length,
   };
+}
+
+export async function fetchDbStats(client, cfg) {
+  if (cfg.mode === 'self-test') {
+    return assertSuccessEnvelope(await client.get('/_test/db-stats'), 200);
+  }
+  const dbStatsUrl = process.env.E2E_DB_STATS_URL;
+  if (!dbStatsUrl) {
+    throw new Error(
+      'Live mode R4 DB isolation test requires E2E_DB_STATS_URL returning { documentsCount, placeSourcesCount }',
+    );
+  }
+  const res = await new HttpClient(dbStatsUrl).get('');
+  assert.equal(
+    res.status,
+    200,
+    `E2E_DB_STATS_URL failed (${res.status}): ${res.text}`,
+  );
+  const stats =
+    res.json?.success === true && res.json?.data ? res.json.data : res.json;
+  assert.ok(
+    stats && typeof stats === 'object',
+    `E2E_DB_STATS_URL must return JSON object: ${res.text}`,
+  );
+  assert.equal(
+    typeof stats.documentsCount,
+    'number',
+    `E2E_DB_STATS_URL missing numeric documentsCount: ${res.text}`,
+  );
+  assert.equal(
+    typeof stats.placeSourcesCount,
+    'number',
+    `E2E_DB_STATS_URL missing numeric placeSourcesCount: ${res.text}`,
+  );
+  return stats;
 }
 
 export function verifyFactualPlaceUnchanged(beforePlace, afterPlace) {

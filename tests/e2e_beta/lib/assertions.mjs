@@ -55,10 +55,12 @@ export function assertErrorEnvelope(
   assert.equal(res.json.success, false, `Expected success=false: ${res.text}`);
   assert.equal(res.json.statusCode, res.status, `Envelope statusCode mismatch: ${res.text}`);
   if (expectedErrorCode !== undefined && expectedErrorCode !== null) {
-    assert.equal(
-      res.json.errorCode,
-      expectedErrorCode,
-      `Expected errorCode="${expectedErrorCode}" but got "${res.json.errorCode}" (${res.text})`,
+    const allowedCodes = Array.isArray(expectedErrorCode)
+      ? expectedErrorCode
+      : [expectedErrorCode];
+    assert.ok(
+      allowedCodes.includes(res.json.errorCode),
+      `Expected errorCode in [${allowedCodes.join(', ')}] but got "${res.json.errorCode}" (${res.text})`,
     );
   }
   assert.ok(
@@ -97,7 +99,11 @@ export function assertYoutubeContainerContract(data) {
   assert.ok(Array.isArray(data.items), 'items must be an array');
 }
 
-export function assertYoutubeFiveFields(item, expectedScope) {
+export function assertYoutubeFiveFields(
+  item,
+  expectedScope,
+  { maxIngestLatencyMs = null } = {},
+) {
   assert.ok(item && typeof item === 'object', 'YouTube item must be an object');
   assert.ok('placeId' in item, 'YouTube item missing mandated field "placeId"');
   if (expectedScope === 'CITY') {
@@ -116,19 +122,11 @@ export function assertYoutubeFiveFields(item, expectedScope) {
     typeof item.ingestLatencyMs === 'number' && item.ingestLatencyMs >= 0,
     `ingestLatencyMs must be >= 0, got ${item.ingestLatencyMs}`,
   );
+  if (maxIngestLatencyMs !== null) {
+    assert.ok(
+      item.ingestLatencyMs <= maxIngestLatencyMs,
+      `ingestLatencyMs=${item.ingestLatencyMs} exceeded SLA max ${maxIngestLatencyMs}ms`,
+    );
+  }
   return { publishedMs, receivedMs, updatedMs };
-}
-
-export function computeFreshnessBadge(publishedAtIso, clientRenderedAtMs, slaMaxMs = 300000) {
-  const publishedMs = Date.parse(publishedAtIso);
-  assert.ok(Number.isFinite(publishedMs), `Invalid publishedAt: ${publishedAtIso}`);
-  const rawDiff = clientRenderedAtMs - publishedMs;
-  const endToEndLatencyMs = Math.max(0, rawDiff);
-  const isRealtime = endToEndLatencyMs <= slaMaxMs;
-  return {
-    endToEndLatencyMs,
-    clampedFromNegative: rawDiff < 0,
-    isRealtime,
-    label: isRealtime ? 'Thời gian thực' : 'Cập nhật gần đây',
-  };
 }
