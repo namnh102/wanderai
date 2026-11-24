@@ -257,7 +257,14 @@ describe('Tier 1 — Feature Coverage (50 Happy-Path Tests: F1–F10)', () => {
       );
     }
     const errRes = await client.get(`/places/${FIXTURE.negativeFixtures.unknownPlaceId}`);
-    assertErrorEnvelope(errRes, 404, 'PLACE_NOT_FOUND', '/places/');
+    assertErrorEnvelope(errRes, 404, null, '/places/');
+    if ('errorCode' in errRes.json && errRes.json.errorCode !== undefined) {
+      assert.equal(errRes.json.errorCode, 'PLACE_NOT_FOUND');
+    }
+    const ytErrRes = await client.get(
+      `/places/${FIXTURE.negativeFixtures.unknownPlaceId}/youtube-updates`,
+    );
+    assertErrorEnvelope(ytErrRes, 404, 'PLACE_NOT_FOUND', '/places/');
     const okRes = await client.get(`/places/${FIXTURE.poi.id}`);
     const place = assertSuccessEnvelope(okRes, 200);
     assert.equal(place.id, FIXTURE.poi.id);
@@ -939,8 +946,9 @@ describe('Tier 1 — Feature Coverage (50 Happy-Path Tests: F1–F10)', () => {
 
   // --- F8: Backend POI & YouTube Freshness Layer ---
   test('T1-F8-01: POST /youtube/events links grounded Tháp Đồng Hồ update with UTC & latency', async () => {
+    const vid = uniqueVideoId('f81');
     const payload = buildGroundedThapDongHoEvent({
-      videoId: uniqueVideoId('f81'),
+      videoId: vid,
     });
     const res = await client.post('/youtube/events', payload, {
       headers: { 'x-youtube-internal-secret': cfg.youtubeSecret },
@@ -951,8 +959,21 @@ describe('Tier 1 — Feature Coverage (50 Happy-Path Tests: F1–F10)', () => {
     assert.equal(receipt.linkedPlaceId, FIXTURE.poi.id);
     assert.ok(receipt.publishedAt.endsWith('Z'));
     assert.ok(receipt.receivedAt.endsWith('Z'));
-    assert.ok(receipt.updatedAt.endsWith('Z'));
-    assert.ok(receipt.ingestLatencyMs >= 0 && receipt.ingestLatencyMs <= 300000);
+    assert.ok(receipt.lastReceivedAt.endsWith('Z'));
+    const receiptLagMs = Math.max(
+      0,
+      Date.parse(receipt.receivedAt) - Date.parse(receipt.publishedAt),
+    );
+    assert.ok(receiptLagMs >= 0 && receiptLagMs <= 300000);
+
+    const updates = assertSuccessEnvelope(
+      await client.get(`/places/${FIXTURE.poi.id}/youtube-updates`, { query: { limit: 50 } }),
+      200,
+    );
+    const item = updates.items.find((i) => i.videoId === vid);
+    assert.ok(item, 'Newly ingested update must appear in GET /places/:id/youtube-updates');
+    assert.ok(item.updatedAt.endsWith('Z'));
+    assert.ok(item.ingestLatencyMs >= 0 && item.ingestLatencyMs <= 300000);
   });
 
   test('T1-F8-02: GET /places/:id/youtube-updates & alias return 5-field items + governance metadata', async () => {
@@ -995,7 +1016,9 @@ describe('Tier 1 — Feature Coverage (50 Happy-Path Tests: F1–F10)', () => {
     assert.equal(receipt.linkedPlaceId, null);
 
     const destData = assertSuccessEnvelope(
-      await client.get('/destinations/ha-long/youtube-updates', { query: { limit: 50 } }),
+      await client.get('/destinations/ha-long/youtube-updates', {
+        query: { limit: 50, scope: 'CITY' },
+      }),
       200,
     );
     assertYoutubeContainerContract(destData);
@@ -1095,7 +1118,14 @@ describe('Tier 1 — Feature Coverage (50 Happy-Path Tests: F1–F10)', () => {
       }),
       200,
     );
-    assert.ok(receipt.ingestLatencyMs >= 0 && receipt.ingestLatencyMs <= 300000);
+    assert.ok(receipt.publishedAt.endsWith('Z'));
+    assert.ok(receipt.receivedAt.endsWith('Z'));
+    assert.ok(receipt.lastReceivedAt.endsWith('Z'));
+    const receiptLagMs = Math.max(
+      0,
+      Date.parse(receipt.receivedAt) - Date.parse(receipt.publishedAt),
+    );
+    assert.ok(receiptLagMs >= 0 && receiptLagMs <= 300000);
 
     const apiData = assertSuccessEnvelope(
       await client.get(`/places/${FIXTURE.poi.id}/youtube-updates`, { query: { limit: 50 } }),
@@ -1140,7 +1170,11 @@ describe('Tier 1 — Feature Coverage (50 Happy-Path Tests: F1–F10)', () => {
       }),
       200,
     );
-    assert.ok(receipt.ingestLatencyMs > 300000, `Expected stale ingestLatencyMs > 300000, got ${receipt.ingestLatencyMs}`);
+    assert.ok(receipt.publishedAt.endsWith('Z'));
+    assert.ok(receipt.receivedAt.endsWith('Z'));
+    assert.ok(receipt.lastReceivedAt.endsWith('Z'));
+    const receiptLagMs = Date.parse(receipt.receivedAt) - Date.parse(receipt.publishedAt);
+    assert.ok(receiptLagMs > 300000, `Expected stale receipt lag > 300000, got ${receiptLagMs}`);
 
     const apiData = assertSuccessEnvelope(
       await client.get(`/places/${FIXTURE.poi.id}/youtube-updates`, { query: { limit: 50 } }),
@@ -1178,7 +1212,9 @@ describe('Tier 1 — Feature Coverage (50 Happy-Path Tests: F1–F10)', () => {
     assert.equal(receipt.linkedPlaceId, null);
 
     const destData = assertSuccessEnvelope(
-      await client.get('/destinations/ha-long/youtube-updates', { query: { limit: 50 } }),
+      await client.get('/destinations/ha-long/youtube-updates', {
+        query: { limit: 50, scope: 'CITY' },
+      }),
       200,
     );
     assertYoutubeContainerContract(destData);

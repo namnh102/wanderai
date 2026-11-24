@@ -506,6 +506,7 @@ export function verifyBetaDartDeliverables(mobileDir, repoRoot, opts = {}) {
     const m4CandidateFiles = [
       'lib/features/places/presentation/place_detail_screen.dart',
       'lib/features/places/presentation/widgets/youtube_freshness_section.dart',
+      'lib/features/places/data/youtube_update_model.dart',
       'lib/features/places/data/youtube_models.dart',
       'lib/features/places/data/youtube_repository.dart',
     ];

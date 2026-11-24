@@ -115,7 +115,14 @@ describe('Tier 3 — Cross-Feature Pairwise Combinations (12 Tests: T3-01..T3-12
       }),
       200,
     );
-    assert.ok(receipt.ingestLatencyMs >= 0 && receipt.ingestLatencyMs <= 300000);
+    assert.ok(receipt.publishedAt.endsWith('Z'));
+    assert.ok(receipt.receivedAt.endsWith('Z'));
+    assert.ok(receipt.lastReceivedAt.endsWith('Z'));
+    const receiptLagMs = Math.max(
+      0,
+      Date.parse(receipt.receivedAt) - Date.parse(receipt.publishedAt),
+    );
+    assert.ok(receiptLagMs >= 0 && receiptLagMs <= 300000);
 
     const updates = assertSuccessEnvelope(
       await client.get(`/places/${FIXTURE.poi.id}/youtube-updates`, { query: { limit: 50 } }),

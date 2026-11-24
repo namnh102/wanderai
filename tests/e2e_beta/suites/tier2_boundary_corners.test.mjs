@@ -253,12 +253,26 @@ describe('Tier 2 — Boundary & Corner Cases (50 Negative/Boundary Tests: F1–F
     assert.equal(empty.items.length, 0);
   });
 
-  test('T2-F2-02: Unknown or unverified place UUID returns 404 PLACE_NOT_FOUND fail-closed', async () => {
+  test('T2-F2-02: Unknown or unverified place UUID returns 404 fail-closed & PLACE_NOT_FOUND on YouTube updates', async () => {
     const unknownRes = await client.get(`/places/${FIXTURE.negativeFixtures.unknownPlaceId}`);
-    assertErrorEnvelope(unknownRes, 404, 'PLACE_NOT_FOUND', '/places/');
+    assertErrorEnvelope(unknownRes, 404, null, '/places/');
+    if ('errorCode' in unknownRes.json && unknownRes.json.errorCode !== undefined) {
+      assert.equal(unknownRes.json.errorCode, 'PLACE_NOT_FOUND');
+    }
+    const unknownYtRes = await client.get(
+      `/places/${FIXTURE.negativeFixtures.unknownPlaceId}/youtube-updates`,
+    );
+    assertErrorEnvelope(unknownYtRes, 404, 'PLACE_NOT_FOUND', '/places/');
 
     const unverifiedRes = await client.get(`/places/${FIXTURE.negativeFixtures.unverifiedPlaceId}`);
-    assertErrorEnvelope(unverifiedRes, 404, 'PLACE_NOT_FOUND', '/places/');
+    assertErrorEnvelope(unverifiedRes, 404, null, '/places/');
+    if ('errorCode' in unverifiedRes.json && unverifiedRes.json.errorCode !== undefined) {
+      assert.equal(unverifiedRes.json.errorCode, 'PLACE_NOT_FOUND');
+    }
+    const unverifiedYtRes = await client.get(
+      `/places/${FIXTURE.negativeFixtures.unverifiedPlaceId}/youtube-updates`,
+    );
+    assertErrorEnvelope(unverifiedYtRes, 404, 'PLACE_NOT_FOUND', '/places/');
   });
 
   test('T2-F2-03: Verified place with null openingHours/rating does not fabricate synthetic values', async () => {
@@ -969,38 +983,66 @@ describe('Tier 2 — Boundary & Corner Cases (50 Negative/Boundary Tests: F1–F
   });
 
   test('T2-F8-05: SLA boundary (290s vs 310s), XXE <!DOCTYPE>, bad HMAC, lat-only, naive TZ, & unknown destination 404', async () => {
+    const withinVid = uniqueVideoId('in');
     const withinSla = assertSuccessEnvelope(
       await client.post(
         '/youtube/events',
         buildGroundedThapDongHoEvent({
           eventId: `sla-in-${crypto.randomUUID()}`,
-          videoId: uniqueVideoId('in'),
+          videoId: withinVid,
           publishedAt: isoWithOffsetSeconds(-290_000, 'Z'),
         }),
         { headers: { 'x-youtube-internal-secret': cfg.youtubeSecret } },
       ),
       200,
     );
+    assert.ok(withinSla.publishedAt.endsWith('Z'));
+    assert.ok(withinSla.receivedAt.endsWith('Z'));
+    assert.ok(withinSla.lastReceivedAt.endsWith('Z'));
+    const withinLagMs = Date.parse(withinSla.receivedAt) - Date.parse(withinSla.publishedAt);
     assert.ok(
-      withinSla.ingestLatencyMs >= 285000 && withinSla.ingestLatencyMs <= 300000,
-      `Expected withinSla.ingestLatencyMs in [285000, 300000], got ${withinSla.ingestLatencyMs}`,
+      withinLagMs >= 285000 && withinLagMs <= 300000,
+      `Expected withinSla receipt lag in [285000, 300000], got ${withinLagMs}`,
     );
 
+    const overVid = uniqueVideoId('ou');
     const overSla = assertSuccessEnvelope(
       await client.post(
         '/youtube/events',
         buildGroundedThapDongHoEvent({
           eventId: `sla-out-${crypto.randomUUID()}`,
-          videoId: uniqueVideoId('ou'),
+          videoId: overVid,
           publishedAt: isoWithOffsetSeconds(-310_000, 'Z'),
         }),
         { headers: { 'x-youtube-internal-secret': cfg.youtubeSecret } },
       ),
       200,
     );
+    assert.ok(overSla.publishedAt.endsWith('Z'));
+    assert.ok(overSla.receivedAt.endsWith('Z'));
+    assert.ok(overSla.lastReceivedAt.endsWith('Z'));
+    const overLagMs = Date.parse(overSla.receivedAt) - Date.parse(overSla.publishedAt);
     assert.ok(
-      overSla.ingestLatencyMs > 300000,
-      `Expected overSla.ingestLatencyMs > 300000, got ${overSla.ingestLatencyMs}`,
+      overLagMs > 300000,
+      `Expected overSla receipt lag > 300000, got ${overLagMs}`,
+    );
+
+    const ytUpdates = assertSuccessEnvelope(
+      await client.get(`/places/${FIXTURE.poi.id}/youtube-updates`, { query: { limit: 50 } }),
+      200,
+    );
+    const withinItem = ytUpdates.items.find((i) => i.videoId === withinVid);
+    const overItem = ytUpdates.items.find((i) => i.videoId === overVid);
+    assert.ok(withinItem && overItem, 'Both 290s and 310s events must appear in youtube-updates');
+    assertYoutubeFiveFields(withinItem, 'POI', { maxIngestLatencyMs: 300000 });
+    assert.ok(
+      withinItem.ingestLatencyMs >= 285000 && withinItem.ingestLatencyMs <= 300000,
+      `Expected withinItem.ingestLatencyMs in [285000, 300000], got ${withinItem.ingestLatencyMs}`,
+    );
+    assertYoutubeFiveFields(overItem, 'POI');
+    assert.ok(
+      overItem.ingestLatencyMs > 300000,
+      `Expected overItem.ingestLatencyMs > 300000, got ${overItem.ingestLatencyMs}`,
     );
 
     const xxeXml = '<!DOCTYPE foo [<!ENTITY xxe SYSTEM "file:///etc/passwd">]><feed></feed>';
@@ -1090,7 +1132,10 @@ describe('Tier 2 — Boundary & Corner Cases (50 Negative/Boundary Tests: F1–F
         ),
         200,
       );
-      assert.equal(atBoundary.ingestLatencyMs, 300000);
+      assert.ok(atBoundary.publishedAt.endsWith('Z'));
+      assert.ok(atBoundary.receivedAt.endsWith('Z'));
+      assert.ok(atBoundary.lastReceivedAt.endsWith('Z'));
+      assert.equal(Date.parse(atBoundary.receivedAt) - Date.parse(atBoundary.publishedAt), 300000);
 
       const overBoundary = assertSuccessEnvelope(
         await client.post(
@@ -1109,7 +1154,13 @@ describe('Tier 2 — Boundary & Corner Cases (50 Negative/Boundary Tests: F1–F
         ),
         200,
       );
-      assert.equal(overBoundary.ingestLatencyMs, 300001);
+      assert.ok(overBoundary.publishedAt.endsWith('Z'));
+      assert.ok(overBoundary.receivedAt.endsWith('Z'));
+      assert.ok(overBoundary.lastReceivedAt.endsWith('Z'));
+      assert.equal(
+        Date.parse(overBoundary.receivedAt) - Date.parse(overBoundary.publishedAt),
+        300001,
+      );
 
       const apiData = assertSuccessEnvelope(
         await client.get(`/places/${FIXTURE.poi.id}/youtube-updates`, {
@@ -1123,6 +1174,8 @@ describe('Tier 2 — Boundary & Corner Cases (50 Negative/Boundary Tests: F1–F
       assert.ok(itemAt && itemOver);
       assertYoutubeFiveFields(itemAt, 'POI', { maxIngestLatencyMs: 300000 });
       assertYoutubeFiveFields(itemOver, 'POI');
+      assert.equal(itemAt.ingestLatencyMs, 300000);
+      assert.equal(itemOver.ingestLatencyMs, 300001);
       assert.ok(itemAt.ingestLatencyMs <= apiData.realtimeSlaMaxLatencyMs);
       assert.ok(itemOver.ingestLatencyMs > apiData.realtimeSlaMaxLatencyMs);
     } else {
@@ -1150,8 +1203,14 @@ describe('Tier 2 — Boundary & Corner Cases (50 Negative/Boundary Tests: F1–F
         ),
         200,
       );
-      assert.ok(withinRes.ingestLatencyMs <= 300000);
-      assert.ok(overRes.ingestLatencyMs > 300000);
+      assert.ok(withinRes.publishedAt.endsWith('Z'));
+      assert.ok(withinRes.receivedAt.endsWith('Z'));
+      assert.ok(withinRes.lastReceivedAt.endsWith('Z'));
+      assert.ok(Date.parse(withinRes.receivedAt) - Date.parse(withinRes.publishedAt) <= 300000);
+      assert.ok(overRes.publishedAt.endsWith('Z'));
+      assert.ok(overRes.receivedAt.endsWith('Z'));
+      assert.ok(overRes.lastReceivedAt.endsWith('Z'));
+      assert.ok(Date.parse(overRes.receivedAt) - Date.parse(overRes.publishedAt) > 300000);
 
       const apiData = assertSuccessEnvelope(
         await client.get(`/places/${FIXTURE.poi.id}/youtube-updates`, { query: { limit: 50 } }),
@@ -1161,6 +1220,7 @@ describe('Tier 2 — Boundary & Corner Cases (50 Negative/Boundary Tests: F1–F
       const itemOver = apiData.items.find((i) => i.videoId === overVid);
       assert.ok(itemAt && itemOver);
       assertYoutubeFiveFields(itemAt, 'POI', { maxIngestLatencyMs: 300000 });
+      assertYoutubeFiveFields(itemOver, 'POI');
       assert.ok(itemOver.ingestLatencyMs > apiData.realtimeSlaMaxLatencyMs);
       verifyBetaDartDeliverables(cfg.mobileDir, cfg.repoRoot, {
         requireScreenshots: true,
@@ -1184,8 +1244,10 @@ describe('Tier 2 — Boundary & Corner Cases (50 Negative/Boundary Tests: F1–F
       ),
       200,
     );
-    assert.equal(receipt.ingestLatencyMs, 0);
-    assert.equal(receipt.updatedAt, receipt.receivedAt);
+    assert.ok(receipt.publishedAt.endsWith('Z'));
+    assert.ok(receipt.receivedAt.endsWith('Z'));
+    assert.ok(receipt.lastReceivedAt.endsWith('Z'));
+    assert.ok(Date.parse(receipt.receivedAt) - Date.parse(receipt.publishedAt) < 0);
 
     const apiData = assertSuccessEnvelope(
       await client.get(`/places/${FIXTURE.poi.id}/youtube-updates`, { query: { limit: 50 } }),

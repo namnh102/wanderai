@@ -595,15 +595,13 @@ export async function startMockServer({
         videoUrl: existing.videoUrl,
         duplicate: true,
         deliveryCount: existing.deliveryCount,
+        publishedAt: existing.publishedAt,
+        receivedAt: existing.receivedAt,
+        lastReceivedAt: existing.lastReceivedAt,
         status: existing.status,
         scope: existing.scope,
         linkedPlaceId: existing.placeId,
         destinationId: existing.destinationId,
-        publishedAt: existing.publishedAt,
-        receivedAt: existing.receivedAt,
-        lastReceivedAt: existing.lastReceivedAt,
-        updatedAt: existing.updatedAt,
-        ingestLatencyMs: existing.ingestLatencyMs,
         groundingBasis: existing.groundingBasis,
         decisionReason: existing.decisionReason,
         groundingEvidence: existing.groundingEvidence,
@@ -656,15 +654,13 @@ export async function startMockServer({
       videoUrl: record.videoUrl,
       duplicate: false,
       deliveryCount: record.deliveryCount,
+      publishedAt: record.publishedAt,
+      receivedAt: record.receivedAt,
+      lastReceivedAt: record.lastReceivedAt,
       status: record.status,
       scope: record.scope,
       linkedPlaceId: record.placeId,
       destinationId: record.destinationId,
-      publishedAt: record.publishedAt,
-      receivedAt: record.receivedAt,
-      lastReceivedAt: record.lastReceivedAt,
-      updatedAt: record.updatedAt,
-      ingestLatencyMs: record.ingestLatencyMs,
       groundingBasis: record.groundingBasis,
       decisionReason: record.decisionReason,
       groundingEvidence: record.groundingEvidence,
@@ -1118,16 +1114,38 @@ export async function startMockServer({
           reqPath,
         );
       }
+      const rawScope = reqUrl.searchParams.get('scope');
+      const scopeFilter = rawScope ? rawScope.trim().toUpperCase() : undefined;
+      if (scopeFilter !== undefined && scopeFilter !== 'POI' && scopeFilter !== 'CITY') {
+        return sendError(res, 400, 'VALIDATION_ERROR', 'scope must be POI or CITY', reqPath);
+      }
       const limit = Math.min(50, Math.max(1, Number(reqUrl.searchParams.get('limit') || 10)));
       const nowMs = resolveEffectiveNowMs(req);
-      const items = sortAndDedupeYoutube(
-        [...state.youtubeUpdatesByDedupeKey.values()].filter(
-          (u) => u.destinationId === dest.id && u.scope === 'CITY',
-        ),
-        limit,
+      const destRows = [...state.youtubeUpdatesByDedupeKey.values()].filter(
+        (u) =>
+          u.destinationId === dest.id &&
+          (scopeFilter ? u.scope === scopeFilter : u.scope === 'POI' || u.scope === 'CITY'),
       );
+      const items = sortAndDedupeYoutube(destRows, limit);
+      const poiVideoIds = new Set(
+        destRows.filter((u) => u.scope === 'POI').map((u) => u.videoId),
+      );
+      const cityFallbackItems =
+        scopeFilter === 'POI'
+          ? []
+          : sortAndDedupeYoutube(
+              [...state.youtubeUpdatesByDedupeKey.values()].filter(
+                (u) =>
+                  u.destinationId === dest.id &&
+                  u.scope === 'CITY' &&
+                  !poiVideoIds.has(u.videoId),
+              ),
+              limit,
+            );
 
       return sendSuccess(res, 200, {
+        placeId: null,
+        placeName: null,
         destinationId: dest.id,
         destinationSlug: dest.slug,
         destinationName: dest.name,
@@ -1137,6 +1155,8 @@ export async function startMockServer({
         realtimeSlaMaxLatencyMs: 300000,
         total: items.length,
         items,
+        cityFallbackTotal: cityFallbackItems.length,
+        cityFallbackItems,
       });
     }
 

@@ -78,7 +78,14 @@ describe('Tier 4 — Real-World Application Journeys (6 E2E Scenarios: T4-01..T4
     );
     assert.equal(ytReceipt.status, 'LINKED');
     assert.equal(ytReceipt.linkedPlaceId, FIXTURE.poi.id);
-    assert.ok(ytReceipt.ingestLatencyMs >= 0 && ytReceipt.ingestLatencyMs <= 300000);
+    assert.ok(ytReceipt.publishedAt.endsWith('Z'));
+    assert.ok(ytReceipt.receivedAt.endsWith('Z'));
+    assert.ok(ytReceipt.lastReceivedAt.endsWith('Z'));
+    const ytReceiptLagMs = Math.max(
+      0,
+      Date.parse(ytReceipt.receivedAt) - Date.parse(ytReceipt.publishedAt),
+    );
+    assert.ok(ytReceiptLagMs >= 0 && ytReceiptLagMs <= 300000);
 
     // 2. Guest discovery flow (public endpoints, zero /users/me calls)
     const haLong = await resolveHaLongDestination(client);
@@ -230,7 +237,10 @@ describe('Tier 4 — Real-World Application Journeys (6 E2E Scenarios: T4-01..T4
     assert.equal(first.status, 'LINKED_CITY');
     assert.equal(first.scope, 'CITY');
     assert.equal(first.linkedPlaceId, null);
-    assert.ok(first.ingestLatencyMs > 300000);
+    assert.ok(first.publishedAt.endsWith('Z'));
+    assert.ok(first.receivedAt.endsWith('Z'));
+    assert.ok(first.lastReceivedAt.endsWith('Z'));
+    assert.ok(Date.parse(first.receivedAt) - Date.parse(first.publishedAt) > 300000);
     assert.equal(second.duplicate, true);
     assert.equal(second.deliveryCount, 2);
 
@@ -422,8 +432,16 @@ describe('Tier 4 — Real-World Application Journeys (6 E2E Scenarios: T4-01..T4
       }),
       200,
     );
-    assert.equal(webRes.results[0].status, 'LINKED');
-    assert.ok(webRes.results[0].ingestLatencyMs >= 0 && webRes.results[0].ingestLatencyMs <= 300000);
+    const webReceipt = webRes.results[0];
+    assert.equal(webReceipt.status, 'LINKED');
+    assert.ok(webReceipt.publishedAt.endsWith('Z'));
+    assert.ok(webReceipt.receivedAt.endsWith('Z'));
+    assert.ok(webReceipt.lastReceivedAt.endsWith('Z'));
+    const webReceiptLagMs = Math.max(
+      0,
+      Date.parse(webReceipt.receivedAt) - Date.parse(webReceipt.publishedAt),
+    );
+    assert.ok(webReceiptLagMs >= 0 && webReceiptLagMs <= 300000);
 
     const updates = assertSuccessEnvelope(
       await client.get(`/places/${FIXTURE.poi.id}/youtube-updates`, { query: { limit: 50 } }),
