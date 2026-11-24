@@ -1,17 +1,18 @@
-import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
-import { PrismaModule } from './prisma/prisma.module';
-import { AuthModule } from './modules/auth/auth.module';
-import { validateEnvironmentJwtConfig } from './modules/auth/jwt-config';
-import { UsersModule } from './modules/users/users.module';
-import { DestinationsModule } from './modules/destinations/destinations.module';
-import { TripsModule } from './modules/trips/trips.module';
-import { VideosModule } from './modules/videos/videos.module';
-import { ReviewsModule } from './modules/reviews/reviews.module';
-import { AiProxyModule } from './modules/ai-proxy/ai-proxy.module';
-import { PlacesModule } from './modules/places/places.module';
-import { HealthModule } from './modules/health/health.module';
-import { MatchesModule } from './modules/matches/matches.module';
+import { Module } from "@nestjs/common";
+import { ConfigModule } from "@nestjs/config";
+import { PrismaModule } from "./prisma/prisma.module";
+import { AuthModule } from "./modules/auth/auth.module";
+import { validateEnvironmentJwtConfig } from "./modules/auth/jwt-config";
+import { UsersModule } from "./modules/users/users.module";
+import { DestinationsModule } from "./modules/destinations/destinations.module";
+import { TripsModule } from "./modules/trips/trips.module";
+import { VideosModule } from "./modules/videos/videos.module";
+import { ReviewsModule } from "./modules/reviews/reviews.module";
+import { AiProxyModule } from "./modules/ai-proxy/ai-proxy.module";
+import { PlacesModule } from "./modules/places/places.module";
+import { HealthModule } from "./modules/health/health.module";
+import { MatchesModule } from "./modules/matches/matches.module";
+import { YoutubeModule } from "./modules/youtube/youtube.module";
 
 @Module({
   imports: [
@@ -29,6 +30,7 @@ import { MatchesModule } from './modules/matches/matches.module';
     VideosModule,
     ReviewsModule,
     MatchesModule,
+    YoutubeModule,
     AiProxyModule,
   ],
   controllers: [],

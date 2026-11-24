@@ -1,6 +1,6 @@
 {
   "schema_version": "GOMATE_POI_PILOT_60_ENRICHMENT_V1",
-  "generated_at_utc": "2026-11-22T06:43:27.176014+00:00",
+  "generated_at_utc": "2026-11-24T14:23:57.245728+00:00",
   "source_policy": "OSM_OVERTURE_WIKIPEDIA_WIKIDATA_COMMONS_ONLY_ZERO_SCRAPING",
   "no_fabricated_ratings_or_reviews": true,
   "summary": {
@@ -10,14 +10,14 @@
       "da-nang": 20,
       "ha-long": 20
     },
-    "with_cover_image": 48,
-    "with_description": 38,
+    "with_cover_image": 49,
+    "with_description": 40,
     "with_opening_hours": 17,
-    "total_images": 114,
+    "total_images": 115,
     "tiers": {
-      "media_and_article": 35,
-      "media_or_article": 16,
-      "osm_factual_only": 9
+      "media_and_article": 36,
+      "media_or_article": 17,
+      "osm_factual_only": 7
     }
   },
   "items": [
@@ -2051,7 +2051,9 @@
       "website": null,
       "phone": null,
       "osm_tags_used": {},
-      "enrichment_tier": "osm_factual_only"
+      "enrichment_tier": "osm_factual_only",
+      "verification_status": "unverified_secondary_media_and_article",
+      "verification_note": "Khớp tọa độ OSM way/674647531 trên đường Đỗ Sĩ Họa (Bãi Cháy), nhưng UNMATCHED trên Overture, không có mục Wikidata/Wikipedia riêng cho nhà ga bến tàu (Q111402972 cách 720m là khách sạn trên Đảo Rều; Q65165492 là Đảo Rều tại Cẩm Phả), và ảnh Commons gần nhất (File:越南 下龙湾码头 - panoramio.jpg, 505m) chụp tòa khách sạn trên đảo thay vì nhà bến trên đất liền."
     },
     {
       "place_id": "0ee36cb9-cfd6-4015-abb3-aa06f6066ebd",
@@ -2088,17 +2090,30 @@
       "destination_slug": "ha-long",
       "category": "attraction",
       "is_rec_a_core_v2": true,
-      "description": null,
-      "description_source_url": null,
-      "description_license": null,
-      "cover_image": null,
-      "images": [],
-      "image_attributions": [],
+      "description": "Cột Đồng Hồ (Tháp Đồng Hồ) nằm tại khu vực trung tâm thành phố Hạ Long cạnh Vincom và tổ hợp Times Garden, là điểm mốc giao thông nối các tuyến đường Lê Thánh Tông, 25 Tháng 4, phố Nhà Thờ và phố Tuệ Tĩnh thuộc khu vực Bạch Đằng.",
+      "description_source_url": "https://vi.wikipedia.org/wiki/H%E1%BA%A1_Long_(th%C3%A0nh_ph%E1%BB%91)",
+      "description_license": "CC BY-SA 4.0 (Wikipedia)",
+      "cover_image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/5e/C%E1%BB%99t_%C4%90%E1%BB%93ng_H%E1%BB%93_-_Vincom_H%E1%BA%A1_Long_2022.jpg/960px-C%E1%BB%99t_%C4%90%E1%BB%93ng_H%E1%BB%93_-_Vincom_H%E1%BA%A1_Long_2022.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "images": [
+        "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/5e/C%E1%BB%99t_%C4%90%E1%BB%93ng_H%E1%BB%93_-_Vincom_H%E1%BA%A1_Long_2022.jpg/960px-C%E1%BB%99t_%C4%90%E1%BB%93ng_H%E1%BB%93_-_Vincom_H%E1%BA%A1_Long_2022.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+      ],
+      "image_attributions": [
+        {
+          "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/5e/C%E1%BB%99t_%C4%90%E1%BB%93ng_H%E1%BB%93_-_Vincom_H%E1%BA%A1_Long_2022.jpg/960px-C%E1%BB%99t_%C4%90%E1%BB%93ng_H%E1%BB%93_-_Vincom_H%E1%BA%A1_Long_2022.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "fullUrl": "https://upload.wikimedia.org/wikipedia/commons/5/5e/C%E1%BB%99t_%C4%90%E1%BB%93ng_H%E1%BB%93_-_Vincom_H%E1%BA%A1_Long_2022.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+          "commonsPageUrl": "https://commons.wikimedia.org/wiki/File:C%E1%BB%99t_%C4%90%E1%BB%93ng_H%E1%BB%93_-_Vincom_H%E1%BA%A1_Long_2022.jpg",
+          "license": "CC BY-SA 4.0",
+          "artist": "Pdhadam",
+          "title": "File:Cột Đồng Hồ - Vincom Hạ Long 2022.jpg"
+        }
+      ],
       "opening_hours": null,
       "website": null,
       "phone": null,
       "osm_tags_used": {},
-      "enrichment_tier": "osm_factual_only"
+      "enrichment_tier": "media_and_article",
+      "verification_status": "verified_media_and_article",
+      "verification_note": "Đã xác minh danh tính và tọa độ (sai lệch 0.0m so với OSM way/674228542 tại vòng xuyến giao Lê Thánh Tông - 25 Tháng 4 - Trần Hưng Đạo - phố Nhà Thờ - Tuệ Tĩnh); đối chiếu khớp bài viết Wikipedia 'Hạ Long (thành phố)' và ảnh Commons File:Cột Đồng Hồ - Vincom Hạ Long 2022.jpg."
     },
     {
       "place_id": "e017ba7c-a9d6-40f2-8b6b-d2bcd4b12b2c",
@@ -2116,7 +2131,9 @@
       "website": null,
       "phone": null,
       "osm_tags_used": {},
-      "enrichment_tier": "osm_factual_only"
+      "enrichment_tier": "osm_factual_only",
+      "verification_status": "unverified_secondary_media_and_article",
+      "verification_note": "Chỉ có stub OSM node/4755942999 (v1 năm 2017, natural=cave_entrance, gần Đảo Cống Đỏ); UNMATCHED trên Overture, không có mục Wikipedia/Wikidata (tránh nhầm với Hang Thầy/Chùa Thầy tại Quốc Oai, Hà Nội) và không có ảnh Commons định danh Hang Thầy (ảnh hang vô danh gần nhất cách 1.255m)."
     },
     {
       "place_id": "bfe45852-9a6d-4915-8b6b-c0b62c6f2b97",
@@ -2134,7 +2151,9 @@
       "website": null,
       "phone": null,
       "osm_tags_used": {},
-      "enrichment_tier": "osm_factual_only"
+      "enrichment_tier": "osm_factual_only",
+      "verification_status": "unverified_secondary_media_and_article",
+      "verification_note": "Điểm neo/check-in hãng tàu thương mại tại cảng Tuần Châu (OSM node/7168778356); UNMATCHED trên Overture, không có mục từ Wikipedia/Wikidata hoặc ảnh Commons của đơn vị này, và chính sách nguồn cấm thu thập/scrape website thương mại."
     },
     {
       "place_id": "34d89a3a-6272-4c3b-8c85-df92db91e3f6",
@@ -2142,9 +2161,9 @@
       "destination_slug": "ha-long",
       "category": "attraction",
       "is_rec_a_core_v2": true,
-      "description": null,
-      "description_source_url": null,
-      "description_license": null,
+      "description": "Đầu bến phía Hòn Gai (Hồng Gai) của Bến phà Bãi Cháy từng là đầu mối giao thông quan trọng nối Hồng Gai với Bãi Cháy qua vịnh Cửa Lục, ngừng hoạt động năm 2007 sau khi được thay thế bằng cầu Bãi Cháy.",
+      "description_source_url": "https://vi.wikipedia.org/wiki/H%E1%BB%93ng_Gai",
+      "description_license": "CC BY-SA 4.0 (Wikipedia)",
       "cover_image": null,
       "images": [],
       "image_attributions": [],
@@ -2152,7 +2171,9 @@
       "website": null,
       "phone": null,
       "osm_tags_used": {},
-      "enrichment_tier": "osm_factual_only"
+      "enrichment_tier": "media_or_article",
+      "verification_status": "verified_article_only_no_verified_image",
+      "verification_note": "Đã xác minh danh tính và tọa độ đầu bến phía Hòn Gai của Bến phà Bãi Cháy cũ (0.0m so với OSM node/839480851 bên bờ vịnh Cửa Lục, cách cầu Bãi Cháy 286m) và đối chiếu bài viết Wikipedia 'Hồng Gai'; chưa gắn ảnh vì File:Bãi Cháy.jpg trên Commons thiếu tọa độ GPS và chụp bờ phà phía Bãi Cháy đối diện thay vì đầu bến Hòn Gai."
     },
     {
       "place_id": "d707d786-f31d-405c-a5ba-d1b4b500c7ab",
@@ -2170,7 +2191,9 @@
       "website": null,
       "phone": null,
       "osm_tags_used": {},
-      "enrichment_tier": "osm_factual_only"
+      "enrichment_tier": "osm_factual_only",
+      "verification_status": "unverified_secondary_media_and_article",
+      "verification_note": "Node OSM node/13516003942 mới tạo 2026-02-01 (v1), tọa độ thực tế thuộc phường Quang Hanh (khu vực Cẩm Phả, cách trung tâm Hạ Long ~16km về phía Đông); UNMATCHED trên Overture và không có bất kỳ mục Wikipedia, Wikidata hay ảnh Commons nào trong bán kính 1,5km."
     },
     {
       "place_id": "749168c6-43e1-40bc-886a-5c39fe5b5c74",
@@ -2188,7 +2211,9 @@
       "website": null,
       "phone": null,
       "osm_tags_used": {},
-      "enrichment_tier": "osm_factual_only"
+      "enrichment_tier": "osm_factual_only",
+      "verification_status": "unverified_secondary_media_and_article",
+      "verification_note": "Tên chung 'Nhạc nước' (OSM way/677038212, amenity=fountain cạnh Quảng trường Mặt Trời, Bãi Cháy, khác với khu nhạc nước Tuần Châu cách ~7km); UNMATCHED trên Overture, thiếu tên định danh riêng và không có bài viết Wikipedia/Wikidata hay ảnh Commons chụp đài phun nước tại tọa độ này."
     },
     {
       "place_id": "317433c7-248e-4470-b4ee-fc7bee017aa3",
@@ -2206,7 +2231,9 @@
       "website": null,
       "phone": null,
       "osm_tags_used": {},
-      "enrichment_tier": "osm_factual_only"
+      "enrichment_tier": "osm_factual_only",
+      "verification_status": "unverified_secondary_media_and_article",
+      "verification_note": "Cơ sở kinh doanh trang sức ngọc trai ven Quốc lộ 18 (OSM way/683639731; khớp Overture 205b266d-9d1f-4a4b-90f4-58d5bac7dcba ở khoảng cách 13,2m nhưng lệch danh mục và không có mô tả/ảnh); không có bài Wikipedia/Wikidata, các ảnh trại ngọc trai trên Commons nằm ngoài vịnh cách >10km."
     },
     {
       "place_id": "88652ea2-61a6-4022-85e5-84a0eb48d3f9",
@@ -2329,7 +2356,9 @@
       "website": null,
       "phone": null,
       "osm_tags_used": {},
-      "enrichment_tier": "osm_factual_only"
+      "enrichment_tier": "osm_factual_only",
+      "verification_status": "unverified_coordinate_landmass_conflict",
+      "verification_note": "Mâu thuẫn không gian: OSM node/6304871405 gắn nhãn place=island nhưng tọa độ (20.9438694, 107.1032461) nằm trên khu đất liền đô thị ven đường Trần Quốc Nghiễn - phố Hải Lộc (khu Hồng Hải, cạnh Cung Quy hoạch Quảng Ninh); UNMATCHED trên Overture và không có mục Wikipedia/Wikidata hay ảnh Commons xác thực."
     }
   ]
 }
