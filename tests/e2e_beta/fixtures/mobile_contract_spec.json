@@ -1,0 +1,113 @@
+{
+  "sharedWidgets": [
+    "AppTextField",
+    "AppButton",
+    "AppLoading",
+    "AppErrorState",
+    "AppStateBanner"
+  ],
+  "coreScreens": [
+    {
+      "name": "HomeScreen",
+      "route": "/",
+      "file": "lib/features/home/presentation/home_screen.dart",
+      "baselineKeys": ["home_dest_ha-long"]
+    },
+    {
+      "name": "MapScreen",
+      "route": "/map",
+      "file": "lib/features/map/presentation/map_screen.dart",
+      "baselineKeys": ["my_location_button", "map_location_error_snackbar", "place_preview_view_detail"]
+    },
+    {
+      "name": "PlaceDetailScreen",
+      "route": "/places/:id",
+      "file": "lib/features/places/presentation/place_detail_screen.dart",
+      "baselineKeys": ["place_detail_save_to_trip", "place_detail_bookmark_action"]
+    },
+    {
+      "name": "TripListScreen",
+      "route": "/trips",
+      "file": "lib/features/trips/presentation/trip_list_screen.dart",
+      "baselineKeys": []
+    },
+    {
+      "name": "TripDetailScreen",
+      "route": "/trips/:id",
+      "file": "lib/features/trips/presentation/trip_detail_screen.dart",
+      "baselineKeys": []
+    }
+  ],
+  "authScreens": [
+    {
+      "name": "LoginScreen",
+      "route": "/login",
+      "file": "lib/features/auth/presentation/login_screen.dart"
+    },
+    {
+      "name": "RegisterScreen",
+      "route": "/register",
+      "file": "lib/features/auth/presentation/register_screen.dart"
+    },
+    {
+      "name": "ForgotPasswordScreen",
+      "route": "/forgot-password",
+      "file": "lib/features/auth/presentation/forgot_password_screen.dart"
+    },
+    {
+      "name": "ResetPasswordScreen",
+      "route": "/reset-password",
+      "file": "lib/features/auth/presentation/reset_password_screen.dart"
+    }
+  ],
+  "publicAuthPaths": [
+    "/auth/login",
+    "/auth/register",
+    "/auth/refresh",
+    "/auth/forgot-password",
+    "/auth/reset-password",
+    "/auth/reset-password/validate",
+    "/auth/oauth/google",
+    "/auth/oauth/facebook"
+  ],
+  "guestAllowedTabs": ["/", "/map"],
+  "authGatedTabs": ["/ai", "/safety", "/trips"],
+  "baseline10126b1Checks": [
+    {
+      "file": "lib/core/router/app_router.dart",
+      "tokens": ["guestBrowseModeProvider", "postLoginRedirectProvider", "sanitizeInternalRedirect", "/places/:id"]
+    },
+    {
+      "file": "lib/core/network/api_client.dart",
+      "tokens": ["_publicAuthPaths", "SessionEpochController", "_JwtAuthInterceptor"]
+    },
+    {
+      "file": "lib/core/constants/app_constants.dart",
+      "tokens": ["resolveApiBaseUrl"]
+    },
+    {
+      "file": "lib/core/widgets/widgets.dart",
+      "tokens": ["app_button.dart", "app_loading.dart", "app_error_state.dart", "app_state_banner.dart"]
+    },
+    {
+      "file": "lib/features/places/presentation/widgets/save_place_to_trip_sheet.dart",
+      "tokens": ["save_place_to_trip_sheet", "trip_picker_new_trip_toggle", "trip_picker_new_title_input", "trip_picker_confirm_save", "_createdPendingTrip"]
+    }
+  ],
+  "betaRequiredDeliverables": {
+    "sharedWidgetsFile": "lib/core/widgets/app_text_field.dart",
+    "widgetsBarrel": "lib/core/widgets/widgets.dart",
+    "forgotPasswordScreen": "lib/features/auth/presentation/forgot_password_screen.dart",
+    "resetPasswordScreen": "lib/features/auth/presentation/reset_password_screen.dart",
+    "perfBenchmarkTest": "integration_test/perf_benchmark_test.dart",
+    "perfDriver": "test_driver/perf_driver.dart",
+    "screenshotDirRelativeToRepo": "docs/beta/mobile",
+    "screenshotDimensions": { "width": 390, "height": 844 },
+    "youtubeLabels": {
+      "realtime": "Thời gian thực",
+      "recent": "Cập nhật gần đây",
+      "slaMaxMs": 300000
+    },
+    "cancelLoginLabels": ["Hủy đăng nhập", "Quay lại"]
+  }
+}
