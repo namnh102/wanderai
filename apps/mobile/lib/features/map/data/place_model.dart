@@ -7,6 +7,7 @@ class PlaceModel {
   final String? address;
   final double? latitude;
   final double? longitude;
+
   /// null = no rating available (never shown as 0 or a default).
   final double? rating;
   final int reviewCount;
@@ -15,6 +16,7 @@ class PlaceModel {
   final String? categoryName;
   final String? categoryIcon;
   final String? categoryColor;
+  final String? destinationId;
   final String? destinationName;
   final bool isVerified;
   final int provenanceCount;
@@ -43,6 +45,7 @@ class PlaceModel {
     this.categoryName,
     this.categoryIcon,
     this.categoryColor,
+    this.destinationId,
     this.destinationName,
     this.isVerified = false,
     this.provenanceCount = 0,
@@ -90,12 +93,14 @@ class PlaceModel {
               : 0),
       coverImage: _nonBlank(json['coverImage'] ?? json['cover_image']),
       images: parsedImages,
-      categoryName: category?['name'] as String? ??
-          json['categoryName'] as String?,
+      categoryName:
+          category?['name'] as String? ?? json['categoryName'] as String?,
       categoryIcon: category?['icon'] as String?,
       categoryColor: category?['color'] as String?,
-      destinationName: destination?['name'] as String? ??
-          json['destinationName'] as String?,
+      destinationId:
+          destination?['id'] as String? ?? json['destinationId'] as String?,
+      destinationName:
+          destination?['name'] as String? ?? json['destinationName'] as String?,
       isVerified: json['isVerified'] as bool? ?? false,
       provenanceCount: (json['provenanceCount'] as num?)?.toInt() ?? 0,
       distanceKm: (json['distanceKm'] as num?)?.toDouble(),
@@ -129,7 +134,8 @@ class PlaceModel {
 
   /// Address exactly as served by the API, or the honest unavailable text.
   /// Never composed from name/destination — shared by preview sheet and detail screen.
-  String get addressDisplay => hasAddress ? address!.trim() : addressUnavailableText;
+  String get addressDisplay =>
+      hasAddress ? address!.trim() : addressUnavailableText;
 }
 
 /// Provenance of a place (OpenStreetMap). Only present for verified places.

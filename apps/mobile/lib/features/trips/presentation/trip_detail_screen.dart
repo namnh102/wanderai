@@ -46,15 +46,16 @@ class _TripDetailScreenState extends ConsumerState<TripDetailScreen> {
     );
 
     if (confirm == true && mounted) {
-      final success = await ref
-          .read(tripListProvider.notifier)
-          .deleteTrip(widget.tripId);
+      final success =
+          await ref.read(tripListProvider.notifier).deleteTrip(widget.tripId);
       if (mounted) {
         if (success) {
           context.pop();
         } else {
-          final err = ref.read(tripListProvider).errorMessage ?? 'Lỗi xóa chuyến đi';
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(err)));
+          final err =
+              ref.read(tripListProvider).errorMessage ?? 'Lỗi xóa chuyến đi';
+          ScaffoldMessenger.of(context)
+              .showSnackBar(SnackBar(content: Text(err)));
         }
       }
     }
@@ -100,9 +101,9 @@ class _TripDetailScreenState extends ConsumerState<TripDetailScreen> {
     if (shouldProceed != true || !mounted) return;
 
     final prompt = noteController.text.trim();
-    final plan = await ref
-        .read(tripDetailProvider.notifier)
-        .generateAiPlan(widget.tripId, prompt: prompt.isNotEmpty ? prompt : null);
+    final plan = await ref.read(tripDetailProvider.notifier).generateAiPlan(
+        widget.tripId,
+        prompt: prompt.isNotEmpty ? prompt : null);
 
     if (!mounted) return;
     if (plan != null) {
@@ -154,12 +155,14 @@ class _TripDetailScreenState extends ConsumerState<TripDetailScreen> {
                       children: [
                         Row(
                           children: [
-                            Icon(Icons.auto_awesome, color: cs.primary, size: 20),
+                            Icon(Icons.auto_awesome,
+                                color: cs.primary, size: 20),
                             const SizedBox(width: 8),
                             const Expanded(
                               child: Text(
                                 'Lịch trình từ Wandy AI',
-                                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                                style: TextStyle(
+                                    fontSize: 18, fontWeight: FontWeight.bold),
                               ),
                             ),
                           ],
@@ -167,7 +170,8 @@ class _TripDetailScreenState extends ConsumerState<TripDetailScreen> {
                         const SizedBox(height: 4),
                         Text(
                           '${plan.destination} • ${plan.totalDays} ngày',
-                          style: TextStyle(fontSize: 13, color: cs.onSurfaceVariant),
+                          style: TextStyle(
+                              fontSize: 13, color: cs.onSurfaceVariant),
                         ),
                       ],
                     ),
@@ -219,14 +223,17 @@ class _TripDetailScreenState extends ConsumerState<TripDetailScreen> {
                               children: [
                                 Text(
                                   'Chi phí ước tính:',
-                                  style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant),
+                                  style: TextStyle(
+                                      fontSize: 12, color: cs.onSurfaceVariant),
                                 ),
                                 Text(
                                   '${plan.budgetAnalysis.estimatedCost} ${plan.budgetAnalysis.currency}',
                                   style: TextStyle(
                                     fontWeight: FontWeight.bold,
                                     fontSize: 16,
-                                    color: plan.budgetAnalysis.isOverBudget ? cs.error : cs.primary,
+                                    color: plan.budgetAnalysis.isOverBudget
+                                        ? cs.error
+                                        : cs.primary,
                                   ),
                                 ),
                               ],
@@ -239,7 +246,8 @@ class _TripDetailScreenState extends ConsumerState<TripDetailScreen> {
                               children: [
                                 Text(
                                   'Ngân sách: ${plan.budgetAnalysis.totalBudget} ${plan.budgetAnalysis.currency}',
-                                  style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant),
+                                  style: TextStyle(
+                                      fontSize: 12, color: cs.onSurfaceVariant),
                                 ),
                                 Text(
                                   plan.budgetAnalysis.isOverBudget
@@ -248,7 +256,9 @@ class _TripDetailScreenState extends ConsumerState<TripDetailScreen> {
                                   style: TextStyle(
                                     fontSize: 12,
                                     fontWeight: FontWeight.bold,
-                                    color: plan.budgetAnalysis.isOverBudget ? cs.error : cs.primary,
+                                    color: plan.budgetAnalysis.isOverBudget
+                                        ? cs.error
+                                        : cs.primary,
                                   ),
                                 ),
                               ],
@@ -268,12 +278,14 @@ class _TripDetailScreenState extends ConsumerState<TripDetailScreen> {
                         ),
                         child: Row(
                           children: [
-                            Icon(Icons.warning_amber_rounded, color: Colors.amber.shade900, size: 20),
+                            Icon(Icons.warning_amber_rounded,
+                                color: Colors.amber.shade900, size: 20),
                             const SizedBox(width: 8),
                             Expanded(
                               child: Text(
                                 'Chuyến đi đã có ${trip.itineraries.length} ngày. Áp dụng sẽ thay thế toàn bộ lịch trình hiện tại!',
-                                style: TextStyle(fontSize: 12, color: Colors.amber.shade900),
+                                style: TextStyle(
+                                    fontSize: 12, color: Colors.amber.shade900),
                               ),
                             ),
                           ],
@@ -285,7 +297,9 @@ class _TripDetailScreenState extends ConsumerState<TripDetailScreen> {
                           decoration: BoxDecoration(
                             color: cs.surface,
                             borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.5)),
+                            border: Border.all(
+                                color:
+                                    cs.outlineVariant.withValues(alpha: 0.5)),
                           ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -295,38 +309,53 @@ class _TripDetailScreenState extends ConsumerState<TripDetailScreen> {
                                   Expanded(
                                     child: Text(
                                       day.title,
-                                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                                      style: const TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 14),
                                     ),
                                   ),
                                   const SizedBox(width: 8),
                                   Text(
                                     '${day.dayCost} VND',
-                                    style: TextStyle(fontSize: 12, color: cs.primary, fontWeight: FontWeight.bold),
+                                    style: TextStyle(
+                                        fontSize: 12,
+                                        color: cs.primary,
+                                        fontWeight: FontWeight.bold),
                                   ),
                                 ],
                               ),
                               const Divider(height: 16),
                               ...day.items.map((item) => Padding(
-                                    padding: const EdgeInsets.symmetric(vertical: 4),
+                                    padding:
+                                        const EdgeInsets.symmetric(vertical: 4),
                                     child: Row(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
                                         Text(
                                           '${item.orderIndex}. ',
-                                          style: TextStyle(fontWeight: FontWeight.bold, color: cs.primary),
+                                          style: TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                              color: cs.primary),
                                         ),
                                         Expanded(
                                           child: Column(
-                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
                                             children: [
                                               Text(
                                                 item.activity,
-                                                style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+                                                style: const TextStyle(
+                                                    fontWeight: FontWeight.w600,
+                                                    fontSize: 13),
                                               ),
                                               if (item.startTime != null)
                                                 Text(
                                                   '${item.startTime} - ${item.estimatedCost} VND',
-                                                  style: TextStyle(fontSize: 11, color: cs.onSurfaceVariant),
+                                                  style: TextStyle(
+                                                      fontSize: 11,
+                                                      color:
+                                                          cs.onSurfaceVariant),
                                                 ),
                                             ],
                                           ),
@@ -360,17 +389,20 @@ class _TripDetailScreenState extends ConsumerState<TripDetailScreen> {
                             Navigator.pop(ctx);
                             final success = await ref
                                 .read(tripDetailProvider.notifier)
-                                .saveAiPlan(widget.tripId, plan, replaceExisting: true);
+                                .saveAiPlan(widget.tripId, plan,
+                                    replaceExisting: true);
                             if (mounted) {
                               if (success) {
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   const SnackBar(
-                                    content: Text('Đã áp dụng lịch trình AI thành công!'),
+                                    content: Text(
+                                        'Đã áp dụng lịch trình AI thành công!'),
                                   ),
                                 );
                               } else {
-                                final err = ref.read(tripDetailProvider).errorMessage ??
-                                    'Lỗi khi lưu lịch trình';
+                                final err =
+                                    ref.read(tripDetailProvider).errorMessage ??
+                                        'Lỗi khi lưu lịch trình';
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(content: Text(err)),
                                 );
@@ -534,8 +566,9 @@ class _TripDetailScreenState extends ConsumerState<TripDetailScreen> {
                 Text(state.errorMessage!),
                 const SizedBox(height: 12),
                 ElevatedButton(
-                  onPressed: () =>
-                      ref.read(tripDetailProvider.notifier).loadTrip(widget.tripId),
+                  onPressed: () => ref
+                      .read(tripDetailProvider.notifier)
+                      .loadTrip(widget.tripId),
                   child: const Text('Thử lại'),
                 ),
               ],
@@ -599,11 +632,13 @@ class _TripDetailScreenState extends ConsumerState<TripDetailScreen> {
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  if (trip.description != null && trip.description!.isNotEmpty) ...[
+                  if (trip.description != null &&
+                      trip.description!.isNotEmpty) ...[
                     const SizedBox(height: 8),
                     Text(
                       trip.description!,
-                      style: TextStyle(fontSize: 14, color: cs.onSurfaceVariant),
+                      style:
+                          TextStyle(fontSize: 14, color: cs.onSurfaceVariant),
                     ),
                   ],
                   const Divider(height: 24),
@@ -646,7 +681,8 @@ class _TripDetailScreenState extends ConsumerState<TripDetailScreen> {
                       spacing: 6,
                       children: trip.interests
                           .map((tag) => Chip(
-                                label: Text(tag, style: const TextStyle(fontSize: 11)),
+                                label: Text(tag,
+                                    style: const TextStyle(fontSize: 11)),
                                 visualDensity: VisualDensity.compact,
                               ))
                           .toList(),
@@ -748,7 +784,8 @@ class _TripDetailScreenState extends ConsumerState<TripDetailScreen> {
             Card(
               elevation: 0,
               color: cs.surfaceContainerLow,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12)),
               child: const Padding(
                 padding: EdgeInsets.all(24),
                 child: Center(
@@ -792,60 +829,70 @@ class _TripDetailScreenState extends ConsumerState<TripDetailScreen> {
   }
 
   Widget _buildDaySection(ItineraryModel day, ColorScheme cs) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      decoration: BoxDecoration(
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Material(
         color: cs.surface,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.5)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-            decoration: BoxDecoration(
-              color: cs.surfaceContainerLow,
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(14)),
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    day.title != null && day.title!.isNotEmpty
-                        ? (day.title!.startsWith('Ngay') ||
-                                day.title!.startsWith('Ngày')
-                            ? day.title!
-                            : 'Ngày ${day.dayNumber}: ${day.title}')
-                        : 'Ngày ${day.dayNumber}',
-                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(14),
+          side: BorderSide(color: cs.outlineVariant.withValues(alpha: 0.5)),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              decoration: BoxDecoration(
+                color: cs.surfaceContainerLow,
+                borderRadius:
+                    const BorderRadius.vertical(top: Radius.circular(14)),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      day.title != null && day.title!.isNotEmpty
+                          ? (day.title!.startsWith('Ngay') ||
+                                  day.title!.startsWith('Ngày')
+                              ? day.title!
+                              : 'Ngày ${day.dayNumber}: ${day.title}')
+                          : 'Ngày ${day.dayNumber}',
+                      style: const TextStyle(
+                          fontWeight: FontWeight.bold, fontSize: 15),
+                    ),
                   ),
-                ),
-                TextButton(
-                  onPressed: () => _showAddItineraryDialog(day.dayNumber),
-                  style: TextButton.styleFrom(
-                    visualDensity: VisualDensity.compact,
-                    padding: EdgeInsets.zero,
+                  TextButton(
+                    onPressed: () => _showAddItineraryDialog(day.dayNumber),
+                    style: TextButton.styleFrom(
+                      visualDensity: VisualDensity.compact,
+                      padding: EdgeInsets.zero,
+                    ),
+                    child: const Text('+ Hoạt động',
+                        style: TextStyle(fontSize: 12)),
                   ),
-                  child: const Text('+ Hoạt động', style: TextStyle(fontSize: 12)),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-          if (day.items.isEmpty)
-            const Padding(
-              padding: EdgeInsets.all(16),
-              child: Text('Chưa có hoạt động nào trong ngày này.'),
-            )
-          else
-            ...day.items.map((item) => _buildItineraryItemRow(item, cs)),
-        ],
+            if (day.items.isEmpty)
+              const Padding(
+                padding: EdgeInsets.all(16),
+                child: Text('Chưa có hoạt động nào trong ngày này.'),
+              )
+            else
+              ...day.items.map((item) => _buildItineraryItemRow(item, cs)),
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildItineraryItemRow(ItineraryItemModel item, ColorScheme cs) {
     return ListTile(
+      key: Key('trip_itinerary_item_${item.id}'),
+      onTap: item.placeId != null
+          ? () => context.push('/places/${item.placeId}')
+          : null,
       leading: Container(
         width: 36,
         height: 36,
@@ -867,6 +914,28 @@ class _TripDetailScreenState extends ConsumerState<TripDetailScreen> {
       subtitle: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          if (item.placeId != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 2),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.place_outlined, size: 13, color: cs.primary),
+                  const SizedBox(width: 3),
+                  Flexible(
+                    child: Text(
+                      item.placeName ?? 'Xem chi tiết địa điểm đã lưu',
+                      key: Key('trip_item_place_${item.placeId}'),
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: cs.primary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
           if (item.startTime != null && item.startTime!.isNotEmpty)
             Text(
               'Thời gian: ${item.startTime}',

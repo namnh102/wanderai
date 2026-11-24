@@ -59,7 +59,8 @@ class TripListScreen extends ConsumerWidget {
               ),
               const SizedBox(height: 16),
               ElevatedButton(
-                onPressed: () => ref.read(tripListProvider.notifier).loadTrips(),
+                onPressed: () =>
+                    ref.read(tripListProvider.notifier).loadTrips(),
                 child: const Text('Thử lại'),
               ),
             ],
@@ -83,7 +84,8 @@ class TripListScreen extends ConsumerWidget {
                   color: cs.primary.withValues(alpha: 0.12),
                   shape: BoxShape.circle,
                 ),
-                child: Icon(Icons.luggage_outlined, size: 40, color: cs.primary),
+                child:
+                    Icon(Icons.luggage_outlined, size: 40, color: cs.primary),
               ),
               const SizedBox(height: 20),
               const Text(
@@ -126,6 +128,7 @@ class TripListScreen extends ConsumerWidget {
     ColorScheme cs,
   ) {
     return Card(
+      key: Key('trip_card_${trip.id}'),
       margin: const EdgeInsets.only(bottom: 14),
       elevation: 0,
       shape: RoundedRectangleBorder(

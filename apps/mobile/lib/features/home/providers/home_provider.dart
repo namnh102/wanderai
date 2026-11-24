@@ -2,6 +2,8 @@ import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:latlong2/latlong.dart';
 import '../../../core/network/api_client.dart';
+import '../../../core/router/app_router.dart';
+import '../../auth/providers/auth_provider.dart';
 import '../../map/data/place_model.dart';
 import '../../map/data/place_repository.dart';
 import '../../map/providers/map_provider.dart';
@@ -90,11 +92,17 @@ class HomeState {
 class HomeNotifier extends StateNotifier<HomeState> {
   final Dio _dio;
   final PlaceRepository _placeRepo;
+  final bool _skipProfile;
   int _loadSeq = 0;
   int _nearbySeq = 0;
 
-  HomeNotifier(this._dio, this._placeRepo, {bool autoLoad = true})
-      : super(const HomeState()) {
+  HomeNotifier(
+    this._dio,
+    this._placeRepo, {
+    bool autoLoad = true,
+    bool skipProfile = false,
+  })  : _skipProfile = skipProfile,
+        super(const HomeState()) {
     if (autoLoad) {
       load();
     }
@@ -128,7 +136,8 @@ class HomeNotifier extends StateNotifier<HomeState> {
     );
 
     try {
-      final destFuture = _dio.get('/destinations', queryParameters: {'limit': 50});
+      final destFuture =
+          _dio.get('/destinations', queryParameters: {'limit': 50});
       final placesFuture = _loadFeaturedPlacesSoft();
       final trendingFuture = _loadTrendingSoft();
       final profileFuture = _loadProfileSoft();
@@ -137,7 +146,9 @@ class HomeNotifier extends StateNotifier<HomeState> {
       if (!mounted || seq != _loadSeq) return;
 
       final rawData = destResp.data;
-      final rawItems = rawData is Map ? (rawData['data']?['items'] as List? ?? []) : const [];
+      final rawItems = rawData is Map
+          ? (rawData['data']?['items'] as List? ?? [])
+          : const [];
       final parsedDestinations = rawItems
           .whereType<Map<String, dynamic>>()
           .map(HomeDestinationItem.fromJson)
@@ -203,10 +214,12 @@ class HomeNotifier extends StateNotifier<HomeState> {
 
   Future<List<PlaceModel>> _loadTrendingSoft() async {
     try {
-      final resp = await _dio.get('/places/trending', queryParameters: {'limit': 6});
+      final resp =
+          await _dio.get('/places/trending', queryParameters: {'limit': 6});
       final raw = resp.data;
       final inner = raw is Map ? (raw['data'] ?? raw) : raw;
-      final items = inner is Map ? (inner['items'] as List? ?? const []) : const [];
+      final items =
+          inner is Map ? (inner['items'] as List? ?? const []) : const [];
       return items
           .whereType<Map<String, dynamic>>()
           .map(PlaceModel.fromJson)
@@ -226,7 +239,10 @@ class HomeNotifier extends StateNotifier<HomeState> {
       return (places, null);
     } on DioException catch (e) {
       if (_isConnectionFailure(e)) {
-        return (<PlaceModel>[], 'Kết nối không ổn định, chưa tải được địa điểm xác minh.');
+        return (
+          <PlaceModel>[],
+          'Kết nối không ổn định, chưa tải được địa điểm xác minh.'
+        );
       }
       return (<PlaceModel>[], null);
     } catch (_) {
@@ -235,6 +251,9 @@ class HomeNotifier extends StateNotifier<HomeState> {
   }
 
   Future<(String?, List<String>)> _loadProfileSoft() async {
+    if (_skipProfile) {
+      return (null, const <String>[]);
+    }
     try {
       final resp = await _dio.get('/users/me');
       final data = resp.data;
@@ -243,11 +262,13 @@ class HomeNotifier extends StateNotifier<HomeState> {
       }
       final userMap = data['data'] as Map<String, dynamic>;
       final profile = userMap['profile'];
-      final rawName = profile is Map ? (profile['displayName'] as String?) : null;
+      final rawName =
+          profile is Map ? (profile['displayName'] as String?) : null;
       final trimmedName = rawName?.trim();
       final prefs = userMap['preferences'];
       final rawInterests = prefs is Map && prefs['interests'] is List
-          ? List<String>.from((prefs['interests'] as List).map((e) => e.toString()))
+          ? List<String>.from(
+              (prefs['interests'] as List).map((e) => e.toString()))
           : const <String>[];
       return (
         (trimmedName != null && trimmedName.isNotEmpty) ? trimmedName : null,
@@ -280,7 +301,8 @@ class HomeNotifier extends StateNotifier<HomeState> {
       state = state.copyWith(
         isNearbyLoading: false,
         hasNearbyLoaded: true,
-        partialBannerMessage: 'Không thể cập nhật danh sách địa điểm gần bạn lúc này.',
+        partialBannerMessage:
+            'Không thể cập nhật danh sách địa điểm gần bạn lúc này.',
       );
     }
   }
@@ -306,5 +328,11 @@ final homeProvider =
     StateNotifierProvider.autoDispose<HomeNotifier, HomeState>((ref) {
   final dio = ref.watch(apiClientProvider);
   final placeRepo = ref.watch(placeRepositoryProvider);
-  return HomeNotifier(dio, placeRepo);
+  final isGuest = ref.watch(guestBrowseModeProvider);
+  final authStatus = ref.watch(authProvider.select((s) => s.status));
+  return HomeNotifier(
+    dio,
+    placeRepo,
+    skipProfile: isGuest && authStatus != AuthStatus.authenticated,
+  );
 });

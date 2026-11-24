@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/router/app_router.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_radius.dart';
 import '../../../core/theme/app_spacing.dart';
@@ -73,6 +74,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   Widget build(BuildContext context) {
     final homeState = ref.watch(homeProvider);
     final locationState = ref.watch(userLocationProvider);
+    final isGuest = ref.watch(guestBrowseModeProvider);
+    final authStatus = ref.watch(authProvider.select((s) => s.status));
+    final showGuestAuthAction =
+        isGuest && authStatus != AuthStatus.authenticated;
 
     ref.listen<UserLocationState>(userLocationProvider, (prev, next) {
       if (next.position != null && prev?.position != next.position) {
@@ -114,22 +119,31 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             ),
           ],
         ),
-        actions: [
-          IconButton(
-            key: const Key('home_preferences_button'),
-            icon: const Icon(Icons.tune_outlined),
-            tooltip: 'Sở thích du lịch',
-            color: AppColors.primary,
-            onPressed: () => context.push('/profile/preferences'),
-          ),
-          IconButton(
-            key: const Key('home_logout_button'),
-            icon: const Icon(Icons.logout_rounded),
-            tooltip: 'Đăng xuất',
-            color: AppColors.textSecondary,
-            onPressed: () => ref.read(authProvider.notifier).logout(),
-          ),
-        ],
+        actions: showGuestAuthAction
+            ? [
+                TextButton.icon(
+                  key: const Key('home_login_button'),
+                  onPressed: () => context.go('/login'),
+                  icon: const Icon(Icons.login_rounded, size: 18),
+                  label: const Text('Đăng nhập'),
+                ),
+              ]
+            : [
+                IconButton(
+                  key: const Key('home_preferences_button'),
+                  icon: const Icon(Icons.tune_outlined),
+                  tooltip: 'Sở thích du lịch',
+                  color: AppColors.primary,
+                  onPressed: () => context.push('/profile/preferences'),
+                ),
+                IconButton(
+                  key: const Key('home_logout_button'),
+                  icon: const Icon(Icons.logout_rounded),
+                  tooltip: 'Đăng xuất',
+                  color: AppColors.textSecondary,
+                  onPressed: () => ref.read(authProvider.notifier).logout(),
+                ),
+              ],
       ),
       body: ResponsiveWrapper(
         maxWidth: 1040.0,
@@ -418,8 +432,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                         ),
                                       ),
                                       Padding(
-                                        padding: const EdgeInsets.all(
-                                            AppSpacing.sm),
+                                        padding:
+                                            const EdgeInsets.all(AppSpacing.sm),
                                         child: Column(
                                           crossAxisAlignment:
                                               CrossAxisAlignment.start,
@@ -428,8 +442,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                               p.name,
                                               maxLines: 1,
                                               overflow: TextOverflow.ellipsis,
-                                              style: AppTypography.label
-                                                  .copyWith(
+                                              style:
+                                                  AppTypography.label.copyWith(
                                                 fontWeight: FontWeight.w700,
                                               ),
                                             ),
@@ -507,7 +521,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           onAction: () => context.go('/map'),
         ),
         const SizedBox(height: AppSpacing.sm),
-
         if (!hasGps) ...[
           _LocationPromptCard(
             locationState: locationState,
@@ -523,7 +536,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           ),
           const SizedBox(height: AppSpacing.mdSmall),
         ],
-
         if (hasGps && homeState.isNearbyLoading)
           const AppLoading(
             isCompact: true,
@@ -810,7 +822,8 @@ class _RecommendationEntryCard extends StatelessWidget {
               ],
             ),
           ),
-          const Icon(Icons.chevron_right_rounded, color: AppColors.textSecondary),
+          const Icon(Icons.chevron_right_rounded,
+              color: AppColors.textSecondary),
         ],
       ),
     );
@@ -852,7 +865,9 @@ class _LocationPromptCard extends StatelessWidget {
               shape: BoxShape.circle,
             ),
             child: Icon(
-              isDenied ? Icons.location_off_outlined : Icons.my_location_outlined,
+              isDenied
+                  ? Icons.location_off_outlined
+                  : Icons.my_location_outlined,
               color: AppColors.primary,
               size: 20,
             ),
