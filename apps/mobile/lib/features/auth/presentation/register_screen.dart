@@ -70,6 +70,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   }
 
   void _cancelRegister(String redirectPath) {
+    ref.read(authProvider.notifier).clearError();
     ref.read(postLoginRedirectProvider.notifier).state = null;
     ref.read(guestBrowseModeProvider.notifier).state = true;
     context.go(redirectPath);
@@ -158,6 +159,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     onPressed: _loading
                         ? null
                         : () {
+                            ref.read(authProvider.notifier).clearError();
                             final target = effectiveRedirect != null
                                 ? '/login?redirect=${Uri.encodeComponent(effectiveRedirect)}'
                                 : '/login';

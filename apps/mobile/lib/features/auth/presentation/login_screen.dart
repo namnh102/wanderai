@@ -259,6 +259,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       onPressed: _isBusy
                           ? null
                           : () {
+                              ref.read(authProvider.notifier).clearError();
                               final target = effectiveRedirect != null
                                   ? '/register?redirect=${Uri.encodeComponent(effectiveRedirect)}'
                                   : '/register';

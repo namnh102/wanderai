@@ -246,7 +246,7 @@ export class TripsService {
       where: { itineraryId: itinerary.id },
     });
 
-    return this.prisma.itineraryItem.create({
+    const item = await this.prisma.itineraryItem.create({
       data: {
         itineraryId: itinerary.id,
         placeId: data.placeId,
@@ -262,6 +262,11 @@ export class TripsService {
         place: { select: { id: true, name: true, address: true } },
       },
     });
+
+    return {
+      ...item,
+      dayNumber: itinerary.dayNumber,
+    };
   }
 
   // DELETE /trips/:id/itinerary/:itemId

@@ -11,6 +11,16 @@ import { sanitizeDestination } from '../destinations/destination-trust';
 // Re-exported for backwards compatibility; canonical implementation lives in osm-tags.ts.
 export { osmAddress };
 
+export function foldVietnameseSearch(text: string): string {
+  return text
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[đĐ]/g, 'd')
+    .toLowerCase()
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
 export interface PilotEnrichmentMeta {
   descriptionSourceUrl: string | null;
   descriptionLicense: string | null;
@@ -76,8 +86,9 @@ export class PlacesService {
     verifiedOnly?: boolean,
   ) {
     const skip = (page - 1) * limit;
+    const foldedSearch = search ? foldVietnameseSearch(search) : '';
 
-    const where: Prisma.PlaceWhereInput = {
+    const baseWhere: Prisma.PlaceWhereInput = {
       deletedAt: null,
       ...(destinationId && { destinationId }),
       ...(verifiedOnly && {
@@ -88,62 +99,100 @@ export class PlacesService {
           name: { equals: category.toLowerCase(), mode: 'insensitive' as Prisma.QueryMode },
         },
       }),
-      ...(search && {
-        OR: [
-          { name: { contains: search, mode: 'insensitive' as Prisma.QueryMode } },
-          { nameEn: { contains: search, mode: 'insensitive' as Prisma.QueryMode } },
-          { address: { contains: search, mode: 'insensitive' as Prisma.QueryMode } },
-        ],
-      }),
     };
 
-    const [rawItems, total] = await Promise.all([
-      this.prisma.place.findMany({
-        where,
-        skip,
-        take: limit,
-        // `id` is the final unique tiebreaker: rating/reviewCount tie for nearly every verified POI, and
-        // without a unique last key OFFSET pagination yields duplicate and missing rows across pages.
-        orderBy: [{ rating: { sort: 'desc', nulls: 'last' } }, { reviewCount: 'desc' }, { id: 'asc' }],
-        include: {
-          destination: {
-            select: { id: true, name: true, slug: true, province: true },
-          },
-          category: {
-            select: { id: true, name: true, icon: true, color: true },
-          },
-          placeSources: {
-            select: {
-              sourceName: true,
-              sourceId: true,
-              confidenceScore: true,
-              rawData: true, // only used to derive the factual address; stripped below
-            },
-          },
-          _count: {
-            // Only trusted, non-deleted reviews are counted.
-            select: { reviews: { where: { trusted: true, deletedAt: null } } },
-          },
-        },
-      }),
-      this.prisma.place.count({ where }),
-    ]);
+    // `id` is the final unique tiebreaker: rating/reviewCount tie for nearly every verified POI, and
+    // without a unique last key OFFSET pagination yields duplicate and missing rows across pages.
+    const orderBy: Prisma.PlaceOrderByWithRelationInput[] = [
+      { rating: { sort: 'desc', nulls: 'last' } },
+      { reviewCount: 'desc' },
+      { id: 'asc' },
+    ];
 
-    const items = rawItems.map((p) => {
+    const include = {
+      destination: {
+        select: { id: true, name: true, slug: true, province: true },
+      },
+      category: {
+        select: { id: true, name: true, icon: true, color: true },
+      },
+      placeSources: {
+        select: {
+          sourceName: true,
+          sourceId: true,
+          confidenceScore: true,
+          rawData: true, // only used to derive the factual address; stripped below
+        },
+      },
+      _count: {
+        // Only trusted, non-deleted reviews are counted.
+        select: { reviews: { where: { trusted: true, deletedAt: null } } },
+      },
+    } satisfies Prisma.PlaceInclude;
+
+    const [rawItems, totalWithoutSearch] = foldedSearch
+      ? [
+          await this.prisma.place.findMany({
+            where: baseWhere,
+            orderBy,
+            include,
+          }),
+          null,
+        ]
+      : await Promise.all([
+          this.prisma.place.findMany({
+            where: baseWhere,
+            skip,
+            take: limit,
+            orderBy,
+            include,
+          }),
+          this.prisma.place.count({ where: baseWhere }),
+        ]);
+
+    const mapped = rawItems.map((p) => {
       const osm = p.placeSources.find((s) => s.sourceName === 'osm');
       // Legacy seed prices are not backed by any authoritative dataset: never exposed publicly.
       const { priceMin: _priceMin, priceMax: _priceMax, ...publicPlace } = p;
+      const derivedAddress = osmAddress((osm?.rawData ?? null) as Record<string, unknown> | null);
       return {
-        ...publicPlace,
-        reviewCount: p._count.reviews,
-        rating: p._count.reviews > 0 ? p.rating : null,
-        placeSources: p.placeSources.map(({ rawData: _raw, ...s }) => s),
-        // Factual OSM address only; never the importer-generated places.address.
-        address: osmAddress((osm?.rawData ?? null) as Record<string, unknown> | null),
-        isVerified: p.placeSources.length > 0,
-        provenanceCount: p.placeSources.length,
+        rawAddress: p.address,
+        item: {
+          ...publicPlace,
+          reviewCount: p._count.reviews,
+          rating: p._count.reviews > 0 ? p.rating : null,
+          placeSources: p.placeSources.map(({ rawData: _raw, ...s }) => s),
+          // Factual OSM address only; never the importer-generated places.address.
+          address: derivedAddress,
+          isVerified: p.placeSources.length > 0,
+          provenanceCount: p.placeSources.length,
+        },
       };
     });
+
+    if (foldedSearch) {
+      const matched = mapped
+        .filter(({ item, rawAddress }) =>
+          [item.name, item.nameEn, item.address, rawAddress].some(
+            (candidate) =>
+              typeof candidate === 'string' &&
+              foldVietnameseSearch(candidate).includes(foldedSearch),
+          ),
+        )
+        .map(({ item }) => item);
+
+      const total = matched.length;
+      return {
+        items: matched.slice(skip, skip + limit),
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      };
+    }
+
+    const items = mapped.map(({ item }) => item);
+    const total = totalWithoutSearch ?? items.length;
 
     return {
       items,

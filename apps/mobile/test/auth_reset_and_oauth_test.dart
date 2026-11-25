@@ -16,6 +16,7 @@ import 'package:wanderai_mobile/core/widgets/app_state_banner.dart';
 import 'package:wanderai_mobile/features/auth/data/auth_social_port.dart';
 import 'package:wanderai_mobile/features/auth/presentation/forgot_password_screen.dart';
 import 'package:wanderai_mobile/features/auth/presentation/login_screen.dart';
+import 'package:wanderai_mobile/features/auth/presentation/register_screen.dart';
 import 'package:wanderai_mobile/features/auth/presentation/reset_password_screen.dart';
 import 'package:wanderai_mobile/features/auth/providers/auth_provider.dart';
 import 'package:wanderai_mobile/features/places/presentation/place_detail_screen.dart';
@@ -54,6 +55,7 @@ class _AuthContractBackendAdapter implements HttpClientAdapter {
   int? overrideFacebookStatusCode;
   bool failNextValidateWithNetwork = false;
   bool failNextLoginWithInvalidCredentials = false;
+  bool failNextRegisterWithEmailExists = false;
 
   @override
   Future<ResponseBody> fetch(
@@ -67,6 +69,25 @@ class _AuthContractBackendAdapter implements HttpClientAdapter {
         ? Map<String, dynamic>.from(options.data as Map)
         : null;
     calls.add((method, path, body));
+
+    if (method == 'POST' && path == '/auth/register') {
+      if (failNextRegisterWithEmailExists) {
+        failNextRegisterWithEmailExists = false;
+        return _json(400, {
+          'success': false,
+          'statusCode': 400,
+          'errorCode': 'EMAIL_ALREADY_EXISTS',
+          'message': 'Email đã được sử dụng.',
+        });
+      }
+      return _json(201, {
+        'success': true,
+        'data': {
+          'access_token': 'register-access',
+          'refresh_token': 'register-refresh',
+        },
+      });
+    }
 
     if (method == 'POST' && path == '/auth/login') {
       if (failNextLoginWithInvalidCredentials) {
@@ -865,6 +886,148 @@ void main() {
       container.read(appRouterProvider).go('/login');
       await _pump(tester, 6);
       expect(find.byType(LoginScreen), findsOneWidget);
+      expect(find.byKey(const Key('login_error_banner')), findsNothing);
+    });
+
+    testWidgets(
+        'Failed registration + register_cancel_button clears auth error and hides login_error_banner on return',
+        (tester) async {
+      SharedPreferences.setMockInitialValues({});
+      final backend = _AuthContractBackendAdapter()
+        ..failNextRegisterWithEmailExists = true;
+      final container = _createContainer(backend, _FakeAuthSocialPort());
+      addTearDown(container.dispose);
+
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: MaterialApp.router(
+            theme: AppTheme.lightTheme,
+            routerConfig: container.read(appRouterProvider),
+          ),
+        ),
+      );
+      await _pump(tester, 4);
+
+      container.read(appRouterProvider).go(
+          '/register?redirect=${Uri.encodeComponent('/places/$_clockTowerId')}');
+      await _pump(tester, 6);
+      expect(find.byType(RegisterScreen), findsOneWidget);
+
+      await tester.enterText(
+        find.byKey(const Key('register_name_input')),
+        'Traveler',
+      );
+      await tester.enterText(
+        find.byKey(const Key('register_email_input')),
+        'existing@gomate.vn',
+      );
+      await tester.enterText(
+        find.byKey(const Key('register_password_input')),
+        'secret123',
+      );
+      await tester.enterText(
+        find.byKey(const Key('register_confirm_password_input')),
+        'secret123',
+      );
+      await tester.ensureVisible(
+          find.byKey(const Key('register_submit_button')));
+      await tester.tap(find.byKey(const Key('register_submit_button')));
+      await _pump(tester, 6);
+
+      expect(find.byKey(const Key('register_error_banner')), findsOneWidget);
+      expect(container.read(authProvider).errorMessage, isNotNull);
+
+      await tester.ensureVisible(
+          find.byKey(const Key('register_cancel_button')));
+      await tester.tap(find.byKey(const Key('register_cancel_button')));
+      await _pump(tester, 6);
+
+      expect(find.byType(PlaceDetailScreen), findsOneWidget);
+      expect(container.read(authProvider).errorMessage, isNull);
+
+      container.read(appRouterProvider).go('/login');
+      await _pump(tester, 6);
+      expect(find.byType(LoginScreen), findsOneWidget);
+      expect(find.byKey(const Key('login_error_banner')), findsNothing);
+    });
+
+    testWidgets(
+        'Switching between Login and Register clears auth error so login_error_banner does not leak',
+        (tester) async {
+      SharedPreferences.setMockInitialValues({});
+      final backend = _AuthContractBackendAdapter()
+        ..failNextLoginWithInvalidCredentials = true
+        ..failNextRegisterWithEmailExists = true;
+      final container = _createContainer(backend, _FakeAuthSocialPort());
+      addTearDown(container.dispose);
+
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: MaterialApp.router(
+            theme: AppTheme.lightTheme,
+            routerConfig: container.read(appRouterProvider),
+          ),
+        ),
+      );
+      await _pump(tester, 4);
+
+      container.read(appRouterProvider).go('/login');
+      await _pump(tester, 6);
+
+      await tester.enterText(
+        find.byKey(const Key('login_email_input')),
+        'traveler@gomate.vn',
+      );
+      await tester.enterText(
+        find.byKey(const Key('login_password_input')),
+        'wrongpass',
+      );
+      await tester.tap(find.byKey(const Key('login_submit_button')));
+      await _pump(tester, 6);
+      expect(find.byKey(const Key('login_error_banner')), findsOneWidget);
+      expect(container.read(authProvider).errorMessage, isNotNull);
+
+      await tester.ensureVisible(
+          find.byKey(const Key('login_go_register_button')));
+      await tester.tap(find.byKey(const Key('login_go_register_button')));
+      await _pump(tester, 6);
+
+      expect(find.byType(RegisterScreen), findsOneWidget);
+      expect(container.read(authProvider).errorMessage, isNull);
+
+      // Fail registration, then return to login via "Đã có tài khoản? Đăng nhập".
+      await tester.enterText(
+        find.byKey(const Key('register_name_input')),
+        'Traveler',
+      );
+      await tester.enterText(
+        find.byKey(const Key('register_email_input')),
+        'existing@gomate.vn',
+      );
+      await tester.enterText(
+        find.byKey(const Key('register_password_input')),
+        'secret123',
+      );
+      await tester.enterText(
+        find.byKey(const Key('register_confirm_password_input')),
+        'secret123',
+      );
+      await tester.ensureVisible(
+          find.byKey(const Key('register_submit_button')));
+      await tester.tap(find.byKey(const Key('register_submit_button')));
+      await _pump(tester, 6);
+      expect(find.byKey(const Key('register_error_banner')), findsOneWidget);
+      expect(container.read(authProvider).errorMessage, isNotNull);
+
+      final goLoginFinder = find.text('Đã có tài khoản? Đăng nhập');
+      await tester.ensureVisible(goLoginFinder);
+      await tester.tap(goLoginFinder);
+      await _pump(tester, 6);
+
+      expect(find.byType(LoginScreen), findsOneWidget);
+      expect(container.read(authProvider).errorMessage, isNull);
       expect(find.byKey(const Key('login_error_banner')), findsNothing);
     });
   });

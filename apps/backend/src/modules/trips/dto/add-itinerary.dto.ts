@@ -6,6 +6,7 @@ import {
   IsInt,
   Min,
 } from 'class-validator';
+import { Transform } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class AddItineraryDto {
@@ -15,6 +16,7 @@ export class AddItineraryDto {
   dayNumber: number;
 
   @ApiProperty({ description: 'Hoạt động cụ thể', example: 'Khám phá Đèo Mã Pí Lèng' })
+  @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
   @IsString()
   @IsNotEmpty({ message: 'Hoạt động không được để trống' })
   activity: string;

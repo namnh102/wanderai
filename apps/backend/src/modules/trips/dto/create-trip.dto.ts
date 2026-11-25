@@ -10,11 +10,13 @@ import {
   IsEnum,
   IsArray,
 } from 'class-validator';
+import { Transform } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { TravelStyle } from '@prisma/client';
 
 export class CreateTripDto {
   @ApiProperty({ description: 'Tên chuyến đi', example: 'Khám phá Hà Giang' })
+  @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
   @IsString()
   @IsNotEmpty({ message: 'Tên chuyến đi không được để trống' })
   title: string;
