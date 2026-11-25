@@ -794,5 +794,78 @@ void main() {
       await _pump(tester, 6);
       expect(find.byKey(const Key('login_error_banner')), findsNothing);
     });
+
+    testWidgets(
+        'Cancel login and guest explore clear auth error so returning to /login has no stale error banner',
+        (tester) async {
+      SharedPreferences.setMockInitialValues({});
+      final backend = _AuthContractBackendAdapter()
+        ..failNextLoginWithInvalidCredentials = true;
+      final container = _createContainer(backend, _FakeAuthSocialPort());
+      addTearDown(container.dispose);
+
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: MaterialApp.router(
+            theme: AppTheme.lightTheme,
+            routerConfig: container.read(appRouterProvider),
+          ),
+        ),
+      );
+      await _pump(tester, 4);
+
+      container.read(appRouterProvider).go(
+          '/login?redirect=${Uri.encodeComponent('/places/$_clockTowerId')}');
+      await _pump(tester, 6);
+
+      await tester.enterText(
+        find.byKey(const Key('login_email_input')),
+        'traveler@gomate.vn',
+      );
+      await tester.enterText(
+        find.byKey(const Key('login_password_input')),
+        'wrongpass',
+      );
+      await tester.tap(find.byKey(const Key('login_submit_button')));
+      await _pump(tester, 6);
+      expect(find.byKey(const Key('login_error_banner')), findsOneWidget);
+
+      await tester.ensureVisible(find.byKey(const Key('login_cancel_button')));
+      await tester.tap(find.byKey(const Key('login_cancel_button')));
+      await _pump(tester, 6);
+      expect(find.byType(PlaceDetailScreen), findsOneWidget);
+      expect(container.read(authProvider).errorMessage, isNull);
+
+      container.read(appRouterProvider).go('/login');
+      await _pump(tester, 6);
+      expect(find.byType(LoginScreen), findsOneWidget);
+      expect(find.byKey(const Key('login_error_banner')), findsNothing);
+
+      // Now fail login again and tap guest explore button.
+      backend.failNextLoginWithInvalidCredentials = true;
+      await tester.enterText(
+        find.byKey(const Key('login_email_input')),
+        'traveler@gomate.vn',
+      );
+      await tester.enterText(
+        find.byKey(const Key('login_password_input')),
+        'wrongpass2',
+      );
+      await tester.tap(find.byKey(const Key('login_submit_button')));
+      await _pump(tester, 6);
+      expect(find.byKey(const Key('login_error_banner')), findsOneWidget);
+
+      await tester.ensureVisible(
+          find.byKey(const Key('login_guest_explore_button')));
+      await tester.tap(find.byKey(const Key('login_guest_explore_button')));
+      await _pump(tester, 6);
+      expect(container.read(authProvider).errorMessage, isNull);
+
+      container.read(appRouterProvider).go('/login');
+      await _pump(tester, 6);
+      expect(find.byType(LoginScreen), findsOneWidget);
+      expect(find.byKey(const Key('login_error_banner')), findsNothing);
+    });
   });
 }

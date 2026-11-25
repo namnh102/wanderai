@@ -98,6 +98,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }
 
   void _cancelLogin(String redirectPath) {
+    ref.read(authProvider.notifier).clearError();
     ref.read(postLoginRedirectProvider.notifier).state = null;
     ref.read(guestBrowseModeProvider.notifier).state = true;
     context.go(redirectPath);
@@ -279,6 +280,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       onPressed: _isBusy
                           ? null
                           : () {
+                              ref.read(authProvider.notifier).clearError();
                               ref.read(postLoginRedirectProvider.notifier).state =
                                   null;
                               ref.read(guestBrowseModeProvider.notifier).state =

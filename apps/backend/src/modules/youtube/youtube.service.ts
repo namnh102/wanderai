@@ -582,7 +582,7 @@ export class YoutubeService {
         },
         orderBy: [
           { publishedAt: "desc" },
-          { sourceUpdatedAt: "desc" },
+          { sourceUpdatedAt: { sort: "desc", nulls: "last" } },
           { receivedAt: "desc" },
         ],
         take: safeLimit * 3,
@@ -597,7 +597,7 @@ export class YoutubeService {
             },
             orderBy: [
               { publishedAt: "desc" },
-              { sourceUpdatedAt: "desc" },
+              { sourceUpdatedAt: { sort: "desc", nulls: "last" } },
               { receivedAt: "desc" },
             ],
             take: safeLimit * 3,
@@ -693,7 +693,7 @@ export class YoutubeService {
         },
         orderBy: [
           { publishedAt: "desc" },
-          { sourceUpdatedAt: "desc" },
+          { sourceUpdatedAt: { sort: "desc", nulls: "last" } },
           { receivedAt: "desc" },
         ],
         take: safeLimit * 3,
@@ -709,7 +709,7 @@ export class YoutubeService {
             },
             orderBy: [
               { publishedAt: "desc" },
-              { sourceUpdatedAt: "desc" },
+              { sourceUpdatedAt: { sort: "desc", nulls: "last" } },
               { receivedAt: "desc" },
             ],
             take: safeLimit * 3,

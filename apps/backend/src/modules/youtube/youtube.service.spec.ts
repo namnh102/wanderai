@@ -738,6 +738,217 @@ describe("YouTube Update Ingestion, Deduplication & POI Grounding Gate", () => {
     ).rejects.toThrow(NotFoundException);
   });
 
+  it("passes sourceUpdatedAt nulls: 'last' orderBy and ranks non-null sourceUpdatedAt ahead of null when publishedAt ties", async () => {
+    const tiedPublishedAt = new Date("2026-11-24T12:00:00.000Z");
+    type SortableYoutubeRow = {
+      id: string;
+      dedupeKey: string;
+      source: string;
+      channelId: string;
+      channelTitle: string | null;
+      videoId: string;
+      videoUrl: string;
+      title: string;
+      description: string | null;
+      tags: string[];
+      latitude: number | null;
+      longitude: number | null;
+      publishedAt: Date;
+      sourceUpdatedAt: Date | null;
+      receivedAt: Date;
+      lastReceivedAt: Date;
+      deliveryCount: number;
+      status: YoutubeUpdateStatus;
+      scope: YoutubeUpdateScope;
+      placeId: string | null;
+      destinationId: string | null;
+      groundingBasis: string | null;
+      decisionReason: string;
+      groundingEvidence: Record<string, unknown>;
+      rawPayload: Record<string, unknown>;
+    };
+
+    const rowWithNullSourceUpdatedAt: SortableYoutubeRow = {
+      id: "poi-null-source-updated",
+      dedupeKey: "yt:video:NullUpdated01:2026-11-24T12:00:00.000Z",
+      source: "youtube",
+      channelId: "UCtest01",
+      channelTitle: "Halong Vlogs",
+      videoId: "NullUpdated01",
+      videoUrl: "https://www.youtube.com/watch?v=NullUpdated01",
+      title: "Tháp Đồng Hồ không có sourceUpdatedAt",
+      description: "Tháp Đồng Hồ",
+      tags: ["Ha Long"],
+      latitude: 20.9516105,
+      longitude: 107.0851999,
+      publishedAt: tiedPublishedAt,
+      sourceUpdatedAt: null,
+      receivedAt: new Date("2026-11-24T12:00:50.000Z"),
+      lastReceivedAt: new Date("2026-11-24T12:00:50.000Z"),
+      deliveryCount: 1,
+      status: YoutubeUpdateStatus.LINKED,
+      scope: YoutubeUpdateScope.POI,
+      placeId: THAP_DONG_HO_CANDIDATE.id,
+      destinationId: HA_LONG_DESTINATION.id,
+      groundingBasis: "NAME_AND_COORDINATE_CORROBORATION",
+      decisionReason: "verified_poi_grounding_passed",
+      groundingEvidence: {},
+      rawPayload: {},
+    };
+
+    const rowWithSourceUpdatedAt: SortableYoutubeRow = {
+      ...rowWithNullSourceUpdatedAt,
+      id: "poi-with-source-updated",
+      dedupeKey: "yt:video:WithUpdated01:2026-11-24T12:00:00.000Z",
+      videoId: "WithUpdated01",
+      videoUrl: "https://www.youtube.com/watch?v=WithUpdated01",
+      title: "Tháp Đồng Hồ có sourceUpdatedAt",
+      sourceUpdatedAt: new Date("2026-11-24T12:00:10.000Z"),
+      receivedAt: new Date("2026-11-24T12:00:15.000Z"),
+      lastReceivedAt: new Date("2026-11-24T12:00:15.000Z"),
+    };
+
+    const cityWithNull: SortableYoutubeRow = {
+      ...rowWithNullSourceUpdatedAt,
+      id: "city-null-source-updated",
+      dedupeKey: "yt:video:CityNull01:2026-11-24T12:00:00.000Z",
+      videoId: "CityNull01",
+      videoUrl: "https://www.youtube.com/watch?v=CityNull01",
+      status: YoutubeUpdateStatus.LINKED_CITY,
+      scope: YoutubeUpdateScope.CITY,
+      placeId: null,
+    };
+
+    const cityWithUpdated: SortableYoutubeRow = {
+      ...rowWithSourceUpdatedAt,
+      id: "city-with-source-updated",
+      dedupeKey: "yt:video:CityUpdated01:2026-11-24T12:00:00.000Z",
+      videoId: "CityUpdated01",
+      videoUrl: "https://www.youtube.com/watch?v=CityUpdated01",
+      status: YoutubeUpdateStatus.LINKED_CITY,
+      scope: YoutubeUpdateScope.CITY,
+      placeId: null,
+    };
+
+    const sortByPrismaOrderBy = (
+      rows: SortableYoutubeRow[],
+      orderBy: Array<Record<string, unknown>>,
+    ) => {
+      return [...rows].sort((a, b) => {
+        for (const clause of orderBy) {
+          if ("publishedAt" in clause) {
+            const diff = b.publishedAt.getTime() - a.publishedAt.getTime();
+            if (diff !== 0) return diff;
+          }
+          if ("sourceUpdatedAt" in clause) {
+            const spec = clause.sourceUpdatedAt as
+              | "desc"
+              | { sort: "desc"; nulls?: "first" | "last" };
+            const aNull = a.sourceUpdatedAt === null;
+            const bNull = b.sourceUpdatedAt === null;
+            if (aNull !== bNull) {
+              if (typeof spec === "object" && spec.nulls === "last") {
+                return aNull ? 1 : -1;
+              }
+              return aNull ? -1 : 1;
+            }
+            if (a.sourceUpdatedAt && b.sourceUpdatedAt) {
+              const diff =
+                b.sourceUpdatedAt.getTime() - a.sourceUpdatedAt.getTime();
+              if (diff !== 0) return diff;
+            }
+          }
+          if ("receivedAt" in clause) {
+            const diff = b.receivedAt.getTime() - a.receivedAt.getTime();
+            if (diff !== 0) return diff;
+          }
+        }
+        return 0;
+      });
+    };
+
+    const findManyMock = jest.fn(
+      async (args: {
+        where: { scope?: unknown };
+        orderBy: Array<Record<string, unknown>>;
+      }) => {
+        const isCityOnly = args.where.scope === YoutubeUpdateScope.CITY;
+        const pool = isCityOnly
+          ? [cityWithNull, cityWithUpdated]
+          : [rowWithNullSourceUpdatedAt, rowWithSourceUpdatedAt];
+        return sortByPrismaOrderBy(pool, args.orderBy);
+      },
+    );
+
+    const mockPrisma = {
+      place: {
+        findUnique: jest.fn().mockResolvedValue({
+          id: THAP_DONG_HO_CANDIDATE.id,
+          name: "Tháp Đồng Hồ",
+          deletedAt: null,
+          destinationId: HA_LONG_DESTINATION.id,
+          destination: {
+            id: HA_LONG_DESTINATION.id,
+            slug: "ha-long",
+            name: "Hạ Long",
+          },
+          _count: { placeSources: 1 },
+        }),
+      },
+      destination: {
+        findUnique: jest.fn().mockResolvedValue({
+          id: HA_LONG_DESTINATION.id,
+          name: "Hạ Long",
+          slug: "ha-long",
+          deletedAt: null,
+        }),
+      },
+      youtubePoiUpdate: {
+        findMany: findManyMock,
+      },
+    } as unknown as PrismaService;
+
+    const mockConfig = {
+      get: jest.fn(() => undefined),
+    } as unknown as ConfigService;
+
+    const service = new YoutubeService(mockPrisma, mockConfig);
+    const placeFeed = await service.listGroundedUpdatesForPlace(
+      THAP_DONG_HO_CANDIDATE.id,
+      10,
+    );
+    const destFeed = await service.listGroundedUpdatesForDestination(
+      "ha-long",
+      10,
+    );
+
+    expect(findManyMock).toHaveBeenCalledTimes(4);
+    for (const call of findManyMock.mock.calls) {
+      expect(call[0].orderBy).toEqual([
+        { publishedAt: "desc" },
+        { sourceUpdatedAt: { sort: "desc", nulls: "last" } },
+        { receivedAt: "desc" },
+      ]);
+    }
+
+    expect(placeFeed.items.map((item) => item.videoId)).toEqual([
+      "WithUpdated01",
+      "NullUpdated01",
+    ]);
+    expect(placeFeed.cityFallbackItems.map((item) => item.videoId)).toEqual([
+      "CityUpdated01",
+      "CityNull01",
+    ]);
+    expect(destFeed.items.map((item) => item.videoId)).toEqual([
+      "WithUpdated01",
+      "NullUpdated01",
+    ]);
+    expect(destFeed.cityFallbackItems.map((item) => item.videoId)).toEqual([
+      "CityUpdated01",
+      "CityNull01",
+    ]);
+  });
+
   it("enforces YoutubeInternalSecretGuard using timingSafeEqual when configured", () => {
     const makeCtx = (headers: Record<string, string | undefined>) =>
       ({
