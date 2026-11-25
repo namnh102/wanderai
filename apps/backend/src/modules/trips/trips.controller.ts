@@ -20,6 +20,7 @@ import { CreateTripDto } from './dto/create-trip.dto';
 import { UpdateTripDto } from './dto/update-trip.dto';
 import { AddItineraryDto } from './dto/add-itinerary.dto';
 import { BulkItineraryDto } from './dto/bulk-itinerary.dto';
+import { ReorderItineraryDto } from './dto/reorder-itinerary.dto';
 import { PlanTripDto } from './dto/plan-trip.dto';
 import { Transform } from 'class-transformer';
 import { IsEmail, IsNotEmpty, MaxLength } from 'class-validator';
@@ -91,6 +92,17 @@ export class TripsController {
     @Headers('idempotency-key') idempotencyKey?: string,
   ) {
     return this.tripsService.addItineraryItem(id, user.id, dto, idempotencyKey);
+  }
+
+  // PUT /trips/:id/itinerary/reorder — kéo đổi thứ tự hoạt động và lưu bền vững (WP-TRIP-01)
+  @Put(':id/itinerary/reorder')
+  @ApiOperation({ summary: 'Sắp xếp lại thứ tự hoạt động trong lịch trình (atomic transaction)' })
+  reorderItinerary(
+    @Param('id', new ParseUUIDPipe()) id: string,
+    @CurrentUser() user: any,
+    @Body() dto: ReorderItineraryDto,
+  ) {
+    return this.tripsService.reorderItineraryItems(id, user.id, dto);
   }
 
   // DELETE /trips/:id/itinerary/:itemId

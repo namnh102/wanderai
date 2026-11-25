@@ -50,6 +50,25 @@ class ItineraryItemModel {
       transportMode: json['transportMode'] as String?,
     );
   }
+
+  ItineraryItemModel copyWith({
+    int? orderIndex,
+  }) {
+    return ItineraryItemModel(
+      id: id,
+      itineraryId: itineraryId,
+      placeId: placeId,
+      placeName: placeName,
+      placeAddress: placeAddress,
+      orderIndex: orderIndex ?? this.orderIndex,
+      startTime: startTime,
+      endTime: endTime,
+      activity: activity,
+      notes: notes,
+      estimatedCost: estimatedCost,
+      transportMode: transportMode,
+    );
+  }
 }
 
 class ItineraryModel {
@@ -82,6 +101,19 @@ class ItineraryModel {
       items: rawItems
           .map((i) => ItineraryItemModel.fromJson(i as Map<String, dynamic>))
           .toList(),
+    );
+  }
+
+  ItineraryModel copyWith({
+    List<ItineraryItemModel>? items,
+  }) {
+    return ItineraryModel(
+      id: id,
+      tripId: tripId,
+      dayNumber: dayNumber,
+      date: date,
+      title: title,
+      items: items ?? this.items,
     );
   }
 }
@@ -326,6 +358,36 @@ class AddItineraryItemRequest {
           'transportMode': transportMode,
         if (clientRequestId != null && clientRequestId!.isNotEmpty)
           'clientRequestId': clientRequestId,
+      };
+}
+
+class ReorderItineraryItemEntry {
+  final String itemId;
+  final int orderIndex;
+
+  const ReorderItineraryItemEntry({
+    required this.itemId,
+    required this.orderIndex,
+  });
+
+  Map<String, dynamic> toJson() => {
+        'itemId': itemId,
+        'orderIndex': orderIndex,
+      };
+}
+
+class ReorderItineraryRequest {
+  final int? dayNumber;
+  final List<ReorderItineraryItemEntry> items;
+
+  const ReorderItineraryRequest({
+    this.dayNumber,
+    required this.items,
+  });
+
+  Map<String, dynamic> toJson() => {
+        if (dayNumber != null) 'dayNumber': dayNumber,
+        'items': items.map((e) => e.toJson()).toList(),
       };
 }
 

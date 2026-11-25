@@ -93,6 +93,26 @@ class TripRepository {
     await _dio.delete('/trips/$tripId/itinerary/$itemId');
   }
 
+  /// PUT /trips/:id/itinerary/reorder — Persist reordered itinerary sequence (WP-TRIP-01)
+  Future<TripModel> reorderItineraryItems(
+    String tripId,
+    ReorderItineraryRequest request,
+  ) async {
+    final response = await _dio.put(
+      '/trips/$tripId/itinerary/reorder',
+      data: request.toJson(),
+    );
+    final data = response.data;
+    if (data is Map<String, dynamic> && data['data'] is Map<String, dynamic>) {
+      return TripModel.fromJson(data['data'] as Map<String, dynamic>);
+    }
+    throw DioException(
+      requestOptions: response.requestOptions,
+      response: response,
+      error: 'Failed to reorder itinerary items',
+    );
+  }
+
   /// POST /trips/:id/ai-plan — Generate AI plan preview
   Future<AiPlanPreviewModel> generateAiPlan(
     String tripId, {

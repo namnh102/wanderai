@@ -17,6 +17,7 @@ import { AiProxyService } from '../ai-proxy/ai-proxy.service';
 import { AddItineraryDto } from './dto/add-itinerary.dto';
 import { BulkItineraryDto } from './dto/bulk-itinerary.dto';
 import { CreateTripDto } from './dto/create-trip.dto';
+import { ReorderItineraryDto } from './dto/reorder-itinerary.dto';
 import { UpdateTripDto } from './dto/update-trip.dto';
 import { TripsController } from './trips.controller';
 import { TripsService } from './trips.service';
@@ -30,7 +31,9 @@ describe('TripsService & Trip DTO Validation', () => {
     itineraryItem: {
       count: jest.Mock;
       findFirst: jest.Mock;
+      findMany: jest.Mock;
       create: jest.Mock;
+      update: jest.Mock;
       deleteMany: jest.Mock;
     };
     $transaction: jest.Mock;
@@ -45,7 +48,9 @@ describe('TripsService & Trip DTO Validation', () => {
       itineraryItem: {
         count: jest.fn(),
         findFirst: jest.fn(),
+        findMany: jest.fn(),
         create: jest.fn(),
+        update: jest.fn(),
         deleteMany: jest.fn(),
       },
       $transaction: jest.fn(async (fn: (tx: unknown) => Promise<unknown>) =>
@@ -357,6 +362,51 @@ describe('TripsService & Trip DTO Validation', () => {
         ),
       ).rejects.toBeInstanceOf(BadRequestException);
     });
+
+    it('WP-TRIP-01: ReorderItineraryDto validates UUID itemId, integer bounds, and non-empty items array', async () => {
+      await expect(
+        validationPipe.transform(
+          { items: [] },
+          { type: 'body', metatype: ReorderItineraryDto },
+        ),
+      ).rejects.toBeInstanceOf(BadRequestException);
+
+      await expect(
+        validationPipe.transform(
+          { items: [{ itemId: 'not-a-uuid', orderIndex: 1 }] },
+          { type: 'body', metatype: ReorderItineraryDto },
+        ),
+      ).rejects.toBeInstanceOf(BadRequestException);
+
+      await expect(
+        validationPipe.transform(
+          {
+            items: [
+              {
+                itemId: '94f73104-7bb8-457b-a023-8927663b50c1',
+                orderIndex: 0,
+              },
+            ],
+          },
+          { type: 'body', metatype: ReorderItineraryDto },
+        ),
+      ).rejects.toBeInstanceOf(BadRequestException);
+
+      const validDto = (await validationPipe.transform(
+        {
+          dayNumber: 1,
+          items: [
+            {
+              itemId: '94f73104-7bb8-457b-a023-8927663b50c1',
+              orderIndex: 1,
+            },
+          ],
+        },
+        { type: 'body', metatype: ReorderItineraryDto },
+      )) as ReorderItineraryDto;
+      expect(validDto.dayNumber).toBe(1);
+      expect(validDto.items).toHaveLength(1);
+    });
   });
 
   describe('TripsController + InMemoryPrismaService Adversarial Behavior (GAP-04 & GAP-05)', () => {
@@ -554,6 +604,130 @@ describe('TripsService & Trip DTO Validation', () => {
         .post(`/trips/${tripId}/members`)
         .send({ email: '  DELETED-Member@WanderAI.Test  ' })
         .expect(404);
+    });
+
+    it('WP-TRIP-01: PUT /trips/:id/itinerary/reorder swaps A -> B into B -> A atomically, persists across GET /trips/:id, and enforces day/index invariants', async () => {
+      const placeA = '65562a67-84ff-44a0-990d-31917a2a9bd0';
+      const placeB = '75562a67-84ff-44a0-990d-31917a2a9bd1';
+
+      const tripRes = await request(app.getHttpServer())
+        .post('/trips')
+        .send({
+          title: 'WP-TRIP-01 Reorder Trip',
+          destinationId: 'd1111111-1111-4111-8111-111111111111',
+        })
+        .expect(201);
+      const tripId = tripRes.body.data.id as string;
+
+      const addA = await request(app.getHttpServer())
+        .post(`/trips/${tripId}/itinerary`)
+        .send({
+          dayNumber: 1,
+          activity: 'Tham quan Tháp Đồng Hồ (A)',
+          placeId: placeA,
+        })
+        .expect(201);
+      const addB = await request(app.getHttpServer())
+        .post(`/trips/${tripId}/itinerary`)
+        .send({
+          dayNumber: 1,
+          activity: 'Tham quan điểm B',
+          placeId: placeB,
+        })
+        .expect(201);
+
+      const itemAId = addA.body.data.id as string;
+      const itemBId = addB.body.data.id as string;
+
+      const beforeReload = await request(app.getHttpServer())
+        .get(`/trips/${tripId}`)
+        .expect(200);
+      expect(
+        beforeReload.body.data.itineraries[0].items.map(
+          (i: { placeId: string; orderIndex: number }) => ({
+            placeId: i.placeId,
+            orderIndex: i.orderIndex,
+          }),
+        ),
+      ).toEqual([
+        { placeId: placeA, orderIndex: 1 },
+        { placeId: placeB, orderIndex: 2 },
+      ]);
+
+      // Reject partial day submission (missing itemA)
+      await request(app.getHttpServer())
+        .put(`/trips/${tripId}/itinerary/reorder`)
+        .send({
+          dayNumber: 1,
+          items: [{ itemId: itemBId, orderIndex: 1 }],
+        })
+        .expect(400);
+
+      // Reject duplicate orderIndex [1, 1]
+      await request(app.getHttpServer())
+        .put(`/trips/${tripId}/itinerary/reorder`)
+        .send({
+          dayNumber: 1,
+          items: [
+            { itemId: itemBId, orderIndex: 1 },
+            { itemId: itemAId, orderIndex: 1 },
+          ],
+        })
+        .expect(400);
+
+      // Reject duplicate itemId
+      await request(app.getHttpServer())
+        .put(`/trips/${tripId}/itinerary/reorder`)
+        .send({
+          dayNumber: 1,
+          items: [
+            { itemId: itemBId, orderIndex: 1 },
+            { itemId: itemBId, orderIndex: 2 },
+          ],
+        })
+        .expect(400);
+
+      // Valid swap A -> B into B -> A
+      const reorderRes = await request(app.getHttpServer())
+        .put(`/trips/${tripId}/itinerary/reorder`)
+        .send({
+          dayNumber: 1,
+          items: [
+            { itemId: itemBId, orderIndex: 1 },
+            { itemId: itemAId, orderIndex: 2 },
+          ],
+        })
+        .expect(200);
+
+      expect(
+        reorderRes.body.data.itineraries[0].items.map(
+          (i: { id: string; placeId: string; orderIndex: number }) => ({
+            id: i.id,
+            placeId: i.placeId,
+            orderIndex: i.orderIndex,
+          }),
+        ),
+      ).toEqual([
+        { id: itemBId, placeId: placeB, orderIndex: 1 },
+        { id: itemAId, placeId: placeA, orderIndex: 2 },
+      ]);
+
+      // Cold GET /trips/:id returns B -> A
+      const afterReload = await request(app.getHttpServer())
+        .get(`/trips/${tripId}`)
+        .expect(200);
+      expect(
+        afterReload.body.data.itineraries[0].items.map(
+          (i: { id: string; placeId: string; orderIndex: number }) => ({
+            id: i.id,
+            placeId: i.placeId,
+            orderIndex: i.orderIndex,
+          }),
+        ),
+      ).toEqual([
+        { id: itemBId, placeId: placeB, orderIndex: 1 },
+        { id: itemAId, placeId: placeA, orderIndex: 2 },
+      ]);
     });
   });
 });

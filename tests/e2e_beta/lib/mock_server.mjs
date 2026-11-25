@@ -1314,16 +1314,63 @@ export async function startMockServer({
         dayObj = { dayNumber, items: [] };
         trip.itineraries.push(dayObj);
       }
+      const maxOrder = dayObj.items.reduce(
+        (acc, cur) => Math.max(acc, Number(cur.orderIndex || 0)),
+        0,
+      );
       const place = jsonBody.placeId ? state.places.get(jsonBody.placeId) || null : null;
       const item = {
         id: crypto.randomUUID(),
         dayNumber,
+        orderIndex: maxOrder + 1,
         activity: jsonBody.activity,
         placeId: jsonBody.placeId || null,
         place,
       };
       dayObj.items.push(item);
       return sendSuccess(res, 201, item);
+    }
+
+    const tripReorderMatch = reqPath.match(/^\/trips\/([^/]+)\/itinerary\/reorder$/);
+    if (tripReorderMatch && method === 'PUT') {
+      const user = getAuthUser(req);
+      if (!user) return sendError(res, 401, 'UNAUTHORIZED', 'Unauthorized', reqPath);
+      const trip = state.trips.get(tripReorderMatch[1]);
+      if (!trip) return sendError(res, 404, 'TRIP_NOT_FOUND', 'Trip not found', reqPath);
+      if (trip.ownerId !== user.id) {
+        return sendError(res, 403, 'FORBIDDEN', 'Forbidden', reqPath);
+      }
+      const updates = Array.isArray(jsonBody?.items) ? jsonBody.items : [];
+      if (updates.length === 0) {
+        return sendError(res, 400, 'VALIDATION_ERROR', 'Empty reorder items', reqPath);
+      }
+      const seenIds = new Set();
+      const allItems = new Map();
+      for (const d of trip.itineraries) {
+        for (const it of d.items) {
+          allItems.set(it.id, { dayObj: d, item: it });
+        }
+      }
+      for (const upd of updates) {
+        if (!upd?.itemId || !UUID_RE.test(String(upd.itemId)) || seenIds.has(upd.itemId)) {
+          return sendError(res, 400, 'VALIDATION_ERROR', 'Invalid or duplicate itemId', reqPath);
+        }
+        seenIds.add(upd.itemId);
+        const found = allItems.get(upd.itemId);
+        if (!found) {
+          return sendError(res, 404, 'ITEM_NOT_FOUND', 'Item not found in trip', reqPath);
+        }
+        if (jsonBody?.dayNumber !== undefined && found.dayObj.dayNumber !== Number(jsonBody.dayNumber)) {
+          return sendError(res, 400, 'VALIDATION_ERROR', 'Day mismatch', reqPath);
+        }
+      }
+      for (const upd of updates) {
+        allItems.get(upd.itemId).item.orderIndex = Number(upd.orderIndex);
+      }
+      for (const d of trip.itineraries) {
+        d.items.sort((a, b) => Number(a.orderIndex || 0) - Number(b.orderIndex || 0));
+      }
+      return sendSuccess(res, 200, trip);
     }
 
     // --- YouTube Ingestion ---

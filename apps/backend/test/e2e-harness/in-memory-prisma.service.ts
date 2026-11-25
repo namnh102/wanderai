@@ -2058,6 +2058,87 @@ export class InMemoryPrismaService implements OnModuleInit, OnModuleDestroy {
       return item;
     },
 
+    findMany: async (
+      args: {
+        where?: {
+          itineraryId?: string;
+          itinerary?: { tripId: string };
+        };
+        orderBy?: { orderIndex?: 'asc' | 'desc' };
+        select?: {
+          id?: boolean;
+          itineraryId?: boolean;
+          orderIndex?: boolean;
+          placeId?: boolean;
+          activity?: boolean;
+          itinerary?: { select?: { dayNumber?: boolean } };
+        };
+      } = {},
+    ) => {
+      const matches = Array.from(this.itineraryItems.values()).filter(
+        (item) => {
+          if (
+            args.where?.itineraryId &&
+            item.itineraryId !== args.where.itineraryId
+          ) {
+            return false;
+          }
+          if (args.where?.itinerary?.tripId) {
+            const it = this.itineraries.get(item.itineraryId);
+            if (!it || it.tripId !== args.where.itinerary.tripId) return false;
+          }
+          return true;
+        },
+      );
+      if (args.orderBy?.orderIndex === 'desc') {
+        matches.sort((a, b) => b.orderIndex - a.orderIndex);
+      } else if (args.orderBy?.orderIndex === 'asc') {
+        matches.sort((a, b) => a.orderIndex - b.orderIndex);
+      }
+      if (args.select) {
+        const sel = args.select;
+        return matches.map((item) => {
+          const it = this.itineraries.get(item.itineraryId);
+          const out: Record<string, unknown> = {};
+          if (sel.id) out.id = item.id;
+          if (sel.itineraryId) out.itineraryId = item.itineraryId;
+          if (sel.orderIndex) out.orderIndex = item.orderIndex;
+          if (sel.placeId) out.placeId = item.placeId;
+          if (sel.activity) out.activity = item.activity;
+          if (sel.itinerary) {
+            out.itinerary = sel.itinerary.select?.dayNumber
+              ? { dayNumber: it?.dayNumber ?? 1 }
+              : (it ?? null);
+          }
+          return out;
+        });
+      }
+      return matches.map((item) => ({ ...item }));
+    },
+
+    update: async (args: {
+      where: { id: string };
+      data: Partial<
+        Pick<
+          StoredItineraryItem,
+          | 'orderIndex'
+          | 'activity'
+          | 'startTime'
+          | 'endTime'
+          | 'notes'
+          | 'estimatedCost'
+          | 'transportMode'
+        >
+      >;
+    }) => {
+      const existing = this.itineraryItems.get(args.where.id);
+      if (!existing) {
+        throw new Error(`ItineraryItem ${args.where.id} not found`);
+      }
+      Object.assign(existing, args.data, { updatedAt: new Date() });
+      return { ...existing };
+    },
+
     deleteMany: async (args: { where: { itinerary?: { tripId: string } } }) => {
       const targetTripId = args.where.itinerary?.tripId;
       let count = 0;
