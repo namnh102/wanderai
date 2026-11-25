@@ -68,10 +68,11 @@ export class ReviewListQueryDto {
   @IsUUID('all', { message: 'placeId phải là UUID hợp lệ' })
   placeId: string;
 
-  @ApiPropertyOptional({ default: 1, minimum: 1 })
+  @ApiPropertyOptional({ default: 1, minimum: 1, maximum: 10000 })
   @Transform(toStrictInt(1))
-  @IsInt({ message: 'page phải là số nguyên từ 1 trở lên' })
-  @Min(1, { message: 'page phải là số nguyên từ 1 trở lên' })
+  @IsInt({ message: 'page phải là số nguyên từ 1 đến 10000' })
+  @Min(1, { message: 'page phải là số nguyên từ 1 đến 10000' })
+  @Max(10000, { message: 'page tối đa 10000' })
   page: number = 1;
 
   @ApiPropertyOptional({ default: 20, minimum: 1, maximum: 100 })
@@ -83,10 +84,11 @@ export class ReviewListQueryDto {
 }
 
 export class ReviewMyQueryDto {
-  @ApiPropertyOptional({ default: 1, minimum: 1 })
+  @ApiPropertyOptional({ default: 1, minimum: 1, maximum: 10000 })
   @Transform(toStrictInt(1))
-  @IsInt({ message: 'page phải là số nguyên từ 1 trở lên' })
-  @Min(1, { message: 'page phải là số nguyên từ 1 trở lên' })
+  @IsInt({ message: 'page phải là số nguyên từ 1 đến 10000' })
+  @Min(1, { message: 'page phải là số nguyên từ 1 đến 10000' })
+  @Max(10000, { message: 'page tối đa 10000' })
   page: number = 1;
 
   @ApiPropertyOptional({ default: 20, minimum: 1, maximum: 100 })

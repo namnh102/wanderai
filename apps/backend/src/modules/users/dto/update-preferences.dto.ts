@@ -2,6 +2,7 @@ import {
   IsEnum,
   IsInt,
   IsOptional,
+  Max,
   Min,
   IsArray,
   IsString,
@@ -58,6 +59,7 @@ export class UpdatePreferencesDto {
   @IsOptional()
   @IsInt({ message: 'budgetMin phải là số nguyên' })
   @Min(0, { message: 'budgetMin không được nhỏ hơn 0' })
+  @Max(2147483647, { message: 'budgetMin vượt quá giới hạn cho phép' })
   budgetMin?: number;
 
   @ApiPropertyOptional({
@@ -67,6 +69,7 @@ export class UpdatePreferencesDto {
   @IsOptional()
   @IsInt({ message: 'budgetMax phải là số nguyên' })
   @Min(0, { message: 'budgetMax không được nhỏ hơn 0' })
+  @Max(2147483647, { message: 'budgetMax vượt quá giới hạn cho phép' })
   budgetMax?: number;
 
   @ApiPropertyOptional({

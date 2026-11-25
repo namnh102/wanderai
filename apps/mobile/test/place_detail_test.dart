@@ -7,11 +7,14 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:wanderai_mobile/core/theme/app_theme.dart';
 import 'package:wanderai_mobile/core/widgets/widgets.dart';
+import 'package:wanderai_mobile/features/auth/data/auth_repository.dart';
+import 'package:wanderai_mobile/features/auth/providers/auth_provider.dart';
 import 'package:wanderai_mobile/features/map/data/place_model.dart';
 import 'package:wanderai_mobile/features/map/data/place_repository.dart';
 import 'package:wanderai_mobile/features/map/presentation/widgets/place_preview_sheet.dart';
 import 'package:wanderai_mobile/features/map/providers/map_provider.dart';
 import 'package:wanderai_mobile/features/places/data/navigation_service.dart';
+import 'package:wanderai_mobile/features/places/data/review_repository.dart';
 import 'package:wanderai_mobile/features/places/presentation/place_detail_screen.dart';
 
 class _FakeRepo implements PlaceRepository {
@@ -23,6 +26,31 @@ class _FakeRepo implements PlaceRepository {
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+class _FakeAuthRepo extends AuthRepository {
+  _FakeAuthRepo() : super(Dio());
+
+  @override
+  Future<bool> restoreSession() async => true;
+}
+
+class _FakeReviewRepo extends ReviewRepository {
+  final Future<PlaceReviewModel> Function({
+    required String placeId,
+    required double rating,
+    required String content,
+  }) onCreate;
+
+  _FakeReviewRepo(this.onCreate) : super(Dio());
+
+  @override
+  Future<PlaceReviewModel> createReview({
+    required String placeId,
+    required double rating,
+    required String content,
+  }) =>
+      onCreate(placeId: placeId, rating: rating, content: content);
 }
 
 const _verifiedJson = <String, dynamic>{
@@ -370,5 +398,86 @@ void main() {
         expect(find.text(fabricated), findsNothing);
       }
     });
+  });
+
+  group('GAP-14: Review sheet lifecycle & overflow hardening', () {
+    testWidgets(
+      'dismissing _openReviewSheet mid-request with failing createReview and keyboard open produces zero FlutterErrors',
+      (tester) async {
+        final errors = <FlutterErrorDetails>[];
+        final prevOnError = FlutterError.onError;
+        FlutterError.onError = (details) {
+          errors.add(details);
+        };
+        addTearDown(() => FlutterError.onError = prevOnError);
+
+        final completer = Completer<PlaceReviewModel>();
+        final authNotifier = AuthNotifier(_FakeAuthRepo());
+
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: [
+              authProvider.overrideWith((_) => authNotifier),
+              placeRepositoryProvider.overrideWithValue(
+                _FakeRepo(
+                  (_) async => PlaceModel.fromJson(
+                    Map<String, dynamic>.from(_verifiedJson),
+                  ),
+                ),
+              ),
+              reviewRepositoryProvider.overrideWithValue(
+                _FakeReviewRepo(
+                  ({required placeId, required rating, required content}) =>
+                      completer.future,
+                ),
+              ),
+            ],
+            child: MaterialApp(
+              theme: AppTheme.lightTheme,
+              home: const MediaQuery(
+                data: MediaQueryData(
+                  size: Size(360, 640),
+                  viewInsets: EdgeInsets.only(bottom: 300),
+                ),
+                child: PlaceDetailScreen(placeId: 'p1'),
+              ),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        final writeReviewBtn =
+            find.byKey(const Key('place_detail_write_review'));
+        await tester.ensureVisible(writeReviewBtn);
+        await tester.tap(writeReviewBtn);
+        await tester.pumpAndSettle();
+
+        final inputFinder = find.byKey(const Key('review_content_input'));
+        expect(inputFinder, findsOneWidget);
+        await tester.tap(inputFinder);
+        await tester.enterText(inputFinder, 'Trải nghiệm tuyệt vời ở Hạ Long');
+        await tester.pump();
+
+        final submitFinder = find.byKey(const Key('review_submit_button'));
+        await tester.ensureVisible(submitFinder);
+        await tester.tap(submitFinder);
+        await tester.pump();
+
+        // Dismiss the bottom sheet mid-request while exit animation runs
+        Navigator.of(tester.element(inputFinder)).pop();
+        await tester.pump(const Duration(milliseconds: 50));
+
+        // Fail the in-flight createReview after dismissal
+        completer.completeError(
+          DioException(
+            requestOptions: RequestOptions(path: '/reviews'),
+            type: DioExceptionType.connectionError,
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        expect(errors, isEmpty);
+      },
+    );
   });
 }

@@ -6,6 +6,7 @@ import {
   IsDateString,
   IsInt,
   Min,
+  Max,
   MaxLength,
   IsIn,
   IsEnum,
@@ -43,6 +44,7 @@ export class CreateTripDto {
   @IsOptional()
   @IsInt({ message: 'totalBudget phải là số nguyên' })
   @Min(0, { message: 'Ngân sách không được nhỏ hơn 0' })
+  @Max(2147483647, { message: 'Ngân sách vượt quá giới hạn cho phép' })
   totalBudget?: number;
 
   @ApiPropertyOptional({ description: 'Đơn vị tiền tệ', example: 'VND', default: 'VND' })

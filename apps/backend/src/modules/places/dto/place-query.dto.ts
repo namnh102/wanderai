@@ -1,5 +1,5 @@
 import { Transform } from 'class-transformer';
-import { IsBoolean, IsInt, IsNumber, IsOptional, IsString, IsUUID, Max, Min } from 'class-validator';
+import { IsBoolean, IsInt, IsNumber, IsOptional, IsString, IsUUID, Max, MaxLength, Min } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export const PLACE_LIST_LIMIT_DEFAULT = 20;
@@ -36,13 +36,15 @@ const toStrictBoolean = ({ value }: { value: unknown }) => {
   return value;
 };
 
-const blankToUndefined = ({ value }: { value: unknown }) => (isBlank(value) ? undefined : value);
+const blankToUndefined = ({ value }: { value: unknown }) =>
+  isBlank(value) ? undefined : typeof value === 'string' ? value.trim() : value;
 
 export class PlaceListQueryDto {
-  @ApiPropertyOptional({ example: 1, default: 1, minimum: 1 })
+  @ApiPropertyOptional({ example: 1, default: 1, minimum: 1, maximum: 10000 })
   @Transform(toStrictInt(1))
-  @IsInt({ message: 'page phải là số nguyên từ 1 trở lên' })
-  @Min(1, { message: 'page phải là số nguyên từ 1 trở lên' })
+  @IsInt({ message: 'page phải là số nguyên từ 1 đến 10000' })
+  @Min(1, { message: 'page phải là số nguyên từ 1 đến 10000' })
+  @Max(10000, { message: 'page tối đa 10000' })
   page: number = 1;
 
   @ApiPropertyOptional({ example: 20, default: PLACE_LIST_LIMIT_DEFAULT, minimum: 1, maximum: PLACE_LIST_LIMIT_MAX })
@@ -56,12 +58,14 @@ export class PlaceListQueryDto {
   @IsOptional()
   @Transform(blankToUndefined)
   @IsString({ message: 'search phải là chuỗi' })
+  @MaxLength(200, { message: 'search tối đa 200 ký tự' })
   search?: string;
 
   @ApiPropertyOptional({ example: 'attraction' })
   @IsOptional()
   @Transform(blankToUndefined)
   @IsString({ message: 'category phải là chuỗi' })
+  @MaxLength(64, { message: 'category tối đa 64 ký tự' })
   category?: string;
 
   @ApiPropertyOptional({ description: 'UUID của điểm đến' })
@@ -99,6 +103,7 @@ export class NearbyQueryDto {
   @Transform(toStrictNumber(NEARBY_RADIUS_KM_DEFAULT))
   @IsNumber({ allowNaN: false, allowInfinity: false }, { message: 'radius phải là số dương (km)' })
   @Min(0.001, { message: 'radius phải là số dương (km)' })
+  @Max(1000, { message: 'radius tối đa 1000 km' })
   radius: number = NEARBY_RADIUS_KM_DEFAULT;
 
   @ApiPropertyOptional({ example: 20, default: PLACE_LIST_LIMIT_DEFAULT, minimum: 1, maximum: PLACE_LIST_LIMIT_MAX })
@@ -132,5 +137,6 @@ export class TrendingQueryDto {
   @IsOptional()
   @Transform(blankToUndefined)
   @IsString({ message: 'category phải là chuỗi' })
+  @MaxLength(64, { message: 'category tối đa 64 ký tự' })
   category?: string;
 }

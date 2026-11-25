@@ -1,46 +1,64 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
+import { CreateVideoDto } from './dto/video.dto';
 
 @Injectable()
 export class VideosService {
   constructor(private prisma: PrismaService) {}
 
-  async getFeed(page: number = 1) {
-    const limit = 20;
-    const skip = (page - 1) * limit;
-    try {
-      const items = await this.prisma['video'].findMany({
-        where: { deletedAt: null },
-        orderBy: { createdAt: 'desc' },
-        skip,
-        take: limit,
-      });
-      return { items, page, limit };
-    } catch (e) {
-      return { items: [], page, limit };
-    }
+  async getFeed(page: number = 1, limit: number = 20) {
+    const safePage = Math.min(Math.max(1, page), 10000);
+    const safeLimit = Math.min(Math.max(1, limit), 50);
+    const skip = (safePage - 1) * safeLimit;
+
+    const items = await this.prisma.video.findMany({
+      where: { deletedAt: null },
+      orderBy: { createdAt: 'desc' },
+      skip,
+      take: safeLimit,
+    });
+    return { items, page: safePage, limit: safeLimit };
   }
 
   async findById(id: string) {
-    try {
-      const video = await this.prisma['video'].findUnique({ where: { id } });
-      if (!video) throw new NotFoundException('Video not found');
-      return video;
-    } catch (e) {
-      return { id, url: 'mock-url' };
+    const video = await this.prisma.video.findUnique({ where: { id } });
+    if (!video || video.deletedAt) {
+      throw new NotFoundException('Video not found');
     }
+    return video;
   }
 
-  async create(data: any, userId?: string) {
+  async create(data: CreateVideoDto, userId: string) {
+    if (!userId) {
+      throw new UnauthorizedException('Yêu cầu đăng nhập để tạo video');
+    }
+
     try {
-      return await this.prisma['video'].create({
+      return await this.prisma.video.create({
         data: {
-          ...data,
           userId,
+          videoUrl: data.videoUrl,
+          ...(data.title !== undefined && { title: data.title }),
+          ...(data.caption !== undefined && { caption: data.caption }),
+          ...(data.thumbnailUrl !== undefined && { thumbnailUrl: data.thumbnailUrl }),
+          ...(data.duration !== undefined && { duration: data.duration }),
+          tags: data.tags ?? [],
         },
       });
-    } catch (e) {
-      return { id: 'mock-video-id', ...data, userId };
+    } catch (err) {
+      if (
+        err instanceof Prisma.PrismaClientKnownRequestError &&
+        err.code === 'P2003'
+      ) {
+        throw new BadRequestException('Thông tin người dùng không hợp lệ');
+      }
+      throw err;
     }
   }
 }

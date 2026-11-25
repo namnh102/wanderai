@@ -64,6 +64,7 @@ export class BulkItineraryItemDto {
   @IsOptional()
   @IsInt()
   @Min(0)
+  @Max(2147483647)
   estimatedCost?: number;
 
   @ApiPropertyOptional({ description: 'Phương tiện di chuyển', example: 'motorbike' })

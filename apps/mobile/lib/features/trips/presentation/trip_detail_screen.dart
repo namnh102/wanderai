@@ -104,45 +104,12 @@ class _TripDetailScreenState extends ConsumerState<TripDetailScreen> {
   }
 
   Future<void> _handleGenerateAiPlan() async {
-    final noteController = TextEditingController();
-    final shouldProceed = await showDialog<bool>(
+    final prompt = await showDialog<String>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Lập lịch trình bằng AI'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Wandy sẽ sử dụng thông tin chuyến đi (điểm đến, ngày, ngân sách, sở thích) để lên lịch trình tối ưu nhất.',
-            ),
-            const SizedBox(height: 12),
-            AppTextField(
-              controller: noteController,
-              labelText: 'Yêu cầu thêm (tùy chọn)',
-              hintText: 'VD: Ưu tiên quán ăn ngon, chụp ảnh...',
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Hủy'),
-          ),
-          AppButton(
-            text: 'Bắt đầu lập',
-            variant: AppButtonVariant.ai,
-            isFullWidth: false,
-            onPressed: () => Navigator.pop(ctx, true),
-          ),
-        ],
-      ),
+      builder: (_) => const _AiPlanPromptDialog(),
     );
 
-    final prompt = noteController.text.trim();
-    noteController.dispose();
-
-    if (shouldProceed != true || !mounted) return;
+    if (prompt == null || !mounted) return;
 
     final plan = await ref.read(tripDetailProvider.notifier).generateAiPlan(
           widget.tripId,
@@ -1150,6 +1117,62 @@ class _AddItinerarySheetState extends State<_AddItinerarySheet> {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _AiPlanPromptDialog extends StatefulWidget {
+  const _AiPlanPromptDialog();
+
+  @override
+  State<_AiPlanPromptDialog> createState() => _AiPlanPromptDialogState();
+}
+
+class _AiPlanPromptDialogState extends State<_AiPlanPromptDialog> {
+  final TextEditingController _noteController = TextEditingController();
+
+  @override
+  void dispose() {
+    _noteController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Lập lịch trình bằng AI'),
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Wandy sẽ sử dụng thông tin chuyến đi (điểm đến, ngày, ngân sách, sở thích) để lên lịch trình tối ưu nhất.',
+            ),
+            const SizedBox(height: 12),
+            AppTextField(
+              key: const Key('trip_ai_plan_prompt_input'),
+              controller: _noteController,
+              labelText: 'Yêu cầu thêm (tùy chọn)',
+              hintText: 'VD: Ưu tiên quán ăn ngon, chụp ảnh...',
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          key: const Key('trip_ai_plan_cancel_button'),
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Hủy'),
+        ),
+        AppButton(
+          key: const Key('trip_ai_plan_confirm_button'),
+          text: 'Bắt đầu lập',
+          variant: AppButtonVariant.ai,
+          isFullWidth: false,
+          onPressed: () => Navigator.pop(context, _noteController.text.trim()),
+        ),
+      ],
     );
   }
 }

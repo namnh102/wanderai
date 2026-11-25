@@ -1,15 +1,20 @@
 import {
+  BadRequestException,
   ExecutionContext,
   INestApplication,
   ValidationPipe,
 } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
+import { Prisma } from '@prisma/client';
 import * as request from 'supertest';
 import { HttpExceptionFilter } from './filters/http-exception.filter';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { TransformInterceptor } from './interceptors/transform.interceptor';
 import { PrismaService } from '../prisma/prisma.service';
 import { InMemoryPrismaService } from '../../test/e2e-harness/in-memory-prisma.service';
+import { AiProxyController } from '../modules/ai-proxy/ai-proxy.controller';
+import { AiProxyService } from '../modules/ai-proxy/ai-proxy.service';
+import { AiChatProxyService } from '../modules/ai-proxy/internal-auth';
 import { ForgotPasswordDto } from '../modules/auth/dto/forgot-password.dto';
 import { LoginDto } from '../modules/auth/dto/login.dto';
 import { RefreshTokenDto } from '../modules/auth/dto/refresh-token.dto';
@@ -17,16 +22,30 @@ import { RegisterDto } from '../modules/auth/dto/register.dto';
 import { ResetPasswordDto } from '../modules/auth/dto/reset-password.dto';
 import { DestinationsController } from '../modules/destinations/destinations.controller';
 import { DestinationsService } from '../modules/destinations/destinations.service';
+import { PlacesController } from '../modules/places/places.controller';
+import { PlacesService } from '../modules/places/places.service';
 import { ReviewsController } from '../modules/reviews/reviews.controller';
 import { ReviewsService } from '../modules/reviews/reviews.service';
+import { AddItineraryDto } from '../modules/trips/dto/add-itinerary.dto';
+import { BulkItineraryDto } from '../modules/trips/dto/bulk-itinerary.dto';
 import { CreateTripDto } from '../modules/trips/dto/create-trip.dto';
+import { UpdateTripDto } from '../modules/trips/dto/update-trip.dto';
+import { UpdatePreferencesDto } from '../modules/users/dto/update-preferences.dto';
 import { UsersController } from '../modules/users/users.controller';
 import { UsersService } from '../modules/users/users.service';
+import { VideosController } from '../modules/videos/videos.controller';
+import { VideosService } from '../modules/videos/videos.service';
 
-describe('GAP-07: Input Validation Hardening (Users, Destinations, Reviews, Auth/Trip Bounds)', () => {
+describe('GAP-07 / GAP-12 / GAP-13: Input Validation & Hardening', () => {
   let app: INestApplication;
   let prisma: InMemoryPrismaService;
-  const activeUserId = '44444444-4444-4444-8444-444444444444';
+  let mockAiProxyService: {
+    chat: jest.Mock;
+    clearChatSession: jest.Mock;
+    planTrip: jest.Mock;
+    getPlaceRecommendations: jest.Mock;
+  };
+  let activeUserId = '44444444-4444-4444-8444-444444444444';
   const verifiedPlaceId = '65562a67-84ff-44a0-990d-31917a2a9bd0';
 
   const validationPipe = new ValidationPipe({
@@ -38,21 +57,48 @@ describe('GAP-07: Input Validation Hardening (Users, Destinations, Reviews, Auth
   beforeAll(async () => {
     prisma = new InMemoryPrismaService();
     await prisma.onModuleInit();
+    const createdUser = await prisma.user.create({
+      data: {
+        email: 'active-hardening@wanderai.test',
+        passwordHash: 'hash',
+        isVerified: true,
+        profile: { create: { displayName: 'Test User' } },
+      },
+    });
+    activeUserId = createdUser.id as string;
+
+    mockAiProxyService = {
+      chat: jest.fn(),
+      clearChatSession: jest.fn(),
+      planTrip: jest.fn().mockResolvedValue({ destination: 'Hạ Long', days: 3 }),
+      getPlaceRecommendations: jest.fn().mockResolvedValue({ items: [] }),
+    };
 
     const moduleRef = await Test.createTestingModule({
-      controllers: [UsersController, DestinationsController, ReviewsController],
+      controllers: [
+        UsersController,
+        DestinationsController,
+        ReviewsController,
+        PlacesController,
+        VideosController,
+        AiProxyController,
+      ],
       providers: [
         UsersService,
         DestinationsService,
         ReviewsService,
+        PlacesService,
+        VideosService,
         { provide: PrismaService, useValue: prisma },
+        { provide: AiChatProxyService, useValue: mockAiProxyService },
+        { provide: AiProxyService, useValue: mockAiProxyService },
       ],
     })
       .overrideGuard(JwtAuthGuard)
       .useValue({
         canActivate: (ctx: ExecutionContext) => {
           const req = ctx.switchToHttp().getRequest();
-          req.user = { id: activeUserId, email: 'user@wanderai.test' };
+          req.user = { id: activeUserId, email: 'active-hardening@wanderai.test' };
           return true;
         },
       })
@@ -67,6 +113,10 @@ describe('GAP-07: Input Validation Hardening (Users, Destinations, Reviews, Auth
 
   afterAll(async () => {
     if (app) await app.close();
+  });
+
+  beforeEach(() => {
+    jest.clearAllMocks();
   });
 
   it('rejects PUT /users/me non-string displayName, blank displayName, and unknown fields with 400 while allowing valid profile', async () => {
@@ -192,5 +242,219 @@ describe('GAP-07: Input Validation Hardening (Users, Destinations, Reviews, Auth
         { type: 'body', metatype: RefreshTokenDto },
       ),
     ).rejects.toThrow();
+  });
+
+  describe('GAP-12: VideosController/VideosService & AiProxyController.plan hardening', () => {
+    it('rejects POST /videos with arbitrary/malformed payloads (400) and persists allowlisted fields without mock fallback', async () => {
+      await request(app.getHttpServer())
+        .post('/videos')
+        .send({ evilField: 'injection', userId: 'spoofed-user' })
+        .expect(400);
+
+      await request(app.getHttpServer())
+        .post('/videos')
+        .send({ videoUrl: 'javascript:alert(1)' })
+        .expect(400);
+
+      await request(app.getHttpServer())
+        .post('/videos')
+        .send({ videoUrl: 'https://cdn.example.com/v.mp4', duration: -10 })
+        .expect(400);
+
+      const created = await request(app.getHttpServer())
+        .post('/videos')
+        .send({
+          videoUrl: 'https://cdn.example.com/halong.mp4',
+          title: '  Tháp Đồng Hồ  ',
+          duration: 30,
+          tags: ['  halong  '],
+        })
+        .expect(201);
+
+      expect(created.body.data.id).not.toBe('mock-video-id');
+      expect(created.body.data.userId).toBe(activeUserId);
+      expect(created.body.data.title).toBe('Tháp Đồng Hồ');
+      expect(created.body.data.tags).toEqual(['halong']);
+
+      const fetched = await request(app.getHttpServer())
+        .get(`/videos/${created.body.data.id}`)
+        .expect(200);
+      expect(fetched.body.data.videoUrl).toBe('https://cdn.example.com/halong.mp4');
+    });
+
+    it('rejects non-UUID GET /videos/:id (400), returns 404 for missing UUID (never 200 mock-url), and validates feed bounds', async () => {
+      await request(app.getHttpServer())
+        .get('/videos/not-a-uuid')
+        .expect(400);
+
+      await request(app.getHttpServer())
+        .get('/videos/99999999-9999-4999-8999-999999999999')
+        .expect(404);
+
+      await request(app.getHttpServer())
+        .get('/videos/feed?page=-1')
+        .expect(400);
+
+      await request(app.getHttpServer())
+        .get('/videos/feed?page=10001')
+        .expect(400);
+
+      await request(app.getHttpServer())
+        .get('/videos/feed?limit=51')
+        .expect(400);
+
+      const feedRes = await request(app.getHttpServer())
+        .get('/videos/feed?page=1&limit=10')
+        .expect(200);
+      expect(Array.isArray(feedRes.body.data.items)).toBe(true);
+      expect(feedRes.body.data.page).toBe(1);
+      expect(feedRes.body.data.limit).toBe(10);
+    });
+
+    it('propagates DB errors cleanly from VideosService instead of returning mock objects', async () => {
+      const failingPrisma = {
+        video: {
+          findMany: jest.fn().mockRejectedValue(new Error('DB connection lost')),
+          findUnique: jest.fn().mockRejectedValue(new Error('DB connection lost')),
+          create: jest.fn().mockRejectedValue(
+            new Prisma.PrismaClientKnownRequestError('FK violation', {
+              code: 'P2003',
+              clientVersion: '5.22.0',
+            }),
+          ),
+        },
+      } as unknown as PrismaService;
+      const svc = new VideosService(failingPrisma);
+
+      await expect(svc.getFeed(1, 20)).rejects.toThrow('DB connection lost');
+      await expect(
+        svc.findById('99999999-9999-4999-8999-999999999999'),
+      ).rejects.toThrow('DB connection lost');
+      await expect(
+        svc.create(
+          { videoUrl: 'https://cdn.example.com/halong.mp4' },
+          activeUserId,
+        ),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('enforces PlanTripLegacyDto on POST /ai/plan (rejects empty/non-whitelisted/out-of-range with 400)', async () => {
+      await request(app.getHttpServer())
+        .post('/ai/plan')
+        .send({ destination: '   ', days: 3 })
+        .expect(400);
+
+      await request(app.getHttpServer())
+        .post('/ai/plan')
+        .send({ destination: 'Hạ Long', days: 3, evilField: true })
+        .expect(400);
+
+      await request(app.getHttpServer())
+        .post('/ai/plan')
+        .send({ destination: 'Hạ Long', days: 15 })
+        .expect(400);
+
+      await request(app.getHttpServer())
+        .post('/ai/plan')
+        .send({ destination: 'Hạ Long', days: 3, budget: 9999999999 })
+        .expect(400);
+
+      await request(app.getHttpServer())
+        .post('/ai/plan')
+        .send({ destination: '  Hạ Long  ', days: 3, budget: 5000000 })
+        .expect(201);
+      expect(mockAiProxyService.planTrip).toHaveBeenCalledWith('Hạ Long', 3, 5000000);
+    });
+  });
+
+  describe('GAP-13: PostgreSQL INT4_MAX, OFFSET, radius, and string length bounds', () => {
+    it('rejects integers > 2147483647 on Trip, Itinerary, and Preferences DTOs while accepting INT4_MAX', async () => {
+      await expect(
+        validationPipe.transform(
+          { title: 'Billionaire Trip', totalBudget: 9999999999 },
+          { type: 'body', metatype: CreateTripDto },
+        ),
+      ).rejects.toThrow();
+
+      await expect(
+        validationPipe.transform(
+          { totalBudget: 2147483648 },
+          { type: 'body', metatype: UpdateTripDto },
+        ),
+      ).rejects.toThrow();
+
+      const validTrip = await validationPipe.transform(
+        { title: 'Max INT4 Trip', totalBudget: 2147483647 },
+        { type: 'body', metatype: CreateTripDto },
+      );
+      expect(validTrip.totalBudget).toBe(2147483647);
+
+      await expect(
+        validationPipe.transform(
+          { dayNumber: 1, activity: 'Yacht', estimatedCost: 9999999999 },
+          { type: 'body', metatype: AddItineraryDto },
+        ),
+      ).rejects.toThrow();
+
+      await expect(
+        validationPipe.transform(
+          {
+            days: [
+              {
+                dayNumber: 1,
+                items: [{ orderIndex: 1, activity: 'Yacht', estimatedCost: 9999999999 }],
+              },
+            ],
+          },
+          { type: 'body', metatype: BulkItineraryDto },
+        ),
+      ).rejects.toThrow();
+
+      await expect(
+        validationPipe.transform(
+          { budgetMin: 9999999999 },
+          { type: 'body', metatype: UpdatePreferencesDto },
+        ),
+      ).rejects.toThrow();
+
+      await request(app.getHttpServer())
+        .put('/users/me/preferences')
+        .send({ budgetMax: 9999999999 })
+        .expect(400);
+    });
+
+    it('rejects excessive page (> 10000), nearby radius (> 1000), and oversized search/category params with 400', async () => {
+      await request(app.getHttpServer())
+        .get('/places?page=999999999')
+        .expect(400);
+
+      await request(app.getHttpServer())
+        .get('/destinations?page=999999999')
+        .expect(400);
+
+      await request(app.getHttpServer())
+        .get(`/reviews?placeId=${verifiedPlaceId}&page=10001`)
+        .expect(400);
+
+      await request(app.getHttpServer())
+        .get('/reviews/my?page=10001')
+        .expect(400);
+
+      await request(app.getHttpServer())
+        .get('/places/nearby?lat=20.95&lng=107.08&radius=999999')
+        .expect(400);
+
+      await request(app.getHttpServer())
+        .get(`/places?search=${'a'.repeat(201)}`)
+        .expect(400);
+
+      await request(app.getHttpServer())
+        .get(`/places?category=${'c'.repeat(65)}`)
+        .expect(400);
+
+      await request(app.getHttpServer())
+        .get(`/places/trending?category=${'c'.repeat(65)}`)
+        .expect(400);
+    });
   });
 });

@@ -31,10 +31,11 @@ const blankToUndefined = ({ value }: { value: unknown }) =>
   isBlank(value) ? undefined : typeof value === 'string' ? value.trim() : value;
 
 export class DestinationListQueryDto {
-  @ApiPropertyOptional({ example: 1, default: 1, minimum: 1 })
+  @ApiPropertyOptional({ example: 1, default: 1, minimum: 1, maximum: 10000 })
   @Transform(toStrictInt(1))
-  @IsInt({ message: 'page phải là số nguyên từ 1 trở lên' })
-  @Min(1, { message: 'page phải là số nguyên từ 1 trở lên' })
+  @IsInt({ message: 'page phải là số nguyên từ 1 đến 10000' })
+  @Min(1, { message: 'page phải là số nguyên từ 1 đến 10000' })
+  @Max(10000, { message: 'page tối đa 10000' })
   page: number = 1;
 
   @ApiPropertyOptional({ example: 20, default: DESTINATION_LIST_LIMIT_DEFAULT, minimum: 1, maximum: DESTINATION_LIST_LIMIT_MAX })

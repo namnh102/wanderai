@@ -1,7 +1,19 @@
-import { Controller, Get, Post, Param, Query, Body, UseGuards, DefaultValuePipe, ParseIntPipe, Request } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiQuery, ApiBearerAuth } from '@nestjs/swagger';
+import {
+  Controller,
+  Get,
+  Post,
+  Param,
+  Query,
+  Body,
+  UseGuards,
+  ParseUUIDPipe,
+  UnauthorizedException,
+} from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { VideosService } from './videos.service';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
+import { CurrentUser } from '../../common/decorators/current-user.decorator';
+import { CreateVideoDto, VideoFeedQueryDto } from './dto/video.dto';
 
 @ApiTags('Videos')
 @Controller('videos')
@@ -10,14 +22,13 @@ export class VideosController {
 
   @Get('feed')
   @ApiOperation({ summary: 'Get short videos feed' })
-  @ApiQuery({ name: 'page', required: false })
-  getFeed(@Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number) {
-    return this.videosService.getFeed(page);
+  getFeed(@Query() query: VideoFeedQueryDto) {
+    return this.videosService.getFeed(query.page, query.limit);
   }
 
   @Get(':id')
   @ApiOperation({ summary: 'Get video by id' })
-  findById(@Param('id') id: string) {
+  findById(@Param('id', new ParseUUIDPipe()) id: string) {
     return this.videosService.findById(id);
   }
 
@@ -25,7 +36,10 @@ export class VideosController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Upload/create a video' })
-  create(@Request() req, @Body() data: any) {
-    return this.videosService.create(data, req.user?.id);
+  create(@CurrentUser() user: { id?: string } | undefined, @Body() data: CreateVideoDto) {
+    if (!user?.id) {
+      throw new UnauthorizedException('Yêu cầu đăng nhập để tạo video');
+    }
+    return this.videosService.create(data, user.id);
   }
 }

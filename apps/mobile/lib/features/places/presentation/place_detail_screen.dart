@@ -308,130 +308,153 @@ class PlaceDetailScreen extends ConsumerWidget {
     WidgetRef ref,
     PlaceModel place,
   ) async {
-    double selectedRating = 5.0;
-    final controller = TextEditingController();
-    bool isSubmitting = false;
-    String? submitError;
-
-    await showModalBottomSheet<void>(
+    final submitted = await showModalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
       backgroundColor: AppColors.surface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (sheetContext) {
-        return StatefulBuilder(
-          builder: (ctx, setSheetState) {
-            return Padding(
-              padding: EdgeInsets.fromLTRB(
-                AppSpacing.screenHorizontal,
-                AppSpacing.md,
-                AppSpacing.screenHorizontal,
-                MediaQuery.of(ctx).viewInsets.bottom + AppSpacing.md,
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('Đánh giá ${place.name}', style: AppTypography.h3),
-                  const SizedBox(height: AppSpacing.sm),
-                  Row(
-                    children: List.generate(5, (i) {
-                      final star = i + 1.0;
-                      return IconButton(
-                        key: Key('review_star_${i + 1}'),
-                        icon: Icon(
-                          star <= selectedRating
-                              ? Icons.star
-                              : Icons.star_border,
-                          color: AppColors.warning,
-                          size: 30,
-                        ),
-                        onPressed: isSubmitting
-                            ? null
-                            : () => setSheetState(() => selectedRating = star),
-                      );
-                    }),
-                  ),
-                  const SizedBox(height: AppSpacing.xs),
-                  AppTextField(
-                    key: const Key('review_content_input'),
-                    controller: controller,
-                    maxLines: 3,
-                    enabled: !isSubmitting,
-                    hintText: 'Chia sẻ trải nghiệm thực tế của bạn...',
-                  ),
-                  if (submitError != null) ...[
-                    const SizedBox(height: AppSpacing.sm),
-                    AppStateBanner(
-                      message: submitError!,
-                      tone: AppStateBannerTone.error,
-                    ),
-                  ],
-                  const SizedBox(height: AppSpacing.md),
-                  SizedBox(
-                    width: double.infinity,
-                    child: AppButton(
-                      key: const Key('review_submit_button'),
-                      text: isSubmitting ? 'Đang gửi...' : 'Gửi đánh giá',
-                      onPressed: isSubmitting
-                          ? null
-                          : () async {
-                              if (controller.text.trim().length < 4) {
-                                setSheetState(() => submitError =
-                                    'Vui lòng nhập nhận xét tối thiểu 4 ký tự.');
-                                return;
-                              }
-                              setSheetState(() {
-                                isSubmitting = true;
-                                submitError = null;
-                              });
-                              try {
-                                await ref
-                                    .read(reviewRepositoryProvider)
-                                    .createReview(
-                                      placeId: place.id,
-                                      rating: selectedRating,
-                                      content: controller.text,
-                                    );
-                                if (sheetContext.mounted) {
-                                  Navigator.of(sheetContext).pop();
-                                }
-                                ref.invalidate(placeDetailProvider(place.id));
-                                if (context.mounted) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content: Text(
-                                          'Đã ghi nhận đánh giá thực tế của bạn!'),
-                                    ),
-                                  );
-                                }
-                              } on DioException catch (e) {
-                                setSheetState(() {
-                                  isSubmitting = false;
-                                  submitError = e.response?.statusCode == 401
-                                      ? 'Vui lòng đăng nhập lại để gửi đánh giá.'
-                                      : 'Không thể gửi đánh giá lúc này.';
-                                });
-                              } catch (_) {
-                                setSheetState(() {
-                                  isSubmitting = false;
-                                  submitError =
-                                      'Không thể gửi đánh giá lúc này.';
-                                });
-                              }
-                            },
-                    ),
-                  ),
-                ],
-              ),
-            );
-          },
-        );
-      },
+      builder: (_) => _ReviewSheet(
+        place: place,
+        onSubmitted: () {
+          if (context.mounted) {
+            ref.invalidate(placeDetailProvider(place.id));
+          }
+        },
+      ),
     );
-    controller.dispose();
+    if (submitted == true && context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Đã ghi nhận đánh giá thực tế của bạn!'),
+        ),
+      );
+    }
+  }
+}
+
+class _ReviewSheet extends ConsumerStatefulWidget {
+  final PlaceModel place;
+  final VoidCallback? onSubmitted;
+
+  const _ReviewSheet({
+    required this.place,
+    this.onSubmitted,
+  });
+
+  @override
+  ConsumerState<_ReviewSheet> createState() => _ReviewSheetState();
+}
+
+class _ReviewSheetState extends ConsumerState<_ReviewSheet> {
+  final TextEditingController _controller = TextEditingController();
+  double _selectedRating = 5.0;
+  bool _isSubmitting = false;
+  String? _submitError;
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  Future<void> _handleSubmit() async {
+    if (_controller.text.trim().length < 4) {
+      setState(() => _submitError = 'Vui lòng nhập nhận xét tối thiểu 4 ký tự.');
+      return;
+    }
+    setState(() {
+      _isSubmitting = true;
+      _submitError = null;
+    });
+    final repo = ref.read(reviewRepositoryProvider);
+    try {
+      await repo.createReview(
+        placeId: widget.place.id,
+        rating: _selectedRating,
+        content: _controller.text,
+      );
+      widget.onSubmitted?.call();
+      if (!mounted) return;
+      Navigator.of(context).pop(true);
+    } on DioException catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _isSubmitting = false;
+        _submitError = e.response?.statusCode == 401
+            ? 'Vui lòng đăng nhập lại để gửi đánh giá.'
+            : 'Không thể gửi đánh giá lúc này.';
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _isSubmitting = false;
+        _submitError = 'Không thể gửi đánh giá lúc này.';
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.fromLTRB(
+        AppSpacing.screenHorizontal,
+        AppSpacing.md,
+        AppSpacing.screenHorizontal,
+        MediaQuery.of(context).viewInsets.bottom + AppSpacing.md,
+      ),
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Đánh giá ${widget.place.name}', style: AppTypography.h3),
+            const SizedBox(height: AppSpacing.sm),
+            Row(
+              children: List.generate(5, (i) {
+                final star = i + 1.0;
+                return IconButton(
+                  key: Key('review_star_${i + 1}'),
+                  icon: Icon(
+                    star <= _selectedRating ? Icons.star : Icons.star_border,
+                    color: AppColors.warning,
+                    size: 30,
+                  ),
+                  onPressed: _isSubmitting
+                      ? null
+                      : () => setState(() => _selectedRating = star),
+                );
+              }),
+            ),
+            const SizedBox(height: AppSpacing.xs),
+            AppTextField(
+              key: const Key('review_content_input'),
+              controller: _controller,
+              maxLines: 3,
+              enabled: !_isSubmitting,
+              hintText: 'Chia sẻ trải nghiệm thực tế của bạn...',
+            ),
+            if (_submitError != null) ...[
+              const SizedBox(height: AppSpacing.sm),
+              AppStateBanner(
+                message: _submitError!,
+                tone: AppStateBannerTone.error,
+              ),
+            ],
+            const SizedBox(height: AppSpacing.md),
+            SizedBox(
+              width: double.infinity,
+              child: AppButton(
+                key: const Key('review_submit_button'),
+                text: _isSubmitting ? 'Đang gửi...' : 'Gửi đánh giá',
+                onPressed: _isSubmitting ? null : _handleSubmit,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
 

@@ -495,5 +495,47 @@ void main() {
 
       expect(find.byType(TripListScreen), findsOneWidget);
     });
+
+    testWidgets(
+      'GAP-14: opening and canceling _handleGenerateAiPlan dialog with focused input produces zero FlutterErrors',
+      (tester) async {
+        final errors = <FlutterErrorDetails>[];
+        final prevOnError = FlutterError.onError;
+        FlutterError.onError = (details) {
+          errors.add(details);
+        };
+        addTearDown(() => FlutterError.onError = prevOnError);
+
+        final fakeRepo = FakeTripRepository();
+
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: [tripRepositoryProvider.overrideWithValue(fakeRepo)],
+            child: const MaterialApp(
+              home: TripDetailScreen(tripId: 'trip_1'),
+            ),
+          ),
+        );
+        await tester.pump();
+        await tester.pumpAndSettle();
+
+        final aiBtn = find.text('Lập lịch trình bằng AI');
+        await tester.ensureVisible(aiBtn);
+        await tester.tap(aiBtn);
+        await tester.pumpAndSettle();
+
+        final promptInput = find.byKey(const Key('trip_ai_plan_prompt_input'));
+        expect(promptInput, findsOneWidget);
+        await tester.tap(promptInput);
+        await tester.enterText(promptInput, 'Ưu tiên hải sản Hạ Long');
+        await tester.pump();
+
+        await tester.tap(find.byKey(const Key('trip_ai_plan_cancel_button')));
+        await tester.pump(const Duration(milliseconds: 50));
+        await tester.pumpAndSettle();
+
+        expect(errors, isEmpty);
+      },
+    );
   });
 }

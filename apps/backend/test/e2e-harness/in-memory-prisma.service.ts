@@ -227,6 +227,23 @@ interface StoredItineraryItem {
   updatedAt: Date;
 }
 
+interface StoredVideo {
+  id: string;
+  userId: string;
+  title: string | null;
+  caption: string | null;
+  videoUrl: string;
+  thumbnailUrl: string | null;
+  duration: number | null;
+  viewCount: number;
+  likeCount: number;
+  commentCount: number;
+  tags: string[];
+  createdAt: Date;
+  updatedAt: Date;
+  deletedAt: Date | null;
+}
+
 interface StringFilter {
   contains?: string;
   equals?: string;
@@ -403,6 +420,13 @@ function createP2002Error(message: string): Prisma.PrismaClientKnownRequestError
   });
 }
 
+function createP2003Error(message: string): Prisma.PrismaClientKnownRequestError {
+  return new Prisma.PrismaClientKnownRequestError(message, {
+    code: 'P2003',
+    clientVersion: '5.22.0',
+  });
+}
+
 function matchStringFilter(
   candidate: string | null | undefined,
   filter?: string | StringFilter,
@@ -444,6 +468,7 @@ export class InMemoryPrismaService implements OnModuleInit, OnModuleDestroy {
   private tripMembers: StoredTripMember[] = [];
   private itineraries = new Map<string, StoredItinerary>();
   private itineraryItems = new Map<string, StoredItineraryItem>();
+  private videos = new Map<string, StoredVideo>();
   private txQueue: Promise<unknown> = Promise.resolve();
 
   constructor() {
@@ -474,6 +499,7 @@ export class InMemoryPrismaService implements OnModuleInit, OnModuleDestroy {
     this.tripMembers = [];
     this.itineraries.clear();
     this.itineraryItems.clear();
+    this.videos.clear();
 
     const now = new Date('2026-11-24T00:00:00.000Z');
 
@@ -2067,6 +2093,69 @@ export class InMemoryPrismaService implements OnModuleInit, OnModuleDestroy {
             }
           : null,
       };
+    },
+  };
+
+  readonly video = {
+    findMany: async (args: {
+      where?: { deletedAt?: null };
+      orderBy?: { createdAt?: 'asc' | 'desc' };
+      skip?: number;
+      take?: number;
+    } = {}) => {
+      const rows = Array.from(this.videos.values())
+        .filter((v) =>
+          args.where?.deletedAt === null ? v.deletedAt === null : true,
+        )
+        .sort((a, b) =>
+          args.orderBy?.createdAt === 'asc'
+            ? a.createdAt.getTime() - b.createdAt.getTime()
+            : b.createdAt.getTime() - a.createdAt.getTime(),
+        );
+      const start = args.skip ?? 0;
+      return typeof args.take === 'number'
+        ? rows.slice(start, start + args.take)
+        : rows.slice(start);
+    },
+
+    findUnique: async (args: { where: { id: string } }) => {
+      return this.videos.get(args.where.id) ?? null;
+    },
+
+    create: async (args: {
+      data: {
+        userId: string;
+        videoUrl: string;
+        title?: string | null;
+        caption?: string | null;
+        thumbnailUrl?: string | null;
+        duration?: number | null;
+        tags?: string[];
+      };
+    }) => {
+      const user = this.users.get(args.data.userId);
+      if (!user || user.deletedAt !== null) {
+        throw createP2003Error('Foreign key constraint failed on user_id');
+      }
+      const now = new Date();
+      const row: StoredVideo = {
+        id: randomUUID(),
+        userId: args.data.userId,
+        title: args.data.title ?? null,
+        caption: args.data.caption ?? null,
+        videoUrl: args.data.videoUrl,
+        thumbnailUrl: args.data.thumbnailUrl ?? null,
+        duration: args.data.duration ?? null,
+        viewCount: 0,
+        likeCount: 0,
+        commentCount: 0,
+        tags: args.data.tags ?? [],
+        createdAt: now,
+        updatedAt: now,
+        deletedAt: null,
+      };
+      this.videos.set(row.id, row);
+      return row;
     },
   };
 

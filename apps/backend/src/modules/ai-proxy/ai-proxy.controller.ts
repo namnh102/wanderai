@@ -12,6 +12,7 @@ import { AiChatProxyService } from './internal-auth';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { ChatDto } from './dto/chat.dto';
+import { PlanTripLegacyDto } from './dto/plan-trip-legacy.dto';
 
 @ApiTags('AI')
 @ApiBearerAuth()
@@ -43,7 +44,7 @@ export class AiProxyController {
 
   @Post('plan')
   @ApiOperation({ summary: 'AI tạo lịch trình du lịch' })
-  async plan(@Body() body: { destination: string; days: number; budget?: number }) {
+  async plan(@Body() body: PlanTripLegacyDto) {
     return this.aiProxyService.planTrip(body.destination, body.days, body.budget);
   }
 }

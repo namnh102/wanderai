@@ -52,6 +52,7 @@ export class AddItineraryDto {
   @IsOptional()
   @IsInt({ message: 'estimatedCost phải là số nguyên' })
   @Min(0, { message: 'Chi phí không được nhỏ hơn 0' })
+  @Max(2147483647, { message: 'Chi phí vượt quá giới hạn cho phép' })
   estimatedCost?: number;
 
   @ApiPropertyOptional({ description: 'Phương tiện di chuyển', example: 'motorbike' })
