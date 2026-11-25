@@ -1,8 +1,11 @@
 import {
+  ArrayMaxSize,
   IsEnum,
   IsInt,
+  IsNotEmpty,
   IsOptional,
   Max,
+  MaxLength,
   Min,
   IsArray,
   IsString,
@@ -24,21 +27,10 @@ export const CANONICAL_INTERESTS = [
 
 export type CanonicalInterest = (typeof CANONICAL_INTERESTS)[number];
 
-const transformStringArray = ({ value }: { value: any }) => {
-  if (!Array.isArray(value)) return value;
-  const seen = new Set<string>();
-  const cleaned: string[] = [];
-  for (const v of value) {
-    if (typeof v === 'string') {
-      const trimmed = v.trim();
-      if (trimmed && !seen.has(trimmed)) {
-        seen.add(trimmed);
-        cleaned.push(trimmed);
-      }
-    }
-  }
-  return cleaned;
-};
+const transformStringArray = ({ value }: { value: unknown }) =>
+  Array.isArray(value)
+    ? value.map((v) => (typeof v === 'string' ? v.trim() : v))
+    : value;
 
 export class UpdatePreferencesDto {
   @ApiPropertyOptional({
@@ -90,7 +82,10 @@ export class UpdatePreferencesDto {
   @IsOptional()
   @Transform(transformStringArray)
   @IsArray({ message: 'interests phải là mảng chuỗi' })
+  @ArrayMaxSize(20, { message: 'interests tối đa 20 mục' })
   @IsString({ each: true, message: 'Mỗi phần tử interests phải là chuỗi' })
+  @IsNotEmpty({ each: true, message: 'Mỗi phần tử interests không được để trống' })
+  @MaxLength(100, { each: true, message: 'Mỗi phần tử interests tối đa 100 ký tự' })
   @IsIn(CANONICAL_INTERESTS, {
     each: true,
     message: `Sở thích không hợp lệ. Các giá trị được chấp nhận: ${CANONICAL_INTERESTS.join(', ')}`,
@@ -104,7 +99,10 @@ export class UpdatePreferencesDto {
   @IsOptional()
   @Transform(transformStringArray)
   @IsArray({ message: 'avoidances phải là mảng chuỗi' })
+  @ArrayMaxSize(30, { message: 'avoidances tối đa 30 mục' })
   @IsString({ each: true, message: 'Mỗi phần tử avoidances phải là chuỗi' })
+  @IsNotEmpty({ each: true, message: 'Mỗi phần tử avoidances không được để trống' })
+  @MaxLength(100, { each: true, message: 'Mỗi phần tử avoidances tối đa 100 ký tự' })
   avoidances?: string[];
 
   @ApiPropertyOptional({
@@ -114,7 +112,10 @@ export class UpdatePreferencesDto {
   @IsOptional()
   @Transform(transformStringArray)
   @IsArray({ message: 'dietaryNeeds phải là mảng chuỗi' })
+  @ArrayMaxSize(30, { message: 'dietaryNeeds tối đa 30 mục' })
   @IsString({ each: true, message: 'Mỗi phần tử dietaryNeeds phải là chuỗi' })
+  @IsNotEmpty({ each: true, message: 'Mỗi phần tử dietaryNeeds không được để trống' })
+  @MaxLength(100, { each: true, message: 'Mỗi phần tử dietaryNeeds tối đa 100 ký tự' })
   dietaryNeeds?: string[];
 }
 

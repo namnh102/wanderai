@@ -11,7 +11,10 @@ import { HttpExceptionFilter } from './filters/http-exception.filter';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { TransformInterceptor } from './interceptors/transform.interceptor';
 import { PrismaService } from '../prisma/prisma.service';
-import { InMemoryPrismaService } from '../../test/e2e-harness/in-memory-prisma.service';
+import {
+  InMemoryPrismaService,
+  DA_NANG_DESTINATION_ID,
+} from '../../test/e2e-harness/in-memory-prisma.service';
 import { AiProxyController } from '../modules/ai-proxy/ai-proxy.controller';
 import { AiProxyService } from '../modules/ai-proxy/ai-proxy.service';
 import { AiChatProxyService } from '../modules/ai-proxy/internal-auth';
@@ -455,6 +458,154 @@ describe('GAP-07 / GAP-12 / GAP-13: Input Validation & Hardening', () => {
       await request(app.getHttpServer())
         .get(`/places/trending?category=${'c'.repeat(65)}`)
         .expect(400);
+    });
+  });
+
+  describe('GAP-17: ChatDto, UpdatePreferencesDto, and DestinationsService.findById soft-delete hardening', () => {
+    it('rejects blank/oversized POST /ai/chat message and oversized session_id with 400 while trimming valid input', async () => {
+      mockAiProxyService.chat.mockResolvedValue({
+        reply: 'Chào bạn!',
+        session_id: 'sess-1',
+        tools_used: [],
+        tool_calls: [],
+        sources: [],
+      });
+
+      await request(app.getHttpServer())
+        .post('/ai/chat')
+        .send({ message: '   ' })
+        .expect(400);
+
+      await request(app.getHttpServer())
+        .post('/ai/chat')
+        .send({ message: 'x'.repeat(4001) })
+        .expect(400);
+
+      await request(app.getHttpServer())
+        .post('/ai/chat')
+        .send({ message: 123 })
+        .expect(400);
+
+      await request(app.getHttpServer())
+        .post('/ai/chat')
+        .send({ message: 'Xin chào', session_id: 's'.repeat(129) })
+        .expect(400);
+
+      expect(mockAiProxyService.chat).not.toHaveBeenCalled();
+
+      await request(app.getHttpServer())
+        .post('/ai/chat')
+        .send({ message: '  Xin chào Wandy  ', session_id: '   ' })
+        .expect(201);
+      expect(mockAiProxyService.chat).toHaveBeenCalledWith(
+        'Xin chào Wandy',
+        undefined,
+        activeUserId,
+      );
+
+      await request(app.getHttpServer())
+        .post('/ai/chat')
+        .send({ message: '  Gợi ý Hạ Long  ', session_id: '  sess-1  ' })
+        .expect(201);
+      expect(mockAiProxyService.chat).toHaveBeenCalledWith(
+        'Gợi ý Hạ Long',
+        'sess-1',
+        activeUserId,
+      );
+    });
+
+    it('rejects non-string, blank, >30 items, >100-char items on PUT /users/me/preferences with 400 while normalizing valid arrays', async () => {
+      await request(app.getHttpServer())
+        .put('/users/me/preferences')
+        .send({ avoidances: [123, 456] })
+        .expect(400);
+
+      await request(app.getHttpServer())
+        .put('/users/me/preferences')
+        .send({ dietaryNeeds: [true] })
+        .expect(400);
+
+      await request(app.getHttpServer())
+        .put('/users/me/preferences')
+        .send({ interests: [123] })
+        .expect(400);
+
+      await request(app.getHttpServer())
+        .put('/users/me/preferences')
+        .send({ avoidances: ['   '] })
+        .expect(400);
+
+      await request(app.getHttpServer())
+        .put('/users/me/preferences')
+        .send({ dietaryNeeds: [''] })
+        .expect(400);
+
+      await request(app.getHttpServer())
+        .put('/users/me/preferences')
+        .send({ avoidances: Array(31).fill('crowds_item') })
+        .expect(400);
+
+      await request(app.getHttpServer())
+        .put('/users/me/preferences')
+        .send({
+          avoidances: Array.from({ length: 31 }, (_, i) => `avoid_${i}`),
+        })
+        .expect(400);
+
+      await request(app.getHttpServer())
+        .put('/users/me/preferences')
+        .send({ dietaryNeeds: Array(31).fill('vegetarian') })
+        .expect(400);
+
+      await request(app.getHttpServer())
+        .put('/users/me/preferences')
+        .send({ interests: Array(21).fill('food_cuisine') })
+        .expect(400);
+
+      await request(app.getHttpServer())
+        .put('/users/me/preferences')
+        .send({ avoidances: ['a'.repeat(101)] })
+        .expect(400);
+
+      await request(app.getHttpServer())
+        .put('/users/me/preferences')
+        .send({ dietaryNeeds: ['b'.repeat(101)] })
+        .expect(400);
+
+      const okRes = await request(app.getHttpServer())
+        .put('/users/me/preferences')
+        .send({
+          interests: ['  food_cuisine  ', 'food_cuisine'],
+          avoidances: ['  crowds  ', 'heights', 'crowds'],
+          dietaryNeeds: ['  vegetarian  '],
+        })
+        .expect(200);
+      expect(okRes.body.data.interests).toEqual(['food_cuisine']);
+      expect(okRes.body.data.avoidances).toEqual(['crowds', 'heights']);
+      expect(okRes.body.data.dietaryNeeds).toEqual(['vegetarian']);
+    });
+
+    it('returns 404 for soft-deleted destination in DestinationsService.findById and GET /destinations/:id', async () => {
+      await prisma.destination.update({
+        where: { id: DA_NANG_DESTINATION_ID },
+        data: { deletedAt: new Date() },
+      });
+      try {
+        const res = await request(app.getHttpServer())
+          .get(`/destinations/${DA_NANG_DESTINATION_ID}`)
+          .expect(404);
+        expect(res.body.errorCode).toBe('DESTINATION_NOT_FOUND');
+      } finally {
+        await prisma.destination.update({
+          where: { id: DA_NANG_DESTINATION_ID },
+          data: { deletedAt: null },
+        });
+      }
+
+      const okRes = await request(app.getHttpServer())
+        .get(`/destinations/${DA_NANG_DESTINATION_ID}`)
+        .expect(200);
+      expect(okRes.body.data.id).toBe(DA_NANG_DESTINATION_ID);
     });
   });
 });

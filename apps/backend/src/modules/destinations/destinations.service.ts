@@ -59,7 +59,12 @@ export class DestinationsService {
       },
     });
 
-    if (!dest) throw new NotFoundException('Destination không tồn tại');
+    if (!dest || dest.deletedAt) {
+      throw new NotFoundException({
+        message: 'Destination không tồn tại',
+        errorCode: 'DESTINATION_NOT_FOUND',
+      });
+    }
     return {
       ...sanitizeDestination(dest),
       // Public nested places: factual OSM-derived address only (never the importer-generated places.address),

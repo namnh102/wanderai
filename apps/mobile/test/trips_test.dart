@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -198,6 +199,60 @@ class FakeTripRepository extends TripRepository {
   }
 }
 
+class _DeferredTripRepository extends FakeTripRepository {
+  Completer<AiPlanPreviewModel>? generateAiPlanCompleter;
+  Completer<TripModel>? saveAiPlanCompleter;
+  Completer<ItineraryItemModel>? addItineraryCompleter;
+  Completer<TripModel>? createTripCompleter;
+  Completer<void>? deleteTripCompleter;
+  Completer<TripModel>? updateTripCompleter;
+  Completer<void>? deleteItineraryCompleter;
+
+  @override
+  Future<AiPlanPreviewModel> generateAiPlan(
+    String tripId, {
+    String? prompt,
+  }) {
+    return generateAiPlanCompleter!.future;
+  }
+
+  @override
+  Future<TripModel> bulkSaveItinerary(
+    String tripId,
+    BulkSaveItineraryRequest request,
+  ) {
+    return saveAiPlanCompleter!.future;
+  }
+
+  @override
+  Future<ItineraryItemModel> addItineraryItem(
+    String tripId,
+    AddItineraryItemRequest request,
+  ) {
+    return addItineraryCompleter!.future;
+  }
+
+  @override
+  Future<TripModel> createTrip(CreateTripRequest request) {
+    return createTripCompleter!.future;
+  }
+
+  @override
+  Future<void> deleteTrip(String id) {
+    return deleteTripCompleter!.future;
+  }
+
+  @override
+  Future<TripModel> updateTrip(String id, UpdateTripRequest request) {
+    return updateTripCompleter!.future;
+  }
+
+  @override
+  Future<void> deleteItineraryItem(String tripId, String itemId) {
+    return deleteItineraryCompleter!.future;
+  }
+}
+
 void main() {
   group('Trip Providers & Logic (Unit Tests)', () {
     test('10. Loading state appears while fetching trips', () async {
@@ -319,6 +374,96 @@ void main() {
       expect(context.interests, contains('nature'));
       expect(context.toJson()['currency'], 'VND');
     });
+
+    test(
+      'GAP-16: disposing TripDetailNotifier and TripListNotifier mid-flight throws zero StateErrors on resolve or reject',
+      () async {
+        const sampleTrip = TripModel(
+          id: 'trip_1',
+          userId: 'user_1',
+          title: 'Hạ Long 2N1Đ',
+        );
+        const samplePlan = AiPlanPreviewModel(
+          tripId: 'trip_1',
+          destination: 'Hạ Long',
+          totalDays: 1,
+          overview: 'Tổng quan',
+          bestTimeToVisit: 'Mùa thu',
+          budgetAnalysis: BudgetAnalysisModel(),
+        );
+        const sampleItem = ItineraryItemModel(
+          id: 'item_1',
+          itineraryId: 'itin_1',
+          orderIndex: 1,
+          activity: 'Tháp Đồng Hồ',
+        );
+        DioException makeDioError(String path) => DioException(
+              requestOptions: RequestOptions(path: path),
+              type: DioExceptionType.connectionError,
+            );
+
+        for (final shouldReject in [false, true]) {
+          final repo = _DeferredTripRepository()
+            ..generateAiPlanCompleter = Completer<AiPlanPreviewModel>()
+            ..saveAiPlanCompleter = Completer<TripModel>()
+            ..addItineraryCompleter = Completer<ItineraryItemModel>()
+            ..updateTripCompleter = Completer<TripModel>()
+            ..deleteItineraryCompleter = Completer<void>()
+            ..createTripCompleter = Completer<TripModel>()
+            ..deleteTripCompleter = Completer<void>();
+
+          final detailNotifier = TripDetailNotifier(repo);
+          final listNotifier = TripListNotifier(repo);
+          // Let initial loadTrips settle before starting in-flight mutations.
+          await Future<void>.delayed(Duration.zero);
+
+          final genFuture = detailNotifier.generateAiPlan('trip_1');
+          final saveFuture = detailNotifier.saveAiPlan('trip_1', samplePlan);
+          final addItemFuture = detailNotifier.addItineraryItem(
+            'trip_1',
+            const AddItineraryItemRequest(dayNumber: 1, activity: 'Tháp Đồng Hồ'),
+          );
+          final updateFuture = detailNotifier.updateTrip(
+            'trip_1',
+            const UpdateTripRequest(title: 'Updated'),
+          );
+          final delItemFuture = detailNotifier.deleteItineraryItem('trip_1', 'item_1');
+          final createFuture = listNotifier.createTrip(
+            const CreateTripRequest(title: 'Hạ Long'),
+          );
+          final deleteFuture = listNotifier.deleteTrip('trip_1');
+
+          detailNotifier.dispose();
+          listNotifier.dispose();
+
+          if (shouldReject) {
+            repo.generateAiPlanCompleter!.completeError(makeDioError('/ai-plan'));
+            repo.saveAiPlanCompleter!.completeError(makeDioError('/bulk'));
+            repo.addItineraryCompleter!.completeError(makeDioError('/itinerary'));
+            repo.updateTripCompleter!.completeError(makeDioError('/trips/trip_1'));
+            repo.deleteItineraryCompleter!.completeError(makeDioError('/itinerary/item_1'));
+            repo.createTripCompleter!.completeError(makeDioError('/trips'));
+            repo.deleteTripCompleter!.completeError(makeDioError('/trips/trip_1'));
+          } else {
+            repo.generateAiPlanCompleter!.complete(samplePlan);
+            repo.saveAiPlanCompleter!.complete(sampleTrip);
+            repo.addItineraryCompleter!.complete(sampleItem);
+            repo.updateTripCompleter!.complete(sampleTrip);
+            repo.deleteItineraryCompleter!.complete();
+            repo.createTripCompleter!.complete(sampleTrip);
+            repo.deleteTripCompleter!.complete();
+          }
+
+          expect(await genFuture, isNull);
+          expect(await saveFuture, isFalse);
+          expect(await addItemFuture, isFalse);
+          expect(await updateFuture, isFalse);
+          expect(await delItemFuture, isFalse);
+          expect(await createFuture, isNull);
+          expect(await deleteFuture, isFalse);
+        }
+      },
+    );
   });
 
   group('Trip Widgets Tests', () {
@@ -534,6 +679,71 @@ void main() {
         await tester.pump(const Duration(milliseconds: 50));
         await tester.pumpAndSettle();
 
+        expect(errors, isEmpty);
+      },
+    );
+
+    testWidgets(
+      'GAP-15: _AddItinerarySheet on 360x640 with viewInsets bottom 300, focused input, and validation error produces zero FlutterErrors',
+      (tester) async {
+        final errors = <FlutterErrorDetails>[];
+        final prevOnError = FlutterError.onError;
+        FlutterError.onError = (details) {
+          errors.add(details);
+        };
+        addTearDown(() => FlutterError.onError = prevOnError);
+
+        tester.view.physicalSize = const Size(360, 640);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(() {
+          tester.view.resetPhysicalSize();
+          tester.view.resetDevicePixelRatio();
+          tester.view.resetViewInsets();
+        });
+
+        final fakeRepo = FakeTripRepository();
+
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: [tripRepositoryProvider.overrideWithValue(fakeRepo)],
+            child: const MaterialApp(
+              home: TripDetailScreen(tripId: 'trip_1'),
+            ),
+          ),
+        );
+        await tester.pump();
+        await tester.pumpAndSettle();
+
+        final addBtn = find.text('Thêm hoạt động');
+        await tester.ensureVisible(addBtn.first);
+        await tester.tap(addBtn.first);
+        await tester.pumpAndSettle();
+
+        final activityInput =
+            find.byKey(const Key('trip_add_item_activity_input'));
+        expect(activityInput, findsOneWidget);
+
+        // Focus activity input and simulate soft keyboard opening (viewInsets.bottom = 300)
+        await tester.tap(activityInput);
+        tester.view.viewInsets = const FakeViewPadding(bottom: 300);
+        await tester.pumpAndSettle();
+
+        expect(
+          MediaQuery.of(tester.element(activityInput)).viewInsets.bottom,
+          300,
+        );
+
+        // Trigger validation error (_dialogError != null) while keyboard viewInsets is open
+        final submitBtn = find.byKey(const Key('trip_add_item_submit_button'));
+        await tester.ensureVisible(submitBtn);
+        await tester.tap(submitBtn);
+        await tester.pumpAndSettle();
+
+        FlutterError.onError = prevOnError;
+        expect(
+          find.byKey(const Key('trip_add_item_dialog_error')),
+          findsOneWidget,
+        );
         expect(errors, isEmpty);
       },
     );

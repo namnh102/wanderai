@@ -78,12 +78,14 @@ class TripListNotifier extends StateNotifier<TripListState> {
   Future<TripModel?> createTrip(CreateTripRequest request) async {
     try {
       final created = await _repo.createTrip(request);
+      if (!mounted) return null;
       state = state.copyWith(
         trips: [created, ...state.trips],
         clearError: true,
       );
       return created;
     } on DioException catch (e) {
+      if (!mounted) return null;
       final details = ApiErrorDetails.fromDioException(e);
       state = state.copyWith(
         errorMessage: _mapError(e),
@@ -96,12 +98,14 @@ class TripListNotifier extends StateNotifier<TripListState> {
   Future<bool> deleteTrip(String id) async {
     try {
       await _repo.deleteTrip(id);
+      if (!mounted) return false;
       state = state.copyWith(
         trips: state.trips.where((t) => t.id != id).toList(),
         clearError: true,
       );
       return true;
     } on DioException catch (e) {
+      if (!mounted) return false;
       final details = ApiErrorDetails.fromDioException(e);
       state = state.copyWith(
         errorMessage: _mapError(e),
@@ -204,9 +208,11 @@ class TripDetailNotifier extends StateNotifier<TripDetailState> {
   Future<bool> updateTrip(String id, UpdateTripRequest request) async {
     try {
       final updated = await _repo.updateTrip(id, request);
+      if (!mounted) return false;
       state = state.copyWith(trip: updated);
       return true;
     } on DioException catch (e) {
+      if (!mounted) return false;
       state = state.copyWith(errorMessage: _mapError(e));
       return false;
     }
@@ -218,13 +224,17 @@ class TripDetailNotifier extends StateNotifier<TripDetailState> {
   ) async {
     try {
       await _repo.addItineraryItem(tripId, request);
+      if (!mounted) return false;
       // Reload trip detail to update all itineraries
       await loadTrip(tripId);
+      if (!mounted) return false;
       return true;
     } on DioException catch (e) {
+      if (!mounted) return false;
       state = state.copyWith(errorMessage: _mapError(e));
       return false;
     } catch (_) {
+      if (!mounted) return false;
       state = state.copyWith(
         errorMessage: 'Không thể thêm hoạt động vào lịch trình',
       );
@@ -235,12 +245,16 @@ class TripDetailNotifier extends StateNotifier<TripDetailState> {
   Future<bool> deleteItineraryItem(String tripId, String itemId) async {
     try {
       await _repo.deleteItineraryItem(tripId, itemId);
+      if (!mounted) return false;
       await loadTrip(tripId);
+      if (!mounted) return false;
       return true;
     } on DioException catch (e) {
+      if (!mounted) return false;
       state = state.copyWith(errorMessage: _mapError(e));
       return false;
     } catch (_) {
+      if (!mounted) return false;
       state = state.copyWith(
         errorMessage: 'Không thể xóa hoạt động khỏi lịch trình',
       );
@@ -258,6 +272,7 @@ class TripDetailNotifier extends StateNotifier<TripDetailState> {
     );
     try {
       final plan = await _repo.generateAiPlan(tripId, prompt: prompt);
+      if (!mounted) return null;
       state = state.copyWith(
         isGeneratingPlan: false,
         generatedPlan: plan,
@@ -265,12 +280,14 @@ class TripDetailNotifier extends StateNotifier<TripDetailState> {
       );
       return plan;
     } on DioException catch (e) {
+      if (!mounted) return null;
       state = state.copyWith(
         isGeneratingPlan: false,
         planErrorMessage: _mapError(e),
       );
       return null;
     } catch (_) {
+      if (!mounted) return null;
       state = state.copyWith(
         isGeneratingPlan: false,
         planErrorMessage: 'Không thể tạo lịch trình từ AI. Vui lòng thử lại.',
@@ -290,6 +307,7 @@ class TripDetailNotifier extends StateNotifier<TripDetailState> {
         tripId,
         plan.toBulkSaveRequest(replaceExisting: replaceExisting),
       );
+      if (!mounted) return false;
       state = state.copyWith(
         trip: updated,
         isLoading: false,
@@ -297,12 +315,14 @@ class TripDetailNotifier extends StateNotifier<TripDetailState> {
       );
       return true;
     } on DioException catch (e) {
+      if (!mounted) return false;
       state = state.copyWith(
         isLoading: false,
         errorMessage: _mapError(e),
       );
       return false;
     } catch (_) {
+      if (!mounted) return false;
       state = state.copyWith(
         isLoading: false,
         errorMessage: 'Lỗi khi lưu lịch trình vào chuyến đi',

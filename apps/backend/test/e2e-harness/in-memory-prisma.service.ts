@@ -1331,7 +1331,7 @@ export class InMemoryPrismaService implements OnModuleInit, OnModuleDestroy {
     },
 
     findUnique: async (args: {
-      where: { id?: string; slug?: string };
+      where: { id?: string; slug?: string; deletedAt?: null };
       include?: { places?: Record<string, unknown> };
     }) => {
       const dest = Array.from(this.destinations.values()).find(
@@ -1340,6 +1340,9 @@ export class InMemoryPrismaService implements OnModuleInit, OnModuleDestroy {
           (args.where.slug && d.slug === args.where.slug),
       );
       if (!dest) return null;
+      if (args.where.deletedAt === null && dest.deletedAt !== null) {
+        return null;
+      }
       if (args.include?.places) {
         const destPlaces = Array.from(this.places.values())
           .filter((p) => {
@@ -1361,6 +1364,21 @@ export class InMemoryPrismaService implements OnModuleInit, OnModuleDestroy {
         return { ...dest, places: destPlaces };
       }
       return dest;
+    },
+
+    update: async (args: {
+      where: { id: string };
+      data: { deletedAt?: Date | null };
+    }) => {
+      const existing = this.destinations.get(args.where.id);
+      if (!existing) {
+        throw new Error(`Destination ${args.where.id} not found`);
+      }
+      if (args.data.deletedAt !== undefined) {
+        existing.deletedAt = args.data.deletedAt;
+      }
+      existing.updatedAt = new Date();
+      return existing;
     },
   };
 
