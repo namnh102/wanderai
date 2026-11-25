@@ -1440,7 +1440,8 @@ describe("MATCH-EVAL-01 — W08 Buddy Ranking (nDCG@5, Precision@5), Consent & 1
         ),
         approvedRoadmapThreshold:
           fixture.rankingSpecification.approvedRoadmapThreshold,
-        rankingGateStatus: "MEASURED_NO_APPROVED_CUTOFF_IN_ROADMAP",
+        rankingGateStatus: "ĐÃ ĐO TRÊN FIXTURE",
+        rankingGateStatusCode: "MEASURED_ON_FIXTURE",
       },
       perQueryRanking: rankingRows,
       privacyAudit: {

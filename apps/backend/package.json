@@ -23,6 +23,7 @@
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
+    "test:buddy-concurrency": "jest --config ./test/jest-e2e.json --runTestsByPath test/buddy-concurrency.e2e-spec.ts --runInBand --forceExit",
     "test:match-eval": "jest --config ./test/jest-e2e.json --runTestsByPath test/buddy-privacy-eval.spec.ts --runInBand --forceExit",
     "db:import-curated": "ts-node prisma/import-curated.ts"
   },

@@ -5,7 +5,7 @@ import {
   Injectable,
   NotFoundException,
 } from "@nestjs/common";
-import { MatchStatus, TravelStyle } from "@prisma/client";
+import { MatchStatus, Prisma, TravelStyle } from "@prisma/client";
 import { PrismaService } from "../../prisma/prisma.service";
 
 export type HandshakeState = "PENDING" | "MATCHED" | "REJECTED" | "WITHDRAWN";
@@ -333,6 +333,26 @@ function mapTripsForScoring(user: Pick<SelectedBuddyUser, "trips">) {
 export class MatchesService {
   constructor(private prisma: PrismaService) {}
 
+  /**
+   * Acquires PostgreSQL row-level locks on `users` in strictly ascending UUID order
+   * so concurrent mutations (`withdraw`, `respond`, `discovery consent`, `block`, `request`)
+   * serialize cleanly under `READ COMMITTED` without deadlocks or two-table write skew.
+   */
+  private async _lockUsersInOrder(
+    tx: Partial<Pick<Prisma.TransactionClient, "$queryRaw">>,
+    userIds: string[],
+  ): Promise<void> {
+    if (typeof tx.$queryRaw !== "function") {
+      return;
+    }
+    const uniqueSorted = Array.from(new Set(userIds)).sort((a, b) =>
+      a.localeCompare(b),
+    );
+    for (const uid of uniqueSorted) {
+      await tx.$queryRaw`SELECT id FROM "users" WHERE id = ${uid}::uuid FOR UPDATE`;
+    }
+  }
+
   private async _getBlockedPeerIds(userId: string): Promise<Set<string>> {
     const blocks = await this.prisma.userBlock.findMany({
       where: {
@@ -382,29 +402,33 @@ export class MatchesService {
   }
 
   async updateDiscoveryConsent(userId: string, isDiscoverable: boolean) {
-    const user = await this.prisma.user.findUnique({
-      where: { id: userId },
-      select: { id: true, deletedAt: true },
-    });
-    if (!user || user.deletedAt !== null) {
-      throw new NotFoundException("Không tìm thấy hồ sơ người dùng");
-    }
+    return this.prisma.$transaction(async (tx) => {
+      await this._lockUsersInOrder(tx, [userId]);
 
-    const profile = await this.prisma.profile.upsert({
-      where: { userId },
-      update: { isDiscoverable },
-      create: {
-        userId,
-        displayName: "Du khách GoMate",
-        isDiscoverable,
-      },
-      select: { isDiscoverable: true },
-    });
+      const user = await tx.user.findUnique({
+        where: { id: userId },
+        select: { id: true, deletedAt: true },
+      });
+      if (!user || user.deletedAt !== null) {
+        throw new NotFoundException("Không tìm thấy hồ sơ người dùng");
+      }
 
-    return {
-      isDiscoverable: profile.isDiscoverable,
-      privacyNotice: PRIVACY_NOTICE_TEXT,
-    };
+      const profile = await tx.profile.upsert({
+        where: { userId },
+        update: { isDiscoverable },
+        create: {
+          userId,
+          displayName: "Du khách GoMate",
+          isDiscoverable,
+        },
+        select: { isDiscoverable: true },
+      });
+
+      return {
+        isDiscoverable: profile.isDiscoverable,
+        privacyNotice: PRIVACY_NOTICE_TEXT,
+      };
+    });
   }
 
   async listCandidates(userId: string, destinationId?: string, limit = 20) {
@@ -703,149 +727,177 @@ export class MatchesService {
       );
     }
 
-    if (await this._hasTwoWayBlock(senderId, receiverId)) {
-      throw new ForbiddenException(
-        "Không thể gửi lời mời kết nối do trạng thái chặn hai chiều",
-      );
-    }
+    return this.prisma.$transaction(async (tx) => {
+      await this._lockUsersInOrder(tx, [senderId, receiverId]);
 
-    const [sender, receiver] = await Promise.all([
-      this.prisma.user.findUnique({
-        where: { id: senderId },
-        select: SAFE_BUDDY_USER_SELECT,
-      }) as Promise<SelectedBuddyUser | null>,
-      this.prisma.user.findUnique({
-        where: { id: receiverId },
-        select: { ...SAFE_BUDDY_USER_SELECT, email: true },
-      }) as Promise<(SelectedBuddyUser & { email: string }) | null>,
-    ]);
+      const blockRow = await tx.userBlock.findFirst({
+        where: {
+          OR: [
+            { blockerId: senderId, blockedId: receiverId },
+            { blockerId: receiverId, blockedId: senderId },
+          ],
+        },
+        select: { id: true },
+      });
+      if (blockRow) {
+        throw new ForbiddenException(
+          "Không thể gửi lời mời kết nối do trạng thái chặn hai chiều",
+        );
+      }
 
-    if (!sender || sender.deletedAt !== null) {
-      throw new NotFoundException("Tài khoản người gửi không tồn tại");
-    }
-    if (!sender.profile?.isDiscoverable) {
-      throw new ForbiddenException(
-        "Vui lòng bật chế độ tìm bạn đồng hành trước khi gửi lời mời",
-      );
-    }
-    if (
-      !receiver ||
-      receiver.deletedAt !== null ||
-      receiver.email === SYSTEM_CURATOR_EMAIL ||
-      !receiver.profile?.isDiscoverable
-    ) {
-      throw new NotFoundException("Không tìm thấy bạn đồng hành phù hợp");
-    }
+      const [sender, receiver] = await Promise.all([
+        tx.user.findUnique({
+          where: { id: senderId },
+          select: SAFE_BUDDY_USER_SELECT,
+        }) as Promise<SelectedBuddyUser | null>,
+        tx.user.findUnique({
+          where: { id: receiverId },
+          select: { ...SAFE_BUDDY_USER_SELECT, email: true },
+        }) as Promise<(SelectedBuddyUser & { email: string }) | null>,
+      ]);
 
-    const existing = await this.prisma.match.findFirst({
-      where: {
-        OR: [
-          { senderId, receiverId },
-          { senderId: receiverId, receiverId: senderId },
-        ],
-      },
+      if (!sender || sender.deletedAt !== null) {
+        throw new NotFoundException("Tài khoản người gửi không tồn tại");
+      }
+      if (!sender.profile?.isDiscoverable) {
+        throw new ForbiddenException(
+          "Vui lòng bật chế độ tìm bạn đồng hành trước khi gửi lời mời",
+        );
+      }
+      if (
+        !receiver ||
+        receiver.deletedAt !== null ||
+        receiver.email === SYSTEM_CURATOR_EMAIL ||
+        !receiver.profile?.isDiscoverable
+      ) {
+        throw new NotFoundException("Không tìm thấy bạn đồng hành phù hợp");
+      }
+
+      const existing = await tx.match.findFirst({
+        where: {
+          OR: [
+            { senderId, receiverId },
+            { senderId: receiverId, receiverId: senderId },
+          ],
+        },
+      });
+
+      if (existing && existing.status !== MatchStatus.WITHDRAWN) {
+        throw new ConflictException(
+          existing.senderId === receiverId
+            ? "Người dùng này đã gửi lời mời cho bạn — hãy phản hồi lời mời đó."
+            : "Bạn đã gửi lời mời kết nối với người dùng này trước đó.",
+        );
+      }
+
+      const compat = scoreBuddyCompatibility({
+        viewerInterests: sender.preferences?.interests ?? [],
+        viewerStyle: sender.preferences?.travelStyle ?? null,
+        viewerTrips: mapTripsForScoring(sender),
+        peerInterests: receiver.preferences?.interests ?? [],
+        peerStyle: receiver.preferences?.travelStyle ?? null,
+        peerTrips: mapTripsForScoring(receiver),
+      });
+
+      if (existing) {
+        await tx.match.delete({ where: { id: existing.id } });
+      }
+
+      const created = await tx.match.create({
+        data: {
+          senderId,
+          receiverId,
+          status: MatchStatus.PENDING,
+          score: compat.score,
+          explanation: compat.explanation,
+        },
+        include: {
+          receiver: { select: SAFE_BUDDY_USER_SELECT },
+        },
+      });
+
+      return {
+        id: created.id,
+        status: created.status,
+        handshakeState: toHandshakeState(created.status),
+        isMatched: false,
+        senderConsent: true,
+        receiverConsent: false,
+        direction: "SENT" as const,
+        score: created.score,
+        explanation: created.explanation,
+        createdAt: created.createdAt,
+        peer: toSafeBuddyPeerView(created.receiver),
+      };
     });
-
-    if (existing && existing.status !== MatchStatus.WITHDRAWN) {
-      throw new ConflictException(
-        existing.senderId === receiverId
-          ? "Người dùng này đã gửi lời mời cho bạn — hãy phản hồi lời mời đó."
-          : "Bạn đã gửi lời mời kết nối với người dùng này trước đó.",
-      );
-    }
-
-    const compat = scoreBuddyCompatibility({
-      viewerInterests: sender.preferences?.interests ?? [],
-      viewerStyle: sender.preferences?.travelStyle ?? null,
-      viewerTrips: mapTripsForScoring(sender),
-      peerInterests: receiver.preferences?.interests ?? [],
-      peerStyle: receiver.preferences?.travelStyle ?? null,
-      peerTrips: mapTripsForScoring(receiver),
-    });
-
-    const created = existing
-      ? await this.prisma.$transaction(async (tx) => {
-          await tx.match.delete({ where: { id: existing.id } });
-          return tx.match.create({
-            data: {
-              senderId,
-              receiverId,
-              status: MatchStatus.PENDING,
-              score: compat.score,
-              explanation: compat.explanation,
-            },
-            include: {
-              receiver: { select: SAFE_BUDDY_USER_SELECT },
-            },
-          });
-        })
-      : await this.prisma.match.create({
-          data: {
-            senderId,
-            receiverId,
-            status: MatchStatus.PENDING,
-            score: compat.score,
-            explanation: compat.explanation,
-          },
-          include: {
-            receiver: { select: SAFE_BUDDY_USER_SELECT },
-          },
-        });
-
-    return {
-      id: created.id,
-      status: created.status,
-      handshakeState: toHandshakeState(created.status),
-      isMatched: false,
-      senderConsent: true,
-      receiverConsent: false,
-      direction: "SENT" as const,
-      score: created.score,
-      explanation: created.explanation,
-      createdAt: created.createdAt,
-      peer: toSafeBuddyPeerView(created.receiver),
-    };
   }
 
   async withdrawMatchRequest(matchId: string, actingUserId: string) {
-    const match = await this.prisma.match.findUnique({
-      where: { id: matchId },
-    });
-    if (!match) {
-      throw new NotFoundException("Lời mời kết nối không tồn tại");
-    }
-    if (match.senderId !== actingUserId) {
-      throw new ForbiddenException(
-        "Chỉ người gửi mới có quyền rút lại lời mời này",
-      );
-    }
-    if (match.status !== MatchStatus.PENDING) {
-      throw new BadRequestException(
-        `Không thể rút lời mời đang ở trạng thái ${match.status}`,
-      );
-    }
+    return this.prisma.$transaction(async (tx) => {
+      const initial = await tx.match.findUnique({
+        where: { id: matchId },
+        select: { id: true, senderId: true, receiverId: true },
+      });
+      if (!initial) {
+        throw new NotFoundException("Lời mời kết nối không tồn tại");
+      }
+      if (initial.senderId !== actingUserId) {
+        throw new ForbiddenException(
+          "Chỉ người gửi mới có quyền rút lại lời mời này",
+        );
+      }
 
-    const updated = await this.prisma.match.update({
-      where: { id: matchId },
-      data: { status: MatchStatus.WITHDRAWN },
-      include: {
-        receiver: { select: SAFE_BUDDY_USER_SELECT },
-      },
-    });
+      await this._lockUsersInOrder(tx, [initial.senderId, initial.receiverId]);
 
-    return {
-      id: updated.id,
-      status: updated.status,
-      handshakeState: toHandshakeState(updated.status),
-      isMatched: false,
-      senderConsent: false,
-      receiverConsent: false,
-      direction: "SENT" as const,
-      score: updated.score,
-      explanation: updated.explanation,
-      createdAt: updated.createdAt,
-      peer: toSafeBuddyPeerView(updated.receiver),
-    };
+      const match = await tx.match.findUnique({
+        where: { id: matchId },
+        include: {
+          receiver: { select: SAFE_BUDDY_USER_SELECT },
+        },
+      });
+      if (!match) {
+        throw new NotFoundException("Lời mời kết nối không tồn tại");
+      }
+      if (match.status !== MatchStatus.PENDING) {
+        throw new BadRequestException(
+          `Không thể rút lời mời đang ở trạng thái ${match.status}`,
+        );
+      }
+
+      const atomicResult = await tx.match.updateMany({
+        where: {
+          id: matchId,
+          senderId: actingUserId,
+          status: MatchStatus.PENDING,
+        },
+        data: { status: MatchStatus.WITHDRAWN },
+      });
+      if (atomicResult.count !== 1) {
+        const latest = await tx.match.findUnique({
+          where: { id: matchId },
+          select: { status: true },
+        });
+        throw new ConflictException(
+          latest
+            ? `Không thể rút lời mời vì trạng thái đã chuyển sang ${latest.status}`
+            : "Trạng thái lời mời đã thay đổi đồng thời",
+        );
+      }
+
+      return {
+        id: match.id,
+        status: MatchStatus.WITHDRAWN,
+        handshakeState: toHandshakeState(MatchStatus.WITHDRAWN),
+        isMatched: false,
+        senderConsent: false,
+        receiverConsent: false,
+        direction: "SENT" as const,
+        score: match.score,
+        explanation: match.explanation,
+        createdAt: match.createdAt,
+        peer: toSafeBuddyPeerView(match.receiver),
+      };
+    });
   }
 
   async respondToMatch(
@@ -854,39 +906,51 @@ export class MatchesService {
     action: "ACCEPTED" | "REJECTED",
   ) {
     return this.prisma.$transaction(async (tx) => {
-      const match = await tx.match.findUnique({
+      const initial = await tx.match.findUnique({
         where: { id: matchId },
-        include: {
-          sender: { select: SAFE_BUDDY_USER_SELECT },
-          receiver: { select: SAFE_BUDDY_USER_SELECT },
-        },
+        select: { id: true, senderId: true, receiverId: true },
       });
+      if (!initial) {
+        throw new NotFoundException("Lời mời kết nối không tồn tại");
+      }
+      if (initial.receiverId !== actingUserId) {
+        throw new ForbiddenException(
+          "Chỉ người nhận mới có quyền phản hồi lời mời này",
+        );
+      }
+
+      await this._lockUsersInOrder(tx, [initial.senderId, initial.receiverId]);
+
+      const [match, blockRow] = await Promise.all([
+        tx.match.findUnique({
+          where: { id: matchId },
+          include: {
+            sender: { select: SAFE_BUDDY_USER_SELECT },
+            receiver: { select: SAFE_BUDDY_USER_SELECT },
+          },
+        }),
+        tx.userBlock.findFirst({
+          where: {
+            OR: [
+              { blockerId: initial.senderId, blockedId: initial.receiverId },
+              { blockerId: initial.receiverId, blockedId: initial.senderId },
+            ],
+          },
+          select: { id: true },
+        }),
+      ]);
+
       if (!match) {
         throw new NotFoundException("Lời mời kết nối không tồn tại");
       }
-      if (match.receiverId !== actingUserId) {
+      if (blockRow) {
         throw new ForbiddenException(
-          "Chỉ người nhận mới có quyền phản hồi lời mời này",
+          "Không thể xử lý lời mời do trạng thái chặn hai chiều",
         );
       }
       if (match.status !== MatchStatus.PENDING) {
         throw new BadRequestException(
           `Lời mời đã ở trạng thái ${match.status}`,
-        );
-      }
-
-      const blockRow = await tx.userBlock.findFirst({
-        where: {
-          OR: [
-            { blockerId: match.senderId, blockedId: match.receiverId },
-            { blockerId: match.receiverId, blockedId: match.senderId },
-          ],
-        },
-        select: { id: true },
-      });
-      if (blockRow) {
-        throw new ForbiddenException(
-          "Không thể xử lý lời mời do trạng thái chặn hai chiều",
         );
       }
 
@@ -913,11 +977,23 @@ export class MatchesService {
         action === "ACCEPTED" ? MatchStatus.ACCEPTED : MatchStatus.REJECTED;
 
       const atomicResult = await tx.match.updateMany({
-        where: { id: matchId, status: MatchStatus.PENDING },
+        where: {
+          id: matchId,
+          receiverId: actingUserId,
+          status: MatchStatus.PENDING,
+        },
         data: { status: nextStatus },
       });
       if (atomicResult.count !== 1) {
-        throw new ConflictException("Trạng thái lời mời đã thay đổi đồng thời");
+        const latest = await tx.match.findUnique({
+          where: { id: matchId },
+          select: { status: true },
+        });
+        throw new ConflictException(
+          latest
+            ? `Không thể phản hồi lời mời vì trạng thái đã chuyển sang ${latest.status}`
+            : "Trạng thái lời mời đã thay đổi đồng thời",
+        );
       }
 
       const isMatched = nextStatus === MatchStatus.ACCEPTED;
@@ -958,15 +1034,18 @@ export class MatchesService {
     if (blockerId === blockedUserId) {
       throw new BadRequestException("Không thể tự chặn chính mình");
     }
-    const target = await this.prisma.user.findUnique({
-      where: { id: blockedUserId },
-      select: SAFE_BUDDY_USER_SELECT,
-    });
-    if (!target || target.deletedAt !== null) {
-      throw new NotFoundException("Không tìm thấy người dùng cần chặn");
-    }
 
-    await this.prisma.$transaction(async (tx) => {
+    return this.prisma.$transaction(async (tx) => {
+      await this._lockUsersInOrder(tx, [blockerId, blockedUserId]);
+
+      const target = await tx.user.findUnique({
+        where: { id: blockedUserId },
+        select: SAFE_BUDDY_USER_SELECT,
+      });
+      if (!target || target.deletedAt !== null) {
+        throw new NotFoundException("Không tìm thấy người dùng cần chặn");
+      }
+
       await tx.userBlock.upsert({
         where: {
           blockerId_blockedId: {
@@ -982,7 +1061,7 @@ export class MatchesService {
       });
 
       // Immediately revoke any PENDING or ACCEPTED match in either direction
-      await tx.match.updateMany({
+      const revoked = await tx.match.updateMany({
         where: {
           OR: [
             { senderId: blockerId, receiverId: blockedUserId },
@@ -992,12 +1071,13 @@ export class MatchesService {
         },
         data: { status: MatchStatus.REJECTED },
       });
-    });
 
-    return {
-      blocked: true,
-      peer: toSafeBuddyPeerView(target),
-    };
+      return {
+        blocked: true,
+        revokedMatchCount: revoked.count,
+        peer: toSafeBuddyPeerView(target),
+      };
+    });
   }
 
   async unblockUser(blockerId: string, blockedUserId: string) {
