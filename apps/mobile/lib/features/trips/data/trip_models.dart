@@ -8,6 +8,8 @@ class ItineraryItemModel {
   final String id;
   final String itineraryId;
   final String? placeId;
+  final String? placeName;
+  final String? placeAddress;
   final int orderIndex;
   final String? startTime;
   final String? endTime;
@@ -20,6 +22,8 @@ class ItineraryItemModel {
     required this.id,
     required this.itineraryId,
     this.placeId,
+    this.placeName,
+    this.placeAddress,
     required this.orderIndex,
     this.startTime,
     this.endTime,
@@ -30,10 +34,13 @@ class ItineraryItemModel {
   });
 
   factory ItineraryItemModel.fromJson(Map<String, dynamic> json) {
+    final place = json['place'] as Map<String, dynamic>?;
     return ItineraryItemModel(
       id: json['id'] as String? ?? '',
       itineraryId: json['itineraryId'] as String? ?? '',
-      placeId: json['placeId'] as String?,
+      placeId: (json['placeId'] as String?) ?? (place?['id'] as String?),
+      placeName: place?['name'] as String?,
+      placeAddress: place?['address'] as String?,
       orderIndex: json['orderIndex'] as int? ?? 1,
       startTime: json['startTime'] as String?,
       endTime: json['endTime'] as String?,
@@ -68,7 +75,9 @@ class ItineraryModel {
       id: json['id'] as String? ?? '',
       tripId: json['tripId'] as String? ?? '',
       dayNumber: json['dayNumber'] as int? ?? 1,
-      date: json['date'] != null ? DateTime.tryParse(json['date'] as String) : null,
+      date: json['date'] != null
+          ? DateTime.tryParse(json['date'] as String)
+          : null,
       title: json['title'] as String?,
       items: rawItems
           .map((i) => ItineraryItemModel.fromJson(i as Map<String, dynamic>))

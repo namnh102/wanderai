@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:latlong2/latlong.dart';
+import '../../../core/router/app_router.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_radius.dart';
 import '../../../core/theme/app_spacing.dart';
@@ -15,6 +16,7 @@ import '../../../core/widgets/app_loading.dart';
 import '../../../core/widgets/rating_view.dart';
 import '../../../core/widgets/responsive_wrapper.dart';
 import '../../ai_chat/providers/chat_provider.dart';
+import '../../auth/providers/auth_provider.dart';
 import '../../location/domain/geo_distance.dart';
 import '../../location/providers/user_location_provider.dart';
 import '../../map/data/place_model.dart';
@@ -22,38 +24,66 @@ import '../data/navigation_service.dart';
 import '../data/review_repository.dart';
 import '../providers/place_detail_provider.dart';
 import 'widgets/place_mini_map.dart';
+import 'widgets/save_place_to_trip_sheet.dart';
 
 /// Vietnamese label for a stored category key.
 String placeCategoryLabel(String category) {
   switch (category.toLowerCase()) {
-    case 'attraction': return 'Tham quan';
-    case 'restaurant': return 'Nhà hàng';
-    case 'hotel': return 'Khách sạn';
-    case 'temple': case 'pagoda': return 'Đền/Chùa';
-    case 'beach': return 'Biển';
-    case 'museum': return 'Bảo tàng';
-    case 'park': return 'Công viên';
-    case 'market': return 'Chợ';
-    case 'cafe': return 'Cà phê';
-    case 'entertainment': return 'Giải trí';
-    case 'culture': return 'Văn hóa';
-    case 'nature': return 'Thiên nhiên';
-    default: return category;
+    case 'attraction':
+      return 'Tham quan';
+    case 'restaurant':
+      return 'Nhà hàng';
+    case 'hotel':
+      return 'Khách sạn';
+    case 'temple':
+    case 'pagoda':
+      return 'Đền/Chùa';
+    case 'beach':
+      return 'Biển';
+    case 'museum':
+      return 'Bảo tàng';
+    case 'park':
+      return 'Công viên';
+    case 'market':
+      return 'Chợ';
+    case 'cafe':
+      return 'Cà phê';
+    case 'entertainment':
+      return 'Giải trí';
+    case 'culture':
+      return 'Văn hóa';
+    case 'nature':
+      return 'Thiên nhiên';
+    default:
+      return category;
   }
 }
 
 IconData placeCategoryIcon(String? category) {
   switch (category?.toLowerCase()) {
-    case 'attraction': return Icons.attractions;
-    case 'restaurant': return Icons.restaurant;
-    case 'hotel': return Icons.hotel;
-    case 'temple': case 'pagoda': return Icons.temple_buddhist;
-    case 'beach': return Icons.beach_access;
-    case 'museum': case 'culture': return Icons.museum;
-    case 'park': case 'nature': return Icons.park;
-    case 'market': return Icons.store;
-    case 'cafe': return Icons.local_cafe;
-    default: return Icons.place;
+    case 'attraction':
+      return Icons.attractions;
+    case 'restaurant':
+      return Icons.restaurant;
+    case 'hotel':
+      return Icons.hotel;
+    case 'temple':
+    case 'pagoda':
+      return Icons.temple_buddhist;
+    case 'beach':
+      return Icons.beach_access;
+    case 'museum':
+    case 'culture':
+      return Icons.museum;
+    case 'park':
+    case 'nature':
+      return Icons.park;
+    case 'market':
+      return Icons.store;
+    case 'cafe':
+      return Icons.local_cafe;
+    default:
+      return Icons.place;
   }
 }
 
@@ -139,9 +169,42 @@ class PlaceDetailScreen extends ConsumerWidget {
     }
   }
 
+  Future<void> _handleSaveToTrip(
+    BuildContext context,
+    WidgetRef ref,
+    PlaceModel place,
+  ) async {
+    final authStatus = ref.read(authProvider).status;
+    if (authStatus != AuthStatus.authenticated) {
+      final targetPath = '/places/${place.id}';
+      ref.read(postLoginRedirectProvider.notifier).state = targetPath;
+      context.go('/login?redirect=${Uri.encodeComponent(targetPath)}');
+      return;
+    }
+
+    final savedTrip = await showSavePlaceToTripSheet(context, place: place);
+    if (savedTrip != null && context.mounted) {
+      final bottomInset = MediaQuery.of(context).padding.bottom;
+      ScaffoldMessenger.of(context)
+        ..removeCurrentSnackBar()
+        ..showSnackBar(
+          SnackBar(
+            content: Text('Đã lưu "${place.name}" vào "${savedTrip.title}".'),
+            behavior: SnackBarBehavior.floating,
+            margin: EdgeInsets.fromLTRB(16, 0, 16, 112 + bottomInset),
+            action: SnackBarAction(
+              label: 'Mở chuyến',
+              onPressed: () => context.push('/trips/${savedTrip.id}'),
+            ),
+          ),
+        );
+    }
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final detail = ref.watch(placeDetailProvider(placeId));
+    final loadedPlace = detail.valueOrNull;
 
     return Scaffold(
       backgroundColor: AppColors.warmBackground,
@@ -156,9 +219,20 @@ class PlaceDetailScreen extends ConsumerWidget {
           onPressed: () => _back(context),
         ),
         title: const Text('Chi tiết địa điểm', style: AppTypography.h3),
+        actions: [
+          if (loadedPlace != null)
+            IconButton(
+              key: const Key('place_detail_bookmark_action'),
+              icon: const Icon(Icons.bookmark_add_outlined),
+              tooltip: 'Lưu vào chuyến đi',
+              color: AppColors.primary,
+              onPressed: () => _handleSaveToTrip(context, ref, loadedPlace),
+            ),
+        ],
       ),
       body: detail.when(
-        loading: () => const AppLoading(message: 'Đang tải thông tin địa điểm...'),
+        loading: () =>
+            const AppLoading(message: 'Đang tải thông tin địa điểm...'),
         error: (e, _) {
           final status = e is DioException ? e.response?.statusCode : null;
           if (status == 404 || status == 400) {
@@ -198,7 +272,18 @@ class PlaceDetailScreen extends ConsumerWidget {
               ref.read(pendingChatPromptProvider.notifier).state = prompt;
               context.go('/ai');
             },
-            onWriteReview: () => _openReviewSheet(context, ref, place),
+            onWriteReview: () {
+              final authStatus = ref.read(authProvider).status;
+              if (authStatus != AuthStatus.authenticated) {
+                final targetPath = '/places/${place.id}';
+                ref.read(postLoginRedirectProvider.notifier).state = targetPath;
+                context
+                    .go('/login?redirect=${Uri.encodeComponent(targetPath)}');
+                return;
+              }
+              _openReviewSheet(context, ref, place);
+            },
+            onSaveToTrip: () => _handleSaveToTrip(context, ref, place),
           );
         },
       ),
@@ -244,7 +329,9 @@ class PlaceDetailScreen extends ConsumerWidget {
                       return IconButton(
                         key: Key('review_star_${i + 1}'),
                         icon: Icon(
-                          star <= selectedRating ? Icons.star : Icons.star_border,
+                          star <= selectedRating
+                              ? Icons.star
+                              : Icons.star_border,
                           color: AppColors.warning,
                           size: 30,
                         ),
@@ -269,7 +356,8 @@ class PlaceDetailScreen extends ConsumerWidget {
                     const SizedBox(height: AppSpacing.xs),
                     Text(
                       submitError!,
-                      style: AppTypography.bodyS.copyWith(color: AppColors.error),
+                      style:
+                          AppTypography.bodyS.copyWith(color: AppColors.error),
                     ),
                   ],
                   const SizedBox(height: AppSpacing.md),
@@ -305,7 +393,8 @@ class PlaceDetailScreen extends ConsumerWidget {
                                 if (context.mounted) {
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     const SnackBar(
-                                      content: Text('Đã ghi nhận đánh giá thực tế của bạn!'),
+                                      content: Text(
+                                          'Đã ghi nhận đánh giá thực tế của bạn!'),
                                     ),
                                   );
                                 }
@@ -319,7 +408,8 @@ class PlaceDetailScreen extends ConsumerWidget {
                               } catch (_) {
                                 setSheetState(() {
                                   isSubmitting = false;
-                                  submitError = 'Không thể gửi đánh giá lúc này.';
+                                  submitError =
+                                      'Không thể gửi đánh giá lúc này.';
                                 });
                               }
                             },
@@ -348,6 +438,7 @@ class PlaceDetailView extends StatelessWidget {
   final VoidCallback? onEnableLocation;
   final VoidCallback? onAskWandy;
   final VoidCallback? onWriteReview;
+  final VoidCallback? onSaveToTrip;
 
   const PlaceDetailView({
     super.key,
@@ -358,6 +449,7 @@ class PlaceDetailView extends StatelessWidget {
     this.onEnableLocation,
     this.onAskWandy,
     this.onWriteReview,
+    this.onSaveToTrip,
   });
 
   @override
@@ -388,7 +480,8 @@ class PlaceDetailView extends StatelessWidget {
                     decoration: BoxDecoration(
                       color: catColor.withValues(alpha: 0.10),
                       borderRadius: AppRadius.heroRadius,
-                      border: Border.all(color: catColor.withValues(alpha: 0.25)),
+                      border:
+                          Border.all(color: catColor.withValues(alpha: 0.25)),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -494,14 +587,16 @@ class PlaceDetailView extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Row(
+                        Wrap(
+                          spacing: AppSpacing.sm,
+                          runSpacing: AppSpacing.xs,
+                          alignment: WrapAlignment.spaceBetween,
+                          crossAxisAlignment: WrapCrossAlignment.center,
                           children: [
-                            Expanded(
-                              child: RatingView(
-                                rating: place.rating,
-                                reviewCount: place.reviewCount,
-                                iconSize: 18,
-                              ),
+                            RatingView(
+                              rating: place.rating,
+                              reviewCount: place.reviewCount,
+                              iconSize: 18,
                             ),
                             if (onWriteReview != null)
                               TextButton.icon(
@@ -517,7 +612,8 @@ class PlaceDetailView extends StatelessWidget {
                           const Divider(height: AppSpacing.md),
                           for (final rev in place.reviews.take(5))
                             Padding(
-                              padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+                              padding:
+                                  const EdgeInsets.only(bottom: AppSpacing.sm),
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
@@ -665,9 +761,11 @@ class PlaceDetailView extends StatelessWidget {
                                   ),
                                 ],
                               ),
-                              if (distanceKm == null && onEnableLocation != null)
+                              if (distanceKm == null &&
+                                  onEnableLocation != null)
                                 InkWell(
-                                  key: const Key('place_detail_enable_location'),
+                                  key:
+                                      const Key('place_detail_enable_location'),
                                   onTap: onEnableLocation,
                                   borderRadius: AppRadius.smRadius,
                                   child: Padding(
@@ -700,8 +798,8 @@ class PlaceDetailView extends StatelessWidget {
                             children: [
                               Text('Nguồn: ${place.source!.name}',
                                   key: const Key('place_detail_source_label'),
-                                  style: AppTypography.bodyM.copyWith(
-                                      fontWeight: FontWeight.w600)),
+                                  style: AppTypography.bodyM
+                                      .copyWith(fontWeight: FontWeight.w600)),
                               _LinkRow(
                                 key: const Key('place_detail_source_url'),
                                 icon: Icons.open_in_new,
@@ -712,13 +810,13 @@ class PlaceDetailView extends StatelessWidget {
                               if (place.source!.license != null ||
                                   place.source!.attribution != null)
                                 Text(
-                                  [place.source!.attribution,
-                                          if (place.source!.license != null)
-                                            'Giấy phép ${place.source!.license}']
-                                      .whereType<String>()
-                                      .join(' · '),
-                                  style: AppTypography.bodyS.copyWith(
-                                      color: AppColors.textTertiary),
+                                  [
+                                    place.source!.attribution,
+                                    if (place.source!.license != null)
+                                      'Giấy phép ${place.source!.license}'
+                                  ].whereType<String>().join(' · '),
+                                  style: AppTypography.bodyS
+                                      .copyWith(color: AppColors.textTertiary),
                                 ),
                             ],
                           )
@@ -732,7 +830,9 @@ class PlaceDetailView extends StatelessWidget {
           ),
 
           // ── Primary CTA ──
-          if (place.hasCoordinates || onAskWandy != null)
+          if (place.hasCoordinates ||
+              onAskWandy != null ||
+              onSaveToTrip != null)
             Container(
               width: double.infinity,
               padding: EdgeInsets.fromLTRB(
@@ -757,54 +857,72 @@ class PlaceDetailView extends StatelessWidget {
                     ),
                     const SizedBox(height: AppSpacing.xs),
                   ],
-                  LayoutBuilder(
-                    builder: (context, constraints) {
-                      final textScale = MediaQuery.textScalerOf(context).scale(1);
-                      final stackActions = place.hasCoordinates &&
-                          onAskWandy != null &&
-                          (constraints.maxWidth < 380 || textScale > 1.15);
-                      final wandyButton = onAskWandy == null
-                          ? null
-                          : AppButton(
-                              key: const Key('place_detail_ask_wandy'),
-                              text: 'Hỏi Wandy',
-                              icon: Icons.auto_awesome_outlined,
-                              variant: AppButtonVariant.secondary,
-                              onPressed: onAskWandy,
-                            );
-                      final directionsButton = place.hasCoordinates
-                          ? AppButton(
-                              key: const Key('place_detail_directions'),
-                              text: 'Chỉ đường',
-                              icon: Icons.directions,
-                              onPressed: onDirections,
-                            )
-                          : null;
+                  if (onSaveToTrip != null) ...[
+                    SizedBox(
+                      width: double.infinity,
+                      child: AppButton(
+                        key: const Key('place_detail_save_to_trip'),
+                        text: 'Lưu vào chuyến đi',
+                        icon: Icons.bookmark_add_outlined,
+                        onPressed: onSaveToTrip,
+                      ),
+                    ),
+                    if (place.hasCoordinates || onAskWandy != null)
+                      const SizedBox(height: AppSpacing.xs),
+                  ],
+                  if (place.hasCoordinates || onAskWandy != null)
+                    LayoutBuilder(
+                      builder: (context, constraints) {
+                        final textScale =
+                            MediaQuery.textScalerOf(context).scale(1);
+                        final stackActions = place.hasCoordinates &&
+                            onAskWandy != null &&
+                            (constraints.maxWidth < 380 || textScale > 1.15);
+                        final wandyButton = onAskWandy == null
+                            ? null
+                            : AppButton(
+                                key: const Key('place_detail_ask_wandy'),
+                                text: 'Hỏi Wandy',
+                                icon: Icons.auto_awesome_outlined,
+                                variant: AppButtonVariant.secondary,
+                                onPressed: onAskWandy,
+                              );
+                        final directionsButton = place.hasCoordinates
+                            ? AppButton(
+                                key: const Key('place_detail_directions'),
+                                text: 'Chỉ đường',
+                                icon: Icons.directions,
+                                variant: onSaveToTrip != null
+                                    ? AppButtonVariant.secondary
+                                    : AppButtonVariant.primary,
+                                onPressed: onDirections,
+                              )
+                            : null;
 
-                      if (stackActions) {
-                        return Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            directionsButton!,
-                            const SizedBox(height: AppSpacing.xs),
-                            wandyButton!,
-                          ],
-                        );
-                      }
+                        if (stackActions) {
+                          return Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              directionsButton!,
+                              const SizedBox(height: AppSpacing.xs),
+                              wandyButton!,
+                            ],
+                          );
+                        }
 
-                      if (wandyButton != null && directionsButton != null) {
-                        return Row(
-                          children: [
-                            Expanded(child: wandyButton),
-                            const SizedBox(width: AppSpacing.sm),
-                            Expanded(flex: 2, child: directionsButton),
-                          ],
-                        );
-                      }
+                        if (wandyButton != null && directionsButton != null) {
+                          return Row(
+                            children: [
+                              Expanded(child: wandyButton),
+                              const SizedBox(width: AppSpacing.sm),
+                              Expanded(flex: 2, child: directionsButton),
+                            ],
+                          );
+                        }
 
-                      return directionsButton ?? wandyButton!;
-                    },
-                  ),
+                        return directionsButton ?? wandyButton!;
+                      },
+                    ),
                 ],
               ),
             ),
@@ -818,7 +936,8 @@ class _Section extends StatelessWidget {
   final IconData icon;
   final String title;
   final Widget child;
-  const _Section({required this.icon, required this.title, required this.child});
+  const _Section(
+      {required this.icon, required this.title, required this.child});
 
   @override
   Widget build(BuildContext context) {
@@ -878,7 +997,8 @@ class _LinkRow extends StatelessWidget {
   final IconData icon;
   final String text;
   final VoidCallback onTap;
-  const _LinkRow({super.key, required this.icon, required this.text, required this.onTap});
+  const _LinkRow(
+      {super.key, required this.icon, required this.text, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
