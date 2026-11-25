@@ -2,7 +2,7 @@
 
 **Integration Repository**: `D:\Do_an\wanderai_beta_integration`  
 **Integration Branch**: `feat/beta-integration`  
-**Verified Code Baseline**: `28b028bf1ba37a8c2a369bdfd38f88cf75702aa9` (`28b028b`) *(this runbook commit sits directly atop `28b028b`)*  
+**Verified Code Baseline**: `28b028bf1ba37a8c2a369bdfd38f88cf75702aa9` (`28b028b`) *(code baseline; followed only by documentation commit(s) for `docs/beta/OWNER_ACCEPTANCE_RUNBOOK.md`)*  
 **Reference POI Journey**: `Tháp Đồng Hồ` (`65562a67-84ff-44a0-990d-31917a2a9bd0`, Hạ Long — `20.9516105, 107.0851999`, OSM `way/674228542`)
 
 This runbook separates **(A) Automated & Emulator Proof already verified on `feat/beta-integration`** from **(B) Owner Real-Device, Real-Database & Real-Credential Acceptance Steps** required when connecting live PostgreSQL, SMTP, Google/Facebook OAuth projects, YouTube WebSub secrets, and physical Android hardware.
@@ -52,7 +52,7 @@ Verified Jest unit/security suites (`12/12`):
 | Debug Android APK | `flutter build apk --debug` | **PASS** — `apps/mobile/build/app/outputs/flutter-apk/app-debug.apk` (`195,979,704` bytes) |
 
 **Opt-in Live Skipped Tests (`~3` of `+315 ~3`)**:
-- `apps/mobile/test/live_halong_trip_save_e2e_test.dart` (2 tests, gated on `LIVE_E2E=1`)
+- `apps/mobile/test/live_halong_trip_save_e2e_test.dart` (2 tests, gated on `LIVE_HALONG_E2E=1`)
 - `apps/mobile/test/live_tc_w3_01_test.dart` (1 test, gated on `LIVE_W3=1`)
 
 **Shared UI Components (`apps/mobile/lib/core/widgets/`)**:
@@ -214,7 +214,7 @@ Artifacts: `docs/beta/mobile/BENCHMARKS.md`, `docs/beta/mobile/benchmarks/before
 | M5-5 Tier 5 Iter 3 | `63376d4` | `63376d4e0f014c73ce049e0bb33d6c105675298f` | `fix(hardening): close GAP-15..GAP-17 and DestinationsService soft-delete check` |
 | M5-5 Tier 5 Iter 4 | `28b028b` | `28b028bf1ba37a8c2a369bdfd38f88cf75702aa9` | `fix(hardening): resolve GAP-18 sheet keyboard overflow, GAP-19 notifier mounted guards, and TripsService checks` |
 
-*(This runbook commit sits directly atop `28b028bf1ba37a8c2a369bdfd38f88cf75702aa9`.)*
+*(Code integration baseline ends at `28b028bf1ba37a8c2a369bdfd38f88cf75702aa9`; subsequent commit(s) on `feat/beta-integration` update only `docs/beta/OWNER_ACCEPTANCE_RUNBOOK.md`.)*
 
 **Untouched Preserved Worktrees (`8` total)**:
 
@@ -233,7 +233,7 @@ Artifacts: `docs/beta/mobile/BENCHMARKS.md`, `docs/beta/mobile/benchmarks/before
 
 ## Section B — Owner Real-Device / Real-Credential Acceptance Steps
 
-> **Important Path Note**: Both `.env.example` and `docker-compose.yml` live at the **repository root** (`D:\Do_an\wanderai_beta_integration\`), **NOT** inside `apps/backend/`.
+> **Important `.env` & Path Note**: Both `.env.example` and `docker-compose.yml` live at the **repository root** (`D:\Do_an\wanderai_beta_integration\`), **NOT** inside `apps/backend/`. However, every `pnpm --dir apps/backend ...` command runs with `cwd = apps/backend/`, where both Prisma CLI (`migrate deploy`, `db seed`, `reconcile-freeze-v2.ts`) and NestJS `ConfigModule.forRoot()` (`apps/backend/src/app.module.ts`, default `path.resolve(process.cwd(), '.env')`) resolve `.env`. You **MUST** either copy the root `.env` to `apps/backend/.env` (`Copy-Item .env apps/backend/.env` — `.gitignore` ignores `.env` everywhere so secrets are never committed) **or** export the root `.env` variables into your active PowerShell session before running backend commands.
 
 ### 1. Elevated Docker Desktop / PostgreSQL Startup, Migrations & Backend Real-DB E2E
 
@@ -247,16 +247,31 @@ Artifacts: `docs/beta/mobile/BENCHMARKS.md`, `docs/beta/mobile/benchmarks/before
    - `docker-compose.yml` defines:
      - `postgres` (`container_name: wanderai-postgres`, PostGIS `16-3.4` + `postgresql-16-pgvector`, `POSTGRES_DB=wanderai`, `POSTGRES_USER=postgres`, `POSTGRES_PASSWORD=postgres`, port `5432:5432`, mounts `./database/init.sql`).
      - `redis` (`container_name: wanderai-redis`, `redis:7-alpine`, port `6379:6379`).
-3. **Create root `.env` from `.env.example`**:
+3. **Create root `.env` from `.env.example` and make it visible to `apps/backend`**:
    ```powershell
+   cd D:\Do_an\wanderai_beta_integration
    Copy-Item .env.example .env
    ```
-   Set at minimum:
+   Edit root `.env` and set at minimum:
    - `DATABASE_URL=postgresql://postgres:postgres@localhost:5432/wanderai`
    - `JWT_SECRET` and `JWT_REFRESH_SECRET`: per `apps/backend/src/modules/auth/jwt-config.ts`, **both are strictly required at NestJS startup**, must each be **`>= 32` characters**, have **`>= 8` distinct characters**, be **distinct from each other**, and **must not** contain placeholders (`<replace_with_...>`, `change-in-production`, `wanderai-dev-`). Generate two strong secrets:
      ```powershell
      node -e "const c=require('crypto'); console.log('JWT_SECRET=' + c.randomBytes(32).toString('hex')); console.log('JWT_REFRESH_SECRET=' + c.randomBytes(32).toString('hex'));"
      ```
+   - For Step 6 (`youtube-updates-thap-dong-ho.e2e-spec.ts`), keep `YOUTUBE_WEBSUB_VERIFY_TOKEN=`, `YOUTUBE_WEBSUB_SECRET=`, and `YOUTUBE_EVENTS_INTERNAL_SECRET=` **blank** for now (as in `.env.example`); you will set strong secrets immediately afterward in Section B.4.
+   - Then sync `.env` to `apps/backend/.env` (Option A — recommended) **or** export root `.env` into your current PowerShell session (Option B):
+     ```powershell
+     # Option A (recommended): copy root .env into apps/backend/.env and verify git still ignores it
+     Copy-Item .env apps/backend/.env
+     git status --short
+
+     # Option B (alternative, per-shell): export root .env variables into the active PowerShell session
+     Get-Content .env | Where-Object { $_ -match '^\s*[^#][^=]*=' } | ForEach-Object {
+       $k, $v = $_ -split '=', 2
+       [Environment]::SetEnvironmentVariable($k.Trim(), $v.Trim(), 'Process')
+     }
+     ```
+     *(Whenever you edit root `.env` in Sections B.2–B.4, re-run `Copy-Item .env apps/backend/.env` or re-export into the active shell before running `prisma`, `test:e2e`, or `start:dev`.)*
 4. **Apply all 10 Prisma migrations** (`apps/backend/prisma/migrations/`):
    ```powershell
    cd D:\Do_an\wanderai_beta_integration
@@ -273,14 +288,20 @@ Artifacts: `docs/beta/mobile/BENCHMARKS.md`, `docs/beta/mobile/benchmarks/before
    8. `20261125120000_add_password_reset_and_oauth_accounts` (`migration.sql` + `down.sql`)
    9. `20261125180000_add_youtube_destination_and_scope` (`migration.sql` + `down.sql`)
    10. `20261125200000_tier5_token_version_and_itinerary_idempotency` (`migration.sql` + `down.sql`)
-5. **Seed a fresh database** (if empty):
+5. **Seed a fresh database AND reconcile Freeze V2 POIs (required for `Tháp Đồng Hồ`)**:
    ```powershell
+   cd D:\Do_an\wanderai_beta_integration
    pnpm --dir apps/backend exec prisma db seed
-   # Optional curated import:
+   # Optional legacy curated import:
    pnpm --dir apps/backend run db:import-curated
+   # REQUIRED for Hạ Long / Tháp Đồng Hồ (65562a67-84ff-44a0-990d-31917a2a9bd0) & all 759 Freeze V2 POIs:
+   pnpm --dir apps/backend exec ts-node prisma/reconcile-freeze-v2.ts
    ```
+   - **Important**: `prisma db seed` (`database/seed/places.json`) and `db:import-curated` (`data/curated/places_canonical.json`) do **not** contain Hạ Long, `Tháp Đồng Hồ` (`65562a67-84ff-44a0-990d-31917a2a9bd0`), or `place_sources` rows (and `youtube-updates-thap-dong-ho.e2e-spec.ts` deletes its temporary `Tháp Đồng Hồ` row in `afterAll` if it created it).
+   - `apps/backend/prisma/reconcile-freeze-v2.ts` non-destructively (zero `TRUNCATE`) upserts categories, 50 destinations (including `ha-long`), all **759 Freeze V2 POIs** from `data/curated/gomate_places_freeze_v2.json` (including `Tháp Đồng Hồ`) + `place_sources`, and applies factual Wikimedia/OSM descriptions & media from `data/enrichment/poi_enrichment_pilot_60_v1.json`. Without running it, Sections B.4 and B.5 fail with `404 PLACE_NOT_FOUND` on a fresh database.
 6. **Run Backend Real-DB E2E (`jest-e2e.json`)**:
    - `apps/backend/test/jest-e2e.json` connects to real PostgreSQL via `DATABASE_URL`.
+   - **Secret Ordering Warning**: `apps/backend/test/youtube-updates-thap-dong-ho.e2e-spec.ts` sends unauthenticated/unsigned WebSub (`GET/POST /youtube/webhook`) and internal (`POST /youtube/events`) requests and **requires `YOUTUBE_WEBSUB_VERIFY_TOKEN`, `YOUTUBE_WEBSUB_SECRET`, and `YOUTUBE_EVENTS_INTERNAL_SECRET` to be blank/unset** during the test run. Keep those 3 variables blank in `.env` / `apps/backend/.env` during this step, then configure strong non-empty secrets immediately afterward before Section B.4 live verification. *(If re-running `test:e2e` later after Section B.4, temporarily blank those 3 keys in `apps/backend/.env` or unset them in shell-only env mode without `apps/backend/.env`.)*
    - Note: `ai-chat.e2e-spec.ts` and `planner.e2e-spec.ts` expect a running AI service at `AI_SERVICE_URL` (e.g. `http://127.0.0.1:8000`). Run either the targeted Beta Auth + YouTube specs or the full E2E suite (with AI service up):
    ```powershell
    # Targeted Beta Auth + YouTube real-DB E2E:
@@ -289,13 +310,13 @@ Artifacts: `docs/beta/mobile/BENCHMARKS.md`, `docs/beta/mobile/benchmarks/before
    # Full backend E2E (requires PostgreSQL + AI_SERVICE_URL):
    pnpm --dir apps/backend run test:e2e
    ```
-   - **Pass Criteria**: All 10 migrations apply with `0` errors; `auth-recovery-oauth.e2e-spec.ts` and `youtube-updates-thap-dong-ho.e2e-spec.ts` pass against live PostgreSQL without modifying `data/curated/gomate_places_freeze_v2.json`.
+   - **Pass Criteria**: All 10 migrations apply with `0` errors; `reconcile-freeze-v2.ts` reports `missingFreezeV2Count: 0` (`759/759` Freeze V2 POIs present); `auth-recovery-oauth.e2e-spec.ts` and `youtube-updates-thap-dong-ho.e2e-spec.ts` pass against live PostgreSQL without modifying `data/curated/gomate_places_freeze_v2.json`.
 
 ---
 
 ### 2. Real SMTP Credentials & Password Reset Live Check
 
-1. **Configure SMTP in root `.env`** (`apps/backend/src/modules/mail/mail.module.ts` & `smtp-mail.transport.ts`):
+1. **Configure SMTP in root `.env` (and sync to `apps/backend/.env`)** (`apps/backend/src/modules/mail/mail.module.ts` & `smtp-mail.transport.ts`):
    - `SMTP_HOST`: **MUST be non-empty** (e.g., `smtp.gmail.com` or `smtp.resend.com`). **Warning**: leaving `SMTP_HOST` blank falls back to `NoopLogMailTransport` outside `NODE_ENV=test` (logs masked email only, sends no email).
    - `SMTP_PORT`: `587` (STARTTLS) or `465` (TLS)
    - `SMTP_SECURE`: `'false'` for `587`, `'true'` for `465` (defaults to `port === 465` if omitted)
@@ -303,8 +324,9 @@ Artifacts: `docs/beta/mobile/BENCHMARKS.md`, `docs/beta/mobile/benchmarks/before
    - `SMTP_PASS`: SMTP password / app password
    - `SMTP_FROM`: e.g. `WanderAI <no-reply@your-domain.com>` (defaults to `WanderAI <no-reply@wanderai.local>`)
    - `APP_RESET_PASSWORD_URL`: link prefix written into the email (`?token=<rawToken>` appended). For Android deep-link testing via ADB or clickable app link, configure `wanderai://reset-password` or `wanderai://app/reset-password` (both registered in `apps/mobile/android/app/src/main/AndroidManifest.xml`), or uncomment & host `assetlinks.json` for `https://app.gomate.vn/reset-password`.
-2. **Start Backend** from repo root:
+2. **Sync `.env` and Start Backend** from repo root:
    ```powershell
+   Copy-Item .env apps/backend/.env
    pnpm --dir apps/backend run start:dev
    ```
 3. **Execute Live Reset & Token Security Checks**:
@@ -342,7 +364,7 @@ Artifacts: `docs/beta/mobile/BENCHMARKS.md`, `docs/beta/mobile/benchmarks/before
    - Create an **Android OAuth 2.0 Client ID** with package `com.example.wanderai_mobile` and the extracted SHA-1.
    - Create a **Web application OAuth 2.0 Client ID** (needed by `google_sign_in` `serverClientId` to mint an `idToken`).
    - **Device Requirement**: Physical Android device **with Google Play Services** (or Google APIs play-store emulator signed in to a Google account).
-4. **Backend root `.env`**:
+4. **Backend `.env` (sync root `.env` -> `apps/backend/.env` & restart backend)**:
    - Set `GOOGLE_CLIENT_ID`, `GOOGLE_WEB_CLIENT_ID`, and `GOOGLE_ANDROID_CLIENT_ID` (backend `HttpGoogleOAuthVerifier` validates `idToken` `aud` against the union of these three variables; note `GOOGLE_CLIENT_SECRET` in `.env.example` is **unused** by the backend verifier).
 5. **Run Flutter with `--dart-define`**:
    ```powershell
@@ -352,14 +374,14 @@ Artifacts: `docs/beta/mobile/BENCHMARKS.md`, `docs/beta/mobile/benchmarks/before
 
 #### B. Facebook OAuth Setup
 1. **Meta for Developers Console**:
-   - Enable Facebook Login, add Android platform with package `com.example.wanderai_mobile`, class `com.example.wanderai_mobile.MainActivity`, and Base64 key hash (`keytool -exportcert -alias androiddebugkey -keystore "$env:USERPROFILE\.android\debug.keystore" | openssl sha1 -binary | openssl base64`).
+   - Enable Facebook Login, add Android platform with package `com.example.wanderai_mobile`, class `com.example.wanderai_mobile.MainActivity`, and Base64 key hash (`keytool -exportcert -alias androiddebugkey -keystore "$env:USERPROFILE\.android\debug.keystore" -storepass android | openssl sha1 -binary | openssl base64`).
 2. **Mobile Android Strings** (`apps/mobile/android/app/src/main/res/values/strings.xml`):
    Replace the three placeholders before building:
    - `facebook_app_id`: `<YOUR_FACEBOOK_APP_ID>` (currently `0000000000000000`)
    - `facebook_client_token`: `<YOUR_FACEBOOK_CLIENT_TOKEN>` (currently `00000000000000000000000000000000`)
    - `fb_login_protocol_scheme`: `fb<YOUR_FACEBOOK_APP_ID>` (currently `fb0000000000000000`)
    *(Already wired in `AndroidManifest.xml` via `FacebookActivity`, `CustomTabActivity`, and `<queries><package android:name="com.facebook.katana"/></queries>`.)*
-3. **Backend root `.env`**:
+3. **Backend `.env` (sync root `.env` -> `apps/backend/.env` & restart backend)**:
    - Set `FACEBOOK_APP_ID` and `FACEBOOK_APP_SECRET` (both required by `HttpFacebookOAuthVerifier`).
 
 #### C. Provider Acceptance Checklist (Execute for BOTH Google and Facebook)
@@ -374,23 +396,23 @@ Artifacts: `docs/beta/mobile/BENCHMARKS.md`, `docs/beta/mobile/benchmarks/before
 
 ### 4. Real YouTube WebSub Secret, Latency Measurement, Tháp Đồng Hồ 5 Fields, Hạ Long Fallback & Idempotency
 
-1. **Configure YouTube Env Vars in root `.env`**:
+1. **Configure YouTube Env Vars in root `.env` (sync to `apps/backend/.env` and restart backend)**:
    - `YOUTUBE_WEBSUB_VERIFY_TOKEN=<strong-random-verify-token>`
    - `YOUTUBE_WEBSUB_SECRET=<strong-random-hmac-secret>`
    - `YOUTUBE_EVENTS_INTERNAL_SECRET=<strong-random-internal-secret>`
    - `YOUTUBE_REALTIME_SLA_MAX_LATENCY_MS=300000` *(5 minutes default; exact key name — do not use `YOUTUBE_REALTIME_SLA_MAX_MS`)*
-   - **CRITICAL SECURITY WARNING**: In `youtube.service.ts` and `youtube-internal-secret.guard.ts`, if `YOUTUBE_WEBSUB_VERIFY_TOKEN`, `YOUTUBE_WEBSUB_SECRET`, or `YOUTUBE_EVENTS_INTERNAL_SECRET` is blank/unset, the backend **skips verification** (`return true`). Owner **MUST** set non-empty strong secrets in real/staging environments.
+   - **CRITICAL SECURITY WARNING**: In `youtube.service.ts` and `youtube-internal-secret.guard.ts`, if `YOUTUBE_WEBSUB_VERIFY_TOKEN`, `YOUTUBE_WEBSUB_SECRET`, or `YOUTUBE_EVENTS_INTERNAL_SECRET` is blank/unset, the backend **skips verification** (`return true`). Owner **MUST** set non-empty strong secrets in real/staging environments (after finishing Section B.1 Step 6 `test:e2e`), then run `Copy-Item .env apps/backend/.env` and restart `pnpm --dir apps/backend run start:dev`.
 2. **Verify Guards Reject Unauthorized Requests**:
    - `GET /youtube/webhook?hub.mode=subscribe&hub.topic=https://www.youtube.com/xml/feeds/videos.xml?channel_id=UC_TEST&hub.challenge=abc&hub.verify_token=wrong` -> `403` `YOUTUBE_EVENT_UNAUTHORIZED`.
    - `POST /youtube/webhook` without valid `X-Hub-Signature` / `X-Hub-Signature-256` -> `401`/`403` `YOUTUBE_EVENT_UNAUTHORIZED`.
    - `POST /youtube/events` without matching `x-youtube-internal-secret` -> `401` `YOUTUBE_EVENT_UNAUTHORIZED`.
 3. **Live Ingestion, 5-Field Tháp Đồng Hồ Check & Real Source-to-App Latency Measurement**:
    - Send a signed Atom XML (`POST /youtube/webhook`) or internal JSON (`POST /youtube/events`) for `Tháp Đồng Hồ` (`65562a67-84ff-44a0-990d-31917a2a9bd0`) with current UTC `publishedAt`:
-     - Inspect `GET /places/65562a67-84ff-44a0-990d-31917a2a9bd0/youtube-updates` and the Flutter `PlaceDetailScreen` `"Cập nhật từ YouTube"` section.
+     - Inspect `GET /places/65562a67-84ff-44a0-990d-31917a2a9bd0/youtube-updates` and the Flutter `PlaceDetailScreen` `"Cập nhật cộng đồng từ YouTube"` section.
      - **Pass Criteria (5 fields)**: Item contains `placeId` (`65562a67-84ff-44a0-990d-31917a2a9bd0`), `source` (`"youtube"`), `publishedAt`, `receivedAt`, `updatedAt`.
      - **Pass Criteria (Latency & SLA Badge)**: Server reports `ingestLatencyMs = receivedAt - publishedAt` and `serverDeliveredAt`; Flutter measures `endToEndLatencyMs = clientRenderedAt - publishedAt` and displays `"Thời gian thực"` **only** when `0 <= endToEndLatencyMs <= 300000` ms. Send a second event with `publishedAt` `> 6` minutes old and confirm Flutter displays `"Cập nhật gần đây"` (never `"Thời gian thực"`).
 4. **Hạ Long City-Level Fallback Check**:
-   - Send an event mentioning `"Hạ Long"` without a specific POI match -> confirm `status: "LINKED_CITY"`, `scope: "CITY"`, `placeId: null` on `GET /destinations/ha-long/youtube-updates` (and `cityFallbackItems` on `GET /places/:id/youtube-updates`), and confirm Flutter renders the city-level fallback banner (`"Cập nhật cấp thành phố Hạ Long"`).
+   - Send an event mentioning `"Hạ Long"` without a specific POI match -> confirm `status: "LINKED_CITY"`, `scope: "CITY"`, `placeId: null` on `GET /destinations/ha-long/youtube-updates` (and `cityFallbackItems` on `GET /places/:id/youtube-updates`), and confirm Flutter renders the city-level fallback banner (`"Chưa có cập nhật riêng cho địa điểm này · Cập nhật cấp thành phố: Hạ Long"` when no direct POI items exist, or subheader/badge `"Cập nhật cấp thành phố: Hạ Long"` when direct POI items also exist).
 5. **Duplicate Replay Idempotency & R4 Table Isolation Check**:
    - Replay the exact same event (`dedupeKey` / `videoId` + `publishedAt`) twice -> confirm `deliveryCount: 2` and **exactly 1 row** in `youtube_poi_updates` (`SELECT COUNT(*) FROM youtube_poi_updates WHERE video_id = ...` = `1`).
    - Confirm `documents` and `place_sources` row counts remain unchanged before and after YouTube ingestion.
