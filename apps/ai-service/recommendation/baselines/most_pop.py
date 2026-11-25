@@ -11,11 +11,22 @@ class MostPopularRecommender:
         self.damping = damping  # Bayesian smoothing prior weight
         self.global_mean: float = 0.0
         self.item_scores: Dict[str, float] = {}
+        self.ranked_items: List[str] = []
         self.hotel_metadata: Dict[str, Dict[str, Any]] = {}
         self.user_history: Dict[str, set] = {}
+        self.is_fitted: bool = False
 
     def fit(self, train_df: pd.DataFrame, hotels_df: Optional[pd.DataFrame] = None):
         """Fit popularity model on training interactions."""
+        if train_df is None or train_df.empty:
+            self.global_mean = 0.0
+            self.item_scores = {}
+            self.ranked_items = []
+            self.hotel_metadata = {}
+            self.user_history = {}
+            self.is_fitted = False
+            return self
+
         self.global_mean = float(train_df["rating"].mean()) if "rating" in train_df else 5.0
 
         # Build user interaction history for exclusion
@@ -57,6 +68,7 @@ class MostPopularRecommender:
 
         # Sort items by popularity score descending
         self.ranked_items = sorted(self.item_scores.keys(), key=lambda x: self.item_scores[x], reverse=True)
+        self.is_fitted = True
         return self
 
     def recommend(
@@ -67,6 +79,9 @@ class MostPopularRecommender:
         exclude_seen: bool = True,
     ) -> List[Tuple[str, float]]:
         """Generate top-K item recommendations with scores."""
+        if not self.is_fitted or top_k <= 0 or not self.ranked_items:
+            return []
+
         seen = set()
         if exclude_seen and user_id and str(user_id) in self.user_history:
             seen = self.user_history[str(user_id)]
