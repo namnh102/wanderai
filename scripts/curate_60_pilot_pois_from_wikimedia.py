@@ -59,6 +59,146 @@ ALLOWED_IMAGE_LICENSES = (
     "ogl",
 )
 
+# Coordinate-verified curation & audit registry for the 9 Ha Long pilot POIs that lack direct
+# OSM wikipedia/wikidata/wikimedia_commons tags. Each entry is gated by exact place_id,
+# OSM source_id, and <= 50m Haversine distance against Freeze V2 before attaching any media/text.
+HALONG_MISSING_PAIR_AUDIT_V1: dict[str, dict[str, Any]] = {
+    "65562a67-84ff-44a0-990d-31917a2a9bd0": {
+        "expected_name": "Tháp Đồng Hồ",
+        "expected_osm_id": "way/674228542",
+        "expected_lat": 20.9516105,
+        "expected_lon": 107.0851999,
+        "verification_status": "verified_media_and_article",
+        "verification_note": (
+            "Đã xác minh danh tính và tọa độ (sai lệch 0.0m so với OSM way/674228542 tại vòng xuyến "
+            "giao Lê Thánh Tông - 25 Tháng 4 - Trần Hưng Đạo - phố Nhà Thờ - Tuệ Tĩnh); đối chiếu khớp "
+            "bài viết Wikipedia 'Hạ Long (thành phố)' và ảnh Commons File:Cột Đồng Hồ - Vincom Hạ Long 2022.jpg."
+        ),
+        "description": (
+            "Cột Đồng Hồ (Tháp Đồng Hồ) nằm tại khu vực trung tâm thành phố Hạ Long cạnh Vincom và "
+            "tổ hợp Times Garden, là điểm mốc giao thông nối các tuyến đường Lê Thánh Tông, 25 Tháng 4, "
+            "phố Nhà Thờ và phố Tuệ Tĩnh thuộc khu vực Bạch Đằng."
+        ),
+        "description_source_url": "https://vi.wikipedia.org/wiki/H%E1%BA%A1_Long_(th%C3%A0nh_ph%E1%BB%91)",
+        "description_license": "CC BY-SA 4.0 (Wikipedia)",
+        "commons_files": ["File:Cột Đồng Hồ - Vincom Hạ Long 2022.jpg"],
+    },
+    "34d89a3a-6272-4c3b-8c85-df92db91e3f6": {
+        "expected_name": "Old Hon Gai Ferry Terminal",
+        "expected_osm_id": "node/839480851",
+        "expected_lat": 20.9580942,
+        "expected_lon": 107.0672948,
+        "verification_status": "verified_article_only_no_verified_image",
+        "verification_note": (
+            "Đã xác minh danh tính và tọa độ đầu bến phía Hòn Gai của Bến phà Bãi Cháy cũ (0.0m so với "
+            "OSM node/839480851 bên bờ vịnh Cửa Lục, cách cầu Bãi Cháy 286m) và đối chiếu bài viết "
+            "Wikipedia 'Hồng Gai'; chưa gắn ảnh vì File:Bãi Cháy.jpg trên Commons thiếu tọa độ GPS và "
+            "chụp bờ phà phía Bãi Cháy đối diện thay vì đầu bến Hòn Gai."
+        ),
+        "description": (
+            "Đầu bến phía Hòn Gai (Hồng Gai) của Bến phà Bãi Cháy từng là đầu mối giao thông quan trọng "
+            "nối Hồng Gai với Bãi Cháy qua vịnh Cửa Lục, ngừng hoạt động năm 2007 sau khi được thay thế "
+            "bằng cầu Bãi Cháy."
+        ),
+        "description_source_url": "https://vi.wikipedia.org/wiki/H%E1%BB%93ng_Gai",
+        "description_license": "CC BY-SA 4.0 (Wikipedia)",
+        "commons_files": [],
+    },
+    "8977e846-04cf-451c-9a2f-bb4c1ddf724f": {
+        "expected_name": "Vinpearl Ferry Terminal",
+        "expected_osm_id": "way/674647531",
+        "expected_lat": 20.9473442,
+        "expected_lon": 107.0246525,
+        "verification_status": "unverified_secondary_media_and_article",
+        "verification_note": (
+            "Khớp tọa độ OSM way/674647531 trên đường Đỗ Sĩ Họa (Bãi Cháy), nhưng UNMATCHED trên Overture, "
+            "không có mục Wikidata/Wikipedia riêng cho nhà ga bến tàu (Q111402972 cách 720m là khách sạn trên "
+            "Đảo Rều; Q65165492 là Đảo Rều tại Cẩm Phả), và ảnh Commons gần nhất (File:越南 下龙湾码头 - panoramio.jpg, "
+            "505m) chụp tòa khách sạn trên đảo thay vì nhà bến trên đất liền."
+        ),
+        "commons_files": [],
+    },
+    "e017ba7c-a9d6-40f2-8b6b-d2bcd4b12b2c": {
+        "expected_name": "Thay Cave",
+        "expected_osm_id": "node/4755942999",
+        "expected_lat": 20.8682301,
+        "expected_lon": 107.2011143,
+        "verification_status": "unverified_secondary_media_and_article",
+        "verification_note": (
+            "Chỉ có stub OSM node/4755942999 (v1 năm 2017, natural=cave_entrance, gần Đảo Cống Đỏ); "
+            "UNMATCHED trên Overture, không có mục Wikipedia/Wikidata (tránh nhầm với Hang Thầy/Chùa Thầy "
+            "tại Quốc Oai, Hà Nội) và không có ảnh Commons định danh Hang Thầy (ảnh hang vô danh gần nhất "
+            "cách 1.255m)."
+        ),
+        "commons_files": [],
+    },
+    "bfe45852-9a6d-4915-8b6b-c0b62c6f2b97": {
+        "expected_name": "Senna Cruise",
+        "expected_osm_id": "node/7168778356",
+        "expected_lat": 20.9217133,
+        "expected_lon": 106.9840436,
+        "verification_status": "unverified_secondary_media_and_article",
+        "verification_note": (
+            "Điểm neo/check-in hãng tàu thương mại tại cảng Tuần Châu (OSM node/7168778356); UNMATCHED "
+            "trên Overture, không có mục từ Wikipedia/Wikidata hoặc ảnh Commons của đơn vị này, và chính "
+            "sách nguồn cấm thu thập/scrape website thương mại."
+        ),
+        "commons_files": [],
+    },
+    "d707d786-f31d-405c-a5ba-d1b4b500c7ab": {
+        "expected_name": "Núi Sư Tử",
+        "expected_osm_id": "node/13516003942",
+        "expected_lat": 20.9825728,
+        "expected_lon": 107.244281,
+        "verification_status": "unverified_secondary_media_and_article",
+        "verification_note": (
+            "Node OSM node/13516003942 mới tạo 2026-02-01 (v1), tọa độ thực tế thuộc phường Quang Hanh "
+            "(khu vực Cẩm Phả, cách trung tâm Hạ Long ~16km về phía Đông); UNMATCHED trên Overture và "
+            "không có bất kỳ mục Wikipedia, Wikidata hay ảnh Commons nào trong bán kính 1,5km."
+        ),
+        "commons_files": [],
+    },
+    "749168c6-43e1-40bc-886a-5c39fe5b5c74": {
+        "expected_name": "Nhạc nước",
+        "expected_osm_id": "way/677038212",
+        "expected_lat": 20.9500306,
+        "expected_lon": 107.043202,
+        "verification_status": "unverified_secondary_media_and_article",
+        "verification_note": (
+            "Tên chung 'Nhạc nước' (OSM way/677038212, amenity=fountain cạnh Quảng trường Mặt Trời, Bãi Cháy, "
+            "khác với khu nhạc nước Tuần Châu cách ~7km); UNMATCHED trên Overture, thiếu tên định danh riêng "
+            "và không có bài viết Wikipedia/Wikidata hay ảnh Commons chụp đài phun nước tại tọa độ này."
+        ),
+        "commons_files": [],
+    },
+    "317433c7-248e-4470-b4ee-fc7bee017aa3": {
+        "expected_name": "Legend Pearl",
+        "expected_osm_id": "way/683639731",
+        "expected_lat": 20.9573534,
+        "expected_lon": 106.9513676,
+        "verification_status": "unverified_secondary_media_and_article",
+        "verification_note": (
+            "Cơ sở kinh doanh trang sức ngọc trai ven Quốc lộ 18 (OSM way/683639731; khớp Overture "
+            "205b266d-9d1f-4a4b-90f4-58d5bac7dcba ở khoảng cách 13,2m nhưng lệch danh mục và không có mô tả/ảnh); "
+            "không có bài Wikipedia/Wikidata, các ảnh trại ngọc trai trên Commons nằm ngoài vịnh cách >10km."
+        ),
+        "commons_files": [],
+    },
+    "205a8100-faa1-42f0-8fa7-8c46fd60bedc": {
+        "expected_name": "Hòn Bằng",
+        "expected_osm_id": "node/6304871405",
+        "expected_lat": 20.9438694,
+        "expected_lon": 107.1032461,
+        "verification_status": "unverified_coordinate_landmass_conflict",
+        "verification_note": (
+            "Mâu thuẫn không gian: OSM node/6304871405 gắn nhãn place=island nhưng tọa độ (20.9438694, 107.1032461) "
+            "nằm trên khu đất liền đô thị ven đường Trần Quốc Nghiễn - phố Hải Lộc (khu Hồng Hải, cạnh Cung Quy hoạch "
+            "Quảng Ninh); UNMATCHED trên Overture và không có mục Wikipedia/Wikidata hay ảnh Commons xác thực."
+        ),
+        "commons_files": [],
+    },
+}
+
 
 def _strip_html(raw: str | None) -> str:
     if not raw:
@@ -400,7 +540,8 @@ def curate_pilot_60(freeze_v2_path: Path, out_path: Path, *, per_city_target: in
                     else ("media_or_article" if (dedup_images or wiki_desc_short) else "osm_factual_only")
                 ),
             }
-            if dedup_images or wiki_desc_short or len(deferred) >= 5:
+            _apply_verified_halong_audit_entry(rec, poi)
+            if rec["images"] or rec["description"] or len(deferred) >= 5:
                 chosen.append(rec)
             else:
                 deferred.append(rec)
@@ -409,15 +550,7 @@ def curate_pilot_60(freeze_v2_path: Path, out_path: Path, *, per_city_target: in
             chosen.append(deferred.pop(0))
         selected_pois.extend(chosen[:per_city_target])
 
-    stats = {
-        "total_pilot_pois": len(selected_pois),
-        "by_city": dict(Counter(p["destination_slug"] for p in selected_pois)),
-        "with_cover_image": sum(1 for p in selected_pois if p["cover_image"]),
-        "with_description": sum(1 for p in selected_pois if p["description"]),
-        "with_opening_hours": sum(1 for p in selected_pois if p["opening_hours"]),
-        "total_images": sum(len(p["images"]) for p in selected_pois),
-        "tiers": dict(Counter(p["enrichment_tier"] for p in selected_pois)),
-    }
+    stats = _compute_summary(selected_pois)
     payload = {
         "schema_version": "GOMATE_POI_PILOT_60_ENRICHMENT_V1",
         "generated_at_utc": datetime.now(timezone.utc).isoformat(),
@@ -427,16 +560,121 @@ def curate_pilot_60(freeze_v2_path: Path, out_path: Path, *, per_city_target: in
         "items": selected_pois,
     }
     out_path.parent.mkdir(parents=True, exist_ok=True)
-    out_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    out_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8", newline="\n")
     return stats
+
+
+def _compute_summary(items: list[dict[str, Any]]) -> dict[str, Any]:
+    return {
+        "total_pilot_pois": len(items),
+        "by_city": dict(Counter(p["destination_slug"] for p in items)),
+        "with_cover_image": sum(1 for p in items if p.get("cover_image")),
+        "with_description": sum(1 for p in items if p.get("description")),
+        "with_opening_hours": sum(1 for p in items if p.get("opening_hours")),
+        "total_images": sum(len(p.get("images") or []) for p in items),
+        "tiers": dict(Counter(p["enrichment_tier"] for p in items)),
+    }
+
+
+def _apply_verified_halong_audit_entry(rec: dict[str, Any], freeze_poi: dict[str, Any]) -> bool:
+    """Verify place_id, name, OSM source_id, and coordinates before attaching audited Ha Long data."""
+    entry = HALONG_MISSING_PAIR_AUDIT_V1.get(rec["place_id"])
+    if not entry:
+        return False
+
+    osm_ids = {
+        src.get("source_id")
+        for src in (freeze_poi.get("sources") or [])
+        if src.get("source_name") == "osm" and src.get("source_id")
+    }
+    lat, lon = freeze_poi.get("latitude"), freeze_poi.get("longitude")
+    if (
+        freeze_poi.get("name") != entry["expected_name"]
+        or entry["expected_osm_id"] not in osm_ids
+        or lat is None
+        or lon is None
+    ):
+        rec["verification_status"] = "identity_mismatch_skipped"
+        rec["verification_note"] = "Không khớp tên hoặc source_id OSM trong Freeze V2; bỏ qua gắn dữ liệu."
+        return False
+
+    drift_m = _haversine_m(float(lat), float(lon), float(entry["expected_lat"]), float(entry["expected_lon"]))
+    if drift_m > 50.0:
+        rec["verification_status"] = "coordinate_drift_exceeded_skipped"
+        rec["verification_note"] = f"Độ lệch tọa độ {drift_m:.1f}m vượt ngưỡng 50m; bỏ qua gắn dữ liệu."
+        return False
+
+    if entry.get("description") and not rec.get("description"):
+        rec["description"] = entry["description"]
+        rec["description_source_url"] = entry["description_source_url"]
+        rec["description_license"] = entry["description_license"]
+
+    if entry.get("commons_files") and not rec.get("images"):
+        verified_imgs: list[dict[str, Any]] = []
+        seen: set[str] = set()
+        for cf in entry["commons_files"]:
+            info = _fetch_commons_file_info(cf)
+            if info and info["url"] not in seen:
+                seen.add(info["url"])
+                verified_imgs.append(info)
+        if verified_imgs:
+            rec["cover_image"] = verified_imgs[0]["url"]
+            rec["images"] = [im["url"] for im in verified_imgs[:4]]
+            rec["image_attributions"] = verified_imgs[:4]
+
+    has_img = bool(rec.get("cover_image"))
+    has_desc = bool(rec.get("description"))
+    rec["enrichment_tier"] = (
+        "media_and_article"
+        if (has_img and has_desc)
+        else ("media_or_article" if (has_img or has_desc) else "osm_factual_only")
+    )
+    rec["verification_status"] = entry["verification_status"]
+    rec["verification_note"] = entry["verification_note"]
+    return has_img or has_desc
+
+
+def enrich_halong_missing_in_place(freeze_v2_path: Path, pilot_path: Path) -> dict[str, Any]:
+    """Process Tháp Đồng Hồ first, then remaining Ha Long POIs missing both cover_image & description."""
+    fv2 = json.loads(freeze_v2_path.read_text(encoding="utf-8"))
+    freeze_by_id = {x["place_id"]: x for x in fv2}
+    payload = json.loads(pilot_path.read_text(encoding="utf-8"))
+    items: list[dict[str, Any]] = payload["items"]
+
+    candidates = [
+        item
+        for item in items
+        if item.get("destination_slug") == "ha-long"
+        and ((not item.get("cover_image") and not item.get("description")) or item["place_id"] in HALONG_MISSING_PAIR_AUDIT_V1)
+        and item["place_id"] in HALONG_MISSING_PAIR_AUDIT_V1
+    ]
+    # Enforce starting with Tháp Đồng Hồ (65562a67-84ff-44a0-990d-31917a2a9bd0)
+    candidates.sort(key=lambda x: 0 if x["place_id"] == "65562a67-84ff-44a0-990d-31917a2a9bd0" else 1)
+
+    for item in candidates:
+        fpoi = freeze_by_id.get(item["place_id"], {})
+        _apply_verified_halong_audit_entry(item, fpoi)
+
+    payload["generated_at_utc"] = datetime.now(timezone.utc).isoformat()
+    payload["summary"] = _compute_summary(items)
+    pilot_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8", newline="\n")
+    return payload["summary"]
 
 
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--freeze-v2", type=Path, default=DEFAULT_FREEZE_V2)
     parser.add_argument("--output", type=Path, default=DEFAULT_OUTPUT)
+    parser.add_argument(
+        "--enrich-halong-missing",
+        action="store_true",
+        help="Verify & enrich Ha Long pilot POIs missing both cover_image and description in-place.",
+    )
     args = parser.parse_args()
-    stats = curate_pilot_60(args.freeze_v2, args.output)
+    if args.enrich_halong_missing:
+        stats = enrich_halong_missing_in_place(args.freeze_v2, args.output)
+    else:
+        stats = curate_pilot_60(args.freeze_v2, args.output)
     print(json.dumps(stats, ensure_ascii=False, indent=2))
     return 0
 

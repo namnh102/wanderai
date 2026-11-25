@@ -1,8 +1,13 @@
-import { Injectable, UnauthorizedException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  UnauthorizedException,
+  BadRequestException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcryptjs';
 import { PrismaService } from '../../prisma/prisma.service';
+import { AUTH_ERROR_CODES } from '../../common/constants/auth-error-codes';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import {
@@ -10,6 +15,11 @@ import {
   JwtTokenPayload,
   ValidatedJwtConfig,
 } from './jwt-config';
+
+export interface AuthTokenPair {
+  access_token: string;
+  refresh_token: string;
+}
 
 @Injectable()
 export class AuthService {
@@ -24,13 +34,16 @@ export class AuthService {
   }
 
   // Đăng ký: validate → hash password → tạo user + profile → trả tokens
-  async register(dto: RegisterDto) {
+  async register(dto: RegisterDto): Promise<AuthTokenPair> {
     const existingUser = await this.prisma.user.findUnique({
       where: { email: dto.email.toLowerCase().trim() },
     });
 
     if (existingUser) {
-      throw new BadRequestException('Email đã được sử dụng');
+      throw new BadRequestException({
+        message: 'Email đã được sử dụng',
+        errorCode: AUTH_ERROR_CODES.EMAIL_ALREADY_EXISTS,
+      });
     }
 
     const hashedPassword = await bcrypt.hash(dto.password, 12);
@@ -50,28 +63,41 @@ export class AuthService {
   }
 
   // Đăng nhập: tìm user → compare password → trả tokens
-  async login(dto: LoginDto) {
+  async login(dto: LoginDto): Promise<AuthTokenPair> {
     const user = await this.prisma.user.findUnique({
       where: { email: dto.email.toLowerCase().trim() },
       include: { profile: true },
     });
 
-    if (!user || user.deletedAt) {
-      throw new UnauthorizedException('Email hoặc mật khẩu không đúng');
+    if (!user || user.deletedAt || !user.passwordHash) {
+      throw new UnauthorizedException({
+        message: 'Email hoặc mật khẩu không đúng',
+        errorCode: AUTH_ERROR_CODES.INVALID_CREDENTIALS,
+      });
     }
 
     const isValid = await bcrypt.compare(dto.password, user.passwordHash);
     if (!isValid) {
-      throw new UnauthorizedException('Email hoặc mật khẩu không đúng');
+      throw new UnauthorizedException({
+        message: 'Email hoặc mật khẩu không đúng',
+        errorCode: AUTH_ERROR_CODES.INVALID_CREDENTIALS,
+      });
     }
 
     return this.generateTokens(user.id, user.email);
   }
 
   // Refresh token: verify signature/expiry/type → kiểm tra tài khoản active → tạo cặp tokens mới
-  async refreshToken(refreshTokenStr: string) {
-    if (!refreshTokenStr || typeof refreshTokenStr !== 'string' || !refreshTokenStr.trim()) {
-      throw new UnauthorizedException('Refresh token không hợp lệ');
+  async refreshToken(refreshTokenStr: string): Promise<AuthTokenPair> {
+    if (
+      !refreshTokenStr ||
+      typeof refreshTokenStr !== 'string' ||
+      !refreshTokenStr.trim()
+    ) {
+      throw new UnauthorizedException({
+        message: 'Refresh token không hợp lệ',
+        errorCode: AUTH_ERROR_CODES.INVALID_CREDENTIALS,
+      });
     }
 
     let payload: JwtTokenPayload;
@@ -80,7 +106,10 @@ export class AuthService {
         secret: this.jwtConfig.refreshSecret,
       });
     } catch {
-      throw new UnauthorizedException('Refresh token không hợp lệ');
+      throw new UnauthorizedException({
+        message: 'Refresh token không hợp lệ',
+        errorCode: AUTH_ERROR_CODES.INVALID_CREDENTIALS,
+      });
     }
 
     if (
@@ -89,7 +118,10 @@ export class AuthService {
       !payload.sub.trim() ||
       payload.type !== 'refresh'
     ) {
-      throw new UnauthorizedException('Refresh token không hợp lệ');
+      throw new UnauthorizedException({
+        message: 'Refresh token không hợp lệ',
+        errorCode: AUTH_ERROR_CODES.INVALID_CREDENTIALS,
+      });
     }
 
     const user = await this.prisma.user.findUnique({
@@ -97,16 +129,31 @@ export class AuthService {
     });
 
     if (!user || user.deletedAt) {
-      throw new UnauthorizedException('Refresh token không hợp lệ');
+      throw new UnauthorizedException({
+        message: 'Refresh token không hợp lệ',
+        errorCode: AUTH_ERROR_CODES.INVALID_CREDENTIALS,
+      });
     }
 
     return this.generateTokens(user.id, user.email);
   }
 
+  issueTokensForUser(userId: string, email: string): AuthTokenPair {
+    return this.generateTokens(userId, email);
+  }
+
   // Tạo cặp access + refresh tokens
-  private generateTokens(userId: string, email: string) {
-    const accessPayload: JwtTokenPayload = { sub: userId, email, type: 'access' };
-    const refreshPayload: JwtTokenPayload = { sub: userId, email, type: 'refresh' };
+  generateTokens(userId: string, email: string): AuthTokenPair {
+    const accessPayload: JwtTokenPayload = {
+      sub: userId,
+      email,
+      type: 'access',
+    };
+    const refreshPayload: JwtTokenPayload = {
+      sub: userId,
+      email,
+      type: 'refresh',
+    };
 
     const accessToken = this.jwtService.sign(accessPayload, {
       secret: this.jwtConfig.accessSecret,

@@ -37,19 +37,26 @@ enum GroupSize {
   FAMILY        // Gia đình
 }
 
+enum OAuthProvider {
+  GOOGLE
+  FACEBOOK
+}
+
 model User {
   id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   email         String    @unique
-  passwordHash  String    @map("password_hash")
+  passwordHash  String?   @map("password_hash")
   role          UserRole  @default(USER)
   isVerified    Boolean   @default(false) @map("is_verified")
   createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz
   updatedAt     DateTime  @updatedAt @map("updated_at") @db.Timestamptz
   deletedAt     DateTime? @map("deleted_at") @db.Timestamptz
 
-  profile       Profile?
-  preferences   TravelPreference?
-  trips         Trip[]
+  profile             Profile?
+  preferences         TravelPreference?
+  passwordResetTokens PasswordResetToken[]
+  oauthAccounts       OAuthAccount[]
+  trips               Trip[]
   tripMembers   TripMember[]
   reviews       Review[]
   videos        Video[]
@@ -86,6 +93,37 @@ model Profile {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("profiles")
+}
+
+model PasswordResetToken {
+  id        String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId    String    @map("user_id") @db.Uuid
+  tokenHash String    @unique @map("token_hash") @db.VarChar(64)
+  expiresAt DateTime  @map("expires_at") @db.Timestamptz
+  usedAt    DateTime? @map("used_at") @db.Timestamptz
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, usedAt])
+  @@index([expiresAt])
+  @@map("password_reset_tokens")
+}
+
+model OAuthAccount {
+  id             String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId         String        @map("user_id") @db.Uuid
+  provider       OAuthProvider
+  providerUserId String        @map("provider_user_id") @db.VarChar(255)
+  email          String?       @db.VarChar(255)
+  createdAt      DateTime      @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt      DateTime      @updatedAt @map("updated_at") @db.Timestamptz
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerUserId])
+  @@index([userId])
+  @@map("oauth_accounts")
 }
 
 model TravelPreference {
@@ -129,8 +167,9 @@ model Destination {
   updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz
   deletedAt   DateTime? @map("deleted_at") @db.Timestamptz
 
-  places      Place[]
-  trips       Trip[]
+  places         Place[]
+  trips          Trip[]
+  youtubeUpdates YoutubePoiUpdate[]
 
   @@map("destinations")
 }
@@ -172,7 +211,8 @@ model Place {
   reviews       Review[]
   itineraryItems ItineraryItem[]
 
-  placeSources  PlaceSource[]
+  placeSources    PlaceSource[]
+  youtubeUpdates  YoutubePoiUpdate[]
 
   @@map("places")
 }
@@ -708,4 +748,56 @@ model Document {
   @@index([sourceName])
   @@index([destinationId])
   @@map("documents")
+}
+
+// ============================================================
+// DYNAMIC SOCIAL FRESHNESS LAYER: YOUTUBE UPDATES
+// Isolated from primary RAG corpus (`documents`) and POI provenance (`place_sources`).
+// ============================================================
+
+enum YoutubeUpdateStatus {
+  LINKED
+  LINKED_CITY
+  UNLINKED_NO_BASIS
+}
+
+enum YoutubeUpdateScope {
+  POI
+  CITY
+  NONE
+}
+
+model YoutubePoiUpdate {
+  id                String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  dedupeKey         String              @unique @map("dedupe_key") @db.VarChar(255)
+  videoId           String              @map("video_id") @db.VarChar(32)
+  channelId         String              @map("channel_id") @db.VarChar(64)
+  channelTitle      String?             @map("channel_title") @db.VarChar(255)
+  videoUrl          String              @map("video_url") @db.VarChar(500)
+  title             String              @db.VarChar(500)
+  description       String?
+  tags              String[]            @default([])
+  latitude          Float?
+  longitude         Float?
+  publishedAt       DateTime            @map("published_at") @db.Timestamptz
+  sourceUpdatedAt   DateTime?           @map("source_updated_at") @db.Timestamptz
+  receivedAt        DateTime            @default(now()) @map("received_at") @db.Timestamptz
+  lastReceivedAt    DateTime            @default(now()) @map("last_received_at") @db.Timestamptz
+  deliveryCount     Int                 @default(1) @map("delivery_count")
+  status            YoutubeUpdateStatus @default(UNLINKED_NO_BASIS)
+  scope             YoutubeUpdateScope  @default(NONE)
+  placeId           String?             @map("place_id") @db.Uuid
+  destinationId     String?             @map("destination_id") @db.Uuid
+  groundingBasis    String?             @map("grounding_basis") @db.VarChar(100)
+  decisionReason    String              @map("decision_reason") @db.VarChar(120)
+  groundingEvidence Json?               @map("grounding_evidence")
+  rawPayload        Json?               @map("raw_payload")
+
+  place             Place?              @relation(fields: [placeId], references: [id], onDelete: SetNull)
+  destination       Destination?        @relation(fields: [destinationId], references: [id], onDelete: SetNull)
+
+  @@index([placeId, status, publishedAt(sort: Desc)])
+  @@index([destinationId, status, scope, publishedAt(sort: Desc)])
+  @@index([videoId, publishedAt(sort: Desc)])
+  @@map("youtube_poi_updates")
 }
