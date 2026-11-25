@@ -13,6 +13,7 @@ import { PlacesModule } from "./modules/places/places.module";
 import { HealthModule } from "./modules/health/health.module";
 import { MailModule } from "./modules/mail/mail.module";
 import { MatchesModule } from "./modules/matches/matches.module";
+import { GroupsModule } from "./modules/groups/groups.module";
 import { YoutubeModule } from "./modules/youtube/youtube.module";
 
 @Module({
@@ -32,6 +33,7 @@ import { YoutubeModule } from "./modules/youtube/youtube.module";
     VideosModule,
     ReviewsModule,
     MatchesModule,
+    GroupsModule,
     YoutubeModule,
     AiProxyModule,
   ],

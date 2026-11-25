@@ -262,7 +262,7 @@ export function toSafeBuddyPeerView(user: {
   };
 }
 
-const SAFE_BUDDY_USER_SELECT = {
+export const SAFE_BUDDY_USER_SELECT = {
   id: true,
   deletedAt: true,
   profile: {

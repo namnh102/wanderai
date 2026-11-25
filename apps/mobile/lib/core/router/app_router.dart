@@ -13,6 +13,8 @@ import '../../features/ai_chat/presentation/ai_chat_screen.dart';
 import '../../features/trips/presentation/trip_list_screen.dart';
 import '../../features/trips/presentation/trip_form_screen.dart';
 import '../../features/trips/presentation/trip_detail_screen.dart';
+import '../../features/groups/presentation/group_list_screen.dart';
+import '../../features/groups/presentation/group_detail_screen.dart';
 import '../../features/map/presentation/map_screen.dart';
 import '../../features/places/presentation/place_detail_screen.dart';
 import '../../features/profile/presentation/preferences_screen.dart';
@@ -184,6 +186,18 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '/trips/:id',
         builder: (context, state) => TripDetailScreen(
           tripId: state.pathParameters['id']!,
+        ),
+      ),
+      GoRoute(
+        path: '/groups',
+        builder: (context, state) => GroupListScreen(
+          initialTripId: state.uri.queryParameters['tripId'],
+        ),
+      ),
+      GoRoute(
+        path: '/groups/:id',
+        builder: (context, state) => GroupDetailScreen(
+          groupId: state.pathParameters['id']!,
         ),
       ),
       GoRoute(
