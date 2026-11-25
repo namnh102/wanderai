@@ -454,7 +454,7 @@ void main() {
       expect(find.text('Ngân sách'), findsOneWidget);
       expect(find.text('Thời gian'), findsOneWidget);
       expect(find.text('Trợ lý Wandy AI'), findsOneWidget);
-      await tester.drag(find.byType(ListView), const Offset(0, -400));
+      await tester.drag(find.byType(CustomScrollView), const Offset(0, -400));
       await tester.pumpAndSettle();
       expect(find.text('Lịch trình chi tiết'), findsOneWidget);
       expect(find.text('Ngan sach'), findsNothing);

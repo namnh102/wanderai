@@ -304,12 +304,16 @@ void main() {
       expect(find.text('123 địa điểm'), findsOneWidget);
       expect(find.text('Chưa có đánh giá'), findsWidgets);
 
-      await tester.drag(find.byType(CustomScrollView), const Offset(0, -350));
+      await tester.scrollUntilVisible(
+        find.text('Bảo tàng Lịch sử Quốc gia'),
+        250,
+        scrollable: find.byType(Scrollable).first,
+      );
       await tester.pump();
       expect(find.text('Bảo tàng Lịch sử Quốc gia'), findsOneWidget);
 
       // Scroll back and filter by Miền Nam
-      await tester.drag(find.byType(CustomScrollView), const Offset(0, 350));
+      await tester.drag(find.byType(CustomScrollView), const Offset(0, 700));
       await tester.pump();
       await tester.tap(find.byKey(const Key('home_region_south')));
       await tester.pump();

@@ -47,9 +47,14 @@ class _DestinationPlacesSheet extends ConsumerStatefulWidget {
 
 class _DestinationPlacesSheetState
     extends ConsumerState<_DestinationPlacesSheet> {
+  static const int _pageSize = 20;
   final TextEditingController _searchCtrl = TextEditingController();
+  final ScrollController _scrollCtrl = ScrollController();
   Timer? _debounce;
   int _loadSeq = 0;
+  int _page = 1;
+  bool _hasMore = false;
+  bool _loadingMore = false;
   String _activeSearch = '';
   bool _loading = true;
   String? _error;
@@ -58,14 +63,27 @@ class _DestinationPlacesSheetState
   @override
   void initState() {
     super.initState();
+    _scrollCtrl.addListener(_onScroll);
     _load();
   }
 
   @override
   void dispose() {
     _debounce?.cancel();
+    _scrollCtrl.removeListener(_onScroll);
+    _scrollCtrl.dispose();
     _searchCtrl.dispose();
     super.dispose();
+  }
+
+  void _onScroll() {
+    if (!_scrollCtrl.hasClients || _loading || _loadingMore || !_hasMore) {
+      return;
+    }
+    final pos = _scrollCtrl.position;
+    if (pos.pixels >= pos.maxScrollExtent - 200) {
+      _loadMore();
+    }
   }
 
   void _onSearchChanged(String value) {
@@ -88,20 +106,25 @@ class _DestinationPlacesSheetState
     final seq = ++_loadSeq;
     setState(() {
       _activeSearch = query;
+      _page = 1;
+      _hasMore = false;
+      _loadingMore = false;
       _loading = true;
       _error = null;
     });
     try {
       final repo = ref.read(placeRepositoryProvider);
       final items = await repo.getPlaces(
+        page: 1,
         destinationId: widget.destination.id,
         search: query.isEmpty ? null : query,
         verifiedOnly: true,
-        limit: 20,
+        limit: _pageSize,
       );
       if (!mounted || seq != _loadSeq) return;
       setState(() {
         _places = items;
+        _hasMore = items.length >= _pageSize;
         _loading = false;
       });
     } catch (_) {
@@ -111,6 +134,36 @@ class _DestinationPlacesSheetState
             'Không thể tải danh sách địa điểm của ${widget.destination.name}.';
         _loading = false;
       });
+    }
+  }
+
+  Future<void> _loadMore() async {
+    if (!mounted || _loadingMore || !_hasMore) return;
+    final seq = _loadSeq;
+    final nextPage = _page + 1;
+    setState(() => _loadingMore = true);
+    try {
+      final repo = ref.read(placeRepositoryProvider);
+      final items = await repo.getPlaces(
+        page: nextPage,
+        destinationId: widget.destination.id,
+        search: _activeSearch.isEmpty ? null : _activeSearch,
+        verifiedOnly: true,
+        limit: _pageSize,
+      );
+      if (!mounted || seq != _loadSeq) return;
+      final existingIds = _places.map((p) => p.id).toSet();
+      final appended =
+          items.where((p) => !existingIds.contains(p.id)).toList();
+      setState(() {
+        _page = nextPage;
+        _places = [..._places, ...appended];
+        _hasMore = items.length >= _pageSize && appended.isNotEmpty;
+        _loadingMore = false;
+      });
+    } catch (_) {
+      if (!mounted || seq != _loadSeq) return;
+      setState(() => _loadingMore = false);
     }
   }
 
@@ -253,11 +306,23 @@ class _DestinationPlacesSheetState
                                   : 'Chưa có địa điểm từ nguồn OpenStreetMap cho điểm đến này.',
                             )
                           : ListView.separated(
+                              controller: _scrollCtrl,
                               padding: const EdgeInsets.all(AppSpacing.md),
-                              itemCount: _places.length,
+                              itemCount: _places.length + (_loadingMore ? 1 : 0),
                               separatorBuilder: (_, __) =>
                                   const SizedBox(height: AppSpacing.sm),
                               itemBuilder: (ctx, idx) {
+                                if (idx >= _places.length) {
+                                  return const Padding(
+                                    padding: EdgeInsets.symmetric(
+                                      vertical: AppSpacing.sm,
+                                    ),
+                                    child: AppLoading(
+                                      isCompact: true,
+                                      message: 'Đang tải thêm địa điểm...',
+                                    ),
+                                  );
+                                }
                                 final place = _places[idx];
                                 return HomeVerifiedPlaceTile(
                                   key: Key('dest_place_tile_${place.id}'),

@@ -9,6 +9,8 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_radius.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
+import '../../../core/widgets/app_loading.dart';
+import '../../../core/widgets/app_state_banner.dart';
 import '../../../core/widgets/responsive_wrapper.dart';
 import '../../location/domain/geo_distance.dart';
 import '../../location/providers/user_location_provider.dart';
@@ -489,20 +491,9 @@ class _MapScreenState extends ConsumerState<MapScreen>
                       ),
                     ],
                   ),
-                  child: const Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      SizedBox(
-                        width: 16,
-                        height: 16,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
-                        ),
-                      ),
-                      SizedBox(width: 8),
-                      Text('Đang tải địa điểm...', style: AppTypography.bodyS),
-                    ],
+                  child: const AppLoading(
+                    isCompact: true,
+                    message: 'Đang tải địa điểm...',
                   ),
                 ),
               ),
@@ -557,34 +548,21 @@ class _MapScreenState extends ConsumerState<MapScreen>
           if (state.status == MapLoadingStatus.error)
             Positioned(
               top: topInset + 168,
-              left: 40,
-              right: 40,
+              left: 24,
+              right: 24,
               child: Center(
-                child: Container(
-                  constraints: const BoxConstraints(maxWidth: 400),
-                  padding: const EdgeInsets.all(AppSpacing.md),
-                  decoration: BoxDecoration(
-                    color: AppColors.errorContainer,
-                    borderRadius: AppRadius.cardRadius,
-                    border: Border.all(color: AppColors.error.withValues(alpha: 0.3)),
-                  ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(Icons.error_outline, color: AppColors.error),
-                      const SizedBox(height: AppSpacing.sm),
-                      Text(
-                        state.errorMessage ?? 'Đã xảy ra lỗi',
-                        style: AppTypography.bodyS.copyWith(color: AppColors.error),
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: AppSpacing.sm),
-                      TextButton(
-                        onPressed: () =>
-                            ref.read(mapProvider.notifier).retry(),
-                        child: const Text('Thử lại'),
-                      ),
-                    ],
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 440),
+                  child: Material(
+                    color: AppColors.surface,
+                    borderRadius: AppRadius.mdRadius,
+                    elevation: 2,
+                    child: AppStateBanner(
+                      message: state.errorMessage ?? 'Đã xảy ra lỗi',
+                      tone: AppStateBannerTone.error,
+                      actionLabel: 'Thử lại',
+                      onAction: () => ref.read(mapProvider.notifier).retry(),
+                    ),
                   ),
                 ),
               ),
@@ -843,10 +821,7 @@ class _LocationButton extends StatelessWidget {
         customChild = const SizedBox(
           width: 20,
           height: 20,
-          child: CircularProgressIndicator(
-            strokeWidth: 2,
-            valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
-          ),
+          child: Center(child: AppLoading(isCompact: true)),
         );
         break;
       case UserLocationStatus.denied:

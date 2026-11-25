@@ -9,7 +9,16 @@ const _accessTokenKey = 'access_token';
 const _refreshTokenKey = 'refresh_token';
 const _retriedRefreshExtraKey = '_retriedAuthRefresh';
 const _requestEpochExtraKey = '_authSessionEpoch';
-const _publicAuthPaths = {'/auth/login', '/auth/register', '/auth/refresh'};
+const _publicAuthPaths = {
+  '/auth/login',
+  '/auth/register',
+  '/auth/refresh',
+  '/auth/forgot-password',
+  '/auth/reset-password',
+  '/auth/reset-password/validate',
+  '/auth/oauth/google',
+  '/auth/oauth/facebook',
+};
 
 /// Notifies listeners whenever automatic JWT refresh fails cleanly on 401/403.
 final authSessionExpiredSignalProvider = StateProvider<int>((ref) => 0);
@@ -87,13 +96,19 @@ class _JwtAuthInterceptor extends Interceptor {
     final originEpoch = _sessionEpoch.current;
     options.extra[_requestEpochExtraKey] = originEpoch;
 
-    final prefs = await SharedPreferences.getInstance();
-    if (_isStale(originEpoch)) {
-      handler.reject(_staleSessionException(options));
-      return;
+    String? token;
+    try {
+      final prefs = await SharedPreferences.getInstance()
+          .timeout(const Duration(seconds: 2));
+      if (_isStale(originEpoch)) {
+        handler.reject(_staleSessionException(options));
+        return;
+      }
+      token = prefs.getString(_accessTokenKey);
+    } catch (_) {
+      // Widget tests without SharedPreferences mock or unavailable plugin store.
     }
 
-    final token = prefs.getString(_accessTokenKey);
     if (token != null && token.isNotEmpty) {
       options.headers['Authorization'] = 'Bearer $token';
     }

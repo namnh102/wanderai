@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -13,6 +14,8 @@ import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_empty_state.dart';
 import '../../../core/widgets/app_error_state.dart';
 import '../../../core/widgets/app_loading.dart';
+import '../../../core/widgets/app_state_banner.dart';
+import '../../../core/widgets/app_text_field.dart';
 import '../../../core/widgets/rating_view.dart';
 import '../../../core/widgets/responsive_wrapper.dart';
 import '../../ai_chat/providers/chat_provider.dart';
@@ -25,6 +28,7 @@ import '../data/review_repository.dart';
 import '../providers/place_detail_provider.dart';
 import 'widgets/place_mini_map.dart';
 import 'widgets/save_place_to_trip_sheet.dart';
+import 'widgets/youtube_freshness_section.dart';
 
 /// Vietnamese label for a stored category key.
 String placeCategoryLabel(String category) {
@@ -284,6 +288,15 @@ class PlaceDetailScreen extends ConsumerWidget {
               _openReviewSheet(context, ref, place);
             },
             onSaveToTrip: () => _handleSaveToTrip(context, ref, place),
+            youtubeFreshnessSection: YoutubeFreshnessSection(
+              place: place,
+              onOpenUrl: (url) => _openExternal(
+                context,
+                ref,
+                url,
+                clearBottomCta: place.hasCoordinates,
+              ),
+            ),
           );
         },
       ),
@@ -342,22 +355,18 @@ class PlaceDetailScreen extends ConsumerWidget {
                     }),
                   ),
                   const SizedBox(height: AppSpacing.xs),
-                  TextField(
+                  AppTextField(
                     key: const Key('review_content_input'),
                     controller: controller,
                     maxLines: 3,
                     enabled: !isSubmitting,
-                    decoration: const InputDecoration(
-                      hintText: 'Chia sẻ trải nghiệm thực tế của bạn...',
-                      border: OutlineInputBorder(),
-                    ),
+                    hintText: 'Chia sẻ trải nghiệm thực tế của bạn...',
                   ),
                   if (submitError != null) ...[
-                    const SizedBox(height: AppSpacing.xs),
-                    Text(
-                      submitError!,
-                      style:
-                          AppTypography.bodyS.copyWith(color: AppColors.error),
+                    const SizedBox(height: AppSpacing.sm),
+                    AppStateBanner(
+                      message: submitError!,
+                      tone: AppStateBannerTone.error,
                     ),
                   ],
                   const SizedBox(height: AppSpacing.md),
@@ -439,6 +448,7 @@ class PlaceDetailView extends StatelessWidget {
   final VoidCallback? onAskWandy;
   final VoidCallback? onWriteReview;
   final VoidCallback? onSaveToTrip;
+  final Widget? youtubeFreshnessSection;
 
   const PlaceDetailView({
     super.key,
@@ -450,6 +460,7 @@ class PlaceDetailView extends StatelessWidget {
     this.onAskWandy,
     this.onWriteReview,
     this.onSaveToTrip,
+    this.youtubeFreshnessSection,
   });
 
   @override
@@ -554,10 +565,19 @@ class PlaceDetailView extends StatelessWidget {
                           child: Container(
                             width: 256,
                             color: AppColors.surfaceContainer,
-                            child: Image.network(
-                              galleryUrls[idx],
+                            child: CachedNetworkImage(
+                              imageUrl: galleryUrls[idx],
                               fit: BoxFit.cover,
-                              errorBuilder: (_, __, ___) => Center(
+                              memCacheWidth: 512,
+                              memCacheHeight: 344,
+                              placeholder: (_, __) => Center(
+                                child: Icon(
+                                  placeCategoryIcon(place.categoryName),
+                                  size: 36,
+                                  color: catColor.withValues(alpha: 0.4),
+                                ),
+                              ),
+                              errorWidget: (_, __, ___) => Center(
                                 child: Icon(
                                   placeCategoryIcon(place.categoryName),
                                   size: 36,
@@ -823,6 +843,7 @@ class PlaceDetailView extends StatelessWidget {
                         : const _Unavailable(
                             'Địa điểm này chưa được xác minh nguồn dữ liệu.'),
                   ),
+                  if (youtubeFreshnessSection != null) youtubeFreshnessSection!,
                   const SizedBox(height: AppSpacing.md),
                 ],
               ),

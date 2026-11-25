@@ -2,6 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/router/app_router.dart';
+import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_spacing.dart';
+import '../../../core/theme/app_typography.dart';
+import '../../../core/widgets/app_button.dart';
+import '../../../core/widgets/app_state_banner.dart';
+import '../../../core/widgets/app_text_field.dart';
+import '../../../core/widgets/responsive_wrapper.dart';
+import '../data/auth_social_port.dart';
 import '../providers/auth_provider.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
@@ -17,8 +25,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _emailCtrl = TextEditingController();
   final _passCtrl = TextEditingController();
   final _formKey = GlobalKey<FormState>();
-  bool _obscure = true;
   bool _loading = false;
+  SocialAuthProvider? _socialLoading;
+  String? _inlineError;
+  AppStateBannerTone _inlineTone = AppStateBannerTone.error;
 
   @override
   void dispose() {
@@ -27,9 +37,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     super.dispose();
   }
 
+  bool get _isBusy => _loading || _socialLoading != null;
+
   Future<void> _login() async {
     if (!_formKey.currentState!.validate()) return;
-    setState(() => _loading = true);
+    setState(() {
+      _loading = true;
+      _inlineError = null;
+    });
 
     if (widget.redirectPath != null) {
       ref.read(postLoginRedirectProvider.notifier).state = widget.redirectPath;
@@ -40,23 +55,52 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           _passCtrl.text,
         );
 
-    if (mounted) {
-      setState(() => _loading = false);
+    if (!mounted) return;
+    setState(() {
+      _loading = false;
       if (!ok) {
         final errorMsg =
             ref.read(authProvider).errorMessage ?? 'Đăng nhập thất bại.';
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(errorMsg),
-            backgroundColor: Theme.of(context).colorScheme.error,
-            behavior: SnackBarBehavior.floating,
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-          ),
-        );
+        _inlineError = errorMsg;
+        _inlineTone = errorMsg.contains('kết nối mạng') ||
+                errorMsg.contains('kết nối máy chủ')
+            ? AppStateBannerTone.warning
+            : AppStateBannerTone.error;
       }
-      // On success, GoRouter redirect handles navigation automatically
+    });
+  }
+
+  Future<void> _socialLogin(SocialAuthProvider provider) async {
+    setState(() {
+      _socialLoading = provider;
+      _inlineError = null;
+    });
+
+    if (widget.redirectPath != null) {
+      ref.read(postLoginRedirectProvider.notifier).state = widget.redirectPath;
     }
+
+    final result = provider == SocialAuthProvider.google
+        ? await ref.read(authProvider.notifier).signInWithGoogle()
+        : await ref.read(authProvider.notifier).signInWithFacebook();
+
+    if (!mounted) return;
+    setState(() {
+      _socialLoading = null;
+      if (result.isError) {
+        _inlineError = result.message ?? 'Đăng nhập thất bại.';
+        _inlineTone = result.isNetworkError
+            ? AppStateBannerTone.warning
+            : AppStateBannerTone.error;
+      }
+      // On AuthActionOutcome.cancelled, stay clean with no error banner.
+    });
+  }
+
+  void _cancelLogin(String redirectPath) {
+    ref.read(postLoginRedirectProvider.notifier).state = null;
+    ref.read(guestBrowseModeProvider.notifier).state = true;
+    context.go(redirectPath);
   }
 
   @override
@@ -64,129 +108,188 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final cs = Theme.of(context).colorScheme;
     final effectiveRedirect =
         widget.redirectPath ?? ref.watch(postLoginRedirectProvider);
+    final authError = ref.watch(authProvider.select((s) => s.errorMessage));
+    final displayedError = _isBusy ? null : (_inlineError ?? authError);
 
     return Scaffold(
       body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
-            child: Form(
-              key: _formKey,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.auto_awesome, size: 64, color: cs.primary),
-                  const SizedBox(height: 8),
-                  Text('GoMate',
+        child: ResponsiveWrapper(
+          maxWidth: 520,
+          child: Center(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(AppSpacing.lg),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.auto_awesome, size: 64, color: cs.primary),
+                    const SizedBox(height: AppSpacing.sm),
+                    Text(
+                      'GoMate',
                       style:
                           Theme.of(context).textTheme.headlineMedium?.copyWith(
                                 fontWeight: FontWeight.w800,
                                 color: cs.primary,
-                              )),
-                  const SizedBox(height: 4),
-                  Text('Khám phá Việt Nam cùng AI',
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: cs.onSurfaceVariant,
-                          )),
-                  if (effectiveRedirect != null &&
-                      effectiveRedirect.startsWith('/places/')) ...[
-                    const SizedBox(height: 16),
-                    Container(
-                      key: const Key('login_redirect_notice'),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 14,
-                        vertical: 10,
-                      ),
-                      decoration: BoxDecoration(
-                        color: cs.primaryContainer.withValues(alpha: 0.45),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(Icons.bookmark_added_outlined,
-                              size: 18, color: cs.primary),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              'Đăng nhập để lưu địa điểm và quay lại ngay nơi bạn đang xem.',
-                              style: TextStyle(
-                                fontSize: 12.5,
-                                color: cs.onSurface,
-                                fontWeight: FontWeight.w500,
                               ),
-                            ),
-                          ),
-                        ],
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Khám phá Việt Nam cùng AI',
+                      style: AppTypography.bodyM
+                          .copyWith(color: AppColors.textSecondary),
+                    ),
+                    if (effectiveRedirect != null &&
+                        effectiveRedirect.startsWith('/places/')) ...[
+                      const SizedBox(height: AppSpacing.md),
+                      const AppStateBanner(
+                        key: Key('login_redirect_notice'),
+                        icon: Icons.bookmark_added_outlined,
+                        tone: AppStateBannerTone.info,
+                        message:
+                            'Đăng nhập để lưu địa điểm và quay lại ngay nơi bạn đang xem.',
                       ),
-                    ),
-                  ],
-                  const SizedBox(height: 32),
-                  TextFormField(
-                    key: const Key('login_email_input'),
-                    controller: _emailCtrl,
-                    keyboardType: TextInputType.emailAddress,
-                    decoration: const InputDecoration(
+                    ],
+                    if (displayedError != null && displayedError.isNotEmpty) ...[
+                      const SizedBox(height: AppSpacing.md),
+                      AppStateBanner(
+                        key: const Key('login_error_banner'),
+                        message: displayedError,
+                        tone: _inlineTone,
+                      ),
+                    ],
+                    const SizedBox(height: AppSpacing.lg),
+                    AppTextField(
+                      key: const Key('login_email_input'),
+                      controller: _emailCtrl,
+                      enabled: !_isBusy,
+                      keyboardType: TextInputType.emailAddress,
+                      textInputAction: TextInputAction.next,
                       labelText: 'Email',
-                      prefixIcon: Icon(Icons.email_outlined),
+                      prefixIcon: const Icon(Icons.email_outlined),
+                      validator: (v) => (v == null || !v.contains('@'))
+                          ? 'Email không hợp lệ'
+                          : null,
                     ),
-                    validator: (v) => (v == null || !v.contains('@'))
-                        ? 'Email không hợp lệ'
-                        : null,
-                  ),
-                  const SizedBox(height: 16),
-                  TextFormField(
-                    key: const Key('login_password_input'),
-                    controller: _passCtrl,
-                    obscureText: _obscure,
-                    decoration: InputDecoration(
+                    const SizedBox(height: AppSpacing.md),
+                    AppTextField(
+                      key: const Key('login_password_input'),
+                      controller: _passCtrl,
+                      enabled: !_isBusy,
+                      obscureText: true,
+                      showPasswordToggle: true,
+                      textInputAction: TextInputAction.done,
                       labelText: 'Mật khẩu',
                       prefixIcon: const Icon(Icons.lock_outlined),
-                      suffixIcon: IconButton(
-                        icon: Icon(
-                            _obscure ? Icons.visibility_off : Icons.visibility),
-                        onPressed: () => setState(() => _obscure = !_obscure),
+                      onSubmitted: (_) => _isBusy ? null : _login(),
+                      validator: (v) => (v == null || v.length < 6)
+                          ? 'Mật khẩu ít nhất 6 ký tự'
+                          : null,
+                    ),
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: TextButton(
+                        key: const Key('login_forgot_password_button'),
+                        onPressed: _isBusy
+                            ? null
+                            : () => context.push('/forgot-password'),
+                        child: const Text('Quên mật khẩu?'),
                       ),
                     ),
-                    validator: (v) => (v == null || v.length < 6)
-                        ? 'Mật khẩu ít nhất 6 ký tự'
-                        : null,
-                  ),
-                  const SizedBox(height: 24),
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
+                    const SizedBox(height: AppSpacing.sm),
+                    AppButton(
                       key: const Key('login_submit_button'),
-                      onPressed: _loading ? null : _login,
-                      child: _loading
-                          ? const SizedBox(
-                              height: 20,
-                              width: 20,
-                              child: CircularProgressIndicator(
-                                  strokeWidth: 2, color: Colors.white))
-                          : const Text('Đăng nhập'),
+                      text: 'Đăng nhập',
+                      isLoading: _loading,
+                      onPressed: _isBusy ? null : _login,
                     ),
-                  ),
-                  const SizedBox(height: 12),
-                  TextButton(
-                    key: const Key('login_go_register_button'),
-                    onPressed: () {
-                      final target = effectiveRedirect != null
-                          ? '/register?redirect=${Uri.encodeComponent(effectiveRedirect)}'
-                          : '/register';
-                      context.go(target);
-                    },
-                    child: const Text('Chưa có tài khoản? Đăng ký'),
-                  ),
-                  TextButton.icon(
-                    key: const Key('login_guest_explore_button'),
-                    onPressed: () {
-                      ref.read(guestBrowseModeProvider.notifier).state = true;
-                      context.go('/');
-                    },
-                    icon: const Icon(Icons.explore_outlined, size: 18),
-                    label: const Text('Khám phá trước khi đăng nhập'),
-                  ),
-                ],
+                    const SizedBox(height: AppSpacing.md),
+                    const Row(
+                      children: [
+                        Expanded(child: Divider()),
+                        Padding(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: AppSpacing.sm,
+                          ),
+                          child: Text(
+                            'Hoặc tiếp tục với',
+                            style: AppTypography.caption,
+                          ),
+                        ),
+                        Expanded(child: Divider()),
+                      ],
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: AppButton(
+                            key: const Key('login_google_button'),
+                            text: 'Google',
+                            icon: Icons.g_mobiledata_rounded,
+                            variant: AppButtonVariant.secondary,
+                            isLoading:
+                                _socialLoading == SocialAuthProvider.google,
+                            onPressed: _isBusy
+                                ? null
+                                : () => _socialLogin(SocialAuthProvider.google),
+                          ),
+                        ),
+                        const SizedBox(width: AppSpacing.sm),
+                        Expanded(
+                          child: AppButton(
+                            key: const Key('login_facebook_button'),
+                            text: 'Facebook',
+                            icon: Icons.facebook_rounded,
+                            variant: AppButtonVariant.secondary,
+                            isLoading:
+                                _socialLoading == SocialAuthProvider.facebook,
+                            onPressed: _isBusy
+                                ? null
+                                : () =>
+                                    _socialLogin(SocialAuthProvider.facebook),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    TextButton(
+                      key: const Key('login_go_register_button'),
+                      onPressed: _isBusy
+                          ? null
+                          : () {
+                              final target = effectiveRedirect != null
+                                  ? '/register?redirect=${Uri.encodeComponent(effectiveRedirect)}'
+                                  : '/register';
+                              context.go(target);
+                            },
+                      child: const Text('Chưa có tài khoản? Đăng ký'),
+                    ),
+                    if (effectiveRedirect != null)
+                      TextButton.icon(
+                        key: const Key('login_cancel_button'),
+                        onPressed: _isBusy
+                            ? null
+                            : () => _cancelLogin(effectiveRedirect),
+                        icon: const Icon(Icons.arrow_back_rounded, size: 18),
+                        label: const Text('Hủy đăng nhập · Quay lại'),
+                      ),
+                    TextButton.icon(
+                      key: const Key('login_guest_explore_button'),
+                      onPressed: _isBusy
+                          ? null
+                          : () {
+                              ref.read(postLoginRedirectProvider.notifier).state =
+                                  null;
+                              ref.read(guestBrowseModeProvider.notifier).state =
+                                  true;
+                              context.go('/');
+                            },
+                      icon: const Icon(Icons.explore_outlined, size: 18),
+                      label: const Text('Khám phá trước khi đăng nhập'),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),

@@ -6,9 +6,6 @@ import 'auth_models.dart';
 ///
 /// Screens/providers call this, NOT Dio directly.
 /// Handles token persistence via SharedPreferences.
-///
-/// LIMITATION: SharedPreferences stores tokens in plaintext on device.
-/// Acceptable for thesis MVP. For production, use flutter_secure_storage.
 class AuthRepository {
   final Dio _dio;
 
@@ -31,6 +28,70 @@ class AuthRepository {
     final tokens = AuthTokens.fromJson(response.data['data']);
     await _saveTokens(tokens);
     return tokens;
+  }
+
+  /// POST /auth/oauth/google
+  Future<AuthTokens> loginWithGoogle(String idToken) async {
+    final response = await _dio.post(
+      '/auth/oauth/google',
+      data: {'idToken': idToken},
+    );
+    final tokens = AuthTokens.fromJson(response.data['data']);
+    await _saveTokens(tokens);
+    return tokens;
+  }
+
+  /// POST /auth/oauth/facebook
+  Future<AuthTokens> loginWithFacebook(String accessToken) async {
+    final response = await _dio.post(
+      '/auth/oauth/facebook',
+      data: {'accessToken': accessToken},
+    );
+    final tokens = AuthTokens.fromJson(response.data['data']);
+    await _saveTokens(tokens);
+    return tokens;
+  }
+
+  /// POST /auth/forgot-password
+  Future<ForgotPasswordResult> forgotPassword(String email) async {
+    final response = await _dio.post(
+      '/auth/forgot-password',
+      data: {'email': email},
+    );
+    final raw = response.data;
+    final data = raw is Map && raw['data'] is Map
+        ? Map<String, dynamic>.from(raw['data'] as Map)
+        : const <String, dynamic>{};
+    return ForgotPasswordResult.fromJson(data);
+  }
+
+  /// GET /auth/reset-password/validate?token=...
+  Future<ResetTokenValidationResult> validateResetToken(String token) async {
+    final response = await _dio.get(
+      '/auth/reset-password/validate',
+      queryParameters: {'token': token},
+    );
+    final raw = response.data;
+    final data = raw is Map && raw['data'] is Map
+        ? Map<String, dynamic>.from(raw['data'] as Map)
+        : const <String, dynamic>{};
+    return ResetTokenValidationResult.fromJson(data);
+  }
+
+  /// POST /auth/reset-password
+  Future<ResetPasswordResult> resetPassword({
+    required String token,
+    required String newPassword,
+  }) async {
+    final response = await _dio.post(
+      '/auth/reset-password',
+      data: {'token': token, 'newPassword': newPassword},
+    );
+    final raw = response.data;
+    final data = raw is Map && raw['data'] is Map
+        ? Map<String, dynamic>.from(raw['data'] as Map)
+        : const <String, dynamic>{};
+    return ResetPasswordResult.fromJson(data);
   }
 
   /// Remove stored tokens.

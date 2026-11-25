@@ -3,16 +3,19 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../data/trip_models.dart';
 import '../data/trip_repository.dart';
 import '../../../core/network/api_client.dart';
+import '../../../core/network/api_error.dart';
 
 class TripListState {
   final List<TripModel> trips;
   final bool isLoading;
   final String? errorMessage;
+  final bool isOfflineError;
 
   const TripListState({
     this.trips = const [],
     this.isLoading = false,
     this.errorMessage,
+    this.isOfflineError = false,
   });
 
   bool get isEmpty => !isLoading && trips.isEmpty && errorMessage == null;
@@ -21,12 +24,14 @@ class TripListState {
     List<TripModel>? trips,
     bool? isLoading,
     String? errorMessage,
+    bool? isOfflineError,
     bool clearError = false,
   }) {
     return TripListState(
       trips: trips ?? this.trips,
       isLoading: isLoading ?? this.isLoading,
       errorMessage: clearError ? null : (errorMessage ?? this.errorMessage),
+      isOfflineError: clearError ? false : (isOfflineError ?? this.isOfflineError),
     );
   }
 }
@@ -54,15 +59,18 @@ class TripListNotifier extends StateNotifier<TripListState> {
       state = state.copyWith(trips: list, isLoading: false, clearError: true);
     } on DioException catch (e) {
       if (!mounted || seq != _loadSeq) return;
+      final details = ApiErrorDetails.fromDioException(e);
       state = state.copyWith(
         isLoading: false,
         errorMessage: _mapError(e),
+        isOfflineError: details.isOfflineOrTransient,
       );
     } catch (_) {
       if (!mounted || seq != _loadSeq) return;
       state = state.copyWith(
         isLoading: false,
         errorMessage: 'Không thể tải danh sách chuyến đi',
+        isOfflineError: false,
       );
     }
   }
@@ -72,10 +80,15 @@ class TripListNotifier extends StateNotifier<TripListState> {
       final created = await _repo.createTrip(request);
       state = state.copyWith(
         trips: [created, ...state.trips],
+        clearError: true,
       );
       return created;
     } on DioException catch (e) {
-      state = state.copyWith(errorMessage: _mapError(e));
+      final details = ApiErrorDetails.fromDioException(e);
+      state = state.copyWith(
+        errorMessage: _mapError(e),
+        isOfflineError: details.isOfflineOrTransient,
+      );
       return null;
     }
   }
@@ -85,21 +98,29 @@ class TripListNotifier extends StateNotifier<TripListState> {
       await _repo.deleteTrip(id);
       state = state.copyWith(
         trips: state.trips.where((t) => t.id != id).toList(),
+        clearError: true,
       );
       return true;
     } on DioException catch (e) {
-      state = state.copyWith(errorMessage: _mapError(e));
+      final details = ApiErrorDetails.fromDioException(e);
+      state = state.copyWith(
+        errorMessage: _mapError(e),
+        isOfflineError: details.isOfflineOrTransient,
+      );
       return false;
     }
   }
 
   String _mapError(DioException e) {
-    if (e.response?.statusCode == 401) {
+    final details = ApiErrorDetails.fromDioException(e);
+    if (details.isNetworkError) {
+      return 'Không có kết nối mạng. Vui lòng kiểm tra kết nối và thử lại.';
+    }
+    if (details.statusCode == 401) {
       return 'Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.';
     }
-    final data = e.response?.data;
-    if (data is Map && data['message'] is String) {
-      return data['message'] as String;
+    if (details.message != null) {
+      return details.message!;
     }
     return 'Lỗi kết nối đến máy chủ. Vui lòng thử lại.';
   }
@@ -285,15 +306,18 @@ class TripDetailNotifier extends StateNotifier<TripDetailState> {
   }
 
   String _mapError(DioException e) {
-    if (e.response?.statusCode == 403) {
+    final details = ApiErrorDetails.fromDioException(e);
+    if (details.isNetworkError) {
+      return 'Không có kết nối mạng. Vui lòng kiểm tra kết nối và thử lại.';
+    }
+    if (details.statusCode == 403) {
       return 'Bạn không có quyền truy cập chuyến đi này.';
     }
-    if (e.response?.statusCode == 404) {
+    if (details.statusCode == 404) {
       return 'Chuyến đi không tồn tại hoặc đã bị xóa.';
     }
-    final data = e.response?.data;
-    if (data is Map && data['message'] is String) {
-      return data['message'] as String;
+    if (details.message != null) {
+      return details.message!;
     }
     return 'Lỗi kết nối. Vui lòng thử lại.';
   }

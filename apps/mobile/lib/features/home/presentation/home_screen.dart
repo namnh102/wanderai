@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -412,10 +413,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                           child: p.coverImage != null &&
                                                   p.coverImage!
                                                       .startsWith('http')
-                                              ? Image.network(
-                                                  p.coverImage!,
+                                              ? CachedNetworkImage(
+                                                  imageUrl: p.coverImage!,
                                                   fit: BoxFit.cover,
-                                                  errorBuilder: (_, __, ___) =>
+                                                  memCacheWidth: 448,
+                                                  memCacheHeight: 196,
+                                                  placeholder: (_, __) => Icon(
+                                                    placeCategoryIcon(
+                                                        p.categoryName),
+                                                    color: color,
+                                                    size: 32,
+                                                  ),
+                                                  errorWidget: (_, __, ___) =>
                                                       Icon(
                                                     placeCategoryIcon(
                                                         p.categoryName),
@@ -476,21 +485,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 ),
 
               // ─── Nearby & Verified Places Section ───
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(
-                    AppSpacing.md,
-                    AppSpacing.lg,
-                    AppSpacing.md,
-                    AppSpacing.xxl,
-                  ),
-                  child: _buildPlacesDiscoverySection(
-                    context,
-                    homeState,
-                    locationState,
-                    isWide,
-                  ),
-                ),
+              ..._buildPlacesDiscoverySlivers(
+                context,
+                homeState,
+                locationState,
+                isWide,
               ),
             ],
           );
@@ -499,7 +498,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
-  Widget _buildPlacesDiscoverySection(
+  List<Widget> _buildPlacesDiscoverySlivers(
     BuildContext context,
     HomeState homeState,
     UserLocationState locationState,
@@ -508,80 +507,103 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final bool hasGps = locationState.position != null;
     final List<PlaceModel> placesToShow =
         hasGps ? homeState.nearbyPlaces : homeState.featuredPlaces;
+    final visiblePlaces = placesToShow.take(isWide ? 6 : 5).toList();
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        AppSectionHeader(
-          title: hasGps ? 'Địa điểm gần bạn' : 'Địa điểm đã xác minh',
-          subtitle: hasGps
-              ? 'Dữ liệu OpenStreetMap quanh vị trí hiện tại'
-              : 'Nguồn OpenStreetMap đã qua kiểm chứng',
-          actionLabel: 'Mở Bản đồ →',
-          onAction: () => context.go('/map'),
-        ),
-        const SizedBox(height: AppSpacing.sm),
-        if (!hasGps) ...[
-          _LocationPromptCard(
-            locationState: locationState,
-            onEnableLocation: _onEnableLocation,
+    return [
+      SliverToBoxAdapter(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.md,
+            AppSpacing.lg,
+            AppSpacing.md,
+            AppSpacing.sm,
           ),
-          const SizedBox(height: AppSpacing.md),
-        ] else if (locationState.label != null) ...[
-          AppBadge(
-            label: locationState.label!,
-            icon: Icons.my_location_rounded,
-            color: AppColors.primary,
-            backgroundColor: AppColors.primaryContainer,
-          ),
-          const SizedBox(height: AppSpacing.mdSmall),
-        ],
-        if (hasGps && homeState.isNearbyLoading)
-          const AppLoading(
-            isCompact: true,
-            message: 'Đang tìm địa điểm quanh bạn...',
-          )
-        else if (placesToShow.isEmpty)
-          AppStateBanner(
-            message: hasGps
-                ? 'Chưa tìm thấy địa điểm xác minh nào trong bán kính 10 km quanh bạn.'
-                : 'Chưa tải được danh sách địa điểm xác minh.',
-            actionLabel: 'Xem bản đồ',
-            onAction: () => context.go('/map'),
-          )
-        else if (isWide)
-          Wrap(
-            spacing: AppSpacing.mdSmall,
-            runSpacing: AppSpacing.mdSmall,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              for (final p in placesToShow.take(6))
-                SizedBox(
-                  width: 480,
-                  child: HomeVerifiedPlaceTile(
-                    key: Key('home_place_${p.id}'),
-                    place: p,
-                    userPosition: locationState.position,
-                    onTap: () => context.push('/places/${p.id}'),
-                  ),
+              AppSectionHeader(
+                title: hasGps ? 'Địa điểm gần bạn' : 'Địa điểm đã xác minh',
+                subtitle: hasGps
+                    ? 'Dữ liệu OpenStreetMap quanh vị trí hiện tại'
+                    : 'Nguồn OpenStreetMap đã qua kiểm chứng',
+                actionLabel: 'Mở Bản đồ →',
+                onAction: () => context.go('/map'),
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              if (!hasGps) ...[
+                _LocationPromptCard(
+                  locationState: locationState,
+                  onEnableLocation: _onEnableLocation,
                 ),
-            ],
-          )
-        else
-          Column(
-            children: [
-              for (final p in placesToShow.take(5)) ...[
-                HomeVerifiedPlaceTile(
-                  key: Key('home_place_${p.id}'),
-                  place: p,
-                  userPosition: locationState.position,
-                  onTap: () => context.push('/places/${p.id}'),
+                const SizedBox(height: AppSpacing.md),
+              ] else if (locationState.label != null) ...[
+                AppBadge(
+                  label: locationState.label!,
+                  icon: Icons.my_location_rounded,
+                  color: AppColors.primary,
+                  backgroundColor: AppColors.primaryContainer,
                 ),
-                const SizedBox(height: AppSpacing.sm),
+                const SizedBox(height: AppSpacing.mdSmall),
               ],
+              if (hasGps && homeState.isNearbyLoading)
+                const AppLoading(
+                  isCompact: true,
+                  message: 'Đang tìm địa điểm quanh bạn...',
+                )
+              else if (placesToShow.isEmpty)
+                AppStateBanner(
+                  message: hasGps
+                      ? 'Chưa tìm thấy địa điểm xác minh nào trong bán kính 10 km quanh bạn.'
+                      : 'Chưa tải được danh sách địa điểm xác minh.',
+                  actionLabel: 'Xem bản đồ',
+                  onAction: () => context.go('/map'),
+                )
+              else if (isWide)
+                Wrap(
+                  spacing: AppSpacing.mdSmall,
+                  runSpacing: AppSpacing.mdSmall,
+                  children: [
+                    for (final p in visiblePlaces)
+                      SizedBox(
+                        width: 480,
+                        child: HomeVerifiedPlaceTile(
+                          key: Key('home_place_${p.id}'),
+                          place: p,
+                          userPosition: locationState.position,
+                          onTap: () => context.push('/places/${p.id}'),
+                        ),
+                      ),
+                  ],
+                ),
             ],
           ),
-      ],
-    );
+        ),
+      ),
+      if (!isWide && !(hasGps && homeState.isNearbyLoading) && visiblePlaces.isNotEmpty)
+        SliverPadding(
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.md,
+            0,
+            AppSpacing.md,
+            AppSpacing.xxl,
+          ),
+          sliver: SliverList.separated(
+            itemCount: visiblePlaces.length,
+            separatorBuilder: (_, __) => const SizedBox(height: AppSpacing.sm),
+            itemBuilder: (context, index) {
+              final p = visiblePlaces[index];
+              return HomeVerifiedPlaceTile(
+                key: Key('home_place_${p.id}'),
+                place: p,
+                userPosition: locationState.position,
+                onTap: () => context.push('/places/${p.id}'),
+              );
+            },
+          ),
+        )
+      else
+        const SliverToBoxAdapter(child: SizedBox(height: AppSpacing.xxl)),
+    ];
   }
 }
 

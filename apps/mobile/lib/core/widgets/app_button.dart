@@ -4,7 +4,7 @@ import '../theme/app_radius.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_typography.dart';
 
-enum AppButtonVariant { primary, secondary, ai, tonal }
+enum AppButtonVariant { primary, secondary, ai, tonal, danger }
 
 /// Unified GoMate Button component.
 /// Source of truth: docs/design/gomate-design-system-ux-spec-v1.md Section 4.2 - 4.4
@@ -51,6 +51,10 @@ class AppButton extends StatelessWidget {
       case AppButtonVariant.tonal:
         bgColor = AppColors.primaryContainer;
         fgColor = AppColors.onPrimaryContainer;
+        break;
+      case AppButtonVariant.danger:
+        bgColor = AppColors.error;
+        fgColor = AppColors.onError;
         break;
     }
 
