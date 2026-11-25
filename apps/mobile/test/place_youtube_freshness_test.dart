@@ -255,6 +255,47 @@ void main() {
         'Cập nhật gần đây',
       );
     });
+
+    test('GAP-11: malformed or missing publishedAt/receivedAt never masquerades as realtime', () {
+      final receivedAt = DateTime.utc(2026, 11, 25, 1, 50, 0);
+      final malformed = YoutubeUpdateModel.fromJson({
+        'id': 'u-bad-date',
+        'placeId': _clockTowerId,
+        'scope': 'POI',
+        'source': 'youtube',
+        'channelId': 'UC1',
+        'videoId': 'vidBad',
+        'publishedAt': 'not-a-date',
+        'receivedAt': receivedAt.toIso8601String(),
+      });
+
+      expect(malformed.hasValidPublishedAt, isFalse);
+      expect(malformed.hasValidReceivedAt, isTrue);
+      expect(malformed.publishedAt, isNot(receivedAt));
+      expect(malformed.isRealtimeAt(receivedAt), isFalse);
+      expect(malformed.freshnessBadgeLabelAt(receivedAt), 'Cập nhật gần đây');
+
+      final missingBoth = YoutubeUpdateModel.fromJson({
+        'id': 'u-missing-dates',
+        'placeId': _clockTowerId,
+        'scope': 'POI',
+        'source': 'youtube',
+        'channelId': 'UC1',
+        'videoId': 'vidMissing',
+      });
+      expect(missingBoth.hasValidPublishedAt, isFalse);
+      expect(missingBoth.hasValidReceivedAt, isFalse);
+      expect(
+        missingBoth.isRealtimeAt(DateTime.fromMillisecondsSinceEpoch(0, isUtc: true)),
+        isFalse,
+      );
+      expect(
+        missingBoth.freshnessBadgeLabelAt(
+          DateTime.fromMillisecondsSinceEpoch(0, isUtc: true),
+        ),
+        'Cập nhật gần đây',
+      );
+    });
   });
 
   group('PlaceDetailScreen YouTube freshness UI', () {
@@ -558,6 +599,52 @@ void main() {
         expect(find.byKey(const Key('youtube_updates_error_banner')), findsNothing);
         expect(find.text('place_id: $_clockTowerId'), findsOneWidget);
         expect(find.text('Thời gian thực'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'GAP-11: malformed publishedAt renders fallback text and never shows "Thời gian thực"',
+      (tester) async {
+        SharedPreferences.setMockInitialValues({});
+        final fixedNow = DateTime.utc(2026, 11, 25, 1, 50, 0);
+        final backend = _YoutubeTestBackendAdapter(
+          onYoutubePlace: (_) async => _YoutubeTestBackendAdapter.jsonResponse(
+            200,
+            {
+              'success': true,
+              'data': {
+                'placeId': _clockTowerId,
+                'placeName': 'Tháp Đồng Hồ',
+                'destinationName': 'Hạ Long',
+                'serverDeliveredAt': '2026-11-25T01:50:00.000Z',
+                'realtimeSlaMaxLatencyMs': 300000,
+                'total': 1,
+                'items': [
+                  _poiUpdateItem(
+                    id: 'yt-malformed',
+                    publishedAt: 'not-a-date',
+                    receivedAt: '2026-11-25T01:50:00.000Z',
+                    ingestLatencyMs: 0,
+                  ),
+                ],
+                'cityFallbackTotal': 0,
+                'cityFallbackItems': [],
+              },
+            },
+          ),
+        );
+
+        await tester.pumpWidget(_buildScreen(backend: backend, fixedNow: fixedNow));
+        await _pump(tester, 8);
+
+        await tester.ensureVisible(
+          find.byKey(const Key('place_youtube_freshness_section')),
+        );
+        await _pump(tester, 2);
+
+        expect(find.text('Thời gian thực'), findsNothing);
+        expect(find.text('Cập nhật gần đây'), findsOneWidget);
+        expect(find.text('Xuất bản: Không rõ thời điểm xuất bản'), findsOneWidget);
       },
     );
   });

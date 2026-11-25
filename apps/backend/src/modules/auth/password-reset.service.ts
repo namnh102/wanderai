@@ -216,7 +216,10 @@ export class PasswordResetService {
 
       await tx.user.update({
         where: { id: record.userId },
-        data: { passwordHash: hashedPassword },
+        data: {
+          passwordHash: hashedPassword,
+          tokenVersion: { increment: 1 },
+        },
       });
 
       await tx.passwordResetToken.updateMany({

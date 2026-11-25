@@ -244,7 +244,10 @@ export class PlacesService {
     // Trust boundary (W3-04 / PDG-004): a place without any provenance source is a legacy seed record, not a
     // verified tourism POI. It is not publicly servable. (No itinerary item or mobile path references them.)
     if (!place || place.deletedAt || place.placeSources.length === 0) {
-      throw new NotFoundException(`Place with ID "${id}" not found`);
+      throw new NotFoundException({
+        message: `Place with ID "${id}" not found`,
+        errorCode: 'PLACE_NOT_FOUND',
+      });
     }
 
     const osm = place.placeSources.find((s) => s.sourceName === 'osm');

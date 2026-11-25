@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
-import { IsNotEmpty, IsString } from 'class-validator';
+import { IsNotEmpty, IsString, MaxLength } from 'class-validator';
 
 export class GoogleOAuthDto {
   @ApiProperty({ example: 'eyJhbGciOiJSUzI1NiIsImtpZCI6...' })
@@ -9,5 +9,6 @@ export class GoogleOAuthDto {
   )
   @IsString()
   @IsNotEmpty()
+  @MaxLength(8192)
   idToken: string;
 }

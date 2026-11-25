@@ -230,43 +230,139 @@ export class TripsService {
     return { message: 'Đã xóa chuyến đi thành công' };
   }
 
+  private async _assertVerifiedPlaces(placeIds: Array<string | undefined>): Promise<void> {
+    const uniqueIds = Array.from(
+      new Set(
+        placeIds
+          .filter((id): id is string => typeof id === 'string' && id.trim().length > 0)
+          .map((id) => id.trim()),
+      ),
+    );
+    if (uniqueIds.length === 0) {
+      return;
+    }
+
+    const found = await this.prisma.place.findMany({
+      where: {
+        id: { in: uniqueIds },
+        deletedAt: null,
+        placeSources: { some: {} },
+      },
+      select: { id: true },
+    });
+    const foundSet = new Set(found.map((p) => p.id));
+    const missingId = uniqueIds.find((id) => !foundSet.has(id));
+    if (missingId) {
+      throw new NotFoundException({
+        message: `Place with ID "${missingId}" not found`,
+        errorCode: 'PLACE_NOT_FOUND',
+      });
+    }
+  }
+
   // POST /trips/:id/itinerary — thêm hoạt động
-  async addItineraryItem(tripId: string, userId: string, data: AddItineraryDto) {
+  async addItineraryItem(
+    tripId: string,
+    userId: string,
+    data: AddItineraryDto,
+    idempotencyKey?: string,
+  ) {
     await this.findById(tripId, userId); // Authorization check
 
-    // Upsert itinerary for dayNumber
-    const itinerary = await this.prisma.itinerary.upsert({
-      where: { tripId_dayNumber: { tripId, dayNumber: data.dayNumber } },
-      create: { tripId, dayNumber: data.dayNumber },
-      update: {},
-    });
+    if (data.placeId) {
+      await this._assertVerifiedPlaces([data.placeId]);
+    }
 
-    // Calculate orderIndex
-    const count = await this.prisma.itineraryItem.count({
-      where: { itineraryId: itinerary.id },
-    });
+    const rawRequestId = data.clientRequestId?.trim() || idempotencyKey?.trim();
+    const effectiveClientRequestId =
+      rawRequestId && rawRequestId.length > 0
+        ? rawRequestId.slice(0, 128)
+        : undefined;
 
-    const item = await this.prisma.itineraryItem.create({
-      data: {
-        itineraryId: itinerary.id,
-        placeId: data.placeId,
-        orderIndex: count + 1,
-        startTime: data.startTime,
-        endTime: data.endTime,
-        activity: data.activity.trim(),
-        notes: data.notes?.trim(),
-        estimatedCost: data.estimatedCost,
-        transportMode: data.transportMode,
-      },
-      include: {
-        place: { select: { id: true, name: true, address: true } },
-      },
-    });
+    return this.prisma.$transaction(async (tx) => {
+      // Upsert itinerary for dayNumber
+      const itinerary = await tx.itinerary.upsert({
+        where: { tripId_dayNumber: { tripId, dayNumber: data.dayNumber } },
+        create: { tripId, dayNumber: data.dayNumber },
+        update: {},
+      });
 
-    return {
-      ...item,
-      dayNumber: itinerary.dayNumber,
-    };
+      if (effectiveClientRequestId) {
+        const existing = await tx.itineraryItem.findFirst({
+          where: {
+            itineraryId: itinerary.id,
+            clientRequestId: effectiveClientRequestId,
+          },
+          include: {
+            place: { select: { id: true, name: true, address: true } },
+          },
+        });
+        if (existing) {
+          return {
+            ...existing,
+            dayNumber: itinerary.dayNumber,
+          };
+        }
+      }
+
+      // Compute orderIndex from MAX(orderIndex) + 1 to avoid collisions after deletions
+      const lastItem = await tx.itineraryItem.findFirst({
+        where: { itineraryId: itinerary.id },
+        orderBy: { orderIndex: 'desc' },
+        select: { orderIndex: true },
+      });
+      const nextOrderIndex = (lastItem?.orderIndex ?? 0) + 1;
+
+      try {
+        const item = await tx.itineraryItem.create({
+          data: {
+            itineraryId: itinerary.id,
+            placeId: data.placeId,
+            ...(effectiveClientRequestId
+              ? { clientRequestId: effectiveClientRequestId }
+              : {}),
+            orderIndex: nextOrderIndex,
+            startTime: data.startTime,
+            endTime: data.endTime,
+            activity: data.activity.trim(),
+            notes: data.notes?.trim(),
+            estimatedCost: data.estimatedCost,
+            transportMode: data.transportMode,
+          },
+          include: {
+            place: { select: { id: true, name: true, address: true } },
+          },
+        });
+
+        return {
+          ...item,
+          dayNumber: itinerary.dayNumber,
+        };
+      } catch (error) {
+        const code =
+          typeof error === 'object' && error !== null && 'code' in error
+            ? (error as { code?: unknown }).code
+            : undefined;
+        if (code === 'P2002' && effectiveClientRequestId) {
+          const existing = await tx.itineraryItem.findFirst({
+            where: {
+              itineraryId: itinerary.id,
+              clientRequestId: effectiveClientRequestId,
+            },
+            include: {
+              place: { select: { id: true, name: true, address: true } },
+            },
+          });
+          if (existing) {
+            return {
+              ...existing,
+              dayNumber: itinerary.dayNumber,
+            };
+          }
+        }
+        throw error;
+      }
+    });
   }
 
   // DELETE /trips/:id/itinerary/:itemId
@@ -414,6 +510,22 @@ export class TripsService {
       throw new BadRequestException('Danh sách ngày lịch trình không được để trống');
     }
 
+    const seenDayNumbers = new Set<number>();
+    const allPlaceIds: Array<string | undefined> = [];
+    for (const day of dto.days) {
+      if (seenDayNumbers.has(day.dayNumber)) {
+        throw new BadRequestException(`Ngày ${day.dayNumber} bị trùng lặp trong lịch trình`);
+      }
+      seenDayNumbers.add(day.dayNumber);
+      for (const item of day.items ?? []) {
+        if (item.placeId) {
+          allPlaceIds.push(item.placeId);
+        }
+      }
+    }
+
+    await this._assertVerifiedPlaces(allPlaceIds);
+
     await this.prisma.$transaction(async (tx) => {
       if (dto.replaceExisting !== false) {
         // Delete all existing items and itineraries for this trip
@@ -441,11 +553,24 @@ export class TripsService {
         });
 
         if (day.items && day.items.length > 0) {
-          for (const item of day.items) {
+          let existingMaxOrder = 0;
+          if (dto.replaceExisting === false) {
+            const lastItem = await tx.itineraryItem.findFirst({
+              where: { itineraryId: itinerary.id },
+              orderBy: { orderIndex: 'desc' },
+              select: { orderIndex: true },
+            });
+            existingMaxOrder = lastItem?.orderIndex ?? 0;
+          }
+
+          for (let idx = 0; idx < day.items.length; idx++) {
+            const item = day.items[idx];
+            const effectiveOrderIndex =
+              existingMaxOrder > 0 ? existingMaxOrder + idx + 1 : item.orderIndex;
             await tx.itineraryItem.create({
               data: {
                 itineraryId: itinerary.id,
-                orderIndex: item.orderIndex,
+                orderIndex: effectiveOrderIndex,
                 activity: item.activity.trim(),
                 startTime: item.startTime,
                 endTime: item.endTime,

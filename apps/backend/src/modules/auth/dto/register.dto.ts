@@ -1,5 +1,5 @@
 import { Transform } from 'class-transformer';
-import { IsEmail, IsNotEmpty, IsString, MinLength } from 'class-validator';
+import { IsEmail, IsNotEmpty, IsString, MaxLength, MinLength } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class RegisterDto {
@@ -8,11 +8,13 @@ export class RegisterDto {
     typeof value === 'string' ? value.trim() : value,
   )
   @IsEmail()
+  @MaxLength(255)
   email: string;
 
   @ApiProperty({ example: 'strongpassword123' })
   @IsString()
   @MinLength(6)
+  @MaxLength(128)
   password: string;
 
   @ApiProperty({ example: 'John Doe' })
@@ -21,5 +23,6 @@ export class RegisterDto {
   )
   @IsString()
   @IsNotEmpty()
+  @MaxLength(120)
   name: string;
 }

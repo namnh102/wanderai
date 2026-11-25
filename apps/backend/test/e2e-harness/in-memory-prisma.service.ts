@@ -29,6 +29,7 @@ interface StoredUser {
   passwordHash: string | null;
   role: UserRole;
   isVerified: boolean;
+  tokenVersion: number;
   createdAt: Date;
   updatedAt: Date;
   deletedAt: Date | null;
@@ -214,6 +215,7 @@ interface StoredItineraryItem {
   id: string;
   itineraryId: string;
   placeId: string | null;
+  clientRequestId: string | null;
   orderIndex: number;
   startTime: string | null;
   endTime: string | null;
@@ -861,6 +863,7 @@ export class InMemoryPrismaService implements OnModuleInit, OnModuleDestroy {
         passwordHash: args.data.passwordHash ?? null,
         role: args.data.role ?? UserRole.USER,
         isVerified: args.data.isVerified ?? false,
+        tokenVersion: 0,
         createdAt: now,
         updatedAt: now,
         deletedAt: args.data.deletedAt ?? null,
@@ -897,7 +900,11 @@ export class InMemoryPrismaService implements OnModuleInit, OnModuleDestroy {
 
     update: async (args: {
       where: { id: string };
-      data: { passwordHash?: string | null; isVerified?: boolean };
+      data: {
+        passwordHash?: string | null;
+        isVerified?: boolean;
+        tokenVersion?: number | { increment: number };
+      };
       include?: Record<string, unknown>;
     }) => {
       const existing = this.users.get(args.where.id);
@@ -909,6 +916,16 @@ export class InMemoryPrismaService implements OnModuleInit, OnModuleDestroy {
       }
       if (args.data.isVerified !== undefined) {
         existing.isVerified = args.data.isVerified;
+      }
+      if (typeof args.data.tokenVersion === 'number') {
+        existing.tokenVersion = args.data.tokenVersion;
+      } else if (
+        args.data.tokenVersion &&
+        typeof args.data.tokenVersion === 'object' &&
+        'increment' in args.data.tokenVersion
+      ) {
+        existing.tokenVersion =
+          (existing.tokenVersion ?? 0) + args.data.tokenVersion.increment;
       }
       existing.updatedAt = new Date();
       return this.hydrateUser(existing, args.include);
@@ -1326,6 +1343,7 @@ export class InMemoryPrismaService implements OnModuleInit, OnModuleDestroy {
   }
 
   private filterPlaces(where?: {
+    id?: string | { in?: string[] };
     deletedAt?: null;
     destinationId?: string;
     placeSources?: { some?: Record<string, unknown> };
@@ -1337,6 +1355,16 @@ export class InMemoryPrismaService implements OnModuleInit, OnModuleDestroy {
     }>;
   }): StoredPlace[] {
     return Array.from(this.places.values()).filter((p) => {
+      if (where?.id !== undefined) {
+        if (typeof where.id === 'string' && p.id !== where.id) return false;
+        if (
+          typeof where.id === 'object' &&
+          Array.isArray(where.id.in) &&
+          !where.id.in.includes(p.id)
+        ) {
+          return false;
+        }
+      }
       if (where?.deletedAt === null && p.deletedAt !== null) return false;
       if (where?.destinationId && p.destinationId !== where.destinationId) {
         return false;
@@ -1375,6 +1403,7 @@ export class InMemoryPrismaService implements OnModuleInit, OnModuleDestroy {
     findMany: async (
       args: {
         where?: {
+          id?: string | { in?: string[] };
           deletedAt?: null;
           destinationId?: string;
           placeSources?: { some?: Record<string, unknown> };
@@ -1854,6 +1883,7 @@ export class InMemoryPrismaService implements OnModuleInit, OnModuleDestroy {
       data: {
         itineraryId: string;
         placeId?: string;
+        clientRequestId?: string;
         orderIndex: number;
         startTime?: string;
         endTime?: string;
@@ -1863,11 +1893,24 @@ export class InMemoryPrismaService implements OnModuleInit, OnModuleDestroy {
         transportMode?: string;
       };
     }) => {
+      if (args.data.clientRequestId) {
+        const dup = Array.from(this.itineraryItems.values()).find(
+          (item) =>
+            item.itineraryId === args.data.itineraryId &&
+            item.clientRequestId === args.data.clientRequestId,
+        );
+        if (dup) {
+          throw createP2002Error(
+            'Unique constraint failed on (itineraryId, clientRequestId)',
+          );
+        }
+      }
       const now = new Date();
       const row: StoredItineraryItem = {
         id: randomUUID(),
         itineraryId: args.data.itineraryId,
         placeId: args.data.placeId ?? null,
+        clientRequestId: args.data.clientRequestId ?? null,
         orderIndex: args.data.orderIndex,
         startTime: args.data.startTime ?? null,
         endTime: args.data.endTime ?? null,
@@ -1895,15 +1938,71 @@ export class InMemoryPrismaService implements OnModuleInit, OnModuleDestroy {
     },
 
     findFirst: async (args: {
-      where: { id: string; itinerary?: { tripId: string } };
+      where: {
+        id?: string;
+        itineraryId?: string;
+        clientRequestId?: string;
+        itinerary?: { tripId: string };
+      };
+      orderBy?: { orderIndex?: 'asc' | 'desc' };
+      select?: Record<string, boolean>;
+      include?: Record<string, unknown>;
     }) => {
-      const item = this.itineraryItems.get(args.where.id);
-      if (!item) return null;
-      if (args.where.itinerary?.tripId) {
-        const it = this.itineraries.get(item.itineraryId);
-        if (!it || it.tripId !== args.where.itinerary.tripId) return null;
+      const matches = Array.from(this.itineraryItems.values()).filter(
+        (item) => {
+          if (args.where.id && item.id !== args.where.id) return false;
+          if (
+            args.where.itineraryId &&
+            item.itineraryId !== args.where.itineraryId
+          ) {
+            return false;
+          }
+          if (
+            args.where.clientRequestId !== undefined &&
+            item.clientRequestId !== args.where.clientRequestId
+          ) {
+            return false;
+          }
+          if (args.where.itinerary?.tripId) {
+            const it = this.itineraries.get(item.itineraryId);
+            if (!it || it.tripId !== args.where.itinerary.tripId) return false;
+          }
+          return true;
+        },
+      );
+      if (matches.length === 0) return null;
+      if (args.orderBy?.orderIndex === 'desc') {
+        matches.sort((a, b) => b.orderIndex - a.orderIndex);
+      } else if (args.orderBy?.orderIndex === 'asc') {
+        matches.sort((a, b) => a.orderIndex - b.orderIndex);
       }
-      return item;
+      const item = matches[0];
+      const place = item.placeId
+        ? (this.places.get(item.placeId) ?? null)
+        : null;
+      if (args.select) {
+        const selected: Record<string, unknown> = {};
+        for (const [k, enabled] of Object.entries(args.select)) {
+          if (enabled && k in item) {
+            selected[k] = item[k as keyof StoredItineraryItem];
+          }
+        }
+        return selected;
+      }
+      return {
+        ...item,
+        ...(args.include?.place
+          ? {
+              place: place
+                ? {
+                    id: place.id,
+                    name: place.name,
+                    address: place.address,
+                  }
+                : null,
+            }
+          : {}),
+      };
     },
 
     delete: async (args: { where: { id: string } }) => {

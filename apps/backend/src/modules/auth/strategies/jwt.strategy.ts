@@ -45,6 +45,14 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       throw new UnauthorizedException('Tài khoản không tồn tại hoặc đã bị vô hiệu hóa');
     }
 
+    const currentVersion = user.tokenVersion ?? 0;
+    if (
+      (currentVersion > 0 && payload.tv !== currentVersion) ||
+      (payload.tv !== undefined && payload.tv !== currentVersion)
+    ) {
+      throw new UnauthorizedException('Phiên đăng nhập đã bị thu hồi');
+    }
+
     return user;
   }
 }

@@ -47,6 +47,8 @@ class _SavePlaceToTripSheet extends ConsumerStatefulWidget {
 class _SavePlaceToTripSheetState extends ConsumerState<_SavePlaceToTripSheet> {
   String? _selectedTripId;
   TripModel? _createdPendingTrip;
+  String? _pendingClientRequestId;
+  String? _pendingRequestScope;
   bool _createNewMode = false;
   int _selectedDay = 1;
   bool _saving = false;
@@ -176,6 +178,14 @@ class _SavePlaceToTripSheetState extends ConsumerState<_SavePlaceToTripSheet> {
         }
       }
 
+      final requestScope = '${targetTrip.id}:$_selectedDay:${widget.place.id}';
+      if (_pendingClientRequestId == null ||
+          _pendingRequestScope != requestScope) {
+        _pendingRequestScope = requestScope;
+        _pendingClientRequestId =
+            'save-${DateTime.now().microsecondsSinceEpoch}-${widget.place.id}';
+      }
+
       await ref.read(tripRepositoryProvider).addItineraryItem(
             targetTrip.id,
             AddItineraryItemRequest(
@@ -183,8 +193,11 @@ class _SavePlaceToTripSheetState extends ConsumerState<_SavePlaceToTripSheet> {
               activity: 'Tham quan ${widget.place.name}',
               placeId: widget.place.id,
               notes: widget.place.hasAddress ? widget.place.address : null,
+              clientRequestId: _pendingClientRequestId,
             ),
           );
+      _pendingClientRequestId = null;
+      _pendingRequestScope = null;
 
       if (kDebugMode) {
         debugPrint(

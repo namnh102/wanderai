@@ -795,11 +795,25 @@ export function verifyWebSubSignature(
       errorCode: YOUTUBE_ERROR_CODES.YOUTUBE_EVENT_UNAUTHORIZED,
     });
   }
-  const [algoRaw, providedHex] = signatureHeader.trim().split("=", 2);
-  const algo = algoRaw.toLowerCase();
+  const trimmed = signatureHeader.trim();
+  const eqIdx = trimmed.indexOf("=");
+  if (eqIdx <= 0) {
+    throw new UnauthorizedException({
+      message: "Missing or malformed X-Hub-Signature header",
+      errorCode: YOUTUBE_ERROR_CODES.YOUTUBE_EVENT_UNAUTHORIZED,
+    });
+  }
+  const algo = trimmed.slice(0, eqIdx).toLowerCase();
+  const providedHex = trimmed.slice(eqIdx + 1);
   if (algo !== "sha1" && algo !== "sha256") {
     throw new UnauthorizedException({
       message: `Unsupported WebSub signature algorithm: ${algo}`,
+      errorCode: YOUTUBE_ERROR_CODES.YOUTUBE_EVENT_UNAUTHORIZED,
+    });
+  }
+  if (!/^[0-9a-f]+$/i.test(providedHex)) {
+    throw new UnauthorizedException({
+      message: "Malformed WebSub X-Hub-Signature digest",
       errorCode: YOUTUBE_ERROR_CODES.YOUTUBE_EVENT_UNAUTHORIZED,
     });
   }

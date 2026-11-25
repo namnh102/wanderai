@@ -64,6 +64,8 @@ class YoutubeUpdateModel {
   final DateTime publishedAt;
   final DateTime receivedAt;
   final DateTime updatedAt;
+  final bool hasValidPublishedAt;
+  final bool hasValidReceivedAt;
   final DateTime? sourceUpdatedAt;
   final DateTime? lastReceivedAt;
   final int ingestLatencyMs;
@@ -88,6 +90,8 @@ class YoutubeUpdateModel {
     required this.publishedAt,
     required this.receivedAt,
     required this.updatedAt,
+    this.hasValidPublishedAt = true,
+    this.hasValidReceivedAt = true,
     required this.sourceUpdatedAt,
     required this.lastReceivedAt,
     required this.ingestLatencyMs,
@@ -98,17 +102,22 @@ class YoutubeUpdateModel {
 
   bool get isCityLevel => scope == YoutubeUpdateScope.city && placeId == null;
 
+  bool get hasReliableTiming => hasValidPublishedAt && hasValidReceivedAt;
+
   /// Measures source-to-app latency (ms) against [clientRenderedAt].
   int endToEndLatencyMsAt(DateTime clientRenderedAt) {
     return clientRenderedAt.toUtc().difference(publishedAt.toUtc()).inMilliseconds;
   }
 
-  /// `"Thời gian thực"` is allowed ONLY when measured source-to-app latency is
-  /// non-negative and within [slaMaxLatencyMs] (default 300,000 ms / 5 min).
+  /// `"Thời gian thực"` is allowed ONLY when timestamps are valid and measured
+  /// source-to-app latency is non-negative and within [slaMaxLatencyMs] (default 300,000 ms / 5 min).
   bool isRealtimeAt(
     DateTime clientRenderedAt, {
     int slaMaxLatencyMs = 300000,
   }) {
+    if (!hasValidPublishedAt || !hasValidReceivedAt) {
+      return false;
+    }
     final lag = endToEndLatencyMsAt(clientRenderedAt);
     return lag >= 0 && lag <= slaMaxLatencyMs;
   }
@@ -124,9 +133,12 @@ class YoutubeUpdateModel {
 
   factory YoutubeUpdateModel.fromJson(Map<String, dynamic> json) {
     final epochFallback = DateTime.fromMillisecondsSinceEpoch(0, isUtc: true);
-    final receivedAt = _tryParseDateTime(json['receivedAt']) ?? epochFallback;
-    final publishedAt =
-        _tryParseDateTime(json['publishedAt']) ?? receivedAt;
+    final parsedReceivedAt = _tryParseDateTime(json['receivedAt']);
+    final parsedPublishedAt = _tryParseDateTime(json['publishedAt']);
+    final hasValidReceivedAt = parsedReceivedAt != null;
+    final hasValidPublishedAt = parsedPublishedAt != null;
+    final receivedAt = parsedReceivedAt ?? epochFallback;
+    final publishedAt = parsedPublishedAt ?? epochFallback;
     final sourceUpdatedAt = _tryParseDateTime(json['sourceUpdatedAt']);
     final lastReceivedAt = _tryParseDateTime(json['lastReceivedAt']);
     final updatedAt = _tryParseDateTime(json['updatedAt']) ??
@@ -159,14 +171,15 @@ class YoutubeUpdateModel {
         ? Map<String, dynamic>.from(rawEvidence)
         : null;
 
-    final computedIngestLatency = math.max(
-      0,
-      receivedAt.difference(publishedAt).inMilliseconds,
-    );
-    final computedDeliveryLag = math.max(
-      0,
-      (lastReceivedAt ?? receivedAt).difference(publishedAt).inMilliseconds,
-    );
+    final computedIngestLatency = (hasValidPublishedAt && hasValidReceivedAt)
+        ? math.max(0, receivedAt.difference(publishedAt).inMilliseconds)
+        : 0;
+    final computedDeliveryLag = (hasValidPublishedAt && hasValidReceivedAt)
+        ? math.max(
+            0,
+            (lastReceivedAt ?? receivedAt).difference(publishedAt).inMilliseconds,
+          )
+        : 0;
 
     return YoutubeUpdateModel(
       id: (json['id'] as String? ?? rawVideoId).trim(),
@@ -185,6 +198,8 @@ class YoutubeUpdateModel {
       publishedAt: publishedAt,
       receivedAt: receivedAt,
       updatedAt: updatedAt,
+      hasValidPublishedAt: hasValidPublishedAt,
+      hasValidReceivedAt: hasValidReceivedAt,
       sourceUpdatedAt: sourceUpdatedAt,
       lastReceivedAt: lastReceivedAt,
       ingestLatencyMs:

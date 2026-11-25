@@ -1,4 +1,4 @@
-import { IsOptional, IsString } from 'class-validator';
+import { IsOptional, IsString, MaxLength } from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 
 export class PlanTripDto {
@@ -8,6 +8,7 @@ export class PlanTripDto {
   })
   @IsOptional()
   @IsString()
+  @MaxLength(1000)
   additionalPrompt?: string;
 
   @ApiPropertyOptional({
@@ -16,5 +17,6 @@ export class PlanTripDto {
   })
   @IsOptional()
   @IsString()
+  @MaxLength(32)
   preferredPace?: string;
 }

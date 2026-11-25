@@ -207,15 +207,27 @@ describe("YouTube Update Ingestion, Deduplication & POI Grounding Gate", () => {
     expect(entries[0].latitude).toBeCloseTo(20.95161, 5);
 
     const secret = "websub-unit-secret";
-    const validSig =
-      "sha256=" +
-      crypto.createHmac("sha256", secret).update(atomXml, "utf8").digest("hex");
+    const validHex = crypto
+      .createHmac("sha256", secret)
+      .update(atomXml, "utf8")
+      .digest("hex");
+    const validSig = `sha256=${validHex}`;
     expect(() =>
       verifyWebSubSignature(atomXml, validSig, secret),
     ).not.toThrow();
     expect(() =>
       verifyWebSubSignature(atomXml, "sha256=deadbeef", secret),
     ).toThrow(UnauthorizedException);
+    for (const malformedSig of [
+      `sha256=${validHex}=tampered`,
+      "sha256=",
+      "sha256=zzzz",
+      `md5=${validHex}`,
+    ]) {
+      expect(() =>
+        verifyWebSubSignature(atomXml, malformedSig, secret),
+      ).toThrow(UnauthorizedException);
+    }
     expect(() =>
       parseYoutubeAtomFeed(
         '<!DOCTYPE foo [<!ENTITY xxe SYSTEM "file:///etc/passwd">]><feed/>',

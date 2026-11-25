@@ -357,24 +357,34 @@ class _YoutubeUpdateItemCard extends StatelessWidget {
           ],
           const SizedBox(height: 2),
           Text(
-            'Xuất bản: ${timestampFormat.format(item.publishedAt.toLocal())}',
+            item.hasValidPublishedAt
+                ? 'Xuất bản: ${timestampFormat.format(item.publishedAt.toLocal())}'
+                : 'Xuất bản: Không rõ thời điểm xuất bản',
             key: Key('youtube_published_at_${item.id}'),
             style: AppTypography.caption.copyWith(color: AppColors.textSecondary),
           ),
           Text(
-            'Tiếp nhận: ${timestampFormat.format(item.receivedAt.toLocal())}',
+            item.hasValidReceivedAt
+                ? 'Tiếp nhận: ${timestampFormat.format(item.receivedAt.toLocal())}'
+                : 'Tiếp nhận: Không rõ thời điểm tiếp nhận',
             key: Key('youtube_received_at_${item.id}'),
             style: AppTypography.caption.copyWith(color: AppColors.textSecondary),
           ),
           Text(
-            'Cập nhật: ${timestampFormat.format(item.updatedAt.toLocal())}',
+            (item.hasValidReceivedAt ||
+                    item.sourceUpdatedAt != null ||
+                    item.lastReceivedAt != null)
+                ? 'Cập nhật: ${timestampFormat.format(item.updatedAt.toLocal())}'
+                : 'Cập nhật: Không rõ thời điểm cập nhật',
             key: Key('youtube_updated_at_${item.id}'),
             style: AppTypography.caption.copyWith(color: AppColors.textSecondary),
           ),
           const SizedBox(height: AppSpacing.xs),
           Text(
-            'Độ trễ nguồn tới app: ${_formatLatency(endToEndMs)} · '
-            'Tiếp nhận server: ${_formatLatency(item.ingestLatencyMs)}',
+            item.hasReliableTiming
+                ? 'Độ trễ nguồn tới app: ${_formatLatency(endToEndMs)} · '
+                    'Tiếp nhận server: ${_formatLatency(item.ingestLatencyMs)}'
+                : 'Độ trễ nguồn tới app: Không xác định (thiếu mốc thời gian hợp lệ)',
             key: Key('youtube_latency_${item.id}'),
             style: AppTypography.caption.copyWith(
               color: isRealtime ? AppColors.success : AppColors.textSecondary,

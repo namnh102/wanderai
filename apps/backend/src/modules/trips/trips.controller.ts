@@ -5,7 +5,9 @@ import {
   Put,
   Delete,
   Body,
+  Headers,
   Param,
+  ParseUUIDPipe,
   UseGuards,
   HttpCode,
   HttpStatus,
@@ -19,11 +21,16 @@ import { UpdateTripDto } from './dto/update-trip.dto';
 import { AddItineraryDto } from './dto/add-itinerary.dto';
 import { BulkItineraryDto } from './dto/bulk-itinerary.dto';
 import { PlanTripDto } from './dto/plan-trip.dto';
-import { IsEmail, IsNotEmpty } from 'class-validator';
+import { Transform } from 'class-transformer';
+import { IsEmail, IsNotEmpty, MaxLength } from 'class-validator';
 
 class InviteMemberDto {
+  @Transform(({ value }: { value: unknown }) =>
+    typeof value === 'string' ? value.trim() : value,
+  )
   @IsEmail({}, { message: 'Email không hợp lệ' })
   @IsNotEmpty()
+  @MaxLength(255)
   email: string;
 }
 
@@ -51,14 +58,18 @@ export class TripsController {
   // GET /trips/:id
   @Get(':id')
   @ApiOperation({ summary: 'Chi tiết chuyến đi (+ lịch trình + thành viên)' })
-  findById(@Param('id') id: string, @CurrentUser() user: any) {
+  findById(@Param('id', new ParseUUIDPipe()) id: string, @CurrentUser() user: any) {
     return this.tripsService.findById(id, user.id);
   }
 
   // PUT /trips/:id
   @Put(':id')
   @ApiOperation({ summary: 'Cập nhật chuyến đi' })
-  update(@Param('id') id: string, @CurrentUser() user: any, @Body() dto: UpdateTripDto) {
+  update(
+    @Param('id', new ParseUUIDPipe()) id: string,
+    @CurrentUser() user: any,
+    @Body() dto: UpdateTripDto,
+  ) {
     return this.tripsService.update(id, user.id, dto);
   }
 
@@ -66,7 +77,7 @@ export class TripsController {
   @Delete(':id')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Xóa chuyến đi (soft delete)' })
-  delete(@Param('id') id: string, @CurrentUser() user: any) {
+  delete(@Param('id', new ParseUUIDPipe()) id: string, @CurrentUser() user: any) {
     return this.tripsService.delete(id, user.id);
   }
 
@@ -74,11 +85,12 @@ export class TripsController {
   @Post(':id/itinerary')
   @ApiOperation({ summary: 'Thêm hoạt động vào lịch trình' })
   addItinerary(
-    @Param('id') id: string,
+    @Param('id', new ParseUUIDPipe()) id: string,
     @CurrentUser() user: any,
     @Body() dto: AddItineraryDto,
+    @Headers('idempotency-key') idempotencyKey?: string,
   ) {
-    return this.tripsService.addItineraryItem(id, user.id, dto);
+    return this.tripsService.addItineraryItem(id, user.id, dto, idempotencyKey);
   }
 
   // DELETE /trips/:id/itinerary/:itemId
@@ -86,8 +98,8 @@ export class TripsController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Xóa hoạt động khỏi lịch trình' })
   removeItinerary(
-    @Param('id') id: string,
-    @Param('itemId') itemId: string,
+    @Param('id', new ParseUUIDPipe()) id: string,
+    @Param('itemId', new ParseUUIDPipe()) itemId: string,
     @CurrentUser() user: any,
   ) {
     return this.tripsService.removeItineraryItem(id, itemId, user.id);
@@ -97,7 +109,7 @@ export class TripsController {
   @Post(':id/members')
   @ApiOperation({ summary: 'Mời thành viên vào chuyến đi (bằng email)' })
   addMember(
-    @Param('id') id: string,
+    @Param('id', new ParseUUIDPipe()) id: string,
     @CurrentUser() user: any,
     @Body() dto: InviteMemberDto,
   ) {
@@ -108,7 +120,7 @@ export class TripsController {
   @Post(':id/ai-plan')
   @ApiOperation({ summary: 'AI tạo lịch trình xem trước dựa trên TripContext (không lưu DB)' })
   planWithAi(
-    @Param('id') id: string,
+    @Param('id', new ParseUUIDPipe()) id: string,
     @CurrentUser() user: any,
     @Body() dto?: PlanTripDto,
   ) {
@@ -119,7 +131,7 @@ export class TripsController {
   @Post(':id/itinerary/bulk')
   @ApiOperation({ summary: 'Lưu toàn bộ lịch trình vào DB (atomic transaction)' })
   bulkSaveItinerary(
-    @Param('id') id: string,
+    @Param('id', new ParseUUIDPipe()) id: string,
     @CurrentUser() user: any,
     @Body() dto: BulkItineraryDto,
   ) {

@@ -37,6 +37,7 @@ interface MockUserRecord {
   id: string;
   email: string;
   passwordHash: string;
+  tokenVersion?: number;
   deletedAt: Date | null;
   profile?: {
     displayName: string;
@@ -682,6 +683,67 @@ describe('PROD-AUTH-02A — JWT Fail-Closed Security & Auth Regression Suite', (
         .post('/auth/login')
         .send({ email: activeUserEmail, password: plainPassword })
         .expect(401);
+    });
+
+    it('T-ACC-08 & T-REF-07: rejects access/refresh tokens with mismatched tv when user.tokenVersion > 0 while keeping tv-less token valid at tokenVersion === 0', async () => {
+      mockUserFindUnique.mockResolvedValue({
+        id: activeUserId,
+        email: activeUserEmail,
+        passwordHash: activePasswordHash,
+        tokenVersion: 2,
+        deletedAt: null,
+      });
+
+      const staleAccess = jwtService.sign(
+        { sub: activeUserId, email: activeUserEmail, type: 'access', tv: 1 },
+        { secret: TEST_JWT_ACCESS_SECRET, expiresIn: '15m' },
+      );
+      const untypedStaleAccess = jwtService.sign({
+        sub: activeUserId,
+        email: activeUserEmail,
+      });
+      const staleRefresh = jwtService.sign(
+        { sub: activeUserId, email: activeUserEmail, type: 'refresh', tv: 1 },
+        { secret: TEST_JWT_REFRESH_SECRET, expiresIn: '7d' },
+      );
+
+      await request(app.getHttpServer())
+        .get('/protected-probe/me')
+        .set('Authorization', `Bearer ${staleAccess}`)
+        .expect(401);
+
+      await request(app.getHttpServer())
+        .get('/protected-probe/me')
+        .set('Authorization', `Bearer ${untypedStaleAccess}`)
+        .expect(401);
+
+      await request(app.getHttpServer())
+        .post('/auth/refresh')
+        .send({ refresh_token: staleRefresh })
+        .expect(401);
+
+      // Matching tokenVersion passes
+      const freshAccess = jwtService.sign(
+        { sub: activeUserId, email: activeUserEmail, type: 'access', tv: 2 },
+        { secret: TEST_JWT_ACCESS_SECRET, expiresIn: '15m' },
+      );
+      await request(app.getHttpServer())
+        .get('/protected-probe/me')
+        .set('Authorization', `Bearer ${freshAccess}`)
+        .expect(200);
+
+      // At tokenVersion === 0, untyped legacy token still succeeds
+      mockUserFindUnique.mockResolvedValue({
+        id: activeUserId,
+        email: activeUserEmail,
+        passwordHash: activePasswordHash,
+        tokenVersion: 0,
+        deletedAt: null,
+      });
+      await request(app.getHttpServer())
+        .get('/protected-probe/me')
+        .set('Authorization', `Bearer ${untypedStaleAccess}`)
+        .expect(200);
     });
   });
 });

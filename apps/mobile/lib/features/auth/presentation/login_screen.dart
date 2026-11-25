@@ -193,7 +193,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         key: const Key('login_forgot_password_button'),
                         onPressed: _isBusy
                             ? null
-                            : () => context.push('/forgot-password'),
+                            : () {
+                                ref.read(authProvider.notifier).clearError();
+                                setState(() => _inlineError = null);
+                                context.push('/forgot-password');
+                              },
                         child: const Text('Quên mật khẩu?'),
                       ),
                     ),

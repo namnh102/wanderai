@@ -63,6 +63,7 @@ class _PassiveLocationService implements LocationService {
 ///   `POST /trips` succeeds.
 class _InMemoryHalongBackendAdapter implements HttpClientAdapter {
   final List<(String method, String path, String? auth)> recordedCalls = [];
+  final List<String?> recordedAddItineraryClientRequestIds = [];
   final Map<String, Map<String, dynamic>> _tripsById = {};
   int failAddItineraryRemaining;
   int failAddItineraryNetworkRemaining;
@@ -314,6 +315,11 @@ class _InMemoryHalongBackendAdapter implements HttpClientAdapter {
       if (!_isAuthorized(options)) {
         return _json(401, {'message': 'Unauthorized'});
       }
+      final reqBody = options.data is Map
+          ? Map<String, dynamic>.from(options.data as Map)
+          : <String, dynamic>{};
+      recordedAddItineraryClientRequestIds
+          .add(reqBody['clientRequestId'] as String?);
       if (failAddItineraryNetworkRemaining > 0) {
         failAddItineraryNetworkRemaining--;
         throw DioException(
@@ -992,6 +998,12 @@ void main() {
         await _pumpFrames(tester, 6);
 
         expect(backend.createTripCallCount, 1);
+        expect(backend.recordedAddItineraryClientRequestIds, hasLength(2));
+        expect(backend.recordedAddItineraryClientRequestIds[0], isNotEmpty);
+        expect(
+          backend.recordedAddItineraryClientRequestIds[1],
+          backend.recordedAddItineraryClientRequestIds[0],
+        );
         expect(
           find.textContaining(
             'Đã lưu "$_clockTowerPlaceName" vào "Chuyến Hạ Long Mất Mạng"',

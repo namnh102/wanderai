@@ -106,8 +106,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     enabled: !_loading,
                     labelText: 'Họ và tên',
                     prefixIcon: const Icon(Icons.person_outlined),
-                    validator: (v) =>
-                        (v == null || v.isEmpty) ? 'Vui lòng nhập tên' : null,
+                    validator: (v) => (v == null || v.trim().isEmpty)
+                        ? 'Vui lòng nhập tên'
+                        : null,
                   ),
                   const SizedBox(height: AppSpacing.md),
                   AppTextField(

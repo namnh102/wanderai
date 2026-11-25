@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { UpdatePreferencesDto, CANONICAL_INTERESTS } from './dto/update-preferences.dto';
+import { UpdateProfileDto } from './dto/update-profile.dto';
 
 @Injectable()
 export class UsersService {
@@ -51,11 +52,21 @@ export class UsersService {
   }
 
   // Cập nhật profile
-  async updateProfile(userId: string, data: { displayName?: string; bio?: string; avatar?: string }) {
+  async updateProfile(userId: string, data: UpdateProfileDto) {
+    const allowedData: { displayName?: string; bio?: string; avatar?: string } = {
+      ...(data.displayName !== undefined && { displayName: data.displayName.trim() }),
+      ...(data.bio !== undefined && { bio: data.bio.trim() }),
+      ...(data.avatar !== undefined && { avatar: data.avatar.trim() }),
+    };
     return this.prisma.profile.upsert({
       where: { userId },
-      update: data,
-      create: { userId, displayName: data.displayName || 'User', ...data },
+      update: allowedData,
+      create: {
+        userId,
+        displayName: allowedData.displayName || 'User',
+        ...(allowedData.bio !== undefined && { bio: allowedData.bio }),
+        ...(allowedData.avatar !== undefined && { avatar: allowedData.avatar }),
+      },
     });
   }
 

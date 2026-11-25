@@ -93,7 +93,7 @@ export class ReviewsService {
         userId,
         placeId: data.placeId,
         rating: data.rating,
-        content: data.content,
+        content: data.content.trim(),
         visitDate: parsedVisitDate,
         images: data.images ?? [],
         source: 'user',

@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
-import { IsNotEmpty, IsString } from 'class-validator';
+import { IsNotEmpty, IsString, MaxLength } from 'class-validator';
 
 export class FacebookOAuthDto {
   @ApiProperty({ example: 'EAAGm0PX4ZCpsBA...' })
@@ -9,5 +9,6 @@ export class FacebookOAuthDto {
   )
   @IsString()
   @IsNotEmpty()
+  @MaxLength(4096)
   accessToken: string;
 }

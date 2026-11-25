@@ -1,3 +1,4 @@
+import { NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { AiProxyService } from '../ai-proxy/ai-proxy.service';
 import { foldVietnameseSearch, PlacesService } from './places.service';
@@ -7,6 +8,7 @@ describe('PlacesService.findAll diacritic-insensitive search & pagination', () =
   let prismaMock: {
     place: {
       findMany: jest.Mock;
+      findUnique: jest.Mock;
       count: jest.Mock;
     };
   };
@@ -111,6 +113,7 @@ describe('PlacesService.findAll diacritic-insensitive search & pagination', () =
     prismaMock = {
       place: {
         findMany: jest.fn().mockResolvedValue(samplePlaces),
+        findUnique: jest.fn(),
         count: jest.fn().mockResolvedValue(samplePlaces.length),
       },
     };
@@ -187,5 +190,37 @@ describe('PlacesService.findAll diacritic-insensitive search & pagination', () =
     expect(result.total).toBe(4);
     expect(result.totalPages).toBe(2);
     expect(result.items).toHaveLength(2);
+  });
+
+  it('GAP-06: findById throws NotFoundException with errorCode PLACE_NOT_FOUND for missing, soft-deleted, and unsourced places', async () => {
+    const missingId = '99999999-9999-4999-8999-999999999999';
+    const deletedId = '88888888-8888-4888-8888-888888888888';
+    const unsourcedId = '00000000-0000-4000-8000-000000000999';
+
+    prismaMock.place.findUnique
+      .mockResolvedValueOnce(null)
+      .mockResolvedValueOnce({
+        id: deletedId,
+        deletedAt: new Date('2026-11-01T00:00:00.000Z'),
+        placeSources: [{ id: 'src-1' }],
+      })
+      .mockResolvedValueOnce({
+        id: unsourcedId,
+        deletedAt: null,
+        placeSources: [],
+      });
+
+    for (const id of [missingId, deletedId, unsourcedId]) {
+      let caught: unknown;
+      try {
+        await placesService.findById(id);
+      } catch (err) {
+        caught = err;
+      }
+      expect(caught).toBeInstanceOf(NotFoundException);
+      expect((caught as NotFoundException).getResponse()).toMatchObject({
+        errorCode: 'PLACE_NOT_FOUND',
+      });
+    }
   });
 });

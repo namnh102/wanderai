@@ -6,9 +6,11 @@ import {
   IsDateString,
   IsInt,
   Min,
+  MaxLength,
   IsIn,
   IsEnum,
   IsArray,
+  ArrayMaxSize,
 } from 'class-validator';
 import { Transform } from 'class-transformer';
 import { ApiPropertyOptional } from '@nestjs/swagger';
@@ -20,6 +22,7 @@ export class UpdateTripDto {
   @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
   @IsString()
   @IsNotEmpty({ message: 'Tên chuyến đi không được để trống' })
+  @MaxLength(200, { message: 'Tên chuyến đi tối đa 200 ký tự' })
   title?: string;
 
   @ApiPropertyOptional({ description: 'ID điểm đến' })
@@ -57,12 +60,15 @@ export class UpdateTripDto {
   @ApiPropertyOptional({ description: 'Sở thích du lịch' })
   @IsOptional()
   @IsArray({ message: 'interests phải là một danh sách' })
+  @ArrayMaxSize(20, { message: 'interests tối đa 20 mục' })
   @IsString({ each: true, message: 'Mỗi sở thích phải là chuỗi' })
+  @MaxLength(64, { each: true, message: 'Mỗi sở thích tối đa 64 ký tự' })
   interests?: string[];
 
   @ApiPropertyOptional({ description: 'Mô tả chuyến đi' })
   @IsOptional()
   @IsString()
+  @MaxLength(2000, { message: 'Mô tả chuyến đi tối đa 2000 ký tự' })
   description?: string;
 
   @ApiPropertyOptional({ description: 'Trạng thái chuyến đi', enum: TripStatus })

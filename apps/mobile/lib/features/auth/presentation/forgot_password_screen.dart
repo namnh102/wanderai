@@ -126,7 +126,10 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                   ),
                   TextButton(
                     key: const Key('forgot_back_login_button'),
-                    onPressed: () => context.go('/login'),
+                    onPressed: () {
+                      ref.read(authProvider.notifier).clearError();
+                      context.go('/login');
+                    },
                     child: const Text('Quay lại đăng nhập'),
                   ),
                 ],

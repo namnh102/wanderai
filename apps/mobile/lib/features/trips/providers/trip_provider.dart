@@ -224,6 +224,11 @@ class TripDetailNotifier extends StateNotifier<TripDetailState> {
     } on DioException catch (e) {
       state = state.copyWith(errorMessage: _mapError(e));
       return false;
+    } catch (_) {
+      state = state.copyWith(
+        errorMessage: 'Không thể thêm hoạt động vào lịch trình',
+      );
+      return false;
     }
   }
 
@@ -234,6 +239,11 @@ class TripDetailNotifier extends StateNotifier<TripDetailState> {
       return true;
     } on DioException catch (e) {
       state = state.copyWith(errorMessage: _mapError(e));
+      return false;
+    } catch (_) {
+      state = state.copyWith(
+        errorMessage: 'Không thể xóa hoạt động khỏi lịch trình',
+      );
       return false;
     }
   }

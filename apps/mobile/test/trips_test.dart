@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:wanderai_mobile/features/trips/data/trip_models.dart';
 import 'package:wanderai_mobile/features/trips/data/trip_repository.dart';
 import 'package:wanderai_mobile/features/trips/providers/trip_provider.dart';
@@ -11,6 +12,8 @@ import 'package:wanderai_mobile/features/trips/presentation/trip_detail_screen.d
 
 class FakeTripRepository extends TripRepository {
   bool shouldFail = false;
+  bool shouldFailItineraryMutation = false;
+  int addItineraryCalls = 0;
   List<TripModel> memoryTrips = [];
 
   FakeTripRepository() : super(Dio());
@@ -156,6 +159,18 @@ class FakeTripRepository extends TripRepository {
     String tripId,
     AddItineraryItemRequest request,
   ) async {
+    addItineraryCalls++;
+    if (shouldFailItineraryMutation) {
+      throw DioException(
+        requestOptions: RequestOptions(path: '/trips/$tripId/itinerary'),
+        type: DioExceptionType.badResponse,
+        response: Response(
+          requestOptions: RequestOptions(path: '/trips/$tripId/itinerary'),
+          statusCode: 400,
+          data: {'message': 'Backend rejected itinerary item'},
+        ),
+      );
+    }
     return ItineraryItemModel(
       id: 'item_${DateTime.now().millisecondsSinceEpoch}',
       itineraryId: 'itin_1',
@@ -168,7 +183,19 @@ class FakeTripRepository extends TripRepository {
   }
 
   @override
-  Future<void> deleteItineraryItem(String tripId, String itemId) async {}
+  Future<void> deleteItineraryItem(String tripId, String itemId) async {
+    if (shouldFailItineraryMutation) {
+      throw DioException(
+        requestOptions: RequestOptions(path: '/trips/$tripId/itinerary/$itemId'),
+        type: DioExceptionType.badResponse,
+        response: Response(
+          requestOptions: RequestOptions(path: '/trips/$tripId/itinerary/$itemId'),
+          statusCode: 400,
+          data: {'message': 'Backend rejected delete item'},
+        ),
+      );
+    }
+  }
 }
 
 void main() {
@@ -375,6 +402,98 @@ void main() {
       expect(find.text('Lịch trình chi tiết'), findsOneWidget);
       expect(find.text('Ngày 1'), findsOneWidget);
       expect(find.text('Tham quan Bao tang'), findsOneWidget);
+    });
+
+    testWidgets('GAP-10: TripDetailScreen validates cost before popping, shows SnackBar on add/delete failure, and guards delete with canPop', (tester) async {
+      final fakeRepo = FakeTripRepository()..shouldFailItineraryMutation = true;
+
+      final router = GoRouter(
+        initialLocation: '/trips/trip_1',
+        routes: [
+          GoRoute(
+            path: '/trips',
+            builder: (_, __) => const TripListScreen(),
+          ),
+          GoRoute(
+            path: '/trips/:id',
+            builder: (_, state) => TripDetailScreen(
+              tripId: state.pathParameters['id']!,
+            ),
+          ),
+        ],
+      );
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [tripRepositoryProvider.overrideWithValue(fakeRepo)],
+          child: MaterialApp.router(routerConfig: router),
+        ),
+      );
+      await tester.pump();
+      await tester.pumpAndSettle();
+
+      // 1. Open Add Itinerary dialog & reject negative cost inside dialog
+      final addBtn = find.text('Thêm hoạt động');
+      await tester.ensureVisible(addBtn.first);
+      await tester.tap(addBtn.first);
+      await tester.pumpAndSettle();
+
+      await tester.enterText(
+        find.byKey(const Key('trip_add_item_activity_input')),
+        'Tháp Đồng Hồ',
+      );
+      await tester.enterText(
+        find.byKey(const Key('trip_add_item_cost_input')),
+        '-5000',
+      );
+      await tester.tap(find.byKey(const Key('trip_add_item_submit_button')));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('trip_add_item_dialog_error')), findsOneWidget);
+      expect(fakeRepo.addItineraryCalls, 0);
+
+      // 2. Fix cost to valid non-negative integer -> submits and shows SnackBar on backend failure
+      await tester.enterText(
+        find.byKey(const Key('trip_add_item_cost_input')),
+        '50000',
+      );
+      await tester.tap(find.byKey(const Key('trip_add_item_submit_button')));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+
+      expect(fakeRepo.addItineraryCalls, 1);
+      expect(find.byKey(const Key('trip_itinerary_error_snackbar')), findsOneWidget);
+      expect(find.textContaining('Backend rejected itinerary item'), findsOneWidget);
+
+      // Clear SnackBar before testing delete failure
+      ScaffoldMessenger.of(tester.element(find.byType(TripDetailScreen)))
+          .clearSnackBars();
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+
+      // 3. Delete itinerary item failure shows SnackBar even when trip != null
+      final deleteItemBtn = find.byTooltip('Xóa hoạt động').first;
+      await tester.ensureVisible(deleteItemBtn);
+      await tester.tap(deleteItemBtn);
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+
+      expect(find.byKey(const Key('trip_itinerary_error_snackbar')), findsOneWidget);
+      expect(find.textContaining('Backend rejected delete item'), findsOneWidget);
+
+      ScaffoldMessenger.of(tester.element(find.byType(TripDetailScreen)))
+          .clearSnackBars();
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+
+      // 4. Delete entire trip when canPop() is false navigates to /trips cleanly
+      await tester.tap(find.byTooltip('Xóa chuyến đi'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+      await tester.tap(find.text('Xóa').last);
+      await tester.pumpAndSettle();
+
+      expect(find.byType(TripListScreen), findsOneWidget);
     });
   });
 }

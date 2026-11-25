@@ -915,4 +915,39 @@ describe("YoutubeModule HTTP Integration (M2-backend-youtube)", () => {
       new Date(raceItem.receivedAt).getTime(),
     );
   });
+
+  it("GAP-02: rejects malformed or trailing-'=' WebSub HMAC signatures with 401 YOUTUBE_EVENT_UNAUTHORIZED", async () => {
+    const atomXml = `<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns:yt="http://www.youtube.com/xml/schemas/2015" xmlns="http://www.w3.org/2005/Atom">
+  <entry>
+    <yt:videoId>HmacEdge001</yt:videoId>
+    <yt:channelId>UC_HL</yt:channelId>
+    <title>Tháp Đồng Hồ Hạ Long</title>
+    <published>2026-11-24T12:00:00Z</published>
+  </entry>
+</feed>`;
+    const validHex = crypto
+      .createHmac("sha256", TEST_WEBSUB_SECRET)
+      .update(atomXml, "utf8")
+      .digest("hex");
+
+    for (const badSig of [
+      `sha256=${validHex}=tampered`,
+      "sha256=",
+      "sha256=zzzz",
+      `md5=${validHex}`,
+    ]) {
+      const res = await http()
+        .post("/youtube/webhook")
+        .set("Content-Type", "application/atom+xml")
+        .set("x-hub-signature-256", badSig)
+        .send(atomXml)
+        .expect(401);
+      expect(res.body.errorCode).toBe(
+        YOUTUBE_ERROR_CODES.YOUTUBE_EVENT_UNAUTHORIZED,
+      );
+    }
+
+    expect(prisma.getAllUpdates()).toHaveLength(0);
+  });
 });

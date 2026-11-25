@@ -286,7 +286,7 @@ class _AuthContractBackendAdapter implements HttpClientAdapter {
 
 ProviderContainer _createContainer(
   _AuthContractBackendAdapter backend,
-  _FakeAuthSocialPort socialPort,
+  AuthSocialPort socialPort,
 ) {
   return ProviderContainer(
     overrides: [
@@ -1030,5 +1030,161 @@ void main() {
       expect(container.read(authProvider).errorMessage, isNull);
       expect(find.byKey(const Key('login_error_banner')), findsNothing);
     });
+
+    testWidgets(
+        'GAP-08: Login -> ForgotPassword -> Back clears auth error and RegisterScreen rejects whitespace-only name',
+        (tester) async {
+      SharedPreferences.setMockInitialValues({});
+      final backend = _AuthContractBackendAdapter()
+        ..failNextLoginWithInvalidCredentials = true;
+      final container = _createContainer(backend, _FakeAuthSocialPort());
+      addTearDown(container.dispose);
+
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: MaterialApp.router(
+            theme: AppTheme.lightTheme,
+            routerConfig: container.read(appRouterProvider),
+          ),
+        ),
+      );
+      await _pump(tester, 4);
+
+      container.read(appRouterProvider).go('/login');
+      await _pump(tester, 6);
+
+      await tester.enterText(
+        find.byKey(const Key('login_email_input')),
+        'traveler@gomate.vn',
+      );
+      await tester.enterText(
+        find.byKey(const Key('login_password_input')),
+        'wrongpass',
+      );
+      await tester.tap(find.byKey(const Key('login_submit_button')));
+      await _pump(tester, 6);
+      expect(find.byKey(const Key('login_error_banner')), findsOneWidget);
+
+      await tester.ensureVisible(
+          find.byKey(const Key('login_forgot_password_button')));
+      await tester.tap(find.byKey(const Key('login_forgot_password_button')));
+      await _pump(tester, 6);
+      expect(find.byType(ForgotPasswordScreen), findsOneWidget);
+
+      await tester.ensureVisible(
+          find.byKey(const Key('forgot_back_login_button')));
+      await tester.tap(find.byKey(const Key('forgot_back_login_button')));
+      await _pump(tester, 6);
+
+      expect(find.byType(LoginScreen), findsOneWidget);
+      expect(container.read(authProvider).errorMessage, isNull);
+      expect(find.byKey(const Key('login_error_banner')), findsNothing);
+
+      // RegisterScreen rejects whitespace-only name before hitting /auth/register
+      container.read(appRouterProvider).go('/register');
+      await _pump(tester, 6);
+      expect(find.byType(RegisterScreen), findsOneWidget);
+
+      await tester.enterText(
+        find.byKey(const Key('register_name_input')),
+        '   \t ',
+      );
+      await tester.enterText(
+        find.byKey(const Key('register_email_input')),
+        'new@gomate.vn',
+      );
+      await tester.enterText(
+        find.byKey(const Key('register_password_input')),
+        'secret123',
+      );
+      await tester.enterText(
+        find.byKey(const Key('register_confirm_password_input')),
+        'secret123',
+      );
+      await tester.ensureVisible(
+          find.byKey(const Key('register_submit_button')));
+      await tester.tap(find.byKey(const Key('register_submit_button')));
+      await _pump(tester, 4);
+
+      expect(find.text('Vui lòng nhập tên'), findsOneWidget);
+      expect(
+        backend.calls.where((c) => c.$2 == '/auth/register'),
+        isEmpty,
+      );
+    });
+
+    test('GAP-09: AuthNotifier.logout awaits signOutAll before completing and survives errors', () async {
+      SharedPreferences.setMockInitialValues({'access_token': 'tok-1'});
+      final backend = _AuthContractBackendAdapter();
+      final signOutGate = Completer<void>();
+      var signOutFinished = false;
+      var signOutFinishedBeforeNextSignIn = false;
+
+      final socialPort = _RacingSocialPort(
+        onSignOutAll: () async {
+          await signOutGate.future;
+          signOutFinished = true;
+        },
+        onSignInWithGoogle: () async {
+          signOutFinishedBeforeNextSignIn = signOutFinished;
+          return const SocialAuthCancelled();
+        },
+      );
+
+      final container = _createContainer(backend, socialPort);
+      addTearDown(container.dispose);
+
+      // Allow _init() to complete
+      await Future<void>.delayed(Duration.zero);
+
+      var logoutCompleted = false;
+      final logoutFuture = container.read(authProvider.notifier).logout().then((_) {
+        logoutCompleted = true;
+      });
+      await Future<void>.delayed(const Duration(milliseconds: 20));
+      expect(logoutCompleted, isFalse);
+
+      signOutGate.complete();
+      await logoutFuture;
+      expect(logoutCompleted, isTrue);
+
+      await container.read(authProvider.notifier).signInWithGoogle();
+      expect(signOutFinishedBeforeNextSignIn, isTrue);
+      expect(container.read(authProvider).status, AuthStatus.unauthenticated);
+
+      // Also survives signOutAll throwing an error
+      final throwingPort = _RacingSocialPort(
+        onSignOutAll: () async {
+          throw StateError('SDK signOut failure');
+        },
+        onSignInWithGoogle: () async => const SocialAuthCancelled(),
+      );
+      final container2 = _createContainer(backend, throwingPort);
+      addTearDown(container2.dispose);
+      await Future<void>.delayed(Duration.zero);
+      await container2.read(authProvider.notifier).logout();
+      expect(container2.read(authProvider).status, AuthStatus.unauthenticated);
+    });
   });
+}
+
+class _RacingSocialPort implements AuthSocialPort {
+  final Future<void> Function() onSignOutAll;
+  final Future<SocialAuthResult> Function() onSignInWithGoogle;
+
+  _RacingSocialPort({
+    required this.onSignOutAll,
+    required this.onSignInWithGoogle,
+  });
+
+  @override
+  Future<SocialAuthResult> signInWithGoogle() => onSignInWithGoogle();
+
+  @override
+  Future<SocialAuthResult> signInWithFacebook() async =>
+      const SocialAuthCancelled();
+
+  @override
+  Future<void> signOutAll() => onSignOutAll();
 }

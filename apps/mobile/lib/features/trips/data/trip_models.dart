@@ -300,6 +300,7 @@ class AddItineraryItemRequest {
   final String? notes;
   final int? estimatedCost;
   final String? transportMode;
+  final String? clientRequestId;
 
   const AddItineraryItemRequest({
     required this.dayNumber,
@@ -310,6 +311,7 @@ class AddItineraryItemRequest {
     this.notes,
     this.estimatedCost,
     this.transportMode,
+    this.clientRequestId,
   });
 
   Map<String, dynamic> toJson() => {
@@ -322,6 +324,8 @@ class AddItineraryItemRequest {
         if (estimatedCost != null) 'estimatedCost': estimatedCost,
         if (transportMode != null && transportMode!.isNotEmpty)
           'transportMode': transportMode,
+        if (clientRequestId != null && clientRequestId!.isNotEmpty)
+          'clientRequestId': clientRequestId,
       };
 }
 

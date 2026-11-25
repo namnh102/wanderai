@@ -4,27 +4,22 @@ import {
   Post,
   Delete,
   Param,
+  ParseUUIDPipe,
   Query,
   Body,
   UseGuards,
-  DefaultValuePipe,
-  ParseIntPipe,
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiQuery, ApiBearerAuth } from '@nestjs/swagger';
-import { IsNumber, IsString, IsOptional, IsArray, Min, Max } from 'class-validator';
+import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { ReviewsService } from './reviews.service';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
-
-class CreateReviewDto {
-  @IsString() placeId: string;
-  @IsNumber() @Min(1) @Max(5) rating: number;
-  @IsString() content: string;
-  @IsOptional() @IsString() visitDate?: string;
-  @IsOptional() @IsArray() images?: string[];
-}
+import {
+  CreateReviewDto,
+  ReviewListQueryDto,
+  ReviewMyQueryDto,
+} from './dto/review.dto';
 
 @ApiTags('Reviews')
 @Controller('reviews')
@@ -34,15 +29,8 @@ export class ReviewsController {
   // GET /reviews?placeId=<id>&page=1
   @Get()
   @ApiOperation({ summary: 'Lấy reviews của một địa điểm' })
-  @ApiQuery({ name: 'placeId', required: true, description: 'ID của Place' })
-  @ApiQuery({ name: 'page', required: false })
-  @ApiQuery({ name: 'limit', required: false })
-  findByPlace(
-    @Query('placeId') placeId: string,
-    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
-    @Query('limit', new DefaultValuePipe(20), ParseIntPipe) limit: number,
-  ) {
-    return this.reviewsService.findByPlace(placeId, page, limit);
+  findByPlace(@Query() query: ReviewListQueryDto) {
+    return this.reviewsService.findByPlace(query.placeId, query.page, query.limit);
   }
 
   // GET /reviews/my
@@ -52,16 +40,15 @@ export class ReviewsController {
   @ApiOperation({ summary: 'Lấy reviews của tôi' })
   findMyReviews(
     @CurrentUser() user: any,
-    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
-    @Query('limit', new DefaultValuePipe(20), ParseIntPipe) limit: number,
+    @Query() query: ReviewMyQueryDto,
   ) {
-    return this.reviewsService.findMyReviews(user.id, page, limit);
+    return this.reviewsService.findMyReviews(user.id, query.page, query.limit);
   }
 
   // GET /reviews/:id
   @Get(':id')
   @ApiOperation({ summary: 'Lấy chi tiết một review' })
-  findById(@Param('id') id: string) {
+  findById(@Param('id', new ParseUUIDPipe()) id: string) {
     return this.reviewsService.findById(id);
   }
 
@@ -80,7 +67,7 @@ export class ReviewsController {
   @ApiBearerAuth()
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Xóa review của mình' })
-  delete(@Param('id') id: string, @CurrentUser() user: any) {
+  delete(@Param('id', new ParseUUIDPipe()) id: string, @CurrentUser() user: any) {
     return this.reviewsService.delete(id, user.id);
   }
 }

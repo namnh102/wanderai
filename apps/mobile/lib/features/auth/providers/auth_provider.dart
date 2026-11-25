@@ -265,7 +265,10 @@ class AuthNotifier extends StateNotifier<AuthState> {
     await _repo.logout();
     final port = _socialPort;
     if (port != null) {
-      unawaited(port.signOutAll().catchError((_) {}));
+      await port
+          .signOutAll()
+          .timeout(const Duration(seconds: 3))
+          .catchError((_) {});
     }
     if (!mounted || _epoch.current != logoutEpoch) return;
     state = const AuthState.unauthenticated();

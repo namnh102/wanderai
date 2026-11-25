@@ -4,6 +4,7 @@ import { UsersService } from './users.service';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { UpdatePreferencesDto } from './dto/update-preferences.dto';
+import { UpdateProfileDto } from './dto/update-profile.dto';
 
 @ApiTags('Users')
 @ApiBearerAuth()
@@ -26,7 +27,7 @@ export class UsersController {
 
   @Put('me')
   @ApiOperation({ summary: 'Cập nhật profile' })
-  updateProfile(@CurrentUser() user: any, @Body() data: { displayName?: string; bio?: string; avatar?: string }) {
-    return this.usersService.updateProfile(user.id, data);
+  updateProfile(@CurrentUser() user: any, @Body() dto: UpdateProfileDto) {
+    return this.usersService.updateProfile(user.id, dto);
   }
 }

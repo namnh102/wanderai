@@ -90,7 +90,11 @@ export class OAuthService {
     }
 
     const user = await this.findOrProvisionUser(identity, normalizedEmail);
-    const tokens = this.authService.issueTokensForUser(user.id, user.email);
+    const tokens = this.authService.issueTokensForUser(
+      user.id,
+      user.email,
+      user.tokenVersion ?? 0,
+    );
 
     const providers = Array.from(
       new Set(

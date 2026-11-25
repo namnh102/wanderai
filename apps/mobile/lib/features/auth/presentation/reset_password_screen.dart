@@ -209,7 +209,10 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
                           AppButton(
                             key: const Key('reset_go_login_button'),
                             text: 'Đăng nhập ngay',
-                            onPressed: () => context.go('/login'),
+                            onPressed: () {
+                              ref.read(authProvider.notifier).clearError();
+                              context.go('/login');
+                            },
                           ),
                         ] else ...[
                           const SizedBox(height: AppSpacing.lg),
@@ -262,7 +265,11 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
                         ],
                         const SizedBox(height: AppSpacing.md),
                         TextButton(
-                          onPressed: () => context.go('/login'),
+                          key: const Key('reset_back_login_button'),
+                          onPressed: () {
+                            ref.read(authProvider.notifier).clearError();
+                            context.go('/login');
+                          },
                           child: const Text('Quay lại đăng nhập'),
                         ),
                       ],

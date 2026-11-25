@@ -48,6 +48,7 @@ model User {
   passwordHash  String?   @map("password_hash")
   role          UserRole  @default(USER)
   isVerified    Boolean   @default(false) @map("is_verified")
+  tokenVersion  Int       @default(0) @map("token_version")
   createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz
   updatedAt     DateTime  @updatedAt @map("updated_at") @db.Timestamptz
   deletedAt     DateTime? @map("deleted_at") @db.Timestamptz
@@ -491,20 +492,22 @@ model Itinerary {
 }
 
 model ItineraryItem {
-  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  itineraryId  String   @map("itinerary_id") @db.Uuid
-  placeId      String?  @map("place_id") @db.Uuid
-  orderIndex   Int      @map("order_index")
-  startTime    String?  @map("start_time")   // "09:00"
-  endTime      String?  @map("end_time")     // "11:00"
-  activity     String
-  notes        String?
-  estimatedCost Int?    @map("estimated_cost") // VND integer
-  transportMode String? @map("transport_mode") // "walk","taxi","bus","motorbike"
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  itineraryId     String   @map("itinerary_id") @db.Uuid
+  placeId         String?  @map("place_id") @db.Uuid
+  clientRequestId String?  @map("client_request_id") @db.VarChar(128)
+  orderIndex      Int      @map("order_index")
+  startTime       String?  @map("start_time")   // "09:00"
+  endTime         String?  @map("end_time")     // "11:00"
+  activity        String
+  notes           String?
+  estimatedCost   Int?     @map("estimated_cost") // VND integer
+  transportMode   String?  @map("transport_mode") // "walk","taxi","bus","motorbike"
 
   itinerary Itinerary @relation(fields: [itineraryId], references: [id], onDelete: Cascade)
   place     Place?    @relation(fields: [placeId], references: [id])
 
+  @@unique([itineraryId, clientRequestId])
   @@map("itinerary_items")
 }
 

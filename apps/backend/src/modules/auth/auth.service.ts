@@ -48,18 +48,33 @@ export class AuthService {
 
     const hashedPassword = await bcrypt.hash(dto.password, 12);
 
-    const user = await this.prisma.user.create({
-      data: {
-        email: dto.email.toLowerCase().trim(),
-        passwordHash: hashedPassword,
-        profile: {
-          create: { displayName: dto.name.trim() },
+    let user: Awaited<ReturnType<PrismaService['user']['create']>>;
+    try {
+      user = await this.prisma.user.create({
+        data: {
+          email: dto.email.toLowerCase().trim(),
+          passwordHash: hashedPassword,
+          profile: {
+            create: { displayName: dto.name.trim() },
+          },
         },
-      },
-      include: { profile: true },
-    });
+        include: { profile: true },
+      });
+    } catch (error) {
+      const code =
+        typeof error === 'object' && error !== null && 'code' in error
+          ? (error as { code?: unknown }).code
+          : undefined;
+      if (code === 'P2002') {
+        throw new BadRequestException({
+          message: 'Email đã được sử dụng',
+          errorCode: AUTH_ERROR_CODES.EMAIL_ALREADY_EXISTS,
+        });
+      }
+      throw error;
+    }
 
-    return this.generateTokens(user.id, user.email);
+    return this.generateTokens(user.id, user.email, user.tokenVersion ?? 0);
   }
 
   // Đăng nhập: tìm user → compare password → trả tokens
@@ -84,7 +99,7 @@ export class AuthService {
       });
     }
 
-    return this.generateTokens(user.id, user.email);
+    return this.generateTokens(user.id, user.email, user.tokenVersion ?? 0);
   }
 
   // Refresh token: verify signature/expiry/type → kiểm tra tài khoản active → tạo cặp tokens mới
@@ -135,24 +150,45 @@ export class AuthService {
       });
     }
 
-    return this.generateTokens(user.id, user.email);
+    const currentVersion = user.tokenVersion ?? 0;
+    if (
+      (currentVersion > 0 && payload.tv !== currentVersion) ||
+      (payload.tv !== undefined && payload.tv !== currentVersion)
+    ) {
+      throw new UnauthorizedException({
+        message: 'Refresh token đã bị thu hồi',
+        errorCode: AUTH_ERROR_CODES.INVALID_CREDENTIALS,
+      });
+    }
+
+    return this.generateTokens(user.id, user.email, currentVersion);
   }
 
-  issueTokensForUser(userId: string, email: string): AuthTokenPair {
-    return this.generateTokens(userId, email);
+  issueTokensForUser(
+    userId: string,
+    email: string,
+    tokenVersion = 0,
+  ): AuthTokenPair {
+    return this.generateTokens(userId, email, tokenVersion);
   }
 
   // Tạo cặp access + refresh tokens
-  generateTokens(userId: string, email: string): AuthTokenPair {
+  generateTokens(
+    userId: string,
+    email: string,
+    tokenVersion = 0,
+  ): AuthTokenPair {
     const accessPayload: JwtTokenPayload = {
       sub: userId,
       email,
       type: 'access',
+      tv: tokenVersion,
     };
     const refreshPayload: JwtTokenPayload = {
       sub: userId,
       email,
       type: 'refresh',
+      tv: tokenVersion,
     };
 
     const accessToken = this.jwtService.sign(accessPayload, {

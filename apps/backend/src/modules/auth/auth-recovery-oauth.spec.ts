@@ -1,8 +1,11 @@
 import {
   BadGatewayException,
   BadRequestException,
+  Controller,
+  Get,
   INestApplication,
   UnauthorizedException,
+  UseGuards,
   ValidationPipe,
 } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
@@ -12,7 +15,9 @@ import axios from 'axios';
 import { createHash, randomBytes, randomUUID } from 'crypto';
 import * as request from 'supertest';
 import { AUTH_ERROR_CODES } from '../../common/constants/auth-error-codes';
+import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { HttpExceptionFilter } from '../../common/filters/http-exception.filter';
+import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { TransformInterceptor } from '../../common/interceptors/transform.interceptor';
 import { PrismaModule } from '../../prisma/prisma.module';
 import { PrismaService } from '../../prisma/prisma.service';
@@ -40,9 +45,19 @@ interface InMemoryUserRow {
   passwordHash: string | null;
   role: UserRole;
   isVerified: boolean;
+  tokenVersion: number;
   createdAt: Date;
   updatedAt: Date;
   deletedAt: Date | null;
+}
+
+@Controller('auth-probe')
+class ProtectedAuthProbeController {
+  @UseGuards(JwtAuthGuard)
+  @Get('me')
+  getMe(@CurrentUser() user: { id: string; email: string }) {
+    return { id: user.id, email: user.email };
+  }
 }
 
 interface InMemoryProfileRow {
@@ -155,6 +170,7 @@ class StatefulInMemoryPrisma {
         passwordHash: args.data.passwordHash ?? null,
         role: args.data.role ?? UserRole.USER,
         isVerified: args.data.isVerified ?? false,
+        tokenVersion: 0,
         createdAt: now,
         updatedAt: now,
         deletedAt: args.data.deletedAt ?? null,
@@ -187,7 +203,11 @@ class StatefulInMemoryPrisma {
 
     update: async (args: {
       where: { id: string };
-      data: { passwordHash?: string | null; isVerified?: boolean };
+      data: {
+        passwordHash?: string | null;
+        isVerified?: boolean;
+        tokenVersion?: number | { increment: number };
+      };
       include?: Record<string, unknown>;
     }) => {
       const existing = this.users.get(args.where.id);
@@ -199,6 +219,16 @@ class StatefulInMemoryPrisma {
       }
       if (args.data.isVerified !== undefined) {
         existing.isVerified = args.data.isVerified;
+      }
+      if (typeof args.data.tokenVersion === 'number') {
+        existing.tokenVersion = args.data.tokenVersion;
+      } else if (
+        args.data.tokenVersion &&
+        typeof args.data.tokenVersion === 'object' &&
+        'increment' in args.data.tokenVersion
+      ) {
+        existing.tokenVersion =
+          (existing.tokenVersion ?? 0) + args.data.tokenVersion.increment;
       }
       existing.updatedAt = new Date();
       return this.hydrateUser(existing, args.include);
@@ -438,6 +468,7 @@ describe('M1-backend-auth — Password Reset, OAuth, Error Codes & Refresh DTO',
         MailModule,
         AuthModule,
       ],
+      controllers: [ProtectedAuthProbeController],
     })
       .overrideProvider(PrismaService)
       .useValue(prisma)
@@ -1365,6 +1396,113 @@ describe('M1-backend-auth — Password Reset, OAuth, Error Codes & Refresh DTO',
       });
       expect(txSpy).toHaveBeenCalledTimes(2);
       expect(findByEmailSpy).toHaveBeenCalled();
+    });
+  });
+
+  describe('6. Tier 5 Security: Token Revocation on Password Reset & Concurrent Register P2002', () => {
+    it('GAP-01: revokes pre-reset access and refresh tokens immediately after POST /auth/reset-password while post-reset login and OAuth tokens work', async () => {
+      const email = 'revoke.reset@wanderai.test';
+      const oldPassword = 'OldPassword123!';
+      const newPassword = 'NewPassword456!';
+
+      const regRes = await request(app.getHttpServer())
+        .post('/auth/register')
+        .send({ email, password: oldPassword, name: 'Revoke User' })
+        .expect(201);
+
+      const preResetAccess = regRes.body.data.access_token as string;
+      const preResetRefresh = regRes.body.data.refresh_token as string;
+
+      await request(app.getHttpServer())
+        .get('/auth-probe/me')
+        .set('Authorization', `Bearer ${preResetAccess}`)
+        .expect(200);
+
+      await request(app.getHttpServer())
+        .post('/auth/forgot-password')
+        .send({ email })
+        .expect(200);
+
+      const resetMail = mailTransport.getLastMessageFor(email);
+      expect(resetMail).toBeDefined();
+      const rawToken = extractTokenFromResetMail(resetMail!.text);
+
+      await request(app.getHttpServer())
+        .post('/auth/reset-password')
+        .send({ token: rawToken, newPassword })
+        .expect(200);
+
+      // Pre-reset access token is rejected with 401
+      await request(app.getHttpServer())
+        .get('/auth-probe/me')
+        .set('Authorization', `Bearer ${preResetAccess}`)
+        .expect(401);
+
+      // Pre-reset refresh token is rejected with 401 INVALID_CREDENTIALS
+      const staleRefreshRes = await request(app.getHttpServer())
+        .post('/auth/refresh')
+        .send({ refresh_token: preResetRefresh })
+        .expect(401);
+      expect(staleRefreshRes.body.errorCode).toBe(
+        AUTH_ERROR_CODES.INVALID_CREDENTIALS,
+      );
+
+      // Post-reset login issues valid tokens with incremented tokenVersion
+      const loginRes = await request(app.getHttpServer())
+        .post('/auth/login')
+        .send({ email, password: newPassword })
+        .expect(200);
+
+      const postAccess = loginRes.body.data.access_token as string;
+      const postRefresh = loginRes.body.data.refresh_token as string;
+
+      await request(app.getHttpServer())
+        .get('/auth-probe/me')
+        .set('Authorization', `Bearer ${postAccess}`)
+        .expect(200);
+
+      await request(app.getHttpServer())
+        .post('/auth/refresh')
+        .send({ refresh_token: postRefresh })
+        .expect(200);
+
+      // OAuth login for the same user also issues valid tokens matching current tokenVersion
+      mockGoogleVerifier.verifyIdToken.mockResolvedValueOnce({
+        provider: OAuthProvider.GOOGLE,
+        providerUserId: 'google-post-reset-sub',
+        email,
+        emailVerified: true,
+        name: 'Revoke User',
+      });
+      const oauthRes = await request(app.getHttpServer())
+        .post('/auth/oauth/google')
+        .send({ idToken: 'valid-post-reset-google' })
+        .expect(200);
+
+      await request(app.getHttpServer())
+        .get('/auth-probe/me')
+        .set('Authorization', `Bearer ${oauthRes.body.data.access_token}`)
+        .expect(200);
+    });
+
+    it('GAP-03: concurrent duplicate POST /auth/register returns [201, 400] with EMAIL_ALREADY_EXISTS instead of 500 on P2002', async () => {
+      const email = 'concurrent.reg@wanderai.test';
+
+      const [resA, resB] = await Promise.all([
+        request(app.getHttpServer())
+          .post('/auth/register')
+          .send({ email, password: 'Password123!', name: 'User A' }),
+        request(app.getHttpServer())
+          .post('/auth/register')
+          .send({ email, password: 'Password123!', name: 'User B' }),
+      ]);
+
+      const statuses = [resA.status, resB.status].sort((a, b) => a - b);
+      expect(statuses).toEqual([201, 400]);
+
+      const failed = resA.status === 400 ? resA : resB;
+      expect(failed.body.errorCode).toBe(AUTH_ERROR_CODES.EMAIL_ALREADY_EXISTS);
+      expect(prisma.users.size).toBe(1);
     });
   });
 });

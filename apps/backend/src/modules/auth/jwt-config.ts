@@ -24,6 +24,7 @@ export interface JwtTokenPayload {
   sub: string;
   email: string;
   type?: JwtTokenType;
+  tv?: number;
   iat?: number;
   exp?: number;
 }

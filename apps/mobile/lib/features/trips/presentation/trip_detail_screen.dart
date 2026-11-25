@@ -88,7 +88,11 @@ class _TripDetailScreenState extends ConsumerState<TripDetailScreen> {
           await ref.read(tripListProvider.notifier).deleteTrip(widget.tripId);
       if (mounted) {
         if (success) {
-          context.pop();
+          if (context.canPop()) {
+            context.pop();
+          } else {
+            context.go('/trips');
+          }
         } else {
           final err =
               ref.read(tripListProvider).errorMessage ?? 'Lỗi xóa chuyến đi';
@@ -468,119 +472,31 @@ class _TripDetailScreenState extends ConsumerState<TripDetailScreen> {
   }
 
   void _showAddItineraryDialog(int defaultDay) {
-    final activityController = TextEditingController();
-    final timeController = TextEditingController();
-    final costController = TextEditingController();
-    final notesController = TextEditingController();
-    int selectedDay = defaultDay;
-
-    showModalBottomSheet(
+    showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setModalState) => Padding(
-          padding: EdgeInsets.only(
-            left: 20,
-            right: 20,
-            top: 20,
-            bottom: MediaQuery.of(ctx).viewInsets.bottom + 20,
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'Thêm hoạt động vào lịch trình',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+      builder: (_) => _AddItinerarySheet(
+        defaultDay: defaultDay,
+        onSubmit: (request) async {
+          final ok = await ref
+              .read(tripDetailProvider.notifier)
+              .addItineraryItem(widget.tripId, request);
+          if (!ok && mounted) {
+            final err = ref.read(tripDetailProvider).errorMessage ??
+                'Không thể thêm hoạt động vào lịch trình';
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                key: const Key('trip_itinerary_error_snackbar'),
+                content: Text(err),
               ),
-              const SizedBox(height: 16),
-              Row(
-                children: [
-                  const Text('Ngày thứ: '),
-                  const SizedBox(width: 8),
-                  DropdownButton<int>(
-                    value: selectedDay,
-                    items: List.generate(
-                      14,
-                      (i) => DropdownMenuItem(
-                        value: i + 1,
-                        child: Text('Ngày ${i + 1}'),
-                      ),
-                    ),
-                    onChanged: (val) {
-                      if (val != null) setModalState(() => selectedDay = val);
-                    },
-                  ),
-                ],
-              ),
-              const SizedBox(height: 10),
-              AppTextField(
-                controller: activityController,
-                labelText: 'Hoạt động / Địa điểm *',
-                hintText: 'VD: Tham quan Hồ Gươm',
-              ),
-              const SizedBox(height: 10),
-              Row(
-                children: [
-                  Expanded(
-                    child: AppTextField(
-                      controller: timeController,
-                      labelText: 'Thời gian',
-                      hintText: '09:00',
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: AppTextField(
-                      controller: costController,
-                      keyboardType: TextInputType.number,
-                      labelText: 'Chi phí (VND)',
-                      hintText: '100000',
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 10),
-              AppTextField(
-                controller: notesController,
-                labelText: 'Ghi chú',
-                hintText: 'Lưu ý, địa chỉ...',
-              ),
-              const SizedBox(height: 20),
-              AppButton(
-                text: 'Thêm vào lịch trình',
-                onPressed: () async {
-                  final activity = activityController.text.trim();
-                  if (activity.isEmpty) return;
-
-                  final cost = int.tryParse(costController.text.trim());
-                  Navigator.pop(ctx);
-
-                  await ref.read(tripDetailProvider.notifier).addItineraryItem(
-                        widget.tripId,
-                        AddItineraryItemRequest(
-                          dayNumber: selectedDay,
-                          activity: activity,
-                          startTime: timeController.text.trim(),
-                          estimatedCost: cost,
-                          notes: notesController.text.trim(),
-                        ),
-                      );
-                },
-              ),
-            ],
-          ),
-        ),
+            );
+          }
+        },
       ),
-    ).whenComplete(() {
-      activityController.dispose();
-      timeController.dispose();
-      costController.dispose();
-      notesController.dispose();
-    });
+    );
   }
 
   List<_SliverItineraryEntry> _flattenItineraries(List<ItineraryModel> days) {
@@ -1056,11 +972,183 @@ class _TripDetailScreenState extends ConsumerState<TripDetailScreen> {
       trailing: IconButton(
         icon: const Icon(Icons.delete_outline, size: 20),
         tooltip: 'Xóa hoạt động',
-        onPressed: () {
-          ref
+        onPressed: () async {
+          final ok = await ref
               .read(tripDetailProvider.notifier)
               .deleteItineraryItem(widget.tripId, item.id);
+          if (!ok && mounted) {
+            final err = ref.read(tripDetailProvider).errorMessage ??
+                'Không thể xóa hoạt động khỏi lịch trình';
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                key: const Key('trip_itinerary_error_snackbar'),
+                content: Text(err),
+              ),
+            );
+          }
         },
+      ),
+    );
+  }
+}
+
+class _AddItinerarySheet extends StatefulWidget {
+  final int defaultDay;
+  final Future<void> Function(AddItineraryItemRequest request) onSubmit;
+
+  const _AddItinerarySheet({
+    required this.defaultDay,
+    required this.onSubmit,
+  });
+
+  @override
+  State<_AddItinerarySheet> createState() => _AddItinerarySheetState();
+}
+
+class _AddItinerarySheetState extends State<_AddItinerarySheet> {
+  final _activityController = TextEditingController();
+  final _timeController = TextEditingController();
+  final _costController = TextEditingController();
+  final _notesController = TextEditingController();
+  late int _selectedDay;
+  String? _dialogError;
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedDay = widget.defaultDay;
+  }
+
+  @override
+  void dispose() {
+    _activityController.dispose();
+    _timeController.dispose();
+    _costController.dispose();
+    _notesController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.only(
+        left: 20,
+        right: 20,
+        top: 20,
+        bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Thêm hoạt động vào lịch trình',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              const Text('Ngày thứ: '),
+              const SizedBox(width: 8),
+              DropdownButton<int>(
+                value: _selectedDay,
+                items: List.generate(
+                  14,
+                  (i) => DropdownMenuItem(
+                    value: i + 1,
+                    child: Text('Ngày ${i + 1}'),
+                  ),
+                ),
+                onChanged: (val) {
+                  if (val != null) setState(() => _selectedDay = val);
+                },
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          AppTextField(
+            key: const Key('trip_add_item_activity_input'),
+            controller: _activityController,
+            labelText: 'Hoạt động / Địa điểm *',
+            hintText: 'VD: Tham quan Hồ Gươm',
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Expanded(
+                child: AppTextField(
+                  key: const Key('trip_add_item_time_input'),
+                  controller: _timeController,
+                  labelText: 'Thời gian',
+                  hintText: '09:00',
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: AppTextField(
+                  key: const Key('trip_add_item_cost_input'),
+                  controller: _costController,
+                  keyboardType: TextInputType.number,
+                  labelText: 'Chi phí (VND)',
+                  hintText: '100000',
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          AppTextField(
+            key: const Key('trip_add_item_notes_input'),
+            controller: _notesController,
+            labelText: 'Ghi chú',
+            hintText: 'Lưu ý, địa chỉ...',
+          ),
+          if (_dialogError != null) ...[
+            const SizedBox(height: 10),
+            Text(
+              _dialogError!,
+              key: const Key('trip_add_item_dialog_error'),
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.error,
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+          const SizedBox(height: 20),
+          AppButton(
+            key: const Key('trip_add_item_submit_button'),
+            text: 'Thêm vào lịch trình',
+            onPressed: () async {
+              final activity = _activityController.text.trim();
+              if (activity.isEmpty) {
+                setState(() => _dialogError = 'Vui lòng nhập tên hoạt động');
+                return;
+              }
+
+              final rawCost = _costController.text.trim();
+              int? cost;
+              if (rawCost.isNotEmpty) {
+                cost = int.tryParse(rawCost);
+                if (cost == null || cost < 0) {
+                  setState(
+                    () => _dialogError = 'Chi phí phải là số nguyên không âm',
+                  );
+                  return;
+                }
+              }
+
+              final req = AddItineraryItemRequest(
+                dayNumber: _selectedDay,
+                activity: activity,
+                startTime: _timeController.text.trim(),
+                estimatedCost: cost,
+                notes: _notesController.text.trim(),
+              );
+              Navigator.pop(context);
+              await widget.onSubmit(req);
+            },
+          ),
+        ],
       ),
     );
   }
