@@ -31,7 +31,8 @@ class TripListState {
       trips: trips ?? this.trips,
       isLoading: isLoading ?? this.isLoading,
       errorMessage: clearError ? null : (errorMessage ?? this.errorMessage),
-      isOfflineError: clearError ? false : (isOfflineError ?? this.isOfflineError),
+      isOfflineError:
+          clearError ? false : (isOfflineError ?? this.isOfflineError),
     );
   }
 }
@@ -133,6 +134,7 @@ class TripListNotifier extends StateNotifier<TripListState> {
 class TripDetailState {
   final TripModel? trip;
   final bool isLoading;
+  final bool isSavingOrder;
   final String? errorMessage;
   final bool isGeneratingPlan;
   final AiPlanPreviewModel? generatedPlan;
@@ -141,6 +143,7 @@ class TripDetailState {
   const TripDetailState({
     this.trip,
     this.isLoading = false,
+    this.isSavingOrder = false,
     this.errorMessage,
     this.isGeneratingPlan = false,
     this.generatedPlan,
@@ -150,6 +153,7 @@ class TripDetailState {
   TripDetailState copyWith({
     TripModel? trip,
     bool? isLoading,
+    bool? isSavingOrder,
     String? errorMessage,
     bool clearError = false,
     bool? isGeneratingPlan,
@@ -161,12 +165,12 @@ class TripDetailState {
     return TripDetailState(
       trip: trip ?? this.trip,
       isLoading: isLoading ?? this.isLoading,
+      isSavingOrder: isSavingOrder ?? this.isSavingOrder,
       errorMessage: clearError ? null : (errorMessage ?? this.errorMessage),
       isGeneratingPlan: isGeneratingPlan ?? this.isGeneratingPlan,
       generatedPlan: clearPlan ? null : (generatedPlan ?? this.generatedPlan),
-      planErrorMessage: clearPlanError
-          ? null
-          : (planErrorMessage ?? this.planErrorMessage),
+      planErrorMessage:
+          clearPlanError ? null : (planErrorMessage ?? this.planErrorMessage),
     );
   }
 }
@@ -257,6 +261,37 @@ class TripDetailNotifier extends StateNotifier<TripDetailState> {
       if (!mounted) return false;
       state = state.copyWith(
         errorMessage: 'Không thể xóa hoạt động khỏi lịch trình',
+      );
+      return false;
+    }
+  }
+
+  Future<bool> reorderItineraryItems(
+    String tripId,
+    ReorderItineraryRequest request,
+  ) async {
+    state = state.copyWith(isSavingOrder: true, clearError: true);
+    try {
+      final updated = await _repo.reorderItineraryItems(tripId, request);
+      if (!mounted) return false;
+      state = state.copyWith(
+        trip: updated,
+        isSavingOrder: false,
+        clearError: true,
+      );
+      return true;
+    } on DioException catch (e) {
+      if (!mounted) return false;
+      state = state.copyWith(
+        isSavingOrder: false,
+        errorMessage: _mapError(e),
+      );
+      return false;
+    } catch (_) {
+      if (!mounted) return false;
+      state = state.copyWith(
+        isSavingOrder: false,
+        errorMessage: 'Không thể lưu thứ tự lịch trình',
       );
       return false;
     }

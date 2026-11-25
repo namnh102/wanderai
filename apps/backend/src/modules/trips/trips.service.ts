@@ -10,6 +10,7 @@ import { CreateTripDto } from './dto/create-trip.dto';
 import { UpdateTripDto } from './dto/update-trip.dto';
 import { AddItineraryDto } from './dto/add-itinerary.dto';
 import { BulkItineraryDto } from './dto/bulk-itinerary.dto';
+import { ReorderItineraryDto } from './dto/reorder-itinerary.dto';
 import { PlanTripDto } from './dto/plan-trip.dto';
 import { AiProxyService } from '../ai-proxy/ai-proxy.service';
 
@@ -363,6 +364,105 @@ export class TripsService {
         throw error;
       }
     });
+  }
+
+  // PUT /trips/:id/itinerary/reorder — sắp xếp lại thứ tự hoạt động trong lịch trình (WP-TRIP-01)
+  async reorderItineraryItems(
+    tripId: string,
+    userId: string,
+    dto: ReorderItineraryDto,
+  ) {
+    const trip = await this.prisma.trip.findFirst({
+      where: { id: tripId, deletedAt: null },
+    });
+    if (!trip) {
+      throw new NotFoundException('Chuyến đi không tồn tại');
+    }
+    if (trip.userId !== userId) {
+      throw new ForbiddenException('Chỉ chủ chuyến đi mới có quyền sắp xếp lịch trình');
+    }
+    if (trip.status === TripStatus.CANCELLED) {
+      throw new BadRequestException('Chuyến đi đã hủy không thể chỉnh sửa lịch trình');
+    }
+    if (!dto.items || !Array.isArray(dto.items) || dto.items.length === 0) {
+      throw new BadRequestException('Danh sách hoạt động sắp xếp không được để trống');
+    }
+
+    const seenItemIds = new Set<string>();
+    for (const entry of dto.items) {
+      if (seenItemIds.has(entry.itemId)) {
+        throw new BadRequestException('Danh sách itemId bị trùng lặp');
+      }
+      seenItemIds.add(entry.itemId);
+    }
+
+    await this.prisma.$transaction(async (tx) => {
+      const existingTripItems = await tx.itineraryItem.findMany({
+        where: { itinerary: { tripId } },
+        select: {
+          id: true,
+          itineraryId: true,
+          itinerary: { select: { dayNumber: true } },
+        },
+      });
+
+      const existingById = new Map(
+        existingTripItems.map((row) => [row.id, row]),
+      );
+
+      const submittedByItinerary = new Map<
+        string,
+        Array<{ itemId: string; orderIndex: number }>
+      >();
+
+      for (const entry of dto.items) {
+        const existing = existingById.get(entry.itemId);
+        if (!existing) {
+          throw new NotFoundException('Hoạt động không tồn tại trong lịch trình');
+        }
+        if (
+          dto.dayNumber !== undefined &&
+          existing.itinerary.dayNumber !== dto.dayNumber
+        ) {
+          throw new BadRequestException(
+            `Hoạt động "${entry.itemId}" không thuộc ngày ${dto.dayNumber}`,
+          );
+        }
+        const list = submittedByItinerary.get(existing.itineraryId) ?? [];
+        list.push(entry);
+        submittedByItinerary.set(existing.itineraryId, list);
+      }
+
+      for (const [itineraryId, submittedList] of submittedByItinerary.entries()) {
+        const totalInDay = existingTripItems.filter(
+          (row) => row.itineraryId === itineraryId,
+        ).length;
+        if (submittedList.length !== totalInDay) {
+          throw new BadRequestException(
+            'Phải gửi đầy đủ tất cả hoạt động trong ngày khi sắp xếp lại thứ tự',
+          );
+        }
+        const sortedIndices = submittedList
+          .map((x) => x.orderIndex)
+          .sort((a, b) => a - b);
+        for (let idx = 0; idx < sortedIndices.length; idx++) {
+          if (sortedIndices[idx] !== idx + 1) {
+            throw new BadRequestException(
+              'Thứ tự orderIndex trong mỗi ngày phải liên tục từ 1 đến N',
+            );
+          }
+        }
+      }
+
+      for (const entry of dto.items) {
+        await tx.itineraryItem.update({
+          where: { id: entry.itemId },
+          data: { orderIndex: entry.orderIndex },
+        });
+      }
+    });
+
+    return this.findById(tripId, userId);
   }
 
   // DELETE /trips/:id/itinerary/:itemId

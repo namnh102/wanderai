@@ -41,6 +41,9 @@ class TripDetailScreen extends ConsumerStatefulWidget {
 }
 
 class _TripDetailScreenState extends ConsumerState<TripDetailScreen> {
+  bool _isReordering = false;
+  List<ItineraryModel> _draftItineraries = const [];
+
   @override
   void initState() {
     super.initState();
@@ -49,6 +52,10 @@ class _TripDetailScreenState extends ConsumerState<TripDetailScreen> {
       if (!mounted) return;
       final loaded = ref.read(tripDetailProvider).trip;
       if (kDebugMode && loaded != null) {
+        final orderedItems = loaded.itineraries
+            .expand((d) => d.items)
+            .map((i) => '${i.orderIndex}:${i.placeName ?? i.activity}')
+            .toList();
         final placeIds = loaded.itineraries
             .expand((d) => d.items)
             .map((i) => i.placeId)
@@ -56,10 +63,125 @@ class _TripDetailScreenState extends ConsumerState<TripDetailScreen> {
             .toList();
         debugPrint(
           '[GoMate][TripDetail] opened trip_id=${loaded.id} '
-          'title="${loaded.title}" place_ids=$placeIds',
+          'title="${loaded.title}" place_ids=$placeIds '
+          'ordered_items=$orderedItems',
         );
       }
     });
+  }
+
+  void _enterReorderMode(TripModel trip) {
+    setState(() {
+      _isReordering = true;
+      _draftItineraries = trip.itineraries
+          .map(
+            (day) => day.copyWith(
+              items: List<ItineraryItemModel>.from(day.items),
+            ),
+          )
+          .toList();
+    });
+  }
+
+  void _cancelReorderMode() {
+    setState(() {
+      _isReordering = false;
+      _draftItineraries = const [];
+    });
+  }
+
+  void _handleDraftDayReorder(int dayNumber, int oldIndex, int newIndex) {
+    setState(() {
+      _draftItineraries = _draftItineraries.map((day) {
+        if (day.dayNumber != dayNumber) return day;
+        final mutable = List<ItineraryItemModel>.from(day.items);
+        if (oldIndex < 0 ||
+            oldIndex >= mutable.length ||
+            newIndex < 0 ||
+            newIndex >= mutable.length) {
+          return day;
+        }
+        final moved = mutable.removeAt(oldIndex);
+        mutable.insert(newIndex, moved);
+        final reindexed = [
+          for (var i = 0; i < mutable.length; i++)
+            mutable[i].copyWith(orderIndex: i + 1),
+        ];
+        if (kDebugMode) {
+          final draftSummary = reindexed
+              .map((i) => '${i.orderIndex}:${i.placeName ?? i.activity}')
+              .toList();
+          debugPrint(
+            '[GoMate][TripDetail] draft_reorder trip_id=${widget.tripId} '
+            'day=$dayNumber order=$draftSummary',
+          );
+        }
+        return day.copyWith(items: reindexed);
+      }).toList();
+    });
+  }
+
+  Future<void> _saveReorderedItinerary() async {
+    final entries = <ReorderItineraryItemEntry>[];
+    for (final day in _draftItineraries) {
+      for (var i = 0; i < day.items.length; i++) {
+        entries.add(
+          ReorderItineraryItemEntry(
+            itemId: day.items[i].id,
+            orderIndex: i + 1,
+          ),
+        );
+      }
+    }
+    if (entries.isEmpty) {
+      _cancelReorderMode();
+      return;
+    }
+
+    final ok =
+        await ref.read(tripDetailProvider.notifier).reorderItineraryItems(
+              widget.tripId,
+              ReorderItineraryRequest(items: entries),
+            );
+    if (!mounted) return;
+
+    if (ok) {
+      final updated = ref.read(tripDetailProvider).trip;
+      if (kDebugMode && updated != null) {
+        final orderedItems = updated.itineraries
+            .expand((d) => d.items)
+            .map((i) => '${i.orderIndex}:${i.placeName ?? i.activity}')
+            .toList();
+        final placeIds = updated.itineraries
+            .expand((d) => d.items)
+            .map((i) => i.placeId)
+            .whereType<String>()
+            .toList();
+        debugPrint(
+          '[GoMate][TripDetail] saved_reorder trip_id=${updated.id} '
+          'place_ids=$placeIds ordered_items=$orderedItems',
+        );
+      }
+      setState(() {
+        _isReordering = false;
+        _draftItineraries = const [];
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          key: Key('trip_itinerary_reorder_saved_snackbar'),
+          content: Text('Đã lưu thứ tự lịch trình'),
+        ),
+      );
+    } else {
+      final err = ref.read(tripDetailProvider).errorMessage ??
+          'Không thể lưu thứ tự lịch trình';
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          key: const Key('trip_itinerary_error_snackbar'),
+          content: Text(err),
+        ),
+      );
+    }
   }
 
   Future<void> _handleDelete() async {
@@ -166,8 +288,7 @@ class _TripDetailScreenState extends ConsumerState<TripDetailScreen> {
                 children: [
                   Text(
                     'Chi phí ước tính:',
-                    style:
-                        TextStyle(fontSize: 12, color: cs.onSurfaceVariant),
+                    style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant),
                   ),
                   Text(
                     '${plan.budgetAnalysis.estimatedCost} ${plan.budgetAnalysis.currency}',
@@ -189,8 +310,7 @@ class _TripDetailScreenState extends ConsumerState<TripDetailScreen> {
                 children: [
                   Text(
                     'Ngân sách: ${plan.budgetAnalysis.totalBudget} ${plan.budgetAnalysis.currency}',
-                    style:
-                        TextStyle(fontSize: 12, color: cs.onSurfaceVariant),
+                    style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant),
                   ),
                   Text(
                     plan.budgetAnalysis.isOverBudget
@@ -227,8 +347,7 @@ class _TripDetailScreenState extends ConsumerState<TripDetailScreen> {
               Expanded(
                 child: Text(
                   'Chuyến đi đã có ${trip.itineraries.length} ngày. Áp dụng sẽ thay thế toàn bộ lịch trình hiện tại!',
-                  style:
-                      TextStyle(fontSize: 12, color: Colors.amber.shade900),
+                  style: TextStyle(fontSize: 12, color: Colors.amber.shade900),
                 ),
               ),
             ],
@@ -639,7 +758,8 @@ class _TripDetailScreenState extends ConsumerState<TripDetailScreen> {
                     color: cs.primaryContainer.withValues(alpha: 0.15),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(16),
-                      side: BorderSide(color: cs.primary.withValues(alpha: 0.3)),
+                      side:
+                          BorderSide(color: cs.primary.withValues(alpha: 0.3)),
                     ),
                     child: Padding(
                       padding: const EdgeInsets.all(16),
@@ -697,13 +817,89 @@ class _TripDetailScreenState extends ConsumerState<TripDetailScreen> {
                               fontSize: 17, fontWeight: FontWeight.bold),
                         ),
                       ),
-                      TextButton.icon(
-                        onPressed: () => _showAddItineraryDialog(1),
-                        icon: const Icon(Icons.add, size: 18),
-                        label: const Text('Thêm hoạt động'),
-                      ),
+                      if (!_isReordering)
+                        TextButton.icon(
+                          onPressed: () => _showAddItineraryDialog(1),
+                          icon: const Icon(Icons.add, size: 18),
+                          label: const Text('Thêm hoạt động'),
+                        ),
                     ],
                   ),
+                  if (!_isReordering &&
+                      trip.status != 'CANCELLED' &&
+                      trip.itineraries.any((d) => d.items.length >= 2))
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: TextButton.icon(
+                        key: const Key('trip_itinerary_reorder_toggle'),
+                        onPressed: () => _enterReorderMode(trip),
+                        style: TextButton.styleFrom(
+                          visualDensity: VisualDensity.compact,
+                        ),
+                        icon: const Icon(Icons.swap_vert, size: 18),
+                        label: const Text('Đổi thứ tự'),
+                      ),
+                    ),
+                  if (_isReordering)
+                    Container(
+                      key: const Key('trip_itinerary_reorder_toolbar'),
+                      margin: const EdgeInsets.only(top: 8),
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: cs.primaryContainer.withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: cs.primary.withValues(alpha: 0.35),
+                        ),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.drag_indicator,
+                                size: 18,
+                                color: cs.primary,
+                              ),
+                              const SizedBox(width: 6),
+                              Expanded(
+                                child: Text(
+                                  'Kéo giữ biểu tượng ≡ để đổi thứ tự hoạt động, sau đó nhấn Lưu thứ tự.',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: cs.onSurface,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 10),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              TextButton(
+                                key: const Key('trip_itinerary_reorder_cancel'),
+                                onPressed: state.isSavingOrder
+                                    ? null
+                                    : _cancelReorderMode,
+                                child: const Text('Hủy'),
+                              ),
+                              const SizedBox(width: 8),
+                              AppButton(
+                                key: const Key('trip_itinerary_reorder_save'),
+                                text: 'Lưu thứ tự',
+                                icon: Icons.check,
+                                isFullWidth: false,
+                                isLoading: state.isSavingOrder,
+                                onPressed: _saveReorderedItinerary,
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
                 ],
               ),
             ),
@@ -732,6 +928,25 @@ class _TripDetailScreenState extends ConsumerState<TripDetailScreen> {
                     ),
                   ),
                 ),
+              ),
+            )
+          else if (_isReordering)
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.md,
+                0,
+                AppSpacing.md,
+                AppSpacing.xl,
+              ),
+              sliver: SliverList.builder(
+                itemCount: _draftItineraries.length,
+                itemBuilder: (context, dayIdx) {
+                  return _buildReorderableDaySection(
+                    _draftItineraries[dayIdx],
+                    cs,
+                    isDisabled: state.isSavingOrder,
+                  );
+                },
               ),
             )
           else
@@ -811,8 +1026,7 @@ class _TripDetailScreenState extends ConsumerState<TripDetailScreen> {
                       ? day.title!
                       : 'Ngày ${day.dayNumber}: ${day.title}')
                   : 'Ngày ${day.dayNumber}',
-              style:
-                  const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
             ),
           ),
           TextButton(
@@ -839,6 +1053,141 @@ class _TripDetailScreenState extends ConsumerState<TripDetailScreen> {
         border: Border.all(color: borderColor),
       ),
       child: const Text('Chưa có hoạt động nào trong ngày này.'),
+    );
+  }
+
+  Widget _buildReorderableDaySection(
+    ItineraryModel day,
+    ColorScheme cs, {
+    required bool isDisabled,
+  }) {
+    final borderColor = cs.outlineVariant.withValues(alpha: 0.5);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Container(
+          margin: const EdgeInsets.only(top: 4),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          decoration: BoxDecoration(
+            color: cs.surfaceContainerLow,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(14)),
+            border: Border(
+              top: BorderSide(color: borderColor),
+              left: BorderSide(color: borderColor),
+              right: BorderSide(color: borderColor),
+            ),
+          ),
+          child: Text(
+            day.title != null && day.title!.isNotEmpty
+                ? (day.title!.startsWith('Ngay') ||
+                        day.title!.startsWith('Ngày')
+                    ? day.title!
+                    : 'Ngày ${day.dayNumber}: ${day.title}')
+                : 'Ngày ${day.dayNumber}',
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+          ),
+        ),
+        if (day.items.isEmpty)
+          _buildEmptyDayCard(cs)
+        else
+          Container(
+            margin: const EdgeInsets.only(bottom: 12),
+            decoration: BoxDecoration(
+              color: cs.surface,
+              borderRadius:
+                  const BorderRadius.vertical(bottom: Radius.circular(14)),
+              border: Border.all(color: borderColor),
+            ),
+            clipBehavior: Clip.antiAlias,
+            child: ReorderableListView.builder(
+              key: Key('trip_reorder_list_day_${day.dayNumber}'),
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              buildDefaultDragHandles: false,
+              itemCount: day.items.length,
+              onReorderItem: (oldIndex, newIndex) {
+                if (isDisabled) return;
+                _handleDraftDayReorder(day.dayNumber, oldIndex, newIndex);
+              },
+              itemBuilder: (context, itemIndex) {
+                final item = day.items[itemIndex];
+                final isLast = itemIndex == day.items.length - 1;
+                return Container(
+                  key: ValueKey('trip_reorder_tile_${item.id}'),
+                  decoration: BoxDecoration(
+                    color: cs.surface,
+                    border: isLast
+                        ? null
+                        : Border(bottom: BorderSide(color: borderColor)),
+                  ),
+                  child: ListTile(
+                    leading: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        ReorderableDragStartListener(
+                          index: itemIndex,
+                          enabled: !isDisabled,
+                          child: Container(
+                            key: Key('trip_reorder_handle_${item.id}'),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 6,
+                              vertical: 8,
+                            ),
+                            child: Icon(
+                              Icons.drag_handle,
+                              color: cs.onSurfaceVariant,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        Container(
+                          key: Key('trip_reorder_badge_${item.id}'),
+                          width: 30,
+                          height: 30,
+                          decoration: BoxDecoration(
+                            color: cs.primary.withValues(alpha: 0.12),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Center(
+                            child: Text(
+                              '${item.orderIndex}',
+                              style: TextStyle(
+                                color: cs.primary,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 13,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    title: Text(
+                      item.activity,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 14,
+                      ),
+                    ),
+                    subtitle: item.placeId != null
+                        ? Padding(
+                            padding: const EdgeInsets.only(top: 2),
+                            child: Text(
+                              item.placeName ?? 'Địa điểm đã lưu',
+                              key: Key('trip_reorder_place_${item.placeId}'),
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: cs.primary,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          )
+                        : null,
+                  ),
+                );
+              },
+            ),
+          ),
+      ],
     );
   }
 

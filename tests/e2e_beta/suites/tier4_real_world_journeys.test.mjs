@@ -463,4 +463,96 @@ describe('Tier 4 — Real-World Application Journeys (6 E2E Scenarios: T4-01..T4
       assert.equal(clean.w07PrepVerified, true);
     }
   });
+
+  test('T4-07: WP-TRIP-01 Itinerary Reorder Persistence — swap A (Tháp Đồng Hồ) -> B to B -> A, save, cold reload & reconcile API', async () => {
+    const haLong = await resolveHaLongDestination(client);
+    const placesRes = assertSuccessEnvelope(
+      await client.get('/places', {
+        query: { destinationId: haLong.id, verifiedOnly: true, limit: 20 },
+      }),
+      200,
+    );
+    const placeAId = FIXTURE.poi.id;
+    const placeBCandidate = placesRes.items.find((p) => p.id !== placeAId);
+    assert.ok(placeBCandidate, 'Expected at least a second verified Hạ Long POI for B');
+    const placeBId = placeBCandidate.id;
+
+    const auth = await registerAndLogin(client, {
+      email: uniqueEmail('wp.trip.01.reorder'),
+      password: 'Password123!',
+      name: 'WP-TRIP-01 Reorder Traveler',
+    });
+    const authed = client.withToken(auth.accessToken);
+
+    const trip = assertSuccessEnvelope(
+      await authed.post('/trips', {
+        title: 'WP-TRIP-01 Hạ Long A->B thành B->A',
+        destinationId: haLong.id,
+      }),
+      201,
+    );
+
+    const itemA = assertSuccessEnvelope(
+      await authed.post(`/trips/${trip.id}/itinerary`, {
+        dayNumber: 1,
+        activity: 'Tham quan Tháp Đồng Hồ (A)',
+        placeId: placeAId,
+      }),
+      201,
+    );
+    const itemB = assertSuccessEnvelope(
+      await authed.post(`/trips/${trip.id}/itinerary`, {
+        dayNumber: 1,
+        activity: `Tham quan ${placeBCandidate.name} (B)`,
+        placeId: placeBId,
+      }),
+      201,
+    );
+
+    const beforeTrip = assertSuccessEnvelope(await authed.get(`/trips/${trip.id}`), 200);
+    const beforeDay1 = beforeTrip.itineraries.find((d) => d.dayNumber === 1);
+    assert.deepEqual(
+      beforeDay1.items.map((i) => i.placeId),
+      [placeAId, placeBId],
+    );
+
+    const reordered = assertSuccessEnvelope(
+      await authed.put(`/trips/${trip.id}/itinerary/reorder`, {
+        dayNumber: 1,
+        items: [
+          { itemId: itemB.id, orderIndex: 1 },
+          { itemId: itemA.id, orderIndex: 2 },
+        ],
+      }),
+      200,
+    );
+    assert.deepEqual(
+      reordered.itineraries.find((d) => d.dayNumber === 1).items.map((i) => ({
+        id: i.id,
+        placeId: i.placeId,
+        orderIndex: i.orderIndex,
+      })),
+      [
+        { id: itemB.id, placeId: placeBId, orderIndex: 1 },
+        { id: itemA.id, placeId: placeAId, orderIndex: 2 },
+      ],
+    );
+
+    // Cold reload using a brand-new HTTP client instance
+    const coldReloadTrip = assertSuccessEnvelope(
+      await new HttpClient(cfg.baseUrl).withToken(auth.accessToken).get(`/trips/${trip.id}`),
+      200,
+    );
+    assert.deepEqual(
+      coldReloadTrip.itineraries.find((d) => d.dayNumber === 1).items.map((i) => ({
+        id: i.id,
+        placeId: i.placeId,
+        orderIndex: i.orderIndex,
+      })),
+      [
+        { id: itemB.id, placeId: placeBId, orderIndex: 1 },
+        { id: itemA.id, placeId: placeAId, orderIndex: 2 },
+      ],
+    );
+  });
 });
