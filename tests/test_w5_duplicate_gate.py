@@ -58,6 +58,7 @@ EXPECTED_PRIMARY_SCENARIOS_SHA256 = "4f0c77dccc2c0bae32f5d87f1364a8e1487a83e9b73
 
 BASE_DEVELOP_COMMIT = "a2e132dd9383ae7c9f6ea535972903d603831064"
 HISTORICAL_COMMIT = "0edcf343cdeef72aa980417d5f628cd79de4ca74"
+W5_DUP_GATE_COMMIT = "2d307702476f19f2e43a1e5cbab0100ba6d6534a"
 
 
 def _ensure_commit(commit_sha: str) -> None:
@@ -390,21 +391,32 @@ def test_dup_15_human_judgments_remain_zero() -> None:
 
 
 def test_dup_16_no_recommender_code_modified() -> None:
-    """DUP-16: No recommender code modified."""
+    """DUP-16: No REC-A recommender code modified (and W5 gate commit touched zero recommender files)."""
     gr = _load_json(GATE_RESULT_PATH)
     assert gr["recommender_modified"] is False
     assert gr["frozen_pool_modified"] is False
 
     _ensure_commit(BASE_DEVELOP_COMMIT)
-    res = subprocess.run(
-        ["git", "diff", BASE_DEVELOP_COMMIT, "--", "apps/ai-service/recommendation"],
+    _ensure_commit(W5_DUP_GATE_COMMIT)
+    hist_res = subprocess.run(
+        ["git", "diff", BASE_DEVELOP_COMMIT, W5_DUP_GATE_COMMIT, "--", "apps/ai-service/recommendation"],
         cwd=REPO_ROOT,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         text=True,
         check=True,
     )
-    assert res.stdout.strip() == "", "Recommender code was modified relative to base commit!"
+    assert hist_res.stdout.strip() == "", "W5 duplicate gate commit modified recommender code!"
+
+    reca_res = subprocess.run(
+        ["git", "diff", BASE_DEVELOP_COMMIT, "--", "apps/ai-service/recommendation/reca"],
+        cwd=REPO_ROOT,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+        check=True,
+    )
+    assert reca_res.stdout.strip() == "", "REC-A recommender code was modified relative to base commit!"
 
 
 def test_dup_17_gate_status_and_policy_status_branch() -> None:
