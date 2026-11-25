@@ -494,5 +494,66 @@ describe('TripsService & Trip DTO Validation', () => {
       }>;
       expect(day1Items.map((i) => i.orderIndex)).toEqual([2, 3, 4]);
     });
+
+    it('rejects soft-deleted destinationId in create and update with 404 NotFoundException', async () => {
+      const deletedDestId = 'd2222222-2222-4222-8222-222222222222';
+      await inMemoryPrisma.destination.update({
+        where: { id: deletedDestId },
+        data: { deletedAt: new Date() },
+      });
+
+      await request(app.getHttpServer())
+        .post('/trips')
+        .send({ title: 'Trip with deleted dest', destinationId: deletedDestId })
+        .expect(404);
+
+      const createdTrip = await request(app.getHttpServer())
+        .post('/trips')
+        .send({
+          title: 'Trip with valid dest',
+          destinationId: 'd1111111-1111-4111-8111-111111111111',
+        })
+        .expect(201);
+
+      await request(app.getHttpServer())
+        .put(`/trips/${createdTrip.body.data.id}`)
+        .send({ destinationId: deletedDestId })
+        .expect(404);
+    });
+
+    it('addMember normalizes memberEmail (trim + lowercase) and rejects soft-deleted users with 404 NotFoundException', async () => {
+      await inMemoryPrisma.user.create({
+        data: {
+          email: 'active-member@wanderai.test',
+          passwordHash: null,
+          isVerified: true,
+        },
+      });
+      await inMemoryPrisma.user.create({
+        data: {
+          email: 'deleted-member@wanderai.test',
+          passwordHash: null,
+          isVerified: true,
+          deletedAt: new Date(),
+        },
+      });
+
+      const tripRes = await request(app.getHttpServer())
+        .post('/trips')
+        .send({ title: 'Trip for members' })
+        .expect(201);
+      const tripId = tripRes.body.data.id as string;
+
+      const added = await request(app.getHttpServer())
+        .post(`/trips/${tripId}/members`)
+        .send({ email: '  Active-Member@WanderAI.Test  ' })
+        .expect(201);
+      expect(added.body.data.user.email).toBe('active-member@wanderai.test');
+
+      await request(app.getHttpServer())
+        .post(`/trips/${tripId}/members`)
+        .send({ email: '  DELETED-Member@WanderAI.Test  ' })
+        .expect(404);
+    });
   });
 });

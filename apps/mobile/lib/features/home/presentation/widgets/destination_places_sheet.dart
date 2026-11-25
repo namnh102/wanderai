@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -181,120 +182,63 @@ class _DestinationPlacesSheetState
     context.go('/map');
   }
 
+  Widget _buildScrollableState(Widget child) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        if (!constraints.hasBoundedHeight) {
+          return child;
+        }
+        return SingleChildScrollView(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(minHeight: constraints.maxHeight),
+            child: child,
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final userPos = ref.watch(userLocationProvider).position;
-    final maxHeight = MediaQuery.of(context).size.height * 0.84;
+    final mediaQuery = MediaQuery.of(context);
+    final viewInsetsBottom = mediaQuery.viewInsets.bottom;
+    final isKeyboardOpen = viewInsetsBottom > 0;
+    final safeHeight = math.max(
+      0.0,
+      mediaQuery.size.height - mediaQuery.padding.top,
+    );
+    final maxHeight =
+        isKeyboardOpen ? safeHeight : mediaQuery.size.height * 0.84;
 
     return ResponsiveWrapper(
       maxWidth: 640.0,
       fillHeight: false,
       child: Container(
         constraints: BoxConstraints(maxHeight: maxHeight),
-        padding: EdgeInsets.only(
-          bottom: MediaQuery.of(context).viewInsets.bottom,
-        ),
+        padding: EdgeInsets.only(bottom: viewInsetsBottom),
         decoration: const BoxDecoration(
           color: AppColors.surface,
           borderRadius: AppRadius.sheetRadius,
         ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: AppSpacing.sm),
-            Center(
-              child: Container(
-                width: 40,
-                height: 4,
-                decoration: const BoxDecoration(
-                  color: AppColors.border,
-                  borderRadius: AppRadius.pillRadius,
-                ),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(
-                AppSpacing.md,
-                AppSpacing.mdSmall,
-                AppSpacing.sm,
-                AppSpacing.xs,
-              ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          widget.destination.name,
-                          style: AppTypography.h2,
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          '${widget.destination.province} · ${widget.destination.regionLabel}',
-                          style: AppTypography.caption,
-                        ),
-                      ],
-                    ),
-                  ),
-                  IconButton(
-                    tooltip: 'Đóng',
-                    icon: const Icon(Icons.close_rounded),
-                    onPressed: () => Navigator.of(context).pop(),
-                  ),
-                ],
-              ),
-            ),
-            if (widget.destination.description != null &&
-                widget.destination.description!.trim().isNotEmpty)
-              Padding(
-                padding: const EdgeInsets.fromLTRB(
-                  AppSpacing.md,
-                  0,
-                  AppSpacing.md,
-                  AppSpacing.sm,
-                ),
-                child: Text(
-                  widget.destination.description!,
-                  style: AppTypography.bodyM,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(
-                AppSpacing.md,
-                0,
-                AppSpacing.md,
-                AppSpacing.sm,
-              ),
-              child: AppSearchBar(
-                key: const Key('destination_places_search_bar'),
-                controller: _searchCtrl,
-                hintText: 'Tìm địa điểm tại ${widget.destination.name}...',
-                onChanged: _onSearchChanged,
-                onSubmitted: (q) {
-                  _debounce?.cancel();
-                  _load(search: q);
-                },
-                onClear: () {
-                  _searchCtrl.clear();
-                  _onSearchChanged('');
-                },
-              ),
-            ),
-            const Divider(height: 1),
-            Expanded(
-              child: _loading
-                  ? const AppLoading(message: 'Đang tải địa điểm xác minh...')
-                  : _error != null
-                      ? AppErrorState(
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final useScrollFallback =
+                constraints.hasBoundedHeight && constraints.maxHeight < 180;
+            final bodyWidget = _loading
+                ? _buildScrollableState(
+                    const AppLoading(message: 'Đang tải địa điểm xác minh...'),
+                  )
+                : _error != null
+                    ? _buildScrollableState(
+                        AppErrorState(
                           message: _error!,
                           onRetry: () => _load(search: _activeSearch),
-                        )
-                      : _places.isEmpty
-                          ? AppEmptyState(
+                        ),
+                      )
+                    : _places.isEmpty
+                        ? _buildScrollableState(
+                            AppEmptyState(
                               icon: _activeSearch.isNotEmpty
                                   ? Icons.search_off_rounded
                                   : Icons.location_searching_outlined,
@@ -304,55 +248,166 @@ class _DestinationPlacesSheetState
                               description: _activeSearch.isNotEmpty
                                   ? 'Chưa có địa điểm xác minh phù hợp với "$_activeSearch" tại ${widget.destination.name}.'
                                   : 'Chưa có địa điểm từ nguồn OpenStreetMap cho điểm đến này.',
-                            )
-                          : ListView.separated(
-                              controller: _scrollCtrl,
-                              padding: const EdgeInsets.all(AppSpacing.md),
-                              itemCount: _places.length + (_loadingMore ? 1 : 0),
-                              separatorBuilder: (_, __) =>
-                                  const SizedBox(height: AppSpacing.sm),
-                              itemBuilder: (ctx, idx) {
-                                if (idx >= _places.length) {
-                                  return const Padding(
-                                    padding: EdgeInsets.symmetric(
-                                      vertical: AppSpacing.sm,
-                                    ),
-                                    child: AppLoading(
-                                      isCompact: true,
-                                      message: 'Đang tải thêm địa điểm...',
-                                    ),
-                                  );
-                                }
-                                final place = _places[idx];
-                                return HomeVerifiedPlaceTile(
-                                  key: Key('dest_place_tile_${place.id}'),
-                                  place: place,
-                                  userPosition: userPos,
-                                  onTap: () {
-                                    Navigator.of(context).pop();
-                                    context.push('/places/${place.id}');
-                                  },
-                                );
-                              },
                             ),
-            ),
-            SafeArea(
-              top: false,
-              child: Padding(
+                          )
+                        : ListView.separated(
+                            controller: useScrollFallback ? null : _scrollCtrl,
+                            shrinkWrap: useScrollFallback,
+                            physics: useScrollFallback
+                                ? const NeverScrollableScrollPhysics()
+                                : null,
+                            padding: const EdgeInsets.all(AppSpacing.md),
+                            itemCount: _places.length + (_loadingMore ? 1 : 0),
+                            separatorBuilder: (_, __) =>
+                                const SizedBox(height: AppSpacing.sm),
+                            itemBuilder: (ctx, idx) {
+                              if (idx >= _places.length) {
+                                return const Padding(
+                                  padding: EdgeInsets.symmetric(
+                                    vertical: AppSpacing.sm,
+                                  ),
+                                  child: AppLoading(
+                                    isCompact: true,
+                                    message: 'Đang tải thêm địa điểm...',
+                                  ),
+                                );
+                              }
+                              final place = _places[idx];
+                              return HomeVerifiedPlaceTile(
+                                key: Key('dest_place_tile_${place.id}'),
+                                place: place,
+                                userPosition: userPos,
+                                onTap: () {
+                                  Navigator.of(context).pop();
+                                  context.push('/places/${place.id}');
+                                },
+                              );
+                            },
+                          );
+
+            final columnChildren = <Widget>[
+              if (!useScrollFallback) ...[
+                const SizedBox(height: AppSpacing.sm),
+                Center(
+                  child: Container(
+                    width: 40,
+                    height: 4,
+                    decoration: const BoxDecoration(
+                      color: AppColors.border,
+                      borderRadius: AppRadius.pillRadius,
+                    ),
+                  ),
+                ),
+              ],
+              Padding(
                 padding: const EdgeInsets.fromLTRB(
                   AppSpacing.md,
+                  AppSpacing.mdSmall,
                   AppSpacing.sm,
-                  AppSpacing.md,
-                  AppSpacing.md,
+                  AppSpacing.xs,
                 ),
-                child: AppButton(
-                  text: 'Mở trên Bản đồ',
-                  icon: Icons.map_outlined,
-                  onPressed: () => _openOnMap(context),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            widget.destination.name,
+                            style: AppTypography.h2,
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            '${widget.destination.province} · ${widget.destination.regionLabel}',
+                            style: AppTypography.caption,
+                          ),
+                        ],
+                      ),
+                    ),
+                    IconButton(
+                      tooltip: 'Đóng',
+                      icon: const Icon(Icons.close_rounded),
+                      onPressed: () => Navigator.of(context).pop(),
+                    ),
+                  ],
                 ),
               ),
-            ),
-          ],
+              if (!isKeyboardOpen &&
+                  widget.destination.description != null &&
+                  widget.destination.description!.trim().isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(
+                    AppSpacing.md,
+                    0,
+                    AppSpacing.md,
+                    AppSpacing.sm,
+                  ),
+                  child: Text(
+                    widget.destination.description!,
+                    style: AppTypography.bodyM,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.md,
+                  0,
+                  AppSpacing.md,
+                  AppSpacing.sm,
+                ),
+                child: AppSearchBar(
+                  key: const Key('destination_places_search_bar'),
+                  controller: _searchCtrl,
+                  hintText: 'Tìm địa điểm tại ${widget.destination.name}...',
+                  onChanged: _onSearchChanged,
+                  onSubmitted: (q) {
+                    _debounce?.cancel();
+                    _load(search: q);
+                  },
+                  onClear: () {
+                    _searchCtrl.clear();
+                    _onSearchChanged('');
+                  },
+                ),
+              ),
+              const Divider(height: 1),
+              if (useScrollFallback) bodyWidget else Expanded(child: bodyWidget),
+              if (!isKeyboardOpen)
+                SafeArea(
+                  top: false,
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(
+                      AppSpacing.md,
+                      AppSpacing.sm,
+                      AppSpacing.md,
+                      AppSpacing.md,
+                    ),
+                    child: AppButton(
+                      text: 'Mở trên Bản đồ',
+                      icon: Icons.map_outlined,
+                      onPressed: () => _openOnMap(context),
+                    ),
+                  ),
+                ),
+            ];
+
+            if (useScrollFallback) {
+              return SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: columnChildren,
+                ),
+              );
+            }
+
+            return Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: columnChildren,
+            );
+          },
         ),
       ),
     );

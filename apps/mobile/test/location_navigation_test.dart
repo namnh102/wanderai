@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -920,4 +921,193 @@ void main() {
       expect(formatDistanceKm(15.67), '15.7 km');
     });
   });
+
+  group('GAP-19: UserLocationNotifier mid-flight disposal safety', () {
+    test('request() disposed during checkPermission() throws 0 StateErrors on resolve and reject', () async {
+      for (final shouldReject in [false, true]) {
+        final svc = _DeferredLocationService()
+          ..checkPermissionCompleter = Completer<LocationPermissionState>();
+        final notifier = UserLocationNotifier(svc, retryDelay: Duration.zero);
+
+        final future = notifier.request();
+        notifier.dispose();
+
+        if (shouldReject) {
+          svc.checkPermissionCompleter!.completeError(Exception('perm error'));
+        } else {
+          svc.checkPermissionCompleter!.complete(LocationPermissionState.granted);
+        }
+
+        expect(await future, isNull);
+      }
+    });
+
+    test('request() disposed during requestPermission() and isServiceEnabled() throws 0 StateErrors', () async {
+      for (final stage in ['requestPermission', 'isServiceEnabled']) {
+        for (final shouldReject in [false, true]) {
+          final svc = _DeferredLocationService()
+            ..checkPermissionResult = LocationPermissionState.denied;
+          if (stage == 'requestPermission') {
+            svc.requestPermissionCompleter = Completer<LocationPermissionState>();
+          } else {
+            svc.checkPermissionResult = LocationPermissionState.granted;
+            svc.isServiceEnabledCompleter = Completer<bool>();
+          }
+
+          final notifier = UserLocationNotifier(svc, retryDelay: Duration.zero);
+          final future = notifier.request();
+          await Future<void>.delayed(Duration.zero);
+          notifier.dispose();
+
+          if (stage == 'requestPermission') {
+            if (shouldReject) {
+              svc.requestPermissionCompleter!.completeError(Exception('req fail'));
+            } else {
+              svc.requestPermissionCompleter!.complete(LocationPermissionState.granted);
+            }
+          } else {
+            if (shouldReject) {
+              svc.isServiceEnabledCompleter!.completeError(Exception('svc fail'));
+            } else {
+              svc.isServiceEnabledCompleter!.complete(true);
+            }
+          }
+
+          expect(await future, isNull);
+        }
+      }
+    });
+
+    test('refreshIfPermitted() disposed mid-flight throws 0 StateErrors on resolve and reject', () async {
+      for (final shouldReject in [false, true]) {
+        final svc = _DeferredLocationService()
+          ..checkPermissionResult = LocationPermissionState.granted
+          ..isServiceEnabledResult = true
+          ..fixCompleters.add(Completer<LocationFix>());
+
+        final notifier = UserLocationNotifier(svc, retryDelay: Duration.zero);
+        final future = notifier.refreshIfPermitted();
+        await Future<void>.delayed(Duration.zero);
+        notifier.dispose();
+
+        if (shouldReject) {
+          svc.fixCompleters.first.completeError(Exception('gps error'));
+        } else {
+          svc.fixCompleters.first.complete(
+            LocationFix(
+              position: const LatLng(20.9516, 107.0852),
+              accuracyMeters: 15.0,
+              timestamp: DateTime(2026, 11, 25),
+            ),
+          );
+        }
+
+        await expectLater(future, completes);
+      }
+    });
+
+    test('_fetchWithQualityGate() retry path disposed mid-flight throws 0 StateErrors on resolve and reject', () async {
+      for (final shouldRejectSecond in [false, true]) {
+        final c1 = Completer<LocationFix>();
+        final c2 = Completer<LocationFix>();
+        final svc = _DeferredLocationService()
+          ..checkPermissionResult = LocationPermissionState.granted
+          ..isServiceEnabledResult = true
+          ..fixCompleters.addAll([c1, c2]);
+
+        final notifier = UserLocationNotifier(
+          svc,
+          retryDelay: const Duration(milliseconds: 5),
+          maxQualityRetries: 3,
+        );
+
+        final future = notifier.request();
+        await Future<void>.delayed(Duration.zero);
+        // First fix is poor (> 200m), triggering retryDelay + second attempt
+        c1.complete(
+          LocationFix(
+            position: const LatLng(20.9516, 107.0852),
+            accuracyMeters: 5000.0,
+            timestamp: DateTime(2026, 11, 25),
+          ),
+        );
+        // Wait past retryDelay so attempt 2 starts, then dispose while c2 is pending
+        await Future<void>.delayed(const Duration(milliseconds: 20));
+        notifier.dispose();
+
+        if (shouldRejectSecond) {
+          c2.completeError(Exception('retry failed'));
+        } else {
+          c2.complete(
+            LocationFix(
+              position: const LatLng(20.9516, 107.0852),
+              accuracyMeters: 12.0,
+              timestamp: DateTime(2026, 11, 25),
+            ),
+          );
+        }
+
+        expect(await future, isNull);
+      }
+    });
+  });
+}
+
+class _DeferredLocationService implements LocationService {
+  LocationPermissionState checkPermissionResult = LocationPermissionState.granted;
+  LocationPermissionState requestPermissionResult = LocationPermissionState.granted;
+  bool isServiceEnabledResult = true;
+
+  Completer<LocationPermissionState>? checkPermissionCompleter;
+  Completer<LocationPermissionState>? requestPermissionCompleter;
+  Completer<bool>? isServiceEnabledCompleter;
+  final List<Completer<LocationFix>> fixCompleters = [];
+  int _fixIndex = 0;
+
+  @override
+  Future<LocationPermissionState> checkPermission() {
+    if (checkPermissionCompleter != null) {
+      return checkPermissionCompleter!.future;
+    }
+    return Future.value(checkPermissionResult);
+  }
+
+  @override
+  Future<LocationPermissionState> requestPermission() {
+    if (requestPermissionCompleter != null) {
+      return requestPermissionCompleter!.future;
+    }
+    return Future.value(requestPermissionResult);
+  }
+
+  @override
+  Future<bool> isServiceEnabled() {
+    if (isServiceEnabledCompleter != null) {
+      return isServiceEnabledCompleter!.future;
+    }
+    return Future.value(isServiceEnabledResult);
+  }
+
+  @override
+  Future<LocationFix> currentFix() {
+    if (_fixIndex < fixCompleters.length) {
+      return fixCompleters[_fixIndex++].future;
+    }
+    return Future.value(
+      LocationFix(
+        position: const LatLng(20.9516, 107.0852),
+        accuracyMeters: 15.0,
+        timestamp: DateTime(2026, 11, 25),
+      ),
+    );
+  }
+
+  @override
+  Future<LatLng> currentPosition() async => (await currentFix()).position;
+
+  @override
+  Future<bool> openAppSettings() async => true;
+
+  @override
+  Future<bool> openLocationSettings() async => true;
 }

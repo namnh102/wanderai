@@ -38,7 +38,7 @@ export class TripsService {
       const dest = await this.prisma.destination.findUnique({
         where: { id: data.destinationId },
       });
-      if (!dest) {
+      if (!dest || dest.deletedAt) {
         throw new NotFoundException('Điểm đến không tồn tại');
       }
     }
@@ -182,7 +182,7 @@ export class TripsService {
       const dest = await this.prisma.destination.findUnique({
         where: { id: data.destinationId },
       });
-      if (!dest) {
+      if (!dest || dest.deletedAt) {
         throw new NotFoundException('Điểm đến không tồn tại');
       }
     }
@@ -389,14 +389,17 @@ export class TripsService {
       throw new ForbiddenException('Chỉ chủ chuyến đi mới có thể mời thành viên');
     }
 
-    const user = await this.prisma.user.findUnique({ where: { email: memberEmail } });
-    if (!user) {
-      throw new NotFoundException(`Không tìm thấy user: ${memberEmail}`);
+    const normalizedEmail = memberEmail.trim().toLowerCase();
+    const member = await this.prisma.user.findUnique({
+      where: { email: normalizedEmail },
+    });
+    if (!member || member.deletedAt) {
+      throw new NotFoundException(`Không tìm thấy user: ${normalizedEmail}`);
     }
 
     try {
       return await this.prisma.tripMember.create({
-        data: { tripId, userId: user.id, role: 'member' },
+        data: { tripId, userId: member.id, role: 'member' },
         include: {
           user: {
             select: {

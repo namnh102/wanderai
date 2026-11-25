@@ -208,9 +208,11 @@ class UserLocationNotifier extends StateNotifier<UserLocationState> {
       if (await _service.checkPermission() != LocationPermissionState.granted) {
         return;
       }
+      if (!mounted) return;
       if (!await _service.isServiceEnabled()) {
         return;
       }
+      if (!mounted) return;
       await _fetchWithQualityGate();
     } catch (_) {
       // Stay "unknown"; the user can tap "Vị trí của tôi".
@@ -220,6 +222,7 @@ class UserLocationNotifier extends StateNotifier<UserLocationState> {
   /// Explicit request (from the "Vị trí của tôi" action). Prompts for
   /// permission if needed. Returns the real position or `null`.
   Future<LatLng?> request() async {
+    if (!mounted) return null;
     state = UserLocationState(
       status: UserLocationStatus.requesting,
       fix: state.fix,
@@ -227,8 +230,10 @@ class UserLocationNotifier extends StateNotifier<UserLocationState> {
     );
     try {
       var perm = await _service.checkPermission();
+      if (!mounted) return null;
       if (perm == LocationPermissionState.denied) {
         perm = await _service.requestPermission();
+        if (!mounted) return null;
       }
       if (perm != LocationPermissionState.granted) {
         state = UserLocationState(
@@ -237,7 +242,9 @@ class UserLocationNotifier extends StateNotifier<UserLocationState> {
         );
         return null;
       }
-      if (!await _service.isServiceEnabled()) {
+      final serviceEnabled = await _service.isServiceEnabled();
+      if (!mounted) return null;
+      if (!serviceEnabled) {
         state = UserLocationState(
           status: UserLocationStatus.unavailable,
           permissionState: LocationPermissionState.granted,
@@ -246,6 +253,7 @@ class UserLocationNotifier extends StateNotifier<UserLocationState> {
       }
       return await _fetchWithQualityGate();
     } catch (_) {
+      if (!mounted) return null;
       state = UserLocationState(
         status: UserLocationStatus.unavailable,
         permissionState: LocationPermissionState.denied,
@@ -264,10 +272,12 @@ class UserLocationNotifier extends StateNotifier<UserLocationState> {
     LocationFix? bestFix;
 
     for (int attempt = 1; attempt <= maxQualityRetries; attempt++) {
+      if (!mounted) return null;
       final LocationFix fix;
       try {
         fix = await _service.currentFix();
       } catch (e) {
+        if (!mounted) return null;
         if (bestFix != null) {
           break;
         }
@@ -277,6 +287,7 @@ class UserLocationNotifier extends StateNotifier<UserLocationState> {
         );
         return null;
       }
+      if (!mounted) return null;
 
       if (bestFix == null || fix.accuracyMeters < bestFix.accuracyMeters) {
         bestFix = fix;
@@ -289,12 +300,14 @@ class UserLocationNotifier extends StateNotifier<UserLocationState> {
           bestFix.quality == LocationAccuracyQuality.poor) {
         if (retryDelay > Duration.zero) {
           await Future.delayed(retryDelay);
+          if (!mounted) return null;
         }
       } else {
         break;
       }
     }
 
+    if (!mounted) return null;
     if (bestFix == null) {
       state = UserLocationState(
         status: UserLocationStatus.unavailable,

@@ -40,10 +40,12 @@ class BuddyNotifier extends StateNotifier<BuddyState> {
 
   void resetForLogout() {
     _loadSeq++;
+    if (!mounted) return;
     state = const BuddyState();
   }
 
   Future<void> load() async {
+    if (!mounted) return;
     final seq = ++_loadSeq;
     state = state.copyWith(isLoading: true, clearError: true);
     try {
@@ -77,6 +79,7 @@ class BuddyNotifier extends StateNotifier<BuddyState> {
   Future<bool> sendRequest(String receiverId) async {
     try {
       await _repo.sendRequest(receiverId);
+      if (!mounted) return true;
       await load();
       return true;
     } catch (_) {
@@ -87,6 +90,7 @@ class BuddyNotifier extends StateNotifier<BuddyState> {
   Future<bool> respond(String matchId, String action) async {
     try {
       await _repo.respond(matchId, action);
+      if (!mounted) return true;
       await load();
       return true;
     } catch (_) {

@@ -1,3 +1,5 @@
+import 'dart:async';
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -7,6 +9,7 @@ import 'package:wanderai_mobile/features/places/presentation/place_detail_screen
 import 'package:wanderai_mobile/features/safety/data/buddy_models.dart';
 import 'package:wanderai_mobile/features/safety/data/buddy_repository.dart';
 import 'package:wanderai_mobile/features/safety/presentation/safety_and_buddies_screen.dart';
+import 'package:wanderai_mobile/features/safety/providers/buddy_provider.dart';
 
 class _FakeBuddyRepo implements BuddyRepository {
   final List<BuddyCandidateModel> candidates;
@@ -191,4 +194,105 @@ void main() {
       expect(find.textContaining('115'), findsOneWidget);
     });
   });
+
+  group('GAP-19: BuddyNotifier mid-flight disposal safety', () {
+    const sampleRecord = BuddyMatchRecord(
+      id: 'm-1',
+      status: 'PENDING',
+      direction: 'SENT',
+      score: 85,
+      peer: BuddyPeerModel(id: 'u-2', displayName: 'Minh Khôi'),
+    );
+
+    DioException makeDioError(String path) => DioException(
+          requestOptions: RequestOptions(path: path),
+          type: DioExceptionType.connectionError,
+        );
+
+    test('sendRequest() and respond() disposed mid-flight throw 0 StateErrors and return accurate status', () async {
+      for (final shouldReject in [false, true]) {
+        final repo = _DeferredBuddyRepo()
+          ..sendCompleter = Completer<BuddyMatchRecord>()
+          ..respondCompleter = Completer<BuddyMatchRecord>();
+        final notifier = BuddyNotifier(repo);
+
+        final sendFuture = notifier.sendRequest('u-2');
+        final respondFuture = notifier.respond('m-1', 'ACCEPT');
+        notifier.dispose();
+
+        if (shouldReject) {
+          repo.sendCompleter!.completeError(makeDioError('/matches/request'));
+          repo.respondCompleter!.completeError(makeDioError('/matches/m-1/respond'));
+        } else {
+          repo.sendCompleter!.complete(sampleRecord);
+          repo.respondCompleter!.complete(sampleRecord);
+        }
+
+        expect(await sendFuture, !shouldReject);
+        expect(await respondFuture, !shouldReject);
+        expect(repo.loadCalls, 0);
+      }
+    });
+
+    test('load() triggered inside sendRequest()/respond() handles mid-flight dispose cleanly on resolve and reject', () async {
+      for (final shouldRejectLoad in [false, true]) {
+        final repo = _DeferredBuddyRepo()
+          ..sendCompleter = Completer<BuddyMatchRecord>()
+          ..candidatesCompleter = Completer<List<BuddyCandidateModel>>()
+          ..matchesCompleter = Completer<List<BuddyMatchRecord>>();
+        final notifier = BuddyNotifier(repo);
+
+        final sendFuture = notifier.sendRequest('u-2');
+        repo.sendCompleter!.complete(sampleRecord);
+        await Future<void>.delayed(Duration.zero);
+
+        notifier.dispose();
+        if (shouldRejectLoad) {
+          repo.candidatesCompleter!.completeError(makeDioError('/matches/candidates'));
+          repo.matchesCompleter!.completeError(makeDioError('/matches'));
+        } else {
+          repo.candidatesCompleter!.complete(const []);
+          repo.matchesCompleter!.complete(const [sampleRecord]);
+        }
+
+        expect(await sendFuture, isTrue);
+      }
+    });
+  });
+}
+
+class _DeferredBuddyRepo implements BuddyRepository {
+  Completer<BuddyMatchRecord>? sendCompleter;
+  Completer<BuddyMatchRecord>? respondCompleter;
+  Completer<List<BuddyCandidateModel>>? candidatesCompleter;
+  Completer<List<BuddyMatchRecord>>? matchesCompleter;
+  int loadCalls = 0;
+
+  @override
+  Future<List<BuddyCandidateModel>> getCandidates({int limit = 20}) {
+    loadCalls++;
+    if (candidatesCompleter != null) return candidatesCompleter!.future;
+    return Future.value(const []);
+  }
+
+  @override
+  Future<List<BuddyMatchRecord>> getMyMatches() {
+    if (matchesCompleter != null) return matchesCompleter!.future;
+    return Future.value(const []);
+  }
+
+  @override
+  Future<BuddyMatchRecord> sendRequest(String receiverId) {
+    if (sendCompleter != null) return sendCompleter!.future;
+    return Future.error(Exception('missing completer'));
+  }
+
+  @override
+  Future<BuddyMatchRecord> respond(String matchId, String action) {
+    if (respondCompleter != null) return respondCompleter!.future;
+    return Future.error(Exception('missing completer'));
+  }
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
