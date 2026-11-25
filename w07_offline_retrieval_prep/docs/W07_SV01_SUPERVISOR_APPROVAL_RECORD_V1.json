@@ -1,0 +1,56 @@
+{
+  "schema_version": "GOMATE_W07_SV01_SUPERVISOR_RECORD_V2",
+  "record_id": "SV-01",
+  "decision_route": "OD-G15-05-AIPROXY",
+  "evaluated_on_date_utc": "2026-11-23",
+  "supervisor_approval_status": "OWNER_REPORTED_APPROVAL",
+  "supervisor_written_evidence_on_disk": false,
+  "frozen_rules_allow_waiver_without_gvhd_evidence": false,
+  "supervisor_identity": null,
+  "supervisor_signature_ref": null,
+  "supervisor_confirmed_artifact_sha256": null,
+  "owner_reports_observed": [
+    {
+      "date": "2026-11-14",
+      "channel": "Owner chat direction",
+      "reported_scope": "Supervisor reported aware/accepting of zero-human direction, without attached signed scope version"
+    },
+    {
+      "date": "2026-11-22",
+      "channel": "User request OD-G15-05-AIPROXY (Route 2)",
+      "reported_scope": "Project Owner states no time/staff for manual annotation and reports GVHD has approved OD-G15-05-AIPROXY"
+    },
+    {
+      "date": "2026-11-23",
+      "channel": "User request W07 ROUTE 2 — FINAL ACTIVATION AUDIT",
+      "reported_scope": "Owner re-confirms GVHD agreed to AI-proxy and stops manual annotator recruitment; written artifact remains unattached on disk"
+    }
+  ],
+  "inspected_on_disk_consultation_artifacts": [
+    {
+      "path": "<EXTERNAL_OFF_REPO>/W07_SUPERVISOR_NOTE.md",
+      "bytes": 3065,
+      "sha256": "422aa1b6bad075c785034b516a332cdfe3737c9adf3fe2ea5c9fd7b51df96da8",
+      "artifact_status": "DRAFT_BLANK_UNSIGNED_V042_CONSULTATION_NOTE",
+      "covers_zero_human_g2a": false,
+      "all_approval_checkboxes_blank": true,
+      "reviewer_and_date_fields": "[BLANK]"
+    },
+    {
+      "path": "docs/W07_SV01_SUPERVISOR_CONSULTATION_NOTE_ROUTE2_V1.md",
+      "artifact_status": "READY_TO_SEND_BLANK_ROUTE2_CONSULTATION_TEMPLATE",
+      "covers_zero_human_g2a": true,
+      "all_approval_checkboxes_blank": true,
+      "reviewer_and_date_fields": "[BLANK]"
+    }
+  ],
+  "anti_forgery_attestation": {
+    "signature_forged": false,
+    "advisor_email_or_pdf_attached": false,
+    "chat_statement_satisfies_frozen_signature_contract": false,
+    "unlock_paths_per_frozen_authorities": [
+      "Path SV01-A (Required by current frozen drafts G2A v2.0.1 / G2B v1.1 / OD-G15-05 Note): Owner obtains real recorded GVHD confirmation (email / message screenshot / signed W07_SV01_SUPERVISOR_CONSULTATION_NOTE_ROUTE2_V1.md) off-repo and updates supervisor_approval_status='SUPERVISOR_WRITTEN_VERIFIED' + SHA-256.",
+      "Path SV01-B (Explicitly Ratified Amendment Exception Only): Because frozen drafts do NOT currently contain an Owner+Auditor waiver clause for SV-01, unlocking without written GVHD proof requires BOTH Independent Auditor (ChatGPT) AND Project Owner to formally ratify an explicit amendment exception (`explicit_frozen_rule_sv01_waiver_amendment_ratified=true` + `owner_reported_supervisor_waiver_accepted_by_audit_and_owner=true`) strictly scoped to `AI_PROXY_NOT_HUMAN`."
+    ]
+  }
+}

@@ -1,0 +1,580 @@
+{
+  "schema_version": "GOMATE_W07_ROUTE2_ACTIVATION_READINESS_REPORT_V1_1",
+  "harmonization_id": "W07-ROUTE2-AIPROXY-HARMONIZED-V1.1",
+  "decision_route": "OD-G15-05-AIPROXY",
+  "harmonization_matrix": [
+    {
+      "axis": "authority_and_annex_baseline",
+      "prior_conflict": "G2A v2.0.1, G2B v1.1, AUTO-EVAL-01 v0.4.2 referenced Annex v0.2.1 & $20 cap; OD-G15-05 Note referenced Annex v0.2.2; Budget40 raised total cap to $40",
+      "harmonized_resolution": "Anchor to Protocol v1.0 (5056c5c2) + Technical Annex v0.2.2 (e78013fd, MiniLM tokenizer 2c3387be, STUB-01..05 sealed PASS). Preserve $20.00 baseline hard cap via PA-1 unless Owner signs Budget40 ($2.00 DEV / $36.00 warn / $40.00 cap) in external Ed25519 trust root."
+    },
+    {
+      "axis": "g2a_query_authorship_and_sv_boundary",
+      "prior_conflict": "G2A-2 validates verbatim offsets on canonical S while OD-AE-05 permits uploading Tier-T1 sanitized V only and forbids raw S/R_AUDIT",
+      "harmonized_resolution": "Strict S/V separation: outbound cloud payloads carry ONLY Tier-T1 sanitized V (safe_doc_v, hard-blocked if R_AUDIT/raw S/T0/T2/PII present); exact V->S projection and canonical S substring validation run 100% locally in Python; AI origin='AI_GENERATED_NO_HUMAN_REVIEW', human_ground_truth=False."
+    },
+    {
+      "axis": "execution_chronology_d054",
+      "prior_conflict": "ORDER_A put G2B pre-G3 while ORDER_B & Decision Note put G3 pre-G2B",
+      "harmonized_resolution": "Stage-1 off-FINAL 5-query DEV canary (quarantined packet, zero G3/FINAL-50) -> Stage-2 G2A PRE_G3_QUERY_LOCK -> G3 local CPU 2x3 sealed ranking -> G2B blind rank-invariant FX-11 judging -> G4 decoupled scorer."
+    },
+    {
+      "axis": "pooling_and_coverage_order_a_vs_b",
+      "prior_conflict": "Protocol v1.0 pooled union vs Budget40 full 50x137 Cartesian ORDER_A vs ORDER_B top-k union",
+      "harmonized_resolution": "Primary: ORDER_A (50x137=6,850/judge = 13,700 base votes, UNJUDGED=0) fits <= $20 cap under PA-1; fallback ORDER_B pre-sealed union pool (out-of-pool stays UNJUDGED (0,3)). Missing pairs trigger INCOMPLETE_SEALED_JUDGE_COVERAGE_HALT."
+    },
+    {
+      "axis": "judge_sampling_params_and_prompt_order_coverage",
+      "prior_conflict": "Decision Note requested temperature=0 and per-pair ORDER_A/B rubric swaps; AUTO-R09 forbids cloud sampling params and cost budgets use stratified swaps",
+      "harmonized_resolution": "Preserve AUTO-R09 (reasoning_effort='low', output_config.effort='low', thinking_level='LOW'; no temperature/top_p/top_k on cloud reasoning); replace full-pair swap claim with explicitly recorded stratified audit sampling: STRATIFIED_20PCT_DEV_AUDIT (137/685 pairs) in Stage-1 and STRATIFIED_200PAIR_FINAL_AUDIT (200/6,850 pairs) in FINAL, using PROMPT_ORDER_CANONICAL vs PROMPT_ORDER_SWAPPED with full_pair_invariance_claimed=False whenever coverage < 1.0."
+    },
+    {
+      "axis": "acceptance_and_kappa_thresholds",
+      "prior_conflict": "judge_gates.py omitted Annex v0.2.2 delta_min >= +0.030; Decision Note mixed order-swap kappa >= 0.75 with cross-family kappa_w >= 0.40",
+      "harmonized_resolution": "Require BOTH: stratified prompt-order swap agreement >= 0.90 (kappa_w_order >= 0.75) on DEV/audit slice AND cross-family kappa_w_AB >= 0.40, delta_min >= +0.030, p_mc_holm < 0.05, 95% CI > 0 on BOTH judges; else NO_CLEAR_PROXY_WINNER."
+    },
+    {
+      "axis": "external_t2_benchmark_isolation",
+      "prior_conflict": "AUTO-EVAL-01 included ZaloLegalQA/EduCoQA while Clearance Matrix kept them HOLD due to unclear/NC licenses",
+      "harmonized_resolution": "Mark external Track T2 optional and non-blocking for W07 Track T1 retrieval closure; never upload external benchmarks or commercial Tier-T2 text to cloud APIs."
+    }
+  ],
+  "authorization_gate_check": {
+    "decision_route": "OD-G15-05-AIPROXY",
+    "harmonization_id": "W07-ROUTE2-AIPROXY-HARMONIZED-V1.1",
+    "gate_phase": "STAGE1_LIVE",
+    "preflight_probes_authorized": false,
+    "batch_generation_authorized": false,
+    "live_execution_authorized": false,
+    "cryptographic_verification": {
+      "cryptographic_verification_passed": false
+    },
+    "formal_gates_status": "HOLD",
+    "g5_status": "HOLD_NOT_AUTHORIZED_BY_THIS_AMENDMENT",
+    "sv01_frozen_rules_require_written_evidence": true,
+    "sv01": {
+      "sv01_valid": true,
+      "supervisor_approval_status": "OWNER_REPORTED_APPROVAL",
+      "written_verified": false,
+      "requires_audit_and_owner_waiver": true
+    },
+    "selected_cap_regime": "UNAMENDED_20USD",
+    "blockers": [
+      "SV01_OWNER_REPORTED_ONLY_WRITTEN_GVHD_EVIDENCE_OR_RATIFIED_WAIVER_REQUIRED",
+      "AWAITING_CHATGPT_INDEPENDENT_AUDIT_PASS",
+      "AWAITING_OWNER_SIGNED_AMENDMENT_AND_TRUST_ROOT_RECEIPT",
+      "HOLD_EXTERNAL_OWNER_TRUST_ROOT_NOT_PROVISIONED",
+      "HOLD_OD_AE_05_PROVIDER_RETENTION_SIGNOFF_PENDING",
+      "HOLD_LIVE_ACCOUNT_RATES_AND_COUNT_TOKENS_NOT_VERIFIED",
+      "UNAUTHENTICATED_BOOLEAN_CLAIM_WITHOUT_CRYPTOGRAPHIC_RECEIPT"
+    ]
+  },
+  "s_vs_v_cloud_boundary_contract": {
+    "cloud_outbound_permitted_tier": "Tier-T1 sanitized view V ONLY (safe_doc_v, SHA-256 046424e5...)",
+    "cloud_outbound_forbidden": [
+      "raw canonical_text_S",
+      "R_AUDIT tags",
+      "removed_r_audit slices",
+      "document_id",
+      "poi_id",
+      "source_url",
+      "T0_PRIVATE",
+      "Tier-T2 domains",
+      "PII"
+    ],
+    "local_python_only_operations": [
+      "safe_doc_v -> V -> S coordinate projection",
+      "canonical_text_S[s_start:s_end] == evidence_quote",
+      "CE9",
+      "CE4"
+    ]
+  },
+  "prompt_order_coverage_policy": {
+    "stage1_dev5_mode": "STRATIFIED_20PCT_DEV_AUDIT",
+    "stage1_dev5_pairs_swapped_per_judge": 137,
+    "stage1_dev5_total_pairs_per_judge": 685,
+    "final50_mode": "STRATIFIED_200PAIR_FINAL_AUDIT",
+    "final50_pairs_swapped_per_judge": 200,
+    "final50_total_pairs_per_judge": 6850,
+    "full_pair_invariance_claimed": false
+  },
+  "dev5_vs_final50_separation": {
+    "dev5_role": "Stage-1 off-FINAL calibration & guardrail probe ONLY (Q01..Q04, Q06 = 5 queries x 137 docs = 685 pairs/judge; verifies F05 prompt injection, S-4 schema, G-SPAN, CE9, CE4, PromptOrderBias; NEVER selects retrieval winner)",
+    "g2a1_stage2_runtime_status": "HOLD_G2A1_PROVIDER_KEY_OR_LOCAL_RUNTIME_UNSELECTED_STAGE2_ONLY (Stage-1 DEV-5 uses quarantined DEV packet post-T0 Ed25519 sign-off)",
+    "final50_role": "Held-out confirmatory 5x3 (15-cell) 50-query set x 137 docs = 6,850 pairs/judge (13,700 base dual-judge votes under ORDER_A); NOT generated, NOT opened while HOLD",
+    "overlap_allowed": false
+  },
+  "local_env_key_presence_only": {
+    "OPENAI_API_KEY": "NON_PLACEHOLDER_CONFIGURED",
+    "ANTHROPIC_API_KEY": "NON_PLACEHOLDER_CONFIGURED",
+    "GEMINI_API_KEY": "NON_PLACEHOLDER_CONFIGURED",
+    "XAI_API_KEY": "UNSET",
+    "GROK_API_KEY": "UNSET",
+    "HF_TOKEN": "UNSET"
+  },
+  "prompt_and_schema_pins": {
+    "prompt_v1_1_sha256": "9d03fbce4e3599d97dc3e23c79e94f9c40e56f82fd80d83b94656f16b73cb60e",
+    "schema_s4_sha256": "544062c5554fb2c4e987b4262db3522acbf77401226a15a52ea2f18a599a24d1",
+    "author_safe_60_poi_catalog_sha256": "9333760ad0bc5c47ea173abca4f9c328ac6f15c5101e8c4c0ba896bdac7b4cf7"
+  },
+  "measured_arm_p_cost_matrix": {
+    "schema_version": "W07_ROUTE2_DETERMINISTIC_COST_MATRIX_V2",
+    "doc_count": 137,
+    "mean_prompt_plus_schema_byte_ceiling_tokens": 7914,
+    "mean_prompt_plus_schema_heuristic_tokens": 2474,
+    "max_prompt_plus_schema_byte_ceiling_tokens": 78290,
+    "long_context_threshold_checks": {
+      "max_single_item_byte_ceiling_tokens": 78290,
+      "anthropic_haiku55_100k_cliff_tokens": 100000,
+      "openai_gpt6luna_272k_cliff_tokens": 272000,
+      "below_anthropic_100k_cliff": true,
+      "below_openai_272k_cliff": true
+    },
+    "order_a_contract_invariants": {
+      "final_queries": 50,
+      "frozen_docs": 137,
+      "pairs_per_judge": 6850,
+      "base_dual_judge_calls": 13700,
+      "optional_prompt_order_swap_audit_pairs": 200,
+      "max_schema_retries_per_item": 1,
+      "max_batch_retry_fraction": 0.15,
+      "max_failed_batches": 1
+    },
+    "g2a_prep_econ_lite": {
+      "verifier_model": "gemini-2.5-flash-lite ($0.05/$0.20 Dev API Batch)",
+      "generator_calls": 100,
+      "verifier_calls": 1800,
+      "heuristic_nominal_usd": 0.5484,
+      "pessimistic_byte_ceiling_15pct_usd": 1.4159
+    },
+    "g2a_prep_flash38": {
+      "verifier_model": "gemini-3.8-flash ($0.375/$1.875 Batch)",
+      "generator_calls": 100,
+      "verifier_calls": 1800,
+      "heuristic_nominal_usd": 4.2841,
+      "pessimistic_byte_ceiling_15pct_usd": 10.9007
+    },
+    "model_pair_forecasts": {
+      "PRIMARY_J1_GPT6LUNA_CLAUDEHAIKU55": {
+        "judge_A": "gpt-6-luna",
+        "judge_B": "claude-haiku-5-5",
+        "stage1_single_5q_137d": {
+          "pairs_per_judge": 685,
+          "total_calls_2_judges": 1370,
+          "heuristic_nominal_5pct_usd": 0.4297,
+          "pessimistic_byte_ceiling_15pct_usd": 1.0961,
+          "cap_usd": 2.0,
+          "fits_cap_at_byte_ceiling": true,
+          "halt_code": null
+        },
+        "stage1_5q_137d_plus_20pct_swap": {
+          "pairs_per_judge": 822,
+          "total_calls_2_judges": 1644,
+          "heuristic_nominal_5pct_usd": 0.5156,
+          "pessimistic_byte_ceiling_15pct_usd": 1.3153,
+          "cap_usd": 2.0,
+          "fits_cap_at_byte_ceiling": true,
+          "halt_code": null
+        },
+        "stage1_5q_137d_full_dual_swap": {
+          "pairs_per_judge": 1370,
+          "total_calls_2_judges": 2740,
+          "heuristic_nominal_5pct_usd": 0.8594,
+          "pessimistic_byte_ceiling_15pct_usd": 2.1922,
+          "cap_usd": 2.0,
+          "fits_cap_at_byte_ceiling": false,
+          "halt_code": "HARD_COST_CAP_EXCEEDED"
+        },
+        "stage1_5q_pool35_dual_swap": {
+          "pairs_per_judge": 350,
+          "total_calls_2_judges": 700,
+          "heuristic_nominal_5pct_usd": 0.2925,
+          "pessimistic_byte_ceiling_15pct_usd": 0.8159,
+          "cap_usd": 2.0,
+          "fits_cap_at_byte_ceiling": true,
+          "halt_code": null
+        },
+        "final_order_a_50q_137d": {
+          "pairs_per_judge": 6850,
+          "total_calls_2_judges": 13700,
+          "heuristic_nominal_5pct_usd": 4.2968,
+          "pessimistic_byte_ceiling_15pct_usd": 10.9608,
+          "cap_usd": 40.0,
+          "fits_cap_at_byte_ceiling": true,
+          "halt_code": null
+        },
+        "final_order_a_plus_200_swap": {
+          "pairs_per_judge": 7050,
+          "total_calls_2_judges": 14100,
+          "heuristic_nominal_5pct_usd": 4.4223,
+          "pessimistic_byte_ceiling_15pct_usd": 11.2808,
+          "cap_usd": 40.0,
+          "fits_cap_at_byte_ceiling": true,
+          "halt_code": null
+        },
+        "final_order_b_50q_u35": {
+          "pairs_per_judge": 1750,
+          "total_calls_2_judges": 3500,
+          "heuristic_nominal_5pct_usd": 1.4627,
+          "pessimistic_byte_ceiling_15pct_usd": 4.0795,
+          "cap_usd": 40.0,
+          "fits_cap_at_byte_ceiling": true,
+          "halt_code": null
+        },
+        "cumulative_with_g2a_econ_lite_order_a": {
+          "g2a_2_model": "gemini-2.5-flash-lite (Paid Gemini Dev API Batch $0.05/$0.20)",
+          "heuristic_nominal_5pct_usd": 5.4863,
+          "pessimistic_byte_ceiling_15pct_usd": 14.012,
+          "fits_unamended_20usd_cap_at_byte_ceiling": true,
+          "headroom_below_20usd_cap_usd": 5.988
+        },
+        "cumulative_with_g2a_flash38_order_a": {
+          "g2a_2_model": "gemini-3.8-flash (Paid Batch $0.375/$1.875)",
+          "heuristic_nominal_5pct_usd": 9.222,
+          "pessimistic_byte_ceiling_15pct_usd": 23.4968,
+          "fits_unamended_20usd_cap_at_byte_ceiling": false,
+          "below_36usd_early_warning": true,
+          "below_40usd_hard_cap": true
+        }
+      },
+      "ALT_GPT5NANO_CLAUDEHAIKU55": {
+        "judge_A": "gpt-5-nano",
+        "judge_B": "claude-haiku-5-5",
+        "stage1_single_5q_137d": {
+          "pairs_per_judge": 685,
+          "total_calls_2_judges": 1370,
+          "heuristic_nominal_5pct_usd": 0.36,
+          "pessimistic_byte_ceiling_15pct_usd": 0.893,
+          "cap_usd": 2.0,
+          "fits_cap_at_byte_ceiling": true,
+          "halt_code": null
+        },
+        "stage1_5q_137d_plus_20pct_swap": {
+          "pairs_per_judge": 822,
+          "total_calls_2_judges": 1644,
+          "heuristic_nominal_5pct_usd": 0.432,
+          "pessimistic_byte_ceiling_15pct_usd": 1.0715,
+          "cap_usd": 2.0,
+          "fits_cap_at_byte_ceiling": true,
+          "halt_code": null
+        },
+        "stage1_5q_137d_full_dual_swap": {
+          "pairs_per_judge": 1370,
+          "total_calls_2_judges": 2740,
+          "heuristic_nominal_5pct_usd": 0.72,
+          "pessimistic_byte_ceiling_15pct_usd": 1.7859,
+          "cap_usd": 2.0,
+          "fits_cap_at_byte_ceiling": true,
+          "halt_code": null
+        },
+        "stage1_5q_pool35_dual_swap": {
+          "pairs_per_judge": 350,
+          "total_calls_2_judges": 700,
+          "heuristic_nominal_5pct_usd": 0.2387,
+          "pessimistic_byte_ceiling_15pct_usd": 0.6482,
+          "cap_usd": 2.0,
+          "fits_cap_at_byte_ceiling": true,
+          "halt_code": null
+        },
+        "final_order_a_50q_137d": {
+          "pairs_per_judge": 6850,
+          "total_calls_2_judges": 13700,
+          "heuristic_nominal_5pct_usd": 3.6002,
+          "pessimistic_byte_ceiling_15pct_usd": 8.9295,
+          "cap_usd": 40.0,
+          "fits_cap_at_byte_ceiling": true,
+          "halt_code": null
+        },
+        "final_order_a_plus_200_swap": {
+          "pairs_per_judge": 7050,
+          "total_calls_2_judges": 14100,
+          "heuristic_nominal_5pct_usd": 3.7053,
+          "pessimistic_byte_ceiling_15pct_usd": 9.1903,
+          "cap_usd": 40.0,
+          "fits_cap_at_byte_ceiling": true,
+          "halt_code": null
+        },
+        "final_order_b_50q_u35": {
+          "pairs_per_judge": 1750,
+          "total_calls_2_judges": 3500,
+          "heuristic_nominal_5pct_usd": 1.1935,
+          "pessimistic_byte_ceiling_15pct_usd": 3.2408,
+          "cap_usd": 40.0,
+          "fits_cap_at_byte_ceiling": true,
+          "halt_code": null
+        },
+        "cumulative_with_g2a_econ_lite_order_a": {
+          "g2a_2_model": "gemini-2.5-flash-lite (Paid Gemini Dev API Batch $0.05/$0.20)",
+          "heuristic_nominal_5pct_usd": 4.6857,
+          "pessimistic_byte_ceiling_15pct_usd": 11.6777,
+          "fits_unamended_20usd_cap_at_byte_ceiling": true,
+          "headroom_below_20usd_cap_usd": 8.3223
+        },
+        "cumulative_with_g2a_flash38_order_a": {
+          "g2a_2_model": "gemini-3.8-flash (Paid Batch $0.375/$1.875)",
+          "heuristic_nominal_5pct_usd": 8.4214,
+          "pessimistic_byte_ceiling_15pct_usd": 21.1625,
+          "fits_unamended_20usd_cap_at_byte_ceiling": false,
+          "below_36usd_early_warning": true,
+          "below_40usd_hard_cap": true
+        }
+      },
+      "ALT_GPT5NANO_GEMINI25FLASHLITE_DEVAPI": {
+        "judge_A": "gpt-5-nano",
+        "judge_B": "gemini-2.5-flash-lite",
+        "stage1_single_5q_137d": {
+          "pairs_per_judge": 685,
+          "total_calls_2_judges": 1370,
+          "heuristic_nominal_5pct_usd": 0.3348,
+          "pessimistic_byte_ceiling_15pct_usd": 0.8457,
+          "cap_usd": 2.0,
+          "fits_cap_at_byte_ceiling": true,
+          "halt_code": null
+        },
+        "stage1_5q_137d_plus_20pct_swap": {
+          "pairs_per_judge": 822,
+          "total_calls_2_judges": 1644,
+          "heuristic_nominal_5pct_usd": 0.4018,
+          "pessimistic_byte_ceiling_15pct_usd": 1.0148,
+          "cap_usd": 2.0,
+          "fits_cap_at_byte_ceiling": true,
+          "halt_code": null
+        },
+        "stage1_5q_137d_full_dual_swap": {
+          "pairs_per_judge": 1370,
+          "total_calls_2_judges": 2740,
+          "heuristic_nominal_5pct_usd": 0.6697,
+          "pessimistic_byte_ceiling_15pct_usd": 1.6914,
+          "cap_usd": 2.0,
+          "fits_cap_at_byte_ceiling": true,
+          "halt_code": null
+        },
+        "stage1_5q_pool35_dual_swap": {
+          "pairs_per_judge": 350,
+          "total_calls_2_judges": 700,
+          "heuristic_nominal_5pct_usd": 0.2258,
+          "pessimistic_byte_ceiling_15pct_usd": 0.624,
+          "cap_usd": 2.0,
+          "fits_cap_at_byte_ceiling": true,
+          "halt_code": null
+        },
+        "final_order_a_50q_137d": {
+          "pairs_per_judge": 6850,
+          "total_calls_2_judges": 13700,
+          "heuristic_nominal_5pct_usd": 3.3485,
+          "pessimistic_byte_ceiling_15pct_usd": 8.4569,
+          "cap_usd": 40.0,
+          "fits_cap_at_byte_ceiling": true,
+          "halt_code": null
+        },
+        "final_order_a_plus_200_swap": {
+          "pairs_per_judge": 7050,
+          "total_calls_2_judges": 14100,
+          "heuristic_nominal_5pct_usd": 3.4462,
+          "pessimistic_byte_ceiling_15pct_usd": 8.7038,
+          "cap_usd": 40.0,
+          "fits_cap_at_byte_ceiling": true,
+          "halt_code": null
+        },
+        "final_order_b_50q_u35": {
+          "pairs_per_judge": 1750,
+          "total_calls_2_judges": 3500,
+          "heuristic_nominal_5pct_usd": 1.1291,
+          "pessimistic_byte_ceiling_15pct_usd": 3.12,
+          "cap_usd": 40.0,
+          "fits_cap_at_byte_ceiling": true,
+          "halt_code": null
+        },
+        "cumulative_with_g2a_econ_lite_order_a": {
+          "g2a_2_model": "gemini-2.5-flash-lite (Paid Gemini Dev API Batch $0.05/$0.20)",
+          "heuristic_nominal_5pct_usd": 4.3964,
+          "pessimistic_byte_ceiling_15pct_usd": 11.1345,
+          "fits_unamended_20usd_cap_at_byte_ceiling": true,
+          "headroom_below_20usd_cap_usd": 8.8655
+        },
+        "cumulative_with_g2a_flash38_order_a": {
+          "g2a_2_model": "gemini-3.8-flash (Paid Batch $0.375/$1.875)",
+          "heuristic_nominal_5pct_usd": 8.1321,
+          "pessimistic_byte_ceiling_15pct_usd": 20.6193,
+          "fits_unamended_20usd_cap_at_byte_ceiling": false,
+          "below_36usd_early_warning": true,
+          "below_40usd_hard_cap": true
+        }
+      },
+      "BACKUP_GPT6LUNA_GEMINI38FLASH": {
+        "judge_A": "gpt-6-luna",
+        "judge_B": "gemini-3.8-flash",
+        "stage1_single_5q_137d": {
+          "pairs_per_judge": 685,
+          "total_calls_2_judges": 1370,
+          "heuristic_nominal_5pct_usd": 1.8261,
+          "pessimistic_byte_ceiling_15pct_usd": 4.6583,
+          "cap_usd": 2.0,
+          "fits_cap_at_byte_ceiling": false,
+          "halt_code": "HARD_COST_CAP_EXCEEDED"
+        },
+        "stage1_5q_137d_plus_20pct_swap": {
+          "pairs_per_judge": 822,
+          "total_calls_2_judges": 1644,
+          "heuristic_nominal_5pct_usd": 2.1914,
+          "pessimistic_byte_ceiling_15pct_usd": 5.59,
+          "cap_usd": 2.0,
+          "fits_cap_at_byte_ceiling": false,
+          "halt_code": "HARD_COST_CAP_EXCEEDED"
+        },
+        "stage1_5q_137d_full_dual_swap": {
+          "pairs_per_judge": 1370,
+          "total_calls_2_judges": 2740,
+          "heuristic_nominal_5pct_usd": 3.6523,
+          "pessimistic_byte_ceiling_15pct_usd": 9.3166,
+          "cap_usd": 2.0,
+          "fits_cap_at_byte_ceiling": false,
+          "halt_code": "HARD_COST_CAP_EXCEEDED"
+        },
+        "stage1_5q_pool35_dual_swap": {
+          "pairs_per_judge": 350,
+          "total_calls_2_judges": 700,
+          "heuristic_nominal_5pct_usd": 1.2433,
+          "pessimistic_byte_ceiling_15pct_usd": 3.4676,
+          "cap_usd": 2.0,
+          "fits_cap_at_byte_ceiling": false,
+          "halt_code": "HARD_COST_CAP_EXCEEDED"
+        },
+        "final_order_a_50q_137d": {
+          "pairs_per_judge": 6850,
+          "total_calls_2_judges": 13700,
+          "heuristic_nominal_5pct_usd": 18.2614,
+          "pessimistic_byte_ceiling_15pct_usd": 46.5832,
+          "cap_usd": 40.0,
+          "fits_cap_at_byte_ceiling": false,
+          "halt_code": "HARD_COST_CAP_EXCEEDED"
+        },
+        "final_order_a_plus_200_swap": {
+          "pairs_per_judge": 7050,
+          "total_calls_2_judges": 14100,
+          "heuristic_nominal_5pct_usd": 18.7946,
+          "pessimistic_byte_ceiling_15pct_usd": 47.9433,
+          "cap_usd": 40.0,
+          "fits_cap_at_byte_ceiling": false,
+          "halt_code": "HARD_COST_CAP_EXCEEDED"
+        },
+        "final_order_b_50q_u35": {
+          "pairs_per_judge": 1750,
+          "total_calls_2_judges": 3500,
+          "heuristic_nominal_5pct_usd": 6.2163,
+          "pessimistic_byte_ceiling_15pct_usd": 17.338,
+          "cap_usd": 40.0,
+          "fits_cap_at_byte_ceiling": true,
+          "halt_code": null
+        },
+        "cumulative_with_g2a_econ_lite_order_a": {
+          "g2a_2_model": "gemini-2.5-flash-lite (Paid Gemini Dev API Batch $0.05/$0.20)",
+          "heuristic_nominal_5pct_usd": 21.5344,
+          "pessimistic_byte_ceiling_15pct_usd": 54.9492,
+          "fits_unamended_20usd_cap_at_byte_ceiling": false,
+          "headroom_below_20usd_cap_usd": -34.9492
+        },
+        "cumulative_with_g2a_flash38_order_a": {
+          "g2a_2_model": "gemini-3.8-flash (Paid Batch $0.375/$1.875)",
+          "heuristic_nominal_5pct_usd": 25.2701,
+          "pessimistic_byte_ceiling_15pct_usd": 64.434,
+          "fits_unamended_20usd_cap_at_byte_ceiling": false,
+          "below_36usd_early_warning": false,
+          "below_40usd_hard_cap": false
+        }
+      },
+      "PREMIUM_GPT61SOL_CLAUDESONNET55": {
+        "judge_A": "gpt-6.1-sol",
+        "judge_B": "claude-sonnet-5-5",
+        "stage1_single_5q_137d": {
+          "pairs_per_judge": 685,
+          "total_calls_2_judges": 1370,
+          "heuristic_nominal_5pct_usd": 8.5936,
+          "pessimistic_byte_ceiling_15pct_usd": 21.9215,
+          "cap_usd": 2.0,
+          "fits_cap_at_byte_ceiling": false,
+          "halt_code": "HARD_COST_CAP_EXCEEDED"
+        },
+        "stage1_5q_137d_plus_20pct_swap": {
+          "pairs_per_judge": 822,
+          "total_calls_2_judges": 1644,
+          "heuristic_nominal_5pct_usd": 10.3123,
+          "pessimistic_byte_ceiling_15pct_usd": 26.3058,
+          "cap_usd": 2.0,
+          "fits_cap_at_byte_ceiling": false,
+          "halt_code": "HARD_COST_CAP_EXCEEDED"
+        },
+        "stage1_5q_137d_full_dual_swap": {
+          "pairs_per_judge": 1370,
+          "total_calls_2_judges": 2740,
+          "heuristic_nominal_5pct_usd": 17.1872,
+          "pessimistic_byte_ceiling_15pct_usd": 43.843,
+          "cap_usd": 2.0,
+          "fits_cap_at_byte_ceiling": false,
+          "halt_code": "HARD_COST_CAP_EXCEEDED"
+        },
+        "stage1_5q_pool35_dual_swap": {
+          "pairs_per_judge": 350,
+          "total_calls_2_judges": 700,
+          "heuristic_nominal_5pct_usd": 5.8506,
+          "pessimistic_byte_ceiling_15pct_usd": 16.3182,
+          "cap_usd": 2.0,
+          "fits_cap_at_byte_ceiling": false,
+          "halt_code": "HARD_COST_CAP_EXCEEDED"
+        },
+        "final_order_a_50q_137d": {
+          "pairs_per_judge": 6850,
+          "total_calls_2_judges": 13700,
+          "heuristic_nominal_5pct_usd": 85.936,
+          "pessimistic_byte_ceiling_15pct_usd": 219.2151,
+          "cap_usd": 40.0,
+          "fits_cap_at_byte_ceiling": false,
+          "halt_code": "HARD_COST_CAP_EXCEEDED"
+        },
+        "final_order_a_plus_200_swap": {
+          "pairs_per_judge": 7050,
+          "total_calls_2_judges": 14100,
+          "heuristic_nominal_5pct_usd": 88.4451,
+          "pessimistic_byte_ceiling_15pct_usd": 225.6155,
+          "cap_usd": 40.0,
+          "fits_cap_at_byte_ceiling": false,
+          "halt_code": "HARD_COST_CAP_EXCEEDED"
+        },
+        "final_order_b_50q_u35": {
+          "pairs_per_judge": 1750,
+          "total_calls_2_judges": 3500,
+          "heuristic_nominal_5pct_usd": 29.253,
+          "pessimistic_byte_ceiling_15pct_usd": 81.5908,
+          "cap_usd": 40.0,
+          "fits_cap_at_byte_ceiling": false,
+          "halt_code": "HARD_COST_CAP_EXCEEDED"
+        },
+        "cumulative_with_g2a_econ_lite_order_a": {
+          "g2a_2_model": "gemini-2.5-flash-lite (Paid Gemini Dev API Batch $0.05/$0.20)",
+          "heuristic_nominal_5pct_usd": 99.3058,
+          "pessimistic_byte_ceiling_15pct_usd": 253.3372,
+          "fits_unamended_20usd_cap_at_byte_ceiling": false,
+          "headroom_below_20usd_cap_usd": -233.3372
+        },
+        "cumulative_with_g2a_flash38_order_a": {
+          "g2a_2_model": "gemini-3.8-flash (Paid Batch $0.375/$1.875)",
+          "heuristic_nominal_5pct_usd": 103.0415,
+          "pessimistic_byte_ceiling_15pct_usd": 262.822,
+          "fits_unamended_20usd_cap_at_byte_ceiling": false,
+          "below_36usd_early_warning": false,
+          "below_40usd_hard_cap": false
+        }
+      }
+    }
+  },
+  "offline_end_to_end_dryrun_verification": {
+    "execution_classification": "SYNTHETIC_AND_OFFLINE_DRYRUN_ONLY",
+    "g2a_verified_as_proxy_count": 3,
+    "dual_order_prompt_previews_built": 12,
+    "prompt_order_gate_passed": true,
+    "quadratic_weighted_kappa": 1.0,
+    "k1_verdict": "NO_CLEAR_PROXY_WINNER",
+    "human_ground_truth_status": "NOT_PERFORMED",
+    "g5_fail_closed_hold_verified": true
+  }
+}

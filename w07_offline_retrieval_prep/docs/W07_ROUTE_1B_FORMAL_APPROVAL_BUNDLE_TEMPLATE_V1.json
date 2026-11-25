@@ -1,0 +1,45 @@
+{
+  "schema_version": "GOMATE_W07_ROUTE_1B_FORMAL_APPROVAL_BUNDLE_V1",
+  "od_g15_05_route": "ROUTE_1B_POOLED_2PLUS1_HUMAN_OPTION_B",
+  "synthetic_mode_disclosure": {
+    "execution_classification": "SYNTHETIC_PREP_ONLY",
+    "contains_synthetic_data": false,
+    "formal_execution_unlocked": false,
+    "note": "Unsigned Route 1B approval bundle template. Cannot unlock G2A/G3/SEALED_FINAL_POOL_EXPORT/G2B/G4 until ChatGPT re-audit PASS, Owner signature on Method Amendment 01 v0.3.1, and committed 2+1 human roster are recorded."
+  },
+  "controlling_protocol_sha256": "5056c5c2373ee9584b8850ba49411160cc2c382ad6315aaada4c05fb9b0030c2",
+  "g15_annex": {
+    "annex_doc_id": "GOMATE_W07_G15_TECHNICAL_ANNEX_V0_2_2_CANDIDATE_2026-11-21",
+    "annex_sha256": "e78013fd4abae98c39ce287a8ae9ed2b6b68fee91d91360f07ecc91c67eee940",
+    "activation_status": "TECH_FREEZE_OD_G15_01_04_ONLY_PENDING_V1_0_PROMOTION"
+  },
+  "method_amendment": {
+    "amendment_id": "W07_B2_METHOD_AMENDMENT_01_V0_3_1_OPTION_B",
+    "amendment_sha256": "f5560a95a6893dbc09681004875500f822a45451b9891086c8b3636ec71561d6",
+    "chatgpt_audit_status": "AWAITING_CORRECTIVE_02_REAUDIT",
+    "activation_status": "NOT_EFFECTIVE_UNSIGNED_REVIEW_DRAFT",
+    "owner_signature_ref": "[BLANK — DO NOT AUTO-SIGN]",
+    "approval_date_ict": "[BLANK]"
+  },
+  "human_roster_receipt": {
+    "schema_version": "GOMATE_W07_OD_G15_05_HUMAN_ROSTER_RECEIPT_V1",
+    "roster_status": "TEMPLATE_UNSIGNED_NOT_COMMITTED",
+    "od_g15_05_route": "ROUTE_1B_POOLED_2PLUS1_HUMAN_OPTION_B",
+    "human_annotator_01_id": "TEMPLATE_HUMAN_ANNOTATOR_01",
+    "human_annotator_02_id": "TEMPLATE_HUMAN_ANNOTATOR_02",
+    "human_adjudicator_03_id": "TEMPLATE_HUMAN_ADJUDICATOR_03",
+    "roster_identity_commitment_sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+  },
+  "operational_gates": {
+    "stub_01_to_05_disposition": "PASS_PERMANENTLY_SEALED_DO_NOT_RERUN",
+    "formal_g2a_query_authoring_unlocked": false,
+    "formal_g3_benchmark_unlocked": false,
+    "formal_g2b_human_grading_unlocked": false,
+    "formal_g4_scoring_unlocked": false,
+    "g3_code_freeze_git_sha": "0000000000000000000000000000000000000000",
+    "g3_no_final_exposure_attested": false,
+    "capacity_envelope_max_votes": 0,
+    "g5_status": "HOLD",
+    "paid_llm_api_allowed": false
+  }
+}

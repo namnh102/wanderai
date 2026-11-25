@@ -1,0 +1,23 @@
+{
+  "schema_version": "GOMATE_W07_OD_G15_05_HUMAN_ROSTER_RECEIPT_V1",
+  "roster_status": "TEMPLATE_UNSIGNED_NOT_COMMITTED",
+  "od_g15_05_route": "ROUTE_1B_POOLED_2PLUS1_HUMAN_OPTION_B",
+  "human_annotator_01_id": "TEMPLATE_HUMAN_ANNOTATOR_01",
+  "human_annotator_02_id": "TEMPLATE_HUMAN_ANNOTATOR_02",
+  "human_adjudicator_03_id": "TEMPLATE_HUMAN_ADJUDICATOR_03",
+  "roster_identity_commitment_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+  "blind_protocol_rules": {
+    "rank_cell_arm_strip_enforced": true,
+    "exact_quote_verbatim_containment_required": true,
+    "r_audit_deleted_span_exclusion_required": true,
+    "rel0_lure_flag_required": true
+  },
+  "governance_holds": {
+    "formal_g2_g3_g4_authorized": false,
+    "stub_06_authorized": false,
+    "final50_unlocked": false,
+    "g5_authorized": false,
+    "paid_llm_api_authorized": false
+  },
+  "instructions": "To exit OD-G15-05 HOLD under Human 2+1 Truth, replace TEMPLATE_* IDs with 3 distinct committed human judge IDs, set roster_identity_commitment_sha256 to the SHA-256 of the off-repo signed roster record, set roster_status='COMMITTED_BY_OWNER', and obtain formal Owner & Supervisor sign-off before opening G2/G2A/G2B/G3/G4."
+}

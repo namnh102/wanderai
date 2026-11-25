@@ -1,0 +1,134 @@
+{
+  "schema_version": "W07_ROUTE2_PROVIDER_EVIDENCE_AND_EXEMPLARS_V1",
+  "verified_public_docs_date": "2026-11-23",
+  "live_api_calls_executed": 0,
+  "live_spend_usd": 0.0,
+  "local_python_runtime_sdks": {
+    "openai": "3.17.0",
+    "anthropic": "1.15.0",
+    "google-genai": "2.25.0",
+    "sentence-transformers": "6.1.0"
+  },
+  "local_env_key_presence_only": {
+    "source_path": "<WANDERAI_REPO_ROOT>/apps/ai-service/.env",
+    "values_printed": false,
+    "OPENAI_API_KEY": "NON_PLACEHOLDER_CONFIGURED",
+    "ANTHROPIC_API_KEY": "NON_PLACEHOLDER_CONFIGURED",
+    "GEMINI_API_KEY": "NON_PLACEHOLDER_CONFIGURED",
+    "XAI_API_KEY": "UNSET",
+    "GROK_API_KEY": "UNSET",
+    "HF_TOKEN": "UNSET"
+  },
+  "selected_primary_judges": {
+    "judge_A": {
+      "provider": "OpenAI",
+      "model_family": "openai_gpt6",
+      "model_id": "gpt-6-luna",
+      "official_urls": [
+        "https://platform.openai.com/pricing/",
+        "https://platform.openai.com/overview"
+      ],
+      "context_window_tokens": 1050000,
+      "max_input_tokens_approx": 922000,
+      "max_output_tokens_limit": 128000,
+      "long_context_cliff_tokens": 272000,
+      "standard_usd_per_1m": { "input": 0.10, "output": 0.50, "cached_input": 0.01 },
+      "batch_api_endpoint": "POST /v1/batches -> /v1/responses (24h turnaround, 50% discount)",
+      "batch_usd_per_1m": { "input": 0.05, "output": 0.25 },
+      "w07_max_item_byte_ceiling_tokens": 78290,
+      "triggers_long_context_surcharge": false,
+      "wire_params_auto_r09": { "reasoning_effort": "low", "max_output_tokens": 1024, "store": false },
+      "forbidden_params_omitted": ["temperature", "top_p", "top_k"],
+      "token_count_endpoint": "POST /v1/responses/input_tokens ($0 fee)",
+      "data_retention_and_w07_suitability": {
+        "model_training_on_api": false,
+        "default_abuse_log_retention": "Up to 30 days (eliminable via enterprise ZDR + PSP)",
+        "batch_file_cleanup_required": true,
+        "allowed_w07_data_tier": "Tier T1 sanitized Arm P view V (046424e5...) only; zero T0_PRIVATE, zero raw S, zero Tier T2",
+        "account_live_verification_status": "HOLD_PENDING_UNLOCK (GET /v1/models snapshot ID, org ZDR, Batch tier, count_tokens unverified at 0 live calls)"
+      }
+    },
+    "judge_B": {
+      "provider": "Anthropic",
+      "model_family": "anthropic_claude5",
+      "model_id": "claude-haiku-5-5",
+      "official_urls": [
+        "https://platform.claude.com/docs/en/models/overview",
+        "https://platform.claude.com/docs/en/build-with-claude/batch-processing"
+      ],
+      "context_window_tokens": 1000000,
+      "max_output_tokens_limit": 128000,
+      "long_context_cliff_tokens": 100000,
+      "long_context_cliff_rule": "Entire request shifts 5x if total prompt exceeds 100,000 tokens (from $0.05/$0.25 Batch to $0.25/$1.25 Batch)",
+      "standard_usd_per_1m_le_100k": { "input": 0.10, "output": 0.50 },
+      "batch_api_endpoint": "POST /v1/messages/batches (24h window, 50% discount, anthropic-version: 2026-10-21)",
+      "batch_usd_per_1m_le_100k": { "input": 0.05, "output": 0.25 },
+      "batch_usd_per_1m_gt_100k": { "input": 0.25, "output": 1.25 },
+      "w07_max_item_byte_ceiling_tokens": 78290,
+      "triggers_100k_long_context_cliff": false,
+      "wire_params_auto_r09": { "output_config": { "effort": "low", "format": "json_schema S-4" }, "max_tokens": 1024 },
+      "forbidden_params_omitted": ["temperature", "top_p", "top_k", "thinking"],
+      "token_count_endpoint": "POST /v1/messages/count_tokens ($0 fee)",
+      "data_retention_and_w07_suitability": {
+        "model_training_on_commercial_api": false,
+        "zdr_applies_to_message_batches": false,
+        "batch_retention_window_days": 29,
+        "mandatory_post_run_action": "Owner explicit OD-AE-05 acceptance of 29-day Batch non-ZDR retention for public/T1 sanitized V ONLY + immediate DELETE on batch results after download",
+        "allowed_w07_data_tier": "Tier T1 sanitized Arm P view V (046424e5...) only; zero T0_PRIVATE, zero raw S, zero Tier T2",
+        "account_live_verification_status": "HOLD_PENDING_UNLOCK (echoed snapshot ID, Batch entitlement, live rates, count_tokens unverified at 0 live calls)"
+      }
+    }
+  },
+  "g2a_support_models": {
+    "g2a_2_primary_under_20usd_budget": {
+      "provider": "Google Gemini Developer API (Paid Tier Only)",
+      "model_id": "gemini-2.5-flash-lite",
+      "official_url": "https://ai.google.dev/gemini-api/docs/pricing",
+      "standard_usd_per_1m": { "input": 0.10, "output": 0.40 },
+      "batch_usd_per_1m": { "input": 0.05, "output": 0.20 },
+      "token_count_endpoint": "models.countTokens ($0 fee)",
+      "retention_and_caveats": {
+        "free_tier_banned": true,
+        "paid_tier_model_training": false,
+        "paid_tier_default_log_retention_days": 55,
+        "supports_store_false_or_shorter_retention": true,
+        "vertex_ai_retirement_note": "Retiring on Vertex AI starting 2026-10-20; use Paid Gemini Developer API or substitute gemini-3.8-flash under Budget40"
+      }
+    },
+    "g2a_2_budget40_alternative": {
+      "provider": "Google Gemini API (Paid Tier Only)",
+      "model_id": "gemini-3.8-flash",
+      "official_url": "https://ai.google.dev/gemini-api/docs/pricing",
+      "standard_usd_per_1m": { "input": 0.75, "output": 3.75 },
+      "batch_usd_per_1m": { "input": 0.375, "output": 1.875 },
+      "wire_params_auto_r09": { "thinking_level": "LOW", "max_output_tokens": 1024 }
+    }
+  },
+  "response_schema_s4_exemplars": {
+    "schema_sha256": "544062c5554fb2c4e987b4262db3522acbf77401226a15a52ea2f18a599a24d1",
+    "exemplar_REL_2": {
+      "grade": "REL_2",
+      "evidence_quote": "Văn Miếu - Quốc Tử Giám mở cửa từ 08:00 đến 17:00 hằng ngày.",
+      "char_start": 0,
+      "char_end": 60
+    },
+    "exemplar_REL_1": {
+      "grade": "REL_1",
+      "evidence_quote": "Hồ Hoàn Kiếm nằm tại quận Hoàn Kiếm, Hà Nội.",
+      "char_start": 14,
+      "char_end": 58
+    },
+    "exemplar_REL_0": {
+      "grade": "REL_0",
+      "evidence_quote": null,
+      "char_start": null,
+      "char_end": null
+    },
+    "exemplar_NA": {
+      "grade": "NA",
+      "evidence_quote": null,
+      "char_start": null,
+      "char_end": null
+    }
+  }
+}

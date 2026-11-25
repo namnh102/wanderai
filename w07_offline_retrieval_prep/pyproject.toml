@@ -1,0 +1,37 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "w07-offline-retrieval-prep"
+version = "0.1.0"
+description = "GOMATE W07 pre-freeze offline 2x3 retrieval engine and decoupled G4 scorer"
+readme = "README.md"
+requires-python = "==3.11.*"
+dependencies = [
+    "numpy==2.4.4",
+    "scipy==1.17.1",
+    "regex==2026.5.9",
+    "underthesea==9.4.0",
+    "sentence-transformers==6.1.0",
+    "transformers==5.17.0",
+    "tokenizers==0.23.2",
+    "torch==2.13.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest==9.1.1"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["w07_retrieval*", "w07_g4_scorer*"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src", "tests"]
+testpaths = ["tests"]
+addopts = ["-p", "no:cacheprovider", "-ra", "--strict-markers"]
+norecursedirs = [".git", "__pycache__", ".pytest_cache", "evidence"]
+markers = [
+    "real_corpus_gated: Real 137-doc corpus checks gated on W07_G15_FROZEN=1 and W07_OWNER_AUTHORIZED=1",
+    "e2e: Opaque-box end-to-end tests",
+]
