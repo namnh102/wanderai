@@ -1,0 +1,58 @@
+{
+  "schema_version": "GOMATE_W07_ROUTE2_AIPROXY_BUNDLE_V1_1",
+  "decision_route": "OD-G15-05-AIPROXY",
+  "harmonization_id": "W07-ROUTE2-AIPROXY-HARMONIZED-V1.1",
+  "route1_human_labeling_stopped": true,
+  "protocol_v1_sha256": "5056c5c2373ee9584b8850ba49411160cc2c382ad6315aaada4c05fb9b0030c2",
+  "annex_v022_sha256": "e78013fd4abae98c39ce287a8ae9ed2b6b68fee91d91360f07ecc91c67eee940",
+  "g2a_v2_0_1_draft_sha256": "7da0bfdc070c1e9d5847f6ce4e3e8881a38e0b7879278cfe93d4f2e175fddbe3",
+  "g2b_v1_1_draft_sha256": "85c184abe62947a0d43523ecb5ce1f6ec80709275f51675fbddef15d9653a8a3",
+  "auto_eval_v042_sha256": "c33b69881cc98efbaa851c341efb6c9a35c2a9c29f868418a99988305cb2c7ae",
+  "g5_status": "HOLD_NOT_AUTHORIZED_BY_THIS_AMENDMENT",
+  "w08_status": "NOT_OPEN",
+  "stub_01_to_05_sealed_pass_do_not_rerun": true,
+  "sv01_record": {
+    "supervisor_approval_status": "OWNER_REPORTED_APPROVAL",
+    "supervisor_written_evidence_on_disk": false,
+    "frozen_rules_allow_waiver_without_gvhd_evidence": false,
+    "supervisor_identity": null,
+    "supervisor_signature_ref": null,
+    "supervisor_confirmed_artifact_sha256": null
+  },
+  "explicit_frozen_rule_sv01_waiver_amendment_ratified": false,
+  "owner_reported_supervisor_waiver_accepted_by_audit_and_owner": false,
+  "chatgpt_audit_verdict": "HOLD_PENDING_AUDIT",
+  "owner_signed_amendment_receipt_verified": false,
+  "external_trust_root_provisioned": false,
+  "od_ae_05_data_rights_and_batch_retention_signed": false,
+  "live_account_rates_and_count_tokens_verified": false,
+  "budget40_signed_activation_binding_verified": false,
+  "selected_judging_order": "ORDER_A",
+  "prompt_order_coverage_policy": {
+    "stage1_dev5_mode": "STRATIFIED_20PCT_DEV_AUDIT",
+    "stage1_dev5_pairs_swapped_per_judge": 137,
+    "stage1_dev5_total_pairs_per_judge": 685,
+    "final50_mode": "STRATIFIED_200PAIR_FINAL_AUDIT",
+    "final50_pairs_swapped_per_judge": 200,
+    "final50_total_pairs_per_judge": 6850,
+    "full_pair_invariance_claimed": false
+  },
+  "s_vs_v_cloud_boundary_enforced": true,
+  "g2a1_stage2_runtime_status": "HOLD_G2A1_PROVIDER_KEY_OR_LOCAL_RUNTIME_UNSELECTED_STAGE2_ONLY (Stage-1 DEV-5 uses quarantined DEV packet post-T0 Ed25519 sign-off)",
+  "selected_model_stack": {
+    "g2a_1_corpus_blind_generator_candidate": "grok-4.20 ($0.05-$0.10/100 calls; needs XAI_API_KEY) OR signed local Role-4 open-weight model (distinct from G2A-2 Google & G2B OpenAI/Anthropic)",
+    "g2a_2_pre_rank_canonical_s_verifier": "gemini-2.5-flash-lite (Paid Dev API Batch $0.05/$0.20 -> ALL-IN <= $20 cap; alt: gemini-3.8-flash under Budget40 $40)",
+    "g2b_judge_a": "gpt-6-luna ($0.05/$0.25 Batch, reasoning_effort='low', store=false)",
+    "g2b_judge_b": "claude-haiku-5-5 ($0.05/$0.25 <=100K Batch, output_config={'effort':'low'}, 29d retention DELETE post-run)"
+  },
+  "budget_caps": {
+    "selected_cap_regime": "UNAMENDED_20USD",
+    "dev_hard_cap_usd": 2.0,
+    "early_warning_threshold_usd": 18.0,
+    "total_hard_cap_usd": 20.0,
+    "optional_budget40_total_hard_cap_usd": 40.0,
+    "mandatory_retry_reserve_fraction": 0.15,
+    "max_schema_retries_per_item": 1,
+    "max_failed_batches": 1
+  }
+}

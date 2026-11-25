@@ -1,0 +1,81 @@
+{
+  "manifest_id": "W07-G15-V022-IMMUTABLE-ARCHIVE-VERIFICATION-MANIFEST-2026-11-21",
+  "date": "2026-11-21",
+  "decision_id": "OD-W07-G15-TECH-FREEZE-V022-20261121-01",
+  "record_classification": "OWNER_CHAT_APPROVED_EXACT_HASH_BOUNDED_TECHNICAL_SPEC",
+  "source_bundle_zip": {
+    "filename": "GOMATE_W07_G15_OWNER_APPROVED_TECH_FREEZE_RECORD_2026-11-21.zip",
+    "size_bytes": 35637,
+    "pre_archive_sha256": "d778bbc56377bbe16670d0799106b02d06d411edf78a3011cf7bab224bb1909b",
+    "post_archive_sha256": "d778bbc56377bbe16670d0799106b02d06d411edf78a3011cf7bab224bb1909b",
+    "byte_identical_verified": true
+  },
+  "archived_files": [
+    {
+      "filename": "GOMATE_W07_G15_TECHNICAL_ANNEX_V0_2_2_CANDIDATE_2026-11-21.md",
+      "size_bytes": 71761,
+      "pre_archive_sha256": "e78013fd4abae98c39ce287a8ae9ed2b6b68fee91d91360f07ecc91c67eee940",
+      "post_archive_primary_sha256": "e78013fd4abae98c39ce287a8ae9ed2b6b68fee91d91360f07ecc91c67eee940",
+      "post_archive_prep_sha256": "e78013fd4abae98c39ce287a8ae9ed2b6b68fee91d91360f07ecc91c67eee940",
+      "content_rewritten": false,
+      "byte_identical_verified": true
+    },
+    {
+      "filename": "GOMATE_W07_G15_TECH_FREEZE_OWNER_DECISION_2026-11-21.md",
+      "size_bytes": 5291,
+      "pre_archive_sha256": "ee6b7bdb6354f51f6da784adeeceb7418d17bb2c63acfcf59f37d9c7a38bcff3",
+      "post_archive_primary_sha256": "ee6b7bdb6354f51f6da784adeeceb7418d17bb2c63acfcf59f37d9c7a38bcff3",
+      "post_archive_prep_sha256": "ee6b7bdb6354f51f6da784adeeceb7418d17bb2c63acfcf59f37d9c7a38bcff3",
+      "content_rewritten": false,
+      "byte_identical_verified": true
+    },
+    {
+      "filename": "GOMATE_W07_G15_TECH_FREEZE_OWNER_APPROVAL_RECEIPT_2026-11-21.json",
+      "size_bytes": 2072,
+      "pre_archive_sha256": "1db438d30ad042296fca38abd882de0d1951d4dc1ff83c31b86a41d5765b6937",
+      "post_archive_primary_sha256": "1db438d30ad042296fca38abd882de0d1951d4dc1ff83c31b86a41d5765b6937",
+      "post_archive_prep_sha256": "1db438d30ad042296fca38abd882de0d1951d4dc1ff83c31b86a41d5765b6937",
+      "content_rewritten": false,
+      "byte_identical_verified": true
+    },
+    {
+      "filename": "GOMATE_W07_G15_POST_FREEZE_ANTIGRAVITY_HANDOFF_2026-11-21.md",
+      "size_bytes": 2069,
+      "pre_archive_sha256": "d02a53ebbbfb7304743980801e4edf7d0f9cee7f736fd6823fb88286209ea635",
+      "post_archive_primary_sha256": "d02a53ebbbfb7304743980801e4edf7d0f9cee7f736fd6823fb88286209ea635",
+      "post_archive_prep_sha256": "d02a53ebbbfb7304743980801e4edf7d0f9cee7f736fd6823fb88286209ea635",
+      "content_rewritten": false,
+      "byte_identical_verified": true
+    },
+    {
+      "filename": "GOMATE_W07_G15_TECH_FREEZE_SHA256SUMS_2026-11-21.txt",
+      "size_bytes": 509,
+      "pre_archive_sha256": "8c849e2393cc4de2412292879518d5a1106604b5fa3c4f21deab5c24f000fc9a",
+      "post_archive_primary_sha256": "8c849e2393cc4de2412292879518d5a1106604b5fa3c4f21deab5c24f000fc9a",
+      "post_archive_prep_sha256": "8c849e2393cc4de2412292879518d5a1106604b5fa3c4f21deab5c24f000fc9a",
+      "content_rewritten": false,
+      "byte_identical_verified": true
+    }
+  ],
+  "unchanged_parent_authorities": {
+    "protocol_v1_0_lf_sha256": "5056c5c2373ee9584b8850ba49411160cc2c382ad6315aaada4c05fb9b0030c2",
+    "protocol_v1_0_raw_crlf_sha256": "5056c5c26142c579e1033fe3557ca031c9a0d2f18a90c2015a0a3fe97a4fdbe2",
+    "parent_annex_v0_2_1_sha256": "842530dd737e2b2371280a4091ca760e540ec783d6ae654d462e33e148075740",
+    "historical_g15_r01_receipt_sha256": "73ef28fba489a9702a2628450755fb6092bebc45b6dbf04eee04b0cfafd52e8a",
+    "erratum_e01_tokenizer_sha256": "2c3387be76557bd40970cec13153b3bbf80407865484b209e655e5e4729076b8"
+  },
+  "governance_flags": {
+    "ratified_decisions": [
+      "OD-G15-01",
+      "OD-G15-02",
+      "OD-G15-03",
+      "OD-G15-04"
+    ],
+    "threshold_route": "THRESH_STATIC_PRE_G3",
+    "od_g15_05": "HOLD",
+    "od_g15_06": "TECHNICAL_SPEC_CHAT_APPROVED_ONLY__FORMAL_GATE_HOLD",
+    "full_g15_closed": false,
+    "real_137_corpus_readonly_stubs_authorized": false,
+    "runtime_execution_authorization": false
+  }
+}
