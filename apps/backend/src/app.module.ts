@@ -14,6 +14,7 @@ import { HealthModule } from "./modules/health/health.module";
 import { MailModule } from "./modules/mail/mail.module";
 import { MatchesModule } from "./modules/matches/matches.module";
 import { YoutubeModule } from "./modules/youtube/youtube.module";
+import { SafetyModule } from "./modules/safety/safety.module";
 
 @Module({
   imports: [
@@ -33,6 +34,7 @@ import { YoutubeModule } from "./modules/youtube/youtube.module";
     ReviewsModule,
     MatchesModule,
     YoutubeModule,
+    SafetyModule,
     AiProxyModule,
   ],
   controllers: [],

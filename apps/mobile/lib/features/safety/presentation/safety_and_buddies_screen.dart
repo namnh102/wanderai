@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import '../../../core/router/app_router.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_radius.dart';
 import '../../../core/theme/app_spacing.dart';
@@ -12,10 +14,12 @@ import '../../../core/widgets/app_error_state.dart';
 import '../../../core/widgets/app_loading.dart';
 import '../../../core/widgets/app_state_banner.dart';
 import '../../../core/widgets/responsive_wrapper.dart';
-import '../../places/data/navigation_service.dart';
+import '../../auth/providers/auth_provider.dart';
 import '../data/buddy_models.dart';
 import '../data/buddy_repository.dart';
 import '../providers/buddy_provider.dart';
+import '../providers/safety_provider.dart';
+import 'widgets/safety_tab_view.dart';
 
 /// W08 Buddy Matching & Safety Tab (`/safety`):
 /// Calls real NestJS `/matches/*` endpoints via [BuddyRepository]:
@@ -36,31 +40,34 @@ class _SafetyAndBuddiesScreenState
     extends ConsumerState<SafetyAndBuddiesScreen> {
   int _selectedSection = 0; // 0 = Bạn đồng hành (W08), 1 = An toàn & SOS
 
+  bool get _isGuestOnly {
+    final isGuestBrowse = ref.read(guestBrowseModeProvider);
+    final authStatus = ref.read(authProvider).status;
+    return isGuestBrowse && authStatus != AuthStatus.authenticated;
+  }
+
   @override
   void initState() {
     super.initState();
+    if (_isGuestOnly) {
+      _selectedSection = 1;
+    }
     Future.microtask(() {
-      if (mounted) {
+      if (!mounted) return;
+      if (!_isGuestOnly) {
         ref.read(buddyProvider.notifier).load();
       }
+      ref.read(safetyProvider.notifier).load();
     });
-  }
-
-  Future<void> _dialEmergency(String number) async {
-    final opened = await openExternalUrlString(
-      'tel:$number',
-      opener: ref.read(externalUriOpenerProvider),
-    );
-    if (!opened && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Không thể mở trình gọi điện tới số $number.')),
-      );
-    }
   }
 
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(buddyProvider);
+    final isGuestBrowse = ref.watch(guestBrowseModeProvider);
+    final authStatus = ref.watch(authProvider.select((s) => s.status));
+    final isGuestOnly =
+        isGuestBrowse && authStatus != AuthStatus.authenticated;
 
     return Scaffold(
       backgroundColor: AppColors.warmBackground,
@@ -102,8 +109,19 @@ class _SafetyAndBuddiesScreenState
             ),
             Expanded(
               child: _selectedSection == 0
-                  ? _BuddiesTab(state: state)
-                  : _SafetyTab(onDial: _dialEmergency),
+                  ? (isGuestOnly
+                      ? AppEmptyState(
+                          key: const Key('buddy_guest_auth_prompt'),
+                          icon: Icons.lock_outline_rounded,
+                          title: 'Đăng nhập để tìm bạn đồng hành',
+                          description:
+                              'Tính năng kết nối bạn đồng hành yêu cầu tài khoản GoMate. Bạn vẫn có thể sử dụng tab "An toàn & SOS" hoàn toàn ngoại tuyến mà không cần đăng nhập.',
+                          actionLabel: 'Đăng nhập ngay',
+                          onAction: () =>
+                              context.go('/login?redirect=%2Fsafety'),
+                        )
+                      : _BuddiesTab(state: state))
+                  : const SafetyTabView(),
             ),
           ],
         ),
@@ -732,114 +750,6 @@ class _CandidateCard extends ConsumerWidget {
                     ),
             ],
           ),
-        ],
-      ),
-    );
-  }
-}
-
-class _SafetyTab extends StatelessWidget {
-  final Future<void> Function(String number) onDial;
-  const _SafetyTab({required this.onDial});
-
-  @override
-  Widget build(BuildContext context) {
-    return ListView(
-      padding: const EdgeInsets.all(AppSpacing.md),
-      children: [
-        const AppStateBanner(
-          message:
-              'Số khẩn cấp Việt Nam hoạt động 24/7. Nhấn để mở trình gọi điện mặc định.',
-          tone: AppStateBannerTone.warning,
-        ),
-        const SizedBox(height: AppSpacing.md),
-        _EmergencyTile(
-          number: '113',
-          title: 'Công an / An ninh khẩn cấp',
-          subtitle: 'Báo cáo sự cố an ninh, mất trộm, đe dọa an toàn.',
-          icon: Icons.local_police_outlined,
-          onTap: () => onDial('113'),
-        ),
-        const SizedBox(height: AppSpacing.sm),
-        _EmergencyTile(
-          number: '114',
-          title: 'Cứu hỏa & Cứu hộ',
-          subtitle: 'Hỗ trợ hỏa hoạn, tai nạn mắc kẹt, cứu nạn khẩn cấp.',
-          icon: Icons.local_fire_department_outlined,
-          onTap: () => onDial('114'),
-        ),
-        const SizedBox(height: AppSpacing.sm),
-        _EmergencyTile(
-          number: '115',
-          title: 'Cấp cứu y tế',
-          subtitle: 'Điều phối xe cứu thương và hỗ trợ y tế khẩn cấp.',
-          icon: Icons.medical_services_outlined,
-          onTap: () => onDial('115'),
-        ),
-        const SizedBox(height: AppSpacing.lg),
-        const AppCard(
-          padding: EdgeInsets.all(AppSpacing.md),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('Lộ trình an toàn W08 (Wave C)', style: AppTypography.h3),
-              SizedBox(height: AppSpacing.xs),
-              Text(
-                '• Danh bạ khẩn cấp cá nhân & Check-in tọa độ chuyến đi đã có bảng schema (safety_contacts, safety_checkins).\n'
-                '• Tuyệt đối không chia sẻ email, SĐT hoặc lịch trình chi tiết với người lạ trước khi đồng ý kết nối 2 chiều.',
-                style: AppTypography.bodyS,
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _EmergencyTile extends StatelessWidget {
-  final String number;
-  final String title;
-  final String subtitle;
-  final IconData icon;
-  final VoidCallback onTap;
-
-  const _EmergencyTile({
-    required this.number,
-    required this.title,
-    required this.subtitle,
-    required this.icon,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return AppCard(
-      onTap: onTap,
-      padding: const EdgeInsets.all(AppSpacing.md),
-      child: Row(
-        children: [
-          Container(
-            width: 48,
-            height: 48,
-            decoration: BoxDecoration(
-              color: AppColors.error.withValues(alpha: 0.12),
-              borderRadius: AppRadius.mdRadius,
-            ),
-            child: Icon(icon, color: AppColors.error),
-          ),
-          const SizedBox(width: AppSpacing.mdSmall),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('$number — $title', style: AppTypography.h3),
-                const SizedBox(height: 2),
-                Text(subtitle, style: AppTypography.bodyS),
-              ],
-            ),
-          ),
-          const Icon(Icons.phone_forwarded_outlined, color: AppColors.error),
         ],
       ),
     );

@@ -94,10 +94,10 @@ class RouterNotifier extends ChangeNotifier {
     if (!isAuth) {
       if (isLoginRoute || isResetRoute) return null;
 
-      // Public place detail pages and explicit guest discovery routes are accessible pre-login.
+      // Public place detail pages and explicit guest discovery/safety routes are accessible pre-login.
       final isPublicPlaceDetail = path.startsWith('/places/');
-      final isGuestShellAllowed =
-          _ref.read(guestBrowseModeProvider) && (path == '/' || path == '/map');
+      final isGuestShellAllowed = _ref.read(guestBrowseModeProvider) &&
+          (path == '/' || path == '/map' || path == '/safety');
       if (isPublicPlaceDetail || isGuestShellAllowed) {
         return null;
       }
@@ -230,7 +230,8 @@ class _MainScaffold extends ConsumerWidget {
     final authStatus = ref.watch(authProvider.select((s) => s.status));
     final isGuestBrowse = ref.watch(guestBrowseModeProvider);
     final path = GoRouterState.of(context).uri.path;
-    final canRenderGuestTab = isGuestBrowse && (path == '/' || path == '/map');
+    final canRenderGuestTab =
+        isGuestBrowse && (path == '/' || path == '/map' || path == '/safety');
     if (authStatus != AuthStatus.authenticated && !canRenderGuestTab) {
       return const Scaffold(
         body: AppLoading(),
@@ -254,7 +255,8 @@ class _MainScaffold extends ConsumerWidget {
                 final targetTab = _tabs[index];
                 if (authStatus != AuthStatus.authenticated &&
                     targetTab != '/' &&
-                    targetTab != '/map') {
+                    targetTab != '/map' &&
+                    targetTab != '/safety') {
                   ref.read(postLoginRedirectProvider.notifier).state =
                       targetTab;
                   context.go(

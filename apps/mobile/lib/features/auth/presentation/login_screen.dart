@@ -295,6 +295,21 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       icon: const Icon(Icons.explore_outlined, size: 18),
                       label: const Text('Khám phá trước khi đăng nhập'),
                     ),
+                    TextButton.icon(
+                      key: const Key('login_emergency_safety_button'),
+                      onPressed: _isBusy
+                          ? null
+                          : () {
+                              ref.read(authProvider.notifier).clearError();
+                              ref.read(postLoginRedirectProvider.notifier).state =
+                                  null;
+                              ref.read(guestBrowseModeProvider.notifier).state =
+                                  true;
+                              context.go('/safety');
+                            },
+                      icon: const Icon(Icons.shield_outlined, size: 18),
+                      label: const Text('An toàn & Số khẩn cấp (Ngoại tuyến)'),
+                    ),
                   ],
                 ),
               ),
