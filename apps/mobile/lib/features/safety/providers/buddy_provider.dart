@@ -5,12 +5,16 @@ import '../data/buddy_repository.dart';
 
 class BuddyState {
   final bool isLoading;
+  final bool isTogglingDiscovery;
+  final bool isDiscoverable;
   final List<BuddyCandidateModel> candidates;
   final List<BuddyMatchRecord> matches;
   final String? errorMessage;
 
   const BuddyState({
     this.isLoading = false,
+    this.isTogglingDiscovery = false,
+    this.isDiscoverable = false,
     this.candidates = const [],
     this.matches = const [],
     this.errorMessage,
@@ -18,6 +22,8 @@ class BuddyState {
 
   BuddyState copyWith({
     bool? isLoading,
+    bool? isTogglingDiscovery,
+    bool? isDiscoverable,
     List<BuddyCandidateModel>? candidates,
     List<BuddyMatchRecord>? matches,
     String? errorMessage,
@@ -25,6 +31,8 @@ class BuddyState {
   }) {
     return BuddyState(
       isLoading: isLoading ?? this.isLoading,
+      isTogglingDiscovery: isTogglingDiscovery ?? this.isTogglingDiscovery,
+      isDiscoverable: isDiscoverable ?? this.isDiscoverable,
       candidates: candidates ?? this.candidates,
       matches: matches ?? this.matches,
       errorMessage: clearError ? null : (errorMessage ?? this.errorMessage),
@@ -43,18 +51,20 @@ class BuddyNotifier extends StateNotifier<BuddyState> {
     state = const BuddyState();
   }
 
-  Future<void> load() async {
+  Future<void> load({String? destinationId}) async {
     final seq = ++_loadSeq;
     state = state.copyWith(isLoading: true, clearError: true);
     try {
       final results = await Future.wait([
-        _repo.getCandidates(),
+        _repo.getCandidatesWithConsent(destinationId: destinationId),
         _repo.getMyMatches(),
       ]);
       if (!mounted || seq != _loadSeq) return;
+      final candRes = results[0] as BuddyCandidatesResponse;
       state = BuddyState(
         isLoading: false,
-        candidates: results[0] as List<BuddyCandidateModel>,
+        isDiscoverable: candRes.isDiscoverable,
+        candidates: candRes.items,
         matches: results[1] as List<BuddyMatchRecord>,
       );
     } on DioException catch (e) {
@@ -74,6 +84,27 @@ class BuddyNotifier extends StateNotifier<BuddyState> {
     }
   }
 
+  Future<bool> toggleDiscovery(bool nextValue) async {
+    state = state.copyWith(isTogglingDiscovery: true, clearError: true);
+    try {
+      final updated = await _repo.updateDiscoveryConsent(nextValue);
+      if (!mounted) return false;
+      state = state.copyWith(
+        isTogglingDiscovery: false,
+        isDiscoverable: updated,
+      );
+      await load();
+      return true;
+    } catch (_) {
+      if (!mounted) return false;
+      state = state.copyWith(
+        isTogglingDiscovery: false,
+        errorMessage: 'Không thể cập nhật trạng thái tìm bạn đồng hành.',
+      );
+      return false;
+    }
+  }
+
   Future<bool> sendRequest(String receiverId) async {
     try {
       await _repo.sendRequest(receiverId);
@@ -84,9 +115,29 @@ class BuddyNotifier extends StateNotifier<BuddyState> {
     }
   }
 
+  Future<bool> withdrawRequest(String matchId) async {
+    try {
+      await _repo.withdrawRequest(matchId);
+      await load();
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
   Future<bool> respond(String matchId, String action) async {
     try {
       await _repo.respond(matchId, action);
+      await load();
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  Future<bool> blockPeer(String peerId) async {
+    try {
+      await _repo.blockUser(peerId);
       await load();
       return true;
     } catch (_) {

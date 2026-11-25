@@ -9,19 +9,80 @@ import 'package:wanderai_mobile/features/safety/data/buddy_repository.dart';
 import 'package:wanderai_mobile/features/safety/presentation/safety_and_buddies_screen.dart';
 
 class _FakeBuddyRepo implements BuddyRepository {
+  bool isDiscoverable;
+  final bool shouldFailLoad;
   final List<BuddyCandidateModel> candidates;
   final List<BuddyMatchRecord> matches;
   final List<String> requestedIds = [];
+  final List<String> withdrawnIds = [];
+  final List<String> blockedIds = [];
   final List<(String, String)> responses = [];
 
-  _FakeBuddyRepo({this.candidates = const [], this.matches = const []});
+  _FakeBuddyRepo({
+    this.isDiscoverable = true,
+    this.shouldFailLoad = false,
+    this.candidates = const [],
+    this.matches = const [],
+  });
 
   @override
-  Future<List<BuddyCandidateModel>> getCandidates({int limit = 20}) async =>
-      candidates;
+  Future<bool> getDiscoveryConsent() async => isDiscoverable;
 
   @override
-  Future<List<BuddyMatchRecord>> getMyMatches() async => matches;
+  Future<bool> updateDiscoveryConsent(bool value) async {
+    isDiscoverable = value;
+    return isDiscoverable;
+  }
+
+  @override
+  Future<BuddyCandidatesResponse> getCandidatesWithConsent({
+    String? destinationId,
+    int limit = 20,
+  }) async {
+    if (shouldFailLoad) {
+      throw Exception('Network error');
+    }
+    return BuddyCandidatesResponse(
+      isDiscoverable: isDiscoverable,
+      items: isDiscoverable ? candidates : const [],
+    );
+  }
+
+  @override
+  Future<List<BuddyCandidateModel>> getCandidates({
+    String? destinationId,
+    int limit = 20,
+  }) async =>
+      isDiscoverable ? candidates : const [];
+
+  @override
+  Future<BuddyMaskedProfileModel> getMaskedProfile(String peerId) async {
+    final cand = candidates.firstWhere((c) => c.peer.id == peerId);
+    return BuddyMaskedProfileModel(
+      peer: cand.peer,
+      compatibilityScore: cand.compatibilityScore,
+      compatibilityBand: cand.compatibilityBand,
+      sharedInterests: cand.sharedInterests,
+      sharedDestinationNames: cand.sharedDestinationNames,
+      hasOverlappingTripWindow: true,
+      explanation: cand.explanation,
+      plannedDestinations: const [
+        BuddyPlannedDestinationSummary(
+          destinationId: 'dest-dn',
+          destinationName: 'Đà Nẵng',
+          hasOverlappingWindow: true,
+        ),
+      ],
+    );
+  }
+
+  @override
+  Future<List<BuddyMatchRecord>> getMyMatches() async {
+    if (shouldFailLoad) {
+      throw Exception('Network error');
+    }
+    return matches;
+  }
 
   @override
   Future<BuddyMatchRecord> sendRequest(String receiverId) async {
@@ -36,128 +97,240 @@ class _FakeBuddyRepo implements BuddyRepository {
   }
 
   @override
+  Future<BuddyMatchRecord> withdrawRequest(String matchId) async {
+    withdrawnIds.add(matchId);
+    return BuddyMatchRecord(
+      id: matchId,
+      status: 'WITHDRAWN',
+      direction: 'SENT',
+      peer: const BuddyPeerModel(id: 'peer-out', displayName: 'Quốc Bảo'),
+    );
+  }
+
+  @override
   Future<BuddyMatchRecord> respond(String matchId, String action) async {
     responses.add((matchId, action));
     return matches.first;
   }
 
   @override
-  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+  Future<void> blockUser(String blockedUserId) async {
+    blockedIds.add(blockedUserId);
+  }
 }
 
 void main() {
   group('Wave C POI Enrichment UI (gallery, attribution, reviews)', () {
     testWidgets(
-        'PlaceDetailView renders Wikimedia gallery attribution, Wikipedia source, and traveler reviews',
-        (tester) async {
-      final place = PlaceModel.fromJson({
-        'id': 'p-hn-1',
-        'name': 'Văn Miếu Quốc Tử Giám',
-        'description':
-            'Quần thể di tích lịch sử văn hóa hàng đầu tại Hà Nội, trường đại học đầu tiên của Việt Nam.',
-        'coverImage': 'https://upload.wikimedia.org/example/vanmieu_cover.jpg',
-        'images': [
-          'https://upload.wikimedia.org/example/vanmieu_cover.jpg',
-          'https://upload.wikimedia.org/example/vanmieu_khuevancac.jpg',
-        ],
-        'rating': 4.8,
-        'reviewCount': 1,
-        'isVerified': true,
-        'category': {'name': 'culture'},
-        'destination': {'name': 'Hà Nội'},
-        'enrichmentMeta': {
-          'descriptionSourceUrl': 'https://vi.wikipedia.org/wiki/V%C4%83n_Mi%E1%BA%BFu',
-          'descriptionLicense': 'CC BY-SA 4.0 (Wikipedia)',
-          'imageAttributions': [
-            {'license': 'CC BY-SA 4.0'},
+      'PlaceDetailView renders Wikimedia gallery attribution, Wikipedia source, and traveler reviews',
+      (tester) async {
+        final place = PlaceModel.fromJson({
+          'id': 'p-hn-1',
+          'name': 'Văn Miếu Quốc Tử Giám',
+          'description':
+              'Quần thể di tích lịch sử văn hóa hàng đầu tại Hà Nội, trường đại học đầu tiên của Việt Nam.',
+          'coverImage':
+              'https://upload.wikimedia.org/example/vanmieu_cover.jpg',
+          'images': [
+            'https://upload.wikimedia.org/example/vanmieu_cover.jpg',
+            'https://upload.wikimedia.org/example/vanmieu_khuevancac.jpg',
           ],
-        },
-        'reviews': [
-          {
-            'id': 'rev-1',
-            'rating': 5.0,
-            'content': 'Không gian trang nghiêm, nhiều cây xanh mát.',
-            'user': {
-              'id': 'u-1',
-              'profile': {'displayName': 'Lan Anh'},
-            },
+          'rating': 4.8,
+          'reviewCount': 1,
+          'isVerified': true,
+          'category': {'name': 'culture'},
+          'destination': {'name': 'Hà Nội'},
+          'enrichmentMeta': {
+            'descriptionSourceUrl':
+                'https://vi.wikipedia.org/wiki/V%C4%83n_Mi%E1%BA%BFu',
+            'descriptionLicense': 'CC BY-SA 4.0 (Wikipedia)',
+            'imageAttributions': [
+              {'license': 'CC BY-SA 4.0'},
+            ],
           },
-        ],
-      });
+          'reviews': [
+            {
+              'id': 'rev-1',
+              'rating': 5.0,
+              'content': 'Không gian trang nghiêm, nhiều cây xanh mát.',
+              'user': {
+                'id': 'u-1',
+                'profile': {'displayName': 'Lan Anh'},
+              },
+            },
+          ],
+        });
 
-      final openedUrls = <String>[];
-      var writeReviewTapped = false;
+        final openedUrls = <String>[];
+        var writeReviewTapped = false;
 
-      await tester.pumpWidget(
-        MaterialApp(
-          theme: AppTheme.lightTheme,
-          home: Scaffold(
-            body: PlaceDetailView(
-              place: place,
-              onOpenUrl: openedUrls.add,
-              onDirections: () {},
-              onWriteReview: () => writeReviewTapped = true,
+        await tester.pumpWidget(
+          MaterialApp(
+            theme: AppTheme.lightTheme,
+            home: Scaffold(
+              body: PlaceDetailView(
+                place: place,
+                onOpenUrl: openedUrls.add,
+                onDirections: () {},
+                onWriteReview: () => writeReviewTapped = true,
+              ),
             ),
           ),
-        ),
-      );
-      await tester.pump();
+        );
+        await tester.pump();
 
-      expect(find.byKey(const Key('place_detail_gallery')), findsOneWidget);
-      expect(find.textContaining('CC BY-SA 4.0'), findsWidgets);
-      expect(find.text('Lan Anh'), findsOneWidget);
-      expect(find.text('Không gian trang nghiêm, nhiều cây xanh mát.'), findsOneWidget);
+        expect(find.byKey(const Key('place_detail_gallery')), findsOneWidget);
+        expect(find.textContaining('CC BY-SA 4.0'), findsWidgets);
+        expect(find.text('Lan Anh'), findsOneWidget);
+        expect(
+          find.text('Không gian trang nghiêm, nhiều cây xanh mát.'),
+          findsOneWidget,
+        );
 
-      await tester.tap(find.byKey(const Key('place_detail_write_review')));
-      expect(writeReviewTapped, isTrue);
+        await tester.tap(find.byKey(const Key('place_detail_write_review')));
+        expect(writeReviewTapped, isTrue);
 
-      await tester.scrollUntilVisible(
-        find.byKey(const Key('place_detail_wiki_source')),
-        200,
-        scrollable: find.byType(Scrollable).first,
-      );
-      await tester.ensureVisible(
-        find.byKey(const Key('place_detail_wiki_source')),
-      );
-      await tester.pumpAndSettle();
-      await tester.tap(find.byKey(const Key('place_detail_wiki_source')));
-      expect(
-        openedUrls,
-        contains('https://vi.wikipedia.org/wiki/V%C4%83n_Mi%E1%BA%BFu'),
-      );
-    });
+        await tester.scrollUntilVisible(
+          find.byKey(const Key('place_detail_wiki_source')),
+          200,
+          scrollable: find.byType(Scrollable).first,
+        );
+        await tester.ensureVisible(
+          find.byKey(const Key('place_detail_wiki_source')),
+        );
+        await tester.pumpAndSettle();
+        await tester.tap(find.byKey(const Key('place_detail_wiki_source')));
+        expect(
+          openedUrls,
+          contains('https://vi.wikipedia.org/wiki/V%C4%83n_Mi%E1%BA%BFu'),
+        );
+      },
+    );
   });
 
-  group('Wave C W08 Buddy Matching & Safety Tab (/safety)', () {
+  group('W08 Buddy Matching & Safety Tab (/safety)', () {
     testWidgets(
-        'renders privacy-safe buddy candidates, triggers request, and switches cleanly to SOS hotlines',
-        (tester) async {
-      final repo = _FakeBuddyRepo(
-        candidates: const [
-          BuddyCandidateModel(
-            peer: BuddyPeerModel(
-              id: 'peer-2',
-              displayName: 'Minh Khôi',
-              travelStyle: 'COMFORT',
-              bio: 'Thích khám phá ẩm thực và bảo tàng.',
+      'supports opt-in toggle, masked profile sheet, invite/withdraw/accept actions, and SOS hotlines',
+      (tester) async {
+        final repo = _FakeBuddyRepo(
+          isDiscoverable: false,
+          candidates: const [
+            BuddyCandidateModel(
+              peer: BuddyPeerModel(
+                id: 'peer-2',
+                displayName: 'Minh Khôi',
+                travelStyle: 'COMFORT',
+                bio: 'Thích khám phá ẩm thực và bảo tàng.',
+              ),
+              compatibilityScore: 84,
+              compatibilityBand: 'HIGH',
+              explanation:
+                  'Cùng sở thích: Ẩm thực, Văn hóa · Cùng kế hoạch đến Đà Nẵng',
             ),
-            compatibilityScore: 84,
-            compatibilityBand: 'HIGH',
-            explanation: 'Cùng sở thích: Ẩm thực, Văn hóa · Cùng kế hoạch đến Đà Nẵng',
-          ),
-        ],
-        matches: const [
-          BuddyMatchRecord(
-            id: 'match-in-1',
-            status: 'PENDING',
-            direction: 'RECEIVED',
-            score: 76,
-            explanation: 'Cùng sở thích: Biển & Đảo',
-            peer: BuddyPeerModel(id: 'peer-3', displayName: 'Thu Hà'),
-          ),
-        ],
-      );
+          ],
+          matches: const [
+            BuddyMatchRecord(
+              id: 'match-in-1',
+              status: 'PENDING',
+              direction: 'RECEIVED',
+              score: 76,
+              explanation: 'Cùng sở thích: Biển & Đảo',
+              peer: BuddyPeerModel(id: 'peer-3', displayName: 'Thu Hà'),
+            ),
+            BuddyMatchRecord(
+              id: 'match-out-1',
+              status: 'PENDING',
+              direction: 'SENT',
+              score: 70,
+              peer: BuddyPeerModel(id: 'peer-4', displayName: 'Quốc Bảo'),
+            ),
+          ],
+        );
 
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: [buddyRepositoryProvider.overrideWithValue(repo)],
+            child: MaterialApp(
+              theme: AppTheme.lightTheme,
+              home: const SafetyAndBuddiesScreen(),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        // Initially opt-in is off -> scroll down to verify opt-in empty state is shown
+        final optOffFinder = find.byKey(const Key('buddy_opt_in_off_state'));
+        await tester.scrollUntilVisible(
+          optOffFinder,
+          180,
+          scrollable: find.byType(Scrollable).first,
+        );
+        expect(optOffFinder, findsOneWidget);
+
+        // Scroll back up and turn opt-in ON via SwitchListTile
+        final switchFinder = find.byKey(const Key('buddy_discovery_switch'));
+        await tester.scrollUntilVisible(
+          switchFinder,
+          -180,
+          scrollable: find.byType(Scrollable).first,
+        );
+        await tester.ensureVisible(switchFinder);
+        await tester.pumpAndSettle();
+        await tester.tap(switchFinder);
+        await tester.pumpAndSettle();
+
+        // Accept incoming PENDING request
+        final acceptBtn = find.byKey(const Key('match_accept_match-in-1'));
+        await tester.ensureVisible(acceptBtn);
+        await tester.tap(acceptBtn);
+        await tester.pumpAndSettle();
+        expect(repo.responses, [('match-in-1', 'ACCEPTED')]);
+
+        // Withdraw outgoing PENDING request
+        final withdrawBtn = find.byKey(const Key('match_withdraw_match-out-1'));
+        await tester.ensureVisible(withdrawBtn);
+        await tester.tap(withdrawBtn);
+        await tester.pumpAndSettle();
+        expect(repo.withdrawnIds, ['match-out-1']);
+
+        // Scroll to candidate Minh Khôi and open masked profile sheet
+        final openProfileBtn =
+            find.byKey(const Key('buddy_open_profile_peer-2'));
+        await tester.scrollUntilVisible(
+          openProfileBtn,
+          180,
+          scrollable: find.byType(Scrollable).first,
+        );
+        await tester.ensureVisible(openProfileBtn);
+        await tester.pumpAndSettle();
+        expect(find.text('Minh Khôi'), findsOneWidget);
+        expect(find.text('84% hợp nhau'), findsOneWidget);
+        await tester.tap(openProfileBtn);
+        await tester.pumpAndSettle();
+
+        expect(
+          find.byKey(const Key('buddy_masked_profile_sheet')),
+          findsOneWidget,
+        );
+        expect(find.text('Đà Nẵng (Trùng lịch)'), findsOneWidget);
+
+        // Invite directly from masked profile sheet
+        await tester.tap(find.byKey(const Key('buddy_sheet_invite_peer-2')));
+        await tester.pumpAndSettle();
+        expect(repo.requestedIds, ['peer-2']);
+
+        // Switch to An toàn & SOS view
+        await tester.tap(find.text('An toàn & SOS'));
+        await tester.pumpAndSettle();
+        expect(find.textContaining('113'), findsOneWidget);
+        expect(find.textContaining('114'), findsOneWidget);
+        expect(find.textContaining('115'), findsOneWidget);
+      },
+    );
+
+    testWidgets('renders honest error state with retry when backend load fails',
+        (tester) async {
+      final repo = _FakeBuddyRepo(shouldFailLoad: true);
       await tester.pumpWidget(
         ProviderScope(
           overrides: [buddyRepositoryProvider.overrideWithValue(repo)],
@@ -168,27 +341,10 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-
-      expect(find.text('An toàn & Bạn đồng hành'), findsOneWidget);
-      expect(find.textContaining('email, số điện thoại'), findsOneWidget);
-      expect(find.text('Thu Hà'), findsOneWidget);
-      expect(find.text('Minh Khôi'), findsOneWidget);
-      expect(find.text('84% hợp nhau'), findsOneWidget);
-
-      final reqBtn = find.byKey(const Key('buddy_request_peer-2'));
-      await tester.scrollUntilVisible(reqBtn, 200);
-      await tester.ensureVisible(reqBtn);
-      await tester.pumpAndSettle();
-      await tester.tap(reqBtn);
-      await tester.pumpAndSettle();
-      expect(repo.requestedIds, ['peer-2']);
-
-      // Switch to An toàn & SOS view
-      await tester.tap(find.text('An toàn & SOS'));
-      await tester.pumpAndSettle();
-      expect(find.textContaining('113'), findsOneWidget);
-      expect(find.textContaining('114'), findsOneWidget);
-      expect(find.textContaining('115'), findsOneWidget);
+      expect(
+        find.text('Không thể tải danh sách bạn đồng hành.'),
+        findsOneWidget,
+      );
     });
   });
 }
