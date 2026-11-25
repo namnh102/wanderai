@@ -1,0 +1,75 @@
+{
+  "poi": {
+    "id": "65562a67-84ff-44a0-990d-31917a2a9bd0",
+    "name": "Tháp Đồng Hồ",
+    "nameEn": "Halong Clock Tower",
+    "aliases": ["Cột Đồng Hồ"],
+    "category": "attraction",
+    "destinationId": "d1111111-1111-4111-8111-111111111111",
+    "destinationSlug": "ha-long",
+    "destinationName": "Hạ Long",
+    "province": "Quảng Ninh",
+    "latitude": 20.9516105,
+    "longitude": 107.0851999,
+    "osmSourceId": "way/674228542",
+    "osmUrl": "https://www.openstreetmap.org/way/674228542",
+    "description": "Cột Đồng Hồ (Tháp Đồng Hồ) nằm tại khu vực trung tâm thành phố Hạ Long cạnh Vincom và tổ hợp Times Garden, là điểm mốc giao thông nối các tuyến đường Lê Thánh Tông, 25 Tháng 4, phố Nhà Thờ và phố Tuệ Tĩnh thuộc khu vực Bạch Đằng.",
+    "descriptionSourceUrl": "https://vi.wikipedia.org/wiki/H%E1%BA%A1_Long_(th%C3%A0nh_ph%E1%BB%91)",
+    "descriptionLicense": "CC BY-SA 4.0 (Wikipedia)",
+    "coverImage": "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/5e/C%E1%BB%99t_%C4%90%E1%BB%93ng_H%E1%BB%93_-_Vincom_H%E1%BA%A1_Long_2022.jpg/960px-C%E1%BB%99t_%C4%90%E1%BB%93ng_H%E1%BB%93_-_Vincom_H%E1%BA%A1_Long_2022.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+    "imageCommonsUrl": "https://commons.wikimedia.org/wiki/File:C%E1%BB%99t_%C4%90%E1%BB%93ng_H%E1%BB%93_-_Vincom_H%E1%BA%A1_Long_2022.jpg",
+    "imageLicense": "CC BY-SA 4.0",
+    "imageAuthor": "Pdhadam",
+    "imageTitle": "File:Cột Đồng Hồ - Vincom Hạ Long 2022.jpg"
+  },
+  "destinations": {
+    "haLong": {
+      "id": "d1111111-1111-4111-8111-111111111111",
+      "slug": "ha-long",
+      "name": "Hạ Long",
+      "province": "Quảng Ninh",
+      "region": "north",
+      "latitude": 20.9516,
+      "longitude": 107.0852
+    },
+    "daNang": {
+      "id": "d2222222-2222-4222-8222-222222222222",
+      "slug": "da-nang",
+      "name": "Đà Nẵng",
+      "province": "Đà Nẵng",
+      "region": "central",
+      "latitude": 16.0544,
+      "longitude": 108.2022
+    },
+    "phuQuoc": {
+      "id": "d3333333-3333-4333-8333-333333333333",
+      "slug": "phu-quoc",
+      "name": "Phú Quốc",
+      "province": "Kiên Giang",
+      "region": "south",
+      "latitude": 10.2899,
+      "longitude": 103.9840
+    }
+  },
+  "negativeFixtures": {
+    "tuanChauFarCoords": {
+      "latitude": 20.91656,
+      "longitude": 106.98958,
+      "note": "> 250m from Tháp Đồng Hồ (approx 10.6 km)"
+    },
+    "unverifiedPlaceId": "00000000-0000-4000-8000-000000000999",
+    "unratedVerifiedPlaceId": "75562a67-84ff-44a0-990d-31917a2a9bd1",
+    "unknownPlaceId": "00000000-0000-4000-8000-000000000998",
+    "unknownDestinationSlug": "khong-ton-tai"
+  },
+  "w07Checksums": {
+    "freezeV2RelativePath": "data/curated/gomate_places_freeze_v2.json",
+    "freezeV2Sha256": "F7517938598E3923906763F8F31334A500EE88BC06232F2992D38E2FCB28A444",
+    "w07KnowledgeRelativePath": "data/curated/w07/poi_knowledge_acquired_v1.jsonl",
+    "w07KnowledgeSha256": "9B0ED36E060924057872A2E8FE9941940F7BC3455F2C9CAD21CDC9A9C1141FDA"
+  },
+  "sla": {
+    "realtimeSlaMaxLatencyMs": 300000,
+    "governanceRole": "DYNAMIC_SOCIAL_FRESHNESS_LAYER"
+  }
+}
