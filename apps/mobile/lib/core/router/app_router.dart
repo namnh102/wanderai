@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../theme/app_colors.dart';
 import '../widgets/responsive_wrapper.dart';
 import '../../features/auth/presentation/login_screen.dart';
 import '../../features/auth/presentation/register_screen.dart';
@@ -15,38 +14,8 @@ import '../../features/map/presentation/map_screen.dart';
 import '../../features/places/presentation/place_detail_screen.dart';
 import '../../features/profile/presentation/preferences_screen.dart';
 import '../../features/recommendations/presentation/recommendation_screen.dart';
+import '../../features/safety/presentation/safety_and_buddies_screen.dart';
 import '../session/session_reset.dart';
-
-// Placeholder screens for tabs not yet implemented
-class _PlaceholderScreen extends StatelessWidget {
-  final String title;
-  final IconData icon;
-  const _PlaceholderScreen({required this.title, required this.icon});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text(title)),
-      body: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: 64, color: AppColors.primary),
-            const SizedBox(height: 16),
-            Text(title, style: Theme.of(context).textTheme.headlineSmall),
-            const SizedBox(height: 8),
-            Text(
-              'Tính năng đang phát triển...',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: AppColors.textSecondary,
-                  ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
 
 /// RouterNotifier listens to AuthState changes and triggers GoRouter redirect
 /// without recreating the GoRouter or its Navigator GlobalKeys.
@@ -146,7 +115,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           GoRoute(path: '/', builder: (_, __) => const HomeScreen()),
           GoRoute(path: '/map', builder: (_, __) => const MapScreen()),
           GoRoute(path: '/ai', builder: (_, __) => const AiChatScreen()),
-          GoRoute(path: '/safety', builder: (_, __) => const _PlaceholderScreen(title: 'An toàn', icon: Icons.shield)),
+          GoRoute(path: '/safety', builder: (_, __) => const SafetyAndBuddiesScreen()),
           GoRoute(path: '/trips', builder: (_, __) => const TripListScreen()),
         ],
       ),

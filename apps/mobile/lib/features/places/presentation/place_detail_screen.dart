@@ -19,6 +19,7 @@ import '../../location/domain/geo_distance.dart';
 import '../../location/providers/user_location_provider.dart';
 import '../../map/data/place_model.dart';
 import '../data/navigation_service.dart';
+import '../data/review_repository.dart';
 import '../providers/place_detail_provider.dart';
 import 'widgets/place_mini_map.dart';
 
@@ -197,10 +198,141 @@ class PlaceDetailScreen extends ConsumerWidget {
               ref.read(pendingChatPromptProvider.notifier).state = prompt;
               context.go('/ai');
             },
+            onWriteReview: () => _openReviewSheet(context, ref, place),
           );
         },
       ),
     );
+  }
+
+  Future<void> _openReviewSheet(
+    BuildContext context,
+    WidgetRef ref,
+    PlaceModel place,
+  ) async {
+    double selectedRating = 5.0;
+    final controller = TextEditingController();
+    bool isSubmitting = false;
+    String? submitError;
+
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: AppColors.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (sheetContext) {
+        return StatefulBuilder(
+          builder: (ctx, setSheetState) {
+            return Padding(
+              padding: EdgeInsets.fromLTRB(
+                AppSpacing.screenHorizontal,
+                AppSpacing.md,
+                AppSpacing.screenHorizontal,
+                MediaQuery.of(ctx).viewInsets.bottom + AppSpacing.md,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Đánh giá ${place.name}', style: AppTypography.h3),
+                  const SizedBox(height: AppSpacing.sm),
+                  Row(
+                    children: List.generate(5, (i) {
+                      final star = i + 1.0;
+                      return IconButton(
+                        key: Key('review_star_${i + 1}'),
+                        icon: Icon(
+                          star <= selectedRating ? Icons.star : Icons.star_border,
+                          color: AppColors.warning,
+                          size: 30,
+                        ),
+                        onPressed: isSubmitting
+                            ? null
+                            : () => setSheetState(() => selectedRating = star),
+                      );
+                    }),
+                  ),
+                  const SizedBox(height: AppSpacing.xs),
+                  TextField(
+                    key: const Key('review_content_input'),
+                    controller: controller,
+                    maxLines: 3,
+                    enabled: !isSubmitting,
+                    decoration: const InputDecoration(
+                      hintText: 'Chia sẻ trải nghiệm thực tế của bạn...',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                  if (submitError != null) ...[
+                    const SizedBox(height: AppSpacing.xs),
+                    Text(
+                      submitError!,
+                      style: AppTypography.bodyS.copyWith(color: AppColors.error),
+                    ),
+                  ],
+                  const SizedBox(height: AppSpacing.md),
+                  SizedBox(
+                    width: double.infinity,
+                    child: AppButton(
+                      key: const Key('review_submit_button'),
+                      text: isSubmitting ? 'Đang gửi...' : 'Gửi đánh giá',
+                      onPressed: isSubmitting
+                          ? null
+                          : () async {
+                              if (controller.text.trim().length < 4) {
+                                setSheetState(() => submitError =
+                                    'Vui lòng nhập nhận xét tối thiểu 4 ký tự.');
+                                return;
+                              }
+                              setSheetState(() {
+                                isSubmitting = true;
+                                submitError = null;
+                              });
+                              try {
+                                await ref
+                                    .read(reviewRepositoryProvider)
+                                    .createReview(
+                                      placeId: place.id,
+                                      rating: selectedRating,
+                                      content: controller.text,
+                                    );
+                                if (sheetContext.mounted) {
+                                  Navigator.of(sheetContext).pop();
+                                }
+                                ref.invalidate(placeDetailProvider(place.id));
+                                if (context.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text('Đã ghi nhận đánh giá thực tế của bạn!'),
+                                    ),
+                                  );
+                                }
+                              } on DioException catch (e) {
+                                setSheetState(() {
+                                  isSubmitting = false;
+                                  submitError = e.response?.statusCode == 401
+                                      ? 'Vui lòng đăng nhập lại để gửi đánh giá.'
+                                      : 'Không thể gửi đánh giá lúc này.';
+                                });
+                              } catch (_) {
+                                setSheetState(() {
+                                  isSubmitting = false;
+                                  submitError = 'Không thể gửi đánh giá lúc này.';
+                                });
+                              }
+                            },
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+    controller.dispose();
   }
 }
 
@@ -215,6 +347,7 @@ class PlaceDetailView extends StatelessWidget {
   final VoidCallback onDirections;
   final VoidCallback? onEnableLocation;
   final VoidCallback? onAskWandy;
+  final VoidCallback? onWriteReview;
 
   const PlaceDetailView({
     super.key,
@@ -224,6 +357,7 @@ class PlaceDetailView extends StatelessWidget {
     required this.onDirections,
     this.onEnableLocation,
     this.onAskWandy,
+    this.onWriteReview,
   });
 
   @override
@@ -231,6 +365,10 @@ class PlaceDetailView extends StatelessWidget {
     final catColor = AppColors.forCategory(place.categoryName);
     final hasHours = place.openingHours != null;
     final hasContact = place.website != null || place.phone != null;
+    final galleryUrls = <String>{
+      if (place.coverImage != null) place.coverImage!,
+      ...place.images,
+    }.where((u) => u.startsWith('http')).toList();
 
     return ResponsiveWrapper(
       maxWidth: 640.0,
@@ -308,14 +446,106 @@ class PlaceDetailView extends StatelessWidget {
                   ),
                   const SizedBox(height: AppSpacing.md),
 
-                  // ── Rating ──
+                  // ── Curated Gallery (Wikimedia Commons / OSM verified URLs) ──
+                  if (galleryUrls.isNotEmpty) ...[
+                    SizedBox(
+                      key: const Key('place_detail_gallery'),
+                      height: 172,
+                      child: ListView.separated(
+                        scrollDirection: Axis.horizontal,
+                        itemCount: galleryUrls.length,
+                        separatorBuilder: (_, __) =>
+                            const SizedBox(width: AppSpacing.sm),
+                        itemBuilder: (_, idx) => ClipRRect(
+                          borderRadius: AppRadius.cardRadius,
+                          child: Container(
+                            width: 256,
+                            color: AppColors.surfaceContainer,
+                            child: Image.network(
+                              galleryUrls[idx],
+                              fit: BoxFit.cover,
+                              errorBuilder: (_, __, ___) => Center(
+                                child: Icon(
+                                  placeCategoryIcon(place.categoryName),
+                                  size: 36,
+                                  color: catColor.withValues(alpha: 0.6),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    if (place.enrichmentMeta?.firstImageLicense != null) ...[
+                      const SizedBox(height: AppSpacing.xs),
+                      Text(
+                        'Ảnh nguồn Wikimedia Commons (${place.enrichmentMeta!.firstImageLicense!})',
+                        style: AppTypography.bodyS
+                            .copyWith(color: AppColors.textTertiary),
+                      ),
+                    ],
+                    const SizedBox(height: AppSpacing.md),
+                  ],
+
+                  // ── Rating & Traveler Reviews ──
                   _Section(
                     icon: Icons.star_border,
                     title: 'Đánh giá',
-                    child: RatingView(
-                      rating: place.rating,
-                      reviewCount: place.reviewCount,
-                      iconSize: 18,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Expanded(
+                              child: RatingView(
+                                rating: place.rating,
+                                reviewCount: place.reviewCount,
+                                iconSize: 18,
+                              ),
+                            ),
+                            if (onWriteReview != null)
+                              TextButton.icon(
+                                key: const Key('place_detail_write_review'),
+                                onPressed: onWriteReview,
+                                icon: const Icon(Icons.rate_review_outlined,
+                                    size: 16),
+                                label: const Text('Viết đánh giá'),
+                              ),
+                          ],
+                        ),
+                        if (place.reviews.isNotEmpty) ...[
+                          const Divider(height: AppSpacing.md),
+                          for (final rev in place.reviews.take(5))
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Text(
+                                        rev.authorName,
+                                        style: AppTypography.label.copyWith(
+                                          fontWeight: FontWeight.w700,
+                                        ),
+                                      ),
+                                      const SizedBox(width: AppSpacing.xs),
+                                      const Icon(Icons.star,
+                                          size: 14, color: AppColors.warning),
+                                      const SizedBox(width: 2),
+                                      Text(
+                                        rev.rating.toStringAsFixed(1),
+                                        style: AppTypography.bodyS,
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(rev.content, style: AppTypography.bodyS),
+                                ],
+                              ),
+                            ),
+                        ],
+                      ],
                     ),
                   ),
 
@@ -370,8 +600,25 @@ class PlaceDetailView extends StatelessWidget {
                     _Section(
                       icon: Icons.notes,
                       title: 'Mô tả',
-                      child: Text(place.description!,
-                          style: AppTypography.bodyM),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(place.description!, style: AppTypography.bodyM),
+                          if (place.enrichmentMeta?.descriptionSourceUrl !=
+                              null) ...[
+                            const SizedBox(height: AppSpacing.xs),
+                            _LinkRow(
+                              key: const Key('place_detail_wiki_source'),
+                              icon: Icons.menu_book_outlined,
+                              text:
+                                  'Nguồn tham khảo (${place.enrichmentMeta!.descriptionLicense ?? 'CC BY-SA 4.0'})',
+                              onTap: () => onOpenUrl(
+                                place.enrichmentMeta!.descriptionSourceUrl!,
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
                     ),
 
                   // ── Coordinates / mini map ──

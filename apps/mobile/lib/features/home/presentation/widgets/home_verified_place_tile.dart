@@ -40,17 +40,28 @@ class HomeVerifiedPlaceTile extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            width: 52,
-            height: 52,
-            decoration: BoxDecoration(
+          ClipRRect(
+            borderRadius: AppRadius.mdRadius,
+            child: Container(
+              width: 56,
+              height: 56,
               color: catColor.withValues(alpha: 0.12),
-              borderRadius: AppRadius.mdRadius,
-            ),
-            child: Icon(
-              placeCategoryIcon(place.categoryName),
-              color: catColor,
-              size: 24,
+              child: place.coverImage != null &&
+                      place.coverImage!.startsWith('http')
+                  ? Image.network(
+                      place.coverImage!,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => Icon(
+                        placeCategoryIcon(place.categoryName),
+                        color: catColor,
+                        size: 24,
+                      ),
+                    )
+                  : Icon(
+                      placeCategoryIcon(place.categoryName),
+                      color: catColor,
+                      size: 24,
+                    ),
             ),
           ),
           const SizedBox(width: AppSpacing.mdSmall),

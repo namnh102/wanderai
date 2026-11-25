@@ -1,20 +1,70 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { Prisma } from '@prisma/client';
+import * as fs from 'fs';
+import * as path from 'path';
 import { AiProxyService } from '../ai-proxy/ai-proxy.service';
 
-import { osmAddress, osmAddressSql, osmOpeningHours, osmPhone, osmWebsite } from './osm-tags';
+import { osmAddress, osmAddressSql, osmOpeningHours, osmPhone, osmTag, osmWebsite } from './osm-tags';
 import { sanitizeDestination } from '../destinations/destination-trust';
 
 // Re-exported for backwards compatibility; canonical implementation lives in osm-tags.ts.
 export { osmAddress };
 
+export interface PilotEnrichmentMeta {
+  descriptionSourceUrl: string | null;
+  descriptionLicense: string | null;
+  imageAttributions: Array<{
+    url: string;
+    commonsPageUrl?: string;
+    license?: string;
+    artist?: string | null;
+    title?: string;
+  }>;
+  enrichmentTier?: string;
+}
+
 @Injectable()
 export class PlacesService {
+  private pilotMetaCache: Map<string, PilotEnrichmentMeta> | null = null;
+
   constructor(
     private prisma: PrismaService,
     private aiProxyService: AiProxyService,
   ) {}
+
+  private _getPilotMetaMap(): Map<string, PilotEnrichmentMeta> {
+    if (this.pilotMetaCache) return this.pilotMetaCache;
+    const map = new Map<string, PilotEnrichmentMeta>();
+    const candidatePaths = [
+      path.resolve(__dirname, '../../../../data/enrichment/poi_enrichment_pilot_60_v1.json'),
+      path.resolve(process.cwd(), 'data/enrichment/poi_enrichment_pilot_60_v1.json'),
+      path.resolve(process.cwd(), '../../data/enrichment/poi_enrichment_pilot_60_v1.json'),
+    ];
+    for (const p of candidatePaths) {
+      if (!fs.existsSync(p)) continue;
+      try {
+        const parsed = JSON.parse(fs.readFileSync(p, 'utf-8'));
+        for (const item of parsed?.items || []) {
+          if (item?.place_id) {
+            map.set(item.place_id, {
+              descriptionSourceUrl: item.description_source_url ?? null,
+              descriptionLicense: item.description_license ?? null,
+              imageAttributions: Array.isArray(item.image_attributions)
+                ? item.image_attributions
+                : [],
+              enrichmentTier: item.enrichment_tier ?? undefined,
+            });
+          }
+        }
+        break;
+      } catch {
+        // Non-fatal: metadata enrichment manifest is optional on stripped containers
+      }
+    }
+    this.pilotMetaCache = map;
+    return map;
+  }
 
   // Lấy danh sách địa điểm có pagination, search, category, destination, verifiedOnly
   async findAll(
@@ -85,6 +135,8 @@ export class PlacesService {
       const { priceMin: _priceMin, priceMax: _priceMax, ...publicPlace } = p;
       return {
         ...publicPlace,
+        reviewCount: p._count.reviews,
+        rating: p._count.reviews > 0 ? p.rating : null,
         placeSources: p.placeSources.map(({ rawData: _raw, ...s }) => s),
         // Factual OSM address only; never the importer-generated places.address.
         address: osmAddress((osm?.rawData ?? null) as Record<string, unknown> | null),
@@ -130,7 +182,6 @@ export class PlacesService {
             user: {
               select: {
                 id: true,
-                email: true,
                 profile: {
                   select: { displayName: true, avatar: true },
                 },
@@ -157,11 +208,16 @@ export class PlacesService {
       attribution: s.sourceName === 'osm' ? '© OpenStreetMap contributors' : null,
     }));
 
+    const trustedReviewCount = place.reviews.length;
+    const enrichmentMeta = this._getPilotMetaMap().get(place.id) ?? null;
+
     // Legacy seed prices are not backed by any authoritative dataset: never exposed publicly.
     const { priceMin: _priceMin, priceMax: _priceMax, ...publicPlace } = place;
 
     return {
       ...publicPlace,
+      reviewCount: trustedReviewCount,
+      rating: trustedReviewCount > 0 ? place.rating : null,
       destination: sanitizeDestination(place.destination),
       placeSources: sources,
       isVerified: true,
@@ -172,6 +228,7 @@ export class PlacesService {
       openingHours: osmOpeningHours(raw) ?? place.openingHours,
       website: osmWebsite(raw),
       phone: osmPhone(raw),
+      enrichmentMeta,
       source: osm
         ? {
             name: 'OpenStreetMap',
@@ -181,6 +238,108 @@ export class PlacesService {
             attribution: '© OpenStreetMap contributors',
           }
         : null,
+    };
+  }
+
+  // Địa điểm nổi bật dựa trên hoạt động thật & độ đầy đủ nguồn/media (không metric giả)
+  async findTrending(limit: number = 10, destinationId?: string, category?: string) {
+    const safeLimit = Math.min(Math.max(1, limit), 50);
+
+    const rows = await this.prisma.place.findMany({
+      where: {
+        deletedAt: null,
+        placeSources: { some: {} },
+        ...(destinationId && { destinationId }),
+        ...(category && {
+          category: {
+            name: { equals: category.toLowerCase(), mode: 'insensitive' as Prisma.QueryMode },
+          },
+        }),
+      },
+      include: {
+        destination: {
+          select: { id: true, name: true, slug: true, province: true },
+        },
+        category: {
+          select: { id: true, name: true, icon: true, color: true },
+        },
+        placeSources: {
+          select: {
+            sourceName: true,
+            sourceId: true,
+            confidenceScore: true,
+            createdAt: true,
+            rawData: true,
+          },
+        },
+        _count: {
+          select: {
+            reviews: { where: { trusted: true, deletedAt: null } },
+            itineraryItems: true,
+          },
+        },
+      },
+      orderBy: [{ reviewCount: 'desc' }, { updatedAt: 'desc' }, { id: 'asc' }],
+      take: 250,
+    });
+
+    const ranked = rows
+      .map((p) => {
+        const osm = p.placeSources.find((s) => s.sourceName === 'osm');
+        const raw = (osm?.rawData ?? null) as Record<string, unknown> | null;
+        const osmTimestamp = osmTag(raw, 'osm_timestamp', '_osm_base_timestamp', 'osm_base');
+        const trustedReviews = p._count.reviews;
+        const itineraryMentions = p._count.itineraryItems;
+        const hasCoverImage = typeof p.coverImage === 'string' && p.coverImage.trim().length > 0;
+        const hasDescription = typeof p.description === 'string' && p.description.trim().length > 0;
+        const multiSourceBonus = p.placeSources.length > 1 ? 10 : 0;
+
+        // Pure factual composite score from real activity + curated media/prose completeness.
+        const activityScore =
+          trustedReviews * 25 +
+          itineraryMentions * 15 +
+          (hasCoverImage ? 20 : 0) +
+          (hasDescription ? 12 : 0) +
+          multiSourceBonus;
+
+        const { priceMin: _pm, priceMax: _px, _count, placeSources, ...pub } = p;
+        return {
+          ...pub,
+          rating: trustedReviews > 0 ? p.rating : null,
+          reviewCount: trustedReviews,
+          destination: p.destination,
+          category: p.category,
+          placeSources: placeSources.map(({ rawData: _raw, ...s }) => s),
+          address: osmAddress(raw),
+          openingHours: osmOpeningHours(raw) ?? p.openingHours,
+          website: osmWebsite(raw),
+          phone: osmPhone(raw),
+          isVerified: true,
+          provenanceCount: placeSources.length,
+          freshness: {
+            trustedReviewCount: trustedReviews,
+            itineraryMentions,
+            hasCoverImage,
+            hasDescription,
+            osmTimestamp,
+            activityScore,
+            rankingBasis: 'verified_activity_and_enrichment_completeness',
+          },
+        };
+      })
+      .sort(
+        (a, b) =>
+          b.freshness.activityScore - a.freshness.activityScore ||
+          b.freshness.trustedReviewCount - a.freshness.trustedReviewCount ||
+          a.id.localeCompare(b.id),
+      )
+      .slice(0, safeLimit);
+
+    return {
+      items: ranked,
+      total: ranked.length,
+      limit: safeLimit,
+      rankingBasis: 'verified_activity_and_enrichment_completeness',
     };
   }
 
@@ -197,6 +356,8 @@ export class PlacesService {
         p.id, 
         p.name, 
         p.name_en AS "nameEn", 
+        p.description,
+        p.cover_image AS "coverImage",
         (
           SELECT ${osmAddressSql('ps.raw_data')}
           FROM place_sources ps

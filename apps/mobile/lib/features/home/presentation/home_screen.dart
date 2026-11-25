@@ -21,6 +21,7 @@ import '../../ai_chat/providers/chat_provider.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../location/providers/user_location_provider.dart';
 import '../../map/data/place_model.dart';
+import '../../places/presentation/place_detail_screen.dart';
 import '../data/home_models.dart';
 import '../providers/home_provider.dart';
 import 'widgets/destination_places_sheet.dart';
@@ -336,6 +337,126 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         );
                       },
                       childCount: visibleDestinations.length,
+                    ),
+                  ),
+                ),
+
+              // ─── Trending & Enriched Verified Places ───
+              if (homeState.trendingPlaces.isNotEmpty)
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.only(top: AppSpacing.lg),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: AppSpacing.md,
+                          ),
+                          child: AppSectionHeader(
+                            title: 'Nổi bật & Đầy đủ dữ liệu',
+                            subtitle:
+                                'Xếp hạng theo dữ liệu OSM/Wikimedia & đánh giá thật',
+                            actionLabel: 'Bản đồ →',
+                            onAction: () => context.go('/map'),
+                          ),
+                        ),
+                        const SizedBox(height: AppSpacing.sm),
+                        SizedBox(
+                          height: 176,
+                          child: ListView.separated(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: AppSpacing.md,
+                            ),
+                            scrollDirection: Axis.horizontal,
+                            itemCount: homeState.trendingPlaces.length,
+                            separatorBuilder: (_, __) =>
+                                const SizedBox(width: AppSpacing.mdSmall),
+                            itemBuilder: (_, idx) {
+                              final p = homeState.trendingPlaces[idx];
+                              final color =
+                                  AppColors.forCategory(p.categoryName);
+                              return SizedBox(
+                                width: 224,
+                                child: AppCard(
+                                  key: Key('home_trending_${p.id}'),
+                                  padding: EdgeInsets.zero,
+                                  onTap: () => context.push('/places/${p.id}'),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      ClipRRect(
+                                        borderRadius:
+                                            const BorderRadius.vertical(
+                                          top: Radius.circular(16),
+                                        ),
+                                        child: Container(
+                                          height: 98,
+                                          width: double.infinity,
+                                          color: color.withValues(alpha: 0.14),
+                                          child: p.coverImage != null &&
+                                                  p.coverImage!
+                                                      .startsWith('http')
+                                              ? Image.network(
+                                                  p.coverImage!,
+                                                  fit: BoxFit.cover,
+                                                  errorBuilder: (_, __, ___) =>
+                                                      Icon(
+                                                    placeCategoryIcon(
+                                                        p.categoryName),
+                                                    color: color,
+                                                    size: 32,
+                                                  ),
+                                                )
+                                              : Icon(
+                                                  placeCategoryIcon(
+                                                      p.categoryName),
+                                                  color: color,
+                                                  size: 32,
+                                                ),
+                                        ),
+                                      ),
+                                      Padding(
+                                        padding: const EdgeInsets.all(
+                                            AppSpacing.sm),
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              p.name,
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                              style: AppTypography.label
+                                                  .copyWith(
+                                                fontWeight: FontWeight.w700,
+                                              ),
+                                            ),
+                                            const SizedBox(height: 2),
+                                            Text(
+                                              [
+                                                if (p.categoryName != null)
+                                                  placeCategoryLabel(
+                                                      p.categoryName!),
+                                                if (p.destinationName != null)
+                                                  p.destinationName!,
+                                              ].join(' · '),
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                              style: AppTypography.bodyS,
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
