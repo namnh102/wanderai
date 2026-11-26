@@ -19,11 +19,13 @@ import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { ReorderItineraryDto } from '../trips/dto/reorder-itinerary.dto';
 import { AddGroupMemberDto } from './dto/add-group-member.dto';
 import { CreateGroupDto } from './dto/create-group.dto';
+import { CreateExpenseDto, CreateSettlementDto } from './dto/group-expenses.dto';
 import {
   ProposeGroupItineraryItemDto,
   VoteItineraryItemDto,
 } from './dto/group-itinerary.dto';
 import { UpdateGroupDto } from './dto/update-group.dto';
+import { GroupExpensesService } from './group-expenses.service';
 import { GroupItineraryService } from './group-itinerary.service';
 import { GroupsService } from './groups.service';
 
@@ -39,6 +41,7 @@ export class GroupsController {
   constructor(
     private readonly groupsService: GroupsService,
     private readonly groupItineraryService: GroupItineraryService,
+    private readonly groupExpensesService: GroupExpensesService,
   ) {}
 
   @Post()
@@ -166,5 +169,83 @@ export class GroupsController {
     @CurrentUser() user: AuthenticatedUser,
   ) {
     return this.groupItineraryService.withdrawVote(id, itemId, user.id);
+  }
+
+  // ============================================================
+  // W10 WP-EXP-01 & WP-EXP-02: Shared Expenses & Settlements
+  // ============================================================
+
+  @Post(':id/expenses')
+  @ApiOperation({ summary: 'Ghi nhận khoản chi chung của nhóm (số nguyên VND)' })
+  createExpense(
+    @Param('id', new ParseUUIDPipe()) id: string,
+    @CurrentUser() user: AuthenticatedUser,
+    @Body() dto: CreateExpenseDto,
+    @Headers('idempotency-key') idempotencyKey?: string,
+  ) {
+    return this.groupExpensesService.createExpense(
+      id,
+      user.id,
+      dto,
+      idempotencyKey,
+    );
+  }
+
+  @Get(':id/expenses')
+  @ApiOperation({ summary: 'Danh sách khoản chi chung của nhóm' })
+  listExpenses(
+    @Param('id', new ParseUUIDPipe()) id: string,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    return this.groupExpensesService.listExpenses(id, user.id);
+  }
+
+  @Get(':id/expenses/:expenseId')
+  @ApiOperation({ summary: 'Chi tiết một khoản chi và phần chia từng người' })
+  getExpense(
+    @Param('id', new ParseUUIDPipe()) id: string,
+    @Param('expenseId', new ParseUUIDPipe()) expenseId: string,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    return this.groupExpensesService.getExpense(id, expenseId, user.id);
+  }
+
+  @Delete(':id/expenses/:expenseId')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Xóa mềm khoản chi trước khi có đối soát' })
+  deleteExpense(
+    @Param('id', new ParseUUIDPipe()) id: string,
+    @Param('expenseId', new ParseUUIDPipe()) expenseId: string,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    return this.groupExpensesService.deleteExpense(id, expenseId, user.id);
+  }
+
+  @Get(':id/settlement-plan')
+  @ApiOperation({ summary: 'Số dư ròng, gợi ý giảm lượt chuyển trả và lịch sử đối soát' })
+  getSettlementPlan(
+    @Param('id', new ParseUUIDPipe()) id: string,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    return this.groupExpensesService.getSettlementPlan(id, user.id);
+  }
+
+  @Post(':id/settlements')
+  @ApiOperation({
+    summary:
+      'Xác nhận đã nhận tiền hoàn trả (chỉ người nhận hoặc admin khác người nợ)',
+  })
+  createSettlement(
+    @Param('id', new ParseUUIDPipe()) id: string,
+    @CurrentUser() user: AuthenticatedUser,
+    @Body() dto: CreateSettlementDto,
+    @Headers('idempotency-key') idempotencyKey?: string,
+  ) {
+    return this.groupExpensesService.createSettlement(
+      id,
+      user.id,
+      dto,
+      idempotencyKey,
+    );
   }
 }

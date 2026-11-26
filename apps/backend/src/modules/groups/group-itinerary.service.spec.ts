@@ -86,7 +86,7 @@ describe('GroupItineraryService (W10 WP-ITIN-01 Unit)', () => {
     await groupsService.addMember(g.id, ownerId, { userId: dualMemberId });
     await groupsService.addMember(g.id, ownerId, { userId: groupOnlyMemberId });
 
-    // Group-only member cannot view or propose
+    // Group-only member cannot view, propose, or vote
     await expect(itinService.getItinerary(g.id, groupOnlyMemberId)).rejects.toThrow(
       ForbiddenException,
     );
@@ -103,6 +103,47 @@ describe('GroupItineraryService (W10 WP-ITIN-01 Unit)', () => {
       activity: 'Tháp Đồng Hồ',
       clientRequestId: 'req-a',
     });
+
+    // U3 (GroupMember lacking TripMember) is ALSO rejected 403 when voting or withdrawing vote
+    await expect(
+      itinService.voteItem(g.id, itemA.id, groupOnlyMemberId, { vote: true }),
+    ).rejects.toThrow(ForbiddenException);
+    await expect(
+      itinService.withdrawVote(g.id, itemA.id, groupOnlyMemberId),
+    ).rejects.toThrow(ForbiddenException);
+
+    // Trip owner lacking GroupMember is ALSO rejected 403 on group itinerary API!
+    const otherOwner = await mem.user.create({
+      data: {
+        email: 'other-owner@gomate.vn',
+        passwordHash: 'hash',
+        profile: { create: { displayName: 'Chủ Chuyến Ngoài Nhóm' } },
+      },
+    });
+    const otherTrip = await mem.trip.create({
+      data: {
+        userId: String(otherOwner.id),
+        title: 'Chuyến Của OtherOwner',
+        status: TripStatus.PLANNED,
+      },
+    });
+    const orphanGroup = await mem.group.create({
+      data: {
+        name: 'Nhóm Thiếu Chủ Chuyến',
+        tripId: otherTrip.id,
+        members: { create: { userId: dualMemberId, role: 'admin' } },
+      },
+    });
+    await expect(
+      itinService.getItinerary(orphanGroup.id, String(otherOwner.id)),
+    ).rejects.toThrow(ForbiddenException);
+    await expect(
+      itinService.proposeItem(orphanGroup.id, String(otherOwner.id), {
+        dayNumber: 1,
+        activity: 'Chủ chuyến thiếu GroupMember',
+      }),
+    ).rejects.toThrow(ForbiddenException);
+
     const itemB1 = await itinService.proposeItem(g.id, dualMemberId, {
       dayNumber: 1,
       activity: 'Bảo tàng Quảng Ninh',
@@ -115,7 +156,7 @@ describe('GroupItineraryService (W10 WP-ITIN-01 Unit)', () => {
     });
     expect(itemB1.id).toBe(itemB2.id);
 
-    // Vote, repeat same vote (idempotent), switch vote, withdraw vote
+    // Vote, repeat same vote (idempotent), switch vote + resend switched vote, withdraw vote + resend withdraw
     const v1 = await itinService.voteItem(g.id, itemA.id, dualMemberId, {
       vote: true,
     });
@@ -129,9 +170,15 @@ describe('GroupItineraryService (W10 WP-ITIN-01 Unit)', () => {
       vote: false,
     });
     expect(v2).toMatchObject({ upvotes: 0, downvotes: 1, score: -1, myVote: false });
+    const v2Dup = await itinService.voteItem(g.id, itemA.id, dualMemberId, {
+      vote: false,
+    });
+    expect(v2Dup).toMatchObject({ upvotes: 0, downvotes: 1, score: -1, myVote: false });
 
     const v3 = await itinService.withdrawVote(g.id, itemA.id, dualMemberId);
     expect(v3).toMatchObject({ upvotes: 0, downvotes: 0, score: 0, myVote: null });
+    const v3Dup = await itinService.withdrawVote(g.id, itemA.id, dualMemberId);
+    expect(v3Dup).toMatchObject({ upvotes: 0, downvotes: 0, score: 0, myVote: null });
 
     // Dual member cannot reorder and cannot delete owner's itemA
     await expect(

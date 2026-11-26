@@ -531,6 +531,13 @@ export class GroupItineraryService {
           },
         });
         if (existing) {
+          if (existing.activity !== dto.activity.trim()) {
+            throw new ConflictException({
+              errorCode: GROUP_ERROR_CODES.IDEMPOTENCY_PAYLOAD_MISMATCH,
+              message:
+                'clientRequestId đã được sử dụng cho một hoạt động đề xuất khác',
+            });
+          }
           return formatItem(existing);
         }
       }

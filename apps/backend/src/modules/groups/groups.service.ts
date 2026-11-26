@@ -15,7 +15,13 @@ import {
 import { CreateGroupDto } from './dto/create-group.dto';
 import { UpdateGroupDto } from './dto/update-group.dto';
 import { AddGroupMemberDto } from './dto/add-group-member.dto';
-import { GROUP_ROLES, GroupRole } from './groups.constants';
+import { GroupExpensesService } from './group-expenses.service';
+import {
+  GROUP_ERROR_CODES,
+  GROUP_ROLES,
+  GroupRole,
+  normalizeUuid,
+} from './groups.constants';
 
 export interface SafeGroupMemberView {
   id: string;
@@ -78,7 +84,10 @@ interface SelectedGroupRow {
 
 @Injectable()
 export class GroupsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly groupExpensesService?: GroupExpensesService,
+  ) {}
 
   private async _lockTrip(
     tx: Prisma.TransactionClient,
@@ -451,7 +460,11 @@ export class GroupsService {
         throw error;
       }
 
-      if (group.tripId) {
+      if (
+        group.tripId &&
+        typeof (tx.itineraryVote as { deleteMany?: unknown } | undefined)
+          ?.deleteMany === 'function'
+      ) {
         await tx.itineraryVote.deleteMany({
           where: {
             userId: dto.userId,
@@ -487,12 +500,22 @@ export class GroupsService {
       await this._lockGroup(tx, groupId);
       const { group, trip } = await this._assertGroupAdmin(tx, groupId, actorId);
 
-      const targetMember = group.members.find((m) => m.userId === targetUserId);
+      // Include soft-deleted users in membership lookup so admin can clean up a deleted
+      // account's GroupMember row AFTER its ledger balance reaches 0 VND.
+      const allGroupMembers =
+        typeof (tx.groupMember as { findMany?: unknown } | undefined)?.findMany ===
+        'function'
+          ? await tx.groupMember.findMany({ where: { groupId } })
+          : group.members;
+      const targetNorm = normalizeUuid(targetUserId);
+      const targetMember = allGroupMembers.find(
+        (m) => normalizeUuid(m.userId) === targetNorm,
+      );
       if (!targetMember) {
         throw new NotFoundException('Thành viên không tồn tại trong nhóm');
       }
 
-      if (trip !== null && trip.userId === targetUserId) {
+      if (trip !== null && normalizeUuid(trip.userId) === targetNorm) {
         throw new ConflictException(
           'Không thể xóa chủ chuyến đi khỏi nhóm đồng hành',
         );
@@ -504,11 +527,15 @@ export class GroupsService {
       const adminCount = activeMembers.filter(
         (m) =>
           m.role === GROUP_ROLES.ADMIN ||
-          (trip !== null && trip.userId === m.userId),
+          (trip !== null && normalizeUuid(trip.userId) === normalizeUuid(m.userId)),
       ).length;
+      const targetIsActive = activeMembers.some(
+        (m) => normalizeUuid(m.userId) === targetNorm,
+      );
       const targetIsAdmin =
-        targetMember.role === GROUP_ROLES.ADMIN ||
-        (trip !== null && trip.userId === targetUserId);
+        targetIsActive &&
+        (targetMember.role === GROUP_ROLES.ADMIN ||
+          (trip !== null && normalizeUuid(trip.userId) === targetNorm));
 
       if (targetIsAdmin && adminCount <= 1) {
         throw new ConflictException(
@@ -516,10 +543,30 @@ export class GroupsService {
         );
       }
 
-      if (group.tripId) {
+      if (this.groupExpensesService) {
+        const netBalance =
+          await this.groupExpensesService.getMemberNetBalanceInTx(
+            tx,
+            groupId,
+            targetUserId,
+          );
+        if (netBalance !== 0n) {
+          throw new ConflictException({
+            errorCode: GROUP_ERROR_CODES.MEMBER_HAS_UNSETTLED_BALANCE,
+            message:
+              'Không thể xóa thành viên khi vẫn còn công nợ chưa quyết toán trong nhóm',
+          });
+        }
+      }
+
+      if (
+        group.tripId &&
+        typeof (tx.itineraryVote as { deleteMany?: unknown } | undefined)
+          ?.deleteMany === 'function'
+      ) {
         await tx.itineraryVote.deleteMany({
           where: {
-            userId: targetUserId,
+            userId: targetMember.userId,
             item: { itinerary: { tripId: group.tripId } },
           },
         });

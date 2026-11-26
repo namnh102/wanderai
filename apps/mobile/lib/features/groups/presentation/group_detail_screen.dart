@@ -15,8 +15,10 @@ import '../../../core/widgets/app_text_field.dart';
 import '../../../core/widgets/responsive_wrapper.dart';
 import '../../profile/providers/profile_provider.dart';
 import '../data/group_models.dart';
+import '../providers/group_expense_provider.dart';
 import '../providers/group_itinerary_provider.dart';
 import '../providers/group_provider.dart';
+import 'widgets/group_expense_tab.dart';
 import 'widgets/group_itinerary_tab.dart';
 
 class GroupDetailScreen extends ConsumerStatefulWidget {
@@ -29,13 +31,17 @@ class GroupDetailScreen extends ConsumerStatefulWidget {
 }
 
 class _GroupDetailScreenState extends ConsumerState<GroupDetailScreen> {
-  int _selectedSection = 0; // 0 = Thành viên, 1 = Lịch trình & Vote
+  int _selectedSection = 0; // 0 = Thành viên, 1 = Lịch trình, 2 = Chi phí
   @override
   void initState() {
     super.initState();
-    Future.microtask(
-      () => ref.read(groupDetailProvider.notifier).loadGroup(widget.groupId),
-    );
+    Future.microtask(() {
+      if (!mounted) return;
+      if (ref.read(profileProvider).user == null) {
+        ref.read(profileProvider.notifier).loadProfile();
+      }
+      ref.read(groupDetailProvider.notifier).loadGroup(widget.groupId);
+    });
   }
 
   Future<void> _openEditDialog(GroupModel group) async {
@@ -185,6 +191,10 @@ class _GroupDetailScreenState extends ConsumerState<GroupDetailScreen> {
           await ref
               .read(groupItineraryProvider.notifier)
               .loadItinerary(widget.groupId);
+        } else if (_selectedSection == 2) {
+          await ref
+              .read(groupExpenseProvider.notifier)
+              .loadLedger(widget.groupId);
         }
       },
       child: ListView(
@@ -303,6 +313,11 @@ class _GroupDetailScreenState extends ConsumerState<GroupDetailScreen> {
                 icon: Icon(Icons.how_to_vote_outlined, size: 18),
                 label: Text('Lịch trình'),
               ),
+              ButtonSegment<int>(
+                value: 2,
+                icon: Icon(Icons.payments_outlined, size: 18),
+                label: Text('Chi phí'),
+              ),
             ],
             selected: {_selectedSection},
             onSelectionChanged: (selection) {
@@ -315,6 +330,12 @@ class _GroupDetailScreenState extends ConsumerState<GroupDetailScreen> {
 
           if (_selectedSection == 1)
             GroupItineraryTabView(groupId: group.id)
+          else if (_selectedSection == 2)
+            GroupExpenseTabView(
+              group: group,
+              currentUserId: currentUserId,
+              isAdmin: isAdmin,
+            )
           else ...[
           // Permission & Privileged Actions Bar
           if (isAdmin)

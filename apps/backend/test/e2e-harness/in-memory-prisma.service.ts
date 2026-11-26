@@ -1,7 +1,9 @@
 import { Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import {
+  ExpenseCategory,
   OAuthProvider,
   Prisma,
+  SplitType,
   TripStatus,
   UserRole,
   YoutubeUpdateScope,
@@ -259,6 +261,48 @@ interface StoredItineraryVote {
   updatedAt: Date;
 }
 
+interface StoredExpenseSplit {
+  id: string;
+  expenseId: string;
+  userId: string;
+  shareAmount: number;
+  createdAt: Date;
+}
+
+interface StoredExpense {
+  id: string;
+  groupId: string;
+  tripId: string | null;
+  paidByUserId: string;
+  createdByUserId: string;
+  clientRequestId: string | null;
+  title: string;
+  amount: number;
+  currency: string;
+  category: ExpenseCategory;
+  splitType: SplitType;
+  expenseDate: Date;
+  notes: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+  deletedAt: Date | null;
+}
+
+interface StoredSettlement {
+  id: string;
+  groupId: string;
+  tripId: string | null;
+  debtorId: string;
+  creditorId: string;
+  createdByUserId: string;
+  clientRequestId: string | null;
+  amount: number;
+  currency: string;
+  notes: string | null;
+  settledAt: Date;
+  createdAt: Date;
+}
+
 interface StoredVideo {
   id: string;
   userId: string;
@@ -504,6 +548,9 @@ export class InMemoryPrismaService implements OnModuleInit, OnModuleDestroy {
   private itineraries = new Map<string, StoredItinerary>();
   private itineraryItems = new Map<string, StoredItineraryItem>();
   private itineraryVotes: StoredItineraryVote[] = [];
+  private expenses = new Map<string, StoredExpense>();
+  private expenseSplits: StoredExpenseSplit[] = [];
+  private settlements = new Map<string, StoredSettlement>();
   private videos = new Map<string, StoredVideo>();
   private txQueue: Promise<unknown> = Promise.resolve();
 
@@ -539,6 +586,9 @@ export class InMemoryPrismaService implements OnModuleInit, OnModuleDestroy {
     this.itineraries.clear();
     this.itineraryItems.clear();
     this.itineraryVotes = [];
+    this.expenses.clear();
+    this.expenseSplits = [];
+    this.settlements.clear();
     this.videos.clear();
 
     const now = new Date('2026-11-24T00:00:00.000Z');
@@ -2557,8 +2607,9 @@ export class InMemoryPrismaService implements OnModuleInit, OnModuleDestroy {
 
     findMany: async (args: {
       where?: { groupId?: string; userId?: string; role?: string };
+      include?: Record<string, unknown>;
     } = {}) => {
-      return this.groupMembers.filter((m) => {
+      const rows = this.groupMembers.filter((m) => {
         if (args.where?.groupId && m.groupId !== args.where.groupId) {
           return false;
         }
@@ -2566,6 +2617,13 @@ export class InMemoryPrismaService implements OnModuleInit, OnModuleDestroy {
         if (args.where?.role && m.role !== args.where.role) return false;
         return true;
       });
+      if (args.include?.user) {
+        return rows.map((m) => ({
+          ...m,
+          user: this.hydrateGroupMemberUser(m.userId),
+        }));
+      }
+      return rows;
     },
 
     delete: async (args: {
@@ -2714,6 +2772,217 @@ export class InMemoryPrismaService implements OnModuleInit, OnModuleDestroy {
         return false;
       });
       return { count: before - this.itineraryVotes.length };
+    },
+  };
+
+  readonly expense = {
+    create: async (args: {
+      data: {
+        groupId: string;
+        tripId?: string | null;
+        paidByUserId: string;
+        createdByUserId: string;
+        clientRequestId?: string;
+        title: string;
+        amount: number;
+        currency?: string;
+        category?: ExpenseCategory;
+        splitType?: SplitType;
+        expenseDate?: Date;
+        notes?: string | null;
+        splits?: { create: Array<{ userId: string; shareAmount: number }> };
+      };
+      include?: Record<string, unknown>;
+    }) => {
+      if (args.data.clientRequestId) {
+        const dup = Array.from(this.expenses.values()).find(
+          (e) =>
+            e.groupId === args.data.groupId &&
+            e.clientRequestId === args.data.clientRequestId,
+        );
+        if (dup) {
+          throw createP2002Error('Unique constraint on (groupId, clientRequestId)');
+        }
+      }
+      const now = new Date();
+      const id = randomUUID();
+      const row: StoredExpense = {
+        id,
+        groupId: args.data.groupId,
+        tripId: args.data.tripId ?? null,
+        paidByUserId: args.data.paidByUserId,
+        createdByUserId: args.data.createdByUserId,
+        clientRequestId: args.data.clientRequestId ?? null,
+        title: args.data.title,
+        amount: args.data.amount,
+        currency: args.data.currency ?? 'VND',
+        category: args.data.category ?? ExpenseCategory.OTHER,
+        splitType: args.data.splitType ?? SplitType.EQUAL,
+        expenseDate: args.data.expenseDate ?? now,
+        notes: args.data.notes ?? null,
+        createdAt: now,
+        updatedAt: now,
+        deletedAt: null,
+      };
+      this.expenses.set(id, row);
+
+      const createdSplits: StoredExpenseSplit[] = [];
+      for (const sp of args.data.splits?.create ?? []) {
+        const splitRow: StoredExpenseSplit = {
+          id: randomUUID(),
+          expenseId: id,
+          userId: sp.userId,
+          shareAmount: sp.shareAmount,
+          createdAt: now,
+        };
+        this.expenseSplits.push(splitRow);
+        createdSplits.push(splitRow);
+      }
+
+      return { ...row, splits: createdSplits };
+    },
+
+    findFirst: async (args: {
+      where: {
+        id?: string;
+        groupId?: string;
+        clientRequestId?: string;
+        deletedAt?: Date | null;
+      };
+      include?: Record<string, unknown>;
+    }) => {
+      const found = Array.from(this.expenses.values()).find((e) => {
+        if (args.where.id && e.id !== args.where.id) return false;
+        if (args.where.groupId && e.groupId !== args.where.groupId) return false;
+        if (
+          args.where.clientRequestId !== undefined &&
+          e.clientRequestId !== args.where.clientRequestId
+        ) {
+          return false;
+        }
+        if (args.where.deletedAt === null && e.deletedAt !== null) return false;
+        return true;
+      });
+      if (!found) return null;
+      const splits = this.expenseSplits.filter((s) => s.expenseId === found.id);
+      return { ...found, splits };
+    },
+
+    findMany: async (
+      args: {
+        where?: { groupId?: string; deletedAt?: Date | null };
+        orderBy?: unknown;
+        include?: Record<string, unknown>;
+      } = {},
+    ) => {
+      const rows = Array.from(this.expenses.values())
+        .filter((e) => {
+          if (args.where?.groupId && e.groupId !== args.where.groupId) {
+            return false;
+          }
+          if (args.where?.deletedAt === null && e.deletedAt !== null) {
+            return false;
+          }
+          return true;
+        })
+        .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+
+      return rows.map((e) => ({
+        ...e,
+        splits: this.expenseSplits.filter((s) => s.expenseId === e.id),
+      }));
+    },
+
+    update: async (args: {
+      where: { id: string };
+      data: Partial<StoredExpense>;
+    }) => {
+      const existing = this.expenses.get(args.where.id);
+      if (!existing) {
+        throw new Error(`Expense ${args.where.id} not found`);
+      }
+      Object.assign(existing, args.data, { updatedAt: new Date() });
+      return { ...existing };
+    },
+  };
+
+  readonly settlement = {
+    count: async (args: { where?: { groupId?: string } } = {}) => {
+      return Array.from(this.settlements.values()).filter((s) =>
+        args.where?.groupId ? s.groupId === args.where.groupId : true,
+      ).length;
+    },
+
+    findFirst: async (args: {
+      where: { groupId?: string; clientRequestId?: string };
+    }) => {
+      return (
+        Array.from(this.settlements.values()).find((s) => {
+          if (args.where.groupId && s.groupId !== args.where.groupId) {
+            return false;
+          }
+          if (
+            args.where.clientRequestId !== undefined &&
+            s.clientRequestId !== args.where.clientRequestId
+          ) {
+            return false;
+          }
+          return true;
+        }) ?? null
+      );
+    },
+
+    findMany: async (
+      args: { where?: { groupId?: string }; orderBy?: unknown } = {},
+    ) => {
+      return Array.from(this.settlements.values())
+        .filter((s) =>
+          args.where?.groupId ? s.groupId === args.where.groupId : true,
+        )
+        .sort((a, b) => b.settledAt.getTime() - a.settledAt.getTime());
+    },
+
+    create: async (args: {
+      data: {
+        groupId: string;
+        tripId?: string | null;
+        debtorId: string;
+        creditorId: string;
+        createdByUserId: string;
+        clientRequestId?: string;
+        amount: number;
+        currency?: string;
+        notes?: string | null;
+        settledAt?: Date;
+      };
+    }) => {
+      if (args.data.clientRequestId) {
+        const dup = Array.from(this.settlements.values()).find(
+          (s) =>
+            s.groupId === args.data.groupId &&
+            s.clientRequestId === args.data.clientRequestId,
+        );
+        if (dup) {
+          throw createP2002Error('Unique constraint on (groupId, clientRequestId)');
+        }
+      }
+      const now = new Date();
+      const row: StoredSettlement = {
+        id: randomUUID(),
+        groupId: args.data.groupId,
+        tripId: args.data.tripId ?? null,
+        debtorId: args.data.debtorId,
+        creditorId: args.data.creditorId,
+        createdByUserId: args.data.createdByUserId,
+        clientRequestId: args.data.clientRequestId ?? null,
+        amount: args.data.amount,
+        currency: args.data.currency ?? 'VND',
+        notes: args.data.notes ?? null,
+        settledAt: args.data.settledAt ?? now,
+        createdAt: now,
+      };
+      this.settlements.set(row.id, row);
+      return { ...row };
     },
   };
 

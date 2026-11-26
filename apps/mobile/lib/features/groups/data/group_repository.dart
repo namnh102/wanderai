@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/network/api_client.dart';
 import '../../trips/data/trip_models.dart';
+import 'group_expense_models.dart';
 import 'group_itinerary_models.dart';
 import 'group_models.dart';
 
@@ -171,6 +172,76 @@ class GroupRepository {
       );
     }
     return GroupVoteResultModel.fromJson(Map<String, dynamic>.from(data));
+  }
+
+  Future<ExpenseListModel> listExpenses(String groupId) async {
+    final res = await _dio.get('/groups/$groupId/expenses');
+    final data = _unwrap(res.data);
+    if (data is! Map) {
+      throw DioException(
+        requestOptions: res.requestOptions,
+        response: res,
+        message: 'Phản hồi sổ chi phí nhóm không hợp lệ',
+      );
+    }
+    return ExpenseListModel.fromJson(Map<String, dynamic>.from(data));
+  }
+
+  Future<ExpenseModel> createExpense(
+    String groupId,
+    CreateExpenseRequest request,
+  ) async {
+    final res = await _dio.post(
+      '/groups/$groupId/expenses',
+      data: request.toJson(),
+    );
+    final data = _unwrap(res.data);
+    if (data is! Map) {
+      throw DioException(
+        requestOptions: res.requestOptions,
+        response: res,
+        message: 'Phản hồi tạo khoản chi không hợp lệ',
+      );
+    }
+    return ExpenseModel.fromJson(Map<String, dynamic>.from(data));
+  }
+
+  Future<void> deleteExpense(String groupId, String expenseId) async {
+    await _dio.delete('/groups/$groupId/expenses/$expenseId');
+  }
+
+  Future<SettlementPlanModel> getSettlementPlan(String groupId) async {
+    final res = await _dio.get('/groups/$groupId/settlement-plan');
+    final data = _unwrap(res.data);
+    if (data is! Map) {
+      throw DioException(
+        requestOptions: res.requestOptions,
+        response: res,
+        message: 'Phản hồi kế hoạch đối soát không hợp lệ',
+      );
+    }
+    return SettlementPlanModel.fromJson(Map<String, dynamic>.from(data));
+  }
+
+  Future<SettlementModel> createSettlement(
+    String groupId,
+    CreateSettlementRequest request,
+  ) async {
+    final res = await _dio.post(
+      '/groups/$groupId/settlements',
+      data: request.toJson(),
+    );
+    final data = _unwrap(res.data);
+    if (data is! Map || data['settlement'] is! Map) {
+      throw DioException(
+        requestOptions: res.requestOptions,
+        response: res,
+        message: 'Phản hồi ghi nhận đối soát không hợp lệ',
+      );
+    }
+    return SettlementModel.fromJson(
+      Map<String, dynamic>.from(data['settlement'] as Map),
+    );
   }
 }
 

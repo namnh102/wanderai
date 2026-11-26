@@ -120,6 +120,7 @@ describe('TripsService & Trip DTO Validation', () => {
         data: {
           itineraryId: 'itin-day-3',
           placeId,
+          createdByUserId: '22222222-2222-4222-8222-222222222222',
           orderIndex: 2,
           startTime: '09:00',
           endTime: '11:00',
