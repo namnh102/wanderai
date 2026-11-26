@@ -1,6 +1,8 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/network/api_client.dart';
+import '../../trips/data/trip_models.dart';
+import 'group_itinerary_models.dart';
 import 'group_models.dart';
 
 class GroupRepository {
@@ -76,6 +78,99 @@ class GroupRepository {
 
   Future<void> removeMember(String groupId, String userId) async {
     await _dio.delete('/groups/$groupId/members/$userId');
+  }
+
+  Future<GroupItineraryStateModel> getGroupItinerary(String groupId) async {
+    final res = await _dio.get('/groups/$groupId/itinerary');
+    final data = _unwrap(res.data);
+    if (data is! Map) {
+      throw DioException(
+        requestOptions: res.requestOptions,
+        response: res,
+        message: 'Phản hồi lịch trình nhóm không hợp lệ',
+      );
+    }
+    return GroupItineraryStateModel.fromJson(Map<String, dynamic>.from(data));
+  }
+
+  Future<GroupItineraryItemModel> proposeItineraryItem(
+    String groupId,
+    ProposeGroupItineraryItemRequest request,
+  ) async {
+    final res = await _dio.post(
+      '/groups/$groupId/itinerary/items',
+      data: request.toJson(),
+    );
+    final data = _unwrap(res.data);
+    if (data is! Map) {
+      throw DioException(
+        requestOptions: res.requestOptions,
+        response: res,
+        message: 'Phản hồi đề xuất hoạt động không hợp lệ',
+      );
+    }
+    return GroupItineraryItemModel.fromJson(Map<String, dynamic>.from(data));
+  }
+
+  Future<void> deleteItineraryItem(String groupId, String itemId) async {
+    await _dio.delete('/groups/$groupId/itinerary/items/$itemId');
+  }
+
+  Future<GroupItineraryStateModel> reorderGroupItinerary(
+    String groupId,
+    ReorderItineraryRequest request,
+  ) async {
+    final res = await _dio.put(
+      '/groups/$groupId/itinerary/reorder',
+      data: request.toJson(),
+    );
+    final data = _unwrap(res.data);
+    if (data is! Map) {
+      throw DioException(
+        requestOptions: res.requestOptions,
+        response: res,
+        message: 'Phản hồi đổi thứ tự lịch trình nhóm không hợp lệ',
+      );
+    }
+    return GroupItineraryStateModel.fromJson(Map<String, dynamic>.from(data));
+  }
+
+  Future<GroupVoteResultModel> voteItineraryItem(
+    String groupId,
+    String itemId, {
+    required bool vote,
+  }) async {
+    final res = await _dio.put(
+      '/groups/$groupId/itinerary/items/$itemId/vote',
+      data: {'vote': vote},
+    );
+    final data = _unwrap(res.data);
+    if (data is! Map) {
+      throw DioException(
+        requestOptions: res.requestOptions,
+        response: res,
+        message: 'Phản hồi bỏ phiếu không hợp lệ',
+      );
+    }
+    return GroupVoteResultModel.fromJson(Map<String, dynamic>.from(data));
+  }
+
+  Future<GroupVoteResultModel> withdrawItineraryVote(
+    String groupId,
+    String itemId,
+  ) async {
+    final res = await _dio.delete(
+      '/groups/$groupId/itinerary/items/$itemId/vote',
+    );
+    final data = _unwrap(res.data);
+    if (data is! Map) {
+      throw DioException(
+        requestOptions: res.requestOptions,
+        response: res,
+        message: 'Phản hồi rút phiếu không hợp lệ',
+      );
+    }
+    return GroupVoteResultModel.fromJson(Map<String, dynamic>.from(data));
   }
 }
 

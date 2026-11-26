@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../features/ai_chat/providers/chat_provider.dart';
+import '../../features/groups/providers/group_itinerary_provider.dart';
 import '../../features/groups/providers/group_provider.dart';
 import '../../features/home/providers/home_provider.dart';
 import '../../features/profile/providers/profile_provider.dart';
@@ -47,6 +48,9 @@ void resetSessionScopedState(Ref ref, {required bool isAuthenticated}) {
     if (ref.exists(groupDetailProvider)) {
       ref.invalidate(groupDetailProvider);
     }
+    if (ref.exists(groupItineraryProvider)) {
+      ref.invalidate(groupItineraryProvider);
+    }
     if (ref.exists(safetyProvider)) {
       ref.invalidate(safetyProvider);
     }
@@ -77,6 +81,9 @@ void resetSessionScopedState(Ref ref, {required bool isAuthenticated}) {
     }
     if (ref.exists(groupDetailProvider)) {
       ref.read(groupDetailProvider.notifier).resetForLogout();
+    }
+    if (ref.exists(groupItineraryProvider)) {
+      ref.read(groupItineraryProvider.notifier).resetForLogout();
     }
     if (ref.exists(safetyProvider)) {
       ref.read(safetyProvider.notifier).resetForAuthTransition();

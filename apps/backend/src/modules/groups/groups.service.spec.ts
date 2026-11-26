@@ -14,7 +14,7 @@ import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { TransformInterceptor } from '../../common/interceptors/transform.interceptor';
 import { PrismaService } from '../../prisma/prisma.service';
 import { InMemoryPrismaService } from '../../../test/e2e-harness/in-memory-prisma.service';
-import { GroupsController } from './groups.controller';
+import { GroupsModule } from './groups.module';
 import { GroupsService } from './groups.service';
 
 describe('GroupsService & GroupsController (W09-A Unit + In-Memory Contract)', () => {
@@ -265,12 +265,10 @@ describe('GroupsService & GroupsController (W09-A Unit + In-Memory Contract)', (
     beforeAll(async () => {
       prisma = new InMemoryPrismaService();
       const moduleRef = await Test.createTestingModule({
-        controllers: [GroupsController],
-        providers: [
-          GroupsService,
-          { provide: PrismaService, useValue: prisma },
-        ],
+        imports: [GroupsModule],
       })
+        .overrideProvider(PrismaService)
+        .useValue(prisma)
         .overrideGuard(JwtAuthGuard)
         .useValue({
           canActivate: (ctx: ExecutionContext) => {

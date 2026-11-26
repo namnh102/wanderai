@@ -15,7 +15,9 @@ import '../../../core/widgets/app_text_field.dart';
 import '../../../core/widgets/responsive_wrapper.dart';
 import '../../profile/providers/profile_provider.dart';
 import '../data/group_models.dart';
+import '../providers/group_itinerary_provider.dart';
 import '../providers/group_provider.dart';
+import 'widgets/group_itinerary_tab.dart';
 
 class GroupDetailScreen extends ConsumerStatefulWidget {
   final String groupId;
@@ -27,6 +29,7 @@ class GroupDetailScreen extends ConsumerStatefulWidget {
 }
 
 class _GroupDetailScreenState extends ConsumerState<GroupDetailScreen> {
+  int _selectedSection = 0; // 0 = Thành viên, 1 = Lịch trình & Vote
   @override
   void initState() {
     super.initState();
@@ -176,8 +179,14 @@ class _GroupDetailScreenState extends ConsumerState<GroupDetailScreen> {
     final isAdmin = group.canManage(currentUserId);
 
     return RefreshIndicator(
-      onRefresh: () =>
-          ref.read(groupDetailProvider.notifier).loadGroup(widget.groupId),
+      onRefresh: () async {
+        await ref.read(groupDetailProvider.notifier).loadGroup(widget.groupId);
+        if (_selectedSection == 1) {
+          await ref
+              .read(groupItineraryProvider.notifier)
+              .loadItinerary(widget.groupId);
+        }
+      },
       child: ListView(
         physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.all(AppSpacing.md),
@@ -281,6 +290,32 @@ class _GroupDetailScreenState extends ConsumerState<GroupDetailScreen> {
           ),
           const SizedBox(height: AppSpacing.md),
 
+          SegmentedButton<int>(
+            key: const Key('group_detail_section_switcher'),
+            segments: const [
+              ButtonSegment<int>(
+                value: 0,
+                icon: Icon(Icons.group_outlined, size: 18),
+                label: Text('Thành viên'),
+              ),
+              ButtonSegment<int>(
+                value: 1,
+                icon: Icon(Icons.how_to_vote_outlined, size: 18),
+                label: Text('Lịch trình'),
+              ),
+            ],
+            selected: {_selectedSection},
+            onSelectionChanged: (selection) {
+              setState(() {
+                _selectedSection = selection.first;
+              });
+            },
+          ),
+          const SizedBox(height: AppSpacing.md),
+
+          if (_selectedSection == 1)
+            GroupItineraryTabView(groupId: group.id)
+          else ...[
           // Permission & Privileged Actions Bar
           if (isAdmin)
             Wrap(
@@ -430,6 +465,7 @@ class _GroupDetailScreenState extends ConsumerState<GroupDetailScreen> {
                 ),
               );
             }),
+          ],
         ],
       ),
     );

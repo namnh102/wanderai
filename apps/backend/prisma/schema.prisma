@@ -76,6 +76,14 @@ model User {
   safetyContacts SafetyContact[]
   safetyCheckins SafetyCheckin[]
   aiSessions    AiSession[]
+  proposedItineraryItems ItineraryItem[] @relation("ItineraryItemCreator")
+  itineraryVotes         ItineraryVote[]
+  paidExpenses           Expense[]       @relation("ExpensePayer")
+  createdExpenses        Expense[]       @relation("ExpenseCreator")
+  expenseSplits          ExpenseSplit[]  @relation("ExpenseSplitUser")
+  debtorSettlements      Settlement[]    @relation("SettlementDebtor")
+  creditorSettlements    Settlement[]    @relation("SettlementCreditor")
+  createdSettlements     Settlement[]    @relation("SettlementCreator")
 
   @@map("users")
 }
@@ -463,6 +471,8 @@ model Trip {
   destination Destination? @relation(fields: [destinationId], references: [id])
   members     TripMember[]
   itineraries Itinerary[]
+  expenses    Expense[]
+  settlements Settlement[]
 
   @@map("trips")
 }
@@ -498,6 +508,7 @@ model ItineraryItem {
   id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   itineraryId     String   @map("itinerary_id") @db.Uuid
   placeId         String?  @map("place_id") @db.Uuid
+  createdByUserId String?  @map("created_by_user_id") @db.Uuid
   clientRequestId String?  @map("client_request_id") @db.VarChar(128)
   orderIndex      Int      @map("order_index")
   startTime       String?  @map("start_time")   // "09:00"
@@ -507,8 +518,10 @@ model ItineraryItem {
   estimatedCost   Int?     @map("estimated_cost") // VND integer
   transportMode   String?  @map("transport_mode") // "walk","taxi","bus","motorbike"
 
-  itinerary Itinerary @relation(fields: [itineraryId], references: [id], onDelete: Cascade)
-  place     Place?    @relation(fields: [placeId], references: [id])
+  itinerary Itinerary       @relation(fields: [itineraryId], references: [id], onDelete: Cascade)
+  place     Place?          @relation(fields: [placeId], references: [id])
+  createdBy User?           @relation("ItineraryItemCreator", fields: [createdByUserId], references: [id], onDelete: SetNull)
+  votes     ItineraryVote[]
 
   @@unique([itineraryId, clientRequestId])
   @@map("itinerary_items")
@@ -625,8 +638,10 @@ model Group {
   tripId      String?  @map("trip_id") @db.Uuid
   createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
 
-  members  GroupMember[]
-  messages Message[]
+  members     GroupMember[]
+  messages    Message[]
+  expenses    Expense[]
+  settlements Settlement[]
 
   @@map("groups")
 }
@@ -823,4 +838,109 @@ model YoutubePoiUpdate {
   @@index([destinationId, status, scope, publishedAt(sort: Desc)])
   @@index([videoId, publishedAt(sort: Desc)])
   @@map("youtube_poi_updates")
+}
+
+// ============================================================
+// NHÓM 9: W10 GROUP ITINERARY VOTING & SHARED EXPENSES (4 bảng)
+// ============================================================
+
+enum ExpenseCategory {
+  FOOD
+  TRANSPORT
+  ACCOMMODATION
+  TICKET
+  SHOPPING
+  OTHER
+}
+
+enum SplitType {
+  EQUAL
+  CUSTOM
+}
+
+model ItineraryVote {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  itemId    String   @map("item_id") @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  vote      Boolean
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt DateTime @default(now()) @map("updated_at") @updatedAt @db.Timestamptz
+
+  item ItineraryItem @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  user User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([itemId, userId])
+  @@index([userId])
+  @@map("itinerary_votes")
+}
+
+model Expense {
+  id              String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  groupId         String          @map("group_id") @db.Uuid
+  tripId          String?         @map("trip_id") @db.Uuid
+  paidByUserId    String          @map("paid_by_user_id") @db.Uuid
+  createdByUserId String          @map("created_by_user_id") @db.Uuid
+  clientRequestId String?         @map("client_request_id") @db.VarChar(128)
+  title           String          @db.VarChar(200)
+  amount          Int
+  currency        String          @default("VND") @db.VarChar(10)
+  category        ExpenseCategory @default(OTHER)
+  splitType       SplitType       @default(EQUAL) @map("split_type")
+  expenseDate     DateTime        @default(now()) @map("expense_date") @db.Date
+  notes           String?         @db.Text
+  createdAt       DateTime        @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt       DateTime        @default(now()) @map("updated_at") @updatedAt @db.Timestamptz
+  deletedAt       DateTime?       @map("deleted_at") @db.Timestamptz
+
+  group   Group          @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  trip    Trip?          @relation(fields: [tripId], references: [id], onDelete: SetNull)
+  payer   User           @relation("ExpensePayer", fields: [paidByUserId], references: [id], onDelete: Restrict)
+  creator User           @relation("ExpenseCreator", fields: [createdByUserId], references: [id], onDelete: Restrict)
+  splits  ExpenseSplit[]
+
+  @@unique([groupId, clientRequestId])
+  @@index([groupId, deletedAt])
+  @@index([tripId])
+  @@map("expenses")
+}
+
+model ExpenseSplit {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  expenseId   String   @map("expense_id") @db.Uuid
+  userId      String   @map("user_id") @db.Uuid
+  shareAmount Int      @map("share_amount")
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  expense Expense @relation(fields: [expenseId], references: [id], onDelete: Cascade)
+  user    User    @relation("ExpenseSplitUser", fields: [userId], references: [id], onDelete: Restrict)
+
+  @@unique([expenseId, userId])
+  @@index([userId])
+  @@map("expense_splits")
+}
+
+model Settlement {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  groupId         String   @map("group_id") @db.Uuid
+  tripId          String?  @map("trip_id") @db.Uuid
+  debtorId        String   @map("debtor_id") @db.Uuid
+  creditorId      String   @map("creditor_id") @db.Uuid
+  createdByUserId String   @map("created_by_user_id") @db.Uuid
+  clientRequestId String?  @map("client_request_id") @db.VarChar(128)
+  amount          Int
+  currency        String   @default("VND") @db.VarChar(10)
+  notes           String?  @db.Text
+  settledAt       DateTime @default(now()) @map("settled_at") @db.Timestamptz
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  group    Group @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  trip     Trip? @relation(fields: [tripId], references: [id], onDelete: SetNull)
+  debtor   User  @relation("SettlementDebtor", fields: [debtorId], references: [id], onDelete: Restrict)
+  creditor User  @relation("SettlementCreditor", fields: [creditorId], references: [id], onDelete: Restrict)
+  creator  User  @relation("SettlementCreator", fields: [createdByUserId], references: [id], onDelete: Restrict)
+
+  @@unique([groupId, clientRequestId])
+  @@index([groupId, settledAt])
+  @@index([tripId])
+  @@map("settlements")
 }

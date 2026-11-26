@@ -237,6 +237,7 @@ interface StoredItineraryItem {
   id: string;
   itineraryId: string;
   placeId: string | null;
+  createdByUserId: string | null;
   clientRequestId: string | null;
   orderIndex: number;
   startTime: string | null;
@@ -245,6 +246,15 @@ interface StoredItineraryItem {
   notes: string | null;
   estimatedCost: number | null;
   transportMode: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+interface StoredItineraryVote {
+  id: string;
+  itemId: string;
+  userId: string;
+  vote: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -493,6 +503,7 @@ export class InMemoryPrismaService implements OnModuleInit, OnModuleDestroy {
   private userBlocks: StoredUserBlock[] = [];
   private itineraries = new Map<string, StoredItinerary>();
   private itineraryItems = new Map<string, StoredItineraryItem>();
+  private itineraryVotes: StoredItineraryVote[] = [];
   private videos = new Map<string, StoredVideo>();
   private txQueue: Promise<unknown> = Promise.resolve();
 
@@ -527,6 +538,7 @@ export class InMemoryPrismaService implements OnModuleInit, OnModuleDestroy {
     this.userBlocks = [];
     this.itineraries.clear();
     this.itineraryItems.clear();
+    this.itineraryVotes = [];
     this.videos.clear();
 
     const now = new Date('2026-11-24T00:00:00.000Z');
@@ -1927,6 +1939,48 @@ export class InMemoryPrismaService implements OnModuleInit, OnModuleDestroy {
   };
 
   readonly itinerary = {
+    findMany: async (
+      args: {
+        where?: { tripId?: string };
+        orderBy?: { dayNumber?: 'asc' | 'desc' };
+        include?: Record<string, unknown>;
+      } = {},
+    ) => {
+      const days = Array.from(this.itineraries.values()).filter((it) =>
+        args.where?.tripId ? it.tripId === args.where.tripId : true,
+      );
+      days.sort((a, b) =>
+        args.orderBy?.dayNumber === 'desc'
+          ? b.dayNumber - a.dayNumber
+          : a.dayNumber - b.dayNumber,
+      );
+      return days.map((day) => {
+        const items = Array.from(this.itineraryItems.values())
+          .filter((item) => item.itineraryId === day.id)
+          .sort((a, b) => a.orderIndex - b.orderIndex)
+          .map((item) => {
+            const place = item.placeId
+              ? (this.places.get(item.placeId) ?? null)
+              : null;
+            const createdBy = item.createdByUserId
+              ? this.hydrateGroupMemberUser(item.createdByUserId)
+              : null;
+            const votes = this.itineraryVotes
+              .filter((v) => v.itemId === item.id)
+              .map((v) => ({ userId: v.userId, vote: v.vote }));
+            return {
+              ...item,
+              place: place
+                ? { id: place.id, name: place.name, address: place.address }
+                : null,
+              createdBy,
+              votes,
+            };
+          });
+        return { ...day, items };
+      });
+    },
+
     upsert: async (args: {
       where: { tripId_dayNumber: { tripId: string; dayNumber: number } };
       create: {
@@ -1985,6 +2039,7 @@ export class InMemoryPrismaService implements OnModuleInit, OnModuleDestroy {
       data: {
         itineraryId: string;
         placeId?: string;
+        createdByUserId?: string | null;
         clientRequestId?: string;
         orderIndex: number;
         startTime?: string;
@@ -2012,6 +2067,7 @@ export class InMemoryPrismaService implements OnModuleInit, OnModuleDestroy {
         id: randomUUID(),
         itineraryId: args.data.itineraryId,
         placeId: args.data.placeId ?? null,
+        createdByUserId: args.data.createdByUserId ?? null,
         clientRequestId: args.data.clientRequestId ?? null,
         orderIndex: args.data.orderIndex,
         startTime: args.data.startTime ?? null,
@@ -2113,6 +2169,9 @@ export class InMemoryPrismaService implements OnModuleInit, OnModuleDestroy {
         throw new Error(`ItineraryItem ${args.where.id} not found`);
       }
       this.itineraryItems.delete(args.where.id);
+      this.itineraryVotes = this.itineraryVotes.filter(
+        (v) => v.itemId !== args.where.id,
+      );
       return item;
     },
 
@@ -2213,6 +2272,16 @@ export class InMemoryPrismaService implements OnModuleInit, OnModuleDestroy {
   };
 
   readonly tripMember = {
+    findMany: async (
+      args: { where?: { tripId?: string; userId?: string } } = {},
+    ) => {
+      return this.tripMembers.filter((m) => {
+        if (args.where?.tripId && m.tripId !== args.where.tripId) return false;
+        if (args.where?.userId && m.userId !== args.where.userId) return false;
+        return true;
+      });
+    },
+
     create: async (args: {
       data: { tripId: string; userId: string; role: string };
     }) => {
@@ -2583,6 +2652,68 @@ export class InMemoryPrismaService implements OnModuleInit, OnModuleDestroy {
         return false;
       });
       return { count: before - this.userBlocks.length };
+    },
+  };
+
+  readonly itineraryVote = {
+    upsert: async (args: {
+      where: { itemId_userId: { itemId: string; userId: string } };
+      create: { itemId: string; userId: string; vote: boolean };
+      update: { vote: boolean };
+    }) => {
+      const existing = this.itineraryVotes.find(
+        (v) =>
+          v.itemId === args.where.itemId_userId.itemId &&
+          v.userId === args.where.itemId_userId.userId,
+      );
+      const now = new Date();
+      if (existing) {
+        existing.vote = args.update.vote;
+        existing.updatedAt = now;
+        return { ...existing };
+      }
+      const row: StoredItineraryVote = {
+        id: randomUUID(),
+        itemId: args.create.itemId,
+        userId: args.create.userId,
+        vote: args.create.vote,
+        createdAt: now,
+        updatedAt: now,
+      };
+      this.itineraryVotes.push(row);
+      return { ...row };
+    },
+
+    findMany: async (
+      args: { where?: { itemId?: string; userId?: string } } = {},
+    ) => {
+      return this.itineraryVotes.filter((v) => {
+        if (args.where?.itemId && v.itemId !== args.where.itemId) return false;
+        if (args.where?.userId && v.userId !== args.where.userId) return false;
+        return true;
+      });
+    },
+
+    deleteMany: async (args: {
+      where: {
+        itemId?: string;
+        userId?: string;
+        item?: { itinerary?: { tripId?: string } };
+      };
+    }) => {
+      const targetTripId = args.where.item?.itinerary?.tripId;
+      const before = this.itineraryVotes.length;
+      this.itineraryVotes = this.itineraryVotes.filter((v) => {
+        if (args.where.itemId && v.itemId !== args.where.itemId) return true;
+        if (args.where.userId && v.userId !== args.where.userId) return true;
+        if (targetTripId) {
+          const item = this.itineraryItems.get(v.itemId);
+          const it = item ? this.itineraries.get(item.itineraryId) : null;
+          if (!it || it.tripId !== targetTripId) return true;
+        }
+        return false;
+      });
+      return { count: before - this.itineraryVotes.length };
     },
   };
 

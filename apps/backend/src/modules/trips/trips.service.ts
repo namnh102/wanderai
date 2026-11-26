@@ -319,6 +319,7 @@ export class TripsService {
           data: {
             itineraryId: itinerary.id,
             placeId: data.placeId,
+            createdByUserId: userId,
             ...(effectiveClientRequestId
               ? { clientRequestId: effectiveClientRequestId }
               : {}),

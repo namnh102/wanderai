@@ -451,6 +451,15 @@ export class GroupsService {
         throw error;
       }
 
+      if (group.tripId) {
+        await tx.itineraryVote.deleteMany({
+          where: {
+            userId: dto.userId,
+            item: { itinerary: { tripId: group.tripId } },
+          },
+        });
+      }
+
       const refreshed = (await tx.group.findUnique({
         where: { id: groupId },
         include: {
@@ -505,6 +514,15 @@ export class GroupsService {
         throw new ConflictException(
           'Không thể xóa quản trị viên duy nhất của nhóm',
         );
+      }
+
+      if (group.tripId) {
+        await tx.itineraryVote.deleteMany({
+          where: {
+            userId: targetUserId,
+            item: { itinerary: { tripId: group.tripId } },
+          },
+        });
       }
 
       await tx.groupMember.delete({
