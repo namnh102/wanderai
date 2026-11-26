@@ -46,6 +46,14 @@ class DestinationModel {
   }
 
   LatLng get center => LatLng(latitude!, longitude!);
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'slug': slug,
+        'name': name,
+        if (latitude != null) 'latitude': latitude,
+        if (longitude != null) 'longitude': longitude,
+      };
 }
 
 /// A supported MVP destination: hardcoded slug + display label only.

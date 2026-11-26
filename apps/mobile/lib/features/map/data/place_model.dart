@@ -136,6 +136,43 @@ class PlaceModel {
   /// Never composed from name/destination — shared by preview sheet and detail screen.
   String get addressDisplay =>
       hasAddress ? address!.trim() : addressUnavailableText;
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'name': name,
+        if (nameEn != null) 'nameEn': nameEn,
+        if (description != null) 'description': description,
+        if (address != null) 'address': address,
+        if (latitude != null) 'latitude': latitude,
+        if (longitude != null) 'longitude': longitude,
+        if (rating != null) 'rating': rating,
+        'reviewCount': reviewCount,
+        if (coverImage != null) 'coverImage': coverImage,
+        if (images.isNotEmpty) 'images': images,
+        if (categoryName != null ||
+            categoryIcon != null ||
+            categoryColor != null)
+          'category': {
+            if (categoryName != null) 'name': categoryName,
+            if (categoryIcon != null) 'icon': categoryIcon,
+            if (categoryColor != null) 'color': categoryColor,
+          },
+        if (destinationId != null || destinationName != null)
+          'destination': {
+            if (destinationId != null) 'id': destinationId,
+            if (destinationName != null) 'name': destinationName,
+          },
+        'isVerified': isVerified,
+        'provenanceCount': provenanceCount,
+        if (distanceKm != null) 'distanceKm': distanceKm,
+        if (openingHours != null) 'openingHours': openingHours,
+        if (website != null) 'website': website,
+        if (phone != null) 'phone': phone,
+        if (source != null) 'source': source!.toJson(),
+        if (enrichmentMeta != null) 'enrichmentMeta': enrichmentMeta!.toJson(),
+        if (reviews.isNotEmpty)
+          'reviews': reviews.map((r) => r.toJson()).toList(),
+      };
 }
 
 /// Provenance of a place (OpenStreetMap). Only present for verified places.
@@ -163,6 +200,14 @@ class PlaceSourceInfo {
       attribution: json['attribution'] as String?,
     );
   }
+
+  Map<String, dynamic> toJson() => {
+        'name': name,
+        'sourceId': sourceId,
+        'canonicalUrl': canonicalUrl,
+        if (license != null) 'license': license,
+        if (attribution != null) 'attribution': attribution,
+      };
 }
 
 /// Optional license & attribution metadata for curated Wikimedia/Wikipedia enrichment.
@@ -192,6 +237,20 @@ class PlaceEnrichmentMeta {
       firstImageArtist: firstAttr?['artist'] as String?,
     );
   }
+
+  Map<String, dynamic> toJson() => {
+        if (descriptionSourceUrl != null)
+          'descriptionSourceUrl': descriptionSourceUrl,
+        if (descriptionLicense != null)
+          'descriptionLicense': descriptionLicense,
+        if (firstImageLicense != null || firstImageArtist != null)
+          'imageAttributions': [
+            {
+              if (firstImageLicense != null) 'license': firstImageLicense,
+              if (firstImageArtist != null) 'artist': firstImageArtist,
+            },
+          ],
+      };
 }
 
 /// Verified traveler review parsed from public `GET /places/:id` or `/reviews`.
@@ -225,4 +284,16 @@ class PlaceReviewModel {
           : null,
     );
   }
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'rating': rating,
+        'content': content,
+        'user': {
+          'profile': {
+            'displayName': authorName,
+          },
+        },
+        if (createdAt != null) 'createdAt': createdAt!.toIso8601String(),
+      };
 }

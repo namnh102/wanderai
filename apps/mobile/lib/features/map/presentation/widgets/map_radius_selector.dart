@@ -44,25 +44,30 @@ class MapRadiusSelector extends StatelessWidget {
           ),
         );
       }).toList(),
-      child: Material(
-        elevation: 4,
-        shape: const CircleBorder(),
-        color: theme.colorScheme.surface,
-        child: Padding(
-          padding: const EdgeInsets.all(10),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(Icons.radar, size: 22, color: theme.colorScheme.primary),
-              Text(
-                '${currentRadius.toInt()}km',
-                style: TextStyle(
-                  fontSize: 9,
-                  fontWeight: FontWeight.w700,
-                  color: theme.colorScheme.primary,
+      child: MediaQuery.withClampedTextScaling(
+        maxScaleFactor: 1.3,
+        child: Material(
+          elevation: 4,
+          shape: const CircleBorder(),
+          color: theme.colorScheme.surface,
+          child: Padding(
+            padding: const EdgeInsets.all(10),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.radar, size: 22, color: theme.colorScheme.primary),
+                Text(
+                  '${currentRadius.toInt()}km',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 9,
+                    fontWeight: FontWeight.w700,
+                    color: theme.colorScheme.primary,
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
