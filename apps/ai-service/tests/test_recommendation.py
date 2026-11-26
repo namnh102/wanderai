@@ -1,9 +1,13 @@
 """Tests for Recommendation Module: Loader, Metrics, MostPop, and Evaluator."""
 
+from concurrent.futures import ThreadPoolExecutor
+import hashlib
 from io import BytesIO
 from pathlib import Path
 import re
 import sys
+import tempfile
+import threading
 import urllib.error
 
 import pandas as pd
@@ -136,6 +140,74 @@ def test_vihorec_loader_rejects_corrupt_download_and_cached_mismatch(tmp_path, m
     bad_cached.write_bytes(b"tampered-cached-bytes\n")
     with pytest.raises(ValueError, match="Cached ViHoRec interactions.csv SHA-256 mismatch"):
         loader.download_if_missing()
+
+
+def test_vihorec_loader_concurrent_two_threads_empty_cache(tmp_path, monkeypatch):
+    class _FakeResp(BytesIO):
+        def __enter__(self):
+            return self
+
+        def __exit__(self, exc_type, exc, tb):
+            self.close()
+
+    synthetic_payloads_by_name = {
+        name: f"col_a,col_b\n{name},1\n{name},2\n".encode("utf-8")
+        for name in DATASET_FILES
+    }
+    synthetic_hashes = {
+        name: hashlib.sha256(raw).hexdigest()
+        for name, raw in synthetic_payloads_by_name.items()
+    }
+    url_to_name = {url: name for name, url in DATASET_FILES.items()}
+    barriers = {name: threading.Barrier(2, timeout=5.0) for name in DATASET_FILES}
+
+    monkeypatch.setattr("recommendation.loader.EXPECTED_SHA256", synthetic_hashes)
+
+    created_tmp_paths = []
+    tmp_lock = threading.Lock()
+    real_mkstemp = tempfile.mkstemp
+
+    def _tracking_mkstemp(*args, **kwargs):
+        fd, path = real_mkstemp(*args, **kwargs)
+        with tmp_lock:
+            created_tmp_paths.append(path)
+        return fd, path
+
+    monkeypatch.setattr("recommendation.loader.tempfile.mkstemp", _tracking_mkstemp)
+
+    def _concurrent_urlopen(req, timeout=30):
+        url = req.full_url if hasattr(req, "full_url") else str(req)
+        name = url_to_name[url]
+        barriers[name].wait()
+        return _FakeResp(synthetic_payloads_by_name[name])
+
+    monkeypatch.setattr("urllib.request.urlopen", _concurrent_urlopen)
+
+    def _worker():
+        loader = ViHoRecLoader(cache_dir=str(tmp_path), verify_checksums=True, max_download_attempts=1)
+        return loader.download_if_missing()
+
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        fut_a = pool.submit(_worker)
+        fut_b = pool.submit(_worker)
+        paths_a = fut_a.result(timeout=10.0)
+        paths_b = fut_b.result(timeout=10.0)
+
+    assert paths_a == paths_b
+    assert set(paths_a.keys()) == set(DATASET_FILES.keys())
+
+    # Every write created a distinct temp filename inside the exact cache directory
+    assert len(created_tmp_paths) == 2 * len(DATASET_FILES)
+    assert len(set(created_tmp_paths)) == len(created_tmp_paths)
+    assert all(Path(p).parent == tmp_path for p in created_tmp_paths)
+
+    # Zero temporary files left behind and all 6 final CSVs match SHA-256
+    remaining_files = sorted(p.name for p in tmp_path.iterdir())
+    assert remaining_files == sorted(f"{name}.csv" for name in DATASET_FILES)
+    for name, expected_sha in synthetic_hashes.items():
+        final_csv = tmp_path / f"{name}.csv"
+        actual_sha = hashlib.sha256(final_csv.read_bytes()).hexdigest()
+        assert actual_sha == expected_sha
 
 
 def test_hotel_recommendation_service_uninitialized_failure_and_recovery():
