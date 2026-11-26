@@ -2,6 +2,7 @@
 
 import hashlib
 import os
+import tempfile
 import time
 import urllib.error
 import urllib.request
@@ -37,11 +38,29 @@ _TRANSIENT_HTTP_CODES = frozenset({408, 429, 500, 502, 503, 504})
 
 
 def _compute_file_sha256(path: str) -> str:
-    digest = hashlib.sha256()
-    with open(path, "rb") as f:
-        while chunk := f.read(65536):
-            digest.update(chunk)
-    return digest.hexdigest()
+    for attempt in range(1, 6):
+        try:
+            digest = hashlib.sha256()
+            with open(path, "rb") as f:
+                while chunk := f.read(65536):
+                    digest.update(chunk)
+            return digest.hexdigest()
+        except PermissionError:
+            if attempt >= 5:
+                raise
+            time.sleep(0.01 * attempt)
+    raise RuntimeError(f"Unreachable SHA-256 read retry exhaustion for {path}")
+
+
+def _atomic_replace(tmp_path: str, local_path: str) -> None:
+    for attempt in range(1, 11):
+        try:
+            os.replace(tmp_path, local_path)
+            return
+        except PermissionError:
+            if attempt >= 10:
+                raise
+            time.sleep(0.01 * attempt)
 
 
 class ViHoRecLoader:
@@ -108,19 +127,25 @@ class ViHoRecLoader:
             if not payload:
                 raise ValueError(f"Downloaded empty payload for ViHoRec {name}.csv from {url}")
 
-            if self.verify_checksums:
-                actual_sha = hashlib.sha256(payload).hexdigest()
-                if actual_sha != expected_sha:
-                    raise ValueError(
-                        f"Downloaded ViHoRec {name}.csv SHA-256 mismatch from {url}: "
-                        f"expected {expected_sha}, got {actual_sha}"
-                    )
-
-            tmp_path = f"{local_path}.{os.getpid()}.tmp"
+            fd, tmp_path = tempfile.mkstemp(
+                prefix=f".{name}.",
+                suffix=".tmp",
+                dir=self.cache_dir,
+            )
             try:
-                with open(tmp_path, "wb") as f:
+                with os.fdopen(fd, "wb") as f:
                     f.write(payload)
-                os.replace(tmp_path, local_path)
+                    f.flush()
+
+                if self.verify_checksums:
+                    actual_sha = _compute_file_sha256(tmp_path)
+                    if actual_sha != expected_sha:
+                        raise ValueError(
+                            f"Downloaded ViHoRec {name}.csv SHA-256 mismatch from {url}: "
+                            f"expected {expected_sha}, got {actual_sha}"
+                        )
+
+                _atomic_replace(tmp_path, local_path)
             finally:
                 if os.path.exists(tmp_path):
                     try:
