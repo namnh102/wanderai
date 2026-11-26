@@ -25,6 +25,12 @@ class TripListScreen extends ConsumerWidget {
         ),
         actions: [
           IconButton(
+            key: const Key('trip_list_groups_button'),
+            icon: const Icon(Icons.groups_outlined),
+            tooltip: 'Nhóm chuyến đi',
+            onPressed: () => context.push('/groups'),
+          ),
+          IconButton(
             icon: const Icon(Icons.add_circle_outline),
             tooltip: 'Tạo chuyến đi mới',
             onPressed: () => context.push('/trips/create'),

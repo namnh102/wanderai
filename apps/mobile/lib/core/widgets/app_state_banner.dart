@@ -13,6 +13,8 @@ class AppStateBanner extends StatelessWidget {
   final VoidCallback? onAction;
   final AppStateBannerTone tone;
   final IconData? icon;
+  final int? maxLines;
+  final bool compact;
 
   const AppStateBanner({
     super.key,
@@ -21,6 +23,8 @@ class AppStateBanner extends StatelessWidget {
     this.onAction,
     this.tone = AppStateBannerTone.info,
     this.icon,
+    this.maxLines,
+    this.compact = false,
   });
 
   @override
@@ -46,44 +50,109 @@ class AppStateBanner extends StatelessWidget {
         ),
     };
 
+    final hasAction = actionLabel != null && onAction != null;
+    final textScale = MediaQuery.textScalerOf(context).scale(14.0) / 14.0;
+    final messageStyle = AppTypography.bodyS.copyWith(
+      color: fg,
+      fontWeight: FontWeight.w500,
+      fontSize: compact ? 12.5 : null,
+      height: compact ? 1.25 : null,
+    );
+    final buttonStyle = TextButton.styleFrom(
+      foregroundColor: fg,
+      tapTargetSize: compact ? MaterialTapTargetSize.shrinkWrap : null,
+      minimumSize: compact ? const Size(44, 28) : const Size(44, 36),
+      padding: EdgeInsets.symmetric(
+        horizontal: AppSpacing.sm,
+        vertical: compact ? 2 : 0,
+      ),
+      textStyle: AppTypography.label.copyWith(
+        color: fg,
+        fontWeight: FontWeight.w700,
+      ),
+    );
+
     return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.mdSmall,
-        vertical: AppSpacing.sm,
+      padding: EdgeInsets.symmetric(
+        horizontal: compact ? 10 : AppSpacing.mdSmall,
+        vertical: compact ? 6 : AppSpacing.sm,
       ),
       decoration: BoxDecoration(
         color: bg,
         borderRadius: AppRadius.mdRadius,
         border: Border.all(color: border, width: 1),
       ),
-      child: Row(
-        children: [
-          Icon(icon ?? defaultIcon, size: 18, color: fg),
-          const SizedBox(width: AppSpacing.sm),
-          Expanded(
-            child: Text(
-              message,
-              style: AppTypography.bodyS.copyWith(
-                color: fg,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ),
-          if (actionLabel != null && onAction != null)
-            TextButton(
-              onPressed: onAction,
-              style: TextButton.styleFrom(
-                foregroundColor: fg,
-                minimumSize: const Size(44, 36),
-                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
-                textStyle: AppTypography.label.copyWith(
-                  color: fg,
-                  fontWeight: FontWeight.w700,
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final stackAction = hasAction &&
+              (compact || constraints.maxWidth < 300 || textScale > 1.25);
+
+          if (stackAction) {
+            return Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.only(top: 1),
+                      child: Icon(icon ?? defaultIcon, size: 18, color: fg),
+                    ),
+                    const SizedBox(width: AppSpacing.sm),
+                    Expanded(
+                      child: Text(
+                        message,
+                        maxLines: maxLines,
+                        overflow:
+                            maxLines != null ? TextOverflow.ellipsis : null,
+                        style: messageStyle,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 2),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: TextButton(
+                    onPressed: onAction,
+                    style: buttonStyle,
+                    child: Text(
+                      actionLabel!,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ),
+              ],
+            );
+          }
+
+          return Row(
+            children: [
+              Icon(icon ?? defaultIcon, size: 18, color: fg),
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: Text(
+                  message,
+                  maxLines: maxLines,
+                  overflow: maxLines != null ? TextOverflow.ellipsis : null,
+                  style: messageStyle,
                 ),
               ),
-              child: Text(actionLabel!),
-            ),
-        ],
+              if (hasAction)
+                TextButton(
+                  onPressed: onAction,
+                  style: buttonStyle,
+                  child: Text(
+                    actionLabel!,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+            ],
+          );
+        },
       ),
     );
   }

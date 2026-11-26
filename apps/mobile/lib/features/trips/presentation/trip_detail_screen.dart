@@ -638,6 +638,12 @@ class _TripDetailScreenState extends ConsumerState<TripDetailScreen> {
         ),
         actions: [
           IconButton(
+            key: const Key('trip_detail_open_groups_button'),
+            icon: const Icon(Icons.groups_outlined),
+            tooltip: 'Nhóm đồng hành',
+            onPressed: () => context.push('/groups?tripId=${trip.id}'),
+          ),
+          IconButton(
             icon: const Icon(Icons.edit_outlined),
             tooltip: 'Chỉnh sửa',
             onPressed: () {

@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radius.dart';
@@ -32,12 +33,19 @@ class PlacePreviewSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bottomPadding = MediaQuery.of(context).padding.bottom;
+    final mq = MediaQuery.of(context);
+    final bottomPadding = mq.padding.bottom;
+    final screenHeight = mq.size.height;
+    final maxSheetHeight = math.max(
+      200.0,
+      math.min(screenHeight * 0.51, 304.0 + bottomPadding),
+    );
     final catColor = AppColors.forCategory(place.categoryName);
 
     return ResponsiveWrapper(
       maxWidth: 540.0,
       child: Container(
+        constraints: BoxConstraints(maxHeight: maxSheetHeight),
         padding: EdgeInsets.only(
           left: AppSpacing.md,
           right: AppSpacing.md,
@@ -56,10 +64,11 @@ class PlacePreviewSheet extends StatelessWidget {
             ),
           ],
         ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
             // Handle bar
             Center(
               child: Container(
@@ -217,6 +226,7 @@ class PlacePreviewSheet extends StatelessWidget {
             ],
           ],
         ),
+        ),
       ),
     );
   }
@@ -280,12 +290,16 @@ class _InfoChip extends StatelessWidget {
         children: [
           Icon(icon, size: 13, color: color),
           const SizedBox(width: AppSpacing.xs),
-          Text(
-            label,
-            style: AppTypography.label.copyWith(
-              fontSize: 11,
-              color: color,
-              fontWeight: FontWeight.w600,
+          Flexible(
+            child: Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: AppTypography.label.copyWith(
+                fontSize: 11,
+                color: color,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
         ],

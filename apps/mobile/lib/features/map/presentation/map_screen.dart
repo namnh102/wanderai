@@ -14,6 +14,8 @@ import '../../../core/widgets/app_state_banner.dart';
 import '../../../core/widgets/responsive_wrapper.dart';
 import '../../location/domain/geo_distance.dart';
 import '../../location/providers/user_location_provider.dart';
+import '../data/cached_offline_tile_provider.dart';
+import '../data/offline_tile_downloader.dart';
 import '../data/place_model.dart';
 import '../providers/map_provider.dart';
 import 'widgets/place_preview_sheet.dart';
@@ -21,6 +23,7 @@ import 'widgets/map_category_bar.dart';
 import 'widgets/map_search_bar.dart';
 import 'widgets/map_destination_selector.dart';
 import 'widgets/map_radius_selector.dart';
+import 'widgets/offline_map_sheet.dart';
 
 class MapScreen extends ConsumerStatefulWidget {
   /// Optional controller, injected only by tests to observe the camera.
@@ -42,12 +45,32 @@ class _MapScreenState extends ConsumerState<MapScreen>
   bool _showLocationPill = true;
   final TextEditingController _searchController = TextEditingController();
   final GlobalKey _previewSheetKey = GlobalKey();
+  final StreamController<void> _tileResetController =
+      StreamController<void>.broadcast();
+  late final CachedOfflineTileProvider _tileProvider;
+  bool _isOutsideOfflineBounds = false;
+  bool _isOutsideOfflineZoom = false;
+  double? _currentCameraZoom;
+  bool _hasUncachedTileErrorsInView = false;
   ScaffoldFeatureController<SnackBar, SnackBarClosedReason>?
       _locationSnackBarController;
 
   @override
   void initState() {
     super.initState();
+    _tileProvider = CachedOfflineTileProvider(
+      store: ref.read(offlineTileStoreProvider),
+      dio: ref.read(offlineTileDioProvider),
+      isOfflineOnly: () => mounted && ref.read(mapProvider).isOfflineMode,
+      onNetworkTileLoaded: () {
+        if (!mounted || !_hasUncachedTileErrorsInView) return;
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted && _hasUncachedTileErrorsInView) {
+            setState(() => _hasUncachedTileErrorsInView = false);
+          }
+        });
+      },
+    );
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _initMap();
     });
@@ -59,7 +82,33 @@ class _MapScreenState extends ConsumerState<MapScreen>
     _cameraAnimationController?.dispose();
     _cameraAnimationController = null;
     _searchController.dispose();
+    _tileResetController.close();
     super.dispose();
+  }
+
+  void _handleCameraPositionChanged(MapCamera camera) {
+    final region = ref.read(mapProvider).cachedHalongRegion;
+    final outsideBounds =
+        region != null && !region.bbox.contains(camera.center);
+    final outsideZoom = region != null && !region.containsZoom(camera.zoom);
+    final zoomChangedSignificantly = outsideZoom &&
+        (_currentCameraZoom == null ||
+            (_currentCameraZoom! - camera.zoom).abs() >= 0.1);
+    final backInside = !outsideBounds && !outsideZoom;
+
+    if (outsideBounds != _isOutsideOfflineBounds ||
+        outsideZoom != _isOutsideOfflineZoom ||
+        zoomChangedSignificantly ||
+        (backInside && _hasUncachedTileErrorsInView)) {
+      setState(() {
+        _isOutsideOfflineBounds = outsideBounds;
+        _isOutsideOfflineZoom = outsideZoom;
+        _currentCameraZoom = camera.zoom;
+        if (backInside) {
+          _hasUncachedTileErrorsInView = false;
+        }
+      });
+    }
   }
 
   Future<void> _initMap() async {
@@ -170,6 +219,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
 
     final hasSelectedPlace = ref.read(mapProvider).selectedPlace != null;
     final mq = MediaQuery.of(context);
+    final textScale = mq.textScaler.scale(14.0) / 14.0;
     double bottomMargin = 80.0 + mq.padding.bottom;
     if (hasSelectedPlace) {
       final sheetBox =
@@ -179,8 +229,11 @@ class _MapScreenState extends ConsumerState<MapScreen>
       final minAboveSheet = sheetHeight + 12.0;
       final desiredAboveControls =
           math.max(sheetHeight + 64.0, 396.0 + mq.padding.bottom);
-      final maxAllowed =
-          math.max(minAboveSheet, mq.size.height - mq.padding.top - 220.0);
+      final reservedForSnackBar = textScale > 1.2 ? 270.0 : 220.0;
+      final maxAllowed = math.max(
+        minAboveSheet,
+        mq.size.height - mq.padding.top - reservedForSnackBar,
+      );
       bottomMargin = desiredAboveControls.clamp(minAboveSheet, maxAllowed);
     }
 
@@ -192,8 +245,13 @@ class _MapScreenState extends ConsumerState<MapScreen>
       SnackBar(
         key: const Key('map_location_error_snackbar'),
         behavior: SnackBarBehavior.floating,
-        margin: EdgeInsets.fromLTRB(12, 0, 12, bottomMargin),
-        content: Text(message),
+        margin: EdgeInsets.fromLTRB(8, 0, 8, bottomMargin),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+        content: Text(
+          message,
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+        ),
         action: SnackBarAction(
           label: 'Mở cài đặt',
           onPressed: () {
@@ -259,13 +317,42 @@ class _MapScreenState extends ConsumerState<MapScreen>
     final userLoc = ref.watch(userLocationProvider);
     final userPos = userLoc.position;
     final theme = Theme.of(context);
-    final topInset = MediaQuery.of(context).padding.top;
+    final mediaQuery = MediaQuery.of(context);
+    final topInset = mediaQuery.padding.top;
+    final textScale = mediaQuery.textScaler.scale(14.0) / 14.0;
+    final isCompactOverlay = mediaQuery.size.width < 420 || textScale > 1.25;
 
     // Camera moves are driven by events, never from build().
     ref.listen<MapCameraRequest?>(
       mapProvider.select((s) => s.cameraRequest),
       (prev, next) {
         if (next != null && next.seq != prev?.seq) _applyCameraRequest(next);
+      },
+    );
+    // Reset cached tiles when download completes or cache is cleared.
+    ref.listen<int>(
+      mapProvider.select((s) => s.tileLayerResetEpoch),
+      (prev, next) {
+        if (prev != next && mounted) {
+          _tileProvider.cacheEpoch = next;
+          _hasUncachedTileErrorsInView = false;
+          _tileResetController.add(null);
+        }
+      },
+    );
+    // Sync boundary flags when cachedHalongRegion is populated or cleared.
+    ref.listen(
+      mapProvider.select((s) => s.cachedHalongRegion),
+      (prev, next) {
+        if (!mounted) return;
+        if ((prev == null) != (next == null)) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (!mounted) return;
+            try {
+              _handleCameraPositionChanged(_mapController.camera);
+            } catch (_) {}
+          });
+        }
       },
     );
     // Search text is cleared when the search is left by other means.
@@ -290,6 +377,33 @@ class _MapScreenState extends ConsumerState<MapScreen>
       },
     );
 
+    final hasOfflineBoundaryContext =
+        state.isOfflineMode || _hasUncachedTileErrorsInView;
+    final suppressOfflineBadgeForSelectedOverlay =
+        state.selectedPlace != null &&
+            (state.status == MapLoadingStatus.loading ||
+                state.status == MapLoadingStatus.empty ||
+                state.status == MapLoadingStatus.error);
+    final showOfflineBadge = state.isOfflineMode &&
+        state.cachedHalongRegion != null &&
+        !_isOutsideOfflineBounds &&
+        !_isOutsideOfflineZoom &&
+        !suppressOfflineBadgeForSelectedOverlay;
+    final showOfflineBoundaryBanner = state.cachedHalongRegion != null &&
+        hasOfflineBoundaryContext &&
+        (_isOutsideOfflineBounds || _isOutsideOfflineZoom);
+    final suppressBadgesForBanner =
+        showOfflineBoundaryBanner && state.selectedPlace != null;
+    final showCountBadge =
+        state.status == MapLoadingStatus.loaded && !suppressBadgesForBanner;
+    final suppressPillForOverlay = state.selectedPlace != null &&
+        (showOfflineBoundaryBanner ||
+            state.status == MapLoadingStatus.loading ||
+            state.status == MapLoadingStatus.empty ||
+            state.status == MapLoadingStatus.error);
+    final showPill =
+        userLoc.label != null && _showLocationPill && !suppressPillForOverlay;
+
     return Scaffold(
       body: Stack(
         children: [
@@ -302,18 +416,100 @@ class _MapScreenState extends ConsumerState<MapScreen>
               minZoom: 5.0,
               maxZoom: 19.0,
               onTap: (_, __) => ref.read(mapProvider.notifier).deselectPlace(),
+              onPositionChanged: (camera, _) =>
+                  _handleCameraPositionChanged(camera),
             ),
             children: [
               // OpenStreetMap Humanitarian (HOT) Basemap Tiles (Reachable in Vietnam, OSM-based, no watermark)
               TileLayer(
-                urlTemplate:
-                    'https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png',
-                fallbackUrl:
-                    'https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png',
-                subdomains: const ['a', 'b', 'c'],
+                urlTemplate: OfflineTileDownloader.primaryUrlTemplate,
+                fallbackUrl: OfflineTileDownloader.fallbackUrlTemplate,
+                subdomains: OfflineTileDownloader.subdomains,
                 userAgentPackageName: 'com.wanderai.mobile',
                 maxZoom: 19,
+                tileProvider: _tileProvider,
+                reset: _tileResetController.stream,
+                evictErrorTileStrategy:
+                    EvictErrorTileStrategy.notVisibleRespectMargin,
+                errorImage: MemoryImage(TileProvider.transparentImage),
+                errorTileCallback: (tile, error, stackTrace) {
+                  if (!mounted) return;
+                  final currentState = ref.read(mapProvider);
+                  if (currentState.cachedHalongRegion == null &&
+                      !currentState.isOfflineMode) {
+                    return;
+                  }
+                  if (!_hasUncachedTileErrorsInView) {
+                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                      if (!mounted || _hasUncachedTileErrorsInView) return;
+                      final region = ref.read(mapProvider).cachedHalongRegion;
+                      var outsideBounds = _isOutsideOfflineBounds;
+                      var outsideZoom = _isOutsideOfflineZoom;
+                      var cameraZoom = _currentCameraZoom;
+                      if (region != null) {
+                        try {
+                          final camera = _mapController.camera;
+                          outsideBounds = !region.bbox.contains(camera.center);
+                          outsideZoom = !region.containsZoom(camera.zoom);
+                          cameraZoom = camera.zoom;
+                        } catch (_) {}
+                      }
+                      setState(() {
+                        _hasUncachedTileErrorsInView = true;
+                        _isOutsideOfflineBounds = outsideBounds;
+                        _isOutsideOfflineZoom = outsideZoom;
+                        _currentCameraZoom = cameraZoom;
+                      });
+                    });
+                  }
+                },
+                tileBuilder: (context, tileWidget, tile) {
+                  if (tile.loadError &&
+                      (state.isOfflineMode ||
+                          state.cachedHalongRegion != null)) {
+                    return Container(
+                      decoration: BoxDecoration(
+                        color: AppColors.surfaceContainer
+                            .withValues(alpha: 0.85),
+                        border: Border.all(
+                          color: AppColors.softBorder,
+                          width: 0.5,
+                        ),
+                      ),
+                      alignment: Alignment.center,
+                      padding: const EdgeInsets.all(4),
+                      child: Text(
+                        'Chưa tải\nngoại tuyến\nz${tile.coordinates.z}',
+                        textAlign: TextAlign.center,
+                        style: AppTypography.label.copyWith(
+                          fontSize: 10,
+                          color: AppColors.textTertiary,
+                        ),
+                      ),
+                    );
+                  }
+                  return tileWidget;
+                },
               ),
+
+              // Downloaded offline region boundary polygon
+              if (state.cachedHalongRegion != null)
+                PolygonLayer(
+                  polygons: [
+                    Polygon(
+                      points: state.cachedHalongRegion!.bbox.polygonPoints,
+                      color: AppColors.primary.withValues(alpha: 0.06),
+                      borderColor: AppColors.primary,
+                      borderStrokeWidth: 2.0,
+                      pattern: StrokePattern.dashed(segments: const [10, 6]),
+                      label: 'Vùng ngoại tuyến Hạ Long',
+                      labelStyle: AppTypography.label.copyWith(
+                        color: AppColors.primaryDeep,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
+                ),
 
               // Accuracy circle: translucent disk with radius = accuracyMeters
               if (userPos != null &&
@@ -445,237 +641,572 @@ class _MapScreenState extends ConsumerState<MapScreen>
             ),
           ),
 
+          // ─── Offline badge / boundary banner & map loading/empty/error states ───
+          if (showOfflineBadge ||
+              showOfflineBoundaryBanner ||
+              (!suppressBadgesForBanner &&
+                  (state.status == MapLoadingStatus.loading ||
+                      state.status == MapLoadingStatus.empty ||
+                      state.status == MapLoadingStatus.error)))
+            Positioned(
+              top: topInset + 162,
+              left: 0,
+              right: 0,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  if (showOfflineBadge)
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: Padding(
+                        padding: EdgeInsets.only(
+                          left: 12,
+                          right: (state.mode == MapMode.nearby &&
+                                  state.selectedPlace != null)
+                              ? 132
+                              : (state.selectedPlace != null ? 64 : 12),
+                        ),
+                        child: GestureDetector(
+                          onTap: () => showOfflineMapSheet(context),
+                          child: Container(
+                            key: const Key('offline_mode_badge'),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 6,
+                            ),
+                            decoration: BoxDecoration(
+                              color: AppColors.primaryContainer,
+                              borderRadius: AppRadius.pillRadius,
+                              border: Border.all(
+                                color: AppColors.primary
+                                    .withValues(alpha: 0.35),
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.08),
+                                  blurRadius: 4,
+                                ),
+                              ],
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(
+                                  Icons.offline_pin,
+                                  size: 15,
+                                  color: AppColors.primaryDeep,
+                                ),
+                                const SizedBox(width: 6),
+                                Flexible(
+                                  child: Text(
+                                    'Chế độ ngoại tuyến · Hạ Long '
+                                    '(z${state.cachedHalongRegion!.minZoom}–z${state.cachedHalongRegion!.maxZoom})',
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: AppTypography.label.copyWith(
+                                      color: AppColors.primaryDeep,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  if (showOfflineBoundaryBanner)
+                    Padding(
+                      padding: EdgeInsets.only(
+                        left: 12,
+                        right: (state.mode == MapMode.nearby &&
+                                state.selectedPlace != null)
+                            ? 132
+                            : (state.selectedPlace != null ? 64 : 12),
+                      ),
+                      child: ResponsiveWrapper(
+                        maxWidth: 600.0,
+                        child: Material(
+                          color: AppColors.surface,
+                          borderRadius: AppRadius.mdRadius,
+                          elevation: 2,
+                          child: _OfflineBoundaryBanner(
+                            key: const Key('offline_boundary_banner'),
+                            message: _isOutsideOfflineBounds
+                                ? 'Ngoài vùng bản đồ ngoại tuyến đã tải '
+                                    '(Hạ Long z${state.cachedHalongRegion!.minZoom}–z${state.cachedHalongRegion!.maxZoom})'
+                                : 'Mức zoom hiện tại (${(_currentCameraZoom ?? 15.0).toStringAsFixed(1)}) '
+                                    'ngoài phạm vi đã tải '
+                                    '(z${state.cachedHalongRegion!.minZoom}–z${state.cachedHalongRegion!.maxZoom})',
+                            onRecenter: () => ref
+                                .read(mapProvider.notifier)
+                                .recenterToOfflineRegion(),
+                          ),
+                        ),
+                      ),
+                    ),
+                  if ((showOfflineBadge || showOfflineBoundaryBanner) &&
+                      !suppressBadgesForBanner &&
+                      (state.status == MapLoadingStatus.loading ||
+                          state.status == MapLoadingStatus.empty ||
+                          state.status == MapLoadingStatus.error))
+                    const SizedBox(height: 8),
+                  if (state.status == MapLoadingStatus.loading &&
+                      !suppressBadgesForBanner)
+                    Padding(
+                      padding: EdgeInsets.only(
+                        left: 12,
+                        right: state.mode == MapMode.nearby
+                            ? (state.selectedPlace != null ? 132 : 92)
+                            : 64,
+                      ),
+                      child: MediaQuery.withClampedTextScaling(
+                        maxScaleFactor: 1.3,
+                        child: Center(
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 8,
+                            ),
+                            decoration: BoxDecoration(
+                              color: AppColors.surface,
+                              borderRadius: AppRadius.pillRadius,
+                              border: Border.all(color: AppColors.softBorder),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: AppColors.primaryDeep
+                                      .withValues(alpha: 0.08),
+                                  blurRadius: 8,
+                                ),
+                              ],
+                            ),
+                            child: const AppLoading(
+                              isCompact: true,
+                              message: 'Đang tải địa điểm...',
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  if (state.status == MapLoadingStatus.empty &&
+                      !suppressBadgesForBanner)
+                    if (state.selectedPlace != null)
+                      Padding(
+                        padding: EdgeInsets.only(
+                          left: 12,
+                          right: state.mode == MapMode.nearby ? 132 : 64,
+                        ),
+                        child: MediaQuery.withClampedTextScaling(
+                          maxScaleFactor: 1.1,
+                          child: Center(
+                            child: Container(
+                              constraints: const BoxConstraints(maxWidth: 400),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 5,
+                              ),
+                              decoration: BoxDecoration(
+                                color: AppColors.surface,
+                                borderRadius: AppRadius.mdRadius,
+                                border: Border.all(color: AppColors.softBorder),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: AppColors.primaryDeep
+                                        .withValues(alpha: 0.1),
+                                    blurRadius: 8,
+                                  ),
+                                ],
+                              ),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      const Icon(
+                                        Icons.location_off_outlined,
+                                        size: 16,
+                                        color: AppColors.textTertiary,
+                                      ),
+                                      const SizedBox(width: 6),
+                                      Expanded(
+                                        child: Text(
+                                          'Không tìm thấy địa điểm',
+                                          style: AppTypography.label.copyWith(
+                                            fontSize: 11.5,
+                                            height: 1.15,
+                                            fontWeight: FontWeight.w700,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    _emptyHint(state),
+                                    key: const Key('map_empty_hint'),
+                                    maxLines: 3,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: AppTypography.caption.copyWith(
+                                      fontSize: 10.5,
+                                      height: 1.15,
+                                      color: AppColors.textTertiary,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      )
+                    else
+                      Padding(
+                        padding: EdgeInsets.only(
+                          left: 12,
+                          right: state.mode == MapMode.nearby ? 92 : 64,
+                        ),
+                        child: MediaQuery.withClampedTextScaling(
+                          maxScaleFactor: 1.25,
+                          child: Center(
+                            child: Container(
+                              constraints: const BoxConstraints(maxWidth: 400),
+                              padding: EdgeInsets.symmetric(
+                                horizontal:
+                                    isCompactOverlay ? 12 : AppSpacing.md,
+                                vertical: isCompactOverlay ? 10 : AppSpacing.md,
+                              ),
+                              decoration: BoxDecoration(
+                                color: AppColors.surface,
+                                borderRadius: isCompactOverlay
+                                    ? AppRadius.mdRadius
+                                    : AppRadius.cardRadius,
+                                border: Border.all(color: AppColors.softBorder),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: AppColors.primaryDeep
+                                        .withValues(alpha: 0.1),
+                                    blurRadius: 8,
+                                  ),
+                                ],
+                              ),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    Icons.location_off_outlined,
+                                    size: isCompactOverlay ? 22 : 32,
+                                    color: AppColors.textTertiary,
+                                  ),
+                                  SizedBox(
+                                    height:
+                                        isCompactOverlay ? 4 : AppSpacing.sm,
+                                  ),
+                                  Text(
+                                    'Không tìm thấy địa điểm',
+                                    maxLines: isCompactOverlay ? 2 : null,
+                                    overflow: isCompactOverlay
+                                        ? TextOverflow.ellipsis
+                                        : null,
+                                    style: isCompactOverlay
+                                        ? AppTypography.h3.copyWith(
+                                            fontSize: 15,
+                                            height: 1.2,
+                                          )
+                                        : AppTypography.h3,
+                                    textAlign: TextAlign.center,
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    _emptyHint(state),
+                                    key: const Key('map_empty_hint'),
+                                    maxLines: isCompactOverlay ? 3 : null,
+                                    overflow: isCompactOverlay
+                                        ? TextOverflow.ellipsis
+                                        : null,
+                                    style: isCompactOverlay
+                                        ? AppTypography.bodyS.copyWith(
+                                            fontSize: 12,
+                                            height: 1.25,
+                                          )
+                                        : AppTypography.bodyS,
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                  if (state.status == MapLoadingStatus.error &&
+                      !suppressBadgesForBanner)
+                    Padding(
+                      padding: EdgeInsets.only(
+                        left: 12,
+                        right: state.mode == MapMode.nearby
+                            ? (state.selectedPlace != null ? 132 : 92)
+                            : 64,
+                      ),
+                      child: Center(
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 440),
+                          child: MediaQuery.withClampedTextScaling(
+                            maxScaleFactor: 1.3,
+                            child: Material(
+                              color: AppColors.surface,
+                              borderRadius: AppRadius.mdRadius,
+                              elevation: 2,
+                              child: AppStateBanner(
+                                message:
+                                    state.errorMessage ?? 'Đã xảy ra lỗi',
+                                tone: AppStateBannerTone.error,
+                                actionLabel: 'Thử lại',
+                                maxLines: state.selectedPlace != null
+                                    ? 2
+                                    : (isCompactOverlay ? 3 : null),
+                                compact: state.selectedPlace != null ||
+                                    isCompactOverlay,
+                                onAction: () =>
+                                    ref.read(mapProvider.notifier).retry(),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+
           // ─── Radius selector & Location action (right side) ───
           Positioned(
             right: 12,
-            bottom: (state.selectedPlace != null ? 340 : 24) +
+            bottom: (state.selectedPlace != null ? 320 : 24) +
                 MediaQuery.of(context).padding.bottom,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                _LocationButton(
-                  key: const Key('my_location_button'),
-                  state: userLoc,
-                  onTap: _onMyLocationTap,
-                ),
-                if (state.mode == MapMode.nearby) ...[
-                  const SizedBox(height: 8),
-                  MapRadiusSelector(
-                    currentRadius: state.radiusKm,
-                    onRadiusChanged: (r) {
-                      ref.read(mapProvider.notifier).setRadius(r);
-                    },
+            child: state.mode == MapMode.nearby && state.selectedPlace != null
+                ? Row(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      MapRadiusSelector(
+                        currentRadius: state.radiusKm,
+                        onRadiusChanged: (r) {
+                          ref.read(mapProvider.notifier).setRadius(r);
+                        },
+                      ),
+                      const SizedBox(width: 8),
+                      Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          _OfflineMapButton(
+                            key: const Key('offline_map_button'),
+                            hasCache: state.cachedHalongRegion != null,
+                            isOfflineMode: state.isOfflineMode,
+                            isDownloading: state.isDownloadingOffline,
+                            onTap: () => showOfflineMapSheet(context),
+                          ),
+                          const SizedBox(height: 8),
+                          _LocationButton(
+                            key: const Key('my_location_button'),
+                            state: userLoc,
+                            onTap: _onMyLocationTap,
+                          ),
+                        ],
+                      ),
+                    ],
+                  )
+                : Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      _OfflineMapButton(
+                        key: const Key('offline_map_button'),
+                        hasCache: state.cachedHalongRegion != null,
+                        isOfflineMode: state.isOfflineMode,
+                        isDownloading: state.isDownloadingOffline,
+                        onTap: () => showOfflineMapSheet(context),
+                      ),
+                      const SizedBox(height: 8),
+                      _LocationButton(
+                        key: const Key('my_location_button'),
+                        state: userLoc,
+                        onTap: _onMyLocationTap,
+                      ),
+                      if (state.mode == MapMode.nearby) ...[
+                        const SizedBox(height: 8),
+                        MapRadiusSelector(
+                          currentRadius: state.radiusKm,
+                          onRadiusChanged: (r) {
+                            ref.read(mapProvider.notifier).setRadius(r);
+                          },
+                        ),
+                      ],
+                    ],
                   ),
-                ],
-              ],
-            ),
           ),
 
-          // ─── Loading indicator ───
-          if (state.status == MapLoadingStatus.loading)
-            Positioned(
-              top: topInset + 168,
-              left: 0,
-              right: 0,
-              child: Center(
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: AppColors.surface,
-                    borderRadius: AppRadius.pillRadius,
-                    border: Border.all(color: AppColors.softBorder),
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppColors.primaryDeep.withValues(alpha: 0.08),
-                        blurRadius: 8,
-                      ),
-                    ],
-                  ),
-                  child: const AppLoading(
-                    isCompact: true,
-                    message: 'Đang tải địa điểm...',
-                  ),
-                ),
-              ),
-            ),
-
-          // ─── Empty state ───
-          if (state.status == MapLoadingStatus.empty)
-            Positioned(
-              top: topInset + 168,
-              left: 40,
-              right: 40,
-              child: Center(
-                child: Container(
-                  constraints: const BoxConstraints(maxWidth: 400),
-                  padding: const EdgeInsets.all(AppSpacing.md),
-                  decoration: BoxDecoration(
-                    color: AppColors.surface,
-                    borderRadius: AppRadius.cardRadius,
-                    border: Border.all(color: AppColors.softBorder),
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppColors.primaryDeep.withValues(alpha: 0.1),
-                        blurRadius: 8,
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(Icons.location_off_outlined,
-                          size: 32, color: AppColors.textTertiary),
-                      const SizedBox(height: AppSpacing.sm),
-                      const Text(
-                        'Không tìm thấy địa điểm',
-                        style: AppTypography.h3,
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        _emptyHint(state),
-                        key: const Key('map_empty_hint'),
-                        style: AppTypography.bodyS,
-                        textAlign: TextAlign.center,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-
-          // ─── Error state ───
-          if (state.status == MapLoadingStatus.error)
-            Positioned(
-              top: topInset + 168,
-              left: 24,
-              right: 24,
-              child: Center(
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 440),
-                  child: Material(
-                    color: AppColors.surface,
-                    borderRadius: AppRadius.mdRadius,
-                    elevation: 2,
-                    child: AppStateBanner(
-                      message: state.errorMessage ?? 'Đã xảy ra lỗi',
-                      tone: AppStateBannerTone.error,
-                      actionLabel: 'Thử lại',
-                      onAction: () => ref.read(mapProvider.notifier).retry(),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-
-          // ─── Place count badge ───
-          if (state.status == MapLoadingStatus.loaded)
+          // ─── Place count badge & Location status pill ───
+          if (showCountBadge || showPill)
             Positioned(
               left: 12,
-              bottom: (state.selectedPlace != null ? 340 : 24) +
+              right: state.mode == MapMode.nearby
+                  ? (state.selectedPlace != null ? 132 : 88)
+                  : 64,
+              bottom: (state.selectedPlace != null ? 320 : 24) +
                   MediaQuery.of(context).padding.bottom,
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(
-                  color: AppColors.primaryContainer,
-                  borderRadius: AppRadius.pillRadius,
-                  border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.08),
-                      blurRadius: 4,
+              child: Builder(
+                builder: (context) {
+                  final countBadge = Container(
+                    key: const Key('place_count_badge'),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
                     ),
-                  ],
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(Icons.place, size: 14, color: AppColors.onPrimaryContainer),
-                    const SizedBox(width: 4),
-                    Text(
-                      '${state.places.length} địa điểm',
-                      style: AppTypography.label.copyWith(
-                        color: AppColors.onPrimaryContainer,
-                        fontWeight: FontWeight.w700,
+                    decoration: BoxDecoration(
+                      color: AppColors.primaryContainer,
+                      borderRadius: AppRadius.pillRadius,
+                      border: Border.all(
+                        color: AppColors.primary.withValues(alpha: 0.3),
                       ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-
-          // ─── Location status pill (honest state) ───
-          if (userLoc.label != null && _showLocationPill)
-            Positioned(
-              right: 60,
-              bottom: (state.selectedPlace != null ? 340 : 24) +
-                  MediaQuery.of(context).padding.bottom +
-                  8,
-              child: GestureDetector(
-                onTap: () {
-                  _pillDismissTimer?.cancel();
-                  setState(() => _showLocationPill = false);
-                },
-                child: Container(
-                  key: const Key('location_status_pill'),
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: AppColors.surface,
-                    borderRadius: AppRadius.pillRadius,
-                    border: Border.all(
-                      color: userLoc.status == UserLocationStatus.denied ||
-                              userLoc.status == UserLocationStatus.unavailable
-                          ? AppColors.error.withValues(alpha: 0.3)
-                          : (userLoc.quality == LocationAccuracyQuality.approximate ||
-                                  userLoc.quality == LocationAccuracyQuality.poor)
-                              ? AppColors.warning.withValues(alpha: 0.5)
-                              : AppColors.border,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.08),
-                        blurRadius: 4,
-                      ),
-                    ],
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        userLoc.status == UserLocationStatus.denied
-                            ? Icons.location_disabled
-                            : userLoc.status == UserLocationStatus.unavailable
-                                ? Icons.location_off
-                                : userLoc.quality == LocationAccuracyQuality.good
-                                    ? Icons.check_circle_outline
-                                    : userLoc.quality == LocationAccuracyQuality.approximate
-                                        ? Icons.info_outline
-                                        : Icons.warning_amber_rounded,
-                        size: 14,
-                        color: userLoc.status == UserLocationStatus.denied ||
-                                userLoc.status == UserLocationStatus.unavailable
-                            ? AppColors.error
-                            : userLoc.quality == LocationAccuracyQuality.good
-                                ? AppColors.info
-                                : AppColors.warning,
-                      ),
-                      const SizedBox(width: 6),
-                      Text(
-                        userLoc.label!,
-                        style: AppTypography.label.copyWith(
-                          color: userLoc.status == UserLocationStatus.denied ||
-                                  userLoc.status == UserLocationStatus.unavailable
-                              ? AppColors.error
-                              : userLoc.quality == LocationAccuracyQuality.good
-                                  ? AppColors.info
-                                  : AppColors.textPrimary,
-                          fontWeight: FontWeight.w600,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.08),
+                          blurRadius: 4,
                         ),
+                      ],
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(
+                          Icons.place,
+                          size: 14,
+                          color: AppColors.onPrimaryContainer,
+                        ),
+                        const SizedBox(width: 4),
+                        Flexible(
+                          child: Text(
+                            '${state.places.length} địa điểm',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: AppTypography.label.copyWith(
+                              color: AppColors.onPrimaryContainer,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+
+                  final locationPill = GestureDetector(
+                    onTap: () {
+                      _pillDismissTimer?.cancel();
+                      setState(() => _showLocationPill = false);
+                    },
+                    child: Container(
+                      key: const Key('location_status_pill'),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
                       ),
+                      decoration: BoxDecoration(
+                        color: AppColors.surface,
+                        borderRadius: AppRadius.pillRadius,
+                        border: Border.all(
+                          color: userLoc.status == UserLocationStatus.denied ||
+                                  userLoc.status ==
+                                      UserLocationStatus.unavailable
+                              ? AppColors.error.withValues(alpha: 0.3)
+                              : (userLoc.quality ==
+                                          LocationAccuracyQuality.approximate ||
+                                      userLoc.quality ==
+                                          LocationAccuracyQuality.poor)
+                                  ? AppColors.warning.withValues(alpha: 0.5)
+                                  : AppColors.border,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.08),
+                            blurRadius: 4,
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            userLoc.status == UserLocationStatus.denied
+                                ? Icons.location_disabled
+                                : userLoc.status ==
+                                        UserLocationStatus.unavailable
+                                    ? Icons.location_off
+                                    : userLoc.quality ==
+                                            LocationAccuracyQuality.good
+                                        ? Icons.check_circle_outline
+                                        : userLoc.quality ==
+                                                LocationAccuracyQuality
+                                                    .approximate
+                                            ? Icons.info_outline
+                                            : Icons.warning_amber_rounded,
+                            size: 14,
+                            color: userLoc.status ==
+                                        UserLocationStatus.denied ||
+                                    userLoc.status ==
+                                        UserLocationStatus.unavailable
+                                ? AppColors.error
+                                : userLoc.quality ==
+                                        LocationAccuracyQuality.good
+                                    ? AppColors.info
+                                    : AppColors.warning,
+                          ),
+                          const SizedBox(width: 6),
+                          Flexible(
+                            child: Text(
+                              userLoc.label ?? '',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: AppTypography.label.copyWith(
+                                color: userLoc.status ==
+                                            UserLocationStatus.denied ||
+                                        userLoc.status ==
+                                            UserLocationStatus.unavailable
+                                    ? AppColors.error
+                                    : userLoc.quality ==
+                                            LocationAccuracyQuality.good
+                                        ? AppColors.info
+                                        : AppColors.textPrimary,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+
+                  return Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    mainAxisAlignment: showCountBadge
+                        ? MainAxisAlignment.spaceBetween
+                        : MainAxisAlignment.end,
+                    children: [
+                      if (showCountBadge)
+                        Flexible(
+                          flex: showPill ? 2 : 1,
+                          child: countBadge,
+                        ),
+                      if (showCountBadge && showPill) const SizedBox(width: 8),
+                      if (showPill)
+                        Flexible(
+                          flex: showCountBadge ? 3 : 1,
+                          child: Padding(
+                            padding: const EdgeInsets.only(bottom: 4),
+                            child: locationPill,
+                          ),
+                        ),
                     ],
-                  ),
-                ),
+                  );
+                },
               ),
             ),
 
@@ -860,6 +1391,147 @@ class _LocationButton extends StatelessWidget {
             padding: const EdgeInsets.all(10),
             child: customChild ?? Icon(icon, size: 22, color: iconColor),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _OfflineMapButton extends StatelessWidget {
+  final bool hasCache;
+  final bool isOfflineMode;
+  final bool isDownloading;
+  final VoidCallback onTap;
+
+  const _OfflineMapButton({
+    super.key,
+    required this.hasCache,
+    required this.isOfflineMode,
+    required this.isDownloading,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final iconColor = isOfflineMode
+        ? AppColors.warning
+        : hasCache
+            ? AppColors.primary
+            : AppColors.textSecondary;
+
+    return Material(
+      elevation: 3,
+      shape: const CircleBorder(),
+      color: AppColors.surface,
+      child: InkWell(
+        onTap: onTap,
+        customBorder: const CircleBorder(),
+        child: Tooltip(
+          message: 'Bản đồ ngoại tuyến',
+          child: Padding(
+            padding: const EdgeInsets.all(10),
+            child: isDownloading
+                ? const SizedBox(
+                    width: 22,
+                    height: 22,
+                    child: Center(child: AppLoading(isCompact: true)),
+                  )
+                : Icon(
+                    hasCache
+                        ? Icons.offline_pin_outlined
+                        : Icons.download_for_offline_outlined,
+                    size: 22,
+                    color: iconColor,
+                  ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _OfflineBoundaryBanner extends StatelessWidget {
+  final String message;
+  final VoidCallback onRecenter;
+
+  const _OfflineBoundaryBanner({
+    super.key,
+    required this.message,
+    required this.onRecenter,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final bg = AppColors.warningContainer.withValues(alpha: 0.7);
+    const fg = AppColors.warning;
+    final border = AppColors.warning.withValues(alpha: 0.28);
+
+    return MediaQuery.withClampedTextScaling(
+      maxScaleFactor: 1.4,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+        decoration: BoxDecoration(
+          color: bg,
+          borderRadius: AppRadius.mdRadius,
+          border: Border.all(color: border, width: 1),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Padding(
+                  padding: EdgeInsets.only(top: 1),
+                  child: Icon(
+                    Icons.layers_clear_outlined,
+                    size: 18,
+                    color: fg,
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.sm),
+                Expanded(
+                  child: Text(
+                    message,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppTypography.bodyS.copyWith(
+                      fontSize: 12.5,
+                      height: 1.3,
+                      color: fg,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 4),
+            Align(
+              alignment: Alignment.centerRight,
+              child: TextButton(
+                onPressed: onRecenter,
+                style: TextButton.styleFrom(
+                  foregroundColor: fg,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  minimumSize: const Size(0, 28),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.sm,
+                    vertical: 2,
+                  ),
+                  textStyle: AppTypography.label.copyWith(
+                    color: fg,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                child: const Text(
+                  'Về Hạ Long',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );

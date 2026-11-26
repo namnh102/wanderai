@@ -201,6 +201,28 @@ interface StoredTripMember {
   createdAt: Date;
 }
 
+interface StoredGroup {
+  id: string;
+  name: string;
+  description: string | null;
+  tripId: string | null;
+  createdAt: Date;
+}
+
+interface StoredGroupMember {
+  id: string;
+  groupId: string;
+  userId: string;
+  role: string;
+}
+
+interface StoredUserBlock {
+  id: string;
+  blockerId: string;
+  blockedId: string;
+  createdAt: Date;
+}
+
 interface StoredItinerary {
   id: string;
   tripId: string;
@@ -466,6 +488,9 @@ export class InMemoryPrismaService implements OnModuleInit, OnModuleDestroy {
   private youtubeUpdates: StoredYoutubePoiUpdate[] = [];
   private trips = new Map<string, StoredTrip>();
   private tripMembers: StoredTripMember[] = [];
+  private groups = new Map<string, StoredGroup>();
+  private groupMembers: StoredGroupMember[] = [];
+  private userBlocks: StoredUserBlock[] = [];
   private itineraries = new Map<string, StoredItinerary>();
   private itineraryItems = new Map<string, StoredItineraryItem>();
   private videos = new Map<string, StoredVideo>();
@@ -497,6 +522,9 @@ export class InMemoryPrismaService implements OnModuleInit, OnModuleDestroy {
     this.youtubeUpdates = [];
     this.trips.clear();
     this.tripMembers = [];
+    this.groups.clear();
+    this.groupMembers = [];
+    this.userBlocks = [];
     this.itineraries.clear();
     this.itineraryItems.clear();
     this.videos.clear();
@@ -806,16 +834,38 @@ export class InMemoryPrismaService implements OnModuleInit, OnModuleDestroy {
       if (select.email) out.email = row.email;
       if (select.role) out.role = row.role;
       if (select.isVerified) out.isVerified = row.isVerified;
+      if (select.deletedAt) out.deletedAt = row.deletedAt;
       if (select.createdAt) out.createdAt = row.createdAt;
       if (select.updatedAt) out.updatedAt = row.updatedAt;
       if (select.profile) {
+        const profileSelect =
+          typeof select.profile === 'object' &&
+          select.profile !== null &&
+          'select' in select.profile
+            ? ((select.profile as { select: Record<string, unknown> }).select ??
+              null)
+            : null;
         out.profile = profile
-          ? {
-              displayName: profile.displayName,
-              avatar: profile.avatar,
-              bio: profile.bio,
-              phone: profile.phone,
-            }
+          ? profileSelect
+            ? {
+                ...(profileSelect.displayName
+                  ? { displayName: profile.displayName }
+                  : {}),
+                ...(profileSelect.avatar ? { avatar: profile.avatar } : {}),
+                ...(profileSelect.bio ? { bio: profile.bio } : {}),
+                ...(profileSelect.phone ? { phone: profile.phone } : {}),
+                ...(profileSelect.nationality ? { nationality: null } : {}),
+                ...(profileSelect.languages ? { languages: [] } : {}),
+                ...(profileSelect.isDiscoverable
+                  ? { isDiscoverable: false }
+                  : {}),
+              }
+            : {
+                displayName: profile.displayName,
+                avatar: profile.avatar,
+                bio: profile.bio,
+                phone: profile.phone,
+              }
           : null;
       }
       if (select.preferences) {
@@ -1768,6 +1818,7 @@ export class InMemoryPrismaService implements OnModuleInit, OnModuleDestroy {
 
     findMany: async (args: {
       where: {
+        id?: string | { in: string[] };
         deletedAt?: null;
         OR?: Array<{
           userId?: string;
@@ -1777,6 +1828,13 @@ export class InMemoryPrismaService implements OnModuleInit, OnModuleDestroy {
     }) => {
       const rows = Array.from(this.trips.values())
         .filter((t) => {
+          if (args.where.id !== undefined) {
+            if (typeof args.where.id === 'string') {
+              if (t.id !== args.where.id) return false;
+            } else if (!args.where.id.in.includes(t.id)) {
+              return false;
+            }
+          }
           if (args.where.deletedAt === null && t.deletedAt !== null) {
             return false;
           }
@@ -2192,6 +2250,339 @@ export class InMemoryPrismaService implements OnModuleInit, OnModuleDestroy {
             }
           : null,
       };
+    },
+  };
+
+  private hydrateGroupMemberUser(userId: string) {
+    const user = this.users.get(userId);
+    if (!user) return null;
+    const profile =
+      Array.from(this.profiles.values()).find((p) => p.userId === user.id) ??
+      null;
+    const pref =
+      Array.from(this.preferences.values()).find((p) => p.userId === user.id) ??
+      null;
+    return {
+      id: user.id,
+      deletedAt: user.deletedAt,
+      profile: profile
+        ? {
+            displayName: profile.displayName,
+            avatar: profile.avatar,
+            bio: profile.bio,
+            nationality: null,
+            languages: [],
+            isDiscoverable: false,
+          }
+        : null,
+      preferences: pref
+        ? {
+            travelStyle: pref.travelStyle,
+            interests: pref.interests,
+          }
+        : null,
+    };
+  }
+
+  private hydrateGroupMembers(groupId: string, activeUsersOnly = true) {
+    return this.groupMembers
+      .filter((m) => m.groupId === groupId)
+      .map((m) => ({
+        ...m,
+        user: this.hydrateGroupMemberUser(m.userId),
+      }))
+      .filter((m) =>
+        activeUsersOnly ? m.user !== null && m.user.deletedAt === null : true,
+      );
+  }
+
+  readonly group = {
+    create: async (args: {
+      data: {
+        name: string;
+        description?: string | null;
+        tripId?: string | null;
+        members?: { create: { userId: string; role: string } };
+      };
+      include?: Record<string, unknown>;
+    }) => {
+      const now = new Date();
+      const id = randomUUID();
+      const row: StoredGroup = {
+        id,
+        name: args.data.name,
+        description: args.data.description ?? null,
+        tripId: args.data.tripId ?? null,
+        createdAt: now,
+      };
+      this.groups.set(id, row);
+
+      if (args.data.members?.create) {
+        const memberUserId = args.data.members.create.userId;
+        if (!this.users.has(memberUserId)) {
+          throw createP2003Error('Foreign key constraint failed on user_id');
+        }
+        if (
+          this.groupMembers.some(
+            (m) => m.groupId === id && m.userId === memberUserId,
+          )
+        ) {
+          throw createP2002Error('Unique constraint on groupId + userId');
+        }
+        this.groupMembers.push({
+          id: randomUUID(),
+          groupId: id,
+          userId: memberUserId,
+          role: args.data.members.create.role,
+        });
+      }
+
+      return {
+        ...row,
+        members: this.hydrateGroupMembers(id),
+      };
+    },
+
+    findMany: async (
+      args: {
+        where?: {
+          members?: { some: { userId: string } };
+          tripId?: string | null;
+        };
+        orderBy?: { createdAt?: 'asc' | 'desc' };
+      } = {},
+    ) => {
+      const rows = Array.from(this.groups.values())
+        .filter((g) => {
+          if (args.where?.tripId !== undefined && g.tripId !== args.where.tripId) {
+            return false;
+          }
+          if (args.where?.members?.some?.userId) {
+            const targetUid = args.where.members.some.userId;
+            return this.groupMembers.some(
+              (m) => m.groupId === g.id && m.userId === targetUid,
+            );
+          }
+          return true;
+        })
+        .sort((a, b) =>
+          args.orderBy?.createdAt === 'asc'
+            ? a.createdAt.getTime() - b.createdAt.getTime()
+            : b.createdAt.getTime() - a.createdAt.getTime(),
+        );
+
+      return rows.map((g) => ({
+        ...g,
+        members: this.hydrateGroupMembers(g.id),
+      }));
+    },
+
+    findUnique: async (args: {
+      where: { id: string };
+      include?: Record<string, unknown>;
+    }) => {
+      const g = this.groups.get(args.where.id);
+      if (!g) return null;
+      return {
+        ...g,
+        members: this.hydrateGroupMembers(g.id),
+      };
+    },
+
+    findFirst: async (args: {
+      where: { id?: string; tripId?: string | null };
+      include?: Record<string, unknown>;
+    }) => {
+      const found = Array.from(this.groups.values()).find((g) => {
+        if (args.where.id !== undefined && g.id !== args.where.id) return false;
+        if (args.where.tripId !== undefined && g.tripId !== args.where.tripId) {
+          return false;
+        }
+        return true;
+      });
+      if (!found) return null;
+      return {
+        ...found,
+        members: this.hydrateGroupMembers(found.id),
+      };
+    },
+
+    update: async (args: {
+      where: { id: string };
+      data: { name?: string; description?: string | null };
+      include?: Record<string, unknown>;
+    }) => {
+      const existing = this.groups.get(args.where.id);
+      if (!existing) {
+        throw new Error(`Group ${args.where.id} not found`);
+      }
+      if (args.data.name !== undefined) existing.name = args.data.name;
+      if (args.data.description !== undefined) {
+        existing.description = args.data.description;
+      }
+      return {
+        ...existing,
+        members: this.hydrateGroupMembers(existing.id),
+      };
+    },
+
+    delete: async (args: { where: { id: string } }) => {
+      const existing = this.groups.get(args.where.id);
+      if (!existing) {
+        throw new Error(`Group ${args.where.id} not found`);
+      }
+      this.groups.delete(args.where.id);
+      this.groupMembers = this.groupMembers.filter(
+        (m) => m.groupId !== args.where.id,
+      );
+      return existing;
+    },
+  };
+
+  readonly groupMember = {
+    create: async (args: {
+      data: { groupId: string; userId: string; role: string };
+    }) => {
+      if (!this.groups.has(args.data.groupId)) {
+        throw createP2003Error('Foreign key constraint failed on group_id');
+      }
+      const user = this.users.get(args.data.userId);
+      if (!user || user.deletedAt !== null) {
+        throw createP2003Error('Foreign key constraint failed on user_id');
+      }
+      if (
+        this.groupMembers.some(
+          (m) =>
+            m.groupId === args.data.groupId && m.userId === args.data.userId,
+        )
+      ) {
+        throw createP2002Error('Unique constraint on groupId + userId');
+      }
+      const row: StoredGroupMember = {
+        id: randomUUID(),
+        groupId: args.data.groupId,
+        userId: args.data.userId,
+        role: args.data.role,
+      };
+      this.groupMembers.push(row);
+      return {
+        ...row,
+        user: this.hydrateGroupMemberUser(row.userId),
+      };
+    },
+
+    findFirst: async (args: {
+      where: { groupId?: string; userId?: string; role?: string };
+    }) => {
+      return (
+        this.groupMembers.find((m) => {
+          if (args.where.groupId && m.groupId !== args.where.groupId) {
+            return false;
+          }
+          if (args.where.userId && m.userId !== args.where.userId) return false;
+          if (args.where.role && m.role !== args.where.role) return false;
+          return true;
+        }) ?? null
+      );
+    },
+
+    findMany: async (args: {
+      where?: { groupId?: string; userId?: string; role?: string };
+    } = {}) => {
+      return this.groupMembers.filter((m) => {
+        if (args.where?.groupId && m.groupId !== args.where.groupId) {
+          return false;
+        }
+        if (args.where?.userId && m.userId !== args.where.userId) return false;
+        if (args.where?.role && m.role !== args.where.role) return false;
+        return true;
+      });
+    },
+
+    delete: async (args: {
+      where: { id?: string; groupId_userId?: { groupId: string; userId: string } };
+    }) => {
+      const idx = this.groupMembers.findIndex((m) => {
+        if (args.where.id) return m.id === args.where.id;
+        if (args.where.groupId_userId) {
+          return (
+            m.groupId === args.where.groupId_userId.groupId &&
+            m.userId === args.where.groupId_userId.userId
+          );
+        }
+        return false;
+      });
+      if (idx === -1) {
+        throw new Error('GroupMember not found');
+      }
+      const [removed] = this.groupMembers.splice(idx, 1);
+      return removed;
+    },
+  };
+
+  readonly userBlock = {
+    findFirst: async (args: {
+      where: {
+        OR?: Array<{ blockerId: string; blockedId: string }>;
+        blockerId?: string;
+        blockedId?: string;
+      };
+    }) => {
+      return (
+        this.userBlocks.find((b) => {
+          if (args.where.OR && args.where.OR.length > 0) {
+            return args.where.OR.some(
+              (clause) =>
+                b.blockerId === clause.blockerId &&
+                b.blockedId === clause.blockedId,
+            );
+          }
+          if (args.where.blockerId && b.blockerId !== args.where.blockerId) {
+            return false;
+          }
+          if (args.where.blockedId && b.blockedId !== args.where.blockedId) {
+            return false;
+          }
+          return true;
+        }) ?? null
+      );
+    },
+
+    upsert: async (args: {
+      where: { blockerId_blockedId: { blockerId: string; blockedId: string } };
+      create: { blockerId: string; blockedId: string };
+      update: Record<string, never>;
+    }) => {
+      const existing = this.userBlocks.find(
+        (b) =>
+          b.blockerId === args.where.blockerId_blockedId.blockerId &&
+          b.blockedId === args.where.blockerId_blockedId.blockedId,
+      );
+      if (existing) return existing;
+      const row: StoredUserBlock = {
+        id: randomUUID(),
+        blockerId: args.create.blockerId,
+        blockedId: args.create.blockedId,
+        createdAt: new Date(),
+      };
+      this.userBlocks.push(row);
+      return row;
+    },
+
+    deleteMany: async (args: {
+      where: { blockerId?: string; blockedId?: string };
+    }) => {
+      const before = this.userBlocks.length;
+      this.userBlocks = this.userBlocks.filter((b) => {
+        if (args.where.blockerId && b.blockerId !== args.where.blockerId) {
+          return true;
+        }
+        if (args.where.blockedId && b.blockedId !== args.where.blockedId) {
+          return true;
+        }
+        return false;
+      });
+      return { count: before - this.userBlocks.length };
     },
   };
 

@@ -13,6 +13,8 @@ import '../../features/ai_chat/presentation/ai_chat_screen.dart';
 import '../../features/trips/presentation/trip_list_screen.dart';
 import '../../features/trips/presentation/trip_form_screen.dart';
 import '../../features/trips/presentation/trip_detail_screen.dart';
+import '../../features/groups/presentation/group_list_screen.dart';
+import '../../features/groups/presentation/group_detail_screen.dart';
 import '../../features/map/presentation/map_screen.dart';
 import '../../features/places/presentation/place_detail_screen.dart';
 import '../../features/profile/presentation/preferences_screen.dart';
@@ -94,10 +96,10 @@ class RouterNotifier extends ChangeNotifier {
     if (!isAuth) {
       if (isLoginRoute || isResetRoute) return null;
 
-      // Public place detail pages and explicit guest discovery routes are accessible pre-login.
+      // Public place detail pages and explicit guest discovery/safety routes are accessible pre-login.
       final isPublicPlaceDetail = path.startsWith('/places/');
-      final isGuestShellAllowed =
-          _ref.read(guestBrowseModeProvider) && (path == '/' || path == '/map');
+      final isGuestShellAllowed = _ref.read(guestBrowseModeProvider) &&
+          (path == '/' || path == '/map' || path == '/safety');
       if (isPublicPlaceDetail || isGuestShellAllowed) {
         return null;
       }
@@ -187,6 +189,18 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         ),
       ),
       GoRoute(
+        path: '/groups',
+        builder: (context, state) => GroupListScreen(
+          initialTripId: state.uri.queryParameters['tripId'],
+        ),
+      ),
+      GoRoute(
+        path: '/groups/:id',
+        builder: (context, state) => GroupDetailScreen(
+          groupId: state.pathParameters['id']!,
+        ),
+      ),
+      GoRoute(
         path: '/places/:id',
         builder: (context, state) => PlaceDetailScreen(
           placeId: state.pathParameters['id']!,
@@ -230,7 +244,8 @@ class _MainScaffold extends ConsumerWidget {
     final authStatus = ref.watch(authProvider.select((s) => s.status));
     final isGuestBrowse = ref.watch(guestBrowseModeProvider);
     final path = GoRouterState.of(context).uri.path;
-    final canRenderGuestTab = isGuestBrowse && (path == '/' || path == '/map');
+    final canRenderGuestTab =
+        isGuestBrowse && (path == '/' || path == '/map' || path == '/safety');
     if (authStatus != AuthStatus.authenticated && !canRenderGuestTab) {
       return const Scaffold(
         body: AppLoading(),
@@ -254,7 +269,8 @@ class _MainScaffold extends ConsumerWidget {
                 final targetTab = _tabs[index];
                 if (authStatus != AuthStatus.authenticated &&
                     targetTab != '/' &&
-                    targetTab != '/map') {
+                    targetTab != '/map' &&
+                    targetTab != '/safety') {
                   ref.read(postLoginRedirectProvider.notifier).state =
                       targetTab;
                   context.go(

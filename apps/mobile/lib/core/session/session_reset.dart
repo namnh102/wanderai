@@ -1,9 +1,11 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../features/ai_chat/providers/chat_provider.dart';
+import '../../features/groups/providers/group_provider.dart';
 import '../../features/home/providers/home_provider.dart';
 import '../../features/profile/providers/profile_provider.dart';
 import '../../features/recommendations/providers/recommendation_provider.dart';
 import '../../features/safety/providers/buddy_provider.dart';
+import '../../features/safety/providers/safety_provider.dart';
 import '../../features/trips/providers/trip_provider.dart';
 
 /// Drops or resets every provider that holds per-user data so the next
@@ -39,6 +41,15 @@ void resetSessionScopedState(Ref ref, {required bool isAuthenticated}) {
     if (ref.exists(buddyProvider)) {
       ref.invalidate(buddyProvider);
     }
+    if (ref.exists(groupListProvider)) {
+      ref.invalidate(groupListProvider);
+    }
+    if (ref.exists(groupDetailProvider)) {
+      ref.invalidate(groupDetailProvider);
+    }
+    if (ref.exists(safetyProvider)) {
+      ref.invalidate(safetyProvider);
+    }
   } else {
     if (ref.exists(profileProvider)) {
       ref.read(profileProvider.notifier).resetForLogout();
@@ -60,6 +71,15 @@ void resetSessionScopedState(Ref ref, {required bool isAuthenticated}) {
     }
     if (ref.exists(buddyProvider)) {
       ref.read(buddyProvider.notifier).resetForLogout();
+    }
+    if (ref.exists(groupListProvider)) {
+      ref.read(groupListProvider.notifier).resetForLogout();
+    }
+    if (ref.exists(groupDetailProvider)) {
+      ref.read(groupDetailProvider.notifier).resetForLogout();
+    }
+    if (ref.exists(safetyProvider)) {
+      ref.read(safetyProvider.notifier).resetForAuthTransition();
     }
   }
   ref.read(pendingChatPromptProvider.notifier).state = null;
