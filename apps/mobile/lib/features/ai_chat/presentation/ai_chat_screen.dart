@@ -518,9 +518,9 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
                                 horizontal: 4,
                                 vertical: 2,
                               ),
-                              leading: CircleAvatar(
+                              leading: const CircleAvatar(
                                 backgroundColor: AppColors.primaryContainer,
-                                child: const Icon(
+                                child: Icon(
                                   Icons.luggage_outlined,
                                   color: AppColors.primary,
                                   size: 18,

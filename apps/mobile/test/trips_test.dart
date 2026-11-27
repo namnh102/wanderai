@@ -212,6 +212,7 @@ class _DeferredTripRepository extends FakeTripRepository {
   Future<AiPlanPreviewModel> generateAiPlan(
     String tripId, {
     String? prompt,
+    AiPlanRequestOptions? options,
   }) {
     return generateAiPlanCompleter!.future;
   }
@@ -219,8 +220,9 @@ class _DeferredTripRepository extends FakeTripRepository {
   @override
   Future<TripModel> bulkSaveItinerary(
     String tripId,
-    BulkSaveItineraryRequest request,
-  ) {
+    BulkSaveItineraryRequest request, {
+    String? idempotencyKey,
+  }) {
     return saveAiPlanCompleter!.future;
   }
 
