@@ -8,7 +8,7 @@ import time
 import uuid
 from typing import Optional, Union
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request, Response
 from google import genai
 from google.genai import types
 
@@ -19,6 +19,8 @@ from app.schemas.planner import (
     BudgetAnalysis,
     ItineraryDay,
     ItineraryItem,
+    PlannerModelAttemptTelemetry,
+    PlannerTimingTelemetry,
     PlanRequest,
     PlanResponse,
     ScheduleViolation,
@@ -233,9 +235,29 @@ def _detect_day_schedule_violations(
     return summary_violations
 
 
+def _get_max_planner_attempts() -> int:
+    return 1 if os.getenv("PYTEST_CURRENT_TEST") else 3
+
+
+def _sleep_for_retry(seconds: float) -> float:
+    t0 = time.perf_counter()
+    time.sleep(seconds)
+    return round((time.perf_counter() - t0) * 1000, 2)
+
+
 @router.post("", response_model=PlanResponse)
-async def create_plan(req: Union[TripContextRequest, PlanRequest]):
+async def create_plan(
+    req: Union[TripContextRequest, PlanRequest],
+    http_request: Request,
+    http_response: Response,
+):
     """Tạo lịch trình du lịch AI chi tiết theo từng ngày từ TripContext."""
+    t_fastapi_start = time.perf_counter()
+    header_req_id = (http_request.headers.get("X-Request-Id") or "").strip()
+    body_req_id = (getattr(req, "request_id", None) or "").strip()
+    request_id = header_req_id or body_req_id or str(uuid.uuid4())
+    http_response.headers["X-Request-Id"] = request_id
+
     if isinstance(req, TripContextRequest):
         destination = req.destination
         days = req.days
@@ -263,7 +285,9 @@ async def create_plan(req: Union[TripContextRequest, PlanRequest]):
         raise HTTPException(status_code=400, detail="Số ngày chuyến đi phải từ 1 đến 14")
 
     grounding_ctx: Optional[str] = None
+    rag_retrieval_ms = 0.0
     if notes and _client is not None and "PYTEST_CURRENT_TEST" not in os.environ:
+        t_rag_start = time.perf_counter()
         try:
             raw_grounding = await chat_router.retrieve_grounding(f"{destination} {notes}")
             norm_grounding = chat_router._normalize_retrieval_result(raw_grounding)
@@ -271,6 +295,8 @@ async def create_plan(req: Union[TripContextRequest, PlanRequest]):
                 grounding_ctx = norm_grounding.context
         except Exception:
             grounding_ctx = None
+        finally:
+            rag_retrieval_ms = round((time.perf_counter() - t_rag_start) * 1000, 2)
 
     prompt = build_planner_prompt(
         destination=destination,
@@ -285,6 +311,10 @@ async def create_plan(req: Union[TripContextRequest, PlanRequest]):
         grounding_context=grounding_ctx,
     )
 
+    model_attempts: list[PlannerModelAttemptTelemetry] = []
+    retry_count = 0
+    retry_wait_ms = 0.0
+
     try:
         raw_text = ""
         if _client:
@@ -293,9 +323,11 @@ async def create_plan(req: Union[TripContextRequest, PlanRequest]):
                 if str(settings.PLANNER_MODEL or "").startswith("gemini-3")
                 else None
             )
-            max_attempts = 1 if os.getenv("PYTEST_CURRENT_TEST") else 3
+            max_attempts = _get_max_planner_attempts()
             response = None
             for _attempt in range(max_attempts):
+                started_offset_ms = round((time.perf_counter() - t_fastapi_start) * 1000, 2)
+                t_call_start = time.perf_counter()
                 try:
                     response = _client.models.generate_content(
                         model=settings.PLANNER_MODEL,
@@ -308,17 +340,43 @@ async def create_plan(req: Union[TripContextRequest, PlanRequest]):
                             http_options=types.HttpOptions(timeout=settings.PLANNER_TIMEOUT_MS),
                         ),
                     )
+                    call_dur_ms = round((time.perf_counter() - t_call_start) * 1000, 2)
+                    model_attempts.append(
+                        PlannerModelAttemptTelemetry(
+                            attempt=_attempt + 1,
+                            started_offset_ms=started_offset_ms,
+                            duration_ms=call_dur_ms,
+                            status="ok",
+                        )
+                    )
                     break
                 except Exception as call_exc:
+                    call_dur_ms = round((time.perf_counter() - t_call_start) * 1000, 2)
                     up_msg = str(call_exc).upper()
-                    if ("503" in up_msg or "UNAVAILABLE" in up_msg) and (_attempt + 1) < max_attempts:
+                    is_503 = "503" in up_msg or "UNAVAILABLE" in up_msg
+                    model_attempts.append(
+                        PlannerModelAttemptTelemetry(
+                            attempt=_attempt + 1,
+                            started_offset_ms=started_offset_ms,
+                            duration_ms=call_dur_ms,
+                            status="error_503" if is_503 else "error",
+                            error_code="PROVIDER_503_UNAVAILABLE" if is_503 else type(call_exc).__name__,
+                        )
+                    )
+                    if is_503 and (_attempt + 1) < max_attempts:
+                        backoff_sec = 2.0 * (_attempt + 1)
                         logger.warning(
-                            "Transient 503/UNAVAILABLE from Gemini planner model=%s (attempt %d/%d); retrying...",
+                            "[C4_PLANNER_RETRY] request_id=%s model=%s attempt=%d/%d duration_ms=%.2f backoff_s=%.1f",
+                            request_id,
                             settings.PLANNER_MODEL,
                             _attempt + 1,
                             max_attempts,
+                            call_dur_ms,
+                            backoff_sec,
                         )
-                        time.sleep(2.0 * (_attempt + 1))
+                        slept_ms = _sleep_for_retry(backoff_sec)
+                        retry_count += 1
+                        retry_wait_ms = round(retry_wait_ms + slept_ms, 2)
                         continue
                     raise
             raw_text = response.text or ""
@@ -361,6 +419,7 @@ async def create_plan(req: Union[TripContextRequest, PlanRequest]):
                 ],
             })
 
+        t_post_ai_start = time.perf_counter()
         cleaned_json = _clean_json_response(raw_text)
         data = json.loads(cleaned_json)
 
@@ -458,6 +517,26 @@ async def create_plan(req: Union[TripContextRequest, PlanRequest]):
             variance=variance,
         )
 
+        post_ai_schedule_validation_ms = round(
+            (time.perf_counter() - t_post_ai_start) * 1000, 2
+        )
+        fastapi_total_ms = round((time.perf_counter() - t_fastapi_start) * 1000, 2)
+        model_total_ms = round(sum(a.duration_ms for a in model_attempts), 2)
+        timing_telemetry = PlannerTimingTelemetry(
+            request_id=request_id,
+            fastapi_total_ms=fastapi_total_ms,
+            rag_retrieval_ms=rag_retrieval_ms,
+            model_attempts=model_attempts,
+            model_total_ms=model_total_ms,
+            retry_count=retry_count,
+            retry_wait_ms=retry_wait_ms,
+            post_ai_schedule_validation_ms=post_ai_schedule_validation_ms,
+        )
+        logger.info(
+            "[C4_PLANNER_TIMING] %s",
+            json.dumps(timing_telemetry.model_dump(), ensure_ascii=False),
+        )
+
         return PlanResponse(
             plan_id=trip_id or str(uuid.uuid4()),
             destination=destination,
@@ -468,6 +547,7 @@ async def create_plan(req: Union[TripContextRequest, PlanRequest]):
             budget_analysis=budget_analysis,
             schedule_violations=all_schedule_violations,
             has_schedule_violations=len(all_schedule_violations) > 0,
+            timing_telemetry=timing_telemetry,
             days=itinerary_days,
         )
 

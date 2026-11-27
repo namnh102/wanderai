@@ -135,8 +135,9 @@ export class TripsController {
     @Param('id', new ParseUUIDPipe()) id: string,
     @CurrentUser() user: any,
     @Body() dto?: PlanTripDto,
+    @Headers('x-request-id') requestId?: string,
   ) {
-    return this.tripsService.planTripWithAi(id, user.id, dto);
+    return this.tripsService.planTripWithAi(id, user.id, dto, requestId);
   }
 
   // POST /trips/:id/itinerary/bulk — Lưu toàn bộ lịch trình vào DB (atomic transaction)

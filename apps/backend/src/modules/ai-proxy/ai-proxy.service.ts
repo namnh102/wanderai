@@ -73,6 +73,7 @@ export class AiProxyService {
 
   // Forward authoritative TripContext đến FastAPI AI Planner
   async planWithTripContext(context: {
+    requestId?: string;
     tripId?: string;
     destination: string;
     days: number;
@@ -88,6 +89,7 @@ export class AiProxyService {
       const response = await axios.post(
         `${this.aiServiceUrl}/planner`,
         {
+          ...(context.requestId ? { request_id: context.requestId } : {}),
           trip_id: context.tripId,
           destination: context.destination,
           days: context.days,
@@ -99,7 +101,12 @@ export class AiProxyService {
           interests: context.interests || [],
           notes: context.notes,
         },
-        { timeout: 60000 },
+        {
+          timeout: 95000,
+          ...(context.requestId
+            ? { headers: { 'X-Request-Id': context.requestId } }
+            : {}),
+        },
       );
 
       return response.data;

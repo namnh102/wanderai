@@ -3,6 +3,7 @@ from typing import List, Optional
 
 
 class TripContextRequest(BaseModel):
+    request_id: Optional[str] = None
     trip_id: Optional[str] = None
     destination: str
     days: int = Field(ge=1, le=14, description="Duration in days, between 1 and 14")
@@ -18,6 +19,7 @@ class TripContextRequest(BaseModel):
 
 # Backward-compatible alias for existing test/proxy callers
 class PlanRequest(BaseModel):
+    request_id: Optional[str] = None
     destination: str
     days: int = 3
     budget: Optional[float] = None
@@ -74,6 +76,25 @@ class BudgetAnalysis(BaseModel):
     variance: Optional[int] = None
 
 
+class PlannerModelAttemptTelemetry(BaseModel):
+    attempt: int
+    started_offset_ms: float
+    duration_ms: float
+    status: str
+    error_code: Optional[str] = None
+
+
+class PlannerTimingTelemetry(BaseModel):
+    request_id: str
+    fastapi_total_ms: float
+    rag_retrieval_ms: float = 0.0
+    model_attempts: List[PlannerModelAttemptTelemetry] = Field(default_factory=list)
+    model_total_ms: float = 0.0
+    retry_count: int = 0
+    retry_wait_ms: float = 0.0
+    post_ai_schedule_validation_ms: float = 0.0
+
+
 class PlanResponse(BaseModel):
     plan_id: str
     destination: str
@@ -84,4 +105,5 @@ class PlanResponse(BaseModel):
     budget_analysis: BudgetAnalysis
     schedule_violations: List[ScheduleViolation] = Field(default_factory=list)
     has_schedule_violations: bool = False
+    timing_telemetry: Optional[PlannerTimingTelemetry] = None
     days: List[ItineraryDay] = Field(default_factory=list)

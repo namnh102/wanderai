@@ -124,14 +124,17 @@ class TripRepository {
         : <String, dynamic>{
             if (prompt != null && prompt.isNotEmpty) 'additionalPrompt': prompt,
           };
+    final reqId =
+        'c4_preview_${tripId}_${DateTime.now().microsecondsSinceEpoch}';
     final response = await _dio.post(
       '/trips/$tripId/ai-plan',
       data: payload,
-      // Real LLM planning takes ~30 s; global timeout is 15 s. Stay above the
-      // NestJS->FastAPI timeout (60 s) so server errors surface instead of timeouts.
+      // Real LLM planning + transient 503 retry can take 35-65 s. Stay above the
+      // NestJS->FastAPI timeout (95 s) so server errors surface cleanly for retry.
       options: Options(
-        sendTimeout: const Duration(seconds: 75),
-        receiveTimeout: const Duration(seconds: 75),
+        headers: {'X-Request-Id': reqId},
+        sendTimeout: const Duration(seconds: 105),
+        receiveTimeout: const Duration(seconds: 105),
       ),
     );
     final data = response.data;
