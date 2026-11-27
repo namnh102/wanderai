@@ -862,5 +862,246 @@ void main() {
         expect(find.text('Review trễ của POI cũ không được đè'), findsNothing);
       },
     );
+
+    testWidgets(
+      '4. Fake clock lifecycle: open POI -> leave screen -> advance >= 10s (2+ poll cycles) -> zero requests',
+      (tester) async {
+        final callsByPoi = <String, int>{};
+        final router = GoRouter(
+          initialLocation: '/',
+          routes: [
+            GoRoute(
+              path: '/',
+              builder: (ctx, _) => Scaffold(
+                body: Column(
+                  children: [
+                    TextButton(
+                      onPressed: () => ctx.push('/places/poi-exit-back'),
+                      child: const Text('OPEN_VIA_PUSH'),
+                    ),
+                    TextButton(
+                      onPressed: () => ctx.go('/places/poi-exit-go'),
+                      child: const Text('OPEN_VIA_GO'),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            GoRoute(
+              path: '/places/:id',
+              builder: (ctx, st) =>
+                  PlaceDetailScreen(placeId: st.pathParameters['id']!),
+            ),
+          ],
+        );
+
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: [
+              placeDetailPollIntervalProvider.overrideWithValue(
+                const Duration(seconds: 5),
+              ),
+              placeRepositoryProvider.overrideWithValue(
+                _FakeRepo((id) async {
+                  callsByPoi[id] = (callsByPoi[id] ?? 0) + 1;
+                  return PlaceModel.fromJson(
+                    placeWithReviews(id: id, name: 'POI $id', reviews: []),
+                  );
+                }),
+              ),
+            ],
+            child: MaterialApp.router(
+              theme: AppTheme.lightTheme,
+              routerConfig: router,
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        // Case A: Open POI -> leave via AppBar back -> advance 15s (3 x 5s cycles >= 10s) -> 0 extra requests
+        await tester.tap(find.text('OPEN_VIA_PUSH'));
+        await tester.pumpAndSettle();
+        expect(find.text('POI poi-exit-back'), findsOneWidget);
+        expect(callsByPoi['poi-exit-back'], 1);
+
+        await tester.tap(find.byKey(const Key('place_detail_back')));
+        await tester.pumpAndSettle();
+        expect(find.text('OPEN_VIA_PUSH'), findsOneWidget);
+
+        await tester.pump(const Duration(seconds: 5));
+        await tester.pump(const Duration(seconds: 5));
+        await tester.pump(const Duration(seconds: 5));
+        expect(callsByPoi['poi-exit-back'], 1);
+
+        // Case B: Open POI -> leave via direct route replacement router.go('/') -> advance 15s -> 0 extra requests
+        await tester.tap(find.text('OPEN_VIA_GO'));
+        await tester.pumpAndSettle();
+        expect(find.text('POI poi-exit-go'), findsOneWidget);
+        expect(callsByPoi['poi-exit-go'], 1);
+
+        router.go('/');
+        await tester.pumpAndSettle();
+        expect(find.text('OPEN_VIA_GO'), findsOneWidget);
+
+        await tester.pump(const Duration(seconds: 5));
+        await tester.pump(const Duration(seconds: 5));
+        await tester.pump(const Duration(seconds: 5));
+        expect(callsByPoi['poi-exit-go'], 1);
+      },
+    );
+
+    testWidgets(
+      '5. GoRouter POI A -> POI B: slow initial or manual response from POI A never overwrites POI B or leaks polls',
+      (tester) async {
+        final slowPoiAInitial = Completer<PlaceModel>();
+        final slowPoiAManual = Completer<PlaceModel>();
+        final callsByPoi = <String, int>{};
+        var useSlowManualForA2 = false;
+
+        final router = GoRouter(
+          initialLocation: '/places/poi-a',
+          routes: [
+            GoRoute(
+              path: '/places/:id',
+              builder: (ctx, st) =>
+                  PlaceDetailScreen(placeId: st.pathParameters['id']!),
+            ),
+          ],
+        );
+
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: [
+              placeDetailPollIntervalProvider.overrideWithValue(
+                const Duration(seconds: 5),
+              ),
+              placeRepositoryProvider.overrideWithValue(
+                _FakeRepo((id) {
+                  callsByPoi[id] = (callsByPoi[id] ?? 0) + 1;
+                  if (id == 'poi-a') {
+                    return slowPoiAInitial.future;
+                  }
+                  if (id == 'poi-a2') {
+                    if (useSlowManualForA2) {
+                      return slowPoiAManual.future;
+                    }
+                    return Future.value(
+                      PlaceModel.fromJson(
+                        placeWithReviews(
+                          id: 'poi-a2',
+                          name: 'Tên POI A2 Ban Đầu',
+                          reviews: [],
+                        ),
+                      ),
+                    );
+                  }
+                  return Future.value(
+                    PlaceModel.fromJson(
+                      placeWithReviews(
+                        id: id,
+                        name: 'Tên POI B Đang Hiển Thị',
+                        rating: 4.5,
+                        reviews: [
+                          {
+                            'id': 'rev-b-valid',
+                            'rating': 4.5,
+                            'content': 'Review hợp lệ của POI B',
+                            'user': {
+                              'profile': {'displayName': 'Khách B'},
+                            },
+                          },
+                        ],
+                      ),
+                    ),
+                  );
+                }),
+              ),
+            ],
+            child: MaterialApp.router(
+              theme: AppTheme.lightTheme,
+              routerConfig: router,
+            ),
+          ),
+        );
+        await tester.pump();
+        expect(callsByPoi['poi-a'], 1);
+
+        // Switch route to POI B while POI A initial fetch is still pending
+        router.go('/places/poi-b');
+        await tester.pumpAndSettle();
+        expect(find.text('Tên POI B Đang Hiển Thị'), findsOneWidget);
+        expect(find.text('Review hợp lệ của POI B'), findsOneWidget);
+
+        // Resolve POI A's delayed initial response -> must NOT overwrite POI B or start polling POI A
+        slowPoiAInitial.complete(
+          PlaceModel.fromJson(
+            placeWithReviews(
+              id: 'poi-a',
+              name: 'Tên POI A Trả Chậm',
+              rating: 1.0,
+              reviews: [
+                {
+                  'id': 'rev-a-stale',
+                  'rating': 1.0,
+                  'content': 'Review trễ từ POI A',
+                },
+              ],
+            ),
+          ),
+        );
+        await tester.pump();
+        await tester.pump(const Duration(seconds: 10));
+
+        expect(find.text('Tên POI B Đang Hiển Thị'), findsOneWidget);
+        expect(find.text('Review hợp lệ của POI B'), findsOneWidget);
+        expect(find.text('Tên POI A Trả Chậm'), findsNothing);
+        expect(find.text('Review trễ từ POI A'), findsNothing);
+        expect(callsByPoi['poi-a'], 1); // Zero background polls leaked for POI A!
+
+        // Sub-case B: Slow manual pull-to-refresh on POI A2 -> switch to POI B2 before it resolves
+        router.go('/places/poi-a2');
+        await tester.pumpAndSettle();
+        expect(find.text('Tên POI A2 Ban Đầu'), findsOneWidget);
+
+        useSlowManualForA2 = true;
+        await tester.fling(
+          find.byKey(const Key('place_detail_scroll_view')),
+          const Offset(0, 350),
+          1000,
+        );
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 500));
+        expect(callsByPoi['poi-a2'], 2);
+
+        router.go('/places/poi-b2');
+        await tester.pumpAndSettle();
+        expect(find.text('Tên POI B Đang Hiển Thị'), findsOneWidget);
+        final a2CallsAtExit = callsByPoi['poi-a2'];
+
+        slowPoiAManual.complete(
+          PlaceModel.fromJson(
+            placeWithReviews(
+              id: 'poi-a2',
+              name: 'Tên POI A2 Kéo Trễ',
+              rating: 2.0,
+              reviews: [
+                {
+                  'id': 'rev-a2-stale',
+                  'rating': 2.0,
+                  'content': 'Review kéo làm mới trễ từ POI A2',
+                },
+              ],
+            ),
+          ),
+        );
+        await tester.pump();
+        await tester.pump(const Duration(seconds: 10));
+
+        expect(find.text('Tên POI B Đang Hiển Thị'), findsOneWidget);
+        expect(find.text('Tên POI A2 Kéo Trễ'), findsNothing);
+        expect(find.text('Review kéo làm mới trễ từ POI A2'), findsNothing);
+        expect(callsByPoi['poi-a2'], a2CallsAtExit);
+      },
+    );
   });
 }
