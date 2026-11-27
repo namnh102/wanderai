@@ -12,6 +12,16 @@ typedef YoutubeClock = DateTime Function();
 final youtubeClockProvider =
     Provider<YoutubeClock>((ref) => () => DateTime.now().toUtc());
 
+/// Default foreground auto-refresh cycle for PlaceDetailScreen reviews & rating.
+/// Active only while PlaceDetailScreen is mounted, visible, and resumed;
+/// uses single-flight sequential scheduling so requests never overlap.
+const Duration kDefaultPlaceDetailPollInterval = Duration(seconds: 5);
+
+/// Injectable poll interval for PlaceDetailScreen (`null` or `Duration.zero` disables polling).
+final placeDetailPollIntervalProvider = Provider<Duration?>((ref) {
+  return kDefaultPlaceDetailPollInterval;
+});
+
 /// Loads the factual place detail from GET /places/:id, falling back to the
 /// offline region cache when offline on network/connection errors.
 /// autoDispose: each visit refetches; the Map's own state is untouched.
