@@ -178,6 +178,7 @@ class TripDetailState {
 class TripDetailNotifier extends StateNotifier<TripDetailState> {
   final TripRepository _repo;
   int _loadSeq = 0;
+  bool _isSavingAiPlan = false;
 
   TripDetailNotifier(this._repo) : super(const TripDetailState());
 
@@ -300,13 +301,18 @@ class TripDetailNotifier extends StateNotifier<TripDetailState> {
   Future<AiPlanPreviewModel?> generateAiPlan(
     String tripId, {
     String? prompt,
+    AiPlanRequestOptions? options,
   }) async {
     state = state.copyWith(
       isGeneratingPlan: true,
       clearPlanError: true,
     );
     try {
-      final plan = await _repo.generateAiPlan(tripId, prompt: prompt);
+      final plan = await _repo.generateAiPlan(
+        tripId,
+        prompt: prompt,
+        options: options,
+      );
       if (!mounted) return null;
       state = state.copyWith(
         isGeneratingPlan: false,
@@ -335,12 +341,21 @@ class TripDetailNotifier extends StateNotifier<TripDetailState> {
     String tripId,
     AiPlanPreviewModel plan, {
     bool replaceExisting = true,
+    String? idempotencyKey,
   }) async {
+    if (_isSavingAiPlan) {
+      return false;
+    }
+    _isSavingAiPlan = true;
     state = state.copyWith(isLoading: true, clearError: true);
     try {
       final updated = await _repo.bulkSaveItinerary(
         tripId,
-        plan.toBulkSaveRequest(replaceExisting: replaceExisting),
+        plan.toBulkSaveRequest(
+          replaceExisting: replaceExisting,
+          clientRequestId: idempotencyKey,
+        ),
+        idempotencyKey: idempotencyKey,
       );
       if (!mounted) return false;
       state = state.copyWith(
@@ -363,6 +378,8 @@ class TripDetailNotifier extends StateNotifier<TripDetailState> {
         errorMessage: 'Lỗi khi lưu lịch trình vào chuyến đi',
       );
       return false;
+    } finally {
+      _isSavingAiPlan = false;
     }
   }
 

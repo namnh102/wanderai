@@ -4,6 +4,73 @@ enum TravelStyle { backpacker, budget, comfort, luxury }
 
 enum TripStatus { draft, planned, ongoing, completed, cancelled }
 
+/// Formats VND integer with dot thousands separator (e.g. 80000 -> '80.000').
+String formatDotVndAmount(int amount) {
+  final raw = (amount < 0 ? 0 : amount).toString();
+  final buf = StringBuffer();
+  for (var i = 0; i < raw.length; i++) {
+    if (i > 0 && (raw.length - i) % 3 == 0) {
+      buf.write('.');
+    }
+    buf.write(raw[i]);
+  }
+  return buf.toString();
+}
+
+/// Builds C4-compliant budget summary text avoiding false remaining-surplus claims when prices are unknown.
+String formatC4BudgetSummary({
+  required int knownCostTotal,
+  required int unknownCostCount,
+  int? totalBudget,
+  bool isOverBudget = false,
+}) {
+  final knownStr = '${formatDotVndAmount(knownCostTotal)}đ';
+  if (unknownCostCount > 0) {
+    if (isOverBudget && totalBudget != null && totalBudget > 0) {
+      final over = (knownCostTotal - totalBudget).abs();
+      return 'Đã biết $knownStr; còn khoản chưa xác minh (vượt ít nhất ${formatDotVndAmount(over)}đ)';
+    }
+    return 'Đã biết $knownStr; còn khoản chưa xác minh';
+  }
+  return 'Chi phí ước tính $knownStr';
+}
+
+class AiPlanRequestOptions {
+  final String? additionalPrompt;
+  final int? partySize;
+  final String? partyDescription;
+  final String? timeWindowStart;
+  final String? timeWindowEnd;
+  final int? budgetOverride;
+  final List<String>? interestsOverride;
+
+  const AiPlanRequestOptions({
+    this.additionalPrompt,
+    this.partySize,
+    this.partyDescription,
+    this.timeWindowStart,
+    this.timeWindowEnd,
+    this.budgetOverride,
+    this.interestsOverride,
+  });
+
+  Map<String, dynamic> toJson() => {
+        if (additionalPrompt != null && additionalPrompt!.trim().isNotEmpty)
+          'additionalPrompt': additionalPrompt!.trim(),
+        if (partySize != null && partySize! > 0) 'partySize': partySize,
+        if (partyDescription != null && partyDescription!.trim().isNotEmpty)
+          'partyDescription': partyDescription!.trim(),
+        if (timeWindowStart != null && timeWindowStart!.trim().isNotEmpty)
+          'timeWindowStart': timeWindowStart!.trim(),
+        if (timeWindowEnd != null && timeWindowEnd!.trim().isNotEmpty)
+          'timeWindowEnd': timeWindowEnd!.trim(),
+        if (budgetOverride != null && budgetOverride! >= 0)
+          'budgetOverride': budgetOverride,
+        if (interestsOverride != null && interestsOverride!.isNotEmpty)
+          'interestsOverride': interestsOverride,
+      };
+}
+
 /// Formats start and end times so both endpoints are visible when present.
 String? formatItineraryTimeRange(String? startTime, String? endTime) {
   final s = startTime?.trim();
@@ -699,9 +766,13 @@ class AiPlanPreviewModel {
     );
   }
 
-  BulkSaveItineraryRequest toBulkSaveRequest({bool replaceExisting = true}) {
+  BulkSaveItineraryRequest toBulkSaveRequest({
+    bool replaceExisting = true,
+    String? clientRequestId,
+  }) {
     return BulkSaveItineraryRequest(
       replaceExisting: replaceExisting,
+      clientRequestId: clientRequestId,
       days: days.map((d) => d.toBulkDayJson()).toList(),
     );
   }
@@ -709,15 +780,19 @@ class AiPlanPreviewModel {
 
 class BulkSaveItineraryRequest {
   final bool replaceExisting;
+  final String? clientRequestId;
   final List<Map<String, dynamic>> days;
 
   const BulkSaveItineraryRequest({
     this.replaceExisting = true,
+    this.clientRequestId,
     required this.days,
   });
 
   Map<String, dynamic> toJson() => {
         'replaceExisting': replaceExisting,
+        if (clientRequestId != null && clientRequestId!.trim().isNotEmpty)
+          'clientRequestId': clientRequestId!.trim(),
         'days': days,
       };
 }

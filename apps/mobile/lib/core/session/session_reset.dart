@@ -97,4 +97,5 @@ void resetSessionScopedState(Ref ref, {required bool isAuthenticated}) {
     }
   }
   ref.read(pendingChatPromptProvider.notifier).state = null;
+  ref.read(pendingWandyPlanHandoffProvider.notifier).state = null;
 }

@@ -117,12 +117,16 @@ class TripRepository {
   Future<AiPlanPreviewModel> generateAiPlan(
     String tripId, {
     String? prompt,
+    AiPlanRequestOptions? options,
   }) async {
+    final payload = options != null
+        ? options.toJson()
+        : <String, dynamic>{
+            if (prompt != null && prompt.isNotEmpty) 'additionalPrompt': prompt,
+          };
     final response = await _dio.post(
       '/trips/$tripId/ai-plan',
-      data: {
-        if (prompt != null && prompt.isNotEmpty) 'additionalPrompt': prompt,
-      },
+      data: payload,
       // Real LLM planning takes ~30 s; global timeout is 15 s. Stay above the
       // NestJS->FastAPI timeout (60 s) so server errors surface instead of timeouts.
       options: Options(
@@ -146,11 +150,18 @@ class TripRepository {
   /// POST /trips/:id/itinerary/bulk — Atomic bulk save itinerary
   Future<TripModel> bulkSaveItinerary(
     String tripId,
-    BulkSaveItineraryRequest request,
-  ) async {
+    BulkSaveItineraryRequest request, {
+    String? idempotencyKey,
+  }) async {
+    final effectiveKey = idempotencyKey?.trim().isNotEmpty == true
+        ? idempotencyKey!.trim()
+        : request.clientRequestId?.trim();
     final response = await _dio.post(
       '/trips/$tripId/itinerary/bulk',
       data: request.toJson(),
+      options: effectiveKey != null && effectiveKey.isNotEmpty
+          ? Options(headers: {'Idempotency-Key': effectiveKey})
+          : null,
     );
     final data = response.data;
     if (data is Map<String, dynamic> && data['data'] is Map<String, dynamic>) {

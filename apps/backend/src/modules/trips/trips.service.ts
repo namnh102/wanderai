@@ -621,6 +621,114 @@ export class TripsService {
     }
   }
 
+  private readonly _bulkSaveInFlight = new Map<string, Promise<any>>();
+  private readonly _bulkSaveRecent = new Map<
+    string,
+    { expiresAt: number; result: any }
+  >();
+
+  private _formatDotVnd(amount: number): string {
+    return Math.max(0, Math.trunc(amount))
+      .toString()
+      .replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  }
+
+  private _extractPromptConstraints(rawPrompt?: string): {
+    partySize?: number;
+    partyDescription?: string;
+    timeWindowStart?: string;
+    timeWindowEnd?: string;
+    budget?: number;
+    interests: string[];
+  } {
+    const out: {
+      partySize?: number;
+      partyDescription?: string;
+      timeWindowStart?: string;
+      timeWindowEnd?: string;
+      budget?: number;
+      interests: string[];
+    } = { interests: [] };
+    if (!rawPrompt || !rawPrompt.trim()) return out;
+
+    const lower = rawPrompt.trim().toLowerCase();
+    const wordMap: Record<string, number> = {
+      một: 1,
+      mot: 1,
+      hai: 2,
+      ba: 3,
+      bốn: 4,
+      bon: 4,
+      tư: 4,
+      năm: 5,
+      nam: 5,
+      sáu: 6,
+      sau: 6,
+      bảy: 7,
+      tám: 8,
+      chín: 9,
+      mười: 10,
+    };
+
+    const numParty = lower.match(/\b(\d{1,2})\s*(người\s*lớn|người|khách|bạn)\b/);
+    if (numParty) {
+      out.partySize = Number(numParty[1]);
+      out.partyDescription = `${out.partySize} ${numParty[2].replace(/\s+/g, ' ').trim()}`;
+    } else {
+      for (const [w, n] of Object.entries(wordMap)) {
+        const re = new RegExp(`\\b${w}\\s+(người\\s*lớn|người|khách)\\b`, 'i');
+        const m = lower.match(re);
+        if (m) {
+          out.partySize = n;
+          out.partyDescription = `${n} ${m[1].replace(/\s+/g, ' ').trim()}`;
+          break;
+        }
+      }
+    }
+
+    const timeMatch = lower.match(
+      /từ\s*(\d{1,2})(?:[:hgiờ\s]*(\d{2}))?\s*(?:h|giờ)?\s*(?:đến|tới|-)\s*(\d{1,2})(?:[:hgiờ\s]*(\d{2}))?\s*(?:h|giờ)?/,
+    );
+    if (timeMatch) {
+      const sh = Number(timeMatch[1]);
+      const sm = Number(timeMatch[2] || 0);
+      const eh = Number(timeMatch[3]);
+      const em = Number(timeMatch[4] || 0);
+      if (sh >= 0 && sh <= 23 && sm >= 0 && sm <= 59 && eh >= 0 && eh <= 23 && em >= 0 && em <= 59) {
+        out.timeWindowStart = `${String(sh).padStart(2, '0')}:${String(sm).padStart(2, '0')}`;
+        out.timeWindowEnd = `${String(eh).padStart(2, '0')}:${String(em).padStart(2, '0')}`;
+      }
+    }
+
+    const mTrieu = lower.match(/(\d+(?:[.,]\d+)?)\s*(?:triệu|tr)\b/);
+    const mVnd = lower.match(/(\d{1,3}(?:[.,]\d{3})+|\d{5,9})\s*(?:đồng|vnd|vnđ|đ)\b/);
+    const mK = lower.match(/\b(\d{2,5})\s*k\b/);
+    if (mTrieu) {
+      out.budget = Math.round(Number(mTrieu[1].replace(',', '.')) * 1_000_000);
+    } else if (mVnd) {
+      const digits = mVnd[1].replace(/[^\d]/g, '');
+      if (digits) out.budget = Number(digits);
+    } else if (mK) {
+      out.budget = Number(mK[1]) * 1000;
+    }
+
+    const interestPairs: Array<[string[], string]> = [
+      [['bảo tàng', 'museum'], 'museum'],
+      [['văn hóa', 'lịch sử', 'di tích', 'chùa', 'đền'], 'culture'],
+      [['biển', 'bãi tắm', 'đảo'], 'beach'],
+      [['ẩm thực', 'ăn uống', 'quán ăn', 'đặc sản'], 'food'],
+      [['thiên nhiên', 'núi', 'hang động', 'vịnh'], 'nature'],
+      [['chụp ảnh', 'check-in', 'sống ảo'], 'photography'],
+      [['chợ', 'mua sắm'], 'shopping'],
+    ];
+    for (const [kws, tag] of interestPairs) {
+      if (kws.some((kw) => lower.includes(kw)) && !out.interests.includes(tag)) {
+        out.interests.push(tag);
+      }
+    }
+    return out;
+  }
+
   // POST /trips/:id/ai-plan — Tạo bản xem trước lịch trình AI (chưa lưu DB)
   async planTripWithAi(tripId: string, userId: string, customOptions?: PlanTripDto) {
     const trip = await this.findById(tripId, userId);
@@ -639,17 +747,61 @@ export class TripsService {
     }
     if (days > 14) days = 14;
 
+    const extracted = this._extractPromptConstraints(customOptions?.additionalPrompt);
+    const effectivePartySize = customOptions?.partySize ?? extracted.partySize;
+    const effectivePartyDescription =
+      customOptions?.partyDescription?.trim() ||
+      extracted.partyDescription ||
+      (effectivePartySize ? `${effectivePartySize} người` : undefined);
+    const effectiveTimeStart =
+      customOptions?.timeWindowStart?.trim() || extracted.timeWindowStart;
+    const effectiveTimeEnd =
+      customOptions?.timeWindowEnd?.trim() || extracted.timeWindowEnd;
+    const effectiveBudget =
+      customOptions?.budgetOverride ?? extracted.budget ?? trip.totalBudget ?? undefined;
+    const effectiveInterests = Array.from(
+      new Set([
+        ...(trip.interests ?? []),
+        ...(customOptions?.interestsOverride ?? []),
+        ...extracted.interests,
+      ]),
+    );
+
+    const structuredNotesParts: string[] = [];
+    if (effectivePartyDescription) {
+      structuredNotesParts.push(`Số người: ${effectivePartyDescription}`);
+    }
+    if (effectiveTimeStart && effectiveTimeEnd) {
+      structuredNotesParts.push(
+        `Khung giờ bắt buộc trong ngày: ${effectiveTimeStart} - ${effectiveTimeEnd}`,
+      );
+    }
+    if (typeof effectiveBudget === 'number' && effectiveBudget > 0) {
+      structuredNotesParts.push(
+        `Tổng ngân sách mục tiêu: ${this._formatDotVnd(effectiveBudget)} ${trip.currency || 'VND'}`,
+      );
+    }
+    if (customOptions?.additionalPrompt?.trim()) {
+      structuredNotesParts.push(
+        `Yêu cầu gốc từ người dùng: ${customOptions.additionalPrompt.trim()}`,
+      );
+    }
+    const mergedNotes =
+      structuredNotesParts.length > 0
+        ? structuredNotesParts.join(' | ')
+        : customOptions?.additionalPrompt;
+
     const context = {
       tripId: trip.id,
       destination: destinationName,
       days,
       startDate: trip.startDate ? trip.startDate.toISOString().split('T')[0] : undefined,
       endDate: trip.endDate ? trip.endDate.toISOString().split('T')[0] : undefined,
-      budget: trip.totalBudget ?? undefined,
+      budget: effectiveBudget,
       currency: trip.currency || 'VND',
       travelStyle: trip.travelStyle ? trip.travelStyle.toLowerCase() : undefined,
-      interests: trip.interests ?? [],
-      notes: customOptions?.additionalPrompt,
+      interests: effectiveInterests,
+      notes: mergedNotes,
     };
 
     const aiResult = await this.aiProxyService.planWithTripContext(context);
@@ -773,17 +925,29 @@ export class TripsService {
           ? 'ALL_UNKNOWN'
           : 'PARTIAL_UNKNOWN';
 
+    const resolvedTotalBudget = effectiveBudget ?? null;
     const hasBudget =
-      typeof trip.totalBudget === 'number' && trip.totalBudget > 0;
-    const isOverBudget = hasBudget ? knownCostTotal > trip.totalBudget! : false;
+      typeof resolvedTotalBudget === 'number' && resolvedTotalBudget > 0;
+    const isOverBudget = hasBudget ? knownCostTotal > resolvedTotalBudget : false;
     const hasSufficientBudgetBasis = hasBudget && totalUnknownCostItems === 0;
     const variance = hasBudget
       ? isOverBudget || hasSufficientBudgetBasis
-        ? trip.totalBudget! - knownCostTotal
+        ? resolvedTotalBudget - knownCostTotal
         : null
       : totalUnknownCostItems === 0
         ? 0
         : null;
+
+    const budgetSummaryText =
+      totalUnknownCostItems > 0
+        ? isOverBudget && hasBudget
+          ? `Đã biết ${this._formatDotVnd(knownCostTotal)}đ; còn khoản chưa xác minh (đã vượt ngân sách ít nhất ${this._formatDotVnd(knownCostTotal - resolvedTotalBudget)}đ)`
+          : `Đã biết ${this._formatDotVnd(knownCostTotal)}đ; còn khoản chưa xác minh`
+        : hasBudget
+          ? isOverBudget
+            ? `Chi phí ước tính ${this._formatDotVnd(knownCostTotal)}đ (vượt ngân sách ${this._formatDotVnd(knownCostTotal - resolvedTotalBudget)}đ)`
+            : `Chi phí ước tính ${this._formatDotVnd(knownCostTotal)}đ`
+          : `Chi phí ước tính ${this._formatDotVnd(knownCostTotal)}đ`;
 
     return {
       tripId: trip.id,
@@ -792,8 +956,16 @@ export class TripsService {
       overview: aiResult.overview || `Lịch trình khám phá ${destinationName}`,
       bestTimeToVisit: aiResult.best_time_to_visit || 'Quanh năm',
       generalTips: aiResult.general_tips || [],
+      preservedContext: {
+        partySize: effectivePartySize ?? null,
+        partyDescription: effectivePartyDescription ?? null,
+        timeWindowStart: effectiveTimeStart ?? null,
+        timeWindowEnd: effectiveTimeEnd ?? null,
+        totalBudget: resolvedTotalBudget,
+        interests: effectiveInterests,
+      },
       budgetAnalysis: {
-        totalBudget: trip.totalBudget,
+        totalBudget: resolvedTotalBudget,
         estimatedCost: knownCostTotal,
         knownCostTotal,
         unknownCostItemCount: totalUnknownCostItems,
@@ -802,6 +974,7 @@ export class TripsService {
         currency: trip.currency,
         isOverBudget,
         variance,
+        summaryText: budgetSummaryText,
       },
       scheduleViolations: constraintEval.violations,
       hasScheduleViolations: constraintEval.violations.length > 0,
@@ -810,8 +983,63 @@ export class TripsService {
     };
   }
 
-  // POST /trips/:id/itinerary/bulk — Lưu toàn bộ lịch trình vào DB (atomic transaction)
-  async bulkSaveItinerary(tripId: string, userId: string, dto: BulkItineraryDto) {
+  // POST /trips/:id/itinerary/bulk — Lưu toàn bộ lịch trình vào DB (atomic transaction + idempotent double-tap guard)
+  async bulkSaveItinerary(
+    tripId: string,
+    userId: string,
+    dto: BulkItineraryDto,
+    idempotencyKey?: string,
+  ) {
+    const rawKey = dto.clientRequestId?.trim() || idempotencyKey?.trim();
+    const dedupeKey =
+      rawKey && rawKey.length > 0 ? `${userId}:${tripId}:${rawKey.slice(0, 128)}` : null;
+
+    const nowMs = Date.now();
+    for (const [k, v] of this._bulkSaveRecent.entries()) {
+      if (v.expiresAt <= nowMs) this._bulkSaveRecent.delete(k);
+    }
+
+    if (dedupeKey) {
+      const cached = this._bulkSaveRecent.get(dedupeKey);
+      if (cached && cached.expiresAt > nowMs) {
+        return cached.result;
+      }
+      const inFlight = this._bulkSaveInFlight.get(dedupeKey);
+      if (inFlight) {
+        return inFlight;
+      }
+    }
+
+    const execPromise = this._executeBulkSaveItinerary(tripId, userId, dto).then(
+      (res) => {
+        if (dedupeKey) {
+          this._bulkSaveRecent.set(dedupeKey, {
+            expiresAt: Date.now() + 60_000,
+            result: res,
+          });
+        }
+        return res;
+      },
+    );
+
+    if (dedupeKey) {
+      this._bulkSaveInFlight.set(dedupeKey, execPromise);
+    }
+
+    try {
+      return await execPromise;
+    } finally {
+      if (dedupeKey) {
+        this._bulkSaveInFlight.delete(dedupeKey);
+      }
+    }
+  }
+
+  private async _executeBulkSaveItinerary(
+    tripId: string,
+    userId: string,
+    dto: BulkItineraryDto,
+  ) {
     const trip = await this.prisma.trip.findFirst({
       where: { id: tripId, deletedAt: null },
     });
@@ -857,6 +1085,20 @@ export class TripsService {
     }
 
     await this.prisma.$transaction(async (tx) => {
+      // Row-level lock on PostgreSQL serializes concurrent replaceExisting calls so double-taps never duplicate items
+      if (
+        (this.prisma as { constructor?: { name?: string } }).constructor?.name !==
+          'InMemoryPrismaService' &&
+        typeof (tx as { $queryRawUnsafe?: unknown }).$queryRawUnsafe === 'function'
+      ) {
+        await (
+          tx as { $queryRawUnsafe: (sql: string, ...params: unknown[]) => Promise<unknown> }
+        ).$queryRawUnsafe(
+          'SELECT id FROM trips WHERE id = $1::uuid FOR UPDATE',
+          tripId,
+        );
+      }
+
       if (dto.replaceExisting !== false) {
         // Delete all existing items and itineraries for this trip
         await tx.itineraryItem.deleteMany({

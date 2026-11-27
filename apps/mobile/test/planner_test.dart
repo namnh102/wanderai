@@ -1,17 +1,35 @@
+import 'dart:async';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:wanderai_mobile/features/ai_chat/data/chat_models.dart';
+import 'package:wanderai_mobile/features/ai_chat/data/chat_repository.dart';
+import 'package:wanderai_mobile/features/ai_chat/presentation/ai_chat_screen.dart';
+import 'package:wanderai_mobile/features/ai_chat/providers/chat_provider.dart';
 import 'package:wanderai_mobile/features/trips/data/trip_models.dart';
 import 'package:wanderai_mobile/features/trips/data/trip_repository.dart';
 import 'package:wanderai_mobile/features/trips/providers/trip_provider.dart';
 import 'package:wanderai_mobile/features/trips/presentation/trip_detail_screen.dart';
+
+class _FakeWandyChatRepo extends ChatRepository {
+  final ChatResponse cannedResponse;
+  _FakeWandyChatRepo(this.cannedResponse) : super(Dio());
+
+  @override
+  Future<ChatResponse> sendMessage(ChatRequest request) async => cannedResponse;
+}
 
 class FakePlannerTripRepository extends TripRepository {
   bool shouldFailPlan = false;
   bool shouldFailSave = false;
   bool planCalled = false;
   bool bulkSaveCalled = false;
+  int bulkSaveCallCount = 0;
+  int saveDelayMs = 0;
+  AiPlanRequestOptions? lastPlanOptions;
+  String? lastIdempotencyKey;
 
   late TripModel currentTrip;
   late AiPlanPreviewModel fakePlan;
@@ -85,13 +103,23 @@ class FakePlannerTripRepository extends TripRepository {
   }
 
   @override
+  Future<List<TripModel>> getMyTrips() async {
+    return [currentTrip];
+  }
+
+  @override
   Future<TripModel> getTripDetail(String id) async {
     return currentTrip;
   }
 
   @override
-  Future<AiPlanPreviewModel> generateAiPlan(String tripId, {String? prompt}) async {
+  Future<AiPlanPreviewModel> generateAiPlan(
+    String tripId, {
+    String? prompt,
+    AiPlanRequestOptions? options,
+  }) async {
     planCalled = true;
+    lastPlanOptions = options;
     if (shouldFailPlan) {
       throw DioException(
         requestOptions: RequestOptions(path: '/trips/$tripId/ai-plan'),
@@ -109,9 +137,15 @@ class FakePlannerTripRepository extends TripRepository {
   @override
   Future<TripModel> bulkSaveItinerary(
     String tripId,
-    BulkSaveItineraryRequest request,
-  ) async {
+    BulkSaveItineraryRequest request, {
+    String? idempotencyKey,
+  }) async {
     bulkSaveCalled = true;
+    bulkSaveCallCount += 1;
+    lastIdempotencyKey = idempotencyKey ?? request.clientRequestId;
+    if (saveDelayMs > 0) {
+      await Future<void>.delayed(Duration(milliseconds: saveDelayMs));
+    }
     if (shouldFailSave) {
       throw DioException(
         requestOptions: RequestOptions(path: '/trips/$tripId/itinerary/bulk'),
@@ -615,6 +649,170 @@ void main() {
         expect(find.text('Hoạt động lịch cũ còn nguyên'), findsOneWidget);
         expect(find.text('Thời gian: 08:00 - 09:30'), findsOneWidget);
         expect(find.text('Mua sắm tại Chợ Cái Dăm'), findsNothing);
+      },
+    );
+
+    testWidgets(
+      '8. Wandy Chat -> "Lập lịch cho chuyến đi" -> pick trip -> C4 Preview ("Đã biết 80.000đ; còn khoản chưa xác minh", final-plan notice) -> double-tap Apply saves once without duplicates',
+      (tester) async {
+        tester.view.physicalSize = const Size(800, 1400);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(() {
+          tester.view.resetPhysicalSize();
+          tester.view.resetDevicePixelRatio();
+        });
+
+        const halongPrompt =
+            'Hai người lớn đi Hạ Long từ 8h đến 12h, tổng ngân sách 500.000 đồng, ưu tiên bảo tàng. Lập giúp tôi một lịch và ghi rõ khoản nào chưa biết giá.';
+
+        final fakeTripRepo = FakePlannerTripRepository()..saveDelayMs = 80;
+        fakeTripRepo.currentTrip = const TripModel(
+          id: 'trip_halong_c4',
+          userId: 'user_1',
+          title: 'Hạ Long Bảo Tàng 8h-12h (500k)',
+          destinationName: 'Hạ Long',
+          totalBudget: 500000,
+          itineraries: [],
+        );
+        fakeTripRepo.fakePlan = AiPlanPreviewModel.fromJson({
+          'tripId': 'trip_halong_c4',
+          'destination': 'Hạ Long',
+          'totalDays': 1,
+          'overview': 'Lịch trình văn hóa Hạ Long 8h-12h.',
+          'bestTimeToVisit': 'Quanh năm',
+          'budgetAnalysis': {
+            'totalBudget': 500000,
+            'estimatedCost': 80000,
+            'knownCostTotal': 80000,
+            'unknownCostItemCount': 1,
+            'costStatus': 'PARTIAL_UNKNOWN',
+            'hasSufficientBudgetBasis': false,
+            'currency': 'VND',
+            'isOverBudget': false,
+            'variance': null,
+          },
+          'days': [
+            {
+              'dayNumber': 1,
+              'date': '2026-11-28',
+              'title': 'Ngày 1: Bảo tàng & Hòn Gai',
+              'dayCost': 80000,
+              'unknownCostItemCount': 1,
+              'items': [
+                {
+                  'orderIndex': 1,
+                  'startTime': '08:00',
+                  'endTime': '10:30',
+                  'activity': 'Tham quan Bảo tàng Quảng Ninh',
+                  'placeId': '8f2b5a69-1293-4efe-8fc5-3a74193edd0f',
+                  'placeName': 'Bảo tàng Quảng Ninh',
+                  'estimatedCost': 80000,
+                  'costStatus': 'KNOWN',
+                },
+                {
+                  'orderIndex': 2,
+                  'startTime': '10:30',
+                  'endTime': '11:30',
+                  'activity': 'Check-in Tháp Đồng Hồ Hạ Long',
+                  'placeId': '65562a67-84ff-44a0-990d-31917a2a9bd0',
+                  'placeName': 'Tháp Đồng Hồ',
+                  'estimatedCost': null,
+                  'costStatus': 'UNKNOWN',
+                },
+                {
+                  'orderIndex': 3,
+                  'startTime': '11:30',
+                  'endTime': '12:00',
+                  'activity': 'Dạo bộ công viên Lán Bè',
+                  'placeName': 'Công viên Lán Bè',
+                  'estimatedCost': 0,
+                  'costStatus': 'KNOWN',
+                },
+              ],
+            },
+          ],
+        });
+
+        final fakeChatRepo = _FakeWandyChatRepo(
+          ChatResponse(
+            reply:
+                '1. 08:00 - 10:30: Bảo tàng Quảng Ninh (80.000đ)\n2. 10:30 - 12:00: Tháp Đồng Hồ (chưa biết giá)\nĐã biết 80.000đ; còn khoản chưa xác minh.',
+            sessionId: 'sess_wandy_1',
+            canPlanTrip: true,
+            planningContext: WandyPlanningContext.extractFromPrompt(halongPrompt),
+          ),
+        );
+
+        final router = GoRouter(
+          initialLocation: '/ai',
+          routes: [
+            GoRoute(path: '/ai', builder: (_, __) => const AiChatScreen()),
+            GoRoute(
+              path: '/trips/:id',
+              builder: (_, state) =>
+                  TripDetailScreen(tripId: state.pathParameters['id']!),
+            ),
+          ],
+        );
+
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: [
+              chatRepositoryProvider.overrideWithValue(fakeChatRepo),
+              tripRepositoryProvider.overrideWithValue(fakeTripRepo),
+            ],
+            child: MaterialApp.router(routerConfig: router),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        // 1. Send Hạ Long message in Wandy Chat
+        await tester.enterText(find.byType(TextField), halongPrompt);
+        await tester.tap(find.byIcon(Icons.send_rounded));
+        await tester.pumpAndSettle();
+
+        // 2. "Lập lịch cho chuyến đi" button renders right under Wandy's reply
+        expect(find.text('Lập lịch cho chuyến đi'), findsOneWidget);
+        await tester.tap(find.text('Lập lịch cho chuyến đi'));
+        await tester.pumpAndSettle();
+
+        // 3. Trip picker sheet appears (since chat has no tripId yet) -> select trip without re-typing
+        expect(find.text('Chọn chuyến đi để lập lịch'), findsOneWidget);
+        await tester.tap(find.text('Hạ Long Bảo Tàng 8h-12h (500k)'));
+        await tester.pumpAndSettle();
+
+        // 4. Verify preserved context was forwarded automatically (user typed nothing else!)
+        expect(fakeTripRepo.planCalled, isTrue);
+        expect(fakeTripRepo.lastPlanOptions?.additionalPrompt, halongPrompt);
+        expect(fakeTripRepo.lastPlanOptions?.partySize, 2);
+        expect(fakeTripRepo.lastPlanOptions?.partyDescription, '2 người lớn');
+        expect(fakeTripRepo.lastPlanOptions?.timeWindowStart, '08:00');
+        expect(fakeTripRepo.lastPlanOptions?.timeWindowEnd, '12:00');
+        expect(fakeTripRepo.lastPlanOptions?.budgetOverride, 500000);
+        expect(fakeTripRepo.lastPlanOptions?.interestsOverride, ['museum']);
+        expect(fakeTripRepo.bulkSaveCalled, isFalse); // Preview has NOT saved to DB!
+
+        // 5. Verify C4 Preview displays exact "Đã biết 80.000đ; còn khoản chưa xác minh", no "420.000", and final-proposal diff notice
+        expect(
+          find.text('Đã biết 80.000đ; còn khoản chưa xác minh'),
+          findsOneWidget,
+        );
+        expect(find.textContaining('420.000'), findsNothing);
+        expect(find.textContaining('Còn dư'), findsNothing);
+        expect(
+          find.byKey(const Key('ai_plan_final_proposal_notice')),
+          findsOneWidget,
+        );
+
+        // 6. Double-tap "Áp dụng vào chuyến đi" rapidly -> bulkSaveItinerary called ONCE!
+        final applyFinder = find.byKey(const Key('ai_plan_apply_button'));
+        await tester.tap(applyFinder);
+        await tester.pump(const Duration(milliseconds: 10));
+        await tester.tap(applyFinder, warnIfMissed: false);
+        await tester.pumpAndSettle();
+
+        expect(fakeTripRepo.bulkSaveCallCount, 1);
+        expect(fakeTripRepo.lastIdempotencyKey, isNotNull);
       },
     );
   });

@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_radius.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/widgets/responsive_wrapper.dart';
 import '../../places/data/navigation_service.dart';
+import '../../trips/data/trip_models.dart';
+import '../../trips/providers/trip_provider.dart';
 import '../data/chat_models.dart';
 import '../providers/chat_provider.dart';
 
@@ -241,12 +244,16 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
         }
 
         final message = chatState.messages[index];
-        return _buildMessageBubble(message, cs);
+        return _buildMessageBubble(message, chatState, cs);
       },
     );
   }
 
-  Widget _buildMessageBubble(ChatMessage message, ColorScheme cs) {
+  Widget _buildMessageBubble(
+    ChatMessage message,
+    ChatState chatState,
+    ColorScheme cs,
+  ) {
     final isUser = message.isUser;
 
     return Padding(
@@ -310,6 +317,8 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
                       !message.isError &&
                       message.retrievalStatus == RetrievalStatus.empty)
                     _buildUngroundedNotice(),
+                  if (!isUser && !message.isError && message.canPlanTrip)
+                    _buildPlanForTripAction(message, chatState, cs),
                 ],
               ),
             ),
@@ -318,6 +327,257 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
         ],
       ),
     );
+  }
+
+  Widget _buildPlanForTripAction(
+    ChatMessage message,
+    ChatState chatState,
+    ColorScheme cs,
+  ) {
+    final boundTripId = chatState.selectedTripId;
+    final boundTripTitle = chatState.selectedTripTitle;
+    return Padding(
+      padding: const EdgeInsets.only(top: AppSpacing.sm),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Divider(height: 12, thickness: 0.8, color: AppColors.border),
+          if (boundTripId != null && boundTripTitle != null)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 6),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(
+                    Icons.luggage_outlined,
+                    size: 13,
+                    color: AppColors.textSecondary,
+                  ),
+                  const SizedBox(width: 4),
+                  Flexible(
+                    child: Text(
+                      'Chuyến đang gắn: $boundTripTitle',
+                      style: AppTypography.bodyS.copyWith(
+                        fontSize: 11,
+                        color: AppColors.textSecondary,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  InkWell(
+                    key: Key('wandy_change_trip_${message.id}'),
+                    onTap: () => _openTripPickerAndTransfer(message),
+                    child: const Text(
+                      'Đổi chuyến',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.primary,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton.tonalIcon(
+              key: Key('wandy_plan_for_trip_button_${message.id}'),
+              style: FilledButton.styleFrom(
+                backgroundColor: AppColors.primaryContainer.withValues(alpha: 0.75),
+                foregroundColor: AppColors.primary,
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  side: BorderSide(color: AppColors.primary.withValues(alpha: 0.35)),
+                ),
+              ),
+              onPressed: () => _handlePlanForTripTap(message, chatState),
+              icon: const Icon(Icons.event_available_rounded, size: 17),
+              label: const Text(
+                'Lập lịch cho chuyến đi',
+                style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _handlePlanForTripTap(
+    ChatMessage message,
+    ChatState chatState,
+  ) async {
+    final existingTripId = chatState.selectedTripId;
+    if (existingTripId != null && existingTripId.isNotEmpty) {
+      _dispatchWandyPlanHandoff(existingTripId, message);
+      return;
+    }
+    await _openTripPickerAndTransfer(message);
+  }
+
+  Future<void> _openTripPickerAndTransfer(ChatMessage message) async {
+    await ref.read(tripListProvider.notifier).loadTrips();
+    if (!mounted) return;
+
+    final chosenTrip = await showModalBottomSheet<TripModel>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (sheetCtx) {
+        return Consumer(
+          builder: (ctx, sheetRef, _) {
+            final tripState = sheetRef.watch(tripListProvider);
+            return ConstrainedBox(
+              key: const Key('wandy_trip_picker_sheet'),
+              constraints: BoxConstraints(
+                maxHeight: MediaQuery.of(ctx).size.height * 0.65,
+              ),
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Expanded(
+                          child: Text(
+                            'Chọn chuyến đi để lập lịch',
+                            style: TextStyle(
+                              fontSize: 17,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.close),
+                          onPressed: () => Navigator.pop(sheetCtx),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Yêu cầu từ khung chat (số người, thời gian, ngân sách, sở thích) sẽ được chuyển nguyên sang bản xem trước lịch trình.',
+                      style: AppTypography.bodyS.copyWith(
+                        fontSize: 12,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                    const Divider(height: 20),
+                    if (tripState.isLoading)
+                      const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 28),
+                        child: Center(child: CircularProgressIndicator()),
+                      )
+                    else if (tripState.trips.isEmpty)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 20),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Text(
+                              'Bạn chưa có chuyến đi nào. Hãy tạo chuyến đi mới để lập lịch trình.',
+                              textAlign: TextAlign.center,
+                            ),
+                            const SizedBox(height: 12),
+                            FilledButton.icon(
+                              onPressed: () {
+                                Navigator.pop(sheetCtx);
+                                context.push('/trips/create');
+                              },
+                              icon: const Icon(Icons.add),
+                              label: const Text('Tạo chuyến đi mới'),
+                            ),
+                          ],
+                        ),
+                      )
+                    else
+                      Flexible(
+                        child: ListView.separated(
+                          shrinkWrap: true,
+                          itemCount: tripState.trips.length,
+                          separatorBuilder: (_, __) => const Divider(height: 1),
+                          itemBuilder: (_, idx) {
+                            final t = tripState.trips[idx];
+                            final destLabel = t.destinationName ?? '';
+                            final budgetLabel = t.totalBudget != null
+                                ? '${t.totalBudget} ${t.currency}'
+                                : 'Chưa đặt ngân sách';
+                            return ListTile(
+                              key: Key('wandy_trip_option_${t.id}'),
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 4,
+                                vertical: 2,
+                              ),
+                              leading: CircleAvatar(
+                                backgroundColor: AppColors.primaryContainer,
+                                child: const Icon(
+                                  Icons.luggage_outlined,
+                                  color: AppColors.primary,
+                                  size: 18,
+                                ),
+                              ),
+                              title: Text(
+                                t.title,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 14,
+                                ),
+                              ),
+                              subtitle: Text(
+                                destLabel.isNotEmpty
+                                    ? '$destLabel • $budgetLabel'
+                                    : budgetLabel,
+                                style: const TextStyle(fontSize: 12),
+                              ),
+                              trailing: const Icon(Icons.chevron_right),
+                              onTap: () => Navigator.pop(sheetCtx, t),
+                            );
+                          },
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+
+    if (chosenTrip == null || !mounted) return;
+    ref
+        .read(chatProvider.notifier)
+        .selectTripForChat(chosenTrip.id, tripTitle: chosenTrip.title);
+    _dispatchWandyPlanHandoff(chosenTrip.id, message);
+  }
+
+  void _dispatchWandyPlanHandoff(String tripId, ChatMessage message) {
+    final promptText = (message.sourceUserPrompt ?? '').trim().isNotEmpty
+        ? message.sourceUserPrompt!.trim()
+        : message.content.trim();
+    final ctx = message.planningContext ??
+        WandyPlanningContext.extractFromPrompt(
+          promptText,
+          assistantReply: message.content,
+        );
+    ref.read(pendingWandyPlanHandoffProvider.notifier).state =
+        PendingWandyPlanHandoff(
+      tripId: tripId,
+      rawPrompt: promptText,
+      initialChatReply: message.content,
+      planningContext: ctx,
+    );
+    context.push('/trips/$tripId');
   }
 
   Widget _buildUngroundedNotice() {

@@ -2,7 +2,9 @@
 import json
 import logging
 import math
+import os
 import re
+import time
 import uuid
 from typing import Optional, Union
 
@@ -12,6 +14,7 @@ from google.genai import types
 
 from app.config import settings
 from app.prompts.planner_prompt import build_planner_prompt
+from app.routers import chat as chat_router
 from app.schemas.planner import (
     BudgetAnalysis,
     ItineraryDay,
@@ -259,6 +262,16 @@ async def create_plan(req: Union[TripContextRequest, PlanRequest]):
     if days < 1 or days > 14:
         raise HTTPException(status_code=400, detail="Số ngày chuyến đi phải từ 1 đến 14")
 
+    grounding_ctx: Optional[str] = None
+    if notes and _client is not None and "PYTEST_CURRENT_TEST" not in os.environ:
+        try:
+            raw_grounding = await chat_router.retrieve_grounding(f"{destination} {notes}")
+            norm_grounding = chat_router._normalize_retrieval_result(raw_grounding)
+            if norm_grounding.status == "ok" and norm_grounding.context:
+                grounding_ctx = norm_grounding.context
+        except Exception:
+            grounding_ctx = None
+
     prompt = build_planner_prompt(
         destination=destination,
         days=days,
@@ -269,21 +282,45 @@ async def create_plan(req: Union[TripContextRequest, PlanRequest]):
         travel_style=travel_style,
         interests=interests,
         notes=notes,
+        grounding_context=grounding_ctx,
     )
 
     try:
         raw_text = ""
         if _client:
-            response = _client.models.generate_content(
-                model=settings.PLANNER_MODEL,
-                contents=prompt,
-                config=types.GenerateContentConfig(
-                    temperature=0.7,
-                    max_output_tokens=settings.PLANNER_MAX_OUTPUT_TOKENS,
-                    response_mime_type="application/json",
-                    http_options=types.HttpOptions(timeout=settings.PLANNER_TIMEOUT_MS),
-                ),
+            planner_thinking_cfg = (
+                types.ThinkingConfig(thinking_level="MINIMAL")
+                if str(settings.PLANNER_MODEL or "").startswith("gemini-3")
+                else None
             )
+            max_attempts = 1 if os.getenv("PYTEST_CURRENT_TEST") else 3
+            response = None
+            for _attempt in range(max_attempts):
+                try:
+                    response = _client.models.generate_content(
+                        model=settings.PLANNER_MODEL,
+                        contents=prompt,
+                        config=types.GenerateContentConfig(
+                            temperature=0.7,
+                            max_output_tokens=settings.PLANNER_MAX_OUTPUT_TOKENS,
+                            response_mime_type="application/json",
+                            thinking_config=planner_thinking_cfg,
+                            http_options=types.HttpOptions(timeout=settings.PLANNER_TIMEOUT_MS),
+                        ),
+                    )
+                    break
+                except Exception as call_exc:
+                    up_msg = str(call_exc).upper()
+                    if ("503" in up_msg or "UNAVAILABLE" in up_msg) and (_attempt + 1) < max_attempts:
+                        logger.warning(
+                            "Transient 503/UNAVAILABLE from Gemini planner model=%s (attempt %d/%d); retrying...",
+                            settings.PLANNER_MODEL,
+                            _attempt + 1,
+                            max_attempts,
+                        )
+                        time.sleep(2.0 * (_attempt + 1))
+                        continue
+                    raise
             raw_text = response.text or ""
             finish = None
             try:

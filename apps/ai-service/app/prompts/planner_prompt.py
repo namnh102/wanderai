@@ -92,6 +92,7 @@ def build_planner_prompt(
     travel_style: str | None = None,
     interests: list[str] | None = None,
     notes: str | None = None,
+    grounding_context: str | None = None,
 ) -> str:
     """Build formatted prompt using TRAVEL_PLANNER_V1 template."""
     style_label = STYLE_TRANSLATIONS.get(travel_style or "", travel_style or "Khám phá tổng hợp")
@@ -107,7 +108,18 @@ def build_planner_prompt(
     end_str = end_date or f"Ngày {days}"
     sample_date_1 = start_date if start_date else ""
 
-    additional = f"- Ghi chú bổ sung: {notes}" if notes else ""
+    additional_parts: list[str] = []
+    if notes:
+        additional_parts.append(f"- Ghi chú bổ sung (BẮT BUỘC tôn trọng khung giờ, số người và ưu tiên): {notes}")
+    if grounding_context:
+        additional_parts.append(
+            "DỮ LIỆU ĐỊA ĐIỂM ĐÃ XÁC MINH TẠI ĐIỂM ĐẾN (ưu tiên chọn đúng các địa điểm phù hợp bên dưới, "
+            "nhân đúng giá vé theo số người nếu đã có giá xác minh, và BẮT BUỘC đặt `\"estimated_cost\": null` "
+            "cho bất kỳ địa điểm/khoản mục nào chưa biết giá; nếu người dùng chỉ đi trong một khung giờ ngắn "
+            "như 08:00-12:00 thì chỉ xếp 2-4 hoạt động nằm trọn trong đúng khung giờ đó):\n"
+            f"{grounding_context}"
+        )
+    additional = "\n".join(additional_parts)
 
     return TRAVEL_PLANNER_V1.format(
         destination=destination,

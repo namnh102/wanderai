@@ -7,12 +7,28 @@ import '../../auth/providers/auth_provider.dart';
 
 enum ChatStatus { initial, loading, success, error }
 
+class PendingWandyPlanHandoff {
+  final String tripId;
+  final String rawPrompt;
+  final String initialChatReply;
+  final WandyPlanningContext? planningContext;
+
+  const PendingWandyPlanHandoff({
+    required this.tripId,
+    required this.rawPrompt,
+    required this.initialChatReply,
+    this.planningContext,
+  });
+}
+
 class ChatState {
   final List<ChatMessage> messages;
   final ChatStatus status;
   final String? errorMessage;
   final String? sessionId;
   final String? lastFailedMessage;
+  final String? selectedTripId;
+  final String? selectedTripTitle;
 
   const ChatState({
     this.messages = const [],
@@ -20,6 +36,8 @@ class ChatState {
     this.errorMessage,
     this.sessionId,
     this.lastFailedMessage,
+    this.selectedTripId,
+    this.selectedTripTitle,
   });
 
   bool get isLoading => status == ChatStatus.loading;
@@ -31,8 +49,11 @@ class ChatState {
     String? errorMessage,
     String? sessionId,
     String? lastFailedMessage,
+    String? selectedTripId,
+    String? selectedTripTitle,
     bool clearError = false,
     bool clearSessionId = false,
+    bool clearSelectedTrip = false,
   }) {
     return ChatState(
       messages: messages ?? this.messages,
@@ -41,6 +62,11 @@ class ChatState {
       sessionId: clearSessionId ? null : (sessionId ?? this.sessionId),
       lastFailedMessage:
           clearError ? null : (lastFailedMessage ?? this.lastFailedMessage),
+      selectedTripId:
+          clearSelectedTrip ? null : (selectedTripId ?? this.selectedTripId),
+      selectedTripTitle: clearSelectedTrip
+          ? null
+          : (selectedTripTitle ?? this.selectedTripTitle),
     );
   }
 }
@@ -91,6 +117,13 @@ class ChatNotifier extends StateNotifier<ChatState> {
           ? response.sources
           : const <String>[];
 
+      final resolvedPlanCtx = response.planningContext ??
+          WandyPlanningContext.extractFromPrompt(
+            trimmed,
+            assistantReply: response.reply,
+          );
+      final canPlan = response.canPlanTrip || resolvedPlanCtx != null;
+
       final assistantMessage = ChatMessage(
         id: 'assistant_${DateTime.now().millisecondsSinceEpoch}',
         role: MessageRole.assistant,
@@ -98,6 +131,9 @@ class ChatNotifier extends StateNotifier<ChatState> {
         timestamp: DateTime.now(),
         sources: safeSources,
         retrievalStatus: response.retrievalStatus,
+        canPlanTrip: canPlan,
+        sourceUserPrompt: trimmed,
+        planningContext: resolvedPlanCtx,
       );
 
       state = state.copyWith(
@@ -170,6 +206,17 @@ class ChatNotifier extends StateNotifier<ChatState> {
     }
   }
 
+  void selectTripForChat(String? tripId, {String? tripTitle}) {
+    if (tripId == null || tripId.trim().isEmpty) {
+      state = state.copyWith(clearSelectedTrip: true);
+      return;
+    }
+    state = state.copyWith(
+      selectedTripId: tripId.trim(),
+      selectedTripTitle: tripTitle?.trim(),
+    );
+  }
+
   /// Clear in-memory conversation and best-effort clear server session.
   void clearConversation({bool syncRemote = true}) {
     final previousSessionId = state.sessionId;
@@ -235,6 +282,9 @@ final chatRepositoryProvider = Provider<ChatRepository>((ref) {
 });
 
 final pendingChatPromptProvider = StateProvider<String?>((ref) => null);
+
+final pendingWandyPlanHandoffProvider =
+    StateProvider<PendingWandyPlanHandoff?>((ref) => null);
 
 final chatProvider = StateNotifierProvider<ChatNotifier, ChatState>((ref) {
   final repo = ref.read(chatRepositoryProvider);

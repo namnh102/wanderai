@@ -1,6 +1,7 @@
 """Chat Router — AI chat voi Function Calling that su, fail-closed RAG/LLM va session isolation."""
 import os
-from typing import Any, List, Optional
+import re
+from typing import Any, Dict, List, Optional
 import uuid
 
 os.environ.setdefault("HF_HUB_DISABLE_TELEMETRY", "1")
@@ -46,6 +47,8 @@ class ChatResponse(BaseModel):
     # these represent retrieved context candidates, NOT claim-level verified answer citations (W07 G5=HOLD).
     sources: List[str] = []
     retrieval_status: RetrievalStatus = "ok"
+    can_plan_trip: bool = False
+    planning_context: Optional[Dict[str, Any]] = None
 
 
 _rag_service: Optional[RAGService] = None
@@ -98,12 +101,194 @@ NO_CONTEXT_INSTRUCTION = (
 )
 
 
+C4_CHAT_BUDGET_INSTRUCTION = (
+    "Quy tắc trình bày ngân sách (C4): Khi lập hoặc tư vấn lịch trình mà có bất kỳ địa điểm/khoản mục nào chưa biết giá "
+    "hoặc chưa có thông tin giá xác minh trong dữ liệu, chỉ cộng các khoản đã biết giá và ghi rõ theo mẫu: "
+    "\"Đã biết <tổng tiền đã biết>đ; còn khoản chưa xác minh\" (ví dụ: \"Đã biết 80.000đ; còn khoản chưa xác minh\"). "
+    "Tuyệt đối KHÔNG lấy tổng ngân sách trừ đi phần đã biết để báo \"còn dư ...\" hay \"số tiền còn lại ...\" như số dư cuối cùng."
+)
+
+_VN_WORD_NUMBERS = {
+    "một": 1,
+    "mot": 1,
+    "hai": 2,
+    "ba": 3,
+    "bốn": 4,
+    "bon": 4,
+    "tư": 4,
+    "năm": 5,
+    "nam": 5,
+    "sáu": 6,
+    "sau": 6,
+    "bảy": 7,
+    "bay": 7,
+    "tám": 8,
+    "tam": 8,
+    "chín": 9,
+    "chin": 9,
+    "mười": 10,
+    "muoi": 10,
+}
+
+_PLANNING_INTENT_RE = re.compile(
+    r"(lập\s+(?:giúp\s+(?:tôi|mình)\s+)?(?:một\s+)?lịch|lịch\s*trình|lên\s+lịch|kế\s*hoạch\s*(?:đi|chuyến|tham\s*quan)|đi\s+.+\s+từ\s+\d{1,2}\s*(?:h|:|giờ))",
+    re.IGNORECASE,
+)
+
+
+def _format_dot_vnd(amount: int) -> str:
+    return f"{amount:,}".replace(",", ".")
+
+
+def extract_planning_request_context(message: str, reply: str = "") -> tuple[bool, Optional[Dict[str, Any]]]:
+    """Deterministically detect itinerary-planning intent and extract party size, time window, budget, and interests."""
+    msg = (message or "").strip()
+    if not msg:
+        return False, None
+
+    has_intent = bool(_PLANNING_INTENT_RE.search(msg))
+    if not has_intent and reply:
+        has_intent = bool(
+            re.search(r"lịch\s*trình", reply, re.IGNORECASE)
+            and re.search(r"\b\d{1,2}:\d{2}\s*-\s*\d{1,2}:\d{2}\b", reply)
+        )
+    if not has_intent:
+        return False, None
+
+    lower = msg.lower()
+
+    # 1. Party size & description (e.g., "Hai người lớn", "3 người")
+    party_size: Optional[int] = None
+    party_description: Optional[str] = None
+    m_party_num = re.search(r"\b(\d{1,2})\s*(người\s*lớn|người|khách|bạn)\b", lower)
+    if m_party_num:
+        party_size = int(m_party_num.group(1))
+        party_description = f"{party_size} {m_party_num.group(2).strip()}"
+    else:
+        for word, val in _VN_WORD_NUMBERS.items():
+            m_word = re.search(rf"\b{word}\s+(người\s*lớn|người|khách)\b", lower)
+            if m_word:
+                party_size = val
+                party_description = f"{val} {m_word.group(1).strip()}"
+                break
+
+    # 2. Time window (e.g., "từ 8h đến 12h", "từ 08:30 đến 12:00")
+    time_start: Optional[str] = None
+    time_end: Optional[str] = None
+    m_time = re.search(
+        r"từ\s*(\d{1,2})(?:[:hgiờ\s]*(\d{2}))?\s*(?:h|giờ)?\s*(?:đến|tới|-)\s*(\d{1,2})(?:[:hgiờ\s]*(\d{2}))?\s*(?:h|giờ)?",
+        lower,
+    )
+    if m_time:
+        sh, sm, eh, em = (
+            int(m_time.group(1)),
+            int(m_time.group(2) or 0),
+            int(m_time.group(3)),
+            int(m_time.group(4) or 0),
+        )
+        if 0 <= sh <= 23 and 0 <= sm <= 59 and 0 <= eh <= 23 and 0 <= em <= 59:
+            time_start = f"{sh:02d}:{sm:02d}"
+            time_end = f"{eh:02d}:{em:02d}"
+
+    # 3. Total budget in VND (e.g., "500.000 đồng", "500k", "1.5 triệu")
+    total_budget: Optional[int] = None
+    m_trieu = re.search(r"(\d+(?:[.,]\d+)?)\s*(?:triệu|tr)\b", lower)
+    m_vnd = re.search(r"(\d{1,3}(?:[.,]\d{3})+|\d{5,9})\s*(?:đồng|vnd|vnđ|đ)\b", lower)
+    m_k = re.search(r"\b(\d{2,5})\s*k\b", lower)
+    if m_trieu:
+        total_budget = int(round(float(m_trieu.group(1).replace(",", ".")) * 1_000_000))
+    elif m_vnd:
+        digits = re.sub(r"[^\d]", "", m_vnd.group(1))
+        if digits:
+            total_budget = int(digits)
+    elif m_k:
+        total_budget = int(m_k.group(1)) * 1000
+
+    # 4. Interests
+    interests: List[str] = []
+    interest_map = [
+        (("bảo tàng", "museum"), "museum"),
+        (("văn hóa", "lịch sử", "di tích", "chùa", "đền"), "culture"),
+        (("biển", "bãi tắm", "đảo"), "beach"),
+        (("ẩm thực", "ăn uống", "quán ăn", "đặc sản"), "food"),
+        (("thiên nhiên", "núi", "hang động", "vịnh"), "nature"),
+        (("chụp ảnh", "check-in", "sống ảo"), "photography"),
+        (("chợ", "mua sắm"), "shopping"),
+    ]
+    for keywords, tag in interest_map:
+        if any(kw in lower for kw in keywords) and tag not in interests:
+            interests.append(tag)
+
+    return True, {
+        "raw_prompt": msg,
+        "party_size": party_size,
+        "party_description": party_description,
+        "time_window_start": time_start,
+        "time_window_end": time_end,
+        "total_budget": total_budget,
+        "interests": interests,
+    }
+
+
+def enforce_c4_chat_budget_presentation(reply: str, planning_ctx: Optional[Dict[str, Any]] = None) -> str:
+    """Ensure chat itinerary replies never present misleading remaining surplus when prices are unknown."""
+    if not reply:
+        return reply
+
+    has_unknown_price = bool(
+        re.search(
+            r"(chưa\s+biết\s+giá|chưa\s+có\s+(?:thông\s+tin|dữ\s+liệu)\s+giá|chưa\s+xác\s+minh)",
+            reply,
+            re.IGNORECASE,
+        )
+    )
+    if not has_unknown_price:
+        return reply
+
+    surplus_line_re = re.compile(
+        r"^[^\n]*(?:còn\s+dư|số\s+tiền\s+còn\s+(?:dư|lại)|tiền\s+dư|ngân\s+sách\s+còn\s+lại)[^\n]*\d[\d.,]*\s*(?:đồng|vnd|vnđ|đ)[^\n]*$",
+        re.IGNORECASE | re.MULTILINE,
+    )
+
+    # Extract known total if explicitly stated or sum item totals when unambiguous
+    known_amount: Optional[int] = None
+    budget_val = (planning_ctx or {}).get("total_budget")
+    m_surplus_num = surplus_line_re.search(reply)
+    if m_surplus_num and isinstance(budget_val, int) and budget_val > 0:
+        m_num = re.search(r"(\d{1,3}(?:[.,]\d{3})+|\d{4,9})\s*(?:đồng|vnd|vnđ|đ)", m_surplus_num.group(0), re.IGNORECASE)
+        if m_num:
+            surplus_digits = int(re.sub(r"[^\d]", "", m_num.group(1)))
+            if 0 <= surplus_digits <= budget_val:
+                known_amount = budget_val - surplus_digits
+
+    if known_amount is None:
+        m_known = re.search(
+            r"(?:đã\s+biết|đã\s+xác\s+minh|tổng\s+tiền\s+vé|chi\s+phí\s+cho\s+\d+\s+người\s+lớn)[^\n:]*:\s*\**(\d{1,3}(?:[.,]\d{3})+|\d{4,9})\s*(?:đồng|vnd|vnđ|đ)",
+            reply,
+            re.IGNORECASE,
+        )
+        if m_known:
+            known_amount = int(re.sub(r"[^\d]", "", m_known.group(1)))
+
+    c4_line = (
+        f"* **Tổng hợp chi phí (theo quy tắc C4):** Đã biết {_format_dot_vnd(known_amount)}đ; còn khoản chưa xác minh (chưa đủ căn cứ tính tiền dư cuối cùng)."
+        if known_amount is not None
+        else "* **Tổng hợp chi phí (theo quy tắc C4):** Còn khoản chưa xác minh giá nên chưa đủ căn cứ tính tiền dư cuối cùng."
+    )
+
+    cleaned = surplus_line_re.sub(c4_line, reply)
+    if "còn khoản chưa xác minh" not in cleaned.lower() and known_amount is not None:
+        cleaned = f"{cleaned.rstrip()}\n\n{c4_line}"
+    return cleaned
+
+
 def build_grounded_message(message: str, context: str) -> str:
     if not context:
-        return f"{NO_CONTEXT_INSTRUCTION}\n\nCâu hỏi của người dùng: {message}"
+        return f"{NO_CONTEXT_INSTRUCTION}\n\n{C4_CHAT_BUDGET_INSTRUCTION}\n\nCâu hỏi của người dùng: {message}"
     return (
         "Dữ liệu truy xuất từ nguồn mở (OpenStreetMap, Wikivoyage). Khi nói về các địa điểm/thông tin có trong dữ liệu này, "
         "chỉ dùng đúng dữ liệu bên dưới; không bịa thêm giờ mở cửa, giá vé hay thông tin không có trong dữ liệu.\n\n"
+        f"{C4_CHAT_BUDGET_INSTRUCTION}\n\n"
         f"{context}\n\nCâu hỏi của người dùng: {message}"
     )
 
@@ -160,7 +345,11 @@ async def chat(
             detail=exc.detail,
         ) from exc
 
-    reply = result["response"]
+    raw_reply = result["response"]
+    can_plan_trip, planning_context = extract_planning_request_context(
+        request.message, raw_reply
+    )
+    reply = enforce_c4_chat_budget_presentation(raw_reply, planning_context)
     raw_tool_calls = result.get("tool_calls", [])
 
     tool_logs = [
@@ -180,6 +369,8 @@ async def chat(
         tool_calls=tool_logs,
         sources=sources,
         retrieval_status=grounding.status,
+        can_plan_trip=can_plan_trip,
+        planning_context=planning_context,
     )
 
 
