@@ -8,14 +8,14 @@ class ChatRepository {
   ChatRepository(this._dio);
 
   /// Send message to Wandy via NestJS `/ai/chat` proxy.
-  /// Uses a dedicated 35s timeout for AI model inference.
+  /// Stay above NestJS->FastAPI AI_CHAT_TIMEOUT_MS (90s) so upstream status codes surface cleanly.
   Future<ChatResponse> sendMessage(ChatRequest request) async {
     final response = await _dio.post(
       '/ai/chat',
       data: request.toJson(),
       options: Options(
-        sendTimeout: const Duration(seconds: 35),
-        receiveTimeout: const Duration(seconds: 35),
+        sendTimeout: const Duration(seconds: 105),
+        receiveTimeout: const Duration(seconds: 105),
       ),
     );
 

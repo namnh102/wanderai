@@ -219,6 +219,9 @@ class ChatNotifier extends StateNotifier<ChatState> {
     if (status == 429) {
       return 'Hệ thống AI đang quá tải yêu cầu (429). Vui lòng đợi một lát rồi thử lại.';
     }
+    if (status == 504) {
+      return 'AI phản hồi quá lâu. Vui lòng thử lại.';
+    }
     if (status == 503 || status == 502) {
       return 'Dịch vụ AI đang bận hoặc quá tải. Vui lòng thử lại sau.';
     }

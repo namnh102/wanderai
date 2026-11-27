@@ -408,11 +408,21 @@ class GeminiProvider:
                 gemini_tools = [types.Tool(function_declarations=declarations)]
                 tool_map = {t.name: t for t in tools}
 
+            model_name = str(_legacy_gemini._MODEL or "")
+            thinking_cfg = (
+                types.ThinkingConfig(thinking_level="MINIMAL")
+                if model_name.startswith("gemini-3")
+                else None
+            )
             config = types.GenerateContentConfig(
                 system_instruction=SYSTEM_PROMPT,
                 temperature=0.7,
                 max_output_tokens=4096,
                 tools=gemini_tools or [],
+                automatic_function_calling=types.AutomaticFunctionCallingConfig(
+                    disable=True
+                ),
+                thinking_config=thinking_cfg,
             )
 
             user_turn = types.Content(role="user", parts=[types.Part(text=message)])

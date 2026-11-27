@@ -170,6 +170,7 @@ export class AiChatProxyService extends AiProxyService {
     userId: string,
     action: string,
     sessionId?: string,
+    ttlSeconds: number = 60,
   ): Record<string, string> {
     const trimmedUserId = typeof userId === 'string' ? userId.trim() : '';
     if (!trimmedUserId) {
@@ -191,6 +192,7 @@ export class AiChatProxyService extends AiProxyService {
         userId: trimmedUserId,
         action,
         sessionId,
+        ttlSeconds,
       });
     } catch {
       throw new HttpException(
@@ -209,10 +211,17 @@ export class AiChatProxyService extends AiProxyService {
       typeof sessionId === 'string' && sessionId.trim().length > 0
         ? sessionId.trim()
         : undefined;
+    const rawTimeout = Number(
+      this.internalConfigService.get('AI_CHAT_TIMEOUT_MS', '90000'),
+    );
+    const chatTimeoutMs =
+      Number.isFinite(rawTimeout) && rawTimeout > 0 ? rawTimeout : 90000;
+    const ttlSeconds = Math.max(120, Math.ceil(chatTimeoutMs / 1000) + 30);
     const headers = this.buildSignedInternalHeaders(
       userId ?? '',
       'POST:/chat',
       normalizedSessionId,
+      ttlSeconds,
     );
 
     try {
@@ -224,7 +233,7 @@ export class AiChatProxyService extends AiProxyService {
           user_id: userId?.trim(),
         },
         {
-          timeout: 30000,
+          timeout: chatTimeoutMs,
           headers,
         },
       );
@@ -240,6 +249,15 @@ export class AiChatProxyService extends AiProxyService {
             'Dịch vụ AI gặp sự cố khi xử lý tin nhắn.',
           ),
           error.response.status,
+        );
+      }
+      if (
+        axios.isAxiosError(error) &&
+        (error.code === 'ECONNABORTED' || error.code === 'ETIMEDOUT')
+      ) {
+        throw new HttpException(
+          'AI phản hồi quá thời gian chờ. Vui lòng thử lại.',
+          HttpStatus.GATEWAY_TIMEOUT,
         );
       }
       throw new HttpException(

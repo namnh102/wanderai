@@ -1,6 +1,9 @@
 """Chat Router — AI chat voi Function Calling that su, fail-closed RAG/LLM va session isolation."""
+import os
 from typing import Any, List, Optional
 import uuid
+
+os.environ.setdefault("HF_HUB_DISABLE_TELEMETRY", "1")
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
