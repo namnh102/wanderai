@@ -297,6 +297,7 @@ async def create_plan(req: Union[TripContextRequest, PlanRequest]):
                     detail="AI tra ve ket qua khong day du. Vui long thu lai.",
                 )
         else:
+            # Fallback mock for testing when no Gemini key is present
             raw_text = json.dumps({
                 "destination": destination,
                 "total_days": days,
@@ -363,7 +364,6 @@ async def create_plan(req: Union[TripContextRequest, PlanRequest]):
                         start_time=_normalize_optional_str(itm.get("start_time", itm.get("time"))),
                         end_time=_normalize_optional_str(itm.get("end_time")),
                         activity=str(itm.get("activity", itm.get("name", "")) or f"Hoạt động {item_idx + 1}"),
-                        place_id=_normalize_optional_str(itm.get("place_id", itm.get("placeId"))),
                         place_name=_normalize_optional_str(itm.get("place_name", itm.get("address"))),
                         notes=_normalize_optional_str(itm.get("notes", itm.get("tip"))),
                         estimated_cost=item_cost,

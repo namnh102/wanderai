@@ -363,3 +363,84 @@ def test_planner_detects_overlapping_schedule_in_same_day():
         assert body["schedule_violations"][0]["code"] == "SCHEDULE_OVERLAP"
         assert len(body["days"][0]["items"][0]["violations"]) == 1
         assert len(body["days"][0]["items"][1]["violations"]) == 1
+
+
+def test_c4_itinerary_evaluator_handles_nullable_and_zero_costs():
+    """Verify C4 product evaluator supports both unknown (`None`/omitted) and free (`0`) item costs."""
+    from app.services.c4_itinerary_evaluator import evaluate_c4_itinerary
+
+    scenario = {
+        "scenario_id": "c4_nullable_and_free_check",
+        "expected_constraints": {"min_days": 1, "max_days": 2, "min_items_per_day": 2},
+    }
+
+    # Case 1: Mix of explicit None, omitted cost, and known paid item -> PARTIAL_UNKNOWN, variance=None
+    partial_unknown_resp = {
+        "destination": "Hạ Long",
+        "budget_analysis": {
+            "total_budget": 500000,
+            "estimated_cost": 60000,
+            "known_cost_total": 60000,
+            "unknown_cost_item_count": 2,
+            "cost_status": "PARTIAL_UNKNOWN",
+            "has_sufficient_budget_basis": False,
+            "is_over_budget": False,
+            "variance": None,
+        },
+        "days": [
+            {
+                "day_number": 1,
+                "day_cost": 60000,
+                "unknown_cost_item_count": 2,
+                "items": [
+                    {"activity": "Cafe", "place_name": "Cafe ban mê", "estimated_cost": None, "cost_status": "UNKNOWN"},
+                    {"activity": "Bảo tàng", "place_name": "Bảo tàng Quảng Ninh", "cost_status": "UNKNOWN"},
+                    {"activity": "Gửi xe", "estimated_cost": 60000, "cost_status": "KNOWN"},
+                ],
+            }
+        ],
+    }
+    res_null = evaluate_c4_itinerary(partial_unknown_resp, scenario)
+    assert res_null["success"] is True, res_null["failed_checks"]
+    assert res_null["calculated_known_total"] == 60000
+    assert res_null["calculated_unknown_count"] == 2
+    assert res_null["cost_status"] == "PARTIAL_UNKNOWN"
+
+    # Reject fabricated surplus when unknown costs exist
+    bad_surplus_resp = {
+        **partial_unknown_resp,
+        "budget_analysis": {**partial_unknown_resp["budget_analysis"], "variance": 440000},
+    }
+    assert evaluate_c4_itinerary(bad_surplus_resp, scenario)["success"] is False
+
+    # Case 2: Sourced free POIs (`estimated_cost = 0`) -> COMPLETE, valid surplus = 300000
+    free_zero_resp = {
+        "destination": "Đà Nẵng",
+        "budget_analysis": {
+            "total_budget": 300000,
+            "estimated_cost": 0,
+            "known_cost_total": 0,
+            "unknown_cost_item_count": 0,
+            "cost_status": "COMPLETE",
+            "has_sufficient_budget_basis": True,
+            "is_over_budget": False,
+            "variance": 300000,
+        },
+        "days": [
+            {
+                "day_number": 1,
+                "day_cost": 0,
+                "unknown_cost_item_count": 0,
+                "items": [
+                    {"activity": "Tắm biển Mỹ Khê", "place_name": "Bãi biển Mỹ Khê", "estimated_cost": 0, "cost_status": "KNOWN"},
+                    {"activity": "Xem Cầu Rồng", "place_name": "Cầu Rồng", "estimated_cost": 0, "cost_status": "KNOWN"},
+                ],
+            }
+        ],
+    }
+    res_zero = evaluate_c4_itinerary(free_zero_resp, scenario)
+    assert res_zero["success"] is True, res_zero["failed_checks"]
+    assert res_zero["calculated_known_total"] == 0
+    assert res_zero["calculated_unknown_count"] == 0
+    assert res_zero["cost_status"] == "COMPLETE"
+

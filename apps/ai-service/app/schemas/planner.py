@@ -44,7 +44,6 @@ class ItineraryItem(BaseModel):
     start_time: Optional[str] = None
     end_time: Optional[str] = None
     activity: str
-    place_id: Optional[str] = None
     place_name: Optional[str] = None
     notes: Optional[str] = None
     estimated_cost: Optional[int] = None

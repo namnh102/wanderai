@@ -28,7 +28,7 @@ def evaluate_itinerary(response_data: dict, scenario_spec: dict) -> dict:
     for d in days:
         day_cost = d.get("day_cost", 0)
         items = d.get("items", [])
-        computed_day_cost = sum((i.get("estimated_cost") or 0) for i in items)
+        computed_day_cost = sum(i.get("estimated_cost", 0) for i in items)
         calculated_total += computed_day_cost
 
         if computed_day_cost != day_cost:
