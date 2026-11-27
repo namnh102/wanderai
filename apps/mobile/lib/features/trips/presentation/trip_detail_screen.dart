@@ -253,6 +253,29 @@ class _TripDetailScreenState extends ConsumerState<TripDetailScreen> {
     final trip = ref.read(tripDetailProvider).trip;
     final hasExistingItinerary = trip != null && trip.itineraries.isNotEmpty;
 
+    final unknownCostCount = plan.budgetAnalysis.unknownCostItemCount > 0
+        ? plan.budgetAnalysis.unknownCostItemCount
+        : plan.days.fold<int>(
+            0,
+            (acc, d) => acc + d.effectiveUnknownCostCount,
+          );
+    final hasUnknownCosts = unknownCostCount > 0;
+    final canShowSurplus = !hasUnknownCosts &&
+        plan.budgetAnalysis.hasSufficientBudgetBasis &&
+        plan.budgetAnalysis.variance != null &&
+        !plan.budgetAnalysis.isOverBudget;
+    final overBudgetAmount = plan.budgetAnalysis.variance != null
+        ? -plan.budgetAnalysis.variance!
+        : ((plan.budgetAnalysis.totalBudget ?? 0) -
+                plan.budgetAnalysis.knownCostTotal)
+            .abs();
+
+    final summaryViolations = plan.scheduleViolations.isNotEmpty
+        ? plan.scheduleViolations
+        : plan.days
+            .expand((d) => d.items.expand((item) => item.violations))
+            .toList();
+
     final previewEntries = <Widget>[
       if (plan.overview.isNotEmpty)
         Container(
@@ -268,6 +291,7 @@ class _TripDetailScreenState extends ConsumerState<TripDetailScreen> {
           ),
         ),
       Container(
+        key: const Key('ai_plan_budget_summary_card'),
         padding: const EdgeInsets.all(12),
         margin: const EdgeInsets.only(bottom: 12),
         decoration: BoxDecoration(
@@ -281,17 +305,18 @@ class _TripDetailScreenState extends ConsumerState<TripDetailScreen> {
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Chi phí ước tính:',
+                    hasUnknownCosts ? 'Chi phí đã biết:' : 'Chi phí ước tính:',
                     style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant),
                   ),
                   Text(
-                    '${plan.budgetAnalysis.estimatedCost} ${plan.budgetAnalysis.currency}',
+                    '${hasUnknownCosts ? plan.budgetAnalysis.knownCostTotal : plan.budgetAnalysis.estimatedCost} ${plan.budgetAnalysis.currency}',
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 16,
@@ -300,36 +325,110 @@ class _TripDetailScreenState extends ConsumerState<TripDetailScreen> {
                           : cs.primary,
                     ),
                   ),
+                  if (hasUnknownCosts) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      'Thiếu giá: $unknownCostCount mục (chưa biết)',
+                      key: const Key('ai_plan_unknown_cost_count_text'),
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.orange.shade900,
+                      ),
+                    ),
+                  ],
                 ],
               ),
             ),
             if (plan.budgetAnalysis.totalBudget != null) ...[
               const SizedBox(width: 8),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(
-                    'Ngân sách: ${plan.budgetAnalysis.totalBudget} ${plan.budgetAnalysis.currency}',
-                    style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant),
-                  ),
-                  Text(
-                    plan.budgetAnalysis.isOverBudget
-                        ? 'Vượt ${-plan.budgetAnalysis.variance} VND'
-                        : 'Còn dư ${plan.budgetAnalysis.variance} VND',
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                      color: plan.budgetAnalysis.isOverBudget
-                          ? cs.error
-                          : cs.primary,
+              Flexible(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      'Ngân sách: ${plan.budgetAnalysis.totalBudget} ${plan.budgetAnalysis.currency}',
+                      textAlign: TextAlign.end,
+                      style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant),
                     ),
-                  ),
-                ],
+                    Text(
+                      plan.budgetAnalysis.isOverBudget
+                          ? (hasUnknownCosts
+                              ? 'Vượt ít nhất $overBudgetAmount VND'
+                              : 'Vượt $overBudgetAmount VND')
+                          : (canShowSurplus
+                              ? 'Còn dư ${plan.budgetAnalysis.variance} VND'
+                              : 'Chưa đủ căn cứ tính tiền dư'),
+                      key: const Key('ai_plan_budget_status_text'),
+                      textAlign: TextAlign.end,
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        color: plan.budgetAnalysis.isOverBudget
+                            ? cs.error
+                            : (canShowSurplus
+                                ? cs.primary
+                                : cs.onSurfaceVariant),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ],
           ],
         ),
       ),
+      if (summaryViolations.isNotEmpty)
+        Container(
+          key: const Key('ai_plan_schedule_violations_banner'),
+          padding: const EdgeInsets.all(12),
+          margin: const EdgeInsets.only(bottom: 12),
+          decoration: BoxDecoration(
+            color: cs.errorContainer.withValues(alpha: 0.35),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: cs.error),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(Icons.error_outline, color: cs.error, size: 20),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Phát hiện ${summaryViolations.length} vi phạm thời gian / giờ mở cửa',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                        color: cs.error,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 6),
+              ...summaryViolations.map(
+                (v) => Padding(
+                  padding: const EdgeInsets.only(bottom: 4),
+                  child: Text(
+                    '• ${v.message}',
+                    style: TextStyle(fontSize: 12, color: cs.onSurface),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                'Yêu cầu áp dụng sẽ bị từ chối theo quy tắc bảo vệ lịch trình và giữ nguyên lịch cũ.',
+                style: TextStyle(
+                  fontSize: 11,
+                  fontStyle: FontStyle.italic,
+                  color: cs.error,
+                ),
+              ),
+            ],
+          ),
+        ),
       if (hasExistingItinerary)
         Container(
           padding: const EdgeInsets.all(12),
@@ -471,7 +570,11 @@ class _TripDetailScreenState extends ConsumerState<TripDetailScreen> {
                                     ref.read(tripDetailProvider).errorMessage ??
                                         'Lỗi khi lưu lịch trình';
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(content: Text(err)),
+                                  SnackBar(
+                                    key: const Key(
+                                        'trip_itinerary_error_snackbar'),
+                                    content: Text(err),
+                                  ),
                                 );
                               }
                             }
@@ -490,6 +593,7 @@ class _TripDetailScreenState extends ConsumerState<TripDetailScreen> {
   }
 
   Widget _buildAiPreviewDayCard(AiPlanDayModel day, ColorScheme cs) {
+    final dayUnknownCount = day.effectiveUnknownCostCount;
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(12),
@@ -511,47 +615,110 @@ class _TripDetailScreenState extends ConsumerState<TripDetailScreen> {
                 ),
               ),
               const SizedBox(width: 8),
-              Text(
-                '${day.dayCost} VND',
-                style: TextStyle(
-                    fontSize: 12,
-                    color: cs.primary,
-                    fontWeight: FontWeight.bold),
+              Flexible(
+                child: Text(
+                  dayUnknownCount > 0
+                      ? 'Đã biết: ${day.dayCost} VND • $dayUnknownCount mục chưa biết'
+                      : '${day.dayCost} VND',
+                  textAlign: TextAlign.end,
+                  style: TextStyle(
+                      fontSize: 12,
+                      color: cs.primary,
+                      fontWeight: FontWeight.bold),
+                ),
               ),
             ],
           ),
           const Divider(height: 16),
-          ...day.items.map((item) => Padding(
-                padding: const EdgeInsets.symmetric(vertical: 4),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '${item.orderIndex}. ',
-                      style: TextStyle(
-                          fontWeight: FontWeight.bold, color: cs.primary),
+          ...day.items.map((item) {
+            final hasViolation = item.violations.isNotEmpty;
+            final timeRange =
+                formatItineraryTimeRange(item.startTime, item.endTime);
+            final costLabel = item.estimatedCost != null
+                ? '${item.estimatedCost} VND'
+                : 'Chưa biết giá';
+            final metaLabel =
+                timeRange != null ? '$timeRange • $costLabel' : costLabel;
+
+            return Container(
+              key: hasViolation
+                  ? Key(
+                      'ai_preview_item_violation_${day.dayNumber}_${item.orderIndex}')
+                  : null,
+              margin: const EdgeInsets.symmetric(vertical: 4),
+              padding: hasViolation
+                  ? const EdgeInsets.all(8)
+                  : const EdgeInsets.symmetric(vertical: 2),
+              decoration: hasViolation
+                  ? BoxDecoration(
+                      color: cs.errorContainer.withValues(alpha: 0.25),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: cs.error),
+                    )
+                  : null,
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '${item.orderIndex}. ',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: hasViolation ? cs.error : cs.primary,
                     ),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            item.activity,
-                            style: const TextStyle(
-                                fontWeight: FontWeight.w600, fontSize: 13),
-                          ),
-                          if (item.startTime != null)
-                            Text(
-                              '${item.startTime} - ${item.estimatedCost} VND',
-                              style: TextStyle(
-                                  fontSize: 11, color: cs.onSurfaceVariant),
+                  ),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            if (hasViolation) ...[
+                              Icon(Icons.warning_amber_rounded,
+                                  size: 15, color: cs.error),
+                              const SizedBox(width: 4),
+                            ],
+                            Expanded(
+                              child: Text(
+                                item.activity,
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 13,
+                                  color: hasViolation ? cs.error : null,
+                                ),
+                              ),
                             ),
+                          ],
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          metaLabel,
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: item.estimatedCost == null
+                                ? Colors.orange.shade900
+                                : cs.onSurfaceVariant,
+                          ),
+                        ),
+                        if (hasViolation) ...[
+                          const SizedBox(height: 4),
+                          ...item.violations.map(
+                            (v) => Text(
+                              v.message,
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                                color: cs.error,
+                              ),
+                            ),
+                          ),
                         ],
-                      ),
+                      ],
                     ),
-                  ],
-                ),
-              )),
+                  ),
+                ],
+              ),
+            );
+          }),
         ],
       ),
     );
@@ -1226,6 +1393,7 @@ class _TripDetailScreenState extends ConsumerState<TripDetailScreen> {
   }
 
   Widget _buildItineraryItemRow(ItineraryItemModel item, ColorScheme cs) {
+    final timeRange = formatItineraryTimeRange(item.startTime, item.endTime);
     return ListTile(
       key: Key('trip_itinerary_item_${item.id}'),
       onTap: item.placeId != null
@@ -1274,16 +1442,17 @@ class _TripDetailScreenState extends ConsumerState<TripDetailScreen> {
                 ],
               ),
             ),
-          if (item.startTime != null && item.startTime!.isNotEmpty)
+          if (timeRange != null)
             Text(
-              'Thời gian: ${item.startTime}',
+              'Thời gian: $timeRange',
               style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant),
             ),
-          if (item.estimatedCost != null)
-            Text(
-              'Chi phí: ${item.estimatedCost} VND',
-              style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant),
-            ),
+          Text(
+            item.estimatedCost != null
+                ? 'Chi phí: ${item.estimatedCost} VND'
+                : 'Chi phí: Chưa biết',
+            style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant),
+          ),
           if (item.notes != null && item.notes!.isNotEmpty)
             Text(
               'Ghi chú: ${item.notes}',

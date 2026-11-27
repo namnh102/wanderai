@@ -4,6 +4,24 @@ enum TravelStyle { backpacker, budget, comfort, luxury }
 
 enum TripStatus { draft, planned, ongoing, completed, cancelled }
 
+/// Formats start and end times so both endpoints are visible when present.
+String? formatItineraryTimeRange(String? startTime, String? endTime) {
+  final s = startTime?.trim();
+  final e = endTime?.trim();
+  final hasStart = s != null && s.isNotEmpty;
+  final hasEnd = e != null && e.isNotEmpty;
+  if (hasStart && hasEnd) {
+    return '$s - $e';
+  }
+  if (hasStart) {
+    return s;
+  }
+  if (hasEnd) {
+    return 'Đến $e';
+  }
+  return null;
+}
+
 class ItineraryItemModel {
   final String id;
   final String itineraryId;
@@ -46,7 +64,7 @@ class ItineraryItemModel {
       endTime: json['endTime'] as String?,
       activity: json['activity'] as String? ?? '',
       notes: json['notes'] as String?,
-      estimatedCost: json['estimatedCost'] as int?,
+      estimatedCost: (json['estimatedCost'] as num?)?.toInt(),
       transportMode: json['transportMode'] as String?,
     );
   }
@@ -204,12 +222,6 @@ class TripModel {
 }
 
 /// Central TripContext abstraction.
-/// Designed for future consumption by:
-/// - AI Travel Agent
-/// - Recommendation Engine
-/// - Booking Flow
-/// - Companion Matching
-/// - Safety Check-ins
 class TripContext {
   final String tripId;
   final String destination;
@@ -391,52 +403,136 @@ class ReorderItineraryRequest {
       };
 }
 
+class ItineraryScheduleViolationModel {
+  final String code;
+  final String reasonCode;
+  final int dayNumber;
+  final int orderIndex;
+  final int? conflictingOrderIndex;
+  final String activity;
+  final String? placeId;
+  final String? placeName;
+  final String? startTime;
+  final String? endTime;
+  final String? openingHours;
+  final String message;
+
+  const ItineraryScheduleViolationModel({
+    required this.code,
+    this.reasonCode = '',
+    required this.dayNumber,
+    required this.orderIndex,
+    this.conflictingOrderIndex,
+    required this.activity,
+    this.placeId,
+    this.placeName,
+    this.startTime,
+    this.endTime,
+    this.openingHours,
+    required this.message,
+  });
+
+  factory ItineraryScheduleViolationModel.fromJson(Map<String, dynamic> json) {
+    return ItineraryScheduleViolationModel(
+      code: json['code'] as String? ?? 'SCHEDULE_VIOLATION',
+      reasonCode: (json['reasonCode'] as String?) ??
+          (json['reason_code'] as String?) ??
+          '',
+      dayNumber:
+          (json['dayNumber'] as int?) ?? (json['day_number'] as int?) ?? 1,
+      orderIndex:
+          (json['orderIndex'] as int?) ?? (json['order_index'] as int?) ?? 1,
+      conflictingOrderIndex: (json['conflictingOrderIndex'] as int?) ??
+          (json['conflicting_order_index'] as int?),
+      activity: json['activity'] as String? ?? '',
+      placeId: (json['placeId'] as String?) ?? (json['place_id'] as String?),
+      placeName:
+          (json['placeName'] as String?) ?? (json['place_name'] as String?),
+      startTime:
+          (json['startTime'] as String?) ?? (json['start_time'] as String?),
+      endTime: (json['endTime'] as String?) ?? (json['end_time'] as String?),
+      openingHours: (json['openingHours'] as String?) ??
+          (json['opening_hours'] as String?),
+      message: json['message'] as String? ?? 'Vi phạm ràng buộc lịch trình',
+    );
+  }
+}
+
 class AiPlanItemModel {
   final int orderIndex;
   final String? startTime;
   final String? endTime;
   final String activity;
+  final String? placeId;
   final String? placeName;
   final String? notes;
-  final int estimatedCost;
+  final int? estimatedCost;
+  final String? costStatus;
   final String? transportMode;
+  final String openingHoursStatus;
+  final List<ItineraryScheduleViolationModel> violations;
 
   const AiPlanItemModel({
     required this.orderIndex,
     this.startTime,
     this.endTime,
     required this.activity,
+    this.placeId,
     this.placeName,
     this.notes,
-    this.estimatedCost = 0,
+    this.estimatedCost,
+    this.costStatus,
     this.transportMode,
+    this.openingHoursStatus = 'UNKNOWN',
+    this.violations = const [],
   });
 
+  bool get isCostKnown => estimatedCost != null;
+
+  String get effectiveCostStatus =>
+      costStatus ?? (estimatedCost != null ? 'KNOWN' : 'UNKNOWN');
+
   factory AiPlanItemModel.fromJson(Map<String, dynamic> json) {
+    final rawViolations = json['violations'] as List<dynamic>? ?? const [];
+    final parsedCost = (json['estimatedCost'] as num?)?.toInt();
     return AiPlanItemModel(
       orderIndex: json['orderIndex'] as int? ?? 1,
       startTime: json['startTime'] as String?,
       endTime: json['endTime'] as String?,
       activity: json['activity'] as String? ?? '',
+      placeId: json['placeId'] as String?,
       placeName: json['placeName'] as String?,
       notes: json['notes'] as String?,
-      estimatedCost: json['estimatedCost'] as int? ?? 0,
+      estimatedCost: parsedCost,
+      costStatus: json['costStatus'] as String? ??
+          (parsedCost != null ? 'KNOWN' : 'UNKNOWN'),
       transportMode: json['transportMode'] as String?,
+      openingHoursStatus: json['openingHoursStatus'] as String? ?? 'UNKNOWN',
+      violations: rawViolations
+          .whereType<Map<String, dynamic>>()
+          .map(ItineraryScheduleViolationModel.fromJson)
+          .toList(),
     );
   }
 
   Map<String, dynamic> toBulkItemJson() {
-    final effectiveNotes = placeName != null
-        ? (notes != null ? '$notes ($placeName)' : placeName)
-        : notes;
+    final hasResolvedPlaceId = placeId != null && placeId!.trim().isNotEmpty;
+    final effectiveNotes = hasResolvedPlaceId
+        ? notes
+        : (placeName != null
+            ? (notes != null ? '$notes ($placeName)' : placeName)
+            : notes);
     return {
       'orderIndex': orderIndex,
       'activity': activity,
-      if (startTime != null) 'startTime': startTime,
-      if (endTime != null) 'endTime': endTime,
-      if (effectiveNotes != null) 'notes': effectiveNotes,
+      if (startTime != null && startTime!.isNotEmpty) 'startTime': startTime,
+      if (endTime != null && endTime!.isNotEmpty) 'endTime': endTime,
+      if (hasResolvedPlaceId) 'placeId': placeId!.trim(),
+      if (effectiveNotes != null && effectiveNotes.isNotEmpty)
+        'notes': effectiveNotes,
       'estimatedCost': estimatedCost,
-      if (transportMode != null) 'transportMode': transportMode,
+      if (transportMode != null && transportMode!.isNotEmpty)
+        'transportMode': transportMode,
     };
   }
 }
@@ -446,6 +542,7 @@ class AiPlanDayModel {
   final String? date;
   final String title;
   final int dayCost;
+  final int unknownCostItemCount;
   final List<AiPlanItemModel> items;
 
   const AiPlanDayModel({
@@ -453,19 +550,27 @@ class AiPlanDayModel {
     this.date,
     required this.title,
     this.dayCost = 0,
+    this.unknownCostItemCount = 0,
     this.items = const [],
   });
 
+  int get effectiveUnknownCostCount => unknownCostItemCount > 0
+      ? unknownCostItemCount
+      : items.where((i) => i.estimatedCost == null).length;
+
   factory AiPlanDayModel.fromJson(Map<String, dynamic> json) {
     final rawItems = json['items'] as List<dynamic>? ?? [];
+    final parsedItems = rawItems
+        .map((i) => AiPlanItemModel.fromJson(i as Map<String, dynamic>))
+        .toList();
     return AiPlanDayModel(
       dayNumber: json['dayNumber'] as int? ?? 1,
       date: json['date'] as String?,
       title: json['title'] as String? ?? 'Ngày ${json['dayNumber'] ?? 1}',
       dayCost: json['dayCost'] as int? ?? 0,
-      items: rawItems
-          .map((i) => AiPlanItemModel.fromJson(i as Map<String, dynamic>))
-          .toList(),
+      unknownCostItemCount: json['unknownCostItemCount'] as int? ??
+          parsedItems.where((i) => i.estimatedCost == null).length,
+      items: parsedItems,
     );
   }
 
@@ -480,25 +585,53 @@ class AiPlanDayModel {
 class BudgetAnalysisModel {
   final int? totalBudget;
   final int estimatedCost;
+  final int? _knownCostTotal;
+  final int unknownCostItemCount;
+  final String? _costStatus;
+  final bool? _hasSufficientBudgetBasis;
   final String currency;
   final bool isOverBudget;
-  final int variance;
+  final int? variance;
 
   const BudgetAnalysisModel({
     this.totalBudget,
     this.estimatedCost = 0,
+    int? knownCostTotal,
+    this.unknownCostItemCount = 0,
+    String? costStatus,
+    bool? hasSufficientBudgetBasis,
     this.currency = 'VND',
     this.isOverBudget = false,
-    this.variance = 0,
-  });
+    this.variance,
+  })  : _knownCostTotal = knownCostTotal,
+        _costStatus = costStatus,
+        _hasSufficientBudgetBasis = hasSufficientBudgetBasis;
+
+  int get knownCostTotal => _knownCostTotal ?? estimatedCost;
+
+  String get costStatus =>
+      _costStatus ??
+      (unknownCostItemCount > 0 ? 'PARTIAL_UNKNOWN' : 'COMPLETE');
+
+  bool get hasSufficientBudgetBasis =>
+      _hasSufficientBudgetBasis ??
+      (totalBudget != null && totalBudget! > 0 && unknownCostItemCount == 0);
 
   factory BudgetAnalysisModel.fromJson(Map<String, dynamic> json) {
+    final totalBudget = (json['totalBudget'] as num?)?.toInt();
+    final estimated = (json['estimatedCost'] as num?)?.toInt() ?? 0;
+    final known = (json['knownCostTotal'] as num?)?.toInt() ?? estimated;
+    final unknownCount = (json['unknownCostItemCount'] as num?)?.toInt() ?? 0;
     return BudgetAnalysisModel(
-      totalBudget: json['totalBudget'] as int?,
-      estimatedCost: json['estimatedCost'] as int? ?? 0,
+      totalBudget: totalBudget,
+      estimatedCost: estimated,
+      knownCostTotal: known,
+      unknownCostItemCount: unknownCount,
+      costStatus: json['costStatus'] as String?,
+      hasSufficientBudgetBasis: json['hasSufficientBudgetBasis'] as bool?,
       currency: json['currency'] as String? ?? 'VND',
       isOverBudget: json['isOverBudget'] as bool? ?? false,
-      variance: json['variance'] as int? ?? 0,
+      variance: (json['variance'] as num?)?.toInt(),
     );
   }
 }
@@ -511,6 +644,9 @@ class AiPlanPreviewModel {
   final String bestTimeToVisit;
   final List<String> generalTips;
   final BudgetAnalysisModel budgetAnalysis;
+  final List<ItineraryScheduleViolationModel> scheduleViolations;
+  final bool? _hasScheduleViolations;
+  final bool? _canApply;
   final List<AiPlanDayModel> days;
 
   const AiPlanPreviewModel({
@@ -521,12 +657,24 @@ class AiPlanPreviewModel {
     required this.bestTimeToVisit,
     this.generalTips = const [],
     required this.budgetAnalysis,
+    this.scheduleViolations = const [],
+    bool? hasScheduleViolations,
+    bool? canApply,
     this.days = const [],
-  });
+  })  : _hasScheduleViolations = hasScheduleViolations,
+        _canApply = canApply;
+
+  bool get hasScheduleViolations =>
+      _hasScheduleViolations ??
+      (scheduleViolations.isNotEmpty ||
+          days.any((d) => d.items.any((i) => i.violations.isNotEmpty)));
+
+  bool get canApply => _canApply ?? !hasScheduleViolations;
 
   factory AiPlanPreviewModel.fromJson(Map<String, dynamic> json) {
     final rawTips = json['generalTips'] as List<dynamic>? ?? [];
     final rawDays = json['days'] as List<dynamic>? ?? [];
+    final rawViolations = json['scheduleViolations'] as List<dynamic>? ?? [];
 
     return AiPlanPreviewModel(
       tripId: json['tripId'] as String? ?? '',
@@ -539,6 +687,12 @@ class AiPlanPreviewModel {
           ? BudgetAnalysisModel.fromJson(
               json['budgetAnalysis'] as Map<String, dynamic>)
           : const BudgetAnalysisModel(),
+      scheduleViolations: rawViolations
+          .whereType<Map<String, dynamic>>()
+          .map(ItineraryScheduleViolationModel.fromJson)
+          .toList(),
+      hasScheduleViolations: json['hasScheduleViolations'] as bool?,
+      canApply: json['canApply'] as bool?,
       days: rawDays
           .map((d) => AiPlanDayModel.fromJson(d as Map<String, dynamic>))
           .toList(),

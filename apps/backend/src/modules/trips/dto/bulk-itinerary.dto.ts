@@ -60,12 +60,12 @@ export class BulkItineraryItemDto {
   @MaxLength(2000, { message: 'Ghi chú tối đa 2000 ký tự' })
   notes?: string;
 
-  @ApiPropertyOptional({ description: 'Chi phí ước tính VND', example: 50000 })
+  @ApiPropertyOptional({ description: 'Chi phí ước tính VND (null nếu chưa biết)', example: 50000, nullable: true })
   @IsOptional()
   @IsInt()
   @Min(0)
   @Max(2147483647)
-  estimatedCost?: number;
+  estimatedCost?: number | null;
 
   @ApiPropertyOptional({ description: 'Phương tiện di chuyển', example: 'motorbike' })
   @IsOptional()
