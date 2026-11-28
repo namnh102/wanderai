@@ -712,6 +712,14 @@ void main() {
             'currency': 'VND',
             'isOverBudget': false,
             'variance': null,
+            'costProvenanceBreakdown': {
+              'verifiedPlaceCostTotal': 80000,
+              'verifiedPlaceCostItemCount': 1,
+              'verifiedFreeItemCount': 0,
+              'unverifiedAiEstimatedCostTotal': 0,
+              'unverifiedAiEstimatedItemCount': 1,
+              'unknownCostItemCount': 1,
+            },
           },
           'days': [
             {
@@ -729,7 +737,7 @@ void main() {
                   'placeId': '8f2b5a69-1293-4efe-8fc5-3a74193edd0f',
                   'placeName': 'Bảo tàng Quảng Ninh',
                   'estimatedCost': 80000,
-                  'costStatus': 'KNOWN',
+                  'costStatus': 'VERIFIED',
                 },
                 {
                   'orderIndex': 2,
@@ -748,7 +756,7 @@ void main() {
                   'activity': 'Dạo bộ công viên Lán Bè',
                   'placeName': 'Công viên Lán Bè',
                   'estimatedCost': 0,
-                  'costStatus': 'KNOWN',
+                  'costStatus': 'ESTIMATED',
                 },
               ],
             },
@@ -814,9 +822,17 @@ void main() {
         expect(fakeTripRepo.lastPlanOptions?.interestsOverride, ['museum']);
         expect(fakeTripRepo.bulkSaveCalled, isFalse); // Preview has NOT saved to DB!
 
-        // 5. Verify C4 Preview displays exact "Đã biết 80.000đ; còn khoản chưa xác minh", no "420.000", and final-proposal diff notice
+        // 5. Verify C4 Preview displays provenance summary, per-item badges, no "420.000", and final-proposal diff notice
         expect(
-          find.text('Đã biết 80.000đ; còn khoản chưa xác minh'),
+          find.text('Đã xác minh 80.000đ · Tạm tính 0đ · 1 khoản chưa biết giá'),
+          findsOneWidget,
+        );
+        expect(
+          find.text('08:00 - 10:30 • 80.000đ · Đã xác minh'),
+          findsOneWidget,
+        );
+        expect(
+          find.text('11:30 - 12:00 • 0đ · Tạm tính'),
           findsOneWidget,
         );
         expect(find.textContaining('420.000'), findsNothing);
@@ -839,8 +855,15 @@ void main() {
     );
 
     testWidgets(
-      '9. Shows "Đang lập bản xem trước" while generating, preserves Wandy request on 503 failure, and succeeds on "Thử lại" with 3 demo cost types',
+      '9. Shows "Đang lập bản xem trước" while generating, preserves Wandy request on 503 failure, and succeeds on "Thử lại" displaying "Đã xác minh 80.000đ · Tạm tính 120.000đ · 1 khoản chưa biết giá"',
       (tester) async {
+        tester.view.physicalSize = const Size(800, 1400);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(() {
+          tester.view.resetPhysicalSize();
+          tester.view.resetDevicePixelRatio();
+        });
+
         const halongPrompt =
             'Hai người lớn đi Hạ Long từ 8h đến 12h, tổng ngân sách 500.000 đồng, ưu tiên bảo tàng. Lập giúp tôi một lịch và ghi rõ khoản nào chưa biết giá.';
 
@@ -872,6 +895,14 @@ void main() {
             'currency': 'VND',
             'isOverBudget': false,
             'variance': null,
+            'costProvenanceBreakdown': {
+              'verifiedPlaceCostTotal': 80000,
+              'verifiedPlaceCostItemCount': 1,
+              'verifiedFreeItemCount': 0,
+              'unverifiedAiEstimatedCostTotal': 120000,
+              'unverifiedAiEstimatedItemCount': 1,
+              'unknownCostItemCount': 1,
+            },
           },
           'days': [
             {
@@ -889,7 +920,7 @@ void main() {
                   'placeId': '8f2b5a69-1293-4efe-8fc5-3a74193edd0f',
                   'placeName': 'Bảo tàng Quảng Ninh',
                   'estimatedCost': 80000,
-                  'costStatus': 'KNOWN',
+                  'costStatus': 'VERIFIED',
                 },
                 {
                   'orderIndex': 2,
@@ -908,7 +939,7 @@ void main() {
                   'activity': 'Thưởng thức bún bề bề Hòn Gai',
                   'placeName': 'Khu vực ẩm thực Hòn Gai',
                   'estimatedCost': 120000,
-                  'costStatus': 'KNOWN',
+                  'costStatus': 'ESTIMATED',
                 },
               ],
             },
@@ -986,9 +1017,137 @@ void main() {
 
         expect(find.text('Lịch trình từ Wandy AI'), findsOneWidget);
         expect(
-          find.text('Đã biết 200.000đ; còn khoản chưa xác minh'),
+          find.text('Đã xác minh 80.000đ · Tạm tính 120.000đ · 1 khoản chưa biết giá'),
           findsOneWidget,
         );
+        expect(
+          find.text('08:00 - 10:30 • 80.000đ · Đã xác minh'),
+          findsOneWidget,
+        );
+        expect(
+          find.text('10:30 - 11:15 • Chưa biết giá'),
+          findsOneWidget,
+        );
+        expect(
+          find.text('11:15 - 12:00 • 120.000đ · Tạm tính'),
+          findsOneWidget,
+        );
+      },
+    );
+
+    testWidgets(
+      '10. Renders sourced free ticket (0đ · Miễn phí (Đã xác minh)) and reopened/legacy trip provenance labels cleanly',
+      (tester) async {
+        tester.view.physicalSize = const Size(800, 1400);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(() {
+          tester.view.resetPhysicalSize();
+          tester.view.resetDevicePixelRatio();
+        });
+
+        final fakeTripRepo = FakePlannerTripRepository();
+        fakeTripRepo.currentTrip = TripModel.fromJson({
+          'id': 'trip_reopen_provenance',
+          'userId': 'user_1',
+          'title': 'Chuyến mở lại & lịch cũ thiếu nguồn giá',
+          'totalBudget': 500000,
+          'status': 'PLANNED',
+          'costSummaryText':
+              'Đã xác minh 80.000đ · Tạm tính 120.000đ · 1 khoản chưa biết giá',
+          'costProvenanceBreakdown': {
+            'verifiedPlaceCostTotal': 80000,
+            'verifiedPlaceCostItemCount': 2,
+            'verifiedFreeItemCount': 1,
+            'unverifiedAiEstimatedCostTotal': 120000,
+            'unverifiedAiEstimatedItemCount': 1,
+            'unknownCostItemCount': 1,
+          },
+          'itineraries': [
+            {
+              'id': 'itin_reopen_1',
+              'tripId': 'trip_reopen_provenance',
+              'dayNumber': 1,
+              'title': 'Ngày 1: Đối chiếu sau khi mở lại',
+              'items': [
+                {
+                  'id': 'item_v1',
+                  'itineraryId': 'itin_reopen_1',
+                  'orderIndex': 1,
+                  'startTime': '08:00',
+                  'endTime': '10:30',
+                  'activity': 'Tham quan Bảo tàng Quảng Ninh',
+                  'placeId': '8f2b5a69-1293-4efe-8fc5-3a74193edd0f',
+                  'place': {
+                    'id': '8f2b5a69-1293-4efe-8fc5-3a74193edd0f',
+                    'name': 'Bảo tàng Quảng Ninh',
+                  },
+                  'estimatedCost': 80000,
+                  'costStatus': 'VERIFIED',
+                },
+                {
+                  'id': 'item_f1',
+                  'itineraryId': 'itin_reopen_1',
+                  'orderIndex': 2,
+                  'startTime': '10:30',
+                  'endTime': '11:00',
+                  'activity': 'Tham quan Cầu Rồng miễn phí có nguồn',
+                  'placeId': '9974ff88-5418-5867-ae49-1b72e0f0861f',
+                  'estimatedCost': 0,
+                  'costStatus': 'VERIFIED',
+                  'isVerifiedFree': true,
+                },
+                {
+                  'id': 'item_e1',
+                  'itineraryId': 'itin_reopen_1',
+                  'orderIndex': 3,
+                  'startTime': '11:00',
+                  'endTime': '11:30',
+                  'activity': 'Mục lịch cũ thiếu nguồn giá',
+                  'estimatedCost': 120000,
+                  'costStatus': 'ESTIMATED',
+                },
+                {
+                  'id': 'item_u1',
+                  'itineraryId': 'itin_reopen_1',
+                  'orderIndex': 4,
+                  'startTime': '11:30',
+                  'endTime': '12:00',
+                  'activity': 'Tháp Đồng Hồ chưa biết giá',
+                  'estimatedCost': null,
+                  'costStatus': 'UNKNOWN',
+                },
+              ],
+            },
+          ],
+        });
+
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: [
+              tripRepositoryProvider.overrideWithValue(fakeTripRepo),
+            ],
+            child: const MaterialApp(
+              home: TripDetailScreen(tripId: 'trip_reopen_provenance'),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        expect(
+          find.byKey(const Key('trip_saved_cost_provenance_summary')),
+          findsOneWidget,
+        );
+        expect(
+          find.text('Đã xác minh 80.000đ · Tạm tính 120.000đ · 1 khoản chưa biết giá'),
+          findsOneWidget,
+        );
+        expect(find.text('Chi phí: 80.000đ · Đã xác minh'), findsOneWidget);
+        expect(
+          find.text('Chi phí: 0đ · Miễn phí (Đã xác minh)'),
+          findsOneWidget,
+        );
+        expect(find.text('Chi phí: 120.000đ · Tạm tính'), findsOneWidget);
+        expect(find.text('Chi phí: Chưa biết giá'), findsOneWidget);
       },
     );
   });

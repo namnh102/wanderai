@@ -1146,8 +1146,10 @@ describe('TripsService & Trip DTO Validation', () => {
         costStatus: 'PARTIAL_UNKNOWN',
         hasSufficientBudgetBasis: false,
         variance: null,
-        summaryText: 'Đã biết 80.000đ; còn khoản chưa xác minh',
+        summaryText: 'Đã xác minh 80.000đ · 1 khoản chưa biết giá',
       });
+      expect(previewRes.body.data.days[0].items[0].costStatus).toBe('VERIFIED');
+      expect(previewRes.body.data.days[0].items[1].costStatus).toBe('UNKNOWN');
 
       // Preview must NOT persist anything to DB
       const beforeApply = await request(app.getHttpServer())
@@ -1171,6 +1173,7 @@ describe('TripsService & Trip DTO Validation', () => {
                 endTime: '10:30',
                 activity: 'Tham quan Bảo tàng Quảng Ninh',
                 placeId: baoTangId,
+                notes: previewRes.body.data.days[0].items[0].notes,
                 estimatedCost: 80000,
               },
               {
@@ -1204,11 +1207,21 @@ describe('TripsService & Trip DTO Validation', () => {
         .expect(200);
       expect(afterDoubleApply.body.data.itineraries).toHaveLength(1);
       expect(afterDoubleApply.body.data.itineraries[0].items).toHaveLength(2);
-      expect(afterDoubleApply.body.data.itineraries[0].items[0].estimatedCost).toBe(80000);
-      expect(afterDoubleApply.body.data.itineraries[0].items[1].estimatedCost).toBeNull();
+      expect(afterDoubleApply.body.data.itineraries[0].items[0]).toMatchObject({
+        estimatedCost: 80000,
+        costStatus: 'VERIFIED',
+        costSourceVerified: true,
+      });
+      expect(afterDoubleApply.body.data.itineraries[0].items[1]).toMatchObject({
+        estimatedCost: null,
+        costStatus: 'UNKNOWN',
+      });
+      expect(afterDoubleApply.body.data.costSummaryText).toBe(
+        'Đã xác minh 80.000đ · 1 khoản chưa biết giá',
+      );
     });
 
-    it('Preview timing & 3-cost demo regression: propagates X-Request-Id across NestJS->FastAPI (503 retry mock) and separates 80.000đ verified POI vs 120.000đ AI-estimated meal vs null unknown POI', async () => {
+    it('Preview timing & 3-cost demo regression: propagates X-Request-Id across NestJS->FastAPI (503 retry mock) and formats "Đã xác minh 80.000đ · Tạm tính 120.000đ · 1 khoản chưa biết giá"', async () => {
       const baoTangId = '8f2b5a69-1293-4efe-8fc5-3a74193edd0f';
       const thapDongHoId = '65562a67-84ff-44a0-990d-31917a2a9bd0';
       const destId = 'd1111111-1111-4111-8111-111111111111';
@@ -1368,22 +1381,363 @@ describe('TripsService & Trip DTO Validation', () => {
         res.body.data.timingTelemetry.nestjsPostAiScheduleValidationMs,
       ).toBeGreaterThanOrEqual(0);
 
-      // Characterization of the 3 demo cost buckets for C4 alignment with ô trái:
+      expect(res.body.data.days[0].items[0].costStatus).toBe('VERIFIED');
+      expect(res.body.data.days[0].items[1].costStatus).toBe('UNKNOWN');
+      expect(res.body.data.days[0].items[2].costStatus).toBe('ESTIMATED');
+
       expect(res.body.data.budgetAnalysis).toMatchObject({
         totalBudget: 500000,
         knownCostTotal: 200000,
         unknownCostItemCount: 1,
         costStatus: 'PARTIAL_UNKNOWN',
         variance: null,
-        summaryText: 'Đã biết 200.000đ; còn khoản chưa xác minh',
+        summaryText: 'Đã xác minh 80.000đ · Tạm tính 120.000đ · 1 khoản chưa biết giá',
         costProvenanceBreakdown: {
           verifiedPlaceCostTotal: 80000,
-          unverifiedAiEstimatedCostTotal: 120000,
           verifiedPlaceCostItemCount: 1,
+          verifiedFreeItemCount: 0,
+          unverifiedAiEstimatedCostTotal: 120000,
           unverifiedAiEstimatedItemCount: 1,
           unknownCostItemCount: 1,
         },
       });
+    });
+
+    it('C4 Strict Cost Provenance: placeId-only never verifies price, enforces exact price+audience, verifies sourced free tickets (0đ), and classifies legacy places/itineraries lacking price provenance as ESTIMATED', async () => {
+      const baoTangId = '8f2b5a69-1293-4efe-8fc5-3a74193edd0f';
+      const thapDongHoId = '65562a67-84ff-44a0-990d-31917a2a9bd0';
+      const cauRongId = '9974ff88-5418-5867-ae49-1b72e0f0861f';
+      const legacySeedPoiId = 'aaaaaaaa-1111-4111-8111-aaaaaaaa1111';
+      const unverifiedParkId = 'bbbbbbbb-2222-4222-8222-bbbbbbbb2222';
+      const destId = 'd1111111-1111-4111-8111-111111111111';
+      const now = new Date('2026-11-28T00:00:00.000Z');
+
+      const rawStore = inMemoryPrisma as unknown as {
+        places: Map<string, Record<string, unknown>>;
+        placeSources: Array<Record<string, unknown>>;
+      };
+
+      for (const poi of [
+        {
+          id: baoTangId,
+          name: 'Bảo tàng Quảng Ninh',
+          priceMin: 10000,
+          priceMax: 40000,
+        },
+        {
+          id: thapDongHoId,
+          name: 'Tháp Đồng Hồ Hạ Long',
+          priceMin: null,
+          priceMax: null,
+        },
+        {
+          id: cauRongId,
+          name: 'Cầu Rồng',
+          priceMin: 0,
+          priceMax: 0,
+        },
+        {
+          id: legacySeedPoiId,
+          name: 'Bảo tàng Cũ Thiếu Nguồn Giá',
+          // Historical seed priceMin/priceMax in DB WITHOUT curated price provenance!
+          priceMin: 20000,
+          priceMax: 40000,
+        },
+        {
+          id: unverifiedParkId,
+          name: 'Công viên Lán Bè',
+          priceMin: null,
+          priceMax: null,
+        },
+      ]) {
+        rawStore.places.set(poi.id, {
+          id: poi.id,
+          destinationId: destId,
+          categoryId: 'c3333333-3333-4333-8333-333333333333',
+          name: poi.name,
+          nameEn: null,
+          description: null,
+          address: 'Việt Nam',
+          latitude: 20.95,
+          longitude: 107.09,
+          priceMin: poi.priceMin,
+          priceMax: poi.priceMax,
+          openingHours: null,
+          coverImage: null,
+          images: [],
+          rating: null,
+          reviewCount: 0,
+          deletedAt: null,
+          createdAt: now,
+          updatedAt: now,
+        });
+        rawStore.placeSources.push({
+          id: `ps-prov-${poi.id}`,
+          placeId: poi.id,
+          sourceName: 'osm',
+          sourceId: `node/${poi.id.slice(0, 6)}`,
+          rawName: poi.name,
+          confidenceScore: 1.0,
+          rawData: { tags: { name: poi.name } },
+          createdAt: now,
+        });
+      }
+
+      const tripRes = await request(app.getHttpServer())
+        .post('/trips')
+        .send({
+          title: 'Kiểm định nguồn gốc chi phí C4',
+          destinationId: destId,
+          startDate: '2026-11-28',
+          endDate: '2026-11-28',
+          totalBudget: 500000,
+        })
+        .expect(201);
+      const tripId = tripRes.body.data.id as string;
+      const aiProxy = app.get(AiProxyService) as { planWithTripContext: jest.Mock };
+
+      // 1) Matching placeId does NOT verify wrong amount, wrong audience, unverified POI, or legacy seed POI!
+      aiProxy.planWithTripContext.mockResolvedValueOnce({
+        destination: 'Hạ Long',
+        total_days: 1,
+        days: [
+          {
+            day_number: 1,
+            date: '2026-11-28',
+            title: 'Ngày 1',
+            items: [
+              {
+                // Bảo tàng Quảng Ninh matched by placeId, but 40.000đ != 2 adults * 40.000đ (80.000đ) -> ESTIMATED!
+                order_index: 1,
+                start_time: '08:00',
+                end_time: '09:30',
+                activity: 'Bảo tàng sai mức giá cho 2 người lớn',
+                place_id: baoTangId,
+                estimated_cost: 40000,
+              },
+              {
+                // Tháp Đồng Hồ matched by placeId, AI guessed 30.000đ, no verified price source -> ESTIMATED!
+                order_index: 2,
+                start_time: '09:30',
+                end_time: '10:15',
+                activity: 'Tháp Đồng Hồ giá tự đoán',
+                place_id: thapDongHoId,
+                estimated_cost: 30000,
+              },
+              {
+                // Legacy POI with seed priceMin=20000, priceMax=40000 but NO price provenance -> ESTIMATED!
+                order_index: 3,
+                start_time: '10:15',
+                end_time: '11:15',
+                activity: 'Bảo tàng Cũ Thiếu Nguồn Giá',
+                place_id: legacySeedPoiId,
+                estimated_cost: 80000,
+              },
+              {
+                // Sourced FREE ticket (Cầu Rồng, 0đ) -> VERIFIED!
+                order_index: 4,
+                start_time: '11:15',
+                end_time: '11:45',
+                activity: 'Tham quan Cầu Rồng miễn phí có nguồn',
+                place_id: cauRongId,
+                estimated_cost: 0,
+              },
+              {
+                // Unverified 0đ at Công viên Lán Bè -> ESTIMATED (never VERIFIED free)!
+                order_index: 5,
+                start_time: '11:45',
+                end_time: '12:00',
+                activity: 'Dạo Công viên Lán Bè chưa có nguồn miễn phí',
+                place_id: unverifiedParkId,
+                estimated_cost: 0,
+              },
+            ],
+          },
+        ],
+      });
+
+      const resStrict = await request(app.getHttpServer())
+        .post(`/trips/${tripId}/ai-plan`)
+        .send({
+          additionalPrompt: 'Hai người lớn đi tham quan từ 8h đến 12h.',
+          partySize: 2,
+          partyDescription: '2 người lớn',
+        })
+        .expect(201);
+
+      const strictItems = resStrict.body.data.days[0].items;
+      // placeId is still resolved (confirming the place!), while costStatus is ESTIMATED for 1, 2, 3, 5!
+      expect(strictItems[0]).toMatchObject({
+        placeId: baoTangId,
+        estimatedCost: 40000,
+        costStatus: 'ESTIMATED',
+        costSourceVerified: false,
+      });
+      expect(strictItems[1]).toMatchObject({
+        placeId: thapDongHoId,
+        estimatedCost: 30000,
+        costStatus: 'ESTIMATED',
+        costSourceVerified: false,
+      });
+      expect(strictItems[2]).toMatchObject({
+        placeId: legacySeedPoiId,
+        estimatedCost: 80000,
+        costStatus: 'ESTIMATED',
+        costSourceVerified: false,
+      });
+      expect(strictItems[3]).toMatchObject({
+        placeId: cauRongId,
+        estimatedCost: 0,
+        costStatus: 'VERIFIED',
+        isVerifiedFree: true,
+        costSourceVerified: true,
+      });
+      expect(strictItems[4]).toMatchObject({
+        placeId: unverifiedParkId,
+        estimatedCost: 0,
+        costStatus: 'ESTIMATED',
+        isVerifiedFree: false,
+      });
+      expect(resStrict.body.data.budgetAnalysis).toMatchObject({
+        summaryText: 'Đã xác minh 0đ (miễn phí) · Tạm tính 150.000đ',
+        costProvenanceBreakdown: {
+          verifiedPlaceCostTotal: 0,
+          verifiedPlaceCostItemCount: 1,
+          verifiedFreeItemCount: 1,
+          unverifiedAiEstimatedCostTotal: 150000,
+          unverifiedAiEstimatedItemCount: 4,
+          unknownCostItemCount: 0,
+        },
+      });
+
+      // 2) Audience match check: 2 sinh viên * 20.000đ = 40.000đ IS verified, whereas unspecified audience ("2 người") is ESTIMATED!
+      aiProxy.planWithTripContext.mockResolvedValueOnce({
+        destination: 'Hạ Long',
+        total_days: 1,
+        days: [
+          {
+            day_number: 1,
+            date: '2026-11-28',
+            title: 'Sinh viên đi bảo tàng',
+            items: [
+              {
+                order_index: 1,
+                start_time: '08:00',
+                end_time: '10:00',
+                activity: 'Tham quan Bảo tàng Quảng Ninh',
+                place_id: baoTangId,
+                estimated_cost: 40000,
+              },
+            ],
+          },
+        ],
+      });
+      const resStudent = await request(app.getHttpServer())
+        .post(`/trips/${tripId}/ai-plan`)
+        .send({ additionalPrompt: 'Hai sinh viên đi Hạ Long từ 8h đến 10h.' })
+        .expect(201);
+      expect(resStudent.body.data.days[0].items[0].costStatus).toBe('VERIFIED');
+      expect(resStudent.body.data.budgetAnalysis.summaryText).toBe(
+        'Đã xác minh 40.000đ',
+      );
+
+      aiProxy.planWithTripContext.mockResolvedValueOnce({
+        destination: 'Hạ Long',
+        total_days: 1,
+        days: [
+          {
+            day_number: 1,
+            date: '2026-11-28',
+            title: 'Chưa rõ đối tượng',
+            items: [
+              {
+                order_index: 1,
+                start_time: '08:00',
+                end_time: '10:00',
+                activity: 'Tham quan Bảo tàng Quảng Ninh',
+                place_id: baoTangId,
+                estimated_cost: 80000,
+              },
+            ],
+          },
+        ],
+      });
+      const resNoAudience = await request(app.getHttpServer())
+        .post(`/trips/${tripId}/ai-plan`)
+        .send({ additionalPrompt: '2 người đi Hạ Long từ 8h đến 10h.' })
+        .expect(201);
+      expect(resNoAudience.body.data.days[0].items[0].costStatus).toBe('ESTIMATED');
+      expect(resNoAudience.body.data.budgetAnalysis.summaryText).toBe(
+        'Tạm tính 80.000đ',
+      );
+
+      // 3) Legacy saved itinerary_items lacking price+audience provenance in DB -> GET /trips/:id classifies as ESTIMATED!
+      await request(app.getHttpServer())
+        .post(`/trips/${tripId}/itinerary/bulk`)
+        .send({
+          replaceExisting: true,
+          days: [
+            {
+              dayNumber: 1,
+              date: '2026-11-28',
+              title: 'Lịch trình cũ thiếu nguồn giá',
+              items: [
+                {
+                  orderIndex: 1,
+                  startTime: '08:00',
+                  endTime: '10:00',
+                  activity: 'Bảo tàng lưu từ lịch cũ không có nguồn giá',
+                  placeId: baoTangId,
+                  notes: 'Tham quan buổi sáng',
+                  estimatedCost: 80000,
+                },
+                {
+                  orderIndex: 2,
+                  startTime: '10:15',
+                  endTime: '11:30',
+                  activity: 'Bảo tàng Cũ Thiếu Nguồn Giá',
+                  placeId: legacySeedPoiId,
+                  estimatedCost: 40000,
+                },
+                {
+                  orderIndex: 3,
+                  startTime: '11:30',
+                  endTime: '12:00',
+                  activity: 'Cầu Rồng miễn phí có nguồn',
+                  placeId: cauRongId,
+                  estimatedCost: 0,
+                },
+              ],
+            },
+          ],
+        })
+        .expect(201);
+
+      const legacyReload = await request(app.getHttpServer())
+        .get(`/trips/${tripId}`)
+        .expect(200);
+      const reloadedItems = legacyReload.body.data.itineraries[0].items;
+      expect(reloadedItems[0]).toMatchObject({
+        placeId: baoTangId,
+        estimatedCost: 80000,
+        costStatus: 'ESTIMATED',
+        costSourceVerified: false,
+      });
+      expect(reloadedItems[1]).toMatchObject({
+        placeId: legacySeedPoiId,
+        estimatedCost: 40000,
+        costStatus: 'ESTIMATED',
+        costSourceVerified: false,
+      });
+      expect(reloadedItems[2]).toMatchObject({
+        placeId: cauRongId,
+        estimatedCost: 0,
+        costStatus: 'VERIFIED',
+        isVerifiedFree: true,
+      });
+      expect(legacyReload.body.data.costSummaryText).toBe(
+        'Đã xác minh 0đ (miễn phí) · Tạm tính 120.000đ',
+      );
     });
   });
 });

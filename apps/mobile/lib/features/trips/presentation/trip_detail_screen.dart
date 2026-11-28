@@ -402,11 +402,8 @@ class _TripDetailScreenState extends ConsumerState<TripDetailScreen> {
         : ((plan.budgetAnalysis.totalBudget ?? 0) -
                 plan.budgetAnalysis.knownCostTotal)
             .abs();
-    final c4UnknownSummary = formatC4BudgetSummary(
-      knownCostTotal: plan.budgetAnalysis.knownCostTotal,
+    final c4ProvenanceSummary = plan.budgetAnalysis.resolveSummaryLine(
       unknownCostCount: unknownCostCount,
-      totalBudget: plan.budgetAnalysis.totalBudget,
-      isOverBudget: plan.budgetAnalysis.isOverBudget,
     );
 
     final summaryViolations = plan.scheduleViolations.isNotEmpty
@@ -592,15 +589,18 @@ class _TripDetailScreenState extends ConsumerState<TripDetailScreen> {
                 ],
               ],
             ),
-            if (hasUnknownCosts) ...[
+            if (c4ProvenanceSummary != null &&
+                c4ProvenanceSummary.isNotEmpty) ...[
               const SizedBox(height: 6),
               Text(
-                c4UnknownSummary,
+                c4ProvenanceSummary,
                 key: const Key('ai_plan_c4_budget_summary_line'),
                 style: TextStyle(
                   fontSize: 12.5,
                   fontWeight: FontWeight.w700,
-                  color: Colors.orange.shade900,
+                  color: hasUnknownCosts
+                      ? Colors.orange.shade900
+                      : cs.primary,
                 ),
               ),
             ],
@@ -891,9 +891,18 @@ class _TripDetailScreenState extends ConsumerState<TripDetailScreen> {
             final hasViolation = item.violations.isNotEmpty;
             final timeRange =
                 formatItineraryTimeRange(item.startTime, item.endTime);
-            final costLabel = item.estimatedCost != null
-                ? '${item.estimatedCost} VND'
-                : 'Chưa biết giá';
+            final String costLabel;
+            if (item.estimatedCost == null) {
+              costLabel = 'Chưa biết giá';
+            } else if (item.effectiveCostStatus == 'VERIFIED') {
+              costLabel = item.estimatedCost == 0
+                  ? '0đ · Miễn phí (Đã xác minh)'
+                  : '${formatDotVndAmount(item.estimatedCost!)}đ · Đã xác minh';
+            } else if (item.effectiveCostStatus == 'ESTIMATED') {
+              costLabel = '${formatDotVndAmount(item.estimatedCost!)}đ · Tạm tính';
+            } else {
+              costLabel = '${item.estimatedCost} VND';
+            }
             final metaLabel =
                 timeRange != null ? '$timeRange • $costLabel' : costLabel;
 
@@ -1389,6 +1398,25 @@ class _TripDetailScreenState extends ConsumerState<TripDetailScreen> {
                         ),
                     ],
                   ),
+                  if (trip.costSummaryText != null &&
+                      trip.costSummaryText!.trim().isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 6),
+                      child: Text(
+                        trip.costSummaryText!.trim(),
+                        key: const Key('trip_saved_cost_provenance_summary'),
+                        style: TextStyle(
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.w700,
+                          color: (trip.costProvenanceBreakdown
+                                          ?.unknownCostItemCount ??
+                                      0) >
+                                  0
+                              ? Colors.orange.shade900
+                              : cs.primary,
+                        ),
+                      ),
+                    ),
                   if (!_isReordering &&
                       trip.status != 'CANCELLED' &&
                       trip.itineraries.any((d) => d.items.length >= 2))
@@ -1839,9 +1867,17 @@ class _TripDetailScreenState extends ConsumerState<TripDetailScreen> {
               style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant),
             ),
           Text(
-            item.estimatedCost != null
-                ? 'Chi phí: ${item.estimatedCost} VND'
-                : 'Chi phí: Chưa biết',
+            item.estimatedCost == null
+                ? (item.costStatus == 'UNKNOWN'
+                    ? 'Chi phí: Chưa biết giá'
+                    : 'Chi phí: Chưa biết')
+                : item.costStatus == 'VERIFIED'
+                    ? (item.estimatedCost == 0
+                        ? 'Chi phí: 0đ · Miễn phí (Đã xác minh)'
+                        : 'Chi phí: ${formatDotVndAmount(item.estimatedCost!)}đ · Đã xác minh')
+                    : item.costStatus == 'ESTIMATED'
+                        ? 'Chi phí: ${formatDotVndAmount(item.estimatedCost!)}đ · Tạm tính'
+                        : 'Chi phí: ${item.estimatedCost} VND',
             style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant),
           ),
           if (item.notes != null && item.notes!.isNotEmpty)

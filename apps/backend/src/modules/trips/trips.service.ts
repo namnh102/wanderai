@@ -20,6 +20,15 @@ import {
   evaluateItineraryDays,
   VerifiedPlaceConstraintInfo,
 } from './itinerary-constraints.util';
+import {
+  attachVerifiedProvenanceNote,
+  classifyPreviewItemCostProvenance,
+  classifySavedItemCostProvenance,
+  CostProvenanceBreakdown,
+  formatCostProvenanceSummaryVi,
+  parseTravelerAudienceContext,
+  PlaceProvenanceSourceRow,
+} from './c4-cost-provenance.util';
 
 const UUID_LIKE_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -164,7 +173,126 @@ export class TripsService {
       throw new ForbiddenException('Bạn không có quyền xem chuyến đi này');
     }
 
-    return trip;
+    const itinerariesList = Array.isArray(trip.itineraries)
+      ? trip.itineraries
+      : null;
+    const totalSavedItems = itinerariesList
+      ? itinerariesList.reduce(
+          (acc, d) => acc + (Array.isArray(d.items) ? d.items.length : 0),
+          0,
+        )
+      : 0;
+
+    if (!itinerariesList || totalSavedItems === 0) {
+      return trip;
+    }
+
+    const savedPlaceIds = Array.from(
+      new Set(
+        itinerariesList
+          .flatMap((d) => d.items ?? [])
+          .map((i) => i.placeId)
+          .filter(
+            (pid): pid is string =>
+              typeof pid === 'string' && pid.trim().length > 0,
+          ),
+      ),
+    );
+    const sourcesByPlaceId = new Map<string, PlaceProvenanceSourceRow[]>();
+    if (savedPlaceIds.length > 0) {
+      const placeRows = await this.prisma.place.findMany({
+        where: { id: { in: savedPlaceIds }, deletedAt: null },
+        select: {
+          id: true,
+          placeSources: { select: { sourceName: true, rawData: true } },
+        },
+      });
+      if (Array.isArray(placeRows)) {
+        for (const p of placeRows) {
+          sourcesByPlaceId.set(
+            p.id,
+            Array.isArray((p as any).placeSources)
+              ? ((p as any).placeSources as PlaceProvenanceSourceRow[])
+              : [],
+          );
+        }
+      }
+    }
+
+    let verifiedPlaceCostTotal = 0;
+    let verifiedPlaceCostItemCount = 0;
+    let verifiedFreeItemCount = 0;
+    let unverifiedAiEstimatedCostTotal = 0;
+    let unverifiedAiEstimatedItemCount = 0;
+    let unknownCostItemCount = 0;
+    let knownCostTotal = 0;
+
+    const enrichedItineraries = itinerariesList.map((day) => {
+      const chargedGroups = new Set<string>();
+      const enrichedItems = (day.items ?? []).map((item) => {
+        const classified = classifySavedItemCostProvenance({
+          estimatedCost: item.estimatedCost,
+          placeId: item.placeId,
+          notes: item.notes,
+          placeSources: item.placeId
+            ? (sourcesByPlaceId.get(item.placeId) ?? [])
+            : null,
+          chargedTicketGroupsInDay: chargedGroups,
+        });
+        if (classified.costStatus === 'UNKNOWN') {
+          unknownCostItemCount += 1;
+        } else {
+          const numericCost = Math.max(0, Math.trunc(item.estimatedCost ?? 0));
+          knownCostTotal += numericCost;
+          if (classified.costStatus === 'VERIFIED') {
+            verifiedPlaceCostTotal += numericCost;
+            verifiedPlaceCostItemCount += 1;
+            if (classified.isVerifiedFree) {
+              verifiedFreeItemCount += 1;
+            }
+          } else {
+            unverifiedAiEstimatedCostTotal += numericCost;
+            unverifiedAiEstimatedItemCount += 1;
+          }
+        }
+        return {
+          ...item,
+          costStatus: classified.costStatus,
+          costBadgeVi: classified.costBadgeVi,
+          isVerifiedFree: classified.isVerifiedFree,
+          costSourceVerified: classified.costSourceVerified,
+          verifiedSourceUrl: classified.verifiedSourceUrl,
+        };
+      });
+      return {
+        ...day,
+        items: enrichedItems,
+      };
+    });
+
+    const savedBreakdown: CostProvenanceBreakdown = {
+      verifiedPlaceCostTotal,
+      verifiedPlaceCostItemCount,
+      verifiedFreeItemCount,
+      unverifiedAiEstimatedCostTotal,
+      unverifiedAiEstimatedItemCount,
+      unknownCostItemCount,
+    };
+    const isOverBudget =
+      typeof trip.totalBudget === 'number' &&
+      trip.totalBudget > 0 &&
+      knownCostTotal > trip.totalBudget;
+
+    return {
+      ...trip,
+      itineraries: enrichedItineraries,
+      costProvenanceBreakdown: savedBreakdown,
+      costSummaryText: formatCostProvenanceSummaryVi(savedBreakdown, {
+        totalBudget: trip.totalBudget,
+        isOverBudget,
+        knownCostTotal,
+      }),
+    };
   }
 
   // PUT /trips/:id
@@ -290,9 +418,11 @@ export class TripsService {
   ): Promise<{
     byId: Map<string, VerifiedPlaceConstraintInfo>;
     unambiguousByName: Map<string, VerifiedPlaceConstraintInfo>;
+    placeSourcesById: Map<string, PlaceProvenanceSourceRow[]>;
   }> {
     const byId = new Map<string, VerifiedPlaceConstraintInfo>();
     const unambiguousByName = new Map<string, VerifiedPlaceConstraintInfo>();
+    const placeSourcesById = new Map<string, PlaceProvenanceSourceRow[]>();
 
     const explicitIds = new Set<string>();
     let hasNamedItems = false;
@@ -316,7 +446,13 @@ export class TripsService {
           deletedAt: null,
           placeSources: { some: {} },
         },
-        select: { id: true, name: true, nameEn: true, openingHours: true },
+        select: {
+          id: true,
+          name: true,
+          nameEn: true,
+          openingHours: true,
+          placeSources: { select: { sourceName: true, rawData: true } },
+        },
       });
       for (const p of explicitPlaces ?? []) {
         byId.set(p.id, {
@@ -325,6 +461,12 @@ export class TripsService {
           nameEn: p.nameEn ?? null,
           openingHours: p.openingHours ?? null,
         });
+        placeSourcesById.set(
+          p.id,
+          Array.isArray((p as any).placeSources)
+            ? ((p as any).placeSources as PlaceProvenanceSourceRow[])
+            : [],
+        );
       }
     }
 
@@ -335,7 +477,13 @@ export class TripsService {
           deletedAt: null,
           placeSources: { some: {} },
         },
-        select: { id: true, name: true, nameEn: true, openingHours: true },
+        select: {
+          id: true,
+          name: true,
+          nameEn: true,
+          openingHours: true,
+          placeSources: { select: { sourceName: true, rawData: true } },
+        },
       });
       const buckets = new Map<string, VerifiedPlaceConstraintInfo[]>();
       const pushKey = (rawKey: string | null | undefined, info: VerifiedPlaceConstraintInfo) => {
@@ -357,6 +505,12 @@ export class TripsService {
           openingHours: p.openingHours ?? null,
         };
         byId.set(p.id, info);
+        placeSourcesById.set(
+          p.id,
+          Array.isArray((p as any).placeSources)
+            ? ((p as any).placeSources as PlaceProvenanceSourceRow[])
+            : [],
+        );
         pushKey(p.name, info);
         pushKey(p.nameEn, info);
       }
@@ -368,7 +522,7 @@ export class TripsService {
       }
     }
 
-    return { byId, unambiguousByName };
+    return { byId, unambiguousByName, placeSourcesById };
   }
 
   // POST /trips/:id/itinerary — thêm hoạt động
@@ -675,13 +829,18 @@ export class TripsService {
       mười: 10,
     };
 
-    const numParty = lower.match(/\b(\d{1,2})\s*(người\s*lớn|người|khách|bạn)\b/);
+    const numParty = lower.match(
+      /\b(\d{1,2})\s*(người\s*cao\s*tuổi|người\s*lớn|sinh\s*viên|học\s*viên|học\s*sinh|trẻ\s*em|người|khách|bạn)\b/,
+    );
     if (numParty) {
       out.partySize = Number(numParty[1]);
       out.partyDescription = `${out.partySize} ${numParty[2].replace(/\s+/g, ' ').trim()}`;
     } else {
       for (const [w, n] of Object.entries(wordMap)) {
-        const re = new RegExp(`\\b${w}\\s+(người\\s*lớn|người|khách)\\b`, 'i');
+        const re = new RegExp(
+          `\\b${w}\\s+(người\\s*cao\\s*tuổi|người\\s*lớn|sinh\\s*viên|học\\s*viên|học\\s*sinh|trẻ\\s*em|người|khách)\\b`,
+          'i',
+        );
         const m = lower.match(re);
         if (m) {
           out.partySize = n;
@@ -825,16 +984,26 @@ export class TripsService {
     const tPostAiStart = performance.now();
     const rawDays = Array.isArray(aiResult?.days) ? aiResult.days : [];
     const tPlaceResStart = performance.now();
-    const { byId: placesById, unambiguousByName } =
-      await this._resolveVerifiedPlacesForPreview(trip.destinationId, rawDays);
+    const {
+      byId: placesById,
+      unambiguousByName,
+      placeSourcesById,
+    } = await this._resolveVerifiedPlacesForPreview(trip.destinationId, rawDays);
     const nestjsPlaceResolutionMs =
       Math.round((performance.now() - tPlaceResStart) * 100) / 100;
+
+    const audienceContext = parseTravelerAudienceContext({
+      partySize: effectivePartySize ?? null,
+      partyDescription: customOptions?.partyDescription ?? extracted.partyDescription ?? null,
+      rawPrompt: customOptions?.additionalPrompt ?? null,
+    });
 
     // Deterministic cost & schedule validation without coercing null/missing prices to 0
     let knownCostTotal = 0;
     let verifiedPlaceCostTotal = 0;
     let unverifiedAiEstimatedCostTotal = 0;
     let verifiedPlaceCostItemCount = 0;
+    let verifiedFreeItemCount = 0;
     let unverifiedAiEstimatedItemCount = 0;
     let totalUnknownCostItems = 0;
     let totalItemsCount = 0;
@@ -848,6 +1017,7 @@ export class TripsService {
             : dayIdx + 1;
       let dayCost = 0;
       let dayUnknownCostCount = 0;
+      const chargedTicketGroupsInDay = new Set<string>();
 
       const items = (Array.isArray(day?.items) ? day.items : []).map(
         (item: any, itemIdx: number) => {
@@ -857,10 +1027,8 @@ export class TripsService {
               ? item.estimated_cost
               : item?.estimatedCost;
           let estimatedCost: number | null = null;
-          let costStatus: 'KNOWN' | 'UNKNOWN' = 'UNKNOWN';
           if (typeof rawCost === 'number' && Number.isFinite(rawCost)) {
             estimatedCost = Math.max(0, Math.trunc(rawCost));
-            costStatus = 'KNOWN';
             dayCost += estimatedCost;
           } else {
             dayUnknownCostCount += 1;
@@ -882,15 +1050,34 @@ export class TripsService {
             }
           }
 
-          if (estimatedCost !== null) {
-            if (resolvedPlaceId !== null) {
-              verifiedPlaceCostTotal += estimatedCost;
-              verifiedPlaceCostItemCount += 1;
-            } else {
-              unverifiedAiEstimatedCostTotal += estimatedCost;
-              unverifiedAiEstimatedItemCount += 1;
+          const classified = classifyPreviewItemCostProvenance({
+            estimatedCost,
+            resolvedPlaceId,
+            placeSources: resolvedPlaceId
+              ? (placeSourcesById.get(resolvedPlaceId) ?? [])
+              : null,
+            audienceContext,
+            chargedTicketGroupsInDay,
+          });
+
+          if (classified.costStatus === 'VERIFIED' && estimatedCost !== null) {
+            verifiedPlaceCostTotal += estimatedCost;
+            verifiedPlaceCostItemCount += 1;
+            if (classified.isVerifiedFree) {
+              verifiedFreeItemCount += 1;
             }
+          } else if (
+            classified.costStatus === 'ESTIMATED' &&
+            estimatedCost !== null
+          ) {
+            unverifiedAiEstimatedCostTotal += estimatedCost;
+            unverifiedAiEstimatedItemCount += 1;
           }
+
+          const effectiveNotes = attachVerifiedProvenanceNote(
+            item?.notes,
+            classified.provenanceNoteTag,
+          );
 
           const startTime =
             typeof (item?.start_time ?? item?.startTime) === 'string' &&
@@ -912,9 +1099,13 @@ export class TripsService {
             placeName:
               (resolvedPlaceId ? placesById.get(resolvedPlaceId)?.name : undefined) ??
               rawPlaceName,
-            notes: item?.notes,
+            notes: effectiveNotes,
             estimatedCost,
-            costStatus,
+            costStatus: classified.costStatus,
+            costBadgeVi: classified.costBadgeVi,
+            isVerifiedFree: classified.isVerifiedFree,
+            costSourceVerified: classified.costSourceVerified,
+            verifiedSourceUrl: classified.verifiedSourceUrl,
             transportMode: item?.transport_mode ?? item?.transportMode,
           };
         },
@@ -976,16 +1167,23 @@ export class TripsService {
         ? 0
         : null;
 
-    const budgetSummaryText =
-      totalUnknownCostItems > 0
-        ? isOverBudget && hasBudget
-          ? `Đã biết ${this._formatDotVnd(knownCostTotal)}đ; còn khoản chưa xác minh (đã vượt ngân sách ít nhất ${this._formatDotVnd(knownCostTotal - resolvedTotalBudget)}đ)`
-          : `Đã biết ${this._formatDotVnd(knownCostTotal)}đ; còn khoản chưa xác minh`
-        : hasBudget
-          ? isOverBudget
-            ? `Chi phí ước tính ${this._formatDotVnd(knownCostTotal)}đ (vượt ngân sách ${this._formatDotVnd(knownCostTotal - resolvedTotalBudget)}đ)`
-            : `Chi phí ước tính ${this._formatDotVnd(knownCostTotal)}đ`
-          : `Chi phí ước tính ${this._formatDotVnd(knownCostTotal)}đ`;
+    const costProvenanceBreakdown: CostProvenanceBreakdown = {
+      verifiedPlaceCostTotal,
+      verifiedPlaceCostItemCount,
+      verifiedFreeItemCount,
+      unverifiedAiEstimatedCostTotal,
+      unverifiedAiEstimatedItemCount,
+      unknownCostItemCount: totalUnknownCostItems,
+    };
+
+    const budgetSummaryText = formatCostProvenanceSummaryVi(
+      costProvenanceBreakdown,
+      {
+        totalBudget: resolvedTotalBudget,
+        isOverBudget,
+        knownCostTotal,
+      },
+    );
 
     const nestjsPostAiScheduleValidationMs =
       Math.round((performance.now() - tPostAiStart) * 100) / 100;
@@ -1064,13 +1262,7 @@ export class TripsService {
         isOverBudget,
         variance,
         summaryText: budgetSummaryText,
-        costProvenanceBreakdown: {
-          verifiedPlaceCostTotal,
-          unverifiedAiEstimatedCostTotal,
-          verifiedPlaceCostItemCount,
-          unverifiedAiEstimatedItemCount,
-          unknownCostItemCount: totalUnknownCostItems,
-        },
+        costProvenanceBreakdown,
       },
       timingTelemetry,
       scheduleViolations: constraintEval.violations,

@@ -35,6 +35,91 @@ String formatC4BudgetSummary({
   return 'Chi phí ước tính $knownStr';
 }
 
+class CostProvenanceBreakdownModel {
+  final int verifiedPlaceCostTotal;
+  final int verifiedPlaceCostItemCount;
+  final int verifiedFreeItemCount;
+  final int unverifiedAiEstimatedCostTotal;
+  final int unverifiedAiEstimatedItemCount;
+  final int unknownCostItemCount;
+
+  const CostProvenanceBreakdownModel({
+    this.verifiedPlaceCostTotal = 0,
+    this.verifiedPlaceCostItemCount = 0,
+    this.verifiedFreeItemCount = 0,
+    this.unverifiedAiEstimatedCostTotal = 0,
+    this.unverifiedAiEstimatedItemCount = 0,
+    this.unknownCostItemCount = 0,
+  });
+
+  factory CostProvenanceBreakdownModel.fromJson(Map<String, dynamic> json) {
+    return CostProvenanceBreakdownModel(
+      verifiedPlaceCostTotal:
+          (json['verifiedPlaceCostTotal'] as num?)?.toInt() ?? 0,
+      verifiedPlaceCostItemCount:
+          (json['verifiedPlaceCostItemCount'] as num?)?.toInt() ?? 0,
+      verifiedFreeItemCount:
+          (json['verifiedFreeItemCount'] as num?)?.toInt() ?? 0,
+      unverifiedAiEstimatedCostTotal:
+          (json['unverifiedAiEstimatedCostTotal'] as num?)?.toInt() ?? 0,
+      unverifiedAiEstimatedItemCount:
+          (json['unverifiedAiEstimatedItemCount'] as num?)?.toInt() ?? 0,
+      unknownCostItemCount:
+          (json['unknownCostItemCount'] as num?)?.toInt() ?? 0,
+    );
+  }
+}
+
+/// Formats provenance summary line with middle-dot (` · `) separators, e.g.:
+/// `Đã xác minh 80.000đ · Tạm tính 120.000đ · 1 khoản chưa biết giá`.
+String formatC4ProvenanceSummary({
+  required CostProvenanceBreakdownModel breakdown,
+  int? unknownCostCountOverride,
+  int? totalBudget,
+  bool isOverBudget = false,
+  int? knownCostTotal,
+}) {
+  final segments = <String>[];
+  if (breakdown.verifiedPlaceCostItemCount > 0) {
+    if (breakdown.verifiedPlaceCostTotal == 0 &&
+        breakdown.verifiedFreeItemCount > 0) {
+      segments.pushIfNotEmpty('Đã xác minh 0đ (miễn phí)');
+    } else {
+      segments.pushIfNotEmpty(
+        'Đã xác minh ${formatDotVndAmount(breakdown.verifiedPlaceCostTotal)}đ',
+      );
+    }
+  }
+  if (breakdown.unverifiedAiEstimatedItemCount > 0) {
+    segments.pushIfNotEmpty(
+      'Tạm tính ${formatDotVndAmount(breakdown.unverifiedAiEstimatedCostTotal)}đ',
+    );
+  }
+  final effectiveUnknown =
+      unknownCostCountOverride ?? breakdown.unknownCostItemCount;
+  if (effectiveUnknown > 0) {
+    segments.pushIfNotEmpty('$effectiveUnknown khoản chưa biết giá');
+  }
+  final base = segments.isNotEmpty ? segments.join(' · ') : 'Tạm tính 0đ';
+  if (isOverBudget &&
+      totalBudget != null &&
+      totalBudget > 0 &&
+      knownCostTotal != null &&
+      knownCostTotal > totalBudget) {
+    final over = knownCostTotal - totalBudget;
+    return effectiveUnknown > 0
+        ? '$base (vượt ngân sách ít nhất ${formatDotVndAmount(over)}đ)'
+        : '$base (vượt ngân sách ${formatDotVndAmount(over)}đ)';
+  }
+  return base;
+}
+
+extension _StringListPush on List<String> {
+  void pushIfNotEmpty(String value) {
+    if (value.isNotEmpty) add(value);
+  }
+}
+
 class AiPlanRequestOptions {
   final String? additionalPrompt;
   final int? partySize;
@@ -101,6 +186,10 @@ class ItineraryItemModel {
   final String activity;
   final String? notes;
   final int? estimatedCost;
+  final String? costStatus;
+  final String? costBadgeVi;
+  final bool isVerifiedFree;
+  final bool costSourceVerified;
   final String? transportMode;
 
   const ItineraryItemModel({
@@ -115,6 +204,10 @@ class ItineraryItemModel {
     required this.activity,
     this.notes,
     this.estimatedCost,
+    this.costStatus,
+    this.costBadgeVi,
+    this.isVerifiedFree = false,
+    this.costSourceVerified = false,
     this.transportMode,
   });
 
@@ -132,6 +225,10 @@ class ItineraryItemModel {
       activity: json['activity'] as String? ?? '',
       notes: json['notes'] as String?,
       estimatedCost: (json['estimatedCost'] as num?)?.toInt(),
+      costStatus: json['costStatus'] as String?,
+      costBadgeVi: json['costBadgeVi'] as String?,
+      isVerifiedFree: json['isVerifiedFree'] as bool? ?? false,
+      costSourceVerified: json['costSourceVerified'] as bool? ?? false,
       transportMode: json['transportMode'] as String?,
     );
   }
@@ -151,6 +248,10 @@ class ItineraryItemModel {
       activity: activity,
       notes: notes,
       estimatedCost: estimatedCost,
+      costStatus: costStatus,
+      costBadgeVi: costBadgeVi,
+      isVerifiedFree: isVerifiedFree,
+      costSourceVerified: costSourceVerified,
       transportMode: transportMode,
     );
   }
@@ -219,6 +320,8 @@ class TripModel {
   final String status;
   final List<ItineraryModel> itineraries;
   final int memberCount;
+  final String? costSummaryText;
+  final CostProvenanceBreakdownModel? costProvenanceBreakdown;
 
   const TripModel({
     required this.id,
@@ -236,12 +339,16 @@ class TripModel {
     this.status = 'DRAFT',
     this.itineraries = const [],
     this.memberCount = 1,
+    this.costSummaryText,
+    this.costProvenanceBreakdown,
   });
 
   factory TripModel.fromJson(Map<String, dynamic> json) {
     final dest = json['destination'] as Map<String, dynamic>?;
     final rawItin = json['itineraries'] as List<dynamic>? ?? [];
     final counts = json['_count'] as Map<String, dynamic>?;
+    final rawBreakdown =
+        json['costProvenanceBreakdown'] as Map<String, dynamic>?;
 
     return TripModel(
       id: json['id'] as String? ?? '',
@@ -268,6 +375,10 @@ class TripModel {
           .map((i) => ItineraryModel.fromJson(i as Map<String, dynamic>))
           .toList(),
       memberCount: counts?['members'] as int? ?? 1,
+      costSummaryText: json['costSummaryText'] as String?,
+      costProvenanceBreakdown: rawBreakdown != null
+          ? CostProvenanceBreakdownModel.fromJson(rawBreakdown)
+          : null,
     );
   }
 
@@ -535,6 +646,9 @@ class AiPlanItemModel {
   final String? notes;
   final int? estimatedCost;
   final String? costStatus;
+  final String? costBadgeVi;
+  final bool isVerifiedFree;
+  final bool costSourceVerified;
   final String? transportMode;
   final String openingHoursStatus;
   final List<ItineraryScheduleViolationModel> violations;
@@ -549,6 +663,9 @@ class AiPlanItemModel {
     this.notes,
     this.estimatedCost,
     this.costStatus,
+    this.costBadgeVi,
+    this.isVerifiedFree = false,
+    this.costSourceVerified = false,
     this.transportMode,
     this.openingHoursStatus = 'UNKNOWN',
     this.violations = const [],
@@ -573,6 +690,9 @@ class AiPlanItemModel {
       estimatedCost: parsedCost,
       costStatus: json['costStatus'] as String? ??
           (parsedCost != null ? 'KNOWN' : 'UNKNOWN'),
+      costBadgeVi: json['costBadgeVi'] as String?,
+      isVerifiedFree: json['isVerifiedFree'] as bool? ?? false,
+      costSourceVerified: json['costSourceVerified'] as bool? ?? false,
       transportMode: json['transportMode'] as String?,
       openingHoursStatus: json['openingHoursStatus'] as String? ?? 'UNKNOWN',
       violations: rawViolations
@@ -659,6 +779,8 @@ class BudgetAnalysisModel {
   final String currency;
   final bool isOverBudget;
   final int? variance;
+  final String? summaryText;
+  final CostProvenanceBreakdownModel? costProvenanceBreakdown;
 
   const BudgetAnalysisModel({
     this.totalBudget,
@@ -670,6 +792,8 @@ class BudgetAnalysisModel {
     this.currency = 'VND',
     this.isOverBudget = false,
     this.variance,
+    this.summaryText,
+    this.costProvenanceBreakdown,
   })  : _knownCostTotal = knownCostTotal,
         _costStatus = costStatus,
         _hasSufficientBudgetBasis = hasSufficientBudgetBasis;
@@ -684,11 +808,37 @@ class BudgetAnalysisModel {
       _hasSufficientBudgetBasis ??
       (totalBudget != null && totalBudget! > 0 && unknownCostItemCount == 0);
 
+  String? resolveSummaryLine({required int unknownCostCount}) {
+    if (summaryText != null && summaryText!.trim().isNotEmpty) {
+      return summaryText!.trim();
+    }
+    if (costProvenanceBreakdown != null) {
+      return formatC4ProvenanceSummary(
+        breakdown: costProvenanceBreakdown!,
+        unknownCostCountOverride: unknownCostCount,
+        totalBudget: totalBudget,
+        isOverBudget: isOverBudget,
+        knownCostTotal: knownCostTotal,
+      );
+    }
+    if (unknownCostCount > 0) {
+      return formatC4BudgetSummary(
+        knownCostTotal: knownCostTotal,
+        unknownCostCount: unknownCostCount,
+        totalBudget: totalBudget,
+        isOverBudget: isOverBudget,
+      );
+    }
+    return null;
+  }
+
   factory BudgetAnalysisModel.fromJson(Map<String, dynamic> json) {
     final totalBudget = (json['totalBudget'] as num?)?.toInt();
     final estimated = (json['estimatedCost'] as num?)?.toInt() ?? 0;
     final known = (json['knownCostTotal'] as num?)?.toInt() ?? estimated;
     final unknownCount = (json['unknownCostItemCount'] as num?)?.toInt() ?? 0;
+    final rawBreakdown =
+        json['costProvenanceBreakdown'] as Map<String, dynamic>?;
     return BudgetAnalysisModel(
       totalBudget: totalBudget,
       estimatedCost: estimated,
@@ -699,6 +849,10 @@ class BudgetAnalysisModel {
       currency: json['currency'] as String? ?? 'VND',
       isOverBudget: json['isOverBudget'] as bool? ?? false,
       variance: (json['variance'] as num?)?.toInt(),
+      summaryText: json['summaryText'] as String?,
+      costProvenanceBreakdown: rawBreakdown != null
+          ? CostProvenanceBreakdownModel.fromJson(rawBreakdown)
+          : null,
     );
   }
 }
