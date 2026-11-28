@@ -17,11 +17,12 @@ NGUYÊN TẮC QUAN TRỌNG:
    - Sắp xếp thứ tự các điểm hợp lý theo cung đường địa lý, tránh việc sáng ở đầu tỉnh chiều chạy ngược về cuối tỉnh gây mất thời gian di chuyển.
 2. NGÂN SÁCH THỰC TẾ:
    - Ước lượng chi phí (estimated_cost) cho từng hoạt động theo đơn vị {currency}.
-   - Đối với điểm tham quan miễn phí hoặc bãi biển công cộng, ghi rõ chi phí là 0.
+   - Đối với điểm tham quan thực sự miễn phí hoặc bãi biển công cộng, ghi rõ chi phí là 0.
+   - Nếu không chắc hoặc chưa có thông tin giá thực tế của địa điểm, đặt `"estimated_cost": null` (không điền 0 thay cho chưa biết).
    - Tổng chi phí các hoạt động cộng lại nên dao động xung quanh ngân sách ({budget_formatted} {currency}).
 3. TIẾN TRÌNH TỪNG NGÀY:
    - Mỗi ngày sắp xếp từ 4 đến 6 hoạt động logic theo thời gian (sáng, trưa thưởng thức ẩm thực đặc sản, chiều tham quan/vui chơi, tối ăn uống dạo phố).
-   - Có thời gian bắt đầu (start_time) và kết thúc (end_time) theo định dạng HH:MM (VD: '07:30', '09:00').
+   - Có đầy đủ thời gian bắt đầu (start_time) và kết thúc (end_time) theo định dạng HH:MM (VD: '07:30', '09:00'), đảm bảo end_time sau start_time và các hoạt động trong cùng ngày không chồng giờ nhau.
 4. PHẢI ĐỦ {days} NGÀY:
    - Mảng days phải có đúng {days} phần tử, tương ứng day_number từ 1 đến {days}.
 

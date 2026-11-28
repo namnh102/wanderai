@@ -225,3 +225,222 @@ def test_evaluation_scenario_runner():
     eval_result = evaluate_itinerary(mock_resp, scenario)
     assert eval_result["success"] is True
     assert eval_result["calculated_total"] == 90000
+
+
+def test_planner_null_and_missing_cost_no_502_and_suppresses_surplus():
+    """Case C: null/missing estimated_cost returns 200 (not 502), preserves None, and suppresses surplus."""
+    mock_output = {
+        "destination": "Hạ Long",
+        "total_days": 1,
+        "overview": "Lịch trình có mục đã biết giá và mục thiếu giá.",
+        "days": [
+            {
+                "day_number": 1,
+                "date": "2026-11-23",
+                "title": "Ngày 1: Hạ Long",
+                "items": [
+                    {
+                        "order_index": 1,
+                        "start_time": "08:30",
+                        "end_time": "10:00",
+                        "activity": "Cà phê tại Cafe ban mê",
+                        "place_name": "Cafe ban mê",
+                        "estimated_cost": None,
+                    },
+                    {
+                        "order_index": 2,
+                        "start_time": "10:30",
+                        "end_time": "12:00",
+                        "activity": "Tham quan Bảo tàng Quảng Ninh",
+                        "place_name": "Bảo tàng Quảng Ninh",
+                        # estimated_cost omitted
+                    },
+                    {
+                        "order_index": 3,
+                        "start_time": "14:00",
+                        "end_time": "15:30",
+                        "activity": "Gửi xe & nước uống",
+                        "estimated_cost": 60000,
+                    },
+                ],
+            }
+        ],
+    }
+    mock_response = MagicMock()
+    mock_response.text = json.dumps(mock_output, ensure_ascii=False)
+    mock_response.candidates = []
+
+    with patch("app.routers.planner._client") as mock_client:
+        mock_client.models.generate_content.return_value = mock_response
+
+        res = client.post(
+            "/planner",
+            json={
+                "trip_id": "trip-case-c",
+                "destination": "Hạ Long",
+                "days": 1,
+                "start_date": "2026-11-23",
+                "end_date": "2026-11-23",
+                "budget": 500000,
+                "currency": "VND",
+            },
+        )
+        assert res.status_code == 200
+        body = res.json()
+        day = body["days"][0]
+        assert day["day_cost"] == 60000
+        assert day["unknown_cost_item_count"] == 2
+        assert day["items"][0]["estimated_cost"] is None
+        assert day["items"][0]["cost_status"] == "UNKNOWN"
+        assert day["items"][1]["estimated_cost"] is None
+        assert day["items"][1]["cost_status"] == "UNKNOWN"
+        assert day["items"][2]["estimated_cost"] == 60000
+        assert day["items"][2]["cost_status"] == "KNOWN"
+
+        ba = body["budget_analysis"]
+        assert ba["known_cost_total"] == 60000
+        assert ba["estimated_cost"] == 60000
+        assert ba["unknown_cost_item_count"] == 2
+        assert ba["cost_status"] == "PARTIAL_UNKNOWN"
+        assert ba["has_sufficient_budget_basis"] is False
+        assert ba["is_over_budget"] is False
+        assert ba["variance"] is None  # Surplus suppressed when unknown costs exist
+
+
+def test_planner_detects_overlapping_schedule_in_same_day():
+    """Case B2: overlapping intervals in the same day are surfaced in schedule_violations."""
+    mock_output = {
+        "destination": "Hạ Long",
+        "total_days": 1,
+        "days": [
+            {
+                "day_number": 1,
+                "date": "2026-11-23",
+                "title": "Ngày 1: Chồng giờ",
+                "items": [
+                    {
+                        "order_index": 1,
+                        "start_time": "09:00",
+                        "end_time": "11:00",
+                        "activity": "Cà phê sáng tại Cafe ban mê",
+                        "place_name": "Cafe ban mê",
+                        "estimated_cost": 60000,
+                    },
+                    {
+                        "order_index": 2,
+                        "start_time": "10:30",
+                        "end_time": "12:00",
+                        "activity": "Mua sắm tại Chợ Cái Dăm",
+                        "place_name": "Chợ Cái Dăm",
+                        "estimated_cost": 100000,
+                    },
+                ],
+            }
+        ],
+    }
+    mock_response = MagicMock()
+    mock_response.text = json.dumps(mock_output, ensure_ascii=False)
+    mock_response.candidates = []
+
+    with patch("app.routers.planner._client") as mock_client:
+        mock_client.models.generate_content.return_value = mock_response
+        res = client.post(
+            "/planner",
+            json={
+                "trip_id": "trip-case-b2",
+                "destination": "Hạ Long",
+                "days": 1,
+                "start_date": "2026-11-23",
+                "end_date": "2026-11-23",
+                "budget": 1000000,
+                "currency": "VND",
+            },
+        )
+        assert res.status_code == 200
+        body = res.json()
+        assert body["has_schedule_violations"] is True
+        assert len(body["schedule_violations"]) == 1
+        assert body["schedule_violations"][0]["code"] == "SCHEDULE_OVERLAP"
+        assert len(body["days"][0]["items"][0]["violations"]) == 1
+        assert len(body["days"][0]["items"][1]["violations"]) == 1
+
+
+def test_c4_itinerary_evaluator_handles_nullable_and_zero_costs():
+    """Verify C4 product evaluator supports both unknown (`None`/omitted) and free (`0`) item costs."""
+    from app.services.c4_itinerary_evaluator import evaluate_c4_itinerary
+
+    scenario = {
+        "scenario_id": "c4_nullable_and_free_check",
+        "expected_constraints": {"min_days": 1, "max_days": 2, "min_items_per_day": 2},
+    }
+
+    # Case 1: Mix of explicit None, omitted cost, and known paid item -> PARTIAL_UNKNOWN, variance=None
+    partial_unknown_resp = {
+        "destination": "Hạ Long",
+        "budget_analysis": {
+            "total_budget": 500000,
+            "estimated_cost": 60000,
+            "known_cost_total": 60000,
+            "unknown_cost_item_count": 2,
+            "cost_status": "PARTIAL_UNKNOWN",
+            "has_sufficient_budget_basis": False,
+            "is_over_budget": False,
+            "variance": None,
+        },
+        "days": [
+            {
+                "day_number": 1,
+                "day_cost": 60000,
+                "unknown_cost_item_count": 2,
+                "items": [
+                    {"activity": "Cafe", "place_name": "Cafe ban mê", "estimated_cost": None, "cost_status": "UNKNOWN"},
+                    {"activity": "Bảo tàng", "place_name": "Bảo tàng Quảng Ninh", "cost_status": "UNKNOWN"},
+                    {"activity": "Gửi xe", "estimated_cost": 60000, "cost_status": "KNOWN"},
+                ],
+            }
+        ],
+    }
+    res_null = evaluate_c4_itinerary(partial_unknown_resp, scenario)
+    assert res_null["success"] is True, res_null["failed_checks"]
+    assert res_null["calculated_known_total"] == 60000
+    assert res_null["calculated_unknown_count"] == 2
+    assert res_null["cost_status"] == "PARTIAL_UNKNOWN"
+
+    # Reject fabricated surplus when unknown costs exist
+    bad_surplus_resp = {
+        **partial_unknown_resp,
+        "budget_analysis": {**partial_unknown_resp["budget_analysis"], "variance": 440000},
+    }
+    assert evaluate_c4_itinerary(bad_surplus_resp, scenario)["success"] is False
+
+    # Case 2: Sourced free POIs (`estimated_cost = 0`) -> COMPLETE, valid surplus = 300000
+    free_zero_resp = {
+        "destination": "Đà Nẵng",
+        "budget_analysis": {
+            "total_budget": 300000,
+            "estimated_cost": 0,
+            "known_cost_total": 0,
+            "unknown_cost_item_count": 0,
+            "cost_status": "COMPLETE",
+            "has_sufficient_budget_basis": True,
+            "is_over_budget": False,
+            "variance": 300000,
+        },
+        "days": [
+            {
+                "day_number": 1,
+                "day_cost": 0,
+                "unknown_cost_item_count": 0,
+                "items": [
+                    {"activity": "Tắm biển Mỹ Khê", "place_name": "Bãi biển Mỹ Khê", "estimated_cost": 0, "cost_status": "KNOWN"},
+                    {"activity": "Xem Cầu Rồng", "place_name": "Cầu Rồng", "estimated_cost": 0, "cost_status": "KNOWN"},
+                ],
+            }
+        ],
+    }
+    res_zero = evaluate_c4_itinerary(free_zero_resp, scenario)
+    assert res_zero["success"] is True, res_zero["failed_checks"]
+    assert res_zero["calculated_known_total"] == 0
+    assert res_zero["calculated_unknown_count"] == 0
+    assert res_zero["cost_status"] == "COMPLETE"
+

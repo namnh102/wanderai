@@ -13,6 +13,13 @@ import { BulkItineraryDto } from './dto/bulk-itinerary.dto';
 import { ReorderItineraryDto } from './dto/reorder-itinerary.dto';
 import { PlanTripDto } from './dto/plan-trip.dto';
 import { AiProxyService } from '../ai-proxy/ai-proxy.service';
+import {
+  evaluateItineraryDays,
+  VerifiedPlaceConstraintInfo,
+} from './itinerary-constraints.util';
+
+const UUID_LIKE_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 @Injectable()
 export class TripsService {
@@ -231,7 +238,9 @@ export class TripsService {
     return { message: 'Đã xóa chuyến đi thành công' };
   }
 
-  private async _assertVerifiedPlaces(placeIds: Array<string | undefined>): Promise<void> {
+  private async _assertVerifiedPlaces(
+    placeIds: Array<string | undefined | null>,
+  ): Promise<Map<string, VerifiedPlaceConstraintInfo>> {
     const uniqueIds = Array.from(
       new Set(
         placeIds
@@ -239,8 +248,9 @@ export class TripsService {
           .map((id) => id.trim()),
       ),
     );
+    const byId = new Map<string, VerifiedPlaceConstraintInfo>();
     if (uniqueIds.length === 0) {
-      return;
+      return byId;
     }
 
     const found = await this.prisma.place.findMany({
@@ -249,16 +259,111 @@ export class TripsService {
         deletedAt: null,
         placeSources: { some: {} },
       },
-      select: { id: true },
+      select: { id: true, name: true, nameEn: true, openingHours: true },
     });
-    const foundSet = new Set(found.map((p) => p.id));
-    const missingId = uniqueIds.find((id) => !foundSet.has(id));
+    for (const p of found) {
+      byId.set(p.id, {
+        id: p.id,
+        name: p.name ?? p.id,
+        nameEn: p.nameEn ?? null,
+        openingHours: p.openingHours ?? null,
+      });
+    }
+    const missingId = uniqueIds.find((id) => !byId.has(id));
     if (missingId) {
       throw new NotFoundException({
         message: `Place with ID "${missingId}" not found`,
         errorCode: 'PLACE_NOT_FOUND',
       });
     }
+    return byId;
+  }
+
+  private async _resolveVerifiedPlacesForPreview(
+    destinationId: string | null | undefined,
+    rawDays: any[],
+  ): Promise<{
+    byId: Map<string, VerifiedPlaceConstraintInfo>;
+    unambiguousByName: Map<string, VerifiedPlaceConstraintInfo>;
+  }> {
+    const byId = new Map<string, VerifiedPlaceConstraintInfo>();
+    const unambiguousByName = new Map<string, VerifiedPlaceConstraintInfo>();
+
+    const explicitIds = new Set<string>();
+    let hasNamedItems = false;
+    for (const day of rawDays) {
+      for (const item of day?.items ?? []) {
+        const rawId = item?.place_id ?? item?.placeId;
+        if (typeof rawId === 'string' && UUID_LIKE_RE.test(rawId.trim())) {
+          explicitIds.add(rawId.trim());
+        }
+        const rawName = item?.place_name ?? item?.placeName;
+        if (typeof rawName === 'string' && rawName.trim().length > 0) {
+          hasNamedItems = true;
+        }
+      }
+    }
+
+    if (explicitIds.size > 0) {
+      const explicitPlaces = await this.prisma.place.findMany({
+        where: {
+          id: { in: Array.from(explicitIds) },
+          deletedAt: null,
+          placeSources: { some: {} },
+        },
+        select: { id: true, name: true, nameEn: true, openingHours: true },
+      });
+      for (const p of explicitPlaces ?? []) {
+        byId.set(p.id, {
+          id: p.id,
+          name: p.name ?? p.id,
+          nameEn: p.nameEn ?? null,
+          openingHours: p.openingHours ?? null,
+        });
+      }
+    }
+
+    if (destinationId && hasNamedItems) {
+      const destPlaces = await this.prisma.place.findMany({
+        where: {
+          destinationId,
+          deletedAt: null,
+          placeSources: { some: {} },
+        },
+        select: { id: true, name: true, nameEn: true, openingHours: true },
+      });
+      const buckets = new Map<string, VerifiedPlaceConstraintInfo[]>();
+      const pushKey = (rawKey: string | null | undefined, info: VerifiedPlaceConstraintInfo) => {
+        if (typeof rawKey !== 'string') return;
+        const norm = rawKey.trim().toLowerCase();
+        if (!norm) return;
+        const arr = buckets.get(norm) ?? [];
+        if (!arr.some((x) => x.id === info.id)) {
+          arr.push(info);
+          buckets.set(norm, arr);
+        }
+      };
+
+      for (const p of destPlaces ?? []) {
+        const info: VerifiedPlaceConstraintInfo = {
+          id: p.id,
+          name: p.name ?? p.id,
+          nameEn: p.nameEn ?? null,
+          openingHours: p.openingHours ?? null,
+        };
+        byId.set(p.id, info);
+        pushKey(p.name, info);
+        pushKey(p.nameEn, info);
+      }
+
+      for (const [normKey, list] of buckets.entries()) {
+        if (list.length === 1) {
+          unambiguousByName.set(normKey, list[0]);
+        }
+      }
+    }
+
+    return { byId, unambiguousByName };
   }
 
   // POST /trips/:id/itinerary — thêm hoạt động
@@ -548,37 +653,137 @@ export class TripsService {
     };
 
     const aiResult = await this.aiProxyService.planWithTripContext(context);
+    const rawDays = Array.isArray(aiResult?.days) ? aiResult.days : [];
+    const { byId: placesById, unambiguousByName } =
+      await this._resolveVerifiedPlacesForPreview(trip.destinationId, rawDays);
 
-    // Deterministic validation & arithmetic calculation
-    let calculatedCost = 0;
-    const processedDays = (aiResult.days || []).map((day: any, dayIdx: number) => {
+    // Deterministic cost & schedule validation without coercing null/missing prices to 0
+    let knownCostTotal = 0;
+    let totalUnknownCostItems = 0;
+    let totalItemsCount = 0;
+
+    const intermediateDays = rawDays.map((day: any, dayIdx: number) => {
+      const dayNumber =
+        typeof day?.day_number === 'number'
+          ? day.day_number
+          : typeof day?.dayNumber === 'number'
+            ? day.dayNumber
+            : dayIdx + 1;
       let dayCost = 0;
-      const items = (day.items || []).map((item: any, itemIdx: number) => {
-        const cost = typeof item.estimated_cost === 'number' ? Math.max(0, item.estimated_cost) : 0;
-        dayCost += cost;
-        return {
-          orderIndex: item.order_index ?? (itemIdx + 1),
-          startTime: item.start_time,
-          endTime: item.end_time,
-          activity: item.activity || `Hoạt động ${itemIdx + 1}`,
-          placeName: item.place_name,
-          notes: item.notes,
-          estimatedCost: cost,
-          transportMode: item.transport_mode,
-        };
-      });
-      calculatedCost += dayCost;
+      let dayUnknownCostCount = 0;
+
+      const items = (Array.isArray(day?.items) ? day.items : []).map(
+        (item: any, itemIdx: number) => {
+          totalItemsCount += 1;
+          const rawCost =
+            item?.estimated_cost !== undefined
+              ? item.estimated_cost
+              : item?.estimatedCost;
+          let estimatedCost: number | null = null;
+          let costStatus: 'KNOWN' | 'UNKNOWN' = 'UNKNOWN';
+          if (typeof rawCost === 'number' && Number.isFinite(rawCost)) {
+            estimatedCost = Math.max(0, Math.trunc(rawCost));
+            costStatus = 'KNOWN';
+            dayCost += estimatedCost;
+          } else {
+            dayUnknownCostCount += 1;
+          }
+
+          const rawPlaceId = item?.place_id ?? item?.placeId;
+          const rawPlaceName =
+            typeof (item?.place_name ?? item?.placeName) === 'string'
+              ? (item.place_name ?? item.placeName).trim()
+              : undefined;
+
+          let resolvedPlaceId: string | null = null;
+          if (typeof rawPlaceId === 'string' && placesById.has(rawPlaceId.trim())) {
+            resolvedPlaceId = rawPlaceId.trim();
+          } else if (rawPlaceName) {
+            const matched = unambiguousByName.get(rawPlaceName.toLowerCase());
+            if (matched) {
+              resolvedPlaceId = matched.id;
+            }
+          }
+
+          const startTime =
+            typeof (item?.start_time ?? item?.startTime) === 'string' &&
+            (item.start_time ?? item.startTime).trim().length > 0
+              ? (item.start_time ?? item.startTime).trim()
+              : undefined;
+          const endTime =
+            typeof (item?.end_time ?? item?.endTime) === 'string' &&
+            (item.end_time ?? item.endTime).trim().length > 0
+              ? (item.end_time ?? item.endTime).trim()
+              : undefined;
+
+          return {
+            orderIndex: item?.order_index ?? item?.orderIndex ?? itemIdx + 1,
+            startTime,
+            endTime,
+            activity: item?.activity || `Hoạt động ${itemIdx + 1}`,
+            placeId: resolvedPlaceId,
+            placeName:
+              (resolvedPlaceId ? placesById.get(resolvedPlaceId)?.name : undefined) ??
+              rawPlaceName,
+            notes: item?.notes,
+            estimatedCost,
+            costStatus,
+            transportMode: item?.transport_mode ?? item?.transportMode,
+          };
+        },
+      );
+
+      knownCostTotal += dayCost;
+      totalUnknownCostItems += dayUnknownCostCount;
+
       return {
-        dayNumber: day.day_number ?? (dayIdx + 1),
-        date: day.date,
-        title: day.title || `Ngày ${dayIdx + 1}`,
+        dayNumber,
+        date: day?.date,
+        title: day?.title || `Ngày ${dayNumber}`,
         dayCost,
+        unknownCostItemCount: dayUnknownCostCount,
         items,
       };
     });
 
-    const isOverBudget = trip.totalBudget ? calculatedCost > trip.totalBudget : false;
-    const variance = trip.totalBudget ? trip.totalBudget - calculatedCost : 0;
+    const constraintEval = evaluateItineraryDays(
+      intermediateDays,
+      placesById,
+      trip.startDate,
+    );
+
+    const processedDays = intermediateDays.map((day) => ({
+      ...day,
+      items: day.items.map((item: any, itemIdx: number) => {
+        const evalRes = constraintEval.perDayItemResults.get(
+          `${day.dayNumber}:${itemIdx}`,
+        );
+        return {
+          ...item,
+          openingHoursStatus: evalRes?.openingHoursStatus ?? 'UNKNOWN',
+          violations: evalRes?.violations ?? [],
+        };
+      }),
+    }));
+
+    const costStatus: 'COMPLETE' | 'PARTIAL_UNKNOWN' | 'ALL_UNKNOWN' =
+      totalUnknownCostItems === 0
+        ? 'COMPLETE'
+        : totalUnknownCostItems === totalItemsCount
+          ? 'ALL_UNKNOWN'
+          : 'PARTIAL_UNKNOWN';
+
+    const hasBudget =
+      typeof trip.totalBudget === 'number' && trip.totalBudget > 0;
+    const isOverBudget = hasBudget ? knownCostTotal > trip.totalBudget! : false;
+    const hasSufficientBudgetBasis = hasBudget && totalUnknownCostItems === 0;
+    const variance = hasBudget
+      ? isOverBudget || hasSufficientBudgetBasis
+        ? trip.totalBudget! - knownCostTotal
+        : null
+      : totalUnknownCostItems === 0
+        ? 0
+        : null;
 
     return {
       tripId: trip.id,
@@ -589,11 +794,18 @@ export class TripsService {
       generalTips: aiResult.general_tips || [],
       budgetAnalysis: {
         totalBudget: trip.totalBudget,
-        estimatedCost: calculatedCost,
+        estimatedCost: knownCostTotal,
+        knownCostTotal,
+        unknownCostItemCount: totalUnknownCostItems,
+        costStatus,
+        hasSufficientBudgetBasis,
         currency: trip.currency,
         isOverBudget,
         variance,
       },
+      scheduleViolations: constraintEval.violations,
+      hasScheduleViolations: constraintEval.violations.length > 0,
+      canApply: constraintEval.violations.length === 0,
       days: processedDays,
     };
   }
@@ -615,7 +827,7 @@ export class TripsService {
     }
 
     const seenDayNumbers = new Set<number>();
-    const allPlaceIds: Array<string | undefined> = [];
+    const allPlaceIds: Array<string | undefined | null> = [];
     for (const day of dto.days) {
       if (seenDayNumbers.has(day.dayNumber)) {
         throw new BadRequestException(`Ngày ${day.dayNumber} bị trùng lặp trong lịch trình`);
@@ -628,7 +840,21 @@ export class TripsService {
       }
     }
 
-    await this._assertVerifiedPlaces(allPlaceIds);
+    const verifiedPlacesById = await this._assertVerifiedPlaces(allPlaceIds);
+
+    // Enforce locked Apply schedule & opening-hours constraints BEFORE any DB write/delete
+    const constraintEval = evaluateItineraryDays(
+      dto.days,
+      verifiedPlacesById,
+      trip.startDate,
+    );
+    if (constraintEval.violations.length > 0) {
+      throw new BadRequestException({
+        message: `Không thể áp dụng lịch trình do có ${constraintEval.violations.length} mục vi phạm thời gian hoặc giờ mở cửa: ${constraintEval.violations.map((v) => v.message).join(' | ')}`,
+        errorCode: 'ITINERARY_SCHEDULE_VIOLATION',
+        violations: constraintEval.violations,
+      });
+    }
 
     await this.prisma.$transaction(async (tx) => {
       if (dto.replaceExisting !== false) {
@@ -680,7 +906,7 @@ export class TripsService {
                 endTime: item.endTime,
                 placeId: item.placeId,
                 notes: item.notes?.trim(),
-                estimatedCost: item.estimatedCost,
+                estimatedCost: item.estimatedCost ?? null,
                 transportMode: item.transportMode,
               },
             });

@@ -3,6 +3,11 @@
     "schemas": {
       "BudgetAnalysis": {
         "properties": {
+          "cost_status": {
+            "default": "COMPLETE",
+            "title": "Cost Status",
+            "type": "string"
+          },
           "currency": {
             "default": "VND",
             "title": "Currency",
@@ -13,10 +18,20 @@
             "title": "Estimated Cost",
             "type": "integer"
           },
+          "has_sufficient_budget_basis": {
+            "default": false,
+            "title": "Has Sufficient Budget Basis",
+            "type": "boolean"
+          },
           "is_over_budget": {
             "default": false,
             "title": "Is Over Budget",
             "type": "boolean"
+          },
+          "known_cost_total": {
+            "default": 0,
+            "title": "Known Cost Total",
+            "type": "integer"
           },
           "total_budget": {
             "anyOf": [
@@ -29,10 +44,21 @@
             ],
             "title": "Total Budget"
           },
-          "variance": {
+          "unknown_cost_item_count": {
             "default": 0,
-            "title": "Variance",
+            "title": "Unknown Cost Item Count",
             "type": "integer"
+          },
+          "variance": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Variance"
           }
         },
         "title": "BudgetAnalysis",
@@ -195,7 +221,6 @@
             "type": "integer"
           },
           "items": {
-            "default": [],
             "items": {
               "$ref": "#/components/schemas/ItineraryItem"
             },
@@ -205,6 +230,11 @@
           "title": {
             "title": "Title",
             "type": "string"
+          },
+          "unknown_cost_item_count": {
+            "default": 0,
+            "title": "Unknown Cost Item Count",
+            "type": "integer"
           }
         },
         "required": [
@@ -220,6 +250,11 @@
             "title": "Activity",
             "type": "string"
           },
+          "cost_status": {
+            "default": "UNKNOWN",
+            "title": "Cost Status",
+            "type": "string"
+          },
           "end_time": {
             "anyOf": [
               {
@@ -232,9 +267,15 @@
             "title": "End Time"
           },
           "estimated_cost": {
-            "default": 0,
-            "title": "Estimated Cost",
-            "type": "integer"
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Estimated Cost"
           },
           "notes": {
             "anyOf": [
@@ -284,6 +325,13 @@
               }
             ],
             "title": "Transport Mode"
+          },
+          "violations": {
+            "items": {
+              "$ref": "#/components/schemas/ScheduleViolation"
+            },
+            "title": "Violations",
+            "type": "array"
           }
         },
         "required": [
@@ -441,7 +489,6 @@
             "type": "string"
           },
           "interests": {
-            "default": [],
             "items": {
               "type": "string"
             },
@@ -488,7 +535,6 @@
             "$ref": "#/components/schemas/BudgetAnalysis"
           },
           "days": {
-            "default": [],
             "items": {
               "$ref": "#/components/schemas/ItineraryDay"
             },
@@ -500,12 +546,16 @@
             "type": "string"
           },
           "general_tips": {
-            "default": [],
             "items": {
               "type": "string"
             },
             "title": "General Tips",
             "type": "array"
+          },
+          "has_schedule_violations": {
+            "default": false,
+            "title": "Has Schedule Violations",
+            "type": "boolean"
           },
           "overview": {
             "title": "Overview",
@@ -514,6 +564,13 @@
           "plan_id": {
             "title": "Plan Id",
             "type": "string"
+          },
+          "schedule_violations": {
+            "items": {
+              "$ref": "#/components/schemas/ScheduleViolation"
+            },
+            "title": "Schedule Violations",
+            "type": "array"
           },
           "total_days": {
             "title": "Total Days",
@@ -591,6 +648,88 @@
         "title": "RecommendedPlaceDto",
         "type": "object"
       },
+      "ScheduleViolation": {
+        "properties": {
+          "activity": {
+            "title": "Activity",
+            "type": "string"
+          },
+          "code": {
+            "title": "Code",
+            "type": "string"
+          },
+          "conflicting_order_index": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Conflicting Order Index"
+          },
+          "day_number": {
+            "title": "Day Number",
+            "type": "integer"
+          },
+          "end_time": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "End Time"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          },
+          "order_index": {
+            "title": "Order Index",
+            "type": "integer"
+          },
+          "place_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Place Name"
+          },
+          "reason_code": {
+            "title": "Reason Code",
+            "type": "string"
+          },
+          "start_time": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Start Time"
+          }
+        },
+        "required": [
+          "code",
+          "reason_code",
+          "day_number",
+          "order_index",
+          "activity",
+          "message"
+        ],
+        "title": "ScheduleViolation",
+        "type": "object"
+      },
       "ToolCallLog": {
         "properties": {
           "args": {
@@ -661,7 +800,6 @@
             "type": "integer"
           },
           "interests": {
-            "default": [],
             "items": {
               "type": "string"
             },

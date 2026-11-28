@@ -730,5 +730,307 @@ describe('TripsService & Trip DTO Validation', () => {
         { id: itemAId, placeId: placeA, orderIndex: 2 },
       ]);
     });
+
+    it('C4 Supplement Cases B1, B2, C: surfaces closed-POI & overlap in Preview, rejects them at Apply while preserving old itinerary, and preserves unknown null prices without false surplus', async () => {
+      const cafeId = '70c3326e-1b53-45bf-a210-6c43a076e95b';
+      const choCaiDamId = '96523873-1b85-4d2f-b85c-cb3f5593091b';
+      const baoTangId = '8f2b5a69-1293-4efe-8fc5-3a74193edd0f';
+      const destId = 'd1111111-1111-4111-8111-111111111111';
+      const now = new Date('2026-11-27T00:00:00.000Z');
+
+      const rawStore = inMemoryPrisma as unknown as {
+        places: Map<string, Record<string, unknown>>;
+        placeSources: Array<Record<string, unknown>>;
+      };
+
+      for (const poi of [
+        { id: cafeId, name: 'Cafe ban mê', openingHours: 'Mo-Su 06:30-23:30' },
+        { id: choCaiDamId, name: 'Chợ Cái Dăm', openingHours: 'Mo-Sa 08:00-16:00' },
+        { id: baoTangId, name: 'Bảo tàng Quảng Ninh', openingHours: null },
+      ]) {
+        rawStore.places.set(poi.id, {
+          id: poi.id,
+          destinationId: destId,
+          categoryId: 'c1111111-1111-4111-8111-111111111111',
+          name: poi.name,
+          nameEn: null,
+          description: null,
+          address: 'Hạ Long, Quảng Ninh',
+          latitude: 20.95,
+          longitude: 107.08,
+          priceMin: null,
+          priceMax: null,
+          openingHours: poi.openingHours,
+          coverImage: null,
+          images: [],
+          rating: null,
+          reviewCount: 0,
+          deletedAt: null,
+          createdAt: now,
+          updatedAt: now,
+        });
+        rawStore.placeSources.push({
+          id: `ps-c4-${poi.id}`,
+          placeId: poi.id,
+          sourceName: 'osm',
+          sourceId: `node/${poi.id.slice(0, 6)}`,
+          rawName: poi.name,
+          confidenceScore: 1.0,
+          rawData: { tags: { name: poi.name } },
+          createdAt: now,
+        });
+      }
+
+      const aiProxy = app.get(AiProxyService) as { planWithTripContext: jest.Mock };
+
+      // 1) Seed trip with an existing valid itinerary ("lịch cũ") on Sunday 2026-11-22
+      const tripRes = await request(app.getHttpServer())
+        .post('/trips')
+        .send({
+          title: 'C4 Protected Trip',
+          destinationId: destId,
+          startDate: '2026-11-22',
+          endDate: '2026-11-22',
+          totalBudget: 500000,
+          currency: 'VND',
+        })
+        .expect(201);
+      const tripId = tripRes.body.data.id as string;
+
+      await request(app.getHttpServer())
+        .post(`/trips/${tripId}/itinerary/bulk`)
+        .send({
+          replaceExisting: true,
+          days: [
+            {
+              dayNumber: 1,
+              date: '2026-11-22',
+              title: 'Lịch cũ hợp lệ',
+              items: [
+                {
+                  orderIndex: 1,
+                  startTime: '08:00',
+                  endTime: '09:30',
+                  activity: 'Hoạt động lịch cũ cần bảo toàn',
+                  placeId: cafeId,
+                  estimatedCost: 50000,
+                },
+              ],
+            },
+          ],
+        })
+        .expect(201);
+
+      // 2) Case B1: Closed POI on Sunday (Chợ Cái Dăm Mo-Sa 08:00-16:00)
+      aiProxy.planWithTripContext.mockResolvedValueOnce({
+        destination: 'Hạ Long',
+        total_days: 1,
+        days: [
+          {
+            day_number: 1,
+            date: '2026-11-22',
+            title: 'Ngày 1 (Chủ nhật)',
+            items: [
+              {
+                order_index: 1,
+                start_time: '08:30',
+                end_time: '10:00',
+                activity: 'Cà phê sáng tại Cafe ban mê',
+                place_name: 'Cafe ban mê',
+                estimated_cost: 60000,
+              },
+              {
+                order_index: 2,
+                start_time: '10:30',
+                end_time: '12:00',
+                activity: 'Mua sắm tại Chợ Cái Dăm',
+                place_name: 'Chợ Cái Dăm',
+                estimated_cost: 100000,
+              },
+            ],
+          },
+        ],
+      });
+
+      const previewB1 = await request(app.getHttpServer())
+        .post(`/trips/${tripId}/ai-plan`)
+        .send({})
+        .expect(201);
+      expect(previewB1.body.data.hasScheduleViolations).toBe(true);
+      expect(previewB1.body.data.canApply).toBe(false);
+      expect(previewB1.body.data.scheduleViolations).toHaveLength(1);
+      expect(previewB1.body.data.scheduleViolations[0]).toMatchObject({
+        code: 'OPENING_HOURS_CLOSED',
+        reasonCode: 'CLOSED_ON_WEEKDAY',
+        orderIndex: 2,
+        placeId: choCaiDamId,
+      });
+
+      const applyB1 = await request(app.getHttpServer())
+        .post(`/trips/${tripId}/itinerary/bulk`)
+        .send({
+          replaceExisting: true,
+          days: [
+            {
+              dayNumber: 1,
+              date: '2026-11-22',
+              items: [
+                {
+                  orderIndex: 1,
+                  startTime: '08:30',
+                  endTime: '10:00',
+                  activity: 'Cà phê sáng tại Cafe ban mê',
+                  placeId: cafeId,
+                  estimatedCost: 60000,
+                },
+                {
+                  orderIndex: 2,
+                  startTime: '10:30',
+                  endTime: '12:00',
+                  activity: 'Mua sắm tại Chợ Cái Dăm',
+                  placeId: choCaiDamId,
+                  estimatedCost: 100000,
+                },
+              ],
+            },
+          ],
+        })
+        .expect(400);
+      expect(applyB1.body.errorCode).toBe('ITINERARY_SCHEDULE_VIOLATION');
+
+      // Verify old itinerary remains 100% intact after B1 rejection!
+      const afterB1Trip = await request(app.getHttpServer())
+        .get(`/trips/${tripId}`)
+        .expect(200);
+      expect(afterB1Trip.body.data.itineraries).toHaveLength(1);
+      expect(afterB1Trip.body.data.itineraries[0].items[0].activity).toBe(
+        'Hoạt động lịch cũ cần bảo toàn',
+      );
+
+      // 3) Case B2: Overlapping schedule on Monday 2026-11-23 (09:00-11:00 vs 10:30-12:00)
+      const applyB2 = await request(app.getHttpServer())
+        .post(`/trips/${tripId}/itinerary/bulk`)
+        .send({
+          replaceExisting: true,
+          days: [
+            {
+              dayNumber: 1,
+              date: '2026-11-23',
+              items: [
+                {
+                  orderIndex: 1,
+                  startTime: '09:00',
+                  endTime: '11:00',
+                  activity: 'Cà phê sáng tại Cafe ban mê',
+                  placeId: cafeId,
+                  estimatedCost: 60000,
+                },
+                {
+                  orderIndex: 2,
+                  startTime: '10:30',
+                  endTime: '12:00',
+                  activity: 'Mua sắm tại Chợ Cái Dăm',
+                  placeId: choCaiDamId,
+                  estimatedCost: 100000,
+                },
+              ],
+            },
+          ],
+        })
+        .expect(400);
+      expect(applyB2.body.errorCode).toBe('ITINERARY_SCHEDULE_VIOLATION');
+
+      // Old itinerary STILL intact after B2 rejection!
+      const afterB2Trip = await request(app.getHttpServer())
+        .get(`/trips/${tripId}`)
+        .expect(200);
+      expect(afterB2Trip.body.data.itineraries[0].items[0].activity).toBe(
+        'Hoạt động lịch cũ cần bảo toàn',
+      );
+
+      // 4) Case C: Null/omitted price + missing openingHours (Bảo tàng Quảng Ninh)
+      aiProxy.planWithTripContext.mockResolvedValueOnce({
+        destination: 'Hạ Long',
+        total_days: 1,
+        days: [
+          {
+            day_number: 1,
+            date: '2026-11-23',
+            title: 'Ngày 1: Hạ Long',
+            items: [
+              {
+                order_index: 1,
+                start_time: '08:30',
+                end_time: '10:00',
+                activity: 'Cà phê tại Cafe ban mê',
+                place_name: 'Cafe ban mê',
+                estimated_cost: null,
+              },
+              {
+                order_index: 2,
+                start_time: '10:30',
+                end_time: '12:00',
+                activity: 'Tham quan Bảo tàng Quảng Ninh',
+                place_name: 'Bảo tàng Quảng Ninh',
+                // estimated_cost omitted, openingHours null (UNKNOWN -> NOT closed!)
+              },
+            ],
+          },
+        ],
+      });
+
+      const previewC = await request(app.getHttpServer())
+        .post(`/trips/${tripId}/ai-plan`)
+        .send({})
+        .expect(201);
+      expect(previewC.body.data.hasScheduleViolations).toBe(false);
+      expect(previewC.body.data.canApply).toBe(true);
+      expect(previewC.body.data.budgetAnalysis).toMatchObject({
+        totalBudget: 500000,
+        knownCostTotal: 0,
+        unknownCostItemCount: 2,
+        costStatus: 'ALL_UNKNOWN',
+        hasSufficientBudgetBasis: false,
+        isOverBudget: false,
+        variance: null,
+      });
+      expect(previewC.body.data.days[0].items[0].estimatedCost).toBeNull();
+      expect(previewC.body.data.days[0].items[1].openingHoursStatus).toBe('UNKNOWN');
+
+      // Applying Case C succeeds (201) and persists estimatedCost: null ("chưa biết")
+      const applyC = await request(app.getHttpServer())
+        .post(`/trips/${tripId}/itinerary/bulk`)
+        .send({
+          replaceExisting: true,
+          days: [
+            {
+              dayNumber: 1,
+              date: '2026-11-23',
+              title: 'Ngày 1: Hạ Long',
+              items: [
+                {
+                  orderIndex: 1,
+                  startTime: '08:30',
+                  endTime: '10:00',
+                  activity: 'Cà phê tại Cafe ban mê',
+                  placeId: cafeId,
+                  estimatedCost: null,
+                },
+                {
+                  orderIndex: 2,
+                  startTime: '10:30',
+                  endTime: '12:00',
+                  activity: 'Tham quan Bảo tàng Quảng Ninh',
+                  placeId: baoTangId,
+                  estimatedCost: null,
+                },
+              ],
+            },
+          ],
+        })
+        .expect(201);
+      expect(applyC.body.data.itineraries[0].items[0].estimatedCost).toBeNull();
+      expect(applyC.body.data.itineraries[0].items[1].estimatedCost).toBeNull();
+    });
   });
 });

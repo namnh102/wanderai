@@ -11,7 +11,7 @@ class TripContextRequest(BaseModel):
     budget: Optional[int] = Field(default=None, ge=0)
     currency: str = "VND"
     travel_style: Optional[str] = None
-    interests: List[str] = []
+    interests: List[str] = Field(default_factory=list)
     existing_itinerary_count: int = 0
     notes: Optional[str] = None
 
@@ -22,8 +22,21 @@ class PlanRequest(BaseModel):
     days: int = 3
     budget: Optional[float] = None
     style: Optional[str] = "mixed"
-    interests: List[str] = []
+    interests: List[str] = Field(default_factory=list)
     start_date: Optional[str] = None
+
+
+class ScheduleViolation(BaseModel):
+    code: str
+    reason_code: str
+    day_number: int
+    order_index: int
+    conflicting_order_index: Optional[int] = None
+    activity: str
+    place_name: Optional[str] = None
+    start_time: Optional[str] = None
+    end_time: Optional[str] = None
+    message: str
 
 
 class ItineraryItem(BaseModel):
@@ -33,24 +46,31 @@ class ItineraryItem(BaseModel):
     activity: str
     place_name: Optional[str] = None
     notes: Optional[str] = None
-    estimated_cost: int = 0
+    estimated_cost: Optional[int] = None
+    cost_status: str = "UNKNOWN"
     transport_mode: Optional[str] = None
+    violations: List[ScheduleViolation] = Field(default_factory=list)
 
 
 class ItineraryDay(BaseModel):
     day_number: int
     date: Optional[str] = None
     title: str
-    items: List[ItineraryItem] = []
+    items: List[ItineraryItem] = Field(default_factory=list)
     day_cost: int = 0
+    unknown_cost_item_count: int = 0
 
 
 class BudgetAnalysis(BaseModel):
     total_budget: Optional[int] = None
     estimated_cost: int = 0
+    known_cost_total: int = 0
+    unknown_cost_item_count: int = 0
+    cost_status: str = "COMPLETE"
+    has_sufficient_budget_basis: bool = False
     currency: str = "VND"
     is_over_budget: bool = False
-    variance: int = 0
+    variance: Optional[int] = None
 
 
 class PlanResponse(BaseModel):
@@ -59,6 +79,8 @@ class PlanResponse(BaseModel):
     total_days: int
     overview: str
     best_time_to_visit: str
-    general_tips: List[str] = []
+    general_tips: List[str] = Field(default_factory=list)
     budget_analysis: BudgetAnalysis
-    days: List[ItineraryDay] = []
+    schedule_violations: List[ScheduleViolation] = Field(default_factory=list)
+    has_schedule_violations: bool = False
+    days: List[ItineraryDay] = Field(default_factory=list)
