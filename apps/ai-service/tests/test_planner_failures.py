@@ -79,3 +79,86 @@ def test_planner_router_has_no_database_access():
     src = pathlib.Path("app/routers/planner.py").read_text(encoding="utf-8")
     for token in ("asyncpg", "psycopg", "sqlalchemy", "DATABASE_URL", "INSERT INTO"):
         assert token not in src
+
+
+def test_planner_503_then_success_records_correlated_request_id_and_retry_timings():
+    """Simulates a transient 503 UNAVAILABLE on attempt 1 followed by 200 OK on attempt 2."""
+    ok_response = MagicMock()
+    ok_response.text = json.dumps(
+        {
+            "destination": "Hạ Long",
+            "total_days": 1,
+            "overview": "Lịch trình Hạ Long buổi sáng.",
+            "days": [
+                {
+                    "day_number": 1,
+                    "date": "2026-11-28",
+                    "title": "Ngày 1: Bảo tàng & Tháp Đồng Hồ",
+                    "items": [
+                        {
+                            "order_index": 1,
+                            "start_time": "08:00",
+                            "end_time": "10:30",
+                            "activity": "Tham quan Bảo tàng Quảng Ninh",
+                            "place_name": "Bảo tàng Quảng Ninh",
+                            "estimated_cost": 80000,
+                        },
+                        {
+                            "order_index": 2,
+                            "start_time": "10:30",
+                            "end_time": "12:00",
+                            "activity": "Check-in Tháp Đồng Hồ Hạ Long",
+                            "place_name": "Tháp Đồng Hồ Hạ Long",
+                            "estimated_cost": None,
+                        },
+                    ],
+                }
+            ],
+        },
+        ensure_ascii=False,
+    )
+    ok_response.candidates = []
+
+    req_id = "req-c4-503-retry-mock-001"
+    with (
+        patch("app.routers.planner._client") as mc,
+        patch("app.routers.planner._get_max_planner_attempts", return_value=3),
+        patch("app.routers.planner._sleep_for_retry", return_value=2000.0) as mock_sleep,
+    ):
+        mc.models.generate_content.side_effect = [
+            RuntimeError("503 UNAVAILABLE: This model is currently experiencing high demand"),
+            ok_response,
+        ]
+        res = client.post(
+            "/planner",
+            json={
+                "trip_id": "88888888-ba26-4c17-8888-000000000c41",
+                "destination": "Hạ Long",
+                "days": 1,
+                "budget": 500000,
+                "currency": "VND",
+                "interests": ["museum"],
+            },
+            headers={"X-Request-Id": req_id},
+        )
+
+    assert res.status_code == 200
+    assert res.headers.get("X-Request-Id") == req_id
+    mock_sleep.assert_called_once_with(2.0)
+
+    body = res.json()
+    tel = body["timing_telemetry"]
+    assert tel["request_id"] == req_id
+    assert tel["retry_count"] == 1
+    assert tel["retry_wait_ms"] == 2000.0
+    assert len(tel["model_attempts"]) == 2
+    assert tel["model_attempts"][0]["attempt"] == 1
+    assert tel["model_attempts"][0]["status"] == "error_503"
+    assert tel["model_attempts"][0]["error_code"] == "PROVIDER_503_UNAVAILABLE"
+    assert tel["model_attempts"][0]["duration_ms"] >= 0.0
+    assert tel["model_attempts"][1]["attempt"] == 2
+    assert tel["model_attempts"][1]["status"] == "ok"
+    assert tel["model_attempts"][1]["duration_ms"] >= 0.0
+    assert tel["fastapi_total_ms"] >= 0.0
+    assert tel["post_ai_schedule_validation_ms"] >= 0.0
+

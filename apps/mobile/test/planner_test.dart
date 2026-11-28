@@ -24,9 +24,13 @@ class FakePlannerTripRepository extends TripRepository {
   bool shouldFailPlan = false;
   bool shouldFailSave = false;
   bool planCalled = false;
+  int planCallCount = 0;
+  int planDelayMs = 0;
+  int failPlanAttemptsRemaining = 0;
   bool bulkSaveCalled = false;
   int bulkSaveCallCount = 0;
   int saveDelayMs = 0;
+  String? lastPlanPrompt;
   AiPlanRequestOptions? lastPlanOptions;
   String? lastIdempotencyKey;
 
@@ -118,7 +122,26 @@ class FakePlannerTripRepository extends TripRepository {
     AiPlanRequestOptions? options,
   }) async {
     planCalled = true;
+    planCallCount += 1;
+    lastPlanPrompt = prompt;
     lastPlanOptions = options;
+    if (planDelayMs > 0) {
+      await Future<void>.delayed(Duration(milliseconds: planDelayMs));
+    }
+    if (failPlanAttemptsRemaining > 0) {
+      failPlanAttemptsRemaining -= 1;
+      throw DioException(
+        requestOptions: RequestOptions(path: '/trips/$tripId/ai-plan'),
+        type: DioExceptionType.badResponse,
+        response: Response(
+          requestOptions: RequestOptions(path: '/trips/$tripId/ai-plan'),
+          statusCode: 503,
+          data: {
+            'message': 'Dịch vụ AI tạm thời không khả dụng (503). Vui lòng thử lại sau.',
+          },
+        ),
+      );
+    }
     if (shouldFailPlan) {
       throw DioException(
         requestOptions: RequestOptions(path: '/trips/$tripId/ai-plan'),
@@ -812,6 +835,160 @@ void main() {
 
         expect(fakeTripRepo.bulkSaveCallCount, 1);
         expect(fakeTripRepo.lastIdempotencyKey, isNotNull);
+      },
+    );
+
+    testWidgets(
+      '9. Shows "Đang lập bản xem trước" while generating, preserves Wandy request on 503 failure, and succeeds on "Thử lại" with 3 demo cost types',
+      (tester) async {
+        const halongPrompt =
+            'Hai người lớn đi Hạ Long từ 8h đến 12h, tổng ngân sách 500.000 đồng, ưu tiên bảo tàng. Lập giúp tôi một lịch và ghi rõ khoản nào chưa biết giá.';
+
+        final fakeTripRepo = FakePlannerTripRepository()
+          ..planDelayMs = 120
+          ..failPlanAttemptsRemaining = 1;
+        fakeTripRepo.currentTrip = const TripModel(
+          id: 'trip_halong_retry',
+          userId: 'user_1',
+          title: 'Hạ Long Bảo Tàng 8h-12h (500k)',
+          destinationName: 'Hạ Long',
+          totalBudget: 500000,
+          itineraries: [],
+        );
+        fakeTripRepo.fakePlan = AiPlanPreviewModel.fromJson({
+          'tripId': 'trip_halong_retry',
+          'destination': 'Hạ Long',
+          'totalDays': 1,
+          'overview': 'Hành trình nửa ngày Hạ Long 8h-12h.',
+          'bestTimeToVisit': 'Tháng 9 - 11',
+          'generalTips': ['Đến bảo tàng lúc 8h'],
+          'budgetAnalysis': {
+            'totalBudget': 500000,
+            'estimatedCost': 200000,
+            'knownCostTotal': 200000,
+            'unknownCostItemCount': 1,
+            'costStatus': 'PARTIAL_UNKNOWN',
+            'hasSufficientBudgetBasis': false,
+            'currency': 'VND',
+            'isOverBudget': false,
+            'variance': null,
+          },
+          'days': [
+            {
+              'dayNumber': 1,
+              'date': '2026-11-28',
+              'title': 'Khám phá Văn hóa & Lịch sử Hạ Long',
+              'dayCost': 200000,
+              'unknownCostItemCount': 1,
+              'items': [
+                {
+                  'orderIndex': 1,
+                  'startTime': '08:00',
+                  'endTime': '10:30',
+                  'activity': 'Tham quan Bảo tàng Quảng Ninh',
+                  'placeId': '8f2b5a69-1293-4efe-8fc5-3a74193edd0f',
+                  'placeName': 'Bảo tàng Quảng Ninh',
+                  'estimatedCost': 80000,
+                  'costStatus': 'KNOWN',
+                },
+                {
+                  'orderIndex': 2,
+                  'startTime': '10:30',
+                  'endTime': '11:15',
+                  'activity': 'Check-in Tháp Đồng Hồ Hạ Long',
+                  'placeId': '65562a67-84ff-44a0-990d-31917a2a9bd0',
+                  'placeName': 'Tháp Đồng Hồ Hạ Long',
+                  'estimatedCost': null,
+                  'costStatus': 'UNKNOWN',
+                },
+                {
+                  'orderIndex': 3,
+                  'startTime': '11:15',
+                  'endTime': '12:00',
+                  'activity': 'Thưởng thức bún bề bề Hòn Gai',
+                  'placeName': 'Khu vực ẩm thực Hòn Gai',
+                  'estimatedCost': 120000,
+                  'costStatus': 'KNOWN',
+                },
+              ],
+            },
+          ],
+        });
+
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: [
+              tripRepositoryProvider.overrideWithValue(fakeTripRepo),
+              pendingWandyPlanHandoffProvider.overrideWith(
+                (_) => const PendingWandyPlanHandoff(
+                  tripId: 'trip_halong_retry',
+                  rawPrompt: halongPrompt,
+                  initialChatReply:
+                      '08:00-10:30 Bảo tàng Quảng Ninh (80.000đ); 10:30-12:00 Tháp Đồng Hồ (Chưa biết giá).',
+                  planningContext: WandyPlanningContext(
+                    rawPrompt: halongPrompt,
+                    partySize: 2,
+                    partyDescription: '2 người lớn',
+                    timeWindowStart: '08:00',
+                    timeWindowEnd: '12:00',
+                    totalBudget: 500000,
+                    interests: ['museum'],
+                  ),
+                ),
+              ),
+            ],
+            child: const MaterialApp(
+              home: TripDetailScreen(tripId: 'trip_halong_retry'),
+            ),
+          ),
+        );
+
+        // Pump microtask + loadTrip so generateAiPlan is in-flight
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 30));
+
+        // 1. "Đang lập bản xem trước" status + preserved constraints are displayed
+        expect(find.text('Đang lập bản xem trước'), findsOneWidget);
+        expect(
+          find.byKey(const Key('ai_plan_generating_preview_status')),
+          findsOneWidget,
+        );
+        expect(
+          find.textContaining('2 người lớn • 08:00 - 12:00 • Ngân sách 500.000đ'),
+          findsOneWidget,
+        );
+
+        // 2. First attempt fails with 503 -> error banner appears & keeps preserved request for retry
+        await tester.pumpAndSettle();
+        expect(fakeTripRepo.planCallCount, 1);
+        expect(
+          find.byKey(const Key('ai_plan_error_retry_banner')),
+          findsOneWidget,
+        );
+        expect(
+          find.byKey(const Key('ai_plan_error_preserved_request')),
+          findsOneWidget,
+        );
+
+        // 3. Tap "Thử lại" -> re-sends exact preserved Wandy request (no re-typing) and opens C4 Preview!
+        await tester.tap(find.byKey(const Key('ai_plan_retry_button')));
+        await tester.pump(const Duration(milliseconds: 30));
+        expect(find.text('Đang lập bản xem trước'), findsOneWidget);
+
+        await tester.pumpAndSettle();
+        expect(fakeTripRepo.planCallCount, 2);
+        expect(fakeTripRepo.lastPlanPrompt, halongPrompt);
+        expect(fakeTripRepo.lastPlanOptions?.partySize, 2);
+        expect(fakeTripRepo.lastPlanOptions?.timeWindowStart, '08:00');
+        expect(fakeTripRepo.lastPlanOptions?.timeWindowEnd, '12:00');
+        expect(fakeTripRepo.lastPlanOptions?.budgetOverride, 500000);
+        expect(fakeTripRepo.lastPlanOptions?.interestsOverride, ['museum']);
+
+        expect(find.text('Lịch trình từ Wandy AI'), findsOneWidget);
+        expect(
+          find.text('Đã biết 200.000đ; còn khoản chưa xác minh'),
+          findsOneWidget,
+        );
       },
     );
   });

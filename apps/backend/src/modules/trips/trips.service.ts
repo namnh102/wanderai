@@ -1,9 +1,12 @@
 import {
   Injectable,
+  Logger,
   NotFoundException,
   ForbiddenException,
   BadRequestException,
 } from '@nestjs/common';
+import { randomUUID } from 'crypto';
+import { performance } from 'perf_hooks';
 import { PrismaService } from '../../prisma/prisma.service';
 import { TripStatus } from '@prisma/client';
 import { CreateTripDto } from './dto/create-trip.dto';
@@ -23,6 +26,8 @@ const UUID_LIKE_RE =
 
 @Injectable()
 export class TripsService {
+  private readonly logger = new Logger(TripsService.name);
+
   constructor(
     private prisma: PrismaService,
     private aiProxyService: AiProxyService,
@@ -730,7 +735,14 @@ export class TripsService {
   }
 
   // POST /trips/:id/ai-plan — Tạo bản xem trước lịch trình AI (chưa lưu DB)
-  async planTripWithAi(tripId: string, userId: string, customOptions?: PlanTripDto) {
+  async planTripWithAi(
+    tripId: string,
+    userId: string,
+    customOptions?: PlanTripDto,
+    requestId?: string,
+  ) {
+    const effectiveRequestId =
+      requestId && requestId.trim().length > 0 ? requestId.trim() : randomUUID();
     const trip = await this.findById(tripId, userId);
 
     const destinationName = trip.destination?.name || trip.title;
@@ -792,6 +804,7 @@ export class TripsService {
         : customOptions?.additionalPrompt;
 
     const context = {
+      requestId: effectiveRequestId,
       tripId: trip.id,
       destination: destinationName,
       days,
@@ -804,13 +817,25 @@ export class TripsService {
       notes: mergedNotes,
     };
 
+    const tAiCallStart = performance.now();
     const aiResult = await this.aiProxyService.planWithTripContext(context);
+    const nestjsAiCallTotalMs =
+      Math.round((performance.now() - tAiCallStart) * 100) / 100;
+
+    const tPostAiStart = performance.now();
     const rawDays = Array.isArray(aiResult?.days) ? aiResult.days : [];
+    const tPlaceResStart = performance.now();
     const { byId: placesById, unambiguousByName } =
       await this._resolveVerifiedPlacesForPreview(trip.destinationId, rawDays);
+    const nestjsPlaceResolutionMs =
+      Math.round((performance.now() - tPlaceResStart) * 100) / 100;
 
     // Deterministic cost & schedule validation without coercing null/missing prices to 0
     let knownCostTotal = 0;
+    let verifiedPlaceCostTotal = 0;
+    let unverifiedAiEstimatedCostTotal = 0;
+    let verifiedPlaceCostItemCount = 0;
+    let unverifiedAiEstimatedItemCount = 0;
     let totalUnknownCostItems = 0;
     let totalItemsCount = 0;
 
@@ -857,6 +882,16 @@ export class TripsService {
             }
           }
 
+          if (estimatedCost !== null) {
+            if (resolvedPlaceId !== null) {
+              verifiedPlaceCostTotal += estimatedCost;
+              verifiedPlaceCostItemCount += 1;
+            } else {
+              unverifiedAiEstimatedCostTotal += estimatedCost;
+              unverifiedAiEstimatedItemCount += 1;
+            }
+          }
+
           const startTime =
             typeof (item?.start_time ?? item?.startTime) === 'string' &&
             (item.start_time ?? item.startTime).trim().length > 0
@@ -898,11 +933,14 @@ export class TripsService {
       };
     });
 
+    const tEvalStart = performance.now();
     const constraintEval = evaluateItineraryDays(
       intermediateDays,
       placesById,
       trip.startDate,
     );
+    const nestjsConstraintEvalMs =
+      Math.round((performance.now() - tEvalStart) * 100) / 100;
 
     const processedDays = intermediateDays.map((day) => ({
       ...day,
@@ -949,7 +987,58 @@ export class TripsService {
             : `Chi phí ước tính ${this._formatDotVnd(knownCostTotal)}đ`
           : `Chi phí ước tính ${this._formatDotVnd(knownCostTotal)}đ`;
 
+    const nestjsPostAiScheduleValidationMs =
+      Math.round((performance.now() - tPostAiStart) * 100) / 100;
+
+    const upstreamTiming = aiResult?.timing_telemetry;
+    const fastapiPostAiMs =
+      typeof upstreamTiming?.post_ai_schedule_validation_ms === 'number'
+        ? upstreamTiming.post_ai_schedule_validation_ms
+        : 0;
+    const timingTelemetry = {
+      requestId: upstreamTiming?.request_id || effectiveRequestId,
+      nestjsAiCallTotalMs,
+      fastapiTotalMs:
+        typeof upstreamTiming?.fastapi_total_ms === 'number'
+          ? upstreamTiming.fastapi_total_ms
+          : null,
+      fastapiRagRetrievalMs:
+        typeof upstreamTiming?.rag_retrieval_ms === 'number'
+          ? upstreamTiming.rag_retrieval_ms
+          : 0,
+      modelAttempts: Array.isArray(upstreamTiming?.model_attempts)
+        ? upstreamTiming.model_attempts.map((a: any) => ({
+            attempt: a.attempt,
+            startedOffsetMs: a.started_offset_ms,
+            durationMs: a.duration_ms,
+            status: a.status,
+            errorCode: a.error_code ?? null,
+          }))
+        : [],
+      modelTotalMs:
+        typeof upstreamTiming?.model_total_ms === 'number'
+          ? upstreamTiming.model_total_ms
+          : null,
+      retryCount:
+        typeof upstreamTiming?.retry_count === 'number'
+          ? upstreamTiming.retry_count
+          : 0,
+      retryWaitMs:
+        typeof upstreamTiming?.retry_wait_ms === 'number'
+          ? upstreamTiming.retry_wait_ms
+          : 0,
+      fastapiPostAiScheduleValidationMs: fastapiPostAiMs,
+      nestjsPlaceResolutionMs,
+      nestjsConstraintEvalMs,
+      nestjsPostAiScheduleValidationMs,
+      totalPostAiScheduleValidationMs:
+        Math.round((fastapiPostAiMs + nestjsPostAiScheduleValidationMs) * 100) / 100,
+    };
+
+    this.logger.log(`[C4_PREVIEW_TIMING] ${JSON.stringify(timingTelemetry)}`);
+
     return {
+      requestId: timingTelemetry.requestId,
       tripId: trip.id,
       destination: destinationName,
       totalDays: processedDays.length,
@@ -975,7 +1064,15 @@ export class TripsService {
         isOverBudget,
         variance,
         summaryText: budgetSummaryText,
+        costProvenanceBreakdown: {
+          verifiedPlaceCostTotal,
+          unverifiedAiEstimatedCostTotal,
+          verifiedPlaceCostItemCount,
+          unverifiedAiEstimatedItemCount,
+          unknownCostItemCount: totalUnknownCostItems,
+        },
       },
+      timingTelemetry,
       scheduleViolations: constraintEval.violations,
       hasScheduleViolations: constraintEval.violations.length > 0,
       canApply: constraintEval.violations.length === 0,

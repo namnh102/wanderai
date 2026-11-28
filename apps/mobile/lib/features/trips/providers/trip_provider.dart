@@ -139,6 +139,8 @@ class TripDetailState {
   final bool isGeneratingPlan;
   final AiPlanPreviewModel? generatedPlan;
   final String? planErrorMessage;
+  final String? lastPlanPrompt;
+  final AiPlanRequestOptions? lastPlanOptions;
 
   const TripDetailState({
     this.trip,
@@ -148,7 +150,13 @@ class TripDetailState {
     this.isGeneratingPlan = false,
     this.generatedPlan,
     this.planErrorMessage,
+    this.lastPlanPrompt,
+    this.lastPlanOptions,
   });
+
+  bool get hasRetryablePlanRequest =>
+      (lastPlanPrompt != null && lastPlanPrompt!.trim().isNotEmpty) ||
+      lastPlanOptions != null;
 
   TripDetailState copyWith({
     TripModel? trip,
@@ -161,6 +169,10 @@ class TripDetailState {
     bool clearPlan = false,
     String? planErrorMessage,
     bool clearPlanError = false,
+    String? lastPlanPrompt,
+    AiPlanRequestOptions? lastPlanOptions,
+    bool updateLastPlanRequest = false,
+    bool clearLastPlanRequest = false,
   }) {
     return TripDetailState(
       trip: trip ?? this.trip,
@@ -171,6 +183,12 @@ class TripDetailState {
       generatedPlan: clearPlan ? null : (generatedPlan ?? this.generatedPlan),
       planErrorMessage:
           clearPlanError ? null : (planErrorMessage ?? this.planErrorMessage),
+      lastPlanPrompt: clearLastPlanRequest
+          ? null
+          : (updateLastPlanRequest ? lastPlanPrompt : (lastPlanPrompt ?? this.lastPlanPrompt)),
+      lastPlanOptions: clearLastPlanRequest
+          ? null
+          : (updateLastPlanRequest ? lastPlanOptions : (lastPlanOptions ?? this.lastPlanOptions)),
     );
   }
 }
@@ -306,6 +324,9 @@ class TripDetailNotifier extends StateNotifier<TripDetailState> {
     state = state.copyWith(
       isGeneratingPlan: true,
       clearPlanError: true,
+      lastPlanPrompt: prompt,
+      lastPlanOptions: options,
+      updateLastPlanRequest: true,
     );
     try {
       final plan = await _repo.generateAiPlan(
@@ -335,6 +356,14 @@ class TripDetailNotifier extends StateNotifier<TripDetailState> {
       );
       return null;
     }
+  }
+
+  Future<AiPlanPreviewModel?> retryLastAiPlan(String tripId) {
+    return generateAiPlan(
+      tripId,
+      prompt: state.lastPlanPrompt,
+      options: state.lastPlanOptions,
+    );
   }
 
   Future<bool> saveAiPlan(

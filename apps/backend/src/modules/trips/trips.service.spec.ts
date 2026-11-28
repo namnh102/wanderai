@@ -1107,6 +1107,7 @@ describe('TripsService & Trip DTO Validation', () => {
                 start_time: '08:00',
                 end_time: '10:30',
                 activity: 'Tham quan Bảo tàng Quảng Ninh',
+                place_id: baoTangId,
                 place_name: 'Bảo tàng Quảng Ninh',
                 estimated_cost: 80000,
               },
@@ -1205,6 +1206,184 @@ describe('TripsService & Trip DTO Validation', () => {
       expect(afterDoubleApply.body.data.itineraries[0].items).toHaveLength(2);
       expect(afterDoubleApply.body.data.itineraries[0].items[0].estimatedCost).toBe(80000);
       expect(afterDoubleApply.body.data.itineraries[0].items[1].estimatedCost).toBeNull();
+    });
+
+    it('Preview timing & 3-cost demo regression: propagates X-Request-Id across NestJS->FastAPI (503 retry mock) and separates 80.000đ verified POI vs 120.000đ AI-estimated meal vs null unknown POI', async () => {
+      const baoTangId = '8f2b5a69-1293-4efe-8fc5-3a74193edd0f';
+      const thapDongHoId = '65562a67-84ff-44a0-990d-31917a2a9bd0';
+      const destId = 'd1111111-1111-4111-8111-111111111111';
+      const now = new Date('2026-11-27T00:00:00.000Z');
+
+      const rawStore = inMemoryPrisma as unknown as {
+        places: Map<string, Record<string, unknown>>;
+        placeSources: Array<Record<string, unknown>>;
+      };
+      for (const poi of [
+        { id: baoTangId, name: 'Bảo tàng Quảng Ninh', openingHours: 'Mo-Su 08:00-12:00,13:00-17:00' },
+        { id: thapDongHoId, name: 'Tháp Đồng Hồ Hạ Long', openingHours: null },
+      ]) {
+        rawStore.places.set(poi.id, {
+          id: poi.id,
+          destinationId: destId,
+          categoryId: 'c2222222-2222-4222-8222-222222222222',
+          name: poi.name,
+          nameEn: null,
+          description: null,
+          address: 'Hạ Long, Quảng Ninh',
+          latitude: 20.95,
+          longitude: 107.09,
+          priceMin: null,
+          priceMax: null,
+          openingHours: poi.openingHours,
+          coverImage: null,
+          images: [],
+          rating: null,
+          reviewCount: 0,
+          deletedAt: null,
+          createdAt: now,
+          updatedAt: now,
+        });
+        rawStore.placeSources.push({
+          id: `ps-reg-${poi.id}`,
+          placeId: poi.id,
+          sourceName: 'osm',
+          sourceId: `node/${poi.id.slice(0, 6)}`,
+          rawName: poi.name,
+          confidenceScore: 1.0,
+          rawData: { tags: { name: poi.name } },
+          createdAt: now,
+        });
+      }
+
+      const tripRes = await request(app.getHttpServer())
+        .post('/trips')
+        .send({
+          title: 'Hạ Long 3 Khoản Chi Phí Demo',
+          destinationId: destId,
+          startDate: '2026-11-28',
+          endDate: '2026-11-28',
+          totalBudget: 500000,
+        })
+        .expect(201);
+      const tripId = tripRes.body.data.id as string;
+
+      const reqId = 'req-halong-demo-503-retry-corr-01';
+      const aiProxy = app.get(AiProxyService) as { planWithTripContext: jest.Mock };
+      aiProxy.planWithTripContext.mockResolvedValueOnce({
+        destination: 'Hạ Long',
+        total_days: 1,
+        overview: 'Hành trình nửa ngày Hạ Long 8h-12h.',
+        timing_telemetry: {
+          request_id: reqId,
+          fastapi_total_ms: 44980.5,
+          rag_retrieval_ms: 35.2,
+          model_attempts: [
+            {
+              attempt: 1,
+              started_offset_ms: 36.1,
+              duration_ms: 32210.0,
+              status: 'error_503',
+              error_code: 'PROVIDER_503_UNAVAILABLE',
+            },
+            {
+              attempt: 2,
+              started_offset_ms: 34248.4,
+              duration_ms: 10730.4,
+              status: 'ok',
+              error_code: null,
+            },
+          ],
+          model_total_ms: 42940.4,
+          retry_count: 1,
+          retry_wait_ms: 2002.3,
+          post_ai_schedule_validation_ms: 1.7,
+        },
+        days: [
+          {
+            day_number: 1,
+            date: '2026-11-28',
+            title: 'Khám phá Văn hóa & Lịch sử Hạ Long',
+            items: [
+              {
+                order_index: 1,
+                start_time: '08:00',
+                end_time: '10:30',
+                activity: 'Tham quan Bảo tàng Quảng Ninh',
+                place_id: baoTangId,
+                place_name: 'Bảo tàng Quảng Ninh',
+                estimated_cost: 80000,
+              },
+              {
+                order_index: 2,
+                start_time: '10:30',
+                end_time: '11:15',
+                activity: 'Check-in và tham quan Tháp Đồng Hồ Hạ Long',
+                place_name: 'Tháp Đồng Hồ Hạ Long',
+                estimated_cost: null,
+              },
+              {
+                order_index: 3,
+                start_time: '11:15',
+                end_time: '12:00',
+                activity: 'Thưởng thức bún bề bề/bún hải sản Hòn Gai',
+                place_name: 'Khu vực ẩm thực Hòn Gai',
+                estimated_cost: 120000,
+              },
+            ],
+          },
+        ],
+      });
+
+      const res = await request(app.getHttpServer())
+        .post(`/trips/${tripId}/ai-plan`)
+        .set('X-Request-Id', reqId)
+        .send({
+          additionalPrompt:
+            'Hai người lớn đi Hạ Long từ 8h đến 12h, tổng ngân sách 500.000 đồng, ưu tiên bảo tàng. Lập giúp tôi một lịch và ghi rõ khoản nào chưa biết giá.',
+          partySize: 2,
+          partyDescription: '2 người lớn',
+          timeWindowStart: '08:00',
+          timeWindowEnd: '12:00',
+          budgetOverride: 500000,
+          interestsOverride: ['museum'],
+        })
+        .expect(201);
+
+      expect(aiProxy.planWithTripContext).toHaveBeenCalledWith(
+        expect.objectContaining({ requestId: reqId }),
+      );
+      expect(res.body.data.requestId).toBe(reqId);
+      expect(res.body.data.timingTelemetry).toMatchObject({
+        requestId: reqId,
+        fastapiTotalMs: 44980.5,
+        fastapiRagRetrievalMs: 35.2,
+        retryCount: 1,
+        retryWaitMs: 2002.3,
+        modelTotalMs: 42940.4,
+        fastapiPostAiScheduleValidationMs: 1.7,
+      });
+      expect(res.body.data.timingTelemetry.modelAttempts).toHaveLength(2);
+      expect(res.body.data.timingTelemetry.nestjsAiCallTotalMs).toBeGreaterThanOrEqual(0);
+      expect(
+        res.body.data.timingTelemetry.nestjsPostAiScheduleValidationMs,
+      ).toBeGreaterThanOrEqual(0);
+
+      // Characterization of the 3 demo cost buckets for C4 alignment with ô trái:
+      expect(res.body.data.budgetAnalysis).toMatchObject({
+        totalBudget: 500000,
+        knownCostTotal: 200000,
+        unknownCostItemCount: 1,
+        costStatus: 'PARTIAL_UNKNOWN',
+        variance: null,
+        summaryText: 'Đã biết 200.000đ; còn khoản chưa xác minh',
+        costProvenanceBreakdown: {
+          verifiedPlaceCostTotal: 80000,
+          unverifiedAiEstimatedCostTotal: 120000,
+          verifiedPlaceCostItemCount: 1,
+          unverifiedAiEstimatedItemCount: 1,
+          unknownCostItemCount: 1,
+        },
+      });
     });
   });
 });
