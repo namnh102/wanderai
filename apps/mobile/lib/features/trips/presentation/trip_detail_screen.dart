@@ -11,6 +11,7 @@ import '../../ai_chat/providers/chat_provider.dart';
 import '../data/trip_models.dart';
 import '../providers/trip_provider.dart';
 import 'trip_form_screen.dart';
+import 'widgets/trip_members_and_invites_card.dart';
 
 sealed class _SliverItineraryEntry {
   const _SliverItineraryEntry();
@@ -1568,6 +1569,17 @@ class _TripDetailScreenState extends ConsumerState<TripDetailScreen> {
                 },
               ),
             ),
+          SliverPadding(
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.md,
+              0,
+              AppSpacing.md,
+              AppSpacing.xl,
+            ),
+            sliver: SliverToBoxAdapter(
+              child: TripMembersAndInvitesCard(trip: trip),
+            ),
+          ),
         ],
       ),
     );
