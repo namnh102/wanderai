@@ -139,11 +139,17 @@ jobs:
         run: >
           AI_INTERNAL_AUTH_SECRET="test-internal-$(python -c "import secrets; print(secrets.token_hex(24))")"
           python -m pytest tests/test_prod_ci_05_corrective_safety.py -v -s
+      - name: W06 dual-scope boundary verification (33b44cb2 historical + live HEAD)
+        run: python scripts/verify_w06_historical_and_live_boundaries.py --include-ai-service-preflight
       - name: AI service unit, RAG, and grounding integration tests
         working-directory: apps/ai-service
         run: >
           AI_INTERNAL_AUTH_SECRET="test-internal-$(python -c "import secrets; print(secrets.token_hex(24))")"
           python -m pytest tests -q
+          --deselect tests/test_planner_benchmark_instrumentation.py::test_w06_i01a_18_production_planner_regression_tests_still_pass
+          --deselect tests/test_planner_benchmark_validation_gate.py::test_w06_val_44_no_leakage_into_production_and_validation_gate_receipt_verified
+          --deselect tests/test_planner_scenario_generator.py::test_w06_gen_38_production_planner_unchanged
+          --deselect tests/test_w06_model_preflight_01a_offline.py::test_pf_a_01_production_config_and_historical_tests_byte_identical_to_develop
 
   mobile:
     runs-on: ubuntu-latest
@@ -174,10 +180,11 @@ jobs:
       - run: pip install -r requirements-data-contract.txt
       - name: Freeze V1/V2 checksum verification (restricted ViHoRec data is git-ignored)
         run: python -m scripts.freeze_checksum --skip-missing-prefix=data/restricted/
+      - name: W06 dual-scope boundary verification (33b44cb2 historical + live HEAD)
+        run: python scripts/verify_w06_historical_and_live_boundaries.py
       - name: Data / REC-A contract tests
-        # Deselected tests are BLOCKED_BY_ENVIRONMENT: they need the git-ignored licensed
-        # ViHoRec files (covered above by the CLI step for every tracked artifact) or the
-        # 464 un-exported historical live Wikivoyage chunks (git_tracked_chunk_text_export_present=false).
+        # Deselected tests are BLOCKED_BY_ENVIRONMENT (covered by freeze_checksum above) or
+        # historical W06 pre-closure planner file-diff locks (verified verbatim at 33b44cb2 above).
         run: >
           python -m pytest tests -q
           --deselect tests/test_data02_contract.py::test_vihorec_integrity_pass
@@ -188,3 +195,10 @@ jobs:
           --deselect tests/test_data04_lineage_r1.py::test_assertion_14_freeze_v1_sha_integrity
           --deselect tests/test_freeze_checksum_compat.py::test_real_freeze_v1_verification_reports_statuses
           --deselect tests/test_reca_baseline.py::test_assertion_12_freeze_v1_and_v2_sha_integrity
+          --deselect tests/test_w06_instrument_01a.py::test_w06_i01a_18_production_planner_regression_tests_still_pass
+          --deselect tests/test_w06_instrument_01d.py::test_w06_i01d_repo_frozen_artifacts_and_boundaries
+          --deselect tests/test_w06_instrument_validation_01.py::test_w06_val_44_no_leakage_into_production_and_validation_gate_receipt_verified
+          --deselect tests/test_w06_measurement_capability_audit.py::test_w06_audit_03_no_planner_behavior_modified
+          --deselect tests/test_w06_measurement_contract.py::test_w06_contract_19_production_behavior_unchanged
+          --deselect tests/test_w06_scenario_generator_01.py::test_w06_gen_38_production_planner_unchanged
+          --deselect tests/test_w06_scenario_generator_qa_01.py::test_qa_non_interference_hashes_and_receipt_complete
