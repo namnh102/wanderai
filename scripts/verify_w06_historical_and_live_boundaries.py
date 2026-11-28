@@ -240,7 +240,7 @@ def verify_historical_w06_suite_at_closure(include_ai_service_preflight: bool) -
     print(f"  [PASS] Historical W06 suite passed 100% verbatim at {W06_CLOSURE_SHA[:8]}.")
 
 
-def verify_live_config_schema_and_api_on_head() -> None:
+def verify_live_config_schema_and_api_on_head(require_fastapi: bool) -> None:
     print("[3/3] Verifying live HEAD configuration, schema/OpenAPI, evaluators & POST /planner API...")
     # 3A. Configuration, requirements, LLM adapter & historical test file guards (carried over from PF-A-01)
     pf_diff = subprocess.run(
@@ -293,16 +293,13 @@ def verify_live_config_schema_and_api_on_head() -> None:
         f"Unexpected diff in tests/test_w06_measurement_contract.py: {changed_lines}"
     )
 
-    # 3B. Runtime settings, Pydantic schemas, OpenAPI contract, evaluators & POST /planner API (from W06-I01A-18 & PF-A-01)
+    # 3B. Runtime settings, Pydantic schemas & evaluators (runs in BOTH data-contract & ai-service)
     os.environ.setdefault("GEMINI_API_KEY", "dummy-key-not-used-in-ci")
     if str(AI_SERVICE_ROOT) not in sys.path:
         sys.path.insert(0, str(AI_SERVICE_ROOT))
 
-    from fastapi.testclient import TestClient
-
     from app.config import settings
     from app.evaluation.planner_benchmark_evaluator import EVALUATOR_VERSION, EVALUATOR_VERSION_01D
-    from app.main import app
     from app.prompts.planner_prompt import build_planner_prompt
     from app.schemas.planner import ItineraryItem, PlanRequest, PlanResponse, TripContextRequest
     from app.services.c4_itinerary_evaluator import evaluate_c4_itinerary
@@ -323,13 +320,22 @@ def verify_live_config_schema_and_api_on_head() -> None:
     prod_prompt = build_planner_prompt(destination=prod_req.destination, days=ctx_req.days)
     assert "Đà Nẵng" in prod_prompt
 
-    # OpenAPI contract snapshot parity check
+    # 3C. FastAPI OpenAPI snapshot parity & live POST /planner check (mandatory in ai-service job)
+    try:
+        from fastapi.testclient import TestClient
+    except ImportError:
+        if require_fastapi:
+            raise
+        print("  [PASS] Live HEAD configuration, Pydantic schemas & evaluators verified (FastAPI HTTP check runs in ai-service job).")
+        return
+
+    from app.main import app
+
     openapi_path = REPO_ROOT / "docs" / "contracts" / "ai-service.openapi.json"
     expected_openapi = json.dumps(app.openapi(), indent=2, sort_keys=True, ensure_ascii=False) + "\n"
     actual_openapi = openapi_path.read_text(encoding="utf-8").replace("\r\n", "\n")
     assert actual_openapi == expected_openapi, "OpenAPI snapshot docs/contracts/ai-service.openapi.json is stale"
 
-    # Live FastAPI /planner backward-compatibility endpoint check (from W06-I01A-18)
     client = TestClient(app)
     with patch("app.routers.planner._client", None):
         resp = client.post(
@@ -361,7 +367,7 @@ def main() -> int:
 
     verify_frozen_w06_artifacts_on_head()
     verify_historical_w06_suite_at_closure(include_ai_service_preflight=include_preflight)
-    verify_live_config_schema_and_api_on_head()
+    verify_live_config_schema_and_api_on_head(require_fastapi=include_preflight)
     print("W06 DUAL-SCOPE VERIFICATION (33b44cb2 + LIVE HEAD): PASS")
     return 0
 
