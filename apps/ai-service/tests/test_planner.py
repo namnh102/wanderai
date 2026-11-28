@@ -444,3 +444,102 @@ def test_c4_itinerary_evaluator_handles_nullable_and_zero_costs():
     assert res_zero["calculated_unknown_count"] == 0
     assert res_zero["cost_status"] == "COMPLETE"
 
+
+def test_planner_halong_demo_three_cost_types_regression():
+    """Regression characterization for the 3 cost categories observed in live Hạ Long demo:
+    1) Verified-source ticket: Bảo tàng Quảng Ninh (place_name matched in NestJS, 80.000đ)
+    2) Unknown-price POI: Tháp Đồng Hồ Hạ Long (estimated_cost=None)
+    3) AI-estimated unverified meal: Bún bề bề Hòn Gai (estimated_cost=120.000đ)
+    """
+    demo_output = {
+        "destination": "Hạ Long",
+        "total_days": 1,
+        "days": [
+            {
+                "day_number": 1,
+                "date": "2026-11-28",
+                "title": "Khám phá Văn hóa & Lịch sử Hạ Long",
+                "items": [
+                    {
+                        "order_index": 1,
+                        "start_time": "08:00",
+                        "end_time": "10:30",
+                        "activity": "Tham quan Bảo tàng Quảng Ninh - Tìm hiểu lịch sử và văn hóa vùng đất mỏ",
+                        "place_id": "8f2b5a69-1293-4efe-8fc5-3a74193edd0f",
+                        "place_name": "Bảo tàng Quảng Ninh",
+                        "notes": "Giá vé đã xác minh cho 2 người lớn là 80.000 VND (40.000 VND/người).",
+                        "estimated_cost": 80000,
+                        "transport_mode": "motorbike",
+                    },
+                    {
+                        "order_index": 2,
+                        "start_time": "10:30",
+                        "end_time": "11:15",
+                        "activity": "Check-in và tham quan Tháp Đồng Hồ Hạ Long",
+                        "place_id": "65562a67-84ff-44a0-990d-31917a2a9bd0",
+                        "place_name": "Tháp Đồng Hồ Hạ Long",
+                        "notes": "Chi phí tham quan/gửi xe tại đây chưa có dữ liệu giá xác minh.",
+                        "estimated_cost": None,
+                        "transport_mode": "motorbike",
+                    },
+                    {
+                        "order_index": 3,
+                        "start_time": "11:15",
+                        "end_time": "12:00",
+                        "activity": "Thưởng thức bún bề bề/bún hải sản Hòn Gai",
+                        "place_id": None,
+                        "place_name": "Khu vực ẩm thực Hòn Gai",
+                        "notes": "AI ước tính khoảng 50.000 - 60.000 VND/bát cho 2 người.",
+                        "estimated_cost": 120000,
+                        "transport_mode": "motorbike",
+                    },
+                ],
+            }
+        ],
+    }
+    mock_response = MagicMock()
+    mock_response.text = json.dumps(demo_output, ensure_ascii=False)
+    mock_response.candidates = []
+
+    with patch("app.routers.planner._client") as mock_client:
+        mock_client.models.generate_content.return_value = mock_response
+        res = client.post(
+            "/planner",
+            json={
+                "request_id": "req-halong-3cost-regression",
+                "trip_id": "88888888-ba26-4c17-8888-000000000c41",
+                "destination": "Hạ Long",
+                "days": 1,
+                "start_date": "2026-11-28",
+                "end_date": "2026-11-28",
+                "budget": 500000,
+                "currency": "VND",
+                "interests": ["museum"],
+            },
+        )
+        assert res.status_code == 200
+        body = res.json()
+        items = body["days"][0]["items"]
+
+        # Item 1: 80.000đ verified POI
+        assert items[0]["place_name"] == "Bảo tàng Quảng Ninh"
+        assert items[0]["estimated_cost"] == 80000
+        assert items[0]["cost_status"] == "KNOWN"
+
+        # Item 2: unknown-price POI -> null preserved, never coerced to 0
+        assert items[1]["place_name"] == "Tháp Đồng Hồ Hạ Long"
+        assert items[1]["estimated_cost"] is None
+        assert items[1]["cost_status"] == "UNKNOWN"
+
+        # Item 3: 120.000đ AI-estimated food item -> FastAPI marks numeric cost KNOWN (NestJS classifies provenance)
+        assert items[2]["place_name"] == "Khu vực ẩm thực Hòn Gai"
+        assert items[2]["estimated_cost"] == 120000
+        assert items[2]["cost_status"] == "KNOWN"
+
+        ba = body["budget_analysis"]
+        assert ba["known_cost_total"] == 200000
+        assert ba["unknown_cost_item_count"] == 1
+        assert ba["cost_status"] == "PARTIAL_UNKNOWN"
+        assert ba["has_sufficient_budget_basis"] is False
+        assert ba["variance"] is None
+

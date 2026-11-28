@@ -87,13 +87,13 @@ class WandyPlanningContext {
     int? partySize;
     String? partyDesc;
     final mNumParty = RegExp(
-      r'\b(\d{1,2})\s*(người\s*lớn|người|khách|bạn)\b',
+      r'\b(\d{1,2})\s*(người\s*cao\s*tuổi|người\s*lớn|sinh\s*viên|học\s*viên|học\s*sinh|trẻ\s*em|người|khách|bạn)\b',
       caseSensitive: false,
     ).firstMatch(lower);
     if (mNumParty != null) {
       partySize = int.tryParse(mNumParty.group(1)!);
       if (partySize != null) {
-        partyDesc = '$partySize ${mNumParty.group(2)!.trim()}';
+        partyDesc = '$partySize ${mNumParty.group(2)!.replaceAll(RegExp(r'\s+'), ' ').trim()}';
       }
     } else {
       const wordNums = <String, int>{
@@ -110,12 +110,13 @@ class WandyPlanningContext {
       };
       for (final entry in wordNums.entries) {
         final mWord = RegExp(
-          '\\b${entry.key}\\s+(người\\s*lớn|người|khách)\\b',
+          '\\b${entry.key}\\s+(người\\s*cao\\s*tuổi|người\\s*lớn|sinh\\s*viên|học\\s*viên|học\\s*sinh|trẻ\\s*em|người|khách)\\b',
           caseSensitive: false,
         ).firstMatch(lower);
         if (mWord != null) {
           partySize = entry.value;
-          partyDesc = '${entry.value} ${mWord.group(1)!.trim()}';
+          partyDesc =
+              '${entry.value} ${mWord.group(1)!.replaceAll(RegExp(r'\s+'), ' ').trim()}';
           break;
         }
       }

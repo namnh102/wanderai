@@ -44,6 +44,7 @@ class TripDetailScreen extends ConsumerStatefulWidget {
 class _TripDetailScreenState extends ConsumerState<TripDetailScreen> {
   bool _isReordering = false;
   List<ItineraryModel> _draftItineraries = const [];
+  PendingWandyPlanHandoff? _activeWandyHandoff;
 
   @override
   void initState() {
@@ -73,9 +74,67 @@ class _TripDetailScreenState extends ConsumerState<TripDetailScreen> {
       final handoff = ref.read(pendingWandyPlanHandoffProvider);
       if (handoff != null && handoff.tripId == widget.tripId) {
         ref.read(pendingWandyPlanHandoffProvider.notifier).state = null;
+        if (mounted) {
+          setState(() {
+            _activeWandyHandoff = handoff;
+          });
+        }
         await _runWandyHandoffPreview(handoff);
       }
     });
+  }
+
+  String? _describePreservedPlanRequest(TripDetailState state) {
+    final opts = state.lastPlanOptions;
+    if (opts != null) {
+      final parts = <String>[
+        if (opts.partyDescription != null &&
+            opts.partyDescription!.trim().isNotEmpty)
+          opts.partyDescription!.trim(),
+        if (opts.timeWindowStart != null && opts.timeWindowEnd != null)
+          '${opts.timeWindowStart} - ${opts.timeWindowEnd}',
+        if (opts.budgetOverride != null)
+          'Ngân sách ${formatDotVndAmount(opts.budgetOverride!)}đ',
+        if (opts.interestsOverride != null &&
+            opts.interestsOverride!.isNotEmpty)
+          opts.interestsOverride!.join(', '),
+      ];
+      if (parts.isNotEmpty) {
+        return parts.join(' • ');
+      }
+      if (opts.additionalPrompt != null &&
+          opts.additionalPrompt!.trim().isNotEmpty) {
+        return opts.additionalPrompt!.trim();
+      }
+    }
+    final prompt = state.lastPlanPrompt?.trim();
+    if (prompt != null && prompt.isNotEmpty) {
+      return prompt;
+    }
+    return null;
+  }
+
+  Future<void> _handleRetryAiPlan() async {
+    if (!mounted) return;
+    final plan = await ref
+        .read(tripDetailProvider.notifier)
+        .retryLastAiPlan(widget.tripId);
+    if (!mounted) return;
+    if (plan != null) {
+      _showAiPlanPreviewModal(plan, wandyHandoff: _activeWandyHandoff);
+    } else {
+      final err = ref.read(tripDetailProvider).planErrorMessage ??
+          'Không thể tạo lịch trình xem trước từ Wandy AI';
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(err),
+          action: SnackBarAction(
+            label: 'Thử lại',
+            onPressed: _handleRetryAiPlan,
+          ),
+        ),
+      );
+    }
   }
 
   Future<void> _runWandyHandoffPreview(PendingWandyPlanHandoff handoff) async {
@@ -101,7 +160,15 @@ class _TripDetailScreenState extends ConsumerState<TripDetailScreen> {
     } else {
       final err = ref.read(tripDetailProvider).planErrorMessage ??
           'Không thể tạo lịch trình xem trước từ Wandy AI';
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(err)));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(err),
+          action: SnackBarAction(
+            label: 'Thử lại',
+            onPressed: _handleRetryAiPlan,
+          ),
+        ),
+      );
     }
   }
 
@@ -268,6 +335,9 @@ class _TripDetailScreenState extends ConsumerState<TripDetailScreen> {
 
     if (prompt == null || !mounted) return;
 
+    setState(() {
+      _activeWandyHandoff = null;
+    });
     final plan = await ref.read(tripDetailProvider.notifier).generateAiPlan(
           widget.tripId,
           prompt: prompt.isNotEmpty ? prompt : null,
@@ -279,7 +349,15 @@ class _TripDetailScreenState extends ConsumerState<TripDetailScreen> {
     } else {
       final err = ref.read(tripDetailProvider).planErrorMessage ??
           'Không thể tạo lịch trình từ AI';
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(err)));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(err),
+          action: SnackBarAction(
+            label: 'Thử lại',
+            onPressed: _handleRetryAiPlan,
+          ),
+        ),
+      );
     }
   }
 
@@ -324,11 +402,8 @@ class _TripDetailScreenState extends ConsumerState<TripDetailScreen> {
         : ((plan.budgetAnalysis.totalBudget ?? 0) -
                 plan.budgetAnalysis.knownCostTotal)
             .abs();
-    final c4UnknownSummary = formatC4BudgetSummary(
-      knownCostTotal: plan.budgetAnalysis.knownCostTotal,
+    final c4ProvenanceSummary = plan.budgetAnalysis.resolveSummaryLine(
       unknownCostCount: unknownCostCount,
-      totalBudget: plan.budgetAnalysis.totalBudget,
-      isOverBudget: plan.budgetAnalysis.isOverBudget,
     );
 
     final summaryViolations = plan.scheduleViolations.isNotEmpty
@@ -514,15 +589,20 @@ class _TripDetailScreenState extends ConsumerState<TripDetailScreen> {
                 ],
               ],
             ),
-            if (hasUnknownCosts) ...[
+            if (c4ProvenanceSummary != null &&
+                c4ProvenanceSummary.isNotEmpty) ...[
               const SizedBox(height: 6),
               Text(
-                c4UnknownSummary,
+                c4ProvenanceSummary,
                 key: const Key('ai_plan_c4_budget_summary_line'),
                 style: TextStyle(
                   fontSize: 12.5,
                   fontWeight: FontWeight.w700,
-                  color: Colors.orange.shade900,
+                  color: plan.budgetAnalysis.isOverBudget
+                      ? cs.error
+                      : (hasUnknownCosts
+                          ? Colors.orange.shade900
+                          : cs.primary),
                 ),
               ),
             ],
@@ -813,9 +893,18 @@ class _TripDetailScreenState extends ConsumerState<TripDetailScreen> {
             final hasViolation = item.violations.isNotEmpty;
             final timeRange =
                 formatItineraryTimeRange(item.startTime, item.endTime);
-            final costLabel = item.estimatedCost != null
-                ? '${item.estimatedCost} VND'
-                : 'Chưa biết giá';
+            final String costLabel;
+            if (item.estimatedCost == null) {
+              costLabel = 'Chưa biết giá';
+            } else if (item.effectiveCostStatus == 'VERIFIED') {
+              costLabel = item.estimatedCost == 0
+                  ? '0đ · Miễn phí (Đã xác minh)'
+                  : '${formatDotVndAmount(item.estimatedCost!)}đ · Đã xác minh';
+            } else if (item.effectiveCostStatus == 'ESTIMATED') {
+              costLabel = '${formatDotVndAmount(item.estimatedCost!)}đ · Tạm tính';
+            } else {
+              costLabel = '${item.estimatedCost} VND';
+            }
             final metaLabel =
                 timeRange != null ? '$timeRange • $costLabel' : costLabel;
 
@@ -1143,11 +1232,145 @@ class _TripDetailScreenState extends ConsumerState<TripDetailScreen> {
                           ),
                           const SizedBox(height: 12),
                           if (state.isGeneratingPlan)
-                            const AppLoading(
-                              isCompact: true,
-                              message: 'Wandy đang lên lịch trình tối ưu...',
+                            Container(
+                              key: const Key('ai_plan_generating_preview_status'),
+                              width: double.infinity,
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: cs.surface,
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: cs.primary.withValues(alpha: 0.35),
+                                ),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      SizedBox(
+                                        width: 18,
+                                        height: 18,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2.2,
+                                          color: cs.primary,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 10),
+                                      Expanded(
+                                        child: Text(
+                                          'Đang lập bản xem trước',
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.w700,
+                                            fontSize: 14,
+                                            color: cs.primary,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  if (_describePreservedPlanRequest(state) !=
+                                      null) ...[
+                                    const SizedBox(height: 6),
+                                    Text(
+                                      'Giữ yêu cầu: ${_describePreservedPlanRequest(state)!}',
+                                      key: const Key(
+                                        'ai_plan_generating_preserved_request',
+                                      ),
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: cs.onSurfaceVariant,
+                                      ),
+                                    ),
+                                  ],
+                                ],
+                              ),
                             )
-                          else
+                          else if (state.planErrorMessage != null) ...[
+                            Container(
+                              key: const Key('ai_plan_error_retry_banner'),
+                              width: double.infinity,
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: cs.errorContainer.withValues(alpha: 0.35),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: cs.error.withValues(alpha: 0.45),
+                                ),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Icon(
+                                        Icons.error_outline,
+                                        color: cs.error,
+                                        size: 18,
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Expanded(
+                                        child: Text(
+                                          'Không thể lập bản xem trước: ${state.planErrorMessage!}',
+                                          style: TextStyle(
+                                            fontSize: 13,
+                                            fontWeight: FontWeight.w600,
+                                            color: cs.error,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  if (_describePreservedPlanRequest(state) !=
+                                      null) ...[
+                                    const SizedBox(height: 6),
+                                    Text(
+                                      'Đã giữ yêu cầu: ${_describePreservedPlanRequest(state)!}',
+                                      key: const Key(
+                                        'ai_plan_error_preserved_request',
+                                      ),
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: cs.onSurfaceVariant,
+                                      ),
+                                    ),
+                                  ],
+                                  const SizedBox(height: 10),
+                                  Row(
+                                    children: [
+                                      Expanded(
+                                        child: AppButton(
+                                          key: const Key(
+                                            'ai_plan_retry_button',
+                                          ),
+                                          text: 'Thử lại',
+                                          variant: AppButtonVariant.ai,
+                                          onPressed: _handleRetryAiPlan,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      OutlinedButton(
+                                        style: OutlinedButton.styleFrom(
+                                          minimumSize: const Size(0, 48),
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 14,
+                                          ),
+                                        ),
+                                        onPressed: _handleGenerateAiPlan,
+                                        child: const Text('Yêu cầu mới'),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ] else
                             AppButton(
                               text: 'Lập lịch trình bằng AI',
                               variant: AppButtonVariant.ai,
@@ -1177,6 +1400,27 @@ class _TripDetailScreenState extends ConsumerState<TripDetailScreen> {
                         ),
                     ],
                   ),
+                  if (trip.costSummaryText != null &&
+                      trip.costSummaryText!.trim().isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 6),
+                      child: Text(
+                        trip.costSummaryText!.trim(),
+                        key: const Key('trip_saved_cost_provenance_summary'),
+                        style: TextStyle(
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.w700,
+                          color: trip.costSummaryText!.contains('vượt ngân sách')
+                              ? cs.error
+                              : ((trip.costProvenanceBreakdown
+                                              ?.unknownCostItemCount ??
+                                          0) >
+                                      0
+                                  ? Colors.orange.shade900
+                                  : cs.primary),
+                        ),
+                      ),
+                    ),
                   if (!_isReordering &&
                       trip.status != 'CANCELLED' &&
                       trip.itineraries.any((d) => d.items.length >= 2))
@@ -1627,9 +1871,17 @@ class _TripDetailScreenState extends ConsumerState<TripDetailScreen> {
               style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant),
             ),
           Text(
-            item.estimatedCost != null
-                ? 'Chi phí: ${item.estimatedCost} VND'
-                : 'Chi phí: Chưa biết',
+            item.estimatedCost == null
+                ? (item.costStatus == 'UNKNOWN'
+                    ? 'Chi phí: Chưa biết giá'
+                    : 'Chi phí: Chưa biết')
+                : item.costStatus == 'VERIFIED'
+                    ? (item.estimatedCost == 0
+                        ? 'Chi phí: 0đ · Miễn phí (Đã xác minh)'
+                        : 'Chi phí: ${formatDotVndAmount(item.estimatedCost!)}đ · Đã xác minh')
+                    : item.costStatus == 'ESTIMATED'
+                        ? 'Chi phí: ${formatDotVndAmount(item.estimatedCost!)}đ · Tạm tính'
+                        : 'Chi phí: ${item.estimatedCost} VND',
             style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant),
           ),
           if (item.notes != null && item.notes!.isNotEmpty)

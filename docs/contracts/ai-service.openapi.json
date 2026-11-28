@@ -512,6 +512,17 @@
             "title": "Interests",
             "type": "array"
           },
+          "request_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Request Id"
+          },
           "start_date": {
             "anyOf": [
               {
@@ -589,6 +600,16 @@
             "title": "Schedule Violations",
             "type": "array"
           },
+          "timing_telemetry": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PlannerTimingTelemetry"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "total_days": {
             "title": "Total Days",
             "type": "integer"
@@ -603,6 +624,95 @@
           "budget_analysis"
         ],
         "title": "PlanResponse",
+        "type": "object"
+      },
+      "PlannerModelAttemptTelemetry": {
+        "properties": {
+          "attempt": {
+            "title": "Attempt",
+            "type": "integer"
+          },
+          "duration_ms": {
+            "title": "Duration Ms",
+            "type": "number"
+          },
+          "error_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error Code"
+          },
+          "started_offset_ms": {
+            "title": "Started Offset Ms",
+            "type": "number"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "attempt",
+          "started_offset_ms",
+          "duration_ms",
+          "status"
+        ],
+        "title": "PlannerModelAttemptTelemetry",
+        "type": "object"
+      },
+      "PlannerTimingTelemetry": {
+        "properties": {
+          "fastapi_total_ms": {
+            "title": "Fastapi Total Ms",
+            "type": "number"
+          },
+          "model_attempts": {
+            "items": {
+              "$ref": "#/components/schemas/PlannerModelAttemptTelemetry"
+            },
+            "title": "Model Attempts",
+            "type": "array"
+          },
+          "model_total_ms": {
+            "default": 0.0,
+            "title": "Model Total Ms",
+            "type": "number"
+          },
+          "post_ai_schedule_validation_ms": {
+            "default": 0.0,
+            "title": "Post Ai Schedule Validation Ms",
+            "type": "number"
+          },
+          "rag_retrieval_ms": {
+            "default": 0.0,
+            "title": "Rag Retrieval Ms",
+            "type": "number"
+          },
+          "request_id": {
+            "title": "Request Id",
+            "type": "string"
+          },
+          "retry_count": {
+            "default": 0,
+            "title": "Retry Count",
+            "type": "integer"
+          },
+          "retry_wait_ms": {
+            "default": 0.0,
+            "title": "Retry Wait Ms",
+            "type": "number"
+          }
+        },
+        "required": [
+          "request_id",
+          "fastapi_total_ms"
+        ],
+        "title": "PlannerTimingTelemetry",
         "type": "object"
       },
       "RecommendedPlaceDto": {
@@ -833,6 +943,17 @@
               }
             ],
             "title": "Notes"
+          },
+          "request_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Request Id"
           },
           "start_date": {
             "anyOf": [
