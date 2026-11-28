@@ -125,6 +125,15 @@ jobs:
           CI_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/wanderai_ci_test
           ALLOW_DESTRUCTIVE_CI_SEED: "1"
         run: python scripts/seed_ci_database.py --include-rag-docs
+      - name: Cache pinned ViHoRec v2.0 dataset (git-ignored research benchmark)
+        uses: actions/cache@v4
+        with:
+          path: data/restricted/vihorec
+          key: vihorec-fd53fbb8903ac305f3a0daffa86bd1a4a997df63-${{ hashFiles('scripts/verify_vihorec_integrity.py') }}
+      - name: Materialize and verify pinned ViHoRec dataset integrity
+        run: |
+          PYTHONPATH=apps/ai-service python -c "from recommendation.loader import ViHoRecLoader, VIHOREC_PINNED_REVISION; assert VIHOREC_PINNED_REVISION == 'fd53fbb8903ac305f3a0daffa86bd1a4a997df63'; ViHoRecLoader().download_if_missing()"
+          python scripts/verify_vihorec_integrity.py
       - name: PROD-CI-05 Corrective-01/02 seed safety, migration rollback & governed source verification
         working-directory: apps/ai-service
         run: >
