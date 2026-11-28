@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
@@ -23,6 +24,7 @@ import '../../auth/providers/auth_provider.dart';
 import '../../location/domain/geo_distance.dart';
 import '../../location/providers/user_location_provider.dart';
 import '../../map/data/place_model.dart';
+import '../../map/providers/map_provider.dart';
 import '../data/navigation_service.dart';
 import '../data/review_repository.dart';
 import '../providers/place_detail_provider.dart';
@@ -160,12 +162,214 @@ Future<void> _openDirections(
   }
 }
 
+const String placeDetailRefreshFailedText =
+    'Không thể cập nhật đánh giá và thông tin địa điểm. Vui lòng thử lại.';
+
+List<PlaceReviewModel> _deduplicateReviews(List<PlaceReviewModel> reviews) {
+  if (reviews.length <= 1) return reviews;
+  final seenIds = <String>{};
+  final result = <PlaceReviewModel>[];
+  for (final rev in reviews) {
+    final id = rev.id.trim();
+    if (id.isNotEmpty) {
+      if (seenIds.add(id)) {
+        result.add(rev);
+      }
+    } else {
+      result.add(rev);
+    }
+  }
+  return result;
+}
+
 /// Place Detail screen — route `/places/:id`.
-class PlaceDetailScreen extends ConsumerWidget {
+class PlaceDetailScreen extends ConsumerStatefulWidget {
   final String placeId;
   const PlaceDetailScreen({super.key, required this.placeId});
 
+  @override
+  ConsumerState<PlaceDetailScreen> createState() => _PlaceDetailScreenState();
+}
+
+class _PlaceDetailScreenState extends ConsumerState<PlaceDetailScreen>
+    with WidgetsBindingObserver {
+  int _placeEpoch = 0;
+  PlaceModel? _warmPlace;
+  String? _warmPlaceId;
+  String? _refreshErrorMessage;
+
+  Timer? _pollTimer;
+  Future<void>? _inFlightRefresh;
+  String? _inFlightPlaceId;
+  bool _inFlightShowErrorOnFail = false;
+  AppLifecycleState _lifecycleState = AppLifecycleState.resumed;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _lifecycleState =
+        WidgetsBinding.instance.lifecycleState ?? AppLifecycleState.resumed;
+  }
+
+  @override
+  void didUpdateWidget(covariant PlaceDetailScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.placeId != widget.placeId) {
+      // Advance epoch so any late in-flight response for oldWidget.placeId is discarded.
+      _placeEpoch++;
+      _cancelPollTimer();
+      _warmPlace = null;
+      _warmPlaceId = null;
+      _refreshErrorMessage = null;
+      _inFlightRefresh = null;
+      _inFlightPlaceId = null;
+      _inFlightShowErrorOnFail = false;
+    }
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    _lifecycleState = state;
+    if (state != AppLifecycleState.resumed) {
+      _cancelPollTimer();
+    } else if (_warmPlace != null && _warmPlaceId == widget.placeId) {
+      _scheduleNextPollIfEligible();
+    }
+  }
+
+  @override
+  void dispose() {
+    _placeEpoch++;
+    _cancelPollTimer();
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  void _cancelPollTimer() {
+    _pollTimer?.cancel();
+    _pollTimer = null;
+  }
+
+  bool get _isScreenActivelyVisible {
+    if (!mounted) return false;
+    if (_lifecycleState != AppLifecycleState.resumed) return false;
+    if (!TickerMode.valuesOf(context).enabled) return false;
+    final route = ModalRoute.of(context);
+    if (route != null && !route.isCurrent) return false;
+    return true;
+  }
+
+  void _scheduleNextPollIfEligible() {
+    _cancelPollTimer();
+    if (!mounted) return;
+    if (_lifecycleState != AppLifecycleState.resumed) return;
+    if (_warmPlace == null || _warmPlaceId != widget.placeId) return;
+
+    final interval = ref.read(placeDetailPollIntervalProvider);
+    if (interval == null || interval <= Duration.zero) return;
+
+    final scheduledEpoch = _placeEpoch;
+    final scheduledPlaceId = widget.placeId;
+    _pollTimer = Timer(interval, () {
+      _pollTimer = null;
+      if (!mounted ||
+          scheduledEpoch != _placeEpoch ||
+          scheduledPlaceId != widget.placeId) {
+        return;
+      }
+      if (!_isScreenActivelyVisible) {
+        // Screen is temporarily covered (e.g. modal sheet or pushed route):
+        // skip HTTP call and re-check later if still mounted and resumed.
+        if (mounted && _lifecycleState == AppLifecycleState.resumed) {
+          _scheduleNextPollIfEligible();
+        }
+        return;
+      }
+      if (_inFlightRefresh != null) {
+        // Single-flight guard: never overlap with an active refresh/poll.
+        _scheduleNextPollIfEligible();
+        return;
+      }
+      unawaited(_refreshCurrentPlace(isManual: false));
+    });
+  }
+
+  Future<void> _refreshCurrentPlace({required bool isManual}) {
+    final targetPlaceId = widget.placeId;
+    final targetEpoch = _placeEpoch;
+
+    if (isManual) {
+      _inFlightShowErrorOnFail = true;
+    }
+
+    // Single-flight: reuse active request for the same POI instead of overlapping.
+    if (_inFlightRefresh != null && _inFlightPlaceId == targetPlaceId) {
+      return _inFlightRefresh!;
+    }
+
+    _cancelPollTimer();
+    _inFlightShowErrorOnFail = isManual;
+
+    final future = () async {
+      try {
+        final fresh =
+            await ref.read(placeRepositoryProvider).getPlaceById(targetPlaceId);
+        if (!mounted ||
+            targetEpoch != _placeEpoch ||
+            targetPlaceId != widget.placeId) {
+          return;
+        }
+        setState(() {
+          _warmPlace = fresh;
+          _warmPlaceId = targetPlaceId;
+          _refreshErrorMessage = null;
+        });
+      } catch (_) {
+        if (!mounted ||
+            targetEpoch != _placeEpoch ||
+            targetPlaceId != widget.placeId) {
+          return;
+        }
+        if (_inFlightShowErrorOnFail) {
+          setState(() {
+            _refreshErrorMessage = placeDetailRefreshFailedText;
+          });
+        }
+      } finally {
+        if (_inFlightPlaceId == targetPlaceId && targetEpoch == _placeEpoch) {
+          _inFlightRefresh = null;
+          _inFlightPlaceId = null;
+          _inFlightShowErrorOnFail = false;
+        }
+        if (mounted &&
+            targetEpoch == _placeEpoch &&
+            targetPlaceId == widget.placeId) {
+          _scheduleNextPollIfEligible();
+        }
+      }
+    }();
+
+    _inFlightRefresh = future;
+    _inFlightPlaceId = targetPlaceId;
+    return future;
+  }
+
+  void _seedWarmPlaceFromInitialLoad(PlaceModel place) {
+    if (_warmPlaceId == widget.placeId && _warmPlace != null) {
+      return;
+    }
+    _warmPlace = place;
+    _warmPlaceId = widget.placeId;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && _warmPlaceId == widget.placeId && _pollTimer == null) {
+        _scheduleNextPollIfEligible();
+      }
+    });
+  }
+
   void _back(BuildContext context) {
+    _cancelPollTimer();
     if (context.canPop()) {
       context.pop();
     } else {
@@ -175,7 +379,6 @@ class PlaceDetailScreen extends ConsumerWidget {
 
   Future<void> _handleSaveToTrip(
     BuildContext context,
-    WidgetRef ref,
     PlaceModel place,
   ) async {
     final authStatus = ref.read(authProvider).status;
@@ -205,10 +408,62 @@ class PlaceDetailScreen extends ConsumerWidget {
     }
   }
 
+  Widget _buildWarmDetailBody(BuildContext context, PlaceModel place) {
+    final user = ref.watch(userLocationProvider).position;
+    return PlaceDetailView(
+      place: place,
+      distanceKm: distanceFromUserKm(user, place.latitude, place.longitude),
+      onRefresh: () => _refreshCurrentPlace(isManual: true),
+      refreshErrorMessage: _refreshErrorMessage,
+      onRetryRefresh: () {
+        unawaited(_refreshCurrentPlace(isManual: true));
+      },
+      onOpenUrl: (url) => _openExternal(
+        context,
+        ref,
+        url,
+        clearBottomCta: place.hasCoordinates,
+      ),
+      onDirections: () => _openDirections(context, ref, place, user),
+      onEnableLocation: () => ref.read(userLocationProvider.notifier).request(),
+      onAskWandy: () {
+        final dest = place.destinationName;
+        final prompt = dest != null && dest.isNotEmpty
+            ? 'Gợi ý thông tin và lịch trình ghé thăm ${place.name} tại $dest.'
+            : 'Gợi ý thông tin và lịch trình ghé thăm ${place.name}.';
+        ref.read(pendingChatPromptProvider.notifier).state = prompt;
+        context.go('/ai');
+      },
+      onWriteReview: () {
+        final authStatus = ref.read(authProvider).status;
+        if (authStatus != AuthStatus.authenticated) {
+          final targetPath = '/places/${place.id}';
+          ref.read(postLoginRedirectProvider.notifier).state = targetPath;
+          context.go('/login?redirect=${Uri.encodeComponent(targetPath)}');
+          return;
+        }
+        _openReviewSheet(context, place);
+      },
+      onSaveToTrip: () => _handleSaveToTrip(context, place),
+      youtubeFreshnessSection: YoutubeFreshnessSection(
+        place: place,
+        onOpenUrl: (url) => _openExternal(
+          context,
+          ref,
+          url,
+          clearBottomCta: place.hasCoordinates,
+        ),
+      ),
+    );
+  }
+
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
+    final placeId = widget.placeId;
     final detail = ref.watch(placeDetailProvider(placeId));
-    final loadedPlace = detail.valueOrNull;
+    final activeWarmPlace =
+        (_warmPlaceId == placeId) ? _warmPlace : null;
+    final loadedPlace = activeWarmPlace ?? detail.valueOrNull;
 
     return Scaffold(
       backgroundColor: AppColors.warmBackground,
@@ -230,84 +485,45 @@ class PlaceDetailScreen extends ConsumerWidget {
               icon: const Icon(Icons.bookmark_add_outlined),
               tooltip: 'Lưu vào chuyến đi',
               color: AppColors.primary,
-              onPressed: () => _handleSaveToTrip(context, ref, loadedPlace),
+              onPressed: () => _handleSaveToTrip(context, loadedPlace),
             ),
         ],
       ),
-      body: detail.when(
-        loading: () =>
-            const AppLoading(message: 'Đang tải thông tin địa điểm...'),
-        error: (e, _) {
-          final status = e is DioException ? e.response?.statusCode : null;
-          if (status == 404 || status == 400) {
-            return AppEmptyState(
-              icon: Icons.location_off_outlined,
-              title: 'Không tìm thấy địa điểm',
-              description: 'Địa điểm này không tồn tại hoặc đã bị gỡ.',
-              actionLabel: 'Về bản đồ',
-              onAction: () => context.go('/map'),
-            );
-          }
-          return AppErrorState(
-            message: 'Không thể tải thông tin địa điểm. Vui lòng thử lại.',
-            onRetry: () => ref.invalidate(placeDetailProvider(placeId)),
-          );
-        },
-        data: (place) {
-          final user = ref.watch(userLocationProvider).position;
-          return PlaceDetailView(
-            place: place,
-            distanceKm:
-                distanceFromUserKm(user, place.latitude, place.longitude),
-            onOpenUrl: (url) => _openExternal(
-              context,
-              ref,
-              url,
-              clearBottomCta: place.hasCoordinates,
+      body: activeWarmPlace != null
+          ? _buildWarmDetailBody(context, activeWarmPlace)
+          : detail.when(
+              loading: () =>
+                  const AppLoading(message: 'Đang tải thông tin địa điểm...'),
+              error: (e, _) {
+                final status = e is DioException ? e.response?.statusCode : null;
+                if (status == 404 || status == 400) {
+                  return AppEmptyState(
+                    icon: Icons.location_off_outlined,
+                    title: 'Không tìm thấy địa điểm',
+                    description: 'Địa điểm này không tồn tại hoặc đã bị gỡ.',
+                    actionLabel: 'Về bản đồ',
+                    onAction: () => context.go('/map'),
+                  );
+                }
+                return AppErrorState(
+                  message:
+                      'Không thể tải thông tin địa điểm. Vui lòng thử lại.',
+                  onRetry: () => ref.invalidate(placeDetailProvider(placeId)),
+                );
+              },
+              data: (place) {
+                _seedWarmPlaceFromInitialLoad(place);
+                return _buildWarmDetailBody(context, place);
+              },
             ),
-            onDirections: () => _openDirections(context, ref, place, user),
-            onEnableLocation: () =>
-                ref.read(userLocationProvider.notifier).request(),
-            onAskWandy: () {
-              final dest = place.destinationName;
-              final prompt = dest != null && dest.isNotEmpty
-                  ? 'Gợi ý thông tin và lịch trình ghé thăm ${place.name} tại $dest.'
-                  : 'Gợi ý thông tin và lịch trình ghé thăm ${place.name}.';
-              ref.read(pendingChatPromptProvider.notifier).state = prompt;
-              context.go('/ai');
-            },
-            onWriteReview: () {
-              final authStatus = ref.read(authProvider).status;
-              if (authStatus != AuthStatus.authenticated) {
-                final targetPath = '/places/${place.id}';
-                ref.read(postLoginRedirectProvider.notifier).state = targetPath;
-                context
-                    .go('/login?redirect=${Uri.encodeComponent(targetPath)}');
-                return;
-              }
-              _openReviewSheet(context, ref, place);
-            },
-            onSaveToTrip: () => _handleSaveToTrip(context, ref, place),
-            youtubeFreshnessSection: YoutubeFreshnessSection(
-              place: place,
-              onOpenUrl: (url) => _openExternal(
-                context,
-                ref,
-                url,
-                clearBottomCta: place.hasCoordinates,
-              ),
-            ),
-          );
-        },
-      ),
     );
   }
 
   Future<void> _openReviewSheet(
     BuildContext context,
-    WidgetRef ref,
     PlaceModel place,
   ) async {
+    _cancelPollTimer();
     final submitted = await showModalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
@@ -318,12 +534,16 @@ class PlaceDetailScreen extends ConsumerWidget {
       builder: (_) => _ReviewSheet(
         place: place,
         onSubmitted: () {
-          if (context.mounted) {
-            ref.invalidate(placeDetailProvider(place.id));
+          if (mounted && widget.placeId == place.id) {
+            unawaited(_refreshCurrentPlace(isManual: true));
           }
         },
       ),
     );
+    if (!mounted) return;
+    if (_pollTimer == null && _inFlightRefresh == null) {
+      _scheduleNextPollIfEligible();
+    }
     if (submitted == true && context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -465,6 +685,9 @@ class PlaceDetailView extends StatelessWidget {
 
   /// Real distance from the user's current position; `null` = unknown.
   final double? distanceKm;
+  final Future<void> Function()? onRefresh;
+  final String? refreshErrorMessage;
+  final VoidCallback? onRetryRefresh;
   final void Function(String url) onOpenUrl;
   final VoidCallback onDirections;
   final VoidCallback? onEnableLocation;
@@ -477,6 +700,9 @@ class PlaceDetailView extends StatelessWidget {
     super.key,
     required this.place,
     this.distanceKm,
+    this.onRefresh,
+    this.refreshErrorMessage,
+    this.onRetryRefresh,
     required this.onOpenUrl,
     required this.onDirections,
     this.onEnableLocation,
@@ -491,22 +717,30 @@ class PlaceDetailView extends StatelessWidget {
     final catColor = AppColors.forCategory(place.categoryName);
     final hasHours = place.openingHours != null;
     final hasContact = place.website != null || place.phone != null;
+    final uniqueReviews = _deduplicateReviews(place.reviews);
     final galleryUrls = <String>{
       if (place.coverImage != null) place.coverImage!,
       ...place.images,
     }.where((u) => u.startsWith('http')).toList();
 
-    return ResponsiveWrapper(
-      maxWidth: 640.0,
+    final scrollContent = SingleChildScrollView(
+      key: const Key('place_detail_scroll_view'),
+      physics: const AlwaysScrollableScrollPhysics(),
+      padding: const EdgeInsets.all(AppSpacing.screenHorizontal),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(AppSpacing.screenHorizontal),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // ── Hero header ──
+          if (refreshErrorMessage != null) ...[
+            AppStateBanner(
+              key: const Key('place_detail_refresh_error_banner'),
+              tone: AppStateBannerTone.warning,
+              message: refreshErrorMessage!,
+              actionLabel: onRetryRefresh != null ? 'Thử lại' : null,
+              onAction: onRetryRefresh,
+            ),
+            const SizedBox(height: AppSpacing.sm),
+          ],
+          // ── Hero header ──
                   Container(
                     key: const Key('place_detail_hero'),
                     width: double.infinity,
@@ -651,9 +885,9 @@ class PlaceDetailView extends StatelessWidget {
                               ),
                           ],
                         ),
-                        if (place.reviews.isNotEmpty) ...[
+                        if (uniqueReviews.isNotEmpty) ...[
                           const Divider(height: AppSpacing.md),
-                          for (final rev in place.reviews.take(5))
+                          for (final rev in uniqueReviews.take(5))
                             Padding(
                               padding:
                                   const EdgeInsets.only(bottom: AppSpacing.sm),
@@ -870,7 +1104,20 @@ class PlaceDetailView extends StatelessWidget {
                   const SizedBox(height: AppSpacing.md),
                 ],
               ),
-            ),
+            );
+
+    return ResponsiveWrapper(
+      maxWidth: 640.0,
+      child: Column(
+        children: [
+          Expanded(
+            child: onRefresh != null
+                ? RefreshIndicator(
+                    key: const Key('place_detail_refresh_indicator'),
+                    onRefresh: onRefresh!,
+                    child: scrollContent,
+                  )
+                : scrollContent,
           ),
 
           // ── Primary CTA ──
