@@ -598,9 +598,11 @@ class _TripDetailScreenState extends ConsumerState<TripDetailScreen> {
                 style: TextStyle(
                   fontSize: 12.5,
                   fontWeight: FontWeight.w700,
-                  color: hasUnknownCosts
-                      ? Colors.orange.shade900
-                      : cs.primary,
+                  color: plan.budgetAnalysis.isOverBudget
+                      ? cs.error
+                      : (hasUnknownCosts
+                          ? Colors.orange.shade900
+                          : cs.primary),
                 ),
               ),
             ],
@@ -1408,12 +1410,14 @@ class _TripDetailScreenState extends ConsumerState<TripDetailScreen> {
                         style: TextStyle(
                           fontSize: 12.5,
                           fontWeight: FontWeight.w700,
-                          color: (trip.costProvenanceBreakdown
-                                          ?.unknownCostItemCount ??
-                                      0) >
-                                  0
-                              ? Colors.orange.shade900
-                              : cs.primary,
+                          color: trip.costSummaryText!.contains('vượt ngân sách')
+                              ? cs.error
+                              : ((trip.costProvenanceBreakdown
+                                              ?.unknownCostItemCount ??
+                                          0) >
+                                      0
+                                  ? Colors.orange.shade900
+                                  : cs.primary),
                         ),
                       ),
                     ),

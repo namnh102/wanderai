@@ -415,6 +415,7 @@ export class TripsService {
   private async _resolveVerifiedPlacesForPreview(
     destinationId: string | null | undefined,
     rawDays: any[],
+    destinationName?: string | null,
   ): Promise<{
     byId: Map<string, VerifiedPlaceConstraintInfo>;
     unambiguousByName: Map<string, VerifiedPlaceConstraintInfo>;
@@ -513,6 +514,9 @@ export class TripsService {
         );
         pushKey(p.name, info);
         pushKey(p.nameEn, info);
+        if (p.name && destinationName && destinationName.trim().length > 0) {
+          pushKey(`${p.name} ${destinationName.trim()}`, info);
+        }
       }
 
       for (const [normKey, list] of buckets.entries()) {
@@ -988,7 +992,11 @@ export class TripsService {
       byId: placesById,
       unambiguousByName,
       placeSourcesById,
-    } = await this._resolveVerifiedPlacesForPreview(trip.destinationId, rawDays);
+    } = await this._resolveVerifiedPlacesForPreview(
+      trip.destinationId,
+      rawDays,
+      destinationName,
+    );
     const nestjsPlaceResolutionMs =
       Math.round((performance.now() - tPlaceResStart) * 100) / 100;
 

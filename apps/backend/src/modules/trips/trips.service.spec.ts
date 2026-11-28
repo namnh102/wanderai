@@ -1739,5 +1739,196 @@ describe('TripsService & Trip DTO Validation', () => {
         'Đã xác minh 0đ (miễn phí) · Tạm tính 120.000đ',
       );
     });
+
+    it('C4 Verified Over-Budget + Unknown Cost Case: reports exact minimum overrun, keeps Preview unwritten, and preserves C4 Apply rule (canApply=true when schedule valid, persists & reopens cleanly)', async () => {
+      const baoTangId = '8f2b5a69-1293-4efe-8fc5-3a74193edd0f';
+      const vinhHaLongId = 'ade2140c-7945-4044-b99a-b1a028edce9e';
+      const thapDongHoId = '65562a67-84ff-44a0-990d-31917a2a9bd0';
+      const destId = 'd1111111-1111-4111-8111-111111111111';
+      const now = new Date('2026-11-28T00:00:00.000Z');
+
+      const rawStore = inMemoryPrisma as unknown as {
+        places: Map<string, Record<string, unknown>>;
+        placeSources: Array<Record<string, unknown>>;
+      };
+
+      for (const poi of [
+        { id: baoTangId, name: 'Bảo tàng Quảng Ninh', openingHours: 'Mo-Su 08:00-12:00,13:00-17:00' },
+        { id: vinhHaLongId, name: 'Vịnh Hạ Long', openingHours: null },
+        { id: thapDongHoId, name: 'Tháp Đồng Hồ', openingHours: null },
+      ]) {
+        rawStore.places.set(poi.id, {
+          id: poi.id,
+          destinationId: destId,
+          categoryId: 'c4444444-4444-4444-8444-444444444444',
+          name: poi.name,
+          nameEn: null,
+          description: null,
+          address: 'Hạ Long, Quảng Ninh',
+          latitude: 20.95,
+          longitude: 107.09,
+          priceMin: null,
+          priceMax: null,
+          openingHours: poi.openingHours,
+          coverImage: null,
+          images: [],
+          rating: null,
+          reviewCount: 0,
+          deletedAt: null,
+          createdAt: now,
+          updatedAt: now,
+        });
+        rawStore.placeSources.push({
+          id: `ps-over-${poi.id}`,
+          placeId: poi.id,
+          sourceName: 'osm',
+          sourceId: `node/${poi.id.slice(0, 6)}`,
+          rawName: poi.name,
+          confidenceScore: 1.0,
+          rawData: { tags: { name: poi.name } },
+          createdAt: now,
+        });
+      }
+
+      const tripRes = await request(app.getHttpServer())
+        .post('/trips')
+        .send({
+          title: 'Hạ Long Vượt Ngân Sách Đã Xác Minh',
+          destinationId: destId,
+          startDate: '2026-11-28',
+          endDate: '2026-11-28',
+          totalBudget: 500000,
+        })
+        .expect(201);
+      const tripId = tripRes.body.data.id as string;
+
+      const aiProxy = app.get(AiProxyService) as { planWithTripContext: jest.Mock };
+      aiProxy.planWithTripContext.mockResolvedValueOnce({
+        destination: 'Hạ Long',
+        total_days: 1,
+        days: [
+          {
+            day_number: 1,
+            date: '2026-11-28',
+            title: 'Ngày 1: Bảo tàng & Vịnh Hạ Long',
+            items: [
+              {
+                order_index: 1,
+                start_time: '08:00',
+                end_time: '09:30',
+                activity: 'Tham quan Bảo tàng Quảng Ninh',
+                place_name: 'Bảo tàng Quảng Ninh',
+                estimated_cost: 80000,
+              },
+              {
+                order_index: 2,
+                start_time: '09:45',
+                end_time: '11:15',
+                activity: 'Tham quan Vịnh Hạ Long Tuyến VHL1',
+                place_name: 'Vịnh Hạ Long',
+                estimated_cost: 500000,
+              },
+              {
+                order_index: 3,
+                start_time: '11:20',
+                end_time: '12:00',
+                activity: 'Check-in Tháp Đồng Hồ Hạ Long',
+                place_name: 'Tháp Đồng Hồ Hạ Long',
+                estimated_cost: null,
+              },
+            ],
+          },
+        ],
+      });
+
+      const previewRes = await request(app.getHttpServer())
+        .post(`/trips/${tripId}/ai-plan`)
+        .send({
+          additionalPrompt:
+            'Hai người lớn đi Hạ Long từ 8h đến 12h, tổng ngân sách 500.000 đồng.',
+          partySize: 2,
+          partyDescription: '2 người lớn',
+          budgetOverride: 500000,
+        })
+        .expect(201);
+
+      // Verified portion alone = 80.000 + 500.000 = 580.000đ (> 500.000đ budget -> minimum overrun = 80.000đ) + 1 unknown item
+      expect(previewRes.body.data.hasScheduleViolations).toBe(false);
+      expect(previewRes.body.data.canApply).toBe(true);
+      expect(previewRes.body.data.days[0].items[0]).toMatchObject({
+        placeId: baoTangId,
+        estimatedCost: 80000,
+        costStatus: 'VERIFIED',
+      });
+      expect(previewRes.body.data.days[0].items[1]).toMatchObject({
+        placeId: vinhHaLongId,
+        estimatedCost: 500000,
+        costStatus: 'VERIFIED',
+      });
+      expect(previewRes.body.data.days[0].items[2]).toMatchObject({
+        placeId: thapDongHoId,
+        estimatedCost: null,
+        costStatus: 'UNKNOWN',
+      });
+      expect(previewRes.body.data.budgetAnalysis).toMatchObject({
+        totalBudget: 500000,
+        knownCostTotal: 580000,
+        unknownCostItemCount: 1,
+        costStatus: 'PARTIAL_UNKNOWN',
+        hasSufficientBudgetBasis: false,
+        isOverBudget: true,
+        variance: -80000,
+        summaryText:
+          'Đã xác minh 580.000đ · 1 khoản chưa biết giá (vượt ngân sách ít nhất 80.000đ)',
+        costProvenanceBreakdown: {
+          verifiedPlaceCostTotal: 580000,
+          verifiedPlaceCostItemCount: 2,
+          verifiedFreeItemCount: 0,
+          unverifiedAiEstimatedCostTotal: 0,
+          unverifiedAiEstimatedItemCount: 0,
+          unknownCostItemCount: 1,
+        },
+      });
+
+      // Preview still writes 0 items to DB
+      const beforeApply = await request(app.getHttpServer())
+        .get(`/trips/${tripId}`)
+        .expect(200);
+      expect(beforeApply.body.data.itineraries).toHaveLength(0);
+
+      // C4 Apply rule: schedule is valid (canApply=true), so explicit user Apply succeeds (201) & persists over-budget summary on reopen
+      await request(app.getHttpServer())
+        .post(`/trips/${tripId}/itinerary/bulk`)
+        .set('Idempotency-Key', 'overbudget-verified-apply-001')
+        .send({
+          replaceExisting: true,
+          clientRequestId: 'overbudget-verified-apply-001',
+          days: [
+            {
+              dayNumber: 1,
+              date: '2026-11-28',
+              title: 'Ngày 1: Bảo tàng & Vịnh Hạ Long',
+              items: previewRes.body.data.days[0].items.map((it: any) => ({
+                orderIndex: it.orderIndex,
+                startTime: it.startTime,
+                endTime: it.endTime,
+                activity: it.activity,
+                placeId: it.placeId,
+                notes: it.notes,
+                estimatedCost: it.estimatedCost,
+              })),
+            },
+          ],
+        })
+        .expect(201);
+
+      const reopened = await request(app.getHttpServer())
+        .get(`/trips/${tripId}`)
+        .expect(200);
+      expect(reopened.body.data.itineraries[0].items).toHaveLength(3);
+      expect(reopened.body.data.costSummaryText).toBe(
+        'Đã xác minh 580.000đ · 1 khoản chưa biết giá (vượt ngân sách ít nhất 80.000đ)',
+      );
+    });
   });
 });

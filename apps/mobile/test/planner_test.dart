@@ -1150,5 +1150,135 @@ void main() {
         expect(find.text('Chi phí: Chưa biết giá'), findsOneWidget);
       },
     );
+
+    testWidgets(
+      '11. Verified over-budget + unknown cost case displays exact minimum overrun ("Vượt ít nhất 80000 VND" & "(vượt ngân sách ít nhất 80.000đ)") and keeps C4 Apply enabled when schedule is valid',
+      (tester) async {
+        tester.view.physicalSize = const Size(800, 1400);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(() {
+          tester.view.resetPhysicalSize();
+          tester.view.resetDevicePixelRatio();
+        });
+
+        final fakeTripRepo = FakePlannerTripRepository();
+        fakeTripRepo.currentTrip = const TripModel(
+          id: 'trip_over_budget_verified',
+          userId: 'user_1',
+          title: 'Hạ Long Bảo Tàng 8h-12h (500k)',
+          destinationName: 'Hạ Long',
+          totalBudget: 500000,
+          itineraries: [],
+        );
+        fakeTripRepo.fakePlan = AiPlanPreviewModel.fromJson({
+          'tripId': 'trip_over_budget_verified',
+          'destination': 'Hạ Long',
+          'totalDays': 1,
+          'overview': 'Lịch trình phần đã xác minh vượt ngân sách và còn khoản chưa biết giá.',
+          'bestTimeToVisit': 'Quanh năm',
+          'hasScheduleViolations': false,
+          'canApply': true,
+          'budgetAnalysis': {
+            'totalBudget': 500000,
+            'estimatedCost': 580000,
+            'knownCostTotal': 580000,
+            'unknownCostItemCount': 1,
+            'costStatus': 'PARTIAL_UNKNOWN',
+            'hasSufficientBudgetBasis': false,
+            'currency': 'VND',
+            'isOverBudget': true,
+            'variance': -80000,
+            'summaryText':
+                'Đã xác minh 580.000đ · 1 khoản chưa biết giá (vượt ngân sách ít nhất 80.000đ)',
+            'costProvenanceBreakdown': {
+              'verifiedPlaceCostTotal': 580000,
+              'verifiedPlaceCostItemCount': 2,
+              'verifiedFreeItemCount': 0,
+              'unverifiedAiEstimatedCostTotal': 0,
+              'unverifiedAiEstimatedItemCount': 0,
+              'unknownCostItemCount': 1,
+            },
+          },
+          'days': [
+            {
+              'dayNumber': 1,
+              'date': '2026-11-28',
+              'title': 'Ngày 1: Bảo tàng & Vịnh Hạ Long',
+              'dayCost': 580000,
+              'unknownCostItemCount': 1,
+              'items': [
+                {
+                  'orderIndex': 1,
+                  'startTime': '08:00',
+                  'endTime': '09:30',
+                  'activity': 'Tham quan Bảo tàng Quảng Ninh',
+                  'placeId': '8f2b5a69-1293-4efe-8fc5-3a74193edd0f',
+                  'placeName': 'Bảo tàng Quảng Ninh',
+                  'estimatedCost': 80000,
+                  'costStatus': 'VERIFIED',
+                },
+                {
+                  'orderIndex': 2,
+                  'startTime': '09:45',
+                  'endTime': '11:15',
+                  'activity': 'Tham quan Vịnh Hạ Long Tuyến VHL1',
+                  'placeId': 'ade2140c-7945-4044-b99a-b1a028edce9e',
+                  'placeName': 'Vịnh Hạ Long',
+                  'estimatedCost': 500000,
+                  'costStatus': 'VERIFIED',
+                },
+                {
+                  'orderIndex': 3,
+                  'startTime': '11:20',
+                  'endTime': '12:00',
+                  'activity': 'Check-in Tháp Đồng Hồ Hạ Long',
+                  'placeId': '65562a67-84ff-44a0-990d-31917a2a9bd0',
+                  'placeName': 'Tháp Đồng Hồ',
+                  'estimatedCost': null,
+                  'costStatus': 'UNKNOWN',
+                },
+              ],
+            },
+          ],
+        });
+
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: [
+              tripRepositoryProvider.overrideWithValue(fakeTripRepo),
+            ],
+            child: const MaterialApp(
+              home: TripDetailScreen(tripId: 'trip_over_budget_verified'),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.text('Lập lịch trình bằng AI'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Bắt đầu lập'));
+        await tester.pumpAndSettle();
+
+        // Minimum overrun is clearly shown, surplus is never claimed, and C4 Apply remains enabled
+        expect(find.text('Chi phí đã biết:'), findsOneWidget);
+        expect(find.text('580000 VND'), findsOneWidget);
+        expect(find.text('Vượt ít nhất 80000 VND'), findsOneWidget);
+        expect(
+          find.text(
+            'Đã xác minh 580.000đ · 1 khoản chưa biết giá (vượt ngân sách ít nhất 80.000đ)',
+          ),
+          findsOneWidget,
+        );
+        expect(find.textContaining('Còn dư'), findsNothing);
+        expect(
+          find.byKey(const Key('ai_plan_schedule_violations_banner')),
+          findsNothing,
+        );
+
+        await tester.tap(find.byKey(const Key('ai_plan_apply_button')));
+        await tester.pumpAndSettle();
+        expect(fakeTripRepo.bulkSaveCallCount, 1);
+      },
+    );
   });
 }
