@@ -743,6 +743,18 @@ describe('TripsService & Trip DTO Validation', () => {
         placeSources: Array<Record<string, unknown>>;
       };
 
+      // Remove any pre-seeded in-memory POIs with the same names so name resolution is 1:1 like staging DB
+      for (const [existingId, existingPlace] of Array.from(rawStore.places.entries())) {
+        if (
+          existingPlace.destinationId === destId &&
+          ['Bảo tàng Quảng Ninh', 'Vịnh Hạ Long', 'Tháp Đồng Hồ'].includes(
+            String(existingPlace.name ?? ''),
+          )
+        ) {
+          rawStore.places.delete(existingId);
+        }
+      }
+
       for (const poi of [
         { id: cafeId, name: 'Cafe ban mê', openingHours: 'Mo-Su 06:30-23:30' },
         { id: choCaiDamId, name: 'Chợ Cái Dăm', openingHours: 'Mo-Sa 08:00-16:00' },
@@ -1043,6 +1055,18 @@ describe('TripsService & Trip DTO Validation', () => {
         places: Map<string, Record<string, unknown>>;
         placeSources: Array<Record<string, unknown>>;
       };
+
+      // Remove any pre-seeded in-memory POIs with the same names so name resolution is 1:1 like staging DB
+      for (const [existingId, existingPlace] of Array.from(rawStore.places.entries())) {
+        if (
+          existingPlace.destinationId === destId &&
+          ['Bảo tàng Quảng Ninh', 'Vịnh Hạ Long', 'Tháp Đồng Hồ'].includes(
+            String(existingPlace.name ?? ''),
+          )
+        ) {
+          rawStore.places.delete(existingId);
+        }
+      }
       for (const poi of [
         { id: baoTangId, name: 'Bảo tàng Quảng Ninh', openingHours: 'Mo-Su 08:00-12:00,13:00-17:00' },
         { id: thapDongHoId, name: 'Tháp Đồng Hồ', openingHours: null },
@@ -1231,6 +1255,18 @@ describe('TripsService & Trip DTO Validation', () => {
         places: Map<string, Record<string, unknown>>;
         placeSources: Array<Record<string, unknown>>;
       };
+
+      // Remove any pre-seeded in-memory POIs with the same names so name resolution is 1:1 like staging DB
+      for (const [existingId, existingPlace] of Array.from(rawStore.places.entries())) {
+        if (
+          existingPlace.destinationId === destId &&
+          ['Bảo tàng Quảng Ninh', 'Vịnh Hạ Long', 'Tháp Đồng Hồ'].includes(
+            String(existingPlace.name ?? ''),
+          )
+        ) {
+          rawStore.places.delete(existingId);
+        }
+      }
       for (const poi of [
         { id: baoTangId, name: 'Bảo tàng Quảng Ninh', openingHours: 'Mo-Su 08:00-12:00,13:00-17:00' },
         { id: thapDongHoId, name: 'Tháp Đồng Hồ Hạ Long', openingHours: null },
@@ -1416,6 +1452,18 @@ describe('TripsService & Trip DTO Validation', () => {
         places: Map<string, Record<string, unknown>>;
         placeSources: Array<Record<string, unknown>>;
       };
+
+      // Remove any pre-seeded in-memory POIs with the same names so name resolution is 1:1 like staging DB
+      for (const [existingId, existingPlace] of Array.from(rawStore.places.entries())) {
+        if (
+          existingPlace.destinationId === destId &&
+          ['Bảo tàng Quảng Ninh', 'Vịnh Hạ Long', 'Tháp Đồng Hồ'].includes(
+            String(existingPlace.name ?? ''),
+          )
+        ) {
+          rawStore.places.delete(existingId);
+        }
+      }
 
       for (const poi of [
         {
@@ -1751,6 +1799,18 @@ describe('TripsService & Trip DTO Validation', () => {
         places: Map<string, Record<string, unknown>>;
         placeSources: Array<Record<string, unknown>>;
       };
+
+      // Remove any pre-seeded in-memory POIs with the same names so name resolution is 1:1 like staging DB
+      for (const [existingId, existingPlace] of Array.from(rawStore.places.entries())) {
+        if (
+          existingPlace.destinationId === destId &&
+          ['Bảo tàng Quảng Ninh', 'Vịnh Hạ Long', 'Tháp Đồng Hồ'].includes(
+            String(existingPlace.name ?? ''),
+          )
+        ) {
+          rawStore.places.delete(existingId);
+        }
+      }
 
       for (const poi of [
         { id: baoTangId, name: 'Bảo tàng Quảng Ninh', openingHours: 'Mo-Su 08:00-12:00,13:00-17:00' },
