@@ -146,7 +146,8 @@ export class TripsController {
     @Param('id', new ParseUUIDPipe()) id: string,
     @CurrentUser() user: any,
     @Body() dto: BulkItineraryDto,
+    @Headers('idempotency-key') idempotencyKey?: string,
   ) {
-    return this.tripsService.bulkSaveItinerary(id, user.id, dto);
+    return this.tripsService.bulkSaveItinerary(id, user.id, dto, idempotencyKey);
   }
 }

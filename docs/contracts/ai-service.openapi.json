@@ -101,6 +101,23 @@
       },
       "ChatResponse": {
         "properties": {
+          "can_plan_trip": {
+            "default": false,
+            "title": "Can Plan Trip",
+            "type": "boolean"
+          },
+          "planning_context": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Planning Context"
+          },
           "reply": {
             "title": "Reply",
             "type": "string"

@@ -1032,5 +1032,179 @@ describe('TripsService & Trip DTO Validation', () => {
       expect(applyC.body.data.itineraries[0].items[0].estimatedCost).toBeNull();
       expect(applyC.body.data.itineraries[0].items[1].estimatedCost).toBeNull();
     });
+
+    it('C4 Wandy-to-Preview & Double-Tap Apply: preserves party/time/budget/interests, formats "Đã biết 80.000đ; còn khoản chưa xác minh", and prevents duplicate items on double Apply', async () => {
+      const baoTangId = '8f2b5a69-1293-4efe-8fc5-3a74193edd0f';
+      const thapDongHoId = '65562a67-84ff-44a0-990d-31917a2a9bd0';
+      const destId = 'd1111111-1111-4111-8111-111111111111';
+      const now = new Date('2026-11-27T00:00:00.000Z');
+
+      const rawStore = inMemoryPrisma as unknown as {
+        places: Map<string, Record<string, unknown>>;
+        placeSources: Array<Record<string, unknown>>;
+      };
+      for (const poi of [
+        { id: baoTangId, name: 'Bảo tàng Quảng Ninh', openingHours: 'Mo-Su 08:00-12:00,13:00-17:00' },
+        { id: thapDongHoId, name: 'Tháp Đồng Hồ', openingHours: null },
+      ]) {
+        rawStore.places.set(poi.id, {
+          id: poi.id,
+          destinationId: destId,
+          categoryId: 'c1111111-1111-4111-8111-111111111111',
+          name: poi.name,
+          nameEn: null,
+          description: null,
+          address: 'Hạ Long, Quảng Ninh',
+          latitude: 20.95,
+          longitude: 107.09,
+          priceMin: null,
+          priceMax: null,
+          openingHours: poi.openingHours,
+          coverImage: null,
+          images: [],
+          rating: null,
+          reviewCount: 0,
+          deletedAt: null,
+          createdAt: now,
+          updatedAt: now,
+        });
+        rawStore.placeSources.push({
+          id: `ps-wandy-${poi.id}`,
+          placeId: poi.id,
+          sourceName: 'osm',
+          sourceId: `node/${poi.id.slice(0, 6)}`,
+          rawName: poi.name,
+          confidenceScore: 1.0,
+          rawData: { tags: { name: poi.name } },
+          createdAt: now,
+        });
+      }
+
+      const tripRes = await request(app.getHttpServer())
+        .post('/trips')
+        .send({
+          title: 'Chuyến Hạ Long từ Wandy',
+          destinationId: destId,
+          startDate: '2026-11-28',
+          endDate: '2026-11-28',
+        })
+        .expect(201);
+      const tripId = tripRes.body.data.id as string;
+
+      const aiProxy = app.get(AiProxyService) as { planWithTripContext: jest.Mock };
+      aiProxy.planWithTripContext.mockResolvedValueOnce({
+        destination: 'Hạ Long',
+        total_days: 1,
+        overview: 'Lịch trình bảo tàng Hạ Long 8h-12h.',
+        days: [
+          {
+            day_number: 1,
+            date: '2026-11-28',
+            title: 'Buổi sáng Hạ Long',
+            items: [
+              {
+                order_index: 1,
+                start_time: '08:00',
+                end_time: '10:30',
+                activity: 'Tham quan Bảo tàng Quảng Ninh',
+                place_name: 'Bảo tàng Quảng Ninh',
+                estimated_cost: 80000,
+              },
+              {
+                order_index: 2,
+                start_time: '10:30',
+                end_time: '12:00',
+                activity: 'Check-in Tháp Đồng Hồ',
+                place_name: 'Tháp Đồng Hồ',
+                estimated_cost: null,
+              },
+            ],
+          },
+        ],
+      });
+
+      const wandyPrompt =
+        'Hai người lớn đi Hạ Long từ 8h đến 12h, tổng ngân sách 500.000 đồng, ưu tiên bảo tàng. Lập giúp tôi một lịch và ghi rõ khoản nào chưa biết giá.';
+      const previewRes = await request(app.getHttpServer())
+        .post(`/trips/${tripId}/ai-plan`)
+        .send({ additionalPrompt: wandyPrompt })
+        .expect(201);
+
+      expect(previewRes.body.data.preservedContext).toEqual({
+        partySize: 2,
+        partyDescription: '2 người lớn',
+        timeWindowStart: '08:00',
+        timeWindowEnd: '12:00',
+        totalBudget: 500000,
+        interests: ['museum'],
+      });
+      expect(previewRes.body.data.budgetAnalysis).toMatchObject({
+        totalBudget: 500000,
+        knownCostTotal: 80000,
+        unknownCostItemCount: 1,
+        costStatus: 'PARTIAL_UNKNOWN',
+        hasSufficientBudgetBasis: false,
+        variance: null,
+        summaryText: 'Đã biết 80.000đ; còn khoản chưa xác minh',
+      });
+
+      // Preview must NOT persist anything to DB
+      const beforeApply = await request(app.getHttpServer())
+        .get(`/trips/${tripId}`)
+        .expect(200);
+      expect(beforeApply.body.data.itineraries).toHaveLength(0);
+
+      // Fire TWO simultaneous Apply requests with the same idempotency key (double-tap simulation)
+      const bulkPayload = {
+        replaceExisting: true,
+        clientRequestId: 'wandy-apply-double-tap-001',
+        days: [
+          {
+            dayNumber: 1,
+            date: '2026-11-28',
+            title: 'Buổi sáng Hạ Long',
+            items: [
+              {
+                orderIndex: 1,
+                startTime: '08:00',
+                endTime: '10:30',
+                activity: 'Tham quan Bảo tàng Quảng Ninh',
+                placeId: baoTangId,
+                estimatedCost: 80000,
+              },
+              {
+                orderIndex: 2,
+                startTime: '10:30',
+                endTime: '12:00',
+                activity: 'Check-in Tháp Đồng Hồ',
+                placeId: thapDongHoId,
+                estimatedCost: null,
+              },
+            ],
+          },
+        ],
+      };
+
+      const [r1, r2] = await Promise.all([
+        request(app.getHttpServer())
+          .post(`/trips/${tripId}/itinerary/bulk`)
+          .set('Idempotency-Key', 'wandy-apply-double-tap-001')
+          .send(bulkPayload),
+        request(app.getHttpServer())
+          .post(`/trips/${tripId}/itinerary/bulk`)
+          .set('Idempotency-Key', 'wandy-apply-double-tap-001')
+          .send(bulkPayload),
+      ]);
+      expect(r1.status).toBe(201);
+      expect(r2.status).toBe(201);
+
+      const afterDoubleApply = await request(app.getHttpServer())
+        .get(`/trips/${tripId}`)
+        .expect(200);
+      expect(afterDoubleApply.body.data.itineraries).toHaveLength(1);
+      expect(afterDoubleApply.body.data.itineraries[0].items).toHaveLength(2);
+      expect(afterDoubleApply.body.data.itineraries[0].items[0].estimatedCost).toBe(80000);
+      expect(afterDoubleApply.body.data.itineraries[0].items[1].estimatedCost).toBeNull();
+    });
   });
 });

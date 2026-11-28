@@ -111,6 +111,15 @@ export class BulkItineraryDto {
   @IsBoolean()
   replaceExisting?: boolean = true;
 
+  @ApiPropertyOptional({
+    description: 'Khóa chống ghi trùng khi bấm Áp dụng nhiều lần liên tiếp',
+  })
+  @IsOptional()
+  @Transform(trimString)
+  @IsString()
+  @MaxLength(128)
+  clientRequestId?: string;
+
   @ApiProperty({ description: 'Danh sách các ngày và hoạt động', type: [BulkItineraryDayDto] })
   @IsArray()
   @ArrayMinSize(1, { message: 'Danh sách ngày lịch trình không được để trống' })

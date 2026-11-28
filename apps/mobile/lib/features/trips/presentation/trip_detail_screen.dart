@@ -7,6 +7,7 @@ import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_error_state.dart';
 import '../../../core/widgets/app_loading.dart';
 import '../../../core/widgets/app_text_field.dart';
+import '../../ai_chat/providers/chat_provider.dart';
 import '../data/trip_models.dart';
 import '../providers/trip_provider.dart';
 import 'trip_form_screen.dart';
@@ -67,7 +68,41 @@ class _TripDetailScreenState extends ConsumerState<TripDetailScreen> {
           'ordered_items=$orderedItems',
         );
       }
+
+      // Consume pending Wandy Chat -> C4 Preview handoff automatically without asking user to re-type
+      final handoff = ref.read(pendingWandyPlanHandoffProvider);
+      if (handoff != null && handoff.tripId == widget.tripId) {
+        ref.read(pendingWandyPlanHandoffProvider.notifier).state = null;
+        await _runWandyHandoffPreview(handoff);
+      }
     });
+  }
+
+  Future<void> _runWandyHandoffPreview(PendingWandyPlanHandoff handoff) async {
+    if (!mounted) return;
+    final ctx = handoff.planningContext;
+    final options = AiPlanRequestOptions(
+      additionalPrompt: handoff.rawPrompt,
+      partySize: ctx?.partySize,
+      partyDescription: ctx?.partyDescription,
+      timeWindowStart: ctx?.timeWindowStart,
+      timeWindowEnd: ctx?.timeWindowEnd,
+      budgetOverride: ctx?.totalBudget,
+      interestsOverride: ctx?.interests,
+    );
+    final plan = await ref.read(tripDetailProvider.notifier).generateAiPlan(
+          widget.tripId,
+          prompt: handoff.rawPrompt,
+          options: options,
+        );
+    if (!mounted) return;
+    if (plan != null) {
+      _showAiPlanPreviewModal(plan, wandyHandoff: handoff);
+    } else {
+      final err = ref.read(tripDetailProvider).planErrorMessage ??
+          'Không thể tạo lịch trình xem trước từ Wandy AI';
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(err)));
+    }
   }
 
   void _enterReorderMode(TripModel trip) {
@@ -248,7 +283,27 @@ class _TripDetailScreenState extends ConsumerState<TripDetailScreen> {
     }
   }
 
-  void _showAiPlanPreviewModal(AiPlanPreviewModel plan) {
+  bool _doesPlanDifferFromInitialAdvice(
+    AiPlanPreviewModel plan,
+    String initialChatReply,
+  ) {
+    final normalizedChat = initialChatReply.toLowerCase();
+    if (normalizedChat.trim().isEmpty) return false;
+    final items = plan.days.expand((d) => d.items).toList();
+    if (items.isEmpty) return false;
+    for (final item in items) {
+      final candidate = (item.placeName ?? item.activity).trim().toLowerCase();
+      if (candidate.isNotEmpty && !normalizedChat.contains(candidate)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  void _showAiPlanPreviewModal(
+    AiPlanPreviewModel plan, {
+    PendingWandyPlanHandoff? wandyHandoff,
+  }) {
     final cs = Theme.of(context).colorScheme;
     final trip = ref.read(tripDetailProvider).trip;
     final hasExistingItinerary = trip != null && trip.itineraries.isNotEmpty;
@@ -269,6 +324,12 @@ class _TripDetailScreenState extends ConsumerState<TripDetailScreen> {
         : ((plan.budgetAnalysis.totalBudget ?? 0) -
                 plan.budgetAnalysis.knownCostTotal)
             .abs();
+    final c4UnknownSummary = formatC4BudgetSummary(
+      knownCostTotal: plan.budgetAnalysis.knownCostTotal,
+      unknownCostCount: unknownCostCount,
+      totalBudget: plan.budgetAnalysis.totalBudget,
+      isOverBudget: plan.budgetAnalysis.isOverBudget,
+    );
 
     final summaryViolations = plan.scheduleViolations.isNotEmpty
         ? plan.scheduleViolations
@@ -276,7 +337,76 @@ class _TripDetailScreenState extends ConsumerState<TripDetailScreen> {
             .expand((d) => d.items.expand((item) => item.violations))
             .toList();
 
+    final differsFromChat = wandyHandoff != null &&
+        _doesPlanDifferFromInitialAdvice(plan, wandyHandoff.initialChatReply);
+    final wandyCtx = wandyHandoff?.planningContext;
+    final preservedParts = <String>[
+      if (wandyCtx?.partyDescription != null &&
+          wandyCtx!.partyDescription!.isNotEmpty)
+        wandyCtx.partyDescription!,
+      if (wandyCtx?.timeWindowStart != null && wandyCtx?.timeWindowEnd != null)
+        '${wandyCtx!.timeWindowStart} - ${wandyCtx.timeWindowEnd}',
+      if (wandyCtx?.totalBudget != null)
+        'Ngân sách ${formatDotVndAmount(wandyCtx!.totalBudget!)}đ',
+      if (wandyCtx != null && wandyCtx.interests.isNotEmpty)
+        wandyCtx.interests.join(', '),
+    ];
+
     final previewEntries = <Widget>[
+      if (wandyHandoff != null)
+        Container(
+          key: const Key('ai_plan_wandy_handoff_banner'),
+          padding: const EdgeInsets.all(12),
+          margin: const EdgeInsets.only(bottom: 12),
+          decoration: BoxDecoration(
+            color: cs.secondaryContainer.withValues(alpha: 0.4),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: cs.secondary.withValues(alpha: 0.5)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(Icons.sync_alt_rounded, size: 17, color: cs.primary),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      differsFromChat
+                          ? 'Phương án cuối để xem trước (đã chuẩn hóa từ yêu cầu Wandy AI)'
+                          : 'Phương án xem trước chuyển từ Wandy AI',
+                      style: TextStyle(
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.w700,
+                        color: cs.onSurface,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              if (preservedParts.isNotEmpty) ...[
+                const SizedBox(height: 4),
+                Text(
+                  'Giữ nguyên điều kiện: ${preservedParts.join(' • ')}',
+                  key: const Key('ai_plan_preserved_constraints_text'),
+                  style: TextStyle(
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.w600,
+                    color: cs.primary,
+                  ),
+                ),
+              ],
+              const SizedBox(height: 4),
+              Text(
+                differsFromChat
+                    ? 'Bộ lập lịch C4 tạo phương án cấu trúc bên dưới (có chi tiết khác lời tư vấn hội thoại ban đầu). Vui lòng xem kỹ phương án cuối này; lịch chỉ được lưu vào chuyến đi khi bạn bấm Áp dụng.'
+                    : 'Chỉ phương án hiển thị bên dưới mới được lưu vào chuyến đi khi bạn bấm Áp dụng.',
+                key: const Key('ai_plan_final_proposal_notice'),
+                style: TextStyle(fontSize: 11.5, color: cs.onSurfaceVariant),
+              ),
+            ],
+          ),
+        ),
       if (plan.overview.isNotEmpty)
         Container(
           padding: const EdgeInsets.all(12),
@@ -303,75 +433,96 @@ class _TripDetailScreenState extends ConsumerState<TripDetailScreen> {
             color: plan.budgetAnalysis.isOverBudget ? cs.error : cs.primary,
           ),
         ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    hasUnknownCosts ? 'Chi phí đã biết:' : 'Chi phí ước tính:',
-                    style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant),
-                  ),
-                  Text(
-                    '${hasUnknownCosts ? plan.budgetAnalysis.knownCostTotal : plan.budgetAnalysis.estimatedCost} ${plan.budgetAnalysis.currency}',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                      color: plan.budgetAnalysis.isOverBudget
-                          ? cs.error
-                          : cs.primary,
-                    ),
-                  ),
-                  if (hasUnknownCosts) ...[
-                    const SizedBox(height: 4),
-                    Text(
-                      'Thiếu giá: $unknownCostCount mục (chưa biết)',
-                      key: const Key('ai_plan_unknown_cost_count_text'),
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.orange.shade900,
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        hasUnknownCosts
+                            ? 'Chi phí đã biết:'
+                            : 'Chi phí ước tính:',
+                        style:
+                            TextStyle(fontSize: 12, color: cs.onSurfaceVariant),
                       ),
+                      Text(
+                        '${hasUnknownCosts ? plan.budgetAnalysis.knownCostTotal : plan.budgetAnalysis.estimatedCost} ${plan.budgetAnalysis.currency}',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                          color: plan.budgetAnalysis.isOverBudget
+                              ? cs.error
+                              : cs.primary,
+                        ),
+                      ),
+                      if (hasUnknownCosts) ...[
+                        const SizedBox(height: 4),
+                        Text(
+                          'Thiếu giá: $unknownCostCount mục (chưa biết)',
+                          key: const Key('ai_plan_unknown_cost_count_text'),
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.orange.shade900,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+                if (plan.budgetAnalysis.totalBudget != null) ...[
+                  const SizedBox(width: 8),
+                  Flexible(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Text(
+                          'Ngân sách: ${plan.budgetAnalysis.totalBudget} ${plan.budgetAnalysis.currency}',
+                          textAlign: TextAlign.end,
+                          style: TextStyle(
+                              fontSize: 12, color: cs.onSurfaceVariant),
+                        ),
+                        Text(
+                          plan.budgetAnalysis.isOverBudget
+                              ? (hasUnknownCosts
+                                  ? 'Vượt ít nhất $overBudgetAmount VND'
+                                  : 'Vượt $overBudgetAmount VND')
+                              : (canShowSurplus
+                                  ? 'Còn dư ${plan.budgetAnalysis.variance} VND'
+                                  : 'Chưa đủ căn cứ tính tiền dư'),
+                          key: const Key('ai_plan_budget_status_text'),
+                          textAlign: TextAlign.end,
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            color: plan.budgetAnalysis.isOverBudget
+                                ? cs.error
+                                : (canShowSurplus
+                                    ? cs.primary
+                                    : cs.onSurfaceVariant),
+                          ),
+                        ),
+                      ],
                     ),
-                  ],
+                  ),
                 ],
-              ),
+              ],
             ),
-            if (plan.budgetAnalysis.totalBudget != null) ...[
-              const SizedBox(width: 8),
-              Flexible(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Text(
-                      'Ngân sách: ${plan.budgetAnalysis.totalBudget} ${plan.budgetAnalysis.currency}',
-                      textAlign: TextAlign.end,
-                      style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant),
-                    ),
-                    Text(
-                      plan.budgetAnalysis.isOverBudget
-                          ? (hasUnknownCosts
-                              ? 'Vượt ít nhất $overBudgetAmount VND'
-                              : 'Vượt $overBudgetAmount VND')
-                          : (canShowSurplus
-                              ? 'Còn dư ${plan.budgetAnalysis.variance} VND'
-                              : 'Chưa đủ căn cứ tính tiền dư'),
-                      key: const Key('ai_plan_budget_status_text'),
-                      textAlign: TextAlign.end,
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                        color: plan.budgetAnalysis.isOverBudget
-                            ? cs.error
-                            : (canShowSurplus
-                                ? cs.primary
-                                : cs.onSurfaceVariant),
-                      ),
-                    ),
-                  ],
+            if (hasUnknownCosts) ...[
+              const SizedBox(height: 6),
+              Text(
+                c4UnknownSummary,
+                key: const Key('ai_plan_c4_budget_summary_line'),
+                style: TextStyle(
+                  fontSize: 12.5,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.orange.shade900,
                 ),
               ),
             ],
@@ -456,6 +607,10 @@ class _TripDetailScreenState extends ConsumerState<TripDetailScreen> {
 
     final totalCount = previewEntries.length + plan.days.length;
 
+    final applyIdempotencyKey =
+        'c4_apply_${widget.tripId}_${DateTime.now().microsecondsSinceEpoch}';
+    var isSubmittingApply = false;
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -463,129 +618,153 @@ class _TripDetailScreenState extends ConsumerState<TripDetailScreen> {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
-      builder: (ctx) => DraggableScrollableSheet(
-        initialChildSize: 0.85,
-        minChildSize: 0.5,
-        maxChildSize: 0.95,
-        expand: false,
-        builder: (ctx, scrollCtrl) => Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Column(
-            children: [
-              const SizedBox(height: 12),
-              Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: cs.outlineVariant,
-                  borderRadius: BorderRadius.circular(2),
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setModalState) => DraggableScrollableSheet(
+          initialChildSize: 0.85,
+          minChildSize: 0.5,
+          maxChildSize: 0.95,
+          expand: false,
+          builder: (ctx, scrollCtrl) => Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Column(
+              children: [
+                const SizedBox(height: 12),
+                Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: cs.outlineVariant,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
                 ),
-              ),
-              const SizedBox(height: 16),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Icon(Icons.auto_awesome,
-                                color: cs.primary, size: 20),
-                            const SizedBox(width: 8),
-                            const Expanded(
-                              child: Text(
-                                'Lịch trình từ Wandy AI',
-                                style: TextStyle(
-                                    fontSize: 18, fontWeight: FontWeight.bold),
+                const SizedBox(height: 16),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Icon(Icons.auto_awesome,
+                                  color: cs.primary, size: 20),
+                              const SizedBox(width: 8),
+                              const Expanded(
+                                child: Text(
+                                  'Lịch trình từ Wandy AI',
+                                  style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold),
+                                ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            '${plan.destination} • ${plan.totalDays} ngày',
+                            style: TextStyle(
+                                fontSize: 13, color: cs.onSurfaceVariant),
+                          ),
+                        ],
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.close),
+                      onPressed: isSubmittingApply
+                          ? null
+                          : () => Navigator.pop(ctx),
+                    ),
+                  ],
+                ),
+                const Divider(),
+                Expanded(
+                  child: ListView.builder(
+                    controller: scrollCtrl,
+                    padding: const EdgeInsets.only(bottom: 20),
+                    itemCount: totalCount,
+                    itemBuilder: (_, index) {
+                      if (index < previewEntries.length) {
+                        return previewEntries[index];
+                      }
+                      final day = plan.days[index - previewEntries.length];
+                      return _buildAiPreviewDayCard(day, cs);
+                    },
+                  ),
+                ),
+                SafeArea(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: AppButton(
+                            text: 'Hủy',
+                            variant: AppButtonVariant.secondary,
+                            onPressed: isSubmittingApply
+                                ? null
+                                : () => Navigator.pop(ctx),
+                          ),
                         ),
-                        const SizedBox(height: 4),
-                        Text(
-                          '${plan.destination} • ${plan.totalDays} ngày',
-                          style: TextStyle(
-                              fontSize: 13, color: cs.onSurfaceVariant),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          flex: 2,
+                          child: AppButton(
+                            key: const Key('ai_plan_apply_button'),
+                            text: 'Áp dụng vào chuyến đi',
+                            icon: Icons.check,
+                            isLoading: isSubmittingApply,
+                            onPressed: isSubmittingApply
+                                ? null
+                                : () async {
+                                    if (isSubmittingApply) return;
+                                    setModalState(() {
+                                      isSubmittingApply = true;
+                                    });
+                                    final success = await ref
+                                        .read(tripDetailProvider.notifier)
+                                        .saveAiPlan(
+                                          widget.tripId,
+                                          plan,
+                                          replaceExisting: true,
+                                          idempotencyKey: applyIdempotencyKey,
+                                        );
+                                    if (ctx.mounted) {
+                                      Navigator.pop(ctx);
+                                    }
+                                    if (mounted) {
+                                      if (success) {
+                                        ScaffoldMessenger.of(context)
+                                            .showSnackBar(
+                                          const SnackBar(
+                                            content: Text(
+                                                'Đã áp dụng lịch trình AI thành công!'),
+                                          ),
+                                        );
+                                      } else {
+                                        final err = ref
+                                                .read(tripDetailProvider)
+                                                .errorMessage ??
+                                            'Lỗi khi lưu lịch trình';
+                                        ScaffoldMessenger.of(context)
+                                            .showSnackBar(
+                                          SnackBar(
+                                            key: const Key(
+                                                'trip_itinerary_error_snackbar'),
+                                            content: Text(err),
+                                          ),
+                                        );
+                                      }
+                                    }
+                                  },
+                          ),
                         ),
                       ],
                     ),
                   ),
-                  IconButton(
-                    icon: const Icon(Icons.close),
-                    onPressed: () => Navigator.pop(ctx),
-                  ),
-                ],
-              ),
-              const Divider(),
-              Expanded(
-                child: ListView.builder(
-                  controller: scrollCtrl,
-                  padding: const EdgeInsets.only(bottom: 20),
-                  itemCount: totalCount,
-                  itemBuilder: (_, index) {
-                    if (index < previewEntries.length) {
-                      return previewEntries[index];
-                    }
-                    final day = plan.days[index - previewEntries.length];
-                    return _buildAiPreviewDayCard(day, cs);
-                  },
                 ),
-              ),
-              SafeArea(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: AppButton(
-                          text: 'Hủy',
-                          variant: AppButtonVariant.secondary,
-                          onPressed: () => Navigator.pop(ctx),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        flex: 2,
-                        child: AppButton(
-                          text: 'Áp dụng vào chuyến đi',
-                          icon: Icons.check,
-                          onPressed: () async {
-                            Navigator.pop(ctx);
-                            final success = await ref
-                                .read(tripDetailProvider.notifier)
-                                .saveAiPlan(widget.tripId, plan,
-                                    replaceExisting: true);
-                            if (mounted) {
-                              if (success) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text(
-                                        'Đã áp dụng lịch trình AI thành công!'),
-                                  ),
-                                );
-                              } else {
-                                final err =
-                                    ref.read(tripDetailProvider).errorMessage ??
-                                        'Lỗi khi lưu lịch trình';
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    key: const Key(
-                                        'trip_itinerary_error_snackbar'),
-                                    content: Text(err),
-                                  ),
-                                );
-                              }
-                            }
-                          },
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

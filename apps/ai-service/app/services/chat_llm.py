@@ -6,6 +6,7 @@ remains byte-identical to develop while /chat uses fail-closed provider & sessio
 import asyncio
 from dataclasses import dataclass, field
 import json
+import os
 import threading
 import time
 from typing import Any, Callable, List, Optional
@@ -408,11 +409,21 @@ class GeminiProvider:
                 gemini_tools = [types.Tool(function_declarations=declarations)]
                 tool_map = {t.name: t for t in tools}
 
+            model_name = str(_legacy_gemini._MODEL or "")
+            thinking_cfg = (
+                types.ThinkingConfig(thinking_level="MINIMAL")
+                if model_name.startswith("gemini-3")
+                else None
+            )
             config = types.GenerateContentConfig(
                 system_instruction=SYSTEM_PROMPT,
                 temperature=0.7,
                 max_output_tokens=4096,
                 tools=gemini_tools or [],
+                automatic_function_calling=types.AutomaticFunctionCallingConfig(
+                    disable=True
+                ),
+                thinking_config=thinking_cfg,
             )
 
             user_turn = types.Content(role="user", parts=[types.Part(text=message)])
@@ -422,14 +433,25 @@ class GeminiProvider:
             response = None
 
             for _iteration in range(5):
-                response = await asyncio.get_event_loop().run_in_executor(
-                    None,
-                    lambda c=contents, cfg=config: _legacy_gemini._client.models.generate_content(
-                        model=_legacy_gemini._MODEL,
-                        contents=c,
-                        config=cfg,
-                    ),
-                )
+                max_attempts = 1 if os.getenv("PYTEST_CURRENT_TEST") else 3
+                for _attempt in range(max_attempts):
+                    try:
+                        response = await asyncio.get_event_loop().run_in_executor(
+                            None,
+                            lambda c=contents, cfg=config: _legacy_gemini._client.models.generate_content(
+                                model=_legacy_gemini._MODEL,
+                                contents=c,
+                                config=cfg,
+                            ),
+                        )
+                        break
+                    except Exception as call_exc:
+                        up_msg = str(call_exc).upper()
+                        is_transient_503 = "503" in up_msg or "UNAVAILABLE" in up_msg
+                        if is_transient_503 and (_attempt + 1) < max_attempts:
+                            await asyncio.sleep(2.0 * (_attempt + 1))
+                            continue
+                        raise
 
                 if not response or not response.candidates:
                     break
