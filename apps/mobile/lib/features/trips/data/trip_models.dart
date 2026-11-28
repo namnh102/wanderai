@@ -304,6 +304,39 @@ class ItineraryModel {
   }
 }
 
+class TripMemberSummaryModel {
+  final String userId;
+  final String role;
+  final String displayName;
+  final String? email;
+
+  const TripMemberSummaryModel({
+    required this.userId,
+    required this.role,
+    required this.displayName,
+    this.email,
+  });
+
+  factory TripMemberSummaryModel.fromJson(Map<String, dynamic> json) {
+    final user = json['user'] as Map<String, dynamic>?;
+    final profile = user?['profile'] as Map<String, dynamic>?;
+    final email = user?['email'] as String?;
+    final rawName = profile?['displayName'] as String?;
+    final fallbackName = (email != null && email.contains('@'))
+        ? email.split('@').first
+        : 'Thành viên';
+    return TripMemberSummaryModel(
+      userId:
+          (json['userId'] as String?) ?? (user?['id'] as String?) ?? '',
+      role: json['role'] as String? ?? 'member',
+      displayName: (rawName != null && rawName.trim().isNotEmpty)
+          ? rawName.trim()
+          : fallbackName,
+      email: email,
+    );
+  }
+}
+
 class TripModel {
   final String id;
   final String userId;
@@ -319,6 +352,7 @@ class TripModel {
   final List<String> interests;
   final String status;
   final List<ItineraryModel> itineraries;
+  final List<TripMemberSummaryModel> members;
   final int memberCount;
   final String? costSummaryText;
   final CostProvenanceBreakdownModel? costProvenanceBreakdown;
@@ -338,6 +372,7 @@ class TripModel {
     this.interests = const [],
     this.status = 'DRAFT',
     this.itineraries = const [],
+    this.members = const [],
     this.memberCount = 1,
     this.costSummaryText,
     this.costProvenanceBreakdown,
@@ -346,6 +381,11 @@ class TripModel {
   factory TripModel.fromJson(Map<String, dynamic> json) {
     final dest = json['destination'] as Map<String, dynamic>?;
     final rawItin = json['itineraries'] as List<dynamic>? ?? [];
+    final rawMembers = json['members'] as List<dynamic>? ?? [];
+    final parsedMembers = rawMembers
+        .whereType<Map<String, dynamic>>()
+        .map(TripMemberSummaryModel.fromJson)
+        .toList();
     final counts = json['_count'] as Map<String, dynamic>?;
     final rawBreakdown =
         json['costProvenanceBreakdown'] as Map<String, dynamic>?;
@@ -374,7 +414,9 @@ class TripModel {
       itineraries: rawItin
           .map((i) => ItineraryModel.fromJson(i as Map<String, dynamic>))
           .toList(),
-      memberCount: counts?['members'] as int? ?? 1,
+      members: parsedMembers,
+      memberCount: counts?['members'] as int? ??
+          (parsedMembers.isNotEmpty ? parsedMembers.length : 1),
       costSummaryText: json['costSummaryText'] as String?,
       costProvenanceBreakdown: rawBreakdown != null
           ? CostProvenanceBreakdownModel.fromJson(rawBreakdown)

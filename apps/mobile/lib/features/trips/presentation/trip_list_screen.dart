@@ -6,6 +6,7 @@ import '../../../core/theme/app_spacing.dart';
 import '../../../core/widgets/app_empty_state.dart';
 import '../../../core/widgets/app_error_state.dart';
 import '../../../core/widgets/app_loading.dart';
+import '../../notifications/presentation/widgets/notification_bell_button.dart';
 import '../data/trip_models.dart';
 import '../providers/trip_provider.dart';
 
@@ -24,6 +25,7 @@ class TripListScreen extends ConsumerWidget {
           style: TextStyle(fontWeight: FontWeight.w700),
         ),
         actions: [
+          const NotificationBellButton(),
           IconButton(
             key: const Key('trip_list_groups_button'),
             icon: const Icon(Icons.groups_outlined),

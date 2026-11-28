@@ -16,6 +16,7 @@ import { MatchesModule } from "./modules/matches/matches.module";
 import { GroupsModule } from "./modules/groups/groups.module";
 import { YoutubeModule } from "./modules/youtube/youtube.module";
 import { SafetyModule } from "./modules/safety/safety.module";
+import { NotificationsModule } from "./modules/notifications/notifications.module";
 
 @Module({
   imports: [
@@ -37,6 +38,7 @@ import { SafetyModule } from "./modules/safety/safety.module";
     GroupsModule,
     YoutubeModule,
     SafetyModule,
+    NotificationsModule,
     AiProxyModule,
   ],
   controllers: [],

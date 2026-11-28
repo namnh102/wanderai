@@ -11,9 +11,11 @@ import {
   UseGuards,
   HttpCode,
   HttpStatus,
+  Optional,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { TripsService } from './trips.service';
+import { TripInvitesService } from './trip-invites.service';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { CreateTripDto } from './dto/create-trip.dto';
@@ -40,7 +42,60 @@ class InviteMemberDto {
 @UseGuards(JwtAuthGuard)
 @Controller('trips')
 export class TripsController {
-  constructor(private readonly tripsService: TripsService) {}
+  constructor(
+    private readonly tripsService: TripsService,
+    @Optional() private readonly tripInvitesService?: TripInvitesService,
+  ) {}
+
+  private get _invites(): TripInvitesService {
+    if (!this.tripInvitesService) {
+      throw new Error('TripInvitesService is not configured');
+    }
+    return this.tripInvitesService;
+  }
+
+  // GET /trips/invites/:inviteId — xem chi tiết lời mời tham gia chuyến đi
+  @Get('invites/:inviteId')
+  @ApiOperation({ summary: 'Chi tiết lời mời tham gia chuyến đi' })
+  getInviteById(
+    @Param('inviteId', new ParseUUIDPipe()) inviteId: string,
+    @CurrentUser() user: { id: string },
+  ) {
+    return this._invites.getInviteById(inviteId, user.id);
+  }
+
+  // POST /trips/invites/:inviteId/accept — chấp nhận lời mời vào chuyến
+  @Post('invites/:inviteId/accept')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Chấp nhận lời mời tham gia chuyến đi' })
+  acceptInvite(
+    @Param('inviteId', new ParseUUIDPipe()) inviteId: string,
+    @CurrentUser() user: { id: string },
+  ) {
+    return this._invites.acceptInvite(inviteId, user.id);
+  }
+
+  // POST /trips/invites/:inviteId/decline — từ chối lời mời vào chuyến
+  @Post('invites/:inviteId/decline')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Từ chối lời mời tham gia chuyến đi' })
+  declineInvite(
+    @Param('inviteId', new ParseUUIDPipe()) inviteId: string,
+    @CurrentUser() user: { id: string },
+  ) {
+    return this._invites.declineInvite(inviteId, user.id);
+  }
+
+  // POST /trips/invites/:inviteId/revoke — thu hồi lời mời (chủ chuyến đi)
+  @Post('invites/:inviteId/revoke')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Thu hồi lời mời tham gia chuyến đi' })
+  revokeInviteDirect(
+    @Param('inviteId', new ParseUUIDPipe()) inviteId: string,
+    @CurrentUser() user: { id: string },
+  ) {
+    return this._invites.revokeInvite(inviteId, user.id);
+  }
 
   // POST /trips
   @Post()
@@ -126,6 +181,39 @@ export class TripsController {
     @Body() dto: InviteMemberDto,
   ) {
     return this.tripsService.addMember(id, user.id, dto.email);
+  }
+
+  // GET /trips/:id/invites — danh sách lời mời của chuyến đi (chủ chuyến)
+  @Get(':id/invites')
+  @ApiOperation({ summary: 'Danh sách lời mời tham gia chuyến đi (chủ chuyến)' })
+  listTripInvites(
+    @Param('id', new ParseUUIDPipe()) id: string,
+    @CurrentUser() user: { id: string },
+  ) {
+    return this._invites.listTripInvites(id, user.id);
+  }
+
+  // POST /trips/:id/invites — gửi lời mời tham gia chuyến đi (tạo TRIP_INVITE)
+  @Post(':id/invites')
+  @ApiOperation({ summary: 'Gửi lời mời tham gia chuyến đi (kèm thông báo TRIP_INVITE, chống trùng)' })
+  createTripInvite(
+    @Param('id', new ParseUUIDPipe()) id: string,
+    @CurrentUser() user: { id: string },
+    @Body() dto: InviteMemberDto,
+  ) {
+    return this._invites.createInvite(id, user.id, dto.email);
+  }
+
+  // POST /trips/:id/invites/:inviteId/revoke — thu hồi lời mời theo chuyến
+  @Post(':id/invites/:inviteId/revoke')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Thu hồi lời mời tham gia chuyến đi theo tripId' })
+  revokeTripInvite(
+    @Param('id', new ParseUUIDPipe()) id: string,
+    @Param('inviteId', new ParseUUIDPipe()) inviteId: string,
+    @CurrentUser() user: { id: string },
+  ) {
+    return this._invites.revokeInvite(inviteId, user.id, id);
   }
 
   // POST /trips/:id/ai-plan — AI tạo lịch trình xem trước (không lưu DB)

@@ -20,6 +20,9 @@ import '../../features/places/presentation/place_detail_screen.dart';
 import '../../features/profile/presentation/preferences_screen.dart';
 import '../../features/recommendations/presentation/recommendation_screen.dart';
 import '../../features/safety/presentation/safety_and_buddies_screen.dart';
+import '../../features/notifications/presentation/notifications_screen.dart';
+import '../../features/notifications/presentation/trip_invite_detail_screen.dart';
+import '../../features/notifications/presentation/widgets/notification_bell_button.dart';
 import '../session/session_reset.dart';
 
 /// Explicit opt-in guest browse flag so cold-start `/` remains auth-gated by
@@ -183,10 +186,20 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const TripFormScreen(),
       ),
       GoRoute(
+        path: '/trips/invites/:inviteId',
+        builder: (context, state) => TripInviteDetailScreen(
+          inviteId: state.pathParameters['inviteId']!,
+        ),
+      ),
+      GoRoute(
         path: '/trips/:id',
         builder: (context, state) => TripDetailScreen(
           tripId: state.pathParameters['id']!,
         ),
+      ),
+      GoRoute(
+        path: '/notifications',
+        builder: (context, state) => const NotificationsScreen(),
       ),
       GoRoute(
         path: '/groups',
@@ -255,7 +268,10 @@ class _MainScaffold extends ConsumerWidget {
     final currentIndex = _tabs.indexOf(path).clamp(0, 4);
 
     return Scaffold(
-      body: child,
+      body: NotificationAutoSyncHost(
+        enabled: authStatus == AuthStatus.authenticated,
+        child: child,
+      ),
       bottomNavigationBar: Container(
         color: Theme.of(context).colorScheme.surface,
         child: SafeArea(

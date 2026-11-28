@@ -22,6 +22,7 @@ import '../../../core/widgets/responsive_wrapper.dart';
 import '../../ai_chat/providers/chat_provider.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../location/providers/user_location_provider.dart';
+import '../../notifications/presentation/widgets/notification_bell_button.dart';
 import '../../map/data/place_model.dart';
 import '../../places/presentation/place_detail_screen.dart';
 import '../data/home_models.dart';
@@ -90,6 +91,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       backgroundColor: AppColors.warmBackground,
       appBar: AppBar(
         title: Row(
+          mainAxisSize: MainAxisSize.min,
           children: [
             Container(
               width: 32,
@@ -111,11 +113,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               ),
             ),
             const SizedBox(width: AppSpacing.sm),
-            Text(
-              'GoMate',
-              style: AppTypography.h2.copyWith(
-                fontWeight: FontWeight.w800,
-                color: AppColors.primaryDeep,
+            Flexible(
+              child: Text(
+                'GoMate',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: AppTypography.h2.copyWith(
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.primaryDeep,
+                ),
               ),
             ),
           ],
@@ -130,10 +136,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 ),
               ]
             : [
+                const NotificationBellButton(),
                 IconButton(
                   key: const Key('home_preferences_button'),
                   icon: const Icon(Icons.tune_outlined),
                   tooltip: 'Sở thích du lịch',
+                  visualDensity: VisualDensity.compact,
                   color: AppColors.primary,
                   onPressed: () => context.push('/profile/preferences'),
                 ),
@@ -141,6 +149,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   key: const Key('home_logout_button'),
                   icon: const Icon(Icons.logout_rounded),
                   tooltip: 'Đăng xuất',
+                  visualDensity: VisualDensity.compact,
                   color: AppColors.textSecondary,
                   onPressed: () => ref.read(authProvider.notifier).logout(),
                 ),

@@ -67,6 +67,8 @@ model User {
   followers     Follow[] @relation("following")
   following     Follow[] @relation("followers")
   notifications Notification[]
+  sentTripInvites     TripInvite[] @relation("TripInviter")
+  receivedTripInvites TripInvite[] @relation("TripInvitee")
   sentMatches   Match[]  @relation("sender")
   receivedMatches Match[] @relation("receiver")
   blockedUsers    UserBlock[] @relation("blocker")
@@ -430,8 +432,10 @@ model Notification {
   isRead    Boolean          @default(false) @map("is_read")
   createdAt DateTime         @default(now()) @map("created_at") @db.Timestamptz
 
-  user User @relation(fields: [userId], references: [id])
+  user       User        @relation(fields: [userId], references: [id])
+  tripInvite TripInvite?
 
+  @@index([userId, isRead, createdAt(sort: Desc)])
   @@map("notifications")
 }
 
@@ -470,6 +474,7 @@ model Trip {
   user        User         @relation(fields: [userId], references: [id])
   destination Destination? @relation(fields: [destinationId], references: [id])
   members     TripMember[]
+  invites     TripInvite[]
   itineraries Itinerary[]
   expenses    Expense[]
   settlements Settlement[]
@@ -943,4 +948,37 @@ model Settlement {
   @@index([groupId, settledAt])
   @@index([tripId])
   @@map("settlements")
+}
+
+// ============================================================
+// NHÓM 10: TRIP INVITATIONS & IN-APP CONSENT FLOW
+// ============================================================
+
+enum TripInviteStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+  REVOKED
+}
+
+model TripInvite {
+  id             String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tripId         String           @map("trip_id") @db.Uuid
+  inviterId      String           @map("inviter_id") @db.Uuid
+  inviteeId      String           @map("invitee_id") @db.Uuid
+  notificationId String?          @unique @map("notification_id") @db.Uuid
+  status         TripInviteStatus @default(PENDING)
+  respondedAt    DateTime?        @map("responded_at") @db.Timestamptz
+  revokedAt      DateTime?        @map("revoked_at") @db.Timestamptz
+  createdAt      DateTime         @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt      DateTime         @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  trip         Trip          @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  inviter      User          @relation("TripInviter", fields: [inviterId], references: [id], onDelete: Cascade)
+  invitee      User          @relation("TripInvitee", fields: [inviteeId], references: [id], onDelete: Cascade)
+  notification Notification? @relation(fields: [notificationId], references: [id], onDelete: SetNull)
+
+  @@index([inviteeId, status, createdAt(sort: Desc)])
+  @@index([tripId, status])
+  @@map("trip_invites")
 }

@@ -4,6 +4,7 @@ import '../../features/groups/providers/group_expense_provider.dart';
 import '../../features/groups/providers/group_itinerary_provider.dart';
 import '../../features/groups/providers/group_provider.dart';
 import '../../features/home/providers/home_provider.dart';
+import '../../features/notifications/providers/notification_provider.dart';
 import '../../features/profile/providers/profile_provider.dart';
 import '../../features/recommendations/providers/recommendation_provider.dart';
 import '../../features/safety/providers/buddy_provider.dart';
@@ -58,6 +59,9 @@ void resetSessionScopedState(Ref ref, {required bool isAuthenticated}) {
     if (ref.exists(safetyProvider)) {
       ref.invalidate(safetyProvider);
     }
+    if (ref.exists(notificationsProvider)) {
+      ref.invalidate(notificationsProvider);
+    }
   } else {
     if (ref.exists(profileProvider)) {
       ref.read(profileProvider.notifier).resetForLogout();
@@ -94,6 +98,9 @@ void resetSessionScopedState(Ref ref, {required bool isAuthenticated}) {
     }
     if (ref.exists(safetyProvider)) {
       ref.read(safetyProvider.notifier).resetForAuthTransition();
+    }
+    if (ref.exists(notificationsProvider)) {
+      ref.read(notificationsProvider.notifier).resetForLogout();
     }
   }
   ref.read(pendingChatPromptProvider.notifier).state = null;
